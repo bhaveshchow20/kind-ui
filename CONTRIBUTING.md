@@ -36,3 +36,7 @@ Do not commit dependency folders, build output, tarballs, coverage, credentials,
 ## Reporting and participation
 
 Use the issue forms for reproducible non-sensitive bugs or focused proposals. For security concerns, follow [SECURITY.md](SECURITY.md). Follow the [Code of Conduct](CODE_OF_CONDUCT.md). There is no guaranteed review or support turnaround at this pre-release stage.
+
+## CodeRabbit review setup
+
+The [repository configuration](.coderabbit.yaml) requests CodeRabbit reviews for draft PRs, stacked base branches, and subsequent pushes. The owner must separately install/approve the GitHub app for this repository; configuration alone does not grant access or establish that a review ran. Repository visibility and any paid plan require a separate owner decision. Automatic review remains subject to [CodeRabbit eligibility and limits](https://docs.coderabbit.ai/management/plans); an explicit `@coderabbitai review` trigger may be required. Inspect the actual review and CI results before merging, and address relevant feedback in a focused change. Automatic code changes and unrelated automation are disabled in the project configuration.
