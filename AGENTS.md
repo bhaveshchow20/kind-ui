@@ -4,7 +4,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing this repository. Its wor
 
 ## Current state and architecture guidance
 
-This is setup-only: `packages/kind-ui/src/index.ts` is empty. `docs/development.md` records direction and unresolved decisions. No renderer, framework adapter, domain package split, recipe format, or CLI has been selected.
+`packages/charts` exports three React chart presentation components; its README is the public API reference. `examples/chart` consumes those exports with Recharts primitives and owns its data alternative. `tests` checks component behavior, consumer types and browser contracts. Keep geometry, axes, data and visibility state consumer-owned; do not add a universal chart schema, generic core or another package without a demonstrated need.
 
 Build on established UI libraries. Check existing capabilities before adding primitives or infrastructure. Prefer familiar composition or a narrow integration. Preserve consumer control of styling, markup, state, refs, handlers, and animation where the API requires it. A new abstraction needs a concrete unmet need, alternatives considered, and a clear benefit beyond integration cost.
 
@@ -25,9 +25,12 @@ Use Node 22.12+ and npm 11.9. Use npm and the checked-in lockfile; do not add a 
 - Lint: `npm run lint`
 - Build/typecheck: `npm run typecheck`
 - Packed-package contract: `npm run check:package`
+- Component tests: `npm test`
+- Chart example: `npm run dev:chart`; browser checks: `npm run check:chart`
+- Browser prerequisite: `npm exec playwright install -- --with-deps chromium`
 - Required aggregate check: `npm run check`
 
-There are no product behavior tests yet. The package gate tests its own failure cases and checks an actual tarball in an isolated consumer; keep it in CI. When implementing behavior, introduce focused regression tests and package-consumer checks in the same PR, using exported APIs wherever practical. Test intentional error paths as well as successful input. Check the touched package and affected consumers, then run the full available aggregate check before proposing a change. Distinguish passed, failed, and unrun checks.
+Component tests use public exports and are repeated against the packed package. The package gate tests its own failure cases and checks an actual tarball in an isolated consumer; keep it in CI. When implementing behavior, introduce focused regression tests and package-consumer checks in the same PR, using exported APIs wherever practical. Test intentional error paths as well as successful input. Check the touched package and affected consumers, then run the full available aggregate check before proposing a change. Distinguish passed, failed, and unrun checks.
 
 Keep one purpose per PR. For a stack, target the immediately preceding branch and describe only that incremental diff. Do not mix cleanup, generated output, unrelated refactors, or future features into a setup change.
 

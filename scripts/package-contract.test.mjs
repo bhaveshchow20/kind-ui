@@ -4,7 +4,7 @@ import test from "node:test";
 import { assertPackageContract } from "./package-contract.mjs";
 
 const manifest = JSON.parse(
-  readFileSync(new URL("../packages/kind-ui/package.json", import.meta.url), "utf8"),
+  readFileSync(new URL("../packages/charts/package.json", import.meta.url), "utf8"),
 );
 const files = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.d.ts"];
 

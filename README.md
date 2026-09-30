@@ -2,7 +2,7 @@
 
 Kind UI is a UI library ecosystem intended to be kind to your AI agentic stack: performant, accessible, extensible, familiar, and easy to compose into agent-driven applications. These are design and verification goals, not delivered guarantees.
 
-This is a pre-release library workspace. This first step sets up development, contribution, and review conventions with one empty package entry point. It contains no product behavior and does not select a chart renderer, primitive system, styling engine, animation library, or CLI.
+This pre-release workspace exports `Root`, `Legend`, and `TooltipContent` from `@kind-ui/charts`: shared chart presentation with consumer-owned state and underlying chart composition. See the [component API and usage](packages/charts/README.md). Nothing is published to npm; the working package name does not imply ownership or an installation route.
 
 ## Local setup
 
@@ -10,14 +10,15 @@ Requires Node 22.12+ (Node 24 recommended) and npm 11.9.
 
 ```sh
 npm ci
+npm exec playwright install -- --with-deps chromium
 npm run check
 ```
 
-`check` runs Biome, a strict TypeScript build, and an isolated packed-package check for ESM, declarations, and required documentation. There are no product behavior tests yet. The empty working package is in `packages/kind-ui`; build output stays in its ignored `dist/` directory. Root and package manifests remain `private: true` and unpublished. The working package name does not imply npm ownership or an installation route.
+`npm run dev:chart` starts the minimal usage example. `check` runs lint, component tests, the actual packed-package gate, strict consumer typechecks, and Chromium interaction checks. Linux browser dependencies may require administrator permission. All packages remain private at `0.0.0`.
 
 ## Direction
 
-Build with established UI libraries, not against them. Prefer familiar composition and existing primitives, styling, and motion capabilities. Introduce a new pattern only for a concrete need that existing options do not meet. Future architecture and package boundaries will be reviewed in small steps; this setup makes no feature or compatibility claims.
+Build with established UI libraries, not against them. Prefer familiar composition and existing primitives, styling, and motion capabilities. Introduce a new pattern only for a concrete need that existing options do not meet. Future architecture and package boundaries will be reviewed in small steps; compatibility claims require tested consumers.
 
 ## Contributing
 

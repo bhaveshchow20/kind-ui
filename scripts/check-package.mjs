@@ -9,6 +9,14 @@ import { assertPackageContract } from "./package-contract.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const npm = process.env.npm_execpath;
 assert.ok(npm, "Use npm run check:package to run the packed-package gate");
+const peerNames = [
+  "react",
+  "react-dom",
+  "react-is",
+  "recharts",
+  "@types/react",
+  "@types/react-dom",
+];
 const rootManifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
 assert.equal(rootManifest.private, true, "Workspace must remain private");
 const scratch = await mkdtemp(join(tmpdir(), "kind-ui-package-"));
@@ -32,7 +40,7 @@ try {
       npm,
       "pack",
       "--workspace",
-      "kind-ui",
+      "@kind-ui/charts",
       "--ignore-scripts",
       "--json",
       "--pack-destination",
@@ -51,20 +59,20 @@ try {
     [
       npm,
       "install",
-      "--offline",
       "--ignore-scripts",
       "--no-audit",
       "--no-fund",
       "--package-lock=false",
       "--workspaces=false",
       join(scratch, packed.filename),
+      ...peerNames.map((name) => `${name}@${rootManifest.devDependencies[name]}`),
     ],
     consumer,
   );
-  const installed = join(consumer, "node_modules", "kind-ui");
+  const installed = join(consumer, "node_modules", "@kind-ui/charts");
   assert.equal(
     await realpath(installed),
-    join(await realpath(consumer), "node_modules", "kind-ui"),
+    join(await realpath(consumer), "node_modules", "@kind-ui/charts"),
     "Consumer must use the tarball, not a workspace link",
   );
   const manifest = JSON.parse(await readFile(join(installed, "package.json"), "utf8"));
@@ -77,14 +85,24 @@ try {
     await readFile(join(root, "LICENSE"), "utf8"),
     "Packed license must match the repository license",
   );
-  run(process.execPath, ["--input-type=module", "-e", "await import('kind-ui')"], consumer);
-  await writeFile(join(consumer, "index.ts"), 'import * as ui from "kind-ui";\nvoid ui;\n');
+  run(process.execPath, ["--input-type=module", "-e", "await import('@kind-ui/charts')"], consumer);
+  await writeFile(
+    join(consumer, "chart.test.mjs"),
+    await readFile(join(root, "tests/chart.test.mjs"), "utf8"),
+  );
+  run(process.execPath, ["--test", "chart.test.mjs"], consumer);
+  await writeFile(
+    join(consumer, "index.tsx"),
+    await readFile(join(root, "tests/consumer.tsx"), "utf8"),
+  );
   for (const mode of ["NodeNext", "Bundler"]) {
     await writeFile(
       join(consumer, "tsconfig.json"),
       JSON.stringify({
         compilerOptions: {
           target: "ES2022",
+          jsx: "react-jsx",
+          esModuleInterop: true,
           module: mode === "Bundler" ? "ESNext" : mode,
           moduleResolution: mode,
           strict: true,
@@ -92,7 +110,7 @@ try {
           noEmit: true,
           typeRoots: [join(consumer, "node_modules", "@types")],
         },
-        include: ["index.ts"],
+        include: ["index.tsx"],
       }),
     );
     run(
@@ -101,7 +119,9 @@ try {
       consumer,
     );
   }
-  console.log("Packed contents, license, ESM import, NodeNext and Bundler declarations passed");
+  console.log(
+    "Packed contents, license, ESM import, component tests and strict NodeNext/Bundler consumer declarations passed",
+  );
 } finally {
   await rm(scratch, { recursive: true, force: true });
 }

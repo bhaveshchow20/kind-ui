@@ -11,15 +11,30 @@
   },
   "packageManager": "npm@11.9.0",
   "scripts": {
-    "build": "tsc -b packages/kind-ui --force",
+    "build": "tsc -b packages/charts --force",
     "typecheck": "npm run build",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "check": "npm run lint && npm run check:package",
-    "check:package": "npm run build && node --test scripts/package-contract.test.mjs && node scripts/check-package.mjs"
+    "check": "npm run lint && npm run test && npm run check:package && npm run check:chart",
+    "check:package": "npm run build && node --test scripts/package-contract.test.mjs && node scripts/check-package.mjs",
+    "test": "npm run build && node --test tests/chart.test.mjs",
+    "dev:chart": "npm run build && vite examples/chart --host 127.0.0.1",
+    "check:chart": "tsc -p examples/chart && vite build examples/chart && playwright test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
-    "typescript": "5.9.3"
+    "@fontsource-variable/geist": "5.3.0",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "22.20.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-is": "19.3.0",
+    "recharts": "3.10.1",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.1"
   }
 }

@@ -1,6 +1,6 @@
 # Kind UI architecture principles and acceptance criteria
 
-Status: design guidance for an unimplemented library. The package entry point is empty; no component API, renderer, supported-stack matrix, or runtime-generation protocol is selected here.
+Status: design guidance. The [chart component API](../packages/charts/README.md) has a focused React consumer; this document does not establish a cross-stack support matrix or runtime-generation protocol.
 
 ## Purpose
 
