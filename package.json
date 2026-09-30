@@ -15,7 +15,8 @@
     "typecheck": "npm run build",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "check": "npm run lint && npm run typecheck"
+    "check": "npm run lint && npm run check:package",
+    "check:package": "npm run build && node --test scripts/package-contract.test.mjs && node scripts/check-package.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

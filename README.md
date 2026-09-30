@@ -13,7 +13,7 @@ npm ci
 npm run check
 ```
 
-`check` runs Biome and a strict TypeScript build. There are no behavior tests yet. The empty working package is in `packages/kind-ui`; build output stays in its ignored `dist/` directory. Root and package are private. The working package name does not imply npm ownership or an installation route.
+`check` runs Biome, a strict TypeScript build, and an isolated packed-package check for ESM, declarations, and required documentation. There are no product behavior tests yet. The empty working package is in `packages/kind-ui`; build output stays in its ignored `dist/` directory. Root and package are private. The working package name does not imply npm ownership or an installation route.
 
 ## Direction
 
