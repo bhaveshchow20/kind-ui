@@ -182,7 +182,8 @@ for (const palette of ["Monochrome", "Color"] as const) {
       if (!host) throw new Error("Missing palette host");
       const style = getComputedStyle(host);
       const luminance = (token: string) => {
-        const hex = style.getPropertyValue(token).trim().slice(1);
+        const raw = style.getPropertyValue(token).trim().slice(1);
+        const hex = raw.length === 3 ? [...raw].map((channel) => channel + channel).join("") : raw;
         const channels = [0, 2, 4]
           .map((index) => Number.parseInt(hex.slice(index, index + 2), 16) / 255)
           .map((value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
