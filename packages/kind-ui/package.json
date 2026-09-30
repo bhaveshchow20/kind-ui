@@ -14,5 +14,10 @@
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts"
-  ]
+  ],
+  "peerDependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "recharts": "^3.10.1"
+  }
 }

@@ -1,0 +1,118 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { ChartContainer, ChartLegend, ChartTooltipContent } from "kind-ui";
+import { createElement as h } from "react";
+import { renderToStaticMarkup as render } from "react-dom/server";
+
+const config = {
+  count: { label: "Tasks", color: "#2563eb", formatValue: (value) => `${value} tasks` },
+};
+const entry = (value, extra = {}) => ({
+  dataKey: "count",
+  name: "count",
+  value,
+  graphicalItemId: "count",
+  ...extra,
+});
+const tooltip = (payload, extra = {}) => ({
+  active: true,
+  payload,
+  label: "Monday",
+  accessibilityLayer: true,
+  activeIndex: "0",
+  coordinate: undefined,
+  ...extra,
+});
+const content = (payload, extra = {}) =>
+  render(
+    h(
+      ChartContainer,
+      { config },
+      h(ChartTooltipContent, {
+        tooltip: tooltip(payload, extra),
+        id: "tip",
+        "data-owner": "consumer",
+      }),
+    ),
+  );
+
+test("zero uses the series formatter; null and undefined remain missing", () => {
+  assert.match(content([entry(0)]), /0 tasks/);
+  assert.match(content([entry(null)]), /No data/);
+  assert.match(content([entry(undefined)]), /No data/);
+  assert.doesNotMatch(content([entry(null)]), /null tasks/);
+});
+test("upstream formatter, tuple label and label formatter remain usable", () => {
+  const html = content([entry(0)], {
+    formatter: (value) => [`${value}%`, "Custom"],
+    labelFormatter: () => "Custom day",
+  });
+  assert.match(html, /0%/);
+  assert.match(html, /Custom day/);
+  assert.match(html, /Custom/);
+});
+test("hidden, type-none, inactive and consumer-hidden entries are omitted", () => {
+  assert.doesNotMatch(content([entry(9, { hide: true })]), /9 tasks/);
+  assert.doesNotMatch(content([entry(9, { type: "none" })]), /9 tasks/);
+  assert.doesNotMatch(content([entry(9)], { active: false }), /9 tasks/);
+  const html = render(
+    h(
+      ChartContainer,
+      { config, visibleSeries: [] },
+      h(ChartTooltipContent, { tooltip: tooltip([entry(9)]) }),
+    ),
+  );
+  assert.doesNotMatch(html, /9 tasks/);
+});
+test("content preserves live-region semantics and forwards DOM props", () => {
+  const html = content([entry(4)]);
+  assert.match(html, /role="status"/);
+  assert.match(html, /aria-live="assertive"/);
+  assert.match(html, /id="tip"/);
+  assert.match(html, /data-owner="consumer"/);
+  assert.doesNotMatch(html, /accessibilityLayer=|graphicalItemId=|activeIndex=/);
+});
+test("legend is static by default, controlled when requested, and container colors are scoped", () => {
+  const html = render(
+    h(
+      ChartContainer,
+      { config, id: "scope", className: "custom" },
+      h(ChartLegend, { id: "legend" }),
+    ),
+  );
+  assert.match(html, /--color-count:#2563eb/);
+  assert.match(html, /id="legend"/);
+  assert.doesNotMatch(html, /<button/);
+  const hidden = render(
+    h(ChartContainer, { config, visibleSeries: [], onVisibleSeriesChange() {} }, h(ChartLegend)),
+  );
+  assert.match(hidden, /aria-pressed="false"/);
+});
+test("invalid composition and keys have actionable errors", () => {
+  assert.throws(() => render(h(ChartLegend)), /inside ChartContainer/);
+  assert.throws(
+    () => render(h(ChartContainer, { config, onVisibleSeriesChange() {} })),
+    /requires visibleSeries/,
+  );
+  assert.throws(
+    () => render(h(ChartContainer, { config: { "bad key": config.count } })),
+    /Chart series key/,
+  );
+});
+
+test("upstream null formatter suppresses an entry and per-entry formatters take precedence", () => {
+  assert.doesNotMatch(content([entry(1)], { formatter: () => null }), /<li/);
+  assert.doesNotMatch(content([entry(1)], { formatter: () => undefined }), /<li/);
+  assert.match(
+    content([entry(0, { formatter: () => "entry format" })], { formatter: () => "global format" }),
+    /entry format/,
+  );
+});
+test("unknown prototype-named keys use upstream metadata without inherited config", () => {
+  for (const dataKey of ["constructor", "toString"]) {
+    const html = content([entry(1, { dataKey, name: "Unknown", color: "#f00" })]);
+    assert.match(html, /Unknown/);
+    assert.match(html, /background:#f00/);
+    assert.doesNotMatch(html, new RegExp(`var\\(--color-${dataKey}`));
+  }
+});
