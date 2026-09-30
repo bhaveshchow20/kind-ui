@@ -1,6 +1,6 @@
 # Contributing
 
-Kind UI is currently private and pre-release. The repository is being prepared for an open-source library workflow; it is not a published package or a production-support promise.
+Kind UI is pre-release and unpublished. The repository uses an open-source contribution workflow; it is not a published package or a production-support promise.
 
 ## Start here
 
