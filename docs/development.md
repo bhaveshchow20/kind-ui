@@ -12,6 +12,8 @@ The current workspace contains one empty package, strict TypeScript, formatting/
 
 Next, identify one concrete consumer need, evaluate established libraries that already solve its parts, and propose the smallest useful composition or integration. Review architecture and compatibility choices before implementing them. Keep each feature, integration, or tooling decision in a separate focused draft PR; stacks target their immediately preceding branch.
 
+See the proposed [agent-friendly architecture and first experiment](agent-friendly-architecture.md) for boundaries, discovery channels, and evidence required before claiming a reusable core or supported stack.
+
 ## Work with the ecosystem
 
 Kind UI should build on established UI libraries. shadcn, Radix, and Motion are examples of possible foundations, not products to replace. Prefer familiar public APIs, composition, accessible primitives, and existing motion systems. New patterns require an unmet need and a clear justification; novelty is not a goal.
