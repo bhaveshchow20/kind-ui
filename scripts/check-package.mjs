@@ -40,7 +40,7 @@ try {
       npm,
       "pack",
       "--workspace",
-      "kind-ui",
+      "@kind-ui/charts",
       "--ignore-scripts",
       "--json",
       "--pack-destination",
@@ -69,10 +69,10 @@ try {
     ],
     consumer,
   );
-  const installed = join(consumer, "node_modules", "kind-ui");
+  const installed = join(consumer, "node_modules", "@kind-ui/charts");
   assert.equal(
     await realpath(installed),
-    join(await realpath(consumer), "node_modules", "kind-ui"),
+    join(await realpath(consumer), "node_modules", "@kind-ui/charts"),
     "Consumer must use the tarball, not a workspace link",
   );
   const manifest = JSON.parse(await readFile(join(installed, "package.json"), "utf8"));
@@ -85,7 +85,7 @@ try {
     await readFile(join(root, "LICENSE"), "utf8"),
     "Packed license must match the repository license",
   );
-  run(process.execPath, ["--input-type=module", "-e", "await import('kind-ui')"], consumer);
+  run(process.execPath, ["--input-type=module", "-e", "await import('@kind-ui/charts')"], consumer);
   await writeFile(
     join(consumer, "chart.test.mjs"),
     await readFile(join(root, "tests/chart.test.mjs"), "utf8"),

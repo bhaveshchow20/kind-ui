@@ -1,4 +1,4 @@
-import { type ChartConfig, ChartContainer, ChartLegend, ChartTooltipContent } from "kind-ui";
+import * as Chart from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -25,7 +25,7 @@ const config = {
     color: "var(--chart-2)",
     formatValue: (value) => `${value} tasks`,
   },
-} satisfies ChartConfig;
+} satisfies Chart.SeriesConfig;
 const data = [
   { day: "Mon", completed: 42, review: 12 },
   { day: "Tue", completed: 58, review: 8 },
@@ -76,10 +76,7 @@ function App() {
             ))}
           </fieldset>
         </div>
-        <section
-          aria-label="Task outcomes"
-          className="rounded-lg border border-border bg-card p-4 sm:p-5"
-        >
+        <section aria-label="Task outcomes">
           <header className="mb-2 flex flex-wrap items-center justify-between gap-3">
             <h1 className="text-xl font-medium tracking-tight">Task outcomes</h1>
             <label className="flex min-h-8 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
@@ -92,13 +89,13 @@ function App() {
               Empty data
             </label>
           </header>
-          <ChartContainer
+          <Chart.Root
             config={config}
             visibleSeries={visible}
             onVisibleSeriesChange={setVisible}
             className="text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-surface]:focus-visible:outline-2 [&_.recharts-surface]:focus-visible:outline-offset-2 [&_.recharts-surface]:focus-visible:outline-ring"
           >
-            <ChartLegend
+            <Chart.Legend
               aria-label="Visible series"
               style={{ margin: "4px 0 10px", gap: 4 }}
               className="text-[13px] [&_button]:border-transparent! [&_button:hover]:[--chart-legend-background:var(--accent)] [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-ring [&_button[aria-pressed=false]]:text-muted-foreground [&_li:first-child_span]:rounded-full [&_li:nth-child(2)_span]:rotate-45 [&_span]:size-2!"
@@ -127,7 +124,7 @@ function App() {
                     filterNull={false}
                     isAnimationActive={false}
                     content={(tooltip) => (
-                      <ChartTooltipContent
+                      <Chart.TooltipContent
                         tooltip={tooltip}
                         className="min-w-44 max-w-64 shadow-sm tabular-nums [&_strong]:font-medium"
                       />
@@ -172,7 +169,7 @@ function App() {
                 </LineChart>
               </ResponsiveContainer>
             )}
-          </ChartContainer>
+          </Chart.Root>
           <p className="mt-3 text-xs text-muted-foreground">
             Gaps mean no data. Hidden series stay in the table.
           </p>

@@ -1,4 +1,4 @@
-import { ChartContainer, ChartLegend, ChartTooltipContent } from "kind-ui";
+import { Legend, Root, TooltipContent } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
@@ -18,7 +18,7 @@ function Fixture({ name, color }: { name: string; color: string }) {
         Hold {name} changes
       </label>
       <output aria-label={`${name} request`}>{request}</output>
-      <ChartContainer
+      <Root
         config={{ count: { label: `${name} tasks`, color } }}
         visibleSeries={visible}
         onVisibleSeriesChange={(next) => {
@@ -30,7 +30,7 @@ function Fixture({ name, color }: { name: string; color: string }) {
           if (node) node.dataset.forwarded = "container";
         }}
       >
-        <ChartLegend
+        <Legend
           aria-label={`${name} legend`}
           ref={(node) => {
             if (node) node.dataset.forwarded = "legend";
@@ -54,7 +54,7 @@ function Fixture({ name, color }: { name: string; color: string }) {
             <Tooltip
               isAnimationActive={false}
               content={(tooltip) => (
-                <ChartTooltipContent
+                <TooltipContent
                   tooltip={tooltip}
                   aria-label={`${name} tooltip`}
                   ref={(node) => {
@@ -65,7 +65,7 @@ function Fixture({ name, color }: { name: string; color: string }) {
             />
           </LineChart>
         </ResponsiveContainer>
-      </ChartContainer>
+      </Root>
     </section>
   );
 }

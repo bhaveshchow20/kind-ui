@@ -4,7 +4,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing this repository. Its wor
 
 ## Current state and architecture guidance
 
-`packages/kind-ui` exports three React chart presentation components; its README is the public API reference. `examples/chart` consumes those exports with Recharts primitives and owns its data alternative. `tests` checks component behavior, consumer types and browser contracts. Keep geometry, axes, data and visibility state consumer-owned; do not add a universal chart schema, generic core or another package without a demonstrated need.
+`packages/charts` exports three React chart presentation components; its README is the public API reference. `examples/chart` consumes those exports with Recharts primitives and owns its data alternative. `tests` checks component behavior, consumer types and browser contracts. Keep geometry, axes, data and visibility state consumer-owned; do not add a universal chart schema, generic core or another package without a demonstrated need.
 
 Build on established UI libraries. Check existing capabilities before adding primitives or infrastructure. Prefer familiar composition or a narrow integration. Preserve consumer control of styling, markup, state, refs, handlers, and animation where the API requires it. A new abstraction needs a concrete unmet need, alternatives considered, and a clear benefit beyond integration cost.
 

@@ -1,8 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ChartContainer, ChartLegend, ChartTooltipContent } from "kind-ui";
+import * as Chart from "@kind-ui/charts";
+import { Legend, Root, TooltipContent } from "@kind-ui/charts";
 import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
+
+test("direct and namespace imports expose the same public components", () => {
+  assert.deepEqual(Object.keys(Chart).sort(), ["Legend", "Root", "TooltipContent"]);
+  assert.equal(Chart.Root, Root);
+  assert.equal(Chart.Legend, Legend);
+  assert.equal(Chart.TooltipContent, TooltipContent);
+});
 
 const config = {
   count: { label: "Tasks", color: "#2563eb", formatValue: (value) => `${value} tasks` },
@@ -26,9 +34,9 @@ const tooltip = (payload, extra = {}) => ({
 const content = (payload, extra = {}) =>
   render(
     h(
-      ChartContainer,
+      Root,
       { config },
-      h(ChartTooltipContent, {
+      h(TooltipContent, {
         tooltip: tooltip(payload, extra),
         id: "tip",
         "data-owner": "consumer",
@@ -56,11 +64,7 @@ test("hidden, type-none, inactive and consumer-hidden entries are omitted", () =
   assert.doesNotMatch(content([entry(9, { type: "none" })]), /9 tasks/);
   assert.doesNotMatch(content([entry(9)], { active: false }), /9 tasks/);
   const html = render(
-    h(
-      ChartContainer,
-      { config, visibleSeries: [] },
-      h(ChartTooltipContent, { tooltip: tooltip([entry(9)]) }),
-    ),
+    h(Root, { config, visibleSeries: [] }, h(TooltipContent, { tooltip: tooltip([entry(9)]) })),
   );
   assert.doesNotMatch(html, /9 tasks/);
 });
@@ -74,30 +78,23 @@ test("content preserves live-region semantics and forwards DOM props", () => {
 });
 test("legend is static by default, controlled when requested, and container colors are scoped", () => {
   const html = render(
-    h(
-      ChartContainer,
-      { config, id: "scope", className: "custom" },
-      h(ChartLegend, { id: "legend" }),
-    ),
+    h(Root, { config, id: "scope", className: "custom" }, h(Legend, { id: "legend" })),
   );
   assert.match(html, /--color-count:#2563eb/);
   assert.match(html, /id="legend"/);
   assert.doesNotMatch(html, /<button/);
   const hidden = render(
-    h(ChartContainer, { config, visibleSeries: [], onVisibleSeriesChange() {} }, h(ChartLegend)),
+    h(Root, { config, visibleSeries: [], onVisibleSeriesChange() {} }, h(Legend)),
   );
   assert.match(hidden, /aria-pressed="false"/);
 });
 test("invalid composition and keys have actionable errors", () => {
-  assert.throws(() => render(h(ChartLegend)), /inside ChartContainer/);
+  assert.throws(() => render(h(Legend)), /inside Root/);
   assert.throws(
-    () => render(h(ChartContainer, { config, onVisibleSeriesChange() {} })),
+    () => render(h(Root, { config, onVisibleSeriesChange() {} })),
     /requires visibleSeries/,
   );
-  assert.throws(
-    () => render(h(ChartContainer, { config: { "bad key": config.count } })),
-    /Chart series key/,
-  );
+  assert.throws(() => render(h(Root, { config: { "bad key": config.count } })), /Chart series key/);
 });
 
 test("upstream null formatter suppresses an entry and per-entry formatters take precedence", () => {

@@ -7,9 +7,12 @@ import {
   type ReactNode,
   useContext,
 } from "react";
-import type { TooltipContentProps, TooltipValueType } from "recharts";
+import type {
+  TooltipValueType,
+  TooltipContentProps as UpstreamTooltipContentProps,
+} from "recharts";
 
-export type ChartConfig = Readonly<
+export type SeriesConfig = Readonly<
   Record<
     string,
     {
@@ -23,29 +26,29 @@ type Visibility = {
   visibleSeries?: readonly string[];
   onVisibleSeriesChange?: (next: string[]) => void;
 };
-type ChartContextValue = Visibility & { config: ChartConfig };
+type ChartContextValue = Visibility & { config: SeriesConfig };
 const ChartContext = createContext<ChartContextValue | null>(null);
 function useChart() {
   const chart = useContext(ChartContext);
-  if (!chart) throw new Error("ChartLegend and ChartTooltipContent must be inside ChartContainer");
+  if (!chart) throw new Error("Legend and TooltipContent must be inside Root");
   return chart;
 }
-export type ChartContainerProps = ComponentPropsWithRef<"div"> & { config: ChartConfig } & (
+export type RootProps = ComponentPropsWithRef<"div"> & { config: SeriesConfig } & (
     | { visibleSeries?: undefined; onVisibleSeriesChange?: never }
     | { visibleSeries: readonly string[]; onVisibleSeriesChange?: (next: string[]) => void }
   );
 
 /** Scopes presentation metadata and CSS colors; the consumer owns chart geometry and state. */
-export function ChartContainer({
+export function Root({
   config,
   visibleSeries,
   onVisibleSeriesChange,
   style,
   children,
   ...props
-}: ChartContainerProps) {
+}: RootProps) {
   if (onVisibleSeriesChange && !visibleSeries)
-    throw new Error("ChartContainer requires visibleSeries when onVisibleSeriesChange is provided");
+    throw new Error("Root requires visibleSeries when onVisibleSeriesChange is provided");
   const colors: Record<string, string> = {};
   for (const [key, item] of Object.entries(config)) {
     if (!/^[a-zA-Z][\w-]*$/.test(key))
@@ -72,7 +75,7 @@ export function ChartContainer({
   );
 }
 
-export type ChartLegendProps = Omit<ComponentPropsWithRef<"ul">, "children">;
+export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children">;
 const legendStyle: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
@@ -95,7 +98,7 @@ const buttonStyle: CSSProperties = {
 };
 
 /** Displays configured series; becomes interactive only when a controlled change callback exists. */
-export function ChartLegend({ style, ...props }: ChartLegendProps) {
+export function Legend({ style, ...props }: LegendProps) {
   const { config, visibleSeries, onVisibleSeriesChange } = useChart();
   return (
     <ul aria-label="Chart legend" {...props} style={{ ...legendStyle, ...style }}>
@@ -145,19 +148,19 @@ export function ChartLegend({ style, ...props }: ChartLegendProps) {
   );
 }
 
-export type ChartTooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
+export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
   /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
-  tooltip: TooltipContentProps;
+  tooltip: UpstreamTooltipContentProps;
   missingValue?: ReactNode;
 };
 
 /** Default tooltip UI using the containing chart's labels, formats, colors and visibility. */
-export function ChartTooltipContent({
+export function TooltipContent({
   tooltip,
   missingValue = "No data",
   style,
   ...props
-}: ChartTooltipContentProps) {
+}: TooltipContentProps) {
   const { config, visibleSeries } = useChart();
   const { active, payload, label, formatter, labelFormatter, accessibilityLayer } = tooltip;
   const entries = active

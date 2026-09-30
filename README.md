@@ -2,7 +2,7 @@
 
 Kind UI is a UI library ecosystem intended to be kind to your AI agentic stack: performant, accessible, extensible, familiar, and easy to compose into agent-driven applications. These are design and verification goals, not delivered guarantees.
 
-This pre-release workspace exports `ChartContainer`, `ChartLegend`, and `ChartTooltipContent`: shared chart presentation with consumer-owned state and underlying chart composition. See the [component API and usage](packages/kind-ui/README.md). Nothing is published to npm; the working package name does not imply ownership or an installation route.
+This pre-release workspace exports `Root`, `Legend`, and `TooltipContent` from `@kind-ui/charts`: shared chart presentation with consumer-owned state and underlying chart composition. See the [component API and usage](packages/charts/README.md). Nothing is published to npm; the working package name does not imply ownership or an installation route.
 
 ## Local setup
 

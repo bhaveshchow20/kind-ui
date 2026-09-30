@@ -1,8 +1,9 @@
 {
-  "name": "kind-ui",
+  "name": "@kind-ui/charts",
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "license": "MIT",
   "exports": {
     ".": {

@@ -1,6 +1,6 @@
 # Kind UI architecture principles and acceptance criteria
 
-Status: design guidance. The [chart component API](../packages/kind-ui/README.md) has a focused React consumer; this document does not establish a cross-stack support matrix or runtime-generation protocol.
+Status: design guidance. The [chart component API](../packages/charts/README.md) has a focused React consumer; this document does not establish a cross-stack support matrix or runtime-generation protocol.
 
 ## Purpose
 

@@ -197,11 +197,11 @@ for (const palette of ["Monochrome", "Color"] as const) {
         return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
       };
       return {
-        text: contrast("--muted-foreground", "--card"),
+        text: contrast("--muted-foreground", "--background"),
         control: contrast("--muted-foreground", "--muted"),
-        firstMark: contrast("--chart-1", "--card"),
-        secondMark: contrast("--chart-2", "--card"),
-        focus: contrast("--ring", "--card"),
+        firstMark: contrast("--chart-1", "--background"),
+        secondMark: contrast("--chart-2", "--background"),
+        focus: contrast("--ring", "--background"),
       };
     });
     expect(ratios.text).toBeGreaterThanOrEqual(4.5);

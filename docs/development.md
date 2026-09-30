@@ -8,7 +8,7 @@ For async interactions, define loading, partial, complete, and error states wher
 
 ## Current implementation
 
-The workspace contains one package with three React chart presentation components, strict TypeScript, checks and contribution guidance. See the [component contracts](../packages/kind-ui/README.md). There is no custom renderer, primitive engine, recipe format or CLI. The package structure does not imply a framework-neutral core.
+The workspace contains one package with three React chart presentation components, strict TypeScript, checks and contribution guidance. See the [component contracts](../packages/charts/README.md). There is no custom renderer, primitive engine, recipe format or CLI. The package structure does not imply a framework-neutral core.
 
 Next, identify one concrete consumer need, evaluate established libraries that already solve its parts, and propose the smallest useful composition or integration. Review architecture and compatibility choices before implementing them. Keep each feature, integration, or tooling decision in a separate focused draft PR; stacks target their immediately preceding branch.
 
