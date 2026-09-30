@@ -12,9 +12,11 @@ The current workspace contains one empty package, strict TypeScript, formatting/
 
 Next, identify one concrete consumer need, evaluate established libraries that already solve its parts, and propose the smallest useful composition or integration. Review architecture and compatibility choices before implementing them. Keep each feature, integration, or tooling decision in a separate focused draft PR; stacks target their immediately preceding branch.
 
+See [Kind UI architecture principles and acceptance criteria](agent-friendly-architecture.md) for public contracts, state boundaries, discoverability, and evidence required before claiming a reusable core or supported stack.
+
 ## Work with the ecosystem
 
-Kind UI should build on established UI libraries. shadcn, Radix, and Motion are examples of possible foundations, not products to replace. Prefer familiar public APIs, composition, accessible primitives, and existing motion systems. New patterns require an unmet need and a clear justification; novelty is not a goal.
+Kind UI should compose with the capabilities already used by its consumers. Prefer familiar public APIs, composition, accessible primitives, and existing motion systems. New patterns require an unmet need and a clear justification; novelty is not a goal.
 
 Evaluate reuse before selecting a renderer or adding geometry, state, theming, or installation infrastructure. Document alternatives, licensing, peer dependencies, bundle/runtime cost, and a compatibility-test plan. Add an integration only for a concrete consumer need; setup installs none of these libraries and claims no compatibility with them.
 
@@ -30,15 +32,6 @@ Implementation PRs must add tests for their public contracts and relevant packed
 
 Root and package stay private at `0.0.0`; CI only checks code. No releases, npm publication, deployments, credentials, or package/scope ownership are implied.
 
-Before a first public release, explicitly decide the package set, supported environments, namespace ownership, security-reporting route, and release authorization. Adopt Changesets in a separate release-setup PR once those decisions are made. Until then, record compatibility and user-visible changes in the PR instead of maintaining fictional release notes.
+Before a first public release, explicitly decide the package set, supported environments, namespace ownership, security-reporting route, and release authorization. Adopt release tooling in a separate release-setup PR once those decisions are made. Until then, record compatibility and user-visible changes in the PR instead of maintaining fictional release notes.
 
 The intended release policy is semantic versioning per independently versioned package. After release tooling is adopted, user-facing package changes require a reviewed changeset and compatibility decision, including the policy for pre-1.0 breaking changes. Documentation, CI, and development-only changes need no package release. A successful CI run never authorizes publishing or merging.
-
-## Conventions learned from mature libraries
-
-- [React Spectrum's AGENTS.md](https://github.com/adobe/react-spectrum/blob/main/AGENTS.md): a short repository map, exact commands, and links to focused contributor guidance
-- [TanStack Table's AGENTS.md](https://github.com/TanStack/table/blob/main/AGENTS.md) and [contributing guide](https://github.com/TanStack/table/blob/main/CONTRIBUTING.md): authoritative contribution instructions, verified one-topic changes, and release-note applicability
-- [Fumadocs' contributing guide](https://github.com/fuma-nama/fumadocs/blob/dev/.github/contributing.md): clear build ordering and local development without production secrets
-- [Radix Primitives' contributing guide](https://github.com/radix-ui/primitives/blob/main/.github/CONTRIBUTING.md): small reviewable changes and avoiding premature abstraction
-
-Composition references: [shadcn principles](https://ui.shadcn.com/docs), [Radix composition](https://www.radix-ui.com/primitives/docs/guides/composition), and [Motion with Radix](https://motion.dev/docs/radix). These are quality and interoperability references, not competitive positioning or verified Kind UI integrations. No upstream implementation or custom build infrastructure is copied.
