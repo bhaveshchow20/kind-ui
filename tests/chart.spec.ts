@@ -146,3 +146,86 @@ test("host theme tokens reach marks, legend and tooltip without changing selecti
   await expect(tooltip).toHaveCSS("background-color", "rgb(255, 240, 200)");
   await expect(tooltip).toHaveCSS("color", "rgb(20, 30, 40)");
 });
+
+for (const palette of ["Monochrome", "Color"] as const) {
+  test(`${palette} preserves chart state, non-color cues and readable theme contrast`, async ({
+    page,
+  }, info) => {
+    const externalRequests: string[] = [];
+    page.on("request", (request) => {
+      if (new URL(request.url()).hostname !== "127.0.0.1") externalRequests.push(request.url());
+    });
+    await page.goto("/");
+    const paletteButton = page.getByRole("button", { name: palette, exact: true });
+    await paletteButton.click();
+    await expect(paletteButton).toHaveAttribute("aria-pressed", "true");
+    await page.evaluate(() => document.fonts.ready);
+    expect(
+      await page.evaluate(() =>
+        [...document.fonts].some(
+          (font) =>
+            font.family.replaceAll('"', "") === "Geist Variable" && font.status === "loaded",
+        ),
+      ),
+    ).toBe(true);
+    const chart = page.getByRole("application", { name: "Task outcomes by day" });
+    const reviewLine = chart.locator('path[stroke="var(--color-review)"]').first();
+    await expect(reviewLine).toHaveAttribute("stroke-dasharray", "5 4");
+    await expect(chart.locator('path.recharts-symbols[fill="var(--color-review)"]')).toHaveCount(5);
+    await expect(chart.locator('circle[fill="var(--color-completed)"]')).toHaveCount(4);
+    await expect(reviewLine).toHaveCSS(
+      "stroke",
+      palette === "Monochrome" ? "rgb(98, 98, 98)" : "rgb(190, 24, 93)",
+    );
+    const ratios = await page.evaluate(() => {
+      const host = document.querySelector("[data-palette]");
+      if (!host) throw new Error("Missing palette host");
+      const style = getComputedStyle(host);
+      const luminance = (token: string) => {
+        const hex = style.getPropertyValue(token).trim().slice(1);
+        const channels = [0, 2, 4]
+          .map((index) => Number.parseInt(hex.slice(index, index + 2), 16) / 255)
+          .map((value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
+        return (
+          (channels[0] ?? 0) * 0.2126 + (channels[1] ?? 0) * 0.7152 + (channels[2] ?? 0) * 0.0722
+        );
+      };
+      const contrast = (a: string, b: string) => {
+        const first = luminance(a),
+          second = luminance(b);
+        return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+      };
+      return {
+        text: contrast("--muted-foreground", "--card"),
+        control: contrast("--muted-foreground", "--muted"),
+        firstMark: contrast("--chart-1", "--card"),
+        secondMark: contrast("--chart-2", "--card"),
+        focus: contrast("--ring", "--card"),
+      };
+    });
+    expect(ratios.text).toBeGreaterThanOrEqual(4.5);
+    expect(ratios.control).toBeGreaterThanOrEqual(4.5);
+    for (const value of [ratios.firstMark, ratios.secondMark, ratios.focus])
+      expect(value).toBeGreaterThanOrEqual(3);
+    await page.screenshot({
+      path: info.outputPath(`chart-${palette.toLowerCase()}.png`),
+      fullPage: true,
+    });
+    const completed = page.getByRole("button", { name: "Completed", exact: true });
+    await completed.click();
+    const other = page.getByRole("button", {
+      name: palette === "Color" ? "Monochrome" : "Color",
+      exact: true,
+    });
+    await other.focus();
+    await expect(other).toHaveCSS("outline-style", "solid");
+    await page.keyboard.press("Space");
+    await expect(other).toHaveAttribute("aria-pressed", "true");
+    await expect(completed).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByRole("columnheader", { name: "Completed Hidden" })).toBeVisible();
+    await page.getByLabel("Empty data").check();
+    await paletteButton.click();
+    await expect(page.getByRole("status")).toHaveText("No data yet.");
+    expect(externalRequests).toEqual([]);
+  });
+}

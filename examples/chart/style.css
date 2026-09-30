@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Geist Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2")
+    format("woff2-variations");
+}
+
 @theme inline {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -20,21 +30,26 @@
 }
 
 :root {
-  --background: oklch(0.98 0.004 264);
-  --foreground: oklch(0.24 0.034 262);
-  --card: oklch(1 0 0);
+  --background: #fafafa;
+  --foreground: #181818;
+  --card: #ffffff;
   --card-foreground: var(--foreground);
-  --popover: oklch(1 0 0);
+  --popover: #ffffff;
   --popover-foreground: var(--foreground);
-  --primary: oklch(0.5 0.18 266);
-  --muted: oklch(0.95 0.014 255);
-  --accent: oklch(0.94 0.025 264);
-  --muted-foreground: oklch(0.46 0.035 258);
-  --border: oklch(0.88 0.019 260);
-  --ring: oklch(0.53 0.18 266);
-  --chart-1: oklch(0.5 0.18 266);
-  --chart-2: oklch(0.52 0.14 48);
-  --radius: 0.625rem;
+  --primary: #181818;
+  --muted: #f1f1f1;
+  --accent: #ededed;
+  --muted-foreground: #666666;
+  --border: #e2e2e2;
+  --ring: #181818;
+  --chart-1: #171717;
+  --chart-2: #626262;
+  --radius: 0.5rem;
+}
+
+[data-palette="color"] {
+  --chart-1: #7c3aed;
+  --chart-2: #be185d;
 }
 
 @layer base {
