@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "experiments/*"
   ],
   "engines": {
     "node": ">=22.12.0"
@@ -15,8 +16,10 @@
     "typecheck": "npm run build",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "check": "npm run lint && npm run check:package",
-    "check:package": "npm run build && node --test scripts/package-contract.test.mjs && node scripts/check-package.mjs"
+    "check": "npm run lint && npm run check:package && npm run check:chart",
+    "check:package": "npm run build && node --test scripts/package-contract.test.mjs && node scripts/check-package.mjs",
+    "dev:chart": "npm run dev --workspace @kind-ui/chart-experiment",
+    "check:chart": "npm run check --workspace @kind-ui/chart-experiment"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

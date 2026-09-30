@@ -2,7 +2,7 @@
 
 Kind UI is a UI library ecosystem intended to be kind to your AI agentic stack: performant, accessible, extensible, familiar, and easy to compose into agent-driven applications. These are design and verification goals, not delivered guarantees.
 
-This is a pre-release library workspace. This first step sets up development, contribution, and review conventions with one empty package entry point. It contains no product behavior and does not select a chart renderer, primitive system, styling engine, animation library, or CLI.
+This is a pre-release library workspace. The library retains one empty package entry point. A [working chart experiment](experiments/chart/README.md) evaluates one concrete composition without exporting a component API or selecting the library’s final architecture.
 
 ## Local setup
 
@@ -10,10 +10,11 @@ Requires Node 22.12+ (Node 24 recommended) and npm 11.9.
 
 ```sh
 npm ci
+npm exec playwright install -- --with-deps chromium
 npm run check
 ```
 
-`check` runs Biome, a strict TypeScript build, and an isolated packed-package check for ESM, declarations, and required documentation. There are no product behavior tests yet. The empty working package is in `packages/kind-ui`; build output stays in its ignored `dist/` directory. Root and package manifests remain `private: true` and unpublished. The working package name does not imply npm ownership or an installation route.
+`check` runs Biome, a strict TypeScript build, and an isolated packed-package check for ESM, declarations, and required documentation. It also builds and browser-tests the chart experiment. Run `npm run dev:chart` to inspect it locally. The empty working package is in `packages/kind-ui`; build output stays in its ignored `dist/` directory. Root and package manifests remain `private: true` and unpublished. The working package name does not imply npm ownership or an installation route.
 
 ## Direction
 

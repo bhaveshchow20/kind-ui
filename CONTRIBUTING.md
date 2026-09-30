@@ -5,7 +5,7 @@ Kind UI is pre-release and unpublished. The repository uses an open-source contr
 ## Start here
 
 1. Read [README.md](README.md), [AGENTS.md](AGENTS.md), and the [development direction](docs/development.md).
-2. Use Node 22.12+ (Node 24 recommended) and npm 11.9, then run `npm ci`.
+2. Use Node 22.12+ (Node 24 recommended) and npm 11.9, then run `npm ci` and `npm exec playwright install -- --with-deps chromium` for browser checks.
 3. Create one focused branch for the agreed scope. Discuss a new feature, public API, dependency, or cross-package abstraction before implementing it.
 4. Run `npm run format` and `npm run check`. Report exactly what was checked and anything blocked.
 5. Open a draft PR describing the purpose, changed behavior/API, verification, and known limits. For stacked work, name and link its immediate base PR.
@@ -17,9 +17,11 @@ Kind UI is pre-release and unpublished. The repository uses an open-source contr
 - `npm run lint`: check formatting and lint rules
 - `npm run format`: apply formatting and safe lint fixes
 - `npm run check:package`: build, validate package-gate fixtures, then verify a tarball in an isolated offline consumer
-- `npm run check`: lint, strict build, and the packed-package gate
+- `npm run dev:chart`: run the isolated chart experiment
+- `npm run check:chart`: typecheck/build the fixture and run its browser tests
+- `npm run check`: lint, strict build, packed-package gate, and chart fixture checks
 
-There are no product behavior tests yet. The package gate checks required packed files, ESM import, and strict NodeNext/Bundler declaration resolution without workspace links. Its small native Node tests prove missing outputs/docs and unwanted files fail validation. Each implementation PR must add its focused tests and include them in `check`. Package functionality must also be checked through packed public exports, rather than only workspace source imports.
+The library has no product behavior yet; the isolated chart fixture has focused interaction tests. The package gate checks required packed files, ESM import, and strict NodeNext/Bundler declaration resolution without workspace links. Its small native Node tests prove missing outputs/docs and unwanted files fail validation. Each implementation PR must add its focused tests and include them in `check`. Package functionality must also be checked through packed public exports, rather than only workspace source imports.
 
 ## Review expectations
 

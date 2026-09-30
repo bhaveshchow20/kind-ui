@@ -4,7 +4,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing this repository. Its wor
 
 ## Current state and architecture guidance
 
-This is setup-only: `packages/kind-ui/src/index.ts` is empty. `docs/development.md` records direction and unresolved decisions. No renderer, framework adapter, domain package split, recipe format, or CLI has been selected.
+The library is still unimplemented: `packages/kind-ui/src/index.ts` is empty. `docs/development.md` records direction and unresolved decisions. `experiments/chart` is an isolated React consumer fixture, not a selected library architecture or exported API. No library renderer, framework adapter, domain package split, recipe format, or CLI has been selected.
 
 Build on established UI libraries. Check existing capabilities before adding primitives or infrastructure. Prefer familiar composition or a narrow integration. Preserve consumer control of styling, markup, state, refs, handlers, and animation where the API requires it. A new abstraction needs a concrete unmet need, alternatives considered, and a clear benefit beyond integration cost.
 
@@ -25,9 +25,10 @@ Use Node 22.12+ and npm 11.9. Use npm and the checked-in lockfile; do not add a 
 - Lint: `npm run lint`
 - Build/typecheck: `npm run typecheck`
 - Packed-package contract: `npm run check:package`
+- Chart fixture: `npm run dev:chart`; browser checks: `npm run check:chart` (install Chromium with `npm exec playwright install -- --with-deps chromium`)
 - Required aggregate check: `npm run check`
 
-There are no product behavior tests yet. The package gate tests its own failure cases and checks an actual tarball in an isolated consumer; keep it in CI. When implementing behavior, introduce focused regression tests and package-consumer checks in the same PR, using exported APIs wherever practical. Test intentional error paths as well as successful input. Check the touched package and affected consumers, then run the full available aggregate check before proposing a change. Distinguish passed, failed, and unrun checks.
+The chart experiment has focused browser tests; the library still has no product behavior. The package gate tests its own failure cases and checks an actual tarball in an isolated consumer; keep it in CI. When implementing behavior, introduce focused regression tests and package-consumer checks in the same PR, using exported APIs wherever practical. Test intentional error paths as well as successful input. Check the touched package and affected consumers, then run the full available aggregate check before proposing a change. Distinguish passed, failed, and unrun checks.
 
 Keep one purpose per PR. For a stack, target the immediately preceding branch and describe only that incremental diff. Do not mix cleanup, generated output, unrelated refactors, or future features into a setup change.
 
