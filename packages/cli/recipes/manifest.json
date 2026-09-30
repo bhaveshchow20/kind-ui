@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "recipes": [
+    {
+      "id": "charts/line",
+      "version": "0.0.0",
+      "framework": "react",
+      "runtime": {
+        "package": "@kind-ui/charts",
+        "version": "0.0.0",
+        "react": "^19.0.0"
+      },
+      "file": {
+        "source": "line-chart-demo.tsx",
+        "target": "charts/line-chart-demo.tsx",
+        "sha256": "9c81480f53de514a41306e27a100ace2e9834b4ca36b8bd4bc9141ec41764d6a"
+      }
+    }
+  ]
+}

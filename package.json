@@ -1,0 +1,43 @@
+{
+  "name": "kind-ui-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "packageManager": "npm@11.9.0",
+  "scripts": {
+    "build:packages": "tsc -b packages/charts-core packages/charts packages/cli --force",
+    "build": "npm run build:packages && npm run build --workspace @kind-ui/example-charts",
+    "dev": "npm run build:packages && npm run dev --workspace @kind-ui/example-charts",
+    "typecheck": "npm run build:packages && tsc --noEmit -p tsconfig.test.json && npm run typecheck --workspace @kind-ui/example-charts",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "npm run build:packages && vitest run",
+    "test:watch": "npm run build:packages && vitest",
+    "package:check": "node scripts/check-packages.mjs",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build && npm run package:check",
+    "dev:packages": "tsc -b packages/charts-core packages/charts packages/cli --watch"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@testing-library/react": "16.3.0",
+    "@testing-library/user-event": "14.6.1",
+    "@types/d3-scale": "4.0.9",
+    "@types/d3-shape": "3.1.7",
+    "@types/node": "24.10.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "jsdom": "27.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vitest": "4.1.11"
+  }
+}

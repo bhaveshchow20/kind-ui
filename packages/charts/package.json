@@ -1,0 +1,31 @@
+{
+  "name": "@kind-ui/charts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "React chart views and semantic model exports for the private Kind UI foundation",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "dependencies": {
+    "@kind-ui/charts-core": "0.0.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}
