@@ -6,7 +6,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing this repository. Its wor
 
 This is setup-only: `packages/kind-ui/src/index.ts` is empty. `docs/development.md` records direction and unresolved decisions. No renderer, framework adapter, domain package split, recipe format, or CLI has been selected.
 
-Build on established UI libraries. Check capabilities in the existing ecosystem, including shadcn, Radix, and Motion, before adding primitives or infrastructure. Prefer familiar composition or a narrow integration over a competing clone. Preserve consumer control of styling, markup, state, refs, handlers, and animation where the API requires it. A new abstraction needs a concrete unmet need, alternatives considered, and a clear benefit beyond integration cost.
+Build on established UI libraries. Check existing capabilities before adding primitives or infrastructure. Prefer familiar composition or a narrow integration. Preserve consumer control of styling, markup, state, refs, handlers, and animation where the API requires it. A new abstraction needs a concrete unmet need, alternatives considered, and a clear benefit beyond integration cost.
 
 Do not install those libraries or implement a future feature just because they appear in this guidance. The current task's scope determines the work. Keep the workspace small; add package boundaries only when independently useful responsibilities are proven, rather than inventing a universal core or custom rendering/animation engine.
 
