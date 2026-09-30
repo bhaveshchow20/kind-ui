@@ -85,11 +85,11 @@ const buttonStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   gap: 6,
-  border: "1px solid currentColor",
-  borderRadius: 6,
+  border: "1px solid var(--border, currentColor)",
+  borderRadius: "var(--radius, 6px)",
   background: "var(--chart-legend-background, transparent)",
   color: "inherit",
-  padding: "6px 10px",
+  padding: "8px 12px",
   font: "inherit",
   cursor: "pointer",
 };
@@ -177,10 +177,10 @@ export function ChartTooltipContent({
       {...props}
       style={{
         padding: "10px 12px",
-        background: "Canvas",
-        color: "CanvasText",
-        border: "1px solid GrayText",
-        borderRadius: 8,
+        background: "var(--popover, Canvas)",
+        color: "var(--popover-foreground, CanvasText)",
+        border: "1px solid var(--border, GrayText)",
+        borderRadius: "var(--radius, 8px)",
         fontSize: 13,
         ...style,
       }}

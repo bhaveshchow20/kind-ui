@@ -119,3 +119,30 @@ test("compact example fits mobile and retains the data alternative", async ({ pa
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({ path: info.outputPath("chart-mobile.png"), fullPage: true });
 });
+
+test("host theme tokens reach marks, legend and tooltip without changing selection", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.documentElement.style.setProperty("--chart-1", "rgb(0, 128, 128)");
+    document.documentElement.style.setProperty("--popover", "rgb(255, 240, 200)");
+    document.documentElement.style.setProperty("--popover-foreground", "rgb(20, 30, 40)");
+  });
+  const chart = page.getByRole("application", { name: "Task outcomes by day" });
+  await expect(chart.locator('path[stroke="var(--color-completed)"]').first()).toHaveCSS(
+    "stroke",
+    "rgb(0, 128, 128)",
+  );
+  const completed = page.getByRole("button", { name: "Completed", exact: true });
+  await expect(completed.locator('[aria-hidden="true"]')).toHaveCSS(
+    "background-color",
+    "rgb(0, 128, 128)",
+  );
+  await expect(completed).toHaveAttribute("aria-pressed", "true");
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  const tooltip = page.getByRole("status");
+  await expect(tooltip).toHaveCSS("background-color", "rgb(255, 240, 200)");
+  await expect(tooltip).toHaveCSS("color", "rgb(20, 30, 40)");
+});

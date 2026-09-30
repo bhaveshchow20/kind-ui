@@ -1,84 +1,44 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
 :root {
-  font-family: system-ui, sans-serif;
-  color: #24334d;
-  background: #f5f7fa;
+  --background: oklch(0.98 0.004 264);
+  --foreground: oklch(0.24 0.034 262);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.5 0.18 266);
+  --muted: oklch(0.95 0.014 255);
+  --accent: oklch(0.94 0.025 264);
+  --muted-foreground: oklch(0.46 0.035 258);
+  --border: oklch(0.88 0.019 260);
+  --ring: oklch(0.53 0.18 266);
+  --chart-1: oklch(0.5 0.18 266);
+  --chart-2: oklch(0.52 0.14 48);
+  --radius: 0.625rem;
 }
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-}
-main {
-  max-width: 780px;
-  margin: 48px auto;
-  padding: 28px;
-  border: 1px solid #d9e0ea;
-  border-radius: 12px;
-  background: white;
-}
-h1 {
-  font-size: 24px;
-  margin: 0 0 18px;
-}
-.data-control,
-.hint {
-  font-size: 12px;
-  color: #52637c;
-}
-.data-control {
-  display: block;
-  margin-bottom: 16px;
-}
-.chart {
-  font-size: 12px;
-}
-button[aria-pressed="false"] {
-  --chart-legend-background: #f1f4f8;
-}
-:focus-visible {
-  outline: 3px solid #3659b8;
-  outline-offset: 3px;
-}
-.empty {
-  display: grid;
-  place-items: center;
-  height: 240px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-th,
-td {
-  border-bottom: 1px solid #e5eaf1;
-  padding: 12px 4px;
-  text-align: right;
-}
-th:first-child {
-  text-align: left;
-}
-small {
-  display: block;
-  font-weight: 400;
-  margin-top: 4px;
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-@media (max-width: 600px) {
-  main {
-    margin: 16px 12px;
-    padding: 16px;
+
+@layer base {
+  body {
+    @apply bg-background font-sans text-foreground;
   }
 }

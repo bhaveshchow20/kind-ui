@@ -44,6 +44,8 @@ Provide a named chart, keyboard instructions and a semantic data alternative app
 
 Consumer checks use `strict: true` with `skipLibCheck: false` in NodeNext and Bundler modes. Adding `exactOptionalPropertyTypes: true` with full dependency checking currently fails in upstream declarations, even without importing Kind UI; that stricter combination is not claimed yet.
 
+The usage example styles its layout with Tailwind CSS 4 utilities and semantic color tokens. Component defaults use host `border`, `radius`, `popover` and `popover-foreground` variables when present, with native CSS fallbacks. Tailwind is development tooling for the example, not a runtime dependency or required styling system for package consumers.
+
 ## Develop
 
 At the repository root: `npm ci`, then `npm exec playwright install -- --with-deps chromium` (Linux dependencies may need administrator permission). Run `npm run dev:chart` for the example, or `npm run check` for library, packed-consumer, type and browser checks.
