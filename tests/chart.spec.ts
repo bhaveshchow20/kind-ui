@@ -219,6 +219,9 @@ for (const palette of ["Monochrome", "Color"] as const) {
       exact: true,
     });
     await other.focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    await expect(other).toBeFocused();
     await expect(other).toHaveCSS("outline-style", "solid");
     await page.keyboard.press("Space");
     await expect(other).toHaveAttribute("aria-pressed", "true");
