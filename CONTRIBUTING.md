@@ -16,9 +16,10 @@ Kind UI is currently private and pre-release. The repository is being prepared f
 - `npm run typecheck`: run the strict TypeScript build
 - `npm run lint`: check formatting and lint rules
 - `npm run format`: apply formatting and safe lint fixes
-- `npm run check`: lint and typecheck/build
+- `npm run check:package`: build, validate package-gate fixtures, then verify a tarball in an isolated offline consumer
+- `npm run check`: lint, strict build, and the packed-package gate
 
-There is deliberately no test command yet: this change contains no product behavior. Each implementation PR must add its focused tests and include them in `check`. Package functionality must also be checked through packed public exports, rather than only workspace source imports.
+There are no product behavior tests yet. The package gate checks required packed files, ESM import, and strict NodeNext/Bundler declaration resolution without workspace links. Its small native Node tests prove missing outputs/docs and unwanted files fail validation. Each implementation PR must add its focused tests and include them in `check`. Package functionality must also be checked through packed public exports, rather than only workspace source imports.
 
 ## Review expectations
 

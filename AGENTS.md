@@ -24,9 +24,10 @@ Use Node 22.12+ and npm 11.9. Use npm and the checked-in lockfile; do not add a 
 - Format: `npm run format`
 - Lint: `npm run lint`
 - Build/typecheck: `npm run typecheck`
+- Packed-package contract: `npm run check:package`
 - Required aggregate check: `npm run check`
 
-There are no behavior tests yet. When implementing behavior, introduce focused regression tests and package-consumer checks in the same PR, using exported APIs wherever practical. Test intentional error paths as well as successful input. Check the touched package and affected consumers, then run the full available aggregate check before proposing a change. Distinguish passed, failed, and unrun checks.
+There are no product behavior tests yet. The package gate tests its own failure cases and checks an actual tarball in an isolated consumer; keep it in CI. When implementing behavior, introduce focused regression tests and package-consumer checks in the same PR, using exported APIs wherever practical. Test intentional error paths as well as successful input. Check the touched package and affected consumers, then run the full available aggregate check before proposing a change. Distinguish passed, failed, and unrun checks.
 
 Keep one purpose per PR. For a stack, target the immediately preceding branch and describe only that incremental diff. Do not mix cleanup, generated output, unrelated refactors, or future features into a setup change.
 
