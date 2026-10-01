@@ -12,9 +12,11 @@ export type BarMaterial = LineMaterial;
 export function BarMaterialFilter({
   material,
   id,
+  horizontal,
 }: {
   material: Exclude<BarMaterial, "plain">;
   id: string;
+  horizontal: boolean;
 }) {
   if (material !== "glow")
     return (
@@ -28,7 +30,7 @@ export function BarMaterialFilter({
         height={2}
         colorInterpolationFilters="sRGB"
       >
-        {material === "clay" ? <BarClay /> : <BarPaper />}
+        {material === "clay" ? <BarClay horizontal={horizontal} /> : <BarPaper />}
       </filter>
     );
   // The shared pure helper returns a native filter. Only bar coordinate units change;
