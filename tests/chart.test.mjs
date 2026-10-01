@@ -14,6 +14,10 @@ test("direct and namespace imports expose the same public components", () => {
     "Legend",
     "LineChart",
     "LineSeries",
+    "RadarChart",
+    "RadarSeries",
+    "RadialBarChart",
+    "RadialBarSeries",
     "Root",
     "Tooltip",
     "TooltipContent",
@@ -150,3 +154,16 @@ test("area composition requires Root and a chart interaction boundary", () => {
     /inside LineChart/,
   );
 });
+
+for (const [name, Component] of [
+  ["RadarSeries", Chart.RadarSeries],
+  ["RadialBarSeries", Chart.RadialBarSeries],
+]) {
+  test(`${name} rejects missing polar composition boundaries`, () => {
+    assert.throws(() => render(h(Component, { dataKey: "count" })), /inside Root/);
+    assert.throws(
+      () => render(h(Root, { config }, h(Component, { dataKey: "count" }))),
+      /inside LineChart/,
+    );
+  });
+}

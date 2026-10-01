@@ -230,3 +230,35 @@ Corner geometry remains native: use `radius={8}` for soft standalone bars. The e
 Each series owns a unique filter that native rectangles apply independently within bounded object-relative regions. Recharts plot/stack clipping and Kind reveal clipping remain in place, so halos at plot edges can be clipped. There is no displacement, animated noise or fabricated bar. Tiny bars show less relief and can clip the outer glow. Extreme stroke widths may need a custom filter with host bounds. Filters add raster work per rectangle; dense data can be more expensive than plain bars. The existing `/bars.html` recipes provide independent Material, Palette and Motion controls.
 
 Bar finish tokens are `--kind-ui-bar-paper-fiber` (white), `--kind-ui-bar-paper-grain` (0.14), `--kind-ui-bar-clay-light` (white), `--kind-ui-bar-clay-shade` (#17212b), `--kind-ui-bar-clay-highlight` (0.8), `--kind-ui-bar-clay-shadow` (0.55), `--kind-ui-bar-glow-light` (white), and `--kind-ui-bar-glow-opacity` (0.6). Opacity tokens accept numbers from 0 to 1. Clay/Paper lighting and ink are composited atop native paint, preserving translucent alpha. Native shapes retain engine zero-label and background filtering. Clay and Paper primitives are bar-local; Glow reuses the coordinated filled-surface helper. Line and area outputs remain unchanged. Validation covers Chromium; other browsers and print/export renderers remain unverified.
+
+## Radar and radial bars
+
+`RadarChart` / `RadarSeries` and `RadialBarChart` / `RadialBarSeries` are maintained public exports. Their generic chart `*Props<DataPoint>` and series `*Props<DataPoint, Value>` types retain native typed data keys. The charts accept their native polar chart props and SVG refs, including `layout="centric" | "radial"`, centers, radii, angles, synchronization and event handlers. The series accept native shapes, dots/active marks, Cells, backgrounds, labels, axis IDs, stack IDs, z-order and handlers. Recharts 3.10.1 exposes no series component ref; place refs on custom SVG marks. Recharts owns polar geometry and native category payloads.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import { PolarAngleAxis, PolarGrid, PolarRadiusAxis } from "recharts";
+import "@kind-ui/charts/styles.css";
+
+<Chart.Root config={{ score: { label: "Score", color: "#3161bd" } }}>
+  <Chart.RadarChart width={420} height={300} data={dimensions} animate={false}>
+    <PolarGrid />
+    <PolarAngleAxis dataKey="dimension" />
+    <PolarRadiusAxis domain={[0, 100]} />
+    <Chart.RadarSeries dataKey="score" fillOpacity={0.2} />
+    <Chart.Tooltip />
+  </Chart.RadarChart>
+</Chart.Root>
+```
+
+For radial progress, use `RadialBarChart` with a **numeric** `PolarAngleAxis` and an explicit domain such as `[0, 100]`, a categorical `PolarRadiusAxis dataKey="dimension"`, and `RadialBarSeries dataKey="score"`. Keep category ordering and any category filtering in your data. `Cell` styling and native category payloads remain intact. Kind's controlled `visibleSeries` and legend identify **series**, through string `dataKey` or explicit `seriesKey` for function/numeric keys. `hide={true}` additionally hides a series; `hide={false}` cannot override Root visibility. A controlled non-string key without `seriesKey` throws an actionable error. Explicit fill/stroke overrides Root color defaults.
+
+Both charts accept `animate={false | true | config}` using `RadarAnimation` / `RadialBarAnimation` (the existing `revealDurationMs`, `revealEasing`, `hoverTransition` contract). Motion fades each native series from 0 to 1 over 1000ms by default; it does not interpolate polar coordinates or category indices. This preserves quantitative geometry and consumer shapes. Shared tooltip motion and the default radar active marker use the existing hover transition. Native engine animation is disabled and `isAnimationActive` is excluded from series props. Animation callbacks/interpolation settings on native props remain available for compatibility but do not run while engine animation is disabled.
+
+Off/reduced-motion modes render full geometry immediately and stop in-flight opacity/hover movement. Pointer, focus and keyboard input finish entrance. Data/visibility/size changes, native polar chart geometry props, series axis/key/group props and child composition changes also finish entrance and clear stale pointer coordinates. Native labels/backgrounds/active marks can render through independent Recharts z-index portals and are not promised to fade. Series visibility changes snap in every mode; entrance does not replay after updates or interaction. Remount the chart to request a fresh entrance. A series mounted later may enter only while the chart's entrance remains uninterrupted. Custom tooltip content, active shapes, backgrounds and native data alternatives remain consumer-owned.
+
+The shared `Legend`, `Tooltip` and `TooltipContent` provide the same formatting, measured bounds and controlled visibility as Cartesian charts. Recharts 3.10.1 provides polar keyboard traversal with Left/Right, Enter toggling, and Escape dismissal. Give each chart an accessible name and provide a value table; native keyboard behavior is preserved rather than replaced. Empty and zero data retain native behavior.
+
+The `/polar.html` showcase uses public APIs for comparison, outline and range radar, grouped rings, stacked arcs and a half-circle gauge. It includes explicit domains, controlled legends, Motion/data/update controls and value tables. `tests/fixtures/polar` installs the actual tarball in an isolated consumer, checks strict NodeNext/Bundler declarations and production builds, and compares browser paths against native Recharts charts.
+
+First-party references: [Radar API](https://recharts.github.io/en-US/api/Radar/), [RadialBar API](https://recharts.github.io/en-US/api/RadialBar/), and the tested package's `types/polar` and `es6/polar` sources. No new dependencies, package boundary, publishing or material API accompanies these exports. The package remains private at `0.0.0`.

@@ -25,3 +25,5 @@ Build with established UI libraries, not against them. Prefer familiar compositi
 Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). See [development direction and release policy](docs/development.md), [security reporting](SECURITY.md), and our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Nothing is published or deployed. MIT © 2026 Bhavesh Chowdhury.
+
+Radar and radial core recipes: open `/polar.html` in the chart example. See [polar recipes](examples/chart/POLAR.md) and the [public component contract](packages/charts/README.md#radar-and-radial-bars).

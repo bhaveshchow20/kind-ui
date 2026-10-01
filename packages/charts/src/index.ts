@@ -17,6 +17,20 @@ export type { BarMaterial } from "./bar-material.js";
 export { BarSeries, type BarSeriesProps } from "./bar-series.js";
 export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";
+export {
+  type RadarAnimation,
+  RadarChart,
+  type RadarChartProps,
+  type RadialBarAnimation,
+  RadialBarChart,
+  type RadialBarChartProps,
+} from "./polar-chart.js";
+export {
+  RadarSeries,
+  type RadarSeriesProps,
+  RadialBarSeries,
+  type RadialBarSeriesProps,
+} from "./polar-series.js";
 export { Root, type RootProps } from "./root.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 export type { SeriesConfig } from "./types.js";
