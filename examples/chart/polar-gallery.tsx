@@ -112,12 +112,14 @@ export function PolarGalleryCard({
   animate,
   showText = true,
   tooltips = true,
+  categoryColors = colors,
 }: {
   kind: "radar" | "radial";
   data: readonly GalleryPoint[];
   animate: boolean | Chart.RadarAnimation;
   showText?: boolean;
   tooltips?: boolean;
+  categoryColors?: readonly string[];
 }) {
   const selectId = useId();
   const [radarVariant, setRadarVariant] = useState<RadarVariant>("default");
@@ -278,7 +280,10 @@ export function PolarGalleryCard({
               >
                 {!singleRing &&
                   rows.map((row, index) => (
-                    <Cell key={row.category} fill={colors[index % colors.length] ?? "#334e68"} />
+                    <Cell
+                      key={row.category}
+                      fill={categoryColors[index % categoryColors.length] ?? "var(--color-actual)"}
+                    />
                   ))}
                 <LabelList
                   fill="white"

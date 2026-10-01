@@ -157,6 +157,7 @@ export const FeatureChart = memo(function FeatureChart({
         {example.id === "gallery" ? (
           <PolarGalleryCard
             kind={family}
+            categoryColors={["var(--chart-1)"]}
             data={polar}
             animate={animate ? entrance : false}
             showText={labels}

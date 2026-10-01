@@ -81,7 +81,7 @@ export async function exampleCode(
             ],
           }),
     }));
-    return `${source}\n\nimport "@kind-ui/charts/styles.css";\nconst sampleData: ${example.id === "gallery" ? "GalleryPoint" : "PolarPoint"}[] = ${JSON.stringify(data, null, 2)};\nexport function GalleryExample() { return <div style={{ "--chart-1": "${color}", "--chart-2": "${secondary}" } as import("react").CSSProperties}>\n  <${example.id === "gallery" ? "PolarGalleryCard" : "PolarRecipeCard"} ${example.id === "gallery" ? `kind="${family}"` : `recipe="${example.title}"`} data={sampleData} animate={${animate ? "{ revealDurationMs: 450 }" : "false"}} showText tooltips />\n</div>; }\n`;
+    return `${source}\n\nimport "@kind-ui/charts/styles.css";\nconst sampleData: ${example.id === "gallery" ? "GalleryPoint" : "PolarPoint"}[] = ${JSON.stringify(data, null, 2)};\nexport function GalleryExample() { return <div style={{ "--chart-1": "${color}", "--chart-2": "${secondary}" } as import("react").CSSProperties}>\n  <${example.id === "gallery" ? "PolarGalleryCard" : "PolarRecipeCard"} ${example.id === "gallery" ? `kind="${family}" categoryColors={["var(--chart-1)"]}` : `recipe="${example.title}"`} data={sampleData} animate={${animate ? "{ revealDurationMs: 450 }" : "false"}} showText tooltips />\n</div>; }\n`;
   }
   const source = (await sourceLoaders[family]()).default;
   const data = example.data.map((point) =>
