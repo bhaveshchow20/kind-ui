@@ -230,3 +230,33 @@ Corner geometry remains native: use `radius={8}` for soft standalone bars. The e
 Each series owns a unique filter that native rectangles apply independently within bounded object-relative regions. Recharts plot/stack clipping and Kind reveal clipping remain in place, so halos at plot edges can be clipped. There is no displacement, animated noise or fabricated bar. Tiny bars show less relief and can clip the outer glow. Extreme stroke widths may need a custom filter with host bounds. Filters add raster work per rectangle; dense data can be more expensive than plain bars. The existing `/bars.html` recipes provide independent Material, Palette and Motion controls.
 
 Bar finish tokens are `--kind-ui-bar-paper-fiber` (white), `--kind-ui-bar-paper-grain` (0.14), `--kind-ui-bar-clay-light` (white), `--kind-ui-bar-clay-shade` (#17212b), `--kind-ui-bar-clay-highlight` (0.8), `--kind-ui-bar-clay-shadow` (0.55), `--kind-ui-bar-glow-light` (white), and `--kind-ui-bar-glow-opacity` (0.6). Opacity tokens accept numbers from 0 to 1. Clay/Paper lighting and ink are composited atop native paint, preserving translucent alpha. Native shapes retain engine zero-label and background filtering. Clay and Paper primitives are bar-local; Glow reuses the coordinated filled-surface helper. Line and area outputs remain unchanged. Validation covers Chromium; other browsers and print/export renderers remain unverified.
+
+## Pie and donut
+
+`PieChart`, `PieSeries`, `PieChartProps`, `PieSeriesProps` and `PieAnimation` are maintained public exports. A donut is a `PieSeries` with native `innerRadius`; it uses the same component and animation contract. No additional dependency or material API is introduced.
+
+```tsx
+const itemKey: NonNullable<Chart.TooltipProps["itemKey"]> = entry => String(entry.payload.id);
+<Chart.Root config={categoryConfig} visibleSeries={visibleIds} onVisibleSeriesChange={setVisibleIds}>
+  <Chart.PieChart width={400} height={300} animate={false}>
+    <Chart.PieSeries data={rows.filter(row => visibleIds.includes(row.id))}
+      dataKey="value" nameKey="id" innerRadius="50%" outerRadius="80%">
+      {rows.filter(row => visibleIds.includes(row.id)).map(row =>
+        <Cell key={row.id} fill={`var(--color-${row.id})`} />)}
+      <Label position="center" value="Capacity" />
+    </Chart.PieSeries>
+    <Chart.Tooltip itemKey={itemKey} />
+  </Chart.PieChart>
+  <Chart.Legend />
+</Chart.Root>
+```
+
+Import `Cell` and `Label` from Recharts. Metadata keys identify **categories**, independently of the shared numeric `dataKey`. `TooltipProps.itemKey` and `TooltipContentProps.itemKey` optionally resolve the native payload entry to the containing Root's metadata/visibility key. The default remains registered series ID, then `dataKey`, then `name`. The bounded Tooltip applies the resolver before visibility filtering and passes it to default content. Custom content receives the filtered native payload and retains its own rendering and formatting; pass the same resolver when composing `TooltipContent` yourself.
+
+Category visibility and Cells are consumer-owned: filter data and generate Cells from that same array so index alignment survives filtering and reordering. Root/Legend never change polar data or silently recompute shares. `PieSeries.hide` hides the whole native Pie independently of category state. Multiple native Pies, native Tooltip selection/`defaultIndex`/`trigger`, `nameKey`, function/numeric `dataKey`, numeric/percentage/function radii, angles, padding, corner radius, labels, custom shapes, Cells, SVG attributes and sector handlers remain available. Chart SVG refs retain the native ref contract. Recharts does not expose a Pie component ref.
+
+`animate={false | true | config}` uses the established duration/easing/tooltip hover transition shape. Recharts animation is disabled in `PieSeries`; Motion grows each default sector from its own start angle within its native angular footprint on entrance. Labels remain at their final native positions. Custom `shape`, `activeShape` and `inactiveShape` retain ownership; Kind does not animate those custom marks. Motion stops and snaps to final geometry on pointer/keyboard interaction, data/visibility/geometry changes, resize or disabling animation. Reduced motion renders final geometry and bounded tooltip placement without motion. Entrance does not replay after an interruption; remount the chart for an intentional new entrance.
+
+Use nonnegative, finite values for meaningful proportional data. Kind preserves native values rather than inventing allocations: empty/all-zero inputs paint no allocation, and zero/missing categories remain distinguishable in the consumer-owned table. A zero category has no visible angular area; expose it in the legend/data alternative rather than imposing a minimum fake share. Provide readable labels and a table/list; SVG plus tooltip alone is not a complete data alternative. [Recharts Pie API](https://recharts.github.io/en-US/api/Pie/) and the pinned `recharts@3.10.1` source (`polar/Pie.js`, `shape/Sector.d.ts`) informed the payload, Cell and polar geometry integration. Motion cancellation uses [animation playback controls](https://motion.dev/docs/animate).
+
+`examples/chart/pies.html` contains two bounded recipes: a pie allocation and a donut capacity summary. Both consume these public APIs and share existing tooltip/legend/formatting/accessibility behavior. The isolated tarball host in `tests/fixtures/pie` is separate from the recipes and is checked with strict NodeNext/Bundler declarations, a production build and browser contracts.
