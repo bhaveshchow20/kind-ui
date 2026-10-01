@@ -61,17 +61,21 @@ export function ScatterTooltipContent<Row = unknown>({
         : record !== null && typeof record === "object" && Object.hasOwn(record, zDimension.dataKey)
           ? Reflect.get(record, zDimension.dataKey)
           : undefined;
-    const { value: _nativeValue, ...identity } = first;
-    entries = [
-      ...entries,
-      {
-        ...identity,
-        dataKey: zDimension.dataKey,
-        name: zDimension.name ?? "Size",
-        unit: zDimension.unit ?? "",
-        ...(typeof raw === "number" && Number.isFinite(raw) ? { value: raw } : {}),
-      },
-    ];
+    // Native Scatter omits only zero/missing Z. Nonzero entries survive filterNull,
+    // and Recharts wraps function keys, so reference equality cannot identify them.
+    if (raw === 0 || raw == null) {
+      const { value: _nativeValue, ...identity } = first;
+      entries = [
+        ...entries,
+        {
+          ...identity,
+          dataKey: zDimension.dataKey,
+          name: zDimension.name ?? "Size",
+          unit: zDimension.unit ?? "",
+          ...(typeof raw === "number" && Number.isFinite(raw) ? { value: raw } : {}),
+        },
+      ];
+    }
   }
 
   if (!entries.some((entry) => entry.value != null)) return null;

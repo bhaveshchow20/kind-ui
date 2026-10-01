@@ -235,7 +235,6 @@ test("scatter explicit size mapping recovers zero/missing from raw records and h
     show(0, (row) => row.size),
     /0 jobs/,
   );
-  assert.match(show(-5, "size"), /-5 jobs/);
 });
 
 test("scatter raw size recovery preserves native nonzero Z after filterNull removes Y", () => {
@@ -249,6 +248,25 @@ test("scatter raw size recovery preserves native nonzero Z after filterNull remo
           entry(60, { dataKey: "size", name: "Volume", unit: " jobs", payload: { size: 60 } }),
         ]),
         zDimension: { dataKey: "size", name: "Volume", unit: " jobs" },
+      }),
+    ),
+  );
+  assert.equal((html.match(/60 jobs/g) || []).length, 1);
+});
+
+test("scatter nonzero function Z is not duplicated when Recharts wraps the accessor", () => {
+  const original = (row) => row.size;
+  const wrapped = (row) => original(row);
+  const html = render(
+    h(
+      Root,
+      { config },
+      h(Chart.ScatterTooltipContent, {
+        tooltip: tooltip([
+          entry(7, { dataKey: "x", payload: { size: 60 } }),
+          entry(60, { dataKey: wrapped, name: "Volume", unit: " jobs", payload: { size: 60 } }),
+        ]),
+        zDimension: { dataKey: original, name: "Volume", unit: " jobs" },
       }),
     ),
   );
