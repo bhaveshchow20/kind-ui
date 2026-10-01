@@ -1,7 +1,9 @@
 import * as Chart from "@kind-ui/charts";
 import { useState } from "react";
 import {
+  Label,
   LabelList,
+  type LabelProps,
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
@@ -32,6 +34,23 @@ const descriptions: Record<PolarRecipe, string> = {
   Stacked: "Stacked arcs share a fixed 0–200 angle scale for additive quantities.",
   Gauge: "A half-circle progress meter keeps its numeric 0–100 domain explicit.",
 };
+function GaugeValue({ viewBox, value }: LabelProps) {
+  if (!viewBox || !("cx" in viewBox) || value == null) return null;
+  return (
+    <text
+      x={viewBox.cx}
+      y={viewBox.cy - 28}
+      textAnchor="middle"
+      dominantBaseline="central"
+      data-gauge-value
+      data-cx={viewBox.cx}
+      data-cy={viewBox.cy}
+      data-inner-radius={viewBox.innerRadius}
+    >
+      {value}
+    </text>
+  );
+}
 export function PolarRecipeCard({
   recipe,
   data,
@@ -142,20 +161,29 @@ export function PolarRecipeCard({
                 tick={false}
                 axisLine={false}
                 tickLine={false}
-              />
+              >
+                {gauge && showText && visible.includes("actual") && rows[0] && (
+                  <Label value={rows[0].actual} content={GaugeValue} />
+                )}
+              </PolarRadiusAxis>
               <Chart.RadialBarSeries
                 dataKey="actual"
                 background
                 cornerRadius={recipe === "Stacked" ? 0 : 5}
                 {...(recipe === "Stacked" ? { stackId: "scores" } : {})}
               >
-                <LabelList
-                  fill="white"
-                  dataKey={gauge ? "actual" : "category"}
-                  content={
-                    <Chart.RadialBarLabel show={showText} fontSize={recipe === "Rings" ? 10 : 11} />
-                  }
-                />
+                {!gauge && (
+                  <LabelList
+                    fill="white"
+                    dataKey="category"
+                    content={
+                      <Chart.RadialBarLabel
+                        show={showText}
+                        fontSize={recipe === "Rings" ? 10 : 11}
+                      />
+                    }
+                  />
+                )}
               </Chart.RadialBarSeries>
               {!gauge && (
                 <Chart.RadialBarSeries

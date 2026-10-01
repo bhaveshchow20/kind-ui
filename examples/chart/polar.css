@@ -46,7 +46,7 @@
   min-height: 44px;
   line-height: 1.5;
 }
-.polar-card svg text:not([data-kind-ui="radial-label"]) {
+.polar-card svg text:not([data-kind-ui="radial-label"]):not([data-gauge-value]) {
   fill: var(--muted-foreground);
   font-size: 11px;
 }
@@ -87,4 +87,11 @@
   min-height: 0;
   font-size: 12px;
   margin-top: 14px;
+}
+
+.polar-card svg [data-gauge-value] {
+  fill: var(--foreground);
+  font-size: 42px;
+  font-weight: 650;
+  letter-spacing: -0.04em;
 }

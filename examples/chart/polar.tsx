@@ -54,7 +54,7 @@ function Showcase() {
             checked={showText}
             onChange={(event) => setShowText(event.target.checked)}
           />{" "}
-          Ring text
+          Chart text
         </label>
         <label>
           <input

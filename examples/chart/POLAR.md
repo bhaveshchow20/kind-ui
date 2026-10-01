@@ -4,7 +4,7 @@ Open `/polar.html` after `npm run dev:chart`.
 
 The six recipes and two gallery selectors in `polar-recipes.tsx` consume only `@kind-ui/charts` and public Recharts composition. Comparison, outline and range radar use a categorical angle axis and numeric radius axis. Grouped rings, stacked arcs and the gauge use a numeric angle axis with an explicit domain and a categorical radius axis. Stacked values use a shared stackId; the half-circle gauge shows one category with a 0–100 domain.
 
-The selectors demonstrate all twelve radar and six radial gallery variations; see [the source audit](./POLAR-GALLERY.md). Ring text follows each native arc inside its band and can be hidden independently from tooltips. Center summaries have a separate control. Short or thin arcs omit text rather than overflow.
+The selectors demonstrate all twelve radar and six radial gallery variations; see [the source audit](./POLAR-GALLERY.md). Chart text controls the large native center Label in the gauge whitespace and the curved labels in other radial charts. Ring text follows each native arc inside its band and can be hidden independently from tooltips. Center summaries have a separate control. Short or thin arcs omit text rather than overflow.
 
 Native Left/Right keys traverse categories; Enter toggles the current tooltip, including a one-category chart after a gallery mode change.
 
