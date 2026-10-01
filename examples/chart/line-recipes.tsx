@@ -100,7 +100,9 @@ function SingleSeriesLine({
             dataKey="value"
             type={type}
             stroke="var(--color-value)"
-            strokeWidth={material === "clay" ? 6 : material === "paper" ? 2.5 : 2}
+            strokeWidth={
+              material === "clay" ? 6 : material === "paper" ? 2.5 : material === "glow" ? 3 : 2
+            }
             material={material}
             dot={dot}
             connectNulls={false}
@@ -196,7 +198,9 @@ export function TargetLine({
             dataKey="value"
             type="linear"
             stroke="var(--color-value)"
-            strokeWidth={material === "clay" ? 6 : material === "paper" ? 2.5 : 2}
+            strokeWidth={
+              material === "clay" ? 6 : material === "paper" ? 2.5 : material === "glow" ? 3 : 2
+            }
             material={material}
             dot={solidDot}
             connectNulls={false}
@@ -271,7 +275,9 @@ export function ComparisonLine({
               dataKey="current"
               type="linear"
               stroke="var(--color-current)"
-              strokeWidth={material === "clay" ? 6 : material === "paper" ? 2.5 : 2}
+              strokeWidth={
+                material === "clay" ? 6 : material === "paper" ? 2.5 : material === "glow" ? 3 : 2
+              }
               material={material}
               dot={{
                 r: 3.5,
@@ -286,7 +292,9 @@ export function ComparisonLine({
               type="linear"
               stroke="var(--color-previous)"
               strokeDasharray="5 4"
-              strokeWidth={material === "clay" ? 6 : material === "paper" ? 2.5 : 2}
+              strokeWidth={
+                material === "clay" ? 6 : material === "paper" ? 2.5 : material === "glow" ? 3 : 2
+              }
               material={material}
               dot={{ r: 3.5, fill: "var(--card)", strokeWidth: 2, strokeDasharray: "none" }}
               connectNulls={false}

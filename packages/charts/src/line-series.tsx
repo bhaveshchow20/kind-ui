@@ -54,7 +54,7 @@ export function LineSeries({
                 material={material}
                 filterId={`${generatedId}-material`}
                 materialWidth={
-                  props.strokeWidth ?? (material === "clay" ? 6 : material === "paper" ? 2.5 : 2)
+                  props.strokeWidth ?? (material === "clay" ? 6 : material === "paper" ? 2.5 : 3)
                 }
               />
             ),

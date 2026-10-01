@@ -74,13 +74,23 @@ export function MaterialCurve({
             </>
           ) : material === "glow" ? (
             <>
-              <feGaussianBlur in="SourceGraphic" stdDeviation={2} result="halo" />
-              <feComponentTransfer in="halo" result="softHalo">
-                <feFuncA type="linear" slope="var(--kind-ui-line-glow-opacity, 0.35)" />
-              </feComponentTransfer>
+              <feGaussianBlur in="SourceAlpha" stdDeviation={2} result="halo" />
+              <feGaussianBlur in="SourceAlpha" stdDeviation={0.65} result="nearHalo" />
+              <feFlood
+                floodColor={props.stroke ?? "currentColor"}
+                floodOpacity="var(--kind-ui-line-glow-opacity, 0.5)"
+                result="haloTint"
+              />
+              <feComposite in="haloTint" in2="halo" operator="in" result="softHalo" />
+              <feComposite in="haloTint" in2="nearHalo" operator="in" result="closeHalo" />
+              <feMorphology in="SourceAlpha" operator="erode" radius={0.55} result="core" />
+              <feFlood floodColor="var(--kind-ui-line-glow-light, #fff)" floodOpacity={0.5} />
+              <feComposite in2="core" operator="in" result="lightCore" />
               <feMerge>
                 <feMergeNode in="softHalo" />
+                <feMergeNode in="closeHalo" />
                 <feMergeNode in="SourceGraphic" />
+                <feMergeNode in="lightCore" />
               </feMerge>
             </>
           ) : (

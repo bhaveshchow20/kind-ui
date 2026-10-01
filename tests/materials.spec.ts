@@ -44,6 +44,17 @@ for (const mode of ["static", "motion"] as const) {
     const clay = await page.getByRole("application", { name: "clay chart" }).screenshot();
     expect(paper.equals(before)).toBe(false);
     expect(clay.equals(before)).toBe(false);
+    const glowChart = page.getByRole("application", { name: "glow chart" });
+    const glow = await glowChart.screenshot();
+    expect(glow.equals(before)).toBe(false);
+    const glowRegion = page.getByRole("region", { name: "glow", exact: true });
+    await glowRegion.evaluate((node) =>
+      (node as HTMLElement).style.setProperty("--kind-ui-line-glow-opacity", "0"),
+    );
+    expect((await glowChart.screenshot()).equals(glow)).toBe(false);
+    await glowRegion.evaluate((node) =>
+      (node as HTMLElement).style.removeProperty("--kind-ui-line-glow-opacity"),
+    );
     await page
       .getByRole("region", { name: "paper", exact: true })
       .evaluate((node) =>
@@ -134,7 +145,7 @@ test("material paint remains static when Motion is off or reduced", async ({ pag
   await page.screenshot({ path: info.outputPath("motion-off.png") });
   await page.getByLabel("Animate", { exact: true }).check();
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(page.locator('[data-kind-ui="line-frame"][data-motion="off"]')).toHaveCount(3);
+  await expect(page.locator('[data-kind-ui="line-frame"][data-motion="off"]')).toHaveCount(4);
   await expect(page.locator('clipPath[id$="-reveal"]')).toHaveCount(0);
   await expect(page.locator("filter")).toHaveCount(6);
   await page.screenshot({ path: info.outputPath("motion-reduced.png") });

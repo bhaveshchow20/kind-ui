@@ -326,7 +326,7 @@ test("existing line recipes expose materials alongside palette, motion and visib
     ).toEqual(markerWidths);
     await expect(curves.first()).toHaveAttribute(
       "stroke-width",
-      material === "clay" ? "6" : material === "paper" ? "2.5" : "2",
+      material === "clay" ? "6" : material === "paper" ? "2.5" : "3",
     );
     await page.screenshot({
       path: info.outputPath(`recipes-${material}-mono-normal.png`),
