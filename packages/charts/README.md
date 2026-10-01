@@ -180,7 +180,7 @@ Implementation references: [Recharts AreaChart](https://recharts.github.io/en-US
 
 ### Area materials
 
-`AreaSeries.material` accepts `"plain"` (default), `"paper"`, `"clay"`, and `"glow"`, independently of color and `AreaChart.animate`. `AreaMaterial` exports that union. Paper adds fibers, Clay adds soft inset edge lighting, and Glow adds a colored halo with a light rim. The native Recharts area shape still owns interpolation, gaps, stacked/range baselines, stroke and fill paths. No displacement changes data geometry.
+`AreaSeries.material` accepts `"plain"` (default), `"paper"`, `"clay"`, and `"glow"`, independently of color and `AreaChart.animate`. `AreaMaterial` exports that union. Paper adds fibers, Clay adds broad, rounded-looking inset relief with directional highlights and soft opposing shadows, and Glow adds a colored halo with a light rim. The native Recharts area shape still owns interpolation, gaps, stacked/range baselines, stroke and fill paths. No displacement changes data geometry.
 
 ```tsx
 <Chart.AreaChart data={data} animate={false}>
@@ -188,4 +188,4 @@ Implementation references: [Recharts AreaChart](https://recharts.github.io/en-US
 </Chart.AreaChart>
 ```
 
-Explicit `shape` or `filter` takes precedence over the material; consumer gradients, fill opacity, stroke widths and handlers remain intact. Low fill opacity also softens the finish. Filter IDs are unique per mounted series, independent of consumer IDs. Area filters use geometry bounds including baselines and remain inside the engine/chart clipping and Motion reveal. Materials are static SVG filters and add no animation. Use `--kind-ui-area-paper-fiber`, `--kind-ui-area-paper-grain`, `--kind-ui-area-clay-light`, `--kind-ui-area-clay-shade`, `--kind-ui-area-glow-light`, and `--kind-ui-area-glow-opacity` on the chart root to tune the finish. No new dependencies or release/version change; the package remains private at `0.0.0`.
+Explicit `shape` or `filter` takes precedence over the material; consumer gradients, fill opacity, stroke widths and handlers remain intact. Low fill opacity also softens the finish. Filter IDs are unique per mounted series, independent of consumer IDs. Area filters use geometry bounds including baselines and remain inside the engine/chart clipping and Motion reveal. Materials are static SVG filters and add no animation. Use `--kind-ui-area-paper-fiber`, `--kind-ui-area-paper-grain`, `--kind-ui-area-clay-light`, `--kind-ui-area-clay-shade`, `--kind-ui-area-clay-highlight` (default `0.9`), `--kind-ui-area-clay-shadow` (default `0.65`), `--kind-ui-area-glow-light`, and `--kind-ui-area-glow-opacity` on the chart root to tune the finish. No new dependencies or release/version change; the package remains private at `0.0.0`.

@@ -253,3 +253,42 @@ export function AreaHost({
 
 // @ts-expect-error Motion owns animation; the engine animation switch is excluded.
 void (<Static.AreaSeries dataKey="value" isAnimationActive={true} />);
+
+/** Isolated public paint consumer: transparent SVG makes output alpha testable. */
+export function AreaPaintHost() {
+  return (
+    <>
+      {(["solid", "gradient"] as const).map((paint) =>
+        (["plain", "clay"] as const).map((material) => (
+          <Static.Root
+            key={`${paint}-${material}`}
+            config={{ value: { label: "Value", color: "#db7093" } }}
+          >
+            <Static.AreaChart
+              width={160}
+              height={120}
+              data={[{ value: 9 }, { value: 9 }, { value: 9 }]}
+              aria-label={`${paint}-${material}`}
+              animate={false}
+            >
+              <defs>
+                <linearGradient id={`${paint}-${material}-paint`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#db7093" stopOpacity={0.8} />
+                  <stop offset="100%" stopColor="#db7093" stopOpacity={0.08} />
+                </linearGradient>
+              </defs>
+              <YAxis hide domain={[0, 10]} />
+              <Static.AreaSeries
+                dataKey="value"
+                material={material}
+                stroke="none"
+                fill={paint === "solid" ? "#db7093" : `url(#${paint}-${material}-paint)`}
+                fillOpacity={paint === "solid" ? 0.35 : 1}
+              />
+            </Static.AreaChart>
+          </Static.Root>
+        )),
+      )}
+    </>
+  );
+}
