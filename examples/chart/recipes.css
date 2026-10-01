@@ -298,3 +298,16 @@
   font-size: 12px;
   font-weight: 550;
 }
+.bar-recipes .recipe-chart [data-kind-ui="chart-legend"] {
+  gap: 12px;
+}
+.bar-recipes .recipe-chart [data-kind-ui="chart-legend-item"] > span {
+  gap: 4px;
+  padding: 2px 0;
+  font-size: 11px;
+  line-height: 16px;
+}
+.bar-recipes .recipe-chart [data-kind-ui="chart-legend"] [data-kind-ui="chart-indicator"] {
+  width: 8px;
+  height: 8px;
+}
