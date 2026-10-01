@@ -7,6 +7,8 @@ import { renderToStaticMarkup as render } from "react-dom/server";
 
 test("direct and namespace imports expose the same public components", () => {
   assert.deepEqual(Object.keys(Chart).sort(), [
+    "AreaChart",
+    "AreaSeries",
     "BarChart",
     "BarSeries",
     "Legend",
@@ -138,6 +140,13 @@ test("line components reject missing composition boundaries", () => {
   assert.throws(() => render(h(Chart.Tooltip)), /inside LineChart/);
   assert.throws(
     () => render(h(Root, { config }, h(Chart.LineSeries, { dataKey: "count" }))),
+    /inside LineChart/,
+  );
+});
+
+test("area composition requires Root and a chart interaction boundary", () => {
+  assert.throws(
+    () => render(h(Root, { config }, h(Chart.AreaSeries, { dataKey: "count" }))),
     /inside LineChart/,
   );
 });

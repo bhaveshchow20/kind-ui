@@ -97,6 +97,11 @@ for (const material of ["plain", "paper", "clay"] satisfies Chart.LineMaterial[]
 // @ts-expect-error Material is independent of palette and limited to the supported SVG options.
 void (<Chart.LineSeries dataKey="count" material="neon" />);
 
+for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.AreaMaterial[]) {
+  void (<Chart.AreaSeries dataKey="count" material={material} fill="url(#host-gradient)" />);
+}
+// @ts-expect-error Unsupported area finish.
+void (<Chart.AreaSeries dataKey="count" material="neon" />);
 for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.BarMaterial[]) {
   void (<Chart.BarSeries dataKey="count" material={material} radius={[3, 3, 0, 0]} />);
 }
