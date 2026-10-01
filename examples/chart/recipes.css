@@ -290,3 +290,13 @@
   font-size: 12px;
   font-weight: 550;
 }
+
+.recipe-plot {
+  position: relative;
+}
+.recipe-plot > .recipe-empty {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  pointer-events: none;
+}

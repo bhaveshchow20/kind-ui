@@ -22,6 +22,7 @@ export type TrendProps = {
   formatValue: (value: number) => string;
   animate?: boolean | LineAnimation | undefined;
   material?: LineMaterial | undefined;
+  guide?: boolean | undefined;
 };
 
 const solidDot = {
@@ -53,6 +54,7 @@ function SingleSeriesLine({
   formatValue,
   animate,
   material = "plain",
+  guide = false,
   type,
   dot,
   children,
@@ -65,7 +67,7 @@ function SingleSeriesLine({
     <Chart.Root
       config={{
         value: {
-          label,
+          label: "Completed",
           color: "var(--chart-1)",
           formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
         },
@@ -87,7 +89,13 @@ function SingleSeriesLine({
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
           <YAxis hide domain={[0, "auto"]} />
-          <Line.Tooltip />
+          <Line.Tooltip
+            cursor={
+              guide
+                ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
+                : false
+            }
+          />
           <Line.LineSeries
             dataKey="value"
             type={type}
@@ -141,13 +149,14 @@ export function TargetLine({
   targetLabel,
   animate,
   material = "plain",
+  guide = false,
 }: TrendProps & { target: number; targetLabel: string }) {
   const id = useId();
   return (
     <Chart.Root
       config={{
         value: {
-          label,
+          label: "Response",
           color: "var(--chart-1)",
           formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
         },
@@ -176,7 +185,13 @@ export function TargetLine({
             stroke="var(--muted-foreground)"
             strokeDasharray="4 4"
           />
-          <Line.Tooltip />
+          <Line.Tooltip
+            cursor={
+              guide
+                ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
+                : false
+            }
+          />
           <Line.LineSeries
             dataKey="value"
             type="linear"
@@ -203,6 +218,7 @@ export function ComparisonLine({
   label,
   animate,
   material = "plain",
+  guide = false,
 }: {
   data: ComparisonPoint[];
   config: Chart.SeriesConfig & Record<"current" | "previous", Chart.SeriesConfig[string]>;
@@ -211,6 +227,7 @@ export function ComparisonLine({
   label: string;
   animate?: boolean | LineAnimation | undefined;
   material?: LineMaterial | undefined;
+  guide?: boolean | undefined;
 }) {
   const id = useId();
   return (
@@ -225,11 +242,12 @@ export function ComparisonLine({
         Use left and right arrow keys to explore. Escape dismisses the tooltip. Previous values use
         a dashed line.
       </p>
-      {visibleSeries.length === 0 ? (
-        <p role="status" className="recipe-empty">
-          Select a series to show it.
-        </p>
-      ) : (
+      <div className="recipe-plot">
+        {visibleSeries.length === 0 && (
+          <p role="status" className="recipe-empty">
+            Select a series to show it.
+          </p>
+        )}
         <ResponsiveContainer width="100%" height={196}>
           <Line.LineChart
             data={data}
@@ -242,7 +260,13 @@ export function ComparisonLine({
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
             <YAxis width={36} axisLine={false} tickLine={false} domain={[0, "auto"]} />
-            <Line.Tooltip />
+            <Line.Tooltip
+              cursor={
+                guide
+                  ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
+                  : false
+              }
+            />
             <Line.LineSeries
               dataKey="current"
               type="linear"
@@ -269,7 +293,7 @@ export function ComparisonLine({
             />
           </Line.LineChart>
         </ResponsiveContainer>
-      )}
+      </div>
     </Chart.Root>
   );
 }

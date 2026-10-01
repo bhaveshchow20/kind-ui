@@ -20,8 +20,9 @@ export function LineSeries({
   stroke,
   className,
   material = "plain",
+  renderWhileHidden = false,
   ...props
-}: LineSeriesProps) {
+}: LineSeriesProps & { renderWhileHidden?: boolean }) {
   const { config, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
@@ -49,7 +50,9 @@ export function LineSeries({
               <MaterialCurve
                 material={material}
                 filterId={`${generatedId}-material`}
-                materialWidth={props.strokeWidth ?? (material === "clay" ? 6 : 2.5)}
+                materialWidth={
+                  props.strokeWidth ?? (material === "clay" ? 6 : material === "paper" ? 2.5 : 2)
+                }
               />
             ),
             strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
@@ -57,7 +60,10 @@ export function LineSeries({
           }
         : {})}
       id={id}
-      hide={hide === true || (visibleSeries !== undefined && !visibleSeries.includes(key ?? ""))}
+      hide={
+        hide === true ||
+        (!renderWhileHidden && visibleSeries !== undefined && !visibleSeries.includes(key ?? ""))
+      }
       {...(color !== undefined ? { stroke: color } : {})}
       className={["kind-ui-line-series", className].filter(Boolean).join(" ")}
     />

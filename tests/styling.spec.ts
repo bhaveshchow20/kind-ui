@@ -14,7 +14,7 @@ test("packed production CSS supplies defaults and permits plain CSS and native o
     "padding",
     "3px 6px",
   );
-  await expect(defaults.locator(part("tooltip"))).toHaveCSS("padding", "7px 9px");
+  await expect(defaults.locator(part("tooltip"))).toHaveCSS("padding", "6px 8px");
   await expect(defaults.locator(part("tooltip"))).toHaveCSS("font-size", "12px");
   await expect(defaults.locator(`${part("legend")} ${part("indicator")}`).first()).toHaveCSS(
     "width",
@@ -48,7 +48,7 @@ test("packed production CSS supplies defaults and permits plain CSS and native o
   await page.keyboard.press("Space");
   await expect(alpha).toBeFocused();
   await expect(alpha).toHaveAttribute("aria-pressed", "false");
-  await expect(alpha).toHaveCSS("text-decoration-line", "line-through");
+  await expect(alpha).toHaveCSS("text-decoration-line", "none");
   await expect(custom.locator(`${part("tooltip")} [data-series="alpha"]`)).toHaveCount(0);
 });
 

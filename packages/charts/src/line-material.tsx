@@ -2,7 +2,7 @@
 
 import { Curve, type LineDrawShapeProps } from "recharts";
 
-export type LineMaterial = "plain" | "paper" | "clay";
+export type LineMaterial = "plain" | "paper" | "clay" | "glow";
 
 /** Uses engine points only for filter bounds; Curve retains the original geometry and pathRef. */
 export function MaterialCurve({
@@ -70,6 +70,17 @@ export function MaterialCurve({
               <feMerge>
                 <feMergeNode in="SourceGraphic" />
                 <feMergeNode in="grain" />
+              </feMerge>
+            </>
+          ) : material === "glow" ? (
+            <>
+              <feGaussianBlur in="SourceGraphic" stdDeviation={2} result="halo" />
+              <feComponentTransfer in="halo" result="softHalo">
+                <feFuncA type="linear" slope="var(--kind-ui-line-glow-opacity, 0.35)" />
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode in="softHalo" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
             </>
           ) : (

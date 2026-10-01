@@ -223,7 +223,7 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
       <button type="button" onClick={() => setEqualWidth(!equalWidth)}>
         Equal width
       </button>
-      {(["plain", "paper", "clay"] satisfies Static.LineMaterial[]).map((material) => (
+      {(["plain", "paper", "clay", "glow"] satisfies Static.LineMaterial[]).map((material) => (
         <section
           key={material}
           aria-label={material}

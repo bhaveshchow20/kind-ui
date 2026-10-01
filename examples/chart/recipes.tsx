@@ -62,6 +62,7 @@ const config = {
 function App() {
   const [palette, setPalette] = useState("monochrome");
   const [material, setMaterial] = useState<LineMaterial>("plain");
+  const [guide, setGuide] = useState(false);
   const [motion, setMotion] = useState(false);
   const reducedMotion = useReducedMotionPreference();
   const [empty, setEmpty] = useState(false);
@@ -98,17 +99,31 @@ function App() {
         </fieldset>
         <fieldset aria-label="Line material">
           <legend className="sr-only">Line material</legend>
-          {(["plain", "paper", "clay"] satisfies LineMaterial[]).map((value) => (
+          {(["plain", "paper", "clay", "glow"] satisfies LineMaterial[]).map((value) => (
             <button
               type="button"
               key={value}
               aria-pressed={material === value}
               onClick={() => setMaterial(value)}
             >
-              {value === "plain" ? "Plain" : value === "paper" ? "Paper" : "Clay"}
+              {value === "plain"
+                ? "Plain"
+                : value === "paper"
+                  ? "Paper"
+                  : value === "clay"
+                    ? "Clay"
+                    : "Glow"}
             </button>
           ))}
         </fieldset>
+        <label>
+          <input
+            type="checkbox"
+            checked={guide}
+            onChange={(event) => setGuide(event.target.checked)}
+          />{" "}
+          Hover guide
+        </label>
         <label>
           <input
             type="checkbox"
@@ -148,6 +163,7 @@ function App() {
                 formatValue={tasks}
                 animate={animate}
                 material={material}
+                guide={guide}
               />
             )}
             <details>
@@ -179,6 +195,7 @@ function App() {
               formatValue={tasks}
               animate={animate}
               material={material}
+              guide={guide}
             />
           )}
           <p className="recipe-note">Daily completions · Mon–Sun</p>
@@ -211,6 +228,7 @@ function App() {
               targetLabel="Budget"
               animate={animate}
               material={material}
+              guide={guide}
             />
           )}
           <p className="recipe-note">Lower is faster. Wednesday was not recorded.</p>
@@ -240,6 +258,7 @@ function App() {
               label="Weekly comparison"
               animate={animate}
               material={material}
+              guide={guide}
             />
           )}
           <p className="recipe-note">
