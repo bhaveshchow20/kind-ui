@@ -1,4 +1,6 @@
+@layer theme, base, kind-ui, components, utilities;
 @import "tailwindcss";
+@import "@kind-ui/charts/styles.css";
 
 @font-face {
   font-family: "Geist Variable";

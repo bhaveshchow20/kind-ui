@@ -97,8 +97,7 @@ function App() {
           >
             <Chart.Legend
               aria-label="Visible series"
-              style={{ margin: "4px 0 10px", gap: 4 }}
-              className="text-[13px] [&_button]:border-transparent! [&_button:hover]:[--chart-legend-background:var(--accent)] [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-ring [&_button[aria-pressed=false]]:text-muted-foreground [&_li:first-child_span]:rounded-full [&_li:nth-child(2)_span]:rotate-45 [&_span]:size-2!"
+              className="mt-1 mb-2.5 gap-1 text-[13px] [&_[data-kind-ui=chart-legend-button]]:border-transparent [&_[data-kind-ui=chart-legend-button]:hover]:[--chart-legend-background:var(--accent)] [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-offset-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-ring [&_[aria-pressed=false]]:text-muted-foreground [&_[data-series=completed]_[data-kind-ui=chart-indicator]]:rounded-full [&_[data-series=review]_[data-kind-ui=chart-indicator]]:rotate-45 [&_[data-kind-ui=chart-indicator]]:size-2"
             />
             <p id="chart-help" className="sr-only">
               Focus the chart and use left and right arrow keys to explore values. Escape dismisses
@@ -126,7 +125,7 @@ function App() {
                     content={(tooltip) => (
                       <Chart.TooltipContent
                         tooltip={tooltip}
-                        className="min-w-44 max-w-64 shadow-sm tabular-nums [&_strong]:font-medium"
+                        className="min-w-44 max-w-64 shadow-sm tabular-nums [&_[data-kind-ui=chart-tooltip-label]]:font-medium [&_[data-kind-ui=chart-tooltip-value]]:font-medium"
                       />
                     )}
                   />

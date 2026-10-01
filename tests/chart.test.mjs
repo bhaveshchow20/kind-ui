@@ -109,7 +109,7 @@ test("unknown prototype-named keys use upstream metadata without inherited confi
   for (const dataKey of ["constructor", "toString"]) {
     const html = content([entry(1, { dataKey, name: "Unknown", color: "#f00" })]);
     assert.match(html, /Unknown/);
-    assert.match(html, /background:#f00/);
+    assert.match(html, /--kind-ui-chart-indicator-color:#f00/);
     assert.doesNotMatch(html, new RegExp(`var\\(--color-${dataKey}`));
   }
 });

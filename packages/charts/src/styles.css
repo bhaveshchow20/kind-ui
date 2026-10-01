@@ -1,0 +1,71 @@
+@layer kind-ui {
+  :where([data-kind-ui="chart"]) {
+    width: 100%;
+    min-width: 0;
+  }
+
+  :where([data-kind-ui="chart-legend"]) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    margin: 12px 0;
+    padding: 0;
+  }
+
+  :where([data-kind-ui="chart-legend-button"]) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--kind-ui-chart-border, var(--border, currentColor));
+    border-radius: var(--kind-ui-chart-radius, var(--radius, 6px));
+    background: var(--kind-ui-chart-legend-background, var(--chart-legend-background, transparent));
+    color: inherit;
+    padding: 8px 12px;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  :where([data-kind-ui="chart-legend-button"][aria-pressed="false"]) {
+    text-decoration: line-through;
+  }
+
+  :where([data-kind-ui="chart-indicator"]) {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    background: var(--kind-ui-chart-indicator-color, currentColor);
+  }
+
+  :where([data-kind-ui="chart-tooltip"]) {
+    padding: 10px 12px;
+    background: var(--kind-ui-chart-popover, var(--popover, Canvas));
+    color: var(--kind-ui-chart-popover-foreground, var(--popover-foreground, CanvasText));
+    border: 1px solid var(--kind-ui-chart-border, var(--border, GrayText));
+    border-radius: var(--kind-ui-chart-radius, var(--radius, 8px));
+    font-size: 13px;
+  }
+
+  :where([data-kind-ui="chart-tooltip-list"]) {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+  }
+
+  :where([data-kind-ui="chart-tooltip-item"]) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  :where([data-kind-ui="chart-tooltip-item"] [data-kind-ui="chart-indicator"]) {
+    width: 8px;
+    height: 8px;
+  }
+
+  :where([data-kind-ui="chart-tooltip-value"]) {
+    margin-left: auto;
+  }
+}
