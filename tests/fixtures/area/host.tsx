@@ -48,6 +48,10 @@ export function AreaHost({
   nativeVisibility?: boolean;
 }) {
   const { AreaChart, AreaSeries, Tooltip } = Static;
+  const [material, setMaterial] = useState<Static.AreaMaterial>("plain");
+  const [overshoot, setOvershoot] = useState(false);
+  const [vertical, setVertical] = useState(false);
+  const [filtered, setFiltered] = useState(false);
   const [stacked, setStacked] = useState(false);
   const [percent, setPercent] = useState(false);
   const [visible, setVisible] = useState(["value", "other", "alias"]);
@@ -61,7 +65,11 @@ export function AreaHost({
   const [show, setShow] = useState(true);
   const [seriesData, setSeriesData] = useState(false);
   const [nativeHide, setNativeHide] = useState(false);
-  const sourceData = nativeVisibility ? nativeVisibilityData : data;
+  const sourceData = overshoot
+    ? data.map((point, i) => ({ ...point, other: i === 0 || i === 3 ? 8 : 0 }))
+    : nativeVisibility
+      ? nativeVisibilityData
+      : data;
   const rows = updated
     ? sourceData.map((point) => ({
         ...point,
@@ -89,6 +97,34 @@ export function AreaHost({
   }, []);
   return (
     <section aria-label="Packed areas">
+      <label>
+        <input
+          type="checkbox"
+          checked={overshoot}
+          onChange={(e) => setOvershoot(e.target.checked)}
+        />
+        Overshoot
+      </label>
+      <label>
+        <input type="checkbox" checked={vertical} onChange={(e) => setVertical(e.target.checked)} />
+        Vertical
+      </label>
+      <label>
+        Material
+        <select
+          aria-label="Material"
+          value={material}
+          onChange={(e) => setMaterial(e.target.value as Static.AreaMaterial)}
+        >
+          {(["plain", "paper", "clay", "glow"] as const).map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        <input type="checkbox" checked={filtered} onChange={(e) => setFiltered(e.target.checked)} />
+        Native filter
+      </label>
       <label>
         <input type="checkbox" checked={stacked} onChange={(e) => setStacked(e.target.checked)} />
         Stack
@@ -146,6 +182,7 @@ export function AreaHost({
         {show && (
           <AreaChart
             {...chartProps}
+            layout={vertical ? "vertical" : "horizontal"}
             width={small ? 160 : 440}
             height={220}
             stackOffset={percent ? "expand" : "none"}
@@ -156,13 +193,19 @@ export function AreaHost({
             onMouseLeave={() => setLeft((n) => n + 1)}
           >
             <defs>
+              <filter id="host-filter">
+                <feGaussianBlur stdDeviation={0.3} />
+              </filter>
               <linearGradient id="packed-gradient">
                 <stop stopColor="purple" />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
-            <XAxis dataKey="time" />
-            <YAxis width={32} />
+            <XAxis {...(vertical ? { type: "number" as const } : { dataKey: "time" })} />
+            <YAxis
+              width={32}
+              {...(vertical ? { type: "category" as const, dataKey: "time" } : {})}
+            />
             <ReferenceLine y={3} />
             <Tooltip
               maxWidth={180}
@@ -175,6 +218,7 @@ export function AreaHost({
             />
             <AreaSeries
               {...(seriesData ? { data: rows } : {})}
+              material={material}
               dataKey="value"
               stackId={stacked ? "values" : undefined}
               connectNulls={false}
@@ -188,7 +232,10 @@ export function AreaHost({
             </AreaSeries>
             <AreaSeries
               {...(seriesData ? { data: rows } : {})}
+              material={material}
+              {...(filtered ? { filter: "url(#host-filter)" } : {})}
               id=""
+              type={overshoot ? "natural" : "linear"}
               dataKey={otherValue}
               stackId={stacked ? "values" : undefined}
               hide={nativeHide}

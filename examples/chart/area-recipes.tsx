@@ -12,12 +12,14 @@ type SingleAreaProps = {
   label: string;
   formatValue: (value: number) => string;
   motion?: AreaMotion | undefined;
+  material?: Chart.AreaMaterial | undefined;
 };
 type StackedAreaProps = {
   data: StackedAreaPoint[];
   label: string;
   config: AreaSeriesConfig;
   motion?: AreaMotion | undefined;
+  material?: Chart.AreaMaterial | undefined;
 };
 type AreaSeries = "desktop" | "mobile";
 type AreaFrameProps<T extends { period: string }> = {
@@ -154,6 +156,7 @@ function SingleArea({
   motion: options,
   type,
   gradient,
+  material,
 }: SingleAreaProps & {
   type: "linear" | "monotone" | "stepAfter";
   gradient?: string;
@@ -176,12 +179,13 @@ function SingleArea({
         </defs>
       )}
       <Chart.AreaSeries
+        material={material ?? "plain"}
         dataKey="value"
         type={type}
         stroke="var(--color-value)"
         strokeWidth={2}
         fill={gradient ? `url(#${gradient})` : "var(--color-value)"}
-        fillOpacity={gradient ? 1 : 0.18}
+        fillOpacity={gradient ? 1 : material === "clay" ? 0.65 : material === "paper" ? 0.4 : 0.18}
         connectNulls={false}
       />
     </AreaFrame>
@@ -220,12 +224,13 @@ export function ThresholdArea(props: SingleAreaProps & { threshold: number }) {
       threshold={threshold}
     >
       <Chart.AreaSeries
+        material={area.material ?? "plain"}
         dataKey="value"
         type="monotone"
         stroke="var(--color-value)"
         strokeWidth={2}
         fill="var(--color-value)"
-        fillOpacity={0.14}
+        fillOpacity={area.material === "clay" ? 0.65 : area.material === "paper" ? 0.4 : 0.14}
         connectNulls={false}
       />
     </AreaFrame>
@@ -238,6 +243,7 @@ function StackedAreas({
   config,
   motion: options,
   percentage,
+  material,
   visibleSeries,
   onVisibleSeriesChange,
 }: StackedAreaProps & {
@@ -271,6 +277,7 @@ function StackedAreas({
       {(["mobile", "desktop"] as const).map((key) => (
         <Chart.AreaSeries
           key={key}
+          material={material ?? "plain"}
           dataKey={key}
           hide={visibleSeries !== undefined && !visibleSeries.includes(key)}
           type="monotone"

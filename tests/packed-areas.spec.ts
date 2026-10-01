@@ -1,17 +1,22 @@
 import { expect, type Locator, test } from "@playwright/test";
 
 async function bounded(tip: Locator, chart: Locator) {
-  const a = await tip.boundingBox();
-  const b = await chart.boundingBox();
-  expect(
-    a &&
-      b &&
-      a.x >= b.x - 1 &&
-      a.y >= b.y - 1 &&
-      a.x + a.width <= b.x + b.width + 1 &&
-      a.y + a.height <= b.y + b.height + 1,
-  ).toBeTruthy();
+  await expect
+    .poll(async () => {
+      const a = await tip.boundingBox();
+      const b = await chart.boundingBox();
+      return Boolean(
+        a &&
+          b &&
+          a.x >= b.x - 1 &&
+          a.y >= b.y - 1 &&
+          a.x + a.width <= b.x + b.width + 1 &&
+          a.y + a.height <= b.y + b.height + 1,
+      );
+    })
+    .toBe(true);
 }
+
 for (const mode of ["static", "motion"] as const) {
   test(`packed area ${mode}: native refs, gaps, zero, composition, handlers and bounded modality`, async ({
     page,
