@@ -41,3 +41,7 @@ Never edit `node_modules/`, `dist/`, artifacts, or caches as source. Regenerate 
 Never add secrets, credentials, telemetry, external uploads, or hidden network behavior. Follow [SECURITY.md](SECURITY.md) for security findings. Do not publish, deploy, merge, create release credentials, or change visibility/access unless explicitly authorized.
 
 All packages remain `private: true` and `0.0.0`. Follow the versioning and changeset policy in [docs/development.md](docs/development.md); no automated publishing is configured. Preserve existing user work and report blockers instead of bypassing permissions or verification.
+
+## Optional React agent skills
+
+For component API or composition work, read `.agents/skills/composition-patterns/SKILL.md`, then only the specific rule files needed. For React render-performance work, read `.agents/skills/react-best-practices/SKILL.md`, then only its relevant selected rule. These references are on-demand; do not load the full set by default or treat guidance as a substitute for the current library API and consumer contract. Source and update notes are in `.agents/skills/UPSTREAM.md`.
