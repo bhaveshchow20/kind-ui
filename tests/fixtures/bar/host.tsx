@@ -2,7 +2,16 @@
 import * as Chart from "@kind-ui/charts";
 import { useCallback, useState } from "react";
 import type { BarShapeProps } from "recharts";
-import { CartesianGrid, Cell, LabelList, Rectangle, ReferenceLine, XAxis, YAxis } from "recharts";
+import {
+  BarStack,
+  CartesianGrid,
+  Cell,
+  LabelList,
+  Rectangle,
+  ReferenceLine,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const data = [
   { category: "A", value: 8, other: 60 },
@@ -14,9 +23,10 @@ const otherValue = (row: unknown) =>
   typeof row === "object" && row !== null && "other" in row && typeof row.other === "number"
     ? row.other
     : undefined;
-function Shape({ x, y, width, height, fill, index }: BarShapeProps) {
+function Shape({ x, y, width, height, fill, filter, index }: BarShapeProps) {
   return (
     <Rectangle
+      filter={filter}
       data-host-shape=""
       data-highlighted={index === 0}
       x={x}
@@ -40,6 +50,16 @@ function Content({ label }: { label?: string | number }) {
   );
 }
 export function BarHost() {
+  const [material, setMaterial] = useState<Chart.BarMaterial>("plain");
+  const [nativeShape, setNativeShape] = useState(
+    !new URLSearchParams(window.location.search).has("materials"),
+  );
+  const [pink, setPink] = useState(false);
+  const [gradient, setGradient] = useState(false);
+  const [customActive, setCustomActive] = useState(false);
+  const [background, setBackground] = useState(false);
+  const [cellFilter, setCellFilter] = useState(false);
+  const [nativeFilter, setNativeFilter] = useState(false);
   const [animate, setAnimate] = useState<boolean | Chart.BarAnimation>(false);
   const [horizontal, setHorizontal] = useState(
     new URLSearchParams(window.location.search).has("horizontal"),
@@ -72,6 +92,34 @@ export function BarHost() {
   }, []);
   return (
     <section aria-label="Packed bars" style={{ width: small ? 180 : 480, background: "white" }}>
+      <fieldset aria-label="Material">
+        {(["plain", "paper", "clay", "glow"] as const).map((value) => (
+          <button type="button" key={value} onClick={() => setMaterial(value)}>
+            {value}
+          </button>
+        ))}
+      </fieldset>
+      <button type="button" onClick={() => setNativeShape(!nativeShape)}>
+        Native shape
+      </button>
+      <button type="button" onClick={() => setNativeFilter(!nativeFilter)}>
+        Native filter
+      </button>
+      <button type="button" onClick={() => setCustomActive(!customActive)}>
+        Custom active
+      </button>
+      <button type="button" onClick={() => setBackground(!background)}>
+        Background
+      </button>
+      <button type="button" onClick={() => setCellFilter(!cellFilter)}>
+        Cell filter
+      </button>
+      <button type="button" onClick={() => setPink(!pink)}>
+        Pink
+      </button>
+      <button type="button" onClick={() => setGradient(!gradient)}>
+        Gradient
+      </button>
       <button
         type="button"
         onClick={() =>
@@ -147,6 +195,20 @@ export function BarHost() {
           onMouseMove={() => setMoved((v) => v + 1)}
           onMouseLeave={() => setLeft((v) => v + 1)}
         >
+          <defs>
+            <linearGradient id="bar-proof-gradient">
+              <stop
+                stopColor="#ff80bf"
+                stopOpacity={
+                  new URLSearchParams(window.location.search).has("gradient-alpha") ? 0.2 : 1
+                }
+              />
+              <stop offset="1" stopColor="#6b45b3" />
+            </linearGradient>
+            <filter id="bar-host-filter">
+              <feOffset dx="1" dy="1" />
+            </filter>
+          </defs>
           <CartesianGrid />
           <XAxis
             {...(horizontal
@@ -206,13 +268,37 @@ export function BarHost() {
             yAxisId="value-axis"
             dataKey={key}
             seriesKey="value"
-            shape={Shape}
+            material={material}
+            background={background}
+            activeBar={customActive ? Shape : false}
+            radius={new URLSearchParams(window.location.search).has("round") ? 8 : [3, 3, 0, 0]}
+            fillOpacity={
+              new URLSearchParams(window.location.search).has("zero-opacity")
+                ? 0
+                : new URLSearchParams(window.location.search).has("translucent")
+                  ? 0.35
+                  : 1
+            }
+            {...(nativeShape ? { shape: Shape } : {})}
+            {...(nativeFilter ? { filter: "url(#bar-host-filter)" } : {})}
             onClick={() => setClicked((v) => v + 1)}
             {...(stacked ? { stackId: "total" } : {})}
           >
             <LabelList dataKey="value" position="top" />
             {data.map((row, i) => (
-              <Cell key={row.category} fill={i === 1 ? "#b40" : "#246"} />
+              <Cell
+                key={row.category}
+                {...(cellFilter && i === 1 ? { filter: "url(#bar-host-filter)" } : {})}
+                fill={
+                  gradient
+                    ? "url(#bar-proof-gradient)"
+                    : pink
+                      ? "#ed79ae"
+                      : i === 1
+                        ? "#b40"
+                        : "#246"
+                }
+              />
             ))}
           </Chart.BarSeries>
           <Chart.BarSeries
@@ -228,11 +314,14 @@ export function BarHost() {
             }
             hide={hide}
             name="Native other"
-            fill="#682"
+            fill={pink ? "#ed79ae" : "#682"}
+            radius={new URLSearchParams(window.location.search).has("round") ? 8 : 0}
+            material={material}
             {...(stacked ? { stackId: "total" } : {})}
           />
         </Chart.BarChart>
       </Chart.Root>
+      {new URLSearchParams(window.location.search).has("envelopes") && <StackProof />}
     </section>
   );
 }
@@ -243,3 +332,36 @@ export const rejectedEngineTween: Chart.BarSeriesProps = {
   // @ts-expect-error Kind reserves native engine animation.
   isAnimationActive: true,
 };
+
+function StackProof() {
+  return (
+    <div data-proof-stack="">
+      {[260, 140].map((width) => (
+        <Chart.Root
+          key={width}
+          config={{
+            value: { label: "Value", color: "#ed79ae" },
+            other: { label: "Other", color: "#682" },
+          }}
+        >
+          <Chart.BarChart
+            width={width}
+            height={120}
+            data={[
+              { category: "A", value: 8, other: 12 },
+              { category: "B", value: 20, other: 0 },
+            ]}
+            aria-label={`Native stack ${width}`}
+          >
+            <XAxis dataKey="category" hide />
+            <YAxis hide />
+            <BarStack radius={8}>
+              <Chart.BarSeries dataKey="value" material="clay" radius={0} />
+              <Chart.BarSeries dataKey="other" material="clay" radius={0} />
+            </BarStack>
+          </Chart.BarChart>
+        </Chart.Root>
+      ))}
+    </div>
+  );
+}
