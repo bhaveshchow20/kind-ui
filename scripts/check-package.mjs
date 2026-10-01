@@ -108,7 +108,7 @@ try {
   );
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
-    if (["line", "area", "bar", "combined"].includes(folder) && file.endsWith(".tsx"))
+    if (["line", "area", "bar", "combined", "combo"].includes(folder) && file.endsWith(".tsx"))
       assertLineConsumerSource(source);
     await writeFile(join(consumer, target), source);
   }
@@ -192,6 +192,14 @@ try {
   await production("combined.html", "packed-combined");
   console.log(
     "Combined area/bar tarball consumer: strict NodeNext/Bundler and production build passed",
+  );
+  await copyFixture("combo", "host.tsx");
+  await copyFixture("combo", "main.tsx", "combo.tsx");
+  await copyFixture("combo", "index.html", "combo.html");
+  await typecheck(["host.tsx", "combo.tsx"]);
+  await production("combo.html", "packed-combo");
+  console.log(
+    "Combo tarball: guarded public imports, strict NodeNext/Bundler and production build passed",
   );
   for (const file of ["index.html", "main.tsx", "consumer.css", "motion.tsx"])
     await copyFixture("styling", file);

@@ -230,3 +230,68 @@ Corner geometry remains native: use `radius={8}` for soft standalone bars. The e
 Each series owns a unique filter that native rectangles apply independently within bounded object-relative regions. Recharts plot/stack clipping and Kind reveal clipping remain in place, so halos at plot edges can be clipped. There is no displacement, animated noise or fabricated bar. Tiny bars show less relief and can clip the outer glow. Extreme stroke widths may need a custom filter with host bounds. Filters add raster work per rectangle; dense data can be more expensive than plain bars. The existing `/bars.html` recipes provide independent Material, Palette and Motion controls.
 
 Bar finish tokens are `--kind-ui-bar-paper-fiber` (white), `--kind-ui-bar-paper-grain` (0.14), `--kind-ui-bar-clay-light` (white), `--kind-ui-bar-clay-shade` (#17212b), `--kind-ui-bar-clay-highlight` (0.48), `--kind-ui-bar-clay-shadow` (0.26), `--kind-ui-bar-glow-light` (white), and `--kind-ui-bar-glow-opacity` (0.6). Opacity tokens accept numbers from 0 to 1. Clay/Paper lighting and ink are composited atop native paint, preserving every painted pixel’s translucent alpha, including antialiasing. Clay’s decorative cast shadow is excluded from that footprint; only fully transparent exterior pixels acquire shade, derived from native alpha at a fixed 0.16 opacity. This shadow does not change the native data path, radius or stack clip, and native clipping can trim it. Lighting uses a silhouette so translucent fills retain the same matte relief. Pixel-sized light/blur offsets are capped for chart marks; tiny bars can show less relief. The raised direction follows shipped line Clay, with [clay.css](https://github.com/codeAdrian/clay.css) and [Malewicz’s Claymorphism tutorial](https://hype4.academy/articles/design/claymorphism-in-user-interfaces) as soft-volume references, adapted without copying assets or adding dependencies. Native shapes retain engine zero-label and background filtering. Clay and Paper primitives are bar-local; Glow reuses the coordinated filled-surface helper. Bar material rendering leaves line and area outputs unchanged. Validation covers Chromium; other browsers and print/export renderers remain unverified.
+
+## Combo / Composed charts
+
+`ComboChart`, `ComboChartProps`, and `ComboAnimation` are public root exports.
+`ComboChart` uses Recharts `ComposedChart` and accepts its native props, SVG ref,
+handlers, axes, margins, layout, stacks, and children. Compose the existing
+`LineSeries`, `AreaSeries`, and `BarSeries` under one `Root`; one `Tooltip` shows
+all registered visible series at the selected category. `Legend` uses the same
+consumer-owned `visibleSeries` and `onVisibleSeriesChange` contract.
+
+```tsx
+<Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+  <Legend />
+  <ResponsiveContainer width="100%" height={260}>
+  <ComboChart data={data}
+    animate={{ lineReveal: { revealDurationMs: 700 }, areaReveal: false,
+      barReveal: { revealDurationMs: 900 } }}>
+    <XAxis dataKey="period" />
+    <YAxis yAxisId="count" />
+    <YAxis yAxisId="ms" orientation="right" />
+    <AreaSeries dataKey="queued" yAxisId="count" fillOpacity={0.2} />
+    <BarSeries dataKey="completed" yAxisId="count" />
+    <LineSeries dataKey="latency" yAxisId="ms" dot={false} />
+    <Tooltip />
+  </ComboChart>
+  </ResponsiveContainer>
+</Root>
+```
+
+`animate` defaults to `false`; `true` uses the existing family defaults. An
+object accepts the same `revealDurationMs`, `revealEasing`, and shared
+`hoverTransition` as `LineChart`. Optional `lineReveal`, `areaReveal`, and
+`barReveal` override entrance timing/easing for each family; `false` disables
+that family's entrance. Hover/line visibility Motion remains shared, rather
+than separately controlled by these entrance options. Reduced motion disables
+all Kind Motion, including when the preference changes after mounting.
+
+Use Recharts `ResponsiveContainer` to mount at measured dimensions, as the
+recipes do. Native `responsive` sizing is accepted; a percentage placeholder
+followed by its first measured size can finish an entrance through the normal
+resize cancellation path.
+
+Line/area entrances sweep across the plot. Bars reuse `BarSeries`' own
+axis-specific, clamped zero baseline reveal for positive, negative and signed
+stacks. One interaction cancellation path finishes all active entrances when
+pointer/focus/keyboard input, visibility, data, geometry, bar layout, or native
+children change. A changed children identity conservatively finishes entrances,
+even if the parent merely rerendered; updates render immediately rather than
+replaying an entrance. Family completion removes only that family's clip.
+
+Colors remain independently supplied by `Root.config` or native series props.
+Native Recharts children, custom marks, cells, labels, filters and event handlers
+retain their ownership. Native marks do not register with Kind visibility or
+metadata; use the maintained series for the shared legend/tooltip contract.
+Native child animation props remain consumer-owned; managed series disable
+Recharts' competing animation as in their standalone families.
+
+Stack only compatible units on the same axes. Recharts owns stack semantics;
+use `stackOffset="sign"` for signed bar stacks. Separate axis IDs preserve
+unrelated units. `null` stays missing and `0` stays zero; `connectNulls` retains
+its native meaning. Native ComposedChart offers axis selection, not item-only
+bar selection. Supply a data table or equivalent text alternative.
+
+See [Combo recipes](../../examples/chart/COMBOS.md) for two axes, signed stacks,
+missing values, custom markers, independent legends and entrance controls.
