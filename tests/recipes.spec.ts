@@ -51,6 +51,16 @@ test("optional motion respects changing preferences and survives interrupted int
   await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await expect(page.locator("main")).toHaveAttribute("data-motion", "on");
+  const clips = page.locator("clipPath[id$='-reveal'] rect");
+  await expect(clips).toHaveCount(3);
+  await expect
+    .poll(async () => Number(await clips.first().getAttribute("width")))
+    .toBeGreaterThan(0);
+  await expect.poll(async () => Number(await clips.first().getAttribute("width"))).toBe(1.04);
+  await expect(page.locator(".recharts-line").first()).not.toHaveCSS("clip-path", "none");
+  await page.getByRole("application", { name: "Completed tasks", exact: true }).focus();
+  await expect(page.locator(".recharts-line").first()).toHaveCSS("clip-path", "none");
+
   for (let index = 0; index < 3; index++) {
     await page.getByLabel("Empty data").check();
     await page.getByLabel("Empty data").uncheck();
@@ -60,7 +70,15 @@ test("optional motion respects changing preferences and survives interrupted int
   await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
   await expect(page.getByRole("application")).toHaveCount(3);
   await expect(page.locator(".recharts-line-curve")).toHaveCount(3);
+  await expect(clips).toHaveCount(0);
+  for (const line of await page.locator(".recharts-line").all())
+    await expect(line).toHaveCSS("clip-path", "none");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(clips).toHaveCount(3);
+
   await page.getByLabel("Motion", { exact: true }).uncheck();
+  await expect(clips).toHaveCount(0);
+  await expect(page.locator(".recharts-line").first()).toHaveCSS("clip-path", "none");
   await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
 });
 
@@ -93,10 +111,13 @@ test("record recipe motion and keyboard exploration", async ({ browser }, info) 
   });
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:4173/recipes.html");
+  await page.waitForTimeout(700); // Lead-in for the review recording.
   await page.getByLabel("Motion", { exact: true }).check();
+  await page.waitForTimeout(800); // Capture the complete 500ms entrance.
   await page.getByLabel("Empty data").check();
   await page.getByLabel("Empty data").uncheck();
   await expect(page.locator(".recharts-line-curve")).toHaveCount(4);
+  await page.waitForTimeout(800); // Leave the second entrance visible in the recording.
   await page.getByRole("button", { name: "Color", exact: true }).click();
   const comparison = page.getByRole("region", { name: "Week over week" });
   await comparison.scrollIntoViewIfNeeded();
@@ -104,5 +125,30 @@ test("record recipe motion and keyboard exploration", async ({ browser }, info) 
   await page.keyboard.press("ArrowRight");
   await expect(comparison.getByRole("status")).toBeVisible();
   await page.screenshot({ path: info.outputPath("recipes-keyboard.png"), fullPage: true });
+  await page.waitForTimeout(1000); // Hold the final keyboard tooltip for review.
   await context.close();
+});
+
+test("Motion advances one shared clip per chart and completes without engine interpolation", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.clock.install();
+  await page.goto("/recipes.html");
+  await page.getByLabel("Motion", { exact: true }).check();
+  await page.clock.runFor(100);
+  const clip = page.locator("clipPath[id$='-reveal'] rect").first();
+  const progress = Number(await clip.getAttribute("width"));
+  expect(progress).toBeGreaterThan(0);
+  expect(progress).toBeLessThan(1.04);
+  await page.clock.runFor(500);
+  await expect(clip).toHaveAttribute("width", "1.04");
+  await expect(page.locator("clipPath[id$='-reveal']")).toHaveCount(3);
+  const comparison = page.getByRole("region", { name: "Week over week" });
+  const paths = await comparison
+    .locator(".recharts-line")
+    .evaluateAll((lines) => lines.map((line) => getComputedStyle(line).clipPath));
+  expect(paths).toHaveLength(2);
+  expect(paths[0]).toBe(paths[1]);
+  expect(paths[0]).toContain("-reveal");
 });

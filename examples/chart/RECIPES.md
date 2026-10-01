@@ -31,7 +31,7 @@ Motion is off by default. The host toggle enables a coordinated Motion SVG clip 
 <TrendLine {...props} reveal={{ durationMs: 500, easing: [0.22, 1, 0.36, 1] }} />
 ```
 
-The recipe uses Motion’s reduced-motion hook; the stylesheet also disables clipping under `prefers-reduced-motion: reduce`. The host also responds to preference changes. Keyboard focus removes the reveal immediately so values are available during entrance. Newly mounted lines reveal; ordinary palette/tooltip updates do not replay it. Removing data interrupts the reveal; restoring it mounts fresh lines. Legend hover/focus uses a subtle background change, with a 120ms transition only when motion is enabled and reduced motion is off.
+The recipe uses Motion’s reduced-motion hook; the stylesheet also disables clipping under `prefers-reduced-motion: reduce`. The host also responds to preference changes. Keyboard focus removes the reveal immediately so values are available during entrance. Newly mounted charts reveal; ordinary palette, visibility and tooltip updates do not replay it. Removing data interrupts the reveal; restoring it mounts fresh lines. Legend hover/focus uses a subtle background change, with a 120ms transition only when motion is enabled and reduced motion is off.
 
 Recharts owns geometry. Its `Line` supports `isAnimationActive`, `animationBegin`, `animationDuration`, `animationEasing`, `dot`, `activeDot` and `shape` in the tested 3.10.1 version. Edit the composition directly if you want engine interpolation instead: remove the recipe reveal and supply those engine props. Avoid two animation systems controlling the same marks. Custom dot/shape rendering requires consumer implementation and testing; this PR does not supply arbitrary path morphing.
 

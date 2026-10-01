@@ -63,7 +63,7 @@ export function TrendLine({ data, label, formatValue, reveal }: TrendProps) {
       data-reveal={enabled ? "on" : "off"}
       style={revealStyle(helpId, enabled)}
     >
-      <p id={helpId} className="sr-only">
+      <p id={helpId} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
       </p>
       <ResponsiveContainer width="100%" height={144}>
@@ -121,7 +121,7 @@ export function TargetLine({
       data-reveal={enabled ? "on" : "off"}
       style={revealStyle(helpId, enabled)}
     >
-      <p id={helpId} className="sr-only">
+      <p id={helpId} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. {targetLabel}:{" "}
         {formatValue(target)}.
       </p>
@@ -194,7 +194,7 @@ export function ComparisonLine({
       style={revealStyle(helpId, enabled)}
     >
       <Chart.Legend aria-label={`${label} series`} />
-      <p id={helpId} className="sr-only">
+      <p id={helpId} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. Previous values use
         a dashed line.
       </p>
