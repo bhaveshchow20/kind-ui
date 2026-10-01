@@ -12,6 +12,22 @@ Kind UI is pre-release and unpublished. The repository uses an open-source contr
 
 `main` requires a pull request, passing Node 22/24 CI checks against the current base, and resolved review conversations. Force pushes and deletion are blocked. See the [branch protection policy](docs/branch-protection.md) for the ruleset configuration, OSS references, and maintenance instructions.
 
+## Find a useful first contribution
+
+- **Improve documentation:** try the setup and public API example, then fix a confusing step, missing explanation, or broken link. Keep documented exports and commands aligned with the branch you change.
+- **Report a bug:** use the [bug report form](https://github.com/bhaveshchow20/kind-ui/issues/new?template=bug_report.yml) with a minimal reproduction, expected and actual behavior, commit, Node/npm versions, and operating system. For browser or chart integration problems, also include the browser and React/Recharts versions.
+- **Propose a chart example or API improvement:** use the [focused proposal form](https://github.com/bhaveshchow20/kind-ui/issues/new?template=feature_request.yml). Describe the consumer's task, representative data, expected interaction, and why current composition is insufficient. Link relevant upstream capabilities and explain alternatives before proposing a new abstraction.
+
+You do not need to design the entire chart library to contribute one useful improvement. Keep example proposals focused on a concrete chart and its consumer. Include sizing, missing and empty data, keyboard interaction, a semantic data alternative, and customization where relevant. Motion proposals should describe reduced-motion behavior and what happens when data or selection changes during an animation.
+
+## Make the change easy to review
+
+Work on a feature branch and open a draft PR against `main` for an independent change. For a stack, target the immediately preceding branch and describe only your incremental diff. Use the [PR template](.github/pull_request_template.md) to explain the consumer problem, resulting behavior, compatibility impact, verification, and remaining limits.
+
+For a bug fix, include a focused regression check that demonstrates the failure and passes with the fix. Documentation-only changes should have their commands, links, and capability claims checked; do not add tests that merely repeat prose. Run the required aggregate check for either kind of change, and distinguish passed, failed, and unrun checks.
+
+Respond to actionable feedback with a focused update and explain the resolution. A successful automation status alone does not establish that a review ran; read the review output. Publishing and merging remain separate maintainer decisions.
+
 ## Commands
 
 - `npm run build`: compile the library entry point and its declarations

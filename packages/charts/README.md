@@ -4,6 +4,14 @@ Three React components share series labels, colors, formatting, and optional con
 
 Pre-release and unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
 
+## Start here
+
+For a runnable consumer, follow the repository's [local setup](https://github.com/bhaveshchow20/kind-ui#try-it-locally) and run `npm run dev:chart` from the repository root. The [example source](https://github.com/bhaveshchow20/kind-ui/blob/main/examples/chart/main.tsx) includes explicit sizing, controlled visibility, keyboard instructions, empty-state recovery, and a semantic data table. Use it alongside the contracts below when adapting a chart.
+
+This package supplies chart presentation; Recharts supplies the chart engine. A custom chart can use the underlying Recharts components directly. Keep visibility state authoritative in your application and apply it to the marks as well as `Root`.
+
+## Usage
+
 ```tsx
 import { useState } from "react";
 import * as Chart from "@kind-ui/charts";
