@@ -6,7 +6,7 @@ test("bar recipes expose missing and zero data with keyboard tooltips and narrow
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/bars.html");
-  await expect(page.getByRole("application")).toHaveCount(4);
+  await expect(page.getByRole("application")).toHaveCount(10);
   await page.screenshot({ path: info.outputPath("bars-monochrome.png"), fullPage: true });
   const vertical = page.getByRole("region", { name: "Vertical", exact: true });
   await vertical.getByRole("application").focus();
@@ -37,9 +37,9 @@ test("bar recipes expose missing and zero data with keyboard tooltips and narrow
   await page.screenshot({ path: info.outputPath("bars-mobile-color.png"), fullPage: true });
   await page.getByLabel("Empty data").check();
   await expect(page.getByRole("application")).toHaveCount(0);
-  await expect(page.getByRole("status")).toHaveCount(4);
+  await expect(page.getByRole("status")).toHaveCount(10);
   await page.getByLabel("Empty data").uncheck();
-  await expect(page.getByRole("application")).toHaveCount(4);
+  await expect(page.getByRole("application")).toHaveCount(10);
   expect(errors).toEqual([]);
 });
 
@@ -80,7 +80,7 @@ test("Motion reveals bars from the value baseline and interrupts safely", async 
   await page.goto("/bars.html");
   await page.getByLabel("Motion", { exact: true }).check();
   const clips = page.locator("[data-bar-reveal='']");
-  await expect(clips).toHaveCount(4);
+  await expect(clips).toHaveCount(10);
   const vertical = clips.nth(0),
     horizontal = clips.nth(1);
   await page.clock.runFor(120);
@@ -120,7 +120,7 @@ test("Motion reveals bars from the value baseline and interrupts safely", async 
   for (const bar of await page.locator(".recharts-bar").all())
     await expect(bar).toHaveCSS("clip-path", "none");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(clips).toHaveCount(4);
+  await expect(clips).toHaveCount(10);
   await page.getByLabel("Motion", { exact: true }).uncheck();
   await expect(clips).toHaveCount(0);
 });
