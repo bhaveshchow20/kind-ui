@@ -40,6 +40,7 @@ type AreaFrameProps<T extends { period: string }> = {
   onVisibleSeriesChange?: (series: string[]) => void;
   offset?: "none" | "expand";
   percentage?: boolean;
+  showLegend?: boolean;
   threshold?: number;
 };
 
@@ -87,6 +88,7 @@ function AreaFrame<T extends { period: string }>({
   onVisibleSeriesChange,
   offset = "none",
   percentage = false,
+  showLegend = false,
   threshold,
 }: AreaFrameProps<T>) {
   const animation = useRecipeMotion(options);
@@ -120,7 +122,9 @@ function AreaFrame<T extends { period: string }>({
   };
   const content = (
     <>
-      {visibleSeries !== undefined && onVisibleSeriesChange !== undefined && <Chart.Legend />}
+      {(showLegend || (visibleSeries !== undefined && onVisibleSeriesChange !== undefined)) && (
+        <Chart.Legend />
+      )}
       <p id={animation.id} className="recipe-help">
         Use left and right arrow keys to explore values. Escape dismisses the tooltip.
       </p>
@@ -145,6 +149,7 @@ function AreaFrame<T extends { period: string }>({
               y={threshold}
               stroke="var(--muted-foreground)"
               strokeDasharray="4 4"
+              ifOverflow="extendDomain"
               label={{ value: "Goal", position: "insideTopRight", fill: "var(--muted-foreground)" }}
             />
           )}
@@ -152,7 +157,16 @@ function AreaFrame<T extends { period: string }>({
           <YAxis
             axisLine={false}
             tickLine={false}
-            domain={percentage ? [0, 1] : ["auto", "auto"]}
+            domain={
+              percentage
+                ? [0, 1]
+                : threshold === undefined
+                  ? ["auto", "auto"]
+                  : ([min, max]) => [
+                      Math.min(min, threshold),
+                      Math.max(max, threshold) + Math.max(1, Math.abs(max - min) * 0.05),
+                    ]
+            }
             {...(percentage
               ? {
                   ticks: [0, 0.25, 0.5, 0.75, 1],
@@ -257,6 +271,7 @@ export function GradientArea(props: SingleAreaProps) {
 }
 export function ThresholdArea(props: SingleAreaProps & { threshold: number }) {
   const { threshold, ...area } = props;
+  const label = `${area.label} with threshold`;
   const config = {
     value: {
       label: area.label,
@@ -267,7 +282,7 @@ export function ThresholdArea(props: SingleAreaProps & { threshold: number }) {
   return (
     <AreaFrame
       data={area.data}
-      label={area.label}
+      label={label}
       config={config}
       motion={area.motion}
       threshold={threshold}
@@ -290,10 +305,12 @@ function StackedAreas({
   data,
   motion: options,
   percentage,
+  interactive = false,
   visibleSeries,
   onVisibleSeriesChange,
 }: StackedAreaProps & {
   percentage?: boolean;
+  interactive?: boolean;
   visibleSeries?: AreaSeries[];
   onVisibleSeriesChange?: (series: AreaSeries[]) => void;
 }) {
@@ -312,11 +329,18 @@ function StackedAreas({
   return (
     <AreaFrame
       data={data}
-      label={percentage ? "Share by device" : "Visitors by device"}
+      label={
+        percentage
+          ? "Share by device"
+          : interactive
+            ? "Visitors by device, interactive"
+            : "Visitors by device"
+      }
       config={stackedConfig}
       motion={options}
       offset={percentage ? "expand" : "none"}
       percentage={percentage ?? false}
+      showLegend
       {...visibilityProps}
     >
       {(["mobile", "desktop"] as const).map((key) => (
@@ -349,5 +373,5 @@ export function InteractiveArea(
     onVisibleSeriesChange: (series: AreaSeries[]) => void;
   },
 ) {
-  return <StackedAreas {...props} />;
+  return <StackedAreas {...props} interactive />;
 }

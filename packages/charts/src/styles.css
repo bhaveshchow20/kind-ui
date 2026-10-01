@@ -7,9 +7,9 @@
   :where([data-kind-ui="chart-legend"]) {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 8px;
     list-style: none;
-    margin: 12px 0;
+    margin: 4px 0 8px;
     padding: 0;
   }
 
@@ -21,8 +21,8 @@
     border-radius: var(--kind-ui-chart-radius, var(--radius, 6px));
     background: var(--kind-ui-chart-legend-background, var(--chart-legend-background, transparent));
     color: inherit;
-    min-height: 28px;
-    padding: 4px 8px;
+    min-height: 24px;
+    padding: 3px 6px;
     font-family: inherit;
     font-size: 11px;
     line-height: 16px;

@@ -47,10 +47,12 @@ function AreaTable({
   data,
   caption,
   stacked = false,
+  stackedData,
 }: {
   data: AreaPoint[];
   caption: string;
   stacked?: boolean;
+  stackedData?: StackedAreaPoint[];
 }) {
   return (
     <table>
@@ -70,13 +72,19 @@ function AreaTable({
       </thead>
       <tbody>
         {stacked ? (
-          devices.map((row) => (
-            <tr key={row.period}>
-              <th scope="row">{row.period}</th>
-              <td>{count(row.desktop)}</td>
-              <td>{count(row.mobile)}</td>
+          stackedData?.length ? (
+            stackedData.map((row) => (
+              <tr key={row.period}>
+                <th scope="row">{row.period}</th>
+                <td>{count(row.desktop)}</td>
+                <td>{count(row.mobile)}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={3}>No data yet.</td>
             </tr>
-          ))
+          )
         ) : data.length ? (
           data.map((row) => (
             <tr key={row.period}>
@@ -193,7 +201,7 @@ function App() {
                     data={visits}
                     label="Monthly visitors"
                     formatValue={count}
-                    threshold={240}
+                    threshold={320}
                     motion={animate ? {} : undefined}
                   />
                 )}
@@ -219,6 +227,7 @@ function App() {
                 data={empty ? [] : visits}
                 caption={`${name} visits by month`}
                 stacked={name === "Stacked" || name === "Percent stacked" || name === "Interactive"}
+                stackedData={empty ? [] : devices}
               />
             </details>
           </section>

@@ -121,9 +121,6 @@
 .recipe-chart .recharts-cartesian-axis-tick text {
   fill: var(--muted-foreground);
 }
-.recipe-chart [data-kind-ui="chart-legend"] {
-  margin-bottom: 10px;
-}
 .recipe-chart [data-kind-ui="chart-legend-button"] {
   border-color: transparent;
 }
