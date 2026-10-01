@@ -10,6 +10,7 @@ export default defineConfig({
         recipes: fileURLToPath(new URL("./recipes.html", import.meta.url)),
         bars: fileURLToPath(new URL("./bars.html", import.meta.url)),
         areas: fileURLToPath(new URL("./areas.html", import.meta.url)),
+        scatters: fileURLToPath(new URL("./scatters.html", import.meta.url)),
         contracts: fileURLToPath(new URL("./contracts.html", import.meta.url)),
       },
     },
