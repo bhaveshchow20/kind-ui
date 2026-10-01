@@ -113,12 +113,10 @@
   fill: var(--muted-foreground);
 }
 .recipe-chart [data-kind-ui="chart-legend"] {
-  gap: 6px;
   margin-bottom: 10px;
 }
 .recipe-chart [data-kind-ui="chart-legend-button"] {
   border-color: transparent;
-  padding: 6px;
 }
 .recipe-chart [data-series="previous"] [data-kind-ui="chart-indicator"] {
   background: transparent;
@@ -228,4 +226,67 @@
 }
 .recipe-card .recipe-chart {
   margin-top: 14px;
+}
+
+.recipe-chart .recharts-bar {
+  clip-path: var(--bar-reveal-clip, none);
+}
+.recipe-chart:focus-within .recharts-bar {
+  clip-path: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .recipe-chart .recharts-bar {
+    clip-path: none;
+  }
+}
+.recipes-header a:last-child:not(:first-child) {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
+.recipe-select {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+.recipe-select select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: var(--card);
+}
+.recipe-total {
+  display: block;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  margin-top: 4px;
+}
+.recipes[data-palette="monochrome"] {
+  --chart-3: #888;
+  --chart-4: #444;
+}
+.recipes[data-palette="color"] {
+  --chart-3: #087e8b;
+  --chart-4: #b45309;
+}
+
+/* Compact controls for the bar gallery, including its series totals. */
+.bar-recipes .recipes-controls fieldset {
+  padding: 2px;
+  border-radius: 6px;
+}
+.bar-recipes .recipes-controls button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 16px;
+}
+.bar-recipes .recipe-total {
+  display: inline;
+  margin: 0 0 0 6px;
+  font-size: 12px;
+  font-weight: 550;
 }

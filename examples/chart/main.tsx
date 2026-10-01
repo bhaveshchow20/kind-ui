@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { MovingTooltip, useRecipeMotion } from "./recipe-motion.js";
 import "./style.css";
 
 const config = {
@@ -50,13 +51,17 @@ function ReviewMarker({ cx, cy, size = 34 }: Pick<DotProps, "cx" | "cy"> & { siz
   );
 }
 function App() {
+  const tooltipMotion = useRecipeMotion(undefined);
   const [palette, setPalette] = useState<"monochrome" | "color">("monochrome");
   const [visible, setVisible] = useState<string[]>([...keys]);
   const [empty, setEmpty] = useState(false);
   const rows = empty ? [] : data;
   return (
     <div data-palette={palette} className="min-h-screen bg-background text-foreground">
-      <main className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
+      <main
+        onKeyDownCapture={tooltipMotion.clearPointer}
+        className="mx-auto max-w-[760px] px-4 py-6 sm:px-6"
+      >
         <div className="mb-5 flex items-center justify-between gap-4">
           <a href="/recipes.html" className="text-lg font-semibold tracking-tight">
             Kind UI · Recipes
@@ -113,6 +118,8 @@ function App() {
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart
                   data={rows}
+                  onMouseMove={tooltipMotion.trackPointer}
+                  onMouseLeave={tooltipMotion.clearPointer}
                   accessibilityLayer
                   aria-label="Task outcomes by day"
                   aria-describedby="chart-help"
@@ -122,12 +129,14 @@ function App() {
                   <XAxis dataKey="day" axisLine={false} tickLine={false} />
                   <YAxis width={32} axisLine={false} tickLine={false} domain={[0, 100]} />
                   <Tooltip
+                    position={{ x: 0, y: 0 }}
                     filterNull={false}
                     isAnimationActive={false}
                     content={(tooltip) => (
-                      <Chart.TooltipContent
+                      <MovingTooltip
                         tooltip={tooltip}
-                        className="min-w-44 max-w-64 shadow-sm tabular-nums [&_[data-kind-ui=chart-tooltip-label]]:font-medium [&_[data-kind-ui=chart-tooltip-value]]:font-medium"
+                        transition={tooltipMotion.transition}
+                        pointer={tooltipMotion.pointer}
                       />
                     )}
                   />
