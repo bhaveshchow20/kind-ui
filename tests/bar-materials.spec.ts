@@ -157,7 +157,7 @@ test("existing bar recipes expose independent finish and palette controls", asyn
 test("raised Clay and sketch Paper preserve native translucent alpha and explicit radii", async ({
   page,
 }, info) => {
-  await page.goto(`${url}&translucent&round`);
+  await page.goto(`${url}&translucent&round&gradient-alpha`);
   await page.locator("section").evaluate((node) => {
     node.style.background = "transparent";
   });
@@ -200,10 +200,16 @@ test("raised Clay and sketch Paper preserve native translucent alpha and explici
       );
       expect(finished.length).toBe(plain.length);
       let maxAlpha = 0,
+        castAlpha = 0,
         rgb = 0,
         samples = 0;
       for (let i = 0; i < plain.length; i += 4) {
-        maxAlpha = Math.max(maxAlpha, Math.abs((plain[i + 3] ?? 0) - (finished[i + 3] ?? 0)));
+        const nativeAlpha = plain[i + 3] ?? 0;
+        const finishedAlpha = finished[i + 3] ?? 0;
+        // Every painted pixel, including antialiasing, keeps native alpha. Only fully
+        // transparent pixels may receive Clay's intentionally decorative cast shade.
+        if (nativeAlpha > 0) maxAlpha = Math.max(maxAlpha, Math.abs(nativeAlpha - finishedAlpha));
+        else castAlpha = Math.max(castAlpha, finishedAlpha);
         if ((plain[i + 3] ?? 0) > 40) {
           rgb +=
             Math.abs((plain[i] ?? 0) - (finished[i] ?? 0)) +
@@ -213,6 +219,11 @@ test("raised Clay and sketch Paper preserve native translucent alpha and explici
         }
       }
       expect(maxAlpha).toBeLessThanOrEqual(1);
+      if (material === "clay") {
+        expect(castAlpha).toBeGreaterThan(0);
+        // Cast shade derives from the native .35 alpha at a fixed .16 opacity.
+        expect(castAlpha).toBeLessThanOrEqual(Math.ceil(255 * 0.35 * 0.16));
+      } else expect(castAlpha).toBe(0);
       expect(rgb / samples).toBeGreaterThan(material === "clay" ? 10 : 2);
     }
   }

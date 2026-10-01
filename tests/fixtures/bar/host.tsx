@@ -197,7 +197,12 @@ export function BarHost() {
         >
           <defs>
             <linearGradient id="bar-proof-gradient">
-              <stop stopColor="#ff80bf" />
+              <stop
+                stopColor="#ff80bf"
+                stopOpacity={
+                  new URLSearchParams(window.location.search).has("gradient-alpha") ? 0.2 : 1
+                }
+              />
               <stop offset="1" stopColor="#6b45b3" />
             </linearGradient>
             <filter id="bar-host-filter">
