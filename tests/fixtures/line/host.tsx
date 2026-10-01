@@ -1,8 +1,16 @@
 // Host-only fixture: chart data, controls and engine extensions. No chart implementation.
 import * as Static from "@kind-ui/charts";
-import { useCallback, useState } from "react";
+import { type CSSProperties, useCallback, useState } from "react";
 import type { DotProps, LineDrawShapeProps } from "recharts";
-import { CartesianGrid, Curve, LabelList, ReferenceLine, XAxis, YAxis } from "recharts";
+import {
+  CartesianGrid,
+  Curve,
+  LabelList,
+  ReferenceLine,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const data = [
   { time: "A", value: 5, other: 8 },
@@ -183,5 +191,143 @@ export function LineHost({
         )}
       </Static.Root>
     </section>
+  );
+}
+
+// Packed public material proof, intentionally a small host fixture rather than a recipe.
+export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartProps }) {
+  const [palette, setPalette] = useState(false);
+  const [custom, setCustom] = useState(false);
+  const [flat, setFlat] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [native, setNative] = useState(false);
+  const [equalWidth, setEqualWidth] = useState(false);
+  const [gaps, setGaps] = useState(false);
+  const [filter, setFilter] = useState(false);
+  const [dots, setDots] = useState(false);
+  const [cssPaint, setCssPaint] = useState(false);
+  const [gradient, setGradient] = useState(false);
+  const points = flat
+    ? [
+        { time: "A", value: 4, other: 6 },
+        { time: "B", value: 4, other: 6 },
+      ]
+    : [
+        { time: "A", value: 3, other: 7 },
+        { time: "B", value: 6, other: 5 },
+        { time: "C", value: 4, other: 8 },
+        { time: "D", value: 8, other: 3 },
+        { time: "E", value: 5, other: 6 },
+      ];
+  return (
+    <main style={{ fontFamily: "system-ui", padding: 16, background: "#faf9f6", color: "#27272a" }}>
+      <button type="button" onClick={() => setPalette(!palette)}>
+        Palette
+      </button>
+      <button type="button" onClick={() => setCustom(!custom)}>
+        Custom color
+      </button>
+      <button type="button" onClick={() => setFlat(!flat)}>
+        Flat
+      </button>
+      <button type="button" onClick={() => setHidden(!hidden)}>
+        Hide
+      </button>
+      <button type="button" onClick={() => setNative(!native)}>
+        Native shape
+      </button>
+      <button type="button" onClick={() => setDots(!dots)}>
+        Dots
+      </button>
+      <button type="button" onClick={() => setFilter(!filter)}>
+        Native filter
+      </button>
+      <button type="button" onClick={() => setGaps(!gaps)}>
+        Gaps
+      </button>
+      <button type="button" onClick={() => setEqualWidth(!equalWidth)}>
+        Equal width
+      </button>
+      <button type="button" onClick={() => setCssPaint(!cssPaint)}>
+        CSS paint
+      </button>
+      <button type="button" onClick={() => setGradient(!gradient)}>
+        Gradient
+      </button>
+      {(["plain", "paper", "clay", "glow"] satisfies Static.LineMaterial[]).map((material) => (
+        <section
+          key={material}
+          aria-label={material}
+          style={{ width: "min(560px, 100%)", marginTop: 20 }}
+        >
+          <h2 style={{ fontSize: 14, margin: "0 0 8px" }}>{material}</h2>
+          <Static.Root
+            config={{
+              value: {
+                label: "Completed",
+                color: custom ? "var(--host-series)" : palette ? "#9e503b" : "#242424",
+              },
+              other: { label: "Planned", color: palette ? "#427768" : "#727272" },
+            }}
+            visibleSeries={hidden ? [] : ["value", "other"]}
+            style={{ "--host-series": "#6b45b3" } as CSSProperties}
+          >
+            <Static.Legend />
+            <ResponsiveContainer width="100%" height={180}>
+              <Static.LineChart
+                {...chartProps}
+                data={
+                  gaps
+                    ? points.map((p, index) => ({
+                        ...p,
+                        value: index === 1 ? null : index === 2 ? 0 : p.value,
+                      }))
+                    : points
+                }
+                margin={{ top: 14, right: 14, bottom: 8, left: 4 }}
+                aria-label={`${material} chart`}
+              >
+                <defs>
+                  <linearGradient id={`${material}-proof-gradient`}>
+                    <stop offset="0%" stopColor="#9e503b" />
+                    <stop offset="100%" stopColor="#427768" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke="#e2e0db" />
+                <XAxis dataKey="time" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                <YAxis
+                  domain={[0, 10]}
+                  allowDataOverflow
+                  width={24}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fontSize: 11 }}
+                />
+                <Static.LineSeries
+                  dataKey="value"
+                  style={cssPaint ? { stroke: "#6b45b3" } : undefined}
+                  {...(gradient ? { stroke: `url(#${material}-proof-gradient)` } : {})}
+                  type="monotone"
+                  material={material}
+                  {...(equalWidth ? { strokeWidth: 6 } : {})}
+                  dot={dots}
+                  {...(native ? { shape: Shape } : {})}
+                  {...(filter ? { filter: "none" } : {})}
+                />
+                <Static.LineSeries
+                  dataKey="other"
+                  type="monotone"
+                  material={material}
+                  {...(equalWidth ? { strokeWidth: 6 } : {})}
+                  dot={false}
+                  strokeDasharray="7 5"
+                />
+                <Static.Tooltip />
+              </Static.LineChart>
+            </ResponsiveContainer>
+          </Static.Root>
+        </section>
+      ))}
+    </main>
   );
 }

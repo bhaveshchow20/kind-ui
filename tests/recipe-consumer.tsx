@@ -1,4 +1,4 @@
-// Legacy application-owned bar/area recipes; these are not package exports.
+// Host recipe typechecks: legacy bars and areas composed from public exports.
 const formatValue = (value: number) => `${value} tasks`;
 
 import {

@@ -219,17 +219,6 @@
   margin-top: 14px;
 }
 
-.recipe-chart .recharts-area {
-  clip-path: var(--area-reveal-clip, none);
-}
-.recipe-chart:focus-within .recharts-area {
-  clip-path: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .recipe-chart .recharts-area {
-    clip-path: none;
-  }
-}
 .recipes-header a:last-child:not(:first-child) {
   font-size: 13px;
   font-weight: 500;
@@ -280,4 +269,20 @@
   margin: 0 0 0 6px;
   font-size: 12px;
   font-weight: 550;
+}
+
+.recipe-plot {
+  position: relative;
+}
+.recipe-plot > .recipe-empty {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.recipe-chart
+  [data-kind-ui="chart-legend-button"][aria-pressed="false"]
+  [data-kind-ui="chart-indicator"] {
+  border-color: currentColor;
 }

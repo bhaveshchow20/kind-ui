@@ -108,7 +108,8 @@ try {
   );
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
-    if (["line", "bar"].includes(folder) && file.endsWith(".tsx")) assertLineConsumerSource(source);
+    if (["line", "area", "bar"].includes(folder) && file.endsWith(".tsx"))
+      assertLineConsumerSource(source);
     await writeFile(join(consumer, target), source);
   }
   async function typecheck(files) {
@@ -170,6 +171,14 @@ try {
   console.log(
     "Motion line consumer: strict NodeNext/Bundler and production build passed using the same packed public imports",
   );
+  for (const file of ["host.tsx", "static.tsx", "static.html", "motion.tsx", "motion.html"])
+    await copyFixture("area", file);
+  await typecheck(["host.tsx", "static.tsx", "motion.tsx"]);
+  await production("static.html", "packed-area-static");
+  await production("motion.html", "packed-area-motion");
+  console.log(
+    "Packed area public exports: strict NodeNext/Bundler and static/Motion production builds passed; host fixtures only, no implementation copying",
+  );
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("bar", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-bar");
@@ -181,7 +190,7 @@ try {
   await typecheck(["index.tsx", "main.tsx", "motion.tsx"]);
   await production("index.html", "packed-chart");
 
-  // Separate example evidence: area recipes remain application-owned; bar recipes compose the public bar API.
+  // Separate host recipe evidence, outside the public line/area/bar fixture proof.
   const legacy = join(consumer, "legacy");
   await mkdir(legacy);
   for (const file of [
@@ -197,7 +206,9 @@ try {
     await readFile(join(root, "tests/recipe-consumer.tsx"), "utf8"),
   );
   await typecheck(["legacy/recipe-consumer.tsx"]);
-  console.log("Bar public compositions and legacy area recipe typechecks passed");
+  console.log(
+    "Migrated area and bar host recipe typechecks passed; separate from packed public-export proof",
+  );
   console.log(
     "Packed contents, CSS, license, ESM import, component tests, strict consumers and production styling build passed",
   );
