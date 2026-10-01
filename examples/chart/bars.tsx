@@ -1,5 +1,5 @@
-import type { SeriesConfig } from "@kind-ui/charts";
-import { useState } from "react";
+import type { BarMaterial, SeriesConfig } from "@kind-ui/charts";
+import { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   type BarPoint,
@@ -124,6 +124,7 @@ function Table({ data, labels }: { data: (BarPoint | GroupedBarPoint)[]; labels:
 }
 function App() {
   const [palette, setPalette] = useState("monochrome");
+  const [material, setMaterial] = useState<BarMaterial>("plain");
   const [motion, setMotion] = useState(false);
   const [activeSeries, setActiveSeries] = useState<"primary" | "secondary">("primary");
   const [highlightedCategory, setHighlightedCategory] = useState("Wed");
@@ -132,17 +133,21 @@ function App() {
   const reduced = useReducedMotionPreference();
   const animate = motion && !reduced;
   const animation = animate ? {} : undefined;
-  const signedData = signedCounts.map((point) => ({
-    ...point,
-    value:
-      point.value === null
-        ? null
-        : signedMode === "negative"
-          ? -Math.abs(point.value)
-          : signedMode === "zero"
-            ? 0
-            : point.value,
-  }));
+  const signedData = useMemo(
+    () =>
+      signedCounts.map((point) => ({
+        ...point,
+        value:
+          point.value === null
+            ? null
+            : signedMode === "negative"
+              ? -Math.abs(point.value)
+              : signedMode === "zero"
+                ? 0
+                : point.value,
+      })),
+    [signedMode],
+  );
   const extraExamples = [
     {
       title: "Labels",
@@ -154,6 +159,7 @@ function App() {
           label="Labeled completions"
           formatValue={tasks}
           motion={animation}
+          material={material}
         />
       ),
     },
@@ -167,6 +173,7 @@ function App() {
           label="Labeled channels"
           formatValue={tasks}
           motion={animation}
+          material={material}
         />
       ),
     },
@@ -180,6 +187,7 @@ function App() {
           label="Colored channels"
           formatValue={tasks}
           motion={animation}
+          material={material}
         />
       ),
     },
@@ -188,6 +196,7 @@ function App() {
     <main
       className="recipes bar-recipes"
       data-palette={palette}
+      data-material={material}
       data-motion={animate ? "on" : "off"}
     >
       <header className="recipes-header">
@@ -209,6 +218,19 @@ function App() {
               onClick={() => setPalette(value)}
             >
               {value === "color" ? "Color" : "Monochrome"}
+            </button>
+          ))}
+        </fieldset>
+        <fieldset aria-label="Material">
+          <legend className="sr-only">Material</legend>
+          {(["plain", "paper", "clay", "glow"] as const).map((value) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={material === value}
+              onClick={() => setMaterial(value)}
+            >
+              {value.slice(0, 1).toUpperCase() + value.slice(1)}
             </button>
           ))}
         </fieldset>
@@ -244,6 +266,7 @@ function App() {
                 label="Daily completions"
                 formatValue={tasks}
                 motion={animation}
+                material={material}
               />
               <p className="recipe-note">
                 Wednesday is unknown. Thursday is zero; neither gets an invented bar.
@@ -266,6 +289,7 @@ function App() {
                 label="Tasks by channel"
                 formatValue={tasks}
                 motion={animation}
+                material={material}
               />
               <p className="recipe-note">Category labels remain visible in a narrow card.</p>
               <Table data={channels} labels={["Completed"]} />
@@ -286,6 +310,7 @@ function App() {
                 label="Weekly comparison"
                 config={comparisonConfig}
                 motion={animation}
+                material={material}
               />
               <p className="recipe-note">
                 Missing categories stay in the table; zero remains a value.
@@ -308,6 +333,7 @@ function App() {
                 label="Task outcomes"
                 config={outcomeConfig}
                 motion={animation}
+                material={material}
               />
               <p className="recipe-note">
                 Completed + retried. Only complete, nonnegative segments belong in a total.
@@ -358,6 +384,7 @@ function App() {
                 highlightedCategory={highlightedCategory}
                 formatValue={tasks}
                 motion={animation}
+                material={material}
               />
               <Table data={labeledCounts} labels={["Completed"]} />
             </>
@@ -388,6 +415,7 @@ function App() {
                 label="Net task change"
                 formatValue={tasks}
                 motion={animation}
+                material={material}
               />
               <p className="recipe-note">Wednesday is unknown. Zero has no artificial bar.</p>
               <Table data={signedData} labels={["Net change"]} />
@@ -433,6 +461,7 @@ function App() {
                 activeSeries={activeSeries}
                 formatCategory={dateLabel}
                 motion={animation}
+                material={material}
               />
               <Table data={dailyViews} labels={["Automated", "Assisted"]} />
             </>

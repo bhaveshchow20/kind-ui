@@ -3,6 +3,10 @@
     clip-path: var(--kind-ui-line-clip, none);
   }
 
+  :where(.kind-ui-bar-series) {
+    clip-path: var(--kind-ui-bar-clip, none);
+  }
+
   :where(.kind-ui-line-chart .recharts-line, .kind-ui-line-chart .recharts-line-dots) {
     clip-path: var(--kind-ui-line-clip, none);
   }
