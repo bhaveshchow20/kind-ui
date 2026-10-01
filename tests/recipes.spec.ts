@@ -1,0 +1,284 @@
+import { expect, test } from "@playwright/test";
+
+test("line recipes preserve missing and zero data, independent state and narrow layouts", async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/recipes.html");
+  await expect(page.getByRole("application")).toHaveCount(8);
+  await page.screenshot({ path: info.outputPath("recipes-monochrome.png"), fullPage: true });
+  const comparison = page.getByRole("region", { name: "Week over week" });
+  await comparison.getByText("View data", { exact: true }).click();
+  await expect(comparison.getByRole("row", { name: "Wed No data 22 tasks" })).toBeVisible();
+  await expect(comparison.getByRole("row", { name: "Thu 0 tasks 16 tasks" })).toBeVisible();
+  const chart = comparison.getByRole("application");
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(comparison.getByRole("status")).toContainText("No data");
+  await page.keyboard.press("ArrowRight");
+  await expect(comparison.getByRole("status")).toContainText("0 tasks");
+  await page.keyboard.press("Escape");
+  await expect(comparison.getByRole("status")).not.toBeVisible();
+  await comparison.getByRole("button", { name: "This week" }).click();
+  const previous = comparison.getByRole("button", { name: "Last week" });
+  await previous.focus();
+  await page.keyboard.press("Space");
+  await expect(previous).toBeFocused();
+  await expect(comparison.getByRole("status")).toHaveText("Select a series to show it.");
+  await expect(page.getByRole("application")).toHaveCount(7);
+  await expect(comparison.getByRole("row", { name: "Thu 0 tasks 16 tasks" })).toBeVisible();
+  await previous.click();
+  await page.getByRole("button", { name: "Color", exact: true }).click();
+  await page.setViewportSize({ width: 320, height: 800 });
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  await expect(page.locator("main")).toHaveCSS("--chart-1", "#7c3aed");
+  await page.screenshot({ path: info.outputPath("recipes-mobile-color.png"), fullPage: true });
+  await page.getByLabel("Empty data").check();
+  await expect(page.getByRole("application")).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveCount(8);
+  await page.getByLabel("Empty data").uncheck();
+  await expect(page.getByRole("application")).toHaveCount(8);
+  expect(errors).toEqual([]);
+});
+
+test("optional motion respects changing preferences and survives interrupted interactions", async ({
+  page,
+}) => {
+  await page.goto("/recipes.html");
+  await page.getByLabel("Motion", { exact: true }).check();
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "on");
+  const clips = page.locator("clipPath[id$='-reveal'] rect");
+  await expect(clips).toHaveCount(8);
+  await expect
+    .poll(async () => Number.parseFloat((await clips.first().getAttribute("width")) ?? "NaN"))
+    .toBeGreaterThan(0);
+  await expect
+    .poll(async () => Number.parseFloat((await clips.first().getAttribute("width")) ?? "NaN"))
+    .toBe(100);
+  await expect(page.locator(".recharts-line").first()).not.toHaveCSS("clip-path", "none");
+  await page.getByRole("application", { name: "Smooth daily completions", exact: true }).focus();
+  await expect(page.locator(".recharts-line").first()).toHaveCSS("clip-path", "none");
+
+  for (let index = 0; index < 3; index++) {
+    await page.getByLabel("Empty data").check();
+    await page.getByLabel("Empty data").uncheck();
+    await page.getByRole("button", { name: "This week", exact: true }).click();
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
+  await expect(page.getByRole("application")).toHaveCount(8);
+  await expect(page.locator(".recharts-line-curve")).toHaveCount(8);
+  await expect(clips).toHaveCount(0);
+  for (const line of await page.locator(".recharts-line").all())
+    await expect(line).toHaveCSS("clip-path", "none");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(clips).toHaveCount(7);
+
+  await page.getByLabel("Motion", { exact: true }).uncheck();
+  await expect(clips).toHaveCount(0);
+  await expect(page.locator(".recharts-line").first()).toHaveCSS("clip-path", "none");
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
+});
+
+test("packed components accept Motion props while retaining refs and native handlers", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("http://127.0.0.1:4174");
+  const root = page.getByRole("region", { name: "Motion contract" });
+  await expect(root).toHaveAttribute("data-ref-tag", "DIV");
+  await expect(root.getByRole("list")).toHaveAttribute("data-ref-tag", "UL");
+  await root.focus();
+  await expect(root).toHaveAttribute("data-focused", "yes");
+  await root.getByRole("button").click();
+  await expect(root.getByRole("list")).toHaveAttribute("data-clicked", "yes");
+  await expect(root.getByRole("button")).toHaveAttribute("aria-pressed", "false");
+  await expect(root).toHaveCSS("opacity", "0.6");
+  await expect(root).not.toHaveAttribute("animate");
+  await root.getByRole("button").click();
+  await expect(root).toHaveCSS("opacity", "1");
+  expect(errors).toEqual([]);
+});
+
+test("Motion advances one shared clip per chart and completes without engine interpolation", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.clock.install();
+  await page.goto("/recipes.html");
+  await page.getByLabel("Motion", { exact: true }).check();
+  await page.clock.runFor(100);
+  const clip = page.locator("clipPath[id$='-reveal'] rect").first();
+  const progress = Number.parseFloat((await clip.getAttribute("width")) ?? "NaN");
+  expect(progress).toBeGreaterThan(0);
+  expect(progress).toBeLessThan(100);
+  await page.clock.runFor(1000);
+  await expect(clip).toHaveAttribute("width", "100%");
+  await expect(page.locator("clipPath[id$='-reveal']")).toHaveCount(8);
+  const comparison = page.getByRole("region", { name: "Week over week" });
+  const paths = await comparison
+    .locator(".recharts-line")
+    .evaluateAll((lines) => lines.map((line) => getComputedStyle(line).clipPath));
+  expect(paths).toHaveLength(2);
+  expect(paths[0]).toBe(paths[1]);
+  expect(paths[0]).toContain("-reveal");
+  const dots = await comparison
+    .locator(".recharts-line-dots")
+    .evaluateAll((groups) => groups.map((group) => getComputedStyle(group).clipPath));
+  expect(dots).toHaveLength(2);
+  expect(dots).toEqual(paths);
+  await expect(comparison.locator("clipPath[id$='-reveal']")).toHaveAttribute(
+    "clipPathUnits",
+    "userSpaceOnUse",
+  );
+  const bounds = await comparison
+    .locator(".recharts-line")
+    .evaluateAll((lines) => lines.map((line) => (line as SVGGraphicsElement).getBBox().x));
+  expect(bounds[0]).not.toBe(bounds[1]); // Leading missing value: both still share chart coordinates.
+  await comparison.getByRole("application").focus();
+  await page.getByLabel("Motion", { exact: true }).focus();
+  await expect(comparison.locator(".recharts-line").first()).toHaveCSS("clip-path", "none");
+});
+
+test("gallery variants retain their distinct engine geometry and markers have solid outlines", async ({
+  page,
+}, info) => {
+  await page.goto("/recipes.html");
+  for (const title of ["Smooth", "Step", "Dots", "Custom markers", "Labels"]) {
+    await expect(
+      page.getByRole("region", { name: title, exact: true }).getByRole("application"),
+    ).toBeVisible();
+  }
+  const smooth = page.getByRole("region", { name: "Smooth", exact: true });
+  const step = page.getByRole("region", { name: "Step", exact: true });
+  expect(await smooth.locator(".recharts-line-curve").getAttribute("d")).toContain("C");
+  expect(await step.locator(".recharts-line-curve").getAttribute("d")).not.toContain("C");
+  await expect(
+    page
+      .getByRole("region", { name: "Custom markers", exact: true })
+      .locator('[data-recipe-marker="diamond"]'),
+  ).toHaveCount(7);
+  await expect(
+    page.getByRole("region", { name: "Labels", exact: true }).locator(".recharts-label-list text"),
+  ).toHaveCount(7);
+  const comparison = page.getByRole("region", { name: "Week over week" });
+  const hollow = comparison.locator('.recharts-line-dots circle[fill="var(--card)"]');
+  await expect(hollow).toHaveCount(7);
+  for (const dot of await hollow.all()) await expect(dot).toHaveCSS("stroke-dasharray", "none");
+  await comparison.screenshot({ path: info.outputPath("markers-solid-outlines.png") });
+});
+
+test("pointer travel retargets active markers and tooltip continuously, then settles and disables immediately", async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.clock.install();
+  await page.goto("/recipes.html");
+  await page.getByLabel("Motion", { exact: true }).check();
+  await page.clock.runFor(1100);
+  const section = page.getByRole("region", { name: "Dots", exact: true });
+  await section.scrollIntoViewIfNeeded();
+  const points = await section.locator(".recharts-line-dot").evaluateAll((dots) =>
+    dots.map((dot) => {
+      const rect = dot.getBoundingClientRect();
+      return {
+        x: rect.x + rect.width / 2,
+        y: rect.y + rect.height / 2,
+        cx: Number(dot.getAttribute("cx")),
+      };
+    }),
+  );
+  const start = points[1];
+  const end = points[5];
+  const middle = points[3];
+  if (!start || !end || !middle) throw new Error("Missing sample coordinates");
+  await page.mouse.move(start.x, start.y);
+  await page.clock.runFor(50);
+  const marker = section.locator("[data-recipe-active-marker]");
+  await expect(marker).toHaveCount(1);
+  const first = Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN");
+  const movingTooltip = section.locator("[data-recipe-tooltip-motion]");
+  const readX = () =>
+    movingTooltip.evaluate((node) => new DOMMatrixReadOnly(getComputedStyle(node).transform).m41);
+  const firstTooltipX = await readX();
+  await page.mouse.move(end.x, end.y);
+  await page.clock.runFor(80);
+  const moving = Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN");
+  expect(moving).toBeGreaterThan(first);
+  expect(moving).toBeLessThan(end.cx);
+  const movingTooltipX = await readX();
+  const svgWidth = await section
+    .getByRole("application")
+    .evaluate((node) => node.getBoundingClientRect().width);
+  const tipWidth = await movingTooltip.evaluate((node) => node.getBoundingClientRect().width);
+  const endTooltipX = Math.max(0, Math.min(end.cx - tipWidth / 2, svgWidth - tipWidth));
+  expect(movingTooltipX).toBeGreaterThan(firstTooltipX);
+  expect(movingTooltipX).toBeLessThan(endTooltipX);
+  // Change preferences in flight without supplying another coordinate.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
+  await page.clock.runFor(32);
+  expect(Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN")).toBeCloseTo(end.cx, 1);
+  expect(await readX()).toBeCloseTo(endTooltipX, 1);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "on");
+  await page.mouse.move(start.x, start.y);
+  await page.clock.runFor(80);
+  await page
+    .getByLabel("Motion", { exact: true })
+    .evaluate((node) => (node as HTMLInputElement).click());
+  await page.clock.runFor(32);
+  expect(Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN")).toBeCloseTo(start.cx, 1);
+  expect(await readX()).toBeCloseTo(firstTooltipX, 1);
+  await page
+    .getByLabel("Motion", { exact: true })
+    .evaluate((node) => (node as HTMLInputElement).click());
+  await page.mouse.move(end.x, end.y);
+  await page.clock.runFor(80);
+  // Interrupt before settling: Motion must retarget, without a queued stale endpoint.
+  await page.mouse.move(middle.x, middle.y);
+  await page.clock.runFor(1500);
+  await expect
+    .poll(async () => Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN"))
+    .toBeCloseTo(middle.cx, 1);
+  await expect(section.getByRole("status")).toContainText("Thu");
+  const middleTooltipX = Math.max(0, Math.min(middle.cx - tipWidth / 2, svgWidth - tipWidth));
+  expect(await readX()).toBeCloseTo(middleTooltipX, 1);
+  const tooltip = section.locator("[data-recipe-tooltip-motion]");
+  const tooltipBox = await tooltip.boundingBox();
+  const chartBox = await section.getByRole("application").boundingBox();
+  expect(
+    tooltipBox &&
+      chartBox &&
+      tooltipBox.x >= chartBox.x &&
+      tooltipBox.x + tooltipBox.width <= chartBox.x + chartBox.width + 1,
+  ).toBeTruthy();
+  await section.screenshot({ path: info.outputPath("pointer-hover.png") });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.mouse.move(end.x, end.y);
+  await page.clock.runFor(32);
+  await expect
+    .poll(async () => Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN"))
+    .toBeCloseTo(end.cx, 1);
+  expect(await readX()).toBeCloseTo(endTooltipX, 1);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.getByLabel("Motion", { exact: true }).uncheck();
+  await section.scrollIntoViewIfNeeded();
+  const staticPoint = await section.locator(".recharts-line-dot").nth(1).boundingBox();
+  if (!staticPoint) throw new Error("Missing static sample");
+  await page.mouse.move(
+    staticPoint.x + staticPoint.width / 2,
+    staticPoint.y + staticPoint.height / 2,
+  );
+  await page.clock.runFor(32);
+  await expect
+    .poll(async () => Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN"))
+    .toBeCloseTo(start.cx, 1);
+  await page.mouse.move(0, 0);
+  await expect(section.getByRole("status")).not.toBeVisible();
+});

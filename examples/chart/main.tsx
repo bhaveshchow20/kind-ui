@@ -58,7 +58,9 @@ function App() {
     <div data-palette={palette} className="min-h-screen bg-background text-foreground">
       <main className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
         <div className="mb-5 flex items-center justify-between gap-4">
-          <p className="text-lg font-semibold tracking-tight">Kind UI</p>
+          <a href="/recipes.html" className="text-lg font-semibold tracking-tight">
+            Kind UI · Recipes
+          </a>
           <fieldset
             aria-label="Chart palette"
             className="flex gap-1 rounded-lg bg-muted p-1 text-xs"

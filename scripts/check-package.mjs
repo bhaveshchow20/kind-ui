@@ -70,6 +70,29 @@ try {
     ],
     consumer,
   );
+  run(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      "await import('@kind-ui/charts'); try { import.meta.resolve('motion') } catch (error) { if (error.code === 'ERR_MODULE_NOT_FOUND') process.exit(0); throw error } throw new Error('Baseline must not install Motion')",
+    ],
+    consumer,
+  );
+  run(
+    process.execPath,
+    [
+      npm,
+      "install",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "--package-lock=false",
+      "--workspaces=false",
+      `motion@${rootManifest.devDependencies.motion}`,
+    ],
+    consumer,
+  );
   const installed = join(consumer, "node_modules", "@kind-ui/charts");
   assert.equal(
     await realpath(installed),
@@ -92,7 +115,7 @@ try {
     await readFile(join(root, "packages/charts/src/styles.css"), "utf8"),
     "Packed CSS must match the component defaults",
   );
-  for (const file of ["index.html", "main.tsx", "consumer.css"]) {
+  for (const file of ["index.html", "main.tsx", "consumer.css", "motion.tsx"]) {
     await writeFile(
       join(consumer, file),
       await readFile(join(root, "tests/fixtures/styling", file)),
@@ -106,6 +129,22 @@ try {
   await writeFile(
     join(consumer, "index.tsx"),
     await readFile(join(root, "tests/consumer.tsx"), "utf8"),
+  );
+  await writeFile(
+    join(consumer, "line-recipes.tsx"),
+    await readFile(join(root, "examples/chart/line-recipes.tsx"), "utf8"),
+  );
+  await writeFile(
+    join(consumer, "recipe-consumer.tsx"),
+    await readFile(join(root, "tests/recipe-consumer.tsx"), "utf8"),
+  );
+  await writeFile(
+    join(consumer, "use-reduced-motion.ts"),
+    await readFile(join(root, "examples/chart/use-reduced-motion.ts"), "utf8"),
+  );
+  await writeFile(
+    join(consumer, "line-motion.tsx"),
+    await readFile(join(root, "examples/chart/line-motion.tsx"), "utf8"),
   );
   for (const mode of ["NodeNext", "Bundler"]) {
     await writeFile(
@@ -122,7 +161,7 @@ try {
           noEmit: true,
           typeRoots: [join(consumer, "node_modules", "@types")],
         },
-        include: ["index.tsx", "main.tsx"],
+        include: ["index.tsx", "main.tsx", "motion.tsx", "line-recipes.tsx", "recipe-consumer.tsx"],
       }),
     );
     run(
