@@ -1,5 +1,6 @@
 "use client";
 
+import { AreaClayRelief } from "./area-clay.js";
 import type { LineMaterial } from "./line-material.js";
 
 /** Internal filled-surface finish only. Callers own native shapes, IDs and bounds. */
@@ -44,6 +45,8 @@ export function SurfaceMaterialFilter({
             <feMergeNode in="grain" />
           </feMerge>
         </>
+      ) : material === "clay" && family === "area" ? (
+        <AreaClayRelief />
       ) : material === "clay" ? (
         <>
           <feOffset in="SourceAlpha" dx={0} dy={1.5} result="lower" />
