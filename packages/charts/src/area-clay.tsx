@@ -26,11 +26,8 @@ export function AreaClayRelief() {
         floodOpacity="var(--kind-ui-area-clay-shadow, 0.65)"
       />
       <feComposite in2="bottomPaint" operator="in" result="shade" />
-      <feMerge>
-        <feMergeNode in="SourceGraphic" />
-        <feMergeNode in="shade" />
-        <feMergeNode in="light" />
-      </feMerge>
+      <feComposite in="shade" in2="SourceGraphic" operator="atop" result="shaded" />
+      <feComposite in="light" in2="shaded" operator="atop" />
     </>
   );
 }
