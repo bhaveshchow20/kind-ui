@@ -65,15 +65,8 @@ function App() {
     <main className="recipes" data-palette={palette} data-motion={animate ? "on" : "off"}>
       <header className="recipes-header">
         <a href="/">Kind UI</a>
-        <span>Line recipes</span>
+        <h1>Line recipes</h1>
       </header>
-      <h1>
-        A little context.
-        <br />A clearer next step.
-      </h1>
-      <p className="recipes-intro">
-        Compact charts for the moments between a question and a decision.
-      </p>
       <div className="recipes-controls">
         <fieldset aria-label="Palette">
           <legend className="sr-only">Palette</legend>
@@ -218,7 +211,7 @@ function App() {
           </details>
         </section>
       </div>
-      <footer>Illustrative data · Built with @kind-ui/charts and Recharts</footer>
+      <footer>Sample data</footer>
     </main>
   );
 }

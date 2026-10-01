@@ -153,6 +153,11 @@ test("Motion advances one shared clip per chart and completes without engine int
   expect(paths).toHaveLength(2);
   expect(paths[0]).toBe(paths[1]);
   expect(paths[0]).toContain("-reveal");
+  const dots = await comparison
+    .locator(".recharts-line-dots")
+    .evaluateAll((groups) => groups.map((group) => getComputedStyle(group).clipPath));
+  expect(dots).toHaveLength(2);
+  expect(dots).toEqual(paths);
   await expect(comparison.locator("clipPath[id$='-reveal']")).toHaveAttribute(
     "clipPathUnits",
     "userSpaceOnUse",

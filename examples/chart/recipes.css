@@ -7,7 +7,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 48px;
+  margin-bottom: 24px;
   font-size: 13px;
 }
 .recipes-header a {
@@ -15,25 +15,16 @@
   font-weight: 650;
   letter-spacing: -0.04em;
 }
-.recipes-header span,
-.recipes-intro,
+.recipes-header h1,
 .recipe-description,
 .recipe-note,
 .recipe-target,
 .recipes footer {
   color: var(--muted-foreground);
 }
-.recipes h1 {
-  font-size: clamp(30px, 6vw, 40px);
-  letter-spacing: -0.05em;
-  line-height: 1.1;
-  font-weight: 550;
-}
-.recipes-intro {
-  margin: 16px 0 24px;
-  max-width: 340px;
-  font-size: 14px;
-  line-height: 1.6;
+.recipes-header h1 {
+  font-size: 13px;
+  font-weight: 500;
 }
 .recipes-controls {
   display: flex;
@@ -202,14 +193,17 @@
   }
 }
 /* Motion owns the SVG clip; Recharts retains geometry and tooltip state. */
-.recipe-chart .recharts-line {
+.recipe-chart .recharts-line,
+.recipe-chart .recharts-line-dots {
   clip-path: var(--line-reveal-clip, none);
 }
-.recipe-chart:focus-within .recharts-line {
+.recipe-chart:focus-within .recharts-line,
+.recipe-chart:focus-within .recharts-line-dots {
   clip-path: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .recipe-chart .recharts-line {
+  .recipe-chart .recharts-line,
+  .recipe-chart .recharts-line-dots {
     clip-path: none;
   }
 }
