@@ -64,6 +64,8 @@ export function BarHost() {
   const [horizontal, setHorizontal] = useState(
     new URLSearchParams(window.location.search).has("horizontal"),
   );
+  const [categoryPadding, setCategoryPadding] = useState(false);
+  const [sqrtScale, setSqrtScale] = useState(false);
   const [stacked, setStacked] = useState(false);
   const [visible, setVisible] = useState(["value", "other", "alias"]);
   const [hide, setHide] = useState(false);
@@ -154,6 +156,12 @@ export function BarHost() {
       <button type="button" onClick={() => setCustom(!custom)}>
         Custom content
       </button>
+      <button type="button" onClick={() => setCategoryPadding(!categoryPadding)}>
+        Category padding
+      </button>
+      <button type="button" onClick={() => setSqrtScale((value) => !value)}>
+        Numeric scale
+      </button>
       <button type="button" onClick={() => setDomain(domain === 100 ? 200 : 100)}>
         Domain
       </button>
@@ -205,8 +213,9 @@ export function BarHost() {
                     domain,
                   ],
                   allowDataOverflow: true,
+                  scale: sqrtScale ? "sqrt" : "linear",
                 }
-              : {})}
+              : { padding: { left: categoryPadding ? 60 : 0, right: categoryPadding ? 60 : 0 } })}
             xAxisId="category-axis"
             dataKey={horizontal ? undefined : "category"}
             type={horizontal ? "number" : "category"}
@@ -221,8 +230,9 @@ export function BarHost() {
                         domain,
                       ],
                   allowDataOverflow: true,
+                  scale: sqrtScale ? "sqrt" : "linear",
                 }
-              : {})}
+              : { padding: { top: categoryPadding ? 40 : 0, bottom: categoryPadding ? 40 : 0 } })}
             {...(new URLSearchParams(window.location.search).has("exclude-zero")
               ? {
                   padding: { bottom: 20, top: 20 },

@@ -66,9 +66,20 @@ export function BarSeries({
       : 0;
   // Clamp the VALUE before scaling: native domain-edge baselines include axis padding.
   const zero = horizontal ? xScale?.(baseline) : yScale?.(baseline);
+  // Sample real domain values and both band edges: numeric probes miss string categories.
+  const axisCoordinates = [
+    xDomain?.map((value) => [
+      xScale?.(value, { position: "start" }),
+      xScale?.(value, { position: "end" }),
+    ]),
+    yDomain?.map((value) => [
+      yScale?.(value, { position: "start" }),
+      yScale?.(value, { position: "end" }),
+    ]),
+  ];
   const geometry =
     area && zero !== undefined
-      ? `${area.x}/${area.y}/${area.width}/${area.height}/${zero}/${xScale?.(1)}/${yScale?.(1)}/${JSON.stringify([xDomain, yDomain])}/${layout}`
+      ? `${area.x}/${area.y}/${area.width}/${area.height}/${zero}/${xScale?.(1)}/${yScale?.(1)}/${JSON.stringify([xDomain, yDomain, axisCoordinates])}/${layout}`
       : undefined;
   const inputs = {
     hide: effectiveHide,
