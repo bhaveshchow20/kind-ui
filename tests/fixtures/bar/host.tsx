@@ -272,7 +272,13 @@ export function BarHost() {
             background={background}
             activeBar={customActive ? Shape : false}
             radius={new URLSearchParams(window.location.search).has("round") ? 8 : [3, 3, 0, 0]}
-            fillOpacity={new URLSearchParams(window.location.search).has("translucent") ? 0.35 : 1}
+            fillOpacity={
+              new URLSearchParams(window.location.search).has("zero-opacity")
+                ? 0
+                : new URLSearchParams(window.location.search).has("translucent")
+                  ? 0.35
+                  : 1
+            }
             {...(nativeShape ? { shape: Shape } : {})}
             {...(nativeFilter ? { filter: "url(#bar-host-filter)" } : {})}
             onClick={() => setClicked((v) => v + 1)}

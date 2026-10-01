@@ -224,7 +224,8 @@ test("raised Clay and sketch Paper preserve native translucent alpha and explici
         // Cast shade derives from the native .35 alpha at a fixed .16 opacity.
         expect(castAlpha).toBeLessThanOrEqual(Math.ceil(255 * 0.35 * 0.16));
       } else expect(castAlpha).toBe(0);
-      expect(rgb / samples).toBeGreaterThan(material === "clay" ? 10 : 2);
+      // Diffuse matte relief stays visibly different on the small translucent gradient.
+      expect(rgb / samples).toBeGreaterThan(material === "clay" ? 5 : 2);
     }
   }
 });
@@ -323,3 +324,91 @@ test("two native Clay stack envelopes have independent IDs and truthful outer ca
     expect(geometry.every((path) => !path.includes("A"))).toBe(true);
   }
 });
+
+for (const horizontal of [false, true]) {
+  test(`Clay cast shade preserves ${horizontal ? "horizontal" : "vertical"} value extent and zero-opacity paint`, async ({
+    page,
+  }, info) => {
+    for (const transparent of [false, true]) {
+      await page.goto(
+        `${url}&round${horizontal ? "&horizontal" : ""}${transparent ? "&zero-opacity" : ""}`,
+      );
+      await page.locator("section").evaluate((node) => {
+        node.style.background = "transparent";
+      });
+      await page.addStyleTag({
+        content: `html, body { background: transparent !important; }
+        svg text, .recharts-cartesian-grid, .recharts-reference-line { visibility: hidden; }
+        ${marks} { visibility: hidden; } [data-alpha-proof] { visibility: visible !important; }`,
+      });
+      const mark = page.locator(marks).first();
+      await mark.evaluate((node) => node.setAttribute("data-alpha-proof", ""));
+      const path = await mark.getAttribute("d");
+      const box = await mark.boundingBox();
+      if (!box) throw new Error("Missing native bar bounds");
+      const clip = {
+        x: Math.floor(box.x - 12),
+        y: Math.floor(box.y - 12),
+        width: Math.ceil(box.width + 25),
+        height: Math.ceil(box.height + 25),
+      };
+      async function raster(material: "plain" | "clay") {
+        await page.getByRole("button", { name: material, exact: true }).click();
+        // Recharts can replace the path when adding a filter; reveal the current node.
+        await mark.evaluate((node) => node.setAttribute("data-alpha-proof", ""));
+        await expect(mark).toHaveAttribute("d", path ?? "");
+        const bytes = await page.screenshot({
+          clip,
+          omitBackground: true,
+          path: info.outputPath(`${material}-${transparent ? "zero" : "opaque"}.png`),
+        });
+        return page.evaluate(
+          async (src) => {
+            const img = new Image();
+            img.src = src;
+            await img.decode();
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) throw new Error("No canvas");
+            ctx.drawImage(img, 0, 0);
+            return {
+              width: img.width,
+              rgba: Array.from(ctx.getImageData(0, 0, img.width, img.height).data),
+            };
+          },
+          `data:image/png;base64,${bytes.toString("base64")}`,
+        );
+      }
+      const plain = await raster("plain"),
+        clay = await raster("clay");
+      const coverage = plain.rgba.flatMap((alpha, i) =>
+        i % 4 === 3 && alpha > 0 ? [(i - 3) / 4] : [],
+      );
+      if (transparent) {
+        expect(coverage).toHaveLength(0);
+        expect(clay.rgba.filter((_, i) => i % 4 === 3).every((alpha) => alpha === 0)).toBe(true);
+        continue;
+      }
+      expect(coverage.length).toBeGreaterThan(0);
+      const coordinate = (pixel: number) =>
+        horizontal ? pixel % plain.width : Math.floor(pixel / plain.width);
+      const min = Math.min(...coverage.map(coordinate)),
+        max = Math.max(...coverage.map(coordinate));
+      let exterior = 0;
+      for (let i = 3; i < clay.rgba.length; i += 4) {
+        const alpha = clay.rgba[i] ?? 0,
+          nativeAlpha = plain.rgba[i] ?? 0;
+        if (nativeAlpha > 0) expect(Math.abs(alpha - nativeAlpha)).toBeLessThanOrEqual(1);
+        else if (alpha > 0) {
+          exterior++;
+          expect(alpha).toBeLessThanOrEqual(Math.ceil(255 * 0.16));
+          expect(coordinate((i - 3) / 4)).toBeGreaterThanOrEqual(min);
+          expect(coordinate((i - 3) / 4)).toBeLessThanOrEqual(max);
+        }
+      }
+      expect(exterior).toBeGreaterThan(0);
+    }
+  });
+}
