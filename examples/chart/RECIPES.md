@@ -2,7 +2,7 @@
 
 Run `npm ci` and `npm run dev:chart`, then open `/recipes.html`. The responsive gallery offers eight distinct line variants: smooth, linear, step, dots, custom markers, labels, target and controlled comparison. These are copyable application components, not new package exports.
 
-Copy `line-recipes.tsx`, `line-motion.tsx`, `use-reduced-motion.ts` and the relevant rules from `recipes.css` into your React 19 host. Import `@kind-ui/charts/styles.css` once. Supply your host's `--chart-1`, `--chart-2`, `--card`, `--border`, `--muted-foreground`, `--accent` and `--ring` tokens. The example's `style.css` provides Geist and monochrome/color tokens; neither Tailwind nor Geist is required by the package.
+Copy `line-recipes.tsx`, `line-motion.tsx`, `recipe-motion.tsx`, `use-reduced-motion.ts` and the relevant rules from `recipes.css` into your React 19 host. Import `@kind-ui/charts/styles.css` once. Supply your host's `--chart-1`, `--chart-2`, `--card`, `--border`, `--muted-foreground`, `--accent` and `--ring` tokens. The example's `style.css` provides Geist and monochrome/color tokens; neither Tailwind nor Geist is required by the package.
 
 | Recipe | Data | Use |
 | --- | --- | --- |
@@ -61,3 +61,5 @@ const MotionLegend = motion.create(Legend);
 Plain `Root`/`Legend` do not themselves accept `animate`, `variants` or `exit`. Motion is a workspace development dependency used by the optional recipes and a packed-consumer compatibility fixture. It is absent from package dependencies; all hosts copying this recipe file must install Motion, including when `motion` is omitted. The fixture checks Motion 13.4.6 with React 19.3.0; it does not promise every Motion gesture/layout/exit combination. Motion can still animate opacity under its reduced-motion setting, so hosts needing no animation at all must explicitly disable it.
 
 `npm run check` checks strict packed consumers, component contracts and browser behavior. CI saves real screenshots in the chart artifacts. Pointer tests exercise intermediate motion, interrupted target changes and reduced-motion updates without recording video. Chromium checks are not a screen-reader conformance claim.
+
+For vertical, horizontal, grouped and stacked bars, see [the bar recipe guide](BARS.md).

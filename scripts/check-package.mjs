@@ -130,21 +130,21 @@ try {
     join(consumer, "index.tsx"),
     await readFile(join(root, "tests/consumer.tsx"), "utf8"),
   );
-  await writeFile(
-    join(consumer, "line-recipes.tsx"),
-    await readFile(join(root, "examples/chart/line-recipes.tsx"), "utf8"),
-  );
+  for (const file of [
+    "line-recipes.tsx",
+    "line-motion.tsx",
+    "recipe-motion.tsx",
+    "bar-recipes.tsx",
+    "use-reduced-motion.ts",
+  ]) {
+    await writeFile(
+      join(consumer, file),
+      await readFile(join(root, "examples/chart", file), "utf8"),
+    );
+  }
   await writeFile(
     join(consumer, "recipe-consumer.tsx"),
     await readFile(join(root, "tests/recipe-consumer.tsx"), "utf8"),
-  );
-  await writeFile(
-    join(consumer, "use-reduced-motion.ts"),
-    await readFile(join(root, "examples/chart/use-reduced-motion.ts"), "utf8"),
-  );
-  await writeFile(
-    join(consumer, "line-motion.tsx"),
-    await readFile(join(root, "examples/chart/line-motion.tsx"), "utf8"),
   );
   for (const mode of ["NodeNext", "Bundler"]) {
     await writeFile(

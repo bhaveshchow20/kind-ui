@@ -229,3 +229,26 @@
 .recipe-card .recipe-chart {
   margin-top: 14px;
 }
+
+.recipe-chart .recharts-bar {
+  clip-path: var(--bar-reveal-clip, none);
+}
+.recipe-chart:focus-within .recharts-bar {
+  clip-path: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .recipe-chart .recharts-bar {
+    clip-path: none;
+  }
+}
+.recipes-header a:last-child:not(:first-child) {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+.recipe-chart [data-kind-ui="chart-legend-item"] > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+}
