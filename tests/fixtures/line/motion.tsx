@@ -24,7 +24,10 @@ function App() {
         <input type="checkbox" checked={defaults} onChange={(e) => setDefaults(e.target.checked)} />
         Default animation
       </label>
-      <LineHost chartProps={props} />
+      <LineHost
+        chartProps={props}
+        nativeVisibility={new URLSearchParams(window.location.search).has("native-visibility")}
+      />
     </>
   );
 }

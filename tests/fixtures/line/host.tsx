@@ -10,6 +10,7 @@ const data = [
   { time: "C", value: 0, other: 4 },
   { time: "D", value: 7, other: 2 },
 ];
+const nativeVisibilityData = data.map((point) => ({ ...point, other: point.other * 20 }));
 const otherValue = (point: { other: number }) => point.other;
 function Mark({ cx, cy }: DotProps) {
   if (cx == null || cy == null) return null;
@@ -41,7 +42,13 @@ function Content({
     </div>
   );
 }
-export function LineHost({ chartProps }: { chartProps?: Static.LineChartProps }) {
+export function LineHost({
+  chartProps,
+  nativeVisibility = false,
+}: {
+  chartProps?: Static.LineChartProps;
+  nativeVisibility?: boolean;
+}) {
   const { LineChart, LineSeries, Tooltip } = Static;
   const [visible, setVisible] = useState(["value", "other", "alias"]);
   const [renamed, setRenamed] = useState(false);
@@ -53,9 +60,14 @@ export function LineHost({ chartProps }: { chartProps?: Static.LineChartProps })
   const [clicked, setClicked] = useState(0);
   const [show, setShow] = useState(true);
   const [seriesData, setSeriesData] = useState(false);
+  const [nativeHide, setNativeHide] = useState(false);
+  const sourceData = nativeVisibility ? nativeVisibilityData : data;
   const rows = updated
-    ? data.map((point) => ({ ...point, value: point.value == null ? null : point.value + 10 }))
-    : data;
+    ? sourceData.map((point) => ({
+        ...point,
+        value: point.value == null ? null : point.value + 10,
+      }))
+    : sourceData;
   const chartRef = useCallback((node: SVGSVGElement | null) => {
     if (node) node.dataset.refTag = node.tagName;
     return () => {
@@ -100,6 +112,16 @@ export function LineHost({ chartProps }: { chartProps?: Static.LineChartProps })
         />
         Series data
       </label>
+      {nativeVisibility && (
+        <label>
+          <input
+            type="checkbox"
+            checked={nativeHide}
+            onChange={(e) => setNativeHide(e.target.checked)}
+          />
+          Native hide other
+        </label>
+      )}
       <div role="note" aria-label="Events">
         {entered}/{left}/{clicked}
       </div>
@@ -151,6 +173,7 @@ export function LineHost({ chartProps }: { chartProps?: Static.LineChartProps })
               {...(seriesData ? { data: rows } : {})}
               id=""
               dataKey={otherValue}
+              hide={nativeHide}
               seriesKey={renamed ? "alias" : "other"}
               stroke="#678"
               name="Engine other"
