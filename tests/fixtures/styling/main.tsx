@@ -3,6 +3,7 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import "@kind-ui/charts/styles.css";
 import "./consumer.css";
+import { MotionContract } from "./motion.js";
 
 const series = {
   alpha: { label: "Alpha", color: "#345" },
@@ -48,5 +49,6 @@ createRoot(root).render(
   <>
     <Panel custom={false} />
     <Panel custom />
+    <MotionContract />
   </>,
 );
