@@ -236,3 +236,74 @@ test("packed controlled function dataKey requires a metadata identity", async ({
     )
     .toBe(true);
 });
+
+for (const horizontal of [false, true]) {
+  test(`packed categorical ${horizontal ? "Y" : "X"} padding cancels entrance without pointer or focus`, async ({
+    page,
+  }) => {
+    await page.clock.install();
+    await page.clock.pauseAt(new Date());
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(horizontal ? `${url}/?horizontal&fixed-zero` : `${url}/?fixed-zero`);
+    const mark = page.locator("[data-host-shape]").first();
+    const geometry = () =>
+      mark.evaluate((node) => {
+        const box = (node as SVGGraphicsElement).getBBox();
+        return { x: box.x, y: box.y, width: box.width, height: box.height };
+      });
+    const before = await geometry();
+    await page
+      .getByRole("button", { name: "Animate", exact: true })
+      .evaluate((node) => (node as HTMLButtonElement).click());
+    await expect(page.locator(clips)).toHaveCount(2);
+    await page.clock.runFor(100);
+    await page
+      .getByRole("button", { name: "Category padding", exact: true })
+      .evaluate((node) => (node as HTMLButtonElement).click());
+    await expect
+      .poll(async () => (horizontal ? (await geometry()).height : (await geometry()).width))
+      .toBeLessThan(horizontal ? before.height : before.width);
+    const after = await geometry();
+    expect(horizontal ? after.y : after.x).toBeGreaterThan(horizontal ? before.y : before.x);
+    await expect(page.locator(clips)).toHaveCount(0);
+    await expect(page.getByLabel("Events")).toHaveText("0/0/0");
+    await page.clock.runFor(1200);
+    await expect(page.locator(clips)).toHaveCount(0);
+    await page.getByRole("application").focus();
+    await page.keyboard.press(horizontal ? "ArrowLeft" : "ArrowRight");
+    await expect(page.getByRole("status")).toContainText("-5 units");
+  });
+}
+
+for (const horizontal of [false, true]) {
+  test(`packed numeric ${horizontal ? "X" : "Y"} scale change cancels entrance without pointer or focus`, async ({
+    page,
+  }) => {
+    await page.clock.install();
+    await page.clock.pauseAt(new Date());
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(horizontal ? `${url}/?horizontal&fixed-zero` : `${url}/?fixed-zero`);
+    const size = () =>
+      page
+        .locator("[data-host-shape]")
+        .first()
+        .evaluate((node, horizontal) => {
+          const box = (node as SVGGraphicsElement).getBBox();
+          return horizontal ? box.width : box.height;
+        }, horizontal);
+    const before = await size();
+    await page
+      .getByRole("button", { name: "Animate", exact: true })
+      .evaluate((node) => (node as HTMLButtonElement).click());
+    await expect(page.locator(clips)).toHaveCount(2);
+    await page.clock.runFor(100);
+    await page
+      .getByRole("button", { name: "Numeric scale", exact: true })
+      .evaluate((node) => (node as HTMLButtonElement).click());
+    await expect.poll(size).toBeGreaterThan(before);
+    await expect(page.locator(clips)).toHaveCount(0);
+    await expect(page.getByLabel("Events")).toHaveText("0/0/0");
+    await page.clock.runFor(1200);
+    await expect(page.locator(clips)).toHaveCount(0);
+  });
+}
