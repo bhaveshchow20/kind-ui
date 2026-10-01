@@ -16,6 +16,8 @@ npm run check
 
 `npm run dev:chart` starts the minimal usage example. `check` runs lint, component tests, the actual packed-package gate, strict consumer typechecks, and Chromium interaction checks. Linux browser dependencies may require administrator permission. All packages remain private at `0.0.0`.
 
+`npm run dev:showcase` opens the feature gallery at `/showcase.html` on port 4873. Color presets and a custom color picker are independent of finish; motion is on by default and follows reduced-motion preferences. Chart-family tabs switch between public area, bar, and line examples.
+
 ## Direction
 
 Build with established UI libraries, not against them. Prefer familiar composition and existing primitives, styling, and motion capabilities. Introduce a new pattern only for a concrete need that existing options do not meet. Future architecture and package boundaries will be reviewed in small steps; compatibility claims require tested consumers.
