@@ -16,6 +16,8 @@ npm run check
 
 `npm run dev:chart` starts the minimal usage example. `check` runs lint, component tests, the actual packed-package gate, strict consumer typechecks, and Chromium interaction checks. Linux browser dependencies may require administrator permission. All packages remain private at `0.0.0`.
 
+Open `/themes.html` for the [glass and clay material examples](examples/chart/THEMES.md), using daisyUI and clay.css with the same chart data.
+
 ## Direction
 
 Build with established UI libraries, not against them. Prefer familiar composition and existing primitives, styling, and motion capabilities. Introduce a new pattern only for a concrete need that existing options do not meet. Future architecture and package boundaries will be reviewed in small steps; compatibility claims require tested consumers.

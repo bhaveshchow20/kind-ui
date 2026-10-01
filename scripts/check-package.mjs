@@ -136,6 +136,7 @@ try {
     "recipe-motion.tsx",
     "bar-recipes.tsx",
     "use-reduced-motion.ts",
+    "theme-chart.tsx",
   ]) {
     await writeFile(
       join(consumer, file),
@@ -161,7 +162,14 @@ try {
           noEmit: true,
           typeRoots: [join(consumer, "node_modules", "@types")],
         },
-        include: ["index.tsx", "main.tsx", "motion.tsx", "line-recipes.tsx", "recipe-consumer.tsx"],
+        include: [
+          "index.tsx",
+          "main.tsx",
+          "motion.tsx",
+          "line-recipes.tsx",
+          "recipe-consumer.tsx",
+          "theme-chart.tsx",
+        ],
       }),
     );
     run(
