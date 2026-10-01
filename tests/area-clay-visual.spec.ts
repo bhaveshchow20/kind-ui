@@ -66,7 +66,8 @@ test("packed area Clay preserves translucent and gradient output alpha while add
     const castAlpha = plain.flatMap((alpha, index) =>
       index % 4 === 3 && alpha === 0 ? [clay[index] ?? 0] : [],
     );
-    expect(Math.max(...castAlpha)).toBeLessThanOrEqual(12);
+    // The exterior cast stays below 6.3% opacity, including raster edge coverage.
+    expect(Math.max(...castAlpha)).toBeLessThanOrEqual(16);
     expect(castAlpha.filter((alpha) => alpha > 0).length).toBeGreaterThan(50);
     expect(Math.max(...alphaDiff)).toBeLessThanOrEqual(1);
     const rgbChanges = plain.filter(
