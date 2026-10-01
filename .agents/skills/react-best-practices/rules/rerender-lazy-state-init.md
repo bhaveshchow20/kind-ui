@@ -12,47 +12,34 @@ Pass a function to `useState` for expensive initial values. Without the function
 **Incorrect (runs on every render):**
 
 ```tsx
-function FilteredList({ items }: { items: Item[] }) {
+function FilteredList() {
   // buildSearchIndex() runs on EVERY render, even after initialization
-  const [searchIndex, setSearchIndex] = useState(buildSearchIndex(items))
+  const [searchIndex, setSearchIndex] = useState(buildSearchIndex())
   const [query, setQuery] = useState('')
 
   // When query changes, buildSearchIndex runs again unnecessarily
   return <SearchResults index={searchIndex} query={query} />
 }
 
-function UserProfile() {
-  // JSON.parse runs on every render
-  const [settings, setSettings] = useState(
-    JSON.parse(localStorage.getItem('settings') || '{}')
-  )
-
-  return <SettingsForm settings={settings} onChange={setSettings} />
-}
 ```
 
 **Correct (runs only once):**
 
+This example builds an index from stable module-level data. If the index must
+track changing props, derive it during render or use `useMemo` with those props
+as dependencies instead of storing it as initial state.
+
 ```tsx
-function FilteredList({ items }: { items: Item[] }) {
+function FilteredList() {
   // buildSearchIndex() runs ONLY on initial render
-  const [searchIndex, setSearchIndex] = useState(() => buildSearchIndex(items))
+  const [searchIndex, setSearchIndex] = useState(() => buildSearchIndex())
   const [query, setQuery] = useState('')
 
   return <SearchResults index={searchIndex} query={query} />
 }
 
-function UserProfile() {
-  // JSON.parse runs only on initial render
-  const [settings, setSettings] = useState(() => {
-    const stored = localStorage.getItem('settings')
-    return stored ? JSON.parse(stored) : {}
-  })
-
-  return <SettingsForm settings={settings} onChange={setSettings} />
-}
 ```
 
-Use lazy initialization when computing initial values from localStorage/sessionStorage, building data structures (indexes, maps), reading from the DOM, or performing heavy transformations.
+Use lazy initialization when computing expensive initial values, such as building a stable index or parsing static configuration. A `useState` initializer runs only on mount; when a value must follow changing props, derive it during render or use `useMemo` with the appropriate dependencies. Do not read `localStorage`, `sessionStorage`, or other browser-only APIs during render in server-rendered components; load those values after hydration or keep the component explicitly browser-only.
 
 For simple primitives (`useState(0)`), direct references (`useState(props.value)`), or cheap literals (`useState({})`), the function form is unnecessary.

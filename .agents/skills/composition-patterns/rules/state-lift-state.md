@@ -62,20 +62,6 @@ function ForwardMessageComposer({ onInputChange }) {
 }
 ```
 
-**Incorrect (reading state from ref on submit):**
-
-```tsx
-function ForwardMessageDialog() {
-  const stateRef = useRef(null)
-  return (
-    <Dialog>
-      <ForwardMessageComposer stateRef={stateRef} />
-      <ForwardButton onPress={() => submit(stateRef.current)} />
-    </Dialog>
-  )
-}
-```
-
 **Correct (state lifted to provider):**
 
 ```tsx
