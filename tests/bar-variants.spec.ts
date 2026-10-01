@@ -22,15 +22,15 @@ for (const mode of ["static", "motion", "reduced"] as const) {
     await page.emulateMedia({ reducedMotion: mode === "reduced" ? "reduce" : "no-preference" });
     await page.goto("/bars.html");
     if (mode !== "static") await page.getByLabel("Motion", { exact: true }).check();
-    const clips = page.locator("[data-bar-reveal='']");
-    await expect(clips).toHaveCount(mode === "motion" ? 10 : 0);
+    const clips = page.locator("[data-kind-ui='bar-reveal']");
+    await expect(clips).toHaveCount(mode === "motion" ? 12 : 0);
     if (mode === "motion") {
       await page.clock.runFor(150);
       for (const clip of await clips.all())
         expect(Number.parseFloat((await clip.getAttribute("height")) ?? "NaN")).toBeGreaterThan(0);
       const signed = page.getByRole("region", { name: "Signed", exact: true });
       const zero = Number(await signed.locator(".recharts-reference-line-line").getAttribute("y1"));
-      const clipBounds = await signed.locator("[data-bar-reveal='']").evaluate((node) => ({
+      const clipBounds = await signed.locator("[data-kind-ui='bar-reveal']").evaluate((node) => ({
         y: new DOMMatrix(getComputedStyle(node).transform).m42,
         height: Number.parseFloat(node.getAttribute("height") ?? "NaN"),
       }));
@@ -203,7 +203,7 @@ test("dense series selection updates bars, totals and tooltips without restartin
   await page.goto("/bars.html");
   await page.getByLabel("Motion", { exact: true }).check();
   const region = page.getByRole("region", { name: "Interactive", exact: true });
-  const clip = region.locator("[data-bar-reveal='']");
+  const clip = region.locator("[data-kind-ui='bar-reveal']");
   await page.clock.runFor(200);
   await region.getByRole("button", { name: /^Assisted/ }).focus();
   await page.keyboard.press("Space");

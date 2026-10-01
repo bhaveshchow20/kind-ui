@@ -7,6 +7,8 @@ import { renderToStaticMarkup as render } from "react-dom/server";
 
 test("direct and namespace imports expose the same public components", () => {
   assert.deepEqual(Object.keys(Chart).sort(), [
+    "BarChart",
+    "BarSeries",
     "Legend",
     "LineChart",
     "LineSeries",

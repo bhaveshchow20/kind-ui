@@ -32,7 +32,7 @@ export type LineChartProps = StaticLineChartProps & {
   animate?: boolean | LineAnimation | undefined;
 };
 const defaultHover: Transition = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 };
-const MotionContext = createContext({ enabled: false, transition: defaultHover });
+export const MotionContext = createContext({ enabled: false, transition: defaultHover });
 const query = "(prefers-reduced-motion: reduce)";
 function subscribe(change: () => void) {
   const media = window.matchMedia(query);
@@ -95,7 +95,7 @@ function useAnimatedCoordinate(target: number, enabled: boolean, transition: Tra
   }, [value, target, enabled, transition]);
   return value;
 }
-function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
+export function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
   const { enabled, transition } = use(MotionContext);
   const { motionReady } = useLineInteraction();
   const animate = enabled && motionReady;

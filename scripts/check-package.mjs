@@ -108,7 +108,7 @@ try {
   );
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
-    if (folder === "line" && file.endsWith(".tsx")) assertLineConsumerSource(source);
+    if (["line", "bar"].includes(folder) && file.endsWith(".tsx")) assertLineConsumerSource(source);
     await writeFile(join(consumer, target), source);
   }
   async function typecheck(files) {
@@ -170,12 +170,18 @@ try {
   console.log(
     "Motion line consumer: strict NodeNext/Bundler and production build passed using the same packed public imports",
   );
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("bar", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-bar");
+  console.log(
+    "Bar tarball consumer: guarded public imports, strict NodeNext/Bundler and production build passed",
+  );
   for (const file of ["index.html", "main.tsx", "consumer.css", "motion.tsx"])
     await copyFixture("styling", file);
   await typecheck(["index.tsx", "main.tsx", "motion.tsx"]);
   await production("index.html", "packed-chart");
 
-  // Separate legacy evidence: bar/area recipes are still application-owned, not exported components.
+  // Separate example evidence: area recipes remain application-owned; bar recipes compose the public bar API.
   const legacy = join(consumer, "legacy");
   await mkdir(legacy);
   for (const file of [
@@ -191,9 +197,7 @@ try {
     await readFile(join(root, "tests/recipe-consumer.tsx"), "utf8"),
   );
   await typecheck(["legacy/recipe-consumer.tsx"]);
-  console.log(
-    "Legacy bar/area recipe typechecks passed; implementations are host-owned and are not package exports",
-  );
+  console.log("Bar public compositions and legacy area recipe typechecks passed");
   console.log(
     "Packed contents, CSS, license, ESM import, component tests, strict consumers and production styling build passed",
   );

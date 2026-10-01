@@ -1,6 +1,6 @@
 # Kind UI charts
 
-React components compose real Recharts lines with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. The same components accept `LineChart animate={false | true | config}` for coordinated reveal and hover animation. Consumers own data shape, scales, axes, grids, reference lines, custom marks, copy and layout. Bar and area recipes remain application-owned.
+React components compose real Recharts lines with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. The same components accept `LineChart animate={false | true | config}` for coordinated reveal and hover animation. Consumers own data shape, scales, axes, grids, reference lines, custom marks, copy and layout. Bar components use the same ownership model; area recipes remain application-owned.
 
 Pre-release and unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, Motion 13.4.6, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
 
@@ -123,3 +123,34 @@ Per-instance series colors and per-entry indicator color values remain inline CS
 At the repository root: `npm ci`, then `npm exec playwright install -- --with-deps chromium` (Linux dependencies may need administrator permission). Run `npm run dev:chart` for the example, or `npm run check` for library, packed-consumer, type and browser checks.
 
 The packed check first builds an actual tarball, installs it and the pinned peer/type dependencies into an isolated consumer, then checks public APIs with NodeNext and Bundler resolution. With the required Motion peer installed, it checks root imports/declarations and builds disabled and animated line consumers using the same exports; it also proves the removed `/motion` path cannot resolve. These line fixtures contain only public package imports and host data/extensions; no example implementation is copied into the proof. Legacy bar/area recipe typechecks are separately identified. It also builds a plain-CSS production consumer for the browser checks, verifying CSS delivery and application overrides. Peer installation can require npm registry access; the package under test always comes from the local tarball, never a workspace link or registry copy.
+
+## Bar ownership and API
+
+`BarChart` and `BarSeries` are maintained package components, imported from the same public entry point as `LineChart`. Kind owns metadata colors, controlled series visibility, pointer/keyboard modality, bounded tooltip placement and optional Motion. Recharts owns bar geometry, grouping/stacking, axes, labels, selection and keyboard traversal. The consumer owns data, ordering, domains, chart orientation, accessible names and a text/table alternative.
+
+```tsx
+import { Root, BarChart, BarSeries, Tooltip } from "@kind-ui/charts";
+import { XAxis, YAxis, LabelList } from "recharts";
+import "@kind-ui/charts/styles.css";
+
+<Root config={{ count: { label: "Tasks", color: "#3659b8" } }}>
+  <BarChart width={480} height={240} data={[{ day: "Mon", count: 8 }, { day: "Tue", count: -3 }]} animate={{ revealDurationMs: 800 }} aria-label="Tasks by day">
+    <XAxis dataKey="day" />
+    <YAxis />
+    <BarSeries dataKey="count" radius={3}>
+      <LabelList dataKey="count" position="top" />
+    </BarSeries>
+    <Tooltip />
+  </BarChart>
+</Root>
+```
+
+- `BarChartProps` retains native Recharts chart props and the SVG ref, including `layout`, `barGap`, `barCategoryGap`, `barSize` and `stackOffset`. Use `layout="horizontal"` for vertical bars, or `layout="vertical"` with a numeric X axis and category Y axis for horizontal bars. Native chart mouse handlers run alongside Kind's tracking.
+- `BarSeriesProps` retains native Bar props, children, cells, shapes, active bars, backgrounds, label/error-bar composition and handlers. It excludes `isAnimationActive`; Motion owns animation and the engine tween is always disabled. `fill` defaults to the Root color, with explicit fill and Cell overrides retaining native semantics. String data keys supply the metadata identity; set `seriesKey` for controlled numeric/function keys. Root visibility and native `hide` combine exactly as on `LineSeries`. Recharts Bar has no public component ref in the tested version; refs belong on custom shape nodes.
+- Group bars by composing series; stack them with matching native axis IDs and `stackId`. Use `stackOffset="sign"` for separate positive/negative stacks, and native `LabelList`, `Cell`, `Rectangle`, `ReferenceLine` and `activeBar` for labels, category colors, highlights and signed baselines. The public API does not impose category/value field names or coerce null/zero values. Default tooltip content shows null as missing alongside available series, retains zero and signed values, and suppresses entirely missing categories.
+
+`BarChart animate` accepts `false` (default), `true`, or `BarAnimation` with the same `revealDurationMs`, `revealEasing` and `hoverTransition` options as line. Each series opens a plot clip outward from the engine's zero coordinate (or nearest domain edge when zero is excluded) on its own numeric axis ID; negative values and both orientations retain their geometry. Grouped and stacked series share chart timing. A scale without a finite zero coordinate renders immediately. Ranged bars retain native geometry; their reveal also opens from numeric zero. Custom labels outside the plot appear fully when reveal completes.
+
+Pointer/focus interaction, data/size/domain/orientation changes and native or controlled visibility changes finish entrance motion and discard stale pointer coordinates. Completed/interrupted reveals do not restart on data updates or palette changes. Tooltip springs retarget through the existing shared implementation and settle immediately when `animate={false}` or reduced motion applies. Neither animation nor geometry invalidation remounts custom tooltip content. Mount a new chart to replay entrance motion. Import the default stylesheet; per-series dynamic clip variables account for Recharts' portal-rendered marks without wrapping or replacing custom shapes. No new dependency, gallery, publication or registry work is included.
+
+The existing [ten bar compositions](../../examples/chart/BARS.md) exercise vertical, horizontal, grouped, stacked, labels, custom labels, category colors, highlight, signed and interactive use. The isolated packed consumer copies only host data/composition fixtures, checks public imports and strict NodeNext/Bundler declarations, builds production output and runs Chromium contracts against the tarball. These checks do not establish screen-reader conformance.

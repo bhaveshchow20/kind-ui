@@ -1,9 +1,6 @@
 import * as Chart from "@kind-ui/charts";
-import { motion } from "motion/react";
-import type { CSSProperties, ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import {
-  Bar,
-  BarChart,
   type BarShapeProps,
   CartesianGrid,
   Cell,
@@ -12,14 +9,11 @@ import {
   Rectangle,
   ReferenceLine,
   ResponsiveContainer,
-  Tooltip,
-  usePlotArea,
   useXAxisScale,
   useYAxisScale,
   XAxis,
   YAxis,
 } from "recharts";
-import { MovingTooltip, type RecipeMotion, useRecipeMotion } from "./recipe-motion.js";
 
 export type BarPoint = { category: string; value: number | null };
 export type GroupedBarPoint = {
@@ -29,7 +23,7 @@ export type GroupedBarPoint = {
 };
 /** A stack is a total: supply complete, nonnegative segments. */
 export type StackedBarPoint = { category: string; primary: number; secondary: number };
-export type BarMotion = RecipeMotion;
+export type BarMotion = Chart.BarAnimation;
 type SingleProps = {
   data: BarPoint[];
   label: string;
@@ -43,44 +37,6 @@ type PairProps = {
   config: PairConfig;
   motion?: BarMotion | undefined;
 };
-
-function BarReveal({
-  id,
-  horizontal,
-  options,
-  onComplete,
-}: {
-  id: string;
-  horizontal: boolean;
-  options: BarMotion;
-  onComplete: () => void;
-}) {
-  const area = usePlotArea();
-  const xScale = useXAxisScale();
-  const yScale = useYAxisScale();
-  const zero = horizontal ? xScale?.(0) : yScale?.(0);
-  if (!area || zero === undefined) return null;
-  return (
-    <defs>
-      <clipPath id={`${id}-bars`} clipPathUnits="userSpaceOnUse">
-        <motion.rect
-          data-bar-reveal=""
-          onAnimationComplete={onComplete}
-          initial={
-            horizontal
-              ? { x: zero, y: area.y, width: 0, height: area.height }
-              : { x: area.x, y: zero, height: 0, width: area.width }
-          }
-          animate={{ x: area.x, y: area.y, width: area.width, height: area.height }}
-          transition={{
-            duration: Math.max(0, options.revealDurationMs ?? 1000) / 1000,
-            ease: options.revealEasing ?? [0.25, 0.1, 0.25, 1],
-          }}
-        />
-      </clipPath>
-    </defs>
-  );
-}
 
 // Shared only where measuring, motion and tooltip wiring are identical. Engine marks stay explicit.
 function BarFrame<T extends { category: string }>({
@@ -104,77 +60,49 @@ function BarFrame<T extends { category: string }>({
   formatCategory?: ((value: string) => string) | undefined;
   colorForCategory?: (category: string) => string | undefined;
 }) {
-  const animation = useRecipeMotion(options);
+  const id = useId();
   return (
-    <Chart.Root
-      config={config}
-      className="recipe-chart"
-      data-bar-reveal={animation.reveal ? "on" : "off"}
-      style={
-        {
-          "--bar-reveal-clip": animation.reveal ? `url(#${animation.id}-bars)` : "none",
-        } as CSSProperties
-      }
-      onFocusCapture={animation.finishReveal}
-      onPointerDownCapture={animation.finishReveal}
-      onPointerMoveCapture={animation.finishReveal}
-      onKeyDownCapture={animation.clearPointer}
-    >
+    <Chart.Root config={config} className="recipe-chart">
       {legend}
-      <p id={animation.id} className="recipe-help">
+      <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
       </p>
       <ResponsiveContainer width="100%" height={220}>
-        <BarChart
+        <Chart.BarChart
           data={data}
           layout={horizontal ? "vertical" : "horizontal"}
-          onMouseMove={animation.trackPointer}
-          onMouseLeave={animation.clearPointer}
+          animate={options ?? false}
           accessibilityLayer
           aria-label={label}
-          aria-describedby={animation.id}
+          aria-describedby={id}
           margin={{ top: 24, right: 32, left: 0, bottom: 0 }}
           barCategoryGap="28%"
           barGap={4}
         >
-          {animation.reveal && options && (
-            <BarReveal
-              id={animation.id}
-              horizontal={horizontal}
-              options={options}
-              onComplete={animation.finishReveal}
-            />
-          )}
           <CartesianGrid vertical={horizontal} horizontal={!horizontal} stroke="var(--border)" />
           {children}
-          <Tooltip
+          <Chart.Tooltip
             cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
-            position={{ x: 0, y: 0 }}
-            filterNull={false}
-            isAnimationActive={false}
             labelFormatter={(value) =>
               formatCategory ? formatCategory(String(value)) : String(value)
             }
-            content={(tooltip) => (
-              <MovingTooltip
-                key={animation.animate ? "animated" : "static"}
-                tooltip={
-                  colorForCategory
-                    ? {
+            {...(colorForCategory
+              ? {
+                  content: (tooltip) => (
+                    <Chart.TooltipContent
+                      tooltip={{
                         ...tooltip,
                         payload: tooltip.payload.map((entry) => {
                           const color = colorForCategory(String(tooltip.label));
                           return color ? { ...entry, color } : entry;
                         }),
-                      }
-                    : tooltip
+                      }}
+                    />
+                  ),
                 }
-                transition={animation.transition}
-                pointer={animation.pointer}
-              />
-            )}
+              : {})}
           />
-        </BarChart>
+        </Chart.BarChart>
       </ResponsiveContainer>
     </Chart.Root>
   );
@@ -234,13 +162,7 @@ export function VerticalBars({ label, formatValue, ...props }: SingleProps) {
   return (
     <BarFrame {...props} label={label} config={singleConfig(label, formatValue)}>
       <VerticalAxes />
-      <Bar
-        dataKey="value"
-        fill="var(--color-value)"
-        maxBarSize={40}
-        radius={3}
-        isAnimationActive={false}
-      />
+      <Chart.BarSeries dataKey="value" fill="var(--color-value)" maxBarSize={40} radius={3} />
     </BarFrame>
   );
 }
@@ -248,13 +170,7 @@ export function HorizontalBars({ label, formatValue, ...props }: SingleProps) {
   return (
     <BarFrame {...props} label={label} config={singleConfig(label, formatValue)} horizontal>
       <HorizontalAxes />
-      <Bar
-        dataKey="value"
-        fill="var(--color-value)"
-        maxBarSize={40}
-        radius={3}
-        isAnimationActive={false}
-      />
+      <Chart.BarSeries dataKey="value" fill="var(--color-value)" maxBarSize={40} radius={3} />
     </BarFrame>
   );
 }
@@ -262,19 +178,12 @@ export function GroupedBars(props: PairProps) {
   return (
     <BarFrame {...props} legend={<Chart.Legend />}>
       <VerticalAxes />
-      <Bar
-        dataKey="primary"
-        fill="var(--color-primary)"
-        maxBarSize={40}
-        radius={3}
-        isAnimationActive={false}
-      />
-      <Bar
+      <Chart.BarSeries dataKey="primary" fill="var(--color-primary)" maxBarSize={40} radius={3} />
+      <Chart.BarSeries
         dataKey="secondary"
         fill="var(--color-secondary)"
         maxBarSize={40}
         radius={3}
-        isAnimationActive={false}
       />
     </BarFrame>
   );
@@ -283,19 +192,17 @@ export function StackedBars(props: Omit<PairProps, "data"> & { data: StackedBarP
   return (
     <BarFrame {...props} legend={<Chart.Legend />}>
       <VerticalAxes />
-      <Bar
+      <Chart.BarSeries
         dataKey="primary"
         fill="var(--color-primary)"
         maxBarSize={40}
         stackId="total"
-        isAnimationActive={false}
       />
-      <Bar
+      <Chart.BarSeries
         dataKey="secondary"
         fill="var(--color-secondary)"
         maxBarSize={40}
         stackId="total"
-        isAnimationActive={false}
       />
     </BarFrame>
   );
@@ -333,13 +240,7 @@ export function LabeledBars({ label, formatValue, ...props }: SingleProps) {
     <BarFrame {...props} label={label} config={singleConfig(label, formatValue)}>
       <VerticalAxes />
       <ZeroValueLabels data={props.data} />
-      <Bar
-        dataKey="value"
-        fill="var(--color-value)"
-        maxBarSize={40}
-        radius={3}
-        isAnimationActive={false}
-      >
+      <Chart.BarSeries dataKey="value" fill="var(--color-value)" maxBarSize={40} radius={3}>
         <LabelList
           dataKey="value"
           position="top"
@@ -347,7 +248,7 @@ export function LabeledBars({ label, formatValue, ...props }: SingleProps) {
           fill="var(--foreground)"
           fontSize={11}
         />
-      </Bar>
+      </Chart.BarSeries>
     </BarFrame>
   );
 }
@@ -380,13 +281,7 @@ export function CustomLabelBars({ label, formatValue, ...props }: SingleProps) {
         allowDecimals={false}
       />
       <YAxis type="category" dataKey="category" hide />
-      <Bar
-        dataKey="value"
-        fill="var(--color-value)"
-        maxBarSize={30}
-        radius={3}
-        isAnimationActive={false}
-      >
+      <Chart.BarSeries dataKey="value" fill="var(--color-value)" maxBarSize={30} radius={3}>
         <LabelList dataKey="category" content={<CategoryLabel />} />
         <LabelList
           dataKey="value"
@@ -395,7 +290,7 @@ export function CustomLabelBars({ label, formatValue, ...props }: SingleProps) {
           fill="var(--foreground)"
           fontSize={11}
         />
-      </Bar>
+      </Chart.BarSeries>
     </BarFrame>
   );
 }
@@ -416,18 +311,17 @@ export function CategoryBars({
       colorForCategory={(category) => data.find((point) => point.category === category)?.color}
     >
       <HorizontalAxes />
-      <Bar
+      <Chart.BarSeries
         name={label}
         formatter={(value) => (typeof value === "number" ? formatValue(value) : "No data")}
         dataKey="value"
         maxBarSize={40}
         radius={3}
-        isAnimationActive={false}
       >
         {data.map((point) => (
           <Cell key={point.category} fill={point.color} />
         ))}
-      </Bar>
+      </Chart.BarSeries>
     </BarFrame>
   );
 }
@@ -466,11 +360,10 @@ export function HighlightedBars({
   return (
     <BarFrame {...props} label={label} config={singleConfig(label, formatValue)}>
       <VerticalAxes />
-      <Bar
+      <Chart.BarSeries
         dataKey="value"
         fill="var(--color-value)"
         maxBarSize={40}
-        isAnimationActive={false}
         shape={(shape) => <Highlight {...shape} selectedIndex={selectedIndex} />}
       />
     </BarFrame>
@@ -491,12 +384,11 @@ export function SignedBars({ data, label, formatValue, ...props }: SingleProps) 
     >
       <VerticalAxes />
       <ReferenceLine y={0} stroke="var(--foreground)" strokeWidth={1} />
-      <Bar
+      <Chart.BarSeries
         name={label}
         formatter={(value) => (typeof value === "number" ? formatValue(value) : "No data")}
         dataKey="value"
         maxBarSize={40}
-        isAnimationActive={false}
       >
         {data.map((point) => (
           <Cell
@@ -504,7 +396,7 @@ export function SignedBars({ data, label, formatValue, ...props }: SingleProps) 
             fill={(point.value ?? 0) < 0 ? "var(--chart-2)" : "var(--chart-1)"}
           />
         ))}
-      </Bar>
+      </Chart.BarSeries>
     </BarFrame>
   );
 }
@@ -520,7 +412,7 @@ export function InteractiveBars({
   return (
     <BarFrame {...props} formatCategory={formatCategory}>
       <VerticalAxes formatCategory={formatCategory} />
-      <Bar dataKey={activeSeries} fill={`var(--color-${activeSeries})`} isAnimationActive={false} />
+      <Chart.BarSeries dataKey={activeSeries} fill={`var(--color-${activeSeries})`} />
     </BarFrame>
   );
 }
