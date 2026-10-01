@@ -27,7 +27,7 @@ test("line recipes preserve missing and zero data, independent state and narrow 
   await page.keyboard.press("Space");
   await expect(previous).toBeFocused();
   await expect(comparison.getByRole("status")).toHaveText("Select a series to show it.");
-  await expect(page.getByRole("application")).toHaveCount(7);
+  await expect(page.getByRole("application")).toHaveCount(8);
   await expect(comparison.getByRole("row", { name: "Thu 0 tasks 16 tasks" })).toBeVisible();
   await previous.click();
   await page.getByRole("button", { name: "Color", exact: true }).click();
@@ -284,4 +284,188 @@ test("pointer travel retargets active markers and tooltip continuously, then set
     .toBeCloseTo(start.cx, 1);
   await page.mouse.move(0, 0);
   await expect(section.getByRole("status")).not.toBeVisible();
+});
+
+test("existing line recipes expose materials alongside palette, motion and visibility", async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/recipes.html");
+  const controls = page.getByRole("group", { name: "Line material", exact: true });
+  const curves = page.locator(".recharts-line-curve");
+  const filters = page.locator("filter");
+  await expect(curves).toHaveCount(9);
+  const geometry = await curves.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+  const markerWidths = await page
+    .locator(".recharts-line-dot")
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("stroke-width")));
+  await expect(controls.getByRole("button", { name: "Plain", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(filters).toHaveCount(0);
+  for (const material of ["paper", "clay", "glow"] as const) {
+    await controls
+      .getByRole("button", {
+        name: material === "paper" ? "Paper" : material === "clay" ? "Clay" : "Glow",
+        exact: true,
+      })
+      .click();
+    await expect(page.locator("main")).toHaveAttribute("data-material", material);
+    await expect(
+      page.locator(`[data-kind-ui="line-material"][data-material="${material}"]`),
+    ).toHaveCount(9);
+    expect(
+      await curves.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
+    ).toEqual(geometry);
+    expect(
+      await page
+        .locator(".recharts-line-dot")
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("stroke-width"))),
+    ).toEqual(markerWidths);
+    await expect(curves.first()).toHaveAttribute(
+      "stroke-width",
+      material === "clay" ? "6" : material === "paper" ? "2.5" : "3",
+    );
+    await page.screenshot({
+      path: info.outputPath(`recipes-${material}-mono-normal.png`),
+      fullPage: true,
+    });
+    await page.getByRole("button", { name: "Color", exact: true }).click();
+    await page.screenshot({
+      path: info.outputPath(`recipes-${material}-color-normal.png`),
+      fullPage: true,
+    });
+    await page
+      .getByRole("region", { name: "Smooth", exact: true })
+      .screenshot({ path: info.outputPath(`recipes-${material}-color-normal-detail.png`) });
+    expect(await curves.first().evaluate((node) => getComputedStyle(node).stroke)).toBe(
+      "rgb(124, 58, 237)",
+    );
+    await page.setViewportSize({ width: 320, height: 800 });
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+    await page.screenshot({
+      path: info.outputPath(`recipes-${material}-color-narrow.png`),
+      fullPage: true,
+    });
+    await page
+      .getByRole("region", { name: "Smooth", exact: true })
+      .screenshot({ path: info.outputPath(`recipes-${material}-color-narrow-detail.png`) });
+    await page.getByRole("button", { name: "Monochrome", exact: true }).click();
+    await page.screenshot({
+      path: info.outputPath(`recipes-${material}-mono-narrow.png`),
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 1000, height: 900 });
+  }
+  const comparison = page.getByRole("region", { name: "Week over week" });
+  await comparison.getByRole("button", { name: "Last week", exact: true }).click();
+  await controls.getByRole("button", { name: "Paper", exact: true }).click();
+  await expect(comparison.getByRole("button", { name: "Last week", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(filters).toHaveCount(8);
+  await comparison.getByRole("button", { name: "Last week", exact: true }).click();
+  await expect(filters).toHaveCount(9);
+  await comparison.getByText("View data", { exact: true }).click();
+  await expect(comparison.getByRole("row", { name: "Thu 0 tasks 16 tasks" })).toBeVisible();
+  await page.getByLabel("Motion", { exact: true }).check();
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
+  await page.screenshot({ path: info.outputPath("recipes-paper-reduced.png"), fullPage: true });
+  // The screenshots/visibility controls have already interacted with charts. Remount for a fresh entrance.
+  await page.getByLabel("Empty data", { exact: true }).check();
+  await page.getByLabel("Empty data", { exact: true }).uncheck();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "on");
+  await expect(page.locator('clipPath[id$="-reveal"] rect')).toHaveCount(8);
+  await controls.getByRole("button", { name: "Clay", exact: true }).click();
+  await expect(filters).toHaveCount(9);
+  await expect
+    .poll(async () =>
+      Number.parseFloat(
+        (await page.locator('clipPath[id$="-reveal"] rect').first().getAttribute("width")) ?? "NaN",
+      ),
+    )
+    .toBe(100);
+  await page.screenshot({ path: info.outputPath("recipes-clay-motion.png"), fullPage: true });
+  await page.getByLabel("Motion", { exact: true }).uncheck();
+  await expect(page.locator('clipPath[id$="-reveal"]')).toHaveCount(0);
+  await controls.getByRole("button", { name: "Plain", exact: true }).click();
+  await expect(filters).toHaveCount(0);
+  await page.getByLabel("Empty data", { exact: true }).check();
+  await expect(page.getByRole("application")).toHaveCount(0);
+  await expect(filters).toHaveCount(0);
+  await page.getByLabel("Empty data", { exact: true }).uncheck();
+  await expect(page.getByRole("application")).toHaveCount(8);
+  expect(errors).toEqual([]);
+});
+
+test("dotted guide toggles independently from the compact tooltip", async ({ page }, info) => {
+  await page.goto("/recipes.html");
+  const region = page.getByRole("region", { name: "Smooth", exact: true });
+  const chart = region.getByRole("application");
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(region.getByRole("status")).toContainText("Completed");
+  await expect(region.locator(".recharts-tooltip-cursor")).toHaveCount(0);
+  await page.getByLabel("Hover guide", { exact: true }).check();
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(region.locator(".recharts-tooltip-cursor")).toHaveAttribute(
+    "stroke-dasharray",
+    "2 4",
+  );
+  await expect(region.getByRole("status")).toContainText("Completed");
+  const tip = region.locator('[data-kind-ui="tooltip-frame"]');
+  expect((await tip.boundingBox())?.width).toBeLessThan(180);
+  expect(await region.getByRole("status").evaluate((node) => getComputedStyle(node).fontSize)).toBe(
+    "12px",
+  );
+  await region.screenshot({ path: info.outputPath("tooltip-guide-normal.png") });
+  await page.setViewportSize({ width: 320, height: 900 });
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  const bounds = await chart.boundingBox();
+  const tooltip = await tip.boundingBox();
+  expect(
+    bounds &&
+      tooltip &&
+      tooltip.x >= bounds.x &&
+      tooltip.x + tooltip.width <= bounds.x + bounds.width + 1,
+  ).toBe(true);
+  await region.screenshot({ path: info.outputPath("tooltip-guide-narrow.png") });
+  await page.getByLabel("Hover guide", { exact: true }).uncheck();
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(region.locator(".recharts-tooltip-cursor")).toHaveCount(0);
+  await expect(region.getByRole("status")).toBeVisible();
+});
+
+test("content-sized tooltip bounds use chart units inside a scaled host", async ({ page }) => {
+  await page.goto("/recipes.html");
+  const region = page.getByRole("region", { name: "Smooth", exact: true });
+  await region.locator('[data-kind-ui="chart"]').evaluate((node) => {
+    Object.assign((node as HTMLElement).style, {
+      transform: "scale(0.5)",
+      transformOrigin: "top left",
+    });
+  });
+  const chart = region.getByRole("application");
+  await chart.focus();
+  for (let index = 0; index < 7; index++) await page.keyboard.press("ArrowRight");
+  await expect(region.getByRole("status")).toContainText("48 tasks");
+  await expect
+    .poll(async () => {
+      const bounds = await chart.boundingBox();
+      const tooltip = await region.locator('[data-kind-ui="tooltip-frame"]').boundingBox();
+      return (
+        bounds &&
+        tooltip &&
+        tooltip.x >= bounds.x &&
+        tooltip.x + tooltip.width <= bounds.x + bounds.width + 0.5
+      );
+    })
+    .toBe(true);
 });

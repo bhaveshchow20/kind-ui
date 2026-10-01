@@ -7,10 +7,12 @@ import {
   useCallback,
   useId,
   useLayoutEffect,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
-import type { DotProps } from "recharts";
+import { DefaultZIndexes, type DotProps, ZIndexLayer } from "recharts";
+import { useChart } from "./chart-context.js";
 import {
   LineChartFrame,
   type LineChartProps as StaticLineChartProps,
@@ -118,7 +120,52 @@ function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
   );
 }
 export function LineSeries(props: LineSeriesProps) {
-  return <StaticLineSeries activeDot={<ActiveMarker />} {...props} isAnimationActive={false} />;
+  const { enabled } = use(MotionContext);
+  const { visibleSeries } = useChart();
+  const key = props.seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
+  const visible = visibleSeries === undefined || (key !== undefined && visibleSeries.includes(key));
+  const opacity = useMotionValue(visible ? 1 : 0);
+  const [drawn, setDrawn] = useState(visible);
+  const previous = useRef(visible);
+  const run = useRef(0);
+  useLayoutEffect(() => {
+    const changed = previous.current !== visible;
+    previous.current = visible;
+    const token = ++run.current;
+    if (!enabled) {
+      opacity.set(visible ? 1 : 0);
+      setDrawn(visible);
+      return;
+    }
+    if (!changed) return;
+    if (visible) setDrawn(true);
+    const controls = animateValue(opacity, visible ? 1 : 0, {
+      duration: 0.18,
+      ease: "easeOut",
+      onComplete: () => {
+        if (!visible && run.current === token) setDrawn(false);
+      },
+    });
+    return () => controls.stop();
+  }, [visible, enabled, opacity]);
+  return (
+    <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
+      <motion.g
+        initial={false}
+        style={{ opacity }}
+        pointerEvents={visible ? undefined : "none"}
+        aria-hidden={visible ? undefined : true}
+      >
+        <StaticLineSeries
+          {...props}
+          activeDot={visible ? (props.activeDot ?? <ActiveMarker />) : false}
+          zIndex={0}
+          renderWhileHidden={enabled && drawn}
+          isAnimationActive={false}
+        />
+      </motion.g>
+    </ZIndexLayer>
+  );
 }
 function MovingFrame({ x, y, maxX, maxY, ref, style, frameProps, children }: TooltipFrameProps) {
   const { enabled, transition } = use(MotionContext);

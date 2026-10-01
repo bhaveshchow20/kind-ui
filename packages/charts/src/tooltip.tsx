@@ -18,6 +18,7 @@ import {
   useChartHeight,
   useChartWidth,
 } from "recharts";
+import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { TooltipContent } from "./tooltip-content.js";
 
@@ -71,7 +72,19 @@ function PositionedContent({
   frameRef: TooltipProps["ref"];
   Frame: (props: TooltipFrameProps) => ReactNode;
 }) {
-  const { pointer } = useLineInteraction();
+  const { pointer, seriesKeys } = useLineInteraction();
+  const { visibleSeries } = useChart();
+  // Exiting strokes can remain painted briefly; hidden series leave all tooltip content immediately.
+  const payload =
+    visibleSeries === undefined
+      ? tooltip.payload
+      : tooltip.payload.filter((entry) => {
+          const key =
+            (entry.graphicalItemId ? seriesKeys.get(entry.graphicalItemId) : undefined) ??
+            String(entry.dataKey ?? entry.name);
+          return visibleSeries.includes(key);
+        });
+  const contentProps = { ...tooltip, payload };
   const width = useChartWidth() ?? 0;
   const height = useChartHeight() ?? 0;
   const [node, setNode] = useState<HTMLDivElement | null>(null);
@@ -86,12 +99,16 @@ function PositionedContent({
   const [size, setSize] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {
     if (!node) return;
-    const measure = () => {
-      const next = { width: node.offsetWidth, height: node.offsetHeight };
+    const measure = (entry?: ResizeObserverEntry) => {
+      const box = entry?.borderBoxSize[0];
+      const next = {
+        width: box?.inlineSize ?? node.offsetWidth,
+        height: box?.blockSize ?? node.offsetHeight,
+      };
       setSize((old) => (old.width === next.width && old.height === next.height ? old : next));
     };
     measure();
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(([entry]) => measure(entry));
     observer.observe(node);
     return () => observer.disconnect();
   }, [node]);
@@ -102,11 +119,11 @@ function PositionedContent({
   const maxX = Math.max(0, width - size.width);
   const maxY = Math.max(0, height - size.height);
   const children = isValidElement<EngineContentProps>(consumerContent) ? (
-    cloneElement(consumerContent, tooltip)
+    cloneElement(consumerContent, contentProps)
   ) : typeof consumerContent === "function" ? (
-    createElement(consumerContent, tooltip)
+    createElement(consumerContent, contentProps)
   ) : (
-    <TooltipContent tooltip={tooltip} />
+    <TooltipContent tooltip={contentProps} />
   );
   return (
     <Frame
@@ -116,8 +133,8 @@ function PositionedContent({
       maxY={maxY}
       ref={attachRef}
       style={{
-        width: Math.min(Math.max(0, maxWidth), width),
-        maxWidth: width,
+        width: "max-content",
+        maxWidth: Math.min(Math.max(0, maxWidth), width),
         maxHeight: height,
         overflow: "auto",
         boxSizing: "border-box",
