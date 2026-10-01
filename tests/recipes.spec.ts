@@ -219,6 +219,27 @@ test("pointer travel retargets active markers and tooltip continuously, then set
   const endTooltipX = Math.max(0, Math.min(end.cx - tipWidth / 2, svgWidth - tipWidth));
   expect(movingTooltipX).toBeGreaterThan(firstTooltipX);
   expect(movingTooltipX).toBeLessThan(endTooltipX);
+  // Change preferences in flight without supplying another coordinate.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
+  await page.clock.runFor(32);
+  expect(Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN")).toBeCloseTo(end.cx, 1);
+  expect(await readX()).toBeCloseTo(endTooltipX, 1);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(page.locator("main")).toHaveAttribute("data-motion", "on");
+  await page.mouse.move(start.x, start.y);
+  await page.clock.runFor(80);
+  await page
+    .getByLabel("Motion", { exact: true })
+    .evaluate((node) => (node as HTMLInputElement).click());
+  await page.clock.runFor(32);
+  expect(Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN")).toBeCloseTo(start.cx, 1);
+  expect(await readX()).toBeCloseTo(firstTooltipX, 1);
+  await page
+    .getByLabel("Motion", { exact: true })
+    .evaluate((node) => (node as HTMLInputElement).click());
+  await page.mouse.move(end.x, end.y);
+  await page.clock.runFor(80);
   // Interrupt before settling: Motion must retarget, without a queued stale endpoint.
   await page.mouse.move(middle.x, middle.y);
   await page.clock.runFor(1500);

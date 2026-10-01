@@ -101,7 +101,11 @@ function SingleSeriesLine({
             filterNull={false}
             isAnimationActive={false}
             content={(tooltip) => (
-              <MovingTooltip tooltip={tooltip} transition={animation.transition} />
+              <MovingTooltip
+                key={animation.animate ? "animated" : "static"}
+                tooltip={tooltip}
+                transition={animation.transition}
+              />
             )}
           />
           <Line
@@ -110,7 +114,12 @@ function SingleSeriesLine({
             stroke="var(--color-value)"
             strokeWidth={2}
             dot={dot}
-            activeDot={<ActiveMarker transition={animation.transition} />}
+            activeDot={
+              <ActiveMarker
+                key={animation.animate ? "animated" : "static"}
+                transition={animation.transition}
+              />
+            }
             connectNulls={false}
             isAnimationActive={false}
           >
@@ -203,7 +212,11 @@ export function TargetLine({
             filterNull={false}
             isAnimationActive={false}
             content={(tooltip) => (
-              <MovingTooltip tooltip={tooltip} transition={animation.transition} />
+              <MovingTooltip
+                key={animation.animate ? "animated" : "static"}
+                tooltip={tooltip}
+                transition={animation.transition}
+              />
             )}
           />
           <Line
@@ -212,7 +225,12 @@ export function TargetLine({
             stroke="var(--color-value)"
             strokeWidth={2}
             dot={solidDot}
-            activeDot={<ActiveMarker transition={animation.transition} />}
+            activeDot={
+              <ActiveMarker
+                key={animation.animate ? "animated" : "static"}
+                transition={animation.transition}
+              />
+            }
             connectNulls={false}
             isAnimationActive={false}
           />
@@ -281,7 +299,11 @@ export function ComparisonLine({
               filterNull={false}
               isAnimationActive={false}
               content={(tooltip) => (
-                <MovingTooltip tooltip={tooltip} transition={animation.transition} />
+                <MovingTooltip
+                  key={animation.animate ? "animated" : "static"}
+                  tooltip={tooltip}
+                  transition={animation.transition}
+                />
               )}
             />
             <Line
@@ -290,7 +312,12 @@ export function ComparisonLine({
               stroke="var(--color-current)"
               strokeWidth={2}
               dot={{ r: 3.5, fill: "var(--color-current)", strokeDasharray: "none" }}
-              activeDot={<ActiveMarker transition={animation.transition} />}
+              activeDot={
+                <ActiveMarker
+                  key={animation.animate ? "animated" : "static"}
+                  transition={animation.transition}
+                />
+              }
               hide={!visibleSeries.includes("current")}
               connectNulls={false}
               isAnimationActive={false}
@@ -302,7 +329,12 @@ export function ComparisonLine({
               strokeDasharray="5 4"
               strokeWidth={2}
               dot={{ r: 3.5, fill: "var(--card)", strokeWidth: 2, strokeDasharray: "none" }}
-              activeDot={<ActiveMarker transition={animation.transition} />}
+              activeDot={
+                <ActiveMarker
+                  key={animation.animate ? "animated" : "static"}
+                  transition={animation.transition}
+                />
+              }
               hide={!visibleSeries.includes("previous")}
               connectNulls={false}
               isAnimationActive={false}
