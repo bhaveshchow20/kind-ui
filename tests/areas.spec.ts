@@ -25,6 +25,14 @@ for (const mode of ["static", "motion", "reduced"] as const) {
     await expect(charts).toHaveCount(8);
     const reveals = page.locator("[data-area-reveal='']");
     await expect(reveals).toHaveCount(mode === "motion" ? 8 : 0);
+    if (mode === "static") {
+      await page.setViewportSize({ width: 320, height: 800 });
+      await page.clock.runFor(32);
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+      await page.screenshot({ path: info.outputPath("areas-mobile.png"), fullPage: true });
+      await page.setViewportSize({ width: 1000, height: 900 });
+      await page.clock.runFor(32);
+    }
     if (mode === "motion") {
       await page.clock.runFor(1200);
       await expect(reveals).toHaveCount(0);
@@ -67,8 +75,6 @@ for (const mode of ["static", "motion", "reduced"] as const) {
       );
       await page.keyboard.press("Escape");
     }
-    if (mode === "static")
-      await page.screenshot({ path: info.outputPath("areas-mobile.png"), fullPage: true });
     await page.getByLabel("Empty data").check();
     await expect(charts).toHaveCount(0);
     expect(errors).toEqual([]);
