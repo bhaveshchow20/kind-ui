@@ -197,6 +197,7 @@ for (const reversed of [false, true]) {
     page,
   }) => {
     await page.clock.install();
+    await page.clock.pauseAt(new Date());
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(`${url}/?exclude-zero${reversed ? "&reversed" : ""}`);
     await page
@@ -216,7 +217,7 @@ for (const reversed of [false, true]) {
     const initial = await clip.evaluate(
       (node) => new DOMMatrix(getComputedStyle(node).transform).m42,
     );
-    expect(Math.abs(initial - baseline)).toBeLessThan(2);
+    expect(Math.abs(initial - baseline)).toBeLessThan(0.01);
     await page.clock.runFor(120);
     const size = Number.parseFloat((await clip.getAttribute("height")) ?? "NaN");
     expect(size).toBeGreaterThan(0);
