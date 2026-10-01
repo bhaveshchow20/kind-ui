@@ -251,7 +251,10 @@ for (const material of ["clay", "paper"] as const) {
           const stack = page
             .locator("section")
             .filter({ has: page.getByRole("heading", { name: "Stacked", exact: true }) });
-          await expect(stack.locator(".recharts-bar-stack-layer")).not.toHaveCount(0);
+          await expect(stack.locator(".recharts-bar-rectangle").first()).toHaveAttribute(
+            "clip-path",
+            /recharts-bar-stack-clip-path/,
+          );
           const paths = await stack
             .locator(marks)
             .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d") ?? ""));
