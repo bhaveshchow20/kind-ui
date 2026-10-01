@@ -138,6 +138,10 @@ try {
     join(consumer, "recipe-consumer.tsx"),
     await readFile(join(root, "tests/recipe-consumer.tsx"), "utf8"),
   );
+  await writeFile(
+    join(consumer, "use-reduced-motion.ts"),
+    await readFile(join(root, "examples/chart/use-reduced-motion.ts"), "utf8"),
+  );
   for (const mode of ["NodeNext", "Bundler"]) {
     await writeFile(
       join(consumer, "tsconfig.json"),

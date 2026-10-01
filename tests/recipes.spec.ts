@@ -54,9 +54,11 @@ test("optional motion respects changing preferences and survives interrupted int
   const clips = page.locator("clipPath[id$='-reveal'] rect");
   await expect(clips).toHaveCount(3);
   await expect
-    .poll(async () => Number(await clips.first().getAttribute("width")))
+    .poll(async () => Number.parseFloat((await clips.first().getAttribute("width")) ?? "NaN"))
     .toBeGreaterThan(0);
-  await expect.poll(async () => Number(await clips.first().getAttribute("width"))).toBe(1.04);
+  await expect
+    .poll(async () => Number.parseFloat((await clips.first().getAttribute("width")) ?? "NaN"))
+    .toBe(100);
   await expect(page.locator(".recharts-line").first()).not.toHaveCSS("clip-path", "none");
   await page.getByRole("application", { name: "Completed tasks", exact: true }).focus();
   await expect(page.locator(".recharts-line").first()).toHaveCSS("clip-path", "none");
@@ -74,7 +76,7 @@ test("optional motion respects changing preferences and survives interrupted int
   for (const line of await page.locator(".recharts-line").all())
     await expect(line).toHaveCSS("clip-path", "none");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(clips).toHaveCount(3);
+  await expect(clips).toHaveCount(2);
 
   await page.getByLabel("Motion", { exact: true }).uncheck();
   await expect(clips).toHaveCount(0);
@@ -138,11 +140,11 @@ test("Motion advances one shared clip per chart and completes without engine int
   await page.getByLabel("Motion", { exact: true }).check();
   await page.clock.runFor(100);
   const clip = page.locator("clipPath[id$='-reveal'] rect").first();
-  const progress = Number(await clip.getAttribute("width"));
+  const progress = Number.parseFloat((await clip.getAttribute("width")) ?? "NaN");
   expect(progress).toBeGreaterThan(0);
-  expect(progress).toBeLessThan(1.04);
+  expect(progress).toBeLessThan(100);
   await page.clock.runFor(500);
-  await expect(clip).toHaveAttribute("width", "1.04");
+  await expect(clip).toHaveAttribute("width", "100%");
   await expect(page.locator("clipPath[id$='-reveal']")).toHaveCount(3);
   const comparison = page.getByRole("region", { name: "Week over week" });
   const paths = await comparison
@@ -151,4 +153,15 @@ test("Motion advances one shared clip per chart and completes without engine int
   expect(paths).toHaveLength(2);
   expect(paths[0]).toBe(paths[1]);
   expect(paths[0]).toContain("-reveal");
+  await expect(comparison.locator("clipPath[id$='-reveal']")).toHaveAttribute(
+    "clipPathUnits",
+    "userSpaceOnUse",
+  );
+  const bounds = await comparison
+    .locator(".recharts-line")
+    .evaluateAll((lines) => lines.map((line) => (line as SVGGraphicsElement).getBBox().x));
+  expect(bounds[0]).not.toBe(bounds[1]); // Leading missing value: both still share chart coordinates.
+  await comparison.getByRole("application").focus();
+  await page.getByLabel("Motion", { exact: true }).focus();
+  await expect(comparison.locator(".recharts-line").first()).toHaveCSS("clip-path", "none");
 });

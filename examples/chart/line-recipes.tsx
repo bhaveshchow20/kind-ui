@@ -1,6 +1,6 @@
 import * as Chart from "@kind-ui/charts";
-import { motion, type Transition, useReducedMotion } from "motion/react";
-import { type CSSProperties, useId } from "react";
+import { motion, type Transition } from "motion/react";
+import { type CSSProperties, useId, useState } from "react";
 import {
   CartesianGrid,
   Line,
@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useReducedMotionPreference } from "./use-reduced-motion.js";
 
 export type TrendPoint = { period: string; value: number | null };
 export type ComparisonPoint = { period: string; current: number | null; previous: number | null };
@@ -22,13 +23,13 @@ function revealStyle(id: string, enabled: boolean): CSSProperties {
 function Reveal({ id, reveal }: { id: string; reveal: LineReveal }) {
   return (
     <defs>
-      <clipPath id={`${id}-reveal`} clipPathUnits="objectBoundingBox">
+      <clipPath id={`${id}-reveal`} clipPathUnits="userSpaceOnUse">
         <motion.rect
-          x={-0.02}
-          y={-0.1}
-          height={1.2}
-          initial={{ width: 0 }}
-          animate={{ width: 1.04 }}
+          x={0}
+          y={0}
+          height="100%"
+          initial={{ width: "0%" }}
+          animate={{ width: "100%" }}
           transition={{
             duration: Math.max(0, reveal.durationMs ?? 500) / 1000,
             ease: reveal.easing ?? [0.22, 1, 0.36, 1],
@@ -48,8 +49,9 @@ type TrendProps = {
 /** Copyable composition: the host supplies data, copy, units and motion policy. */
 export function TrendLine({ data, label, formatValue, reveal }: TrendProps) {
   const helpId = useId();
-  const reducedMotion = useReducedMotion();
-  const enabled = reveal !== undefined && reducedMotion === false;
+  const reducedMotion = useReducedMotionPreference();
+  const [interacted, setInteracted] = useState(false);
+  const enabled = reveal !== undefined && !reducedMotion && !interacted;
   return (
     <Chart.Root
       config={{
@@ -62,6 +64,7 @@ export function TrendLine({ data, label, formatValue, reveal }: TrendProps) {
       className="recipe-chart"
       data-reveal={enabled ? "on" : "off"}
       style={revealStyle(helpId, enabled)}
+      onFocusCapture={() => setInteracted(true)}
     >
       <p id={helpId} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
@@ -106,8 +109,9 @@ export function TargetLine({
   reveal,
 }: TrendProps & { target: number; targetLabel: string }) {
   const helpId = useId();
-  const reducedMotion = useReducedMotion();
-  const enabled = reveal !== undefined && reducedMotion === false;
+  const reducedMotion = useReducedMotionPreference();
+  const [interacted, setInteracted] = useState(false);
+  const enabled = reveal !== undefined && !reducedMotion && !interacted;
   return (
     <Chart.Root
       config={{
@@ -120,6 +124,7 @@ export function TargetLine({
       className="recipe-chart"
       data-reveal={enabled ? "on" : "off"}
       style={revealStyle(helpId, enabled)}
+      onFocusCapture={() => setInteracted(true)}
     >
       <p id={helpId} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. {targetLabel}:{" "}
@@ -182,8 +187,9 @@ export function ComparisonLine({
   reveal?: LineReveal | undefined;
 }) {
   const helpId = useId();
-  const reducedMotion = useReducedMotion();
-  const enabled = reveal !== undefined && reducedMotion === false;
+  const reducedMotion = useReducedMotionPreference();
+  const [interacted, setInteracted] = useState(false);
+  const enabled = reveal !== undefined && !reducedMotion && !interacted;
   return (
     <Chart.Root
       config={config}
@@ -192,6 +198,7 @@ export function ComparisonLine({
       className="recipe-chart"
       data-reveal={enabled ? "on" : "off"}
       style={revealStyle(helpId, enabled)}
+      onFocusCapture={() => setInteracted(true)}
     >
       <Chart.Legend aria-label={`${label} series`} />
       <p id={helpId} className="recipe-help">

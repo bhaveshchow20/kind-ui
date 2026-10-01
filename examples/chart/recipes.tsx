@@ -1,5 +1,5 @@
 import type { SeriesConfig } from "@kind-ui/charts";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ComparisonLine,
@@ -8,6 +8,7 @@ import {
   TrendLine,
   type TrendPoint,
 } from "./line-recipes";
+import { useReducedMotionPreference } from "./use-reduced-motion.js";
 import "./style.css";
 import "./recipes.css";
 
@@ -30,7 +31,7 @@ const latency: TrendPoint[] = [
   { period: "Sun", value: 180 },
 ];
 const comparison: ComparisonPoint[] = [
-  { period: "Mon", current: 18, previous: 14 },
+  { period: "Mon", current: null, previous: 14 },
   { period: "Tue", current: 26, previous: 20 },
   { period: "Wed", current: null, previous: 22 },
   { period: "Thu", current: 0, previous: 16 },
@@ -56,16 +57,9 @@ const config = {
 function App() {
   const [palette, setPalette] = useState("monochrome");
   const [motion, setMotion] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(true);
+  const reducedMotion = useReducedMotionPreference();
   const [empty, setEmpty] = useState(false);
   const [visible, setVisible] = useState<string[]>(["current", "previous"]);
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReducedMotion(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
   const animate = motion && !reducedMotion;
   return (
     <main className="recipes" data-palette={palette} data-motion={animate ? "on" : "off"}>
