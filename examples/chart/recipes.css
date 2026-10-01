@@ -15,6 +15,15 @@
   font-weight: 650;
   letter-spacing: -0.04em;
 }
+.recipes-header nav {
+  display: flex;
+  gap: 12px;
+}
+.recipes-header nav a {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
 .recipes-header h1,
 .recipe-description,
 .recipe-note,
@@ -111,9 +120,6 @@
 }
 .recipe-chart .recharts-cartesian-axis-tick text {
   fill: var(--muted-foreground);
-}
-.recipe-chart [data-kind-ui="chart-legend"] {
-  margin-bottom: 10px;
 }
 .recipe-chart [data-kind-ui="chart-legend-button"] {
   border-color: transparent;
@@ -231,11 +237,20 @@
 .recipe-chart .recharts-bar {
   clip-path: var(--bar-reveal-clip, none);
 }
+.recipe-chart .recharts-area {
+  clip-path: var(--area-reveal-clip, none);
+}
 .recipe-chart:focus-within .recharts-bar {
+  clip-path: none;
+}
+.recipe-chart:focus-within .recharts-area {
   clip-path: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .recipe-chart .recharts-bar {
+    clip-path: none;
+  }
+  .recipe-chart .recharts-area {
     clip-path: none;
   }
 }

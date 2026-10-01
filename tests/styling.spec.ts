@@ -8,10 +8,11 @@ test("packed production CSS supplies defaults and permits plain CSS and native o
   const custom = page.getByRole("region", { name: "Overrides" });
   const part = (name: string) => `[data-kind-ui="chart-${name}"]`;
   await expect(defaults.locator(part("legend"))).toHaveCSS("display", "flex");
-  await expect(defaults.locator(part("legend"))).toHaveCSS("gap", "12px");
+  await expect(defaults.locator(part("legend"))).toHaveCSS("gap", "8px");
+  await expect(defaults.locator(part("legend"))).toHaveCSS("margin", "4px 0px 8px");
   await expect(defaults.getByRole("button", { name: "Alpha", exact: true })).toHaveCSS(
     "padding",
-    "4px 8px",
+    "3px 6px",
   );
   await expect(defaults.locator(part("tooltip"))).toHaveCSS("padding", "7px 9px");
   await expect(defaults.locator(part("tooltip"))).toHaveCSS("font-size", "12px");

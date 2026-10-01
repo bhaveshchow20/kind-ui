@@ -71,7 +71,10 @@ function App() {
       <header className="recipes-header">
         <a href="/">Kind UI</a>
         <h1>Line recipes</h1>
-        <a href="/bars.html">Bar recipes</a>
+        <nav aria-label="Chart families">
+          <a href="/areas.html">Area recipes</a>
+          <a href="/bars.html">Bar recipes</a>
+        </nav>
       </header>
       <div className="recipes-controls">
         <fieldset aria-label="Palette">

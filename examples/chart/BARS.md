@@ -32,6 +32,8 @@ Motion is off when the recipe's `motion` prop is omitted. When enabled, a one-se
 
 Use left/right arrow keys after focusing a chart, including the horizontal variant (Left advances down its categories), and Escape to dismiss the tooltip (Recharts 3.10.1 behavior). Browser tests cover geometry, zero/missing keyboard tooltips, narrow layouts, interrupted reveals and the shared line/tooltip regressions. CI saves screenshots. No video recording is required; these tests do not establish screen-reader conformance.
 
+For line recipes, see [the line recipe guide](RECIPES.md). For curves, stacked shares and area fills, see [the area recipe guide](AREAS.md).
+
 ## Additional compositions
 
 | Component | Additional input | Behavior |

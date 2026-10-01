@@ -143,3 +143,46 @@ void (
     formatCategory={(value) => value}
   />
 );
+
+import {
+  type AreaPoint,
+  type AreaSeriesConfig,
+  GradientArea,
+  InteractiveArea,
+  LinearArea,
+  PercentArea,
+  SmoothArea,
+  StackedArea,
+  type StackedAreaPoint,
+  StepArea,
+  ThresholdArea,
+} from "./area-recipes.js";
+
+const areaData: AreaPoint[] = [
+  { period: "Jan", value: 0 },
+  { period: "Feb", value: null },
+];
+const completeArea: StackedAreaPoint[] = [{ period: "Jan", desktop: 2, mobile: 1 }];
+const areaSeriesConfig: AreaSeriesConfig = {
+  desktop: { label: "Desktop", color: "var(--chart-1)" },
+  mobile: { label: "Mobile", color: "var(--chart-2)" },
+};
+void (<SmoothArea data={areaData} label="Area" formatValue={formatValue} />);
+void (<LinearArea data={areaData} label="Area" formatValue={formatValue} />);
+void (<StepArea data={areaData} label="Area" formatValue={formatValue} />);
+void (<GradientArea data={areaData} label="Area" formatValue={formatValue} />);
+void (<ThresholdArea data={areaData} label="Area" formatValue={formatValue} threshold={1} />);
+void (<StackedArea data={completeArea} label="Visitors" config={areaSeriesConfig} />);
+void (<PercentArea data={completeArea} label="Share" config={areaSeriesConfig} />);
+void (
+  <InteractiveArea
+    data={completeArea}
+    label="Visitors by device"
+    config={areaSeriesConfig}
+    visibleSeries={["desktop"]}
+    onVisibleSeriesChange={() => {}}
+  />
+);
+// @ts-expect-error Stacked areas need complete values to preserve totals.
+const incompleteArea: StackedAreaPoint = { period: "Jan", desktop: null, mobile: 1 };
+void incompleteArea;
