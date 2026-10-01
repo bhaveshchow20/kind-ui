@@ -27,6 +27,10 @@ test("bar recipes expose missing and zero data with keyboard tooltips and narrow
   await page.keyboard.press("ArrowRight");
   await expect(grouped.getByRole("status")).toContainText("No data");
   await expect(grouped.getByRole("status")).toContainText("22 tasks");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(grouped.getByRole("status")).toContainText("34 tasks");
+  await grouped.getByRole("status").screenshot({ path: info.outputPath("compact-tooltip.png") });
   await page.keyboard.press("Escape");
   await grouped.getByText("View data", { exact: true }).click();
   await expect(grouped.getByRole("row", { name: "Wed No data 22 tasks" })).toBeVisible();
