@@ -150,3 +150,26 @@ test("area composition requires Root and a chart interaction boundary", () => {
     /inside LineChart/,
   );
 });
+
+test("category itemKey resolves metadata, zero, formatting and visibility independently of dataKey", () => {
+  const payload = [entry(0, { payload: { id: "category" }, name: "Native name" })];
+  const categoryConfig = {
+    category: { label: "Category label", color: "red", formatValue: (v) => `${v} members` },
+  };
+  const renderCategory = (visibleSeries) =>
+    render(
+      h(
+        Root,
+        { config: categoryConfig, visibleSeries },
+        h(TooltipContent, {
+          tooltip: tooltip(payload),
+          itemKey: (item) => item.payload.id,
+        }),
+      ),
+    );
+  assert.match(renderCategory(["category"]), /Category label/);
+  assert.match(renderCategory(["category"]), /0 members/);
+  assert.match(renderCategory(["category"]), /data-series="category"/);
+  assert.doesNotMatch(renderCategory(["count"]), /chart-tooltip/);
+  assert.doesNotMatch(renderCategory(["category"]), /itemKey=/);
+});

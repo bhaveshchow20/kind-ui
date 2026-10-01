@@ -107,3 +107,16 @@ for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.BarMat
 }
 // @ts-expect-error Bar finishes use the established material vocabulary.
 void (<Chart.BarSeries dataKey="count" material="metal" />);
+const categoryKey: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
+void (<Chart.Tooltip itemKey={categoryKey} />);
+const categoryContent: Chart.TooltipContentProps = {
+  tooltip: {
+    active: true,
+    payload: [],
+    activeIndex: "0",
+    coordinate: undefined,
+    accessibilityLayer: true,
+  },
+  itemKey: categoryKey,
+};
+void categoryContent;
