@@ -1,4 +1,4 @@
-import type { SeriesConfig } from "@kind-ui/charts";
+import type { LineMaterial, SeriesConfig } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -61,13 +61,20 @@ const config = {
 
 function App() {
   const [palette, setPalette] = useState("monochrome");
+  const [material, setMaterial] = useState<LineMaterial>("plain");
+  const [guide, setGuide] = useState(false);
   const [motion, setMotion] = useState(false);
   const reducedMotion = useReducedMotionPreference();
   const [empty, setEmpty] = useState(false);
   const [visible, setVisible] = useState<string[]>(["current", "previous"]);
   const animate = motion && !reducedMotion;
   return (
-    <main className="recipes" data-palette={palette} data-motion={animate ? "on" : "off"}>
+    <main
+      className="recipes"
+      data-palette={palette}
+      data-material={material}
+      data-motion={animate ? "on" : "off"}
+    >
       <header className="recipes-header">
         <a href="/">Kind UI</a>
         <h1>Line recipes</h1>
@@ -90,6 +97,33 @@ function App() {
             </button>
           ))}
         </fieldset>
+        <fieldset aria-label="Line material">
+          <legend className="sr-only">Line material</legend>
+          {(["plain", "paper", "clay", "glow"] satisfies LineMaterial[]).map((value) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={material === value}
+              onClick={() => setMaterial(value)}
+            >
+              {value === "plain"
+                ? "Plain"
+                : value === "paper"
+                  ? "Paper"
+                  : value === "clay"
+                    ? "Clay"
+                    : "Glow"}
+            </button>
+          ))}
+        </fieldset>
+        <label>
+          <input
+            type="checkbox"
+            checked={guide}
+            onChange={(event) => setGuide(event.target.checked)}
+          />{" "}
+          Hover guide
+        </label>
         <label>
           <input
             type="checkbox"
@@ -128,6 +162,8 @@ function App() {
                 label={`${title} daily completions`}
                 formatValue={tasks}
                 animate={animate}
+                material={material}
+                guide={guide}
               />
             )}
             <details>
@@ -158,6 +194,8 @@ function App() {
               label="Completed tasks"
               formatValue={tasks}
               animate={animate}
+              material={material}
+              guide={guide}
             />
           )}
           <p className="recipe-note">Daily completions · Mon–Sun</p>
@@ -189,6 +227,8 @@ function App() {
               target={240}
               targetLabel="Budget"
               animate={animate}
+              material={material}
+              guide={guide}
             />
           )}
           <p className="recipe-note">Lower is faster. Wednesday was not recorded.</p>
@@ -217,6 +257,8 @@ function App() {
               onVisibleSeriesChange={setVisible}
               label="Weekly comparison"
               animate={animate}
+              material={material}
+              guide={guide}
             />
           )}
           <p className="recipe-note">
