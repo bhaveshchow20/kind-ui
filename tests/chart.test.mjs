@@ -6,7 +6,14 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 
 test("direct and namespace imports expose the same public components", () => {
-  assert.deepEqual(Object.keys(Chart).sort(), ["Legend", "Root", "TooltipContent"]);
+  assert.deepEqual(Object.keys(Chart).sort(), [
+    "Legend",
+    "LineChart",
+    "LineSeries",
+    "Root",
+    "Tooltip",
+    "TooltipContent",
+  ]);
   assert.equal(Chart.Root, Root);
   assert.equal(Chart.Legend, Legend);
   assert.equal(Chart.TooltipContent, TooltipContent);
@@ -123,4 +130,12 @@ test("unknown prototype-named keys use upstream metadata without inherited confi
     assert.match(html, /--kind-ui-chart-indicator-color:#f00/);
     assert.doesNotMatch(html, new RegExp(`var\\(--color-${dataKey}`));
   }
+});
+
+test("line components reject missing composition boundaries", () => {
+  assert.throws(() => render(h(Chart.Tooltip)), /inside LineChart/);
+  assert.throws(
+    () => render(h(Root, { config }, h(Chart.LineSeries, { dataKey: "count" }))),
+    /inside LineChart/,
+  );
 });

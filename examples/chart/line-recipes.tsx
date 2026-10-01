@@ -1,26 +1,19 @@
 import * as Chart from "@kind-ui/charts";
+import type { LineMotion } from "@kind-ui/charts/motion";
+import * as Line from "@kind-ui/charts/motion";
 import type { ComponentProps, ReactNode } from "react";
+import { useId } from "react";
 import {
   CartesianGrid,
   type DotProps,
   LabelList,
-  Line,
-  LineChart,
   ReferenceLine,
   ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  ActiveMarker,
-  type LineMotion,
-  LineReveal,
-  MovingTooltip,
-  useLineMotion,
-} from "./line-motion.js";
 
-export type { LineMotion } from "./line-motion.js";
+export type { LineMotion } from "@kind-ui/charts/motion";
 export type TrendPoint = { period: string; value: number | null };
 export type ComparisonPoint = { period: string; current: number | null; previous: number | null };
 export type TrendProps = {
@@ -51,8 +44,8 @@ function Diamond({ cx, cy }: Pick<DotProps, "cx" | "cy">) {
   );
 }
 
-// These single-series recipes repeat the same measured frame, tooltip and motion wiring.
-// The engine's Line props remain explicit at each recipe, rather than encoded in a chart schema.
+// Examples own their data, layout and native Recharts geometry.
+// Shared interaction, visibility and animation come from the package.
 function SingleSeriesLine({
   data,
   label,
@@ -62,8 +55,10 @@ function SingleSeriesLine({
   dot,
   children,
 }: TrendProps &
-  Required<Pick<ComponentProps<typeof Line>, "type" | "dot">> & { children?: ReactNode }) {
-  const animation = useLineMotion(motion);
+  Required<Pick<ComponentProps<typeof Line.LineSeries>, "type" | "dot">> & {
+    children?: ReactNode;
+  }) {
+  const id = useId();
   return (
     <Chart.Root
       config={{
@@ -74,62 +69,34 @@ function SingleSeriesLine({
         },
       }}
       className="recipe-chart"
-      data-reveal={animation.reveal ? "on" : "off"}
-      style={animation.style}
-      onFocusCapture={animation.finishReveal}
-      onPointerDownCapture={animation.finishReveal}
-      onPointerMoveCapture={animation.finishReveal}
-      onKeyDownCapture={animation.clearPointer}
     >
-      <p id={animation.id} className="recipe-help">
+      <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
       </p>
       <ResponsiveContainer width="100%" height={196}>
-        <LineChart
+        <Line.LineChart
           data={data}
-          onMouseMove={animation.trackPointer}
-          onMouseLeave={animation.clearPointer}
+          motion={motion}
           accessibilityLayer
           aria-label={label}
-          aria-describedby={animation.id}
+          aria-describedby={id}
           margin={{ top: 28, right: 16, left: 16, bottom: 0 }}
         >
-          {animation.reveal && motion && <LineReveal id={animation.id} options={motion} />}
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
           <YAxis hide domain={[0, "auto"]} />
-          <Tooltip
-            position={{ x: 0, y: 0 }}
-            cursor={false}
-            filterNull={false}
-            isAnimationActive={false}
-            content={(tooltip) => (
-              <MovingTooltip
-                key={animation.animate ? "animated" : "static"}
-                tooltip={tooltip}
-                transition={animation.transition}
-                pointer={animation.pointer}
-              />
-            )}
-          />
-          <Line
+          <Line.Tooltip />
+          <Line.LineSeries
             dataKey="value"
             type={type}
             stroke="var(--color-value)"
             strokeWidth={2}
             dot={dot}
-            activeDot={
-              <ActiveMarker
-                key={animation.animate ? "animated" : "static"}
-                transition={animation.transition}
-              />
-            }
             connectNulls={false}
-            isAnimationActive={false}
           >
             {children}
-          </Line>
-        </LineChart>
+          </Line.LineSeries>
+        </Line.LineChart>
       </ResponsiveContainer>
     </Chart.Root>
   );
@@ -171,7 +138,7 @@ export function TargetLine({
   targetLabel,
   motion,
 }: TrendProps & { target: number; targetLabel: string }) {
-  const animation = useLineMotion(motion);
+  const id = useId();
   return (
     <Chart.Root
       config={{
@@ -182,28 +149,20 @@ export function TargetLine({
         },
       }}
       className="recipe-chart"
-      data-reveal={animation.reveal ? "on" : "off"}
-      style={animation.style}
-      onFocusCapture={animation.finishReveal}
-      onPointerDownCapture={animation.finishReveal}
-      onPointerMoveCapture={animation.finishReveal}
-      onKeyDownCapture={animation.clearPointer}
     >
-      <p id={animation.id} className="recipe-help">
+      <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. {targetLabel}:{" "}
         {formatValue(target)}.
       </p>
       <ResponsiveContainer width="100%" height={196}>
-        <LineChart
+        <Line.LineChart
           data={data}
-          onMouseMove={animation.trackPointer}
-          onMouseLeave={animation.clearPointer}
+          motion={motion}
           accessibilityLayer
           aria-label={label}
-          aria-describedby={animation.id}
+          aria-describedby={id}
           margin={{ top: 20, right: 16, left: 0, bottom: 0 }}
         >
-          {animation.reveal && motion && <LineReveal id={animation.id} options={motion} />}
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
           <YAxis width={44} axisLine={false} tickLine={false} domain={[0, "auto"]} />
@@ -213,36 +172,16 @@ export function TargetLine({
             stroke="var(--muted-foreground)"
             strokeDasharray="4 4"
           />
-          <Tooltip
-            position={{ x: 0, y: 0 }}
-            cursor={false}
-            filterNull={false}
-            isAnimationActive={false}
-            content={(tooltip) => (
-              <MovingTooltip
-                key={animation.animate ? "animated" : "static"}
-                tooltip={tooltip}
-                transition={animation.transition}
-                pointer={animation.pointer}
-              />
-            )}
-          />
-          <Line
+          <Line.Tooltip />
+          <Line.LineSeries
             dataKey="value"
             type="linear"
             stroke="var(--color-value)"
             strokeWidth={2}
             dot={solidDot}
-            activeDot={
-              <ActiveMarker
-                key={animation.animate ? "animated" : "static"}
-                transition={animation.transition}
-              />
-            }
             connectNulls={false}
-            isAnimationActive={false}
           />
-        </LineChart>
+        </Line.LineChart>
       </ResponsiveContainer>
       <p className="recipe-target">
         Dashed line · {targetLabel}: {formatValue(target)}
@@ -266,22 +205,16 @@ export function ComparisonLine({
   label: string;
   motion?: LineMotion | undefined;
 }) {
-  const animation = useLineMotion(motion);
+  const id = useId();
   return (
     <Chart.Root
       config={config}
       visibleSeries={visibleSeries}
       onVisibleSeriesChange={onVisibleSeriesChange}
       className="recipe-chart"
-      data-reveal={animation.reveal ? "on" : "off"}
-      style={animation.style}
-      onFocusCapture={animation.finishReveal}
-      onPointerDownCapture={animation.finishReveal}
-      onPointerMoveCapture={animation.finishReveal}
-      onKeyDownCapture={animation.clearPointer}
     >
       <Chart.Legend aria-label={`${label} series`} />
-      <p id={animation.id} className="recipe-help">
+      <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. Previous values use
         a dashed line.
       </p>
@@ -291,67 +224,36 @@ export function ComparisonLine({
         </p>
       ) : (
         <ResponsiveContainer width="100%" height={196}>
-          <LineChart
+          <Line.LineChart
             data={data}
-            onMouseMove={animation.trackPointer}
-            onMouseLeave={animation.clearPointer}
+            motion={motion}
             accessibilityLayer
             aria-label={label}
-            aria-describedby={animation.id}
+            aria-describedby={id}
             margin={{ top: 20, right: 16, left: 0, bottom: 0 }}
           >
-            {animation.reveal && motion && <LineReveal id={animation.id} options={motion} />}
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
             <YAxis width={36} axisLine={false} tickLine={false} domain={[0, "auto"]} />
-            <Tooltip
-              position={{ x: 0, y: 0 }}
-              cursor={false}
-              filterNull={false}
-              isAnimationActive={false}
-              content={(tooltip) => (
-                <MovingTooltip
-                  key={animation.animate ? "animated" : "static"}
-                  tooltip={tooltip}
-                  transition={animation.transition}
-                  pointer={animation.pointer}
-                />
-              )}
-            />
-            <Line
+            <Line.Tooltip />
+            <Line.LineSeries
               dataKey="current"
               type="linear"
               stroke="var(--color-current)"
               strokeWidth={2}
               dot={{ r: 3.5, fill: "var(--color-current)", strokeDasharray: "none" }}
-              activeDot={
-                <ActiveMarker
-                  key={animation.animate ? "animated" : "static"}
-                  transition={animation.transition}
-                />
-              }
-              hide={!visibleSeries.includes("current")}
               connectNulls={false}
-              isAnimationActive={false}
             />
-            <Line
+            <Line.LineSeries
               dataKey="previous"
               type="linear"
               stroke="var(--color-previous)"
               strokeDasharray="5 4"
               strokeWidth={2}
               dot={{ r: 3.5, fill: "var(--card)", strokeWidth: 2, strokeDasharray: "none" }}
-              activeDot={
-                <ActiveMarker
-                  key={animation.animate ? "animated" : "static"}
-                  transition={animation.transition}
-                />
-              }
-              hide={!visibleSeries.includes("previous")}
               connectNulls={false}
-              isAnimationActive={false}
             />
-          </LineChart>
+          </Line.LineChart>
         </ResponsiveContainer>
       )}
     </Chart.Root>

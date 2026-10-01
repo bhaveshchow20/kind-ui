@@ -48,3 +48,26 @@ const invalidControl = <Root config={config} onVisibleSeriesChange={() => {}} />
 const invalidConfig: SeriesConfig = { count: { label: "Tasks", color: 1 } };
 void invalidControl;
 void invalidConfig;
+
+// Static line declarations resolve without Motion installed.
+void (
+  <Chart.Root config={config}>
+    <Chart.LineChart width={300} height={200} ref={createRef<SVGSVGElement>()}>
+      <Chart.LineSeries
+        dataKey={(point: { count: number }) => point.count}
+        seriesKey="count"
+        dot={false}
+      />
+      <Chart.Tooltip
+        ref={createRef<HTMLDivElement>()}
+        frameProps={{ onFocus: (event) => event.currentTarget.focus() }}
+      />
+    </Chart.LineChart>
+  </Chart.Root>
+);
+// @ts-expect-error Motion options belong exclusively to the optional subpath.
+void (<Chart.LineChart motion={{ revealDurationMs: 10 }} />);
+// @ts-expect-error Recharts Line does not provide a component ref; use a custom shape's pathRef.
+void (<Chart.LineSeries dataKey="count" ref={createRef<SVGPathElement>()} />);
+// @ts-expect-error Kind owns the bounded tooltip anchor.
+void (<Chart.Tooltip position={{ x: 0, y: 0 }} />);

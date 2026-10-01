@@ -16,7 +16,7 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "check": "npm run lint && npm run test && npm run check:chart",
-    "check:package": "npm run build && node --test scripts/package-contract.test.mjs && node scripts/check-package.mjs",
+    "check:package": "npm run build && node --test scripts/package-contract.test.mjs scripts/line-consumer-contract.test.mjs && node scripts/check-package.mjs",
     "test": "npm run build && node --test tests/chart.test.mjs",
     "dev:chart": "npm run build && vite examples/chart --host 127.0.0.1",
     "check:chart": "npm run check:package && tsc -p examples/chart && vite build examples/chart && playwright test"

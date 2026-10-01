@@ -198,21 +198,6 @@
   }
 }
 /* Motion owns the SVG clip; Recharts retains geometry and tooltip state. */
-.recipe-chart .recharts-line,
-.recipe-chart .recharts-line-dots {
-  clip-path: var(--line-reveal-clip, none);
-}
-.recipe-chart:focus-within .recharts-line,
-.recipe-chart:focus-within .recharts-line-dots {
-  clip-path: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .recipe-chart .recharts-line,
-  .recipe-chart .recharts-line-dots {
-    clip-path: none;
-  }
-}
-
 .recipe-help {
   position: absolute;
   width: 1px;

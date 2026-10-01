@@ -12,7 +12,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./dist/styles.css",
+    "./motion": {
+      "types": "./dist/motion.d.ts",
+      "import": "./dist/motion.js"
+    }
   },
   "types": "./dist/index.d.ts",
   "files": [
@@ -23,6 +27,12 @@
   "peerDependencies": {
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "motion": "^13.4.6"
+  },
+  "peerDependenciesMeta": {
+    "motion": {
+      "optional": true
+    }
   }
 }

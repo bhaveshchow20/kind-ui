@@ -1,18 +1,7 @@
 import * as Chart from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import {
-  CartesianGrid,
-  type DotProps,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Symbols,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { MovingTooltip, useRecipeMotion } from "./recipe-motion.js";
+import { CartesianGrid, type DotProps, ResponsiveContainer, Symbols, XAxis, YAxis } from "recharts";
 import "./style.css";
 
 const config = {
@@ -51,17 +40,13 @@ function ReviewMarker({ cx, cy, size = 34 }: Pick<DotProps, "cx" | "cy"> & { siz
   );
 }
 function App() {
-  const tooltipMotion = useRecipeMotion(undefined);
   const [palette, setPalette] = useState<"monochrome" | "color">("monochrome");
   const [visible, setVisible] = useState<string[]>([...keys]);
   const [empty, setEmpty] = useState(false);
   const rows = empty ? [] : data;
   return (
     <div data-palette={palette} className="min-h-screen bg-background text-foreground">
-      <main
-        onKeyDownCapture={tooltipMotion.clearPointer}
-        className="mx-auto max-w-[760px] px-4 py-6 sm:px-6"
-      >
+      <main className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
         <div className="mb-5 flex items-center justify-between gap-4">
           <a href="/recipes.html" className="text-lg font-semibold tracking-tight">
             Kind UI · Recipes
@@ -116,10 +101,8 @@ function App() {
               </p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart
+                <Chart.LineChart
                   data={rows}
-                  onMouseMove={tooltipMotion.trackPointer}
-                  onMouseLeave={tooltipMotion.clearPointer}
                   accessibilityLayer
                   aria-label="Task outcomes by day"
                   aria-describedby="chart-help"
@@ -128,20 +111,9 @@ function App() {
                   <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.65} />
                   <XAxis dataKey="day" axisLine={false} tickLine={false} />
                   <YAxis width={32} axisLine={false} tickLine={false} domain={[0, 100]} />
-                  <Tooltip
-                    position={{ x: 0, y: 0 }}
-                    filterNull={false}
-                    isAnimationActive={false}
-                    content={(tooltip) => (
-                      <MovingTooltip
-                        tooltip={tooltip}
-                        transition={tooltipMotion.transition}
-                        pointer={tooltipMotion.pointer}
-                      />
-                    )}
-                  />
+                  <Chart.Tooltip cursor />
                   {keys.map((key) => (
-                    <Line
+                    <Chart.LineSeries
                       key={key}
                       dataKey={key}
                       stroke={`var(--color-${key})`}
@@ -171,12 +143,11 @@ function App() {
                         )
                       }
                       strokeDasharray={key === "review" ? "5 4" : "none"}
-                      hide={!visible.includes(key)}
                       connectNulls={false}
                       isAnimationActive={false}
                     />
                   ))}
-                </LineChart>
+                </Chart.LineChart>
               </ResponsiveContainer>
             )}
           </Chart.Root>

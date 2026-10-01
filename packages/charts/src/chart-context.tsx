@@ -11,6 +11,6 @@ export type ChartContextValue = Visibility & { config: SeriesConfig };
 export const ChartContext = createContext<ChartContextValue | null>(null);
 export function useChart() {
   const chart = useContext(ChartContext);
-  if (!chart) throw new Error("Legend and TooltipContent must be inside Root");
+  if (!chart) throw new Error("Chart components must be inside Root");
   return chart;
 }

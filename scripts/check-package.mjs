@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "vite";
+import { assertLineConsumerSource } from "./line-consumer-contract.mjs";
 import { assertPackageContract } from "./package-contract.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -25,7 +26,10 @@ function run(command, args, cwd = root) {
   return execFileSync(command, args, {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, NODE_PATH: "" },
+    env: {
+      ...process.env,
+      NODE_PATH: "",
+    },
     stdio: ["ignore", "pipe", "inherit"],
   });
 }
@@ -79,20 +83,6 @@ try {
     ],
     consumer,
   );
-  run(
-    process.execPath,
-    [
-      npm,
-      "install",
-      "--ignore-scripts",
-      "--no-audit",
-      "--no-fund",
-      "--package-lock=false",
-      "--workspaces=false",
-      `motion@${rootManifest.devDependencies.motion}`,
-    ],
-    consumer,
-  );
   const installed = join(consumer, "node_modules", "@kind-ui/charts");
   assert.equal(
     await realpath(installed),
@@ -115,75 +105,108 @@ try {
     await readFile(join(root, "packages/charts/src/styles.css"), "utf8"),
     "Packed CSS must match the component defaults",
   );
-  for (const file of ["index.html", "main.tsx", "consumer.css", "motion.tsx"]) {
-    await writeFile(
-      join(consumer, file),
-      await readFile(join(root, "tests/fixtures/styling", file)),
-    );
+  async function copyFixture(folder, file, target = file) {
+    const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
+    if (folder === "line" && file.endsWith(".tsx")) assertLineConsumerSource(source);
+    await writeFile(join(consumer, target), source);
   }
+  async function typecheck(files) {
+    for (const mode of ["NodeNext", "Bundler"]) {
+      await writeFile(
+        join(consumer, "tsconfig.json"),
+        JSON.stringify({
+          compilerOptions: {
+            target: "ES2022",
+            jsx: "react-jsx",
+            esModuleInterop: true,
+            module: mode === "Bundler" ? "ESNext" : mode,
+            moduleResolution: mode,
+            strict: true,
+            skipLibCheck: false,
+            noEmit: true,
+            typeRoots: [join(consumer, "node_modules", "@types")],
+          },
+          files,
+        }),
+      );
+      run(
+        process.execPath,
+        [join(root, "node_modules/typescript/bin/tsc"), "-p", "tsconfig.json"],
+        consumer,
+      );
+    }
+  }
+  async function production(entry, outDir) {
+    await build({
+      configFile: false,
+      root: consumer,
+      logLevel: "warn",
+      build: {
+        outDir: join(root, "artifacts", outDir),
+        emptyOutDir: true,
+        rolldownOptions: { input: join(consumer, entry) },
+      },
+    });
+  }
+  await writeFile(
+    join(consumer, "index.tsx"),
+    await readFile(join(root, "tests/consumer.tsx"), "utf8"),
+  );
   await writeFile(
     join(consumer, "chart.test.mjs"),
     await readFile(join(root, "tests/chart.test.mjs"), "utf8"),
   );
   run(process.execPath, ["--test", "chart.test.mjs"], consumer);
-  await writeFile(
-    join(consumer, "index.tsx"),
-    await readFile(join(root, "tests/consumer.tsx"), "utf8"),
+  for (const file of ["host.tsx", "static.tsx", "static.html"]) await copyFixture("line", file);
+  await typecheck(["index.tsx", "host.tsx", "static.tsx"]);
+  await production("static.html", "packed-line-static");
+  console.log(
+    "Static line consumer: strict NodeNext/Bundler and production build passed with no Motion installed",
   );
+  run(
+    process.execPath,
+    [
+      npm,
+      "install",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "--package-lock=false",
+      "--workspaces=false",
+      `motion@${rootManifest.devDependencies.motion}`,
+    ],
+    consumer,
+  );
+  for (const file of ["motion.tsx", "motion.html"]) await copyFixture("line", file);
+  await typecheck(["host.tsx", "motion.tsx"]);
+  await production("motion.html", "packed-line-motion");
+  console.log(
+    "Motion line consumer: strict NodeNext/Bundler and production build passed using only packed public imports",
+  );
+  for (const file of ["index.html", "main.tsx", "consumer.css", "motion.tsx"])
+    await copyFixture("styling", file);
+  await typecheck(["index.tsx", "main.tsx", "motion.tsx"]);
+  await production("index.html", "packed-chart");
+
+  // Separate legacy evidence: bar/area recipes are still application-owned, not exported components.
+  const legacy = join(consumer, "legacy");
+  await mkdir(legacy);
   for (const file of [
-    "line-recipes.tsx",
-    "line-motion.tsx",
     "recipe-motion.tsx",
     "bar-recipes.tsx",
     "area-recipes.tsx",
     "use-reduced-motion.ts",
   ]) {
-    await writeFile(
-      join(consumer, file),
-      await readFile(join(root, "examples/chart", file), "utf8"),
-    );
+    await writeFile(join(legacy, file), await readFile(join(root, "examples/chart", file), "utf8"));
   }
   await writeFile(
-    join(consumer, "recipe-consumer.tsx"),
+    join(legacy, "recipe-consumer.tsx"),
     await readFile(join(root, "tests/recipe-consumer.tsx"), "utf8"),
   );
-  for (const mode of ["NodeNext", "Bundler"]) {
-    await writeFile(
-      join(consumer, "tsconfig.json"),
-      JSON.stringify({
-        compilerOptions: {
-          target: "ES2022",
-          jsx: "react-jsx",
-          esModuleInterop: true,
-          module: mode === "Bundler" ? "ESNext" : mode,
-          moduleResolution: mode,
-          strict: true,
-          skipLibCheck: false,
-          noEmit: true,
-          typeRoots: [join(consumer, "node_modules", "@types")],
-        },
-        include: [
-          "index.tsx",
-          "main.tsx",
-          "motion.tsx",
-          "line-recipes.tsx",
-          "area-recipes.tsx",
-          "recipe-consumer.tsx",
-        ],
-      }),
-    );
-    run(
-      process.execPath,
-      [join(root, "node_modules/typescript/bin/tsc"), "-p", "tsconfig.json"],
-      consumer,
-    );
-  }
-  await build({
-    configFile: false,
-    root: consumer,
-    logLevel: "warn",
-    build: { outDir: join(root, "artifacts/packed-chart"), emptyOutDir: true },
-  });
+  await typecheck(["legacy/recipe-consumer.tsx"]);
+  console.log(
+    "Legacy bar/area recipe typechecks passed; implementations are host-owned and are not package exports",
+  );
   console.log(
     "Packed contents, CSS, license, ESM import, component tests, strict consumers and production styling build passed",
   );

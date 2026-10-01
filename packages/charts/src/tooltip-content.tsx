@@ -1,8 +1,9 @@
 "use client";
 
-import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
+import { type ComponentPropsWithRef, type CSSProperties, type ReactNode, use } from "react";
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
 import { useChart } from "./chart-context.js";
+import { LineInteraction } from "./line-chart.js";
 
 export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
   /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
@@ -17,20 +18,23 @@ export function TooltipContent({
   ...props
 }: TooltipContentProps) {
   const { config, visibleSeries } = useChart();
+  const line = use(LineInteraction);
+  const identity = (entry: UpstreamTooltipContentProps["payload"][number]) =>
+    (entry.graphicalItemId ? line?.seriesKeys.get(entry.graphicalItemId) : undefined) ??
+    String(entry.dataKey ?? entry.name);
   const { active, payload, label, formatter, labelFormatter, accessibilityLayer } = tooltip;
   const entries = active
     ? payload.filter(
         (item) =>
           item.type !== "none" &&
           !item.hide &&
-          (visibleSeries === undefined ||
-            visibleSeries.includes(String(item.dataKey ?? item.name))),
+          (visibleSeries === undefined || visibleSeries.includes(identity(item))),
       )
     : [];
   if (!entries.some((entry) => entry.value != null)) return null;
   let hasVisibleValue = false;
   const items = entries.map((entry, index) => {
-    const key = String(entry.dataKey ?? entry.name ?? index);
+    const key = identity(entry);
     const item = Object.hasOwn(config, key) ? config[key] : undefined;
     let name: ReactNode = item?.label ?? entry.name ?? key;
     let value: ReactNode = missingValue;
