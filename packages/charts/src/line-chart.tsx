@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  type Attributes,
   type ComponentProps,
+  type ComponentType,
   type CSSProperties,
   createContext,
   use,
@@ -12,6 +14,7 @@ import {
 } from "react";
 import {
   LineChart as EngineLineChart,
+  type RadarChart as EngineRadarChart,
   getRelativeCoordinate,
   useChartHeight,
   useChartWidth,
@@ -55,21 +58,24 @@ function Lifecycle({ data, invalidate }: { data: LineChartProps["data"]; invalid
 }
 
 /** Internal boundary shared by the static and optional Motion entry points. */
-export function LineChartFrame({
-  engine: EngineChart = EngineLineChart,
+type NativeChartProps = LineChartProps | ComponentProps<typeof EngineRadarChart>;
+
+export function LineChartFrame<Props extends NativeChartProps & Attributes = LineChartProps>({
+  engine: EngineChart,
   interrupt = () => {},
   clip,
   motionEnabled,
-  children,
-  onMouseMove,
-  onMouseLeave,
-  ...props
-}: LineChartProps & {
-  engine?: typeof EngineLineChart;
+  chartProps: props,
+  children = props.children,
+}: {
+  chartProps: Props;
+  engine: ComponentType<Props>;
+  children?: Props["children"];
   interrupt?: () => void;
   clip?: string;
   motionEnabled?: boolean;
 }) {
+  const { onMouseMove, onMouseLeave } = props;
   const [motionReady, setMotionReady] = useState(true);
   const [pointer, setPointer] = useState<Point>(null);
   const [seriesKeys, setSeriesKeys] = useState(() => new Map<string, string>());
@@ -138,5 +144,5 @@ export function LineChartFrame({
 
 /** Recharts owns geometry and keyboard selection; Kind shares pointer/keyboard modality. */
 export function LineChart(props: LineChartProps) {
-  return <LineChartFrame {...props} />;
+  return <LineChartFrame chartProps={props} engine={EngineLineChart} />;
 }
