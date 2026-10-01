@@ -13,6 +13,8 @@ for (const material of ["paper", "clay", "glow"]) {
       page
         .locator(".recharts-area-area, .recharts-bar-rectangle path")
         .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+    await expect(area.locator(".recharts-area-area")).toHaveCount(2);
+    await expect(bar.locator(".recharts-bar-rectangle path")).toHaveCount(6);
     const before = await geometry();
     await area.getByRole("combobox").selectOption(material);
     await bar.getByRole("combobox").selectOption(material);
@@ -23,7 +25,10 @@ for (const material of ["paper", "clay", "glow"]) {
     expect(
       await page.locator(".recharts-area-area, .recharts-bar-rectangle path").evaluateAll((nodes) =>
         nodes.every((node) => {
-          const id = node.getAttribute("filter")?.match(/^url\(#(.+)\)$/)?.[1];
+          const id = node
+            .closest("[filter]")
+            ?.getAttribute("filter")
+            ?.match(/^url\(#(.+)\)$/)?.[1];
           return Boolean(id && node.closest("svg")?.querySelector(`[id="${id}"]`));
         }),
       ),
