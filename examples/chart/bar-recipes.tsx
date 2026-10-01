@@ -2,6 +2,7 @@ import * as Chart from "@kind-ui/charts";
 import { type ReactNode, useId } from "react";
 import {
   type BarShapeProps,
+  BarStack,
   CartesianGrid,
   Cell,
   LabelList,
@@ -170,7 +171,7 @@ export function VerticalBars({ label, formatValue, ...props }: SingleProps) {
         dataKey="value"
         fill="var(--color-value)"
         maxBarSize={40}
-        radius={3}
+        radius={props.material === "clay" ? 8 : 3}
       />
     </BarFrame>
   );
@@ -184,7 +185,7 @@ export function HorizontalBars({ label, formatValue, ...props }: SingleProps) {
         dataKey="value"
         fill="var(--color-value)"
         maxBarSize={40}
-        radius={3}
+        radius={props.material === "clay" ? 8 : 3}
       />
     </BarFrame>
   );
@@ -198,14 +199,14 @@ export function GroupedBars(props: PairProps) {
         dataKey="primary"
         fill="var(--color-primary)"
         maxBarSize={40}
-        radius={3}
+        radius={props.material === "clay" ? 8 : 3}
       />
       <Chart.BarSeries
         material={props.material}
         dataKey="secondary"
         fill="var(--color-secondary)"
         maxBarSize={40}
-        radius={3}
+        radius={props.material === "clay" ? 8 : 3}
       />
     </BarFrame>
   );
@@ -214,20 +215,22 @@ export function StackedBars(props: Omit<PairProps, "data"> & { data: StackedBarP
   return (
     <BarFrame {...props} legend={<Chart.Legend />}>
       <VerticalAxes />
-      <Chart.BarSeries
-        material={props.material}
-        dataKey="primary"
-        fill="var(--color-primary)"
-        maxBarSize={40}
-        stackId="total"
-      />
-      <Chart.BarSeries
-        material={props.material}
-        dataKey="secondary"
-        fill="var(--color-secondary)"
-        maxBarSize={40}
-        stackId="total"
-      />
+      <BarStack radius={props.material === "clay" ? 8 : 0}>
+        <Chart.BarSeries
+          material={props.material}
+          dataKey="primary"
+          fill="var(--color-primary)"
+          maxBarSize={40}
+          radius={0}
+        />
+        <Chart.BarSeries
+          material={props.material}
+          dataKey="secondary"
+          fill="var(--color-secondary)"
+          maxBarSize={40}
+          radius={0}
+        />
+      </BarStack>
     </BarFrame>
   );
 }
@@ -269,7 +272,7 @@ export function LabeledBars({ label, formatValue, ...props }: SingleProps) {
         dataKey="value"
         fill="var(--color-value)"
         maxBarSize={40}
-        radius={3}
+        radius={props.material === "clay" ? 8 : 3}
       >
         <LabelList
           dataKey="value"
@@ -316,7 +319,7 @@ export function CustomLabelBars({ label, formatValue, ...props }: SingleProps) {
         dataKey="value"
         fill="var(--color-value)"
         maxBarSize={30}
-        radius={3}
+        radius={props.material === "clay" ? 8 : 3}
       >
         <LabelList dataKey="category" content={<CategoryLabel />} />
         <LabelList
@@ -353,7 +356,7 @@ export function CategoryBars({
         formatter={(value) => (typeof value === "number" ? formatValue(value) : "No data")}
         dataKey="value"
         maxBarSize={40}
-        radius={3}
+        radius={props.material === "clay" ? 8 : 3}
       >
         {data.map((point) => (
           <Cell key={point.category} fill={point.color} />
@@ -427,6 +430,7 @@ export function SignedBars({ data, label, formatValue, ...props }: SingleProps) 
         name={label}
         formatter={(value) => (typeof value === "number" ? formatValue(value) : "No data")}
         dataKey="value"
+        radius={props.material === "clay" ? 8 : 0}
         maxBarSize={40}
       >
         {data.map((point) => (
@@ -453,6 +457,7 @@ export function InteractiveBars({
       <VerticalAxes formatCategory={formatCategory} />
       <Chart.BarSeries
         material={props.material}
+        radius={props.material === "clay" ? 8 : 0}
         dataKey={activeSeries}
         fill={`var(--color-${activeSeries})`}
       />

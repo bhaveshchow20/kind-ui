@@ -2,7 +2,16 @@
 import * as Chart from "@kind-ui/charts";
 import { useCallback, useState } from "react";
 import type { BarShapeProps } from "recharts";
-import { CartesianGrid, Cell, LabelList, Rectangle, ReferenceLine, XAxis, YAxis } from "recharts";
+import {
+  BarStack,
+  CartesianGrid,
+  Cell,
+  LabelList,
+  Rectangle,
+  ReferenceLine,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const data = [
   { category: "A", value: 8, other: 60 },
@@ -247,7 +256,8 @@ export function BarHost() {
             material={material}
             background={background}
             activeBar={customActive ? Shape : false}
-            radius={[3, 3, 0, 0]}
+            radius={new URLSearchParams(window.location.search).has("round") ? 8 : [3, 3, 0, 0]}
+            fillOpacity={new URLSearchParams(window.location.search).has("translucent") ? 0.35 : 1}
             {...(nativeShape ? { shape: Shape } : {})}
             {...(nativeFilter ? { filter: "url(#bar-host-filter)" } : {})}
             onClick={() => setClicked((v) => v + 1)}
@@ -284,11 +294,13 @@ export function BarHost() {
             hide={hide}
             name="Native other"
             fill={pink ? "#ed79ae" : "#682"}
+            radius={new URLSearchParams(window.location.search).has("round") ? 8 : 0}
             material={material}
             {...(stacked ? { stackId: "total" } : {})}
           />
         </Chart.BarChart>
       </Chart.Root>
+      {new URLSearchParams(window.location.search).has("envelopes") && <StackProof />}
     </section>
   );
 }
@@ -299,3 +311,36 @@ export const rejectedEngineTween: Chart.BarSeriesProps = {
   // @ts-expect-error Kind reserves native engine animation.
   isAnimationActive: true,
 };
+
+function StackProof() {
+  return (
+    <div data-proof-stack="">
+      {[260, 140].map((width) => (
+        <Chart.Root
+          key={width}
+          config={{
+            value: { label: "Value", color: "#ed79ae" },
+            other: { label: "Other", color: "#682" },
+          }}
+        >
+          <Chart.BarChart
+            width={width}
+            height={120}
+            data={[
+              { category: "A", value: 8, other: 12 },
+              { category: "B", value: 20, other: 0 },
+            ]}
+            aria-label={`Native stack ${width}`}
+          >
+            <XAxis dataKey="category" hide />
+            <YAxis hide />
+            <BarStack radius={8}>
+              <Chart.BarSeries dataKey="value" material="clay" radius={0} />
+              <Chart.BarSeries dataKey="other" material="clay" radius={0} />
+            </BarStack>
+          </Chart.BarChart>
+        </Chart.Root>
+      ))}
+    </div>
+  );
+}
