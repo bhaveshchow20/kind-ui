@@ -107,3 +107,26 @@ for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.BarMat
 }
 // @ts-expect-error Bar finishes use the established material vocabulary.
 void (<Chart.BarSeries dataKey="count" material="metal" />);
+
+export function CompleteNamespaceChart() {
+  return (
+    <Chart.Root config={{ count: { label: "Count", color: "#4055ee" } }}>
+      <Chart.ResponsiveContainer width="100%" height={240}>
+        <Chart.LineChart
+          data={[{ month: "Jan", count: 0 }]}
+          animate
+          accessibilityLayer
+          aria-label="Count by month"
+        >
+          <Chart.CartesianGrid vertical={false} />
+          <Chart.XAxis dataKey="month" />
+          <Chart.YAxis />
+          <Chart.ReferenceLine y={0} />
+          <Chart.LineSeries dataKey="count" />
+          <Chart.Tooltip />
+        </Chart.LineChart>
+      </Chart.ResponsiveContainer>
+      <Chart.Legend />
+    </Chart.Root>
+  );
+}

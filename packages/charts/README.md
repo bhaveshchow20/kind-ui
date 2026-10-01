@@ -7,7 +7,6 @@ Pre-release and unpublished. The examples below use this workspace's built `@kin
 ```tsx
 import { useState } from "react";
 import * as Chart from "@kind-ui/charts";
-import { ResponsiveContainer, XAxis } from "recharts";
 import "@kind-ui/charts/styles.css";
 
 const config = {
@@ -19,19 +18,25 @@ export function TasksChart() {
   return (
     <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
       <Chart.Legend aria-label="Visible series" />
-      <ResponsiveContainer width="100%" height={240}>
+      <Chart.ResponsiveContainer width="100%" height={240}>
         <Chart.LineChart data={[{ day: "Mon", tasks: 0 }, { day: "Tue", tasks: null }]} accessibilityLayer aria-label="Tasks by day">
-          <XAxis dataKey="day" />
+          <Chart.XAxis dataKey="day" />
           <Chart.LineSeries dataKey="tasks" connectNulls={false} />
           <Chart.Tooltip />
         </Chart.LineChart>
-      </ResponsiveContainer>
+      </Chart.ResponsiveContainer>
     </Chart.Root>
   );
 }
 ```
 
 `Chart` above is a normal ES module namespace import. Direct named imports also work: `import { Root, Legend, TooltipContent } from "@kind-ui/charts"`. The module exports `SeriesConfig` and each component's `*Props` type; there is no additional `Chart` object export.
+
+## Composition primitives
+
+`CartesianGrid`, `XAxis`, `YAxis`, `ReferenceLine`, and `ResponsiveContainer` (and their `*Props` types) are explicit public reexports of the existing Recharts peer components. Complete compositions can use one `Chart` namespace import, as above. Native identity, props, refs, handlers, registration, defaults, and scale/layout behavior remain unchanged; Kind adds no wrapper or rendering logic. Direct imports from Recharts remain valid. Geometry and configuration remain consumer-owned. Other engine primitives still import directly from Recharts.
+
+This additive API addresses the showcase's single-import composition requirement without introducing a universal schema, new dependency, or renderer. Recharts remains a required peer; these convenience exports do not make Kind a separate geometry engine.
 
 ## Line ownership and API
 
@@ -41,7 +46,7 @@ export function TasksChart() {
 | Recharts | Geometry, curve interpolation, axes/scales, graphical-item registration, payload and active selection, keyboard traversal and Escape/blur dismissal |
 | Consumer | Data and ordering, controlled visibleSeries, sizing, axes/grid/reference lines, custom dot/activeDot/shape/content, labels, styling, accessible name/instructions and data alternative |
 
-Render `LineChart` inside `Root`, and `LineSeries`/`Tooltip` inside `LineChart`. Engine children such as `XAxis`, `YAxis`, `CartesianGrid`, `ReferenceLine`, `LabelList` and `ErrorBar` keep their native composition path. There is no prescribed data schema, card or layout. The wrappers render registered Recharts components, rather than inspecting child display names or reexporting the engine.
+Render `LineChart` inside `Root`, and `LineSeries`/`Tooltip` inside `LineChart`. Engine children such as `XAxis`, `YAxis`, `CartesianGrid`, `ReferenceLine`, `LabelList` and `ErrorBar` keep their native composition path. There is no prescribed data schema, card or layout. The wrappers render registered Recharts components, rather than inspecting child display names.
 
 - `LineChart`: native Recharts chart props and SVG ref. Kind composes `onMouseMove`/`onMouseLeave` with its own pointer tracking and captures focus/keyboard changes without replacing Root handlers. The ref targets `SVGSVGElement`, including React 19 callback cleanup. The internal frame uses `display: contents` so sizing stays with the engine or `ResponsiveContainer`.
 - `LineSeries`: native `Line` props/children/custom `dot`, `activeDot`, `shape` and handlers. Motion owns animation, so `isAnimationActive` is excluded and Recharts animation is always disabled. `stroke` defaults to Root's color. A Root-hidden series stays hidden even with `hide={false}`; `hide={true}` additionally hides a series. String `dataKey` is the default metadata identity. Use `seriesKey` for function/numeric data keys, required with controlled visibility. Native tooltip payloads remain unchanged; Kind's default content resolves registered identities for metadata and filtering. Recharts Line has no public component ref in 3.10.1: use refs on your custom mark/shape nodes, retaining the engine shape's `pathRef` where needed.

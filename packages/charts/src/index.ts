@@ -1,5 +1,18 @@
 "use client";
 
+// Keep native component identity and consumer-owned layout/scale semantics.
+export {
+  CartesianGrid,
+  type CartesianGridProps,
+  ReferenceLine,
+  type ReferenceLineProps,
+  ResponsiveContainer,
+  type ResponsiveContainerProps,
+  XAxis,
+  type XAxisProps,
+  YAxis,
+  type YAxisProps,
+} from "recharts";
 export {
   type LineAnimation,
   LineChart,

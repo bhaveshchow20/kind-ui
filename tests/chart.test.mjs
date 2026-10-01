@@ -4,6 +4,7 @@ import * as Chart from "@kind-ui/charts";
 import { Legend, Root, TooltipContent } from "@kind-ui/charts";
 import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
+import { CartesianGrid, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 test("direct and namespace imports expose the same public components", () => {
   assert.deepEqual(Object.keys(Chart).sort(), [
@@ -11,16 +12,29 @@ test("direct and namespace imports expose the same public components", () => {
     "AreaSeries",
     "BarChart",
     "BarSeries",
+    "CartesianGrid",
     "Legend",
     "LineChart",
     "LineSeries",
+    "ReferenceLine",
+    "ResponsiveContainer",
     "Root",
     "Tooltip",
     "TooltipContent",
+    "XAxis",
+    "YAxis",
   ]);
   assert.equal(Chart.Root, Root);
   assert.equal(Chart.Legend, Legend);
   assert.equal(Chart.TooltipContent, TooltipContent);
+});
+
+test("composition primitives retain native identity and registration semantics", () => {
+  assert.equal(Chart.CartesianGrid, CartesianGrid);
+  assert.equal(Chart.ReferenceLine, ReferenceLine);
+  assert.equal(Chart.ResponsiveContainer, ResponsiveContainer);
+  assert.equal(Chart.XAxis, XAxis);
+  assert.equal(Chart.YAxis, YAxis);
 });
 
 const config = {
