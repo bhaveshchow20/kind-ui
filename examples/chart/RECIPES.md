@@ -63,3 +63,5 @@ Plain `Root`/`Legend` do not themselves accept `animate`, `variants` or `exit`. 
 `npm run check` checks strict packed consumers, component contracts and browser behavior. CI saves real screenshots in the chart artifacts. Pointer tests exercise intermediate motion, interrupted target changes and reduced-motion updates without recording video. Chromium checks are not a screen-reader conformance claim.
 
 For vertical, horizontal, grouped and stacked bars, see [the bar recipe guide](BARS.md).
+
+For smooth, linear, step, gradient and stacked areas, see [the area recipe guide](AREAS.md).
