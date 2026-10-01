@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 
 const url = "http://127.0.0.1:4177";
 const sectors = '[data-kind-ui="pie-sector"]';
@@ -237,4 +237,116 @@ test("pie and donut recipes fit a phone viewport and retain the data alternative
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
   ).toBeTruthy();
   await page.screenshot({ path: info.outputPath("pie-donut-recipes-phone.png"), fullPage: true });
+});
+
+async function paint(chart: Locator) {
+  return chart.locator(".recharts-pie-sector path").evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      d: node.getAttribute("d"),
+      stroke: node.getAttribute("stroke"),
+      fill: node.getAttribute("fill"),
+    })),
+  );
+}
+test("continuous defaults match a gap-free native oracle including zero, tiny, visibility, rings and hover", async ({
+  page,
+}, info) => {
+  await page.goto(`${url}/?oracle`);
+  const proof = page.getByRole("region", { name: "Continuity proof" });
+  const kind = proof.getByRole("application", { name: "Kind continuity" });
+  const native = proof.getByRole("application", { name: "Native oracle" });
+  for (const scenario of ["normal", "zero", "tiny", "single", "empty", "allZero"]) {
+    await proof.getByRole("button", { name: `Scenario ${scenario}`, exact: true }).click();
+    await expect(proof.getByLabel("Oracle state")).toContainText(`${scenario}/`);
+    await expect
+      .poll(async () => JSON.stringify(await paint(kind)) === JSON.stringify(await paint(native)))
+      .toBeTruthy();
+    if (
+      scenario === "normal" ||
+      scenario === "zero" ||
+      scenario === "tiny" ||
+      scenario === "single"
+    ) {
+      await page.mouse.move(0, 0);
+      const kindPixels = await kind.screenshot({ path: info.outputPath(`oracle-${scenario}-kind.png`) });
+      const nativePixels = await native.screenshot({ path: info.outputPath(`oracle-${scenario}-native.png`) });
+      expect(kindPixels.equals(nativePixels), `native pixel oracle: ${scenario}`).toBeTruthy();
+      if (scenario === "single") {
+        await kind.screenshot({ path: info.outputPath("continuous-single-pie.png") });
+        await proof.getByRole("button", { name: "Oracle donut", exact: true }).click();
+        expect((await kind.screenshot()).equals(await native.screenshot())).toBeTruthy();
+        await kind.screenshot({ path: info.outputPath("continuous-single-donut.png") });
+        await proof.getByRole("button", { name: "Oracle donut", exact: true }).click();
+      }
+      await expect(kind.locator(".recharts-pie-sector path").first()).toHaveAttribute(
+        "stroke",
+        "none",
+      );
+    }
+  }
+  await proof.getByRole("button", { name: "Scenario normal", exact: true }).click();
+  for (const control of [
+    "Oracle donut",
+    "Oracle rings",
+    "Oracle visibility",
+    "Oracle visibility",
+  ]) {
+    await proof.getByRole("button", { name: control, exact: true }).click();
+    await expect
+      .poll(async () => JSON.stringify(await paint(kind)) === JSON.stringify(await paint(native)))
+      .toBeTruthy();
+  }
+  await kind.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect
+    .poll(async () => JSON.stringify(await paint(kind)) === JSON.stringify(await paint(native)))
+    .toBeTruthy();
+  await page.mouse.move(0, 0);
+  await kind.screenshot({ path: info.outputPath("continuous-multiple-rings.png") });
+  await proof.getByRole("button", { name: "Explicit gaps", exact: true }).click();
+  await expect(kind.locator(".recharts-pie-sector path").first()).toHaveAttribute("stroke", "#fff");
+  await expect
+    .poll(async () => JSON.stringify(await paint(kind)) === JSON.stringify(await paint(native)))
+    .toBeTruthy();
+});
+
+test("recipes remain continuous before hover, after selection, filter/unhide and Motion settles", async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/pies.html");
+  const charts = page.getByRole("application");
+  await expect(charts).toHaveCount(2);
+  for (const chart of await charts.all()) {
+    await expect(chart.locator(".recharts-pie-sector path").first()).toHaveAttribute(
+      "stroke",
+      "none",
+    );
+    const before = await paint(chart);
+    await chart.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => paint(chart)).toEqual(before);
+    await page.keyboard.press("Escape");
+  }
+  const first = page.locator("article").first();
+  await page.goto("/pies.html");
+  const finalPaint = await paint(charts.first());
+  await first.getByRole("checkbox", { name: "Animate", exact: true }).check();
+  await expect(first.locator(revealing).first()).toBeAttached();
+  await expect(first.locator(revealing)).toHaveCount(0);
+  await expect.poll(() => paint(charts.first())).toEqual(finalPaint);
+  await charts.first().locator(".recharts-pie-sector path").first().hover();
+  await expect.poll(() => paint(charts.first())).toEqual(finalPaint);
+  await page.getByRole("heading", { name: "Pie & donut", exact: true }).click();
+  await first.getByRole("button", { name: "Delivery", exact: true }).click();
+  await expect(first.getByRole("status")).toContainText("40 visible hours");
+  await first.getByRole("button", { name: "Delivery", exact: true }).click();
+  await expect(first.getByRole("status")).toContainText("88 visible hours");
+  await page.mouse.move(0, 0);
+  await charts.first().screenshot({ path: info.outputPath("continuous-pie-closeup.png") });
+  await charts.last().screenshot({ path: info.outputPath("continuous-donut-closeup.png") });
+  await page.screenshot({
+    path: info.outputPath("continuous-recipes-desktop.png"),
+    fullPage: true,
+  });
 });

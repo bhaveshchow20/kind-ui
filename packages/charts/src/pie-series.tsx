@@ -137,6 +137,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   return (
     <Pie<DataPoint, Value>
       {...props}
+      stroke={props.stroke ?? "none"}
       shape={props.shape ?? renderEntranceSector}
       isAnimationActive={false}
     />

@@ -1,5 +1,5 @@
 import * as Chart from "@kind-ui/charts";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Cell, Label } from "recharts";
 
 const config = {
@@ -19,7 +19,7 @@ export function Allocation({ donut = false }: { donut?: boolean }) {
   const [visible, setVisible] = useState(Object.keys(config));
   const [animate, setAnimate] = useState(false);
   const [selected, setSelected] = useState<string>();
-  const data = rows.filter((row) => visible.includes(row.id));
+  const data = useMemo(() => rows.filter((row) => visible.includes(row.id)), [visible]);
   const total = data.reduce((sum, row) => sum + row.hours, 0);
   return (
     <article className="pie-card">
@@ -43,7 +43,7 @@ export function Allocation({ donut = false }: { donut?: boolean }) {
       >
         <Chart.PieChart
           responsive
-          style={{ width: "100%", height: 300 }}
+          style={{ width: "100%", height: 260 }}
           animate={animate}
           aria-label={donut ? "Team capacity donut" : "Weekly hours pie"}
         >
@@ -52,17 +52,11 @@ export function Allocation({ donut = false }: { donut?: boolean }) {
             dataKey="hours"
             nameKey="id"
             innerRadius={donut ? "52%" : 0}
-            outerRadius="80%"
-            paddingAngle={2}
+            outerRadius="92%"
             onClick={(sector) => setSelected(String(sector.payload.id))}
           >
             {data.map((row) => (
-              <Cell
-                key={row.id}
-                fill={`var(--color-${row.id})`}
-                stroke="var(--card, white)"
-                strokeWidth={selected === row.id ? 4 : 2}
-              />
+              <Cell key={row.id} fill={`var(--color-${row.id})`} />
             ))}
             {donut && <Label position="center" value={`${total} hours`} />}
           </Chart.PieSeries>

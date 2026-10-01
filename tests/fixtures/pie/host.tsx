@@ -1,7 +1,16 @@
 // Host composition only; the installed tarball owns all chart behavior.
 import * as Chart from "@kind-ui/charts";
 import { useCallback, useMemo, useState } from "react";
-import { Cell, Label, LabelList, type PieSectorShapeProps, Sector } from "recharts";
+import {
+  Cell,
+  Label,
+  LabelList,
+  PieChart as NativePieChart,
+  Tooltip as NativeTooltip,
+  Pie,
+  type PieSectorShapeProps,
+  Sector,
+} from "recharts";
 
 const config = {
   alpha: { label: "Alpha", color: "#4f46e5", formatValue: (v: unknown) => `${v} seats` },
@@ -193,6 +202,7 @@ export function PieHost() {
       </Chart.Root>
       {new URLSearchParams(window.location.search).has("multi") && nativeComposition}
       {new URLSearchParams(window.location.search).has("cells") && <CellHost />}
+      {new URLSearchParams(window.location.search).has("oracle") && <ContinuityHost />}
     </section>
   );
 }
@@ -268,6 +278,111 @@ function CellHost() {
           </Chart.PieSeries>
           <Chart.Tooltip itemKey={identity} />
         </Chart.PieChart>
+      </Chart.Root>
+    </section>
+  );
+}
+
+const cases = {
+  single: [
+    { id: "alpha", value: 0 },
+    { id: "beta", value: 16 },
+  ],
+  normal: [
+    { id: "alpha", value: 60 },
+    { id: "beta", value: 40 },
+  ],
+  zero: [
+    { id: "alpha", value: 60 },
+    { id: "zero", value: 0 },
+    { id: "beta", value: 40 },
+  ],
+  tiny: [
+    { id: "alpha", value: 0.000001 },
+    { id: "zero", value: 0 },
+    { id: "beta", value: 1 },
+  ],
+  empty: [],
+  allZero: [
+    { id: "alpha", value: 0 },
+    { id: "beta", value: 0 },
+  ],
+};
+function ContinuityHost() {
+  const [scenario, setScenario] = useState<keyof typeof cases>("normal");
+  const [included, setIncluded] = useState(true);
+  const [donut, setDonut] = useState(false);
+  const [gaps, setGaps] = useState(false);
+  const [rings, setRings] = useState(false);
+  const data = useMemo(
+    () => cases[scenario].filter((row) => included || row.id !== "beta"),
+    [scenario, included],
+  );
+  const props = {
+    data,
+    dataKey: "value" as const,
+    nameKey: "id" as const,
+    innerRadius: donut ? 65 : 0,
+    outerRadius: 110,
+    startAngle: 90,
+    endAngle: -270,
+    ...(gaps ? { paddingAngle: 4, cornerRadius: 8, stroke: "#fff", strokeWidth: 2 } : {}),
+  };
+  const cells = data.map((row) => (
+    <Cell
+      key={row.id}
+      fill={row.id === "alpha" ? "#4f46e5" : row.id === "beta" ? "#0891b2" : "#db2777"}
+    />
+  ));
+  return (
+    <section aria-label="Continuity proof">
+      {Object.keys(cases).map((key) => (
+        <button type="button" key={key} onClick={() => setScenario(key as keyof typeof cases)}>
+          Scenario {key}
+        </button>
+      ))}
+      <button type="button" onClick={() => setIncluded(!included)}>
+        Oracle visibility
+      </button>
+      <button type="button" onClick={() => setDonut(!donut)}>
+        Oracle donut
+      </button>
+      <button type="button" onClick={() => setGaps(!gaps)}>
+        Explicit gaps
+      </button>
+      <button type="button" onClick={() => setRings(!rings)}>
+        Oracle rings
+      </button>
+      <output aria-label="Oracle state">
+        {scenario}/{String(included)}/{String(donut)}/{String(gaps)}/{String(rings)}
+      </output>
+      <Chart.Root config={config} style={{ display: "flex", width: 600, background: "white" }}>
+        <Chart.PieChart width={300} height={280} aria-label="Kind continuity">
+          <Chart.PieSeries {...props}>{cells}</Chart.PieSeries>
+          {rings && (
+            <Chart.PieSeries {...props} innerRadius={115} outerRadius={130}>
+              {cells}
+            </Chart.PieSeries>
+          )}
+          <Chart.Tooltip itemKey={identity} />
+        </Chart.PieChart>
+        <NativePieChart width={300} height={280} aria-label="Native oracle">
+          <Pie {...props} stroke={gaps ? "#fff" : "none"} isAnimationActive={false}>
+            {cells}
+          </Pie>
+          {rings && (
+            <Pie
+              {...props}
+              innerRadius={115}
+              outerRadius={130}
+              stroke={gaps ? "#fff" : "none"}
+              isAnimationActive={false}
+            >
+              {cells}
+            </Pie>
+          )}
+          <NativeTooltip isAnimationActive={false} />
+        </NativePieChart>
       </Chart.Root>
     </section>
   );

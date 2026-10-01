@@ -42,6 +42,9 @@ export function PieChart({ animate = false, children, ...props }: PieChartProps)
   const [interacted, setInteracted] = useState(false);
   const finish = useCallback(() => setInteracted(true), []);
   const enabled = animate !== false && !reduced;
+  const interrupt = useCallback(() => {
+    if (enabled) finish();
+  }, [enabled, finish]);
   const options = typeof animate === "object" ? animate : {};
   const previousEnabled = useRef(enabled);
   useLayoutEffect(() => {
@@ -55,7 +58,7 @@ export function PieChart({ animate = false, children, ...props }: PieChartProps)
           chartProps={props}
           engine={EnginePieChart}
           motionEnabled={enabled}
-          interrupt={finish}
+          interrupt={interrupt}
         >
           {children}
         </LineChartFrame>
