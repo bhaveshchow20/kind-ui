@@ -2,7 +2,7 @@ import type * as Motion from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import "@kind-ui/charts/styles.css";
-import { LineHost } from "./host.js";
+import { LineHost, MaterialsHost } from "./host.js";
 
 function App() {
   const [enabled, setEnabled] = useState(true);
@@ -24,7 +24,11 @@ function App() {
         <input type="checkbox" checked={defaults} onChange={(e) => setDefaults(e.target.checked)} />
         Default animation
       </label>
-      <LineHost chartProps={props} />
+      {location.search.includes("materials") ? (
+        <MaterialsHost chartProps={props} />
+      ) : (
+        <LineHost chartProps={props} />
+      )}
     </>
   );
 }

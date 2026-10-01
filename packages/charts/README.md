@@ -74,6 +74,34 @@ The single-prop mode follows the familiar behavioral toggle in [Nivo](https://ni
 
 The package subscribes reactively to reduced motion and starts disabled during server rendering. Reduced motion or explicit off snaps in-flight hover targets immediately. Focus, keyboard or pointer interaction finishes entrance; chart or per-series data/visibility identity or measured size changes also cancel entrance, discard stale pointer pixels and snap existing hover targets. Hover motion resumes on the next pointer/keyboard input. Ordinary hover retargets the same mounted marks and tooltip. Entrance does not replay after interaction/update; remount to request a fresh entrance. Palette changes preserve chart state. The clip requires the stylesheet; pointer/keyboard state and tooltip measurement work without it.
 
+## Line materials
+
+`LineSeries material="plain" | "paper" | "clay"` changes the default SVG curve's surface independently of color and animation. The exported `LineMaterial` type names these options. Plain is the existing default. Paper adds static fine fiber variation inside the ink stroke (2.5px by default); Clay adds a rounded, softly lit bevel, inner shade and a small neutral cast shadow (6px by default). Both retain the engine's original quantitative path: no displacement, rough geometry or path morphing. Thin Clay strokes show less relief; use `strokeWidth` to choose thickness explicitly. Material defaults use round joins and solid-line caps; dashed lines use butt caps to keep their gaps visible. Native `strokeLinecap`, `strokeLinejoin`, dash patterns and handlers remain available.
+
+```tsx
+<Root config={{ count: { label: "Count", color: "var(--color-count-ink)" } }}>
+  <LineChart width={400} height={220} data={points} animate={false}>
+    <LineSeries dataKey="count" material="clay" strokeWidth={5} dot={false} />
+    <Tooltip />
+  </LineChart>
+</Root>
+```
+
+Keep colors in `SeriesConfig`, CSS variables or an explicit `stroke`. For Tailwind CSS 4, for example, define `@theme { --color-count-ink: #8b5040; }` in the host stylesheet. A material does not choose a palette or theme surrounding UI. Legend/tooltip indicators still represent the series' unlit color; when setting a different explicit `stroke`, keep the config color consistent if indicators should match it.
+
+| CSS variable (inherit from Root or host) | Default | Purpose |
+| --- | --- | --- |
+| `--kind-ui-line-paper-fiber` | `#fff` | Fiber tint, composited inside the ink |
+| `--kind-ui-line-paper-grain` | `0.38` | Fiber opacity, use a number from 0 to 1 |
+| `--kind-ui-line-clay-light` | `#fff` | Neutral bevel light |
+| `--kind-ui-line-clay-shade` | `#17212b` | Neutral inner and cast shade |
+
+These tokens work in plain CSS and Tailwind arbitrary properties, such as `[--kind-ui-line-paper-grain:0.2]` on Root. Existing component tokens independently style the restrained legend and tooltip. The defaults are original SVG compositions; [PaperCSS](https://www.getpapercss.com/) and [clay.css](https://github.com/codeAdrian/clay.css) are visual references for HTML surfaces, not dependencies or copied code. SVG [specular lighting](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/feSpecularLighting) supplies Clay's bevel; [Tailwind theme variables](https://tailwindcss.com/docs/theme) can supply host colors.
+
+Materials apply only to the default line shape. An explicit native `shape` or `filter` takes precedence, disables built-in material rendering and retains consumer ownership. Dots, active marks, error bars, axes, labels, tooltip content and legends keep their existing rendering; custom shapes need their own surface treatment. The filtered curve retains the engine pathRef and plot clipping, and Motion still controls the shared reveal clip and hover motion. Off/reduced-motion modes keep static materials. Hidden series allocate no rendered filters. Each mounted series has its own filter ID independent of a supplied Line ID; separately mounted React roots should use React's `identifierPrefix` to avoid document-wide ID collisions.
+
+Only curves are filtered, with bounds padded by half the numeric `strokeWidth` plus 6 SVG units (a 12-unit width allowance for nonnumeric widths). Set a numeric `strokeWidth` for unusually wide strokes instead of overriding it only in CSS. Bounds use engine point extents, so custom curve interpolation that overshoots those extents may require a consumer shape/filter. Paper uses one static turbulence octave; Clay uses alpha blur and lighting. No filter time animation, shader engine, additional dependency or canvas-wide filter is introduced. Filters add browser raster work proportional to each curve's bounding rectangle; many long overlapping series can be costly. Plain avoids this work. Current visual/interaction evidence covers Chromium, including narrow, flat and colored lines; other browsers, print/export renderers and dark host surfaces need their own verification. This additive pre-release API keeps packages private at `0.0.0`; no release or publication is implied.
+
 ## Contracts
 
 - `SeriesConfig`: a record keyed by a string `dataKey`. Each entry has a string `label`, CSS `color`, and optional `formatValue(value)` returning React content. Keys start with a letter and contain letters, numbers, underscores, or hyphens. No data normalization or scales are introduced.

@@ -83,3 +83,16 @@ for (const animate of [
 void (<Chart.LineSeries dataKey="count" isAnimationActive />);
 // @ts-expect-error Invalid animation configuration.
 void (<Chart.LineChart animate={{ revealDurationMs: "fast" }} />);
+
+for (const material of ["plain", "paper", "clay"] satisfies Chart.LineMaterial[]) {
+  void (
+    <Chart.LineSeries
+      dataKey="count"
+      material={material}
+      stroke="var(--host-color)"
+      strokeWidth={4}
+    />
+  );
+}
+// @ts-expect-error Material is independent of palette and limited to the supported SVG options.
+void (<Chart.LineSeries dataKey="count" material="neon" />);

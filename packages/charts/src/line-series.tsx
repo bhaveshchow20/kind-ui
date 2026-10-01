@@ -4,14 +4,24 @@ import { type ComponentProps, useId, useLayoutEffect, useRef } from "react";
 import { Line } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
+import { type LineMaterial, MaterialCurve } from "./line-material.js";
 
 export type LineSeriesProps = ComponentProps<typeof Line> & {
   /** Metadata/visibility key, required only for function or numeric data keys. */
   seriesKey?: string;
+  /** Material on the default SVG curve; custom shape/filter retain consumer ownership. */
+  material?: LineMaterial;
 };
 
 /** A registered Recharts Line with Root colors and controlled visibility. */
-export function LineSeries({ seriesKey, hide, stroke, className, ...props }: LineSeriesProps) {
+export function LineSeries({
+  seriesKey,
+  hide,
+  stroke,
+  className,
+  material = "plain",
+  ...props
+}: LineSeriesProps) {
   const { config, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
@@ -33,6 +43,14 @@ export function LineSeries({ seriesKey, hide, stroke, className, ...props }: Lin
     <Line
       isAnimationActive={false}
       {...props}
+      {...(material !== "plain" && props.shape === undefined && props.filter === undefined
+        ? {
+            shape: <MaterialCurve material={material} filterId={`${generatedId}-material`} />,
+            strokeWidth: props.strokeWidth ?? (material === "clay" ? 6 : 2.5),
+            strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
+            strokeLinejoin: props.strokeLinejoin ?? "round",
+          }
+        : {})}
       id={id}
       hide={hide === true || (visibleSeries !== undefined && !visibleSeries.includes(key ?? ""))}
       {...(color !== undefined ? { stroke: color } : {})}
