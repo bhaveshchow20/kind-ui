@@ -305,7 +305,7 @@ function ZeroValueLabels({ data }: { data: BarPoint[] }) {
       {data
         .filter((point) => point.value === 0)
         .map((point) => {
-          const x = xScale?.(point.category),
+          const x = xScale?.(point.category, { position: "middle" }),
             y = yScale?.(0);
           return x === undefined || y === undefined ? null : (
             <text

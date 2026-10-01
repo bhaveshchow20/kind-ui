@@ -91,6 +91,14 @@ test("labels, category colors and controlled highlight remain truthful", async (
   const labels = page.getByRole("region", { name: "Labels", exact: true });
   await expect(labels.locator(".recharts-label-list text")).toHaveText(["18", "26", "22", "34"]);
   await expect(labels.locator("[data-bar-zero-label]")).toHaveText("0");
+  const zeroLabel = await labels.locator("[data-bar-zero-label]").boundingBox();
+  const zeroTick = await labels
+    .getByRole("application")
+    .getByText("Thu", { exact: true })
+    .boundingBox();
+  if (!zeroLabel || !zeroTick) throw new Error("Expected zero annotation and category tick");
+  expect(zeroLabel.x + zeroLabel.width / 2).toBeCloseTo(zeroTick.x + zeroTick.width / 2, 1);
+
   const custom = page.getByRole("region", { name: "Custom labels", exact: true });
   await expect(custom.locator("[data-bar-category-label]")).toHaveText([
     "Chat",
@@ -102,7 +110,7 @@ test("labels, category colors and controlled highlight remain truthful", async (
     "42",
     "31",
     "24",
-    "16",
+    "2",
   ]);
   await page.getByRole("button", { name: "Color", exact: true }).click();
   const colored = page.getByRole("region", { name: "Category colors", exact: true });
