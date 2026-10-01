@@ -1,6 +1,8 @@
 # Kind UI
 
-Kind UI is building simple, composable UI for people and coding agents, starting with React charts. The goal is a broad collection of clean chart experiences built on established libraries, with predictable types and room to customize.
+Kind UI is a library of simple, clean, composable UI primitives, designed to be *kind* to developers and the tools they use.
+
+We prioritize performance, accessibility, extensibility, familiar APIs, and easy integration.
 
 **Status: pre-release and unpublished.** Today, `@kind-ui/charts` provides three presentation components for Recharts. A broad chart collection and polished motion remain development goals. Nothing is published to npm; use the local workspace to explore the implementation.
 
