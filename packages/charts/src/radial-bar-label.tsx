@@ -157,7 +157,7 @@ export function RadialBarLabel({
         fontSize: Number.parseFloat(getComputedStyle(node).fontSize),
       };
       if ((!contained || next.length > length - inset * 2) && size > minFontSize)
-        setFitSize(Math.max(minFontSize, size - 1));
+        setFitSize(minFontSize);
       setMeasurement((old) =>
         old.length === next.length &&
         old.fontSize === next.fontSize &&

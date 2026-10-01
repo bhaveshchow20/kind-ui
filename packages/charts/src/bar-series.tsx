@@ -143,7 +143,7 @@ export function BarSeries({
       )}
       {materialized && (
         <defs data-kind-ui="bar-material" data-material={material} pointerEvents="none">
-          <BarMaterialFilter material={material} id={filterId} />
+          <BarMaterialFilter material={material} id={filterId} horizontal={horizontal} />
         </defs>
       )}
       <Bar
