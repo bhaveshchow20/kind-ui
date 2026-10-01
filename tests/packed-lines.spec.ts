@@ -263,3 +263,49 @@ test("stateful packed tooltip content and refs survive mode, preference and geom
   }));
   expect(after).toEqual(before);
 });
+
+test("packed native hide cancels entrance without changing Root visibility or data", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.clock.install();
+  await page.goto("http://127.0.0.1:4176/motion.html?native-visibility");
+  await page.clock.runFor(120);
+  const clip = page.locator("clipPath[id$='-reveal'] rect");
+  const progress = Number.parseFloat((await clip.getAttribute("width")) ?? "NaN");
+  expect(progress).toBeGreaterThan(0);
+  expect(progress).toBeLessThan(100);
+  await page.getByLabel("Native hide other").evaluate((node) => (node as HTMLInputElement).click());
+  await expect(page.locator(".recharts-line-curve")).toHaveCount(1);
+  await expect(clip).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Other", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});
+
+test("packed native visibility changes snap active hover to rescaled geometry", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.clock.install();
+  await page.goto("http://127.0.0.1:4176/motion.html?native-visibility");
+  const toggle = page.getByLabel("Native hide other");
+  await toggle.evaluate((node) => (node as HTMLInputElement).click());
+  const point = page.locator("[data-host-mark]").first();
+  const box = await point.boundingBox();
+  if (!box) throw new Error("Missing visible point");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.clock.runFor(500);
+  const marker = page.locator('[data-kind-ui="active-marker"]').first();
+  const before = Number(await point.getAttribute("cy"));
+  expect(Number(await marker.getAttribute("cy"))).toBeCloseTo(before, 1);
+  for (const hidden of [false, true]) {
+    await toggle.evaluate((node) => (node as HTMLInputElement).click());
+    await page.clock.runFor(32);
+    const target = Number(await point.getAttribute("cy"));
+    if (!hidden) expect(Math.abs(target - before)).toBeGreaterThan(20);
+    expect(Number(await marker.getAttribute("cy"))).toBeCloseTo(target, 1);
+    await bounds(page.locator('[data-kind-ui="tooltip-frame"]'), page.getByRole("application"));
+  }
+});

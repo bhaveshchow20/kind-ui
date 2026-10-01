@@ -27,7 +27,10 @@ function App() {
       {location.search.includes("materials") ? (
         <MaterialsHost chartProps={props} />
       ) : (
-        <LineHost chartProps={props} />
+        <LineHost
+          chartProps={props}
+          nativeVisibility={new URLSearchParams(window.location.search).has("native-visibility")}
+        />
       )}
     </>
   );

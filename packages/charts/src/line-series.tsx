@@ -28,11 +28,14 @@ export function LineSeries({
   const generatedId = useId();
   const id = props.id || generatedId;
   const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
-  const previousData = useRef(props.data);
+  const effectiveHide =
+    hide === true || (visibleSeries !== undefined && !visibleSeries.includes(key ?? ""));
+  const previous = useRef({ data: props.data, hide: effectiveHide });
   useLayoutEffect(() => {
-    if (props.data !== previousData.current) invalidate();
-    previousData.current = props.data;
-  }, [props.data, invalidate]);
+    if (props.data !== previous.current.data || effectiveHide !== previous.current.hide)
+      invalidate();
+    previous.current = { data: props.data, hide: effectiveHide };
+  }, [props.data, effectiveHide, invalidate]);
   useLayoutEffect(() => {
     if (key === undefined) return;
     return registerSeries(id, key);
@@ -60,10 +63,7 @@ export function LineSeries({
           }
         : {})}
       id={id}
-      hide={
-        hide === true ||
-        (!renderWhileHidden && visibleSeries !== undefined && !visibleSeries.includes(key ?? ""))
-      }
+      hide={hide === true || (!renderWhileHidden && effectiveHide)}
       {...(color !== undefined ? { stroke: color } : {})}
       className={["kind-ui-line-series", className].filter(Boolean).join(" ")}
     />
