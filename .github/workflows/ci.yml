@@ -30,8 +30,6 @@ jobs:
         if: always()
         with:
           name: chart-screenshots-node-${{ matrix.node }}
-          path: |
-            artifacts/chart-tests/**/*.png
-            artifacts/chart-tests/**/*.webm
+          path: artifacts/chart-tests/**/*.png
           if-no-files-found: error
           retention-days: 14

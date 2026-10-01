@@ -142,6 +142,10 @@ try {
     join(consumer, "use-reduced-motion.ts"),
     await readFile(join(root, "examples/chart/use-reduced-motion.ts"), "utf8"),
   );
+  await writeFile(
+    join(consumer, "line-motion.tsx"),
+    await readFile(join(root, "examples/chart/line-motion.tsx"), "utf8"),
+  );
   for (const mode of ["NodeNext", "Bundler"]) {
     await writeFile(
       join(consumer, "tsconfig.json"),

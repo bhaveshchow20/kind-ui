@@ -1,8 +1,9 @@
 import * as Chart from "@kind-ui/charts";
-import { motion, type Transition } from "motion/react";
-import { type CSSProperties, useId, useState } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import {
   CartesianGrid,
+  type DotProps,
+  LabelList,
   Line,
   LineChart,
   ReferenceLine,
@@ -11,47 +12,58 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useReducedMotionPreference } from "./use-reduced-motion.js";
+import {
+  ActiveMarker,
+  type LineMotion,
+  LineReveal,
+  MovingTooltip,
+  useLineMotion,
+} from "./line-motion.js";
 
+export type { LineMotion } from "./line-motion.js";
 export type TrendPoint = { period: string; value: number | null };
 export type ComparisonPoint = { period: string; current: number | null; previous: number | null };
-/** Recipe-local mark reveal; omit to keep marks static. Duration is in milliseconds. */
-export type LineReveal = { durationMs?: number; easing?: Transition["ease"] };
-function revealStyle(id: string, enabled: boolean): CSSProperties {
-  return { "--line-reveal-clip": enabled ? `url(#${id}-reveal)` : "none" } as CSSProperties;
-}
-function Reveal({ id, reveal }: { id: string; reveal: LineReveal }) {
-  return (
-    <defs>
-      <clipPath id={`${id}-reveal`} clipPathUnits="userSpaceOnUse">
-        <motion.rect
-          x={0}
-          y={0}
-          height="100%"
-          initial={{ width: "0%" }}
-          animate={{ width: "100%" }}
-          transition={{
-            duration: Math.max(0, reveal.durationMs ?? 500) / 1000,
-            ease: reveal.easing ?? [0.22, 1, 0.36, 1],
-          }}
-        />
-      </clipPath>
-    </defs>
-  );
-}
-type TrendProps = {
+export type TrendProps = {
   data: TrendPoint[];
   label: string;
   formatValue: (value: number) => string;
-  reveal?: LineReveal | undefined;
+  motion?: LineMotion | undefined;
 };
 
-/** Copyable composition: the host supplies data, copy, units and motion policy. */
-export function TrendLine({ data, label, formatValue, reveal }: TrendProps) {
-  const helpId = useId();
-  const reducedMotion = useReducedMotionPreference();
-  const [interacted, setInteracted] = useState(false);
-  const enabled = reveal !== undefined && !reducedMotion && !interacted;
+const solidDot = {
+  r: 3.5,
+  fill: "var(--color-value)",
+  stroke: "var(--card)",
+  strokeWidth: 1.5,
+  strokeDasharray: "none",
+};
+function Diamond({ cx, cy }: Pick<DotProps, "cx" | "cy">) {
+  if (cx == null || cy == null) return <g />;
+  return (
+    <path
+      data-recipe-marker="diamond"
+      d={`M ${cx} ${cy - 5} l 5 5 -5 5 -5 -5 Z`}
+      fill="var(--card)"
+      stroke="var(--color-value)"
+      strokeWidth={1.5}
+      strokeDasharray="none"
+    />
+  );
+}
+
+// These single-series recipes repeat the same measured frame, tooltip and motion wiring.
+// The engine's Line props remain explicit at each recipe, rather than encoded in a chart schema.
+function SingleSeriesLine({
+  data,
+  label,
+  formatValue,
+  motion,
+  type,
+  dot,
+  children,
+}: TrendProps &
+  Required<Pick<ComponentProps<typeof Line>, "type" | "dot">> & { children?: ReactNode }) {
+  const animation = useLineMotion(motion);
   return (
     <Chart.Root
       config={{
@@ -62,41 +74,79 @@ export function TrendLine({ data, label, formatValue, reveal }: TrendProps) {
         },
       }}
       className="recipe-chart"
-      data-reveal={enabled ? "on" : "off"}
-      style={revealStyle(helpId, enabled)}
-      onFocusCapture={() => setInteracted(true)}
+      data-reveal={animation.reveal ? "on" : "off"}
+      style={animation.style}
+      onFocusCapture={animation.finishReveal}
+      onPointerDownCapture={animation.finishReveal}
+      onPointerMoveCapture={animation.finishReveal}
     >
-      <p id={helpId} className="recipe-help">
+      <p id={animation.id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
       </p>
-      <ResponsiveContainer width="100%" height={144}>
+      <ResponsiveContainer width="100%" height={196}>
         <LineChart
           data={data}
           accessibilityLayer
           aria-label={label}
-          aria-describedby={helpId}
-          margin={{ top: 12, right: 12, left: 12, bottom: 0 }}
+          aria-describedby={animation.id}
+          margin={{ top: 28, right: 16, left: 16, bottom: 0 }}
         >
-          {enabled && reveal && <Reveal id={helpId} reveal={reveal} />}
+          {animation.reveal && motion && <LineReveal id={animation.id} options={motion} />}
+          <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
           <YAxis hide domain={[0, "auto"]} />
           <Tooltip
+            position={{ x: 0, y: 0 }}
+            cursor={false}
             filterNull={false}
             isAnimationActive={false}
-            content={(tooltip) => <Chart.TooltipContent tooltip={tooltip} />}
+            content={(tooltip) => (
+              <MovingTooltip tooltip={tooltip} transition={animation.transition} />
+            )}
           />
           <Line
             dataKey="value"
-            type="linear"
+            type={type}
             stroke="var(--color-value)"
             strokeWidth={2}
-            dot={{ r: 3, fill: "var(--color-value)", stroke: "var(--card)" }}
+            dot={dot}
+            activeDot={<ActiveMarker transition={animation.transition} />}
             connectNulls={false}
             isAnimationActive={false}
-          />
+          >
+            {children}
+          </Line>
         </LineChart>
       </ResponsiveContainer>
     </Chart.Root>
+  );
+}
+export function TrendLine(props: TrendProps) {
+  return <SingleSeriesLine {...props} type="linear" dot={false} />;
+}
+export function SmoothLine(props: TrendProps) {
+  return <SingleSeriesLine {...props} type="monotone" dot={false} />;
+}
+export function StepLine(props: TrendProps) {
+  return <SingleSeriesLine {...props} type="stepAfter" dot={false} />;
+}
+export function DotsLine(props: TrendProps) {
+  return <SingleSeriesLine {...props} type="monotone" dot={solidDot} />;
+}
+export function CustomMarkerLine(props: TrendProps) {
+  return <SingleSeriesLine {...props} type="linear" dot={<Diamond />} />;
+}
+export function LabeledLine(props: TrendProps) {
+  return (
+    <SingleSeriesLine {...props} type="monotone" dot={solidDot}>
+      <LabelList
+        dataKey="value"
+        position="top"
+        offset={12}
+        fill="var(--foreground)"
+        fontSize={11}
+      />
+    </SingleSeriesLine>
   );
 }
 
@@ -106,12 +156,9 @@ export function TargetLine({
   formatValue,
   target,
   targetLabel,
-  reveal,
+  motion,
 }: TrendProps & { target: number; targetLabel: string }) {
-  const helpId = useId();
-  const reducedMotion = useReducedMotionPreference();
-  const [interacted, setInteracted] = useState(false);
-  const enabled = reveal !== undefined && !reducedMotion && !interacted;
+  const animation = useLineMotion(motion);
   return (
     <Chart.Root
       config={{
@@ -122,11 +169,13 @@ export function TargetLine({
         },
       }}
       className="recipe-chart"
-      data-reveal={enabled ? "on" : "off"}
-      style={revealStyle(helpId, enabled)}
-      onFocusCapture={() => setInteracted(true)}
+      data-reveal={animation.reveal ? "on" : "off"}
+      style={animation.style}
+      onFocusCapture={animation.finishReveal}
+      onPointerDownCapture={animation.finishReveal}
+      onPointerMoveCapture={animation.finishReveal}
     >
-      <p id={helpId} className="recipe-help">
+      <p id={animation.id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. {targetLabel}:{" "}
         {formatValue(target)}.
       </p>
@@ -135,10 +184,10 @@ export function TargetLine({
           data={data}
           accessibilityLayer
           aria-label={label}
-          aria-describedby={helpId}
-          margin={{ top: 16, right: 12, left: 0, bottom: 0 }}
+          aria-describedby={animation.id}
+          margin={{ top: 20, right: 16, left: 0, bottom: 0 }}
         >
-          {enabled && reveal && <Reveal id={helpId} reveal={reveal} />}
+          {animation.reveal && motion && <LineReveal id={animation.id} options={motion} />}
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
           <YAxis width={44} axisLine={false} tickLine={false} domain={[0, "auto"]} />
@@ -149,16 +198,21 @@ export function TargetLine({
             strokeDasharray="4 4"
           />
           <Tooltip
+            position={{ x: 0, y: 0 }}
+            cursor={false}
             filterNull={false}
             isAnimationActive={false}
-            content={(tooltip) => <Chart.TooltipContent tooltip={tooltip} />}
+            content={(tooltip) => (
+              <MovingTooltip tooltip={tooltip} transition={animation.transition} />
+            )}
           />
           <Line
             dataKey="value"
             type="linear"
             stroke="var(--color-value)"
             strokeWidth={2}
-            dot={{ r: 3, fill: "var(--color-value)", stroke: "var(--card)" }}
+            dot={solidDot}
+            activeDot={<ActiveMarker transition={animation.transition} />}
             connectNulls={false}
             isAnimationActive={false}
           />
@@ -177,31 +231,30 @@ export function ComparisonLine({
   visibleSeries,
   onVisibleSeriesChange,
   label,
-  reveal,
+  motion,
 }: {
   data: ComparisonPoint[];
   config: Chart.SeriesConfig & Record<"current" | "previous", Chart.SeriesConfig[string]>;
   visibleSeries: string[];
   onVisibleSeriesChange: (keys: string[]) => void;
   label: string;
-  reveal?: LineReveal | undefined;
+  motion?: LineMotion | undefined;
 }) {
-  const helpId = useId();
-  const reducedMotion = useReducedMotionPreference();
-  const [interacted, setInteracted] = useState(false);
-  const enabled = reveal !== undefined && !reducedMotion && !interacted;
+  const animation = useLineMotion(motion);
   return (
     <Chart.Root
       config={config}
       visibleSeries={visibleSeries}
       onVisibleSeriesChange={onVisibleSeriesChange}
       className="recipe-chart"
-      data-reveal={enabled ? "on" : "off"}
-      style={revealStyle(helpId, enabled)}
-      onFocusCapture={() => setInteracted(true)}
+      data-reveal={animation.reveal ? "on" : "off"}
+      style={animation.style}
+      onFocusCapture={animation.finishReveal}
+      onPointerDownCapture={animation.finishReveal}
+      onPointerMoveCapture={animation.finishReveal}
     >
       <Chart.Legend aria-label={`${label} series`} />
-      <p id={helpId} className="recipe-help">
+      <p id={animation.id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. Previous values use
         a dashed line.
       </p>
@@ -215,24 +268,29 @@ export function ComparisonLine({
             data={data}
             accessibilityLayer
             aria-label={label}
-            aria-describedby={helpId}
-            margin={{ top: 16, right: 12, left: 0, bottom: 0 }}
+            aria-describedby={animation.id}
+            margin={{ top: 20, right: 16, left: 0, bottom: 0 }}
           >
-            {enabled && reveal && <Reveal id={helpId} reveal={reveal} />}
+            {animation.reveal && motion && <LineReveal id={animation.id} options={motion} />}
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
             <YAxis width={36} axisLine={false} tickLine={false} domain={[0, "auto"]} />
             <Tooltip
+              position={{ x: 0, y: 0 }}
+              cursor={false}
               filterNull={false}
               isAnimationActive={false}
-              content={(tooltip) => <Chart.TooltipContent tooltip={tooltip} />}
+              content={(tooltip) => (
+                <MovingTooltip tooltip={tooltip} transition={animation.transition} />
+              )}
             />
             <Line
               dataKey="current"
               type="linear"
               stroke="var(--color-current)"
               strokeWidth={2}
-              dot={{ r: 3, fill: "var(--color-current)" }}
+              dot={{ r: 3.5, fill: "var(--color-current)", strokeDasharray: "none" }}
+              activeDot={<ActiveMarker transition={animation.transition} />}
               hide={!visibleSeries.includes("current")}
               connectNulls={false}
               isAnimationActive={false}
@@ -243,7 +301,8 @@ export function ComparisonLine({
               stroke="var(--color-previous)"
               strokeDasharray="5 4"
               strokeWidth={2}
-              dot={{ r: 3, fill: "var(--card)", strokeWidth: 2 }}
+              dot={{ r: 3.5, fill: "var(--card)", strokeWidth: 2, strokeDasharray: "none" }}
+              activeDot={<ActiveMarker transition={animation.transition} />}
               hide={!visibleSeries.includes("previous")}
               connectNulls={false}
               isAnimationActive={false}

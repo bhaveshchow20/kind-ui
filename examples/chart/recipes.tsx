@@ -4,6 +4,11 @@ import { createRoot } from "react-dom/client";
 import {
   ComparisonLine,
   type ComparisonPoint,
+  CustomMarkerLine,
+  DotsLine,
+  LabeledLine,
+  SmoothLine,
+  StepLine,
   TargetLine,
   TrendLine,
   type TrendPoint,
@@ -99,8 +104,41 @@ function App() {
         </label>
       </div>
       <div className="recipe-stack">
+        {[
+          { title: "Smooth", Component: SmoothLine },
+          { title: "Step", Component: StepLine },
+          { title: "Dots", Component: DotsLine },
+          { title: "Custom markers", Component: CustomMarkerLine },
+          { title: "Labels", Component: LabeledLine },
+        ].map(({ title, Component }) => (
+          <section className="recipe-card" aria-label={title} key={title}>
+            <h2>{title}</h2>
+            <p className="recipe-description">Daily completions · Mon–Sun</p>
+            {empty ? (
+              <p role="status" className="recipe-empty">
+                No data yet.
+              </p>
+            ) : (
+              <Component
+                data={volume}
+                label={`${title} daily completions`}
+                formatValue={tasks}
+                motion={animate ? {} : undefined}
+              />
+            )}
+            <details>
+              <summary>View data</summary>
+              <TrendTable
+                data={empty ? [] : volume}
+                caption={`${title}, daily completions`}
+                formatValue={tasks}
+              />
+            </details>
+          </section>
+        ))}
+
         <section className="recipe-card" aria-labelledby="trend-title">
-          <div className="recipe-eyebrow">01 / Trend</div>
+          <div className="recipe-eyebrow">Linear</div>
           <h2 id="trend-title">Tasks completed</h2>
           <p className="recipe-metric">
             {empty ? "—" : "48"}
@@ -115,7 +153,7 @@ function App() {
               data={volume}
               label="Completed tasks"
               formatValue={tasks}
-              reveal={animate ? { durationMs: 500 } : undefined}
+              motion={animate ? {} : undefined}
             />
           )}
           <p className="recipe-note">Daily completions · Mon–Sun</p>
@@ -129,7 +167,7 @@ function App() {
           </details>
         </section>
         <section className="recipe-card" aria-labelledby="target-title">
-          <div className="recipe-eyebrow">02 / Target</div>
+          <div className="recipe-eyebrow">Target</div>
           <h2 id="target-title">Response time</h2>
           <p className="recipe-metric">
             {empty ? "—" : "180"}
@@ -146,7 +184,7 @@ function App() {
               formatValue={milliseconds}
               target={240}
               targetLabel="Budget"
-              reveal={animate ? { durationMs: 500 } : undefined}
+              motion={animate ? {} : undefined}
             />
           )}
           <p className="recipe-note">Lower is faster. Wednesday was not recorded.</p>
@@ -159,8 +197,8 @@ function App() {
             />
           </details>
         </section>
-        <section className="recipe-card" aria-labelledby="compare-title">
-          <div className="recipe-eyebrow">03 / Comparison</div>
+        <section className="recipe-card recipe-wide" aria-labelledby="compare-title">
+          <div className="recipe-eyebrow">Multiple · interactive legend</div>
           <h2 id="compare-title">Week over week</h2>
           <p className="recipe-description">Daily completions, with last week for context.</p>
           {empty ? (
@@ -174,7 +212,7 @@ function App() {
               visibleSeries={visible}
               onVisibleSeriesChange={setVisible}
               label="Weekly comparison"
-              reveal={animate ? { durationMs: 500 } : undefined}
+              motion={animate ? {} : undefined}
             />
           )}
           <p className="recipe-note">

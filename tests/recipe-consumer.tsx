@@ -11,7 +11,11 @@ void (
     data={data}
     label="Tasks"
     formatValue={formatValue}
-    reveal={{ durationMs: 300, easing: "easeOut" }}
+    motion={{
+      revealDurationMs: 900,
+      revealEasing: "easeOut",
+      hoverTransition: { type: "spring", stiffness: 180, damping: 26 },
+    }}
   />
 );
 void (
