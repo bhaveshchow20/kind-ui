@@ -81,12 +81,16 @@ for (const mode of ["static", "motion", "reduced"] as const) {
   });
 }
 
-test("area gaps, zero, stacked percentages, and controlled series stay truthful", async ({
+test("area defaults stay complete and missing gaps, zero, percentages, and controlled series stay truthful", async ({
   page,
 }, info) => {
   await page.goto("/areas.html");
   await page.screenshot({ path: info.outputPath("areas-monochrome.png"), fullPage: true });
   const smooth = page.getByRole("region", { name: "Smooth", exact: true });
+  await smooth.getByText("View data", { exact: true }).click();
+  await expect(smooth.getByRole("row", { name: "Apr 198 visits" })).toBeVisible();
+  await smooth.getByText("View data", { exact: true }).click();
+  await page.getByLabel("Missing April data").check();
   await smooth.getByRole("application").focus();
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");

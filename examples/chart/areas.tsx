@@ -19,7 +19,7 @@ const visits: AreaPoint[] = [
   { period: "Jan", value: 186 },
   { period: "Feb", value: 305 },
   { period: "Mar", value: 237 },
-  { period: "Apr", value: null },
+  { period: "Apr", value: 198 },
   { period: "May", value: 209 },
   { period: "Jun", value: 0 },
 ];
@@ -115,6 +115,7 @@ function App() {
   const [palette, setPalette] = useState<"monochrome" | "color">("monochrome");
   const [motion, setMotion] = useState(false);
   const [empty, setEmpty] = useState(false);
+  const [missingApril, setMissingApril] = useState(false);
   const [allZero, setAllZero] = useState(false);
   const [visibleSeries, setVisibleSeries] = useState<("desktop" | "mobile")[]>([
     "desktop",
@@ -123,6 +124,9 @@ function App() {
   const reducedMotion = useReducedMotionPreference();
   const animate = motion && !reducedMotion;
   const chartDevices = allZero ? zeroDevices : devices;
+  const chartVisits = missingApril
+    ? visits.map((point) => (point.period === "Apr" ? { ...point, value: null } : point))
+    : visits;
   return (
     <main className="recipes" data-palette={palette} data-motion={animate ? "on" : "off"}>
       <header className="recipes-header">
@@ -166,6 +170,14 @@ function App() {
         <label>
           <input
             type="checkbox"
+            checked={missingApril}
+            onChange={(event) => setMissingApril(event.target.checked)}
+          />{" "}
+          Missing April data
+        </label>
+        <label>
+          <input
+            type="checkbox"
             checked={empty}
             onChange={(event) => setEmpty(event.target.checked)}
           />{" "}
@@ -185,7 +197,7 @@ function App() {
               <>
                 {name === "Smooth" && (
                   <SmoothArea
-                    data={visits}
+                    data={chartVisits}
                     label="Monthly visitors"
                     formatValue={count}
                     motion={animate ? {} : undefined}
@@ -193,7 +205,7 @@ function App() {
                 )}
                 {name === "Linear" && (
                   <LinearArea
-                    data={visits}
+                    data={chartVisits}
                     label="Monthly visitors, linear"
                     formatValue={count}
                     motion={animate ? {} : undefined}
@@ -201,7 +213,7 @@ function App() {
                 )}
                 {name === "Step" && (
                   <StepArea
-                    data={visits}
+                    data={chartVisits}
                     label="Monthly visitors, step"
                     formatValue={count}
                     motion={animate ? {} : undefined}
@@ -209,7 +221,7 @@ function App() {
                 )}
                 {name === "Gradient" && (
                   <GradientArea
-                    data={visits}
+                    data={chartVisits}
                     label="Monthly visitors, gradient"
                     formatValue={count}
                     motion={animate ? {} : undefined}
@@ -217,7 +229,7 @@ function App() {
                 )}
                 {name === "Threshold" && (
                   <ThresholdArea
-                    data={visits}
+                    data={chartVisits}
                     label="Monthly visitors"
                     formatValue={count}
                     threshold={320}
@@ -255,7 +267,7 @@ function App() {
             <details>
               <summary>View data</summary>
               <AreaTable
-                data={empty ? [] : visits}
+                data={empty ? [] : chartVisits}
                 caption={`${name} visits by month`}
                 stacked={name === "Stacked" || name === "Percent stacked" || name === "Interactive"}
                 stackedData={empty ? [] : chartDevices}
