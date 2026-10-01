@@ -72,6 +72,11 @@ for (const mode of ["static", "motion", "reduced"] as const) {
       );
       await page.clock.runFor(32);
       const tip = region.getByRole("status");
+      if (name === "Vertical" || name === "Signed") {
+        await expect(tip).not.toBeVisible();
+        await page.keyboard.press("ArrowRight");
+        await page.clock.runFor(32);
+      }
       await expect(tip).toBeVisible();
       const tipBox = await tip.boundingBox();
       expect(tipBox?.x).toBeGreaterThanOrEqual(0);
@@ -175,7 +180,7 @@ test("signed bars cover positive, negative, missing and zero without changing th
   await page.keyboard.press("ArrowRight");
   await expect(region.getByRole("status")).toContainText("-12 tasks");
   await page.keyboard.press("ArrowRight");
-  await expect(region.getByRole("status")).toContainText("No data");
+  await expect(region.getByRole("status")).not.toBeVisible();
   await page.keyboard.press("ArrowRight");
   await expect(region.getByRole("status")).toContainText("0 tasks");
   await region.getByLabel("Values").selectOption("negative");

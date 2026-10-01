@@ -284,7 +284,9 @@ function App() {
                 config={comparisonConfig}
                 motion={animation}
               />
-              <p className="recipe-note">Missing values retain their category and tooltip entry.</p>
+              <p className="recipe-note">
+                Missing categories stay in the table; zero remains a value.
+              </p>
               <Table data={comparison} labels={["This week", "Last week"]} />
             </>
           )}

@@ -79,6 +79,7 @@ function SingleSeriesLine({
       onFocusCapture={animation.finishReveal}
       onPointerDownCapture={animation.finishReveal}
       onPointerMoveCapture={animation.finishReveal}
+      onKeyDownCapture={animation.clearPointer}
     >
       <p id={animation.id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
@@ -86,6 +87,8 @@ function SingleSeriesLine({
       <ResponsiveContainer width="100%" height={196}>
         <LineChart
           data={data}
+          onMouseMove={animation.trackPointer}
+          onMouseLeave={animation.clearPointer}
           accessibilityLayer
           aria-label={label}
           aria-describedby={animation.id}
@@ -105,6 +108,7 @@ function SingleSeriesLine({
                 key={animation.animate ? "animated" : "static"}
                 tooltip={tooltip}
                 transition={animation.transition}
+                pointer={animation.pointer}
               />
             )}
           />
@@ -183,6 +187,7 @@ export function TargetLine({
       onFocusCapture={animation.finishReveal}
       onPointerDownCapture={animation.finishReveal}
       onPointerMoveCapture={animation.finishReveal}
+      onKeyDownCapture={animation.clearPointer}
     >
       <p id={animation.id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. {targetLabel}:{" "}
@@ -191,6 +196,8 @@ export function TargetLine({
       <ResponsiveContainer width="100%" height={196}>
         <LineChart
           data={data}
+          onMouseMove={animation.trackPointer}
+          onMouseLeave={animation.clearPointer}
           accessibilityLayer
           aria-label={label}
           aria-describedby={animation.id}
@@ -216,6 +223,7 @@ export function TargetLine({
                 key={animation.animate ? "animated" : "static"}
                 tooltip={tooltip}
                 transition={animation.transition}
+                pointer={animation.pointer}
               />
             )}
           />
@@ -270,6 +278,7 @@ export function ComparisonLine({
       onFocusCapture={animation.finishReveal}
       onPointerDownCapture={animation.finishReveal}
       onPointerMoveCapture={animation.finishReveal}
+      onKeyDownCapture={animation.clearPointer}
     >
       <Chart.Legend aria-label={`${label} series`} />
       <p id={animation.id} className="recipe-help">
@@ -284,6 +293,8 @@ export function ComparisonLine({
         <ResponsiveContainer width="100%" height={196}>
           <LineChart
             data={data}
+            onMouseMove={animation.trackPointer}
+            onMouseLeave={animation.clearPointer}
             accessibilityLayer
             aria-label={label}
             aria-describedby={animation.id}
@@ -303,6 +314,7 @@ export function ComparisonLine({
                   key={animation.animate ? "animated" : "static"}
                   tooltip={tooltip}
                   transition={animation.transition}
+                  pointer={animation.pointer}
                 />
               )}
             />

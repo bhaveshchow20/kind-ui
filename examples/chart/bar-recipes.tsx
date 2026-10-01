@@ -118,6 +118,7 @@ function BarFrame<T extends { category: string }>({
       onFocusCapture={animation.finishReveal}
       onPointerDownCapture={animation.finishReveal}
       onPointerMoveCapture={animation.finishReveal}
+      onKeyDownCapture={animation.clearPointer}
     >
       {legend}
       <p id={animation.id} className="recipe-help">
@@ -127,6 +128,8 @@ function BarFrame<T extends { category: string }>({
         <BarChart
           data={data}
           layout={horizontal ? "vertical" : "horizontal"}
+          onMouseMove={animation.trackPointer}
+          onMouseLeave={animation.clearPointer}
           accessibilityLayer
           aria-label={label}
           aria-describedby={animation.id}
@@ -167,6 +170,7 @@ function BarFrame<T extends { category: string }>({
                     : tooltip
                 }
                 transition={animation.transition}
+                pointer={animation.pointer}
               />
             )}
           />

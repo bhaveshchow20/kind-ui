@@ -113,12 +113,10 @@
   fill: var(--muted-foreground);
 }
 .recipe-chart [data-kind-ui="chart-legend"] {
-  gap: 6px;
   margin-bottom: 10px;
 }
 .recipe-chart [data-kind-ui="chart-legend-button"] {
   border-color: transparent;
-  padding: 6px;
 }
 .recipe-chart [data-series="previous"] [data-kind-ui="chart-indicator"] {
   background: transparent;
@@ -127,34 +125,6 @@
 .recipe-chart [data-kind-ui="chart-tooltip"] {
   max-width: 220px;
   box-shadow: 0 4px 18px #0000000d;
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-tooltip"] {
-  padding: 7px 9px;
-  font-size: 12px;
-  line-height: 16px;
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-tooltip-label"],
-.bar-recipes .recipe-chart [data-kind-ui="chart-tooltip-value"] {
-  font-weight: 500;
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-tooltip-list"] {
-  margin-top: 4px;
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-tooltip-item"] {
-  gap: 6px;
-  margin-top: 2px;
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-tooltip-item"] > span:last-of-type {
-  color: var(--muted-foreground);
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-tooltip-item"] [data-kind-ui="chart-indicator"] {
-  width: 3px;
-  height: 12px;
-  border-radius: 1px;
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-tooltip-value"] {
-  padding-left: 6px;
-  font-variant-numeric: tabular-nums;
 }
 .recipe-note,
 .recipe-target {
@@ -274,12 +244,6 @@
   font-weight: 500;
   letter-spacing: normal;
 }
-.recipe-chart [data-kind-ui="chart-legend-item"] > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px;
-}
 
 .recipe-select {
   display: flex;
@@ -325,17 +289,4 @@
   margin: 0 0 0 6px;
   font-size: 12px;
   font-weight: 550;
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-legend"] {
-  gap: 12px;
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-legend-item"] > span {
-  gap: 4px;
-  padding: 2px 0;
-  font-size: 11px;
-  line-height: 16px;
-}
-.bar-recipes .recipe-chart [data-kind-ui="chart-legend"] [data-kind-ui="chart-indicator"] {
-  width: 8px;
-  height: 8px;
 }

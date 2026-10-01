@@ -46,8 +46,9 @@ const content = (payload, extra = {}) =>
 
 test("zero uses the series formatter; null and undefined remain missing", () => {
   assert.match(content([entry(0)]), /0 tasks/);
-  assert.match(content([entry(null)]), /No data/);
-  assert.match(content([entry(undefined)]), /No data/);
+  assert.doesNotMatch(content([entry(null)]), /data-kind-ui="chart-tooltip"/);
+  assert.doesNotMatch(content([entry(undefined)]), /data-kind-ui="chart-tooltip"/);
+  assert.match(content([entry(null), entry(0, { graphicalItemId: "other" })]), /No data/);
   assert.doesNotMatch(content([entry(null)]), /null tasks/);
 });
 test("upstream formatter, tuple label and label formatter remain usable", () => {
@@ -98,8 +99,18 @@ test("invalid composition and keys have actionable errors", () => {
 });
 
 test("upstream null formatter suppresses an entry and per-entry formatters take precedence", () => {
-  assert.doesNotMatch(content([entry(1)], { formatter: () => null }), /<li/);
-  assert.doesNotMatch(content([entry(1)], { formatter: () => undefined }), /<li/);
+  assert.doesNotMatch(
+    content([entry(1, { formatter: () => null }), entry(null, { graphicalItemId: "missing" })]),
+    /data-kind-ui="chart-tooltip"/,
+  );
+  assert.doesNotMatch(
+    content([entry(1)], { formatter: () => null }),
+    /data-kind-ui="chart-tooltip"/,
+  );
+  assert.doesNotMatch(
+    content([entry(1)], { formatter: () => undefined }),
+    /data-kind-ui="chart-tooltip"/,
+  );
   assert.match(
     content([entry(0, { formatter: () => "entry format" })], { formatter: () => "global format" }),
     /entry format/,
