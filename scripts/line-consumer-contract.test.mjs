@@ -8,6 +8,7 @@ test("line proof accepts public package and host dependencies", () => {
   );
 });
 for (const specifier of [
+  "@kind-ui/charts/motion",
   "./line-recipes.js",
   "../../packages/charts/src/line-chart.tsx",
   "@kind-ui/charts/dist/index.js",

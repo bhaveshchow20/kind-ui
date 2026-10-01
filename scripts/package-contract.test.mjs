@@ -13,8 +13,6 @@ const files = [
   "dist/index.js",
   "dist/index.d.ts",
   "dist/styles.css",
-  "dist/motion.js",
-  "dist/motion.d.ts",
 ];
 
 test("accepts the declared packed contract", () => assertPackageContract(manifest, files));
@@ -22,8 +20,6 @@ for (const missing of [
   "dist/index.js",
   "dist/index.d.ts",
   "dist/styles.css",
-  "dist/motion.js",
-  "dist/motion.d.ts",
   "LICENSE",
   "README.md",
 ]) {
@@ -56,7 +52,7 @@ test("rejects CSS that bundlers may drop or consumers cannot resolve", () => {
       assertPackageContract(
         {
           ...manifest,
-          exports: { ".": manifest.exports["."], "./motion": manifest.exports["./motion"] },
+          exports: { ".": manifest.exports["."] },
         },
         files,
       ),
@@ -64,9 +60,13 @@ test("rejects CSS that bundlers may drop or consumers cannot resolve", () => {
   );
 });
 
-test("rejects mandatory Motion", () => {
+test("rejects optional Motion", () => {
   assert.throws(
-    () => assertPackageContract({ ...manifest, peerDependenciesMeta: {} }, files),
-    /optional/,
+    () =>
+      assertPackageContract(
+        { ...manifest, peerDependenciesMeta: { motion: { optional: true } } },
+        files,
+      ),
+    /required/,
   );
 });

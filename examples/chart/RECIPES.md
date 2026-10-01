@@ -29,16 +29,16 @@ The host in `recipes.tsx` owns titles, summary metrics, input data, empty states
 
 ## Motion controls
 
-Motion is off by default. The host toggle enables a coordinated Motion SVG clip reveal of each Recharts line group (stroke and resting dots together). Axes stay still. Active markers and tooltip content use a retargetable Motion spring during pointer travel. The package's `LineMotion` options set timing:
+Motion is off by default. The host toggle enables a coordinated Motion SVG clip reveal of each Recharts line group (stroke and resting dots together). Axes stay still. Active markers and tooltip content use a retargetable Motion spring during pointer travel. The package's `LineAnimation` options set timing:
 
 ```tsx
-<TrendLine {...props} /> // explicit static path: omit motion
-<TrendLine {...props} motion={{ revealDurationMs: 1000, revealEasing: [0.25, 0.1, 0.25, 1], hoverTransition: { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } }} />
+<TrendLine {...props} /> // immediate rendering: omit animate or pass false
+<TrendLine {...props} animate={{ revealDurationMs: 1000, revealEasing: [0.25, 0.1, 0.25, 1], hoverTransition: { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } }} />
 ```
 
 The package subscribes reactively to the operating-system motion preference. The host also responds to preference changes. Pointer interaction or keyboard focus completes the reveal for the mounted chart so values remain available after focus moves away. Newly mounted charts reveal; ordinary palette and tooltip updates do not replay it. Visibility/data changes and measured resizing cancel the entrance. Removing data interrupts the reveal; restoring it mounts fresh lines. Tooltips follow both mouse coordinates, fall back to the engine position for keyboard exploration, and hide entirely missing categories. Tooltip coordinates are clamped inside the chart; the engine tooltip anchor stays fixed so Motion is the only position animator. Missing points remove active markers instead of interpolating fabricated values. Turning motion off or changing reduced-motion preference updates active markers and tooltips immediately. Legend hover/focus uses a subtle background change, with a 120ms transition only when motion is enabled and reduced motion is off.
 
-Recharts owns geometry. Its `Line` supports `isAnimationActive`, `animationBegin`, `animationDuration`, `animationEasing`, `dot`, `activeDot` and `shape` in the tested 3.10.1 version. Use the static package entry with explicit engine animation props if you want engine interpolation instead. Avoid two animation systems controlling the same marks. Custom dot/shape rendering requires consumer implementation and testing; the package does not supply arbitrary path morphing.
+Recharts owns geometry. Its `Line` supports `isAnimationActive`, `animationBegin`, `animationDuration`, `animationEasing`, `dot`, `activeDot` and `shape` in the tested 3.10.1 version. Kind disables engine animation and excludes `isAnimationActive` from its public LineSeries API; `animate` controls Motion. Use native Recharts components when engine interpolation is required. Custom dot/shape rendering requires consumer implementation and testing; the package does not supply arbitrary path morphing.
 
 ## Optional Motion composition
 

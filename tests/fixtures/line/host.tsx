@@ -31,20 +31,18 @@ function Content({
   label?: string | number;
   payload?: readonly { value?: unknown }[];
 }) {
+  const [count, setCount] = useState(0);
   return (
     <div data-host-content="" style={{ height: 260 }}>
+      <button type="button" onClick={() => setCount(count + 1)}>
+        Content count {count}
+      </button>
       Custom {label}: {String(payload?.[0]?.value)}
     </div>
   );
 }
-export function LineHost({
-  components = Static,
-  chartProps,
-}: {
-  components?: Pick<typeof Static, "LineChart" | "LineSeries" | "Tooltip">;
-  chartProps?: Static.LineChartProps;
-}) {
-  const { LineChart, LineSeries, Tooltip } = components;
+export function LineHost({ chartProps }: { chartProps?: Static.LineChartProps }) {
+  const { LineChart, LineSeries, Tooltip } = Static;
   const [visible, setVisible] = useState(["value", "other", "alias"]);
   const [renamed, setRenamed] = useState(false);
   const [custom, setCustom] = useState(false);
@@ -62,6 +60,19 @@ export function LineHost({
     if (node) node.dataset.refTag = node.tagName;
     return () => {
       document.body.dataset.chartRefCleanup = "yes";
+    };
+  }, []);
+  const tooltipRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      node.dataset.refTag = node.tagName;
+      document.body.dataset.tooltipAttachments = String(
+        Number(document.body.dataset.tooltipAttachments ?? 0) + 1,
+      );
+    }
+    return () => {
+      document.body.dataset.tooltipCleanups = String(
+        Number(document.body.dataset.tooltipCleanups ?? 0) + 1,
+      );
     };
   }, []);
   return (
@@ -120,9 +131,7 @@ export function LineHost({
             <Tooltip
               maxWidth={180}
               {...(custom ? { content: <Content /> } : {})}
-              ref={(node) => {
-                if (node) node.dataset.refTag = node.tagName;
-              }}
+              ref={tooltipRef}
               frameProps={{
                 "aria-label": "Bounded tooltip",
                 onMouseDown: () => setClicked((n) => n + 1),

@@ -7,12 +7,9 @@ export function assertPackageContract(manifest, files) {
   assert.ok(entry && typeof entry === "object", "Root export must declare import and types");
   assert.equal(manifest.types, entry.types, "Top-level types must match the root export");
   const required = ["package.json", "README.md", "LICENSE"];
-  assert.ok(manifest.exports["./motion"], "Motion must have an explicit subpath");
-  assert.equal(
-    manifest.peerDependenciesMeta?.motion?.optional,
-    true,
-    "Motion must remain optional",
-  );
+  assert.equal(manifest.exports["./motion"], undefined, "Motion subpath must not be public");
+  assert.ok(manifest.peerDependencies.motion, "Motion peer must be declared");
+  assert.notEqual(manifest.peerDependenciesMeta?.motion?.optional, true, "Motion must be required");
   for (const [name, exported] of Object.entries(manifest.exports)) {
     if (name === "./styles.css") continue;
     for (const [condition, suffix] of [

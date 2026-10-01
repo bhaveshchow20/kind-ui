@@ -1,8 +1,8 @@
 # Kind UI charts
 
-React components compose real Recharts lines with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. The optional `/motion` entry supplies coordinated reveal and hover animation. Consumers own data shape, scales, axes, grids, reference lines, custom marks, copy and layout. Bar and area recipes remain application-owned.
+React components compose real Recharts lines with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. The same components accept `LineChart animate={false | true | config}` for coordinated reveal and hover animation. Consumers own data shape, scales, axes, grids, reference lines, custom marks, copy and layout. Bar and area recipes remain application-owned.
 
-Pre-release and unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
+Pre-release and unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, Motion 13.4.6, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
 
 ```tsx
 import { useState } from "react";
@@ -44,24 +44,23 @@ export function TasksChart() {
 Render `LineChart` inside `Root`, and `LineSeries`/`Tooltip` inside `LineChart`. Engine children such as `XAxis`, `YAxis`, `CartesianGrid`, `ReferenceLine`, `LabelList` and `ErrorBar` keep their native composition path. There is no prescribed data schema, card or layout. The wrappers render registered Recharts components, rather than inspecting child display names or reexporting the engine.
 
 - `LineChart`: native Recharts chart props and SVG ref. Kind composes `onMouseMove`/`onMouseLeave` with its own pointer tracking and captures focus/keyboard changes without replacing Root handlers. The ref targets `SVGSVGElement`, including React 19 callback cleanup. The internal frame uses `display: contents` so sizing stays with the engine or `ResponsiveContainer`.
-- `LineSeries`: native `Line` props/children/custom `dot`, `activeDot`, `shape` and handlers. Defaults to immediate engine rendering; the static entry permits an explicit `isAnimationActive` override. `stroke` defaults to Root's color. A Root-hidden series stays hidden even with `hide={false}`; `hide={true}` additionally hides a series. String `dataKey` is the default metadata identity. Use `seriesKey` for function/numeric data keys, required with controlled visibility. Native tooltip payloads remain unchanged; Kind's default content resolves registered identities for metadata and filtering. Recharts Line has no public component ref in 3.10.1: use refs on your custom mark/shape nodes, retaining the engine shape's `pathRef` where needed.
+- `LineSeries`: native `Line` props/children/custom `dot`, `activeDot`, `shape` and handlers. Motion owns animation, so `isAnimationActive` is excluded and Recharts animation is always disabled. `stroke` defaults to Root's color. A Root-hidden series stays hidden even with `hide={false}`; `hide={true}` additionally hides a series. String `dataKey` is the default metadata identity. Use `seriesKey` for function/numeric data keys, required with controlled visibility. Native tooltip payloads remain unchanged; Kind's default content resolves registered identities for metadata and filtering. Recharts Line has no public component ref in 3.10.1: use refs on your custom mark/shape nodes, retaining the engine shape's `pathRef` where needed.
 - `Tooltip`: native selection/formatting/cursor/trigger/style props and element/function `content`, plus `maxWidth` (180 by default), native `frameProps` and a ref to the measured div. Kind owns `position`, `isAnimationActive`, the chart portal and bounds/translation options (`allowEscapeViewBox`, `reverseDirection`, `useTranslate3d`); those props are excluded. `offset` is honored as a number or x/y pair, defaulting to 12. It measures width and height with ResizeObserver, follows the pointer, and uses the engine coordinate after keyboard interaction. Oversized content gets chart-sized width/height limits and scrolling. Frame styles/classes may customize presentation; overriding sizing, margins or transforms can change bounds. A custom content component receives native engine props and owns its accessible feedback. Defaults are `cursor={false}`, `filterNull={false}` and `TooltipContent`.
 
 Custom shape/content functions should be stable component types defined outside render when they retain state. Engine `wrapperStyle`, axes, IDs and native refs keep their upstream semantics. Custom tooltip portals/anchors can instead use a native Recharts Tooltip; it can share Root's `TooltipContent` metadata.
 
-## Optional line motion
+## Line animation
 
-The root JavaScript and declarations have no Motion import and are checked with Motion absent. Install the optional Motion peer only for `/motion`, tested at 13.4.6. Import all three matching line components from that subpath, and import `@kind-ui/charts/styles.css` for the shared SVG reveal clipping:
+Import the same components from `@kind-ui/charts` in every mode. `LineChart` accepts `animate`, defaulting to `false`: `false` renders immediately, `true` enables defaults, and a `LineAnimation` object enables animation with overrides. It exposes `revealDurationMs` (1000 by default), Motion `revealEasing` and `hoverTransition` (spring by default). Import the stylesheet for shared SVG reveal clipping:
 
 ```tsx
-import { Root } from "@kind-ui/charts";
-import { LineChart, LineSeries, Tooltip } from "@kind-ui/charts/motion";
+import { Root, LineChart, LineSeries, Tooltip } from "@kind-ui/charts";
 import { XAxis } from "recharts";
 import "@kind-ui/charts/styles.css";
 
 <Root config={{ count: { label: "Count", color: "#345" } }}>
   <LineChart width={400} height={220} data={points}
-    motion={{ revealDurationMs: 900, revealEasing: "easeOut", hoverTransition: { duration: 0.2 } }}>
+    animate={{ revealDurationMs: 900, revealEasing: "easeOut", hoverTransition: { duration: 0.2 } }}>
     <XAxis dataKey="day" />
     <LineSeries dataKey="count" />
     <Tooltip />
@@ -69,7 +68,9 @@ import "@kind-ui/charts/styles.css";
 </Root>
 ```
 
-Omit `motion` or pass `motion={false}` for immediate rendering. An options object enables animation. `LineMotion` exposes `revealDurationMs`, Motion `revealEasing` and `hoverTransition`; no host animation wiring is needed. Motion owns one chart-space clip for all line strokes and resting dots, the default active marker and tooltip translation. Engine animation is forced off for this path and excluded from its `LineSeriesProps`. Custom marks/shapes/content retain consumer ownership; custom active dots replace the default animated mark. Arbitrary path morphing and animation of axes are outside this contract.
+Motion is a required peer, including when `animate={false}`. This prop controls behavior; it does not remove Motion installation or bundle bytes. We use synchronous `motion/react` imports to keep component identities and customization stable across modes, without asynchronous loading/error states. Motion's [LazyMotion](https://motion.dev/docs/react-lazy-motion) can defer features, but that is a separate loading/bundle strategy, not a consequence of disabling animation. The prior unpublished `/motion` export, `motion` prop and `LineMotion` type are removed; migrate imports to the root and use `animate` and `LineAnimation`. All packages remain private at `0.0.0`; this is a pre-release API revision, with no publication or release.
+
+The single-prop mode follows the familiar behavioral toggle in [Nivo](https://nivo.rocks/line/); [EvilCharts](https://evilcharts.com/docs/recharts/line-chart/static) also exposes a disabled intro mode. These are API references, not reused implementations or additional renderers. Recharts still owns geometry and selection. Motion owns one chart-space clip for all line strokes and resting dots, the default active marker and tooltip translation. Engine animation is forced off and excluded from `LineSeriesProps`. Custom marks/shapes/content retain consumer ownership; custom active dots replace the default animated mark. Arbitrary path morphing and animation of axes are outside this contract.
 
 The package subscribes reactively to reduced motion and starts disabled during server rendering. Reduced motion or explicit off snaps in-flight hover targets immediately. Focus, keyboard or pointer interaction finishes entrance; chart or per-series data/visibility identity or measured size changes also cancel entrance, discard stale pointer pixels and snap existing hover targets. Hover motion resumes on the next pointer/keyboard input. Ordinary hover retargets the same mounted marks and tooltip. Entrance does not replay after interaction/update; remount to request a fresh entrance. Palette changes preserve chart state. The clip requires the stylesheet; pointer/keyboard state and tooltip measurement work without it.
 
@@ -121,4 +122,4 @@ Per-instance series colors and per-entry indicator color values remain inline CS
 
 At the repository root: `npm ci`, then `npm exec playwright install -- --with-deps chromium` (Linux dependencies may need administrator permission). Run `npm run dev:chart` for the example, or `npm run check` for library, packed-consumer, type and browser checks.
 
-The packed check first builds an actual tarball, installs it and the pinned peer/type dependencies into an isolated consumer, then checks public APIs with NodeNext and Bundler resolution. Before installing Motion it checks root imports/declarations and builds a static line consumer, then builds a separate `/motion` line consumer with that optional peer. These line fixtures contain only public package imports and host data/extensions; no example implementation is copied into the proof. Legacy bar/area recipe typechecks are separately identified. It also builds a plain-CSS production consumer for the browser checks, verifying CSS delivery and application overrides. Peer installation can require npm registry access; the package under test always comes from the local tarball, never a workspace link or registry copy.
+The packed check first builds an actual tarball, installs it and the pinned peer/type dependencies into an isolated consumer, then checks public APIs with NodeNext and Bundler resolution. With the required Motion peer installed, it checks root imports/declarations and builds disabled and animated line consumers using the same exports; it also proves the removed `/motion` path cannot resolve. These line fixtures contain only public package imports and host data/extensions; no example implementation is copied into the proof. Legacy bar/area recipe typechecks are separately identified. It also builds a plain-CSS production consumer for the browser checks, verifying CSS delivery and application overrides. Peer installation can require npm registry access; the package under test always comes from the local tarball, never a workspace link or registry copy.

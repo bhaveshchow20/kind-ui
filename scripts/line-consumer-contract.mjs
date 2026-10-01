@@ -4,7 +4,6 @@ import assert from "node:assert/strict";
 export function assertLineConsumerSource(source) {
   const allowed = new Set([
     "@kind-ui/charts",
-    "@kind-ui/charts/motion",
     "@kind-ui/charts/styles.css",
     "react",
     "react-dom/client",

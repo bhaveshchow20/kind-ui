@@ -1,6 +1,6 @@
+import type { LineAnimation } from "@kind-ui/charts";
 import * as Chart from "@kind-ui/charts";
-import type { LineMotion } from "@kind-ui/charts/motion";
-import * as Line from "@kind-ui/charts/motion";
+import * as Line from "@kind-ui/charts";
 import type { ComponentProps, ReactNode } from "react";
 import { useId } from "react";
 import {
@@ -13,14 +13,14 @@ import {
   YAxis,
 } from "recharts";
 
-export type { LineMotion } from "@kind-ui/charts/motion";
+export type { LineAnimation } from "@kind-ui/charts";
 export type TrendPoint = { period: string; value: number | null };
 export type ComparisonPoint = { period: string; current: number | null; previous: number | null };
 export type TrendProps = {
   data: TrendPoint[];
   label: string;
   formatValue: (value: number) => string;
-  motion?: LineMotion | undefined;
+  animate?: boolean | LineAnimation | undefined;
 };
 
 const solidDot = {
@@ -50,7 +50,7 @@ function SingleSeriesLine({
   data,
   label,
   formatValue,
-  motion,
+  animate,
   type,
   dot,
   children,
@@ -76,7 +76,7 @@ function SingleSeriesLine({
       <ResponsiveContainer width="100%" height={196}>
         <Line.LineChart
           data={data}
-          motion={motion}
+          animate={animate}
           accessibilityLayer
           aria-label={label}
           aria-describedby={id}
@@ -136,7 +136,7 @@ export function TargetLine({
   formatValue,
   target,
   targetLabel,
-  motion,
+  animate,
 }: TrendProps & { target: number; targetLabel: string }) {
   const id = useId();
   return (
@@ -157,7 +157,7 @@ export function TargetLine({
       <ResponsiveContainer width="100%" height={196}>
         <Line.LineChart
           data={data}
-          motion={motion}
+          animate={animate}
           accessibilityLayer
           aria-label={label}
           aria-describedby={id}
@@ -196,14 +196,14 @@ export function ComparisonLine({
   visibleSeries,
   onVisibleSeriesChange,
   label,
-  motion,
+  animate,
 }: {
   data: ComparisonPoint[];
   config: Chart.SeriesConfig & Record<"current" | "previous", Chart.SeriesConfig[string]>;
   visibleSeries: string[];
   onVisibleSeriesChange: (keys: string[]) => void;
   label: string;
-  motion?: LineMotion | undefined;
+  animate?: boolean | LineAnimation | undefined;
 }) {
   const id = useId();
   return (
@@ -226,7 +226,7 @@ export function ComparisonLine({
         <ResponsiveContainer width="100%" height={196}>
           <Line.LineChart
             data={data}
-            motion={motion}
+            animate={animate}
             accessibilityLayer
             aria-label={label}
             aria-describedby={id}

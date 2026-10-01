@@ -1,7 +1,15 @@
 "use client";
 
-import { motion, type Transition } from "motion/react";
-import { createContext, use, useId, useState, useSyncExternalStore } from "react";
+import { animate as animateValue, motion, type Transition, useMotionValue } from "motion/react";
+import {
+  createContext,
+  use,
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { DotProps } from "recharts";
 import {
   LineChartFrame,
@@ -14,15 +22,17 @@ import {
 } from "./line-series.js";
 import { TooltipBase, type TooltipFrameProps, type TooltipProps } from "./tooltip.js";
 
-export type LineMotion = {
+export type LineAnimation = {
   revealDurationMs?: number;
   revealEasing?: Transition["ease"];
   hoverTransition?: Transition;
 };
 export type LineSeriesProps = Omit<StaticLineSeriesProps, "isAnimationActive">;
-export type LineChartProps = StaticLineChartProps & { motion?: LineMotion | false | undefined };
+export type LineChartProps = StaticLineChartProps & {
+  animate?: boolean | LineAnimation | undefined;
+};
 const defaultHover: Transition = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 };
-const MotionContext = createContext({ enabled: false, transition: { duration: 0 } as Transition });
+const MotionContext = createContext({ enabled: false, transition: defaultHover });
 const query = "(prefers-reduced-motion: reduce)";
 function subscribe(change: () => void) {
   const media = window.matchMedia(query);
@@ -32,20 +42,22 @@ function subscribe(change: () => void) {
 const snapshot = () => window.matchMedia(query).matches;
 const serverSnapshot = () => true;
 
-/** Optional Motion owns the shared entrance clip and default active marks. */
-export function LineChart({ motion: options, children, ...props }: LineChartProps) {
+/** Motion owns the shared entrance clip and default active marks. */
+export function LineChart({ animate = false, children, ...props }: LineChartProps) {
   const id = useId();
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
-  const enabled = options !== undefined && options !== false && !reduced;
+  const options = typeof animate === "object" ? animate : {};
+  const enabled = animate !== false && !reduced;
+  const interrupt = useCallback(() => setInteracted(true), []);
   const reveal = enabled && !interacted;
-  const transition = enabled ? (options.hoverTransition ?? defaultHover) : { duration: 0 };
+  const transition = options.hoverTransition ?? defaultHover;
   return (
     <MotionContext value={{ enabled, transition }}>
       <LineChartFrame
         {...props}
         motionEnabled={enabled}
-        interrupt={() => setInteracted(true)}
+        interrupt={interrupt}
         {...(reveal ? { clip: `url(#${id}-reveal)` } : {})}
       >
         {reveal && (
@@ -70,18 +82,32 @@ export function LineChart({ motion: options, children, ...props }: LineChartProp
     </MotionContext>
   );
 }
+// Stop the previous target before retargeting or snapping, without remounting consumer DOM.
+function useAnimatedCoordinate(target: number, enabled: boolean, transition: Transition) {
+  const value = useMotionValue(target);
+  useLayoutEffect(() => {
+    if (!enabled) {
+      value.set(target);
+      return;
+    }
+    const controls = animateValue(value, target, transition);
+    return () => controls.stop();
+  }, [value, target, enabled, transition]);
+  return value;
+}
 function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
   const { enabled, transition } = use(MotionContext);
   const { motionReady } = useLineInteraction();
   const animate = enabled && motionReady;
+  const x = useAnimatedCoordinate(cx ?? 0, animate, transition);
+  const y = useAnimatedCoordinate(cy ?? 0, animate, transition);
   if (cx == null || cy == null) return null;
   return (
     <motion.circle
-      key={animate ? "animated" : "static"}
       data-kind-ui="active-marker"
       initial={false}
-      animate={{ cx, cy }}
-      transition={animate ? transition : { duration: 0 }}
+      cx={x}
+      cy={y}
       r={5}
       fill={fill ?? stroke}
       stroke="var(--card, white)"
@@ -98,13 +124,13 @@ function MovingFrame({ x, y, maxX, maxY, ref, style, frameProps, children }: Too
   const { enabled, transition } = use(MotionContext);
   const { motionReady } = useLineInteraction();
   const animate = enabled && motionReady;
+  const movingX = useAnimatedCoordinate(x, animate, transition);
+  const movingY = useAnimatedCoordinate(y, animate, transition);
   return (
     <motion.div
-      key={animate ? "animated" : "static"}
       data-kind-ui="tooltip-motion"
       initial={false}
-      animate={{ x, y }}
-      transition={animate ? transition : { duration: 0 }}
+      style={{ x: movingX, y: movingY }}
       transformTemplate={({ x = 0, y = 0 }) =>
         `translate(clamp(0px, ${typeof x === "number" ? `${x}px` : x}, ${maxX}px), clamp(0px, ${typeof y === "number" ? `${y}px` : y}, ${maxY}px))`
       }

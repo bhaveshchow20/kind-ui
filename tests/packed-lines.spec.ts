@@ -197,3 +197,69 @@ test("packed Motion retargets marks and tooltip, snaps off reactively, and cance
   await expect(page.getByRole("status")).not.toBeVisible();
   await page.screenshot({ path: info.outputPath("packed-motion-interruption.png") });
 });
+
+test("the same packed components support false, true and config without losing customization", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.clock.install();
+  await page.goto("http://127.0.0.1:4176/motion.html");
+  const frame = page.locator('[data-kind-ui="line-frame"]');
+  const clip = page.locator("clipPath[id$='-reveal'] rect");
+  await page.getByLabel("Animate", { exact: true }).uncheck();
+  await expect(frame).toHaveAttribute("data-motion", "off");
+  await expect(clip).toHaveCount(0);
+  await page.getByLabel("Default animation", { exact: true }).check();
+  await page.getByLabel("Animate", { exact: true }).check();
+  await page.clock.runFor(120);
+  await expect(frame).toHaveAttribute("data-motion", "on");
+  const progress = Number.parseFloat((await clip.getAttribute("width")) ?? "NaN");
+  expect(progress).toBeGreaterThan(0);
+  expect(progress).toBeLessThan(100);
+  await expect(page.locator(".host-shape")).toHaveCount(1);
+  await expect(page.locator("[data-host-mark]")).toHaveCount(3);
+  await expect(page.getByRole("application")).toHaveAttribute("data-ref-tag", "svg");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(frame).toHaveAttribute("data-motion", "off");
+  await expect(clip).toHaveCount(0);
+});
+
+test("stateful packed tooltip content and refs survive mode, preference and geometry changes", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("http://127.0.0.1:4176/motion.html");
+  await page.getByRole("button", { name: "Custom content", exact: true }).click();
+  const coords = await points(page);
+  const start = coords[0];
+  if (!start) throw new Error("Missing coordinates");
+  await page.mouse.move(start.x, start.y);
+  await page
+    .getByRole("button", { name: "Content count 0" })
+    .evaluate((node) => (node as HTMLButtonElement).click());
+  const content = page.getByRole("button", { name: "Content count 1" });
+  const before = await page.locator("body").evaluate((node) => ({
+    attaches: node.dataset.tooltipAttachments,
+    cleanups: node.dataset.tooltipCleanups,
+  }));
+  await page
+    .getByLabel("Animate", { exact: true })
+    .evaluate((node) => (node as HTMLInputElement).click());
+  await expect(content).toHaveCount(1);
+  await page
+    .getByLabel("Animate", { exact: true })
+    .evaluate((node) => (node as HTMLInputElement).click());
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  for (const name of ["Resize", "Update"]) {
+    await page
+      .getByRole("button", { name, exact: true })
+      .evaluate((node) => (node as HTMLButtonElement).click());
+    await expect(content).toHaveCount(1);
+  }
+  const after = await page.locator("body").evaluate((node) => ({
+    attaches: node.dataset.tooltipAttachments,
+    cleanups: node.dataset.tooltipCleanups,
+  }));
+  expect(after).toEqual(before);
+});

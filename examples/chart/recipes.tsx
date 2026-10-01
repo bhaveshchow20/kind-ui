@@ -127,7 +127,7 @@ function App() {
                 data={volume}
                 label={`${title} daily completions`}
                 formatValue={tasks}
-                motion={animate ? {} : undefined}
+                animate={animate}
               />
             )}
             <details>
@@ -157,7 +157,7 @@ function App() {
               data={volume}
               label="Completed tasks"
               formatValue={tasks}
-              motion={animate ? {} : undefined}
+              animate={animate}
             />
           )}
           <p className="recipe-note">Daily completions · Mon–Sun</p>
@@ -188,7 +188,7 @@ function App() {
               formatValue={milliseconds}
               target={240}
               targetLabel="Budget"
-              motion={animate ? {} : undefined}
+              animate={animate}
             />
           )}
           <p className="recipe-note">Lower is faster. Wednesday was not recorded.</p>
@@ -216,7 +216,7 @@ function App() {
               visibleSeries={visible}
               onVisibleSeriesChange={setVisible}
               label="Weekly comparison"
-              motion={animate ? {} : undefined}
+              animate={animate}
             />
           )}
           <p className="recipe-note">

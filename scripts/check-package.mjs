@@ -16,6 +16,7 @@ const peerNames = [
   "react-dom",
   "react-is",
   "recharts",
+  "motion",
   "@types/react",
   "@types/react-dom",
 ];
@@ -79,7 +80,7 @@ try {
     [
       "--input-type=module",
       "-e",
-      "await import('@kind-ui/charts'); try { import.meta.resolve('motion') } catch (error) { if (error.code === 'ERR_MODULE_NOT_FOUND') process.exit(0); throw error } throw new Error('Baseline must not install Motion')",
+      "await import('@kind-ui/charts'); await import('motion/react'); try { import.meta.resolve('@kind-ui/charts/motion') } catch (error) { if (error.code === 'ERR_PACKAGE_PATH_NOT_EXPORTED') process.exit(0); throw error } throw new Error('Removed motion subpath must not resolve')",
     ],
     consumer,
   );
@@ -161,27 +162,13 @@ try {
   await typecheck(["index.tsx", "host.tsx", "static.tsx"]);
   await production("static.html", "packed-line-static");
   console.log(
-    "Static line consumer: strict NodeNext/Bundler and production build passed with no Motion installed",
-  );
-  run(
-    process.execPath,
-    [
-      npm,
-      "install",
-      "--ignore-scripts",
-      "--no-audit",
-      "--no-fund",
-      "--package-lock=false",
-      "--workspaces=false",
-      `motion@${rootManifest.devDependencies.motion}`,
-    ],
-    consumer,
+    "Static line consumer: strict NodeNext/Bundler and production build passed with required Motion peer",
   );
   for (const file of ["motion.tsx", "motion.html"]) await copyFixture("line", file);
   await typecheck(["host.tsx", "motion.tsx"]);
   await production("motion.html", "packed-line-motion");
   console.log(
-    "Motion line consumer: strict NodeNext/Bundler and production build passed using only packed public imports",
+    "Motion line consumer: strict NodeNext/Bundler and production build passed using the same packed public imports",
   );
   for (const file of ["index.html", "main.tsx", "consumer.css", "motion.tsx"])
     await copyFixture("styling", file);

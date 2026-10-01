@@ -144,7 +144,6 @@ function App() {
                       }
                       strokeDasharray={key === "review" ? "5 4" : "none"}
                       connectNulls={false}
-                      isAnimationActive={false}
                     />
                   ))}
                 </Chart.LineChart>

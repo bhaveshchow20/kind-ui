@@ -1,4 +1,4 @@
-import * as Motion from "@kind-ui/charts/motion";
+import type * as Motion from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import "@kind-ui/charts/styles.css";
@@ -6,8 +6,13 @@ import { LineHost } from "./host.js";
 
 function App() {
   const [enabled, setEnabled] = useState(true);
+  const [defaults, setDefaults] = useState(false);
   const props: Motion.LineChartProps = {
-    motion: enabled ? { revealDurationMs: 800, hoverTransition: { duration: 0.4 } } : false,
+    animate: enabled
+      ? defaults
+        ? true
+        : { revealDurationMs: 800, hoverTransition: { duration: 0.4 } }
+      : false,
   };
   return (
     <>
@@ -15,7 +20,11 @@ function App() {
         <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
         Animate
       </label>
-      <LineHost components={Motion} chartProps={props} />
+      <label>
+        <input type="checkbox" checked={defaults} onChange={(e) => setDefaults(e.target.checked)} />
+        Default animation
+      </label>
+      <LineHost chartProps={props} />
     </>
   );
 }

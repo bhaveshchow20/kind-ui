@@ -49,7 +49,7 @@ const invalidConfig: SeriesConfig = { count: { label: "Tasks", color: 1 } };
 void invalidControl;
 void invalidConfig;
 
-// Static line declarations resolve without Motion installed.
+// All animation modes share the public components and declarations.
 void (
   <Chart.Root config={config}>
     <Chart.LineChart width={300} height={200} ref={createRef<SVGSVGElement>()}>
@@ -65,9 +65,21 @@ void (
     </Chart.LineChart>
   </Chart.Root>
 );
-// @ts-expect-error Motion options belong exclusively to the optional subpath.
+// @ts-expect-error The old motion prop is not part of the public API.
 void (<Chart.LineChart motion={{ revealDurationMs: 10 }} />);
 // @ts-expect-error Recharts Line does not provide a component ref; use a custom shape's pathRef.
 void (<Chart.LineSeries dataKey="count" ref={createRef<SVGPathElement>()} />);
 // @ts-expect-error Kind owns the bounded tooltip anchor.
 void (<Chart.Tooltip position={{ x: 0, y: 0 }} />);
+
+for (const animate of [
+  false,
+  true,
+  { revealDurationMs: 10, hoverTransition: { duration: 0.2 } },
+] satisfies Chart.LineChartProps["animate"][]) {
+  void (<Chart.LineChart animate={animate} />);
+}
+// @ts-expect-error Motion owns animation; Recharts animation cannot compete.
+void (<Chart.LineSeries dataKey="count" isAnimationActive />);
+// @ts-expect-error Invalid animation configuration.
+void (<Chart.LineChart animate={{ revealDurationMs: "fast" }} />);
