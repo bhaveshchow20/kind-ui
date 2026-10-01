@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 const url = "http://127.0.0.1:4177";
 const sectors = '[data-kind-ui="pie-sector"]';
@@ -178,7 +178,13 @@ test("native chart data, function keys, variable radius, multiple rings and clic
   const chart = page.getByRole("application", { name: "Native rings" });
   await expect(chart).toBeVisible();
   const outer = chart.locator('[data-ring="outer"]').first();
-  await outer.click({ force: true });
+  const bounds = await chart.boundingBox();
+  if (!bounds) throw new Error("Missing native ring bounds");
+  // Alpha spans 90 to -126 degrees. Click its interior, rather than its hollow bounding-box center.
+  await page.mouse.click(
+    bounds.x + 180 + 100 * Math.cos(Math.PI / 10),
+    bounds.y + 150 + 100 * Math.sin(Math.PI / 10),
+  );
   await expect(page.locator('[data-kind-ui="chart-tooltip"]').last()).toContainText("Alpha");
   await expect(page.locator('[data-kind-ui="chart-tooltip"]').last()).toContainText("60 seats");
   expect(await outer.getAttribute("d")).not.toBe(
@@ -248,13 +254,44 @@ async function paint(chart: Locator) {
     })),
   );
 }
+async function assertNativePixels(page: Page, kind: Buffer, native: Buffer) {
+  const difference = await page.evaluate(
+    async (pngs) => {
+      const pixels = await Promise.all(
+        pngs.map(async (png) => {
+          const image = new Image();
+          image.src = `data:image/png;base64,${png}`;
+          await image.decode();
+          const canvas = document.createElement("canvas");
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const context = canvas.getContext("2d");
+          if (!context) throw new Error("Missing pixel context");
+          context.drawImage(image, 0, 0);
+          return context.getImageData(0, 0, canvas.width, canvas.height).data;
+        }),
+      );
+      const [actual, expected] = pixels;
+      if (!actual || !expected || actual.length !== expected.length)
+        throw new Error("Oracle pixel dimensions differ");
+      let max = 0;
+      for (let i = 0; i < actual.length; i++)
+        max = Math.max(max, Math.abs((actual[i] ?? 0) - (expected[i] ?? 0)));
+      return max;
+    },
+    [kind.toString("base64"), native.toString("base64")],
+  );
+  // Chromium quantizes identical sector edges differently across paint layers (up to 47).
+  // A white separator against these opaque fills exceeds 64; retain exact path/stroke checks too.
+  expect(difference).toBeLessThanOrEqual(64);
+}
 test("continuous defaults match a gap-free native oracle including zero, tiny, visibility, rings and hover", async ({
   page,
 }, info) => {
   await page.goto(`${url}/?oracle`);
   const proof = page.getByRole("region", { name: "Continuity proof" });
-  const kind = proof.getByRole("application", { name: "Kind continuity" });
-  const native = proof.getByRole("application", { name: "Native oracle" });
+  const kind = proof.getByRole("application", { name: "Kind continuity", includeHidden: true });
+  const native = proof.getByRole("application", { name: "Native oracle", includeHidden: true });
   for (const scenario of ["normal", "zero", "tiny", "single", "empty", "allZero"]) {
     await proof.getByRole("button", { name: `Scenario ${scenario}`, exact: true }).click();
     await expect(proof.getByLabel("Oracle state")).toContainText(`${scenario}/`);
@@ -268,13 +305,42 @@ test("continuous defaults match a gap-free native oracle including zero, tiny, v
       scenario === "single"
     ) {
       await page.mouse.move(0, 0);
-      const kindPixels = await kind.screenshot({ path: info.outputPath(`oracle-${scenario}-kind.png`) });
-      const nativePixels = await native.screenshot({ path: info.outputPath(`oracle-${scenario}-native.png`) });
-      expect(kindPixels.equals(nativePixels), `native pixel oracle: ${scenario}`).toBeTruthy();
+      const kindPixels = await kind.screenshot({
+        path: info.outputPath(`oracle-${scenario}-kind.png`),
+      });
+      await kind.evaluate((node) => {
+        node.style.visibility = "hidden";
+      });
+      await native.evaluate((node) => {
+        (node.parentElement as HTMLElement).style.visibility = "visible";
+      });
+      const nativePixels = await native.screenshot({
+        path: info.outputPath(`oracle-${scenario}-native.png`),
+      });
+      await native.evaluate((node) => {
+        (node.parentElement as HTMLElement).style.visibility = "hidden";
+      });
+      await kind.evaluate((node) => {
+        node.style.visibility = "visible";
+      });
+      await assertNativePixels(page, kindPixels, nativePixels);
       if (scenario === "single") {
         await kind.screenshot({ path: info.outputPath("continuous-single-pie.png") });
         await proof.getByRole("button", { name: "Oracle donut", exact: true }).click();
-        expect((await kind.screenshot()).equals(await native.screenshot())).toBeTruthy();
+        const donutPixels = await kind.screenshot();
+        await kind.evaluate((node) => {
+          node.style.visibility = "hidden";
+        });
+        await native.evaluate((node) => {
+          (node.parentElement as HTMLElement).style.visibility = "visible";
+        });
+        await assertNativePixels(page, donutPixels, await native.screenshot());
+        await native.evaluate((node) => {
+          (node.parentElement as HTMLElement).style.visibility = "hidden";
+        });
+        await kind.evaluate((node) => {
+          node.style.visibility = "visible";
+        });
         await kind.screenshot({ path: info.outputPath("continuous-single-donut.png") });
         await proof.getByRole("button", { name: "Oracle donut", exact: true }).click();
       }

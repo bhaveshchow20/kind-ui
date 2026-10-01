@@ -356,7 +356,7 @@ function ContinuityHost() {
       <output aria-label="Oracle state">
         {scenario}/{String(included)}/{String(donut)}/{String(gaps)}/{String(rings)}
       </output>
-      <Chart.Root config={config} style={{ display: "flex", width: 600, background: "white" }}>
+      <Chart.Root config={config} style={{ position: "relative", width: 300, background: "white" }}>
         <Chart.PieChart width={300} height={280} aria-label="Kind continuity">
           <Chart.PieSeries {...props}>{cells}</Chart.PieSeries>
           {rings && (
@@ -366,7 +366,12 @@ function ContinuityHost() {
           )}
           <Chart.Tooltip itemKey={identity} />
         </Chart.PieChart>
-        <NativePieChart width={300} height={280} aria-label="Native oracle">
+        <NativePieChart
+          width={300}
+          height={280}
+          aria-label="Native oracle"
+          style={{ position: "absolute", top: 0, left: 0, visibility: "hidden" }}
+        >
           <Pie {...props} stroke={gaps ? "#fff" : "none"} isAnimationActive={false}>
             {cells}
           </Pie>
