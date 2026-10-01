@@ -40,10 +40,12 @@ function BarReveal({
   id,
   horizontal,
   options,
+  onComplete,
 }: {
   id: string;
   horizontal: boolean;
   options: BarMotion;
+  onComplete: () => void;
 }) {
   const area = usePlotArea();
   if (!area) return null;
@@ -52,6 +54,7 @@ function BarReveal({
       <clipPath id={`${id}-bars`} clipPathUnits="userSpaceOnUse">
         <motion.rect
           data-bar-reveal=""
+          onAnimationComplete={onComplete}
           x={area.x}
           initial={
             horizontal
@@ -118,7 +121,12 @@ function BarFrame({
           barGap={4}
         >
           {animation.reveal && options && (
-            <BarReveal id={animation.id} horizontal={horizontal} options={options} />
+            <BarReveal
+              id={animation.id}
+              horizontal={horizontal}
+              options={options}
+              onComplete={animation.finishReveal}
+            />
           )}
           <CartesianGrid vertical={horizontal} horizontal={!horizontal} stroke="var(--border)" />
           {horizontal ? (

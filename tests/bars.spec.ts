@@ -88,16 +88,26 @@ test("Motion reveals bars from the value baseline and interrupts safely", async 
   const earlyWidth = Number.parseFloat((await horizontal.getAttribute("width")) ?? "NaN");
   expect(earlyHeight).toBeGreaterThan(0);
   expect(earlyWidth).toBeGreaterThan(0);
-  await page.clock.runFor(1000);
+  await page.clock.runFor(300);
   expect(Number.parseFloat((await vertical.getAttribute("height")) ?? "NaN")).toBeGreaterThan(
     earlyHeight,
   );
   expect(Number.parseFloat((await horizontal.getAttribute("width")) ?? "NaN")).toBeGreaterThan(
     earlyWidth,
   );
-  const clipId = await vertical.locator("..").getAttribute("id");
+  await page.clock.runFor(1000);
+  await expect(clips).toHaveCount(0);
   await page.getByRole("button", { name: "Color", exact: true }).click();
-  expect(await vertical.locator("..").getAttribute("id")).toBe(clipId);
+  // Completed reveals must not lag behind immediate Recharts resize geometry.
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.setViewportSize({ width: 1100, height: 900 });
+  await page.clock.runFor(32);
+  await expect(clips).toHaveCount(0);
+  for (const bar of await page.locator(".recharts-bar").all())
+    await expect(bar).toHaveCSS("clip-path", "none");
+  await page.getByLabel("Empty data").check();
+  await page.getByLabel("Empty data").uncheck();
+  await page.clock.runFor(120);
   await page.getByRole("application", { name: "Daily completions", exact: true }).focus();
   await expect(
     page.getByRole("region", { name: "Vertical", exact: true }).locator(".recharts-bar"),
