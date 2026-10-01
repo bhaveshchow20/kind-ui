@@ -48,7 +48,12 @@ export function ScatterTooltipContent<Row = unknown>({
       })
     : [];
   const first = entries[0];
-  if (zDimension && first && entries.length === 2) {
+  if (
+    zDimension &&
+    first &&
+    entries.length <= 2 &&
+    !entries.some((entry) => entry.dataKey === zDimension.dataKey)
+  ) {
     const record: unknown = first.payload;
     const raw: unknown =
       typeof zDimension.dataKey === "function"

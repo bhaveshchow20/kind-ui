@@ -201,5 +201,14 @@ for (const functional of [false, true]) {
     await expect(tip).toContainText("missing-size");
     await expect(tip).toContainText("VolumeNo data");
     await expect(tip.locator('[data-kind-ui="chart-tooltip-item"]')).toHaveCount(3);
+    await page
+      .getByRole("button", { name: "Filter null", exact: true })
+      .evaluate((node) => (node as HTMLButtonElement).click());
+    await chart.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(tip).toContainText("missing-y");
+    await expect(tip.locator('[data-kind-ui="chart-tooltip-item"]')).toHaveCount(2);
+    await expect(tip).toContainText("Volume60 jobs");
+    expect((await tip.textContent())?.match(/60 jobs/g)).toHaveLength(1);
   });
 }

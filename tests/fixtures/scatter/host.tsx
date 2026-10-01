@@ -68,6 +68,7 @@ function Content(props: TooltipContentProps) {
 export function ScatterHost() {
   const [visible, setVisible] = useState(["alpha", "beta"]);
   const [animate, setAnimate] = useState<boolean | Chart.ScatterAnimation>(false);
+  const [filterNull, setFilterNull] = useState(false);
   const [functionZ, setFunctionZ] = useState(false);
   const [custom, setCustom] = useState(false);
   const [narrow, setNarrow] = useState(false);
@@ -145,6 +146,9 @@ export function ScatterHost() {
           <button key="accessor" type="button" onClick={() => setFunctionZ(!functionZ)}>
             Size accessor
           </button>,
+          <button key="nulls" type="button" onClick={() => setFilterNull(!filterNull)}>
+            Filter null
+          </button>,
           <button key="custom" type="button" onClick={() => setCustom(!custom)}>
             Custom content
           </button>,
@@ -199,6 +203,7 @@ export function ScatterHost() {
           />
           <Chart.ScatterTooltip
             axisId="latency"
+            filterNull={filterNull}
             pointLabel={label}
             zDimension={{ dataKey: functionZ ? volume : "z", name: "Volume", unit: " jobs" }}
             ref={(node) => node?.setAttribute("data-ref", node.tagName)}

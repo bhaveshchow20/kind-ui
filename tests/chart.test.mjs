@@ -237,3 +237,20 @@ test("scatter explicit size mapping recovers zero/missing from raw records and h
   );
   assert.match(show(-5, "size"), /-5 jobs/);
 });
+
+test("scatter raw size recovery preserves native nonzero Z after filterNull removes Y", () => {
+  const html = render(
+    h(
+      Root,
+      { config },
+      h(Chart.ScatterTooltipContent, {
+        tooltip: tooltip([
+          entry(7, { dataKey: "x", payload: { size: 60 } }),
+          entry(60, { dataKey: "size", name: "Volume", unit: " jobs", payload: { size: 60 } }),
+        ]),
+        zDimension: { dataKey: "size", name: "Volume", unit: " jobs" },
+      }),
+    ),
+  );
+  assert.equal((html.match(/60 jobs/g) || []).length, 1);
+});
