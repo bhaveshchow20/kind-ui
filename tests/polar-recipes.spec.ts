@@ -7,8 +7,13 @@ test("polar recipes use public components, accessible tables and controlled lege
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/polar.html");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Radar & radial charts");
-  await expect(page.locator(".polar-card")).toHaveCount(6);
-  await expect(page.locator(".polar-card svg[role=application]")).toHaveCount(6);
+  await expect(page.locator(".polar-card")).toHaveCount(8);
+  await expect(page.locator(".polar-card svg[role=application]")).toHaveCount(8);
+  await expect(page.locator('[data-kind-ui="radial-label"][data-fit="yes"]').first()).toBeVisible();
+  await page.getByRole("checkbox", { name: "Ring text", exact: true }).uncheck();
+  await expect(page.locator('[data-kind-ui="radial-label"]')).toHaveCount(0);
+  await page.getByRole("checkbox", { name: "Ring text", exact: true }).check();
+  await expect(page.locator('[data-kind-ui="radial-label"][data-fit="yes"]').first()).toBeVisible();
   await page.screenshot({
     path: "artifacts/chart-tests/polar-recipes-desktop.png",
     fullPage: true,
@@ -27,7 +32,7 @@ test("polar recipes use public components, accessible tables and controlled lege
   expect(errors).toEqual([]);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
-  await expect(page.locator(".polar-card svg[role=application]")).toHaveCount(6);
+  await expect(page.locator(".polar-card svg[role=application]")).toHaveCount(8);
   expect(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: "artifacts/chart-tests/polar-recipes-mobile.png", fullPage: true });
 });

@@ -46,7 +46,7 @@
   min-height: 44px;
   line-height: 1.5;
 }
-.polar-card svg text {
+.polar-card svg text:not([data-kind-ui="radial-label"]) {
   fill: var(--muted-foreground);
   font-size: 11px;
 }
@@ -77,4 +77,14 @@
   .polar-showcase {
     padding: 24px 14px;
   }
+}
+
+.polar-center-control {
+  display: block;
+  margin: 12px 0;
+}
+.polar-card .polar-source {
+  min-height: 0;
+  font-size: 12px;
+  margin-top: 14px;
 }

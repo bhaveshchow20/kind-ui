@@ -191,6 +191,15 @@ try {
   await production("index.html", "packed-polar");
   await production("index.html", "packed-polar-development", true);
   console.log("Radar/radial tarball consumer: strict NodeNext/Bundler and production build passed");
+  const polarGallery = await readFile(join(root, "examples/chart/polar-gallery.tsx"), "utf8");
+  assertLineConsumerSource(polarGallery);
+  await writeFile(join(consumer, "host.tsx"), polarGallery);
+  for (const file of ["gallery.tsx", "gallery.html"]) await copyFixture("polar", file);
+  await typecheck(["host.tsx", "gallery.tsx"]);
+  await production("gallery.html", "packed-polar-gallery");
+  console.log(
+    "All 18 polar gallery composition paths: guarded public imports, strict NodeNext/Bundler and tarball build passed",
+  );
   await copyFixture("combined", "host.tsx");
   await copyFixture("combined", "main.tsx", "combined.tsx");
   await copyFixture("combined", "index.html", "combined.html");

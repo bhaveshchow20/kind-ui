@@ -27,7 +27,8 @@ const descriptions: Record<PolarRecipe, string> = {
   Comparison: "Compare actual and target scores on the same 0–100 scale.",
   Outline: "Unfilled polygons and point marks emphasize differences across dimensions.",
   Range: "A native range radar shows the lower and upper bounds of each score.",
-  Rings: "Grouped radial bars compare each category against its target.",
+  Rings:
+    "Grouped radial bars compare three dimensions against their targets, keeping six bands readable.",
   Stacked: "Stacked arcs share a fixed 0–200 angle scale for additive quantities.",
   Gauge: "A half-circle progress meter keeps its numeric 0–100 domain explicit.",
 };
@@ -35,10 +36,14 @@ export function PolarRecipeCard({
   recipe,
   data,
   animate,
+  showText = true,
+  tooltips = true,
 }: {
   recipe: PolarRecipe;
   data: PolarPoint[];
   animate: boolean | Chart.RadarAnimation;
+  showText?: boolean;
+  tooltips?: boolean;
 }) {
   const radar = recipe === "Comparison" || recipe === "Outline" || recipe === "Range";
   const gauge = recipe === "Gauge";
@@ -64,7 +69,8 @@ export function PolarRecipeCard({
         Array.isArray(value) ? `${value.join("–")} points` : String(value),
     },
   } satisfies Chart.SeriesConfig;
-  const rows = gauge ? data.slice(0, 1) : data;
+  // Six grouped bands remain readable at phone width; the table reflects this explicit subset.
+  const rows = gauge ? data.slice(0, 1) : recipe === "Rings" ? data.slice(0, 3) : data;
   return (
     <article className="polar-card">
       <h2>{recipe}</h2>
@@ -110,7 +116,7 @@ export function PolarRecipeCard({
                   />
                 </>
               )}
-              <Chart.Tooltip />
+              <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
             </Chart.RadarChart>
           ) : (
             <Chart.RadialBarChart
@@ -118,8 +124,10 @@ export function PolarRecipeCard({
               animate={animate}
               startAngle={gauge ? 180 : 90}
               endAngle={gauge ? 0 : -270}
-              innerRadius={gauge ? "55%" : "20%"}
-              outerRadius="85%"
+              innerRadius={gauge ? "55%" : "10%"}
+              outerRadius={gauge ? "85%" : "95%"}
+              barCategoryGap="4%"
+              barGap={2}
               cy={gauge ? "68%" : "50%"}
               aria-label={`${recipe} scores`}
             >
@@ -131,7 +139,7 @@ export function PolarRecipeCard({
               <PolarRadiusAxis
                 type="category"
                 dataKey="category"
-                tick={!gauge}
+                tick={false}
                 axisLine={false}
                 tickLine={false}
               />
@@ -141,16 +149,28 @@ export function PolarRecipeCard({
                 cornerRadius={recipe === "Stacked" ? 0 : 5}
                 {...(recipe === "Stacked" ? { stackId: "scores" } : {})}
               >
-                {gauge && <LabelList dataKey="actual" position="insideEnd" />}
+                <LabelList
+                  fill="white"
+                  dataKey={gauge ? "actual" : "category"}
+                  content={
+                    <Chart.RadialBarLabel show={showText} fontSize={recipe === "Rings" ? 10 : 11} />
+                  }
+                />
               </Chart.RadialBarSeries>
               {!gauge && (
                 <Chart.RadialBarSeries
                   dataKey="target"
                   fillOpacity={0.55}
                   {...(recipe === "Stacked" ? { stackId: "scores" } : {})}
-                />
+                >
+                  <LabelList
+                    fill="var(--foreground, #171717)"
+                    dataKey="target"
+                    content={<Chart.RadialBarLabel show={showText} fontSize={10} />}
+                  />
+                </Chart.RadialBarSeries>
               )}
-              <Chart.Tooltip />
+              <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
             </Chart.RadialBarChart>
           )}
         </ResponsiveContainer>

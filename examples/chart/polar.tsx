@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
+import { PolarGalleryCard } from "./polar-gallery.js";
 import { type PolarPoint, PolarRecipeCard, polarRecipes } from "./polar-recipes.js";
 import "./style.css";
 import "./polar.css";
@@ -13,6 +14,8 @@ const data: PolarPoint[] = [
 ];
 function Showcase() {
   const [motion, setMotion] = useState(false);
+  const [showText, setShowText] = useState(true);
+  const [tooltips, setTooltips] = useState(true);
   const [updated, setUpdated] = useState(false);
   const [mode, setMode] = useState("sample");
   const rows =
@@ -28,12 +31,12 @@ function Showcase() {
         <a href="/">Kind UI charts</a>
         <h1>Radar & radial charts</h1>
         <p>
-          Six polar recipes. Compare dimensions, show ranges, or track progress with an explicit
-          scale.
+          Six polar recipes and all 18 official gallery variations. Compare dimensions, show ranges,
+          or track progress with an explicit scale.
         </p>
         <p>
-          Focus a chart and use Left/Right to inspect values. Use the legend to toggle series, or
-          open the value table.
+          Focus a chart and use Left/Right to inspect values; Enter toggles the current tooltip. Use
+          the legend to toggle series, or open the value table.
         </p>
       </header>
       <div className="polar-controls">
@@ -44,6 +47,22 @@ function Showcase() {
             onChange={(event) => setMotion(event.target.checked)}
           />{" "}
           Motion
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={showText}
+            onChange={(event) => setShowText(event.target.checked)}
+          />{" "}
+          Ring text
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={tooltips}
+            onChange={(event) => setTooltips(event.target.checked)}
+          />{" "}
+          Tooltips
         </label>
         <label>
           Data{" "}
@@ -59,8 +78,29 @@ function Showcase() {
       </div>
       <div className="polar-grid">
         {polarRecipes.map((recipe) => (
-          <PolarRecipeCard key={recipe} recipe={recipe} data={rows} animate={motion} />
+          <PolarRecipeCard
+            key={recipe}
+            recipe={recipe}
+            data={rows}
+            animate={motion}
+            showText={showText}
+            tooltips={tooltips}
+          />
         ))}
+        <PolarGalleryCard
+          kind="radar"
+          data={rows}
+          animate={motion}
+          showText={showText}
+          tooltips={tooltips}
+        />
+        <PolarGalleryCard
+          kind="radial"
+          data={rows}
+          animate={motion}
+          showText={showText}
+          tooltips={tooltips}
+        />
       </div>
     </main>
   );

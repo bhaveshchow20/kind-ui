@@ -31,6 +31,7 @@ export {
   RadialBarSeries,
   type RadialBarSeriesProps,
 } from "./polar-series.js";
+export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
 export { Root, type RootProps } from "./root.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 export type { SeriesConfig } from "./types.js";
