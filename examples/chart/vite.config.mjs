@@ -8,6 +8,7 @@ export default defineConfig({
       input: {
         example: fileURLToPath(new URL("./index.html", import.meta.url)),
         recipes: fileURLToPath(new URL("./recipes.html", import.meta.url)),
+        pies: fileURLToPath(new URL("./pies.html", import.meta.url)),
         bars: fileURLToPath(new URL("./bars.html", import.meta.url)),
         areas: fileURLToPath(new URL("./areas.html", import.meta.url)),
         showcase: fileURLToPath(new URL("./showcase.html", import.meta.url)),

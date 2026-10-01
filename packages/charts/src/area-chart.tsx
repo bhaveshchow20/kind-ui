@@ -33,9 +33,11 @@ export function AreaChart({ animate = false, children, ...props }: AreaChartProp
   return (
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
       <LineChartFrame
-        {...props}
+        chartProps={{
+          ...props,
+          className: ["kind-ui-area-chart", props.className].filter(Boolean).join(" "),
+        }}
         engine={EngineAreaChart}
-        className={["kind-ui-area-chart", props.className].filter(Boolean).join(" ")}
         motionEnabled={enabled}
         interrupt={interrupt}
         {...(reveal ? { clip: `url(#${id}-area-reveal)` } : {})}
