@@ -101,6 +101,15 @@ test("area gaps, zero, stacked percentages, and controlled series stay truthful"
   await percent.getByRole("application").focus();
   await expect(page.getByRole("status")).toContainText("70%");
   await expect(page.getByRole("status")).toContainText("30%");
+  await page.getByLabel("All-zero stack").check();
+  await percent.getByRole("application").focus();
+  await page.keyboard.press("ArrowRight");
+  const zeroTooltip = percent.getByRole("status");
+  await expect(zeroTooltip).toContainText("No share");
+  await expect(zeroTooltip).not.toContainText("%");
+  await percent.getByText("View data", { exact: true }).click();
+  await expect(percent.getByRole("row", { name: "Jan 0 visits 0 visits" })).toBeVisible();
+  await page.getByLabel("All-zero stack").uncheck();
 
   const threshold = page.getByRole("region", { name: "Threshold", exact: true });
   const goalLine = threshold.locator(".recharts-reference-line-line");

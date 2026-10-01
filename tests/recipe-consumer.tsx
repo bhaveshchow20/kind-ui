@@ -146,6 +146,7 @@ void (
 
 import {
   type AreaPoint,
+  type AreaSeriesConfig,
   GradientArea,
   InteractiveArea,
   LinearArea,
@@ -162,16 +163,22 @@ const areaData: AreaPoint[] = [
   { period: "Feb", value: null },
 ];
 const completeArea: StackedAreaPoint[] = [{ period: "Jan", desktop: 2, mobile: 1 }];
+const areaSeriesConfig: AreaSeriesConfig = {
+  desktop: { label: "Desktop", color: "var(--chart-1)" },
+  mobile: { label: "Mobile", color: "var(--chart-2)" },
+};
 void (<SmoothArea data={areaData} label="Area" formatValue={formatValue} />);
 void (<LinearArea data={areaData} label="Area" formatValue={formatValue} />);
 void (<StepArea data={areaData} label="Area" formatValue={formatValue} />);
 void (<GradientArea data={areaData} label="Area" formatValue={formatValue} />);
 void (<ThresholdArea data={areaData} label="Area" formatValue={formatValue} threshold={1} />);
-void (<StackedArea data={completeArea} />);
-void (<PercentArea data={completeArea} />);
+void (<StackedArea data={completeArea} label="Visitors" config={areaSeriesConfig} />);
+void (<PercentArea data={completeArea} label="Share" config={areaSeriesConfig} />);
 void (
   <InteractiveArea
     data={completeArea}
+    label="Visitors by device"
+    config={areaSeriesConfig}
     visibleSeries={["desktop"]}
     onVisibleSeriesChange={() => {}}
   />

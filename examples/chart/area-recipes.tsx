@@ -18,6 +18,7 @@ export type AreaPoint = { period: string; value: number | null };
 /** A complete stack has numeric values for every series at each period. */
 export type StackedAreaPoint = { period: string; desktop: number; mobile: number };
 export type AreaMotion = RecipeMotion;
+export type AreaSeriesConfig = Record<"desktop" | "mobile", Chart.SeriesConfig[string]>;
 type SingleAreaProps = {
   data: AreaPoint[];
   label: string;
@@ -26,10 +27,11 @@ type SingleAreaProps = {
 };
 type StackedAreaProps = {
   data: StackedAreaPoint[];
+  label: string;
+  config: AreaSeriesConfig;
   motion?: AreaMotion | undefined;
 };
 type AreaSeries = "desktop" | "mobile";
-type Config = Record<AreaSeries, Chart.SeriesConfig[string]>;
 type AreaFrameProps<T extends { period: string }> = {
   data: T[];
   label: string;
@@ -42,11 +44,6 @@ type AreaFrameProps<T extends { period: string }> = {
   percentage?: boolean;
   showLegend?: boolean;
   threshold?: number;
-};
-
-const stackedConfig: Config = {
-  desktop: { label: "Desktop", color: "var(--chart-1)" },
-  mobile: { label: "Mobile", color: "var(--chart-2)" },
 };
 
 function AreaReveal({
@@ -104,8 +101,11 @@ function AreaFrame<T extends { period: string }>({
           (sum, point) => sum + (typeof point.value === "number" ? point.value : 0),
           0,
         );
-        const percent = typeof value === "number" && total > 0 ? (value / total) * 100 : 0;
-        return [`${percent.toFixed(0)}%`, name];
+        const share =
+          typeof value === "number" && total > 0
+            ? `${((value / total) * 100).toFixed(0)}%`
+            : "No share";
+        return [share, name];
       }
     : undefined;
   const rootProps = {
@@ -303,14 +303,14 @@ export function ThresholdArea(props: SingleAreaProps & { threshold: number }) {
 
 function StackedAreas({
   data,
+  label,
+  config,
   motion: options,
   percentage,
-  interactive = false,
   visibleSeries,
   onVisibleSeriesChange,
 }: StackedAreaProps & {
   percentage?: boolean;
-  interactive?: boolean;
   visibleSeries?: AreaSeries[];
   onVisibleSeriesChange?: (series: AreaSeries[]) => void;
 }) {
@@ -329,14 +329,8 @@ function StackedAreas({
   return (
     <AreaFrame
       data={data}
-      label={
-        percentage
-          ? "Share by device"
-          : interactive
-            ? "Visitors by device, interactive"
-            : "Visitors by device"
-      }
-      config={stackedConfig}
+      label={label}
+      config={config}
       motion={options}
       offset={percentage ? "expand" : "none"}
       percentage={percentage ?? false}
@@ -373,5 +367,5 @@ export function InteractiveArea(
     onVisibleSeriesChange: (series: AreaSeries[]) => void;
   },
 ) {
-  return <StackedAreas {...props} interactive />;
+  return <StackedAreas {...props} />;
 }

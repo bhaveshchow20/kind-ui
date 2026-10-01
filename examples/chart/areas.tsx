@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import type { AreaPoint, StackedAreaPoint } from "./area-recipes.js";
+import type { AreaPoint, AreaSeriesConfig, StackedAreaPoint } from "./area-recipes.js";
 import {
   GradientArea,
   InteractiveArea,
@@ -31,6 +31,15 @@ const devices: StackedAreaPoint[] = [
   { period: "May", desktop: 209, mobile: 130 },
   { period: "Jun", desktop: 214, mobile: 140 },
 ];
+const zeroDevices: StackedAreaPoint[] = devices.map(({ period }) => ({
+  period,
+  desktop: 0,
+  mobile: 0,
+}));
+const deviceConfig: AreaSeriesConfig = {
+  desktop: { label: "Desktop", color: "var(--chart-1)" },
+  mobile: { label: "Mobile", color: "var(--chart-2)" },
+};
 const count = (value: number) => `${value.toLocaleString()} visits`;
 const entries = [
   "Smooth",
@@ -106,12 +115,14 @@ function App() {
   const [palette, setPalette] = useState<"monochrome" | "color">("monochrome");
   const [motion, setMotion] = useState(false);
   const [empty, setEmpty] = useState(false);
+  const [allZero, setAllZero] = useState(false);
   const [visibleSeries, setVisibleSeries] = useState<("desktop" | "mobile")[]>([
     "desktop",
     "mobile",
   ]);
   const reducedMotion = useReducedMotionPreference();
   const animate = motion && !reducedMotion;
+  const chartDevices = allZero ? zeroDevices : devices;
   return (
     <main className="recipes" data-palette={palette} data-motion={animate ? "on" : "off"}>
       <header className="recipes-header">
@@ -143,6 +154,14 @@ function App() {
             onChange={(event) => setMotion(event.target.checked)}
           />{" "}
           Motion
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={allZero}
+            onChange={(event) => setAllZero(event.target.checked)}
+          />{" "}
+          All-zero stack
         </label>
         <label>
           <input
@@ -206,14 +225,26 @@ function App() {
                   />
                 )}
                 {name === "Stacked" && (
-                  <StackedArea data={devices} motion={animate ? {} : undefined} />
+                  <StackedArea
+                    data={chartDevices}
+                    label="Visitors by device"
+                    config={deviceConfig}
+                    motion={animate ? {} : undefined}
+                  />
                 )}
                 {name === "Percent stacked" && (
-                  <PercentArea data={devices} motion={animate ? {} : undefined} />
+                  <PercentArea
+                    data={chartDevices}
+                    label="Share by device"
+                    config={deviceConfig}
+                    motion={animate ? {} : undefined}
+                  />
                 )}
                 {name === "Interactive" && (
                   <InteractiveArea
-                    data={devices}
+                    data={chartDevices}
+                    label="Visitors by device, interactive"
+                    config={deviceConfig}
                     visibleSeries={visibleSeries}
                     onVisibleSeriesChange={setVisibleSeries}
                     motion={animate ? {} : undefined}
@@ -227,7 +258,7 @@ function App() {
                 data={empty ? [] : visits}
                 caption={`${name} visits by month`}
                 stacked={name === "Stacked" || name === "Percent stacked" || name === "Interactive"}
-                stackedData={empty ? [] : devices}
+                stackedData={empty ? [] : chartDevices}
               />
             </details>
           </section>
