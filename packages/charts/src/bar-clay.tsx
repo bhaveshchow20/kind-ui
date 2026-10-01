@@ -1,56 +1,68 @@
 "use client";
 
-/** Raised inset relief. Every lighting pass is atop native paint to retain its alpha. */
-export function BarClay() {
+/** Convex matte relief, lit from upper left; the native paint keeps its alpha. */
+export function BarClay({ horizontal }: { horizontal: boolean }) {
   return (
     <>
-      <feMorphology in="SourceAlpha" operator="erode" radius={4} result="inner" />
-      <feComposite in="SourceAlpha" in2="inner" operator="arithmetic" k2={1} k3={-1} result="rim" />
-      <feGaussianBlur in="SourceAlpha" stdDeviation={1.2} result="soft" />
-      <feSpecularLighting
-        in="soft"
-        surfaceScale={7}
-        specularConstant={0.9}
-        specularExponent={12}
-        lightingColor="var(--kind-ui-bar-clay-light, #fff)"
-        result="specular"
-      >
-        <feDistantLight azimuth={225} elevation={50} />
-      </feSpecularLighting>
-      <feComposite in="specular" in2="rim" operator="in" result="bevel" />
-      <feOffset in="SourceAlpha" dx={3} dy={3} result="lower" />
-      <feComposite
-        in="SourceAlpha"
-        in2="lower"
-        operator="arithmetic"
-        k2={1}
-        k3={-1}
-        result="topEdge"
-      />
-      <feGaussianBlur in="topEdge" stdDeviation={0.7} result="softTop" />
+      {/* A silhouette keeps the same surface light at any fill opacity. */}
+      <feComponentTransfer in="SourceAlpha" result="footprint">
+        <feFuncA type="linear" slope={100000} />
+      </feComponentTransfer>
+      <feOffset in="footprint" dx={horizontal ? 2 : 4} dy={horizontal ? 4 : 2} result="lower" />
+      <feComposite in="footprint" in2="lower" operator="arithmetic" k2={1} k3={-1} result="top" />
+      <feGaussianBlur in="top" stdDeviation={horizontal ? "2.7 3.2" : "3.2 2.7"} result="softTop" />
       <feFlood
         floodColor="var(--kind-ui-bar-clay-light, #fff)"
-        floodOpacity="var(--kind-ui-bar-clay-highlight, 0.8)"
+        floodOpacity="var(--kind-ui-bar-clay-highlight, 0.48)"
       />
       <feComposite in2="softTop" operator="in" result="light" />
-      <feOffset in="SourceAlpha" dx={-3} dy={-3} result="upper" />
+      <feOffset in="footprint" dx={horizontal ? -2 : -4} dy={horizontal ? -4 : -2} result="upper" />
       <feComposite
-        in="SourceAlpha"
+        in="footprint"
         in2="upper"
         operator="arithmetic"
         k2={1}
         k3={-1}
-        result="bottomEdge"
+        result="bottom"
       />
-      <feGaussianBlur in="bottomEdge" stdDeviation={0.9} result="softBottom" />
+      <feGaussianBlur
+        in="bottom"
+        stdDeviation={horizontal ? "2.7 3.2" : "3.2 2.7"}
+        result="softBottom"
+      />
       <feFlood
         floodColor="var(--kind-ui-bar-clay-shade, #17212b)"
-        floodOpacity="var(--kind-ui-bar-clay-shadow, 0.55)"
+        floodOpacity="var(--kind-ui-bar-clay-shadow, 0.26)"
       />
       <feComposite in2="softBottom" operator="in" result="shade" />
       <feComposite in="shade" in2="SourceGraphic" operator="atop" result="shaded" />
-      <feComposite in="light" in2="shaded" operator="atop" result="raised" />
-      <feComposite in="bevel" in2="raised" operator="atop" />
+      <feComposite in="light" in2="shaded" operator="atop" result="body" />
+      {/* A quiet static microtexture keeps the broad surface matte. */}
+      <feTurbulence
+        type="fractalNoise"
+        baseFrequency={0.7}
+        numOctaves={1}
+        seed={17}
+        result="grain"
+      />
+      <feFlood floodColor="var(--kind-ui-bar-clay-light, #fff)" floodOpacity={0.025} />
+      <feComposite in2="grain" operator="in" result="texture" />
+      <feComposite in="texture" in2="body" operator="atop" result="matte" />
+      {/* Cast across the category axis: no extension of value length or dark stack seam. */}
+      <feGaussianBlur
+        in="SourceAlpha"
+        stdDeviation={horizontal ? "0 2.5" : "2.5 0"}
+        result="soft"
+      />
+      <feOffset in="soft" dx={horizontal ? 0 : 1.5} dy={horizontal ? 1.5 : 0} result="dropped" />
+      <feFlood floodColor="var(--kind-ui-bar-clay-shade, #17212b)" floodOpacity={0.16} />
+      <feComposite in2="dropped" operator="in" result="cast" />
+      {/* Cast shade is exterior only, so translucent native paint does not get denser. */}
+      <feComposite in="cast" in2="footprint" operator="out" result="shadow" />
+      <feMerge>
+        <feMergeNode in="shadow" />
+        <feMergeNode in="matte" />
+      </feMerge>
     </>
   );
 }
