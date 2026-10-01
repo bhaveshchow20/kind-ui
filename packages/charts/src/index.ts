@@ -10,6 +10,7 @@ export {
   type TooltipProps,
 } from "./animation.js";
 export { type AreaAnimation, AreaChart, type AreaChartProps } from "./area-chart.js";
+export type { AreaMaterial } from "./area-material.js";
 export { AreaSeries, type AreaSeriesProps } from "./area-series.js";
 export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";

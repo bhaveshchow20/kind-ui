@@ -1,3 +1,4 @@
+import type { AreaMaterial } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { AreaPoint, AreaSeriesConfig, StackedAreaPoint } from "./area-recipes.js";
@@ -14,6 +15,7 @@ import {
 import { useReducedMotionPreference } from "./use-reduced-motion.js";
 import "./style.css";
 import "./recipes.css";
+import "./areas.css";
 
 const visits: AreaPoint[] = [
   { period: "Jan", value: 186 },
@@ -112,7 +114,8 @@ function AreaTable({
 }
 
 function App() {
-  const [palette, setPalette] = useState<"monochrome" | "color">("monochrome");
+  const [palette, setPalette] = useState<"monochrome" | "color" | "pink">("monochrome");
+  const [material, setMaterial] = useState<AreaMaterial>("plain");
   const [motion, setMotion] = useState(false);
   const [empty, setEmpty] = useState(false);
   const [missingApril, setMissingApril] = useState(false);
@@ -128,7 +131,12 @@ function App() {
     ? visits.map((point) => (point.period === "Apr" ? { ...point, value: null } : point))
     : visits;
   return (
-    <main className="recipes" data-palette={palette} data-motion={animate ? "on" : "off"}>
+    <main
+      className="recipes area-recipes"
+      data-material={material}
+      data-palette={palette}
+      data-motion={animate ? "on" : "off"}
+    >
       <header className="recipes-header">
         <a href="/">Kind UI</a>
         <h1>Area recipes</h1>
@@ -140,14 +148,28 @@ function App() {
       <div className="recipes-controls">
         <fieldset aria-label="Palette">
           <legend className="sr-only">Palette</legend>
-          {(["monochrome", "color"] as const).map((value) => (
+          {(["monochrome", "color", "pink"] as const).map((value) => (
             <button
               type="button"
               key={value}
               aria-pressed={palette === value}
               onClick={() => setPalette(value)}
             >
-              {value === "color" ? "Color" : "Monochrome"}
+              {value === "color" ? "Color" : value === "pink" ? "Pink" : "Monochrome"}
+            </button>
+          ))}
+        </fieldset>
+        <fieldset aria-label="Area material">
+          <legend className="sr-only">Area material</legend>
+          {(["plain", "paper", "clay", "glow"] satisfies AreaMaterial[]).map((value) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={material === value}
+              onClick={() => setMaterial(value)}
+            >
+              {value[0]?.toUpperCase()}
+              {value.slice(1)}
             </button>
           ))}
         </fieldset>
@@ -200,6 +222,7 @@ function App() {
                     data={chartVisits}
                     label="Monthly visitors"
                     formatValue={count}
+                    material={material}
                     motion={animate ? {} : undefined}
                   />
                 )}
@@ -208,6 +231,7 @@ function App() {
                     data={chartVisits}
                     label="Monthly visitors, linear"
                     formatValue={count}
+                    material={material}
                     motion={animate ? {} : undefined}
                   />
                 )}
@@ -216,6 +240,7 @@ function App() {
                     data={chartVisits}
                     label="Monthly visitors, step"
                     formatValue={count}
+                    material={material}
                     motion={animate ? {} : undefined}
                   />
                 )}
@@ -224,6 +249,7 @@ function App() {
                     data={chartVisits}
                     label="Monthly visitors, gradient"
                     formatValue={count}
+                    material={material}
                     motion={animate ? {} : undefined}
                   />
                 )}
@@ -233,6 +259,7 @@ function App() {
                     label="Monthly visitors"
                     formatValue={count}
                     threshold={320}
+                    material={material}
                     motion={animate ? {} : undefined}
                   />
                 )}
@@ -241,6 +268,7 @@ function App() {
                     data={chartDevices}
                     label="Visitors by device"
                     config={deviceConfig}
+                    material={material}
                     motion={animate ? {} : undefined}
                   />
                 )}
@@ -249,6 +277,7 @@ function App() {
                     data={chartDevices}
                     label="Share by device"
                     config={deviceConfig}
+                    material={material}
                     motion={animate ? {} : undefined}
                   />
                 )}
@@ -259,6 +288,7 @@ function App() {
                     config={deviceConfig}
                     visibleSeries={visibleSeries}
                     onVisibleSeriesChange={setVisibleSeries}
+                    material={material}
                     motion={animate ? {} : undefined}
                   />
                 )}

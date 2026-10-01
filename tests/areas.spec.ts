@@ -62,17 +62,21 @@ for (const mode of ["static", "motion", "reduced"] as const) {
       await page.keyboard.press("ArrowRight");
       const tooltip = page.getByRole("status").last();
       await expect(tooltip).toBeVisible();
-      const chartBox = await chart.boundingBox();
-      const tooltipBox = await tooltip.boundingBox();
-      expect(chartBox).not.toBeNull();
-      expect(tooltipBox).not.toBeNull();
-      if (!chartBox || !tooltipBox) throw new Error("Chart or tooltip is missing");
-      expect(tooltipBox.x).toBeGreaterThanOrEqual(chartBox.x);
-      expect(tooltipBox.y).toBeGreaterThanOrEqual(chartBox.y);
-      expect(tooltipBox.x + tooltipBox.width).toBeLessThanOrEqual(chartBox.x + chartBox.width + 1);
-      expect(tooltipBox.y + tooltipBox.height).toBeLessThanOrEqual(
-        chartBox.y + chartBox.height + 1,
-      );
+      // Content width is measured asynchronously after resize; assert settled bounds.
+      await expect
+        .poll(async () => {
+          const chartBox = await chart.boundingBox();
+          const tooltipBox = await tooltip.boundingBox();
+          return Boolean(
+            chartBox &&
+              tooltipBox &&
+              tooltipBox.x >= chartBox.x &&
+              tooltipBox.y >= chartBox.y &&
+              tooltipBox.x + tooltipBox.width <= chartBox.x + chartBox.width + 1 &&
+              tooltipBox.y + tooltipBox.height <= chartBox.y + chartBox.height + 1,
+          );
+        })
+        .toBe(true);
       await page.keyboard.press("Escape");
     }
     await page.getByLabel("Empty data").check();

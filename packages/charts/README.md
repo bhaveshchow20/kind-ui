@@ -177,3 +177,15 @@ The packed check first builds an actual tarball, installs it and the pinned peer
 Missing/null values remain gaps by default; numeric zero remains data. Hosts may explicitly choose `connectNulls`. The eight migrated area recipes are host compositions of these exports. Stacked/percent recipe examples use complete nonnegative inputs; percent axis labels and tooltip formatting belong to the host, use visible payload totals, and show “No share” for an all-zero row. The package does not impute, validate or mutate stack data.
 
 Implementation references: [Recharts AreaChart](https://recharts.github.io/en-US/api/AreaChart/), [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [Motion values](https://motion.dev/docs/react-motion-value).
+
+### Area materials
+
+`AreaSeries.material` accepts `"plain"` (default), `"paper"`, `"clay"`, and `"glow"`, independently of color and `AreaChart.animate`. `AreaMaterial` exports that union. Paper adds fibers, Clay adds broad soft convex matte relief with upper-left light, gradual lower-right shading and a small external cast shadow, and Glow adds a colored halo with a light rim. The native Recharts area shape still owns interpolation, gaps, stacked/range baselines, stroke and fill paths. No displacement changes data geometry.
+
+```tsx
+<Chart.AreaChart data={data} animate={false}>
+  <Chart.AreaSeries dataKey="value" material="clay" fill="#db7093" fillOpacity={0.65} />
+</Chart.AreaChart>
+```
+
+Explicit `shape` or `filter` takes precedence over the material; consumer gradients, fill opacity, stroke widths and handlers remain intact. Low fill opacity also softens the finish. Filter IDs are unique per mounted series, independent of consumer IDs. Area filters use geometry bounds including baselines and remain inside the engine/chart clipping and Motion reveal. Materials are static SVG filters and add no animation. Use `--kind-ui-area-paper-fiber`, `--kind-ui-area-paper-grain`, `--kind-ui-area-clay-light`, `--kind-ui-area-clay-shade`, `--kind-ui-area-clay-highlight` (default `0.48`), `--kind-ui-area-clay-shadow` (default `0.28`), `--kind-ui-area-clay-cast` (default `0.12`), `--kind-ui-area-glow-light`, and `--kind-ui-area-glow-opacity` on the chart root to tune the finish. No new dependencies or release/version change; the package remains private at `0.0.0`.

@@ -3,6 +3,7 @@
 import { type ComponentProps, useId, useLayoutEffect, useRef } from "react";
 import { Area } from "recharts";
 import { ActiveMarker } from "./animation.js";
+import { type AreaMaterial, MaterialArea } from "./area-material.js";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 
@@ -12,11 +13,14 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
 > & {
   /** Metadata/visibility key, required only for function or numeric data keys. */
   seriesKey?: string;
+  /** Finish on the native area; explicit shape/filter retain consumer ownership. */
+  material?: AreaMaterial;
 };
 
 /** A registered Recharts Area with Root colors and controlled visibility. */
 export function AreaSeries<DataPoint = unknown, Value = unknown>({
   seriesKey,
+  material = "plain",
   hide,
   stroke,
   fill,
@@ -47,6 +51,9 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
     <Area
       activeDot={<ActiveMarker />}
       {...props}
+      {...(material !== "plain" && props.shape === undefined && props.filter === undefined
+        ? { shape: <MaterialArea material={material} filterId={`${generatedId}-area-material`} /> }
+        : {})}
       isAnimationActive={false}
       id={id}
       hide={effectiveHide}
