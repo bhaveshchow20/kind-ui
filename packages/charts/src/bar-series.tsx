@@ -12,16 +12,27 @@ import {
   useYAxisScale,
 } from "recharts";
 import { BarMotion } from "./bar-chart.js";
+import { type BarMaterial, BarMaterialFilter } from "./bar-material.js";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 
 export type BarSeriesProps = Omit<ComponentProps<typeof Bar>, "isAnimationActive"> & {
   /** Metadata/visibility key, required for controlled function or numeric data keys. */
   seriesKey?: string;
+  /** Finish on native rectangles; custom shapes and filters retain ownership. */
+  material?: BarMaterial | undefined;
 };
 
 /** A registered native Bar; axes, shape, cells, labels and handlers stay consumer-owned. */
-export function BarSeries({ seriesKey, hide, fill, className, style, ...props }: BarSeriesProps) {
+export function BarSeries({
+  seriesKey,
+  hide,
+  fill,
+  className,
+  style,
+  material = "plain",
+  ...props
+}: BarSeriesProps) {
   const { config, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const { reveal, options, finish } = use(BarMotion);
@@ -29,6 +40,12 @@ export function BarSeries({ seriesKey, hide, fill, className, style, ...props }:
   const id = props.id || generatedId;
   const selector = `kind-ui-bar-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const clipId = `${selector}-reveal`;
+  const filterId = `${selector}-material`;
+  const materialized =
+    material !== "plain" &&
+    props.shape === undefined &&
+    props.filter === undefined &&
+    (props.activeBar === undefined || typeof props.activeBar === "boolean");
   const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
   const effectiveHide =
     hide === true || (visibleSeries !== undefined && !visibleSeries.includes(key ?? ""));
@@ -113,8 +130,14 @@ export function BarSeries({ seriesKey, hide, fill, className, style, ...props }:
           </clipPath>
         </defs>
       )}
+      {materialized && (
+        <defs data-kind-ui="bar-material" data-material={material} pointerEvents="none">
+          <BarMaterialFilter material={material} id={filterId} />
+        </defs>
+      )}
       <Bar
         {...props}
+        {...(materialized ? { filter: `url(#${filterId})` } : {})}
         id={id}
         hide={effectiveHide}
         {...(color !== undefined ? { fill: color } : {})}

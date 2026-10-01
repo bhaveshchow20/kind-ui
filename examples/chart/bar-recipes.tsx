@@ -29,6 +29,7 @@ type SingleProps = {
   label: string;
   formatValue: (value: number) => string;
   motion?: BarMotion | undefined;
+  material?: Chart.BarMaterial | undefined;
 };
 type PairConfig = Record<"primary" | "secondary", Chart.SeriesConfig[string]>;
 type PairProps = {
@@ -36,6 +37,7 @@ type PairProps = {
   label: string;
   config: PairConfig;
   motion?: BarMotion | undefined;
+  material?: Chart.BarMaterial | undefined;
 };
 
 // Shared only where measuring, motion and tooltip wiring are identical. Engine marks stay explicit.
@@ -55,6 +57,7 @@ function BarFrame<T extends { category: string }>({
   config: Chart.SeriesConfig;
   horizontal?: boolean;
   motion?: BarMotion | undefined;
+  material?: Chart.BarMaterial | undefined;
   children: ReactNode;
   legend?: ReactNode;
   formatCategory?: ((value: string) => string) | undefined;
@@ -162,7 +165,13 @@ export function VerticalBars({ label, formatValue, ...props }: SingleProps) {
   return (
     <BarFrame {...props} label={label} config={singleConfig(label, formatValue)}>
       <VerticalAxes />
-      <Chart.BarSeries dataKey="value" fill="var(--color-value)" maxBarSize={40} radius={3} />
+      <Chart.BarSeries
+        material={props.material}
+        dataKey="value"
+        fill="var(--color-value)"
+        maxBarSize={40}
+        radius={3}
+      />
     </BarFrame>
   );
 }
@@ -170,7 +179,13 @@ export function HorizontalBars({ label, formatValue, ...props }: SingleProps) {
   return (
     <BarFrame {...props} label={label} config={singleConfig(label, formatValue)} horizontal>
       <HorizontalAxes />
-      <Chart.BarSeries dataKey="value" fill="var(--color-value)" maxBarSize={40} radius={3} />
+      <Chart.BarSeries
+        material={props.material}
+        dataKey="value"
+        fill="var(--color-value)"
+        maxBarSize={40}
+        radius={3}
+      />
     </BarFrame>
   );
 }
@@ -178,8 +193,15 @@ export function GroupedBars(props: PairProps) {
   return (
     <BarFrame {...props} legend={<Chart.Legend />}>
       <VerticalAxes />
-      <Chart.BarSeries dataKey="primary" fill="var(--color-primary)" maxBarSize={40} radius={3} />
       <Chart.BarSeries
+        material={props.material}
+        dataKey="primary"
+        fill="var(--color-primary)"
+        maxBarSize={40}
+        radius={3}
+      />
+      <Chart.BarSeries
+        material={props.material}
         dataKey="secondary"
         fill="var(--color-secondary)"
         maxBarSize={40}
@@ -193,12 +215,14 @@ export function StackedBars(props: Omit<PairProps, "data"> & { data: StackedBarP
     <BarFrame {...props} legend={<Chart.Legend />}>
       <VerticalAxes />
       <Chart.BarSeries
+        material={props.material}
         dataKey="primary"
         fill="var(--color-primary)"
         maxBarSize={40}
         stackId="total"
       />
       <Chart.BarSeries
+        material={props.material}
         dataKey="secondary"
         fill="var(--color-secondary)"
         maxBarSize={40}
@@ -240,7 +264,13 @@ export function LabeledBars({ label, formatValue, ...props }: SingleProps) {
     <BarFrame {...props} label={label} config={singleConfig(label, formatValue)}>
       <VerticalAxes />
       <ZeroValueLabels data={props.data} />
-      <Chart.BarSeries dataKey="value" fill="var(--color-value)" maxBarSize={40} radius={3}>
+      <Chart.BarSeries
+        material={props.material}
+        dataKey="value"
+        fill="var(--color-value)"
+        maxBarSize={40}
+        radius={3}
+      >
         <LabelList
           dataKey="value"
           position="top"
@@ -281,7 +311,13 @@ export function CustomLabelBars({ label, formatValue, ...props }: SingleProps) {
         allowDecimals={false}
       />
       <YAxis type="category" dataKey="category" hide />
-      <Chart.BarSeries dataKey="value" fill="var(--color-value)" maxBarSize={30} radius={3}>
+      <Chart.BarSeries
+        material={props.material}
+        dataKey="value"
+        fill="var(--color-value)"
+        maxBarSize={30}
+        radius={3}
+      >
         <LabelList dataKey="category" content={<CategoryLabel />} />
         <LabelList
           dataKey="value"
@@ -312,6 +348,7 @@ export function CategoryBars({
     >
       <HorizontalAxes />
       <Chart.BarSeries
+        material={props.material}
         name={label}
         formatter={(value) => (typeof value === "number" ? formatValue(value) : "No data")}
         dataKey="value"
@@ -361,6 +398,7 @@ export function HighlightedBars({
     <BarFrame {...props} label={label} config={singleConfig(label, formatValue)}>
       <VerticalAxes />
       <Chart.BarSeries
+        material={props.material}
         dataKey="value"
         fill="var(--color-value)"
         maxBarSize={40}
@@ -385,6 +423,7 @@ export function SignedBars({ data, label, formatValue, ...props }: SingleProps) 
       <VerticalAxes />
       <ReferenceLine y={0} stroke="var(--foreground)" strokeWidth={1} />
       <Chart.BarSeries
+        material={props.material}
         name={label}
         formatter={(value) => (typeof value === "number" ? formatValue(value) : "No data")}
         dataKey="value"
@@ -412,7 +451,11 @@ export function InteractiveBars({
   return (
     <BarFrame {...props} formatCategory={formatCategory}>
       <VerticalAxes formatCategory={formatCategory} />
-      <Chart.BarSeries dataKey={activeSeries} fill={`var(--color-${activeSeries})`} />
+      <Chart.BarSeries
+        material={props.material}
+        dataKey={activeSeries}
+        fill={`var(--color-${activeSeries})`}
+      />
     </BarFrame>
   );
 }
