@@ -23,6 +23,10 @@ test("gallery shows public recipe variants and defaults to motion", async ({ pag
     await expect(page.locator(".recharts-surface")).toHaveCount(count);
     await expect(page.locator('[data-kind-ui="chart-legend"]')).toHaveCount(count);
   }
+  await page.getByRole("button", { name: "Green palette" }).click();
+  await expect(
+    page.locator('[data-example="gallery"] .recharts-radial-bar-sector').first(),
+  ).toHaveCSS("fill", "rgb(57, 133, 109)");
   expect(errors).toEqual([]);
 });
 
