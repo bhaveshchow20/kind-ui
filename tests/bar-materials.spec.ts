@@ -131,7 +131,25 @@ test("existing bar recipes expose independent finish and palette controls", asyn
   );
   await page.getByRole("button", { name: "Color", exact: true }).click();
   await expect(page.locator("main")).toHaveAttribute("data-material", "clay");
+  await expect(
+    page.locator(".recharts-responsive-container").first().locator(".recharts-bar-rectangle path"),
+  ).toHaveCount(3);
+  await page.screenshot({ path: info.outputPath("recipes-clay-color-normal.png"), fullPage: true });
   await page.getByRole("checkbox", { name: "Motion", exact: true }).check();
   await page.setViewportSize({ width: 360, height: 800 });
+  await expect
+    .poll(() =>
+      page
+        .locator(".recharts-responsive-container")
+        .first()
+        .evaluate((node) => {
+          const svg = node.querySelector("svg.recharts-surface");
+          return (
+            Math.abs(Number(svg?.getAttribute("width")) - node.getBoundingClientRect().width) < 1 &&
+            node.querySelectorAll(".recharts-bar-rectangle path").length === 3
+          );
+        }),
+    )
+    .toBe(true);
   await page.screenshot({ path: info.outputPath("recipes-clay-color-narrow.png"), fullPage: true });
 });
