@@ -171,8 +171,8 @@ test("Motion reveals bars from the value baseline and interrupts safely", async 
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/bars.html");
   await page.getByLabel("Motion", { exact: true }).check();
-  const clips = page.locator("[data-bar-reveal='']");
-  await expect(clips).toHaveCount(10);
+  const clips = page.locator("[data-kind-ui='bar-reveal']");
+  await expect(clips).toHaveCount(12);
   const vertical = clips.nth(0),
     horizontal = clips.nth(1);
   await page.clock.runFor(120);
@@ -212,7 +212,7 @@ test("Motion reveals bars from the value baseline and interrupts safely", async 
   for (const bar of await page.locator(".recharts-bar").all())
     await expect(bar).toHaveCSS("clip-path", "none");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(clips).toHaveCount(10);
+  await expect(clips).toHaveCount(12);
   await page.getByLabel("Motion", { exact: true }).uncheck();
   await expect(clips).toHaveCount(0);
 });
@@ -230,7 +230,7 @@ test("bar tooltip retargets and settles mid-flight when reduced motion or explic
   const start = await bars.first().boundingBox(),
     end = await bars.last().boundingBox();
   if (!start || !end) throw new Error("Expected nonzero bars");
-  const tip = chart.locator("[data-recipe-tooltip-motion]");
+  const tip = chart.locator('[data-kind-ui="tooltip-motion"]');
   const readX = () => tip.evaluate((node) => new DOMMatrix(getComputedStyle(node).transform).m41);
   await page.mouse.move(start.x + start.width / 2, start.y + 10);
   await page.clock.runFor(1500);

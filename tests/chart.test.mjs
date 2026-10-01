@@ -9,6 +9,8 @@ test("direct and namespace imports expose the same public components", () => {
   assert.deepEqual(Object.keys(Chart).sort(), [
     "AreaChart",
     "AreaSeries",
+    "BarChart",
+    "BarSeries",
     "Legend",
     "LineChart",
     "LineSeries",

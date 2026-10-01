@@ -1,5 +1,5 @@
 import type { SeriesConfig } from "@kind-ui/charts";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   type BarPoint,
@@ -132,17 +132,21 @@ function App() {
   const reduced = useReducedMotionPreference();
   const animate = motion && !reduced;
   const animation = animate ? {} : undefined;
-  const signedData = signedCounts.map((point) => ({
-    ...point,
-    value:
-      point.value === null
-        ? null
-        : signedMode === "negative"
-          ? -Math.abs(point.value)
-          : signedMode === "zero"
-            ? 0
-            : point.value,
-  }));
+  const signedData = useMemo(
+    () =>
+      signedCounts.map((point) => ({
+        ...point,
+        value:
+          point.value === null
+            ? null
+            : signedMode === "negative"
+              ? -Math.abs(point.value)
+              : signedMode === "zero"
+                ? 0
+                : point.value,
+      })),
+    [signedMode],
+  );
   const extraExamples = [
     {
       title: "Labels",

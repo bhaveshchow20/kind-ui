@@ -108,7 +108,7 @@ try {
   );
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
-    if ((folder === "line" || folder === "area") && file.endsWith(".tsx"))
+    if (["line", "area", "bar"].includes(folder) && file.endsWith(".tsx"))
       assertLineConsumerSource(source);
     await writeFile(join(consumer, target), source);
   }
@@ -179,12 +179,18 @@ try {
   console.log(
     "Packed area public exports: strict NodeNext/Bundler and static/Motion production builds passed; host fixtures only, no implementation copying",
   );
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("bar", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-bar");
+  console.log(
+    "Bar tarball consumer: guarded public imports, strict NodeNext/Bundler and production build passed",
+  );
   for (const file of ["index.html", "main.tsx", "consumer.css", "motion.tsx"])
     await copyFixture("styling", file);
   await typecheck(["index.tsx", "main.tsx", "motion.tsx"]);
   await production("index.html", "packed-chart");
 
-  // Separate host recipe evidence, outside the public line/area fixture proof.
+  // Separate host recipe evidence, outside the public line/area/bar fixture proof.
   const legacy = join(consumer, "legacy");
   await mkdir(legacy);
   for (const file of [
@@ -201,7 +207,7 @@ try {
   );
   await typecheck(["legacy/recipe-consumer.tsx"]);
   console.log(
-    "Legacy bar and migrated area host recipe typechecks passed; separate from packed public-export proof",
+    "Migrated area and bar host recipe typechecks passed; separate from packed public-export proof",
   );
   console.log(
     "Packed contents, CSS, license, ESM import, component tests, strict consumers and production styling build passed",
