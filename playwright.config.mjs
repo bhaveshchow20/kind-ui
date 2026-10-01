@@ -20,6 +20,18 @@ export default defineConfig({
       url: `http://127.0.0.1:${port(4177)}`,
     },
     {
+      command: `npm exec vite preview -- --outDir artifacts/packed-polar --host 127.0.0.1 --port ${port(4178)} --strictPort`,
+      url: `http://127.0.0.1:${port(4178)}`,
+    },
+    {
+      command: `npm exec vite preview -- --outDir artifacts/packed-polar-development --host 127.0.0.1 --port ${port(4179)} --strictPort`,
+      url: `http://127.0.0.1:${port(4179)}`,
+    },
+    {
+      command: `npm exec vite preview -- --outDir artifacts/packed-polar-gallery --host 127.0.0.1 --port ${port(4180)} --strictPort`,
+      url: `http://127.0.0.1:${port(4180)}/gallery.html`,
+    },
+    {
       command: `npm exec vite preview -- --outDir artifacts/packed-combined --host 127.0.0.1 --port ${port(4184)} --strictPort`,
       url: `http://127.0.0.1:${port(4184)}/combined.html`,
     },
@@ -36,7 +48,7 @@ export default defineConfig({
       url: `http://127.0.0.1:${port(4183)}`,
     },
     {
-      command: `npm exec vite preview -- examples/chart --host 127.0.0.1 --port ${port(4173)} --strictPort`,
+      command: `npm exec vite preview -- --outDir examples/chart/dist --host 127.0.0.1 --port ${port(4173)} --strictPort`,
       url: `http://127.0.0.1:${port(4173)}`,
     },
     {

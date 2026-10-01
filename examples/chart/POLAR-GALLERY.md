@@ -1,0 +1,30 @@
+# Official polar gallery composition audit
+
+Audited the [radar](https://ui.shadcn.com/charts/radar#charts) and [radial](https://ui.shadcn.com/charts/radial#charts) galleries against first-party source pinned at `d75a96ab781f3d659be1ad287347d5887ce9f2fc`. `/polar.html` has two grouped selectors covering all eighteen paths, alongside six task-oriented recipes. The examples use our data and styling; they demonstrate each defining composition rather than reproduce shadcn cards pixel for pixel.
+
+All native geometry/composition paths were supported by the maintained wrappers before this revision. The prior six recipes did not showcase every grid, custom tick, summary and arc path. This revision closes those demonstration gaps and adds `RadialBarLabel` for the requested bounded band text; it does not add another renderer.
+
+| Gallery variation | Public composition demonstrated and packed-browser checked | Status |
+| --- | --- | --- |
+| [radar/default](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-default.tsx) | Filled polygon | Supported + showcased |
+| [radar/dots](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-dots.tsx) | Native dot props | Supported + showcased |
+| [radar/lines-only](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-lines-only.tsx) | Two unfilled polygons, no radial grid lines | Supported + showcased |
+| [radar/label-custom](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-label-custom.tsx) | Native custom angle ticks with both scores | Supported + showcased |
+| [radar/grid-custom](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-grid-custom.tsx) | Native polarRadius, no radial grid lines | Supported + showcased |
+| [radar/grid-none](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-grid-none.tsx) | Grid omitted | Supported + showcased |
+| [radar/grid-circle](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-grid-circle.tsx) | Circular grid | Supported + showcased |
+| [radar/grid-circle-no-lines](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-grid-circle-no-lines.tsx) | Circular grid, no radial lines | Supported + showcased |
+| [radar/grid-circle-fill](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-grid-circle-fill.tsx) | Filled circular grid with radial spokes | Supported + showcased |
+| [radar/grid-fill](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-grid-fill.tsx) | Filled polygon grid | Supported + showcased |
+| [radar/multiple](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-multiple.tsx) | Two filled series | Supported + showcased |
+| [radar/legend](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radar-legend.tsx) | Shared accessible series legend | Supported + showcased |
+| [radial/simple](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radial-simple.tsx) | Category-colored Cells and background sectors | Supported + showcased |
+| [radial/label](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radial-label.tsx) | Category labels inside actual arcs | Supported + showcased |
+| [radial/grid](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radial-grid.tsx) | Native circular grid and category-colored sectors | Supported + showcased |
+| [radial/text](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radial-text.tsx) | Partial arc with native center Label and annulus grid | Supported + showcased |
+| [radial/shape](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radial-shape.tsx) | Short arc, custom native circle radii and center Label | Supported + showcased |
+| [radial/stacked](https://github.com/shadcn-ui/ui/blob/d75a96ab781f3d659be1ad287347d5887ce9f2fc/apps/v4/registry/new-york-v4/charts/chart-radial-stacked.tsx) | Two series with native stackId and half-circle summary | Supported + showcased |
+
+The official radial label path uses native `LabelList position="insideStart"`. Our public band-text example supplies `content={<Chart.RadialBarLabel />}` to the same native LabelList: it follows the actual sector midpoint and endpoints, keeps text upright and hides text whose measured glyph bounds do not fit. Native Label/LabelList content remains available for other label designs. The official “shape” variation changes arc extent and PolarGrid radii; it does not require a new custom sector implementation.
+
+Ring text, center summary and tooltip visibility have independent controls. Hiding text does not change data, native sector paths, Root metadata or tooltip payload. Too-short, zero and thin sectors omit text; data tables and tooltip metadata remain available. Phone checks exercise 390px layout. Packed tests traverse all eighteen modes, native grids/dots/custom ticks/stacks, keyboard tooltips, series visibility, full glyph bounds, text/tooltip independence, empty/zero restoration and finite paths. Existing packed polar checks cover native geometry equivalence, refs/handlers, updates, reduced motion, animation interruption and React StrictMode.

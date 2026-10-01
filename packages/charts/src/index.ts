@@ -19,6 +19,21 @@ export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";
 export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";
 export { PieSeries, type PieSeriesProps } from "./pie-series.js";
+export {
+  type RadarAnimation,
+  RadarChart,
+  type RadarChartProps,
+  type RadialBarAnimation,
+  RadialBarChart,
+  type RadialBarChartProps,
+} from "./polar-chart.js";
+export {
+  RadarSeries,
+  type RadarSeriesProps,
+  RadialBarSeries,
+  type RadialBarSeriesProps,
+} from "./polar-series.js";
+export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
 export { Root, type RootProps } from "./root.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 export type { SeriesConfig } from "./types.js";
