@@ -2,6 +2,7 @@ import { Legend, Root, TooltipContent } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
+import "./style.css";
 
 function Fixture({ name, color }: { name: string; color: string }) {
   const [visible, setVisible] = useState<string[]>([]);
@@ -31,6 +32,7 @@ function Fixture({ name, color }: { name: string; color: string }) {
         }}
       >
         <Legend
+          className="gap-[19px] p-[7px] text-[17px] [&_[data-kind-ui=chart-legend-button]]:p-[3px]"
           aria-label={`${name} legend`}
           ref={(node) => {
             if (node) node.dataset.forwarded = "legend";
@@ -55,6 +57,7 @@ function Fixture({ name, color }: { name: string; color: string }) {
               isAnimationActive={false}
               content={(tooltip) => (
                 <TooltipContent
+                  className="p-[5px] text-[18px]"
                   tooltip={tooltip}
                   aria-label={`${name} tooltip`}
                   ref={(node) => {

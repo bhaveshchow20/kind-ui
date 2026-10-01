@@ -6,10 +6,23 @@ import { assertPackageContract } from "./package-contract.mjs";
 const manifest = JSON.parse(
   readFileSync(new URL("../packages/charts/package.json", import.meta.url), "utf8"),
 );
-const files = ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.d.ts"];
+const files = [
+  "package.json",
+  "README.md",
+  "LICENSE",
+  "dist/index.js",
+  "dist/index.d.ts",
+  "dist/styles.css",
+];
 
 test("accepts the declared packed contract", () => assertPackageContract(manifest, files));
-for (const missing of ["dist/index.js", "dist/index.d.ts", "LICENSE", "README.md"]) {
+for (const missing of [
+  "dist/index.js",
+  "dist/index.d.ts",
+  "dist/styles.css",
+  "LICENSE",
+  "README.md",
+]) {
   test(`rejects a missing ${missing}`, () => {
     assert.throws(
       () =>
@@ -28,4 +41,14 @@ for (const extra of ["src/index.ts", ".env", "dist/.tsbuildinfo", "dist/node_mod
 }
 test("rejects publication enablement", () => {
   assert.throws(() => assertPackageContract({ ...manifest, private: false }, files), /private/);
+});
+test("rejects CSS that bundlers may drop or consumers cannot resolve", () => {
+  assert.throws(
+    () => assertPackageContract({ ...manifest, sideEffects: false }, files),
+    /side effects/,
+  );
+  assert.throws(
+    () => assertPackageContract({ ...manifest, exports: { ".": manifest.exports["."] } }, files),
+    /CSS export/,
+  );
 });

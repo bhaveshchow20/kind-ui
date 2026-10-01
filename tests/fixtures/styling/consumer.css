@@ -1,0 +1,22 @@
+.consumer {
+  width: 280px;
+  --kind-ui-chart-radius: 11px;
+  --kind-ui-chart-border: rgb(120, 40, 80);
+  --kind-ui-chart-popover: rgb(240, 245, 250);
+  --chart-legend-background: rgb(220, 230, 240);
+}
+.consumer [data-kind-ui="chart-legend"] {
+  gap: 17px;
+  margin: 0;
+}
+.consumer [data-kind-ui="chart-legend-button"] {
+  padding: 3px 7px;
+  border-width: 2px;
+}
+.consumer [data-kind-ui="chart-tooltip"] {
+  padding: 3px;
+  font-size: 19px;
+}
+.consumer [data-series="alpha"] [data-kind-ui="chart-indicator"] {
+  border-radius: 50%;
+}

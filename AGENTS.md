@@ -4,7 +4,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing this repository. Its wor
 
 ## Current state and architecture guidance
 
-`packages/charts` exports three React chart presentation components; its README is the public API reference. `examples/chart` consumes those exports with Recharts primitives and owns its data alternative. `tests` checks component behavior, consumer types and browser contracts. Keep geometry, axes, data and visibility state consumer-owned; do not add a universal chart schema, generic core or another package without a demonstrated need.
+`packages/charts` exports three React chart presentation components and an optional default stylesheet; its README is the public API reference. Keep component props with their implementation, share only the context/config types that are needed, and keep the public index as explicit reexports. Static presentation belongs in the scoped CSS layer; data-dependent CSS variables and explicit consumer styles can remain inline. `examples/chart` consumes the exports and owns its data alternative. `tests` checks component behavior, consumer types and browser contracts. Keep geometry, axes, data and visibility state consumer-owned; do not add a universal chart schema, generic core or another package without a demonstrated need.
 
 Build on established UI libraries. Check existing capabilities before adding primitives or infrastructure. Prefer familiar composition or a narrow integration. Preserve consumer control of styling, markup, state, refs, handlers, and animation where the API requires it. A new abstraction needs a concrete unmet need, alternatives considered, and a clear benefit beyond integration cost.
 
@@ -26,7 +26,7 @@ Use Node 22.12+ and npm 11.9. Use npm and the checked-in lockfile; do not add a 
 - Build/typecheck: `npm run typecheck`
 - Packed-package contract: `npm run check:package`
 - Component tests: `npm test`
-- Chart example: `npm run dev:chart`; browser checks: `npm run check:chart`
+- Chart example: `npm run dev:chart`; packed-consumer and browser checks: `npm run check:chart`
 - Browser prerequisite: `npm exec playwright install -- --with-deps chromium`
 - Required aggregate check: `npm run check`
 

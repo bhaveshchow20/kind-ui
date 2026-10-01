@@ -18,8 +18,15 @@ export function assertPackageContract(manifest, files) {
     );
     required.push(target.slice(2));
   }
+  assert.equal(
+    manifest.exports["./styles.css"],
+    "./dist/styles.css",
+    "CSS export must point to dist/styles.css",
+  );
+  assert.deepEqual(manifest.sideEffects, ["**/*.css"], "CSS imports must remain side effects");
+  required.push("dist/styles.css");
   const allowed =
-    /^(package\.json|README\.md|LICENSE|dist\/(?:[^/.][^/]*\/)*[^/.][^/]*\.(js|d\.ts))$/;
+    /^(package\.json|README\.md|LICENSE|dist\/styles\.css|dist\/(?:[^/.][^/]*\/)*[^/.][^/]*\.(js|d\.ts))$/;
   for (const file of files) {
     assert.ok(allowed.test(file), `Unexpected packed file: ${file}`);
     assert.ok(!file.split("/").includes("node_modules"), `Nested dependency in package: ${file}`);
