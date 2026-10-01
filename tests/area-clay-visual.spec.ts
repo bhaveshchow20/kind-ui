@@ -60,9 +60,14 @@ test("packed area Clay preserves translucent and gradient output alpha while add
     const plain = paints[`${paint}-plain`];
     const clay = paints[`${paint}-clay`];
     if (!plain || !clay) throw new Error("Missing public paint consumer");
-    const alphaDiff = plain
-      .filter((_, index) => index % 4 === 3)
-      .map((alpha, index) => Math.abs(alpha - (clay[index * 4 + 3] ?? 0)));
+    const alphaDiff = plain.flatMap((alpha, index) =>
+      index % 4 === 3 && alpha > 0 ? [Math.abs(alpha - (clay[index] ?? 0))] : [],
+    );
+    const castAlpha = plain.flatMap((alpha, index) =>
+      index % 4 === 3 && alpha === 0 ? [clay[index] ?? 0] : [],
+    );
+    expect(Math.max(...castAlpha)).toBeLessThanOrEqual(12);
+    expect(castAlpha.filter((alpha) => alpha > 0).length).toBeGreaterThan(50);
     expect(Math.max(...alphaDiff)).toBeLessThanOrEqual(1);
     const rgbChanges = plain.filter(
       (value, index) => index % 4 !== 3 && Math.abs(value - (clay[index] ?? 0)) > 5,
