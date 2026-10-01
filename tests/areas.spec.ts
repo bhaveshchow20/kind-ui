@@ -99,8 +99,11 @@ test("area gaps, zero, stacked percentages, and controlled series stay truthful"
   await expect(percentLegend).toContainText("Mobile");
   await expect(percent.locator("svg")).toContainText("100%");
   await percent.getByRole("application").focus();
-  await expect(page.getByRole("status")).toContainText("70%");
-  await expect(page.getByRole("status")).toContainText("30%");
+  const percentTooltip = percent.getByRole("status");
+  await expect(percentTooltip).toContainText("70%");
+  await expect(percentTooltip).toContainText("30%");
+  await expect(percentTooltip).toContainText("Desktop");
+  await expect(percentTooltip).toContainText("Mobile");
   await page.getByLabel("All-zero stack").check();
   await percent.getByRole("application").focus();
   await page.keyboard.press("ArrowRight");

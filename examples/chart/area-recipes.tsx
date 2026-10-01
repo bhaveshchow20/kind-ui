@@ -92,7 +92,7 @@ function AreaFrame<T extends { period: string }>({
   const tooltipFormatter = percentage
     ? (
         value: number | string | readonly (number | string)[] | undefined,
-        name: string | number | undefined,
+        _name: string | number | undefined,
         _entry: unknown,
         _index: number,
         payload: readonly { value?: unknown }[],
@@ -105,7 +105,7 @@ function AreaFrame<T extends { period: string }>({
           typeof value === "number" && total > 0
             ? `${((value / total) * 100).toFixed(0)}%`
             : "No share";
-        return [share, name];
+        return share;
       }
     : undefined;
   const rootProps = {
