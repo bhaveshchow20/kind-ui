@@ -181,6 +181,7 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
   const [equalWidth, setEqualWidth] = useState(false);
   const [gaps, setGaps] = useState(false);
   const [filter, setFilter] = useState(false);
+  const [dots, setDots] = useState(false);
   const points = flat
     ? [
         { time: "A", value: 4, other: 6 },
@@ -209,6 +210,9 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
       </button>
       <button type="button" onClick={() => setNative(!native)}>
         Native shape
+      </button>
+      <button type="button" onClick={() => setDots(!dots)}>
+        Dots
       </button>
       <button type="button" onClick={() => setFilter(!filter)}>
         Native filter
@@ -267,7 +271,7 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
                   type="monotone"
                   material={material}
                   {...(equalWidth ? { strokeWidth: 6 } : {})}
-                  dot={false}
+                  dot={dots}
                   {...(native ? { shape: Shape } : {})}
                   {...(filter ? { filter: "none" } : {})}
                 />

@@ -100,6 +100,13 @@ for (const mode of ["static", "motion"] as const) {
     );
     expect(flatBounds.every((height) => height >= 14 && height <= 24)).toBe(true);
     await page.screenshot({ path: info.outputPath(`${mode}-flat-narrow.png`) });
+    await page.getByRole("button", { name: "Dots", exact: true }).click();
+    const dotWidths = await page
+      .locator(".recharts-line-dot")
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("stroke-width")));
+    expect(dotWidths.length).toBeGreaterThan(0);
+    expect(new Set(dotWidths).size).toBe(1);
+    await page.getByRole("button", { name: "Dots", exact: true }).click();
     await page.getByRole("button", { name: "Native filter", exact: true }).click();
     await expect(filters).toHaveCount(2);
     for (const index of [0, 2, 4])

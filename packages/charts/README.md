@@ -76,6 +76,8 @@ The package subscribes reactively to reduced motion and starts disabled during s
 
 ## Line materials
 
+The existing `/recipes.html` line showcase has a compact Plain/Paper/Clay selector alongside palette and Motion controls. It applies this public API to all eight existing recipes while retaining their data, markers, labels and visibility.
+
 `LineSeries material="plain" | "paper" | "clay"` changes the default SVG curve's surface independently of color and animation. The exported `LineMaterial` type names these options. Plain is the existing default. Paper adds static fine fiber variation inside the ink stroke (2.5px by default); Clay adds a rounded, softly lit bevel, inner shade and a small neutral cast shadow (6px by default). Both retain the engine's original quantitative path: no displacement, rough geometry or path morphing. Thin Clay strokes show less relief; use `strokeWidth` to choose thickness explicitly. Material defaults use round joins and solid-line caps; dashed lines use butt caps to keep their gaps visible. Native `strokeLinecap`, `strokeLinejoin`, dash patterns and handlers remain available.
 
 ```tsx

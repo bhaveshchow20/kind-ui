@@ -1,4 +1,4 @@
-import type { SeriesConfig } from "@kind-ui/charts";
+import type { LineMaterial, SeriesConfig } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -61,13 +61,19 @@ const config = {
 
 function App() {
   const [palette, setPalette] = useState("monochrome");
+  const [material, setMaterial] = useState<LineMaterial>("plain");
   const [motion, setMotion] = useState(false);
   const reducedMotion = useReducedMotionPreference();
   const [empty, setEmpty] = useState(false);
   const [visible, setVisible] = useState<string[]>(["current", "previous"]);
   const animate = motion && !reducedMotion;
   return (
-    <main className="recipes" data-palette={palette} data-motion={animate ? "on" : "off"}>
+    <main
+      className="recipes"
+      data-palette={palette}
+      data-material={material}
+      data-motion={animate ? "on" : "off"}
+    >
       <header className="recipes-header">
         <a href="/">Kind UI</a>
         <h1>Line recipes</h1>
@@ -87,6 +93,19 @@ function App() {
               onClick={() => setPalette(value)}
             >
               {value === "color" ? "Color" : "Monochrome"}
+            </button>
+          ))}
+        </fieldset>
+        <fieldset aria-label="Line material">
+          <legend className="sr-only">Line material</legend>
+          {(["plain", "paper", "clay"] satisfies LineMaterial[]).map((value) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={material === value}
+              onClick={() => setMaterial(value)}
+            >
+              {value === "plain" ? "Plain" : value === "paper" ? "Paper" : "Clay"}
             </button>
           ))}
         </fieldset>
@@ -128,6 +147,7 @@ function App() {
                 label={`${title} daily completions`}
                 formatValue={tasks}
                 animate={animate}
+                material={material}
               />
             )}
             <details>
@@ -158,6 +178,7 @@ function App() {
               label="Completed tasks"
               formatValue={tasks}
               animate={animate}
+              material={material}
             />
           )}
           <p className="recipe-note">Daily completions · Mon–Sun</p>
@@ -189,6 +210,7 @@ function App() {
               target={240}
               targetLabel="Budget"
               animate={animate}
+              material={material}
             />
           )}
           <p className="recipe-note">Lower is faster. Wednesday was not recorded.</p>
@@ -217,6 +239,7 @@ function App() {
               onVisibleSeriesChange={setVisible}
               label="Weekly comparison"
               animate={animate}
+              material={material}
             />
           )}
           <p className="recipe-note">

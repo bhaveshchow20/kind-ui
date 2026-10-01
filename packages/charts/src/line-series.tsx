@@ -45,8 +45,13 @@ export function LineSeries({
       {...props}
       {...(material !== "plain" && props.shape === undefined && props.filter === undefined
         ? {
-            shape: <MaterialCurve material={material} filterId={`${generatedId}-material`} />,
-            strokeWidth: props.strokeWidth ?? (material === "clay" ? 6 : 2.5),
+            shape: (
+              <MaterialCurve
+                material={material}
+                filterId={`${generatedId}-material`}
+                materialWidth={props.strokeWidth ?? (material === "clay" ? 6 : 2.5)}
+              />
+            ),
             strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
             strokeLinejoin: props.strokeLinejoin ?? "round",
           }

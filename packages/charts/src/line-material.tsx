@@ -8,6 +8,7 @@ export type LineMaterial = "plain" | "paper" | "clay";
 export function MaterialCurve({
   material,
   filterId,
+  materialWidth,
   animationElapsedTime: _time,
   isAnimating: _active,
   isEntrance: _entrance,
@@ -18,12 +19,13 @@ export function MaterialCurve({
   pathRef?: LineDrawShapeProps["pathRef"];
   material: Exclude<LineMaterial, "plain">;
   filterId: string;
+  materialWidth: number | string;
 }) {
   const points =
     props.points?.filter(
       (p): p is typeof p & { x: number; y: number } => Number.isFinite(p.x) && Number.isFinite(p.y),
     ) ?? [];
-  if (!points.length) return <Curve {...props} clipPath={clipPath} />;
+  if (!points.length) return <Curve {...props} strokeWidth={materialWidth} clipPath={clipPath} />;
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -34,7 +36,7 @@ export function MaterialCurve({
     maxX = Math.max(maxX, point.x);
     maxY = Math.max(maxY, point.y);
   }
-  const width = Number(props.strokeWidth);
+  const width = Number(materialWidth);
   const pad = (Number.isFinite(width) ? width : 12) / 2 + 6;
   const x = minX - pad;
   const y = minY - pad;
@@ -111,7 +113,7 @@ export function MaterialCurve({
           )}
         </filter>
       </defs>
-      <Curve {...props} filter={`url(#${filterId})`} />
+      <Curve {...props} strokeWidth={materialWidth} filter={`url(#${filterId})`} />
     </g>
   );
 }

@@ -1,4 +1,4 @@
-import type { LineAnimation } from "@kind-ui/charts";
+import type { LineAnimation, LineMaterial } from "@kind-ui/charts";
 import * as Chart from "@kind-ui/charts";
 import * as Line from "@kind-ui/charts";
 import type { ComponentProps, ReactNode } from "react";
@@ -21,6 +21,7 @@ export type TrendProps = {
   label: string;
   formatValue: (value: number) => string;
   animate?: boolean | LineAnimation | undefined;
+  material?: LineMaterial | undefined;
 };
 
 const solidDot = {
@@ -51,6 +52,7 @@ function SingleSeriesLine({
   label,
   formatValue,
   animate,
+  material = "plain",
   type,
   dot,
   children,
@@ -90,7 +92,8 @@ function SingleSeriesLine({
             dataKey="value"
             type={type}
             stroke="var(--color-value)"
-            strokeWidth={2}
+            strokeWidth={material === "clay" ? 6 : material === "paper" ? 2.5 : 2}
+            material={material}
             dot={dot}
             connectNulls={false}
           >
@@ -137,6 +140,7 @@ export function TargetLine({
   target,
   targetLabel,
   animate,
+  material = "plain",
 }: TrendProps & { target: number; targetLabel: string }) {
   const id = useId();
   return (
@@ -177,7 +181,8 @@ export function TargetLine({
             dataKey="value"
             type="linear"
             stroke="var(--color-value)"
-            strokeWidth={2}
+            strokeWidth={material === "clay" ? 6 : material === "paper" ? 2.5 : 2}
+            material={material}
             dot={solidDot}
             connectNulls={false}
           />
@@ -197,6 +202,7 @@ export function ComparisonLine({
   onVisibleSeriesChange,
   label,
   animate,
+  material = "plain",
 }: {
   data: ComparisonPoint[];
   config: Chart.SeriesConfig & Record<"current" | "previous", Chart.SeriesConfig[string]>;
@@ -204,6 +210,7 @@ export function ComparisonLine({
   onVisibleSeriesChange: (keys: string[]) => void;
   label: string;
   animate?: boolean | LineAnimation | undefined;
+  material?: LineMaterial | undefined;
 }) {
   const id = useId();
   return (
@@ -240,8 +247,14 @@ export function ComparisonLine({
               dataKey="current"
               type="linear"
               stroke="var(--color-current)"
-              strokeWidth={2}
-              dot={{ r: 3.5, fill: "var(--color-current)", strokeDasharray: "none" }}
+              strokeWidth={material === "clay" ? 6 : material === "paper" ? 2.5 : 2}
+              material={material}
+              dot={{
+                r: 3.5,
+                fill: "var(--color-current)",
+                strokeWidth: 2,
+                strokeDasharray: "none",
+              }}
               connectNulls={false}
             />
             <Line.LineSeries
@@ -249,7 +262,8 @@ export function ComparisonLine({
               type="linear"
               stroke="var(--color-previous)"
               strokeDasharray="5 4"
-              strokeWidth={2}
+              strokeWidth={material === "clay" ? 6 : material === "paper" ? 2.5 : 2}
+              material={material}
               dot={{ r: 3.5, fill: "var(--card)", strokeWidth: 2, strokeDasharray: "none" }}
               connectNulls={false}
             />
