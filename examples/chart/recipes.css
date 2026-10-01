@@ -222,20 +222,11 @@
 .recipe-chart .recharts-bar {
   clip-path: var(--bar-reveal-clip, none);
 }
-.recipe-chart .recharts-area {
-  clip-path: var(--area-reveal-clip, none);
-}
 .recipe-chart:focus-within .recharts-bar {
-  clip-path: none;
-}
-.recipe-chart:focus-within .recharts-area {
   clip-path: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .recipe-chart .recharts-bar {
-    clip-path: none;
-  }
-  .recipe-chart .recharts-area {
     clip-path: none;
   }
 }

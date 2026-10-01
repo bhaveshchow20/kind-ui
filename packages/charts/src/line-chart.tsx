@@ -56,6 +56,7 @@ function Lifecycle({ data, invalidate }: { data: LineChartProps["data"]; invalid
 
 /** Internal boundary shared by the static and optional Motion entry points. */
 export function LineChartFrame({
+  engine: EngineChart = EngineLineChart,
   interrupt = () => {},
   clip,
   motionEnabled,
@@ -63,7 +64,12 @@ export function LineChartFrame({
   onMouseMove,
   onMouseLeave,
   ...props
-}: LineChartProps & { interrupt?: () => void; clip?: string; motionEnabled?: boolean }) {
+}: LineChartProps & {
+  engine?: typeof EngineLineChart;
+  interrupt?: () => void;
+  clip?: string;
+  motionEnabled?: boolean;
+}) {
   const [motionReady, setMotionReady] = useState(true);
   const [pointer, setPointer] = useState<Point>(null);
   const [seriesKeys, setSeriesKeys] = useState(() => new Map<string, string>());
@@ -106,7 +112,7 @@ export function LineChartFrame({
         }}
         onBlurCapture={() => setPointer(null)}
       >
-        <EngineLineChart
+        <EngineChart
           {...props}
           className={["kind-ui-line-chart", props.className].filter(Boolean).join(" ")}
           style={{ ...props.style, "--kind-ui-line-clip": clip ?? "none" } as CSSProperties}
@@ -124,7 +130,7 @@ export function LineChartFrame({
         >
           <Lifecycle data={props.data} invalidate={invalidate} />
           {children}
-        </EngineLineChart>
+        </EngineChart>
       </div>
     </LineInteraction>
   );

@@ -1,6 +1,6 @@
 # Kind UI charts
 
-React components compose real Recharts lines with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. The same components accept `LineChart animate={false | true | config}` for coordinated reveal and hover animation. Consumers own data shape, scales, axes, grids, reference lines, custom marks, copy and layout. Bar and area recipes remain application-owned.
+React components compose real Recharts lines and areas with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. The same components accept `LineChart animate={false | true | config}` for coordinated reveal and hover animation. Consumers own data shape, scales, axes, grids, reference lines, custom marks, copy and layout. Bar recipes remain application-owned.
 
 Pre-release and unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, Motion 13.4.6, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
 
@@ -154,4 +154,26 @@ Per-instance series colors and per-entry indicator color values remain inline CS
 
 At the repository root: `npm ci`, then `npm exec playwright install -- --with-deps chromium` (Linux dependencies may need administrator permission). Run `npm run dev:chart` for the example, or `npm run check` for library, packed-consumer, type and browser checks.
 
-The packed check first builds an actual tarball, installs it and the pinned peer/type dependencies into an isolated consumer, then checks public APIs with NodeNext and Bundler resolution. With the required Motion peer installed, it checks root imports/declarations and builds disabled and animated line consumers using the same exports; it also proves the removed `/motion` path cannot resolve. These line fixtures contain only public package imports and host data/extensions; no example implementation is copied into the proof. Legacy bar/area recipe typechecks are separately identified. It also builds a plain-CSS production consumer for the browser checks, verifying CSS delivery and application overrides. Peer installation can require npm registry access; the package under test always comes from the local tarball, never a workspace link or registry copy.
+The packed check first builds an actual tarball, installs it and the pinned peer/type dependencies into an isolated consumer, then checks public APIs with NodeNext and Bundler resolution. With the required Motion peer installed, it checks root imports/declarations and builds disabled and animated line/area consumers using the same exports; it also proves the removed `/motion` path cannot resolve. These line and area fixtures contain only public package imports and host data/extensions; no example implementation is copied into the proof. Legacy bar recipes and migrated area host recipes are typechecked separately. It also builds a plain-CSS production consumer for the browser checks, verifying CSS delivery and application overrides. Peer installation can require npm registry access; the package under test always comes from the local tarball, never a workspace link or registry copy.
+
+## Area ownership and API
+
+`AreaChart` and `AreaSeries` use the same Root, Legend and Tooltip exports as lines. Recharts owns area geometry, native interpolation (`monotone`, `linear`, `stepAfter`), baseline (`baseValue`), stacking (`stackId`) and normalization (`stackOffset="expand"`). Kind owns registered metadata, Root-controlled visibility, bounded pointer/keyboard tooltip placement, and Motion reveal/default active marks. Hosts own labels, axes, data, formatting, gradients and reference thresholds.
+
+`AreaChart` accepts native Recharts AreaChart props, SVG ref, caller handlers and `animate={false | true | AreaAnimation}`. AreaAnimation has the same fields and defaults as LineAnimation. Data, size, controlled visibility and native `hide` changes discard stale pointer coordinates, cancel entrance and snap owned hover motion. Reduced-motion preference changes disable owned animation. Custom marks/content remain mounted when animation changes.
+
+`AreaSeries<DataPoint, Value>` accepts native Area props and children except `isAnimationActive`; Recharts animation is always disabled. String data keys identify Root metadata automatically. Use `seriesKey` for numeric/function keys; it is required for controlled visibility. Native `hide={true}` and Root visibility both apply. Stroke and fill default to Root color; explicit native overrides win. Custom `dot`, `activeDot`, `shape`, handlers and nested LabelList retain native composition. Recharts Area has no public component ref; place refs on host marks or shapes.
+
+```tsx
+<Chart.Root config={{ visits: { label: "Visits", color: "#3659b8" } }}>
+  <Chart.AreaChart width={400} height={220} data={points} animate={true} accessibilityLayer aria-label="Visits">
+    <XAxis dataKey="day" />
+    <Chart.AreaSeries dataKey="visits" type="monotone" connectNulls={false} fillOpacity={0.2} />
+    <Chart.Tooltip />
+  </Chart.AreaChart>
+</Chart.Root>
+```
+
+Missing/null values remain gaps by default; numeric zero remains data. Hosts may explicitly choose `connectNulls`. The eight migrated area recipes are host compositions of these exports. Stacked/percent recipe examples use complete nonnegative inputs; percent axis labels and tooltip formatting belong to the host, use visible payload totals, and show “No share” for an all-zero row. The package does not impute, validate or mutate stack data.
+
+Implementation references: [Recharts AreaChart](https://recharts.github.io/en-US/api/AreaChart/), [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [Motion values](https://motion.dev/docs/react-motion-value).

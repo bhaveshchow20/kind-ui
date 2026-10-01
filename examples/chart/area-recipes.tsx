@@ -1,23 +1,11 @@
 import * as Chart from "@kind-ui/charts";
-import { motion } from "motion/react";
-import { type CSSProperties, type ReactNode, useId } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  usePlotArea,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { MovingTooltip, type RecipeMotion, useRecipeMotion } from "./recipe-motion.js";
+import { type ReactNode, useId } from "react";
+import { CartesianGrid, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 export type AreaPoint = { period: string; value: number | null };
 /** A complete stack has numeric values for every series at each period. */
 export type StackedAreaPoint = { period: string; desktop: number; mobile: number };
-export type AreaMotion = RecipeMotion;
+export type AreaMotion = Chart.AreaAnimation;
 export type AreaSeriesConfig = Record<"desktop" | "mobile", Chart.SeriesConfig[string]>;
 type SingleAreaProps = {
   data: AreaPoint[];
@@ -46,35 +34,6 @@ type AreaFrameProps<T extends { period: string }> = {
   threshold?: number;
 };
 
-function AreaReveal({
-  id,
-  options,
-  onComplete,
-}: {
-  id: string;
-  options: AreaMotion;
-  onComplete: () => void;
-}) {
-  const area = usePlotArea();
-  if (!area) return null;
-  return (
-    <defs>
-      <clipPath id={`${id}-area`} clipPathUnits="userSpaceOnUse">
-        <motion.rect
-          data-area-reveal=""
-          onAnimationComplete={onComplete}
-          initial={{ x: area.x, y: area.y, width: 0, height: area.height }}
-          animate={{ x: area.x, y: area.y, width: area.width, height: area.height }}
-          transition={{
-            duration: Math.max(0, options.revealDurationMs ?? 1000) / 1000,
-            ease: options.revealEasing ?? [0.25, 0.1, 0.25, 1],
-          }}
-        />
-      </clipPath>
-    </defs>
-  );
-}
-
 function AreaFrame<T extends { period: string }>({
   data,
   label,
@@ -88,7 +47,7 @@ function AreaFrame<T extends { period: string }>({
   showLegend = false,
   threshold,
 }: AreaFrameProps<T>) {
-  const animation = useRecipeMotion(options);
+  const id = useId();
   const tooltipFormatter = percentage
     ? (
         value: number | string | readonly (number | string)[] | undefined,
@@ -111,37 +70,25 @@ function AreaFrame<T extends { period: string }>({
   const rootProps = {
     config,
     className: "recipe-chart",
-    "data-area-reveal": animation.reveal ? "on" : "off",
-    style: {
-      "--area-reveal-clip": animation.reveal ? `url(#${animation.id}-area)` : "none",
-    } as CSSProperties,
-    onFocusCapture: animation.finishReveal,
-    onPointerDownCapture: animation.finishReveal,
-    onPointerMoveCapture: animation.finishReveal,
-    onKeyDownCapture: animation.clearPointer,
   };
   const content = (
     <>
       {(showLegend || (visibleSeries !== undefined && onVisibleSeriesChange !== undefined)) && (
         <Chart.Legend />
       )}
-      <p id={animation.id} className="recipe-help">
+      <p id={id} className="recipe-help">
         Use left and right arrow keys to explore values. Escape dismisses the tooltip.
       </p>
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart
+        <Chart.AreaChart
           data={data}
           stackOffset={offset}
           accessibilityLayer
           aria-label={label}
-          aria-describedby={animation.id}
-          onMouseMove={animation.trackPointer}
-          onMouseLeave={animation.clearPointer}
+          aria-describedby={id}
+          animate={options ?? false}
           margin={{ top: 20, right: 12, bottom: 0, left: 0 }}
         >
-          {animation.reveal && options && (
-            <AreaReveal id={animation.id} options={options} onComplete={animation.finishReveal} />
-          )}
           <CartesianGrid vertical={false} stroke="var(--border)" />
           {children}
           {threshold !== undefined && (
@@ -175,22 +122,8 @@ function AreaFrame<T extends { period: string }>({
               : {})}
             width={36}
           />
-          <Tooltip
-            position={{ x: 0, y: 0 }}
-            cursor={false}
-            filterNull={false}
-            isAnimationActive={false}
-            {...(tooltipFormatter ? { formatter: tooltipFormatter } : {})}
-            content={(tooltip) => (
-              <MovingTooltip
-                key={animation.animate ? "animated" : "static"}
-                tooltip={tooltip}
-                transition={animation.transition}
-                pointer={animation.pointer}
-              />
-            )}
-          />
-        </AreaChart>
+          <Chart.Tooltip {...(tooltipFormatter ? { formatter: tooltipFormatter } : {})} />
+        </Chart.AreaChart>
       </ResponsiveContainer>
     </>
   );
@@ -242,7 +175,7 @@ function SingleArea({
           </linearGradient>
         </defs>
       )}
-      <Area
+      <Chart.AreaSeries
         dataKey="value"
         type={type}
         stroke="var(--color-value)"
@@ -250,7 +183,6 @@ function SingleArea({
         fill={gradient ? `url(#${gradient})` : "var(--color-value)"}
         fillOpacity={gradient ? 1 : 0.18}
         connectNulls={false}
-        isAnimationActive={false}
       />
     </AreaFrame>
   );
@@ -287,7 +219,7 @@ export function ThresholdArea(props: SingleAreaProps & { threshold: number }) {
       motion={area.motion}
       threshold={threshold}
     >
-      <Area
+      <Chart.AreaSeries
         dataKey="value"
         type="monotone"
         stroke="var(--color-value)"
@@ -295,7 +227,6 @@ export function ThresholdArea(props: SingleAreaProps & { threshold: number }) {
         fill="var(--color-value)"
         fillOpacity={0.14}
         connectNulls={false}
-        isAnimationActive={false}
       />
     </AreaFrame>
   );
@@ -338,7 +269,7 @@ function StackedAreas({
       {...visibilityProps}
     >
       {(["mobile", "desktop"] as const).map((key) => (
-        <Area
+        <Chart.AreaSeries
           key={key}
           dataKey={key}
           hide={visibleSeries !== undefined && !visibleSeries.includes(key)}
@@ -348,7 +279,6 @@ function StackedAreas({
           fill={`var(--color-${key})`}
           fillOpacity={key === "mobile" ? 0.26 : 0.58}
           connectNulls={false}
-          isAnimationActive={false}
         />
       ))}
     </AreaFrame>
