@@ -1,4 +1,4 @@
-import type { LineAnimation } from "@kind-ui/charts";
+import type { LineAnimation, LineMaterial } from "@kind-ui/charts";
 import * as Chart from "@kind-ui/charts";
 import * as Line from "@kind-ui/charts";
 import type { ComponentProps, ReactNode } from "react";
@@ -21,6 +21,8 @@ export type TrendProps = {
   label: string;
   formatValue: (value: number) => string;
   animate?: boolean | LineAnimation | undefined;
+  material?: LineMaterial | undefined;
+  guide?: boolean | undefined;
 };
 
 const solidDot = {
@@ -51,6 +53,8 @@ function SingleSeriesLine({
   label,
   formatValue,
   animate,
+  material = "plain",
+  guide = false,
   type,
   dot,
   children,
@@ -63,7 +67,7 @@ function SingleSeriesLine({
     <Chart.Root
       config={{
         value: {
-          label,
+          label: "Completed",
           color: "var(--chart-1)",
           formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
         },
@@ -85,12 +89,21 @@ function SingleSeriesLine({
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
           <YAxis hide domain={[0, "auto"]} />
-          <Line.Tooltip />
+          <Line.Tooltip
+            cursor={
+              guide
+                ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
+                : false
+            }
+          />
           <Line.LineSeries
             dataKey="value"
             type={type}
             stroke="var(--color-value)"
-            strokeWidth={2}
+            strokeWidth={
+              material === "clay" ? 6 : material === "paper" ? 2.5 : material === "glow" ? 3 : 2
+            }
+            material={material}
             dot={dot}
             connectNulls={false}
           >
@@ -137,13 +150,15 @@ export function TargetLine({
   target,
   targetLabel,
   animate,
+  material = "plain",
+  guide = false,
 }: TrendProps & { target: number; targetLabel: string }) {
   const id = useId();
   return (
     <Chart.Root
       config={{
         value: {
-          label,
+          label: "Response",
           color: "var(--chart-1)",
           formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
         },
@@ -172,12 +187,21 @@ export function TargetLine({
             stroke="var(--muted-foreground)"
             strokeDasharray="4 4"
           />
-          <Line.Tooltip />
+          <Line.Tooltip
+            cursor={
+              guide
+                ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
+                : false
+            }
+          />
           <Line.LineSeries
             dataKey="value"
             type="linear"
             stroke="var(--color-value)"
-            strokeWidth={2}
+            strokeWidth={
+              material === "clay" ? 6 : material === "paper" ? 2.5 : material === "glow" ? 3 : 2
+            }
+            material={material}
             dot={solidDot}
             connectNulls={false}
           />
@@ -197,6 +221,8 @@ export function ComparisonLine({
   onVisibleSeriesChange,
   label,
   animate,
+  material = "plain",
+  guide = false,
 }: {
   data: ComparisonPoint[];
   config: Chart.SeriesConfig & Record<"current" | "previous", Chart.SeriesConfig[string]>;
@@ -204,6 +230,8 @@ export function ComparisonLine({
   onVisibleSeriesChange: (keys: string[]) => void;
   label: string;
   animate?: boolean | LineAnimation | undefined;
+  material?: LineMaterial | undefined;
+  guide?: boolean | undefined;
 }) {
   const id = useId();
   return (
@@ -218,11 +246,12 @@ export function ComparisonLine({
         Use left and right arrow keys to explore. Escape dismisses the tooltip. Previous values use
         a dashed line.
       </p>
-      {visibleSeries.length === 0 ? (
-        <p role="status" className="recipe-empty">
-          Select a series to show it.
-        </p>
-      ) : (
+      <div className="recipe-plot">
+        {visibleSeries.length === 0 && (
+          <p role="status" className="recipe-empty">
+            Select a series to show it.
+          </p>
+        )}
         <ResponsiveContainer width="100%" height={196}>
           <Line.LineChart
             data={data}
@@ -235,13 +264,27 @@ export function ComparisonLine({
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
             <YAxis width={36} axisLine={false} tickLine={false} domain={[0, "auto"]} />
-            <Line.Tooltip />
+            <Line.Tooltip
+              cursor={
+                guide
+                  ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
+                  : false
+              }
+            />
             <Line.LineSeries
               dataKey="current"
               type="linear"
               stroke="var(--color-current)"
-              strokeWidth={2}
-              dot={{ r: 3.5, fill: "var(--color-current)", strokeDasharray: "none" }}
+              strokeWidth={
+                material === "clay" ? 6 : material === "paper" ? 2.5 : material === "glow" ? 3 : 2
+              }
+              material={material}
+              dot={{
+                r: 3.5,
+                fill: "var(--color-current)",
+                strokeWidth: 2,
+                strokeDasharray: "none",
+              }}
               connectNulls={false}
             />
             <Line.LineSeries
@@ -249,13 +292,16 @@ export function ComparisonLine({
               type="linear"
               stroke="var(--color-previous)"
               strokeDasharray="5 4"
-              strokeWidth={2}
+              strokeWidth={
+                material === "clay" ? 6 : material === "paper" ? 2.5 : material === "glow" ? 3 : 2
+              }
+              material={material}
               dot={{ r: 3.5, fill: "var(--card)", strokeWidth: 2, strokeDasharray: "none" }}
               connectNulls={false}
             />
           </Line.LineChart>
         </ResponsiveContainer>
-      )}
+      </div>
     </Chart.Root>
   );
 }

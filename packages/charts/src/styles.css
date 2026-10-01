@@ -47,7 +47,8 @@
   }
 
   :where([data-kind-ui="chart-legend-button"][aria-pressed="false"]) {
-    text-decoration: line-through;
+    color: var(--kind-ui-chart-muted-foreground, var(--muted-foreground, GrayText));
+    text-decoration: none;
   }
 
   :where([data-kind-ui="chart-indicator"]) {
@@ -58,8 +59,14 @@
     background: var(--kind-ui-chart-indicator-color, currentColor);
   }
 
+  :where(
+    [data-kind-ui="chart-legend-button"][aria-pressed="false"] [data-kind-ui="chart-indicator"]
+  ) {
+    background: currentColor;
+  }
+
   :where([data-kind-ui="chart-tooltip"]) {
-    padding: 7px 9px;
+    padding: 6px 8px;
     background: var(--kind-ui-chart-popover, var(--popover, Canvas));
     color: var(--kind-ui-chart-popover-foreground, var(--popover-foreground, CanvasText));
     border: 1px solid var(--kind-ui-chart-border, var(--border, GrayText));
@@ -71,14 +78,14 @@
   :where([data-kind-ui="chart-tooltip-list"]) {
     list-style: none;
     padding: 0;
-    margin: 4px 0 0;
+    margin: 2px 0 0;
   }
 
   :where([data-kind-ui="chart-tooltip-item"]) {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 2px;
+    gap: 4px;
+    margin-top: 1px;
   }
 
   :where([data-kind-ui="chart-tooltip-item"] [data-kind-ui="chart-indicator"]) {
@@ -97,7 +104,7 @@
 
   :where([data-kind-ui="chart-tooltip-value"]) {
     margin-left: auto;
-    padding-left: 6px;
+    padding-left: 4px;
     font-variant-numeric: tabular-nums;
   }
 }

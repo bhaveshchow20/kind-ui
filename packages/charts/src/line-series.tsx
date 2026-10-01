@@ -4,14 +4,25 @@ import { type ComponentProps, useId, useLayoutEffect, useRef } from "react";
 import { Line } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
+import { type LineMaterial, MaterialCurve } from "./line-material.js";
 
 export type LineSeriesProps = ComponentProps<typeof Line> & {
   /** Metadata/visibility key, required only for function or numeric data keys. */
   seriesKey?: string;
+  /** Material on the default SVG curve; custom shape/filter retain consumer ownership. */
+  material?: LineMaterial;
 };
 
 /** A registered Recharts Line with Root colors and controlled visibility. */
-export function LineSeries({ seriesKey, hide, stroke, className, ...props }: LineSeriesProps) {
+export function LineSeries({
+  seriesKey,
+  hide,
+  stroke,
+  className,
+  material = "plain",
+  renderWhileHidden = false,
+  ...props
+}: LineSeriesProps & { renderWhileHidden?: boolean }) {
   const { config, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
@@ -19,12 +30,17 @@ export function LineSeries({ seriesKey, hide, stroke, className, ...props }: Lin
   const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
   const effectiveHide =
     hide === true || (visibleSeries !== undefined && !visibleSeries.includes(key ?? ""));
-  const previous = useRef({ data: props.data, hide: effectiveHide });
+  const renderedHide = hide === true || (!renderWhileHidden && effectiveHide);
+  const previous = useRef({ data: props.data, hide: effectiveHide, renderedHide });
   useLayoutEffect(() => {
-    if (props.data !== previous.current.data || effectiveHide !== previous.current.hide)
+    if (
+      props.data !== previous.current.data ||
+      effectiveHide !== previous.current.hide ||
+      renderedHide !== previous.current.renderedHide
+    )
       invalidate();
-    previous.current = { data: props.data, hide: effectiveHide };
-  }, [props.data, effectiveHide, invalidate]);
+    previous.current = { data: props.data, hide: effectiveHide, renderedHide };
+  }, [props.data, effectiveHide, renderedHide, invalidate]);
   useLayoutEffect(() => {
     if (key === undefined) return;
     return registerSeries(id, key);
@@ -36,8 +52,23 @@ export function LineSeries({ seriesKey, hide, stroke, className, ...props }: Lin
     <Line
       isAnimationActive={false}
       {...props}
+      {...(material !== "plain" && props.shape === undefined && props.filter === undefined
+        ? {
+            shape: (
+              <MaterialCurve
+                material={material}
+                filterId={`${generatedId}-material`}
+                materialWidth={
+                  props.strokeWidth ?? (material === "clay" ? 6 : material === "paper" ? 2.5 : 3)
+                }
+              />
+            ),
+            strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
+            strokeLinejoin: props.strokeLinejoin ?? "round",
+          }
+        : {})}
       id={id}
-      hide={effectiveHide}
+      hide={renderedHide}
       {...(color !== undefined ? { stroke: color } : {})}
       className={["kind-ui-line-series", className].filter(Boolean).join(" ")}
     />

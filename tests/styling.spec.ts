@@ -14,7 +14,7 @@ test("packed production CSS supplies defaults and permits plain CSS and native o
     "padding",
     "3px 6px",
   );
-  await expect(defaults.locator(part("tooltip"))).toHaveCSS("padding", "7px 9px");
+  await expect(defaults.locator(part("tooltip"))).toHaveCSS("padding", "6px 8px");
   await expect(defaults.locator(part("tooltip"))).toHaveCSS("font-size", "12px");
   await expect(defaults.locator(`${part("legend")} ${part("indicator")}`).first()).toHaveCSS(
     "width",
@@ -48,7 +48,7 @@ test("packed production CSS supplies defaults and permits plain CSS and native o
   await page.keyboard.press("Space");
   await expect(alpha).toBeFocused();
   await expect(alpha).toHaveAttribute("aria-pressed", "false");
-  await expect(alpha).toHaveCSS("text-decoration-line", "line-through");
+  await expect(alpha).toHaveCSS("text-decoration-line", "none");
   await expect(custom.locator(`${part("tooltip")} [data-series="alpha"]`)).toHaveCount(0);
 });
 
@@ -71,4 +71,18 @@ test("Tailwind utility layer overrides component defaults without important rule
   await expect(tooltip).toBeVisible();
   await expect(tooltip).toHaveCSS("padding", "5px");
   await expect(tooltip).toHaveCSS("font-size", "18px");
+});
+
+test("hidden colored legend markers inherit the muted label color", async ({ page }) => {
+  await page.goto("/recipes.html");
+  await page.getByRole("button", { name: "Color", exact: true }).click();
+  const comparison = page.getByRole("region", { name: "Week over week" });
+  const button = comparison.getByRole("button", { name: "This week", exact: true });
+  const marker = button.locator('[data-kind-ui="chart-indicator"]');
+  const seriesColor = await marker.evaluate((node) => getComputedStyle(node).backgroundColor);
+  await button.click();
+  const muted = await button.evaluate((node) => getComputedStyle(node).color);
+  expect(muted).not.toBe(seriesColor);
+  await expect(marker).toHaveCSS("background-color", muted);
+  await expect(button).toHaveCSS("text-decoration-line", "none");
 });
