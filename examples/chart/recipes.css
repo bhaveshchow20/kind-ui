@@ -279,3 +279,22 @@
   --chart-3: #087e8b;
   --chart-4: #b45309;
 }
+
+/* Compact controls for the bar gallery, including its series totals. */
+.bar-recipes .recipes-controls fieldset {
+  padding: 2px;
+  border-radius: 6px;
+}
+.bar-recipes .recipes-controls button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 16px;
+}
+.bar-recipes .recipe-total {
+  display: inline;
+  margin: 0 0 0 6px;
+  font-size: 12px;
+  font-weight: 550;
+}

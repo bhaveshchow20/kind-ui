@@ -192,7 +192,7 @@ test("signed bars cover positive, negative, missing and zero without changing th
 
 test("dense series selection updates bars, totals and tooltips without restarting motion", async ({
   page,
-}) => {
+}, info) => {
   await page.clock.install();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/bars.html");
@@ -227,4 +227,7 @@ test("dense series selection updates bars, totals and tooltips without restartin
   await page.keyboard.press("ArrowRight");
   await page.clock.runFor(32);
   await expect(region.getByRole("status")).toContainText("61 tasks");
+  await page.keyboard.press("Escape");
+  await region.getByRole("heading", { name: "Interactive", exact: true }).click();
+  await region.screenshot({ path: info.outputPath("compact-series-buttons.png") });
 });

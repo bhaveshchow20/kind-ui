@@ -185,7 +185,11 @@ function App() {
     },
   ];
   return (
-    <main className="recipes" data-palette={palette} data-motion={animate ? "on" : "off"}>
+    <main
+      className="recipes bar-recipes"
+      data-palette={palette}
+      data-motion={animate ? "on" : "off"}
+    >
       <header className="recipes-header">
         <a href="/">Kind UI</a>
         <h1>Bar recipes</h1>
@@ -398,7 +402,7 @@ function App() {
                   aria-pressed={activeSeries === key}
                   onClick={() => setActiveSeries(key)}
                 >
-                  {key === "primary" ? "Automated" : "Assisted"}
+                  {key === "primary" ? "Automated" : "Assisted"}{" "}
                   <span className="recipe-total">
                     {dailyViews
                       .reduce((total, point) => total + (point[key] ?? 0), 0)
