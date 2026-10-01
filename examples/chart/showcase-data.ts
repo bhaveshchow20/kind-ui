@@ -1,4 +1,4 @@
-export type Family = "area" | "line" | "bar";
+export type Family = "area" | "line" | "bar" | "pie" | "radar" | "radial";
 export type Point = { period: string; primary: number | null; secondary: number | null };
 export type Example = {
   id: string;
@@ -161,6 +161,98 @@ export const examples: Record<Family, Example[]> = {
       data: points([24, -16, 38, -9, 18, -25]),
       type: "linear",
       target: 0,
+    },
+  ],
+  pie: [
+    {
+      id: "pie",
+      title: "Pie",
+      detail: "Continuous sectors",
+      label: "Allocation",
+      unit: "hours",
+      data: points([24, 48, 16, 8]),
+    },
+    {
+      id: "donut",
+      title: "Donut",
+      detail: "Native innerRadius and center Label",
+      label: "Allocation",
+      unit: "hours",
+      data: points([36, 22, 18, 12]),
+    },
+  ],
+  radar: [
+    {
+      id: "comparison",
+      title: "Comparison",
+      detail: "Shared 0–100 scale",
+      label: "Actual",
+      second: "Target",
+      unit: "points",
+      data: points([62, 84, 73, 54, 91, 68], [75, 75, 80, 70, 85, 80]),
+    },
+    {
+      id: "outline",
+      title: "Outline",
+      detail: "Unfilled polygons and dots",
+      label: "Actual",
+      second: "Target",
+      unit: "points",
+      data: points([80, 52, 64, 90, 72, 45], [70, 65, 75, 85, 60, 65]),
+    },
+    {
+      id: "range",
+      title: "Range",
+      detail: "Native range radar",
+      label: "Actual",
+      unit: "points",
+      data: points([55, 68, 42, 79, 61, 72], [72, 90, 68, 95, 85, 88]),
+    },
+    {
+      id: "gallery",
+      title: "Grid & shape variants",
+      detail: "12 maintained compositions",
+      label: "Actual",
+      second: "Target",
+      unit: "points",
+      data: points([68, 83, 57, 76, 92, 64], [80, 75, 70, 85, 80, 75]),
+    },
+  ],
+  radial: [
+    {
+      id: "rings",
+      title: "Rings",
+      detail: "Grouped bands with curved labels",
+      label: "Actual",
+      second: "Target",
+      unit: "points",
+      data: points([62, 84, 73], [75, 75, 80]),
+    },
+    {
+      id: "stacked",
+      title: "Stacked",
+      detail: "Additive arcs · 0–200 scale",
+      label: "Actual",
+      second: "Target",
+      unit: "points",
+      data: points([45, 62, 38, 51, 74, 56], [40, 48, 35, 44, 52, 39]),
+    },
+    {
+      id: "gauge",
+      title: "Gauge",
+      detail: "Value in the open center",
+      label: "Actual",
+      unit: "points",
+      data: points([72]),
+    },
+    {
+      id: "gallery",
+      title: "Ring variants",
+      detail: "6 maintained compositions",
+      label: "Actual",
+      second: "Target",
+      unit: "points",
+      data: points([68, 83, 57, 76, 92], [80, 75, 70, 85, 80]),
     },
   ],
   bar: [

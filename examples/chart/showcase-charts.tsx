@@ -3,6 +3,9 @@ import { memo, type ReactNode, useMemo, useState } from "react";
 import * as Area from "./area-recipes";
 import * as Bar from "./bar-recipes";
 import * as Line from "./line-recipes";
+import { Allocation } from "./pie-recipes";
+import { PolarGalleryCard } from "./polar-gallery";
+import { type PolarRecipe, PolarRecipeCard } from "./polar-recipes";
 import type { Example, Family } from "./showcase-data";
 
 export type Finish = "plain" | "paper" | "clay" | "glow";
@@ -86,6 +89,91 @@ export const FeatureChart = memo(function FeatureChart({
         typeof value === "number" ? format(example.unit)(value) : "No data",
     },
   };
+  const [labels, setLabels] = useState(true);
+  const [tooltips, setTooltips] = useState(true);
+  const polar = useMemo(
+    () =>
+      example.data.map((point, index) => ({
+        category: ["Design", "Speed", "Access", "Quality", "Coverage", "Support"][index] ?? "Score",
+        actual: point.primary ?? 0,
+        target: point.secondary ?? 80,
+        range: [
+          Math.max(0, (point.primary ?? 0) - 12),
+          point.secondary ?? Math.min(100, (point.primary ?? 0) + 15),
+        ] as [number, number],
+      })),
+    [example],
+  );
+  if (family === "pie") {
+    const categories = ["research", "delivery", "support", "planning"];
+    const colors = [
+      "var(--chart-1)",
+      "var(--chart-2)",
+      "color-mix(in oklch, var(--chart-1) 65%, var(--card))",
+      "color-mix(in oklch, var(--chart-2) 65%, var(--card))",
+    ];
+    const config: Chart.SeriesConfig = Object.fromEntries(
+      categories.map((key, i) => [
+        key,
+        {
+          label: ["Research", "Delivery", "Support", "Planning"][i] ?? key,
+          color: colors[i] ?? "var(--chart-1)",
+          formatValue: (value: unknown) => `${value} hours`,
+        },
+      ]),
+    );
+    const rows = example.data.map((point, i) => ({
+      id: categories[i] ?? String(i),
+      hours: point.primary ?? 0,
+    }));
+    return (
+      <div className="gallery-chart">
+        <Allocation config={config} rows={rows} donut={example.id === "donut"} animate={animate} />
+      </div>
+    );
+  }
+  if (family === "radar" || family === "radial") {
+    const recipe = example.title as PolarRecipe;
+    return (
+      <div className="gallery-chart polar-example">
+        <div className="polar-options">
+          <label>
+            <input
+              type="checkbox"
+              checked={labels}
+              onChange={(event) => setLabels(event.target.checked)}
+            />{" "}
+            Labels
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={tooltips}
+              onChange={(event) => setTooltips(event.target.checked)}
+            />{" "}
+            Tooltips
+          </label>
+        </div>
+        {example.id === "gallery" ? (
+          <PolarGalleryCard
+            kind={family}
+            data={polar}
+            animate={animate ? entrance : false}
+            showText={labels}
+            tooltips={tooltips}
+          />
+        ) : (
+          <PolarRecipeCard
+            recipe={recipe}
+            data={polar}
+            animate={animate ? entrance : false}
+            showText={labels}
+            tooltips={tooltips}
+          />
+        )}
+      </div>
+    );
+  }
   let content: ReactNode;
   if (family === "area") {
     const props = { ...common, data, motion };
@@ -107,7 +195,12 @@ export const FeatureChart = memo(function FeatureChart({
     else if (example.type === "stepAfter") content = <Area.StepArea {...props} />;
     else content = <Area.LinearArea {...props} />;
   } else if (family === "line") {
-    const props = { ...common, data, animate };
+    const props = {
+      ...common,
+      data,
+      seriesLabel: example.label,
+      animate: animate ? entrance : false,
+    };
     if (example.second)
       content = (
         <Line.ComparisonLine
@@ -117,7 +210,7 @@ export const FeatureChart = memo(function FeatureChart({
           visibleSeries={visible}
           onVisibleSeriesChange={setVisible}
           material={material}
-          animate={animate}
+          animate={animate ? entrance : false}
         />
       );
     else if (example.target !== undefined)

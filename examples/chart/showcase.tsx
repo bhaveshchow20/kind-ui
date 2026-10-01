@@ -8,7 +8,7 @@ import { exampleCode } from "./showcase-code";
 import { type Example, examples, type Family } from "./showcase-data";
 import { useReducedMotionPreference } from "./use-reduced-motion";
 
-const families: Family[] = ["area", "bar", "line"];
+const families: Family[] = ["area", "bar", "line", "pie", "radar", "radial"];
 const finishes: Finish[] = ["plain", "paper", "clay", "glow"];
 const palettes = [
   { name: "Blue", color: "#5b7cde", secondary: "#5b9f8a" },
@@ -70,6 +70,7 @@ function Showcase() {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
+  const codeRequest = useRef(0);
   const reducedMotion = useReducedMotionPreference();
   const animate = motion && !reducedMotion;
   const [codeExample, setCodeExample] = useState<Example | null>(null);
@@ -79,25 +80,29 @@ function Showcase() {
     return () => window.clearTimeout(timer);
   }, [status]);
   async function copy(example: Example) {
-    const next = await exampleCode(family, example, material, animate, color, secondary);
+    const request = ++codeRequest.current;
     try {
+      const next = await exampleCode(family, example, material, animate, color, secondary);
+      if (request !== codeRequest.current) return;
       await navigator.clipboard.writeText(next);
-      setStatus(`${example.title} code copied`);
+      if (request === codeRequest.current) setStatus(`${example.title} code copied`);
     } catch {
-      setCode(next);
-      setCodeExample(example);
-      dialog.current?.showModal();
+      if (request !== codeRequest.current) return;
+      await showCode(example);
       setStatus("Select the code and copy it.");
     }
   }
   async function showCode(example: Example) {
+    const request = ++codeRequest.current;
     setCodeExample(example);
     setCode("Loading code…");
     dialog.current?.showModal();
     try {
-      setCode(await exampleCode(family, example, material, animate, color, secondary));
+      const next = await exampleCode(family, example, material, animate, color, secondary);
+      if (request === codeRequest.current) setCode(next);
     } catch {
-      setCode("Code could not load. Close this dialog and try again.");
+      if (request === codeRequest.current)
+        setCode("Code could not load. Close this dialog and try again.");
     }
   }
   function navigateTabs(event: KeyboardEvent<HTMLButtonElement>, value: Family) {
@@ -112,6 +117,7 @@ function Showcase() {
             : undefined;
     if (!next) return;
     event.preventDefault();
+    codeRequest.current++;
     setFamily(next);
     document.getElementById(`tab-${next}`)?.focus();
   }
@@ -160,7 +166,10 @@ function Showcase() {
               aria-selected={family === value}
               aria-controls={`panel-${value}`}
               tabIndex={family === value ? 0 : -1}
-              onClick={() => setFamily(value)}
+              onClick={() => {
+                codeRequest.current++;
+                setFamily(value);
+              }}
               onKeyDown={(event) => navigateTabs(event, value)}
             >
               {capitalize(value)}
@@ -170,11 +179,15 @@ function Showcase() {
         <div className="gallery-controls">
           <fieldset>
             <legend>Finish</legend>
-            <div className="finish-options">
+            <div
+              className="finish-options"
+              aria-disabled={family === "pie" || family === "radar" || family === "radial"}
+            >
               {finishes.map((value) => (
                 <label key={value}>
                   <input
                     type="radio"
+                    disabled={family === "pie" || family === "radar" || family === "radial"}
                     name="finish"
                     value={value}
                     checked={material === value}
@@ -217,6 +230,7 @@ function Showcase() {
             <span>Motion</span>
             <input
               type="checkbox"
+              aria-label="Motion"
               checked={motion}
               onChange={(event) => setMotion(event.target.checked)}
             />
@@ -246,7 +260,14 @@ function Showcase() {
       <p className="copy-status" role="status" aria-live="polite">
         {status}
       </p>
-      <dialog ref={dialog} className="code-dialog" aria-labelledby="code-title">
+      <dialog
+        ref={dialog}
+        className="code-dialog"
+        aria-labelledby="code-title"
+        onClose={() => {
+          codeRequest.current++;
+        }}
+      >
         <div>
           <h2 id="code-title">
             {codeExample?.title} · {capitalize(family)}

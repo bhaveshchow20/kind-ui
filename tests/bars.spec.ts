@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 test("first mouse activation stays bounded during motion at the bottom edge", async ({
   page,

@@ -462,3 +462,88 @@ pre:focus-visible {
   fill: var(--muted-foreground);
   font-size: 11px;
 }
+
+.gallery-chart .recharts-cartesian-axis .recharts-text {
+  font-size: 11px;
+}
+.gallery-chart .recipe-chart svg text {
+  font-size: 11px;
+}
+.switch-track {
+  pointer-events: none;
+}
+.gallery-chart .recipe-chart {
+  display: flex;
+  flex-direction: column;
+}
+.gallery-chart .recipe-chart > [data-kind-ui="chart-legend"] {
+  order: 2;
+}
+.gallery-chart .polar-card,
+.gallery-chart .pie-card {
+  min-width: 0;
+}
+.gallery-chart .polar-card > h2,
+.gallery-chart .pie-card > h2,
+.gallery-chart .polar-card > p:not([role="status"]),
+.gallery-chart .pie-card > p,
+.gallery-chart .pie-card [data-kind-ui="chart"] > p:not([role="status"]) {
+  display: none;
+}
+.gallery-chart .polar-card table,
+.gallery-chart .pie-card table {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.gallery-chart .polar-card [data-kind-ui="chart"],
+.gallery-chart .pie-card [data-kind-ui="chart"] {
+  display: flex;
+  flex-direction: column;
+}
+.gallery-chart .polar-card [data-kind-ui="chart-legend"],
+.gallery-chart .pie-card [data-kind-ui="chart-legend"] {
+  order: 2;
+}
+.gallery-chart .pie-card [data-kind-ui="chart"] > p[role="status"] {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.polar-options {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-bottom: 10px;
+}
+.gallery-chart .polar-card > label {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  display: block;
+  margin: 8px 0;
+}
+.gallery-chart select {
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px;
+}
+.gallery-chart .recharts-polar-angle-axis-tick text,
+.gallery-chart .recharts-polar-radius-axis-tick text {
+  fill: var(--muted-foreground);
+  font-size: 11px;
+}
+.gallery-chart [data-gauge-value] {
+  fill: var(--foreground);
+  font-size: 36px;
+  font-weight: 600;
+}
+.finish-options[aria-disabled="true"] {
+  opacity: 0.45;
+}
+.finish-options[aria-disabled="true"] label {
+  cursor: default;
+}
