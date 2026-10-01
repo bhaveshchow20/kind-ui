@@ -300,3 +300,9 @@
   margin: 0;
   pointer-events: none;
 }
+
+.recipe-chart
+  [data-kind-ui="chart-legend-button"][aria-pressed="false"]
+  [data-kind-ui="chart-indicator"] {
+  border-color: currentColor;
+}

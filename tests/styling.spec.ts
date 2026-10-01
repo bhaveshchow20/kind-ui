@@ -72,3 +72,17 @@ test("Tailwind utility layer overrides component defaults without important rule
   await expect(tooltip).toHaveCSS("padding", "5px");
   await expect(tooltip).toHaveCSS("font-size", "18px");
 });
+
+test("hidden colored legend markers inherit the muted label color", async ({ page }) => {
+  await page.goto("/recipes.html");
+  await page.getByRole("button", { name: "Color", exact: true }).click();
+  const comparison = page.getByRole("region", { name: "Week over week" });
+  const button = comparison.getByRole("button", { name: "This week", exact: true });
+  const marker = button.locator('[data-kind-ui="chart-indicator"]');
+  const seriesColor = await marker.evaluate((node) => getComputedStyle(node).backgroundColor);
+  await button.click();
+  const muted = await button.evaluate((node) => getComputedStyle(node).color);
+  expect(muted).not.toBe(seriesColor);
+  await expect(marker).toHaveCSS("background-color", muted);
+  await expect(button).toHaveCSS("text-decoration-line", "none");
+});

@@ -99,13 +99,16 @@ function PositionedContent({
   const [size, setSize] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {
     if (!node) return;
-    const measure = () => {
-      const bounds = node.getBoundingClientRect();
-      const next = { width: bounds.width, height: bounds.height };
+    const measure = (entry?: ResizeObserverEntry) => {
+      const box = entry?.borderBoxSize[0];
+      const next = {
+        width: box?.inlineSize ?? node.offsetWidth,
+        height: box?.blockSize ?? node.offsetHeight,
+      };
       setSize((old) => (old.width === next.width && old.height === next.height ? old : next));
     };
     measure();
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(([entry]) => measure(entry));
     observer.observe(node);
     return () => observer.disconnect();
   }, [node]);

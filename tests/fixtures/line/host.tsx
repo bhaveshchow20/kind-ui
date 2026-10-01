@@ -205,6 +205,8 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
   const [gaps, setGaps] = useState(false);
   const [filter, setFilter] = useState(false);
   const [dots, setDots] = useState(false);
+  const [cssPaint, setCssPaint] = useState(false);
+  const [gradient, setGradient] = useState(false);
   const points = flat
     ? [
         { time: "A", value: 4, other: 6 },
@@ -246,6 +248,12 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
       <button type="button" onClick={() => setEqualWidth(!equalWidth)}>
         Equal width
       </button>
+      <button type="button" onClick={() => setCssPaint(!cssPaint)}>
+        CSS paint
+      </button>
+      <button type="button" onClick={() => setGradient(!gradient)}>
+        Gradient
+      </button>
       {(["plain", "paper", "clay", "glow"] satisfies Static.LineMaterial[]).map((material) => (
         <section
           key={material}
@@ -279,6 +287,12 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
                 margin={{ top: 14, right: 14, bottom: 8, left: 4 }}
                 aria-label={`${material} chart`}
               >
+                <defs>
+                  <linearGradient id={`${material}-proof-gradient`}>
+                    <stop offset="0%" stopColor="#9e503b" />
+                    <stop offset="100%" stopColor="#427768" />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid vertical={false} stroke="#e2e0db" />
                 <XAxis dataKey="time" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
                 <YAxis
@@ -291,6 +305,8 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
                 />
                 <Static.LineSeries
                   dataKey="value"
+                  style={cssPaint ? { stroke: "#6b45b3" } : undefined}
+                  {...(gradient ? { stroke: `url(#${material}-proof-gradient)` } : {})}
                   type="monotone"
                   material={material}
                   {...(equalWidth ? { strokeWidth: 6 } : {})}

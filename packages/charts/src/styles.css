@@ -33,12 +33,6 @@
     cursor: pointer;
   }
 
-  :where(
-    [data-kind-ui="chart-legend-button"][aria-pressed="false"] [data-kind-ui="chart-indicator"]
-  ) {
-    background: currentColor;
-  }
-
   :where([data-kind-ui="chart-legend-item"] > span) {
     display: inline-flex;
     align-items: center;
@@ -59,6 +53,12 @@
     width: 8px;
     height: 8px;
     background: var(--kind-ui-chart-indicator-color, currentColor);
+  }
+
+  :where(
+    [data-kind-ui="chart-legend-button"][aria-pressed="false"] [data-kind-ui="chart-indicator"]
+  ) {
+    background: currentColor;
   }
 
   :where([data-kind-ui="chart-tooltip"]) {

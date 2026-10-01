@@ -442,3 +442,30 @@ test("dotted guide toggles independently from the compact tooltip", async ({ pag
   await expect(region.locator(".recharts-tooltip-cursor")).toHaveCount(0);
   await expect(region.getByRole("status")).toBeVisible();
 });
+
+test("content-sized tooltip bounds use chart units inside a scaled host", async ({ page }) => {
+  await page.goto("/recipes.html");
+  const region = page.getByRole("region", { name: "Smooth", exact: true });
+  await region.locator('[data-kind-ui="chart"]').evaluate((node) => {
+    Object.assign((node as HTMLElement).style, {
+      transform: "scale(0.5)",
+      transformOrigin: "top left",
+    });
+  });
+  const chart = region.getByRole("application");
+  await chart.focus();
+  for (let index = 0; index < 7; index++) await page.keyboard.press("ArrowRight");
+  await expect(region.getByRole("status")).toContainText("48 tasks");
+  await expect
+    .poll(async () => {
+      const bounds = await chart.boundingBox();
+      const tooltip = await region.locator('[data-kind-ui="tooltip-frame"]').boundingBox();
+      return (
+        bounds &&
+        tooltip &&
+        tooltip.x >= bounds.x &&
+        tooltip.x + tooltip.width <= bounds.x + bounds.width + 0.5
+      );
+    })
+    .toBe(true);
+});

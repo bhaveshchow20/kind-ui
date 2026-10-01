@@ -14,6 +14,7 @@ for (const mode of ["static", "motion"] as const) {
     await page.getByRole("application").first().focus();
     await page.getByRole("application").nth(1).focus();
     await page.getByRole("application").nth(2).focus();
+    await page.getByRole("application").nth(3).focus();
     const geometry = await curves.evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute("d")),
     );
@@ -37,7 +38,7 @@ for (const mode of ["static", "motion"] as const) {
     await expect(
       page.locator("feDisplacementMap, filter animate, filter animateTransform"),
     ).toHaveCount(0);
-    await page.screenshot({ path: info.outputPath(`${mode}-mono-normal.png`) });
+    await page.screenshot({ path: info.outputPath(`${mode}-mono-normal.png`), fullPage: true });
     await page.getByRole("button", { name: "Equal width", exact: true }).click();
     const before = await page.getByRole("application", { name: "plain chart" }).screenshot();
     const paper = await page.getByRole("application", { name: "paper chart" }).screenshot();
@@ -65,7 +66,7 @@ for (const mode of ["static", "motion"] as const) {
     await page
       .getByRole("region", { name: "paper", exact: true })
       .evaluate((node) => (node as HTMLElement).style.removeProperty("--kind-ui-line-paper-grain"));
-    await page.screenshot({ path: info.outputPath(`${mode}-equal-width.png`) });
+    await page.screenshot({ path: info.outputPath(`${mode}-equal-width.png`), fullPage: true });
     await page.getByRole("button", { name: "Equal width", exact: true }).click();
     await page.getByRole("button", { name: "Palette", exact: true }).click();
     expect(
@@ -74,8 +75,20 @@ for (const mode of ["static", "motion"] as const) {
     expect(await curves.first().evaluate((node) => getComputedStyle(node).stroke)).toBe(
       "rgb(158, 80, 59)",
     );
-    await page.screenshot({ path: info.outputPath(`${mode}-color-normal.png`) });
+    await page.screenshot({ path: info.outputPath(`${mode}-color-normal.png`), fullPage: true });
+    await page.getByRole("button", { name: "CSS paint", exact: true }).click();
+    const cssGlow = await glowChart.screenshot();
     await page.getByRole("button", { name: "Custom color", exact: true }).click();
+    await page.getByRole("button", { name: "CSS paint", exact: true }).click();
+    expect((await glowChart.screenshot()).equals(cssGlow)).toBe(true);
+    await page.getByRole("button", { name: "Gradient", exact: true }).click();
+    await expect(glowChart.locator(".recharts-line-curve").first()).toHaveAttribute(
+      "stroke",
+      "url(#glow-proof-gradient)",
+    );
+    expect((await glowChart.screenshot()).equals(cssGlow)).toBe(false);
+    await glowChart.screenshot({ path: info.outputPath(`${mode}-glow-gradient.png`) });
+    await page.getByRole("button", { name: "Gradient", exact: true }).click();
     for (const index of [0, 2, 4, 6])
       expect(await curves.nth(index).evaluate((node) => getComputedStyle(node).stroke)).toBe(
         "rgb(107, 69, 179)",
@@ -91,14 +104,14 @@ for (const mode of ["static", "motion"] as const) {
         .evaluate((node) => getComputedStyle(node).backgroundColor),
     ).toBe("rgb(107, 69, 179)");
     await page.keyboard.press("Escape");
-    await page.screenshot({ path: info.outputPath(`${mode}-custom-normal.png`) });
+    await page.screenshot({ path: info.outputPath(`${mode}-custom-normal.png`), fullPage: true });
     await page.setViewportSize({ width: 320, height: 900 });
     await expect(page.getByRole("application").first()).toHaveAttribute("width", "272");
-    await page.screenshot({ path: info.outputPath(`${mode}-custom-narrow.png`) });
+    await page.screenshot({ path: info.outputPath(`${mode}-custom-narrow.png`), fullPage: true });
     await page.getByRole("button", { name: "Custom color", exact: true }).click();
-    await page.screenshot({ path: info.outputPath(`${mode}-color-narrow.png`) });
+    await page.screenshot({ path: info.outputPath(`${mode}-color-narrow.png`), fullPage: true });
     await page.getByRole("button", { name: "Palette", exact: true }).click();
-    await page.screenshot({ path: info.outputPath(`${mode}-mono-narrow.png`) });
+    await page.screenshot({ path: info.outputPath(`${mode}-mono-narrow.png`), fullPage: true });
     await expect(page.locator('[data-kind-ui="line-material"][clip-path^="url"]')).toHaveCount(6);
     await page.getByRole("button", { name: "Gaps", exact: true }).click();
     const gaps = await curves.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
@@ -112,7 +125,7 @@ for (const mode of ["static", "motion"] as const) {
       nodes.map((node) => Number(node.getAttribute("height"))),
     );
     expect(flatBounds.every((height) => height >= 14 && height <= 24)).toBe(true);
-    await page.screenshot({ path: info.outputPath(`${mode}-flat-narrow.png`) });
+    await page.screenshot({ path: info.outputPath(`${mode}-flat-narrow.png`), fullPage: true });
     await page.getByRole("button", { name: "Dots", exact: true }).click();
     const dotWidths = await page
       .locator(".recharts-line-dot")
@@ -142,11 +155,11 @@ test("material paint remains static when Motion is off or reduced", async ({ pag
   await page.getByLabel("Animate", { exact: true }).uncheck();
   await expect(page.locator('clipPath[id$="-reveal"]')).toHaveCount(0);
   await expect(page.locator("filter")).toHaveCount(6);
-  await page.screenshot({ path: info.outputPath("motion-off.png") });
+  await page.screenshot({ path: info.outputPath("motion-off.png"), fullPage: true });
   await page.getByLabel("Animate", { exact: true }).check();
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator('[data-kind-ui="line-frame"][data-motion="off"]')).toHaveCount(4);
   await expect(page.locator('clipPath[id$="-reveal"]')).toHaveCount(0);
   await expect(page.locator("filter")).toHaveCount(6);
-  await page.screenshot({ path: info.outputPath("motion-reduced.png") });
+  await page.screenshot({ path: info.outputPath("motion-reduced.png"), fullPage: true });
 });
