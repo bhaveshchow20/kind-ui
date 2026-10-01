@@ -10,6 +10,8 @@ Kind UI is pre-release and unpublished. The repository uses an open-source contr
 4. Run `npm run format` and `npm run check`. Report exactly what was checked and anything blocked.
 5. Open a draft PR describing the purpose, changed behavior/API, verification, and known limits. For stacked work, name and link its immediate base PR.
 
+`main` requires a pull request, passing Node 22/24 CI checks against the current base, and resolved review conversations. Force pushes and deletion are blocked. See the [branch protection policy](docs/branch-protection.md) for the ruleset configuration, OSS references, and maintenance instructions.
+
 ## Commands
 
 - `npm run build`: compile the library entry point and its declarations
