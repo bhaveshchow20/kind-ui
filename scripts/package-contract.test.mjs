@@ -48,7 +48,25 @@ test("rejects CSS that bundlers may drop or consumers cannot resolve", () => {
     /side effects/,
   );
   assert.throws(
-    () => assertPackageContract({ ...manifest, exports: { ".": manifest.exports["."] } }, files),
+    () =>
+      assertPackageContract(
+        {
+          ...manifest,
+          exports: { ".": manifest.exports["."] },
+        },
+        files,
+      ),
     /CSS export/,
+  );
+});
+
+test("rejects optional Motion", () => {
+  assert.throws(
+    () =>
+      assertPackageContract(
+        { ...manifest, peerDependenciesMeta: { motion: { optional: true } } },
+        files,
+      ),
+    /required/,
   );
 });

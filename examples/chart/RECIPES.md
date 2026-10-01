@@ -1,8 +1,8 @@
 # Compact line recipes
 
-Run `npm ci` and `npm run dev:chart`, then open `/recipes.html`. The responsive gallery offers eight distinct line variants: smooth, linear, step, dots, custom markers, labels, target and controlled comparison. These are copyable application components, not new package exports.
+Run `npm ci` and `npm run dev:chart`, then open `/recipes.html`. The responsive gallery offers eight distinct line variants: smooth, linear, step, dots, custom markers, labels, target and controlled comparison. These are application compositions of the exported `LineChart`, `LineSeries` and `Tooltip`, with host-owned geometry and layout.
 
-Copy `line-recipes.tsx`, `line-motion.tsx`, `recipe-motion.tsx`, `use-reduced-motion.ts` and the relevant rules from `recipes.css` into your React 19 host. Import `@kind-ui/charts/styles.css` once. Supply your host's `--chart-1`, `--chart-2`, `--card`, `--border`, `--muted-foreground`, `--accent` and `--ring` tokens. The example's `style.css` provides Geist and monochrome/color tokens; neither Tailwind nor Geist is required by the package.
+Use the public APIs described in [the package contract](../../packages/charts/README.md). `line-recipes.tsx` shows existing application compositions; shared interaction and motion are maintained in the package. Import `@kind-ui/charts/styles.css` once. Supply your host's `--chart-1`, `--chart-2`, `--card`, `--border`, `--muted-foreground`, `--accent` and `--ring` tokens. The example's `style.css` provides Geist and monochrome/color tokens; neither Tailwind nor Geist is required by the package.
 
 | Recipe | Data | Use |
 | --- | --- | --- |
@@ -29,16 +29,16 @@ The host in `recipes.tsx` owns titles, summary metrics, input data, empty states
 
 ## Motion controls
 
-Motion is off by default. The host toggle enables a coordinated Motion SVG clip reveal of each Recharts line group (stroke and resting dots together). Axes stay still. Active markers and tooltip content use a retargetable Motion spring during pointer travel. The recipe-local `motion` option sets timing; it does not add a package API:
+Motion is off by default. The host toggle enables a coordinated Motion SVG clip reveal of each Recharts line group (stroke and resting dots together). Axes stay still. Active markers and tooltip content use a retargetable Motion spring during pointer travel. The package's `LineAnimation` options set timing:
 
 ```tsx
-<TrendLine {...props} /> // explicit static path: omit motion
-<TrendLine {...props} motion={{ revealDurationMs: 1000, revealEasing: [0.25, 0.1, 0.25, 1], hoverTransition: { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } }} />
+<TrendLine {...props} /> // immediate rendering: omit animate or pass false
+<TrendLine {...props} animate={{ revealDurationMs: 1000, revealEasing: [0.25, 0.1, 0.25, 1], hoverTransition: { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } }} />
 ```
 
-The recipe subscribes to the operating-system motion preference; the stylesheet also disables clipping under `prefers-reduced-motion: reduce`. The host also responds to preference changes. Pointer interaction or keyboard focus completes the reveal for the mounted chart so values remain available after focus moves away. Newly mounted charts reveal; ordinary palette, visibility and tooltip updates do not replay it. Removing data interrupts the reveal; restoring it mounts fresh lines. Tooltips follow both mouse coordinates, fall back to the engine position for keyboard exploration, and hide entirely missing categories. Tooltip coordinates are clamped inside the chart; the engine tooltip anchor stays fixed so Motion is the only position animator. Missing points remove active markers instead of interpolating fabricated values. Turning motion off or changing reduced-motion preference updates active markers and tooltips immediately. Legend hover/focus uses a subtle background change, with a 120ms transition only when motion is enabled and reduced motion is off.
+The package subscribes reactively to the operating-system motion preference. The host also responds to preference changes. Pointer interaction or keyboard focus completes the reveal for the mounted chart so values remain available after focus moves away. Newly mounted charts reveal; ordinary palette and tooltip updates do not replay it. Visibility/data changes and measured resizing cancel the entrance. Removing data interrupts the reveal; restoring it mounts fresh lines. Tooltips follow both mouse coordinates, fall back to the engine position for keyboard exploration, and hide entirely missing categories. Tooltip coordinates are clamped inside the chart; the engine tooltip anchor stays fixed so Motion is the only position animator. Missing points remove active markers instead of interpolating fabricated values. Turning motion off or changing reduced-motion preference updates active markers and tooltips immediately. Legend hover/focus uses a subtle background change, with a 120ms transition only when motion is enabled and reduced motion is off.
 
-Recharts owns geometry. Its `Line` supports `isAnimationActive`, `animationBegin`, `animationDuration`, `animationEasing`, `dot`, `activeDot` and `shape` in the tested 3.10.1 version. Edit the composition directly if you want engine interpolation instead: remove the recipe reveal and supply those engine props. Avoid two animation systems controlling the same marks. Custom dot/shape rendering requires consumer implementation and testing; this PR does not supply arbitrary path morphing.
+Recharts owns geometry. Its `Line` supports `isAnimationActive`, `animationBegin`, `animationDuration`, `animationEasing`, `dot`, `activeDot` and `shape` in the tested 3.10.1 version. Kind disables engine animation and excludes `isAnimationActive` from its public LineSeries API; `animate` controls Motion. Use native Recharts components when engine interpolation is required. Custom dot/shape rendering requires consumer implementation and testing; the package does not supply arbitrary path morphing.
 
 ## Optional Motion composition
 
@@ -58,7 +58,7 @@ const MotionLegend = motion.create(Legend);
 </MotionConfig>
 ```
 
-Plain `Root`/`Legend` do not themselves accept `animate`, `variants` or `exit`. Motion is a workspace development dependency used by the optional recipes and a packed-consumer compatibility fixture. It is absent from package dependencies; all hosts copying this recipe file must install Motion, including when `motion` is omitted. The fixture checks Motion 13.4.6 with React 19.3.0; it does not promise every Motion gesture/layout/exit combination. Motion can still animate opacity under its reduced-motion setting, so hosts needing no animation at all must explicitly disable it.
+Plain `Root`/`Legend` do not themselves accept `animate`, `variants` or `exit`. Motion is an optional package peer used only by the `/motion` entry. This example imports that entry, so its host must install Motion even when the toggle is off. The root entry and its declarations work without Motion. The fixture checks Motion 13.4.6 with React 19.3.0; it does not promise every Motion gesture/layout/exit combination. Motion can still animate opacity under its reduced-motion setting, so hosts needing no animation at all must explicitly disable it.
 
 `npm run check` checks strict packed consumers, component contracts and browser behavior. CI saves real screenshots in the chart artifacts. Pointer tests exercise intermediate motion, interrupted target changes and reduced-motion updates without recording video. Chromium checks are not a screen-reader conformance claim.
 

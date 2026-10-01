@@ -1,7 +1,7 @@
-import { Legend, Root, TooltipContent } from "@kind-ui/charts";
+import { Legend, LineChart, LineSeries, Root, Tooltip, TooltipContent } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
+import { ResponsiveContainer } from "recharts";
 import "./style.css";
 
 function Fixture({ name, color }: { name: string; color: string }) {
@@ -47,14 +47,8 @@ function Fixture({ name, color }: { name: string; color: string }) {
             accessibilityLayer
             aria-label={`Chart ${name}`}
           >
-            <Line
-              dataKey="count"
-              hide={!visible.includes("count")}
-              stroke="var(--color-count)"
-              isAnimationActive={false}
-            />
+            <LineSeries dataKey="count" stroke="var(--color-count)" />
             <Tooltip
-              isAnimationActive={false}
               content={(tooltip) => (
                 <TooltipContent
                   className="p-[5px] text-[18px]"

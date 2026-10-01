@@ -129,7 +129,9 @@ test("Motion advances one shared clip per chart and completes without engine int
   expect(paths[0]).toContain("-reveal");
   const dots = await comparison
     .locator(".recharts-line-dots")
-    .evaluateAll((groups) => groups.map((group) => getComputedStyle(group).clipPath));
+    .evaluateAll((groups) =>
+      groups.map((group) => getComputedStyle(group.closest(".recharts-line") ?? group).clipPath),
+    );
   expect(dots).toHaveLength(2);
   expect(dots).toEqual(paths);
   await expect(comparison.locator("clipPath[id$='-reveal']")).toHaveAttribute(
@@ -199,10 +201,10 @@ test("pointer travel retargets active markers and tooltip continuously, then set
   if (!start || !end || !middle) throw new Error("Missing sample coordinates");
   await page.mouse.move(start.x, start.y);
   await page.clock.runFor(1500);
-  const marker = section.locator("[data-recipe-active-marker]");
+  const marker = section.locator('[data-kind-ui="active-marker"]');
   await expect(marker).toHaveCount(1);
   const first = Number.parseFloat((await marker.getAttribute("cx")) ?? "NaN");
-  const movingTooltip = section.locator("[data-recipe-tooltip-motion]");
+  const movingTooltip = section.locator('[data-kind-ui="tooltip-motion"]');
   const readX = () =>
     movingTooltip.evaluate((node) => new DOMMatrixReadOnly(getComputedStyle(node).transform).m41);
   const firstTooltipX = await readX();
@@ -250,7 +252,7 @@ test("pointer travel retargets active markers and tooltip continuously, then set
   const middleTooltipX = Math.max(0, Math.min(middle.cx + 12, svgWidth - tipWidth));
   // Mouse coordinates are rounded to device pixels by the browser/engine.
   expect(Math.abs((await readX()) - middleTooltipX)).toBeLessThanOrEqual(1);
-  const tooltip = section.locator("[data-recipe-tooltip-motion]");
+  const tooltip = section.locator('[data-kind-ui="tooltip-motion"]');
   const tooltipBox = await tooltip.boundingBox();
   const chartBox = await section.getByRole("application").boundingBox();
   expect(
