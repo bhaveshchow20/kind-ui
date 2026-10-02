@@ -343,3 +343,124 @@ test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geomet
       "",
     );
 });
+
+const Icon = () => h("svg", { "data-icon": "task" }, h("title", {}, "Decorative task"));
+const iconConfig = { ...config, count: { ...config.count, icon: Icon } };
+const optionContent = (options = {}, extra = {}) =>
+  render(
+    h(
+      Root,
+      { config: iconConfig },
+      h(TooltipContent, { tooltip: tooltip([entry(0)], extra), ...options }),
+    ),
+  );
+test("tooltip icon takes precedence; hiding decoration preserves value and live feedback", () => {
+  for (const indicator of ["dot", "line", "dashed"]) {
+    const html = optionContent({ indicator });
+    assert.match(html, /aria-hidden="true" data-kind-ui="chart-icon"/);
+    assert.match(html, /data-icon="task"/);
+    assert.doesNotMatch(html, /data-kind-ui="chart-indicator"/);
+    assert.match(html, /0 tasks/);
+  }
+  const hidden = optionContent({ hideIndicator: true, hideLabel: true });
+  assert.doesNotMatch(
+    hidden,
+    /data-kind-ui="chart-icon"|data-kind-ui="chart-indicator"|chart-tooltip-label/,
+  );
+  assert.match(hidden, /role="status"/);
+  assert.match(hidden, /Tasks/);
+  assert.match(hidden, /0 tasks/);
+  assert.doesNotMatch(hidden, /hideLabel=|hideIndicator=|indicator=/);
+});
+test("indicator choices, missing/unknown metadata and header formatters remain independent", () => {
+  for (const indicator of ["dot", "line", "dashed"]) {
+    const html = render(
+      h(Root, { config }, h(TooltipContent, { tooltip: tooltip([entry(0)]), indicator })),
+    );
+    assert.match(html, new RegExp(`data-indicator="${indicator}"`));
+    assert.match(html, /aria-hidden="true"/);
+  }
+  assert.match(content([entry(0)]), /data-indicator="line"/);
+  assert.match(optionContent({}, { labelFormatter: () => "Formatted day" }), /Formatted day/);
+  assert.doesNotMatch(
+    optionContent(
+      { hideLabel: true },
+      {
+        labelFormatter: () => {
+          throw new Error("Hidden heading must not format");
+        },
+      },
+    ),
+    /chart-tooltip-label/,
+  );
+  assert.match(
+    optionContent({}, { formatter: () => ["Formatted zero", "Tuple label"] }),
+    /Tuple label/,
+  );
+  assert.doesNotMatch(optionContent({}, { formatter: () => null }), /chart-tooltip/);
+});
+test("legend icon fallback and composed noninteractive contents retain controlled semantics", () => {
+  const legend = (props = {}, root = {}) =>
+    render(h(Root, { config: iconConfig, ...root }, h(Legend, props)));
+  assert.match(legend(), /data-icon="task"/);
+  assert.doesNotMatch(legend({ hideIcon: true }), /data-icon="task"/);
+  assert.match(legend({ hideIcon: true }), /chart-indicator/);
+  const html = legend(
+    {
+      children: ({ key, label, visible, marker }) =>
+        h("span", {}, marker, `${key}: ${label} ${visible ? "Shown" : "Hidden"}`),
+    },
+    { visibleSeries: [], onVisibleSeriesChange() {} },
+  );
+  assert.match(html, /aria-pressed="false"/);
+  assert.match(html, /count: Tasks Hidden/);
+  assert.equal((html.match(/<button/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /hideIcon=/);
+});
+test("category itemKey resolves icon, formatting, zero and hidden state together", () => {
+  const category = entry(0, { dataKey: "amount", payload: { category: "count" } });
+  const props = {
+    tooltip: tooltip([category]),
+    itemKey: (entry) => entry.payload.category,
+    indicator: "dashed",
+  };
+  const html = render(
+    h(Root, { config: iconConfig, visibleSeries: ["count"] }, h(TooltipContent, props)),
+  );
+  assert.match(html, /data-series="count"/);
+  assert.match(html, /data-icon="task"/);
+  assert.match(html, /0 tasks/);
+  assert.doesNotMatch(
+    render(h(Root, { config: iconConfig, visibleSeries: [] }, h(TooltipContent, props))),
+    /chart-tooltip/,
+  );
+});
+
+test("presentation options preserve unknown native colors and mixed missing/zero entries", () => {
+  const payload = [
+    entry(0, { dataKey: "unknown", name: "Native", color: "rebeccapurple" }),
+    entry(null),
+  ];
+  const markup = render(
+    h(
+      Root,
+      { config: iconConfig },
+      h(TooltipContent, { tooltip: tooltip(payload), indicator: "dashed" }),
+    ),
+  );
+  assert.match(markup, /data-indicator="dashed"/);
+  assert.match(markup, /--kind-ui-chart-indicator-color:rebeccapurple/);
+  assert.match(markup, /data-icon="task"/);
+  assert.match(markup, /No data/);
+  assert.match(markup, />0</);
+  const hidden = render(
+    h(
+      Root,
+      { config: iconConfig },
+      h(TooltipContent, { tooltip: tooltip(payload), hideIndicator: true }),
+    ),
+  );
+  assert.doesNotMatch(hidden, /chart-icon|chart-indicator/);
+  assert.match(hidden, /No data/);
+  assert.match(hidden, />0</);
+});

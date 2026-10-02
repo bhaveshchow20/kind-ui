@@ -4,7 +4,7 @@ import { assertLineConsumerSource } from "./line-consumer-contract.mjs";
 
 test("line proof accepts public package and host dependencies", () => {
   assertLineConsumerSource(
-    'import { LineSeries } from "@kind-ui/charts"; import "@kind-ui/charts/styles.css";',
+    'import { LineSeries } from "@kind-ui/charts"; import "@kind-ui/charts/styles.css"; import { useReducedMotionPreference } from "./use-reduced-motion.js";',
   );
 });
 for (const specifier of [
