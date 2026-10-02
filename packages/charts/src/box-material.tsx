@@ -15,6 +15,7 @@ export function BoxMaterialFilter({
   size,
   horizontal,
   outlierRadius,
+  strokePadding,
 }: {
   material: Exclude<BoxPlotMaterial, "plain">;
   id: string;
@@ -23,11 +24,12 @@ export function BoxMaterialFilter({
   size: number;
   horizontal: boolean;
   outlierRadius: number;
+  strokePadding: number;
 }) {
   const values = [c.lowerWhisker, c.q1, c.median, c.q3, c.upperWhisker, ...(c.outliers ?? [])];
   const low = Math.min(...values);
   const high = Math.max(...values);
-  const padding = 12 + Math.max(0, outlierRadius);
+  const padding = 12 + Math.max(0, outlierRadius) + strokePadding;
   const bounds = horizontal
     ? {
         x: low - padding,

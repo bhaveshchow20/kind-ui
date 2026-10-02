@@ -204,31 +204,33 @@ export function BoxHost() {
           </Chart.BoxPlotChart>
         </ResponsiveContainer>
       </Chart.Root>
-      <table>
-        <caption>Full distribution statistics, units</caption>
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Lower whisker</th>
-            <th>Q1</th>
-            <th>Median</th>
-            <th>Q3</th>
-            <th>Upper whisker</th>
-            <th>Outliers</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ category, summary }) => (
-            <tr key={category}>
-              <th>{category}</th>
-              {(["lowerWhisker", "q1", "median", "q3", "upperWhisker"] as const).map((key) => (
-                <td key={key}>{summary?.[key] ?? "Missing"}</td>
-              ))}
-              <td>{summary ? summary.outliers?.join(", ") || "None" : "Missing"}</td>
+      <div style={{ maxWidth: "100%", overflowX: "auto" }}>
+        <table>
+          <caption>Full distribution statistics, units</caption>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Lower whisker</th>
+              <th>Q1</th>
+              <th>Median</th>
+              <th>Q3</th>
+              <th>Upper whisker</th>
+              <th>Outliers</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map(({ category, summary }) => (
+              <tr key={category}>
+                <th>{category}</th>
+                {(["lowerWhisker", "q1", "median", "q3", "upperWhisker"] as const).map((key) => (
+                  <td key={key}>{summary?.[key] ?? "Missing"}</td>
+                ))}
+                <td>{summary ? summary.outliers?.join(", ") || "None" : "Missing"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
@@ -272,6 +274,25 @@ export function MaterialGallery() {
               fillOpacity={0.65}
               stroke="#176b69"
               strokeWidth={2}
+            />
+          </svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={220}
+            height={220}
+            data-wide={material}
+            style={{ position: "absolute", left: -10000 }}
+            aria-label={`${material} styled wide stroke`}
+          >
+            <style>{`.wide-mark > [data-box-part] { stroke-width: 80px; } .wide-mark > [data-box-part="box"] { fill: red; fill-opacity: 0; }`}</style>
+            <Chart.BoxPlotMark
+              material={material}
+              className="wide-mark"
+              coordinates={{ lowerWhisker: 100, q1: 130, median: 150, q3: 170, upperWhisker: 190 }}
+              center={100}
+              size={40}
+              fill="#176b69"
+              stroke="#176b69"
             />
           </svg>
           <svg

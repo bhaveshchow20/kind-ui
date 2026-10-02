@@ -1,6 +1,16 @@
 "use client";
 
-import { type ComponentPropsWithRef, type ReactNode, useCallback, useId, useMemo } from "react";
+import {
+  type ComponentPropsWithRef,
+  type ReactNode,
+  useCallback,
+  useId,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { type BarShapeProps, useChartLayout, useXAxisScale, useYAxisScale } from "recharts";
 import { BarChart, type BarChartProps } from "./bar-chart.js";
 import { BarSeries, type BarSeriesProps } from "./bar-series.js";
@@ -87,8 +97,91 @@ export function BoxPlotMark({
   ...props
 }: BoxPlotMarkProps) {
   const id = `kind-ui-box-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const node = useRef<SVGGElement>(null);
+  useImperativeHandle(props.ref, () => {
+    if (!node.current) throw new Error("Missing BoxPlot mark ref");
+    return node.current;
+  }, []);
+  const width = props.style?.strokeWidth ?? strokeWidth;
+  const resolvedWidth = Number.parseFloat(String(width));
+  const miter = Number(props.style?.strokeMiterlimit ?? props.strokeMiterlimit ?? 4);
+  const initialPadding =
+    Number.isFinite(resolvedWidth) && Number.isFinite(miter)
+      ? (Math.max(0, resolvedWidth) * Math.max(1, miter)) / 2
+      : 0;
+  const [paintPadding, setPaintPadding] = useState(initialPadding);
   const materialized =
     material !== "plain" && props.filter === undefined && props.style?.filter === undefined;
+  // Native child selectors can change individual stroke widths. Read their resolved
+  // paint after layout, before first paint, without moving the marks or their refs.
+  useLayoutEffect(() => {
+    const mark = node.current;
+    if (!materialized || !mark) return;
+    const measure = () => {
+      let padding = initialPadding;
+      for (const part of Array.from(mark.querySelectorAll<SVGElement>("[data-box-part]"))) {
+        const style = getComputedStyle(part);
+        let width = Number.parseFloat(style.strokeWidth);
+        if (style.strokeWidth.endsWith("%")) {
+          const svg = part.ownerSVGElement;
+          const viewport = svg?.viewBox.baseVal;
+          const w = viewport?.width || svg?.width.baseVal.value || 0;
+          const h = viewport?.height || svg?.height.baseVal.value || 0;
+          width = ((width / 100) * Math.hypot(w, h)) / Math.SQRT2;
+        }
+        const limit = Number.parseFloat(style.strokeMiterlimit);
+        if (Number.isFinite(width))
+          padding = Math.max(
+            padding,
+            (width * (Number.isFinite(limit) ? Math.max(1, limit) : 4)) / 2,
+          );
+      }
+      setPaintPadding((previous) => (previous === padding ? previous : padding));
+    };
+    measure();
+    // Stylesheets and ancestor theme classes can change paint without a React
+    // update. Observe the actual ownership chain, plus stylesheet loads/edits.
+    const observer = new MutationObserver(measure);
+    observer.observe(mark, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ["class", "style", "stroke", "stroke-width", "stroke-miterlimit"],
+    });
+    for (let ancestor = mark.parentElement; ancestor; ancestor = ancestor.parentElement)
+      observer.observe(ancestor, { attributes: true, attributeFilter: ["class", "style"] });
+    if (mark.ownerSVGElement)
+      observer.observe(mark.ownerSVGElement, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ["class", "style", "stroke", "stroke-width", "stroke-miterlimit"],
+      });
+    observer.observe(mark.ownerDocument.head, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+    });
+    const resize = new ResizeObserver(measure);
+    if (mark.ownerSVGElement) resize.observe(mark.ownerSVGElement);
+    const view = mark.ownerDocument.defaultView;
+    view?.addEventListener("resize", measure);
+    mark.ownerDocument.addEventListener("load", measure, true);
+    mark.addEventListener("pointerover", measure);
+    mark.addEventListener("pointerout", measure);
+    const dark = view?.matchMedia("(prefers-color-scheme: dark)");
+    dark?.addEventListener("change", measure);
+    return () => {
+      observer.disconnect();
+      resize.disconnect();
+      view?.removeEventListener("resize", measure);
+      mark.ownerDocument.removeEventListener("load", measure, true);
+      mark.removeEventListener("pointerover", measure);
+      mark.removeEventListener("pointerout", measure);
+      dark?.removeEventListener("change", measure);
+    };
+  });
   const horizontal = orientation === "horizontal";
   const start = center - size / 2;
   const low = Math.min(c.q1, c.q3);
@@ -145,25 +238,24 @@ export function BoxPlotMark({
       stroke="currentColor"
       strokeWidth={strokeWidth}
       {...props}
+      {...(materialized ? { filter: `url(#${id})` } : {})}
+      ref={node}
     >
-      {materialized ? (
-        <>
-          <defs data-kind-ui="box-material" data-material={material} pointerEvents="none">
-            <BoxMaterialFilter
-              material={material}
-              id={id}
-              coordinates={c}
-              center={center}
-              size={size}
-              horizontal={horizontal}
-              outlierRadius={outlierRadius}
-            />
-          </defs>
-          <g filter={`url(#${id})`}>{parts}</g>
-        </>
-      ) : (
-        parts
+      {materialized && (
+        <defs data-kind-ui="box-material" data-material={material} pointerEvents="none">
+          <BoxMaterialFilter
+            material={material}
+            id={id}
+            coordinates={c}
+            center={center}
+            size={size}
+            horizontal={horizontal}
+            outlierRadius={outlierRadius}
+            strokePadding={Math.max(initialPadding, paintPadding)}
+          />
+        </defs>
       )}
+      {parts}
     </g>
   );
 }

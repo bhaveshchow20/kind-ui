@@ -300,7 +300,8 @@ test("box materials retain native geometry and consumer filter ownership, includ
   const geometry = (svg) =>
     [...svg.matchAll(/<(?:rect|line|circle)\b[^>]*>/g)].map((match) => match[0]);
   for (const material of ["paper", "clay", "glow"]) {
-    const svg = render(h(Chart.BoxPlotMark, { ...attrs, material }));
+    const svg = render(h(Chart.BoxPlotMark, { ...attrs, material, filter: undefined }));
+    assert.match(svg, /data-kind-ui="box-plot-mark"[^>]*filter="url\(#kind-ui-box-/);
     assert.deepEqual(geometry(svg), geometry(plain));
     assert.match(svg, /filterUnits="userSpaceOnUse"/);
     assert.match(svg, /fill-opacity="0"/);

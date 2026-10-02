@@ -186,6 +186,8 @@ test("responsive box plot recipes have complete summaries and real desktop/phone
   await expect(page.locator(marks)).toHaveCount(8);
   await expect(page.getByRole("table")).toHaveCount(3);
   await expect(page.getByRole("table").last()).toContainText("Missing");
+  await page.getByRole("button", { name: "clay", exact: true }).click();
+  await expect(page.locator('[data-kind-ui="box-material"]')).toHaveCount(8);
   await page.screenshot({ path: info.outputPath("box-recipes-desktop.png"), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator(marks)).toHaveCount(8);
