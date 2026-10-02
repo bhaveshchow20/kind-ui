@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 test("polar recipes use public components, accessible tables and controlled legends", async ({
   page,

@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, test } from "./browser";
 
 const url = "http://127.0.0.1:4185";
 const mark = (id: string) => `[data-point="${id}"]`;

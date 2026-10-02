@@ -262,7 +262,8 @@ Motion fades native marks without moving their coordinates; native geometry anim
 
 For custom X axis IDs, set the matching native `ScatterTooltip axisId` so Recharts can resolve keyboard navigation. Native keyboard navigation visits points in the first registered series, in data order. Hover can select any series; arrows do not perform spatial or all-series navigation. Provide a keyboard-accessible data alternative for every series, especially overlapping points and missing measurements. Browser coverage is Chromium at the pinned peer versions; it is not a screen-reader/browser conformance claim or a large-dataset performance promise. See the [four bounded recipes](../../examples/chart/SCATTERS.md) and the isolated tarball consumer/browser proof in `tests/fixtures/scatter` and `tests/packed-scatter.spec.ts`.
 
-This adds a pre-release public API at private version `0.0.0`; no dependency, publication or release change is made. The internal frame reuses the approved standalone generic `engine + chartProps` seam shared with the pending polar/combo work.
+This adds a pre-release public API at private version `0.0.0`; no dependency, publication or release change is made. The internal frame reuses the approved standalone generic `engine + chartProps` seam shared by polar and Combo charts.
+
 ## Combo / Composed charts
 
 `ComboChart`, `ComboChartProps`, and `ComboAnimation` are public root exports.
@@ -327,6 +328,7 @@ bar selection. Supply a data table or equivalent text alternative.
 
 See [Combo recipes](../../examples/chart/COMBOS.md) for two axes, signed stacks,
 missing values, custom markers, independent legends and entrance controls.
+
 ## Pie and donut
 
 `PieChart`, `PieSeries`, `PieChartProps`, `PieSeriesProps` and `PieAnimation` are maintained public exports. A donut is a `PieSeries` with native `innerRadius`; it uses the same component and animation contract. No additional dependency or material API is introduced.

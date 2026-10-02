@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 for (const phone of [false, true]) {
   test(`scatter recipes ${phone ? "phone" : "desktop"} show numeric relationships, bubbles and truthful raw size values`, async ({

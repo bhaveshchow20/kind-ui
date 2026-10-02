@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 const url = "http://127.0.0.1:4183/?materials";
 const marks = ".recharts-bar-rectangle path";
