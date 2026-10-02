@@ -99,8 +99,8 @@ all families from this prototype.
   changes 4,338 of 4,845 captured pixels. This verifies actual backdrop filtering
   in Chromium, rather than self-blurring a data path.
 - Bounded 180-bar sample, five warm dev navigations per finish: median time from
-  navigation to available native marks was 131.5 ms Plain / 160.4 ms Glass
-  (+28.9 ms). This is a small mount/load sample, not a GPU frame-time benchmark
+  navigation to available native marks was 123.5 ms Plain / 148.3 ms Glass
+  (+24.8 ms). This is a small mount/load sample, not a GPU frame-time benchmark
   or production performance guarantee. Static per-mark filters still have cost.
   Prefer bounded counts and no per-point animated blur.
 - Firefox and WebKit launch checks were attempted; their Playwright executables
@@ -115,6 +115,11 @@ The reviewed contact sheet is saved in Library as `/glass-contact-sheet.png`,
 ID `libfile_a7907767180c81918c380569f0b4c839`, version 1;
 file ID `file_00000000290c820c91e451b571164db3`. Local identity metadata is
 persisted and the complete response is in `artifacts/glass/library-result.json`.
+
+During the run, remote main advanced to
+`e927cda1e059d027385510cc06bf202746907826`. This isolated prototype was not
+rebased or retested against that later base. All aggregate evidence above applies
+to its original verified base; this does not grant merge approval.
 
 ## Primary references and licensing
 
