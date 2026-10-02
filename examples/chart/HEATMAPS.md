@@ -4,7 +4,7 @@ Run `npm run dev:chart` and open `/heatmaps.html`. The latency matrix shows sign
 
 Native table layout keeps each row/column category at equal size. Small screens scroll within the card rather than compressing cells or overflowing the page. Arrow keys navigate cells, Home/End navigate the row, and Ctrl+Home/End reach the grid corners. Escape dismisses the tooltip, and Tab leaves the grid in one stop. Tooltip content is an in-flow readout, avoiding viewport-edge placement. Expand the data disclosure for a separate native static table.
 
-The example card uses consumer-owned CSS through the native `className` prop. Heatmap exposes no material prop, material type or finish selector. Paper, raised matte Clay and Glow mark treatments remain a separate explicit foundation backlog item; they are not implemented or claimed complete. Numeric cell fills remain the exact scale output. Missing cells have a separate patterned fill and explicit text label.
+The Cell material selector changes `HeatmapGrid material` between Plain, Paper (grain and sketch rim), Clay (soft convex matte bevel), and Glow (contained luminous rim). The outer 8% edge band is decoration: compare the untouched central 84% by 84% to the scale legend. Numeric base fills stay opaque; missing cells retain their separate pattern and explicit label without material paint. Full-face texture, glossy shading and external glow are excluded because they would alter or bleed numeric encoding. Card styles remain native consumer CSS. Native cell backgrounds, filters and events remain extensible; consumer paint can override the treatment and its encoding guarantee.
 
 ## Renderer research
 

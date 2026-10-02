@@ -162,9 +162,13 @@ export function HeatmapCellContent({ fill, formattedValue }: HeatmapCellContentP
     </span>
   );
 }
+export type HeatmapMaterial = "plain" | "paper" | "clay" | "glow";
+
 export type HeatmapGridProps = Omit<ComponentPropsWithRef<"table">, "children"> & {
   /** Required accessible name, also rendered as a native caption. */
   caption: string;
+  /** Static edge treatment; the central 84% × 84% remains the exact scale color. */
+  material?: HeatmapMaterial;
   Cell?: ComponentType<HeatmapCellContentProps>;
   /** Native cell styles, refs and handlers; grid semantics and navigation remain owned by the table. */
   cellProps?: (cell: HeatmapCell) => ComponentPropsWithRef<"td">;
@@ -174,6 +178,7 @@ export type HeatmapGridProps = Omit<ComponentPropsWithRef<"table">, "children"> 
 
 export function HeatmapGrid({
   caption,
+  material = "plain",
   Cell = HeatmapCellContent,
   cellProps,
   rowLabel,
@@ -293,6 +298,7 @@ export function HeatmapGrid({
                     role="gridcell"
                     data-cell-key={keyOf(cell)}
                     data-missing={cell.value === null ? "true" : "false"}
+                    data-material={cell.value === null ? undefined : material}
                     tabIndex={keyOf(cell) === tabKey ? 0 : -1}
                     aria-label={labelOf(cell, context)}
                     aria-describedby={

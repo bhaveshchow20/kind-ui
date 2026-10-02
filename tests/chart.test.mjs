@@ -810,3 +810,33 @@ test("Sankey keeps parallel identities in validation but rejects native equal-va
     );
   }
 });
+
+test("heatmap materials decorate measured cells only and retain custom content/styles", () => {
+  for (const material of ["plain", "paper", "clay", "glow"]) {
+    const markup = render(
+      h(
+        Chart.HeatmapChart,
+        {
+          rows: ["A"],
+          columns: ["X", "Y"],
+          data: [{ row: "A", column: "X", value: 0 }],
+          scale: Chart.createHeatmapScale({ domain: [-1, 1], colors: ["#000000", "#ffffff"] }),
+        },
+        h(Chart.HeatmapGrid, {
+          caption: "Materials",
+          material,
+          Cell: ({ formattedValue }) => h("b", {}, formattedValue),
+          cellProps: () => ({
+            style: { filter: "brightness(1)", backgroundImage: "none" },
+            "data-host": "yes",
+          }),
+        }),
+      ),
+    );
+    assert.equal((markup.match(new RegExp(`data-material="${material}"`, "g")) ?? []).length, 1);
+    assert.match(markup, /filter:brightness\(1\);background-image:none;background-color:#808080/);
+    assert.match(markup, /<b>0<\/b>/);
+    assert.match(markup, /aria-label="A, Y: Missing"/);
+    assert.doesNotMatch(markup, / material=/);
+  }
+});
