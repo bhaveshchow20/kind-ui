@@ -20,7 +20,7 @@ import {
 } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
-import { TooltipContent } from "./tooltip-content.js";
+import { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 
 export type TooltipProps = Omit<
   EngineTooltipProps,
@@ -35,6 +35,8 @@ export type TooltipProps = Omit<
   ref?: Ref<HTMLDivElement>;
   frameProps?: Omit<ComponentPropsWithRef<"div">, "children" | "ref">;
   maxWidth?: number;
+  /** Resolves category identity before the existing series-key fallback. */
+  itemKey?: TooltipContentProps["itemKey"];
 };
 export type TooltipFrameProps = {
   x: number;
@@ -60,6 +62,7 @@ export function StaticTooltipFrame({ x, y, ref, style, frameProps, children }: T
 }
 function PositionedContent({
   consumerContent,
+  itemKey,
   maxWidth,
   frameProps,
   frameRef,
@@ -67,6 +70,7 @@ function PositionedContent({
   ...tooltip
 }: EngineContentProps & {
   consumerContent: TooltipProps["content"];
+  itemKey: TooltipProps["itemKey"];
   maxWidth: number;
   frameProps: TooltipProps["frameProps"];
   frameRef: TooltipProps["ref"];
@@ -80,6 +84,7 @@ function PositionedContent({
       ? tooltip.payload
       : tooltip.payload.filter((entry) => {
           const key =
+            itemKey?.(entry) ??
             (entry.graphicalItemId ? seriesKeys.get(entry.graphicalItemId) : undefined) ??
             String(entry.dataKey ?? entry.name);
           return visibleSeries.includes(key);
@@ -123,7 +128,7 @@ function PositionedContent({
   ) : typeof consumerContent === "function" ? (
     createElement(consumerContent, contentProps)
   ) : (
-    <TooltipContent tooltip={contentProps} />
+    <TooltipContent tooltip={contentProps} {...(itemKey ? { itemKey } : {})} />
   );
   return (
     <Frame
@@ -150,6 +155,7 @@ export function TooltipBase({
   content,
   frameProps,
   maxWidth = 180,
+  itemKey,
   Frame = StaticTooltipFrame,
   ...props
 }: TooltipProps & { Frame?: (props: TooltipFrameProps) => ReactNode }) {
@@ -170,6 +176,7 @@ export function TooltipBase({
           activeIndex={undefined}
           accessibilityLayer={false}
           consumerContent={content}
+          itemKey={itemKey}
           maxWidth={maxWidth}
           frameProps={frameProps}
           frameRef={ref}

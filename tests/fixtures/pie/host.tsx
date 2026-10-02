@@ -1,0 +1,394 @@
+// Host composition only; the installed tarball owns all chart behavior.
+import * as Chart from "@kind-ui/charts";
+import { useCallback, useMemo, useState } from "react";
+import {
+  Cell,
+  Label,
+  LabelList,
+  PieChart as NativePieChart,
+  Tooltip as NativeTooltip,
+  Pie,
+  type PieSectorShapeProps,
+  Sector,
+} from "recharts";
+
+const config = {
+  alpha: { label: "Alpha", color: "#4f46e5", formatValue: (v: unknown) => `${v} seats` },
+  beta: { label: "Beta", color: "#0891b2", formatValue: (v: unknown) => `${v} seats` },
+  zero: { label: "Zero", color: "#db2777" },
+  missing: { label: "Missing", color: "#d97706" },
+} satisfies Chart.SeriesConfig;
+const original = [
+  { id: "alpha", value: 60 },
+  { id: "beta", value: 40 },
+  { id: "zero", value: 0 },
+  { id: "missing", value: null },
+];
+const identity: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
+function CustomShape(props: PieSectorShapeProps) {
+  const {
+    className,
+    cornerRadius,
+    onClick,
+    onMouseDown,
+    onMouseUp,
+    onMouseMove,
+    onMouseOver,
+    onMouseOut,
+    onMouseEnter,
+    onMouseLeave,
+    ...sector
+  } = props;
+  return (
+    <Sector
+      {...sector}
+      {...(onClick ? { onClick } : {})}
+      {...(onMouseDown ? { onMouseDown } : {})}
+      {...(onMouseUp ? { onMouseUp } : {})}
+      {...(onMouseMove ? { onMouseMove } : {})}
+      {...(onMouseOver ? { onMouseOver } : {})}
+      {...(onMouseOut ? { onMouseOut } : {})}
+      {...(onMouseEnter ? { onMouseEnter } : {})}
+      {...(onMouseLeave ? { onMouseLeave } : {})}
+      {...(className ? { className } : {})}
+      {...(cornerRadius !== undefined ? { cornerRadius } : {})}
+      data-host-shape=""
+      data-click-x={props.tooltipPosition?.x}
+      data-click-y={props.tooltipPosition?.y}
+    />
+  );
+}
+function CustomContent({ payload }: { payload?: readonly { name?: string | number }[] }) {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <button type="button" onClick={() => setCount(count + 1)}>
+        Content count {count}
+      </button>
+      Native {payload?.[0]?.name}
+    </div>
+  );
+}
+export function PieHost() {
+  const [animate, setAnimate] = useState<boolean | Chart.PieAnimation>(
+    new URLSearchParams(window.location.search).has("motion"),
+  );
+  const [visible, setVisible] = useState(Object.keys(config));
+  const [donut, setDonut] = useState(true);
+  const [updated, setUpdated] = useState(false);
+  const [reverse, setReverse] = useState(false);
+  const [small, setSmall] = useState(false);
+  const [custom, setCustom] = useState(false);
+  const [customContent, setCustomContent] = useState(false);
+  const [empty, setEmpty] = useState(false);
+  const [allZero, setAllZero] = useState(false);
+  const [angles, setAngles] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [clicked, setClicked] = useState("none");
+  const [moved, setMoved] = useState(0);
+  const ref = useCallback((node: SVGSVGElement | null) => {
+    if (node) node.dataset.refTag = node.tagName;
+  }, []);
+  const tooltipRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) node.dataset.refTag = node.tagName;
+  }, []);
+  const data = useMemo(() => {
+    const next = (empty ? [] : original)
+      .filter((row) => visible.includes(row.id))
+      .map((row) => ({
+        ...row,
+        value: allZero ? 0 : updated && row.id === "alpha" ? 20 : row.value,
+      }));
+    return reverse ? next.reverse() : next;
+  }, [empty, visible, allZero, updated, reverse]);
+  return (
+    <section aria-label="Packed pies" style={{ width: small ? 220 : 480, background: "white" }}>
+      <button
+        type="button"
+        onClick={() =>
+          setAnimate(
+            animate === false
+              ? { revealDurationMs: 2000, hoverTransition: { duration: 0.1 } }
+              : false,
+          )
+        }
+      >
+        Animate
+      </button>
+      <button type="button" onClick={() => setAnimate(true)}>
+        Default animation
+      </button>
+      <button type="button" onClick={() => setDonut(!donut)}>
+        Donut
+      </button>
+      <button type="button" onClick={() => setUpdated(!updated)}>
+        Update
+      </button>
+      <button type="button" onClick={() => setReverse(!reverse)}>
+        Reorder
+      </button>
+      <button type="button" onClick={() => setSmall(!small)}>
+        Resize
+      </button>
+      <button type="button" onClick={() => setCustom(!custom)}>
+        Custom shape
+      </button>
+      <button type="button" onClick={() => setCustomContent(!customContent)}>
+        Custom content
+      </button>
+      <button type="button" onClick={() => setEmpty(!empty)}>
+        Empty
+      </button>
+      <button type="button" onClick={() => setAllZero(!allZero)}>
+        All zero
+      </button>
+      <button type="button" onClick={() => setAngles(!angles)}>
+        Angles
+      </button>
+      <button type="button" onClick={() => setHidden(!hidden)}>
+        Native hide
+      </button>
+      <output aria-label="Events">
+        {clicked}/{moved}
+      </output>
+      <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+        <Chart.Legend />
+        <Chart.PieChart
+          animate={animate}
+          width={small ? 220 : 480}
+          height={300}
+          ref={ref}
+          aria-label="Packed pie chart"
+          layout="centric"
+          onMouseMove={() => setMoved((v) => v + 1)}
+        >
+          <Chart.PieSeries
+            data={data}
+            dataKey="value"
+            nameKey="id"
+            innerRadius={donut ? "45%" : 0}
+            outerRadius="75%"
+            startAngle={angles ? 180 : 90}
+            endAngle={angles ? 0 : -270}
+            paddingAngle={0}
+            cornerRadius={3}
+            hide={hidden}
+            {...(custom ? { shape: CustomShape } : {})}
+            onClick={(row) => setClicked(String(row.payload.id))}
+          >
+            {data.map((row) => (
+              <Cell key={row.id} fill={`var(--color-${row.id})`} />
+            ))}
+            <LabelList dataKey="id" position="outside" />
+            {donut && <Label position="center" value="Seats" />}
+          </Chart.PieSeries>
+          <Chart.Tooltip
+            itemKey={identity}
+            ref={tooltipRef}
+            {...(customContent ? { content: <CustomContent /> } : {})}
+          />
+        </Chart.PieChart>
+        <table>
+          <caption>Category values</caption>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.id}>
+                <th>{row.id}</th>
+                <td>{row.value === null ? "No data" : row.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Chart.Root>
+      {new URLSearchParams(window.location.search).has("multi") && nativeComposition}
+      {new URLSearchParams(window.location.search).has("cells") && <CellHost />}
+      {new URLSearchParams(window.location.search).has("oracle") && <ContinuityHost />}
+    </section>
+  );
+}
+export const rejectedEngineTween: Chart.PieSeriesProps = {
+  dataKey: "value",
+  // @ts-expect-error Motion owns animation for the maintained component.
+  isAnimationActive: true,
+};
+
+// Native extensions typecheck against the installed declarations, not a workspace source link.
+export const nativeComposition = (
+  <Chart.Root config={config}>
+    <Chart.PieChart
+      data={original}
+      width={360}
+      height={300}
+      layout="radial"
+      aria-label="Native rings"
+    >
+      <Chart.PieSeries dataKey="value" nameKey="id" outerRadius={70}>
+        {original.map((row) => (
+          <Cell key={row.id} fill={`var(--color-${row.id})`} data-ring="inner" />
+        ))}
+      </Chart.PieSeries>
+      <Chart.PieSeries<AllocationRow, string | number | null>
+        dataKey={(row: AllocationRow) => row.value}
+        nameKey={(row: AllocationRow) => row.id}
+        innerRadius={85}
+        outerRadius={(row: { id: string }) => (row.id === "alpha" ? 120 : 110)}
+        startAngle={90}
+        endAngle={-270}
+      >
+        {original.map((row) => (
+          <Cell key={row.id} fill={`var(--color-${row.id})`} data-ring="outer" />
+        ))}
+      </Chart.PieSeries>
+      <Chart.Tooltip itemKey={identity} trigger="click" />
+    </Chart.PieChart>
+  </Chart.Root>
+);
+type AllocationRow = { id: string; value: number | null };
+export const typedPie: Chart.PieSeriesProps<AllocationRow, number | null> = {
+  data: original,
+  dataKey: (row) => row.value,
+};
+export const rejectedField: Chart.PieSeriesProps<AllocationRow, number> = {
+  // @ts-expect-error A typed category row does not contain typoValue.
+  dataKey: (row) => row.typoValue,
+};
+function CellHost() {
+  const [updated, setUpdated] = useState(false);
+  const [count, setCount] = useState(0);
+  return (
+    <section aria-label="Cell data proof">
+      <button type="button" onClick={() => setUpdated(!updated)}>
+        Cell update
+      </button>
+      <button type="button" onClick={() => setCount(count + 1)}>
+        Unchanged Cells {count}
+      </button>
+      <Chart.Root config={config}>
+        <Chart.PieChart
+          width={360}
+          height={280}
+          animate={{ revealDurationMs: 2000 }}
+          aria-label="Cell data chart"
+        >
+          <Chart.PieSeries dataKey="value" nameKey="id" outerRadius={100}>
+            <>
+              <Cell {...{ id: "alpha", value: updated ? 20 : 60 }} fill="var(--color-alpha)" />
+              <Cell {...{ id: "beta", value: 40 }} fill="var(--color-beta)" />
+            </>
+          </Chart.PieSeries>
+          <Chart.Tooltip itemKey={identity} />
+        </Chart.PieChart>
+      </Chart.Root>
+    </section>
+  );
+}
+
+const cases = {
+  single: [
+    { id: "alpha", value: 0 },
+    { id: "beta", value: 16 },
+  ],
+  normal: [
+    { id: "alpha", value: 60 },
+    { id: "beta", value: 40 },
+  ],
+  zero: [
+    { id: "alpha", value: 60 },
+    { id: "zero", value: 0 },
+    { id: "beta", value: 40 },
+  ],
+  tiny: [
+    { id: "alpha", value: 0.000001 },
+    { id: "zero", value: 0 },
+    { id: "beta", value: 1 },
+  ],
+  empty: [],
+  allZero: [
+    { id: "alpha", value: 0 },
+    { id: "beta", value: 0 },
+  ],
+};
+function ContinuityHost() {
+  const [scenario, setScenario] = useState<keyof typeof cases>("normal");
+  const [included, setIncluded] = useState(true);
+  const [donut, setDonut] = useState(false);
+  const [gaps, setGaps] = useState(false);
+  const [rings, setRings] = useState(false);
+  const data = useMemo(
+    () => cases[scenario].filter((row) => included || row.id !== "beta"),
+    [scenario, included],
+  );
+  const props = {
+    data,
+    dataKey: "value" as const,
+    nameKey: "id" as const,
+    innerRadius: donut ? 65 : 0,
+    outerRadius: 110,
+    startAngle: 90,
+    endAngle: -270,
+    ...(gaps ? { paddingAngle: 4, cornerRadius: 8, stroke: "#fff", strokeWidth: 2 } : {}),
+  };
+  const cells = data.map((row) => (
+    <Cell
+      key={row.id}
+      fill={row.id === "alpha" ? "#4f46e5" : row.id === "beta" ? "#0891b2" : "#db2777"}
+    />
+  ));
+  return (
+    <section aria-label="Continuity proof">
+      {Object.keys(cases).map((key) => (
+        <button type="button" key={key} onClick={() => setScenario(key as keyof typeof cases)}>
+          Scenario {key}
+        </button>
+      ))}
+      <button type="button" onClick={() => setIncluded(!included)}>
+        Oracle visibility
+      </button>
+      <button type="button" onClick={() => setDonut(!donut)}>
+        Oracle donut
+      </button>
+      <button type="button" onClick={() => setGaps(!gaps)}>
+        Explicit gaps
+      </button>
+      <button type="button" onClick={() => setRings(!rings)}>
+        Oracle rings
+      </button>
+      <output aria-label="Oracle state">
+        {scenario}/{String(included)}/{String(donut)}/{String(gaps)}/{String(rings)}
+      </output>
+      <Chart.Root config={config} style={{ position: "relative", width: 300, background: "white" }}>
+        <Chart.PieChart width={300} height={280} aria-label="Kind continuity">
+          <Chart.PieSeries {...props}>{cells}</Chart.PieSeries>
+          {rings && (
+            <Chart.PieSeries {...props} innerRadius={115} outerRadius={130}>
+              {cells}
+            </Chart.PieSeries>
+          )}
+          <Chart.Tooltip itemKey={identity} />
+        </Chart.PieChart>
+        <NativePieChart
+          width={300}
+          height={280}
+          aria-label="Native oracle"
+          style={{ position: "absolute", top: 0, left: 0, visibility: "hidden" }}
+        >
+          <Pie {...props} stroke={gaps ? "#fff" : "none"} isAnimationActive={false}>
+            {cells}
+          </Pie>
+          {rings && (
+            <Pie
+              {...props}
+              innerRadius={115}
+              outerRadius={130}
+              stroke={gaps ? "#fff" : "none"}
+              isAnimationActive={false}
+            >
+              {cells}
+            </Pie>
+          )}
+          <NativeTooltip isAnimationActive={false} />
+        </NativePieChart>
+      </Chart.Root>
+    </section>
+  );
+}

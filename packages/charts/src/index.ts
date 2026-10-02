@@ -17,6 +17,8 @@ export type { BarMaterial } from "./bar-material.js";
 export { BarSeries, type BarSeriesProps } from "./bar-series.js";
 export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";
+export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";
+export { PieSeries, type PieSeriesProps } from "./pie-series.js";
 export {
   type RadarAnimation,
   RadarChart,
