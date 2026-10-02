@@ -19,7 +19,8 @@
     "check:package": "npm run build && node --test scripts/package-contract.test.mjs scripts/line-consumer-contract.test.mjs && node scripts/check-package.mjs",
     "test": "npm run build && node --test tests/chart.test.mjs",
     "dev:chart": "npm run build && vite examples/chart --host 127.0.0.1",
-    "check:chart": "npm run check:package && tsc -p examples/chart && vite build examples/chart && playwright test"
+    "check:chart": "npm run check:package && tsc -p examples/chart && node scripts/check-showcase-code.mjs && vite build examples/chart && playwright test",
+    "dev:showcase": "npm run build && vite examples/chart --host 127.0.0.1 --port 4873 --open /showcase.html"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

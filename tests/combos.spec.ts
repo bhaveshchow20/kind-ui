@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 test("Combo recipes render three useful compositions with independently controlled legends", async ({
   page,

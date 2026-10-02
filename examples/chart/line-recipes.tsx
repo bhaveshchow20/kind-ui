@@ -19,6 +19,7 @@ export type ComparisonPoint = { period: string; current: number | null; previous
 export type TrendProps = {
   data: TrendPoint[];
   label: string;
+  seriesLabel?: string;
   formatValue: (value: number) => string;
   animate?: boolean | LineAnimation | undefined;
   material?: LineMaterial | undefined;
@@ -51,6 +52,7 @@ function Diamond({ cx, cy }: Pick<DotProps, "cx" | "cy">) {
 function SingleSeriesLine({
   data,
   label,
+  seriesLabel = "Completed",
   formatValue,
   animate,
   material = "plain",
@@ -67,7 +69,7 @@ function SingleSeriesLine({
     <Chart.Root
       config={{
         value: {
-          label: "Completed",
+          label: seriesLabel,
           color: "var(--chart-1)",
           formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
         },
@@ -146,6 +148,7 @@ export function LabeledLine(props: TrendProps) {
 export function TargetLine({
   data,
   label,
+  seriesLabel = "Response",
   formatValue,
   target,
   targetLabel,
@@ -158,7 +161,7 @@ export function TargetLine({
     <Chart.Root
       config={{
         value: {
-          label: "Response",
+          label: seriesLabel,
           color: "var(--chart-1)",
           formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
         },

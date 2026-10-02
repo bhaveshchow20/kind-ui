@@ -108,11 +108,12 @@ Only curves are filtered, with bounds padded by half the numeric `strokeWidth` p
 
 ## Contracts
 
-- `SeriesConfig`: a record keyed by a string `dataKey`. Each entry has a string `label`, CSS `color`, and optional `formatValue(value)` returning React content. Keys start with a letter and contain letters, numbers, underscores, or hyphens. No data normalization or scales are introduced.
+- `SeriesConfig`: a record keyed by a string `dataKey`. Each entry has a string `label`, CSS `color`, optional `formatValue(value)` returning React content, and optional decorative `icon: ComponentType`. Built-in legend and tooltip content render that component inside an aria-hidden wrapper; keep visible string labels meaningful. Keys start with a letter and contain letters, numbers, underscores, or hyphens. No data normalization or scales are introduced.
 - `Root`: scopes config and `--color-{key}` CSS variables. It forwards native div props/ref. The default stylesheet provides full width with `min-width: 0`. Set chart height explicitly through the underlying chart or `ResponsiveContainer`. Nested or adjacent containers keep separate metadata and colors.
 - `visibleSeries` is optional and consumer-owned. A callback requires this value; the legend requests the next array but never changes it itself. `LineSeries` applies this visibility automatically; keep native engine marks' `hide` props in sync when using them directly. Omit the callback for a static legend. An empty array means all series are hidden; the example owns that empty-state message.
-- `Legend`: renders a native list; with a callback, it renders native toggle buttons with `aria-pressed`. It forwards ul props/ref. Space/Enter work through normal button behavior; focus stays on the button. Style its root with `className`/`style`, or set `--chart-legend-background` on buttons. You can also build your own legend from the same config.
-- `TooltipContent`: pass the upstream callback's props as `tooltip`. Native div props/ref, classes, and style remain separate and are forwarded. Upstream `formatter`, per-entry formatter, and `labelFormatter` work; per-entry formatters take precedence over the upstream formatter, which takes precedence over the config formatter. An upstream formatter returning null/undefined suppresses that entry. Formatters run for zero but not null/undefined; those display `missingValue` (default “No data”) alongside other available values. Inactive, empty, or entirely missing visible payloads render no tooltip; zero remains valid data.
+- `Legend`: renders a native list; with a callback, it renders native toggle buttons with `aria-pressed`. It forwards ul props/ref. Space/Enter work through normal button behavior; focus stays on the button. Style its root with `className`/`style`, or set `--chart-legend-background` on buttons. Configured icons replace swatches by default; `hideIcon` restores color swatches. Optional `children={({ key, label, visible, marker }) => ...}` composes each item's content inside the existing list item and button/static span. Include meaningful label text; return noninteractive content only (no buttons, links, inputs, tab stops or click handlers). Kind retains the controlled toggle and keyboard ownership. Use a separate host legend when you need different interaction semantics.
+- `TooltipContent`: pass the upstream callback's props as `tooltip`. Native div props/ref, classes, and style remain separate and are forwarded. Upstream `formatter`, per-entry formatter, and `labelFormatter` work; per-entry formatters take precedence over the upstream formatter, which takes precedence over the config formatter. An upstream formatter returning null/undefined suppresses that entry. Formatters run for zero but not null/undefined; those display `missingValue` (default “No data”) alongside other available values. Inactive, empty, or entirely missing visible payloads render no tooltip; zero remains valid data. `hideLabel` omits the heading and its formatter, retaining series names/values and the live region. `indicator="dot" | "line" | "dashed"` changes the color marker; the default remains the existing slim `line`. Configured icons take precedence over marker choices; `hideIndicator` hides all decorative tooltip markers, including icons. These are content props: pass them to `TooltipContent` through the native `content` callback. Custom content keeps native formatter/content ownership and receives no injected presentation options.
+- `Tooltip` and `TooltipContent` accept optional `itemKey(entry)` to resolve metadata/visibility identity before registered series keys or native dataKey/name. Pass the same resolver to both when composing content for categories such as pie slices. Keep category IDs stable; `labelFormatter` owns heading presentation independently. This avoids adding a second nameKey/labelKey identity convention.
 - Tooltip entries marked hidden or `type: "none"` are excluded, as are consumer-hidden series. Use `filterNull={false}` on the upstream Tooltip when missing values should appear. Unknown keys fall back to upstream names/colors/values. No tooltip payload is mutated.
 - Keyboard positioning, Escape/blur dismissal, focus and live-region orchestration remain with the upstream chart/Tooltip. Content supplies its default `role="status"` and live-region attributes when the upstream accessibility layer is enabled. Preserve equivalent feedback when overriding these attributes.
 
@@ -140,7 +141,7 @@ Theme the components with `--kind-ui-chart-border`, `--kind-ui-chart-radius`, `-
 
 Default legends use 8px markers and 11px labels; interactive legend buttons retain native semantics with a minimum 28px height. Hidden legend buttons use readable muted text and markers with no strikethrough, preserving `aria-pressed`. The default tooltip uses compact 12px text, slim series markers, aligned tabular values and measured content width capped by `maxWidth` (180px by default). Host metadata owns concise labels and units; formatter and custom content overrides remain supported. Override the scoped styles or theme tokens as needed. `Tooltip` supplies mouse-following placement with measured boundary clamping and keyboard fallback. A guide is independent of tooltip content: use `<Tooltip cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }} />` for a dotted hover line or `cursor={false}` (the default) to hide only the guide. The existing recipes demonstrate this with a Hover guide toggle.
 
-Stable `data-kind-ui` hooks are `chart`, `chart-legend`, `chart-legend-item`, `chart-legend-button`, `chart-indicator`, `chart-tooltip`, `chart-tooltip-label`, `chart-tooltip-list`, `chart-tooltip-item` and `chart-tooltip-value`. Line components additionally expose `line-frame`, `tooltip-frame`, `tooltip-motion` and `active-marker`. Legend and tooltip items also expose `data-series` with their series key. Use that identity for series-specific styles instead of positional selectors; tooltip entries may be reordered or hidden. Interactive legend buttons retain `aria-pressed` for state styling. For example:
+Stable `data-kind-ui` hooks are `chart`, `chart-legend`, `chart-legend-item`, `chart-legend-button`, `chart-indicator`, `chart-tooltip`, `chart-tooltip-label`, `chart-tooltip-list`, `chart-tooltip-item` and `chart-tooltip-value`. Decorative configured glyph wrappers expose `chart-icon`; color markers expose `data-indicator` in tooltips. Line components additionally expose `line-frame`, `tooltip-frame`, `tooltip-motion` and `active-marker`. Legend and tooltip items also expose `data-series` with their series key. Use that identity for series-specific styles instead of positional selectors; tooltip entries may be reordered or hidden. Interactive legend buttons retain `aria-pressed` for state styling. For example:
 
 ```css
 .my-chart [data-series="tasks"] [data-kind-ui="chart-indicator"] {
@@ -231,6 +232,45 @@ Each series owns a unique filter that native rectangles apply independently with
 
 Bar finish tokens are `--kind-ui-bar-paper-fiber` (white), `--kind-ui-bar-paper-grain` (0.14), `--kind-ui-bar-clay-light` (white), `--kind-ui-bar-clay-shade` (#17212b), `--kind-ui-bar-clay-highlight` (0.48), `--kind-ui-bar-clay-shadow` (0.26), `--kind-ui-bar-glow-light` (white), and `--kind-ui-bar-glow-opacity` (0.6). Opacity tokens accept numbers from 0 to 1. Clay/Paper lighting and ink are composited atop native paint, preserving every painted pixel’s translucent alpha, including antialiasing. Clay’s decorative cast shadow is excluded from that footprint; only fully transparent exterior pixels acquire shade, derived from native alpha at a fixed 0.16 opacity. This shadow does not change the native data path, radius or stack clip, and native clipping can trim it. Lighting uses a silhouette so translucent fills retain the same matte relief. Pixel-sized light/blur offsets are capped for chart marks; tiny bars can show less relief. The raised direction follows shipped line Clay, with [clay.css](https://github.com/codeAdrian/clay.css) and [Malewicz’s Claymorphism tutorial](https://hype4.academy/articles/design/claymorphism-in-user-interfaces) as soft-volume references, adapted without copying assets or adding dependencies. Native shapes retain engine zero-label and background filtering. Clay and Paper primitives are bar-local; Glow reuses the coordinated filled-surface helper. Bar material rendering leaves line and area outputs unchanged. Validation covers Chromium; other browsers and print/export renderers remain unverified.
 
+## Scatter and bubble charts
+
+`ScatterChart`, `ScatterSeries`, `ScatterTooltip`, and `ScatterTooltipContent` are public exports with colocated prop types; `ScatterAnimation` shares the familiar `revealDurationMs`, `revealEasing`, and `hoverTransition` options. `ScatterChart` accepts native Recharts ScatterChart props and refs plus `animate={false | true | config}`. `ScatterSeries` accepts native Scatter composition (Cells, labels, custom/active shapes, native handlers, axis IDs, lines and fits), except `isAnimationActive`: Kind owns animation. Set `seriesKey` for controlled visibility because numeric axis keys describe dimensions, not series. Explicit native `hide` remains authoritative.
+
+```tsx
+import { Root, Legend, ScatterChart, ScatterSeries, ScatterTooltip } from "@kind-ui/charts";
+import { CartesianGrid, XAxis, YAxis, ZAxis } from "recharts";
+
+<Root config={{ tasks: { label: "Tasks", color: "#7c5ce7" } }}>
+  <Legend />
+  <ScatterChart responsive style={{ width: "100%", height: 320 }} animate={false}>
+    <CartesianGrid />
+    <XAxis type="number" dataKey="latency" name="Latency" unit=" ms" domain={[0, 100]} />
+    <YAxis type="number" dataKey="acceptance" name="Acceptance" unit="%" domain={[0, 100]} />
+    <ZAxis dataKey="requests" name="Requests" unit="k" domain={[0, 300]} range={[35, 1200]} />
+    <ScatterSeries seriesKey="tasks" data={observations} />
+    <ScatterTooltip zDimension={{ dataKey: "requests", name: "Requests", unit: "k" }} pointLabel={(record) =>
+      record && typeof record === "object" && "id" in record ? String(record.id) : "Task"
+    } />
+  </ScatterChart>
+</Root>
+```
+
+`ScatterSeries material="plain" | "paper" | "clay" | "glow"` (exported `ScatterMaterial`) is independent of consumer color and Motion. Plain is the default. Paper uses deterministic inset pencil contours and subtle grain without displacing the path. Clay uses upper-left diffuse light and lower-right shade for convex matte relief, entirely inside the native silhouette. Glow uses a gentle luminous tint, inset light rim and soft exterior halo; the halo is decorative light, **not quantitative bubble area**. Native symbol paths, transforms, Z sizes and paint alpha remain exact. Glow light uses a separate noninteractive `use` and native-symbol geometry exclusion mask with an exterior guard covering declared stroke extents plus 1px for antialiased edges to keep fully transparent gradient regions and stroke-only interiors transparent. Geometry paths inside SVG definitions are decoration machinery, not additional data marks. Body finishes compose atop the original paint, including translucent gradients and invisible paint. Labels and native connecting lines are never filtered.
+
+Materials apply to default/string symbols, including native boolean default-shape options and `Cell` paint/geometry overrides. Custom function/element/object shapes retain their own finish; custom active shapes retain ownership independently. Explicit `filter` or `style.filter` on a series or Cell opts that symbol out, even `none`. Every finish also retains unchanged native rendering for explicit point `clipPath` or `style.clipPath`, including `none`: filtering can rerasterize antialiased clip edges, and separate Glow light cannot safely inherit arbitrary native-local or object-bounding-box clip coordinates. This declared clipping fallback preserves native alpha and is tested for both coordinate systems and both prop/style ownership; ancestor plot clipping still applies to every finish. Refs and native handlers are forwarded. Each rendered symbol owns a unique filter ID, including duplicate consumer series IDs and active portals.
+
+Effects scale with the square root of native area, with upper bounds (pencil rim 0.9px, Clay offset 3px/blur 2px, Glow blur 1.8px), **no minimum radius or size substitution**. Subpixel marks retain exact geometry and alpha but cannot show a full grain/relief pattern; the small-scale effect becomes tonal and may be indistinguishable below raster resolution. Nonpositive/unresolved sizes render through native Symbols without a finish. A declared nonnumeric stroke width or a stroke extent exceeding the square root of native area also uses unchanged native rendering instead of cropping paint; stroke-aware exclusion can suppress a small Glow halo while retaining its luminous body. This bounded fallback is covered with a 12px transparent gradient stroke, including `style.strokeWidth`. Glow's filter region is limited to three times each native symbol's bounding box and keeps native plot clipping, so extreme consumer strokes, registered custom symbol factories or boundary marks may crop decorative light. This is a bounded SVG finish for the seven built-in symbols, not an arbitrary custom-renderer guarantee.
+
+Native Recharts owns numeric axes, ZAxis area mapping and per-point selection. Use `ScatterTooltip` instead of the category-oriented default `TooltipContent`: its default content displays the actual selected record's dimension values, names and units; a point label comes from the supplied callback or configured series title. Optional metadata for a dimension's string dataKey uses the same `Root.config` `label`/`formatValue` contract; native `entry.formatter`/tooltip `formatter` takes precedence. `Legend` shows all config entries, so use native axis names/units or a tooltip formatter when dimension entries should not appear in the legend. Custom `content`, `frameProps`, frame refs, bounded positioning and shared Motion are retained. Use `<ScatterTooltipContent tooltip={nativeContentProps} />` to compose the default UI inside your own native content.
+
+No missing/zero/negative values are coerced or deduplicated by Kind. Default native symbols omit unresolvable x/y coordinates; custom shapes receive native nullable geometry and must guard it themselves. Recharts 3.10.1 uses the minimum Z range and omits the Z tooltip entry for both zero and missing z; default content displays only the native entries and does not invent a z value. Supply `zDimension={{ dataKey: "requests", name: "Requests", unit: "k" }}` to recover zero or missing size in maintained default content from the actual point record. `ScatterSizeDimension<Row>` also accepts a typed `(record: Row) => number | null | undefined` accessor without casts; reuse the accessor used by your ZAxis. String keys read own top-level properties only; use a function for nested paths. When native Recharts supplies a nonzero Z entry it remains intact, with its native formatter/name/unit. Mapping name/unit supplies the omitted entry, existing tooltip/series formatter and dimension config formatting apply, and missing entries use `missingValue` (default “No data”). No field is guessed when mapping is omitted. A table remains appropriate for all observations. Negative z is passed to the native scale; validate count domains in the host. Duplicate coordinates overlap but keep distinct record payloads/indexes. Custom Cells may override native geometry, exactly as with Recharts Scatter.
+
+Motion fades native marks without moving their coordinates; native geometry animation is disabled to avoid two animation engines. Shared tooltip positioning can animate. Reduced motion and SSR render final geometry with Motion off; interaction, x/y geometry, data/visibility changes and resize settle entrance, and stale pointer placement is discarded on geometry changes. Off/config switches preserve consumer content and handlers. Entrance does not replay after interaction. Consumers own input validation, data tables, errors/loading states and immutable data updates.
+
+For custom X axis IDs, set the matching native `ScatterTooltip axisId` so Recharts can resolve keyboard navigation. Native keyboard navigation visits points in the first registered series, in data order. Hover can select any series; arrows do not perform spatial or all-series navigation. Provide a keyboard-accessible data alternative for every series, especially overlapping points and missing measurements. Browser coverage is Chromium at the pinned peer versions; it is not a screen-reader/browser conformance claim or a large-dataset performance promise. See the [four bounded recipes](../../examples/chart/SCATTERS.md) and the isolated tarball consumer/browser proof in `tests/fixtures/scatter` and `tests/packed-scatter.spec.ts`.
+
+This adds a pre-release public API at private version `0.0.0`; no dependency, publication or release change is made. The internal frame reuses the approved standalone generic `engine + chartProps` seam shared by polar and Combo charts.
+
 ## Combo / Composed charts
 
 `ComboChart`, `ComboChartProps`, and `ComboAnimation` are public root exports.
@@ -295,6 +335,7 @@ bar selection. Supply a data table or equivalent text alternative.
 
 See [Combo recipes](../../examples/chart/COMBOS.md) for two axes, signed stacks,
 missing values, custom markers, independent legends and entrance controls.
+
 ## Pie and donut
 
 `PieChart`, `PieSeries`, `PieChartProps`, `PieSeriesProps` and `PieAnimation` are maintained public exports. A donut is a `PieSeries` with native `innerRadius`; it uses the same component and animation contract. No additional dependency or material API is introduced.
@@ -355,7 +396,7 @@ The shared `Legend`, `Tooltip` and `TooltipContent` provide the same formatting,
 
 The `/polar.html` showcase uses public APIs for comparison, outline and range radar, grouped rings, stacked arcs and a half-circle gauge. It includes explicit domains, controlled legends, Motion/data/update controls and value tables. `tests/fixtures/polar` installs the actual tarball in an isolated consumer, checks strict NodeNext/Bundler declarations and production builds, and compares browser paths against native Recharts charts.
 
-First-party references: [Radar API](https://recharts.github.io/en-US/api/Radar/), [RadialBar API](https://recharts.github.io/en-US/api/RadialBar/), and the tested package's `types/polar` and `es6/polar` sources. No new dependencies, package boundary, publishing or material API accompanies these exports. The package remains private at `0.0.0`.
+First-party references: [Radar API](https://recharts.github.io/en-US/api/Radar/), [RadialBar API](https://recharts.github.io/en-US/api/RadialBar/), and the tested package's `types/polar` and `es6/polar` sources. No new dependencies, package boundary or publishing accompanies these exports. The package remains private at `0.0.0`.
 
 ### Radial band labels
 
@@ -446,3 +487,246 @@ The sample estimator and whisker definition deliberately remain caller-owned.
 Each present native mark has its own React-generated filter ID and user-space region, including outliers and resolved child stroke widths/miter limits, so line-only summaries do not require nonzero bounding boxes. Use React `identifierPrefix` for independently mounted roots. Box finishes reuse the `--kind-ui-bar-*` tokens documented above. Body alpha is preserved, including zero fill opacity; glow/cast effects can paint only outside the native footprint. Tiny marks have less room for visible grain/relief. Bounds are refreshed for React updates, stylesheet edits/loads, ancestor theme classes, viewport changes and pointer entry/exit. Direct CSSOM rule mutations without one of those signals are not observed. The default box fill remains `0.18`; an explicit `fillOpacity` (for example `0.65`) makes broad surfaces easier to see.
 
 An explicit series/Cell/mark `filter`, or `style.filter`, including `none`, disables the built-in finish for that mark. Custom `shape` owns its markup and is not automatically materialized; it may explicitly return a materialized `BoxPlotMark`. Cells, gradients, native paint/opacity, mark styles, clipping, masks, visibility, refs, handlers and labels retain ownership. Filters run on the original consumer mark group (parts remain direct children) and existing reveal/plot clips, which may trim decorative halos. Chromium is verified; other SVG engines and print renderers remain unverified. No shared helper changes, dependencies, workflow changes or releases accompany this material stack.
+### Shared presentation example
+
+`examples/chart/presentation.html` demonstrates the same public options for line, area and bar, icon/swatch fallback, composed legend labels, native formatter tuples/suppression, custom content and light/dark host CSS variables. It enables motion by default while following live reduced-motion preferences, and includes keyboard instructions and all-series table values. Its source is also compiled against an independently installed tarball, with guarded public imports, strict NodeNext/Bundler checks, and Chromium interactions. Theme colors remain host-owned CSS variables; this change does not add automatic light/dark config mapping. String labels/colors remain required.
+
+```tsx
+<Chart.Legend hideIcon>
+  {({ label, visible, marker }) => <>{marker}<span>{label}</span><small>{visible ? "Shown" : "Hidden"}</small></>}
+</Chart.Legend>
+<Chart.Tooltip content={(tooltip) => (
+  <Chart.TooltipContent tooltip={tooltip} hideLabel indicator="dashed" />
+)} />
+```
+
+### Polar materials
+
+`RadarSeries` and `RadialBarSeries` accept `material="plain" | "paper" | "clay" | "glow"` (`PolarMaterial`), independently of consumer color and Motion. Plain is the default. Paper uses seeded inset pencil contours and subtle fiber grain without displacement; Clay adds broad upper-left convex matte relief; Glow adds a bright rim and exterior color light. All retain native polygon/sector paths, quantitative coordinates, gradients, fill/stroke opacity and zero-alpha paint. Paper and Clay retain native output alpha; Glow retains native alpha inside the mark and adds intentional decorative light outside it. The exterior halo is not a quantitative extent. Very thin/short marks have less room for interior relief. Chromium can rasterize curved antialiased edges differently when a native SVG filter uses spatial inputs; alpha regression checks require every covered pixel to stay within the independently measured native unfiltered/morphology/blur/offset-relief raster envelope (plus one byte for quantization), alongside untouched path/paint assertions and zero-alpha checks. Unfiltered and filtered edge rasters are not promised to be byte-identical.
+
+Custom Radar `shape`, RadialBar `shape` or custom `activeShape`, a series `filter`, or `style.filter` owns rendering and suppresses the material. Cell filter/style overrides retain native precedence. Dots, backgrounds, labels, refs and handlers remain native. Unique per-series filters use chart-space bounds so short/thin/empty arcs do not depend on nonzero object bounds. Native SVG and consumer clipping still apply. Optional CSS variables use `--kind-ui-polar-paper-{fiber,grain}`, `--kind-ui-polar-clay-{light,highlight,shade,shadow}` and `--kind-ui-polar-glow-{light,opacity}`.
+
+The polar recipes/gallery share a Material control and enable Motion by default, respecting reduced motion. Gauge text remains large in the center whitespace; ordinary radial labels remain at band center with independent Chart text visibility. This is an additive pre-release API at private version `0.0.0`.
+
+## Waterfall
+
+`computeWaterfallData(entries, initialBalance = 0)` returns fresh ordered rows for
+native numeric range bars. Each entry has a unique nonempty `id`, a `label`, and
+one of these explicit kinds:
+
+| Kind | Supplied value | Meaning |
+| --- | --- | --- |
+| `start`, `total`, `end` | finite number or `null` | Checkpoint: draw zero → value and establish the running balance. A checkpoint can intentionally disagree with the preceding balance. |
+| `delta` | finite signed number or `null` | Draw previous balance → balance + value. |
+| `subtotal` | none | Draw zero → current balance; do not add it again or reset it. |
+
+The default starting balance is explicitly zero; pass `null` for an unknown
+opening balance. Kind names express intent, not positional restrictions: an
+`end` is an explicit supplied total, never an automatically inferred final sum.
+A missing delta makes subsequent geometry/balances unknown until a known
+checkpoint restores them. Its known successors still retain their original
+values. A missing checkpoint also establishes an unknown balance. Zero remains
+numeric (`[balance, balance]` for a zero delta), with no invented minimum height.
+Nonfinite values, omitted values, duplicate/empty ids, supplied subtotal values,
+unknown kinds and arithmetic overflow throw. Inputs are not mutated.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import { Cell, ReferenceLine, XAxis, YAxis } from "recharts";
+
+const data = Chart.computeWaterfallData([
+  { id: "opening", label: "Opening", kind: "start", value: 80 },
+  { id: "cost", label: "Cost", kind: "delta", value: -100 },
+  { id: "net", label: "Net", kind: "subtotal" },
+  { id: "closing", label: "Closing", kind: "end", value: -20 },
+]);
+
+<Chart.Root config={{ range: { label: "Balance", color: "#3478ae" } }}>
+  <Chart.WaterfallChart data={data} width={480} height={280} animate>
+    <XAxis dataKey="id" />
+    <YAxis domain={["auto", "auto"]} />
+    <ReferenceLine y={0} />
+    <Chart.WaterfallConnectors data={data} />
+    <Chart.WaterfallSeries material="paper">
+      {data.map(row => <Cell key={row.id} fill={row.kind === "delta" ? "#b54d46" : "#3478ae"} />)}
+    </Chart.WaterfallSeries>
+  </Chart.WaterfallChart>
+</Chart.Root>;
+```
+
+`WaterfallChart` is the existing `BarChart` under a descriptive name, with its
+native props/ref, controlled visibility, interruption behavior, reduced-motion
+handling and opt-in Motion. `WaterfallSeries` binds `dataKey="range"` and
+`minPointSize={0}`. It accepts the remaining `BarSeries` extension points,
+including native shapes, cells, labels, active bars, filters, refs and events;
+`data`, `dataKey`, `stackId`, and `minPointSize` are excluded and rejected at
+runtime. Keep one unstacked Waterfall series on its axes. Supply the computed
+rows to the chart and the same rows to connectors, with the categorical axis
+using `id`. Custom range rows may be supplied directly by a host that owns its
+arithmetic. Brush-windowed connectors are not covered; subset the data for both
+primitives yourself.
+
+`WaterfallConnectors` uses native `ReferenceLine` segments, matching explicit
+`xAxisId`/`yAxisId` and horizontal (`layout="vertical"`) charts as well. Pass the
+same `seriesKey` (default `range`) and `hide` as the series. Connectors join only
+adjacent known balances that agree: no bridge over an unknown step, or from a
+computed balance to a differing checkpoint. They run between native category
+centers under bars, with default `zIndex={100}`, dashed stroke and no pointer
+capture; native `shape`, `stroke`, `position`, `zIndex`, labels and overflow props
+remain available. Use `position="middle"` to align center endpoints.
+
+Existing `BarMaterial` (`plain`, `paper`, `clay`, `glow`) applies independently to
+native floating rectangles without changing numeric geometry. Native custom
+shapes/filters retain material ownership, as with `BarSeries`; no additional
+material adapter or shared API change is needed.
+
+A native range tooltip reports range endpoints. For semantic values, compose
+`Tooltip` content using the original/computed row (as in
+[`waterfall-recipes.tsx`](../../examples/chart/waterfall-recipes.tsx)); use
+`filterNull={false}` when showing unknown steps. The host owns formatting,
+accessible data tables and source values. The responsive
+[`waterfalls.html`](../../examples/chart/waterfalls.html) recipe enables motion
+by default and includes a table, visibility/update controls and missing, zero,
+negative and crossing-zero examples.
+
+### Sankey flows
+
+`SankeyChart` uses first-party Recharts `Sankey` for layout, native `node`/`link`
+object, element or callback renderers, child Tooltip, labels, SVG props and native
+events. `data` is `SankeyFlowData`: every node has a nonempty unique string `id`
+and string `name`; every link has its own unique `id`, a finite nonnegative
+`value`, and `source`/`target` as node IDs or integer array indices. String
+endpoints always mean IDs, including numeric-looking strings. No flow is
+synthesized, normalized or aggregated.
+
+`prepareSankeyData(data)` validates and copies input into native numeric
+endpoints. It rejects duplicate/empty identities, unknown IDs, out-of-range or
+fractional indices, missing/negative/nonfinite values, overflowing node totals
+and cycles, including zero links. Nodes with both incoming and outgoing links
+must balance to a relative tolerance of `1e-9`, with no absolute zero tolerance.
+Model losses/gains as explicit edges and boundary nodes. Boundary sources/sinks
+need no matching counterpart. Supply immutable data when changing a chart.
+
+Zero links and nodes without positive links remain in input and tables;
+`SankeyChart` excludes them from native layout. All-zero and empty charts display
+`empty` (default `No positive flows`). Native callback indices address this
+filtered rendering array. Renderer/event payloads retain typed `id` identities,
+including source/target node IDs on links. Native layout owns derived node
+values (maximum input/output). Never use a render index as an input identity.
+
+Finite values can still exceed native floating-point layout limits. At the
+native drawable height H, with N positive-flow nodes, the chart conservatively requires finite aggregate
+positive flow T, finite positive H/T, finite T*H and nonzero v*((H - (N-1)*padding)/T) for every
+positive link. It throws an explicit renderer-limit error rather than changing
+values. Supply explicitly rescaled units at your data boundary if necessary.
+Equal-value parallel positive links also throw a renderer-limit error because
+Recharts keys links by source, target and value. Distinct-value parallel links
+are supported; semantic validation and the table accept either. No duplicate
+flow is silently combined. These checks are separate from semantic validation. A frame too small for the
+conservative node-padding budget displays `Insufficient space for flows; use
+the data table` instead of negative native geometry. SSR and unmeasured frames
+also use this status until measured. Native ResponsiveContainer remains usable.
+
+`SankeyNode` and `SankeyLink` are optional native callback/element shapes, not
+series components. They accept SVG presentation/handlers and `rectProps` or
+`pathProps`. Computed coordinates, dimensions and link width win over supplied
+presentation attributes; link width also wins over inline CSS stroke width.
+`SankeyLink.material="solid" | "gradient"` remains the paint API, using native
+cubic coordinates and proportional stroke widths. Separately,
+`SankeyLink.finish` and `SankeyNode.finish` accept exported `SankeyFinish`:
+`"plain"` (default), `"paper"`, `"clay"`, or `"glow"`. No chart-level finish
+is injected into custom renderers. Set finishes explicitly on the optional marks:
+
+```tsx
+<SankeyChart data={flows}
+  node={(props) => <SankeyNode {...props} color="#cf5782" finish="clay" />}
+  link={(props) => <SankeyLink {...props} material="gradient" finish="paper" />}
+/>
+```
+
+Paper uses static subtle grain and an uneven inset pencil contour. Clay uses
+broad upper-left light and diffuse lower-right shading to suggest convex matte
+volume, with quiet grain and no cast shadow. Glow has a soft white interior
+rim and a restrained neutral exterior halo; blur is 0.85–1px (flow width/4, bounded to a nonzero native blur
+kernel), halo opacity is capped at 0.12. It is intentionally less expansive
+than line Glow so adjacent flows retain their quantitative reading. Tiny marks
+show less relief. No finish displaces, widens, offsets or blurs native geometry.
+Paint RGB/semantic gradients remain the base; neutral surface decoration modifies
+visible RGB while atop compositing preserves native body alpha. Exterior Glow
+is separately decorative, is not additional flow, and never adds hit targets.
+
+Explicit SVG `filter` or inline `style.filter` disables built-in finishes;
+stylesheet filters override the filter presentation attribute normally. Props,
+refs and handlers remain on the original rect/path; native clipping can trim
+exterior Glow. Node labels are consumer siblings, outside mark filters. Native
+custom node/link callbacks and elements retain complete rendering ownership.
+Separately mounted React roots should use `identifierPrefix` for unique IDs.
+Finishes are static and follow the chart's existing reduced-motion reveal rules.
+This is an additive pre-release API with no dependency or version change; the
+package stays private at `0.0.0`. Validation targets Chromium; other browsers,
+print/export renderers and richer configurable material tokens are unverified.
+
+`SankeyTable` is an independently composable native table with required
+`caption`, all link identities, source/target names and exact zero values.
+`formatValue` controls units. Optional `onInspect` renders native buttons for
+Tab/Enter/Space inspection with controlled `activeLinkId` and `aria-pressed`.
+The callback receives the original link. Consumer state connects pointer/native
+events to the same table; table refs, attributes and handlers remain available.
+Pair diagrams with tables and a status description. Supply separate node
+metadata tables when isolated nodes carry information beyond flow quantities.
+
+`animate` defaults to false; recipes enable it. `animate={true}` uses 450ms;
+`animate={{ revealDurationMs: 800 }}` accepts a finite nonnegative duration. Motion reveals opacity only for
+450ms, without changing proportional widths or moving flows. Pointer down,
+focus, changed immutable data/layout/renderers, native measured frame resize and live
+reduced-motion preference stop playback and show final geometry. Unmount stops
+playback. Examples retain a readable minimum diagram width in a keyboard
+scrollable region on phones and viewport-fitting tables. No topology morph or
+width tween is promised. See `examples/chart/SANKEYS.md` and `/sankeys.html`.
+
+## Heatmap
+
+`HeatmapChart`, `HeatmapGrid`, `HeatmapLegend`, `HeatmapTooltip`, and `HeatmapDataTable` compose a two-dimensional categorical grid using native HTML table layout. They are independent of `Root` and Recharts chart contexts. The browser owns equal-cell geometry; ordered domains and data are consumer-owned. No new dependency or existing chart API change is required.
+
+```tsx
+import {
+  createHeatmapScale, HeatmapChart, HeatmapGrid,
+  HeatmapLegend, HeatmapTooltip, HeatmapDataTable,
+} from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const scale = createHeatmapScale({
+  domain: [-10, 10],
+  colors: ["#3b6fa8", "#f5f5ee", "#bf5b38"],
+});
+<HeatmapChart
+  rows={["API", "Worker"]}
+  columns={["East", "West"]}
+  data={[
+    { row: "API", column: "East", value: -4 },
+    { row: "API", column: "West", value: 0 },
+    { row: "Worker", column: "East", value: null },
+  ]}
+  scale={scale}
+  animate
+>
+  <HeatmapGrid caption="Latency change by service and region" />
+  <HeatmapTooltip />
+  <HeatmapLegend label="Change in milliseconds" />
+  <details>
+    <summary>View values</summary>
+    <HeatmapDataTable caption="Latency changes (ms)" />
+  </details>
+</HeatmapChart>;
+```
+
+- `rows` and `columns` are explicit ordered unique string domains. Unknown coordinates, duplicate domain entries, undefined/nonfinite values and overflowed sums throw actionable errors. An empty domain renders an empty grid message. Domains containing categories with no records still render missing cells. Supply new array identities when updating data/domains; inputs are treated as immutable.
+- A datum is `{ row: string; column: string; value: number | null }`. Absent records and explicit `null` are missing, while `0` remains measured zero. `createHeatmapModel` exposes every domain coordinate, indices, resolved value and original `sources` for typed customization and inspection.
+- `duplicates` defaults to `"error"`. `"first"` and `"last"` preserve the corresponding record, including null. `"sum"` sums finite records, ignores null when numbers exist, and keeps all-null cells missing. Negative/positive cancellation remains zero. `sources` retains all records in input order for every policy.
+- `createHeatmapScale({ domain, colors })` requires finite ascending endpoints and at least two opaque `#rrggbb` colors. It interpolates evenly spaced stops in sRGB and clamps out-of-domain values. A constant domain uses the palette midpoint. Explicit domains make comparisons across updates meaningful; automatic rescaling is not performed. Consumers should label any clamping and choose a palette suited to sequential or diverging values. The legend uses the same stops/endpoints, includes a positioned zero marker with a separate label for signed domains, and a separate missing key.
+- `formatValue(number)` and `missingLabel` are shared by cell labels, tooltip, legend and table. Default labels show values, with contrast-selected black/white text for numeric fills. Set both `--heatmap-missing` and `--heatmap-missing-foreground` when changing the missing swatch colors. Custom content owns its own text contrast. `HeatmapGrid` accepts a typed `Cell: ComponentType<HeatmapCellContentProps>` receiving `{ cell, fill, formattedValue }`, plus `cellProps(cell)` for native td refs/styles/handlers, and `rowLabel`/`columnLabel` for visible header content. Preserve opaque fills and a meaningful text alternative when customizing; nested interactive content needs host-specific keyboard handling. Grid role, tab stops, coordinate identity, accessible cell labels and background color remain component-owned; cell handlers are composed and a cancelled key event suppresses grid navigation.
+- Native DOM props, styles, refs and handlers are forwarded on the chart div, grid table, legend fieldset, tooltip div and static table. `HeatmapTooltip` accepts a typed `Content` component with the same cell contract. Compose one grid and at most one tooltip per chart; create separate chart boundaries for independent grids. Tooltip values derive from the latest active coordinate, so data changes and reorder do not leave stale payloads.
+- The grid has one roving tab stop. Arrow keys move within the ordered domains, Home/End move to the row endpoints, Ctrl+Home/End to the corners. Focus and pointer inspection open the tooltip; Escape closes it and Tab exits the grid. Native cell focus scrolls narrow containers. Long row headers and default cell text are clipped visually to preserve equal rows; cell accessible labels and the static data table retain the full values. Removing the focused category falls back to the first cell on the next Tab entry. The optional tooltip is an in-flow readout; the static data table is consumer-placed and has no roving focus behavior.
+- `animate` defaults off in the library and on in the recipes. The existing Motion peer animates only a short frame translation; cell fills stay opaque and values do not tween. Reduced-motion preferences disable translation. Host/card styling belongs to the consumer through native `className` and `style`; it is not a chart material. `HeatmapGrid material` accepts `HeatmapMaterial`: `"plain"` (default), `"paper"`, `"clay"`, or `"glow"`. These are static per-cell edge treatments, never card styling. Paper adds a fibrous, irregular ink rim; Clay adds a soft top-lit convex matte bevel; Glow adds a luminous rim contained within the cell. Only the outer 8% on each side is decorated: the central 84% by 84% (70.56% of the rectangular cell area, before text) remains the exact opaque scale color. Compare this center to the unmodified legend, not the decorative edge. Missing cells retain their pattern and never receive a finish. No filter, opacity, shadow, geometry or animation is added. Consumer background-image/size/repeat overrides still win, and custom content and native cell styles/filters/refs/events remain owned by the consumer. Consumer paint overrides can invalidate the encoding guarantee. Full-face texture, glossy clay and an external glow halo are intentionally unsupported because they would alter or bleed the numeric encoding; these are bounded rim materials.
+
+See [responsive matrix and activity recipes](../../examples/chart/HEATMAPS.md) for renderer research, behavior, verification and limitations. Native tables render every cell; virtualization, editing, range selection, inferred domains and automatic aggregation are outside this API. Automated Chromium checks cover tested interaction/layout paths; manual screen-reader coverage remains unverified.

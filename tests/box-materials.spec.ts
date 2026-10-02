@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
-const url = "http://127.0.0.1:4185/?materials";
+const url = `http://127.0.0.1:${4191 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?materials`;
 const finishes = ["plain", "paper", "clay", "glow"] as const;
 const marks = '[data-kind-ui="box-plot-mark"]';
 
