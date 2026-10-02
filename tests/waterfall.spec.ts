@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const offset = Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173;
-const packed = `http://127.0.0.1:${4187 + offset}`;
+const packed = `http://127.0.0.1:${4188 + offset}`;
 const marks = ".recharts-bar-rectangle path";
 const links = '.recharts-reference-line line[stroke-dasharray="3 3"]';
 const reveal = '[data-kind-ui="bar-reveal"]';
