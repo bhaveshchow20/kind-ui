@@ -103,6 +103,10 @@ for (const packed of [false, true]) {
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
       ).toBe(true);
       const grid = page.getByRole("grid", { name: "Deployment activity" });
+      const matrix = page.getByRole("grid", { name: "Weekly latency" });
+      expect((await matrix.locator("caption").boundingBox())?.width).toBeLessThanOrEqual(
+        await matrix.locator("..").evaluate((node) => node.clientWidth),
+      );
       await grid.getByRole("gridcell").first().focus();
       await page.keyboard.press("Control+End");
       await expect(grid.getByRole("gridcell").last()).toBeFocused();

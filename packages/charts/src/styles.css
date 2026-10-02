@@ -136,6 +136,7 @@
     box-shadow: inset 0 2px 5px #17203314;
   }
   [data-kind-ui="heatmap-scroll"] {
+    container-type: inline-size;
     overflow-x: auto;
     max-width: 100%;
   }
@@ -146,6 +147,9 @@
     min-width: calc(7rem + var(--heatmap-columns) * 3.25rem);
   }
   [data-kind-ui="heatmap-grid"] caption {
+    width: 100cqw;
+    max-width: 100cqw;
+    overflow-wrap: anywhere;
     text-align: left;
     font-weight: 600;
     padding-bottom: 1rem;

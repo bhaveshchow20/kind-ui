@@ -1,6 +1,5 @@
-@import "tailwindcss";
-@theme {
-  --font-sans: "Geist Variable", sans-serif;
+* {
+  box-sizing: border-box;
 }
 :root {
   font-family: "Geist Variable", sans-serif;
