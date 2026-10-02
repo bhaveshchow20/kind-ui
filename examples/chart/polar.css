@@ -95,3 +95,8 @@
   font-weight: 650;
   letter-spacing: -0.04em;
 }
+
+.polar-showcase[data-palette="pink"] {
+  --chart-1: #df55a0;
+  --chart-2: #8b5bc7;
+}

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 for (const palette of ["Pink", "Color", "Monochrome"] as const) {
   test(`area clay relief stays native in ${palette} at normal and narrow widths`, async ({

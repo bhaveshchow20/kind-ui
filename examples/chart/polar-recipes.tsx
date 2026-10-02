@@ -55,12 +55,14 @@ export function PolarRecipeCard({
   recipe,
   data,
   animate,
+  material = "plain",
   showText = true,
   tooltips = true,
 }: {
   recipe: PolarRecipe;
   data: PolarPoint[];
   animate: boolean | Chart.RadarAnimation;
+  material?: Chart.PolarMaterial;
   showText?: boolean;
   tooltips?: boolean;
 }) {
@@ -119,15 +121,17 @@ export function PolarRecipeCard({
               <PolarAngleAxis dataKey="category" tickLine={false} />
               <PolarRadiusAxis domain={[0, 100]} tickCount={3} />
               {range ? (
-                <Chart.RadarSeries dataKey="range" isRange fillOpacity={0.2} />
+                <Chart.RadarSeries material={material} dataKey="range" isRange fillOpacity={0.2} />
               ) : (
                 <>
                   <Chart.RadarSeries
+                    material={material}
                     dataKey="actual"
                     fillOpacity={recipe === "Outline" ? 0 : 0.2}
                     dot={recipe === "Outline"}
                   />
                   <Chart.RadarSeries
+                    material={material}
                     dataKey="target"
                     fill="none"
                     strokeDasharray="5 4"
@@ -167,6 +171,7 @@ export function PolarRecipeCard({
                 )}
               </PolarRadiusAxis>
               <Chart.RadialBarSeries
+                material={material}
                 dataKey="actual"
                 background
                 cornerRadius={recipe === "Stacked" ? 0 : 5}
@@ -187,6 +192,7 @@ export function PolarRecipeCard({
               </Chart.RadialBarSeries>
               {!gauge && (
                 <Chart.RadialBarSeries
+                  material={material}
                   dataKey="target"
                   fillOpacity={0.55}
                   {...(recipe === "Stacked" ? { stackId: "scores" } : {})}

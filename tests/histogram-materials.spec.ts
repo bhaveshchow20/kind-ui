@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const packed = "http://127.0.0.1:4185";
+const packed = `http://127.0.0.1:${4192 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
 const marks = '[data-kind-ui="histogram-bin"]';
 const finishes = ["plain", "paper", "clay", "glow"] as const;
 

@@ -1,0 +1,122 @@
+@layer base, kind-ui, host;
+@layer base {
+  body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: #eeeee9;
+  }
+  * {
+    box-sizing: border-box;
+  }
+}
+@layer host {
+  .presentation {
+    --completed: #3d6470;
+    --review: #aa7456;
+    --kind-ui-chart-popover: #fff;
+    --kind-ui-chart-popover-foreground: #222;
+    --kind-ui-chart-border: #ccc;
+    max-width: 780px;
+    margin: auto;
+    padding: 32px 24px;
+    color: #263332;
+  }
+  .presentation[data-dark="true"] {
+    --completed: #95cedc;
+    --review: #e6b591;
+    --kind-ui-chart-popover: #263332;
+    --kind-ui-chart-popover-foreground: #f5f5ee;
+    --kind-ui-chart-border: #657574;
+    background: #172322;
+    color: #f5f5ee;
+    color-scheme: dark;
+  }
+  .presentation header p:first-child {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 11px;
+  }
+  .presentation h1 {
+    font-size: 40px;
+    margin: 10px 0;
+    letter-spacing: -0.04em;
+  }
+  .presentation header p {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .presentation fieldset {
+    border: 0;
+    padding: 16px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 12px;
+  }
+  .presentation label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .presentation select {
+    font: inherit;
+    padding: 5px;
+  }
+  .presentation-card {
+    border: 1px solid var(--kind-ui-chart-border);
+    border-radius: 16px;
+    padding: 20px;
+    background: var(--kind-ui-chart-popover);
+    color: var(--kind-ui-chart-popover-foreground);
+  }
+  .presentation h2 {
+    font-size: 18px;
+    margin: 0 0 14px;
+  }
+  .presentation #presentation-help {
+    font-size: 11px;
+  }
+  .presentation .recharts-cartesian-axis-tick-value {
+    fill: var(--kind-ui-chart-popover-foreground);
+    font-size: 11px;
+  }
+  .presentation .recharts-surface:focus-visible {
+    outline: 2px solid var(--completed);
+    outline-offset: 2px;
+  }
+  .presentation button:focus-visible {
+    outline: 2px solid var(--completed);
+    outline-offset: 2px;
+  }
+  .presentation table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 16px;
+  }
+  .presentation caption {
+    text-align: left;
+    font-size: 11px;
+    padding: 10px 0;
+  }
+  .presentation td,
+  .presentation th {
+    border-top: 1px solid var(--kind-ui-chart-border);
+    padding: 10px 4px;
+    text-align: right;
+  }
+  .presentation th:first-child {
+    text-align: left;
+  }
+  @media (max-width: 400px) {
+    .presentation {
+      padding: 20px 12px;
+    }
+    .presentation-card {
+      padding: 12px;
+    }
+    .presentation h1 {
+      font-size: 32px;
+    }
+  }
+}

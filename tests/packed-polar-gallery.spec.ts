@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, test } from "./browser";
 
 const url = "http://127.0.0.1:4179/gallery.html";
 const radarModes = [
