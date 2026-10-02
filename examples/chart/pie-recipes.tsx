@@ -20,13 +20,17 @@ export function Allocation({
   config = defaultConfig,
   rows = defaultRows,
   animate: controlledAnimation,
+  material: controlledMaterial,
 }: {
   donut?: boolean;
   config?: Chart.SeriesConfig;
   rows?: { id: string; hours: number }[];
   animate?: boolean;
+  material?: Chart.PieMaterial;
 }) {
   const [visible, setVisible] = useState(Object.keys(config));
+  const [localMaterial, setMaterial] = useState<Chart.PieMaterial>("plain");
+  const material = controlledMaterial ?? localMaterial;
   const [localAnimation, setAnimate] = useState(false);
   const animate = controlledAnimation ?? localAnimation;
   const [selected, setSelected] = useState<string>();
@@ -46,6 +50,28 @@ export function Allocation({
           Animate
         </label>
       )}
+      {controlledMaterial === undefined && (
+        <label
+          style={{
+            display: "inline-flex",
+            gap: 6,
+            marginInlineStart: controlledAnimation === undefined ? 12 : 0,
+          }}
+        >
+          Material
+          <select
+            aria-label="Material"
+            value={material}
+            onChange={(event) => setMaterial(event.target.value as Chart.PieMaterial)}
+          >
+            {["plain", "paper", "clay", "glow"].map((finish) => (
+              <option key={finish} value={finish}>
+                {finish}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <Chart.Root
         config={config}
         visibleSeries={visible}
@@ -61,6 +87,7 @@ export function Allocation({
           aria-label={donut ? "Team capacity donut" : "Weekly hours pie"}
         >
           <Chart.PieSeries
+            material={material}
             data={data}
             dataKey="hours"
             nameKey="id"

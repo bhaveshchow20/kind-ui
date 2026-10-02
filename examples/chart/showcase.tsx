@@ -181,13 +181,13 @@ function Showcase() {
             <legend>Finish</legend>
             <div
               className="finish-options"
-              aria-disabled={family === "pie" || family === "radar" || family === "radial"}
+              aria-disabled={family === "radar" || family === "radial"}
             >
               {finishes.map((value) => (
                 <label key={value}>
                   <input
                     type="radio"
-                    disabled={family === "pie" || family === "radar" || family === "radial"}
+                    disabled={family === "radar" || family === "radial"}
                     name="finish"
                     value={value}
                     checked={material === value}
