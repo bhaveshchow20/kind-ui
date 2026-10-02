@@ -15,32 +15,36 @@ for (const phone of [false, true]) {
     });
     const signed = page.getByRole("application", { name: "Cost and quality change by team" });
     const coverage = page.getByRole("application", { name: "Coverage and adoption by region" });
-    await expect(relationship.locator(".recharts-scatter-symbol path")).toHaveCount(11);
-    await expect(bubble.locator(".recharts-scatter-symbol path")).toHaveCount(6);
-    await expect(signed.locator(".recharts-scatter-symbol path")).toHaveCount(7);
-    await expect(coverage.locator(".recharts-scatter-symbol path")).toHaveCount(4);
+    await expect(relationship.locator(".recharts-scatter-symbol path:not(defs path)")).toHaveCount(
+      11,
+    );
+    await expect(bubble.locator(".recharts-scatter-symbol path:not(defs path)")).toHaveCount(6);
+    await expect(signed.locator(".recharts-scatter-symbol path:not(defs path)")).toHaveCount(7);
+    await expect(coverage.locator(".recharts-scatter-symbol path:not(defs path)")).toHaveCount(4);
     const sizes = await bubble
-      .locator(".recharts-scatter-symbol path")
+      .locator(".recharts-scatter-symbol path:not(defs path)")
       .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
     expect(new Set(sizes).size).toBe(6);
-    await relationship.locator(".recharts-scatter-symbol path").first().hover();
+    await relationship.locator(".recharts-scatter-symbol path:not(defs path)").first().hover();
     let tip = page.locator('[data-kind-ui="chart-tooltip"]').first();
     await expect(tip).toContainText("Search");
     await expect(tip).toContainText("28 ms");
     await expect(tip).toContainText("84%");
     await page.getByRole("button", { name: "Weekend", exact: true }).click();
-    await expect(relationship.locator(".recharts-scatter-symbol path")).toHaveCount(6);
+    await expect(relationship.locator(".recharts-scatter-symbol path:not(defs path)")).toHaveCount(
+      6,
+    );
     await page.getByRole("button", { name: "Weekend", exact: true }).click();
     await page.getByRole("button", { name: "Next week", exact: true }).click();
-    await relationship.locator(".recharts-scatter-symbol path").first().hover();
+    await relationship.locator(".recharts-scatter-symbol path:not(defs path)").first().hover();
     await expect(tip).toContainText("25 ms");
     await expect(tip).toContainText("81%");
     await page.getByRole("button", { name: "Current week", exact: true }).click();
-    await coverage.locator(".recharts-scatter-symbol path").nth(0).hover();
+    await coverage.locator(".recharts-scatter-symbol path:not(defs path)").nth(0).hover();
     tip = page.locator('[data-kind-ui="chart-tooltip"]').last();
     await expect(tip).toContainText("North");
     await expect(tip).toContainText("0k");
-    await coverage.locator(".recharts-scatter-symbol path").nth(2).hover();
+    await coverage.locator(".recharts-scatter-symbol path:not(defs path)").nth(2).hover();
     await expect(tip).toContainText("South");
     await expect(tip).toContainText("No data");
     await page.getByText("View observations", { exact: true }).last().click();

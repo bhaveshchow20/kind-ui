@@ -12,6 +12,12 @@ test("direct and namespace imports expose the same public components", () => {
     "BarChart",
     "BarSeries",
     "ComboChart",
+    "HeatmapCellContent",
+    "HeatmapChart",
+    "HeatmapDataTable",
+    "HeatmapGrid",
+    "HeatmapLegend",
+    "HeatmapTooltip",
     "Legend",
     "LineChart",
     "LineSeries",
@@ -37,6 +43,8 @@ test("direct and namespace imports expose the same public components", () => {
     "WaterfallConnectors",
     "WaterfallSeries",
     "computeWaterfallData",
+    "createHeatmapModel",
+    "createHeatmapScale",
     "prepareSankeyData",
   ]);
   assert.equal(Chart.Root, Root);
@@ -353,6 +361,110 @@ test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geomet
     );
 });
 
+test("heatmap explicit domains preserve signed, zero, missing and ordering", () => {
+  const model = Chart.createHeatmapModel({
+    rows: ["B", "A"],
+    columns: ["Y", "X"],
+    data: [
+      { row: "A", column: "X", value: 0 },
+      { row: "B", column: "Y", value: -5 },
+      { row: "A", column: "Y", value: null },
+    ],
+  });
+  assert.deepEqual(
+    model.cells.map((row) => row.map((cell) => cell.value)),
+    [
+      [-5, null],
+      [null, 0],
+    ],
+  );
+  assert.equal(model.cells[0][1].sources.length, 0);
+  assert.equal(model.cells[1][0].sources.length, 1);
+  assert.equal(Chart.createHeatmapModel({ rows: [], columns: ["X"], data: [] }).cells.length, 0);
+});
+test("heatmap duplicate policies, invalid coordinates and nonfinite input", () => {
+  const base = {
+    rows: ["A"],
+    columns: ["X"],
+    data: [null, -2, 2].map((value) => ({ row: "A", column: "X", value })),
+  };
+  assert.throws(() => Chart.createHeatmapModel(base), /Duplicate/);
+  assert.equal(Chart.createHeatmapModel({ ...base, duplicates: "first" }).cells[0][0].value, null);
+  assert.equal(Chart.createHeatmapModel({ ...base, duplicates: "last" }).cells[0][0].value, 2);
+  assert.equal(Chart.createHeatmapModel({ ...base, duplicates: "sum" }).cells[0][0].value, 0);
+  assert.equal(
+    Chart.createHeatmapModel({ ...base, duplicates: "sum", data: base.data.slice(0, 1) })
+      .cells[0][0].value,
+    null,
+  );
+  assert.throws(() => Chart.createHeatmapModel({ ...base, rows: ["A", "A"] }), /unique/);
+  assert.throws(() => Chart.createHeatmapModel({ ...base, columns: ["Y"] }), /outside/);
+  for (const value of [NaN, Infinity, undefined])
+    assert.throws(
+      () => Chart.createHeatmapModel({ ...base, data: [{ row: "A", column: "X", value }] }),
+      /finite/,
+    );
+  assert.throws(
+    () =>
+      Chart.createHeatmapModel({
+        ...base,
+        duplicates: "sum",
+        data: [Number.MAX_VALUE, Number.MAX_VALUE].map((value) => ({
+          row: "A",
+          column: "X",
+          value,
+        })),
+      }),
+    /finite/,
+  );
+});
+test("heatmap quantitative scale clamps, interpolates and handles constant zero", () => {
+  const scale = Chart.createHeatmapScale({ domain: [-1, 1], colors: ["#000000", "#ffffff"] });
+  assert.equal(scale.color(-10), "#000000");
+  assert.equal(scale.color(0), "#808080");
+  assert.equal(scale.color(10), "#ffffff");
+  assert.equal(
+    Chart.createHeatmapScale({ domain: [0, 0], colors: scale.colors }).color(0),
+    "#808080",
+  );
+  for (const domain of [
+    [1, -1],
+    [0, Infinity],
+    [-Number.MAX_VALUE, Number.MAX_VALUE],
+  ])
+    assert.throws(() => Chart.createHeatmapScale({ domain, colors: scale.colors }), /domain/);
+  assert.throws(
+    () => Chart.createHeatmapScale({ domain: [0, 1], colors: ["red", "transparent"] }),
+    /opaque/,
+  );
+  assert.throws(() => scale.color(NaN), /finite/);
+});
+test("heatmap public components compose native grid, numeric legend and static alternative", () => {
+  const markup = render(
+    h(
+      Chart.HeatmapChart,
+      {
+        rows: ["A"],
+        columns: ["X", "Y"],
+        data: [{ row: "A", column: "X", value: 0 }],
+        scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
+      },
+      h(Chart.HeatmapGrid, { caption: "Example" }),
+      h(Chart.HeatmapLegend, { label: "Count" }),
+      h(Chart.HeatmapTooltip),
+      h(Chart.HeatmapDataTable, { caption: "Data" }),
+    ),
+  );
+  assert.match(markup, /role="grid"/);
+  assert.match(markup, /aria-label="A, X: 0"/);
+  assert.match(markup, /aria-label="A, Y: Missing"/);
+  assert.match(markup, /data-missing="true"/);
+  assert.match(markup, /data-kind-ui="heatmap-data-table"/);
+  assert.throws(
+    () => render(h(Chart.HeatmapGrid, { caption: "No provider" })),
+    /require HeatmapChart/,
+  );
+});
 const Icon = () => h("svg", { "data-icon": "task" }, h("title", {}, "Decorative task"));
 const iconConfig = { ...config, count: { ...config.count, icon: Icon } };
 const optionContent = (options = {}, extra = {}) =>
@@ -696,5 +808,35 @@ test("Sankey keeps parallel identities in validation but rejects native equal-va
         ),
       /finite and nonnegative/,
     );
+  }
+});
+
+test("heatmap materials decorate measured cells only and retain custom content/styles", () => {
+  for (const material of ["plain", "paper", "clay", "glow"]) {
+    const markup = render(
+      h(
+        Chart.HeatmapChart,
+        {
+          rows: ["A"],
+          columns: ["X", "Y"],
+          data: [{ row: "A", column: "X", value: 0 }],
+          scale: Chart.createHeatmapScale({ domain: [-1, 1], colors: ["#000000", "#ffffff"] }),
+        },
+        h(Chart.HeatmapGrid, {
+          caption: "Materials",
+          material,
+          Cell: ({ formattedValue }) => h("b", {}, formattedValue),
+          cellProps: () => ({
+            style: { filter: "brightness(1)", backgroundImage: "none" },
+            "data-host": "yes",
+          }),
+        }),
+      ),
+    );
+    assert.equal((markup.match(new RegExp(`data-material="${material}"`, "g")) ?? []).length, 1);
+    assert.match(markup, /filter:brightness\(1\);background-image:none;background-color:#808080/);
+    assert.match(markup, /<b>0<\/b>/);
+    assert.match(markup, /aria-label="A, Y: Missing"/);
+    assert.doesNotMatch(markup, / material=/);
   }
 });

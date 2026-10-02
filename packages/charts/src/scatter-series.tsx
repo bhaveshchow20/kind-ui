@@ -1,10 +1,12 @@
 "use client";
 
 import { animate, motion, useMotionValue } from "motion/react";
-import { type ComponentProps, use, useId, useLayoutEffect, useRef } from "react";
+import { type ComponentProps, use, useId, useLayoutEffect, useMemo, useRef } from "react";
 import {
   DefaultZIndexes,
   Scatter,
+  type ScatterShapeProps,
+  type Symbols,
   usePlotArea,
   useXAxisDomain,
   useXAxisScale,
@@ -15,17 +17,50 @@ import {
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { ScatterMotion } from "./scatter-chart.js";
+import { type ScatterMaterial, ScatterMaterialSymbol } from "./scatter-material.js";
 
 export type ScatterSeriesProps = Omit<ComponentProps<typeof Scatter>, "isAnimationActive"> & {
   /** Series identity is separate from numeric axis data keys. Required for controlled visibility. */
   seriesKey?: string;
+  /** Finish built-in symbols; custom shapes and consumer filters retain ownership. */
+  material?: ScatterMaterial | undefined;
 };
 
 /** Native Scatter owns marks, Cells, labels, handlers, axis mapping and point payloads. */
-export function ScatterSeries({ seriesKey, hide, fill, ...props }: ScatterSeriesProps) {
+export function ScatterSeries({
+  seriesKey,
+  hide,
+  fill,
+  material = "plain",
+  ...props
+}: ScatterSeriesProps) {
   const { config, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const { reveal, options } = use(ScatterMotion);
+  const shapes = useMemo(() => {
+    function finish(option: ScatterSeriesProps["shape"]) {
+      if (
+        material === "plain" ||
+        (option !== undefined && typeof option !== "string" && typeof option !== "boolean")
+      )
+        return option;
+      return (point: ScatterShapeProps) => (
+        <ScatterMaterialSymbol
+          material={material}
+          type={typeof option === "string" ? option : "circle"}
+          {...(point as ComponentProps<typeof Symbols>)}
+        />
+      );
+    }
+    return {
+      shape: finish(props.shape),
+      // Undefined activeShape must stay undefined: native activation/portal semantics.
+      activeShape:
+        props.activeShape === undefined || props.activeShape === false
+          ? props.activeShape
+          : finish(props.activeShape),
+    };
+  }, [material, props.shape, props.activeShape]);
   const generatedId = useId();
   const id = props.id ?? generatedId;
   const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
@@ -83,6 +118,8 @@ export function ScatterSeries({ seriesKey, hide, fill, ...props }: ScatterSeries
       <motion.g data-kind-ui="scatter-fade" initial={false} style={{ opacity }}>
         <Scatter
           {...props}
+          {...(shapes.shape !== undefined ? { shape: shapes.shape } : {})}
+          {...(shapes.activeShape !== undefined ? { activeShape: shapes.activeShape } : {})}
           id={id}
           hide={hidden}
           {...(color !== undefined ? { fill: color } : {})}

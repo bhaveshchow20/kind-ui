@@ -255,6 +255,12 @@ import { CartesianGrid, XAxis, YAxis, ZAxis } from "recharts";
 </Root>
 ```
 
+`ScatterSeries material="plain" | "paper" | "clay" | "glow"` (exported `ScatterMaterial`) is independent of consumer color and Motion. Plain is the default. Paper uses deterministic inset pencil contours and subtle grain without displacing the path. Clay uses upper-left diffuse light and lower-right shade for convex matte relief, entirely inside the native silhouette. Glow uses a gentle luminous tint, inset light rim and soft exterior halo; the halo is decorative light, **not quantitative bubble area**. Native symbol paths, transforms, Z sizes and paint alpha remain exact. Glow light uses a separate noninteractive `use` and native-symbol geometry exclusion mask with an exterior guard covering declared stroke extents plus 1px for antialiased edges to keep fully transparent gradient regions and stroke-only interiors transparent. Geometry paths inside SVG definitions are decoration machinery, not additional data marks. Body finishes compose atop the original paint, including translucent gradients and invisible paint. Labels and native connecting lines are never filtered.
+
+Materials apply to default/string symbols, including native boolean default-shape options and `Cell` paint/geometry overrides. Custom function/element/object shapes retain their own finish; custom active shapes retain ownership independently. Explicit `filter` or `style.filter` on a series or Cell opts that symbol out, even `none`. Every finish also retains unchanged native rendering for explicit point `clipPath` or `style.clipPath`, including `none`: filtering can rerasterize antialiased clip edges, and separate Glow light cannot safely inherit arbitrary native-local or object-bounding-box clip coordinates. This declared clipping fallback preserves native alpha and is tested for both coordinate systems and both prop/style ownership; ancestor plot clipping still applies to every finish. Refs and native handlers are forwarded. Each rendered symbol owns a unique filter ID, including duplicate consumer series IDs and active portals.
+
+Effects scale with the square root of native area, with upper bounds (pencil rim 0.9px, Clay offset 3px/blur 2px, Glow blur 1.8px), **no minimum radius or size substitution**. Subpixel marks retain exact geometry and alpha but cannot show a full grain/relief pattern; the small-scale effect becomes tonal and may be indistinguishable below raster resolution. Nonpositive/unresolved sizes render through native Symbols without a finish. A declared nonnumeric stroke width or a stroke extent exceeding the square root of native area also uses unchanged native rendering instead of cropping paint; stroke-aware exclusion can suppress a small Glow halo while retaining its luminous body. This bounded fallback is covered with a 12px transparent gradient stroke, including `style.strokeWidth`. Glow's filter region is limited to three times each native symbol's bounding box and keeps native plot clipping, so extreme consumer strokes, registered custom symbol factories or boundary marks may crop decorative light. This is a bounded SVG finish for the seven built-in symbols, not an arbitrary custom-renderer guarantee.
+
 Native Recharts owns numeric axes, ZAxis area mapping and per-point selection. Use `ScatterTooltip` instead of the category-oriented default `TooltipContent`: its default content displays the actual selected record's dimension values, names and units; a point label comes from the supplied callback or configured series title. Optional metadata for a dimension's string dataKey uses the same `Root.config` `label`/`formatValue` contract; native `entry.formatter`/tooltip `formatter` takes precedence. `Legend` shows all config entries, so use native axis names/units or a tooltip formatter when dimension entries should not appear in the legend. Custom `content`, `frameProps`, frame refs, bounded positioning and shared Motion are retained. Use `<ScatterTooltipContent tooltip={nativeContentProps} />` to compose the default UI inside your own native content.
 
 No missing/zero/negative values are coerced or deduplicated by Kind. Default native symbols omit unresolvable x/y coordinates; custom shapes receive native nullable geometry and must guard it themselves. Recharts 3.10.1 uses the minimum Z range and omits the Z tooltip entry for both zero and missing z; default content displays only the native entries and does not invent a z value. Supply `zDimension={{ dataKey: "requests", name: "Requests", unit: "k" }}` to recover zero or missing size in maintained default content from the actual point record. `ScatterSizeDimension<Row>` also accepts a typed `(record: Row) => number | null | undefined` accessor without casts; reuse the accessor used by your ZAxis. String keys read own top-level properties only; use a function for nested paths. When native Recharts supplies a nonzero Z entry it remains intact, with its native formatter/name/unit. Mapping name/unit supplies the omitted entry, existing tooltip/series formatter and dimension config formatting apply, and missing entries use `missingValue` (default “No data”). No field is guessed when mapping is omitted. A table remains appropriate for all observations. Negative z is passed to the native scale; validate count domains in the host. Duplicate coordinates overlap but keep distinct record payloads/indexes. Custom Cells may override native geometry, exactly as with Recharts Scatter.
@@ -567,3 +573,50 @@ reduced-motion preference stop playback and show final geometry. Unmount stops
 playback. Examples retain a readable minimum diagram width in a keyboard
 scrollable region on phones and viewport-fitting tables. No topology morph or
 width tween is promised. See `examples/chart/SANKEYS.md` and `/sankeys.html`.
+
+## Heatmap
+
+`HeatmapChart`, `HeatmapGrid`, `HeatmapLegend`, `HeatmapTooltip`, and `HeatmapDataTable` compose a two-dimensional categorical grid using native HTML table layout. They are independent of `Root` and Recharts chart contexts. The browser owns equal-cell geometry; ordered domains and data are consumer-owned. No new dependency or existing chart API change is required.
+
+```tsx
+import {
+  createHeatmapScale, HeatmapChart, HeatmapGrid,
+  HeatmapLegend, HeatmapTooltip, HeatmapDataTable,
+} from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const scale = createHeatmapScale({
+  domain: [-10, 10],
+  colors: ["#3b6fa8", "#f5f5ee", "#bf5b38"],
+});
+<HeatmapChart
+  rows={["API", "Worker"]}
+  columns={["East", "West"]}
+  data={[
+    { row: "API", column: "East", value: -4 },
+    { row: "API", column: "West", value: 0 },
+    { row: "Worker", column: "East", value: null },
+  ]}
+  scale={scale}
+  animate
+>
+  <HeatmapGrid caption="Latency change by service and region" />
+  <HeatmapTooltip />
+  <HeatmapLegend label="Change in milliseconds" />
+  <details>
+    <summary>View values</summary>
+    <HeatmapDataTable caption="Latency changes (ms)" />
+  </details>
+</HeatmapChart>;
+```
+
+- `rows` and `columns` are explicit ordered unique string domains. Unknown coordinates, duplicate domain entries, undefined/nonfinite values and overflowed sums throw actionable errors. An empty domain renders an empty grid message. Domains containing categories with no records still render missing cells. Supply new array identities when updating data/domains; inputs are treated as immutable.
+- A datum is `{ row: string; column: string; value: number | null }`. Absent records and explicit `null` are missing, while `0` remains measured zero. `createHeatmapModel` exposes every domain coordinate, indices, resolved value and original `sources` for typed customization and inspection.
+- `duplicates` defaults to `"error"`. `"first"` and `"last"` preserve the corresponding record, including null. `"sum"` sums finite records, ignores null when numbers exist, and keeps all-null cells missing. Negative/positive cancellation remains zero. `sources` retains all records in input order for every policy.
+- `createHeatmapScale({ domain, colors })` requires finite ascending endpoints and at least two opaque `#rrggbb` colors. It interpolates evenly spaced stops in sRGB and clamps out-of-domain values. A constant domain uses the palette midpoint. Explicit domains make comparisons across updates meaningful; automatic rescaling is not performed. Consumers should label any clamping and choose a palette suited to sequential or diverging values. The legend uses the same stops/endpoints, includes a positioned zero marker with a separate label for signed domains, and a separate missing key.
+- `formatValue(number)` and `missingLabel` are shared by cell labels, tooltip, legend and table. Default labels show values, with contrast-selected black/white text for numeric fills. Set both `--heatmap-missing` and `--heatmap-missing-foreground` when changing the missing swatch colors. Custom content owns its own text contrast. `HeatmapGrid` accepts a typed `Cell: ComponentType<HeatmapCellContentProps>` receiving `{ cell, fill, formattedValue }`, plus `cellProps(cell)` for native td refs/styles/handlers, and `rowLabel`/`columnLabel` for visible header content. Preserve opaque fills and a meaningful text alternative when customizing; nested interactive content needs host-specific keyboard handling. Grid role, tab stops, coordinate identity, accessible cell labels and background color remain component-owned; cell handlers are composed and a cancelled key event suppresses grid navigation.
+- Native DOM props, styles, refs and handlers are forwarded on the chart div, grid table, legend fieldset, tooltip div and static table. `HeatmapTooltip` accepts a typed `Content` component with the same cell contract. Compose one grid and at most one tooltip per chart; create separate chart boundaries for independent grids. Tooltip values derive from the latest active coordinate, so data changes and reorder do not leave stale payloads.
+- The grid has one roving tab stop. Arrow keys move within the ordered domains, Home/End move to the row endpoints, Ctrl+Home/End to the corners. Focus and pointer inspection open the tooltip; Escape closes it and Tab exits the grid. Native cell focus scrolls narrow containers. Long row headers and default cell text are clipped visually to preserve equal rows; cell accessible labels and the static data table retain the full values. Removing the focused category falls back to the first cell on the next Tab entry. The optional tooltip is an in-flow readout; the static data table is consumer-placed and has no roving focus behavior.
+- `animate` defaults off in the library and on in the recipes. The existing Motion peer animates only a short frame translation; cell fills stay opaque and values do not tween. Reduced-motion preferences disable translation. Host/card styling belongs to the consumer through native `className` and `style`; it is not a chart material. `HeatmapGrid material` accepts `HeatmapMaterial`: `"plain"` (default), `"paper"`, `"clay"`, or `"glow"`. These are static per-cell edge treatments, never card styling. Paper adds a fibrous, irregular ink rim; Clay adds a soft top-lit convex matte bevel; Glow adds a luminous rim contained within the cell. Only the outer 8% on each side is decorated: the central 84% by 84% (70.56% of the rectangular cell area, before text) remains the exact opaque scale color. Compare this center to the unmodified legend, not the decorative edge. Missing cells retain their pattern and never receive a finish. No filter, opacity, shadow, geometry or animation is added. Consumer background-image/size/repeat overrides still win, and custom content and native cell styles/filters/refs/events remain owned by the consumer. Consumer paint overrides can invalidate the encoding guarantee. Full-face texture, glossy clay and an external glow halo are intentionally unsupported because they would alter or bleed the numeric encoding; these are bounded rim materials.
+
+See [responsive matrix and activity recipes](../../examples/chart/HEATMAPS.md) for renderer research, behavior, verification and limitations. Native tables render every cell; virtualization, editing, range selection, inferred domains and automatic aggregation are outside this API. Automated Chromium checks cover tested interaction/layout paths; manual screen-reader coverage remains unverified.
