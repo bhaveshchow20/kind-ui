@@ -7,15 +7,24 @@ import { ActiveMarker } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { PolarMotion } from "./polar-chart.js";
+import { type PolarMaterial, PolarMaterialFilter } from "./polar-material.js";
 
 export type RadarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Radar<DataPoint, Value>>,
   "isAnimationActive"
-> & { seriesKey?: string };
+> & {
+  seriesKey?: string;
+  /** Finish on native marks; custom renderers and consumer filters retain ownership. */
+  material?: PolarMaterial | undefined;
+};
 export type RadialBarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof RadialBar<DataPoint, Value>>,
   "isAnimationActive"
-> & { seriesKey?: string };
+> & {
+  seriesKey?: string;
+  /** Finish on native marks; custom renderers and consumer filters retain ownership. */
+  material?: PolarMaterial | undefined;
+};
 
 function usePolarSeries(
   kind: string,
@@ -76,6 +85,7 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
   stroke,
   fill,
   className,
+  material = "plain",
   ...props
 }: RadarSeriesProps<DataPoint, Value>) {
   const series = usePolarSeries("RadarSeries", { ...props, seriesKey, hide }, [
@@ -86,8 +96,22 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
     props.baseLinePoints,
     props.isRange,
   ]);
+  const filterId = `kind-ui-polar-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const materialized =
+    material !== "plain" &&
+    props.shape === undefined &&
+    props.filter === undefined &&
+    props.style?.filter === undefined;
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.area}>
+      {materialized && (
+        <>
+          <PolarMaterialFilter material={material} id={filterId} />
+          {/* A series filter would also reach RadarDotsWrapper. Scope to the native
+            Polygon root, including its range subpaths, so custom dots stay owned. */}
+          <style>{`.${filterId} .recharts-radar-polygon > .recharts-polygon { filter: url(#${filterId}); }`}</style>
+        </>
+      )}
       <motion.g data-kind-ui="radar-reveal" initial={false} style={{ opacity: series.opacity }}>
         <Radar<DataPoint, Value>
           activeDot={<ActiveMarker />}
@@ -106,7 +130,7 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
             : series.color !== undefined
               ? { fill: series.color }
               : {})}
-          className={["kind-ui-radar-series", className].filter(Boolean).join(" ")}
+          className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
         />
       </motion.g>
     </ZIndexLayer>
@@ -119,6 +143,7 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
   hide,
   fill,
   className,
+  material = "plain",
   ...props
 }: RadialBarSeriesProps<DataPoint, Value>) {
   const series = usePolarSeries("RadialBarSeries", { ...props, seriesKey, hide }, [
@@ -131,8 +156,16 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
     props.maxBarSize,
     props.minPointSize,
   ]);
+  const filterId = `kind-ui-polar-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const materialized =
+    material !== "plain" &&
+    (props.shape === undefined || typeof props.shape === "boolean") &&
+    (props.activeShape === undefined || typeof props.activeShape === "boolean") &&
+    props.filter === undefined &&
+    props.style?.filter === undefined;
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
+      {materialized && <PolarMaterialFilter material={material} id={filterId} />}
       <motion.g
         data-kind-ui="radial-bar-reveal"
         initial={false}
@@ -140,6 +173,7 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
       >
         <RadialBar<DataPoint, Value>
           {...props}
+          {...(materialized ? { filter: `url(#${filterId})` } : {})}
           id={series.id}
           hide={series.hide}
           isAnimationActive={false}

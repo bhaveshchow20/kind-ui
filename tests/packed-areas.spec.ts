@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, test } from "./browser";
 
 async function bounded(tip: Locator, chart: Locator) {
   await expect

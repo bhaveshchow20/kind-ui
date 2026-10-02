@@ -11,6 +11,7 @@ import {
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
+  Polygon,
   Sector,
 } from "recharts";
 
@@ -41,6 +42,8 @@ export function PolarHost() {
   const [animate, setAnimate] = useState<boolean | Chart.RadarAnimation>(
     params.has("motion") ? { revealDurationMs: 2400 } : false,
   );
+  const [material, setMaterial] = useState<Chart.PolarMaterial>("plain");
+  const [nativeFilter, setNativeFilter] = useState(false);
   const [visible, setVisible] = useState(["value", "alias"]);
   const [updated, setUpdated] = useState(false);
   const [reverse, setReverse] = useState(false);
@@ -62,7 +65,15 @@ export function PolarHost() {
   }, []);
   let data = initial.map((row) => ({
     ...row,
-    value: zero ? 0 : updated ? 100 - row.value : row.value,
+    value: zero
+      ? 0
+      : params.has("short")
+        ? 0.3
+        : params.has("signed")
+          ? row.value - 50
+          : updated
+            ? 100 - row.value
+            : row.value,
   }));
   if (reverse) data = [...data].reverse();
   if (empty) data = [];
@@ -73,6 +84,27 @@ export function PolarHost() {
   const width = small ? 330 : 520;
   return (
     <main>
+      <label>
+        Material{" "}
+        <select
+          aria-label="Material"
+          value={material}
+          onChange={(event) => setMaterial(event.target.value as Chart.PolarMaterial)}
+        >
+          <option value="plain">Plain</option>
+          <option value="paper">Paper</option>
+          <option value="clay">Clay</option>
+          <option value="glow">Glow</option>
+        </select>
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={nativeFilter}
+          onChange={(event) => setNativeFilter(event.target.checked)}
+        />
+        Native filter
+      </label>
       <button
         type="button"
         onClick={() => setAnimate(animate === false ? { revealDurationMs: 2400 } : false)}
@@ -130,20 +162,42 @@ export function PolarHost() {
           aria-label="Radar comparison"
           onMouseMove={() => setMoves((n) => n + 1)}
         >
+          <defs>
+            <linearGradient id="polar-paint">
+              <stop stopColor="#df55a0" stopOpacity={0.2} />
+              <stop offset="1" stopColor="#8346cc" stopOpacity={0.8} />
+            </linearGradient>
+            <filter id="host-filter">
+              <feOffset dx={0} dy={0} />
+            </filter>
+          </defs>
           <PolarGrid />
           <PolarAngleAxis dataKey="category" />
-          <PolarRadiusAxis domain={[0, domain]} />
+          <PolarRadiusAxis domain={[params.has("signed") ? -100 : 0, domain]} />
           <Chart.RadarSeries<(typeof initial)[number], number | [number, number]>
             dataKey={params.has("range") ? range : "value"}
             seriesKey="value"
             isRange={params.has("range")}
-            fillOpacity={0.25}
+            material={material}
+            filter={nativeFilter ? "url(#host-filter)" : undefined}
+            style={params.has("style-filter") ? { filter: "none" } : undefined}
+            shape={params.has("radar-shape") ? <Polygon data-host-shape="radar" /> : undefined}
+            fill={
+              params.has("paint")
+                ? params.has("solid")
+                  ? "#df55a0"
+                  : "url(#polar-paint)"
+                : undefined
+            }
+            stroke={params.has("paint") ? "none" : undefined}
+            fillOpacity={params.has("transparent") ? 0 : 0.25}
             hide={hide}
             dot
             label
           />
           <Chart.RadarSeries<(typeof initial)[number], number>
             dataKey={other}
+            material={material}
             {...(params.has("invalid") ? {} : { seriesKey: "alias" })}
             fill="none"
             strokeDasharray="4 3"
@@ -166,32 +220,62 @@ export function PolarHost() {
           animate={animate}
           innerRadius="22%"
           outerRadius="88%"
+          {...(params.has("thin") ? { barSize: 2 } : {})}
           startAngle={shift ? 180 : 90}
           endAngle={shift ? 0 : -270}
           aria-label="Radial comparison"
         >
-          <PolarAngleAxis type="number" domain={[0, domain]} tick={false} />
+          <defs>
+            <linearGradient id="polar-radial-paint">
+              <stop stopColor="#df55a0" stopOpacity={0.2} />
+              <stop offset="1" stopColor="#8346cc" stopOpacity={0.8} />
+            </linearGradient>
+            <filter id="radial-host-filter">
+              <feOffset dx={0} dy={0} />
+            </filter>
+          </defs>
+          <PolarAngleAxis
+            type="number"
+            domain={[params.has("signed") ? -100 : 0, domain]}
+            tick={false}
+          />
           <PolarRadiusAxis type="category" dataKey="category" tick />
-          <Chart.RadialBarSeries<(typeof initial)[number], number>
-            dataKey="value"
+          <Chart.RadialBarSeries<(typeof initial)[number], number | [number, number]>
+            dataKey={params.has("radial-range") ? range : "value"}
+            seriesKey="value"
+            material={material}
+            filter={nativeFilter ? "url(#radial-host-filter)" : undefined}
+            activeShape={params.has("active-shape") ? Shape : undefined}
+            style={params.has("style-filter") ? { filter: "none" } : undefined}
+            fill={
+              params.has("paint")
+                ? params.has("solid")
+                  ? "#df55a0"
+                  : "url(#polar-radial-paint)"
+                : undefined
+            }
+            fillOpacity={params.has("transparent") ? 0 : params.has("paint") ? 0.35 : 1}
             hide={hide}
+            {...(params.has("stack") ? { stackId: "scores" } : {})}
             cornerRadius={4}
             background
-            shape={custom ? Shape : undefined}
+            shape={custom ? Shape : params.has("boolean-shape") ? true : undefined}
             onClick={() => setClicks((n) => n + 1)}
           >
             {data.map((row) => (
               <Cell
                 key={row.id}
-                fill={row.id === "quality" ? "#27806a" : undefined}
+                {...(!params.has("paint") && row.id === "quality" ? { fill: "#27806a" } : {})}
                 data-category-id={row.id}
               />
             ))}
             <LabelList dataKey="value" position="insideEnd" />
           </Chart.RadialBarSeries>
-          <Chart.RadialBarSeries<(typeof initial)[number], number>
+          <Chart.RadialBarSeries<(typeof initial)[number], number | [number, number]>
             dataKey={other}
+            material={material}
             {...(params.has("invalid") ? {} : { seriesKey: "alias" })}
+            {...(params.has("stack") ? { stackId: "scores" } : {})}
             fillOpacity={0.55}
           />
           <Chart.Tooltip content={content ? <Content /> : undefined} />
@@ -207,8 +291,9 @@ export function PolarHost() {
         >
           <PolarGrid />
           <PolarAngleAxis dataKey="category" />
-          <PolarRadiusAxis domain={[0, domain]} />
+          <PolarRadiusAxis domain={[params.has("signed") ? -100 : 0, domain]} />
           <NativeRadar<(typeof initial)[number], number | [number, number]>
+            stroke={params.has("paint") ? "none" : "#3161bd"}
             dataKey={params.has("range") ? range : "value"}
             isRange={params.has("range")}
             isAnimationActive={false}
@@ -221,13 +306,27 @@ export function PolarHost() {
           height={360}
           innerRadius="22%"
           outerRadius="88%"
+          {...(params.has("thin") ? { barSize: 2 } : {})}
           startAngle={shift ? 180 : 90}
           endAngle={shift ? 0 : -270}
         >
-          <PolarAngleAxis type="number" domain={[0, domain]} tick={false} />
+          <PolarAngleAxis
+            type="number"
+            domain={[params.has("signed") ? -100 : 0, domain]}
+            tick={false}
+          />
           <PolarRadiusAxis type="category" dataKey="category" tick />
-          <NativeRadialBar dataKey="value" cornerRadius={4} isAnimationActive={false} />
-          <NativeRadialBar dataKey={other} isAnimationActive={false} />
+          <NativeRadialBar<(typeof initial)[number], number | [number, number]>
+            dataKey={params.has("radial-range") ? range : "value"}
+            {...(params.has("stack") ? { stackId: "scores" } : {})}
+            cornerRadius={4}
+            isAnimationActive={false}
+          />
+          <NativeRadialBar<(typeof initial)[number], number | [number, number]>
+            dataKey={other}
+            {...(params.has("stack") ? { stackId: "scores" } : {})}
+            isAnimationActive={false}
+          />
         </NativeRadialBarChart>
       </section>
     </main>
@@ -252,3 +351,9 @@ const badRadialAnimation: Chart.RadialBarSeriesProps = { isAnimationActive: true
 void badLayout;
 void badAnimation;
 void badRadialAnimation;
+
+const materialProof: Chart.PolarMaterial = "clay";
+// @ts-expect-error Finish vocabulary is closed.
+const invalidMaterial: Chart.RadialBarSeriesProps = { material: "metal" };
+void materialProof;
+void invalidMaterial;
