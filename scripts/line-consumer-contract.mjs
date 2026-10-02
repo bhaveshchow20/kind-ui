@@ -10,6 +10,7 @@ export function assertLineConsumerSource(source) {
     "recharts",
     "./host.js",
     "./presentation.js",
+    "./use-reduced-motion.js",
     "./presentation.css",
   ]);
   for (const match of source.matchAll(/(?:from\s*|import\s*\(?\s*)["']([^"']+)["']/g)) {

@@ -245,7 +245,7 @@ try {
     "presentation.html",
   ]) {
     const source = await readFile(join(root, "examples/chart", file), "utf8");
-    if (file.endsWith(".tsx")) assertLineConsumerSource(source);
+    if (file.endsWith(".tsx") || file.endsWith(".ts")) assertLineConsumerSource(source);
     await writeFile(join(consumer, file), source);
   }
   await typecheck(["presentation.tsx", "presentation-main.tsx"]);
