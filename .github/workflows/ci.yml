@@ -9,30 +9,45 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  check:
+  recover-evidence:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [22, 24]
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: ${{ matrix.node }}
-          cache: npm
-      - run: npm install --global npm@11.9.0
-      - run: npm ci
-      - run: npm exec playwright install -- --with-deps chromium
-      # Temporary focused diagnostic; restore normal aggregate before any fix is reviewed.
-      - run: npm run build && npm exec vite build -- examples/chart
-      - run: node node_modules/@playwright/test/cli.js test --config bar-return.playwright.mjs --repeat-each 40
+      - name: Recover only the two exact Node 24 failure traces
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import io, json, os, urllib.request, urllib.error, zipfile
+          from pathlib import Path
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args, **kwargs):
+                  return None
+          request = urllib.request.Request(
+              'https://api.github.com/repos/bhaveshchow20/kind-ui/actions/artifacts/11255647817/zip',
+              headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                       'Accept': 'application/vnd.github+json'})
+          try:
+              urllib.request.build_opener(NoRedirect).open(request)
+              raise RuntimeError('Expected artifact redirect')
+          except urllib.error.HTTPError as error:
+              if error.code != 302:
+                  raise
+              location = error.headers['Location']
+          with urllib.request.urlopen(location) as response:
+              archive = zipfile.ZipFile(io.BytesIO(response.read()))
+          count = 0
+          for entry in archive.infolist():
+              parts = Path(entry.filename).parts
+              if any(part.endswith('-repeat3') or part.endswith('-repeat32') for part in parts):
+                  archive.extract(entry, 'recovered')
+                  count += 1
+          if count == 0:
+              raise RuntimeError('Failure trace paths were not found')
+          print('Recovered', count, 'files from the exact failed diagnostic artifact')
+          PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
         with:
-          name: chart-screenshots-node-${{ matrix.node }}
-          path: artifacts/bar-return-diagnostic/
+          name: exact-node24-failure-traces
+          path: recovered/
           if-no-files-found: error
           retention-days: 14
