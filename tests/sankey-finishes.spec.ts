@@ -77,7 +77,7 @@ test("packed Sankey finishes preserve alpha and quantify thin/adjacent halo sepa
         [3, 55],
         [12, 90],
         [32, 125],
-      ]) {
+      ] as const) {
         let flowHalo = 0;
         for (let y = center - Math.ceil(width / 2) - 4; y <= center + Math.ceil(width / 2) + 4; y++)
           for (let x = 40; x < 260; x++) {
