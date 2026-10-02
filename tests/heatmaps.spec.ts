@@ -4,7 +4,7 @@ const offset = Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173;
 for (const packed of [false, true]) {
   test.describe(packed ? "packed heatmap" : "heatmap recipes", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto(packed ? `http://127.0.0.1:${4187 + offset}` : "/heatmaps.html");
+      await page.goto(packed ? `http://127.0.0.1:${4190 + offset}` : "/heatmaps.html");
     });
     test("keyboard traverses rows/columns, skips headers, preserves zero and missing, dismisses tooltip", async ({
       page,
@@ -124,7 +124,7 @@ for (const packed of [false, true]) {
 test("packed constant zero, missing updates, native refs and handler cancellation", async ({
   page,
 }) => {
-  await page.goto(`http://127.0.0.1:${4187 + offset}`);
+  await page.goto(`http://127.0.0.1:${4190 + offset}`);
   const grid = page.getByRole("grid", { name: "Constant and missing grid" });
   const cells = grid.getByRole("gridcell");
   await expect(cells.first()).toHaveCSS("background-color", "rgb(128, 128, 128)");
@@ -181,7 +181,7 @@ test("actual touch inspection opens zero and missing cells", async ({ browser })
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
-  await page.goto(`http://127.0.0.1:${4187 + offset}`);
+  await page.goto(`http://127.0.0.1:${4190 + offset}`);
   const grid = page.getByRole("grid", { name: "Weekly latency" });
   await grid.getByRole("gridcell").nth(2).tap();
   await expect(page.getByRole("tooltip").first()).toHaveText("Platform, Europe: 0");
@@ -192,7 +192,7 @@ test("actual touch inspection opens zero and missing cells", async ({ browser })
 test("removed focused row has a valid tab reentry and custom missing foreground", async ({
   page,
 }) => {
-  await page.goto(`http://127.0.0.1:${4187 + offset}`);
+  await page.goto(`http://127.0.0.1:${4190 + offset}`);
   const grid = page.getByRole("grid", { name: "Constant and missing grid" });
   await grid.getByRole("gridcell").last().focus();
   await page
@@ -238,7 +238,7 @@ test("live reduced motion cancels an active entrance immediately", async ({ page
 test("long categories preserve equal rows and skewed signed legend stays readable", async ({
   page,
 }) => {
-  await page.goto(`http://127.0.0.1:${4187 + offset}`);
+  await page.goto(`http://127.0.0.1:${4190 + offset}`);
   await page.setViewportSize({ width: 390, height: 844 });
   const grid = page.getByRole("grid", { name: "Long category grid" });
   const heights = await grid

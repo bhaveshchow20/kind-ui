@@ -109,9 +109,19 @@ try {
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
     if (
-      ["line", "area", "bar", "pie", "combined", "polar", "combo", "scatter", "heatmap"].includes(
-        folder,
-      ) &&
+      [
+        "line",
+        "area",
+        "bar",
+        "pie",
+        "combined",
+        "polar",
+        "combo",
+        "scatter",
+        "heatmap",
+        "waterfall",
+        "sankey",
+      ].includes(folder) &&
       file.endsWith(".tsx")
     )
       assertLineConsumerSource(source);
@@ -191,6 +201,12 @@ try {
   console.log(
     "Bar tarball consumer: guarded public imports, strict NodeNext/Bundler and production build passed",
   );
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("waterfall", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-waterfall");
+  console.log(
+    "Waterfall tarball: guarded public imports, strict NodeNext/Bundler and production build passed",
+  );
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("scatter", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-scatter");
@@ -241,10 +257,34 @@ try {
   console.log(
     "Combo tarball: guarded public imports, strict NodeNext/Bundler and production build passed",
   );
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("sankey", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-sankey");
+  console.log(
+    "Sankey tarball: guarded public exports, strict NodeNext/Bundler and production build passed",
+  );
   for (const file of ["index.html", "main.tsx", "consumer.css", "motion.tsx"])
     await copyFixture("styling", file);
   await typecheck(["index.tsx", "main.tsx", "motion.tsx"]);
   await production("index.html", "packed-chart");
+
+  // The actual presentation recipe is independently checked through the installed tarball.
+  for (const file of [
+    "use-reduced-motion.ts",
+    "presentation.tsx",
+    "presentation-main.tsx",
+    "presentation.css",
+    "presentation.html",
+  ]) {
+    const source = await readFile(join(root, "examples/chart", file), "utf8");
+    if (file.endsWith(".tsx") || file.endsWith(".ts")) assertLineConsumerSource(source);
+    await writeFile(join(consumer, file), source);
+  }
+  await typecheck(["presentation.tsx", "presentation-main.tsx"]);
+  await production("presentation.html", "packed-presentation");
+  console.log(
+    "Presentation recipe: guarded public imports, strict NodeNext/Bundler and tarball production build passed",
+  );
 
   // Separate host recipe evidence, outside the public line/area/bar fixture proof.
   const legacy = join(consumer, "legacy");

@@ -6,9 +6,11 @@ export default defineConfig({
   build: {
     rolldownOptions: {
       input: {
+        presentation: fileURLToPath(new URL("./presentation.html", import.meta.url)),
         example: fileURLToPath(new URL("./index.html", import.meta.url)),
         recipes: fileURLToPath(new URL("./recipes.html", import.meta.url)),
         pies: fileURLToPath(new URL("./pies.html", import.meta.url)),
+        waterfalls: fileURLToPath(new URL("./waterfalls.html", import.meta.url)),
         bars: fileURLToPath(new URL("./bars.html", import.meta.url)),
         areas: fileURLToPath(new URL("./areas.html", import.meta.url)),
         showcase: fileURLToPath(new URL("./showcase.html", import.meta.url)),
@@ -16,6 +18,7 @@ export default defineConfig({
         combos: fileURLToPath(new URL("./combos.html", import.meta.url)),
         polar: fileURLToPath(new URL("./polar.html", import.meta.url)),
         heatmaps: fileURLToPath(new URL("./heatmaps.html", import.meta.url)),
+        sankeys: fileURLToPath(new URL("./sankeys.html", import.meta.url)),
         contracts: fileURLToPath(new URL("./contracts.html", import.meta.url)),
       },
     },

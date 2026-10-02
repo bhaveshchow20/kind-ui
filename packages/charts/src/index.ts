@@ -12,7 +12,13 @@ export {
 export { type AreaAnimation, AreaChart, type AreaChartProps } from "./area-chart.js";
 export type { AreaMaterial } from "./area-material.js";
 export { AreaSeries, type AreaSeriesProps } from "./area-series.js";
-export { type BarAnimation, BarChart, type BarChartProps } from "./bar-chart.js";
+export {
+  type BarAnimation,
+  BarChart,
+  BarChart as WaterfallChart,
+  type BarChartProps,
+  type BarChartProps as WaterfallChartProps,
+} from "./bar-chart.js";
 export type { BarMaterial } from "./bar-material.js";
 export { BarSeries, type BarSeriesProps } from "./bar-series.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
@@ -61,6 +67,21 @@ export {
 } from "./polar-series.js";
 export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
 export { Root, type RootProps } from "./root.js";
+export { type SankeyAnimation, SankeyChart, type SankeyChartProps } from "./sankey-chart.js";
+export {
+  prepareSankeyData,
+  type SankeyFlowData,
+  type SankeyFlowLink,
+  type SankeyFlowNode,
+} from "./sankey-data.js";
+export {
+  SankeyLink,
+  type SankeyLinkProps,
+  type SankeyMaterial,
+  SankeyNode,
+  type SankeyNodeProps,
+} from "./sankey-marks.js";
+export { SankeyTable, type SankeyTableProps } from "./sankey-table.js";
 export { type ScatterAnimation, ScatterChart, type ScatterChartProps } from "./scatter-chart.js";
 export { ScatterSeries, type ScatterSeriesProps } from "./scatter-series.js";
 export {
@@ -72,3 +93,14 @@ export {
 } from "./scatter-tooltip.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 export type { SeriesConfig } from "./types.js";
+export {
+  computeWaterfallData,
+  type WaterfallDatum,
+  type WaterfallEntry,
+} from "./waterfall-data.js";
+export {
+  WaterfallConnectors,
+  type WaterfallConnectorsProps,
+  WaterfallSeries,
+  type WaterfallSeriesProps,
+} from "./waterfall-series.js";
