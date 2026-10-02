@@ -107,3 +107,18 @@ for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.BarMat
 }
 // @ts-expect-error Bar finishes use the established material vocabulary.
 void (<Chart.BarSeries dataKey="count" material="metal" />);
+
+const radialLabel: Chart.RadialBarLabelProps = {
+  show: true,
+  fontSize: 12,
+  minFontSize: 9,
+  padding: 2,
+  ref: (node) => {
+    if (node) node.dataset.owner = "consumer";
+    return () => {};
+  },
+};
+void radialLabel;
+// @ts-expect-error Ring fitting requires a numeric pixel font size.
+const invalidRadialLabel: Chart.RadialBarLabelProps = { fontSize: "12px" };
+void invalidRadialLabel;

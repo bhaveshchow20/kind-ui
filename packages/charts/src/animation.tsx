@@ -11,7 +11,12 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { DefaultZIndexes, type DotProps, ZIndexLayer } from "recharts";
+import {
+  DefaultZIndexes,
+  type DotProps,
+  LineChart as EngineLineChart,
+  ZIndexLayer,
+} from "recharts";
 import { useChart } from "./chart-context.js";
 import {
   LineChartFrame,
@@ -57,7 +62,8 @@ export function LineChart({ animate = false, children, ...props }: LineChartProp
   return (
     <MotionContext value={{ enabled, transition }}>
       <LineChartFrame
-        {...props}
+        chartProps={props}
+        engine={EngineLineChart}
         motionEnabled={enabled}
         interrupt={interrupt}
         {...(reveal ? { clip: `url(#${id}-reveal)` } : {})}

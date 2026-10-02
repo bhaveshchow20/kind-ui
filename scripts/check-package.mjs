@@ -108,7 +108,7 @@ try {
   );
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
-    if (["line", "area", "bar", "combined"].includes(folder) && file.endsWith(".tsx"))
+    if (["line", "area", "bar", "combined", "polar"].includes(folder) && file.endsWith(".tsx"))
       assertLineConsumerSource(source);
     await writeFile(join(consumer, target), source);
   }
@@ -138,11 +138,12 @@ try {
       );
     }
   }
-  async function production(entry, outDir) {
+  async function production(entry, outDir, developmentReact = false) {
     await build({
       configFile: false,
       root: consumer,
       logLevel: "warn",
+      ...(developmentReact ? { define: { "process.env.NODE_ENV": '"development"' } } : {}),
       build: {
         outDir: join(root, "artifacts", outDir),
         emptyOutDir: true,
@@ -184,6 +185,20 @@ try {
   await production("index.html", "packed-bar");
   console.log(
     "Bar tarball consumer: guarded public imports, strict NodeNext/Bundler and production build passed",
+  );
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("polar", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-polar");
+  await production("index.html", "packed-polar-development", true);
+  console.log("Radar/radial tarball consumer: strict NodeNext/Bundler and production build passed");
+  const polarGallery = await readFile(join(root, "examples/chart/polar-gallery.tsx"), "utf8");
+  assertLineConsumerSource(polarGallery);
+  await writeFile(join(consumer, "host.tsx"), polarGallery);
+  for (const file of ["gallery.tsx", "gallery.html"]) await copyFixture("polar", file);
+  await typecheck(["host.tsx", "gallery.tsx"]);
+  await production("gallery.html", "packed-polar-gallery");
+  console.log(
+    "All 18 polar gallery composition paths: guarded public imports, strict NodeNext/Bundler and tarball build passed",
   );
   await copyFixture("combined", "host.tsx");
   await copyFixture("combined", "main.tsx", "combined.tsx");

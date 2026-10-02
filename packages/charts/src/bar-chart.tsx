@@ -66,7 +66,7 @@ export function BarChart({ animate = false, children, ...props }: BarChartProps)
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
       <BarMotion value={{ reveal: enabled && !interacted, options, finish }}>
         <LineChartFrame
-          {...props}
+          chartProps={props}
           engine={EngineBarChart}
           motionEnabled={enabled}
           interrupt={finish}
