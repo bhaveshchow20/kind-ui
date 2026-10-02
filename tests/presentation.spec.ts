@@ -132,6 +132,7 @@ test("packed custom content and responsive bounds survive options, hiding and mo
         const frame = await page.locator('[data-kind-ui="tooltip-frame"]').boundingBox();
         const chart = await surface.boundingBox();
         return (
+          (await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)) &&
           !!frame &&
           !!chart &&
           frame.x >= chart.x - 1 &&
