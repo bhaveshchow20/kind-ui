@@ -25,6 +25,11 @@ export function HistogramHost() {
   const [visible, setVisible] = useState(["count"]);
   const [clicked, setClicked] = useState(0);
   const [custom, setCustom] = useState(false);
+  const [material, setMaterial] = useState<Chart.BarMaterial>("plain");
+  const [override, setOverride] = useState("none");
+  const [gradient, setGradient] = useState(false);
+  const strokeMode = new URLSearchParams(window.location.search).get("stroke");
+  const transparent = new URLSearchParams(window.location.search).has("transparent");
   const ref = useCallback((node: SVGSVGElement | null) => {
     if (node) node.dataset.hostRef = "yes";
   }, []);
@@ -51,6 +56,24 @@ export function HistogramHost() {
       <button type="button" onClick={() => setCustom(!custom)}>
         Custom shape
       </button>
+      {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+        <button type="button" key={finish} onClick={() => setMaterial(finish)}>
+          {finish}
+        </button>
+      ))}
+      {(["none", "series-filter", "series-style", "cell-filter", "cell-style"] as const).map(
+        (value) => (
+          <button type="button" key={value} onClick={() => setOverride(value)}>
+            {value}
+          </button>
+        ),
+      )}
+      <button type="button" onClick={() => setGradient(!gradient)}>
+        Gradient
+      </button>
+      {strokeMode === "css" && (
+        <style>{'[data-kind-ui="histogram-bin"] { stroke-width: 32px; }'}</style>
+      )}
       <output aria-label="Clicked">{clicked}</output>
       <Chart.Root
         config={{
@@ -74,11 +97,33 @@ export function HistogramHost() {
           aria-label="Histogram proof"
           xAxisProps={{ label: { value: "Duration (ms)", position: "insideBottom", offset: -5 } }}
         >
+          <defs>
+            <filter id="histogram-host-filter">
+              <feColorMatrix type="saturate" values="0.5" />
+            </filter>
+            <linearGradient id="histogram-host-gradient">
+              <stop stopColor="#187c79" stopOpacity={0.2} />
+              <stop offset="0.35" stopColor="#187c79" stopOpacity={0} />
+              <stop offset="0.65" stopColor="#be7150" stopOpacity={0} />
+              <stop offset="1" stopColor="#be7150" stopOpacity={0.8} />
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <ReferenceLine x={0} stroke="red" />
           <Chart.HistogramSeries
+            material={material}
+            filter={override === "series-filter" ? "url(#histogram-host-filter)" : undefined}
+            style={{
+              ...(override === "series-style" ? { filter: "url(#histogram-host-filter)" } : {}),
+              ...(strokeMode === "em" ? { fontSize: 16, strokeWidth: "2em" } : {}),
+              ...(strokeMode === "var"
+                ? { "--host-stroke": "32px", strokeWidth: "var(--host-stroke)" }
+                : {}),
+              ...(strokeMode === "percent" ? { strokeWidth: "5%" } : {}),
+            }}
             fillOpacity={0.6}
             stroke="#183a36"
+            strokeWidth={new URLSearchParams(window.location.search).has("wide-stroke") ? 24 : 1}
             strokeDasharray="2 2"
             onClick={() => setClicked((value) => value + 1)}
             shape={
@@ -108,7 +153,22 @@ export function HistogramHost() {
             {bins.map((bin) => (
               <Cell
                 key={bin.lower}
-                fill={bin.lower === 0 ? "#be7150" : "#187c79"}
+                {...(override === "cell-filter" && bin.lower === 0
+                  ? { filter: "url(#histogram-host-filter)" }
+                  : {})}
+                {...(override === "cell-style" && bin.lower === 0
+                  ? { style: { filter: "url(#histogram-host-filter)" } }
+                  : {})}
+                fill={
+                  transparent
+                    ? "transparent"
+                    : gradient
+                      ? "url(#histogram-host-gradient)"
+                      : bin.lower === 0
+                        ? "#be7150"
+                        : "#187c79"
+                }
+                {...(transparent ? { stroke: "none" } : {})}
                 fillOpacity={bin.lower === 0 ? 0.3 : 0.6}
               />
             ))}
