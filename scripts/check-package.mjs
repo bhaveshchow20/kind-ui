@@ -198,6 +198,23 @@ try {
   await typecheck(["index.tsx", "main.tsx", "motion.tsx"]);
   await production("index.html", "packed-chart");
 
+  // The actual presentation recipe is independently checked through the installed tarball.
+  for (const file of [
+    "presentation.tsx",
+    "presentation-main.tsx",
+    "presentation.css",
+    "presentation.html",
+  ]) {
+    const source = await readFile(join(root, "examples/chart", file), "utf8");
+    if (file.endsWith(".tsx")) assertLineConsumerSource(source);
+    await writeFile(join(consumer, file), source);
+  }
+  await typecheck(["presentation.tsx", "presentation-main.tsx"]);
+  await production("presentation.html", "packed-presentation");
+  console.log(
+    "Presentation recipe: guarded public imports, strict NodeNext/Bundler and tarball production build passed",
+  );
+
   // Separate host recipe evidence, outside the public line/area/bar fixture proof.
   const legacy = join(consumer, "legacy");
   await mkdir(legacy);

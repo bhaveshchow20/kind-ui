@@ -9,6 +9,12 @@ export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children">
   /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
   tooltip: UpstreamTooltipContentProps;
   missingValue?: ReactNode;
+  /** Omit the heading; series labels and values remain accessible. */
+  hideLabel?: boolean;
+  /** Omit the decorative marker, including a configured icon. */
+  hideIndicator?: boolean;
+  /** Defaults to the existing slim line marker. Configured icons take precedence. */
+  indicator?: "dot" | "line" | "dashed";
   /** Stable metadata/visibility identity for an item, e.g. a pie category payload ID. */
   itemKey?: (entry: UpstreamTooltipContentProps["payload"][number]) => string;
 };
@@ -18,6 +24,9 @@ export function TooltipContent({
   tooltip,
   missingValue = "No data",
   itemKey,
+  hideLabel = false,
+  hideIndicator = false,
+  indicator = "line",
   ...props
 }: TooltipContentProps) {
   const { config, visibleSeries } = useChart();
@@ -63,17 +72,25 @@ export function TooltipContent({
         data-kind-ui="chart-tooltip-item"
         data-series={key}
       >
-        <span
-          aria-hidden="true"
-          data-kind-ui="chart-indicator"
-          style={
-            {
-              "--kind-ui-chart-indicator-color": item
-                ? `var(--color-${key})`
-                : (entry.color ?? "currentColor"),
-            } as CSSProperties
-          }
-        />
+        {!hideIndicator &&
+          (item?.icon ? (
+            <span aria-hidden="true" data-kind-ui="chart-icon">
+              <item.icon />
+            </span>
+          ) : (
+            <span
+              aria-hidden="true"
+              data-kind-ui="chart-indicator"
+              data-indicator={indicator}
+              style={
+                {
+                  "--kind-ui-chart-indicator-color": item
+                    ? `var(--color-${key})`
+                    : (entry.color ?? "currentColor"),
+                } as CSSProperties
+              }
+            />
+          ))}
         <span>{name}</span>
         <strong data-kind-ui="chart-tooltip-value">{value}</strong>
       </li>
@@ -90,9 +107,11 @@ export function TooltipContent({
     >
       {entries.length > 0 && (
         <>
-          <strong data-kind-ui="chart-tooltip-label">
-            {labelFormatter ? labelFormatter(label, entries) : label}
-          </strong>
+          {!hideLabel && (
+            <strong data-kind-ui="chart-tooltip-label">
+              {labelFormatter ? labelFormatter(label, entries) : label}
+            </strong>
+          )}
           <ul data-kind-ui="chart-tooltip-list">{items}</ul>
         </>
       )}
