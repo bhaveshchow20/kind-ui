@@ -62,7 +62,14 @@ test("packed finishes keep native geometry, zero/tiny/single, rings, visibility 
 test("packed finishes retain decoded native body alpha for translucent gradients and transparent fills", async ({
   page,
 }, info) => {
-  for (const paint of ["opaque", "alpha", "alpha&gradient", "transparent"]) {
+  for (const paint of [
+    "opaque",
+    "alpha",
+    "alpha&gradient",
+    "transparent",
+    "alpha&transform",
+    "alpha&style-transform",
+  ]) {
     await page.goto(`${url}/?oracle&${paint}`);
     const proof = page.getByRole("region", { name: "Continuity proof" });
     const chart = proof.getByRole("application", { name: "Kind continuity" });

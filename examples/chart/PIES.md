@@ -1,6 +1,6 @@
 # Pie and donut recipes
 
-Open `/pies.html` after `npm run dev:chart`. These two bounded recipes use public `PieChart`, `PieSeries`, `Root`, `Legend` and `Tooltip` exports with native Recharts Cells and center labels. No playground or materials are included.
+Open `/pies.html` after `npm run dev:chart`. These two bounded recipes use public `PieChart`, `PieSeries`, `Root`, `Legend` and `Tooltip` exports with native Recharts Cells and center labels. Each recipe independently controls Plain, Paper, Clay and Glow finishes, color and animation.
 
 Category identity is `row.id`, not the common numeric `hours` key. `Tooltip.itemKey` resolves that native payload ID. Controlled legend state filters data and Cells together; shares and the center total reflect only included categories. A zero category stays in the table and legend without inventing a painted share. Each card owns its state independently.
 

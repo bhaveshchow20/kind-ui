@@ -65,6 +65,7 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
   const [paintStroke, setPaintStroke] = useState(
     Number.isFinite(resolvedStroke) ? resolvedStroke : 0,
   );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: class changes can change stylesheet-owned paint.
   useLayoutEffect(() => {
     if (
       material === "plain" ||
@@ -79,7 +80,15 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     if (computed.filter !== paintFilter) setPaintFilter(computed.filter);
     const width = Number.parseFloat(computed.strokeWidth);
     if (Number.isFinite(width) && width !== paintStroke) setPaintStroke(width);
-  });
+  }, [
+    material,
+    props.filter,
+    props.style,
+    props.className,
+    resolvedStroke,
+    paintFilter,
+    paintStroke,
+  ]);
   const materialized =
     material !== "plain" &&
     props.filter === undefined &&
@@ -117,10 +126,18 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     onMouseOut,
     onMouseEnter,
     onMouseLeave,
+    transform,
+    style,
     ...sector
   } = props;
+  // Transform the complete finish in the same coordinate system as its native paint.
+  const { transform: styleTransform, transformOrigin, transformBox, ...paintStyle } = style ?? {};
   return (
-    <g ref={markGroup}>
+    <g
+      ref={markGroup}
+      transform={transform}
+      style={{ transform: styleTransform, transformOrigin, transformBox }}
+    >
       {materialized && (
         <defs data-kind-ui="pie-material" data-material={material} pointerEvents="none">
           <PieMaterialFilter
@@ -152,9 +169,11 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
         </defs>
       )}
       {materialized && material === "glow" && (
+        // biome-ignore lint/a11y/noAriaHiddenOnFocusable: SVG decoration is explicitly nonfocusable and ignores pointer events.
         <g
           filter={`url(#${filterId})`}
           pointerEvents="none"
+          focusable="false"
           aria-hidden="true"
           data-kind-ui="pie-halo"
         >
@@ -168,6 +187,7 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
         <g id={sourceId}>
           <Sector
             {...sector}
+            {...(style ? { style: paintStyle } : {})}
             {...(onClick ? { onClick } : {})}
             {...(onMouseDown ? { onMouseDown } : {})}
             {...(onMouseUp ? { onMouseUp } : {})}

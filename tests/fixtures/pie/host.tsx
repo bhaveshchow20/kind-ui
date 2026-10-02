@@ -356,6 +356,10 @@ function ContinuityHost() {
     <Cell
       key={row.id}
       fillOpacity={opacity}
+      {...(query.has("transform") ? { transform: "translate(40 0) scale(.85)" } : {})}
+      {...(query.has("style-transform")
+        ? { style: { transform: "translate(40px, 0px) scale(.85)" } }
+        : {})}
       {...(query.has("filter") ? { filter: "url(#host-filter)" } : {})}
       {...(query.has("style-filter") ? { style: { filter: "url(#host-filter)" } } : {})}
       fill={
