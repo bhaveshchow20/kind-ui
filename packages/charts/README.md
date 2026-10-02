@@ -396,7 +396,7 @@ The shared `Legend`, `Tooltip` and `TooltipContent` provide the same formatting,
 
 The `/polar.html` showcase uses public APIs for comparison, outline and range radar, grouped rings, stacked arcs and a half-circle gauge. It includes explicit domains, controlled legends, Motion/data/update controls and value tables. `tests/fixtures/polar` installs the actual tarball in an isolated consumer, checks strict NodeNext/Bundler declarations and production builds, and compares browser paths against native Recharts charts.
 
-First-party references: [Radar API](https://recharts.github.io/en-US/api/Radar/), [RadialBar API](https://recharts.github.io/en-US/api/RadialBar/), and the tested package's `types/polar` and `es6/polar` sources. No new dependencies, package boundary, publishing or material API accompanies these exports. The package remains private at `0.0.0`.
+First-party references: [Radar API](https://recharts.github.io/en-US/api/Radar/), [RadialBar API](https://recharts.github.io/en-US/api/RadialBar/), and the tested package's `types/polar` and `es6/polar` sources. No new dependencies, package boundary or publishing accompanies these exports. The package remains private at `0.0.0`.
 
 ### Radial band labels
 
@@ -418,6 +418,14 @@ The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighte
   <Chart.TooltipContent tooltip={tooltip} hideLabel indicator="dashed" />
 )} />
 ```
+
+### Polar materials
+
+`RadarSeries` and `RadialBarSeries` accept `material="plain" | "paper" | "clay" | "glow"` (`PolarMaterial`), independently of consumer color and Motion. Plain is the default. Paper uses seeded inset pencil contours and subtle fiber grain without displacement; Clay adds broad upper-left convex matte relief; Glow adds a bright rim and exterior color light. All retain native polygon/sector paths, quantitative coordinates, gradients, fill/stroke opacity and zero-alpha paint. Paper and Clay retain native output alpha; Glow retains native alpha inside the mark and adds intentional decorative light outside it. The exterior halo is not a quantitative extent. Very thin/short marks have less room for interior relief. Chromium can rasterize curved antialiased edges differently when a native SVG filter uses spatial inputs; alpha regression checks require every covered pixel to stay within the independently measured native unfiltered/morphology/blur/offset-relief raster envelope (plus one byte for quantization), alongside untouched path/paint assertions and zero-alpha checks. Unfiltered and filtered edge rasters are not promised to be byte-identical.
+
+Custom Radar `shape`, RadialBar `shape` or custom `activeShape`, a series `filter`, or `style.filter` owns rendering and suppresses the material. Cell filter/style overrides retain native precedence. Dots, backgrounds, labels, refs and handlers remain native. Unique per-series filters use chart-space bounds so short/thin/empty arcs do not depend on nonzero object bounds. Native SVG and consumer clipping still apply. Optional CSS variables use `--kind-ui-polar-paper-{fiber,grain}`, `--kind-ui-polar-clay-{light,highlight,shade,shadow}` and `--kind-ui-polar-glow-{light,opacity}`.
+
+The polar recipes/gallery share a Material control and enable Motion by default, respecting reduced motion. Gauge text remains large in the center whitespace; ordinary radial labels remain at band center with independent Chart text visibility. This is an additive pre-release API at private version `0.0.0`.
 
 ## Waterfall
 
