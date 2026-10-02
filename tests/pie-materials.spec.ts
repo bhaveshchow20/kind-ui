@@ -149,7 +149,7 @@ test("packed finishes retain decoded native body alpha for translucent gradients
             const x = ((i - 3) / 4) % imageWidth;
             if (
               clippedBounds &&
-              (x < Math.floor(clippedBounds[0]) || x >= Math.ceil(clippedBounds[1]))
+              (x < Math.floor(clippedBounds.left) || x >= Math.ceil(clippedBounds.right))
             )
               clippedExteriorMax = Math.max(clippedExteriorMax, b[i] ?? 0);
           }
@@ -159,10 +159,10 @@ test("packed finishes retain decoded native body alpha for translucent gradients
           pngs: [baseline.toString("base64"), actual.toString("base64")],
           clippedBounds: paint.includes("clip")
             ? paint.includes("css-transform")
-              ? [170, 200]
+              ? { left: 170, right: 200 }
               : paint.includes("transform")
-                ? [142, 167.5]
-                : [120, 150]
+                ? { left: 142, right: 167.5 }
+                : { left: 120, right: 150 }
             : null,
         },
       );
