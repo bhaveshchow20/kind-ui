@@ -58,7 +58,7 @@ const MotionLegend = motion.create(Legend);
 </MotionConfig>
 ```
 
-Plain `Root`/`Legend` do not themselves accept `animate`, `variants` or `exit`. Motion is an optional package peer used only by the `/motion` entry. This example imports that entry, so its host must install Motion even when the toggle is off. The root entry and its declarations work without Motion. The fixture checks Motion 13.4.6 with React 19.3.0; it does not promise every Motion gesture/layout/exit combination. Motion can still animate opacity under its reduced-motion setting, so hosts needing no animation at all must explicitly disable it.
+Plain `Root`/`Legend` do not themselves accept `animate`, `variants` or `exit`. Motion is a required package peer, including when animation is disabled. Charts and their declarations use synchronous `motion/react` imports from the root `@kind-ui/charts` entry; the removed `/motion` entry is not exported. Import public components from the root and install Motion even when the toggle is off. Disabling animation does not remove the dependency or its bundle cost. The fixture checks Motion 13.4.6 with React 19.3.0; it does not promise every Motion gesture/layout/exit combination. Motion can still animate opacity under its reduced-motion setting, so hosts needing no animation at all must explicitly disable it.
 
 `npm run check` checks strict packed consumers, component contracts and browser behavior. CI saves real screenshots in the chart artifacts. Pointer tests exercise intermediate motion, interrupted target changes and reduced-motion updates without recording video. Chromium checks are not a screen-reader conformance claim.
 
