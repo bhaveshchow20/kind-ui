@@ -29,6 +29,10 @@ test("direct and namespace imports expose the same public components", () => {
     "ScatterTooltipContent",
     "Tooltip",
     "TooltipContent",
+    "WaterfallChart",
+    "WaterfallConnectors",
+    "WaterfallSeries",
+    "computeWaterfallData",
   ]);
   assert.equal(Chart.Root, Root);
   assert.equal(Chart.Legend, Legend);
@@ -342,4 +346,74 @@ test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geomet
       render(h(Chart.RadialBarLabel, { ...props, ...overrides, formatter: undefined })),
       "",
     );
+});
+
+test("waterfall arithmetic preserves directed endpoints, zero, crossing and checkpoints", () => {
+  const entry = (id, kind, value) => ({
+    id,
+    label: id,
+    kind,
+    ...(kind === "subtotal" ? {} : { value }),
+  });
+  const raw = [
+    entry("start", "start", 10),
+    entry("gain", "delta", 5),
+    entry("loss", "delta", -20),
+    entry("net", "subtotal"),
+    entry("zero", "delta", 0),
+    entry("end", "end", -5),
+  ];
+  const rows = Chart.computeWaterfallData(raw);
+  assert.deepEqual(
+    rows.map((row) => row.range),
+    [
+      [0, 10],
+      [10, 15],
+      [-5, 15],
+      [-5, 0],
+      [-5, -5],
+      [-5, 0],
+    ],
+  );
+  assert.deepEqual(
+    rows.map((row) => row.balance),
+    [10, 15, -5, -5, -5, -5],
+  );
+  assert.equal(rows[2].start, 15);
+  assert.equal(rows[2].end, -5);
+  assert.equal(raw[3].value, undefined);
+  assert.deepEqual(Chart.computeWaterfallData([]), []);
+  assert.equal(Chart.computeWaterfallData([entry("a", "delta", 0)])[0].balance, 0);
+  assert.equal(Chart.computeWaterfallData([entry("a", "delta", 5)], null)[0].range, null);
+});
+test("waterfall missing changes propagate uncertainty and explicit totals recover", () => {
+  const rows = Chart.computeWaterfallData([
+    { id: "a", label: "a", kind: "delta", value: null },
+    { id: "b", label: "b", kind: "delta", value: 5 },
+    { id: "c", label: "c", kind: "subtotal" },
+    { id: "d", label: "d", kind: "total", value: -10 },
+    { id: "e", label: "e", kind: "delta", value: 10 },
+  ]);
+  assert.deepEqual(
+    rows.map((row) => row.range),
+    [null, null, null, [-10, 0], [-10, 0]],
+  );
+  assert.equal(rows[1].value, 5);
+  assert.equal(rows[4].balance, 0);
+});
+test("waterfall rejects invalid values, identities, kinds and overflow", () => {
+  const base = { id: "a", label: "a", kind: "delta", value: 1 };
+  for (const value of [undefined, NaN, Infinity, "1"])
+    assert.throws(() => Chart.computeWaterfallData([{ ...base, value }]));
+  assert.throws(() => Chart.computeWaterfallData([base, base]), /unique/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...base, id: "" }]), /unique/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...base, kind: "other" }]), /kind/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...base, kind: "subtotal" }]), /subtotals/);
+  assert.throws(
+    () => Chart.computeWaterfallData([{ ...base, value: Number.MAX_VALUE }], Number.MAX_VALUE),
+    /overflow/,
+  );
+  assert.throws(() => Chart.computeWaterfallData([], NaN), /initialBalance/);
+  for (const key of ["stackId", "minPointSize", "dataKey", "data"])
+    assert.throws(() => render(h(Chart.WaterfallSeries, { [key]: 0 })), /does not accept/);
 });
