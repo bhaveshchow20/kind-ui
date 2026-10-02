@@ -263,3 +263,136 @@ Motion fades native marks without moving their coordinates; native geometry anim
 For custom X axis IDs, set the matching native `ScatterTooltip axisId` so Recharts can resolve keyboard navigation. Native keyboard navigation visits points in the first registered series, in data order. Hover can select any series; arrows do not perform spatial or all-series navigation. Provide a keyboard-accessible data alternative for every series, especially overlapping points and missing measurements. Browser coverage is Chromium at the pinned peer versions; it is not a screen-reader/browser conformance claim or a large-dataset performance promise. See the [four bounded recipes](../../examples/chart/SCATTERS.md) and the isolated tarball consumer/browser proof in `tests/fixtures/scatter` and `tests/packed-scatter.spec.ts`.
 
 This adds a pre-release public API at private version `0.0.0`; no dependency, publication or release change is made. The internal frame reuses the approved standalone generic `engine + chartProps` seam shared with the pending polar/combo work.
+## Combo / Composed charts
+
+`ComboChart`, `ComboChartProps`, and `ComboAnimation` are public root exports.
+`ComboChart` uses Recharts `ComposedChart` and accepts its native props, SVG ref,
+handlers, axes, margins, layout, stacks, and children. Compose the existing
+`LineSeries`, `AreaSeries`, and `BarSeries` under one `Root`; one `Tooltip` shows
+all registered visible series at the selected category. `Legend` uses the same
+consumer-owned `visibleSeries` and `onVisibleSeriesChange` contract.
+
+```tsx
+<Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+  <Legend />
+  <ResponsiveContainer width="100%" height={260}>
+  <ComboChart data={data}
+    animate={{ lineReveal: { revealDurationMs: 700 }, areaReveal: false,
+      barReveal: { revealDurationMs: 900 } }}>
+    <XAxis dataKey="period" />
+    <YAxis yAxisId="count" />
+    <YAxis yAxisId="ms" orientation="right" />
+    <AreaSeries dataKey="queued" yAxisId="count" fillOpacity={0.2} />
+    <BarSeries dataKey="completed" yAxisId="count" />
+    <LineSeries dataKey="latency" yAxisId="ms" dot={false} />
+    <Tooltip />
+  </ComboChart>
+  </ResponsiveContainer>
+</Root>
+```
+
+`animate` defaults to `false`; `true` uses the existing family defaults. An
+object accepts the same `revealDurationMs`, `revealEasing`, and shared
+`hoverTransition` as `LineChart`. Optional `lineReveal`, `areaReveal`, and
+`barReveal` override entrance timing/easing for each family; `false` disables
+that family's entrance. Hover/line visibility Motion remains shared, rather
+than separately controlled by these entrance options. Reduced motion disables
+all Kind Motion, including when the preference changes after mounting.
+
+Use Recharts `ResponsiveContainer` to mount at measured dimensions, as the
+recipes do. Native `responsive` sizing is accepted; a percentage placeholder
+followed by its first measured size can finish an entrance through the normal
+resize cancellation path.
+
+Line/area entrances sweep across the plot. Bars reuse `BarSeries`' own
+axis-specific, clamped zero baseline reveal for positive, negative and signed
+stacks. One interaction cancellation path finishes all active entrances when
+pointer/focus/keyboard input, visibility, data, geometry, bar layout, or native
+children change. A changed children identity conservatively finishes entrances,
+even if the parent merely rerendered; updates render immediately rather than
+replaying an entrance. Family completion removes only that family's clip.
+
+Colors remain independently supplied by `Root.config` or native series props.
+Native Recharts children, custom marks, cells, labels, filters and event handlers
+retain their ownership. Native marks do not register with Kind visibility or
+metadata; use the maintained series for the shared legend/tooltip contract.
+Native child animation props remain consumer-owned; managed series disable
+Recharts' competing animation as in their standalone families.
+
+Stack only compatible units on the same axes. Recharts owns stack semantics;
+use `stackOffset="sign"` for signed bar stacks. Separate axis IDs preserve
+unrelated units. `null` stays missing and `0` stays zero; `connectNulls` retains
+its native meaning. Native ComposedChart offers axis selection, not item-only
+bar selection. Supply a data table or equivalent text alternative.
+
+See [Combo recipes](../../examples/chart/COMBOS.md) for two axes, signed stacks,
+missing values, custom markers, independent legends and entrance controls.
+## Pie and donut
+
+`PieChart`, `PieSeries`, `PieChartProps`, `PieSeriesProps` and `PieAnimation` are maintained public exports. A donut is a `PieSeries` with native `innerRadius`; it uses the same component and animation contract. No additional dependency or material API is introduced.
+
+```tsx
+const itemKey: NonNullable<Chart.TooltipProps["itemKey"]> = entry => String(entry.payload.id);
+<Chart.Root config={categoryConfig} visibleSeries={visibleIds} onVisibleSeriesChange={setVisibleIds}>
+  <Chart.PieChart width={400} height={300} animate={false}>
+    <Chart.PieSeries data={rows.filter(row => visibleIds.includes(row.id))}
+      dataKey="value" nameKey="id" innerRadius="50%" outerRadius="80%">
+      {rows.filter(row => visibleIds.includes(row.id)).map(row =>
+        <Cell key={row.id} fill={`var(--color-${row.id})`} />)}
+      <Label position="center" value="Capacity" />
+    </Chart.PieSeries>
+    <Chart.Tooltip itemKey={itemKey} />
+  </Chart.PieChart>
+  <Chart.Legend />
+</Chart.Root>
+```
+
+Import `Cell` and `Label` from Recharts. Metadata keys identify **categories**, independently of the shared numeric `dataKey`. `TooltipProps.itemKey` and `TooltipContentProps.itemKey` optionally resolve the native payload entry to the containing Root's metadata/visibility key. The default remains registered series ID, then `dataKey`, then `name`. The bounded Tooltip applies the resolver before visibility filtering and passes it to default content. Custom content receives the filtered native payload and retains its own rendering and formatting; pass the same resolver when composing `TooltipContent` yourself.
+
+Category visibility and Cells are consumer-owned: filter data and generate Cells from that same array so index alignment survives filtering and reordering. Root/Legend never change polar data or silently recompute shares. `PieSeries` defaults to a continuous allocation: native padding/corner defaults remain zero, and its default stroke is `none`. Explicit series/Cell strokes, padding angles and corner radii remain consumer customizations. `PieSeries.hide` hides the whole native Pie independently of category state. Multiple native Pies, native Tooltip selection/`defaultIndex`/`trigger`, `nameKey`, function/numeric `dataKey`, numeric/percentage/function radii, angles, padding, corner radius, labels, custom shapes, Cells, SVG attributes and sector handlers remain available. Chart SVG refs retain the native ref contract. Recharts does not expose a Pie component ref.
+
+`animate={false | true | config}` uses the established duration/easing/tooltip hover transition shape. Recharts animation is disabled in `PieSeries`; Motion grows each default sector from its own start angle within its native angular footprint on entrance. Labels remain at their final native positions. Custom `shape`, `activeShape` and `inactiveShape` retain ownership; Kind does not animate those custom marks. Motion stops and snaps to final geometry on pointer/keyboard interaction, data/visibility/geometry changes, resize or disabling animation. Reduced motion renders final geometry and bounded tooltip placement without motion. Entrance does not replay after an interruption; remount the chart for an intentional new entrance.
+
+Use nonnegative, finite values for meaningful proportional data. Kind preserves native values rather than inventing allocations: empty/all-zero inputs paint no allocation, and zero/missing categories remain distinguishable in the consumer-owned table. A zero category has no visible angular area; expose it in the legend/data alternative rather than imposing a minimum fake share. Provide readable labels and a table/list; SVG plus tooltip alone is not a complete data alternative. [Recharts Pie API](https://recharts.github.io/en-US/api/Pie/) and the pinned `recharts@3.10.1` source (`polar/Pie.js`, `shape/Sector.d.ts`) informed the payload, Cell and polar geometry integration. Motion cancellation uses [animation playback controls](https://motion.dev/docs/animate).
+
+`examples/chart/pies.html` contains two bounded recipes: a pie allocation and a donut capacity summary. Both consume these public APIs and share existing tooltip/legend/formatting/accessibility behavior. The isolated tarball host in `tests/fixtures/pie` is separate from the recipes and is checked with strict NodeNext/Bundler declarations, a production build and browser contracts.
+
+## Radar and radial bars
+
+`RadarChart` / `RadarSeries` and `RadialBarChart` / `RadialBarSeries` are maintained public exports. Their generic chart `*Props<DataPoint>` and series `*Props<DataPoint, Value>` types retain native typed data keys. The charts accept their native polar chart props and SVG refs, including `layout="centric" | "radial"`, centers, radii, angles, synchronization and event handlers. The series accept native shapes, dots/active marks, Cells, backgrounds, labels, axis IDs, stack IDs, z-order and handlers. Recharts 3.10.1 exposes no series component ref; place refs on custom SVG marks. Recharts owns polar geometry and native category payloads.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import { PolarAngleAxis, PolarGrid, PolarRadiusAxis } from "recharts";
+import "@kind-ui/charts/styles.css";
+
+<Chart.Root config={{ score: { label: "Score", color: "#3161bd" } }}>
+  <Chart.RadarChart width={420} height={300} data={dimensions} animate={false}>
+    <PolarGrid />
+    <PolarAngleAxis dataKey="dimension" />
+    <PolarRadiusAxis domain={[0, 100]} />
+    <Chart.RadarSeries dataKey="score" fillOpacity={0.2} />
+    <Chart.Tooltip />
+  </Chart.RadarChart>
+</Chart.Root>
+```
+
+For radial progress, use `RadialBarChart` with a **numeric** `PolarAngleAxis` and an explicit domain such as `[0, 100]`, a categorical `PolarRadiusAxis dataKey="dimension"`, and `RadialBarSeries dataKey="score"`. Keep category ordering and any category filtering in your data. `Cell` styling and native category payloads remain intact. Kind's controlled `visibleSeries` and legend identify **series**, through string `dataKey` or explicit `seriesKey` for function/numeric keys. `hide={true}` additionally hides a series; `hide={false}` cannot override Root visibility. A controlled non-string key without `seriesKey` throws an actionable error. Explicit fill/stroke overrides Root color defaults.
+
+Both charts accept `animate={false | true | config}` using `RadarAnimation` / `RadialBarAnimation` (the existing `revealDurationMs`, `revealEasing`, `hoverTransition` contract). Motion fades each native series from 0 to 1 over 1000ms by default; it does not interpolate polar coordinates or category indices. This preserves quantitative geometry and consumer shapes. Shared tooltip motion and the default radar active marker use the existing hover transition. Native engine animation is disabled and `isAnimationActive` is excluded from series props. Animation callbacks/interpolation settings on native props remain available for compatibility but do not run while engine animation is disabled.
+
+Off/reduced-motion modes render full geometry immediately and stop in-flight opacity/hover movement. Pointer, focus and keyboard input finish entrance. Data/visibility/size changes, native polar chart geometry props, series axis/key/group props and child composition changes also finish entrance and clear stale pointer coordinates. Native labels/backgrounds/active marks can render through independent Recharts z-index portals and are not promised to fade. Series visibility changes snap in every mode; entrance does not replay after updates or interaction. Remount the chart to request a fresh entrance. A series mounted later may enter only while the chart's entrance remains uninterrupted. Custom tooltip content, active shapes, backgrounds and native data alternatives remain consumer-owned.
+
+The shared `Legend`, `Tooltip` and `TooltipContent` provide the same formatting, measured bounds and controlled visibility as Cartesian charts. Recharts 3.10.1 provides polar keyboard traversal with Left/Right, Enter toggling, and Escape dismissal. Give each chart an accessible name and provide a value table; native keyboard behavior is preserved rather than replaced. Empty and zero data retain native behavior.
+
+The `/polar.html` showcase uses public APIs for comparison, outline and range radar, grouped rings, stacked arcs and a half-circle gauge. It includes explicit domains, controlled legends, Motion/data/update controls and value tables. `tests/fixtures/polar` installs the actual tarball in an isolated consumer, checks strict NodeNext/Bundler declarations and production builds, and compares browser paths against native Recharts charts.
+
+First-party references: [Radar API](https://recharts.github.io/en-US/api/Radar/), [RadialBar API](https://recharts.github.io/en-US/api/RadialBar/), and the tested package's `types/polar` and `es6/polar` sources. No new dependencies, package boundary, publishing or material API accompanies these exports. The package remains private at `0.0.0`.
+
+### Radial band labels
+
+Use native `LabelList dataKey="dimension" fill="white" content={<Chart.RadialBarLabel show={showText} />}` inside `RadialBarSeries`. `RadialBarLabel` is maintained label content, not a sector renderer. It consumes Recharts' native polar viewBox, follows the mid-radius within that sector's endpoints, reverses the path for upright reading, and checks measured glyph bounds. `fontSize` defaults to 11 numeric pixels, `minFontSize` to 9 and `padding` to 2. Thin/short/zero/invalid sectors and values that cannot fit omit or hide text. The native LabelList can inject fill; set its fill explicitly for contrast. `formatter`, SVG presentation/events and SVG text `ref`/`labelRef` (including React 19 cleanup) remain available. Layout coordinates/transform are excluded because the helper owns arc placement. Oversized CSS font overrides also fail the fit guard.
+
+`show={false}` controls only this visual label; it does not filter series, data, tooltip payload or Root metadata. Control tooltip visibility independently with native `Tooltip active={false}`. Labels render hidden during SSR until client SVG measurement; retain a value table for an immediate data alternative. Arbitrary geometry transforms or inherited letter/word styling can change available space; measurement conservatively hides labels when their glyph bounding boxes exceed the native sector.
+
+The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighteen current first-party shadcn radar/radial variations to runnable public compositions.

@@ -19,6 +19,31 @@ export default defineConfig({
     },
     {
       command:
+        "npm exec vite preview -- --outDir artifacts/packed-combo --host 127.0.0.1 --port 4186 --strictPort",
+      url: "http://127.0.0.1:4186/combo.html",
+    },
+    {
+      command:
+        "npm exec vite preview -- --outDir artifacts/packed-pie --host 127.0.0.1 --port 4180 --strictPort",
+      url: "http://127.0.0.1:4180",
+    },
+    {
+      command:
+        "npm exec vite preview -- --outDir artifacts/packed-polar-gallery --host 127.0.0.1 --port 4179 --strictPort",
+      url: "http://127.0.0.1:4179/gallery.html",
+    },
+    {
+      command:
+        "npm exec vite preview -- --outDir artifacts/packed-polar-development --host 127.0.0.1 --port 4178 --strictPort",
+      url: "http://127.0.0.1:4178",
+    },
+    {
+      command:
+        "npm exec vite preview -- --outDir artifacts/packed-polar --host 127.0.0.1 --port 4177 --strictPort",
+      url: "http://127.0.0.1:4177",
+    },
+    {
+      command:
         "npm exec vite preview -- --outDir artifacts/packed-combined --host 127.0.0.1 --port 4184 --strictPort",
       url: "http://127.0.0.1:4184/combined.html",
     },
