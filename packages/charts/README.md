@@ -406,6 +406,41 @@ Use native `LabelList dataKey="dimension" fill="white" content={<Chart.RadialBar
 
 The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighteen current first-party shadcn radar/radial variations to runnable public compositions.
 
+## Histogram family
+
+`HistogramChart`, `HistogramSeries`, and `binHistogram` are maintained public exports, with `HistogramBin`, `HistogramMeasure`, `HistogramBinningResult`, chart/series props and `HistogramShapeProps` types. No new dependency or package is introduced. This additive pre-release API remains private at `0.0.0`.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import { CartesianGrid } from "recharts";
+
+const result = Chart.binHistogram([0, 1, 2, 2, null, NaN, 9], [0, 1, 3]);
+<Chart.Root config={{ count: { label: "Density", color: "#167d77" } }}>
+  <Chart.HistogramChart bins={result.bins} measure="density" width={480} height={260}
+    xAxisProps={{ label: { value: "ms", position: "insideBottom" } }}>
+    <CartesianGrid vertical={false} />
+    <Chart.HistogramSeries />
+    <Chart.Tooltip shared={false} labelFormatter={(_label, entries) => {
+      const bin = entries[0]?.payload;
+      return bin ? `[${bin.lower}, ${bin.upper}${bin.upper === 3 ? "]" : ")"} ms` : "";
+    }} />
+  </Chart.HistogramChart>
+</Chart.Root>;
+```
+
+The helper owns raw-sample aggregation with **explicit edges**. Edges must be finite, strictly increasing, and have finite positive differences. Intervals are `[lower, upper)`, except the final upper edge is included, following [D3 bin](https://d3js.org/d3-array/bin) and [NumPy histogram](https://numpy.org/doc/stable/reference/generated/numpy.histogram.html). It returns every bin, including zero counts, plus `accepted`, `missing` (`null`/`undefined`), `nonfinite` (`NaN`/infinities), and `outOfRange` totals. It does not coerce, infer edges, round, impute, weight observations, or select a statistical binning estimator. Inputs are not mutated; work is O(samples × log(edges) + edges).
+
+For **pre-binned data**, callers supply ordered, nonoverlapping `{ lower, upper, count }` intervals and own aggregation and interval membership. Gaps are retained as quantitative space, rather than compressed into categories. Counts must be nonnegative safe integers; bounds, widths and overall domain span must be finite. Invalid bins, overlaps, unsafe totals, and nonfinite or underflowing positive density fail with actionable errors. Empty `bins=[]` uses a neutral `[0,1]` x-domain and no marks. All-zero bins retain zero height; density is zero when total count is zero.
+
+`measure` is always required. `count` means height = count. **With unequal widths, count-mode rectangle area does not represent frequency**; disclose that choice to readers. Prefer `density` for unequal bins: height = count / total count / bin width, so the sum of height × width is one when total is positive. Density units are the reciprocal of the input unit (e.g. ms⁻¹), rather than samples or percent. Counts remain available in the original tooltip payload and data table. No rounding is applied to bin edges or counts; native Recharts retains ownership of SVG coordinate serialization. Formatting belongs to the consumer.
+
+The chart reuses `BarChart`/`BarSeries`, visibility metadata, `Legend`, shared `Tooltip` presentation and interrupted/reduced Motion. It owns vertical layout and linear numeric axes (ID 0), maps x/width from actual bounds, and preserves the zero baseline. Use `xAxisProps`/`yAxisProps` for axis labels, ticks, styling and padding. Native `CartesianGrid`, `ReferenceLine`, SVG definitions, `Cell`, chart refs, attributes and handlers compose as children/props. `HistogramSeries.shape` receives native `BarShapeProps` with corrected x/width and `bin`; it owns its resulting SVG and can return a native `Rectangle`. Native bar Cells and events remain available. The default shape has square corners and exact numeric boundaries. `material="plain" | "paper" | "clay" | "glow"` adds static native-bin paint, independently of color and Motion. Paper reuses bar pencil/grain primitives; Clay reuses soft convex matte relief but crops its exterior cast shadow because both histogram axes are quantitative. Glow adds an exterior decorative halo and crisp inset light; the underlying body retains native translucent alpha. No finish rounds or displaces interval boundaries. All finishes use the documented `--kind-ui-bar-*` tokens. Each painted bin has its own filter ID and exact user-space bounds; filter padding resolves native CSS stroke widths on mounting and React updates. Stylesheet-only stroke transitions without a React render remain unverified. Custom `shape`, series `filter`/`style.filter`, and per-Cell `filter`/`style.filter` retain paint ownership. Custom shape callbacks still receive corrected geometry and original bins. The material gallery is `/histograms.html?materials`; zero bins retain zero geometry and no material-created marks. Native bar labels remain excluded by the core contract; use axis labels, tooltips, tables or the custom shape extension for bin annotations.
+
+Use `Tooltip shared={false}` for pointer hit testing against the actual bin rectangles; native shared-axis tooltip selection uses nearest midpoints. Native arrow-key selection remains available. Label the original interval and unit through `labelFormatter`, rather than presenting the midpoint as a bin boundary. A zero-height bin has no pointer target; keyboard selection and a complete table expose its value. The consumer owns the data alternative and units. The feature recipes at `/histograms.html` demonstrate raw rebinning with discard audit, unequal-bin density, native custom shapes/reference lines, controlled visibility, responsive layout and expandable tables.
+
+For labels, use the custom shape with its corrected geometry. Native Bar `LabelList` uses the engine’s original bar sizing and is not supported for unequal-bin edge positions.
+
+This bounded family does not support horizontal orientation, stacking, native bar sizing/minimum heights/backgrounds, automatic edges, weighted/fractional counts or nonlinear histogram axes. Do not add replacement primary axes or wrap the series in `BarStack`; native escape hatches remain the consumer's responsibility. Floating-point inputs follow JavaScript comparison without epsilon adjustments; extreme finite values that cannot produce a finite domain/density are rejected. Chromium and the pinned React/Recharts/Motion peers are the tested targets; there is no broader compatibility guarantee.
 ## Box plot: explicit statistics
 
 `BoxPlotChart` reuses Kind's `BarChart` (including optional `animate`) and public
@@ -465,7 +500,7 @@ const data = [{ group: "A", summary: {
 
 Initial scope: linear numeric axes, categorical groups, two orientations, optional
 Bar reveal Motion with reduced-motion/interruption behavior. Stacking, minimum
-numeric sizes, native rectangle backgrounds/radius, material finishes, native
+numeric sizes, native rectangle backgrounds/radius, native
 active-bar duplication, raw-sample estimators, weighted quartiles, notches,
 variable-width-by-sample-size boxes, and quantitative category positioning are
 outside this family. Nonlinear numeric axes, Brush, mixed-series composition and
@@ -479,6 +514,14 @@ References: [NIST box plot definitions and variants](https://www.itl.nist.gov/di
 [public Y scale](https://recharts.github.io/en-US/api/useYAxisScale/).
 The sample estimator and whisker definition deliberately remain caller-owned.
 
+
+### Box plot materials
+
+`BoxPlotSeries` and the screen-space `BoxPlotMark` accept `material="plain" | "paper" | "clay" | "glow"` (`BoxPlotMaterial`). Plain is the default. Paper uses the existing bar grain and uneven inset pencil contour; Clay uses bar soft convex matte relief; Glow adds an exterior painted halo and a crisp lightened body. These static finishes are independent of color and Motion and preserve every whisker, quartile, median and outlier coordinate. Native stroke width/dashes remain the input silhouette. No extra minimum extent is introduced: all-equal and tiny marks receive a line finish; missing rows still have no marks.
+
+Each present native mark has its own React-generated filter ID and user-space region, including outliers and resolved child stroke widths/miter limits, so line-only summaries do not require nonzero bounding boxes. Use React `identifierPrefix` for independently mounted roots. Box finishes reuse the `--kind-ui-bar-*` tokens documented above. Body alpha is preserved, including zero fill opacity; glow/cast effects can paint only outside the native footprint. Tiny marks have less room for visible grain/relief. Bounds are refreshed for React updates, stylesheet edits/loads, ancestor theme classes, viewport changes and pointer entry/exit. Direct CSSOM rule mutations without one of those signals are not observed. The default box fill remains `0.18`; an explicit `fillOpacity` (for example `0.65`) makes broad surfaces easier to see.
+
+An explicit series/Cell/mark `filter`, or `style.filter`, including `none`, disables the built-in finish for that mark. Custom `shape` owns its markup and is not automatically materialized; it may explicitly return a materialized `BoxPlotMark`. Cells, gradients, native paint/opacity, mark styles, clipping, masks, visibility, refs, handlers and labels retain ownership. Filters run on the original consumer mark group (parts remain direct children) and existing reveal/plot clips, which may trim decorative halos. Chromium is verified; other SVG engines and print renderers remain unverified. No shared helper changes, dependencies, workflow changes or releases accompany this material stack.
 ### Shared presentation example
 
 `examples/chart/presentation.html` demonstrates the same public options for line, area and bar, icon/swatch fallback, composed legend labels, native formatter tuples/suppression, custom content and light/dark host CSS variables. It enables motion by default while following live reduced-motion preferences, and includes keyboard instructions and all-series table values. Its source is also compiled against an independently installed tarball, with guarded public imports, strict NodeNext/Bundler checks, and Chromium interactions. Theme colors remain host-owned CSS variables; this change does not add automatic light/dark config mapping. String labels/colors remain required.

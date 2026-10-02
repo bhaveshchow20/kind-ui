@@ -22,6 +22,8 @@ test("direct and namespace imports expose the same public components", () => {
     "HeatmapGrid",
     "HeatmapLegend",
     "HeatmapTooltip",
+    "HistogramChart",
+    "HistogramSeries",
     "Legend",
     "LineChart",
     "LineSeries",
@@ -46,6 +48,7 @@ test("direct and namespace imports expose the same public components", () => {
     "WaterfallChart",
     "WaterfallConnectors",
     "WaterfallSeries",
+    "binHistogram",
     "boxPlotExtent",
     "computeWaterfallData",
     "createHeatmapModel",
@@ -367,6 +370,117 @@ test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geomet
       "",
     );
 });
+// Histogram numerical contracts also run from the isolated tarball consumer.
+test("histogram explicit boundaries include final edge, negatives and zeros", () => {
+  const result = Chart.binHistogram(
+    [-3, -2, -1, 0, 1, 2, 3, null, undefined, NaN, Infinity],
+    [-2, 0, 2],
+  );
+  assert.deepEqual(result, {
+    bins: [
+      { lower: -2, upper: 0, count: 2 },
+      { lower: 0, upper: 2, count: 3 },
+    ],
+    accepted: 5,
+    missing: 2,
+    nonfinite: 2,
+    outOfRange: 2,
+  });
+  assert.deepEqual(
+    Chart.binHistogram([], [0, 1, 3]).bins.map((bin) => bin.count),
+    [0, 0],
+  );
+  assert.equal(Chart.binHistogram([0, 1], [0, 1]).bins[0].count, 2);
+});
+test("histogram rejects duplicate, unsorted, nonfinite and overflowing edges", () => {
+  for (const edges of [
+    [],
+    [0],
+    [0, 0],
+    [2, 1],
+    [0, NaN],
+    [-Infinity, 1],
+    [-Number.MAX_VALUE, Number.MAX_VALUE],
+  ])
+    assert.throws(() => Chart.binHistogram([], edges), /Histogram/);
+});
+test("histogram counts conserve accepted samples without mutating inputs", () => {
+  const edges = Object.freeze([-10, -3, 0, 0.5, 10]);
+  const samples = Object.freeze(Array.from({ length: 501 }, (_, index) => index / 10 - 20));
+  const result = Chart.binHistogram(samples, edges);
+  assert.equal(
+    result.accepted + result.outOfRange + result.missing + result.nonfinite,
+    samples.length,
+  );
+  assert.equal(
+    result.bins.reduce((sum, bin) => sum + bin.count, 0),
+    result.accepted,
+  );
+});
+const histogramMarkup = (bins, measure = "count") =>
+  render(
+    h(
+      Root,
+      { config },
+      h(Chart.HistogramChart, { bins, measure, width: 300, height: 200 }, h(Chart.HistogramSeries)),
+    ),
+  );
+test("histogram validates pre-binned aggregates instead of repairing them", () => {
+  for (const bins of [
+    [{ lower: 0, upper: 1, count: -1 }],
+    [{ lower: 0, upper: 1, count: 0.5 }],
+    [{ lower: 0, upper: 1, count: null }],
+    [{ lower: 0, upper: 1, count: NaN }],
+    [{ lower: 0, upper: 1, count: Infinity }],
+    [
+      { lower: 0, upper: 2, count: 1 },
+      { lower: 1, upper: 3, count: 2 },
+    ],
+    [
+      { lower: 0, upper: 1, count: Number.MAX_SAFE_INTEGER },
+      { lower: 1, upper: 2, count: 1 },
+    ],
+  ])
+    assert.throws(() => histogramMarkup(bins), /Histogram/);
+  assert.doesNotThrow(() => histogramMarkup([], "density"));
+  assert.doesNotThrow(() =>
+    histogramMarkup(
+      [
+        { lower: -2, upper: 0, count: 0 },
+        { lower: 1, upper: 5, count: 0 },
+      ],
+      "density",
+    ),
+  );
+  assert.throws(
+    () => histogramMarkup([{ lower: 0, upper: Number.MIN_VALUE, count: 1 }], "density"),
+    /density/,
+  );
+  assert.throws(() => histogramMarkup([], "fraction"), /measure/);
+  assert.throws(() => render(h(Root, { config }, h(Chart.HistogramSeries))), /HistogramChart/);
+});
+
+test("histogram rejects domain overflow and positive-density underflow", () => {
+  assert.throws(
+    () =>
+      histogramMarkup([
+        { lower: -Number.MAX_VALUE, upper: 0, count: 1 },
+        { lower: 0, upper: Number.MAX_VALUE, count: 1 },
+      ]),
+    /domain/,
+  );
+  assert.throws(
+    () =>
+      histogramMarkup(
+        [
+          { lower: 0, upper: 1, count: Number.MAX_SAFE_INTEGER - 1 },
+          { lower: 1, upper: 1e308, count: 1 },
+        ],
+        "density",
+      ),
+    /density/,
+  );
+});
 
 const summary = {
   lowerWhisker: -5,
@@ -424,6 +538,46 @@ test("box SVG primitive preserves numeric geometry, zero IQR and native attribut
   );
   assert.match(collapsed, /data-box-part="box"[^>]*width="0"/);
   assert.match(collapsed, /data-box-part="collapsed-box"/);
+});
+
+test("box materials retain native geometry and consumer filter ownership, including collapsed marks", () => {
+  const attrs = {
+    coordinates: summary,
+    center: 30,
+    size: 20,
+    fillOpacity: 0,
+    strokeDasharray: "4 2",
+    clipPath: "url(#clip)",
+    mask: "url(#mask)",
+    visibility: "hidden",
+  };
+  const plain = render(h(Chart.BoxPlotMark, attrs));
+  const geometry = (svg) =>
+    [...svg.matchAll(/<(?:rect|line|circle)\b[^>]*>/g)].map((match) => match[0]);
+  for (const material of ["paper", "clay", "glow"]) {
+    const svg = render(h(Chart.BoxPlotMark, { ...attrs, material, filter: undefined }));
+    assert.match(svg, /data-kind-ui="box-plot-mark"[^>]*filter="url\(#kind-ui-box-/);
+    assert.deepEqual(geometry(svg), geometry(plain));
+    assert.match(svg, /filterUnits="userSpaceOnUse"/);
+    assert.match(svg, /fill-opacity="0"/);
+    assert.match(svg, /visibility="hidden"/);
+    for (const override of [{ filter: "none" }, { style: { filter: "none" } }]) {
+      assert.doesNotMatch(
+        render(h(Chart.BoxPlotMark, { ...attrs, material, ...override })),
+        /data-kind-ui="box-material"/,
+      );
+    }
+    const collapsed = render(
+      h(Chart.BoxPlotMark, {
+        material,
+        coordinates: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 },
+        center: 4,
+        size: 0.5,
+      }),
+    );
+    assert.match(collapsed, /data-box-part="collapsed-box"/);
+    assert.match(collapsed, /width="0.5"[^>]*height="0"/);
+  }
 });
 
 test("heatmap explicit domains preserve signed, zero, missing and ordering", () => {

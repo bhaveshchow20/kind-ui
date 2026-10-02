@@ -59,6 +59,7 @@ function App() {
   const [customPeer, setCustomPeer] = useState(false);
   const [stacked, setStacked] = useState(false);
   const [visible, setVisible] = useState(["first", "second"]);
+  const [incomingVisible, setIncomingVisible] = useState(["bins", "distribution"]);
   const [clicks, setClicks] = useState(0);
   const data = (reversed ? [...rows].reverse() : rows)
     .filter((row) => !removed || row.category !== "A")
@@ -238,6 +239,53 @@ function App() {
             <Chart.LineSeries dataKey="second" />
             <Chart.Tooltip />
           </Chart.LineChart>
+        </section>
+      </Chart.Root>
+      <Chart.Root
+        visibleSeries={incomingVisible}
+        onVisibleSeriesChange={setIncomingVisible}
+        config={{
+          bins: { label: "Bins", color: "#635bff" },
+          distribution: { label: "Distribution", color: "#00a6a0" },
+        }}
+      >
+        <section id="incoming">
+          <h2>Incoming families keep native materials</h2>
+          <Chart.Legend emphasis="series" />
+          <Chart.HistogramChart
+            width={440}
+            height={250}
+            bins={[
+              { lower: 0, upper: 1, count: 3 },
+              { lower: 1, upper: 2, count: 5 },
+            ]}
+            measure="count"
+            emphasis="category"
+          >
+            <Chart.HistogramSeries seriesKey="bins" material="paper" />
+          </Chart.HistogramChart>
+          <Chart.BoxPlotChart
+            width={440}
+            height={250}
+            data={[
+              {
+                category: "A",
+                summary: {
+                  lowerWhisker: 1,
+                  q1: 2,
+                  median: 3,
+                  q3: 4,
+                  upperWhisker: 5,
+                  outliers: [7],
+                },
+              },
+            ]}
+            emphasis="category"
+          >
+            <XAxis dataKey="category" />
+            <YAxis />
+            <Chart.BoxPlotSeries dataKey="summary" seriesKey="distribution" material="clay" />
+          </Chart.BoxPlotChart>
         </section>
       </Chart.Root>
     </main>

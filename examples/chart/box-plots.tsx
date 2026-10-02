@@ -87,6 +87,7 @@ function Distribution({
   color,
   id,
   animate,
+  material,
 }: {
   title: string;
   rows: Row[];
@@ -95,6 +96,7 @@ function Distribution({
   color: string;
   id: string;
   animate: boolean;
+  material: Chart.BoxPlotMaterial;
 }) {
   const [visible, setVisible] = useState(["spread"]);
   return (
@@ -133,7 +135,13 @@ function Distribution({
           />
           <ReferenceLine {...(horizontal ? { x: 0 } : { y: 0 })} stroke="#b1bcb5" />
           <Chart.Tooltip content={<Summary unit={unit} />} maxWidth={250} />
-          <Chart.BoxPlotSeries<Row> dataKey="summary" seriesKey="spread" barSize={32}>
+          <Chart.BoxPlotSeries<Row>
+            dataKey="summary"
+            seriesKey="spread"
+            barSize={32}
+            material={material}
+            fillOpacity={0.65}
+          >
             {rows.map((row) => (
               <Cell key={row.category} fill={color} />
             ))}
@@ -177,6 +185,7 @@ function Table({ rows, title, unit }: { rows: Row[]; title: string; unit: string
   );
 }
 function Recipes() {
+  const [material, setMaterial] = useState<Chart.BoxPlotMaterial>("plain");
   const [animate, setAnimate] = useState(false);
   return (
     <main>
@@ -201,6 +210,18 @@ function Recipes() {
           Motion {animate ? "on" : "off"}
         </button>
       </div>
+      <nav aria-label="Box finish">
+        {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+          <button
+            type="button"
+            key={finish}
+            aria-pressed={material === finish}
+            onClick={() => setMaterial(finish)}
+          >
+            {finish}
+          </button>
+        ))}
+      </nav>
       <div className="cards">
         <article>
           <div className="card-heading">
@@ -216,6 +237,7 @@ function Recipes() {
             color="#16756c"
             id="latency"
             animate={animate}
+            material={material}
           />
           <div className="card-foot">
             <span>Box = Q1–Q3</span>
@@ -237,6 +259,7 @@ function Recipes() {
             color="#b76c38"
             id="changes"
             animate={animate}
+            material={material}
           />
           <div className="card-foot">
             <span>Whiskers = supplied endpoints</span>
@@ -264,6 +287,7 @@ function Recipes() {
           color="#596f9d"
           id="edge"
           animate={animate}
+          material={material}
         />
       </article>
       <section className="tables" aria-label="Full chart data">

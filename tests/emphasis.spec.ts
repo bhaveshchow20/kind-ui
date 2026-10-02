@@ -1,7 +1,9 @@
 import { expect, test } from "./browser.js";
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("http://127.0.0.1:4193");
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`,
+  );
 });
 const marks = "[data-kind-ui=emphasis-mark]";
 const dimmed = "[data-emphasis=dimmed]";
@@ -311,4 +313,47 @@ test("deduplicated category domains fall back instead of assigning wrong positio
 }) => {
   await expect(page.locator("#deduplicated .recharts-rectangle").first()).toBeVisible();
   await expect(page.locator("#deduplicated").locator(marks)).toHaveCount(0);
+});
+
+test("incoming Histogram and Box materials retain native paint and controlled visibility during legend emphasis", async ({
+  page,
+}) => {
+  const region = page.locator("#incoming");
+  await expect(region.locator("[data-kind-ui=box-plot-mark]")).toHaveCount(1);
+  const paint = () =>
+    region
+      .locator("svg g, svg path, svg rect, svg line, svg circle")
+      .evaluateAll((nodes) =>
+        nodes.map((node) => [
+          node.tagName,
+          ...[
+            "d",
+            "x",
+            "y",
+            "width",
+            "height",
+            "x1",
+            "x2",
+            "y1",
+            "y2",
+            "cx",
+            "cy",
+            "r",
+            "filter",
+            "opacity",
+            "fill",
+            "stroke",
+          ].map((name) => node.getAttribute(name)),
+        ]),
+      );
+  const baseline = await paint();
+  await region.getByRole("button", { name: "Distribution", exact: true }).hover();
+  await expect(region.locator(marks)).toHaveCount(0);
+  expect(await paint()).toEqual(baseline);
+  await page.mouse.move(0, 0);
+  await page.keyboard.press("Tab");
+  await region.getByRole("button", { name: "Distribution", exact: true }).focus();
+  expect(await paint()).toEqual(baseline);
+  await region.getByRole("button", { name: "Distribution", exact: true }).click();
+  await expect(region.locator("[data-kind-ui=box-plot-mark]")).toHaveCount(0);
 });
