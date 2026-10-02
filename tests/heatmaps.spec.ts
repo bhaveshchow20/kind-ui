@@ -213,3 +213,16 @@ test("removed focused row has a valid tab reentry and custom missing foreground"
   await expect(missing).toHaveCSS("background-color", "rgb(0, 0, 0)");
   await expect(missing.locator("span")).toHaveCSS("color", "rgb(255, 255, 255)");
 });
+
+test("live reduced motion cancels an active entrance immediately", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/heatmaps.html", { waitUntil: "domcontentloaded" });
+  const entrance = page.locator('[data-kind-ui="heatmap-entrance"]').first();
+  await expect
+    .poll(() =>
+      entrance.evaluate((node) => new DOMMatrixReadOnly(getComputedStyle(node).transform).m42),
+    )
+    .toBeGreaterThan(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(entrance).toHaveCSS("transform", "none", { timeout: 150 });
+});

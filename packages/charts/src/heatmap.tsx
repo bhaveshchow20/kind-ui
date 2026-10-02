@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { animate as animateValue, motion, useMotionValue } from "motion/react";
 import {
   type ComponentPropsWithRef,
   type ComponentType,
@@ -10,9 +10,11 @@ import {
   use,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   createHeatmapModel,
@@ -49,6 +51,14 @@ function useHeatmap() {
   if (!value) throw new Error("Heatmap components require HeatmapChart");
   return value;
 }
+const reducedQuery = "(prefers-reduced-motion: reduce)";
+function subscribeReduced(change: () => void) {
+  const media = window.matchMedia(reducedQuery);
+  media.addEventListener("change", change);
+  return () => media.removeEventListener("change", change);
+}
+const reducedSnapshot = () => window.matchMedia(reducedQuery).matches;
+const reducedServerSnapshot = () => true;
 const number = (value: number) => String(value);
 const keyOf = (cell: HeatmapCell) => JSON.stringify([cell.row, cell.column]);
 const labelOf = (cell: HeatmapCell, context: Context) =>
@@ -76,7 +86,18 @@ export function HeatmapChart({
   const [active, setActive] = useState<readonly [string, string] | null>(null);
   const tooltipId = useId();
   const [tooltipMounted, setTooltipMounted] = useState(false);
-  const reduced = useReducedMotion();
+  const reduced = useSyncExternalStore(subscribeReduced, reducedSnapshot, reducedServerSnapshot);
+  const y = useMotionValue(0);
+  const enabled = animate && !reduced;
+  useLayoutEffect(() => {
+    if (!enabled) {
+      y.set(0);
+      return;
+    }
+    y.set(8);
+    const controls = animateValue(y, 0, { duration: 0.35 });
+    return () => controls.stop();
+  }, [enabled, y]);
   useEffect(() => {
     if (!active || !tooltipMounted) return;
     const dismiss = (event: KeyboardEvent) => {
@@ -113,12 +134,7 @@ export function HeatmapChart({
           setActive(cell ? [cell.row, cell.column] : null);
         }}
       >
-        <motion.div
-          data-kind-ui="heatmap-entrance"
-          initial={animate && reduced === false ? { y: 8 } : false}
-          animate={{ y: 0 }}
-          transition={{ duration: animate && !reduced ? 0.35 : 0 }}
-        >
+        <motion.div data-kind-ui="heatmap-entrance" initial={false} style={{ y }}>
           {children}
         </motion.div>
       </div>
