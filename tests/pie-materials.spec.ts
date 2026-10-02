@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import { expect, type Locator, test } from "./browser";
-import { pieNativeOwnership } from "./pie-native-ownership";
+import { pieAlphaDifference, pieLivePaint, pieNativeOwnership } from "./pie-native-ownership";
 
 const url = process.env.KIND_UI_PIE_URL ?? "http://127.0.0.1:4180";
 const finishes = ["plain", "paper", "clay", "glow"] as const;
@@ -124,85 +124,157 @@ test("packed finishes retain decoded native body alpha for translucent gradients
     });
     const target = chart.locator(mark).first();
     await target.evaluate((n) => n.setAttribute("data-alpha-proof", ""));
-    const baseline = await chart.screenshot({
-      omitBackground: true,
-      path: info.outputPath(`native-${paint.replaceAll("&", "-")}.png`),
-    });
+    const nativeState = await pieNativeOwnership(chart, { allowEmpty: paint === "transparent" });
+    const baseline = await pieLivePaint(
+      chart,
+      info.outputPath(`native-${paint.replaceAll("&", "-")}.png`),
+    );
     const captureBox = await chart.boundingBox();
+    const nativeGeometry = await geometry(chart);
     await proof.getByLabel("Oracle finish").selectOption("plain");
-    expect(
-      await chart.screenshot({ omitBackground: true }),
-      `Repeat native baseline: ${paint}`,
-    ).toEqual(baseline);
+    const repeat = await pieNativeOwnership(chart, { allowEmpty: paint === "transparent" });
+    expect(repeat.state, `Repeat native state: ${paint}`).toBe(nativeState.state);
+    expect(repeat.rgba === nativeState.rgba, `Repeat native RGBA: ${paint}`).toBe(true);
     for (const finish of finishes.slice(1)) {
       await proof.getByLabel("Oracle finish").selectOption(finish);
       expect(await chart.boundingBox(), `Stable alpha capture: ${paint}/${finish}`).toEqual(
         captureBox,
       );
+      expect(await geometry(chart), `Live native geometry: ${paint}/${finish}`).toEqual(
+        nativeGeometry,
+      );
       await chart
         .locator(mark)
         .first()
         .evaluate((n) => n.setAttribute("data-alpha-proof", ""));
-      const actual = await chart.screenshot({
-        omitBackground: true,
-        path: info.outputPath(`${finish}-${paint.replaceAll("&", "-")}.png`),
-      });
-      const difference = await page.evaluate(
-        async ({ pngs, clippedBounds }) => {
-          let imageWidth = 0;
-          const arrays = await Promise.all(
-            pngs.map(async (png) => {
-              const img = new Image();
-              img.src = `data:image/png;base64,${png}`;
-              await img.decode();
-              imageWidth = img.width;
-              const c = document.createElement("canvas");
-              c.width = img.width;
-              c.height = img.height;
-              const ctx = c.getContext("2d");
-              if (!ctx) throw Error("No pixel context");
-              ctx.drawImage(img, 0, 0);
-              return ctx.getImageData(0, 0, c.width, c.height).data;
-            }),
-          );
-          const a = arrays[0],
-            b = arrays[1];
-          if (!a || !b || a.length !== b.length) throw Error("Dimensions");
-          let bodyMax = 0,
-            exteriorMax = 0,
-            painted = 0,
-            clippedExteriorMax = 0;
-          for (let i = 3; i < a.length; i += 4) {
-            if ((a[i] ?? 0) > 0) bodyMax = Math.max(bodyMax, Math.abs((a[i] ?? 0) - (b[i] ?? 0)));
-            else exteriorMax = Math.max(exteriorMax, b[i] ?? 0);
-            if ((a[i] ?? 0) > 0) painted++;
-            const x = ((i - 3) / 4) % imageWidth;
-            if (
-              clippedBounds &&
-              (x < Math.floor(clippedBounds.left) || x >= Math.ceil(clippedBounds.right))
-            )
-              clippedExteriorMax = Math.max(clippedExteriorMax, b[i] ?? 0);
-          }
-          return { bodyMax, exteriorMax, painted, clippedExteriorMax };
-        },
-        {
-          pngs: [baseline.toString("base64"), actual.toString("base64")],
-          clippedBounds: paint.includes("clip")
-            ? paint.includes("css-transform")
-              ? { left: 170, right: 200 }
-              : paint.includes("transform")
-                ? { left: 142, right: 167.5 }
-                : { left: 120, right: 150 }
-            : null,
-        },
+      const actual = await pieLivePaint(
+        chart,
+        info.outputPath(`${finish}-${paint.replaceAll("&", "-")}.png`),
       );
-      expect(difference.bodyMax, `${paint}/${finish}`).toBeLessThanOrEqual(1);
-      expect(difference.clippedExteriorMax).toBe(0);
-      expect(difference.exteriorMax).toBeLessThanOrEqual(
-        finish === "glow" && paint !== "transparent" ? (paint === "opaque" ? 96 : 40) : 1,
-      );
-      expect(difference.painted > 0).toBe(paint !== "transparent");
+      assertPieAlpha(pieAlphaDifference(baseline, actual, alphaClipBounds(paint)), paint, finish);
     }
+  }
+});
+
+function alphaClipBounds(paint: string) {
+  return paint.includes("clip")
+    ? paint.includes("transform")
+      ? { left: 142, right: 167.5 }
+      : { left: 120, right: 150 }
+    : null;
+}
+function assertPieAlpha(
+  difference: ReturnType<typeof pieAlphaDifference>,
+  paint: string,
+  finish: string,
+) {
+  expect(difference.bodyMax, `${paint}/${finish}`).toBeLessThanOrEqual(1);
+  expect(difference.clippedExteriorMax).toBe(0);
+  expect(difference.exteriorMax).toBeLessThanOrEqual(
+    finish === "glow" && paint !== "transparent" ? (paint === "opaque" ? 96 : 40) : 1,
+  );
+  expect(difference.painted > 0).toBe(paint !== "transparent");
+  if (paint === "transparent") expect(difference.actualPainted).toBe(0);
+}
+
+test("material alpha proof rejects actual source, mask, gradient, clipping and emission defects", async ({
+  page,
+}) => {
+  const controls = [
+    ["source-opacity", "paper", "alpha", "bodyMax"],
+    ["wrapper-opacity", "clay", "opaque", "bodyMax"],
+    ["mask-opacity", "clay", "alpha", "bodyMax"],
+    ["gradient-opacity", "clay", "alpha&gradient", "bodyMax"],
+    ["source-clip", "paper", "alpha&clip", "clippedExteriorMax"],
+    ["glow-source-opacity", "glow", "alpha", "bodyMax"],
+    ["halo-clip", "glow", "alpha&clip", "clippedExteriorMax"],
+    ["flood-leak", "glow", "transparent", "actualPainted"],
+    ["one-byte-transparent-leak", "clay", "transparent", "actualPainted"],
+  ] as const;
+  for (const [mutation, finish, paint, metric] of controls) {
+    await page.goto(`${url}/?oracle&${paint}`);
+    const proof = page.getByRole("region", { name: "Continuity proof" });
+    const chart = proof.getByRole("application", { name: "Kind continuity" });
+    await proof.scrollIntoViewIfNeeded();
+    await page.addStyleTag({
+      content:
+        'html,body,section,[data-kind-ui="chart"] {background:transparent !important;} [data-kind-ui="pie-sector"] {visibility:hidden;} [data-alpha-proof] {visibility:visible !important;}',
+    });
+    await chart
+      .locator(mark)
+      .first()
+      .evaluate((node) => node.setAttribute("data-alpha-proof", ""));
+    const native = await pieLivePaint(chart);
+    await proof.getByLabel("Oracle finish").selectOption(finish);
+    await chart
+      .locator(mark)
+      .first()
+      .evaluate((node) => node.setAttribute("data-alpha-proof", ""));
+    const valid = await pieLivePaint(chart);
+    assertPieAlpha(pieAlphaDifference(native, valid, alphaClipBounds(paint)), paint, finish);
+    await chart.evaluate((node, mutation) => {
+      const svg = node instanceof SVGSVGElement ? node : node.querySelector("svg");
+      const source = svg?.querySelector("[data-alpha-proof]");
+      const body = source?.parentElement?.parentElement;
+      const tree = body?.parentElement;
+      if (
+        !(svg instanceof SVGSVGElement) ||
+        !(source instanceof SVGElement) ||
+        !(body instanceof SVGElement) ||
+        !(tree instanceof SVGElement)
+      )
+        throw Error("Expected actual material tree");
+      if (mutation === "source-opacity" || mutation === "glow-source-opacity")
+        source.style.fillOpacity = "0.8";
+      if (mutation === "wrapper-opacity") body.style.opacity = "0.5";
+      if (mutation === "mask-opacity") {
+        const use = tree.querySelector("mask use");
+        if (!(use instanceof SVGElement)) throw Error("Expected actual material mask");
+        use.style.opacity = "0.5";
+      }
+      if (mutation === "gradient-opacity") {
+        const stops = svg.querySelectorAll("#host-gradient stop");
+        if (!stops.length) throw Error("Expected consumer gradient stops");
+        for (const stop of stops) (stop as SVGElement).style.stopOpacity = "0.1";
+      }
+      if (mutation === "source-clip") source.style.clipPath = "none";
+      if (mutation === "halo-clip") {
+        const halo = tree.querySelector('[data-kind-ui="pie-halo"]');
+        if (!(halo instanceof SVGElement)) throw Error("Expected actual Glow halo");
+        halo.style.clipPath = "none";
+      }
+      if (mutation === "flood-leak") {
+        const filter = tree.querySelector("filter");
+        if (!filter) throw Error("Expected actual Glow filter");
+        const flood = document.createElementNS("http://www.w3.org/2000/svg", "feFlood");
+        flood.setAttribute("flood-color", "red");
+        flood.setAttribute("flood-opacity", "1");
+        filter.append(flood);
+      }
+      if (mutation === "one-byte-transparent-leak") {
+        const leak = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        for (const [name, value] of Object.entries({
+          x: "145",
+          y: "135",
+          width: "10",
+          height: "10",
+          fill: "red",
+          "fill-opacity": String(1 / 255),
+        }))
+          leak.setAttribute(name, value);
+        tree.append(leak);
+      }
+    }, mutation);
+    const defective = await pieLivePaint(chart);
+    const difference = pieAlphaDifference(native, defective, alphaClipBounds(paint));
+    expect(difference[metric], `Actual alpha defect: ${mutation}`).toBeGreaterThan(
+      metric === "bodyMax" ? 1 : 0,
+    );
+    if (mutation === "one-byte-transparent-leak") expect(difference.exteriorMax).toBe(1);
+    expect(
+      () => assertPieAlpha(difference, paint, finish),
+      `Production alpha assertions reject ${mutation}`,
+    ).toThrow();
   }
 });
 

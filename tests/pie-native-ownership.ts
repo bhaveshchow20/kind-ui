@@ -1,8 +1,8 @@
 import type { Locator } from "./browser";
 
-// Fixture-only ownership oracle. It does not promise stable live-inline Chromium rasterization.
-export async function pieNativeOwnership(chart: Locator) {
-  return chart.evaluate(async (chartNode) => {
+// Fixture-only paint/ownership oracle; live-inline compositor stability is a separate property.
+export async function pieNativeOwnership(chart: Locator, options: { allowEmpty?: boolean } = {}) {
+  return chart.evaluate(async (chartNode, { allowEmpty }) => {
     const svg = chartNode instanceof SVGSVGElement ? chartNode : chartNode.querySelector("svg");
     if (!(svg instanceof SVGSVGElement)) throw Error("Expected complete Pie fixture SVG");
     const paintProperties = [
@@ -183,7 +183,7 @@ export async function pieNativeOwnership(chart: Locator) {
     let painted = 0,
       bytes = "";
     for (let i = 3; i < rgba.length; i += 4) if (rgba[i]) painted++;
-    if (!painted) throw Error("Empty serialized native Pie paint");
+    if (!painted && !allowEmpty) throw Error("Empty serialized native Pie paint");
     for (let i = 0; i < rgba.length; i += 32768)
       bytes += String.fromCharCode(...rgba.subarray(i, i + 32768));
     return {
@@ -194,5 +194,61 @@ export async function pieNativeOwnership(chart: Locator) {
       width,
       height,
     };
-  });
+  }, options);
+}
+
+// Preserve live screenshot pixels for material alpha. SVG-image filter edges can differ.
+export async function pieLivePaint(chart: Locator, path?: string) {
+  const png = await chart.screenshot({ omitBackground: true, ...(path ? { path } : {}) });
+  const pngBase64 = png.toString("base64");
+  const pixels = await chart.evaluate(async (_node, png) => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${png}`;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext("2d");
+    if (!context) throw Error("Expected live Pie pixel decoder");
+    context.drawImage(image, 0, 0);
+    const rgba = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let bytes = "";
+    for (let i = 0; i < rgba.length; i += 32768)
+      bytes += String.fromCharCode(...rgba.subarray(i, i + 32768));
+    return { rgba: btoa(bytes), width: canvas.width, height: canvas.height };
+  }, pngBase64);
+  return { ...pixels, pngBase64 };
+}
+
+// Compare independently captured actual fixture pixels; never normalize their alpha.
+export function pieAlphaDifference(
+  native: Pick<Awaited<ReturnType<typeof pieNativeOwnership>>, "rgba" | "width" | "height">,
+  actual: Pick<Awaited<ReturnType<typeof pieNativeOwnership>>, "rgba" | "width" | "height">,
+  clippedBounds: { left: number; right: number } | null,
+) {
+  const a = Buffer.from(native.rgba, "base64"),
+    b = Buffer.from(actual.rgba, "base64");
+  if (native.width !== actual.width || native.height !== actual.height || a.length !== b.length)
+    throw Error("Dimensions");
+  let bodyMax = 0,
+    exteriorMax = 0,
+    painted = 0,
+    actualPainted = 0,
+    clippedExteriorMax = 0;
+  for (let i = 3; i < a.length; i += 4) {
+    const before = a[i] ?? 0,
+      after = b[i] ?? 0;
+    if (before > 0) {
+      bodyMax = Math.max(bodyMax, Math.abs(before - after));
+      painted++;
+    } else exteriorMax = Math.max(exteriorMax, after);
+    if (after > 0) actualPainted++;
+    const x = ((i - 3) / 4) % native.width;
+    if (
+      clippedBounds &&
+      (x < Math.floor(clippedBounds.left) || x >= Math.ceil(clippedBounds.right))
+    )
+      clippedExteriorMax = Math.max(clippedExteriorMax, after);
+  }
+  return { bodyMax, exteriorMax, painted, actualPainted, clippedExteriorMax };
 }
