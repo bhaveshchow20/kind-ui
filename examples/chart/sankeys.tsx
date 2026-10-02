@@ -11,6 +11,7 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ResponsiveContainer, Tooltip } from "recharts";
 import "./sankeys.css";
+import { SankeyNetwork } from "./sankey-network.js";
 
 const data: SankeyFlowData = {
   nodes: [
@@ -135,6 +136,7 @@ function App() {
         <h1>Sankey recipes</h1>
         <p>Native geometry. Explicit balance. Every flow available by keyboard.</p>
       </header>
+      <SankeyNetwork />
       <Recipe material="solid" />
       <Recipe material="gradient" />
       <Recipe material="gradient" finish="paper" />

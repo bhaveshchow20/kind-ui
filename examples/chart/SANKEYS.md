@@ -29,3 +29,17 @@ retain ownership; thin marks can show less relief.
 The aggregate gate includes public validation/SSR tests, installed-tarball
 NodeNext/Bundler and production build, packed browser checks and desktop/phone
 screenshots. Screenshots are evidence, not pixel-baseline assertions.
+
+The deeper regional-allocation recipe adds five stages, 16 nodes and 39 routes:
+solar/wind/hydro → balancing zones → supply portfolios → delivery grids → four
+end uses. This is explicitly illustrative allocated energy before conversion
+losses, not a measured system or a storage-efficiency model. Every intermediate
+node balances and each stage carries 180 MWh. Node colors identify semantic
+categories; native gradient ribbons interpolate the actual endpoint colors.
+
+The diagram retains its native scale on phones in a keyboard-focusable horizontal
+viewport. Every route also appears in the wrapping table. Finish controls change
+surfaces independently of native widths and labels; pointer ribbons and table
+buttons share inspection state. Labels sit above their native nodes in layout
+padding rather than inside crossing ribbons. The initial 2× desktop PNG is a
+native Chromium screenshot, not a generated mockup.
