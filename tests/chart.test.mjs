@@ -656,19 +656,21 @@ test("Sankey finishes keep computed curve and width even with competing presenta
     index: 0,
     payload: {},
   };
-  for (const material of ["solid", "gradient"]) {
-    const markup = render(
-      h(Chart.SankeyLink, {
-        ...props,
-        material,
-        pathProps: { strokeWidth: 99, style: { strokeWidth: 99 }, d: "M0,0" },
-      }),
-    );
-    assert.match(markup, /stroke-width="7"/);
-    assert.match(markup, /style="stroke-width:7"/);
-    assert.match(markup, /M0,20C40,20 60,50 100,50/);
-    assert.match(markup, /fill="none"/);
-  }
+  for (const finish of ["plain", "paper", "clay", "glow"])
+    for (const material of ["solid", "gradient"]) {
+      const markup = render(
+        h(Chart.SankeyLink, {
+          ...props,
+          material,
+          finish,
+          pathProps: { strokeWidth: 99, style: { strokeWidth: 99 }, d: "M0,0" },
+        }),
+      );
+      assert.match(markup, /stroke-width="7"/);
+      assert.match(markup, /style="stroke-width:7"/);
+      assert.match(markup, /M0,20C40,20 60,50 100,50/);
+      assert.match(markup, /fill="none"/);
+    }
 });
 
 test("Sankey keeps parallel identities in validation but rejects native equal-value key collisions", () => {
@@ -696,5 +698,57 @@ test("Sankey keeps parallel identities in validation but rejects native equal-va
         ),
       /finite and nonnegative/,
     );
+  }
+});
+
+test("Sankey explicit filters own surfaces and plain nodes retain direct rectangles", () => {
+  const node = { x: 10, y: 20, width: 14, height: 50, index: 0, payload: {} };
+  for (const finish of ["paper", "clay", "glow"]) {
+    for (const rectProps of [{ filter: "url(#custom)" }, { style: { filter: "none" } }]) {
+      const markup = render(h(Chart.SankeyNode, { ...node, finish, rectProps }));
+      assert.doesNotMatch(markup, /<filter/);
+      assert.match(markup, /width="14"/);
+      assert.match(markup, /height="50"/);
+    }
+  }
+  assert.match(render(h(Chart.SankeyNode, node)), /^<rect/);
+});
+
+test("Sankey undefined filters retain generated finishes and wide node strokes retain bounds", () => {
+  for (const finish of ["paper", "clay", "glow"]) {
+    const markup = render(
+      h(Chart.SankeyNode, {
+        x: 10,
+        y: 20,
+        width: 14,
+        height: 50,
+        index: 0,
+        payload: {},
+        finish,
+        filter: undefined,
+        rectProps: { filter: undefined, strokeWidth: 10 },
+      }),
+    );
+    assert.match(markup, /<rect[^>]*filter="url\(#/);
+    assert.match(markup, /x="-100%" y="-100%" width="300%" height="300%"/);
+    const link = render(
+      h(Chart.SankeyLink, {
+        sourceX: 0,
+        sourceY: 20,
+        targetX: 100,
+        targetY: 50,
+        sourceControlX: 40,
+        targetControlX: 60,
+        sourceRelativeY: 0,
+        targetRelativeY: 0,
+        linkWidth: 7,
+        index: 0,
+        payload: {},
+        finish,
+        filter: undefined,
+        pathProps: { filter: undefined },
+      }),
+    );
+    assert.match(link, /<path[^>]*filter="url\(#/);
   }
 });

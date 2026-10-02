@@ -536,11 +536,40 @@ also use this status until measured. Native ResponsiveContainer remains usable.
 series components. They accept SVG presentation/handlers and `rectProps` or
 `pathProps`. Computed coordinates, dimensions and link width win over supplied
 presentation attributes; link width also wins over inline CSS stroke width.
-`SankeyLink` supports `solid` and `gradient`, using native cubic coordinates and
-`linkWidth`. Gradient does not encode a second quantity. Paper, clay, glow,
-metal and glass are unsupported: widened strokes, shadows and extrusion can
-misrepresent flows. Consumers may supply a native custom renderer and own its
-visual semantics. External CSS/transform overrides remain consumer-owned.
+`SankeyLink.material="solid" | "gradient"` remains the paint API, using native
+cubic coordinates and proportional stroke widths. Separately,
+`SankeyLink.finish` and `SankeyNode.finish` accept exported `SankeyFinish`:
+`"plain"` (default), `"paper"`, `"clay"`, or `"glow"`. No chart-level finish
+is injected into custom renderers. Set finishes explicitly on the optional marks:
+
+```tsx
+<SankeyChart data={flows}
+  node={(props) => <SankeyNode {...props} color="#cf5782" finish="clay" />}
+  link={(props) => <SankeyLink {...props} material="gradient" finish="paper" />}
+/>
+```
+
+Paper uses static subtle grain and an uneven inset pencil contour. Clay uses
+broad upper-left light and diffuse lower-right shading to suggest convex matte
+volume, with quiet grain and no cast shadow. Glow has a soft white interior
+rim and a restrained neutral exterior halo; blur is capped at 0.6px (or flow
+width/8 for thin flows), halo opacity at 0.12. It is intentionally less expansive
+than line Glow so adjacent flows retain their quantitative reading. Tiny marks
+show less relief. No finish displaces, widens, offsets or blurs native geometry.
+Paint RGB/semantic gradients remain the base; neutral surface decoration modifies
+visible RGB while atop compositing preserves native body alpha. Exterior Glow
+is separately decorative, is not additional flow, and never adds hit targets.
+
+Explicit SVG `filter` or inline `style.filter` disables built-in finishes;
+stylesheet filters override the filter presentation attribute normally. Props,
+refs and handlers remain on the original rect/path; native clipping can trim
+exterior Glow. Node labels are consumer siblings, outside mark filters. Native
+custom node/link callbacks and elements retain complete rendering ownership.
+Separately mounted React roots should use `identifierPrefix` for unique IDs.
+Finishes are static and follow the chart's existing reduced-motion reveal rules.
+This is an additive pre-release API with no dependency or version change; the
+package stays private at `0.0.0`. Validation targets Chromium; other browsers,
+print/export renderers and richer configurable material tokens are unverified.
 
 `SankeyTable` is an independently composable native table with required
 `caption`, all link identities, source/target names and exact zero values.

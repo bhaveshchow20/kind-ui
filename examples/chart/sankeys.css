@@ -100,6 +100,10 @@ tr[data-active] {
     padding: 8px 3px;
     font-size: 12px;
   }
+  table {
+    table-layout: fixed;
+    overflow-wrap: anywhere;
+  }
   table button {
     padding: 6px;
     font-size: 12px;

@@ -49,6 +49,7 @@ export {
   type SankeyFlowLink,
   type SankeyFlowNode,
 } from "./sankey-data.js";
+export type { SankeyFinish } from "./sankey-finish.js";
 export {
   SankeyLink,
   type SankeyLinkProps,
