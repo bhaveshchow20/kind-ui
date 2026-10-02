@@ -34,7 +34,11 @@ export type LineAnimation = {
   revealEasing?: Transition["ease"];
   hoverTransition?: Transition;
 };
-export type LineSeriesProps = Omit<StaticLineSeriesProps, "isAnimationActive">;
+type DefaultLineDataKey = Extract<StaticLineSeriesProps["dataKey"], (row: never) => unknown>;
+export type LineSeriesProps<
+  DataPoint = Parameters<DefaultLineDataKey>[0],
+  Value = ReturnType<DefaultLineDataKey>,
+> = Omit<StaticLineSeriesProps<DataPoint, Value>, "isAnimationActive">;
 export type LineChartProps = StaticLineChartProps & {
   animate?: boolean | LineAnimation | undefined;
 };
@@ -125,7 +129,10 @@ export function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
     />
   );
 }
-export function LineSeries(props: LineSeriesProps) {
+export function LineSeries<
+  DataPoint = Parameters<DefaultLineDataKey>[0],
+  Value = ReturnType<DefaultLineDataKey>,
+>(props: LineSeriesProps<DataPoint, Value>) {
   const { enabled } = use(MotionContext);
   const { visibleSeries } = useChart();
   const key = props.seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
@@ -162,7 +169,7 @@ export function LineSeries(props: LineSeriesProps) {
         pointerEvents={visible ? undefined : "none"}
         aria-hidden={visible ? undefined : true}
       >
-        <StaticLineSeries
+        <StaticLineSeries<DataPoint, Value>
           {...props}
           activeDot={visible ? (props.activeDot ?? <ActiveMarker />) : false}
           zIndex={0}
