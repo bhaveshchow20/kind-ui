@@ -398,3 +398,50 @@ Use native `LabelList dataKey="dimension" fill="white" content={<Chart.RadialBar
 `show={false}` controls only this visual label; it does not filter series, data, tooltip payload or Root metadata. Control tooltip visibility independently with native `Tooltip active={false}`. Labels render hidden during SSR until client SVG measurement; retain a value table for an immediate data alternative. Arbitrary geometry transforms or inherited letter/word styling can change available space; measurement conservatively hides labels when their glyph bounding boxes exceed the native sector.
 
 The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighteen current first-party shadcn radar/radial variations to runnable public compositions.
+
+## Heatmap
+
+`HeatmapChart`, `HeatmapGrid`, `HeatmapLegend`, `HeatmapTooltip`, and `HeatmapDataTable` compose a two-dimensional categorical grid using native HTML table layout. They are independent of `Root` and Recharts chart contexts. The browser owns equal-cell geometry; ordered domains and data are consumer-owned. No new dependency or existing chart API change is required.
+
+```tsx
+import {
+  createHeatmapScale, HeatmapChart, HeatmapGrid,
+  HeatmapLegend, HeatmapTooltip, HeatmapDataTable,
+} from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const scale = createHeatmapScale({
+  domain: [-10, 10],
+  colors: ["#3b6fa8", "#f5f5ee", "#bf5b38"],
+});
+<HeatmapChart
+  rows={["API", "Worker"]}
+  columns={["East", "West"]}
+  data={[
+    { row: "API", column: "East", value: -4 },
+    { row: "API", column: "West", value: 0 },
+    { row: "Worker", column: "East", value: null },
+  ]}
+  scale={scale}
+  animate
+>
+  <HeatmapGrid caption="Latency change by service and region" />
+  <HeatmapTooltip />
+  <HeatmapLegend label="Change in milliseconds" />
+  <details>
+    <summary>View values</summary>
+    <HeatmapDataTable caption="Latency changes (ms)" />
+  </details>
+</HeatmapChart>;
+```
+
+- `rows` and `columns` are explicit ordered unique string domains. Unknown coordinates, duplicate domain entries, undefined/nonfinite values and overflowed sums throw actionable errors. An empty domain renders an empty grid message. Domains containing categories with no records still render missing cells. Supply new array identities when updating data/domains; inputs are treated as immutable.
+- A datum is `{ row: string; column: string; value: number | null }`. Absent records and explicit `null` are missing, while `0` remains measured zero. `createHeatmapModel` exposes every domain coordinate, indices, resolved value and original `sources` for typed customization and inspection.
+- `duplicates` defaults to `"error"`. `"first"` and `"last"` preserve the corresponding record, including null. `"sum"` sums finite records, ignores null when numbers exist, and keeps all-null cells missing. Negative/positive cancellation remains zero. `sources` retains all records in input order for every policy.
+- `createHeatmapScale({ domain, colors })` requires finite ascending endpoints and at least two opaque `#rrggbb` colors. It interpolates evenly spaced stops in sRGB and clamps out-of-domain values. A constant domain uses the palette midpoint. Explicit domains make comparisons across updates meaningful; automatic rescaling is not performed. Consumers should label any clamping and choose a palette suited to sequential or diverging values. The legend uses the same stops/endpoints, includes a positioned zero tick for signed domains, and a separate missing key.
+- `formatValue(number)` and `missingLabel` are shared by cell labels, tooltip, legend and table. Default labels show values, with contrast-selected black/white text for numeric fills. Set both `--heatmap-missing` and `--heatmap-missing-foreground` when changing the missing swatch colors. Custom content owns its own text contrast. `HeatmapGrid` accepts a typed `Cell: ComponentType<HeatmapCellContentProps>` receiving `{ cell, fill, formattedValue }`, plus `cellProps(cell)` for native td refs/styles/handlers, and `rowLabel`/`columnLabel` for visible header content. Preserve opaque fills and a meaningful text alternative when customizing; nested interactive content needs host-specific keyboard handling. Grid role, tab stops, coordinate identity, accessible cell labels and background color remain component-owned; cell handlers are composed and a cancelled key event suppresses grid navigation.
+- Native DOM props, styles, refs and handlers are forwarded on the chart div, grid table, legend fieldset, tooltip div and static table. `HeatmapTooltip` accepts a typed `Content` component with the same cell contract. Compose one grid and at most one tooltip per chart; create separate chart boundaries for independent grids. Tooltip values derive from the latest active coordinate, so data changes and reorder do not leave stale payloads.
+- The grid has one roving tab stop. Arrow keys move within the ordered domains, Home/End move to the row endpoints, Ctrl+Home/End to the corners. Focus and pointer inspection open the tooltip; Escape closes it and Tab exits the grid. Native cell focus scrolls narrow containers. Removing the focused category falls back to the first cell on the next Tab entry. The optional tooltip is an in-flow readout; the static data table is consumer-placed and has no roving focus behavior.
+- `animate` defaults off in the library and on in the recipes. The existing Motion peer animates only a short frame translation; cell fills stay opaque and values do not tween. Reduced-motion preferences disable translation. `material` is `"plain" | "paper" | "inset"`: frame-only treatments that leave scale colors and geometry unchanged. No cell finish that obscures quantitative color is offered.
+
+See [responsive matrix and activity recipes](../../examples/chart/HEATMAPS.md) for renderer research, behavior, verification and limitations. Native tables render every cell; virtualization, editing, range selection, inferred domains and automatic aggregation are outside this API. Automated Chromium checks cover tested interaction/layout paths; manual screen-reader coverage remains unverified.

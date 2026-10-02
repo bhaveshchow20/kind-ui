@@ -29,3 +29,5 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). See [d
 No packages are published. MIT © 2026 Bhavesh Chowdhury.
 
 Radar and radial core recipes: open `/polar.html` in the chart example. See [polar recipes](examples/chart/POLAR.md) and the [public component contract](packages/charts/README.md#radar-and-radial-bars).
+
+Heatmap matrix and activity recipes: open `/heatmaps.html` in the chart example. See [heatmap recipes and renderer research](examples/chart/HEATMAPS.md) and the [public Heatmap contract](packages/charts/README.md#heatmap).

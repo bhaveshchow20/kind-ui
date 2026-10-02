@@ -15,6 +15,7 @@ export default defineConfig({
         scatters: fileURLToPath(new URL("./scatters.html", import.meta.url)),
         combos: fileURLToPath(new URL("./combos.html", import.meta.url)),
         polar: fileURLToPath(new URL("./polar.html", import.meta.url)),
+        heatmaps: fileURLToPath(new URL("./heatmaps.html", import.meta.url)),
         contracts: fileURLToPath(new URL("./contracts.html", import.meta.url)),
       },
     },
