@@ -11,6 +11,7 @@ export default defineConfig({
         bars: fileURLToPath(new URL("./bars.html", import.meta.url)),
         areas: fileURLToPath(new URL("./areas.html", import.meta.url)),
         boxPlots: fileURLToPath(new URL("./box-plots.html", import.meta.url)),
+        polar: fileURLToPath(new URL("./polar.html", import.meta.url)),
         contracts: fileURLToPath(new URL("./contracts.html", import.meta.url)),
       },
     },

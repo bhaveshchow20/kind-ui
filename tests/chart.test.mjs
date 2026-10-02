@@ -17,6 +17,11 @@ test("direct and namespace imports expose the same public components", () => {
     "Legend",
     "LineChart",
     "LineSeries",
+    "RadarChart",
+    "RadarSeries",
+    "RadialBarChart",
+    "RadialBarLabel",
+    "RadialBarSeries",
     "Root",
     "Tooltip",
     "TooltipContent",
@@ -154,6 +159,46 @@ test("area composition requires Root and a chart interaction boundary", () => {
     () => render(h(Root, { config }, h(Chart.AreaSeries, { dataKey: "count" }))),
     /inside LineChart/,
   );
+});
+
+for (const [name, Component] of [
+  ["RadarSeries", Chart.RadarSeries],
+  ["RadialBarSeries", Chart.RadialBarSeries],
+]) {
+  test(`${name} rejects missing polar composition boundaries`, () => {
+    assert.throws(() => render(h(Component, { dataKey: "count" })), /inside Root/);
+    assert.throws(
+      () => render(h(Root, { config }, h(Component, { dataKey: "count" }))),
+      /inside LineChart/,
+    );
+  });
+}
+
+test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geometry", () => {
+  const viewBox = {
+    cx: 100,
+    cy: 100,
+    innerRadius: 60,
+    outerRadius: 80,
+    startAngle: 0,
+    endAngle: 180,
+  };
+  const props = { viewBox, value: 25, formatter: (value) => `${value} points` };
+  const markup = render(h("svg", null, h(Chart.RadialBarLabel, props)));
+  assert.match(markup, /25 points/);
+  assert.match(markup, /visibility:hidden/);
+  assert.doesNotMatch(markup, /NaN/);
+  for (const overrides of [
+    { show: false },
+    { viewBox: { ...viewBox, endAngle: 0 } },
+    { viewBox: { ...viewBox, outerRadius: 61 } },
+    { viewBox: { ...viewBox, cx: NaN } },
+    { value: null },
+  ])
+    assert.equal(
+      render(h(Chart.RadialBarLabel, { ...props, ...overrides, formatter: undefined })),
+      "",
+    );
 });
 
 const summary = {
