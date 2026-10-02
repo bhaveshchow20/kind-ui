@@ -398,3 +398,69 @@ Use native `LabelList dataKey="dimension" fill="white" content={<Chart.RadialBar
 `show={false}` controls only this visual label; it does not filter series, data, tooltip payload or Root metadata. Control tooltip visibility independently with native `Tooltip active={false}`. Labels render hidden during SSR until client SVG measurement; retain a value table for an immediate data alternative. Arbitrary geometry transforms or inherited letter/word styling can change available space; measurement conservatively hides labels when their glyph bounding boxes exceed the native sector.
 
 The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighteen current first-party shadcn radar/radial variations to runnable public compositions.
+
+### Sankey flows
+
+`SankeyChart` uses first-party Recharts `Sankey` for layout, native `node`/`link`
+object, element or callback renderers, child Tooltip, labels, SVG props and native
+events. `data` is `SankeyFlowData`: every node has a nonempty unique string `id`
+and string `name`; every link has its own unique `id`, a finite nonnegative
+`value`, and `source`/`target` as node IDs or integer array indices. String
+endpoints always mean IDs, including numeric-looking strings. No flow is
+synthesized, normalized or aggregated.
+
+`prepareSankeyData(data)` validates and copies input into native numeric
+endpoints. It rejects duplicate/empty identities, unknown IDs, out-of-range or
+fractional indices, missing/negative/nonfinite values, overflowing node totals
+and cycles, including zero links. Nodes with both incoming and outgoing links
+must balance to a relative tolerance of `1e-9`, with no absolute zero tolerance.
+Model losses/gains as explicit edges and boundary nodes. Boundary sources/sinks
+need no matching counterpart. Supply immutable data when changing a chart.
+
+Zero links and nodes without positive links remain in input and tables;
+`SankeyChart` excludes them from native layout. All-zero and empty charts display
+`empty` (default `No positive flows`). Native callback indices address this
+filtered rendering array. Renderer/event payloads retain typed `id` identities,
+including source/target node IDs on links. Native layout owns derived node
+values (maximum input/output). Never use a render index as an input identity.
+
+Finite values can still exceed native floating-point layout limits. At the
+native drawable height H, with N positive-flow nodes, the chart conservatively requires finite aggregate
+positive flow T, finite positive H/T, finite T*H and nonzero v*((H - (N-1)*padding)/T) for every
+positive link. It throws an explicit renderer-limit error rather than changing
+values. Supply explicitly rescaled units at your data boundary if necessary.
+Equal-value parallel positive links also throw a renderer-limit error because
+Recharts keys links by source, target and value. Distinct-value parallel links
+are supported; semantic validation and the table accept either. No duplicate
+flow is silently combined. These checks are separate from semantic validation. A frame too small for the
+conservative node-padding budget displays `Insufficient space for flows; use
+the data table` instead of negative native geometry. SSR and unmeasured frames
+also use this status until measured. Native ResponsiveContainer remains usable.
+
+`SankeyNode` and `SankeyLink` are optional native callback/element shapes, not
+series components. They accept SVG presentation/handlers and `rectProps` or
+`pathProps`. Computed coordinates, dimensions and link width win over supplied
+presentation attributes; link width also wins over inline CSS stroke width.
+`SankeyLink` supports `solid` and `gradient`, using native cubic coordinates and
+`linkWidth`. Gradient does not encode a second quantity. Paper, clay, glow,
+metal and glass are unsupported: widened strokes, shadows and extrusion can
+misrepresent flows. Consumers may supply a native custom renderer and own its
+visual semantics. External CSS/transform overrides remain consumer-owned.
+
+`SankeyTable` is an independently composable native table with required
+`caption`, all link identities, source/target names and exact zero values.
+`formatValue` controls units. Optional `onInspect` renders native buttons for
+Tab/Enter/Space inspection with controlled `activeLinkId` and `aria-pressed`.
+The callback receives the original link. Consumer state connects pointer/native
+events to the same table; table refs, attributes and handlers remain available.
+Pair diagrams with tables and a status description. Supply separate node
+metadata tables when isolated nodes carry information beyond flow quantities.
+
+`animate` defaults to false; recipes enable it. `animate={true}` uses 450ms;
+`animate={{ revealDurationMs: 800 }}` accepts a finite nonnegative duration. Motion reveals opacity only for
+450ms, without changing proportional widths or moving flows. Pointer down,
+focus, changed immutable data/layout/renderers, native measured frame resize and live
+reduced-motion preference stop playback and show final geometry. Unmount stops
+playback. Examples retain a readable minimum diagram width in a keyboard
+scrollable region on phones and viewport-fitting tables. No topology morph or
+width tween is promised. See `examples/chart/SANKEYS.md` and `/sankeys.html`.

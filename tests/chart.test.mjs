@@ -23,12 +23,17 @@ test("direct and namespace imports expose the same public components", () => {
     "RadialBarLabel",
     "RadialBarSeries",
     "Root",
+    "SankeyChart",
+    "SankeyLink",
+    "SankeyNode",
+    "SankeyTable",
     "ScatterChart",
     "ScatterSeries",
     "ScatterTooltip",
     "ScatterTooltipContent",
     "Tooltip",
     "TooltipContent",
+    "prepareSankeyData",
   ]);
   assert.equal(Chart.Root, Root);
   assert.equal(Chart.Legend, Legend);
@@ -342,4 +347,159 @@ test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geomet
       render(h(Chart.RadialBarLabel, { ...props, ...overrides, formatter: undefined })),
       "",
     );
+});
+
+const flowData = () => ({
+  nodes: [
+    { id: "a", name: "A" },
+    { id: "b", name: "B" },
+    { id: "c", name: "C" },
+  ],
+  links: [
+    { id: "ab", source: "a", target: "b", value: 10 },
+    { id: "bc", source: 1, target: 2, value: 10 },
+  ],
+});
+test("Sankey resolves explicit IDs and indices without mutating inputs", () => {
+  const input = flowData();
+  input.links.push({ id: "zero", source: 0, target: 2, value: 0 });
+  const copy = structuredClone(input);
+  const result = Chart.prepareSankeyData(input);
+  assert.equal(result.links[0].source, 0);
+  assert.equal(result.links[2].value, 0);
+  assert.deepEqual(input, copy);
+  assert.deepEqual(Chart.prepareSankeyData({ nodes: [], links: [] }), { nodes: [], links: [] });
+});
+test("Sankey rejects invalid identities, endpoints, missing values, overflow and totals", () => {
+  for (const value of [NaN, Infinity, -1, undefined, null, "1"]) {
+    const data = flowData();
+    data.links[0].value = value;
+    assert.throws(() => Chart.prepareSankeyData(data), /finite nonnegative/);
+  }
+  for (const endpoint of [-1, 3, 0.5, NaN, "missing", "0", undefined]) {
+    const data = flowData();
+    data.links[0].source = endpoint;
+    assert.throws(() => Chart.prepareSankeyData(data), /endpoint/);
+  }
+  for (const kind of ["nodes", "links"]) {
+    const data = flowData();
+    data[kind][1].id = data[kind][0].id;
+    assert.throws(() => Chart.prepareSankeyData(data), /Duplicate/);
+    data[kind][1].id = " ";
+    assert.throws(() => Chart.prepareSankeyData(data), /nonempty/);
+  }
+  const unbalanced = flowData();
+  unbalanced.links[1].value = 9;
+  assert.throws(() => Chart.prepareSankeyData(unbalanced), /Inconsistent.*explicit loss\/gain/);
+  const overflow = flowData();
+  overflow.links = [0, 1].map((i) => ({
+    id: `flow${i}`,
+    source: 0,
+    target: 2,
+    value: Number.MAX_VALUE,
+  }));
+  assert.throws(() => Chart.prepareSankeyData(overflow), /overflow/);
+  const decimals = flowData();
+  decimals.links[0].value = 0.1 + 0.2;
+  decimals.links[1].value = 0.3;
+  assert.doesNotThrow(() => Chart.prepareSankeyData(decimals));
+});
+test("Sankey rejects self and multi-node cycles including measured zero", () => {
+  for (const value of [0, 10]) {
+    const data = flowData();
+    data.links.forEach((link) => {
+      link.value = value;
+    });
+    data.links.push({ id: "ca", source: 2, target: 0, value });
+    assert.throws(() => Chart.prepareSankeyData(data), /cycles/);
+    data.links = [{ id: "self", source: 0, target: 0, value }];
+    assert.throws(() => Chart.prepareSankeyData(data), /cycles/);
+  }
+});
+test("Sankey table retains measured zero and escapes labels; empty chart skips native layout", () => {
+  const data = {
+    nodes: [
+      { id: "a", name: "<A>" },
+      { id: "b", name: "B" },
+    ],
+    links: [{ id: "zero", source: "a", target: "b", value: 0 }],
+  };
+  const table = render(
+    h(Chart.SankeyTable, {
+      data,
+      caption: "All flows",
+      onInspect: () => {},
+      activeLinkId: "zero",
+      formatValue: (v) => `${v} MWh`,
+    }),
+  );
+  assert.match(table, /&lt;A&gt;/);
+  assert.match(table, /0 MWh/);
+  assert.match(table, /aria-pressed="true"/);
+  assert.match(table, /scope="row"/);
+  assert.match(
+    render(h(Chart.SankeyChart, { data, width: 200, height: 100 })),
+    /No positive flows/,
+  );
+  assert.throws(
+    () =>
+      render(h(Chart.SankeyChart, { data: { ...data, links: [{ ...data.links[0], value: -1 }] } })),
+    /finite nonnegative/,
+  );
+});
+test("Sankey finishes keep computed curve and width even with competing presentation", () => {
+  const props = {
+    sourceX: 0,
+    targetX: 100,
+    sourceY: 20,
+    targetY: 50,
+    sourceControlX: 40,
+    targetControlX: 60,
+    sourceRelativeY: 0,
+    targetRelativeY: 0,
+    linkWidth: 7,
+    index: 0,
+    payload: {},
+  };
+  for (const material of ["solid", "gradient"]) {
+    const markup = render(
+      h(Chart.SankeyLink, {
+        ...props,
+        material,
+        pathProps: { strokeWidth: 99, style: { strokeWidth: 99 }, d: "M0,0" },
+      }),
+    );
+    assert.match(markup, /stroke-width="7"/);
+    assert.match(markup, /style="stroke-width:7"/);
+    assert.match(markup, /M0,20C40,20 60,50 100,50/);
+    assert.match(markup, /fill="none"/);
+  }
+});
+
+test("Sankey keeps parallel identities in validation but rejects native equal-value key collisions", () => {
+  const data = {
+    nodes: [
+      { id: "a", name: "A" },
+      { id: "b", name: "B" },
+    ],
+    links: [
+      { id: "one", source: 0, target: 1, value: 5 },
+      { id: "two", source: 0, target: 1, value: 5 },
+    ],
+  };
+  assert.equal(Chart.prepareSankeyData(data).links.length, 2);
+  assert.throws(() => render(h(Chart.SankeyChart, { data })), /equal-value parallel/);
+  assert.doesNotThrow(() => render(h(Chart.SankeyTable, { data, caption: "Parallel flows" })));
+  for (const duration of [-1, Infinity, NaN]) {
+    assert.throws(
+      () =>
+        render(
+          h(Chart.SankeyChart, {
+            data: { nodes: [], links: [] },
+            animate: { revealDurationMs: duration },
+          }),
+        ),
+      /finite and nonnegative/,
+    );
+  }
 });

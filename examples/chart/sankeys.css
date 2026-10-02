@@ -1,0 +1,107 @@
+@import "@fontsource-variable/geist";
+:root {
+  font-family: "Geist Variable", sans-serif;
+  color: #1e293b;
+  background: #f5f6fb;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 1000px;
+  margin: auto;
+  padding: 48px 24px;
+}
+header {
+  margin-bottom: 36px;
+}
+header > p:first-child {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: #4338ca;
+}
+h1 {
+  font-size: clamp(36px, 7vw, 56px);
+  letter-spacing: -0.05em;
+  margin: 12px 0;
+}
+h2 {
+  font-size: 23px;
+  letter-spacing: -0.025em;
+}
+p,
+footer {
+  line-height: 1.6;
+}
+section {
+  background: white;
+  border: 1px solid #dce0eb;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+}
+.diagram-scroll {
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+  overflow-x: auto;
+  margin-top: 16px;
+}
+.diagram {
+  min-width: 650px;
+  height: 320px;
+}
+button {
+  font: inherit;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 7px 12px;
+  background: #eef2ff;
+  cursor: pointer;
+}
+button:focus-visible,
+.diagram-scroll:focus-visible {
+  outline: 3px solid #4f46e5;
+  outline-offset: 3px;
+}
+button[aria-pressed="true"] {
+  background: #4338ca;
+  color: white;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+caption {
+  text-align: left;
+  color: #64748b;
+  padding: 12px 0;
+}
+th,
+td {
+  text-align: left;
+  padding: 10px 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+tr[data-active] {
+  background: #eef2ff;
+}
+@media (max-width: 600px) {
+  main {
+    padding: 24px 12px;
+  }
+  section {
+    padding: 16px 10px;
+  }
+  th,
+  td {
+    padding: 8px 3px;
+    font-size: 12px;
+  }
+  table button {
+    padding: 6px;
+    font-size: 12px;
+  }
+}

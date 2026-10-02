@@ -109,7 +109,9 @@ try {
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
     if (
-      ["line", "area", "bar", "pie", "combined", "polar", "combo", "scatter"].includes(folder) &&
+      ["line", "area", "bar", "pie", "combined", "polar", "combo", "scatter", "sankey"].includes(
+        folder,
+      ) &&
       file.endsWith(".tsx")
     )
       assertLineConsumerSource(source);
@@ -230,6 +232,12 @@ try {
   await production("combo.html", "packed-combo");
   console.log(
     "Combo tarball: guarded public imports, strict NodeNext/Bundler and production build passed",
+  );
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("sankey", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-sankey");
+  console.log(
+    "Sankey tarball: guarded public exports, strict NodeNext/Bundler and production build passed",
   );
   for (const file of ["index.html", "main.tsx", "consumer.css", "motion.tsx"])
     await copyFixture("styling", file);
