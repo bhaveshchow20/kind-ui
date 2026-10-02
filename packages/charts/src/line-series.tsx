@@ -6,7 +6,12 @@ import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
 
-export type LineSeriesProps = ComponentProps<typeof Line> & {
+// Preserve the legacy native defaults while allowing explicit row/value parameters.
+type DefaultLineDataKey = Extract<ComponentProps<typeof Line>["dataKey"], (row: never) => unknown>;
+export type LineSeriesProps<
+  DataPoint = Parameters<DefaultLineDataKey>[0],
+  Value = ReturnType<DefaultLineDataKey>,
+> = ComponentProps<typeof Line<DataPoint, Value>> & {
   /** Metadata/visibility key, required only for function or numeric data keys. */
   seriesKey?: string;
   /** Material on the default SVG curve; custom shape/filter retain consumer ownership. */
@@ -14,7 +19,10 @@ export type LineSeriesProps = ComponentProps<typeof Line> & {
 };
 
 /** A registered Recharts Line with Root colors and controlled visibility. */
-export function LineSeries({
+export function LineSeries<
+  DataPoint = Parameters<DefaultLineDataKey>[0],
+  Value = ReturnType<DefaultLineDataKey>,
+>({
   seriesKey,
   hide,
   stroke,
@@ -22,7 +30,7 @@ export function LineSeries({
   material = "plain",
   renderWhileHidden = false,
   ...props
-}: LineSeriesProps & { renderWhileHidden?: boolean }) {
+}: LineSeriesProps<DataPoint, Value> & { renderWhileHidden?: boolean }) {
   const { config, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
@@ -49,7 +57,7 @@ export function LineSeries({
     throw new Error("LineSeries requires seriesKey for controlled non-string dataKey");
   const color = stroke ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
   return (
-    <Line
+    <Line<DataPoint, Value>
       isAnimationActive={false}
       {...props}
       {...(material !== "plain" && props.shape === undefined && props.filter === undefined

@@ -21,7 +21,10 @@ import { useChart } from "./chart-context.js";
 import { EmphasisMark } from "./emphasis.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 
-export type BarSeriesProps = Omit<ComponentProps<typeof Bar>, "isAnimationActive"> & {
+export type BarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
+  ComponentProps<typeof Bar<DataPoint, Value>>,
+  "isAnimationActive"
+> & {
   /** Metadata/visibility key, required for controlled function or numeric data keys. */
   seriesKey?: string;
   /** Stable category identity for numeric domains or independently supplied series rows. */
@@ -31,7 +34,7 @@ export type BarSeriesProps = Omit<ComponentProps<typeof Bar>, "isAnimationActive
 };
 
 /** A registered native Bar; axes, shape, cells, labels and handlers stay consumer-owned. */
-export function BarSeries({
+export function BarSeries<DataPoint = unknown, Value = unknown>({
   seriesKey,
   emphasisKey,
   hide,
@@ -40,7 +43,7 @@ export function BarSeries({
   style,
   material = "plain",
   ...props
-}: BarSeriesProps) {
+}: BarSeriesProps<DataPoint, Value>) {
   const { config, visibleSeries } = useChart();
   const { registerSeries, invalidate, data, categoryEmphasis, registerCategoryEligibility } =
     useLineInteraction();
@@ -199,7 +202,7 @@ export function BarSeries({
           <BarMaterialFilter material={material} id={filterId} horizontal={horizontal} />
         </defs>
       )}
-      <Bar
+      <Bar<DataPoint, Value>
         {...props}
         {...(categoryEmphasis && eligible
           ? {

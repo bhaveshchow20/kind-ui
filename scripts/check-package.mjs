@@ -169,6 +169,11 @@ try {
       },
     });
   }
+  const genericsConsumer = await readFile(join(root, "tests/series-generics-consumer.tsx"), "utf8");
+  assertLineConsumerSource(genericsConsumer);
+  await writeFile(join(consumer, "series-generics-consumer.tsx"), genericsConsumer);
+  await typecheck(["series-generics-consumer.tsx"]);
+  console.log("Line/Bar generics: packed public-only strict NodeNext/Bundler consumers passed");
   await writeFile(
     join(consumer, "index.tsx"),
     await readFile(join(root, "tests/consumer.tsx"), "utf8"),
