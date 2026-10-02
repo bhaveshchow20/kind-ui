@@ -16,6 +16,18 @@ export { type BarAnimation, BarChart, type BarChartProps } from "./bar-chart.js"
 export type { BarMaterial } from "./bar-material.js";
 export { BarSeries, type BarSeriesProps } from "./bar-series.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
+export { HistogramChart, type HistogramChartProps } from "./histogram-chart.js";
+export {
+  binHistogram,
+  type HistogramBin,
+  type HistogramBinningResult,
+  type HistogramMeasure,
+} from "./histogram-data.js";
+export {
+  HistogramSeries,
+  type HistogramSeriesProps,
+  type HistogramShapeProps,
+} from "./histogram-series.js";
 export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";
 export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";

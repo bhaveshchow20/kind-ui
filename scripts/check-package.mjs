@@ -109,7 +109,7 @@ try {
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
     if (
-      ["line", "area", "bar", "pie", "combined", "polar", "combo"].includes(folder) &&
+      ["line", "area", "bar", "pie", "combined", "polar", "combo", "histogram"].includes(folder) &&
       file.endsWith(".tsx")
     )
       assertLineConsumerSource(source);
@@ -209,6 +209,10 @@ try {
   console.log(
     "All 18 polar gallery composition paths: guarded public imports, strict NodeNext/Bundler and tarball build passed",
   );
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("histogram", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-histogram");
+  console.log("Histogram tarball: strict NodeNext/Bundler and public-only production build passed");
   await copyFixture("combined", "host.tsx");
   await copyFixture("combined", "main.tsx", "combined.tsx");
   await copyFixture("combined", "index.html", "combined.html");
