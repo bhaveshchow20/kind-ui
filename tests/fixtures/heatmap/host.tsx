@@ -205,8 +205,22 @@ export function Edges() {
   const [shrink, setShrink] = useState(false);
   const [values, setValues] = useState(false);
   const [handled, setHandled] = useState(0);
+  const skewed = createHeatmapScale({ domain: [-1, 100], colors: ["#000000", "#ffffff"] });
   return (
     <section aria-label="Edge cases">
+      <HeatmapChart
+        rows={[
+          "An extremely long category label that must stay one row tall even on a narrow screen",
+          "Short",
+        ]}
+        columns={["Value"]}
+        data={[]}
+        scale={skewed}
+        style={{ maxWidth: 300 }}
+      >
+        <HeatmapGrid caption="Long category grid" />
+        <HeatmapLegend label="Skewed signed scale" />
+      </HeatmapChart>
       <button type="button" onClick={() => setShrink(!shrink)}>
         Remove row
       </button>

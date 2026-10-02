@@ -226,3 +226,27 @@ test("live reduced motion cancels an active entrance immediately", async ({ page
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(entrance).toHaveCSS("transform", "none", { timeout: 150 });
 });
+
+test("long categories preserve equal rows and skewed signed legend stays readable", async ({
+  page,
+}) => {
+  await page.goto(`http://127.0.0.1:${4187 + offset}`);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const grid = page.getByRole("grid", { name: "Long category grid" });
+  const heights = await grid
+    .getByRole("gridcell")
+    .evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().height));
+  expect(heights[0]).toBe(heights[1]);
+  const legend = page
+    .locator('[data-kind-ui="heatmap-legend"]')
+    .filter({ has: page.getByText("Skewed signed scale", { exact: true }) });
+  const zero = await legend.locator('[data-kind-ui="heatmap-zero-label"]').boundingBox();
+  const endpoint = await legend
+    .locator('[data-kind-ui="heatmap-ticks"] span')
+    .first()
+    .boundingBox();
+  expect(zero?.y).toBeGreaterThanOrEqual((endpoint?.y ?? 0) + (endpoint?.height ?? 0));
+  const marker = await legend.locator('[data-kind-ui="heatmap-zero-marker"]').boundingBox();
+  const ramp = await legend.locator('[data-kind-ui="heatmap-ramp"]').boundingBox();
+  expect((marker?.x ?? 0) - (ramp?.x ?? 0)).toBeCloseTo((ramp?.width ?? 0) / 101, 0);
+});

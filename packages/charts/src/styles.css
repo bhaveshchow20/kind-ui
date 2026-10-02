@@ -161,6 +161,9 @@
     text-align: left;
   }
   [data-kind-ui="heatmap-grid"] td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     height: 2.6rem;
     text-align: center;
     border-radius: 3px;
@@ -168,6 +171,13 @@
     font-variant-numeric: tabular-nums;
     font-size: 0.75rem;
     cursor: default;
+  }
+  [data-kind-ui="heatmap-row-label"] {
+    display: block;
+    max-height: 1.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   [data-kind-ui="heatmap-grid"] td:focus-visible {
     outline: 3px solid var(--foreground, #172033);
@@ -199,6 +209,7 @@
     max-width: 22rem;
   }
   [data-kind-ui="heatmap-ramp"] {
+    position: relative;
     height: 0.65rem;
     border-radius: 3px;
     margin-top: 0.5rem;
@@ -236,5 +247,24 @@
   [data-kind-ui="heatmap-data-table"] caption {
     padding: 0.75rem 0;
     text-align: left;
+  }
+}
+
+@layer kind-ui {
+  [data-kind-ui="heatmap-zero-marker"] {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 1px;
+    background: var(--foreground, #172033);
+  }
+  [data-kind-ui="heatmap-zero-label"] {
+    display: block;
+    margin-top: 0.25rem;
+    overflow-wrap: anywhere;
+  }
+  [data-kind-ui="heatmap-ticks"] > span {
+    max-width: 48%;
+    overflow-wrap: anywhere;
   }
 }

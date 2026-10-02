@@ -278,7 +278,11 @@ export function HeatmapGrid({
         <tbody>
           {model.rows.map((row, r) => (
             <tr key={row}>
-              <th scope="row">{rowLabel?.(row) ?? row}</th>
+              <th scope="row">
+                <span data-kind-ui="heatmap-row-label" title={row}>
+                  {rowLabel?.(row) ?? row}
+                </span>
+              </th>
               {model.cells[r]?.map((cell) => {
                 const extra = cellProps?.(cell) ?? {};
                 const fill =
@@ -396,22 +400,21 @@ export function HeatmapLegend({ label, ...props }: HeatmapLegendProps) {
               ? scale.color(min)
               : `linear-gradient(to right in srgb, ${scale.colors.join(", ")})`,
         }}
-      />
+      >
+        {min < 0 && max > 0 ? (
+          <i
+            data-kind-ui="heatmap-zero-marker"
+            style={{ left: `${(-min / (max - min)) * 100}%` }}
+          />
+        ) : null}
+      </div>
       <div data-kind-ui="heatmap-ticks">
         <span>{formatValue(min)}</span>
-        {min < 0 && max > 0 ? (
-          <span
-            style={{
-              position: "absolute",
-              left: `${(-min / (max - min)) * 100}%`,
-              transform: "translateX(-50%)",
-            }}
-          >
-            {formatValue(0)}
-          </span>
-        ) : null}
         <span>{formatValue(max)}</span>
       </div>
+      {min < 0 && max > 0 ? (
+        <span data-kind-ui="heatmap-zero-label">Zero marker: {formatValue(0)}</span>
+      ) : null}
       <span data-kind-ui="heatmap-missing-key">
         <i aria-hidden="true" />
         {missingLabel}
