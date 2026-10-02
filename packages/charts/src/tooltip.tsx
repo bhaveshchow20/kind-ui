@@ -37,6 +37,8 @@ export type TooltipProps = Omit<
   maxWidth?: number;
   /** Resolves category identity before the existing series-key fallback. */
   itemKey?: TooltipContentProps["itemKey"];
+  /** Opt in on Kind's default content; custom content owns its own animation. */
+  valueAnimation?: TooltipContentProps["valueAnimation"];
 };
 export type TooltipFrameProps = {
   x: number;
@@ -63,6 +65,7 @@ export function StaticTooltipFrame({ x, y, ref, style, frameProps, children }: T
 function PositionedContent({
   consumerContent,
   itemKey,
+  valueAnimation,
   maxWidth,
   frameProps,
   frameRef,
@@ -71,6 +74,7 @@ function PositionedContent({
 }: EngineContentProps & {
   consumerContent: TooltipProps["content"];
   itemKey: TooltipProps["itemKey"];
+  valueAnimation: TooltipProps["valueAnimation"];
   maxWidth: number;
   frameProps: TooltipProps["frameProps"];
   frameRef: TooltipProps["ref"];
@@ -128,7 +132,11 @@ function PositionedContent({
   ) : typeof consumerContent === "function" ? (
     createElement(consumerContent, contentProps)
   ) : (
-    <TooltipContent tooltip={contentProps} {...(itemKey ? { itemKey } : {})} />
+    <TooltipContent
+      tooltip={contentProps}
+      {...(itemKey ? { itemKey } : {})}
+      {...(valueAnimation ? { valueAnimation } : {})}
+    />
   );
   return (
     <Frame
@@ -156,6 +164,7 @@ export function TooltipBase({
   frameProps,
   maxWidth = 180,
   itemKey,
+  valueAnimation,
   Frame = StaticTooltipFrame,
   ...props
 }: TooltipProps & { Frame?: (props: TooltipFrameProps) => ReactNode }) {
@@ -177,6 +186,7 @@ export function TooltipBase({
           accessibilityLayer={false}
           consumerContent={content}
           itemKey={itemKey}
+          valueAnimation={valueAnimation}
           maxWidth={maxWidth}
           frameProps={frameProps}
           frameRef={ref}

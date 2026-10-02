@@ -5,6 +5,8 @@ import type { TooltipContentProps as NativeContentProps } from "recharts";
 import { Tooltip, type TooltipProps } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { LineInteraction } from "./line-chart.js";
+import type { TooltipContentProps } from "./tooltip-content.js";
+import { TooltipNumber } from "./tooltip-number.js";
 
 export type ScatterSizeDimension<Row = unknown> = {
   /** Own top-level property key, or the same typed record accessor used by ZAxis. */
@@ -23,6 +25,7 @@ export type ScatterTooltipContentProps<Row = unknown> = Omit<
   /** Recovers zero/missing Z entries omitted by native Recharts, without changing marker geometry. */
   zDimension?: ScatterSizeDimension<Row>;
   missingValue?: ReactNode;
+  valueAnimation?: TooltipContentProps["valueAnimation"];
 };
 
 /** Dimension metadata uses each entry's dataKey; series identity only controls visibility/title. */
@@ -31,6 +34,7 @@ export function ScatterTooltipContent<Row = unknown>({
   pointLabel,
   zDimension,
   missingValue = "No data",
+  valueAnimation,
   ...props
 }: ScatterTooltipContentProps<Row>) {
   const { config, visibleSeries } = useChart();
@@ -112,7 +116,16 @@ export function ScatterTooltipContent<Row = unknown>({
         data-dimension={key}
       >
         <span>{name}</span>
-        <strong data-kind-ui="chart-tooltip-value">{value}</strong>
+        <strong data-kind-ui="chart-tooltip-value">
+          {valueAnimation === "shuffle" &&
+          typeof entry.value === "number" &&
+          Number.isFinite(entry.value) &&
+          (typeof value === "string" || (typeof value === "number" && Number.isFinite(value))) ? (
+            <TooltipNumber value={value} />
+          ) : (
+            value
+          )}
+        </strong>
       </li>
     );
   });
@@ -136,11 +149,35 @@ export function ScatterTooltipContent<Row = unknown>({
 }
 export type ScatterTooltipProps<Row = unknown> = TooltipProps &
   Pick<ScatterTooltipContentProps<Row>, "pointLabel" | "zDimension" | "missingValue">;
+
+// A stable native-content adapter retains digit/width state across consumer rerenders.
+function DefaultScatterContent<Row>({
+  pointLabel,
+  zDimension,
+  missingValue,
+  valueAnimation,
+  ...tooltip
+}: NativeContentProps &
+  Pick<
+    ScatterTooltipContentProps<Row>,
+    "pointLabel" | "zDimension" | "missingValue" | "valueAnimation"
+  >) {
+  return (
+    <ScatterTooltipContent<Row>
+      tooltip={tooltip}
+      {...(pointLabel ? { pointLabel } : {})}
+      {...(zDimension ? { zDimension } : {})}
+      {...(missingValue !== undefined ? { missingValue } : {})}
+      {...(valueAnimation ? { valueAnimation } : {})}
+    />
+  );
+}
 /** Shared bounded positioning/Motion with Scatter-aware default dimension content. */
 export function ScatterTooltip<Row = unknown>({
   pointLabel,
   zDimension,
   missingValue,
+  valueAnimation,
   content,
   ...props
 }: ScatterTooltipProps<Row>) {
@@ -148,15 +185,19 @@ export function ScatterTooltip<Row = unknown>({
     <Tooltip
       {...props}
       content={
-        content ??
-        ((tooltip) => (
-          <ScatterTooltipContent<Row>
-            tooltip={tooltip}
+        content ?? (
+          <DefaultScatterContent<Row>
+            active={false}
+            payload={[]}
+            coordinate={undefined}
+            activeIndex={undefined}
+            accessibilityLayer={false}
             {...(pointLabel ? { pointLabel } : {})}
             {...(zDimension ? { zDimension } : {})}
             {...(missingValue !== undefined ? { missingValue } : {})}
+            {...(valueAnimation ? { valueAnimation } : {})}
           />
-        ))
+        )
       }
     />
   );
