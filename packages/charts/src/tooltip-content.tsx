@@ -9,17 +9,21 @@ export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children">
   /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
   tooltip: UpstreamTooltipContentProps;
   missingValue?: ReactNode;
+  /** Stable metadata/visibility identity for an item, e.g. a pie category payload ID. */
+  itemKey?: (entry: UpstreamTooltipContentProps["payload"][number]) => string;
 };
 
 /** Default tooltip UI using the containing chart's labels, formats, colors and visibility. */
 export function TooltipContent({
   tooltip,
   missingValue = "No data",
+  itemKey,
   ...props
 }: TooltipContentProps) {
   const { config, visibleSeries } = useChart();
   const line = use(LineInteraction);
   const identity = (entry: UpstreamTooltipContentProps["payload"][number]) =>
+    itemKey?.(entry) ??
     (entry.graphicalItemId ? line?.seriesKeys.get(entry.graphicalItemId) : undefined) ??
     String(entry.dataKey ?? entry.name);
   const { active, payload, label, formatter, labelFormatter, accessibilityLayer } = tooltip;

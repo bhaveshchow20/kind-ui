@@ -1,16 +1,20 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 async function bounds(tip: Locator, chart: Locator) {
-  const a = await tip.boundingBox();
-  const b = await chart.boundingBox();
-  expect(
-    a &&
-      b &&
-      a.x >= b.x - 1 &&
-      a.y >= b.y - 1 &&
-      a.x + a.width <= b.x + b.width + 1 &&
-      a.y + a.height <= b.y + b.height + 1,
-  ).toBeTruthy();
+  await expect
+    .poll(async () => {
+      const a = await tip.boundingBox();
+      const b = await chart.boundingBox();
+      return Boolean(
+        a &&
+          b &&
+          a.x >= b.x - 1 &&
+          a.y >= b.y - 1 &&
+          a.x + a.width <= b.x + b.width + 1 &&
+          a.y + a.height <= b.y + b.height + 1,
+      );
+    })
+    .toBeTruthy();
 }
 async function points(page: Page) {
   return page.locator(".recharts-line-dot").evaluateAll((dots) =>

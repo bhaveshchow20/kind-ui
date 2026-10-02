@@ -9,17 +9,17 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { BarChart as EngineBarChart } from "recharts";
+import { PieChart as EnginePieChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
-import { LineChartFrame, useLineInteraction } from "./line-chart.js";
+import { LineChartFrame } from "./line-chart.js";
 
-export type BarAnimation = LineAnimation;
-export type BarChartProps = ComponentProps<typeof EngineBarChart> & {
-  animate?: boolean | BarAnimation | undefined;
+export type PieAnimation = LineAnimation;
+export type PieChartProps = ComponentProps<typeof EnginePieChart> & {
+  animate?: boolean | PieAnimation | undefined;
 };
-export const BarMotion = createContext<{
+export const PieMotion = createContext<{
   reveal: boolean;
-  options: BarAnimation;
+  options: PieAnimation;
   finish: () => void;
 }>({
   reveal: false,
@@ -36,45 +36,33 @@ const snapshot = () => window.matchMedia(query).matches;
 const serverSnapshot = () => true;
 const defaultHover = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } as const;
 
-// Chart layout props may move bars without changing the plot or numeric zero.
-export function BarLifecycle({
-  layout,
-  barGap,
-  barCategoryGap,
-  barSize,
-  stackOffset,
-  reverseStackOrder,
-}: BarChartProps) {
-  const { invalidate } = useLineInteraction();
-  const inputs = [layout, barGap, barCategoryGap, barSize, stackOffset, reverseStackOrder];
-  const previous = useRef(inputs);
-  useLayoutEffect(() => {
-    if (inputs.some((value, index) => value !== previous.current[index])) invalidate();
-    previous.current = inputs;
-  });
-  return null;
-}
-
-/** Native Recharts composition with Kind interaction and optional Motion. */
-export function BarChart({ animate = false, children, ...props }: BarChartProps) {
+/** Native polar composition, shared interaction, and optional Motion-owned sector entrance. */
+export function PieChart({ animate = false, children, ...props }: PieChartProps) {
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
   const finish = useCallback(() => setInteracted(true), []);
   const enabled = animate !== false && !reduced;
+  const interrupt = useCallback(() => {
+    if (enabled) finish();
+  }, [enabled, finish]);
   const options = typeof animate === "object" ? animate : {};
+  const previousEnabled = useRef(enabled);
+  useLayoutEffect(() => {
+    if (previousEnabled.current && !enabled) finish();
+    previousEnabled.current = enabled;
+  }, [enabled, finish]);
   return (
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
-      <BarMotion value={{ reveal: enabled && !interacted, options, finish }}>
+      <PieMotion value={{ reveal: enabled && !interacted, options, finish }}>
         <LineChartFrame
           chartProps={props}
-          engine={EngineBarChart}
+          engine={EnginePieChart}
           motionEnabled={enabled}
-          interrupt={finish}
+          interrupt={interrupt}
         >
-          <BarLifecycle {...props} />
           {children}
         </LineChartFrame>
-      </BarMotion>
+      </PieMotion>
     </MotionContext>
   );
 }

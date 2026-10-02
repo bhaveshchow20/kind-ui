@@ -1,4 +1,8 @@
 @layer kind-ui {
+  :where(.kind-ui-combo-chart .recharts-area, .kind-ui-combo-chart .recharts-area-dots) {
+    clip-path: var(--kind-ui-combo-area-clip, none);
+  }
+
   :where(.kind-ui-area-chart .recharts-area, .kind-ui-area-chart .recharts-area-dots) {
     clip-path: var(--kind-ui-line-clip, none);
   }
