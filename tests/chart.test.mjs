@@ -435,3 +435,32 @@ test("category itemKey resolves icon, formatting, zero and hidden state together
     /chart-tooltip/,
   );
 });
+
+test("presentation options preserve unknown native colors and mixed missing/zero entries", () => {
+  const payload = [
+    entry(0, { dataKey: "unknown", name: "Native", color: "rebeccapurple" }),
+    entry(null),
+  ];
+  const markup = render(
+    h(
+      Root,
+      { config: iconConfig },
+      h(TooltipContent, { tooltip: tooltip(payload), indicator: "dashed" }),
+    ),
+  );
+  assert.match(markup, /data-indicator="dashed"/);
+  assert.match(markup, /--kind-ui-chart-indicator-color:rebeccapurple/);
+  assert.match(markup, /data-icon="task"/);
+  assert.match(markup, /No data/);
+  assert.match(markup, />0</);
+  const hidden = render(
+    h(
+      Root,
+      { config: iconConfig },
+      h(TooltipContent, { tooltip: tooltip(payload), hideIndicator: true }),
+    ),
+  );
+  assert.doesNotMatch(hidden, /chart-icon|chart-indicator/);
+  assert.match(hidden, /No data/);
+  assert.match(hidden, />0</);
+});

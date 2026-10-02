@@ -238,6 +238,7 @@ try {
 
   // The actual presentation recipe is independently checked through the installed tarball.
   for (const file of [
+    "use-reduced-motion.ts",
     "presentation.tsx",
     "presentation-main.tsx",
     "presentation.css",

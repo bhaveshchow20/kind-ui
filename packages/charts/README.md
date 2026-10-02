@@ -402,7 +402,7 @@ The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighte
 
 ### Shared presentation example
 
-`examples/chart/presentation.html` demonstrates the same public options for line, area and bar, icon/swatch fallback, composed legend labels, native formatter tuples/suppression, custom content and light/dark host CSS variables. It includes keyboard instructions and all-series table values. Its source is also compiled against an independently installed tarball, with guarded public imports, strict NodeNext/Bundler checks, and Chromium interactions. Theme colors remain host-owned CSS variables; this change does not add automatic light/dark config mapping. String labels/colors remain required.
+`examples/chart/presentation.html` demonstrates the same public options for line, area and bar, icon/swatch fallback, composed legend labels, native formatter tuples/suppression, custom content and light/dark host CSS variables. It enables motion by default while following live reduced-motion preferences, and includes keyboard instructions and all-series table values. Its source is also compiled against an independently installed tarball, with guarded public imports, strict NodeNext/Bundler checks, and Chromium interactions. Theme colors remain host-owned CSS variables; this change does not add automatic light/dark config mapping. String labels/colors remain required.
 
 ```tsx
 <Chart.Legend hideIcon>

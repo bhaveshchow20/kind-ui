@@ -1,6 +1,7 @@
 import * as Chart from "@kind-ui/charts";
 import { useState } from "react";
 import { Bar, Cell, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { useReducedMotionPreference } from "./use-reduced-motion.js";
 
 function TaskIcon() {
   return (
@@ -128,6 +129,7 @@ export function PresentationExample() {
           </p>
           <ResponsiveContainer width="100%" height={240}>
             <Frame
+              animate
               data={rows}
               aria-label="Task outcomes by day"
               aria-describedby="presentation-help"
@@ -199,6 +201,7 @@ const categoryKey: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) =>
   String(entry.payload.category);
 /** Native host marks use amount as dataKey; category metadata intentionally has different IDs. */
 export function CategoryIdentityExample() {
+  const reduced = useReducedMotionPreference();
   const [visible, setVisible] = useState<string[]>(["delivery", "support"]);
   const [custom, setCustom] = useState(false);
   const config = {
@@ -231,7 +234,7 @@ export function CategoryIdentityExample() {
           <Chart.BarChart data={categoryRows} aria-label="Category amounts" accessibilityLayer>
             <XAxis dataKey="category" />
             <YAxis domain={[0, 12]} />
-            <Bar dataKey="amount" isAnimationActive={false}>
+            <Bar dataKey="amount" isAnimationActive={!reduced}>
               {categoryRows.map((row) => (
                 <Cell
                   key={row.category}

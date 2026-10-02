@@ -182,3 +182,18 @@ test("packed category itemKey differs from native dataKey: icons, zero, visibili
   await expect(custom).not.toContainText("support:");
   await expect(page.getByRole("table")).toContainText("Delivery");
 });
+
+for (const family of ["line", "area", "bar"]) {
+  test(`packed ${family}: default motion follows the live reduced-motion preference`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(url);
+    await page.getByLabel("Chart family").selectOption(family);
+    await expect(page.locator('[data-kind-ui="tooltip-motion"]')).toHaveCount(1);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(page.locator('[data-kind-ui="tooltip-motion"]')).toHaveCount(0);
+    await explore(page);
+    await expect(page.locator(tipSelector)).toContainText("0 tasks");
+  });
+}
