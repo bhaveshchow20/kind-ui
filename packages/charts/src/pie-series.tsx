@@ -8,6 +8,8 @@ import {
   isValidElement,
   type ReactNode,
   use,
+  useCallback,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -15,11 +17,15 @@ import {
 import { Cell, Pie, type PieSectorShapeProps, Sector } from "recharts";
 import { useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
+import { type PieMaterial, PieMaterialFilter } from "./pie-material.js";
 
 export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
   "isAnimationActive"
->;
+> & {
+  /** Inset finish on default native sectors; custom shapes and filters keep ownership. */
+  material?: PieMaterial | undefined;
+};
 
 // Recharts also supports Cell props as data when neither the chart nor Pie supplies rows.
 function cellProps(children: ReactNode): Record<string, unknown>[] {
@@ -46,7 +52,11 @@ function sameCells(previous: Record<string, unknown>[], next: Record<string, unk
 }
 
 // Motion interpolates only the native sector's angular span; Recharts owns all polar geometry.
-function EntranceSector(props: PieSectorShapeProps) {
+function EntranceSector({ material, ...props }: PieSectorShapeProps & { material: PieMaterial }) {
+  const generatedId = useId();
+  const filterId = `kind-ui-pie-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "_")}-material`;
+  const materialized =
+    material !== "plain" && props.filter === undefined && props.style?.filter === undefined;
   const { reveal, options, finish } = use(PieMotion);
   const [progress, setProgress] = useState(reveal ? 0 : 1);
   useLayoutEffect(() => {
@@ -78,31 +88,54 @@ function EntranceSector(props: PieSectorShapeProps) {
     ...sector
   } = props;
   return (
-    <Sector
-      {...sector}
-      {...(onClick ? { onClick } : {})}
-      {...(onMouseDown ? { onMouseDown } : {})}
-      {...(onMouseUp ? { onMouseUp } : {})}
-      {...(onMouseMove ? { onMouseMove } : {})}
-      {...(onMouseOver ? { onMouseOver } : {})}
-      {...(onMouseOut ? { onMouseOut } : {})}
-      {...(onMouseEnter ? { onMouseEnter } : {})}
-      {...(onMouseLeave ? { onMouseLeave } : {})}
-      {...(className !== undefined ? { className } : {})}
-      {...(cornerRadius !== undefined ? { cornerRadius } : {})}
-      data-kind-ui="pie-sector"
-      data-reveal={reveal ? "on" : "off"}
-      endAngle={reveal ? startAngle + (endAngle - startAngle) * progress : endAngle}
-    />
+    <>
+      {materialized && (
+        <defs data-kind-ui="pie-material" data-material={material} pointerEvents="none">
+          <PieMaterialFilter
+            material={material}
+            id={filterId}
+            strokeWidth={
+              Number.isFinite(Number(props.strokeWidth))
+                ? Math.max(0, Number(props.strokeWidth))
+                : 0
+            }
+            cx={props.cx}
+            cy={props.cy}
+            radius={props.outerRadius}
+            thickness={props.outerRadius - props.innerRadius}
+          />
+        </defs>
+      )}
+      <Sector
+        {...sector}
+        {...(materialized ? { filter: `url(#${filterId})` } : {})}
+        {...(onClick ? { onClick } : {})}
+        {...(onMouseDown ? { onMouseDown } : {})}
+        {...(onMouseUp ? { onMouseUp } : {})}
+        {...(onMouseMove ? { onMouseMove } : {})}
+        {...(onMouseOver ? { onMouseOver } : {})}
+        {...(onMouseOut ? { onMouseOut } : {})}
+        {...(onMouseEnter ? { onMouseEnter } : {})}
+        {...(onMouseLeave ? { onMouseLeave } : {})}
+        {...(className !== undefined ? { className } : {})}
+        {...(cornerRadius !== undefined ? { cornerRadius } : {})}
+        data-kind-ui="pie-sector"
+        data-reveal={reveal ? "on" : "off"}
+        endAngle={reveal ? startAngle + (endAngle - startAngle) * progress : endAngle}
+      />
+    </>
   );
 }
-
-const renderEntranceSector = (props: PieSectorShapeProps) => <EntranceSector {...props} />;
 
 /** A native Pie. Use innerRadius for donuts; category data, Cells and visibility are consumer-owned. */
 export function PieSeries<DataPoint = unknown, Value = unknown>(
   props: PieSeriesProps<DataPoint, Value>,
 ) {
+  const { material = "plain", ...nativeProps } = props;
+  const renderEntranceSector = useCallback(
+    (sector: PieSectorShapeProps) => <EntranceSector {...sector} material={material} />,
+    [material],
+  );
   const { invalidate } = useLineInteraction();
   const inputs = [
     props.data,
@@ -121,6 +154,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     props.shape,
     props.activeShape,
     props.inactiveShape,
+    material,
   ];
   const cells = cellProps(props.children);
   const previousCells = useRef(cells);
@@ -136,7 +170,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   });
   return (
     <Pie<DataPoint, Value>
-      {...props}
+      {...nativeProps}
       stroke={props.stroke ?? "none"}
       shape={props.shape ?? renderEntranceSector}
       isAnimationActive={false}

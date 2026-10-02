@@ -73,6 +73,9 @@ export function PieHost() {
   const [animate, setAnimate] = useState<boolean | Chart.PieAnimation>(
     new URLSearchParams(window.location.search).has("motion"),
   );
+  const [material, setMaterial] = useState<Chart.PieMaterial>(
+    (new URLSearchParams(location.search).get("material") as Chart.PieMaterial) ?? "plain",
+  );
   const [visible, setVisible] = useState(Object.keys(config));
   const [donut, setDonut] = useState(true);
   const [updated, setUpdated] = useState(false);
@@ -103,6 +106,18 @@ export function PieHost() {
   }, [empty, visible, allZero, updated, reverse]);
   return (
     <section aria-label="Packed pies" style={{ width: small ? 220 : 480, background: "white" }}>
+      <label>
+        Finish
+        <select
+          aria-label="Finish"
+          value={material}
+          onChange={(e) => setMaterial(e.target.value as Chart.PieMaterial)}
+        >
+          {["plain", "paper", "clay", "glow"].map((v) => (
+            <option key={v}>{v}</option>
+          ))}
+        </select>
+      </label>
       <button
         type="button"
         onClick={() =>
@@ -163,6 +178,7 @@ export function PieHost() {
           onMouseMove={() => setMoved((v) => v + 1)}
         >
           <Chart.PieSeries
+            material={material}
             data={data}
             dataKey="value"
             nameKey="id"
@@ -309,6 +325,11 @@ const cases = {
   ],
 };
 function ContinuityHost() {
+  const query = new URLSearchParams(location.search);
+  const [material, setMaterial] = useState<Chart.PieMaterial>(
+    (query.get("material") as Chart.PieMaterial) ?? "plain",
+  );
+  const opacity = query.has("transparent") ? 0 : query.has("alpha") ? 0.35 : 1;
   const [scenario, setScenario] = useState<keyof typeof cases>("normal");
   const [included, setIncluded] = useState(true);
   const [donut, setDonut] = useState(false);
@@ -331,11 +352,34 @@ function ContinuityHost() {
   const cells = data.map((row) => (
     <Cell
       key={row.id}
-      fill={row.id === "alpha" ? "#4f46e5" : row.id === "beta" ? "#0891b2" : "#db2777"}
+      fillOpacity={opacity}
+      {...(query.has("filter") ? { filter: "url(#host-filter)" } : {})}
+      {...(query.has("style-filter") ? { style: { filter: "url(#host-filter)" } } : {})}
+      fill={
+        query.has("gradient")
+          ? "url(#host-gradient)"
+          : row.id === "alpha"
+            ? "#4f46e5"
+            : row.id === "beta"
+              ? "#0891b2"
+              : "#db2777"
+      }
     />
   ));
   return (
     <section aria-label="Continuity proof">
+      <label>
+        Oracle finish
+        <select
+          aria-label="Oracle finish"
+          value={material}
+          onChange={(e) => setMaterial(e.target.value as Chart.PieMaterial)}
+        >
+          {["plain", "paper", "clay", "glow"].map((v) => (
+            <option key={v}>{v}</option>
+          ))}
+        </select>
+      </label>
       {Object.keys(cases).map((key) => (
         <button type="button" key={key} onClick={() => setScenario(key as keyof typeof cases)}>
           Scenario {key}
@@ -358,9 +402,20 @@ function ContinuityHost() {
       </output>
       <Chart.Root config={config} style={{ position: "relative", width: 300, background: "white" }}>
         <Chart.PieChart width={300} height={280} aria-label="Kind continuity">
-          <Chart.PieSeries {...props}>{cells}</Chart.PieSeries>
+          <defs>
+            <filter id="host-filter">
+              <feGaussianBlur stdDeviation={0.2} />
+            </filter>
+            <linearGradient id="host-gradient">
+              <stop stopColor="#db6baa" stopOpacity={0.2} />
+              <stop offset="1" stopColor="#eb9cc7" stopOpacity={0.7} />
+            </linearGradient>
+          </defs>
+          <Chart.PieSeries {...props} material={material}>
+            {cells}
+          </Chart.PieSeries>
           {rings && (
-            <Chart.PieSeries {...props} innerRadius={115} outerRadius={130}>
+            <Chart.PieSeries {...props} material={material} innerRadius={115} outerRadius={130}>
               {cells}
             </Chart.PieSeries>
           )}
@@ -390,5 +445,58 @@ function ContinuityHost() {
         </NativePieChart>
       </Chart.Root>
     </section>
+  );
+}
+
+export function MaterialGallery() {
+  return (
+    <main style={{ fontFamily: "system-ui", padding: 24, background: "#f6f4f6" }}>
+      <h1>Pie / donut finishes</h1>
+      <p>Native continuous sectors • pink and monochrome • normal and narrow</p>
+      {(["plain", "paper", "clay", "glow"] as const).map((material) => (
+        <section key={material}>
+          <h2>{material}</h2>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+            {[false, true].flatMap((mono) =>
+              [false, true].map((donut) => (
+                <article
+                  key={`${mono}/${donut}`}
+                  style={{ background: "white", borderRadius: 18, padding: 12 }}
+                >
+                  <h3>
+                    {mono ? "Mono" : "Pink"} {donut ? "donut" : "pie"}
+                  </h3>
+                  {[300, 180].map((width) => (
+                    <Chart.Root key={width} config={{}}>
+                      <Chart.PieChart
+                        width={width}
+                        height={width}
+                        animate={false}
+                        aria-label={`${material} ${mono ? "mono" : "pink"} ${donut ? "donut" : "pie"} ${width}`}
+                      >
+                        <Chart.PieSeries
+                          data={[{ v: 60 }, { v: 28 }, { v: 12 }]}
+                          dataKey="v"
+                          material={material}
+                          innerRadius={donut ? "52%" : 0}
+                          outerRadius="85%"
+                        >
+                          {(mono
+                            ? ["#55545c", "#929099", "#d2cfd6"]
+                            : ["#db6baa", "#eb9cc7", "#f3c4df"]
+                          ).map((color) => (
+                            <Cell key={color} fill={color} />
+                          ))}
+                        </Chart.PieSeries>
+                      </Chart.PieChart>
+                    </Chart.Root>
+                  ))}
+                </article>
+              )),
+            )}
+          </div>
+        </section>
+      ))}
+    </main>
   );
 }

@@ -260,3 +260,27 @@ Category visibility and Cells are consumer-owned: filter data and generate Cells
 Use nonnegative, finite values for meaningful proportional data. Kind preserves native values rather than inventing allocations: empty/all-zero inputs paint no allocation, and zero/missing categories remain distinguishable in the consumer-owned table. A zero category has no visible angular area; expose it in the legend/data alternative rather than imposing a minimum fake share. Provide readable labels and a table/list; SVG plus tooltip alone is not a complete data alternative. [Recharts Pie API](https://recharts.github.io/en-US/api/Pie/) and the pinned `recharts@3.10.1` source (`polar/Pie.js`, `shape/Sector.d.ts`) informed the payload, Cell and polar geometry integration. Motion cancellation uses [animation playback controls](https://motion.dev/docs/animate).
 
 `examples/chart/pies.html` contains two bounded recipes: a pie allocation and a donut capacity summary. Both consume these public APIs and share existing tooltip/legend/formatting/accessibility behavior. The isolated tarball host in `tests/fixtures/pie` is separate from the recipes and is checked with strict NodeNext/Bundler declarations, a production build and browser contracts.
+
+### Pie and donut finishes
+
+`PieSeries` accepts `material="plain" | "paper" | "clay" | "glow"` (`PieMaterial`),
+independently of native fill/Cells and the chart’s `animate` prop. Plain is the default.
+Paper adds faint fibers and an uneven inset pencil contour; Clay gives soft convex
+matte relief; Glow emits a soft colored halo around the crisp native sector. All finishes preserve native
+angles, radii, path, paint alpha, continuous zero-padding/no-stroke defaults and labels.
+Donuts use the same prop with native `innerRadius`.
+
+Custom shapes (including active/inactive shapes) remain consumer-owned. Explicit
+sector `filter` or `style.filter`, including Cell overrides, bypasses the built-in
+finish on that sector. Native gradients, clipping, IDs and handlers remain available.
+Paper/Clay remain inset. Glow’s decorative halo can overlap adjacent sectors/rings;
+it does not change quantitative geometry or native body alpha. No finish displaces paths.
+Per-sector filter IDs are instance-scoped. Switching finishes during entrance snaps
+to final geometry using the existing interruption contract.
+
+Optional CSS variables: `--kind-ui-pie-clay-light`, `--kind-ui-pie-clay-highlight`,
+`--kind-ui-pie-clay-shade`, `--kind-ui-pie-clay-shadow`, `--kind-ui-pie-paper-fiber`,
+`--kind-ui-pie-paper-grain`, `--kind-ui-pie-paper-ink`, `--kind-ui-pie-glow-light`,
+and `--kind-ui-pie-glow-opacity`. Lighting adapts locally to native radius and ring
+thickness. The pie/donut recipes expose the material control and keep category totals
+and selection consumer-controlled.

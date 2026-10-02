@@ -17,6 +17,7 @@ const rows = [
 const itemKey: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
 export function Allocation({ donut = false }: { donut?: boolean }) {
   const [visible, setVisible] = useState(Object.keys(config));
+  const [material, setMaterial] = useState<Chart.PieMaterial>("plain");
   const [animate, setAnimate] = useState(false);
   const [selected, setSelected] = useState<string>();
   const data = useMemo(() => rows.filter((row) => visible.includes(row.id)), [visible]);
@@ -33,6 +34,19 @@ export function Allocation({ donut = false }: { donut?: boolean }) {
         />{" "}
         Animate
       </label>
+      <label>
+        Material{" "}
+        <select
+          value={material}
+          onChange={(event) => setMaterial(event.target.value as Chart.PieMaterial)}
+        >
+          {["plain", "paper", "clay", "glow"].map((finish) => (
+            <option key={finish} value={finish}>
+              {finish}
+            </option>
+          ))}
+        </select>
+      </label>
       <Chart.Root
         config={config}
         visibleSeries={visible}
@@ -48,6 +62,7 @@ export function Allocation({ donut = false }: { donut?: boolean }) {
           aria-label={donut ? "Team capacity donut" : "Weekly hours pie"}
         >
           <Chart.PieSeries
+            material={material}
             data={data}
             dataKey="hours"
             nameKey="id"
