@@ -3,6 +3,7 @@
 import { animate as animateValue, motion, type Transition, useMotionValue } from "motion/react";
 import {
   createContext,
+  type ReactElement,
   use,
   useCallback,
   useId,
@@ -129,6 +130,12 @@ export function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
     />
   );
 }
+export function LineSeries<
+  DataPoint = Parameters<DefaultLineDataKey>[0],
+  Value = ReturnType<DefaultLineDataKey>,
+>(props: LineSeriesProps<DataPoint, Value>): ReactElement;
+// Like native Line, default calls allow dynamic keys and nested path strings.
+export function LineSeries(props: LineSeriesProps): ReactElement;
 export function LineSeries<
   DataPoint = Parameters<DefaultLineDataKey>[0],
   Value = ReturnType<DefaultLineDataKey>,

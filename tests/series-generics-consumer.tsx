@@ -1,5 +1,5 @@
 import * as Chart from "@kind-ui/charts";
-import { type ComponentProps, createRef } from "react";
+import { type ComponentProps, createRef, type MouseEvent } from "react";
 import { Bar, Cell, Curve, LabelList, Line, Rectangle } from "recharts";
 
 type Row = { id: string; value: number; nullable: number | null; range: [number, number] };
@@ -16,7 +16,11 @@ const lineProps: Chart.LineSeriesProps<Row, number> = {
   connectNulls: true,
   strokeDasharray: "3 2",
   shape: <Curve pathRef={createRef<SVGPathElement>()} />,
-  onClick: (event) => event.currentTarget.getBoundingClientRect(),
+  onClick: (curve, event) => {
+    const width: string | number | undefined = curve.strokeWidth;
+    const path: SVGPathElement = event.currentTarget;
+    void [width, path];
+  },
 };
 const barProps: Chart.BarSeriesProps<Row, number> = {
   dataKey: "value",
@@ -59,7 +63,7 @@ void (<Chart.LineSeries<Row, number | null> dataKey="nullable" />);
 void (<Chart.BarSeries<Row, [number, number]> dataKey="range" />);
 void (<Chart.LineSeries<Row> dataKey="id" />);
 void (<Chart.BarSeries<Row> dataKey="id" />);
-void (<Chart.LineSeries<[number, string], number> dataKey={0} />);
+void (<Chart.LineSeries<{ 0: number; 1: string }, number> dataKey={0} />);
 void (<Chart.BarSeries<[number, string], number> dataKey="0" />);
 
 // Default/inferred calls still support chart-owned rows, typed accessors and open keys.
@@ -75,6 +79,11 @@ const legacyLineProps: Chart.LineSeriesProps = {
 };
 const legacyBarProps: Chart.BarSeriesProps = { dataKey: "chartOwnedKey" };
 void [legacyLineProps, legacyBarProps];
+const dynamicKey: string = rows.map((row) => row.id).join("");
+void (<Line data={rows} dataKey={dynamicKey} />);
+void (<Chart.LineSeries data={rows} dataKey={dynamicKey} />);
+void (<Line data={[{ metrics: { value: 2 } }]} dataKey="metrics.value" />);
+void (<Chart.LineSeries data={[{ metrics: { value: 2 } }]} dataKey="metrics.value" />);
 
 // Negative native cases act as the oracle for the wrappers' explicit parameters.
 // @ts-expect-error Native numeric keys exclude misspellings.
@@ -122,8 +131,16 @@ void (<Bar<Row, number> ref={createRef<SVGPathElement>()} />);
 void (<Chart.LineSeries<Row, number> ref={createRef<SVGPathElement>()} />);
 // @ts-expect-error The public Bar retains the native ref boundary.
 void (<Chart.BarSeries<Row, number> ref={createRef<SVGPathElement>()} />);
-// @ts-expect-error Line's handler is an SVG event, not a row callback.
-void (<Chart.LineSeries<Row, number> onClick={(row: Row) => void row} />);
+// @ts-expect-error Native Line's handler event targets an SVG path.
+void (
+  <Line<Row, number> onClick={(curve, event: MouseEvent<HTMLDivElement>) => void [curve, event]} />
+);
+// @ts-expect-error The public Line retains the native SVG event target.
+void (
+  <Chart.LineSeries<Row, number>
+    onClick={(curve, event: MouseEvent<HTMLDivElement>) => void [curve, event]}
+  />
+);
 // @ts-expect-error Bar's first handler argument is a native rectangle, not the declared row.
 void (<Chart.BarSeries<Row, number> onClick={(row: Row) => void row} />);
 // @ts-expect-error Kind continues to own engine animation.
