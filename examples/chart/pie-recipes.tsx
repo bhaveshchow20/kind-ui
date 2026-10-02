@@ -37,6 +37,7 @@ export function Allocation({ donut = false }: { donut?: boolean }) {
       <label>
         Material{" "}
         <select
+          aria-label="Material"
           value={material}
           onChange={(event) => setMaterial(event.target.value as Chart.PieMaterial)}
         >

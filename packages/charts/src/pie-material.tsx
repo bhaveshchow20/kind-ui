@@ -24,14 +24,18 @@ export function PieMaterialFilter({
 }) {
   const relief = Math.max(1, Math.min(14, radius * 0.12, thickness * 0.22));
   const margin = 16 + strokeWidth / 2;
+  const x = Math.floor(cx - radius - margin);
+  const y = Math.floor(cy - radius - margin);
+  const width = Math.ceil(cx + radius + margin) - x;
+  const height = Math.ceil(cy + radius + margin) - y;
   return (
     <filter
       id={id}
       filterUnits="userSpaceOnUse"
-      x={cx - radius - margin}
-      y={cy - radius - margin}
-      width={radius * 2 + margin * 2}
-      height={radius * 2 + margin * 2}
+      x={x}
+      y={y}
+      width={width}
+      height={height}
       colorInterpolationFilters="sRGB"
     >
       {material === "clay" ? (
@@ -58,7 +62,8 @@ export function PieMaterialFilter({
           />
           <feComposite in2="softBottom" operator="in" result="shade" />
           <feComposite in="shade" in2="SourceGraphic" operator="atop" result="shaded" />
-          <feComposite in="light" in2="shaded" operator="atop" />
+          <feComposite in="light" in2="shaded" operator="atop" result="finished" />
+          <NativePaintColor />
         </>
       ) : material === "paper" ? (
         <>
@@ -95,23 +100,32 @@ export function PieMaterialFilter({
           <feComposite in="pencilLine" in2="sketch" operator="in" result="brokenLine" />
           <feFlood floodColor="var(--kind-ui-pie-paper-ink, #17212b)" floodOpacity={0.45} />
           <feComposite in2="brokenLine" operator="in" result="pencilPaint" />
-          <feComposite in="pencilPaint" in2="outlined" operator="atop" />
+          <feComposite in="pencilPaint" in2="outlined" operator="atop" result="finished" />
+          <NativePaintColor />
         </>
       ) : (
         <>
           <feComponentTransfer in="SourceAlpha" result="footprint">
             <feFuncA type="linear" slope={100000} />
           </feComponentTransfer>
+          {/* Keep emission off native antialiased pixels; the crisp body renders separately. */}
+          <feMorphology in="footprint" operator="dilate" radius={1.5} result="haloGuard" />
           <feGaussianBlur in="SourceGraphic" stdDeviation={4.5} result="soft" />
           <feFlood floodOpacity="var(--kind-ui-pie-glow-opacity, 0.8)" result="strength" />
           <feComposite in="soft" in2="strength" operator="in" result="haloPaint" />
-          <feComposite in="haloPaint" in2="footprint" operator="out" result="halo" />
+          <feComposite in="haloPaint" in2="haloGuard" operator="out" result="halo" />
           <feMerge>
             <feMergeNode in="halo" />
-            <feMergeNode in="SourceGraphic" />
           </feMerge>
         </>
       )}
     </filter>
+  );
+}
+
+/** The enclosing native-paint mask owns alpha; this surface contributes color only. */
+function NativePaintColor() {
+  return (
+    <feColorMatrix in="finished" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1" />
   );
 }

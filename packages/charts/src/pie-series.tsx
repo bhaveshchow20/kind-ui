@@ -23,7 +23,7 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
   "isAnimationActive"
 > & {
-  /** Inset finish on default native sectors; custom shapes and filters keep ownership. */
+  /** Finish on default native sectors; custom shapes and filters keep ownership. */
   material?: PieMaterial | undefined;
 };
 
@@ -54,9 +54,41 @@ function sameCells(previous: Record<string, unknown>[], next: Record<string, unk
 // Motion interpolates only the native sector's angular span; Recharts owns all polar geometry.
 function EntranceSector({ material, ...props }: PieSectorShapeProps & { material: PieMaterial }) {
   const generatedId = useId();
+  const sourceId = `kind-ui-pie-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "_")}-paint`;
+  const maskId = `${sourceId}-alpha`;
   const filterId = `kind-ui-pie-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "_")}-material`;
+  // Unresolved CSS stroke widths retain native rendering rather than receiving guessed bounds.
+  const strokeWidth = props.style?.strokeWidth ?? props.strokeWidth ?? 0;
+  const resolvedStroke = Number(strokeWidth);
+  const markGroup = useRef<SVGGElement>(null);
+  const [paintFilter, setPaintFilter] = useState("none");
+  const [paintStroke, setPaintStroke] = useState(
+    Number.isFinite(resolvedStroke) ? resolvedStroke : 0,
+  );
+  useLayoutEffect(() => {
+    if (
+      material === "plain" ||
+      props.filter !== undefined ||
+      props.style?.filter !== undefined ||
+      !Number.isFinite(resolvedStroke)
+    )
+      return;
+    const path = markGroup.current?.querySelector("path");
+    if (!path) return;
+    const computed = getComputedStyle(path);
+    if (computed.filter !== paintFilter) setPaintFilter(computed.filter);
+    const width = Number.parseFloat(computed.strokeWidth);
+    if (Number.isFinite(width) && width !== paintStroke) setPaintStroke(width);
+  });
   const materialized =
-    material !== "plain" && props.filter === undefined && props.style?.filter === undefined;
+    material !== "plain" &&
+    props.filter === undefined &&
+    props.style?.filter === undefined &&
+    paintFilter === "none" &&
+    Number.isFinite(resolvedStroke);
+  const inset = materialized && material !== "glow";
+  const margin =
+    16 + Math.max(Number.isFinite(resolvedStroke) ? resolvedStroke : 0, paintStroke) / 2;
   const { reveal, options, finish } = use(PieMotion);
   const [progress, setProgress] = useState(reveal ? 0 : 1);
   useLayoutEffect(() => {
@@ -88,42 +120,71 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     ...sector
   } = props;
   return (
-    <>
+    <g ref={markGroup}>
       {materialized && (
         <defs data-kind-ui="pie-material" data-material={material} pointerEvents="none">
           <PieMaterialFilter
             material={material}
             id={filterId}
-            strokeWidth={
-              Number.isFinite(Number(props.strokeWidth))
-                ? Math.max(0, Number(props.strokeWidth))
-                : 0
-            }
+            strokeWidth={Math.max(
+              0,
+              Number.isFinite(resolvedStroke) ? resolvedStroke : 0,
+              paintStroke,
+            )}
             cx={props.cx}
             cy={props.cy}
             radius={props.outerRadius}
             thickness={props.outerRadius - props.innerRadius}
           />
+          {inset && (
+            <mask
+              id={maskId}
+              maskUnits="userSpaceOnUse"
+              x={Math.floor(props.cx - props.outerRadius - margin)}
+              y={Math.floor(props.cy - props.outerRadius - margin)}
+              width={Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
+              height={Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
+              style={{ maskType: "alpha" }}
+            >
+              <use href={`#${sourceId}`} />
+            </mask>
+          )}
         </defs>
       )}
-      <Sector
-        {...sector}
-        {...(materialized ? { filter: `url(#${filterId})` } : {})}
-        {...(onClick ? { onClick } : {})}
-        {...(onMouseDown ? { onMouseDown } : {})}
-        {...(onMouseUp ? { onMouseUp } : {})}
-        {...(onMouseMove ? { onMouseMove } : {})}
-        {...(onMouseOver ? { onMouseOver } : {})}
-        {...(onMouseOut ? { onMouseOut } : {})}
-        {...(onMouseEnter ? { onMouseEnter } : {})}
-        {...(onMouseLeave ? { onMouseLeave } : {})}
-        {...(className !== undefined ? { className } : {})}
-        {...(cornerRadius !== undefined ? { cornerRadius } : {})}
-        data-kind-ui="pie-sector"
-        data-reveal={reveal ? "on" : "off"}
-        endAngle={reveal ? startAngle + (endAngle - startAngle) * progress : endAngle}
-      />
-    </>
+      {materialized && material === "glow" && (
+        <g
+          filter={`url(#${filterId})`}
+          pointerEvents="none"
+          aria-hidden="true"
+          data-kind-ui="pie-halo"
+        >
+          <use href={`#${sourceId}`} />
+        </g>
+      )}
+      <g
+        {...(inset ? { filter: `url(#${filterId})` } : {})}
+        {...(inset ? { mask: `url(#${maskId})` } : {})}
+      >
+        <g id={sourceId}>
+          <Sector
+            {...sector}
+            {...(onClick ? { onClick } : {})}
+            {...(onMouseDown ? { onMouseDown } : {})}
+            {...(onMouseUp ? { onMouseUp } : {})}
+            {...(onMouseMove ? { onMouseMove } : {})}
+            {...(onMouseOver ? { onMouseOver } : {})}
+            {...(onMouseOut ? { onMouseOut } : {})}
+            {...(onMouseEnter ? { onMouseEnter } : {})}
+            {...(onMouseLeave ? { onMouseLeave } : {})}
+            {...(className !== undefined ? { className } : {})}
+            {...(cornerRadius !== undefined ? { cornerRadius } : {})}
+            data-kind-ui="pie-sector"
+            data-reveal={reveal ? "on" : "off"}
+            endAngle={reveal ? startAngle + (endAngle - startAngle) * progress : endAngle}
+          />
+        </g>
+      </g>
+    </g>
   );
 }
 

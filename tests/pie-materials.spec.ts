@@ -1,6 +1,6 @@
 import { expect, type Locator, test } from "@playwright/test";
 
-const url = "http://127.0.0.1:4180";
+const url = process.env.KIND_UI_PIE_URL ?? "http://127.0.0.1:4180";
 const finishes = ["plain", "paper", "clay", "glow"] as const;
 const mark = '[data-kind-ui="pie-sector"]';
 async function geometry(chart: Locator) {
@@ -59,24 +59,27 @@ test("packed finishes keep native geometry, zero/tiny/single, rings, visibility 
   }
 });
 
-test("packed inset finishes retain decoded native alpha for translucent gradients and transparent fills", async ({
+test("packed finishes retain decoded native body alpha for translucent gradients and transparent fills", async ({
   page,
 }, info) => {
-  for (const paint of ["alpha", "alpha&gradient", "transparent"]) {
+  for (const paint of ["opaque", "alpha", "alpha&gradient", "transparent"]) {
     await page.goto(`${url}/?oracle&${paint}`);
     const proof = page.getByRole("region", { name: "Continuity proof" });
     const chart = proof.getByRole("application", { name: "Kind continuity" });
     await page.addStyleTag({
-      content: 'html,body,section,[data-kind-ui="root"] {background:transparent !important;}',
+      content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
     });
     // Isolate one native sector so alpha is measured without adjacent paint or page content.
     await page.addStyleTag({
       content:
-        ".recharts-wrapper * {visibility:hidden;} [data-alpha-proof] {visibility:visible !important;}",
+        '[data-kind-ui="pie-sector"] {visibility:hidden;} [data-alpha-proof] {visibility:visible !important;}',
     });
     const target = chart.locator(mark).first();
     await target.evaluate((n) => n.setAttribute("data-alpha-proof", ""));
-    const baseline = await chart.screenshot({ omitBackground: true });
+    const baseline = await chart.screenshot({
+      omitBackground: true,
+      path: info.outputPath(`native-${paint.replaceAll("&", "-")}.png`),
+    });
     for (const finish of finishes.slice(1)) {
       await proof.getByLabel("Oracle finish").selectOption(finish);
       await chart
@@ -120,7 +123,7 @@ test("packed inset finishes retain decoded native alpha for translucent gradient
       );
       expect(difference.bodyMax).toBeLessThanOrEqual(1);
       expect(difference.exteriorMax).toBeLessThanOrEqual(
-        finish === "glow" && paint !== "transparent" ? 60 : 1,
+        finish === "glow" && paint !== "transparent" ? (paint === "opaque" ? 96 : 40) : 1,
       );
       expect(difference.painted > 0).toBe(paint !== "transparent");
     }
@@ -138,6 +141,19 @@ for (const owner of ["filter", "style-filter"])
         await node.evaluate((n) => n.getAttribute("filter") ?? (n as SVGElement).style.filter),
       ).toContain("host-filter");
   });
+
+test("packed stylesheet filter retains consumer ownership", async ({ page }) => {
+  await page.goto(`${url}/?oracle&material=clay&css-filter`);
+  const chart = page.getByRole("application", { name: "Kind continuity" });
+  await expect(chart.locator(mark)).toHaveCount(2);
+  await expect(chart.locator('[data-kind-ui="pie-material"]')).toHaveCount(0);
+  expect(
+    await chart
+      .locator(mark)
+      .first()
+      .evaluate((node) => getComputedStyle(node).filter),
+  ).toBe("grayscale(1)");
+});
 
 test("packed custom shape ownership and repeated interrupted/reduced motion across finishes", async ({
   page,
@@ -192,7 +208,9 @@ test("actual recipes expose independent materials and preserve selection/totals 
   await page.getByLabel("Material", { exact: true }).first().selectOption("clay");
   await page.getByLabel("Material", { exact: true }).nth(1).selectOption("paper");
   await charts.first().locator(mark).first().click();
-  await expect(page.getByRole("status").first()).toContainText("Selected:");
+  await expect(page.locator("article").first().locator("p[role=status]")).toContainText(
+    "Selected:",
+  );
   await page.screenshot({
     path: info.outputPath("pie-material-recipes-desktop.png"),
     fullPage: true,
@@ -203,6 +221,83 @@ test("actual recipes expose independent materials and preserve selection/totals 
     .toBeTruthy();
   await page.screenshot({
     path: info.outputPath("pie-material-recipes-phone.png"),
+    fullPage: true,
+  });
+});
+
+test("material filter includes explicit native thick stroke and meaningful visual finishes", async ({
+  page,
+}, info) => {
+  await page.goto(`${url}/?oracle&thick`);
+  const proof = page.getByRole("region", { name: "Continuity proof" });
+  const chart = proof.getByRole("application", { name: "Kind continuity" });
+  await proof.getByRole("button", { name: "Scenario single", exact: true }).click();
+  const native = await geometry(chart);
+  for (const finish of finishes.slice(1)) {
+    await proof.getByLabel("Oracle finish").selectOption(finish);
+    await expect
+      .poll(async () => JSON.stringify(await geometry(chart)) === JSON.stringify(native))
+      .toBeTruthy();
+    const bounds = await chart
+      .locator('[data-kind-ui="pie-material"] filter')
+      .first()
+      .evaluate((n) => ({
+        x: Number(n.getAttribute("x")),
+        width: Number(n.getAttribute("width")),
+      }));
+    // cx150, outerRadius110, explicit stroke reaches x10..290; halo gets another16px.
+    expect(bounds.x).toBeLessThanOrEqual(10);
+    expect(bounds.x + bounds.width).toBeGreaterThanOrEqual(290);
+  }
+  await page.goto(`${url}/?oracle&css-stroke&material=clay`);
+  const styledChart = page.getByRole("application", { name: "Kind continuity" });
+  await expect
+    .poll(async () =>
+      styledChart
+        .locator('[data-kind-ui="pie-material"] filter')
+        .first()
+        .evaluate((n) => Number(n.getAttribute("x"))),
+    )
+    .toBeLessThanOrEqual(10);
+  await page.goto(`${url}/?gallery`);
+  const plain = await page
+    .getByRole("application", { name: "plain pink pie 300", exact: true })
+    .screenshot();
+  for (const finish of finishes.slice(1)) {
+    const bytes = await page
+      .getByRole("application", { name: `${finish} pink pie 300`, exact: true })
+      .screenshot({ path: info.outputPath(`${finish}-visual.png`) });
+    const changed = await page.evaluate(
+      async (pngs) => {
+        const pixels = await Promise.all(
+          pngs.map(async (png) => {
+            const img = new Image();
+            img.src = `data:image/png;base64,${png}`;
+            await img.decode();
+            const c = document.createElement("canvas");
+            c.width = img.width;
+            c.height = img.height;
+            const ctx = c.getContext("2d");
+            if (!ctx) throw Error("Missing context");
+            ctx.drawImage(img, 0, 0);
+            return ctx.getImageData(0, 0, c.width, c.height).data;
+          }),
+        );
+        const a = pixels[0],
+          b = pixels[1];
+        if (!a || !b) throw Error("No pixels");
+        let changed = 0;
+        for (let i = 0; i < a.length; i += 4)
+          if (Math.max(...[0, 1, 2].map((c) => Math.abs((a[i + c] ?? 0) - (b[i + c] ?? 0)))) > 8)
+            changed++;
+        return changed;
+      },
+      [plain.toString("base64"), bytes.toString("base64")],
+    );
+    expect(changed).toBeGreaterThan(500);
+  }
+  await page.screenshot({
+    path: info.outputPath("pie-material-final-gallery.png"),
     fullPage: true,
   });
 });

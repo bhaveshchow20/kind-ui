@@ -347,6 +347,9 @@ function ContinuityHost() {
     outerRadius: 110,
     startAngle: 90,
     endAngle: -270,
+    ...(query.has("css-filter") ? { className: "host-owned-filter" } : {}),
+    ...(query.has("css-stroke") ? { className: "host-thick-stroke" } : {}),
+    ...(query.has("thick") ? { stroke: "#db6baa", strokeWidth: 60 } : {}),
     ...(gaps ? { paddingAngle: 4, cornerRadius: 8, stroke: "#fff", strokeWidth: 2 } : {}),
   };
   const cells = data.map((row) => (
@@ -368,6 +371,10 @@ function ContinuityHost() {
   ));
   return (
     <section aria-label="Continuity proof">
+      {query.has("css-filter") && <style>{".host-owned-filter {filter: grayscale(1);}"}</style>}
+      {query.has("css-stroke") && (
+        <style>{".host-thick-stroke {stroke: #db6baa; stroke-width: 60px;}"}</style>
+      )}
       <label>
         Oracle finish
         <select
@@ -427,7 +434,11 @@ function ContinuityHost() {
           aria-label="Native oracle"
           style={{ position: "absolute", top: 0, left: 0, visibility: "hidden" }}
         >
-          <Pie {...props} stroke={gaps ? "#fff" : "none"} isAnimationActive={false}>
+          <Pie
+            {...props}
+            stroke={gaps ? "#fff" : query.has("thick") ? "#db6baa" : "none"}
+            isAnimationActive={false}
+          >
             {cells}
           </Pie>
           {rings && (
@@ -435,7 +446,7 @@ function ContinuityHost() {
               {...props}
               innerRadius={115}
               outerRadius={130}
-              stroke={gaps ? "#fff" : "none"}
+              stroke={gaps ? "#fff" : query.has("thick") ? "#db6baa" : "none"}
               isAnimationActive={false}
             >
               {cells}

@@ -275,7 +275,9 @@ sector `filter` or `style.filter`, including Cell overrides, bypasses the built-
 finish on that sector. Native gradients, clipping, IDs and handlers remain available.
 Paper/Clay remain inset. Glow’s decorative halo can overlap adjacent sectors/rings;
 it does not change quantitative geometry or native body alpha. No finish displaces paths.
-Per-sector filter IDs are instance-scoped. Switching finishes during entrance snaps
+Per-sector filter/mask/source IDs are instance-scoped. Native paint masks retain
+Paper/Clay alpha at curved edges; Glow keeps the native body separate from its
+decorative halo. The halo follows the painted footprint, including gradient fades. Switching finishes during entrance snaps
 to final geometry using the existing interruption contract.
 
 Optional CSS variables: `--kind-ui-pie-clay-light`, `--kind-ui-pie-clay-highlight`,
