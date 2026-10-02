@@ -28,6 +28,8 @@ for (const packed of [false, true]) {
             ];
           }),
         );
+      // Screenshots await webfonts; geometry must use the same settled font metrics.
+      await page.evaluate(() => document.fonts.ready);
       const geometry = await capture();
       const plain = (await cells.first().screenshot()).toString("base64");
       const missing = await cells.nth(4).evaluate((node) => {
