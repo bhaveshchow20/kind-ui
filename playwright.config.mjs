@@ -14,6 +14,11 @@ export default defineConfig({
   webServer: [
     {
       command:
+        "npm exec vite preview -- --outDir artifacts/packed-scatter --host 127.0.0.1 --port 4185 --strictPort",
+      url: "http://127.0.0.1:4185",
+    },
+    {
+      command:
         "npm exec vite preview -- --outDir artifacts/packed-combo --host 127.0.0.1 --port 4186 --strictPort",
       url: "http://127.0.0.1:4186/combo.html",
     },

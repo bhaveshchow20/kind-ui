@@ -23,6 +23,10 @@ test("direct and namespace imports expose the same public components", () => {
     "RadialBarLabel",
     "RadialBarSeries",
     "Root",
+    "ScatterChart",
+    "ScatterSeries",
+    "ScatterTooltip",
+    "ScatterTooltipContent",
     "Tooltip",
     "TooltipContent",
   ]);
@@ -157,6 +161,124 @@ test("area composition requires Root and a chart interaction boundary", () => {
     () => render(h(Root, { config }, h(Chart.AreaSeries, { dataKey: "count" }))),
     /inside LineChart/,
   );
+});
+
+const scatterContent = (payload, extra = {}, root = {}) =>
+  render(
+    h(
+      Root,
+      {
+        config: {
+          alpha: { label: "Alpha", color: "purple" },
+          x: { label: "Latency", color: "gray", formatValue: (v) => `${v} ms` },
+        },
+        ...root,
+      },
+      h(Chart.ScatterTooltipContent, {
+        tooltip: tooltip(payload, extra),
+        pointLabel: (row) => row.id,
+      }),
+    ),
+  );
+test("scatter dimensions keep point identity, signed and zero values, native units and formatters", () => {
+  const payload = [
+    entry(0, { dataKey: "x", graphicalItemId: "alpha", payload: { id: "point-a" } }),
+    entry(-8, {
+      dataKey: "y",
+      name: "Change",
+      unit: "%",
+      graphicalItemId: "alpha",
+      payload: { id: "point-a" },
+    }),
+  ];
+  const html = scatterContent(payload);
+  assert.match(html, /point-a/);
+  assert.match(html, /Latency/);
+  assert.match(html, /0 ms/);
+  assert.match(html, /-8%/);
+  assert.doesNotMatch(html, /Monday/);
+  assert.match(
+    scatterContent(payload, { formatter: (v, name) => [`${v} units`, name] }),
+    /0 units/,
+  );
+  assert.match(scatterContent(payload), /role="status"/);
+  assert.doesNotMatch(scatterContent(payload, {}, { visibleSeries: [] }), /chart-tooltip/);
+  assert.match(scatterContent(payload, {}, { visibleSeries: ["alpha"] }), /0 ms/);
+});
+test("scatter default content does not fabricate omitted dimensions or coerce missing into zero", () => {
+  assert.doesNotMatch(
+    scatterContent([
+      entry(null, { dataKey: "x", graphicalItemId: "alpha", payload: { id: "missing" } }),
+    ]),
+    /chart-tooltip/,
+  );
+  const html = scatterContent([
+    entry(1, { dataKey: "x", graphicalItemId: "alpha", payload: { id: "missing-size" } }),
+    entry(null, { dataKey: "y", graphicalItemId: "alpha", payload: { id: "missing-size" } }),
+  ]);
+  assert.match(html, /No data/);
+  assert.doesNotMatch(html, /data-dimension="z"/);
+});
+
+test("scatter explicit size mapping recovers zero/missing from raw records and honors custom missing content", () => {
+  const show = (z, dataKey, extra = {}) =>
+    render(
+      h(
+        Root,
+        { config },
+        h(Chart.ScatterTooltipContent, {
+          tooltip: tooltip([
+            entry(2, { dataKey: "x", payload: { size: z } }),
+            entry(3, { dataKey: "y", payload: { size: z } }),
+          ]),
+          zDimension: { dataKey, name: "Volume", unit: " jobs" },
+          ...extra,
+        }),
+      ),
+    );
+  assert.match(show(0, "size"), /0 jobs/);
+  assert.match(show(null, "size"), /No data/);
+  assert.match(show(undefined, "size", { missingValue: "Not measured" }), /Not measured/);
+  assert.match(
+    show(0, (row) => row.size),
+    /0 jobs/,
+  );
+});
+
+test("scatter raw size recovery preserves native nonzero Z after filterNull removes Y", () => {
+  const html = render(
+    h(
+      Root,
+      { config },
+      h(Chart.ScatterTooltipContent, {
+        tooltip: tooltip([
+          entry(7, { dataKey: "x", payload: { size: 60 } }),
+          entry(60, { dataKey: "size", name: "Volume", unit: " jobs", payload: { size: 60 } }),
+        ]),
+        zDimension: { dataKey: "size", name: "Volume", unit: " jobs" },
+      }),
+    ),
+  );
+  assert.equal((html.match(/60 jobs/g) || []).length, 1);
+});
+
+test("scatter nonzero function Z is not duplicated when Recharts wraps the accessor", () => {
+  const original = (row) => row.size;
+  const wrapped = (row) => original(row);
+  const html = render(
+    h(
+      Root,
+      { config },
+      h(Chart.ScatterTooltipContent, {
+        tooltip: tooltip([
+          entry(7, { dataKey: "x", payload: { size: 60 } }),
+          entry(60, { dataKey: wrapped, name: "Volume", unit: " jobs", payload: { size: 60 } }),
+        ]),
+        zDimension: { dataKey: original, name: "Volume", unit: " jobs" },
+      }),
+    ),
+  );
+  assert.equal((html.match(/60 jobs/g) || []).length, 1);
 });
 
 test("category itemKey resolves metadata, zero, formatting and visibility independently of dataKey", () => {
