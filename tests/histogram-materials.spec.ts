@@ -12,33 +12,50 @@ test("packed histogram finishes retain quantitative geometry, Cells, overrides a
   await expect(bins).toHaveCount(4);
   const snapshot = () =>
     bins.evaluateAll((nodes) =>
-      nodes.map((node) =>
-        [
-          "x",
-          "y",
-          "width",
-          "height",
-          "d",
-          "fill",
-          "fill-opacity",
-          "stroke",
-          "stroke-dasharray",
-          "data-count",
-        ].map((key) => node.getAttribute(key)),
-      ),
+      nodes
+        .map((node) =>
+          [
+            "x",
+            "y",
+            "width",
+            "height",
+            "d",
+            "fill",
+            "fill-opacity",
+            "stroke",
+            "stroke-dasharray",
+            "data-count",
+          ].map((key) => node.getAttribute(key)),
+        )
+        .sort((a, b) => Number(a[0]) - Number(b[0])),
     );
   const plain = await snapshot();
   for (const material of finishes) {
     await page.getByRole("button", { name: material, exact: true }).click();
-    expect(await snapshot()).toEqual(plain);
+    expect((await snapshot()).sort()).toEqual([...plain].sort());
+    await expect(page.locator('svg[data-host-ref="yes"]')).toHaveCount(1);
+    const chart = page.getByRole("application", { name: "Histogram proof" });
+    await chart.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator('[data-kind-ui="chart-tooltip"]')).toContainText("per ms");
+    await page.getByRole("button", { name: "Measure", exact: true }).click();
+    const countGeometry = await snapshot();
+    expect(countGeometry.map((bin) => bin[2])).toEqual(plain.map((bin) => bin[2]));
+    await page.getByRole("button", { name: "Resize", exact: true }).click();
+    const resized = await snapshot();
+    expect(Number(resized[2]?.[2]) / Number(resized[1]?.[2])).toBeCloseTo(3, 3);
+    expect(Number(resized[2]?.[3]) / Number(resized[1]?.[3])).toBeCloseTo(3, 3);
+    await page.getByRole("button", { name: "Resize", exact: true }).click();
+    await page.getByRole("button", { name: "Measure", exact: true }).click();
+    expect((await snapshot()).sort()).toEqual([...plain].sort());
     await expect(page.locator("feDisplacementMap")).toHaveCount(0);
     await expect(page.locator('[data-kind-ui="histogram-material"]')).toHaveCount(
-      material === "plain" ? 0 : 1,
+      material === "plain" ? 0 : 4,
     );
     if (material !== "plain")
       await expect(bins.first()).toHaveAttribute("filter", /kind-ui-histogram/);
     for (let i = 0; i < 3; i++) {
-      await bins.nth(1).click();
+      await page.locator(`${marks}[data-lower="0"]`).click();
       await expect(page.getByRole("status", { name: "Clicked" })).toHaveText(
         String(finishes.indexOf(material) * 3 + i + 1),
       );
@@ -51,8 +68,15 @@ test("packed histogram finishes retain quantitative geometry, Cells, overrides a
   for (const override of ["cell-filter", "cell-style", "series-filter", "series-style"]) {
     await page.getByRole("button", { name: override, exact: true }).click();
     if (override.endsWith("style"))
-      await expect(bins.nth(1)).toHaveCSS("filter", /histogram-host-filter/);
-    else await expect(bins.nth(1)).toHaveAttribute("filter", "url(#histogram-host-filter)");
+      await expect(page.locator(`${marks}[data-lower="0"]`)).toHaveCSS(
+        "filter",
+        /histogram-host-filter/,
+      );
+    else
+      await expect(page.locator(`${marks}[data-lower="0"]`)).toHaveAttribute(
+        "filter",
+        "url(#histogram-host-filter)",
+      );
     if (override.startsWith("series"))
       await expect(page.locator('[data-kind-ui="histogram-material"]')).toHaveCount(0);
   }
@@ -66,16 +90,105 @@ test("packed histogram finishes retain quantitative geometry, Cells, overrides a
   );
 });
 
-test("Paper Clay and Glow retain translucent solid and gradient body alpha", async ({
-  page,
-}, info) => {
-  await page.goto(packed);
-  await page.addStyleTag({
-    content: `html, body, section { background: transparent !important; } svg * { visibility: hidden; } ${marks}[data-lower="-2"] { visibility: visible; }`,
+for (const [lower, strokeMode] of [
+  [-2, "normal"],
+  [0, "normal"],
+  [0, "wide-stroke"],
+  [0, "em"],
+  [0, "var"],
+  [0, "css"],
+  [0, "percent"],
+] as const) {
+  test(`Paper Clay and Glow retain Cell ${lower} stroke ${strokeMode} solid and gradient body alpha`, async ({
+    page,
+  }, info) => {
+    await page.goto(
+      strokeMode === "wide-stroke" ? `${packed}/?wide-stroke` : `${packed}/?stroke=${strokeMode}`,
+    );
+    await page.addStyleTag({
+      content: `html, body, section { background: transparent !important; } svg text, .recharts-cartesian-grid, .recharts-reference-line, .recharts-cartesian-axis, .recharts-tooltip-cursor, ${marks} { visibility: hidden; } ${marks}[data-lower="${lower}"] { visibility: visible; }`,
+    });
+    const bin = page.locator(`${marks}[data-lower="${lower}"]`);
+    async function pixels(bytes: Buffer) {
+      return page.evaluate(
+        async (src) => {
+          const img = new Image();
+          img.src = src;
+          await img.decode();
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("No canvas");
+          ctx.drawImage(img, 0, 0);
+          return Array.from(ctx.getImageData(0, 0, img.width, img.height).data);
+        },
+        `data:image/png;base64,${bytes.toString("base64")}`,
+      );
+    }
+    for (const gradient of [false, true]) {
+      if (gradient) await page.getByRole("button", { name: "Gradient", exact: true }).click();
+      await page.getByRole("button", { name: "plain", exact: true }).click();
+      const bounds = await bin.evaluate((node) => ({
+        x: Number(node.getAttribute("x")),
+        y: Number(node.getAttribute("y")),
+        width: Number(node.getAttribute("width")),
+        height: Number(node.getAttribute("height")),
+      }));
+      const chart = page.getByRole("application", { name: "Histogram proof" });
+      const chartBounds = await chart.boundingBox();
+      if (!chartBounds) throw new Error("No chart bounds");
+      const pixelWidth = Math.ceil(chartBounds.x + chartBounds.width) - Math.floor(chartBounds.x);
+      const plain = await pixels(await chart.screenshot({ omitBackground: true }));
+      for (const material of ["paper", "clay", "glow"] as const) {
+        await page.getByRole("button", { name: material, exact: true }).click();
+        const finished = await pixels(
+          await chart.screenshot({
+            omitBackground: true,
+            path: info.outputPath(`${material}-${gradient ? "gradient" : "solid"}.png`),
+          }),
+        );
+        expect(finished.length).toBe(plain.length);
+        let delta = 0,
+          rgb = 0,
+          samples = 0;
+        for (let i = 0; i < plain.length; i += 4) {
+          const pixel = i / 4;
+          const px = pixel % pixelWidth;
+          const py = Math.floor(pixel / pixelWidth);
+          const interior =
+            px > bounds.x + 3 &&
+            px < bounds.x + bounds.width - 3 &&
+            py > bounds.y + 3 &&
+            py < bounds.y + bounds.height - 3;
+          if ((plain[i + 3] ?? 0) > 0 || interior)
+            delta = Math.max(delta, Math.abs((plain[i + 3] ?? 0) - (finished[i + 3] ?? 0)));
+          if ((plain[i + 3] ?? 0) > 40) {
+            rgb +=
+              Math.abs((plain[i] ?? 0) - (finished[i] ?? 0)) +
+              Math.abs((plain[i + 1] ?? 0) - (finished[i + 1] ?? 0)) +
+              Math.abs((plain[i + 2] ?? 0) - (finished[i + 2] ?? 0));
+            samples += 3;
+          }
+        }
+        expect(delta).toBeLessThanOrEqual(1);
+        expect(rgb / samples).toBeGreaterThan(0.5);
+      }
+    }
   });
-  const bin = page.locator(`${marks}[data-lower="-2"]`);
-  async function pixels(bytes: Buffer) {
-    return page.evaluate(
+}
+
+test("fully transparent Cells produce no material-created paint", async ({ page }) => {
+  await page.goto(`${packed}/?transparent`);
+  await page.addStyleTag({
+    content: `html, body, section { background: transparent !important; } svg text, .recharts-cartesian-grid, .recharts-reference-line, .recharts-cartesian-axis, .recharts-tooltip-cursor, ${marks} { visibility: hidden; } ${marks}[data-lower="0"] { visibility: visible; }`,
+  });
+  for (const material of finishes) {
+    await page.getByRole("button", { name: material, exact: true }).click();
+    const bytes = await page
+      .locator(`${marks}[data-lower="0"]`)
+      .screenshot({ omitBackground: true });
+    const alpha = await page.evaluate(
       async (src) => {
         const img = new Image();
         img.src = src;
@@ -86,41 +199,13 @@ test("Paper Clay and Glow retain translucent solid and gradient body alpha", asy
         const ctx = canvas.getContext("2d");
         if (!ctx) throw new Error("No canvas");
         ctx.drawImage(img, 0, 0);
-        return Array.from(ctx.getImageData(0, 0, img.width, img.height).data);
+        return Array.from(ctx.getImageData(0, 0, img.width, img.height).data).filter(
+          (_, i) => i % 4 === 3,
+        );
       },
       `data:image/png;base64,${bytes.toString("base64")}`,
     );
-  }
-  for (const gradient of [false, true]) {
-    if (gradient) await page.getByRole("button", { name: "Gradient", exact: true }).click();
-    await page.getByRole("button", { name: "plain", exact: true }).click();
-    const plain = await pixels(await bin.screenshot({ omitBackground: true }));
-    for (const material of ["paper", "clay", "glow"] as const) {
-      await page.getByRole("button", { name: material, exact: true }).click();
-      const finished = await pixels(
-        await bin.screenshot({
-          omitBackground: true,
-          path: info.outputPath(`${material}-${gradient ? "gradient" : "solid"}.png`),
-        }),
-      );
-      expect(finished.length).toBe(plain.length);
-      let delta = 0,
-        rgb = 0,
-        samples = 0;
-      for (let i = 0; i < plain.length; i += 4) {
-        if ((plain[i + 3] ?? 0) > 0)
-          delta = Math.max(delta, Math.abs((plain[i + 3] ?? 0) - (finished[i + 3] ?? 0)));
-        if ((plain[i + 3] ?? 0) > 40) {
-          rgb +=
-            Math.abs((plain[i] ?? 0) - (finished[i] ?? 0)) +
-            Math.abs((plain[i + 1] ?? 0) - (finished[i + 1] ?? 0)) +
-            Math.abs((plain[i + 2] ?? 0) - (finished[i + 2] ?? 0));
-          samples += 3;
-        }
-      }
-      expect(delta).toBeLessThanOrEqual(1);
-      expect(rgb / samples).toBeGreaterThan(0.5);
-    }
+    expect(alpha.every((value) => value === 0)).toBe(true);
   }
 });
 
@@ -158,9 +243,9 @@ test("four real finishes retain unequal density rectangles on desktop and phone"
     await page.goto("/histograms.html?materials");
     await expect(page.locator(marks)).toHaveCount(12);
     const filters = page.locator('[data-kind-ui="histogram-material"] filter');
-    await expect(filters).toHaveCount(3);
+    await expect(filters).toHaveCount(9);
     const ids = await filters.evaluateAll((nodes) => nodes.map((node) => node.id));
-    expect(new Set(ids).size).toBe(3);
+    expect(new Set(ids).size).toBe(9);
     const geometry = await page
       .locator("article")
       .evaluateAll((nodes) =>
