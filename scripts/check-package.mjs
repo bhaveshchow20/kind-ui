@@ -197,8 +197,10 @@ try {
   console.log(
     "Scatter tarball consumer: guarded public imports, strict NodeNext/Bundler and production build passed",
   );
-  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("heatmap", file);
+  for (const file of ["host.tsx", "main.tsx", "contract.tsx", "index.html"])
+    await copyFixture("heatmap", file);
   await typecheck(["host.tsx", "main.tsx"]);
+  await typecheck(["contract.tsx"]);
   await production("index.html", "packed-heatmap");
   console.log(
     "Heatmap tarball: public composition, strict NodeNext/Bundler and production build passed",

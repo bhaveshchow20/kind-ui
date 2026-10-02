@@ -79,7 +79,7 @@ for (const packed of [false, true]) {
       await page.keyboard.press("Escape");
       await expect(page.getByRole("tooltip")).toHaveCount(0);
     });
-    test("frame materials preserve all quantitative cell fills and dimensions", async ({
+    test("native container styling remains host-owned and preserves quantitative cells", async ({
       page,
     }) => {
       const grid = page.getByRole("grid", { name: "Weekly latency" });
@@ -92,10 +92,16 @@ for (const packed of [false, true]) {
           }),
         );
       const plain = await capture();
-      for (const material of ["paper", "inset", "plain"]) {
-        await page.getByRole("combobox").selectOption(material);
-        expect(await capture()).toEqual(plain);
-      }
+      const chart = grid.locator("..").locator("..").locator("..");
+      await expect(chart).toHaveClass("heatmap-card");
+      await chart.evaluate((node: HTMLElement) => {
+        node.style.backgroundColor = "rgb(250, 246, 240)";
+        node.style.boxShadow = "0 2px 5px #17203314";
+      });
+      await expect(chart).toHaveCSS("background-color", "rgb(250, 246, 240)");
+      expect(await capture()).toEqual(plain);
+      await expect(page.getByRole("combobox")).toHaveCount(0);
+      await expect(page.locator('[data-kind-ui="heatmap"][data-material]')).toHaveCount(0);
     });
     test("phone layout contains overflow and reaches last activity cell", async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
@@ -159,8 +165,6 @@ test("desktop and phone visual evidence with motion enabled and reduced-motion s
   );
   await page.keyboard.press("Escape");
   await page.screenshot({ path: info.outputPath("heatmap-desktop.png"), fullPage: true });
-  await page.getByRole("combobox").selectOption("paper");
-  await page.screenshot({ path: info.outputPath("heatmap-paper-desktop.png"), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: info.outputPath("heatmap-phone.png"), fullPage: true });
   await page.emulateMedia({ reducedMotion: "reduce" });

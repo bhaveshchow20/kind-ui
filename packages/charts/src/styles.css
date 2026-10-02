@@ -120,20 +120,6 @@
 @layer kind-ui {
   [data-kind-ui="heatmap"] {
     --heatmap-missing: #e5e7eb;
-    padding: 1rem;
-    border: 1px solid var(--border, #d1d5db);
-    border-radius: 1rem;
-    color: var(--foreground, #172033);
-    background: var(--card, white);
-  }
-  [data-kind-ui="heatmap"][data-material="paper"] {
-    box-shadow:
-      0 2px 0 #d6d0c4,
-      0 8px 20px #1720330d;
-    border-color: #d6d0c4;
-  }
-  [data-kind-ui="heatmap"][data-material="inset"] {
-    box-shadow: inset 0 2px 5px #17203314;
   }
   [data-kind-ui="heatmap-scroll"] {
     container-type: inline-size;

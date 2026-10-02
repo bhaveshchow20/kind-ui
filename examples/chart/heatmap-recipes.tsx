@@ -7,7 +7,6 @@ import {
   type HeatmapDatum,
   HeatmapGrid,
   HeatmapLegend,
-  type HeatmapMaterial,
   HeatmapTooltip,
 } from "@kind-ui/charts";
 import { useState } from "react";
@@ -65,7 +64,6 @@ function ActivityCell({ cell }: HeatmapCellContentProps) {
   return <span aria-hidden="true">{cell.value === null ? "—" : ""}</span>;
 }
 export function HeatmapRecipes() {
-  const [material, setMaterial] = useState<HeatmapMaterial>("plain");
   const [reversed, setReversed] = useState(false);
   const [updated, setUpdated] = useState(false);
   const [empty, setEmpty] = useState(false);
@@ -80,17 +78,6 @@ export function HeatmapRecipes() {
         </p>
       </header>
       <nav className="heatmaps-controls" aria-label="Heatmap controls">
-        <label>
-          Frame{" "}
-          <select
-            value={material}
-            onChange={(event) => setMaterial(event.target.value as HeatmapMaterial)}
-          >
-            <option value="plain">Plain</option>
-            <option value="paper">Paper frame</option>
-            <option value="inset">Inset frame</option>
-          </select>
-        </label>
         <label>
           <input
             type="checkbox"
@@ -135,7 +122,7 @@ export function HeatmapRecipes() {
           scale={signed}
           formatValue={(value) => `${value > 0 ? "+" : ""}${value}`}
           missingLabel="No sample"
-          material={material}
+          className="heatmap-card"
           animate={motion}
         >
           <HeatmapGrid
@@ -174,7 +161,7 @@ export function HeatmapRecipes() {
           columns={weeks}
           data={activity}
           scale={counts}
-          material={material}
+          className="heatmap-card"
           animate={motion}
           formatValue={(value) => `${value} deployments`}
           missingLabel="Not yet observed"
@@ -189,8 +176,8 @@ export function HeatmapRecipes() {
         </HeatmapChart>
         <p className="technical">
           The native table scrolls inside its card on small screens. Every cell, including zero and
-          missing observations, remains reachable. Frame materials leave quantitative colors opaque
-          and unchanged.
+          missing observations, remains reachable. Numeric cell colors remain opaque and match the
+          legend.
         </p>
       </section>
       <footer>

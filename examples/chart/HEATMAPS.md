@@ -4,7 +4,7 @@ Run `npm run dev:chart` and open `/heatmaps.html`. The latency matrix shows sign
 
 Native table layout keeps each row/column category at equal size. Small screens scroll within the card rather than compressing cells or overflowing the page. Arrow keys navigate cells, Home/End navigate the row, and Ctrl+Home/End reach the grid corners. Escape dismisses the tooltip, and Tab leaves the grid in one stop. Tooltip content is an in-flow readout, avoiding viewport-edge placement. Expand the data disclosure for a separate native static table.
 
-The frame selector offers plain, paper and inset frames. These are frame treatments only: cell fills remain the exact scale output and cell size remains unchanged. No clay, glow, transparent overlay or textured quantitative cells are claimed. Missing cells have a separate patterned fill and explicit text label.
+The example card uses consumer-owned CSS through the native `className` prop. Heatmap exposes no material prop, material type or finish selector. Paper, raised matte Clay and Glow mark treatments remain a separate explicit foundation backlog item; they are not implemented or claimed complete. Numeric cell fills remain the exact scale output. Missing cells have a separate patterned fill and explicit text label.
 
 ## Renderer research
 
@@ -14,4 +14,4 @@ The keyboard contract follows the [WAI-ARIA data grid pattern](https://www.w3.or
 
 ## Verification
 
-`npm run check` includes public model/scale/server-rendered component tests, repeated against the actual installed tarball, strict NodeNext and Bundler consumer checks, production consumer build, and desktop/narrow browser interactions against both workspace examples and packed public imports. `tests/heatmaps.spec.ts` records actual desktop, paper-frame and phone screenshots. The packed fixture adds constant-zero, missing-to-zero, native refs and event cancellation checks.
+`npm run check` includes public model/scale/server-rendered component tests, repeated against the actual installed tarball, strict NodeNext and Bundler consumer checks, production consumer build, and desktop/narrow browser interactions against both workspace examples and packed public imports. `tests/heatmaps.spec.ts` records actual desktop and phone screenshots. The packed fixture adds constant-zero, missing-to-zero, native refs and event cancellation checks.

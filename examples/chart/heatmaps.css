@@ -109,3 +109,11 @@ button {
     gap: 12px;
   }
 }
+
+.heatmap-card {
+  padding: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 1rem;
+  color: #172033;
+  background: white;
+}

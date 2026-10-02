@@ -24,7 +24,6 @@ import {
   type HeatmapScale,
 } from "./heatmap-model.js";
 
-export type HeatmapMaterial = "plain" | "paper" | "inset";
 export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
   HeatmapModelOptions & {
     scale: HeatmapScale;
@@ -32,7 +31,6 @@ export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
     missingLabel?: string;
     /** Animate frame entrance only; quantitative cell fills remain opaque. */
     animate?: boolean;
-    material?: HeatmapMaterial;
   };
 type Context = {
   model: HeatmapModel;
@@ -74,7 +72,6 @@ export function HeatmapChart({
   formatValue = number,
   missingLabel = "Missing",
   animate = false,
-  material = "plain",
   children,
   onPointerLeave,
   ...props
@@ -123,7 +120,6 @@ export function HeatmapChart({
       <div
         {...props}
         data-kind-ui="heatmap"
-        data-material={material}
         onPointerLeave={(event) => {
           onPointerLeave?.(event);
           if (!active) return;
