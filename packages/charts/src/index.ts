@@ -34,6 +34,7 @@ export {
   RadialBarChart,
   type RadialBarChartProps,
 } from "./polar-chart.js";
+export type { PolarMaterial } from "./polar-material.js";
 export {
   RadarSeries,
   type RadarSeriesProps,
