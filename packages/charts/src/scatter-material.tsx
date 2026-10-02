@@ -41,7 +41,7 @@ export function ScatterMaterialSymbol({
               <Symbols
                 cx={props.cx}
                 cy={props.cy}
-                size={props.size}
+                size={props.size ?? 64}
                 {...(props.type !== undefined ? { type: props.type } : {})}
                 {...(props.sizeType !== undefined ? { sizeType: props.sizeType } : {})}
                 fill="#000"
