@@ -61,11 +61,13 @@ test("explicit Cell clip ownership retains native alpha with bounded finish fall
           path: info.outputPath(`${owner}-${material}.png`),
         }),
       );
+      let maxAlphaDifference = 0;
       for (let i = 3; i < plain.length; i += 4)
-        expect(
+        maxAlphaDifference = Math.max(
+          maxAlphaDifference,
           Math.abs((painted[i] ?? 0) - (plain[i] ?? 0)),
-          `${owner} ${material} alpha pixel ${(i - 3) / 4}`,
-        ).toBeLessThanOrEqual(1);
+        );
+      expect(maxAlphaDifference, `${owner} ${material} alpha`).toBeLessThanOrEqual(1);
     }
   }
 });
