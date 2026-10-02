@@ -234,7 +234,7 @@ for (const paint of ["gradient", "solid", "zero"] as const) {
         await mark.evaluate((node) => node.setAttribute("data-alpha-proof", ""));
         if (nativeSpatialControl)
           await mark.evaluate((node, operation) => {
-            const svg = node.ownerSVGElement;
+            const svg = (node as SVGElement).ownerSVGElement;
             if (!svg) throw new Error("No native SVG");
             const filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
             filter.id = "native-alpha-control";
@@ -265,7 +265,7 @@ for (const paint of ["gradient", "solid", "zero"] as const) {
         if (nativeSpatialControl)
           await mark.evaluate((node) => {
             node.removeAttribute("filter");
-            node.ownerSVGElement?.querySelector("#native-alpha-control")?.remove();
+            (node as SVGElement).ownerSVGElement?.querySelector("#native-alpha-control")?.remove();
           });
         return page.evaluate(
           async (src) => {
