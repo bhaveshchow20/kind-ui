@@ -120,3 +120,18 @@ const categoryContent: Chart.TooltipContentProps = {
   itemKey: categoryKey,
 };
 void categoryContent;
+
+const radialLabel: Chart.RadialBarLabelProps = {
+  show: true,
+  fontSize: 12,
+  minFontSize: 9,
+  padding: 2,
+  ref: (node) => {
+    if (node) node.dataset.owner = "consumer";
+    return () => {};
+  },
+};
+void radialLabel;
+// @ts-expect-error Ring fitting requires a numeric pixel font size.
+const invalidRadialLabel: Chart.RadialBarLabelProps = { fontSize: "12px" };
+void invalidRadialLabel;
