@@ -44,6 +44,7 @@ function Content({ active, payload, label }: Partial<TooltipContentProps>) {
   );
 }
 export function BoxHost() {
+  const [mode, setMode] = useState<"mixed" | "equal" | "missing">("mixed");
   const [horizontal, setHorizontal] = useState(false);
   const [reordered, setReordered] = useState(false);
   const [empty, setEmpty] = useState(false);
@@ -60,7 +61,16 @@ export function BoxHost() {
   const markRef = useCallback((node: SVGGElement | null) => {
     if (node) node.dataset.markRef = "yes";
   }, []);
-  const rows = empty ? [] : reordered ? [...data].reverse() : data;
+  const base =
+    mode === "equal"
+      ? ["A", "B"].map((category) => ({
+          category,
+          summary: { lowerWhisker: 5, q1: 5, median: 5, q3: 5, upperWhisker: 5 },
+        }))
+      : mode === "missing"
+        ? data.map((row) => ({ ...row, summary: null }))
+        : data;
+  const rows = empty ? [] : reordered ? [...base].reverse() : base;
   return (
     <section
       aria-label="Packed box plot"
@@ -82,6 +92,12 @@ export function BoxHost() {
           {label}
         </button>
       ))}
+      <button type="button" onClick={() => setMode("equal")}>
+        All equal
+      </button>
+      <button type="button" onClick={() => setMode("missing")}>
+        All missing
+      </button>
       <output aria-label="Events">{events}</output>
       <Chart.Root
         config={{ distribution: { label: "Distribution", color: "#176b69" } }}
@@ -142,6 +158,8 @@ export function BoxHost() {
             >
               {rows.map((row) => (
                 <Cell
+                  strokeWidth={4}
+                  strokeDasharray="4 2"
                   key={row.category}
                   fill={row.category === "Positive" ? "#935b2d" : "#176b69"}
                 />

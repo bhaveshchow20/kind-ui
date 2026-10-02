@@ -14,6 +14,8 @@ test("packed box plots: exact native geometry, domains, composition, null and co
   await expect(chart).toHaveAttribute("data-host-ref", "yes");
   await expect(page.locator(marks)).toHaveCount(3);
   await expect(page.locator(`${marks}[data-mark-ref="yes"]`)).toHaveCount(3);
+  await expect(page.locator(marks).first()).toHaveAttribute("stroke-width", "4");
+  await expect(page.locator(marks).first()).toHaveAttribute("stroke-dasharray", "4 2");
   const measure = async (horizontal = false) =>
     page.locator(marks).evaluateAll(
       (nodes, horizontal) =>
@@ -87,6 +89,13 @@ test("packed box plots: exact native geometry, domains, composition, null and co
   await page.getByRole("button", { name: "Reorder", exact: true }).click();
   const reordered = await measure(true);
   expect(reordered[0]?.outliers).toHaveLength(2);
+  const positive = reordered[0],
+    negative = reordered[2];
+  if (!positive || !negative) throw new Error("Missing reordered groups");
+  const slope = (positive.high - positive.low) / 14;
+  expect(positive.median).toBeCloseTo(positive.low + (8 - 3) * slope, 5);
+  expect(negative.median).toBeCloseTo(positive.low + (-3 - 3) * slope, 5);
+  expect(positive.center).toBeLessThan(negative.center);
   await page.getByRole("button", { name: "Custom", exact: true }).click();
   await expect(page.locator('[data-custom="yes"]')).toHaveCount(3);
   await page.getByRole("button", { name: "Distribution", exact: true }).click();
@@ -99,6 +108,18 @@ test("packed box plots: exact native geometry, domains, composition, null and co
   await page.getByRole("button", { name: "Empty", exact: true }).click();
   await expect(page.locator(marks)).toHaveCount(0);
   await expect(page.locator("tbody tr")).toHaveCount(0);
+  await page.getByRole("button", { name: "Empty", exact: true }).click();
+  await page.getByRole("button", { name: "All equal", exact: true }).click();
+  await expect(page.locator(marks)).toHaveCount(2);
+  const equal = await measure(true);
+  for (const mark of equal) {
+    expect(mark.size).toBe(0);
+    expect(mark.low).toBe(mark.high);
+    expect(Number.isFinite(mark.median)).toBe(true);
+  }
+  await page.getByRole("button", { name: "All missing", exact: true }).click();
+  await expect(page.locator(marks)).toHaveCount(0);
+  await expect(page.locator("tbody tr")).toHaveCount(4);
   expect(errors).toEqual([]);
 });
 

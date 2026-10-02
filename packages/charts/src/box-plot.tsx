@@ -79,6 +79,7 @@ export function BoxPlotMark({
   size,
   orientation = "vertical",
   outlierRadius = 3,
+  strokeWidth = 1.5,
   ...props
 }: BoxPlotMarkProps) {
   const horizontal = orientation === "horizontal";
@@ -99,7 +100,7 @@ export function BoxPlotMark({
       data-kind-ui="box-plot-mark"
       fill="currentColor"
       stroke="currentColor"
-      strokeWidth={1.5}
+      strokeWidth={strokeWidth}
       {...props}
     >
       <line
@@ -201,6 +202,19 @@ function ScaledMark({
     fill: native.fill,
     stroke: native.stroke ?? native.fill,
     fillOpacity: native.fillOpacity,
+    fillRule: native.fillRule,
+    opacity: native.opacity,
+    strokeOpacity: native.strokeOpacity,
+    strokeWidth: native.strokeWidth,
+    strokeDasharray: native.strokeDasharray,
+    strokeDashoffset: native.strokeDashoffset,
+    strokeLinecap: native.strokeLinecap,
+    strokeLinejoin: native.strokeLinejoin,
+    strokeMiterlimit: native.strokeMiterlimit,
+    vectorEffect: native.vectorEffect,
+    color: native.color,
+    className: native.className,
+    style: native.style,
     filter: native.filter,
     ...markProps,
     coordinates: { lowerWhisker, q1, median, q3, upperWhisker, outliers: outliers as number[] },
@@ -227,7 +241,9 @@ export function BoxPlotSeries<Row extends object = Record<string, unknown>>({
 }: BoxPlotSeriesProps<Row>) {
   const read = useCallback(
     (row: Row) =>
-      validateBoxPlotSummary(typeof dataKey === "function" ? dataKey(row) : row[dataKey]),
+      row == null
+        ? null
+        : validateBoxPlotSummary(typeof dataKey === "function" ? dataKey(row) : row[dataKey]),
     [dataKey],
   );
   const extent = useCallback(
