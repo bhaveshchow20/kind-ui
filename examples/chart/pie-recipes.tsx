@@ -34,8 +34,8 @@ export function Allocation({ donut = false }: { donut?: boolean }) {
         />{" "}
         Animate
       </label>
-      <label>
-        Material{" "}
+      <label style={{ display: "inline-flex", gap: 6, marginInlineStart: 12 }}>
+        Material
         <select
           aria-label="Material"
           value={material}
