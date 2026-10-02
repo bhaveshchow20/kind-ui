@@ -292,6 +292,9 @@ function Custom(point: ScatterShapeProps) {
 }
 export function ScatterMaterialHost() {
   const [defaults, setDefaults] = useState(0);
+  const [activeOwner, setActiveOwner] = useState(0);
+  const [holes, setHoles] = useState(false);
+  const [strokeOnly, setStrokeOnly] = useState(false);
   const [subpixel, setSubpixel] = useState(false);
   const [material, setMaterial] = useState<Chart.ScatterMaterial>("plain");
   const [animate, setAnimate] = useState(true);
@@ -318,8 +321,11 @@ export function ScatterMaterialHost() {
       {values.map((p, i) => (
         <Cell
           key={p.id}
-          fill={gradient ? "url(#alpha-paint)" : i === 3 ? "#169b83" : paint}
-          {...(i === 3 ? { cx: 300, cy: 150, size: 16, sizeType: "diameter", type: "square" } : {})}
+          fill={strokeOnly ? "none" : gradient ? "url(#alpha-paint)" : i === 3 ? "#169b83" : paint}
+          stroke={strokeOnly ? paint : "none"}
+          strokeOpacity={0.35}
+          strokeWidth={strokeOnly ? 1.5 : 0}
+          {...(i === 3 ? { cx: 180, cy: 150, size: 16, sizeType: "diameter", type: "square" } : {})}
           fillOpacity={i === 4 ? 0 : 0.35}
           opacity={0.8}
           style={{ opacity: 0.6 }}
@@ -331,7 +337,8 @@ export function ScatterMaterialHost() {
   const defs = (
     <defs>
       <linearGradient id="alpha-paint">
-        <stop stopColor={paint} stopOpacity={0.2} />
+        <stop stopColor={paint} stopOpacity={holes ? 0 : 0.2} />
+        {holes && <stop offset="0.5" stopColor={paint} stopOpacity={0} />}
         <stop offset="1" stopColor={paint} stopOpacity={0.9} />
       </linearGradient>
     </defs>
@@ -381,6 +388,17 @@ export function ScatterMaterialHost() {
           Subpixel
         </button>
       </div>
+      <div>
+        <button type="button" onClick={() => setActiveOwner((n) => (n + 1) % 4)}>
+          Active owner
+        </button>
+        <button type="button" onClick={() => setHoles(!holes)}>
+          Transparent gradient
+        </button>
+        <button type="button" onClick={() => setStrokeOnly(!strokeOnly)}>
+          Stroke only
+        </button>
+      </div>
       <output aria-label="Clicks">{clicks}</output>
       <Chart.Root
         config={{ marks: { label: "Marks", color: paint } }}
@@ -401,6 +419,13 @@ export function ScatterMaterialHost() {
             data={values}
             seriesKey="marks"
             {...(nativeShape !== undefined ? { shape: nativeShape, activeShape: nativeShape } : {})}
+            {...(activeOwner === 1
+              ? { activeShape: Custom }
+              : activeOwner === 2
+                ? { activeShape: <Symbols type="square" data-custom="active-element" /> }
+                : activeOwner === 3
+                  ? { activeShape: { fill: "red" } }
+                  : {})}
             onClick={() => setClicks((n) => n + 1)}
           >
             {cells}

@@ -29,9 +29,70 @@ export function ScatterMaterialSymbol({
   const relief = Math.min(3, span * 0.17);
   const soft = Math.min(2, span * 0.1);
   const halo = Math.min(1.8, span * 0.065);
+  const stroke = Number(props.style?.strokeWidth ?? props.strokeWidth ?? 0);
+  const extent = span * 3 + (Number.isFinite(stroke) ? Math.abs(stroke) : 0);
   return (
     <>
       <defs data-kind-ui="scatter-material" data-material={material} pointerEvents="none">
+        {material === "glow" && (
+          <>
+            <clipPath id={`${id}-geometry`} clipPathUnits="userSpaceOnUse">
+              {/* Native Symbols supplies the exact geometry, independently of transparent paint. */}
+              <Symbols
+                cx={props.cx}
+                cy={props.cy}
+                size={props.size}
+                {...(props.type !== undefined ? { type: props.type } : {})}
+                {...(props.sizeType !== undefined ? { sizeType: props.sizeType } : {})}
+                fill="#000"
+                stroke="#000"
+                strokeWidth={props.strokeWidth ?? 0}
+              />
+            </clipPath>
+            <mask
+              id={`${id}-outside`}
+              maskUnits="userSpaceOnUse"
+              x={(props.cx ?? 0) - extent}
+              y={(props.cy ?? 0) - extent}
+              width={extent * 2}
+              height={extent * 2}
+            >
+              <rect
+                x={(props.cx ?? 0) - extent}
+                y={(props.cy ?? 0) - extent}
+                width={extent * 2}
+                height={extent * 2}
+                fill="#fff"
+              />
+              <rect
+                x={(props.cx ?? 0) - extent}
+                y={(props.cy ?? 0) - extent}
+                width={extent * 2}
+                height={extent * 2}
+                fill="#000"
+                clipPath={`url(#${id}-geometry)`}
+              />
+            </mask>
+            <filter
+              id={`${id}-halo`}
+              x={-1}
+              y={-1}
+              width={3}
+              height={3}
+              filterUnits="objectBoundingBox"
+              primitiveUnits="userSpaceOnUse"
+              colorInterpolationFilters="sRGB"
+            >
+              <feComponentTransfer in="SourceAlpha" result="painted">
+                <feFuncA type="linear" slope={100000} />
+              </feComponentTransfer>
+              <feGaussianBlur in="SourceGraphic" stdDeviation={halo} result="halo" />
+              <feFlood floodOpacity="var(--kind-ui-scatter-glow-opacity, 0.65)" result="strength" />
+              <feComposite in="halo" in2="strength" operator="in" result="softHalo" />
+              <feComposite in="softHalo" in2="painted" operator="out" />
+            </filter>
+          </>
+        )}
         <filter
           id={id}
           x={-1}
@@ -113,11 +174,6 @@ export function ScatterMaterialSymbol({
             </>
           ) : (
             <>
-              <feGaussianBlur in="SourceGraphic" stdDeviation={halo} result="halo" />
-              <feFlood floodOpacity="var(--kind-ui-scatter-glow-opacity, 0.65)" result="strength" />
-              <feComposite in="halo" in2="strength" operator="in" result="softHalo" />
-              {/* Exterior light never increases the native body's translucent alpha. */}
-              <feComposite in="softHalo" in2="footprint" operator="out" result="externalLight" />
               <feMorphology in="footprint" operator="erode" radius={rim} result="inside" />
               <feComposite in="footprint" in2="inside" operator="out" result="edge" />
               <feFlood floodColor="var(--kind-ui-scatter-glow-light, #fff)" floodOpacity={0.55} />
@@ -129,15 +185,29 @@ export function ScatterMaterialSymbol({
                 result="bloom"
               />
               <feComposite in="bloom" in2="body" operator="atop" result="luminousBody" />
-              <feMerge>
-                <feMergeNode in="externalLight" />
-                <feMergeNode in="luminousBody" />
-              </feMerge>
             </>
           )}
         </filter>
       </defs>
-      <Symbols {...props} filter={`url(#${id})`} />
+      {material === "glow" ? (
+        <>
+          <use
+            data-kind-ui="scatter-light"
+            href={`#${id}-body`}
+            filter={`url(#${id}-halo)`}
+            mask={`url(#${id}-outside)`}
+            pointerEvents="none"
+            aria-hidden="true"
+            focusable="false"
+            tabIndex={-1}
+          />
+          <g id={`${id}-body`}>
+            <Symbols {...props} filter={`url(#${id})`} />
+          </g>
+        </>
+      ) : (
+        <Symbols {...props} filter={`url(#${id})`} />
+      )}
     </>
   );
 }

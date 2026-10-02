@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "./browser";
 
 const url = "http://127.0.0.1:4185/?materials";
-const paths = ".recharts-scatter-symbol path.recharts-symbols";
+const paths = ".recharts-scatter-symbol path.recharts-symbols:not(defs path)";
 const finishes = ["plain", "paper", "clay", "glow"] as const;
 async function pixels(page: Page, bytes: Buffer) {
   return page.evaluate(
@@ -57,7 +57,7 @@ test("tarball finishes preserve all seven native symbol paths, transforms, paint
       const ids = await finished
         .locator('[data-kind-ui="scatter-material"] filter')
         .evaluateAll((nodes) => nodes.map((n) => n.id));
-      expect(ids.length).toBe(material === "plain" ? 0 : 7);
+      expect(ids.length).toBe(material === "plain" ? 0 : material === "glow" ? 14 : 7);
       expect(new Set(ids).size).toBe(ids.length);
     }
   }
@@ -270,3 +270,88 @@ test("native boolean/default shapes retain finishes and subpixel areas remain na
     }
   }
 });
+
+for (const paint of ["transparent-gradient", "stroke-only"] as const) {
+  test(`Glow excludes native geometric interior for ${paint} paint and retains independently custom active ownership`, async ({
+    page,
+  }, info) => {
+    await page.goto(url);
+    if (paint === "transparent-gradient") {
+      await page.getByRole("button", { name: "Gradient", exact: true }).click();
+      await page.getByRole("button", { name: "Transparent gradient", exact: true }).click();
+    } else await page.getByRole("button", { name: "Stroke only", exact: true }).click();
+    const chart = page.getByRole("application", { name: "Finished symbols" });
+    const mark = chart.locator("path#largest");
+    const box = await mark.boundingBox();
+    if (!box) throw new Error("Missing native symbol");
+    const clip = {
+      x: Math.floor(box.x - 12),
+      y: Math.floor(box.y - 12),
+      width: Math.ceil(box.width + 25),
+      height: Math.ceil(box.height + 25),
+    };
+    await page.addStyleTag({
+      content: `html, body { background: transparent !important; } svg text, svg line, ${paths} { visibility: hidden; } [data-alpha-proof] { visibility: visible !important; }`,
+    });
+    await mark.evaluate((n) => n.setAttribute("data-alpha-proof", ""));
+    const plain = await pixels(page, await page.screenshot({ clip, omitBackground: true }));
+    const saved = await mark.evaluate((n) => {
+      const saved = ["fill", "stroke", "opacity", "fill-opacity", "stroke-opacity", "style"].map(
+        (a) => [a, n.getAttribute(a)],
+      );
+      for (const [a, v] of [
+        ["fill", "#fff"],
+        ["stroke", "#fff"],
+        ["opacity", "1"],
+        ["fill-opacity", "1"],
+        ["stroke-opacity", "1"],
+        ["style", "opacity: 1"],
+      ])
+        n.setAttribute(a ?? "", v ?? "");
+      return saved;
+    });
+    const geometry = await pixels(page, await page.screenshot({ clip, omitBackground: true }));
+    await mark.evaluate((n, saved) => {
+      for (const [a, v] of saved) {
+        if (a) {
+          if (v === null) n.removeAttribute(a);
+          else n.setAttribute(a, v ?? "");
+        }
+      }
+    }, saved);
+    await page.getByRole("button", { name: "glow", exact: true }).click();
+    await mark.evaluate((n) => n.setAttribute("data-alpha-proof", ""));
+    const glow = await pixels(
+      page,
+      await page.screenshot({
+        clip,
+        omitBackground: true,
+        path: info.outputPath(`${paint}-glow.png`),
+      }),
+    );
+    let zeroInterior = 0,
+      exterior = 0;
+    for (let i = 3; i < plain.length; i += 4) {
+      const a = plain[i] ?? 0,
+        g = geometry[i] ?? 0,
+        b = glow[i] ?? 0;
+      if (a > 0 || g === 255) expect(Math.abs(a - b)).toBeLessThanOrEqual(1);
+      if (a === 0 && g === 255) zeroInterior++;
+      if (g === 0 && b > 0) exterior++;
+    }
+    expect(zeroInterior).toBeGreaterThan(0);
+    expect(exterior).toBeGreaterThan(0);
+    await page.addStyleTag({ content: `${paths} { visibility: visible !important; }` });
+    for (const owner of ["function", "element", "object"]) {
+      await page.getByRole("button", { name: "Active owner", exact: true }).click();
+      // The normal native symbol remains finished while an independently custom active renderer owns its pipeline.
+      await page.mouse.move(0, 0);
+      await expect(chart.locator("path#medium")).toHaveAttribute("filter", /kind-ui-scatter/);
+      await chart.locator("path#medium").hover();
+      const active = chart.locator(".recharts-active-shape path:not(defs path)");
+      await expect(active).toHaveCount(1);
+      await expect(active).not.toHaveAttribute("filter");
+      if (owner === "object") await expect(active).toHaveAttribute("fill", "red");
+    }
+  });
+}
