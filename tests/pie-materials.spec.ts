@@ -301,7 +301,7 @@ test("packed controlled style, class, id, geometry and finish refresh native own
       await proof.getByRole("button", { name: "Ownership geometry", exact: true }).click();
     else await proof.getByLabel("Oracle finish").selectOption("paper");
     await proveNative();
-    await ambient.evaluate((node) => node.remove());
+    await ambient.evaluate((node) => node.parentNode?.removeChild(node));
     if (prop === "geometry")
       await proof.getByRole("button", { name: "Ownership geometry", exact: true }).click();
     else await proof.getByLabel("Oracle finish").selectOption("paper");
