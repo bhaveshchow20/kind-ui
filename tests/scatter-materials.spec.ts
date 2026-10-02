@@ -341,6 +341,8 @@ for (const paint of ["transparent-gradient", "stroke-only"] as const) {
     }
     expect(zeroInterior).toBeGreaterThan(0);
     expect(exterior).toBeGreaterThan(0);
+    if (paint === "stroke-only")
+      await page.getByRole("button", { name: "Stroke only", exact: true }).click();
     await page.addStyleTag({ content: `${paths} { visibility: visible !important; }` });
     for (const owner of ["function", "element", "object"]) {
       await page.getByRole("button", { name: "Active owner", exact: true }).click();
