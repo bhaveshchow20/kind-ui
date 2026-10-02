@@ -21,7 +21,7 @@ async function pixels(page: Page, bytes: Buffer) {
   );
 }
 
-test("explicit Cell clip ownership retains native alpha with bounded Glow fallback in both coordinate systems", async ({
+test("explicit Cell clip ownership retains native alpha with bounded finish fallback in both coordinate systems", async ({
   page,
 }, info) => {
   await page.goto(url);
@@ -52,8 +52,7 @@ test("explicit Cell clip ownership retains native alpha with bounded Glow fallba
         expect(await mark.getAttribute(attribute)).toBe(
           await native.locator("path#largest").getAttribute(attribute),
         );
-      if (material === "glow") await expect(mark).not.toHaveAttribute("filter");
-      else await expect(mark).toHaveAttribute("filter", /kind-ui-scatter/);
+      await expect(mark).not.toHaveAttribute("filter");
       const painted = await pixels(
         page,
         await page.screenshot({
@@ -63,7 +62,10 @@ test("explicit Cell clip ownership retains native alpha with bounded Glow fallba
         }),
       );
       for (let i = 3; i < plain.length; i += 4)
-        expect(Math.abs((painted[i] ?? 0) - (plain[i] ?? 0))).toBeLessThanOrEqual(1);
+        expect(
+          Math.abs((painted[i] ?? 0) - (plain[i] ?? 0)),
+          `${owner} ${material} alpha pixel ${(i - 3) / 4}`,
+        ).toBeLessThanOrEqual(1);
     }
   }
 });
