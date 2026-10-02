@@ -6,6 +6,7 @@ export default defineConfig({
   build: {
     rolldownOptions: {
       input: {
+        glass: fileURLToPath(new URL("./glass.html", import.meta.url)),
         presentation: fileURLToPath(new URL("./presentation.html", import.meta.url)),
         example: fileURLToPath(new URL("./index.html", import.meta.url)),
         recipes: fileURLToPath(new URL("./recipes.html", import.meta.url)),
