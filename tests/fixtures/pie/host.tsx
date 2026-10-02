@@ -335,6 +335,8 @@ function ContinuityHost() {
   const [donut, setDonut] = useState(false);
   const [gaps, setGaps] = useState(false);
   const [rings, setRings] = useState(false);
+  const [ownership, setOwnership] = useState("none");
+  const [radius, setRadius] = useState(110);
   const data = useMemo(
     () => cases[scenario].filter((row) => included || row.id !== "beta"),
     [scenario, included],
@@ -344,7 +346,7 @@ function ContinuityHost() {
     dataKey: "value" as const,
     nameKey: "id" as const,
     innerRadius: donut ? 65 : 0,
-    outerRadius: 110,
+    outerRadius: radius,
     startAngle: 90,
     endAngle: -270,
     ...(query.has("css-filter") ? { className: "host-owned-filter" } : {}),
@@ -366,6 +368,17 @@ function ContinuityHost() {
       {...(query.has("style-transform")
         ? { style: { transform: "translate(40px, 0px) scale(.85)" } }
         : {})}
+      {...(query.has("individual-translate") ? { style: { translate: "40px 0" } } : {})}
+      {...(query.has("individual-rotate") ? { style: { rotate: "12deg" } } : {})}
+      {...(query.has("individual-scale") ? { style: { scale: ".85" } } : {})}
+      {...(query.has("css-3d") ? { className: "host-3d" } : {})}
+      {...(query.has("ownership-updates")
+        ? {
+            className: ownership === "class" ? "host-lifecycle-class" : "host-lifecycle",
+            id: ownership === "id" ? `host-owned-${row.id}` : undefined,
+            style: ownership === "style" ? { transform: "translateX(40px)" } : undefined,
+          }
+        : {})}
       {...(query.has("filter") ? { filter: "url(#host-filter)" } : {})}
       {...(query.has("style-filter") ? { style: { filter: "url(#host-filter)" } } : {})}
       fill={
@@ -381,6 +394,24 @@ function ContinuityHost() {
   ));
   return (
     <section aria-label="Continuity proof">
+      {query.has("css-3d") && <style>{".host-3d {transform: translateZ(1px);}"}</style>}
+      {query.has("ownership-updates") && (
+        <>
+          <style>
+            {
+              ".host-lifecycle-class, #host-owned-alpha, #host-owned-beta {transform: translateX(40px);}"
+            }
+          </style>
+          {["style", "class", "id", "none"].map((owner) => (
+            <button key={owner} type="button" onClick={() => setOwnership(owner)}>
+              Ownership {owner}
+            </button>
+          ))}
+          <button type="button" onClick={() => setRadius((value) => (value === 110 ? 100 : 110))}>
+            Ownership geometry
+          </button>
+        </>
+      )}
       {query.has("harmless-css") && <style>{".host-harmless {color: #333;}"}</style>}
       {query.has("css-filter") && <style>{".host-owned-filter {filter: grayscale(1);}"}</style>}
       {query.has("css-transform") && (

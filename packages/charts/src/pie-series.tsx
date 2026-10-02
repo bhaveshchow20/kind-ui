@@ -89,10 +89,17 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     const computedTransform =
       computed.transform === "none" ? new DOMMatrix() : new DOMMatrix(computed.transform);
     const differentTransform = (["a", "b", "c", "d", "e", "f"] as const).some(
-      (key) => Math.abs(attributeTransform[key] - computedTransform[key]) > 0.00001,
+      (key) =>
+        Math.abs(attributeTransform[key] - computedTransform[key]) >
+        0.00001 * Math.max(1, Math.abs(attributeTransform[key]), Math.abs(computedTransform[key])),
     );
     const ownsTransform =
-      differentTransform || (props.style?.transform !== undefined && computed.transform !== "none");
+      differentTransform ||
+      !computedTransform.is2D ||
+      computed.translate !== "none" ||
+      computed.rotate !== "none" ||
+      computed.scale !== "none" ||
+      (props.style?.transform !== undefined && computed.transform !== "none");
     setCssTransformOwned((old) => (old === ownsTransform ? old : ownsTransform));
     if (computed.filter !== paintFilter) setPaintFilter(computed.filter);
     if (computed.clipPath !== paintClip) setPaintClip(computed.clipPath);

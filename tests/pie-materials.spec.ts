@@ -230,6 +230,13 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
     "transform&css-transform",
     "clip&style-transform",
     "clip&css-transform",
+    "individual-translate",
+    "individual-rotate",
+    "individual-scale",
+    "clip&individual-translate",
+    "clip&individual-rotate",
+    "clip&individual-scale",
+    "css-3d",
   ]) {
     await page.goto(`${url}/?oracle&alpha&${override}`);
     const proof = page.getByRole("region", { name: "Continuity proof" });
@@ -256,6 +263,49 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
       expect(await geometry(chart)).toEqual(nativeGeometry);
       expect(await chart.screenshot({ omitBackground: true })).toEqual(native);
     }
+  }
+});
+
+test("packed controlled style, class, id, geometry and finish refresh native ownership", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?oracle&alpha&ownership-updates&material=clay`);
+  const proof = page.getByRole("region", { name: "Continuity proof" });
+  const chart = proof.getByRole("application", { name: "Kind continuity" });
+  const definitions = chart.locator('[data-kind-ui="pie-material"]');
+  const oracle = proof.getByRole("application", { name: "Native oracle", includeHidden: true });
+  await expect(definitions).toHaveCount(2);
+  await page.addStyleTag({
+    content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
+  });
+  const proveNative = async () => {
+    await expect(definitions).toHaveCount(0);
+    expect(await geometry(chart)).toEqual(await geometry(oracle));
+    await proof.getByLabel("Oracle finish").selectOption("plain");
+    const native = await chart.screenshot({ omitBackground: true });
+    await proof.getByLabel("Oracle finish").selectOption("clay");
+    await expect(definitions).toHaveCount(0);
+    expect(await chart.screenshot({ omitBackground: true })).toEqual(native);
+  };
+  for (const prop of ["style", "class", "id"]) {
+    await proof.getByRole("button", { name: `Ownership ${prop}`, exact: true }).click();
+    await proveNative();
+    await proof.getByRole("button", { name: "Ownership none", exact: true }).click();
+    await expect(definitions).toHaveCount(2);
+  }
+  for (const prop of ["geometry", "finish"]) {
+    const ambient = await page.addStyleTag({
+      content: ".host-lifecycle {transform: translateX(40px);}",
+    });
+    if (prop === "geometry")
+      await proof.getByRole("button", { name: "Ownership geometry", exact: true }).click();
+    else await proof.getByLabel("Oracle finish").selectOption("paper");
+    await proveNative();
+    await ambient.evaluate((node) => node.remove());
+    if (prop === "geometry")
+      await proof.getByRole("button", { name: "Ownership geometry", exact: true }).click();
+    else await proof.getByLabel("Oracle finish").selectOption("paper");
+    await expect(definitions).toHaveCount(2);
   }
 });
 
