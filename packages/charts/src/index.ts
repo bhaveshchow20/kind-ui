@@ -12,7 +12,13 @@ export {
 export { type AreaAnimation, AreaChart, type AreaChartProps } from "./area-chart.js";
 export type { AreaMaterial } from "./area-material.js";
 export { AreaSeries, type AreaSeriesProps } from "./area-series.js";
-export { type BarAnimation, BarChart, type BarChartProps } from "./bar-chart.js";
+export {
+  type BarAnimation,
+  BarChart,
+  BarChart as WaterfallChart,
+  type BarChartProps,
+  type BarChartProps as WaterfallChartProps,
+} from "./bar-chart.js";
 export type { BarMaterial } from "./bar-material.js";
 export { BarSeries, type BarSeriesProps } from "./bar-series.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
@@ -62,3 +68,14 @@ export {
 } from "./scatter-tooltip.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 export type { SeriesConfig } from "./types.js";
+export {
+  computeWaterfallData,
+  type WaterfallDatum,
+  type WaterfallEntry,
+} from "./waterfall-data.js";
+export {
+  WaterfallConnectors,
+  type WaterfallConnectorsProps,
+  WaterfallSeries,
+  type WaterfallSeriesProps,
+} from "./waterfall-series.js";

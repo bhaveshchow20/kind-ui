@@ -33,6 +33,10 @@ test("direct and namespace imports expose the same public components", () => {
     "ScatterTooltipContent",
     "Tooltip",
     "TooltipContent",
+    "WaterfallChart",
+    "WaterfallConnectors",
+    "WaterfallSeries",
+    "computeWaterfallData",
     "prepareSankeyData",
   ]);
   assert.equal(Chart.Root, Root);
@@ -347,6 +351,197 @@ test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geomet
       render(h(Chart.RadialBarLabel, { ...props, ...overrides, formatter: undefined })),
       "",
     );
+});
+
+const Icon = () => h("svg", { "data-icon": "task" }, h("title", {}, "Decorative task"));
+const iconConfig = { ...config, count: { ...config.count, icon: Icon } };
+const optionContent = (options = {}, extra = {}) =>
+  render(
+    h(
+      Root,
+      { config: iconConfig },
+      h(TooltipContent, { tooltip: tooltip([entry(0)], extra), ...options }),
+    ),
+  );
+test("tooltip icon takes precedence; hiding decoration preserves value and live feedback", () => {
+  for (const indicator of ["dot", "line", "dashed"]) {
+    const html = optionContent({ indicator });
+    assert.match(html, /aria-hidden="true" data-kind-ui="chart-icon"/);
+    assert.match(html, /data-icon="task"/);
+    assert.doesNotMatch(html, /data-kind-ui="chart-indicator"/);
+    assert.match(html, /0 tasks/);
+  }
+  const hidden = optionContent({ hideIndicator: true, hideLabel: true });
+  assert.doesNotMatch(
+    hidden,
+    /data-kind-ui="chart-icon"|data-kind-ui="chart-indicator"|chart-tooltip-label/,
+  );
+  assert.match(hidden, /role="status"/);
+  assert.match(hidden, /Tasks/);
+  assert.match(hidden, /0 tasks/);
+  assert.doesNotMatch(hidden, /hideLabel=|hideIndicator=|indicator=/);
+});
+test("indicator choices, missing/unknown metadata and header formatters remain independent", () => {
+  for (const indicator of ["dot", "line", "dashed"]) {
+    const html = render(
+      h(Root, { config }, h(TooltipContent, { tooltip: tooltip([entry(0)]), indicator })),
+    );
+    assert.match(html, new RegExp(`data-indicator="${indicator}"`));
+    assert.match(html, /aria-hidden="true"/);
+  }
+  assert.match(content([entry(0)]), /data-indicator="line"/);
+  assert.match(optionContent({}, { labelFormatter: () => "Formatted day" }), /Formatted day/);
+  assert.doesNotMatch(
+    optionContent(
+      { hideLabel: true },
+      {
+        labelFormatter: () => {
+          throw new Error("Hidden heading must not format");
+        },
+      },
+    ),
+    /chart-tooltip-label/,
+  );
+  assert.match(
+    optionContent({}, { formatter: () => ["Formatted zero", "Tuple label"] }),
+    /Tuple label/,
+  );
+  assert.doesNotMatch(optionContent({}, { formatter: () => null }), /chart-tooltip/);
+});
+test("legend icon fallback and composed noninteractive contents retain controlled semantics", () => {
+  const legend = (props = {}, root = {}) =>
+    render(h(Root, { config: iconConfig, ...root }, h(Legend, props)));
+  assert.match(legend(), /data-icon="task"/);
+  assert.doesNotMatch(legend({ hideIcon: true }), /data-icon="task"/);
+  assert.match(legend({ hideIcon: true }), /chart-indicator/);
+  const html = legend(
+    {
+      children: ({ key, label, visible, marker }) =>
+        h("span", {}, marker, `${key}: ${label} ${visible ? "Shown" : "Hidden"}`),
+    },
+    { visibleSeries: [], onVisibleSeriesChange() {} },
+  );
+  assert.match(html, /aria-pressed="false"/);
+  assert.match(html, /count: Tasks Hidden/);
+  assert.equal((html.match(/<button/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /hideIcon=/);
+});
+test("category itemKey resolves icon, formatting, zero and hidden state together", () => {
+  const category = entry(0, { dataKey: "amount", payload: { category: "count" } });
+  const props = {
+    tooltip: tooltip([category]),
+    itemKey: (entry) => entry.payload.category,
+    indicator: "dashed",
+  };
+  const html = render(
+    h(Root, { config: iconConfig, visibleSeries: ["count"] }, h(TooltipContent, props)),
+  );
+  assert.match(html, /data-series="count"/);
+  assert.match(html, /data-icon="task"/);
+  assert.match(html, /0 tasks/);
+  assert.doesNotMatch(
+    render(h(Root, { config: iconConfig, visibleSeries: [] }, h(TooltipContent, props))),
+    /chart-tooltip/,
+  );
+});
+
+test("presentation options preserve unknown native colors and mixed missing/zero entries", () => {
+  const payload = [
+    entry(0, { dataKey: "unknown", name: "Native", color: "rebeccapurple" }),
+    entry(null),
+  ];
+  const markup = render(
+    h(
+      Root,
+      { config: iconConfig },
+      h(TooltipContent, { tooltip: tooltip(payload), indicator: "dashed" }),
+    ),
+  );
+  assert.match(markup, /data-indicator="dashed"/);
+  assert.match(markup, /--kind-ui-chart-indicator-color:rebeccapurple/);
+  assert.match(markup, /data-icon="task"/);
+  assert.match(markup, /No data/);
+  assert.match(markup, />0</);
+  const hidden = render(
+    h(
+      Root,
+      { config: iconConfig },
+      h(TooltipContent, { tooltip: tooltip(payload), hideIndicator: true }),
+    ),
+  );
+  assert.doesNotMatch(hidden, /chart-icon|chart-indicator/);
+  assert.match(hidden, /No data/);
+  assert.match(hidden, />0</);
+});
+
+test("waterfall arithmetic preserves directed endpoints, zero, crossing and checkpoints", () => {
+  const entry = (id, kind, value) => ({
+    id,
+    label: id,
+    kind,
+    ...(kind === "subtotal" ? {} : { value }),
+  });
+  const raw = [
+    entry("start", "start", 10),
+    entry("gain", "delta", 5),
+    entry("loss", "delta", -20),
+    entry("net", "subtotal"),
+    entry("zero", "delta", 0),
+    entry("end", "end", -5),
+  ];
+  const rows = Chart.computeWaterfallData(raw);
+  assert.deepEqual(
+    rows.map((row) => row.range),
+    [
+      [0, 10],
+      [10, 15],
+      [-5, 15],
+      [-5, 0],
+      [-5, -5],
+      [-5, 0],
+    ],
+  );
+  assert.deepEqual(
+    rows.map((row) => row.balance),
+    [10, 15, -5, -5, -5, -5],
+  );
+  assert.equal(rows[2].start, 15);
+  assert.equal(rows[2].end, -5);
+  assert.equal(raw[3].value, undefined);
+  assert.deepEqual(Chart.computeWaterfallData([]), []);
+  assert.equal(Chart.computeWaterfallData([entry("a", "delta", 0)])[0].balance, 0);
+  assert.equal(Chart.computeWaterfallData([entry("a", "delta", 5)], null)[0].range, null);
+});
+test("waterfall missing changes propagate uncertainty and explicit totals recover", () => {
+  const rows = Chart.computeWaterfallData([
+    { id: "a", label: "a", kind: "delta", value: null },
+    { id: "b", label: "b", kind: "delta", value: 5 },
+    { id: "c", label: "c", kind: "subtotal" },
+    { id: "d", label: "d", kind: "total", value: -10 },
+    { id: "e", label: "e", kind: "delta", value: 10 },
+  ]);
+  assert.deepEqual(
+    rows.map((row) => row.range),
+    [null, null, null, [-10, 0], [-10, 0]],
+  );
+  assert.equal(rows[1].value, 5);
+  assert.equal(rows[4].balance, 0);
+});
+test("waterfall rejects invalid values, identities, kinds and overflow", () => {
+  const base = { id: "a", label: "a", kind: "delta", value: 1 };
+  for (const value of [undefined, NaN, Infinity, "1"])
+    assert.throws(() => Chart.computeWaterfallData([{ ...base, value }]));
+  assert.throws(() => Chart.computeWaterfallData([base, base]), /unique/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...base, id: "" }]), /unique/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...base, kind: "other" }]), /kind/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...base, kind: "subtotal" }]), /subtotals/);
+  assert.throws(
+    () => Chart.computeWaterfallData([{ ...base, value: Number.MAX_VALUE }], Number.MAX_VALUE),
+    /overflow/,
+  );
+  assert.throws(() => Chart.computeWaterfallData([], NaN), /initialBalance/);
+  for (const key of ["stackId", "minPointSize", "dataKey", "data"])
+    assert.throws(() => render(h(Chart.WaterfallSeries, { [key]: 0 })), /does not accept/);
 });
 
 const flowData = () => ({

@@ -16,8 +16,16 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `npm exec vite preview -- --outDir artifacts/packed-sankey --host 127.0.0.1 --port ${port(4187)} --strictPort`,
-      url: `http://127.0.0.1:${port(4187)}`,
+      command: `npm exec vite preview -- --outDir artifacts/packed-sankey --host 127.0.0.1 --port ${port(4189)} --strictPort`,
+      url: `http://127.0.0.1:${port(4189)}`,
+    },
+    {
+      command: `npm exec vite preview -- --outDir artifacts/packed-waterfall --host 127.0.0.1 --port ${port(4188)} --strictPort`,
+      url: `http://127.0.0.1:${port(4188)}`,
+    },
+    {
+      command: `npm exec vite preview -- --outDir artifacts/packed-presentation --host 127.0.0.1 --port ${port(4187)} --strictPort`,
+      url: `http://127.0.0.1:${port(4187)}/presentation.html`,
     },
     {
       command: `npm exec vite preview -- --outDir artifacts/packed-scatter --host 127.0.0.1 --port ${port(4185)} --strictPort`,

@@ -28,4 +28,6 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). See [d
 
 No packages are published. MIT © 2026 Bhavesh Chowdhury.
 
+Waterfall technical recipe: open `/waterfalls.html` in the chart example. It uses native numeric floating bars, explicit totals and subtotals, unknown-balance gaps, an accessible data table, and motion enabled by default. See the [Waterfall public contract](packages/charts/README.md#waterfall).
+
 Radar and radial core recipes: open `/polar.html` in the chart example. See [polar recipes](examples/chart/POLAR.md) and the [public component contract](packages/charts/README.md#radar-and-radial-bars).

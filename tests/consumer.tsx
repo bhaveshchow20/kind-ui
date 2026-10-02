@@ -135,3 +135,60 @@ void radialLabel;
 // @ts-expect-error Ring fitting requires a numeric pixel font size.
 const invalidRadialLabel: Chart.RadialBarLabelProps = { fontSize: "12px" };
 void invalidRadialLabel;
+function TaskIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 16 16" />;
+}
+const iconConfig = {
+  count: { label: "Tasks", color: "var(--tasks)", icon: TaskIcon },
+} satisfies SeriesConfig;
+void (
+  <Chart.Root config={iconConfig}>
+    <Chart.Legend hideIcon>
+      {({ key, label, visible, marker }) => (
+        <>
+          {marker}
+          <span data-key={key}>
+            {label}: {visible ? "Shown" : "Hidden"}
+          </span>
+        </>
+      )}
+    </Chart.Legend>
+    <LineChart>
+      <Tooltip
+        content={(tooltip) => (
+          <Chart.TooltipContent
+            tooltip={tooltip}
+            indicator="dashed"
+            hideIndicator
+            hideLabel
+            itemKey={(entry) => String(entry.dataKey)}
+          />
+        )}
+      />
+    </LineChart>
+  </Chart.Root>
+);
+for (const indicator of [
+  "dot",
+  "line",
+  "dashed",
+] satisfies Chart.TooltipContentProps["indicator"][]) {
+  void (
+    <LineChart>
+      <Tooltip
+        content={(tooltip) => <Chart.TooltipContent tooltip={tooltip} indicator={indicator} />}
+      />
+    </LineChart>
+  );
+}
+void (
+  <LineChart>
+    <Tooltip
+      // @ts-expect-error Unsupported decorative marker.
+      content={(tooltip) => <Chart.TooltipContent tooltip={tooltip} indicator="triangle" />}
+    />
+  </LineChart>
+);
+// @ts-expect-error Icons are renderable component types, not arbitrary strings.
+const invalidIcon: SeriesConfig = { count: { label: "Tasks", color: "red", icon: "task" } };
+void invalidIcon;

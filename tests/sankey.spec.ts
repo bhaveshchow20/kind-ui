@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const packed = `http://127.0.0.1:${4187 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
+const packed = `http://127.0.0.1:${4189 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
 
 test("Sankey native widths, labels, pointer and keyboard inspection retain zero", async ({
   page,
