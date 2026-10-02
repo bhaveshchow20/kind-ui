@@ -1,10 +1,21 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "vite";
+import { assertDocumentationContract } from "./documentation-contract.mjs";
 import { assertLineConsumerSource } from "./line-consumer-contract.mjs";
 import { assertPackageContract } from "./package-contract.mjs";
 
@@ -23,6 +34,11 @@ const peerNames = [
 const rootManifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
 assert.equal(rootManifest.private, true, "Workspace must remain private");
 const scratch = await mkdtemp(join(tmpdir(), "kind-ui-package-"));
+const artifactDestination = join(root, "artifacts/package");
+if (process.argv.includes("--keep-artifact")) {
+  // A failed rerun must not leave an earlier artifact marked as validated.
+  await rm(artifactDestination, { recursive: true, force: true });
+}
 function run(command, args, cwd = root) {
   return execFileSync(command, args, {
     cwd,
@@ -35,6 +51,12 @@ function run(command, args, cwd = root) {
   });
 }
 try {
+  run(process.execPath, [
+    "--test",
+    "scripts/package-contract.test.mjs",
+    "scripts/documentation-contract.test.mjs",
+    "scripts/line-consumer-contract.test.mjs",
+  ]);
   const workspacePath = await realpath(root);
   const scratchPath = await realpath(scratch);
   assert.ok(
@@ -47,7 +69,6 @@ try {
       "pack",
       "--workspace",
       "@kind-ui/charts",
-      "--ignore-scripts",
       "--json",
       "--pack-destination",
       scratch,
@@ -93,6 +114,14 @@ try {
   const manifest = JSON.parse(await readFile(join(installed, "package.json"), "utf8"));
   assertPackageContract(
     manifest,
+    packed.files.map((file) => file.path),
+    (await readdir(join(root, "packages/charts/src"), { recursive: true })).filter((file) =>
+      /\.tsx?$/.test(file),
+    ),
+  );
+  assertDocumentationContract(
+    await readFile(join(installed, "README.md"), "utf8"),
+    await readdir(join(root, "examples/chart")),
     packed.files.map((file) => file.path),
   );
   assert.equal(
@@ -331,6 +360,26 @@ try {
   console.log(
     "Packed contents, CSS, license, ESM import, component tests, strict consumers and production styling build passed",
   );
+  if (process.argv.includes("--keep-artifact")) {
+    const destination = artifactDestination;
+    await mkdir(destination, { recursive: true });
+    const tarball = join(scratch, packed.filename);
+    const sha256 = createHash("sha256")
+      .update(await readFile(tarball))
+      .digest("hex");
+    await copyFile(tarball, join(destination, packed.filename));
+    assert.equal(
+      createHash("sha256")
+        .update(await readFile(join(destination, packed.filename)))
+        .digest("hex"),
+      sha256,
+    );
+    await writeFile(
+      join(destination, "validated-artifact.json"),
+      `${JSON.stringify({ filename: packed.filename, sha256, integrity: packed.integrity }, null, 2)}\n`,
+    );
+    console.log(`Validated artifact: ${join(destination, packed.filename)} (SHA-256 ${sha256})`);
+  }
 } finally {
   await rm(scratch, { recursive: true, force: true });
 }
