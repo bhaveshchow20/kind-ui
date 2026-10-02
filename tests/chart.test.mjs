@@ -11,6 +11,7 @@ test("direct and namespace imports expose the same public components", () => {
     "AreaSeries",
     "BarChart",
     "BarSeries",
+    "ComboChart",
     "Legend",
     "LineChart",
     "LineSeries",

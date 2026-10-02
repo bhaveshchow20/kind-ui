@@ -37,7 +37,7 @@ const serverSnapshot = () => true;
 const defaultHover = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } as const;
 
 // Chart layout props may move bars without changing the plot or numeric zero.
-function BarLifecycle({
+export function BarLifecycle({
   layout,
   barGap,
   barCategoryGap,
