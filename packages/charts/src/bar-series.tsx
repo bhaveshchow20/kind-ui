@@ -1,9 +1,13 @@
 "use client";
 
 import { motion } from "motion/react";
-import { type ComponentProps, use, useId, useLayoutEffect, useRef } from "react";
+import { type ComponentProps, use, useCallback, useId, useLayoutEffect, useRef } from "react";
 import {
   Bar,
+  type BarShapeProps,
+  Rectangle,
+  useActiveTooltipDataPoints,
+  useActiveTooltipLabel,
   useChartLayout,
   usePlotArea,
   useXAxisDomain,
@@ -14,11 +18,14 @@ import {
 import { BarMotion } from "./bar-chart.js";
 import { type BarMaterial, BarMaterialFilter } from "./bar-material.js";
 import { useChart } from "./chart-context.js";
-import { useLineInteraction } from "./line-chart.js";
+import { EmphasisMark } from "./emphasis.js";
+import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 
 export type BarSeriesProps = Omit<ComponentProps<typeof Bar>, "isAnimationActive"> & {
   /** Metadata/visibility key, required for controlled function or numeric data keys. */
   seriesKey?: string;
+  /** Stable category identity for numeric domains or independently supplied series rows. */
+  emphasisKey?: ((payload: unknown) => string | number | undefined) | undefined;
   /** Finish on native rectangles; custom shapes and filters retain ownership. */
   material?: BarMaterial | undefined;
 };
@@ -26,6 +33,7 @@ export type BarSeriesProps = Omit<ComponentProps<typeof Bar>, "isAnimationActive
 /** A registered native Bar; axes, shape, cells, labels and handlers stay consumer-owned. */
 export function BarSeries({
   seriesKey,
+  emphasisKey,
   hide,
   fill,
   className,
@@ -34,7 +42,8 @@ export function BarSeries({
   ...props
 }: BarSeriesProps) {
   const { config, visibleSeries } = useChart();
-  const { registerSeries, invalidate } = useLineInteraction();
+  const { registerSeries, invalidate, data, categoryEmphasis, registerCategoryEligibility } =
+    useLineInteraction();
   const { reveal, options, finish } = use(BarMotion);
   const generatedId = useId();
   const id = props.id || generatedId;
@@ -116,6 +125,50 @@ export function BarSeries({
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("BarSeries requires seriesKey for controlled non-string dataKey");
   const color = fill ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
+  const nativeRows =
+    (!("data" in props) &&
+      data?.every((row: unknown) => {
+        if (
+          typeof props.dataKey !== "string" ||
+          typeof row !== "object" ||
+          row === null ||
+          !Object.hasOwn(row, props.dataKey)
+        )
+          return false;
+        const value = (row as Record<string, unknown>)[props.dataKey];
+        return typeof value === "number" && Number.isFinite(value) && value !== baseline;
+      })) ??
+    false;
+  const categoryDomain = horizontal ? yDomain : xDomain;
+  const explicitIdentities = emphasisKey ? data?.map(emphasisKey) : undefined;
+  const semanticCategories = emphasisKey
+    ? explicitIdentities !== undefined &&
+      explicitIdentities.every((key) => key !== undefined) &&
+      new Set(explicitIdentities.map(String)).size === explicitIdentities.length
+    : categoryDomain !== undefined &&
+      categoryDomain.length === data?.length &&
+      categoryDomain.every((value) => typeof value === "string") &&
+      new Set(categoryDomain).size === categoryDomain.length;
+  const eligible =
+    nativeRows &&
+    semanticCategories &&
+    props.shape === undefined &&
+    (props.activeBar === undefined || typeof props.activeBar === "boolean");
+  useLayoutEffect(
+    () => registerCategoryEligibility(id, eligible, effectiveHide),
+    [id, eligible, effectiveHide, registerCategoryEligibility],
+  );
+  const categoryShape = useCallback(
+    (shapeProps: BarShapeProps) => (
+      <CategoryBar
+        {...shapeProps}
+        seriesKey={key}
+        emphasisKey={emphasisKey}
+        axisId={horizontal ? props.yAxisId : props.xAxisId}
+      />
+    ),
+    [key, emphasisKey, horizontal, props.xAxisId, props.yAxisId],
+  );
   const clipped = reveal && !effectiveHide && area && zero !== undefined && Number.isFinite(zero);
   return (
     <>
@@ -148,6 +201,11 @@ export function BarSeries({
       )}
       <Bar
         {...props}
+        {...(categoryEmphasis && eligible
+          ? {
+              shape: categoryShape,
+            }
+          : {})}
         {...(materialized ? { filter: `url(#${filterId})` } : {})}
         id={id}
         hide={effectiveHide}
@@ -157,5 +215,44 @@ export function BarSeries({
         isAnimationActive={false}
       />
     </>
+  );
+}
+
+function CategoryBar({
+  seriesKey,
+  emphasisKey,
+  axisId,
+  ...props
+}: BarShapeProps & {
+  seriesKey: string | undefined;
+  emphasisKey: BarSeriesProps["emphasisKey"];
+  axisId: BarSeriesProps["xAxisId"];
+}) {
+  const { emphasisScope } = useLineInteraction();
+  const keyboard = useChartKeyboard();
+  const layout = useChartLayout();
+  const xDomain = useXAxisDomain(axisId);
+  const yDomain = useYAxisDomain(axisId);
+  const domain = layout === "vertical" ? yDomain : xDomain;
+  const semantic = emphasisKey ? emphasisKey(props.payload) : domain?.[props.originalDataIndex];
+  // Native index-only domains cannot promise identity across data reorder.
+  const eligible =
+    emphasisKey !== undefined ? semantic !== undefined : typeof semantic === "string";
+  const activeLabel = useActiveTooltipLabel();
+  const activePoints = useActiveTooltipDataPoints();
+  const active = keyboard && (activePoints?.includes(props.payload) || activeLabel === semantic);
+  return (
+    <EmphasisMark
+      enabled={eligible}
+      target={{
+        kind: "category",
+        key: String(semantic),
+        scope: `${emphasisScope}/${String(axisId ?? 0)}`,
+        seriesKey,
+      }}
+      keyboardActive={Boolean(active)}
+    >
+      <Rectangle {...props} />
+    </EmphasisMark>
   );
 }

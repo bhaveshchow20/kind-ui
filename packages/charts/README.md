@@ -722,3 +722,86 @@ const scale = createHeatmapScale({
 - `animate` defaults off in the library and on in the recipes. The existing Motion peer animates only a short frame translation; cell fills stay opaque and values do not tween. Reduced-motion preferences disable translation. Host/card styling belongs to the consumer through native `className` and `style`; it is not a chart material. `HeatmapGrid material` accepts `HeatmapMaterial`: `"plain"` (default), `"paper"`, `"clay"`, or `"glow"`. These are static per-cell edge treatments, never card styling. Paper adds a fibrous, irregular ink rim; Clay adds a soft top-lit convex matte bevel; Glow adds a luminous rim contained within the cell. Only the outer 8% on each side is decorated: the central 84% by 84% (70.56% of the rectangular cell area, before text) remains the exact opaque scale color. Compare this center to the unmodified legend, not the decorative edge. Missing cells retain their pattern and never receive a finish. No filter, opacity, shadow, geometry or animation is added. Consumer background-image/size/repeat overrides still win, and custom content and native cell styles/filters/refs/events remain owned by the consumer. Consumer paint overrides can invalidate the encoding guarantee. Full-face texture, glossy clay and an external glow halo are intentionally unsupported because they would alter or bleed the numeric encoding; these are bounded rim materials.
 
 See [responsive matrix and activity recipes](../../examples/chart/HEATMAPS.md) for renderer research, behavior, verification and limitations. Native tables render every cell; virtualization, editing, range selection, inferred domains and automatic aggregation are outside this API. Automated Chromium checks cover tested interaction/layout paths; manual screen-reader coverage remains unverified.
+
+### Selective emphasis (preview)
+
+`Root emphasis="auto"` is the default; `"none"` disables transient emphasis.
+It does not change `visibleSeries`, engine inspection, selection, or click callbacks.
+
+| Family | Automatic decoration in this preview |
+| --- | --- |
+| Bar | Default `BarChart emphasis="none"`. Opt in with `emphasis="category"` for an eligible native plot; grouped and stacked series stay together. |
+| Pie / Donut | Native default sectors emphasize the semantic `nameKey` value. |
+| Line / Area / Combo / Scatter / Bubble | Existing inspection; no automatic dimming. |
+| Radar / Radial / Sankey / Box / Histogram | Adapters unfinished; no automatic dimming. |
+| Heatmap / Waterfall | Existing cell or step inspection; numeric paint and chain remain unchanged. |
+
+Bar eligibility is conservative and applies to the whole visible plot. Every visible
+Kind `BarSeries` must use chart-level rows, a direct string numeric `dataKey`,
+complete finite values that differ from the numeric baseline, native default
+shape/activeBar, and unique string category-axis values with one domain entry per row, or a complete
+unique `emphasisKey` mapping. A resolver returning `undefined` makes the entire
+Bar plot ineligible; it does not partially dim remaining rows.
+Zero/missing/range/function/nested-key/per-series rows, ambiguous categories, and
+custom-shape peers fall back the entire plot to native rendering without dimming.
+Hidden peers do not block eligibility. Use Kind `BarSeries` for all peers in this
+opt-in comparison; raw engine/custom marks require explicit decoration. This
+protects native zero-size filtering and consumer labels. Eligibility changes
+clear removed paint targets; safe→sparse/custom→safe does not resurrect an old
+hover. Root `emphasis="none"` disables the opt-in as well.
+
+Bar numeric and index-only domains do not dim automatically. Supply
+`emphasisKey={(row) => ...}` on each participating `BarSeries` to return the same
+stable category ID across grouped/stacked series. Give Pie a semantic `nameKey`
+or an `emphasisKey` resolver. IDs must be unique within each category/sector scope;
+index values are not stable IDs. Independent plots inside one Root have separate
+category scopes. Removing a registered target clears its transient state.
+
+Custom shapes, consumer active/inactive shape overrides, and their portals retain
+ownership. To participate explicitly, wrap only their paint in
+`<EmphasisMark target={{kind: "category", key: data.id, scope: "my-plot", seriesKey: "sales"}}>…</EmphasisMark>`.
+Keep annotations and labels outside that wrapper. Share a `scope` only for marks
+that represent the same comparison. `useEmphasis(target, enabled?)` exposes
+`active`, `dimmed`, `factor`, `enter("pointer" | "keyboard")`, and `leave(channel)`
+for renderers needing their own decoration. Apply `factor` through an extra paint
+layer so existing opacity, transparent fills and motion multiply exactly once.
+Neither API uses descendant rewriting or global selectors.
+
+`Legend emphasis="series"` opts into series hover/focus emphasis for participating
+marks with `seriesKey`; controlled visibility click behavior and custom item content
+remain unchanged. Other chart families require an explicit mark adapter before
+legend emphasis paints them. The default Legend does not emphasize series.
+
+Pointer leave restores the retained keyboard candidate. Explicit legend/custom keyboard/focus
+emphasis supersedes hover; Escape clears transient emphasis without changing
+controlled selection. Touch has no new tap/click behavior. Dimming keeps marks
+hittable and uses a 160ms interruptible opacity transition; reduced motion removes
+the transition. Import `@kind-ui/charts/styles.css` for these defaults.
+
+The public packed recipe in `tests/fixtures/emphasis` demonstrates category,
+sector, custom portal, visibility, and independent-plot composition. This preview
+is additive and private at `0.0.0`; adapters beyond the matrix above are not claimed.
+
+Identity relationships: `dataKey` selects measured values; it is not a category ID.
+`seriesKey` selects Root metadata and controlled series visibility (or a string
+`dataKey` supplies that series key). `emphasisKey` selects the stable datum ID.
+Pie sector visibility remains consumer-owned through its supplied data/Cells;
+Root visibility does not rewrite Pie data. A custom mark must use `enabled={false}`
+when its owning consumer hides or removes it. Emphasis registration represents
+paint that is currently present, rather than a second persistent selection model.
+
+A pointer candidate temporarily takes precedence over a retained keyboard
+candidate. A new explicit legend/custom keyboard/focus action supersedes pointer emphasis;
+leaving that hover restores the retained candidate. Native chart focus/blur and
+Escape reconcile these transient candidates without invoking selection callbacks.
+Touch-induced focus does not create keyboard emphasis. Native active marks may
+move between Recharts portals; clearing uses semantic identity across that move.
+
+Native overlap limitation: Recharts' public tooltip inspection prioritizes an
+active mouse hover over keyboard state. When the pointer remains on category A
+and keyboard arrows run, native tooltip data and Kind emphasis can both remain
+on A. Clean keyboard entry advances normally. Kind does not maintain a second
+keyboard index, dispatch synthetic consumer events, or use private engine state.
+Full pointer/keyboard equivalence is not claimed. After pointer exit, retained
+keyboard emphasis represents the last eligible inspection candidate; the native
+tooltip may close. This bounded preview follows native selection ownership.

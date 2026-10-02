@@ -7,6 +7,7 @@ export function assertLineConsumerSource(source) {
     "@kind-ui/charts/styles.css",
     "react",
     "react-dom/client",
+    "react-dom",
     "recharts",
     "./host.js",
     "./presentation.js",
