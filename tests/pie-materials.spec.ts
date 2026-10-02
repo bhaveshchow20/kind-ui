@@ -9,6 +9,7 @@ test("shared showcase pie finish and copied recipe follow independent controls",
   await page.goto("/showcase.html");
   await page.getByRole("tab", { name: "Pie", exact: true }).click();
   const chart = page.locator(".example-card").first().getByRole("application");
+  await expect(chart.locator(mark)).not.toHaveCount(0);
   const plain = await geometry(chart);
   await page.getByRole("radio", { name: "Clay", exact: true }).check();
   await expect(
@@ -240,6 +241,10 @@ test("packed custom shape ownership and repeated interrupted/reduced motion acro
       .poll(async () => JSON.stringify(await geometry(chart)) === JSON.stringify(final))
       .toBeTruthy();
     await page.getByRole("button", { name: "Animate", exact: true }).click();
+    await page.getByLabel("Finish", { exact: true }).selectOption(finish);
+    await page.getByRole("button", { name: "Animate", exact: true }).click();
+    await expect(chart.locator(`${mark}[data-reveal="on"]`)).toHaveCount(0);
+    expect(await geometry(chart)).toEqual(final);
   }
   await page.goto(`${url}/?material=clay`);
   await page.getByLabel("Finish", { exact: true }).selectOption("clay");
@@ -274,7 +279,31 @@ test("actual recipes expose independent materials and preserve selection/totals 
   }
   await page.getByLabel("Material", { exact: true }).first().selectOption("clay");
   await page.getByLabel("Material", { exact: true }).nth(1).selectOption("paper");
-  await charts.first().locator(mark).first().click();
+  const slice = charts.first().locator(mark).first();
+  await slice.scrollIntoViewIfNeeded();
+  let interior: { x: number; y: number } | undefined;
+  await expect
+    .poll(async () => {
+      interior = await slice.evaluate((node) => {
+        if (!(node instanceof SVGGeometryElement)) throw Error("Expected native SVG geometry");
+        const box = node.getBBox();
+        const matrix = node.getScreenCTM();
+        if (!matrix) return undefined;
+        for (const x of [0.5, 0.25, 0.75])
+          for (const y of [0.5, 0.25, 0.75]) {
+            const point = new DOMPoint(box.x + box.width * x, box.y + box.height * y);
+            if (!node.isPointInFill(point)) continue;
+            const screen = point.matrixTransform(matrix);
+            if (document.elementFromPoint(screen.x, screen.y) === node)
+              return { x: screen.x, y: screen.y };
+          }
+        return undefined;
+      });
+      return interior !== undefined;
+    })
+    .toBeTruthy();
+  if (!interior) throw Error("No hittable native slice interior");
+  await page.mouse.click(interior.x, interior.y);
   await expect(page.locator("article").first().locator("p[role=status]")).toContainText(
     "Selected:",
   );

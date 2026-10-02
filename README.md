@@ -16,7 +16,7 @@ npm run check
 
 `npm run dev:chart` starts the minimal usage example. `check` runs lint, component tests, the actual packed-package gate, strict consumer typechecks, and Chromium interaction checks. Linux browser dependencies may require administrator permission. All packages remain private at `0.0.0`.
 
-`npm run dev:showcase` opens the feature gallery at `/showcase.html` on port 4873. Color presets and a custom color picker are independent of finish; motion is on by default and follows reduced-motion preferences. Chart-family tabs switch between area, bar, line, pie, radar, and radial examples. Finishes are available only for the Cartesian families; the polar families retain their native geometry.
+`npm run dev:showcase` opens the feature gallery at `/showcase.html` on port 4873. Color presets and a custom color picker are independent of finish; motion is on by default and follows reduced-motion preferences. Chart-family tabs switch between area, bar, line, pie, radar, and radial examples. The showcase offers finishes for Cartesian charts and pie/donut; native geometry remains unchanged.
 
 ## Direction
 

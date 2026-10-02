@@ -230,6 +230,17 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
         {...(inset ? { mask: `url(#${maskId})` } : {})}
       >
         <g id={sourceId}>
+          {materialized && (
+            <rect
+              x={paintBounds?.x ?? props.cx - props.outerRadius - margin}
+              y={paintBounds?.y ?? props.cy - props.outerRadius - margin}
+              width={paintBounds?.width ?? props.outerRadius * 2 + margin * 2}
+              height={paintBounds?.height ?? props.outerRadius * 2 + margin * 2}
+              fill="white"
+              fillOpacity={0}
+              pointerEvents="none"
+            />
+          )}
           <Sector
             {...sector}
             {...(onClick ? { onClick } : {})}
