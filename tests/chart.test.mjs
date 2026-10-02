@@ -42,16 +42,15 @@ test("direct and namespace imports expose the same public components", () => {
     "ScatterTooltipContent",
     "Tooltip",
     "TooltipContent",
-    "boxPlotExtent",
-    "validateBoxPlotSummary",
-
     "WaterfallChart",
     "WaterfallConnectors",
     "WaterfallSeries",
+    "boxPlotExtent",
     "computeWaterfallData",
     "createHeatmapModel",
     "createHeatmapScale",
     "prepareSankeyData",
+    "validateBoxPlotSummary",
   ]);
   assert.equal(Chart.Root, Root);
   assert.equal(Chart.Legend, Legend);
