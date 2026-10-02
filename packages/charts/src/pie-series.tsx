@@ -15,7 +15,8 @@ import {
   useState,
 } from "react";
 import { Cell, Pie, type PieSectorShapeProps, Sector } from "recharts";
-import { useLineInteraction } from "./line-chart.js";
+import { EmphasisMark } from "./emphasis.js";
+import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
 import { type PieMaterial, PieMaterialFilter, type PiePaintBounds } from "./pie-material.js";
 
@@ -25,6 +26,8 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
 > & {
   /** Finish on default native sectors; custom shapes, filters and CSS transforms keep ownership. */
   material?: PieMaterial | undefined;
+  /** Stable sector identity; defaults to the native nameKey value. */
+  emphasisKey?: ((payload: unknown) => string | number | undefined) | undefined;
 };
 
 // Recharts also supports Cell props as data when neither the chart nor Pie supplies rows.
@@ -52,7 +55,20 @@ function sameCells(previous: Record<string, unknown>[], next: Record<string, unk
 }
 
 // Motion interpolates only the native sector's angular span; Recharts owns all polar geometry.
-function EntranceSector({ material, ...props }: PieSectorShapeProps & { material: PieMaterial }) {
+function EntranceSector({
+  material,
+  emphasisKey,
+  scope,
+  enabled,
+  ...props
+}: PieSectorShapeProps & {
+  material: PieMaterial;
+  emphasisKey?: PieSeriesProps["emphasisKey"];
+  scope: string;
+  enabled: boolean;
+}) {
+  const keyboard = useChartKeyboard();
+  const semantic = emphasisKey ? emphasisKey(props.payload) : props.name;
   const generatedId = useId();
   const sourceId = `kind-ui-pie-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "_")}-paint`;
   const maskId = `${sourceId}-alpha`;
@@ -198,91 +214,100 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     ...sector
   } = props;
   return (
-    <g ref={markGroup}>
-      {materialized && (
-        <defs data-kind-ui="pie-material" data-material={material} pointerEvents="none">
-          <PieMaterialFilter
-            material={material}
-            id={filterId}
-            strokeWidth={Math.max(
-              0,
-              Number.isFinite(resolvedStroke) ? resolvedStroke : 0,
-              paintStroke,
+    <EmphasisMark
+      enabled={
+        enabled &&
+        (emphasisKey !== undefined ? semantic !== undefined : typeof semantic === "string")
+      }
+      target={{ kind: "sector", key: String(semantic), scope, seriesKey: String(semantic) }}
+      keyboardActive={keyboard && props.isActive}
+    >
+      <g ref={markGroup}>
+        {materialized && (
+          <defs data-kind-ui="pie-material" data-material={material} pointerEvents="none">
+            <PieMaterialFilter
+              material={material}
+              id={filterId}
+              strokeWidth={Math.max(
+                0,
+                Number.isFinite(resolvedStroke) ? resolvedStroke : 0,
+                paintStroke,
+              )}
+              cx={props.cx}
+              cy={props.cy}
+              radius={props.outerRadius}
+              thickness={props.outerRadius - props.innerRadius}
+              bounds={paintBounds}
+            />
+            {inset && (
+              <mask
+                id={maskId}
+                maskUnits="userSpaceOnUse"
+                x={paintBounds?.x ?? Math.floor(props.cx - props.outerRadius - margin)}
+                y={paintBounds?.y ?? Math.floor(props.cy - props.outerRadius - margin)}
+                width={paintBounds?.width ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
+                height={paintBounds?.height ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
+                style={{ maskType: "alpha" }}
+              >
+                <use href={`#${sourceId}`} />
+              </mask>
             )}
-            cx={props.cx}
-            cy={props.cy}
-            radius={props.outerRadius}
-            thickness={props.outerRadius - props.innerRadius}
-            bounds={paintBounds}
-          />
-          {inset && (
-            <mask
-              id={maskId}
-              maskUnits="userSpaceOnUse"
-              x={paintBounds?.x ?? Math.floor(props.cx - props.outerRadius - margin)}
-              y={paintBounds?.y ?? Math.floor(props.cy - props.outerRadius - margin)}
-              width={paintBounds?.width ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
-              height={paintBounds?.height ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
-              style={{ maskType: "alpha" }}
+          </defs>
+        )}
+        {materialized && material === "glow" && (
+          // biome-ignore lint/a11y/noAriaHiddenOnFocusable: SVG decoration is explicitly nonfocusable and ignores pointer events.
+          <g
+            pointerEvents="none"
+            focusable="false"
+            aria-hidden="true"
+            data-kind-ui="pie-halo"
+            style={{ clipPath: paintClip }}
+            transform={paintClip !== "none" ? clipTransform.forward : undefined}
+          >
+            <g
+              transform={paintClip !== "none" ? clipTransform.inverse : undefined}
+              filter={`url(#${filterId})`}
             >
               <use href={`#${sourceId}`} />
-            </mask>
-          )}
-        </defs>
-      )}
-      {materialized && material === "glow" && (
-        // biome-ignore lint/a11y/noAriaHiddenOnFocusable: SVG decoration is explicitly nonfocusable and ignores pointer events.
+            </g>
+          </g>
+        )}
         <g
-          pointerEvents="none"
-          focusable="false"
-          aria-hidden="true"
-          data-kind-ui="pie-halo"
-          style={{ clipPath: paintClip }}
-          transform={paintClip !== "none" ? clipTransform.forward : undefined}
+          {...(inset ? { filter: `url(#${filterId})` } : {})}
+          {...(inset ? { mask: `url(#${maskId})` } : {})}
         >
-          <g
-            transform={paintClip !== "none" ? clipTransform.inverse : undefined}
-            filter={`url(#${filterId})`}
-          >
-            <use href={`#${sourceId}`} />
+          <g id={sourceId}>
+            {materialized && (
+              <rect
+                x={paintBounds?.x ?? props.cx - props.outerRadius - margin}
+                y={paintBounds?.y ?? props.cy - props.outerRadius - margin}
+                width={paintBounds?.width ?? props.outerRadius * 2 + margin * 2}
+                height={paintBounds?.height ?? props.outerRadius * 2 + margin * 2}
+                fill="white"
+                fillOpacity={0}
+                pointerEvents="none"
+              />
+            )}
+            <Sector
+              {...sector}
+              {...(onClick ? { onClick } : {})}
+              {...(onMouseDown ? { onMouseDown } : {})}
+              {...(onMouseUp ? { onMouseUp } : {})}
+              {...(onMouseMove ? { onMouseMove } : {})}
+              {...(onMouseOver ? { onMouseOver } : {})}
+              {...(onMouseOut ? { onMouseOut } : {})}
+              {...(onMouseEnter ? { onMouseEnter } : {})}
+              {...(onMouseLeave ? { onMouseLeave } : {})}
+              {...(className !== undefined ? { className } : {})}
+              {...(cornerRadius !== undefined ? { cornerRadius } : {})}
+              data-kind-ui="pie-sector"
+              data-reveal={reveal ? "on" : "off"}
+              endAngle={reveal ? startAngle + (endAngle - startAngle) * progress : endAngle}
+            />
           </g>
         </g>
-      )}
-      <g
-        {...(inset ? { filter: `url(#${filterId})` } : {})}
-        {...(inset ? { mask: `url(#${maskId})` } : {})}
-      >
-        <g id={sourceId}>
-          {materialized && (
-            <rect
-              x={paintBounds?.x ?? props.cx - props.outerRadius - margin}
-              y={paintBounds?.y ?? props.cy - props.outerRadius - margin}
-              width={paintBounds?.width ?? props.outerRadius * 2 + margin * 2}
-              height={paintBounds?.height ?? props.outerRadius * 2 + margin * 2}
-              fill="white"
-              fillOpacity={0}
-              pointerEvents="none"
-            />
-          )}
-          <Sector
-            {...sector}
-            {...(onClick ? { onClick } : {})}
-            {...(onMouseDown ? { onMouseDown } : {})}
-            {...(onMouseUp ? { onMouseUp } : {})}
-            {...(onMouseMove ? { onMouseMove } : {})}
-            {...(onMouseOver ? { onMouseOver } : {})}
-            {...(onMouseOut ? { onMouseOut } : {})}
-            {...(onMouseEnter ? { onMouseEnter } : {})}
-            {...(onMouseLeave ? { onMouseLeave } : {})}
-            {...(className !== undefined ? { className } : {})}
-            {...(cornerRadius !== undefined ? { cornerRadius } : {})}
-            data-kind-ui="pie-sector"
-            data-reveal={reveal ? "on" : "off"}
-            endAngle={reveal ? startAngle + (endAngle - startAngle) * progress : endAngle}
-          />
-        </g>
       </g>
-    </g>
+    </EmphasisMark>
   );
 }
 
@@ -290,12 +315,22 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
 export function PieSeries<DataPoint = unknown, Value = unknown>(
   props: PieSeriesProps<DataPoint, Value>,
 ) {
-  const { material = "plain", ...nativeProps } = props;
-  const renderEntranceSector = useCallback(
-    (sector: PieSectorShapeProps) => <EntranceSector {...sector} material={material} />,
-    [material],
+  const { material = "plain", emphasisKey, ...nativeProps } = props;
+  const seriesId = useId();
+  const { invalidate, emphasisScope } = useLineInteraction();
+  const scope = `${emphasisScope}/${seriesId}`;
+  const sectorShape = useCallback(
+    (sector: PieSectorShapeProps) => (
+      <EntranceSector
+        {...sector}
+        material={material}
+        scope={scope}
+        emphasisKey={emphasisKey}
+        enabled={props.activeShape === undefined && props.inactiveShape === undefined}
+      />
+    ),
+    [material, scope, emphasisKey, props.activeShape, props.inactiveShape],
   );
-  const { invalidate } = useLineInteraction();
   const inputs = [
     props.data,
     props.dataKey,
@@ -331,7 +366,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     <Pie<DataPoint, Value>
       {...nativeProps}
       stroke={props.stroke ?? "none"}
-      shape={props.shape ?? renderEntranceSector}
+      shape={props.shape ?? sectorShape}
       isAnimationActive={false}
     />
   );

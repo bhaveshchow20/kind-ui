@@ -432,6 +432,122 @@ Use native `LabelList dataKey="dimension" fill="white" content={<Chart.RadialBar
 
 The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighteen current first-party shadcn radar/radial variations to runnable public compositions.
 
+## Histogram family
+
+`HistogramChart`, `HistogramSeries`, and `binHistogram` are maintained public exports, with `HistogramBin`, `HistogramMeasure`, `HistogramBinningResult`, chart/series props and `HistogramShapeProps` types. No new dependency or package is introduced. This additive pre-release API remains private at `0.0.0`.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import { CartesianGrid } from "recharts";
+
+const result = Chart.binHistogram([0, 1, 2, 2, null, NaN, 9], [0, 1, 3]);
+<Chart.Root config={{ count: { label: "Density", color: "#167d77" } }}>
+  <Chart.HistogramChart bins={result.bins} measure="density" width={480} height={260}
+    xAxisProps={{ label: { value: "ms", position: "insideBottom" } }}>
+    <CartesianGrid vertical={false} />
+    <Chart.HistogramSeries />
+    <Chart.Tooltip shared={false} labelFormatter={(_label, entries) => {
+      const bin = entries[0]?.payload;
+      return bin ? `[${bin.lower}, ${bin.upper}${bin.upper === 3 ? "]" : ")"} ms` : "";
+    }} />
+  </Chart.HistogramChart>
+</Chart.Root>;
+```
+
+The helper owns raw-sample aggregation with **explicit edges**. Edges must be finite, strictly increasing, and have finite positive differences. Intervals are `[lower, upper)`, except the final upper edge is included, following [D3 bin](https://d3js.org/d3-array/bin) and [NumPy histogram](https://numpy.org/doc/stable/reference/generated/numpy.histogram.html). It returns every bin, including zero counts, plus `accepted`, `missing` (`null`/`undefined`), `nonfinite` (`NaN`/infinities), and `outOfRange` totals. It does not coerce, infer edges, round, impute, weight observations, or select a statistical binning estimator. Inputs are not mutated; work is O(samples × log(edges) + edges).
+
+For **pre-binned data**, callers supply ordered, nonoverlapping `{ lower, upper, count }` intervals and own aggregation and interval membership. Gaps are retained as quantitative space, rather than compressed into categories. Counts must be nonnegative safe integers; bounds, widths and overall domain span must be finite. Invalid bins, overlaps, unsafe totals, and nonfinite or underflowing positive density fail with actionable errors. Empty `bins=[]` uses a neutral `[0,1]` x-domain and no marks. All-zero bins retain zero height; density is zero when total count is zero.
+
+`measure` is always required. `count` means height = count. **With unequal widths, count-mode rectangle area does not represent frequency**; disclose that choice to readers. Prefer `density` for unequal bins: height = count / total count / bin width, so the sum of height × width is one when total is positive. Density units are the reciprocal of the input unit (e.g. ms⁻¹), rather than samples or percent. Counts remain available in the original tooltip payload and data table. No rounding is applied to bin edges or counts; native Recharts retains ownership of SVG coordinate serialization. Formatting belongs to the consumer.
+
+The chart reuses `BarChart`/`BarSeries`, visibility metadata, `Legend`, shared `Tooltip` presentation and interrupted/reduced Motion. It owns vertical layout and linear numeric axes (ID 0), maps x/width from actual bounds, and preserves the zero baseline. Use `xAxisProps`/`yAxisProps` for axis labels, ticks, styling and padding. Native `CartesianGrid`, `ReferenceLine`, SVG definitions, `Cell`, chart refs, attributes and handlers compose as children/props. `HistogramSeries.shape` receives native `BarShapeProps` with corrected x/width and `bin`; it owns its resulting SVG and can return a native `Rectangle`. Native bar Cells and events remain available. The default shape has square corners and exact numeric boundaries. `material="plain" | "paper" | "clay" | "glow"` adds static native-bin paint, independently of color and Motion. Paper reuses bar pencil/grain primitives; Clay reuses soft convex matte relief but crops its exterior cast shadow because both histogram axes are quantitative. Glow adds an exterior decorative halo and crisp inset light; the underlying body retains native translucent alpha. No finish rounds or displaces interval boundaries. All finishes use the documented `--kind-ui-bar-*` tokens. Each painted bin has its own filter ID and exact user-space bounds; filter padding resolves native CSS stroke widths on mounting and React updates. Stylesheet-only stroke transitions without a React render remain unverified. Custom `shape`, series `filter`/`style.filter`, and per-Cell `filter`/`style.filter` retain paint ownership. Custom shape callbacks still receive corrected geometry and original bins. The material gallery is `/histograms.html?materials`; zero bins retain zero geometry and no material-created marks. Native bar labels remain excluded by the core contract; use axis labels, tooltips, tables or the custom shape extension for bin annotations.
+
+Use `Tooltip shared={false}` for pointer hit testing against the actual bin rectangles; native shared-axis tooltip selection uses nearest midpoints. Native arrow-key selection remains available. Label the original interval and unit through `labelFormatter`, rather than presenting the midpoint as a bin boundary. A zero-height bin has no pointer target; keyboard selection and a complete table expose its value. The consumer owns the data alternative and units. The feature recipes at `/histograms.html` demonstrate raw rebinning with discard audit, unequal-bin density, native custom shapes/reference lines, controlled visibility, responsive layout and expandable tables.
+
+For labels, use the custom shape with its corrected geometry. Native Bar `LabelList` uses the engine’s original bar sizing and is not supported for unequal-bin edge positions.
+
+This bounded family does not support horizontal orientation, stacking, native bar sizing/minimum heights/backgrounds, automatic edges, weighted/fractional counts or nonlinear histogram axes. Do not add replacement primary axes or wrap the series in `BarStack`; native escape hatches remain the consumer's responsibility. Floating-point inputs follow JavaScript comparison without epsilon adjustments; extreme finite values that cannot produce a finite domain/density are rejected. Chromium and the pinned React/Recharts/Motion peers are the tested targets; there is no broader compatibility guarantee.
+## Box plot: explicit statistics
+
+`BoxPlotChart` reuses Kind's `BarChart` (including optional `animate`) and public
+Recharts composition. Recharts has no native BoxPlot component: `BoxPlotSeries`
+registers a native range Bar and renders its summary with public axis-scale hooks.
+No new dependency or copied renderer is introduced.
+
+```tsx
+const data = [{ group: "A", summary: {
+  lowerWhisker: -5, q1: -2, median: 0, q3: 3, upperWhisker: 8,
+  outliers: [-10, 20],
+} }];
+<Root config={{ spread: { label: "Distribution", color: "#16756c" } }}>
+  <BoxPlotChart data={data} width={480} height={280}>
+    <XAxis dataKey="group" />
+    <YAxis type="number" domain={["dataMin", "dataMax"]} />
+    <BoxPlotSeries dataKey="summary" seriesKey="spread" />
+  </BoxPlotChart>
+</Root>
+```
+
+- `BoxPlotSummary` requires finite numbers in the order
+  `lowerWhisker <= q1 <= median <= q3 <= upperWhisker`.
+  `outliers?: readonly number[]` must be finite and strictly outside the supplied
+  whiskers. Duplicates are retained. Invalid present summaries throw actionable
+  errors; `null`/`undefined` summaries render no marks, and an empty dataset renders
+  no marks. Zero, negatives, equal quartiles and equal whiskers are valid.
+- The caller computes these statistics and chooses the quartile/fence convention.
+  Kind does not ingest raw samples, classify observations, remove outliers, or
+  fabricate statistics. `validateBoxPlotSummary(unknown)` returns the same summary
+  or null; `boxPlotExtent(summary)` validates and returns the complete min/max,
+  including every outlier. These helpers do not mutate input.
+- `BoxPlotSeries<Row>` accepts a direct property name or typed accessor in `dataKey`
+  (no nested-path interpretation). `seriesKey` is required for metadata and
+  controlled Root visibility. Native domain inference uses the complete extent,
+  not just median or quartiles. Supply native axes and their IDs; for horizontal
+  boxes use `layout="vertical"`, a numeric XAxis and categorical YAxis.
+- `barSize`, native series data, Cell paint, stroke, opacity, style, filter,
+  clipPath, mask and visibility, LabelList, axis IDs, chart/series
+  handlers, chart refs, and consumer children retain their native ownership.
+  LabelList's native position refers to the enclosing range; supply a label
+  dataKey or custom content if the label should describe a statistic.
+- `shape(props: BoxPlotShapeProps)` receives `summary`, `native: BarShapeProps`,
+  mapped `coordinates`, category `center`/`size` and `orientation`. It owns its
+  returned markup. `markProps` forwards SVG group attributes, styles, handlers and
+  refs (one group per present row). `BoxPlotMark` is the exported SVG primitive;
+  it accepts screen coordinates rather than statistical values. Degenerate boxes
+  get a collapsed line without inflating the numeric IQR. `outlierRadius` controls
+  the screen-space outlier symbol size.
+- Shared `Legend`, controlled visibility, `Tooltip`, and optional Motion remain
+  available. A native tooltip value is the enclosing numeric range; use custom
+  tooltip content to read the original payload and show quartiles/whiskers/
+  outliers. The recipe demonstrates that and a full, always-available table.
+  Recharts owns keyboard category selection; null rows have no numeric tooltip.
+  Arrow keys and Escape are checked in Chromium. Tables provide complete numeric
+  access independently of chart interaction and series visibility.
+
+Initial scope: linear numeric axes, categorical groups, two orientations, optional
+Bar reveal Motion with reduced-motion/interruption behavior. Stacking, minimum
+numeric sizes, native rectangle backgrounds/radius, native
+active-bar duplication, raw-sample estimators, weighted quartiles, notches,
+variable-width-by-sample-size boxes, and quantitative category positioning are
+outside this family. Nonlinear numeric axes, Brush, mixed-series composition and
+performance at large sample/group counts are not verified. Custom SVG marks are
+consumer-owned. This change adds exports at private `0.0.0`; it does not publish
+or alter existing family contracts.
+
+References: [NIST box plot definitions and variants](https://www.itl.nist.gov/div898/handbook/eda/section3/boxplot.htm),
+[Recharts Bar](https://recharts.github.io/en-US/api/Bar/),
+[public X scale](https://recharts.github.io/en-US/api/useXAxisScale/),
+[public Y scale](https://recharts.github.io/en-US/api/useYAxisScale/).
+The sample estimator and whisker definition deliberately remain caller-owned.
+
+
+### Box plot materials
+
+`BoxPlotSeries` and the screen-space `BoxPlotMark` accept `material="plain" | "paper" | "clay" | "glow"` (`BoxPlotMaterial`). Plain is the default. Paper uses the existing bar grain and uneven inset pencil contour; Clay uses bar soft convex matte relief; Glow adds an exterior painted halo and a crisp lightened body. These static finishes are independent of color and Motion and preserve every whisker, quartile, median and outlier coordinate. Native stroke width/dashes remain the input silhouette. No extra minimum extent is introduced: all-equal and tiny marks receive a line finish; missing rows still have no marks.
+
+Each present native mark has its own React-generated filter ID and user-space region, including outliers and resolved child stroke widths/miter limits, so line-only summaries do not require nonzero bounding boxes. Use React `identifierPrefix` for independently mounted roots. Box finishes reuse the `--kind-ui-bar-*` tokens documented above. Body alpha is preserved, including zero fill opacity; glow/cast effects can paint only outside the native footprint. Tiny marks have less room for visible grain/relief. Bounds are refreshed for React updates, stylesheet edits/loads, ancestor theme classes, viewport changes and pointer entry/exit. Direct CSSOM rule mutations without one of those signals are not observed. The default box fill remains `0.18`; an explicit `fillOpacity` (for example `0.65`) makes broad surfaces easier to see.
+
+An explicit series/Cell/mark `filter`, or `style.filter`, including `none`, disables the built-in finish for that mark. Custom `shape` owns its markup and is not automatically materialized; it may explicitly return a materialized `BoxPlotMark`. Cells, gradients, native paint/opacity, mark styles, clipping, masks, visibility, refs, handlers and labels retain ownership. Filters run on the original consumer mark group (parts remain direct children) and existing reveal/plot clips, which may trim decorative halos. Chromium is verified; other SVG engines and print renderers remain unverified. No shared helper changes, dependencies, workflow changes or releases accompany this material stack.
 ### Shared presentation example
 
 `examples/chart/presentation.html` demonstrates the same public options for line, area and bar, icon/swatch fallback, composed legend labels, native formatter tuples/suppression, custom content and light/dark host CSS variables. It enables motion by default while following live reduced-motion preferences, and includes keyboard instructions and all-series table values. Its source is also compiled against an independently installed tarball, with guarded public imports, strict NodeNext/Bundler checks, and Chromium interactions. Theme colors remain host-owned CSS variables; this change does not add automatic light/dark config mapping. String labels/colors remain required.
@@ -679,3 +795,86 @@ See [responsive matrix and activity recipes](../../examples/chart/HEATMAPS.md) f
 Pie finishes preserve consumer CSS transform ownership by rendering the original native Sector when an inline transform or a stylesheet transform overrides its SVG transform attribute. This fallback preserves antialiased paint, clipping and hit targets; it does not apply the requested finish. Ordinary CSS colors/classes/styles and explicit SVG `transform` attributes continue to support finishes. CSS individual `translate`, `rotate` and `scale` properties also retain native ownership. Ambient stylesheet/media/pseudo-class changes without a relevant React prop update do not refresh material ownership. Stylesheet ownership is sampled when the finish, center, outer radius, SVG transform, style, class or id changes. For transforms that change later through media queries, ancestor state or pseudo-classes, use a consumer `style` prop or change the finish/style/class/id to refresh ownership. Custom shapes and filters also retain native ownership.
 
 CSS fallback verification compares complete native SVG topology and resolved ancestor paint, absence of transient material definitions, and exact decoded RGBA from self-contained fixed-fixture SVG images. Mutation controls check paint, transforms, clipping, wrappers and reference relationships. This proves native paint ownership; it does not promise universal live-inline browser raster stability or arbitrary HTML-to-SVG export fidelity. Normal material alpha and geometry checks continue to use the live packed consumer.
+
+### Selective emphasis (preview)
+
+`Root emphasis="auto"` is the default; `"none"` disables transient emphasis.
+It does not change `visibleSeries`, engine inspection, selection, or click callbacks.
+
+| Family | Automatic decoration in this preview |
+| --- | --- |
+| Bar | Default `BarChart emphasis="none"`. Opt in with `emphasis="category"` for an eligible native plot; grouped and stacked series stay together. |
+| Pie / Donut | Native default sectors emphasize the semantic `nameKey` value. |
+| Line / Area / Combo / Scatter / Bubble | Existing inspection; no automatic dimming. |
+| Radar / Radial / Sankey / Box / Histogram | Adapters unfinished; no automatic dimming. |
+| Heatmap / Waterfall | Existing cell or step inspection; numeric paint and chain remain unchanged. |
+
+Bar eligibility is conservative and applies to the whole visible plot. Every visible
+Kind `BarSeries` must use chart-level rows, a direct string numeric `dataKey`,
+complete finite values that differ from the numeric baseline, native default
+shape/activeBar, and unique string category-axis values with one domain entry per row, or a complete
+unique `emphasisKey` mapping. A resolver returning `undefined` makes the entire
+Bar plot ineligible; it does not partially dim remaining rows.
+Zero/missing/range/function/nested-key/per-series rows, ambiguous categories, and
+custom-shape peers fall back the entire plot to native rendering without dimming.
+Hidden peers do not block eligibility. Use Kind `BarSeries` for all peers in this
+opt-in comparison; raw engine/custom marks require explicit decoration. This
+protects native zero-size filtering and consumer labels. Eligibility changes
+clear removed paint targets; safe→sparse/custom→safe does not resurrect an old
+hover. Root `emphasis="none"` disables the opt-in as well.
+
+Bar numeric and index-only domains do not dim automatically. Supply
+`emphasisKey={(row) => ...}` on each participating `BarSeries` to return the same
+stable category ID across grouped/stacked series. Give Pie a semantic `nameKey`
+or an `emphasisKey` resolver. IDs must be unique within each category/sector scope;
+index values are not stable IDs. Independent plots inside one Root have separate
+category scopes. Removing a registered target clears its transient state.
+
+Custom shapes, consumer active/inactive shape overrides, and their portals retain
+ownership. To participate explicitly, wrap only their paint in
+`<EmphasisMark target={{kind: "category", key: data.id, scope: "my-plot", seriesKey: "sales"}}>…</EmphasisMark>`.
+Keep annotations and labels outside that wrapper. Share a `scope` only for marks
+that represent the same comparison. `useEmphasis(target, enabled?)` exposes
+`active`, `dimmed`, `factor`, `enter("pointer" | "keyboard")`, and `leave(channel)`
+for renderers needing their own decoration. Apply `factor` through an extra paint
+layer so existing opacity, transparent fills and motion multiply exactly once.
+Neither API uses descendant rewriting or global selectors.
+
+`Legend emphasis="series"` opts into series hover/focus emphasis for participating
+marks with `seriesKey`; controlled visibility click behavior and custom item content
+remain unchanged. Other chart families require an explicit mark adapter before
+legend emphasis paints them. The default Legend does not emphasize series.
+
+Pointer leave restores the retained keyboard candidate. Explicit legend/custom keyboard/focus
+emphasis supersedes hover; Escape clears transient emphasis without changing
+controlled selection. Touch has no new tap/click behavior. Dimming keeps marks
+hittable and uses a 160ms interruptible opacity transition; reduced motion removes
+the transition. Import `@kind-ui/charts/styles.css` for these defaults.
+
+The public packed recipe in `tests/fixtures/emphasis` demonstrates category,
+sector, custom portal, visibility, and independent-plot composition. This preview
+is additive and private at `0.0.0`; adapters beyond the matrix above are not claimed.
+
+Identity relationships: `dataKey` selects measured values; it is not a category ID.
+`seriesKey` selects Root metadata and controlled series visibility (or a string
+`dataKey` supplies that series key). `emphasisKey` selects the stable datum ID.
+Pie sector visibility remains consumer-owned through its supplied data/Cells;
+Root visibility does not rewrite Pie data. A custom mark must use `enabled={false}`
+when its owning consumer hides or removes it. Emphasis registration represents
+paint that is currently present, rather than a second persistent selection model.
+
+A pointer candidate temporarily takes precedence over a retained keyboard
+candidate. A new explicit legend/custom keyboard/focus action supersedes pointer emphasis;
+leaving that hover restores the retained candidate. Native chart focus/blur and
+Escape reconcile these transient candidates without invoking selection callbacks.
+Touch-induced focus does not create keyboard emphasis. Native active marks may
+move between Recharts portals; clearing uses semantic identity across that move.
+
+Native overlap limitation: Recharts' public tooltip inspection prioritizes an
+active mouse hover over keyboard state. When the pointer remains on category A
+and keyboard arrows run, native tooltip data and Kind emphasis can both remain
+on A. Clean keyboard entry advances normally. Kind does not maintain a second
+keyboard index, dispatch synthetic consumer events, or use private engine state.
+Full pointer/keyboard equivalence is not claimed. After pointer exit, retained
+keyboard emphasis represents the last eligible inspection candidate; the native
+tooltip may close. This bounded preview follows native selection ownership.

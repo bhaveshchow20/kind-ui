@@ -113,6 +113,7 @@ try {
         "line",
         "area",
         "bar",
+        "emphasis",
         "pie",
         "combined",
         "polar",
@@ -121,6 +122,8 @@ try {
         "heatmap",
         "waterfall",
         "sankey",
+        "histogram",
+        "box-plot",
       ].includes(folder) &&
       file.endsWith(".tsx")
     )
@@ -241,6 +244,10 @@ try {
   console.log(
     "All 18 polar gallery composition paths: guarded public imports, strict NodeNext/Bundler and tarball build passed",
   );
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("histogram", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-histogram");
+  console.log("Histogram tarball: strict NodeNext/Bundler and public-only production build passed");
   await copyFixture("combined", "host.tsx");
   await copyFixture("combined", "main.tsx", "combined.tsx");
   await copyFixture("combined", "index.html", "combined.html");
@@ -268,6 +275,11 @@ try {
   await typecheck(["index.tsx", "main.tsx", "motion.tsx"]);
   await production("index.html", "packed-chart");
 
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("box-plot", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-box-plot");
+  console.log("Box plot tarball: public-only strict NodeNext/Bundler and production build passed");
+
   // The actual presentation recipe is independently checked through the installed tarball.
   for (const file of [
     "use-reduced-motion.ts",
@@ -285,6 +297,12 @@ try {
   console.log(
     "Presentation recipe: guarded public imports, strict NodeNext/Bundler and tarball production build passed",
   );
+
+  await copyFixture("emphasis", "index.html");
+  await copyFixture("emphasis", "main.tsx");
+  await typecheck(["main.tsx"]);
+  await production("index.html", "packed-emphasis");
+  console.log("Emphasis tarball: strict NodeNext/Bundler and production build passed");
 
   // Separate host recipe evidence, outside the public line/area/bar fixture proof.
   const legacy = join(consumer, "legacy");

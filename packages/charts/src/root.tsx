@@ -3,9 +3,13 @@
 import type { ComponentPropsWithRef } from "react";
 import type { ChartContextValue } from "./chart-context.js";
 import { ChartContext } from "./chart-context.js";
+import { EmphasisProvider, useEmphasisActions } from "./emphasis.js";
 import type { SeriesConfig } from "./types.js";
 
-export type RootProps = ComponentPropsWithRef<"div"> & { config: SeriesConfig } & (
+export type RootProps = ComponentPropsWithRef<"div"> & {
+  config: SeriesConfig;
+  emphasis?: "auto" | "none";
+} & (
     | { visibleSeries?: undefined; onVisibleSeriesChange?: never }
     | { visibleSeries: readonly string[]; onVisibleSeriesChange?: (next: string[]) => void }
   );
@@ -13,6 +17,7 @@ export type RootProps = ComponentPropsWithRef<"div"> & { config: SeriesConfig } 
 /** Scopes presentation metadata and CSS colors; the consumer owns chart geometry and state. */
 export function Root({
   config,
+  emphasis = "auto",
   visibleSeries,
   onVisibleSeriesChange,
   style,
@@ -36,9 +41,27 @@ export function Root({
   };
   return (
     <ChartContext value={value}>
-      <div {...props} data-kind-ui="chart" style={{ ...colors, ...style }}>
-        {children}
-      </div>
+      <EmphasisProvider enabled={emphasis === "auto"}>
+        <RootFrame {...props} style={{ ...colors, ...style }}>
+          {children}
+        </RootFrame>
+      </EmphasisProvider>
     </ChartContext>
+  );
+}
+
+function RootFrame({ children, ...props }: ComponentPropsWithRef<"div">) {
+  const { reset } = useEmphasisActions();
+  return (
+    <div
+      {...props}
+      data-kind-ui="chart"
+      onKeyDownCapture={(event) => {
+        if (event.key === "Escape") reset();
+        props.onKeyDownCapture?.(event);
+      }}
+    >
+      {children}
+    </div>
   );
 }
