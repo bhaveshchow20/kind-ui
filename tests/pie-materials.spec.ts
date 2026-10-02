@@ -3,6 +3,27 @@ import { expect, type Locator, test } from "./browser";
 const url = process.env.KIND_UI_PIE_URL ?? "http://127.0.0.1:4180";
 const finishes = ["plain", "paper", "clay", "glow"] as const;
 const mark = '[data-kind-ui="pie-sector"]';
+test("shared showcase pie finish and copied recipe follow independent controls", async ({
+  page,
+}) => {
+  await page.goto("/showcase.html");
+  await page.getByRole("tab", { name: "Pie", exact: true }).click();
+  const chart = page.locator(".example-card").first().getByRole("application");
+  const plain = await geometry(chart);
+  await page.getByRole("radio", { name: "Clay", exact: true }).check();
+  await expect(
+    chart.locator('[data-kind-ui="pie-material"][data-material="clay"]'),
+  ).not.toHaveCount(0);
+  expect(await geometry(chart)).toEqual(plain);
+  await page.getByRole("button", { name: "Green palette" }).click();
+  await expect(page.getByRole("radio", { name: "Clay", exact: true })).toBeChecked();
+  await page
+    .locator(".example-card")
+    .first()
+    .getByRole("button", { name: "View code", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toContainText('material="clay"');
+});
 async function geometry(chart: Locator) {
   return chart.locator(".recharts-pie-sector path").evaluateAll((nodes) =>
     nodes.map((n) => ({

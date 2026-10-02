@@ -128,7 +128,13 @@ export const FeatureChart = memo(function FeatureChart({
     }));
     return (
       <div className="gallery-chart">
-        <Allocation config={config} rows={rows} donut={example.id === "donut"} animate={animate} />
+        <Allocation
+          config={config}
+          rows={rows}
+          donut={example.id === "donut"}
+          animate={animate}
+          material={material}
+        />
       </div>
     );
   }
