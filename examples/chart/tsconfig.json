@@ -9,5 +9,11 @@
     "declaration": false,
     "types": ["vite/client", "node"]
   },
-  "include": ["*.tsx", "../../tests/consumer.tsx", "../../tests/*.spec.ts"]
+  "include": [
+    "*.tsx",
+    "showcase-data.ts",
+    "showcase-code.ts",
+    "../../tests/consumer.tsx",
+    "../../tests/*.spec.ts"
+  ]
 }

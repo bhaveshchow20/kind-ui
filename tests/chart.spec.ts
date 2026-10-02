@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 test("public components share configuration and preserve missing, zero and hidden values", async ({
   page,

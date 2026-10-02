@@ -1,3 +1,4 @@
+import type { PolarMaterial } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { PolarGalleryCard } from "./polar-gallery.js";
@@ -13,7 +14,9 @@ const data: PolarPoint[] = [
   { category: "Efficiency", actual: 74, target: 65, range: [50, 80] },
 ];
 function Showcase() {
-  const [motion, setMotion] = useState(false);
+  const [motion, setMotion] = useState(true);
+  const [palette, setPalette] = useState("mono");
+  const [material, setMaterial] = useState<PolarMaterial>("plain");
   const [showText, setShowText] = useState(true);
   const [tooltips, setTooltips] = useState(true);
   const [updated, setUpdated] = useState(false);
@@ -26,7 +29,7 @@ function Showcase() {
           actual: mode === "zero" ? 0 : updated ? 100 - row.actual : row.actual,
         }));
   return (
-    <main className="polar-showcase">
+    <main className="polar-showcase" data-palette={palette}>
       <header>
         <a href="/">Kind UI charts</a>
         <h1>Radar & radial charts</h1>
@@ -40,6 +43,31 @@ function Showcase() {
         </p>
       </header>
       <div className="polar-controls">
+        <label>
+          Color{" "}
+          <select
+            aria-label="Color"
+            value={palette}
+            onChange={(event) => setPalette(event.target.value)}
+          >
+            <option value="mono">Monochrome</option>
+            <option value="color">Violet</option>
+            <option value="pink">Pink</option>
+          </select>
+        </label>
+        <label>
+          Material{" "}
+          <select
+            aria-label="Material"
+            value={material}
+            onChange={(event) => setMaterial(event.target.value as PolarMaterial)}
+          >
+            <option value="plain">Plain</option>
+            <option value="paper">Paper</option>
+            <option value="clay">Clay</option>
+            <option value="glow">Glow</option>
+          </select>
+        </label>
         <label>
           <input
             type="checkbox"
@@ -82,6 +110,7 @@ function Showcase() {
             key={recipe}
             recipe={recipe}
             data={rows}
+            material={material}
             animate={motion}
             showText={showText}
             tooltips={tooltips}
@@ -90,6 +119,7 @@ function Showcase() {
         <PolarGalleryCard
           kind="radar"
           data={rows}
+          material={material}
           animate={motion}
           showText={showText}
           tooltips={tooltips}
@@ -97,6 +127,7 @@ function Showcase() {
         <PolarGalleryCard
           kind="radial"
           data={rows}
+          material={material}
           animate={motion}
           showText={showText}
           tooltips={tooltips}

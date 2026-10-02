@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, test } from "./browser";
 
 async function alpha(path: Locator) {
   return path.evaluate((node) => {

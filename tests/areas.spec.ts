@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 const variants = [
   ["Smooth", "Monthly visitors"],
