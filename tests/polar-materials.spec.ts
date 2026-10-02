@@ -120,11 +120,13 @@ for (const mode of ["static", "motion", "reduced"] as const) {
       .filter({ has: page.getByRole("heading", { name: "Gauge", exact: true }) });
     for (const material of ["plain", "paper", "clay", "glow"]) {
       await page.getByLabel("Material", { exact: true }).selectOption(material);
-      expect(
-        await page
-          .locator(".recharts-radar-polygon path, .recharts-radial-bar-sector")
-          .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
-      ).toEqual(geometry);
+      await expect
+        .poll(() =>
+          page
+            .locator(".recharts-radar-polygon path, .recharts-radial-bar-sector")
+            .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
+        )
+        .toEqual(geometry);
       for (const width of [1000, 390]) {
         await page.setViewportSize({ width, height: 900 });
         await expect(gauge.locator("[data-gauge-value]")).toBeVisible();
@@ -152,6 +154,8 @@ for (const mode of ["static", "motion", "reduced"] as const) {
         });
         await gauge.getByRole("application").focus();
         await page.keyboard.press("ArrowRight");
+        if (!(await gauge.locator('[data-kind-ui="chart-tooltip"]').isVisible()))
+          await page.keyboard.press("Enter");
         await expect(gauge.locator('[data-kind-ui="chart-tooltip"]')).toBeVisible();
         await page.keyboard.press("Escape");
       }
@@ -172,17 +176,26 @@ for (const mode of ["static", "motion", "reduced"] as const) {
   });
 }
 
-for (const transparent of [false, true]) {
-  test(`polar raster alpha and visible distinctions: ${transparent ? "zero" : "gradient"}`, async ({
-    page,
-  }, info) => {
-    await page.goto(`${url}?paint${transparent ? "&transparent" : ""}`);
+for (const paint of ["gradient", "solid", "zero"] as const) {
+  const transparent = paint === "zero";
+  test(`polar raster alpha and visible distinctions: ${paint}`, async ({ page }, info) => {
+    await page.goto(
+      `${url}?paint${transparent ? "&transparent" : paint === "solid" ? "&solid" : ""}`,
+    );
     await page.addStyleTag({
       content:
         '[data-host="radar"], [data-host="radial"] { background: transparent !important; } svg * { visibility: hidden; } svg defs *, [data-alpha-proof] { visibility: visible !important; }',
     });
     for (const [family, selector] of families) {
       const mark = page.locator(`[data-host="${family}"] ${selector}`).first();
+      await expect(mark).toHaveAttribute(
+        "fill",
+        paint === "solid" ? "#df55a0" : /url\(#polar.*paint\)/,
+      );
+      await expect(mark).toHaveAttribute(
+        "fill-opacity",
+        transparent ? "0" : family === "radar" ? "0.25" : "0.35",
+      );
       const box = await mark.boundingBox();
       if (!box) throw new Error("Missing native shape");
       const clip = {
@@ -191,14 +204,42 @@ for (const transparent of [false, true]) {
         width: Math.ceil(box.width + 25),
         height: Math.ceil(box.height + 25),
       };
-      async function raster(material: string) {
+      async function raster(material: string, nativeSpatialControl?: "morphology" | "blur") {
         await page.getByLabel("Material", { exact: true }).selectOption(material);
         await mark.evaluate((node) => node.setAttribute("data-alpha-proof", ""));
+        if (nativeSpatialControl)
+          await mark.evaluate((node, operation) => {
+            const svg = node.ownerSVGElement;
+            if (!svg) throw new Error("No native SVG");
+            const filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+            filter.id = "native-alpha-control";
+            filter.setAttribute("filterUnits", "userSpaceOnUse");
+            filter.setAttribute("x", "-10");
+            filter.setAttribute("y", "-10");
+            filter.setAttribute("width", String(svg.viewBox.baseVal.width + 20));
+            filter.setAttribute("height", String(svg.viewBox.baseVal.height + 20));
+            filter.setAttribute("color-interpolation-filters", "sRGB");
+            // Independent platform control: atop mathematically keeps SourceGraphic
+            // alpha. A spatial input forces native curved-edge offscreen rasterization.
+            filter.innerHTML =
+              operation === "morphology"
+                ? '<feMorphology in="SourceAlpha" operator="erode" radius="1.2"/><feComposite in2="SourceGraphic" operator="atop"/>'
+                : '<feGaussianBlur in="SourceGraphic" stdDeviation="3"/><feComposite in2="SourceGraphic" operator="atop"/>';
+            svg.append(filter);
+            node.setAttribute("filter", "url(#native-alpha-control)");
+          }, nativeSpatialControl);
         const bytes = await page.screenshot({
           clip,
           omitBackground: true,
-          path: info.outputPath(`${family}-${material}-${transparent ? "zero" : "gradient"}.png`),
+          path: info.outputPath(
+            `${family}-${material}${nativeSpatialControl ? `-native-${nativeSpatialControl}` : ""}-${paint}.png`,
+          ),
         });
+        if (nativeSpatialControl)
+          await mark.evaluate((node) => {
+            node.removeAttribute("filter");
+            node.ownerSVGElement?.querySelector("#native-alpha-control")?.remove();
+          });
         return page.evaluate(
           async (src) => {
             const image = new Image();
@@ -218,11 +259,14 @@ for (const transparent of [false, true]) {
       const plain = await raster("plain");
       for (const material of ["paper", "clay", "glow"]) {
         const finish = await raster(material);
+        const native = await raster("plain", material === "paper" ? "morphology" : "blur");
+        // Compare all native coverage, including antialiasing, to an independent
+        // alpha-preserving native spatial filter, not a copy of our material graph.
         let exterior = 0,
           changed = 0,
           maxAlphaDifference = 0;
         for (let i = 3; i < plain.length; i += 4) {
-          const alpha = plain[i] ?? 0,
+          const alpha = native[i] ?? 0,
             next = finish[i] ?? 0;
           if (alpha > 0) {
             maxAlphaDifference = Math.max(maxAlphaDifference, Math.abs(alpha - next));

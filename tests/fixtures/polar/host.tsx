@@ -182,7 +182,13 @@ export function PolarHost() {
             filter={nativeFilter ? "url(#host-filter)" : undefined}
             style={params.has("style-filter") ? { filter: "none" } : undefined}
             shape={params.has("radar-shape") ? <Polygon data-host-shape="radar" /> : undefined}
-            fill={params.has("paint") ? "url(#polar-paint)" : undefined}
+            fill={
+              params.has("paint")
+                ? params.has("solid")
+                  ? "#df55a0"
+                  : "url(#polar-paint)"
+                : undefined
+            }
             stroke={params.has("paint") ? "none" : undefined}
             fillOpacity={params.has("transparent") ? 0 : 0.25}
             hide={hide}
@@ -236,11 +242,18 @@ export function PolarHost() {
           <PolarRadiusAxis type="category" dataKey="category" tick />
           <Chart.RadialBarSeries<(typeof initial)[number], number | [number, number]>
             dataKey={params.has("radial-range") ? range : "value"}
+            seriesKey="value"
             material={material}
             filter={nativeFilter ? "url(#radial-host-filter)" : undefined}
             activeShape={params.has("active-shape") ? Shape : undefined}
             style={params.has("style-filter") ? { filter: "none" } : undefined}
-            fill={params.has("paint") ? "url(#polar-radial-paint)" : undefined}
+            fill={
+              params.has("paint")
+                ? params.has("solid")
+                  ? "#df55a0"
+                  : "url(#polar-radial-paint)"
+                : undefined
+            }
             fillOpacity={params.has("transparent") ? 0 : params.has("paint") ? 0.35 : 1}
             hide={hide}
             {...(params.has("stack") ? { stackId: "scores" } : {})}
@@ -252,7 +265,7 @@ export function PolarHost() {
             {data.map((row) => (
               <Cell
                 key={row.id}
-                fill={!params.has("paint") && row.id === "quality" ? "#27806a" : undefined}
+                {...(!params.has("paint") && row.id === "quality" ? { fill: "#27806a" } : {})}
                 data-category-id={row.id}
               />
             ))}
@@ -280,6 +293,7 @@ export function PolarHost() {
           <PolarAngleAxis dataKey="category" />
           <PolarRadiusAxis domain={[params.has("signed") ? -100 : 0, domain]} />
           <NativeRadar<(typeof initial)[number], number | [number, number]>
+            stroke={params.has("paint") ? "none" : "#3161bd"}
             dataKey={params.has("range") ? range : "value"}
             isRange={params.has("range")}
             isAnimationActive={false}
