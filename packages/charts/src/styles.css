@@ -302,3 +302,14 @@
     background-repeat: no-repeat;
   }
 }
+
+@layer kind-ui {
+  [data-kind-ui="emphasis-paint"] {
+    transition: opacity 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-kind-ui="emphasis-paint"] {
+      transition: none;
+    }
+  }
+}

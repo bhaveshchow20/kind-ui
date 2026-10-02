@@ -113,6 +113,7 @@ try {
         "line",
         "area",
         "bar",
+        "emphasis",
         "pie",
         "combined",
         "polar",
@@ -296,6 +297,12 @@ try {
   console.log(
     "Presentation recipe: guarded public imports, strict NodeNext/Bundler and tarball production build passed",
   );
+
+  await copyFixture("emphasis", "index.html");
+  await copyFixture("emphasis", "main.tsx");
+  await typecheck(["main.tsx"]);
+  await production("index.html", "packed-emphasis");
+  console.log("Emphasis tarball: strict NodeNext/Bundler and production build passed");
 
   // Separate host recipe evidence, outside the public line/area/bar fixture proof.
   const legacy = join(consumer, "legacy");

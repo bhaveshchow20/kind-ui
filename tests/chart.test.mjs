@@ -15,6 +15,7 @@ test("direct and namespace imports expose the same public components", () => {
     "BoxPlotMark",
     "BoxPlotSeries",
     "ComboChart",
+    "EmphasisMark",
     "HeatmapCellContent",
     "HeatmapChart",
     "HeatmapDataTable",
@@ -53,6 +54,7 @@ test("direct and namespace imports expose the same public components", () => {
     "createHeatmapModel",
     "createHeatmapScale",
     "prepareSankeyData",
+    "useEmphasis",
     "validateBoxPlotSummary",
   ]);
   assert.equal(Chart.Root, Root);

@@ -36,6 +36,12 @@ export {
 } from "./box-plot.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
 export {
+  EmphasisMark,
+  type EmphasisMarkProps,
+  type EmphasisTarget,
+  useEmphasis,
+} from "./emphasis.js";
+export {
   HeatmapCellContent,
   type HeatmapCellContentProps,
   HeatmapChart,
