@@ -338,7 +338,7 @@ missing values, custom markers, independent legends and entrance controls.
 
 ## Pie and donut
 
-`PieChart`, `PieSeries`, `PieChartProps`, `PieSeriesProps` and `PieAnimation` are maintained public exports. A donut is a `PieSeries` with native `innerRadius`; it uses the same component and animation contract. No additional dependency or material API is introduced.
+`PieChart`, `PieSeries`, `PieChartProps`, `PieSeriesProps` and `PieAnimation` are maintained public exports. A donut is a `PieSeries` with native `innerRadius`; it uses the same component and animation contract. No additional dependency is introduced.
 
 ```tsx
 const itemKey: NonNullable<Chart.TooltipProps["itemKey"]> = entry => String(entry.payload.id);
@@ -365,6 +365,32 @@ Category visibility and Cells are consumer-owned: filter data and generate Cells
 Use nonnegative, finite values for meaningful proportional data. Kind preserves native values rather than inventing allocations: empty/all-zero inputs paint no allocation, and zero/missing categories remain distinguishable in the consumer-owned table. A zero category has no visible angular area; expose it in the legend/data alternative rather than imposing a minimum fake share. Provide readable labels and a table/list; SVG plus tooltip alone is not a complete data alternative. [Recharts Pie API](https://recharts.github.io/en-US/api/Pie/) and the pinned `recharts@3.10.1` source (`polar/Pie.js`, `shape/Sector.d.ts`) informed the payload, Cell and polar geometry integration. Motion cancellation uses [animation playback controls](https://motion.dev/docs/animate).
 
 `examples/chart/pies.html` contains two bounded recipes: a pie allocation and a donut capacity summary. Both consume these public APIs and share existing tooltip/legend/formatting/accessibility behavior. The isolated tarball host in `tests/fixtures/pie` is separate from the recipes and is checked with strict NodeNext/Bundler declarations, a production build and browser contracts.
+
+### Pie and donut finishes
+
+`PieSeries` accepts `material="plain" | "paper" | "clay" | "glow"` (`PieMaterial`),
+independently of native fill/Cells and the chart’s `animate` prop. Plain is the default.
+Paper adds faint fibers and an uneven inset pencil contour; Clay gives soft convex
+matte relief; Glow emits a soft colored halo around the crisp native sector. All finishes preserve native
+angles, radii, path, paint alpha, continuous zero-padding/no-stroke defaults and labels.
+Donuts use the same prop with native `innerRadius`.
+
+Custom shapes (including active/inactive shapes) remain consumer-owned. Explicit
+sector `filter` or `style.filter`, including Cell overrides, bypasses the built-in
+finish on that sector. Native gradients, clipping, IDs and handlers remain available.
+Paper/Clay remain inset. Glow’s decorative halo can overlap adjacent sectors/rings;
+it does not change quantitative geometry or native body alpha. No finish displaces paths.
+Per-sector filter/mask/source IDs are instance-scoped. Native paint masks retain
+Paper/Clay alpha at curved edges; Glow keeps the native body separate from its
+decorative halo. The halo follows the painted footprint, including gradient fades. Switching finishes during entrance snaps
+to final geometry using the existing interruption contract.
+
+Optional CSS variables: `--kind-ui-pie-clay-light`, `--kind-ui-pie-clay-highlight`,
+`--kind-ui-pie-clay-shade`, `--kind-ui-pie-clay-shadow`, `--kind-ui-pie-paper-fiber`,
+`--kind-ui-pie-paper-grain`, `--kind-ui-pie-paper-ink`,
+and `--kind-ui-pie-glow-opacity`. Lighting adapts locally to native radius and ring
+thickness. The pie/donut recipes expose the material control and keep category totals
+and selection consumer-controlled.
 
 ## Radar and radial bars
 
@@ -765,6 +791,10 @@ const scale = createHeatmapScale({
 - `animate` defaults off in the library and on in the recipes. The existing Motion peer animates only a short frame translation; cell fills stay opaque and values do not tween. Reduced-motion preferences disable translation. Host/card styling belongs to the consumer through native `className` and `style`; it is not a chart material. `HeatmapGrid material` accepts `HeatmapMaterial`: `"plain"` (default), `"paper"`, `"clay"`, or `"glow"`. These are static per-cell edge treatments, never card styling. Paper adds a fibrous, irregular ink rim; Clay adds a soft top-lit convex matte bevel; Glow adds a luminous rim contained within the cell. Only the outer 8% on each side is decorated: the central 84% by 84% (70.56% of the rectangular cell area, before text) remains the exact opaque scale color. Compare this center to the unmodified legend, not the decorative edge. Missing cells retain their pattern and never receive a finish. No filter, opacity, shadow, geometry or animation is added. Consumer background-image/size/repeat overrides still win, and custom content and native cell styles/filters/refs/events remain owned by the consumer. Consumer paint overrides can invalidate the encoding guarantee. Full-face texture, glossy clay and an external glow halo are intentionally unsupported because they would alter or bleed the numeric encoding; these are bounded rim materials.
 
 See [responsive matrix and activity recipes](https://github.com/bhaveshchow20/kind-ui/blob/931eb002287e300d220023a45d3ab8ff8ee86a37/examples/chart/HEATMAPS.md) for renderer research, behavior, verification and limitations. Native tables render every cell; virtualization, editing, range selection, inferred domains and automatic aggregation are outside this API. Automated Chromium checks cover tested interaction/layout paths; manual screen-reader coverage remains unverified.
+
+Pie finishes preserve consumer CSS transform ownership by rendering the original native Sector when an inline transform or a stylesheet transform overrides its SVG transform attribute. This fallback preserves antialiased paint, clipping and hit targets; it does not apply the requested finish. Ordinary CSS colors/classes/styles and explicit SVG `transform` attributes continue to support finishes. CSS individual `translate`, `rotate` and `scale` properties also retain native ownership. Ambient stylesheet/media/pseudo-class changes without a relevant React prop update do not refresh material ownership. Stylesheet ownership is sampled when the finish, center, outer radius, SVG transform, style, class or id changes. For transforms that change later through media queries, ancestor state or pseudo-classes, use a consumer `style` prop or change the finish/style/class/id to refresh ownership. Custom shapes and filters also retain native ownership.
+
+CSS fallback verification compares complete native SVG topology and resolved ancestor paint, absence of transient material definitions, and exact decoded RGBA from self-contained fixed-fixture SVG images. Mutation controls check paint, transforms, clipping, wrappers and reference relationships. This proves native paint ownership; it does not promise universal live-inline browser raster stability or arbitrary HTML-to-SVG export fidelity. Normal material alpha and geometry checks continue to use the live packed consumer.
 
 ### Selective emphasis (preview)
 
