@@ -412,3 +412,84 @@ The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighte
   <Chart.TooltipContent tooltip={tooltip} hideLabel indicator="dashed" />
 )} />
 ```
+
+## Waterfall
+
+`computeWaterfallData(entries, initialBalance = 0)` returns fresh ordered rows for
+native numeric range bars. Each entry has a unique nonempty `id`, a `label`, and
+one of these explicit kinds:
+
+| Kind | Supplied value | Meaning |
+| --- | --- | --- |
+| `start`, `total`, `end` | finite number or `null` | Checkpoint: draw zero → value and establish the running balance. A checkpoint can intentionally disagree with the preceding balance. |
+| `delta` | finite signed number or `null` | Draw previous balance → balance + value. |
+| `subtotal` | none | Draw zero → current balance; do not add it again or reset it. |
+
+The default starting balance is explicitly zero; pass `null` for an unknown
+opening balance. Kind names express intent, not positional restrictions: an
+`end` is an explicit supplied total, never an automatically inferred final sum.
+A missing delta makes subsequent geometry/balances unknown until a known
+checkpoint restores them. Its known successors still retain their original
+values. A missing checkpoint also establishes an unknown balance. Zero remains
+numeric (`[balance, balance]` for a zero delta), with no invented minimum height.
+Nonfinite values, omitted values, duplicate/empty ids, supplied subtotal values,
+unknown kinds and arithmetic overflow throw. Inputs are not mutated.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import { Cell, ReferenceLine, XAxis, YAxis } from "recharts";
+
+const data = Chart.computeWaterfallData([
+  { id: "opening", label: "Opening", kind: "start", value: 80 },
+  { id: "cost", label: "Cost", kind: "delta", value: -100 },
+  { id: "net", label: "Net", kind: "subtotal" },
+  { id: "closing", label: "Closing", kind: "end", value: -20 },
+]);
+
+<Chart.Root config={{ range: { label: "Balance", color: "#3478ae" } }}>
+  <Chart.WaterfallChart data={data} width={480} height={280} animate>
+    <XAxis dataKey="id" />
+    <YAxis domain={["auto", "auto"]} />
+    <ReferenceLine y={0} />
+    <Chart.WaterfallConnectors data={data} />
+    <Chart.WaterfallSeries material="paper">
+      {data.map(row => <Cell key={row.id} fill={row.kind === "delta" ? "#b54d46" : "#3478ae"} />)}
+    </Chart.WaterfallSeries>
+  </Chart.WaterfallChart>
+</Chart.Root>;
+```
+
+`WaterfallChart` is the existing `BarChart` under a descriptive name, with its
+native props/ref, controlled visibility, interruption behavior, reduced-motion
+handling and opt-in Motion. `WaterfallSeries` binds `dataKey="range"` and
+`minPointSize={0}`. It accepts the remaining `BarSeries` extension points,
+including native shapes, cells, labels, active bars, filters, refs and events;
+`data`, `dataKey`, `stackId`, and `minPointSize` are excluded and rejected at
+runtime. Keep one unstacked Waterfall series on its axes. Supply the computed
+rows to the chart and the same rows to connectors, with the categorical axis
+using `id`. Custom range rows may be supplied directly by a host that owns its
+arithmetic. Brush-windowed connectors are not covered; subset the data for both
+primitives yourself.
+
+`WaterfallConnectors` uses native `ReferenceLine` segments, matching explicit
+`xAxisId`/`yAxisId` and horizontal (`layout="vertical"`) charts as well. Pass the
+same `seriesKey` (default `range`) and `hide` as the series. Connectors join only
+adjacent known balances that agree: no bridge over an unknown step, or from a
+computed balance to a differing checkpoint. They run between native category
+centers under bars, with default `zIndex={100}`, dashed stroke and no pointer
+capture; native `shape`, `stroke`, `position`, `zIndex`, labels and overflow props
+remain available. Use `position="middle"` to align center endpoints.
+
+Existing `BarMaterial` (`plain`, `paper`, `clay`, `glow`) applies independently to
+native floating rectangles without changing numeric geometry. Native custom
+shapes/filters retain material ownership, as with `BarSeries`; no additional
+material adapter or shared API change is needed.
+
+A native range tooltip reports range endpoints. For semantic values, compose
+`Tooltip` content using the original/computed row (as in
+[`waterfall-recipes.tsx`](../../examples/chart/waterfall-recipes.tsx)); use
+`filterNull={false}` when showing unknown steps. The host owns formatting,
+accessible data tables and source values. The responsive
+[`waterfalls.html`](../../examples/chart/waterfalls.html) recipe enables motion
+by default and includes a table, visibility/update controls and missing, zero,
+negative and crossing-zero examples.
