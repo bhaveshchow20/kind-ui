@@ -1,6 +1,7 @@
 import {
   prepareSankeyData,
   SankeyChart,
+  type SankeyFinish,
   type SankeyFlowData,
   SankeyLink,
   type SankeyLinkProps,
@@ -8,7 +9,7 @@ import {
   SankeyNode,
   SankeyTable,
 } from "@kind-ui/charts";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ResponsiveContainer, Tooltip } from "recharts";
 
 const data: SankeyFlowData = {
@@ -22,8 +23,11 @@ const data: SankeyFlowData = {
   ],
 };
 void prepareSankeyData(data);
-const finish: SankeyMaterial = "gradient";
+const paint: SankeyMaterial = "gradient";
 export function Host() {
+  const [finish, setFinish] = useState<SankeyFinish>(
+    (new URLSearchParams(window.location.search).get("finish") ?? "plain") as SankeyFinish,
+  );
   const [shown, setShown] = useState(true);
   const extreme = new URLSearchParams(window.location.search).get("extreme");
   const [value, setValue] = useState(
@@ -60,9 +64,129 @@ export function Host() {
             ...base,
             links: base.links.map((link) => ({ ...link, value: link.value > 0 ? value : 0 })),
           };
+  const ref = useRef<SVGPathElement>(null);
+  const [clicks, setClicks] = useState(0);
   const [active, setActive] = useState<string | null>(null);
   return (
     <>
+      {(["plain", "paper", "clay", "glow"] as const).map((item) => (
+        <button key={item} type="button" onClick={() => setFinish(item)}>
+          {item}
+        </button>
+      ))}
+      <section aria-label="Mark ownership">
+        {clicks} / {ref.current?.tagName ?? "pending"}
+      </section>
+      <svg aria-label="Surface probe" width={300} height={160} style={{ display: "block" }}>
+        {([1, 3, 12, 32] as const).map((width, index) => (
+          <SankeyLink
+            key={width}
+            sourceX={20}
+            targetX={280}
+            sourceY={20 + index * 35}
+            targetY={20 + index * 35}
+            sourceControlX={100}
+            targetControlX={200}
+            sourceRelativeY={0}
+            targetRelativeY={0}
+            linkWidth={width}
+            index={index}
+            payload={{} as SankeyLinkProps["payload"]}
+            finish={finish}
+            material="gradient"
+            pathProps={{ strokeOpacity: 0.4, "aria-label": `probe-${width}` }}
+          />
+        ))}
+      </svg>
+      <svg aria-label="Adjacent probe" width={300} height={60}>
+        {[24.5, 28.5].map((y) => (
+          <SankeyLink
+            key={y}
+            sourceX={20}
+            targetX={280}
+            sourceY={y}
+            targetY={y}
+            sourceControlX={100}
+            targetControlX={200}
+            sourceRelativeY={0}
+            targetRelativeY={0}
+            linkWidth={3}
+            index={0}
+            payload={{} as SankeyLinkProps["payload"]}
+            finish={finish}
+            color="#cf5782"
+          />
+        ))}
+      </svg>
+      <svg aria-label="Ownership probe" width={300} height={80}>
+        <defs>
+          <filter id="owned">
+            <feOffset dx={0} dy={0} />
+          </filter>
+        </defs>
+        <SankeyNode
+          x={20}
+          y={20}
+          width={14}
+          height={40}
+          index={0}
+          payload={{} as Parameters<typeof SankeyNode>[0]["payload"]}
+          finish={finish}
+          rectProps={{ stroke: "#cf5782", strokeWidth: "2em", "aria-label": "wide-stroke" }}
+        />
+        <SankeyNode
+          x={70}
+          y={20}
+          width={14}
+          height={40}
+          index={0}
+          payload={{} as Parameters<typeof SankeyNode>[0]["payload"]}
+          finish={finish}
+          rectProps={{ filter: "url(#owned)", "aria-label": "owned-filter" }}
+        />
+        <SankeyLink
+          sourceX={100}
+          targetX={280}
+          sourceY={40}
+          targetY={40}
+          sourceControlX={150}
+          targetControlX={220}
+          sourceRelativeY={0}
+          targetRelativeY={0}
+          linkWidth={12}
+          index={0}
+          payload={{} as SankeyLinkProps["payload"]}
+          finish={finish}
+          pathProps={{
+            ref,
+            onClick: () => setClicks((count) => count + 1),
+            className: "owned-css",
+            "aria-label": "owned-path",
+          }}
+        />
+      </svg>
+      {new URLSearchParams(window.location.search).has("ownership") && (
+        <SankeyChart
+          className="custom-native"
+          width={300}
+          height={80}
+          data={data}
+          node={(props) => (
+            <rect
+              {...{ x: props.x, y: props.y, width: props.width, height: props.height }}
+              aria-label="custom-node"
+            />
+          )}
+          link={(props) => (
+            <path
+              d={`M${props.sourceX},${props.sourceY}L${props.targetX},${props.targetY}`}
+              stroke="pink"
+              strokeWidth={props.linkWidth}
+              aria-label="custom-link"
+            />
+          )}
+        />
+      )}
       <button type="button" onClick={() => setShown(!shown)}>
         Toggle chart
       </button>
@@ -80,12 +204,13 @@ export function Host() {
               animate={{ revealDurationMs: 3000 }}
               title="Packed Sankey"
               node={(props) => (
-                <SankeyNode {...props} rectProps={{ "aria-label": "Native node" }} />
+                <SankeyNode finish="clay" {...props} rectProps={{ "aria-label": "Native node" }} />
               )}
               link={(props: SankeyLinkProps) => (
                 <SankeyLink
                   {...props}
-                  material={finish}
+                  material={paint}
+                  finish={finish}
                   pathProps={{ "aria-label": props.payload.id, style: { strokeWidth: 99 } }}
                 />
               )}
@@ -120,3 +245,6 @@ void missing;
 // @ts-expect-error Unsupported finish, width-changing textures are not promised.
 const unsupported: SankeyMaterial = "clay";
 void unsupported;
+
+const supported: SankeyFinish = "glow";
+void supported;

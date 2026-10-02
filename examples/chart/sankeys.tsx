@@ -1,5 +1,6 @@
 import {
   SankeyChart,
+  type SankeyFinish,
   type SankeyFlowData,
   SankeyLink,
   type SankeyMaterial,
@@ -10,6 +11,7 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ResponsiveContainer, Tooltip } from "recharts";
 import "./sankeys.css";
+import { SankeyNetwork } from "./sankey-network.js";
 
 const data: SankeyFlowData = {
   nodes: [
@@ -26,7 +28,13 @@ const data: SankeyFlowData = {
     { id: "reserve", source: "supply", target: "reserve", value: 0 },
   ],
 };
-function Recipe({ material }: { material: SankeyMaterial }) {
+function Recipe({
+  material,
+  finish = "plain",
+}: {
+  material: SankeyMaterial;
+  finish?: SankeyFinish;
+}) {
   const [active, setActive] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const flow =
@@ -35,8 +43,10 @@ function Recipe({ material }: { material: SankeyMaterial }) {
       : { ...data, links: data.links.map((link) => ({ ...link, value: link.value * scale })) };
   const inspected = flow.links.find((link) => link.id === active);
   return (
-    <section>
-      <h2>{material === "solid" ? "Energy balance · solid" : "Energy balance · gradient"}</h2>
+    <section data-finish={finish}>
+      <h2>
+        {material === "solid" ? "Energy balance · solid" : "Energy balance · gradient"} · {finish}
+      </h2>
       <p>
         100 MWh enters processing. Useful output and explicit loss total 100 MWh. Reserve is
         measured zero.
@@ -71,7 +81,7 @@ function Recipe({ material }: { material: SankeyMaterial }) {
               }}
               node={(props) => (
                 <g>
-                  <SankeyNode {...props} color="#4338ca" />
+                  <SankeyNode finish={finish} {...props} color="#4338ca" />
                   <text
                     x={props.x > 300 ? props.x - 8 : props.x + props.width + 8}
                     y={props.y + props.height / 2}
@@ -87,6 +97,7 @@ function Recipe({ material }: { material: SankeyMaterial }) {
                 <SankeyLink
                   {...props}
                   material={material}
+                  finish={finish}
                   pathProps={
                     {
                       opacity: active && active !== props.payload.id ? 0.35 : 0.8,
@@ -125,15 +136,19 @@ function App() {
         <h1>Sankey recipes</h1>
         <p>Native geometry. Explicit balance. Every flow available by keyboard.</p>
       </header>
+      <SankeyNetwork />
       <Recipe material="solid" />
       <Recipe material="gradient" />
+      <Recipe material="gradient" finish="paper" />
+      <Recipe material="gradient" finish="clay" />
+      <Recipe material="gradient" finish="glow" />
       <section>
         <h2>Zero and empty</h2>
         <button type="button" onClick={() => setEmpty(!empty)}>
           Toggle empty
         </button>
         <SankeyChart
-          width={300}
+          width={240}
           height={70}
           data={
             empty
