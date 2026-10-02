@@ -42,6 +42,21 @@ export {
 } from "./polar-series.js";
 export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
 export { Root, type RootProps } from "./root.js";
+export { type SankeyAnimation, SankeyChart, type SankeyChartProps } from "./sankey-chart.js";
+export {
+  prepareSankeyData,
+  type SankeyFlowData,
+  type SankeyFlowLink,
+  type SankeyFlowNode,
+} from "./sankey-data.js";
+export {
+  SankeyLink,
+  type SankeyLinkProps,
+  type SankeyMaterial,
+  SankeyNode,
+  type SankeyNodeProps,
+} from "./sankey-marks.js";
+export { SankeyTable, type SankeyTableProps } from "./sankey-table.js";
 export { type ScatterAnimation, ScatterChart, type ScatterChartProps } from "./scatter-chart.js";
 export { ScatterSeries, type ScatterSeriesProps } from "./scatter-series.js";
 export {
