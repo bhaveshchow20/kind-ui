@@ -1,6 +1,6 @@
 import { expect, type Locator, test } from "@playwright/test";
 
-const url = "http://127.0.0.1:4177";
+const url = "http://127.0.0.1:4180";
 const finishes = ["plain", "paper", "clay", "glow"] as const;
 const mark = '[data-kind-ui="pie-sector"]';
 async function geometry(chart: Locator) {
