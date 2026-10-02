@@ -144,3 +144,29 @@ test("empty, all-zero and single-bin inputs keep native zero semantics", async (
     if (mode === "one") expect(at(await geometry(page), 0).width).toBeGreaterThan(300);
   }
 });
+
+test("public shape values prove absolute density normalization and zero-total behavior", async ({
+  page,
+}) => {
+  for (const mode of ["positive", "zero", "one"]) {
+    await page.goto(mode === "positive" ? packed : `${packed}/?data=${mode}`);
+    await page.getByRole("button", { name: "Custom shape" }).click();
+    const values = await page.locator("[data-host-numeric]").evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        value: Number(node.getAttribute("data-value")),
+        width: Number(node.getAttribute("data-upper")) - Number(node.getAttribute("data-lower")),
+        count: Number(node.getAttribute("data-count")),
+      })),
+    );
+    expect(values).toHaveLength(mode === "one" ? 1 : 5);
+    const total = values.reduce((sum, bin) => sum + bin.count, 0);
+    // Actual numeric values from the public shape callback: a missing normalization
+    // factor cannot cancel as it would in normalized pixel-area comparisons.
+    for (const bin of values)
+      expect(bin.value).toBeCloseTo(total ? bin.count / total / bin.width : 0, 12);
+    expect(values.reduce((area, bin) => area + bin.value * bin.width, 0)).toBeCloseTo(
+      total ? 1 : 0,
+      12,
+    );
+  }
+});

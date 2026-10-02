@@ -84,15 +84,23 @@ export function HistogramHost() {
             shape={
               custom
                 ? (props) => (
-                    <Rectangle
-                      x={props.x}
-                      y={props.y}
-                      width={props.width}
-                      height={props.height}
-                      fill={props.fill}
-                      data-host-shape="yes"
+                    <g
+                      data-host-numeric=""
+                      data-value={props.value}
                       data-lower={props.bin.lower}
-                    />
+                      data-upper={props.bin.upper}
+                      data-count={props.bin.count}
+                    >
+                      <Rectangle
+                        x={props.x}
+                        y={props.y}
+                        width={props.width}
+                        height={props.height}
+                        fill={props.fill}
+                        data-host-shape="yes"
+                        data-lower={props.bin.lower}
+                      />
+                    </g>
                   )
                 : undefined
             }
