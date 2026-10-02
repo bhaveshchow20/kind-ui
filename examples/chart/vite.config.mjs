@@ -16,6 +16,7 @@ export default defineConfig({
         showcase: fileURLToPath(new URL("./showcase.html", import.meta.url)),
         scatters: fileURLToPath(new URL("./scatters.html", import.meta.url)),
         combos: fileURLToPath(new URL("./combos.html", import.meta.url)),
+        boxPlots: fileURLToPath(new URL("./box-plots.html", import.meta.url)),
         polar: fileURLToPath(new URL("./polar.html", import.meta.url)),
         histograms: fileURLToPath(new URL("./histograms.html", import.meta.url)),
         heatmaps: fileURLToPath(new URL("./heatmaps.html", import.meta.url)),
