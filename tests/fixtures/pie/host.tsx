@@ -359,6 +359,10 @@ function ContinuityHost() {
       {...(query.has("clip") ? { clipPath: "url(#host-clip)" } : {})}
       {...(query.has("css-transform") ? { className: "host-transformed" } : {})}
       {...(query.has("transform") ? { transform: "translate(40 0) scale(.85)" } : {})}
+      {...(query.has("rotate-transform") ? { transform: "rotate(12 150 140) skewX(5)" } : {})}
+      {...(query.has("harmless-css")
+        ? { className: "host-harmless", style: { color: "#333", transform: "none" } }
+        : {})}
       {...(query.has("style-transform")
         ? { style: { transform: "translate(40px, 0px) scale(.85)" } }
         : {})}
@@ -377,6 +381,7 @@ function ContinuityHost() {
   ));
   return (
     <section aria-label="Continuity proof">
+      {query.has("harmless-css") && <style>{".host-harmless {color: #333;}"}</style>}
       {query.has("css-filter") && <style>{".host-owned-filter {filter: grayscale(1);}"}</style>}
       {query.has("css-transform") && (
         <style>{".host-transformed {transform: translateX(50px);}"}</style>

@@ -23,7 +23,7 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
   "isAnimationActive"
 > & {
-  /** Finish on default native sectors; custom shapes and filters keep ownership. */
+  /** Finish on default native sectors; custom shapes, filters and CSS transforms keep ownership. */
   material?: PieMaterial | undefined;
 };
 
@@ -63,6 +63,7 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
   const markGroup = useRef<SVGGElement>(null);
   const [paintFilter, setPaintFilter] = useState("none");
   const [paintClip, setPaintClip] = useState("none");
+  const [cssTransformOwned, setCssTransformOwned] = useState(false);
   const [clipTransform, setClipTransform] = useState({ forward: "", inverse: "" });
   const [paintBounds, setPaintBounds] = useState<PiePaintBounds>();
   const [paintStroke, setPaintStroke] = useState(
@@ -80,6 +81,19 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     const path = markGroup.current?.querySelector("path");
     if (!path) return;
     const computed = getComputedStyle(path);
+    // SVG attributes still receive finishes. CSS overrides keep native rasterization:
+    // offscreen masks can change their antialiased alpha even with identical geometry.
+    let attributeTransform = new DOMMatrix();
+    for (let i = 0; i < path.transform.baseVal.numberOfItems; i++)
+      attributeTransform = attributeTransform.multiply(path.transform.baseVal.getItem(i).matrix);
+    const computedTransform =
+      computed.transform === "none" ? new DOMMatrix() : new DOMMatrix(computed.transform);
+    const differentTransform = (["a", "b", "c", "d", "e", "f"] as const).some(
+      (key) => Math.abs(attributeTransform[key] - computedTransform[key]) > 0.00001,
+    );
+    const ownsTransform =
+      differentTransform || (props.style?.transform !== undefined && computed.transform !== "none");
+    setCssTransformOwned((old) => (old === ownsTransform ? old : ownsTransform));
     if (computed.filter !== paintFilter) setPaintFilter(computed.filter);
     if (computed.clipPath !== paintClip) setPaintClip(computed.clipPath);
     const width = Number.parseFloat(computed.strokeWidth);
@@ -140,6 +154,7 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     props.filter === undefined &&
     props.style?.filter === undefined &&
     paintFilter === "none" &&
+    !cssTransformOwned &&
     Number.isFinite(resolvedStroke);
   const inset = materialized && material !== "glow";
   const margin =

@@ -94,12 +94,8 @@ test("packed finishes retain decoded native body alpha for translucent gradients
     "alpha&gradient",
     "transparent",
     "alpha&transform",
-    "alpha&style-transform",
-    "alpha&css-transform",
-    "alpha&css-transform&style-transform",
     "alpha&clip",
     "alpha&clip&transform",
-    "alpha&clip&css-transform",
   ]) {
     await page.goto(`${url}/?oracle&${paint}`);
     const proof = page.getByRole("region", { name: "Continuity proof" });
@@ -194,6 +190,71 @@ test("packed finishes retain decoded native body alpha for translucent gradients
         finish === "glow" && paint !== "transparent" ? (paint === "opaque" ? 96 : 40) : 1,
       );
       expect(difference.painted > 0).toBe(paint !== "transparent");
+    }
+  }
+});
+
+test("packed harmless CSS and SVG transform lists still receive every finish", async ({ page }) => {
+  for (const customization of ["harmless-css", "transform", "rotate-transform"]) {
+    await page.goto(`${url}/?oracle&${customization}`);
+    const proof = page.getByRole("region", { name: "Continuity proof" });
+    const chart = proof.getByRole("application", { name: "Kind continuity" });
+    await expect
+      .poll(
+        async () =>
+          JSON.stringify(await geometry(chart)) ===
+          JSON.stringify(
+            await geometry(
+              proof.getByRole("application", { name: "Native oracle", includeHidden: true }),
+            ),
+          ),
+      )
+      .toBeTruthy();
+    const nativeGeometry = await geometry(chart);
+    for (const finish of finishes.slice(1)) {
+      await proof.getByLabel("Oracle finish").selectOption(finish);
+      await expect(chart.locator('[data-kind-ui="pie-material"]')).toHaveCount(2);
+      expect(await geometry(chart)).toEqual(nativeGeometry);
+    }
+  }
+});
+
+test("packed consumer CSS transforms retain native paint ownership, precedence and clipping", async ({
+  page,
+}) => {
+  for (const override of [
+    "style-transform",
+    "css-transform",
+    "css-transform&style-transform",
+    "transform&style-transform",
+    "transform&css-transform",
+    "clip&style-transform",
+    "clip&css-transform",
+  ]) {
+    await page.goto(`${url}/?oracle&alpha&${override}`);
+    const proof = page.getByRole("region", { name: "Continuity proof" });
+    const chart = proof.getByRole("application", { name: "Kind continuity" });
+    await expect
+      .poll(
+        async () =>
+          JSON.stringify(await geometry(chart)) ===
+          JSON.stringify(
+            await geometry(
+              proof.getByRole("application", { name: "Native oracle", includeHidden: true }),
+            ),
+          ),
+      )
+      .toBeTruthy();
+    await page.addStyleTag({
+      content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
+    });
+    const native = await chart.screenshot({ omitBackground: true });
+    const nativeGeometry = await geometry(chart);
+    for (const finish of finishes.slice(1)) {
+      await proof.getByLabel("Oracle finish").selectOption(finish);
+      await expect(chart.locator('[data-kind-ui="pie-material"]')).toHaveCount(0);
+      expect(await geometry(chart)).toEqual(nativeGeometry);
+      expect(await chart.screenshot({ omitBackground: true })).toEqual(native);
     }
   }
 });
