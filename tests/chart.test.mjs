@@ -12,6 +12,12 @@ test("direct and namespace imports expose the same public components", () => {
     "BarChart",
     "BarSeries",
     "ComboChart",
+    "HeatmapCellContent",
+    "HeatmapChart",
+    "HeatmapDataTable",
+    "HeatmapGrid",
+    "HeatmapLegend",
+    "HeatmapTooltip",
     "Legend",
     "LineChart",
     "LineSeries",
@@ -23,12 +29,23 @@ test("direct and namespace imports expose the same public components", () => {
     "RadialBarLabel",
     "RadialBarSeries",
     "Root",
+    "SankeyChart",
+    "SankeyLink",
+    "SankeyNode",
+    "SankeyTable",
     "ScatterChart",
     "ScatterSeries",
     "ScatterTooltip",
     "ScatterTooltipContent",
     "Tooltip",
     "TooltipContent",
+    "WaterfallChart",
+    "WaterfallConnectors",
+    "WaterfallSeries",
+    "computeWaterfallData",
+    "createHeatmapModel",
+    "createHeatmapScale",
+    "prepareSankeyData",
   ]);
   assert.equal(Chart.Root, Root);
   assert.equal(Chart.Legend, Legend);
@@ -344,6 +361,110 @@ test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geomet
     );
 });
 
+test("heatmap explicit domains preserve signed, zero, missing and ordering", () => {
+  const model = Chart.createHeatmapModel({
+    rows: ["B", "A"],
+    columns: ["Y", "X"],
+    data: [
+      { row: "A", column: "X", value: 0 },
+      { row: "B", column: "Y", value: -5 },
+      { row: "A", column: "Y", value: null },
+    ],
+  });
+  assert.deepEqual(
+    model.cells.map((row) => row.map((cell) => cell.value)),
+    [
+      [-5, null],
+      [null, 0],
+    ],
+  );
+  assert.equal(model.cells[0][1].sources.length, 0);
+  assert.equal(model.cells[1][0].sources.length, 1);
+  assert.equal(Chart.createHeatmapModel({ rows: [], columns: ["X"], data: [] }).cells.length, 0);
+});
+test("heatmap duplicate policies, invalid coordinates and nonfinite input", () => {
+  const base = {
+    rows: ["A"],
+    columns: ["X"],
+    data: [null, -2, 2].map((value) => ({ row: "A", column: "X", value })),
+  };
+  assert.throws(() => Chart.createHeatmapModel(base), /Duplicate/);
+  assert.equal(Chart.createHeatmapModel({ ...base, duplicates: "first" }).cells[0][0].value, null);
+  assert.equal(Chart.createHeatmapModel({ ...base, duplicates: "last" }).cells[0][0].value, 2);
+  assert.equal(Chart.createHeatmapModel({ ...base, duplicates: "sum" }).cells[0][0].value, 0);
+  assert.equal(
+    Chart.createHeatmapModel({ ...base, duplicates: "sum", data: base.data.slice(0, 1) })
+      .cells[0][0].value,
+    null,
+  );
+  assert.throws(() => Chart.createHeatmapModel({ ...base, rows: ["A", "A"] }), /unique/);
+  assert.throws(() => Chart.createHeatmapModel({ ...base, columns: ["Y"] }), /outside/);
+  for (const value of [NaN, Infinity, undefined])
+    assert.throws(
+      () => Chart.createHeatmapModel({ ...base, data: [{ row: "A", column: "X", value }] }),
+      /finite/,
+    );
+  assert.throws(
+    () =>
+      Chart.createHeatmapModel({
+        ...base,
+        duplicates: "sum",
+        data: [Number.MAX_VALUE, Number.MAX_VALUE].map((value) => ({
+          row: "A",
+          column: "X",
+          value,
+        })),
+      }),
+    /finite/,
+  );
+});
+test("heatmap quantitative scale clamps, interpolates and handles constant zero", () => {
+  const scale = Chart.createHeatmapScale({ domain: [-1, 1], colors: ["#000000", "#ffffff"] });
+  assert.equal(scale.color(-10), "#000000");
+  assert.equal(scale.color(0), "#808080");
+  assert.equal(scale.color(10), "#ffffff");
+  assert.equal(
+    Chart.createHeatmapScale({ domain: [0, 0], colors: scale.colors }).color(0),
+    "#808080",
+  );
+  for (const domain of [
+    [1, -1],
+    [0, Infinity],
+    [-Number.MAX_VALUE, Number.MAX_VALUE],
+  ])
+    assert.throws(() => Chart.createHeatmapScale({ domain, colors: scale.colors }), /domain/);
+  assert.throws(
+    () => Chart.createHeatmapScale({ domain: [0, 1], colors: ["red", "transparent"] }),
+    /opaque/,
+  );
+  assert.throws(() => scale.color(NaN), /finite/);
+});
+test("heatmap public components compose native grid, numeric legend and static alternative", () => {
+  const markup = render(
+    h(
+      Chart.HeatmapChart,
+      {
+        rows: ["A"],
+        columns: ["X", "Y"],
+        data: [{ row: "A", column: "X", value: 0 }],
+        scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
+      },
+      h(Chart.HeatmapGrid, { caption: "Example" }),
+      h(Chart.HeatmapLegend, { label: "Count" }),
+      h(Chart.HeatmapTooltip),
+      h(Chart.HeatmapDataTable, { caption: "Data" }),
+    ),
+  );
+  assert.match(markup, /role="grid"/);
+  assert.match(markup, /aria-label="A, X: 0"/);
+  assert.match(markup, /aria-label="A, Y: Missing"/);
+  assert.match(markup, /data-missing="true"/);
+  assert.match(markup, /data-kind-ui="heatmap-data-table"/);
+  assert.throws(
+    () => render(h(Chart.HeatmapGrid, { caption: "No provider" })),
+    /require HeatmapChart/,
+  );
+});
 const Icon = () => h("svg", { "data-icon": "task" }, h("title", {}, "Decorative task"));
 const iconConfig = { ...config, count: { ...config.count, icon: Icon } };
 const optionContent = (options = {}, extra = {}) =>
@@ -463,4 +584,259 @@ test("presentation options preserve unknown native colors and mixed missing/zero
   assert.doesNotMatch(hidden, /chart-icon|chart-indicator/);
   assert.match(hidden, /No data/);
   assert.match(hidden, />0</);
+});
+
+test("waterfall arithmetic preserves directed endpoints, zero, crossing and checkpoints", () => {
+  const entry = (id, kind, value) => ({
+    id,
+    label: id,
+    kind,
+    ...(kind === "subtotal" ? {} : { value }),
+  });
+  const raw = [
+    entry("start", "start", 10),
+    entry("gain", "delta", 5),
+    entry("loss", "delta", -20),
+    entry("net", "subtotal"),
+    entry("zero", "delta", 0),
+    entry("end", "end", -5),
+  ];
+  const rows = Chart.computeWaterfallData(raw);
+  assert.deepEqual(
+    rows.map((row) => row.range),
+    [
+      [0, 10],
+      [10, 15],
+      [-5, 15],
+      [-5, 0],
+      [-5, -5],
+      [-5, 0],
+    ],
+  );
+  assert.deepEqual(
+    rows.map((row) => row.balance),
+    [10, 15, -5, -5, -5, -5],
+  );
+  assert.equal(rows[2].start, 15);
+  assert.equal(rows[2].end, -5);
+  assert.equal(raw[3].value, undefined);
+  assert.deepEqual(Chart.computeWaterfallData([]), []);
+  assert.equal(Chart.computeWaterfallData([entry("a", "delta", 0)])[0].balance, 0);
+  assert.equal(Chart.computeWaterfallData([entry("a", "delta", 5)], null)[0].range, null);
+});
+test("waterfall missing changes propagate uncertainty and explicit totals recover", () => {
+  const rows = Chart.computeWaterfallData([
+    { id: "a", label: "a", kind: "delta", value: null },
+    { id: "b", label: "b", kind: "delta", value: 5 },
+    { id: "c", label: "c", kind: "subtotal" },
+    { id: "d", label: "d", kind: "total", value: -10 },
+    { id: "e", label: "e", kind: "delta", value: 10 },
+  ]);
+  assert.deepEqual(
+    rows.map((row) => row.range),
+    [null, null, null, [-10, 0], [-10, 0]],
+  );
+  assert.equal(rows[1].value, 5);
+  assert.equal(rows[4].balance, 0);
+});
+test("waterfall rejects invalid values, identities, kinds and overflow", () => {
+  const base = { id: "a", label: "a", kind: "delta", value: 1 };
+  for (const value of [undefined, NaN, Infinity, "1"])
+    assert.throws(() => Chart.computeWaterfallData([{ ...base, value }]));
+  assert.throws(() => Chart.computeWaterfallData([base, base]), /unique/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...base, id: "" }]), /unique/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...base, kind: "other" }]), /kind/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...base, kind: "subtotal" }]), /subtotals/);
+  assert.throws(
+    () => Chart.computeWaterfallData([{ ...base, value: Number.MAX_VALUE }], Number.MAX_VALUE),
+    /overflow/,
+  );
+  assert.throws(() => Chart.computeWaterfallData([], NaN), /initialBalance/);
+  for (const key of ["stackId", "minPointSize", "dataKey", "data"])
+    assert.throws(() => render(h(Chart.WaterfallSeries, { [key]: 0 })), /does not accept/);
+});
+
+const flowData = () => ({
+  nodes: [
+    { id: "a", name: "A" },
+    { id: "b", name: "B" },
+    { id: "c", name: "C" },
+  ],
+  links: [
+    { id: "ab", source: "a", target: "b", value: 10 },
+    { id: "bc", source: 1, target: 2, value: 10 },
+  ],
+});
+test("Sankey resolves explicit IDs and indices without mutating inputs", () => {
+  const input = flowData();
+  input.links.push({ id: "zero", source: 0, target: 2, value: 0 });
+  const copy = structuredClone(input);
+  const result = Chart.prepareSankeyData(input);
+  assert.equal(result.links[0].source, 0);
+  assert.equal(result.links[2].value, 0);
+  assert.deepEqual(input, copy);
+  assert.deepEqual(Chart.prepareSankeyData({ nodes: [], links: [] }), { nodes: [], links: [] });
+});
+test("Sankey rejects invalid identities, endpoints, missing values, overflow and totals", () => {
+  for (const value of [NaN, Infinity, -1, undefined, null, "1"]) {
+    const data = flowData();
+    data.links[0].value = value;
+    assert.throws(() => Chart.prepareSankeyData(data), /finite nonnegative/);
+  }
+  for (const endpoint of [-1, 3, 0.5, NaN, "missing", "0", undefined]) {
+    const data = flowData();
+    data.links[0].source = endpoint;
+    assert.throws(() => Chart.prepareSankeyData(data), /endpoint/);
+  }
+  for (const kind of ["nodes", "links"]) {
+    const data = flowData();
+    data[kind][1].id = data[kind][0].id;
+    assert.throws(() => Chart.prepareSankeyData(data), /Duplicate/);
+    data[kind][1].id = " ";
+    assert.throws(() => Chart.prepareSankeyData(data), /nonempty/);
+  }
+  const unbalanced = flowData();
+  unbalanced.links[1].value = 9;
+  assert.throws(() => Chart.prepareSankeyData(unbalanced), /Inconsistent.*explicit loss\/gain/);
+  const overflow = flowData();
+  overflow.links = [0, 1].map((i) => ({
+    id: `flow${i}`,
+    source: 0,
+    target: 2,
+    value: Number.MAX_VALUE,
+  }));
+  assert.throws(() => Chart.prepareSankeyData(overflow), /overflow/);
+  const decimals = flowData();
+  decimals.links[0].value = 0.1 + 0.2;
+  decimals.links[1].value = 0.3;
+  assert.doesNotThrow(() => Chart.prepareSankeyData(decimals));
+});
+test("Sankey rejects self and multi-node cycles including measured zero", () => {
+  for (const value of [0, 10]) {
+    const data = flowData();
+    data.links.forEach((link) => {
+      link.value = value;
+    });
+    data.links.push({ id: "ca", source: 2, target: 0, value });
+    assert.throws(() => Chart.prepareSankeyData(data), /cycles/);
+    data.links = [{ id: "self", source: 0, target: 0, value }];
+    assert.throws(() => Chart.prepareSankeyData(data), /cycles/);
+  }
+});
+test("Sankey table retains measured zero and escapes labels; empty chart skips native layout", () => {
+  const data = {
+    nodes: [
+      { id: "a", name: "<A>" },
+      { id: "b", name: "B" },
+    ],
+    links: [{ id: "zero", source: "a", target: "b", value: 0 }],
+  };
+  const table = render(
+    h(Chart.SankeyTable, {
+      data,
+      caption: "All flows",
+      onInspect: () => {},
+      activeLinkId: "zero",
+      formatValue: (v) => `${v} MWh`,
+    }),
+  );
+  assert.match(table, /&lt;A&gt;/);
+  assert.match(table, /0 MWh/);
+  assert.match(table, /aria-pressed="true"/);
+  assert.match(table, /scope="row"/);
+  assert.match(
+    render(h(Chart.SankeyChart, { data, width: 200, height: 100 })),
+    /No positive flows/,
+  );
+  assert.throws(
+    () =>
+      render(h(Chart.SankeyChart, { data: { ...data, links: [{ ...data.links[0], value: -1 }] } })),
+    /finite nonnegative/,
+  );
+});
+test("Sankey finishes keep computed curve and width even with competing presentation", () => {
+  const props = {
+    sourceX: 0,
+    targetX: 100,
+    sourceY: 20,
+    targetY: 50,
+    sourceControlX: 40,
+    targetControlX: 60,
+    sourceRelativeY: 0,
+    targetRelativeY: 0,
+    linkWidth: 7,
+    index: 0,
+    payload: {},
+  };
+  for (const material of ["solid", "gradient"]) {
+    const markup = render(
+      h(Chart.SankeyLink, {
+        ...props,
+        material,
+        pathProps: { strokeWidth: 99, style: { strokeWidth: 99 }, d: "M0,0" },
+      }),
+    );
+    assert.match(markup, /stroke-width="7"/);
+    assert.match(markup, /style="stroke-width:7"/);
+    assert.match(markup, /M0,20C40,20 60,50 100,50/);
+    assert.match(markup, /fill="none"/);
+  }
+});
+
+test("Sankey keeps parallel identities in validation but rejects native equal-value key collisions", () => {
+  const data = {
+    nodes: [
+      { id: "a", name: "A" },
+      { id: "b", name: "B" },
+    ],
+    links: [
+      { id: "one", source: 0, target: 1, value: 5 },
+      { id: "two", source: 0, target: 1, value: 5 },
+    ],
+  };
+  assert.equal(Chart.prepareSankeyData(data).links.length, 2);
+  assert.throws(() => render(h(Chart.SankeyChart, { data })), /equal-value parallel/);
+  assert.doesNotThrow(() => render(h(Chart.SankeyTable, { data, caption: "Parallel flows" })));
+  for (const duration of [-1, Infinity, NaN]) {
+    assert.throws(
+      () =>
+        render(
+          h(Chart.SankeyChart, {
+            data: { nodes: [], links: [] },
+            animate: { revealDurationMs: duration },
+          }),
+        ),
+      /finite and nonnegative/,
+    );
+  }
+});
+
+test("heatmap materials decorate measured cells only and retain custom content/styles", () => {
+  for (const material of ["plain", "paper", "clay", "glow"]) {
+    const markup = render(
+      h(
+        Chart.HeatmapChart,
+        {
+          rows: ["A"],
+          columns: ["X", "Y"],
+          data: [{ row: "A", column: "X", value: 0 }],
+          scale: Chart.createHeatmapScale({ domain: [-1, 1], colors: ["#000000", "#ffffff"] }),
+        },
+        h(Chart.HeatmapGrid, {
+          caption: "Materials",
+          material,
+          Cell: ({ formattedValue }) => h("b", {}, formattedValue),
+          cellProps: () => ({
+            style: { filter: "brightness(1)", backgroundImage: "none" },
+            "data-host": "yes",
+          }),
+        }),
+      ),
+    );
+    assert.equal((markup.match(new RegExp(`data-material="${material}"`, "g")) ?? []).length, 1);
+    assert.match(markup, /filter:brightness\(1\);background-image:none;background-color:#808080/);
+    assert.match(markup, /<b>0<\/b>/);
+    assert.match(markup, /aria-label="A, Y: Missing"/);
+    assert.doesNotMatch(markup, / material=/);
+  }
 });

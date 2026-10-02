@@ -418,3 +418,197 @@ The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighte
   <Chart.TooltipContent tooltip={tooltip} hideLabel indicator="dashed" />
 )} />
 ```
+
+## Waterfall
+
+`computeWaterfallData(entries, initialBalance = 0)` returns fresh ordered rows for
+native numeric range bars. Each entry has a unique nonempty `id`, a `label`, and
+one of these explicit kinds:
+
+| Kind | Supplied value | Meaning |
+| --- | --- | --- |
+| `start`, `total`, `end` | finite number or `null` | Checkpoint: draw zero → value and establish the running balance. A checkpoint can intentionally disagree with the preceding balance. |
+| `delta` | finite signed number or `null` | Draw previous balance → balance + value. |
+| `subtotal` | none | Draw zero → current balance; do not add it again or reset it. |
+
+The default starting balance is explicitly zero; pass `null` for an unknown
+opening balance. Kind names express intent, not positional restrictions: an
+`end` is an explicit supplied total, never an automatically inferred final sum.
+A missing delta makes subsequent geometry/balances unknown until a known
+checkpoint restores them. Its known successors still retain their original
+values. A missing checkpoint also establishes an unknown balance. Zero remains
+numeric (`[balance, balance]` for a zero delta), with no invented minimum height.
+Nonfinite values, omitted values, duplicate/empty ids, supplied subtotal values,
+unknown kinds and arithmetic overflow throw. Inputs are not mutated.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import { Cell, ReferenceLine, XAxis, YAxis } from "recharts";
+
+const data = Chart.computeWaterfallData([
+  { id: "opening", label: "Opening", kind: "start", value: 80 },
+  { id: "cost", label: "Cost", kind: "delta", value: -100 },
+  { id: "net", label: "Net", kind: "subtotal" },
+  { id: "closing", label: "Closing", kind: "end", value: -20 },
+]);
+
+<Chart.Root config={{ range: { label: "Balance", color: "#3478ae" } }}>
+  <Chart.WaterfallChart data={data} width={480} height={280} animate>
+    <XAxis dataKey="id" />
+    <YAxis domain={["auto", "auto"]} />
+    <ReferenceLine y={0} />
+    <Chart.WaterfallConnectors data={data} />
+    <Chart.WaterfallSeries material="paper">
+      {data.map(row => <Cell key={row.id} fill={row.kind === "delta" ? "#b54d46" : "#3478ae"} />)}
+    </Chart.WaterfallSeries>
+  </Chart.WaterfallChart>
+</Chart.Root>;
+```
+
+`WaterfallChart` is the existing `BarChart` under a descriptive name, with its
+native props/ref, controlled visibility, interruption behavior, reduced-motion
+handling and opt-in Motion. `WaterfallSeries` binds `dataKey="range"` and
+`minPointSize={0}`. It accepts the remaining `BarSeries` extension points,
+including native shapes, cells, labels, active bars, filters, refs and events;
+`data`, `dataKey`, `stackId`, and `minPointSize` are excluded and rejected at
+runtime. Keep one unstacked Waterfall series on its axes. Supply the computed
+rows to the chart and the same rows to connectors, with the categorical axis
+using `id`. Custom range rows may be supplied directly by a host that owns its
+arithmetic. Brush-windowed connectors are not covered; subset the data for both
+primitives yourself.
+
+`WaterfallConnectors` uses native `ReferenceLine` segments, matching explicit
+`xAxisId`/`yAxisId` and horizontal (`layout="vertical"`) charts as well. Pass the
+same `seriesKey` (default `range`) and `hide` as the series. Connectors join only
+adjacent known balances that agree: no bridge over an unknown step, or from a
+computed balance to a differing checkpoint. They run between native category
+centers under bars, with default `zIndex={100}`, dashed stroke and no pointer
+capture; native `shape`, `stroke`, `position`, `zIndex`, labels and overflow props
+remain available. Use `position="middle"` to align center endpoints.
+
+Existing `BarMaterial` (`plain`, `paper`, `clay`, `glow`) applies independently to
+native floating rectangles without changing numeric geometry. Native custom
+shapes/filters retain material ownership, as with `BarSeries`; no additional
+material adapter or shared API change is needed.
+
+A native range tooltip reports range endpoints. For semantic values, compose
+`Tooltip` content using the original/computed row (as in
+[`waterfall-recipes.tsx`](../../examples/chart/waterfall-recipes.tsx)); use
+`filterNull={false}` when showing unknown steps. The host owns formatting,
+accessible data tables and source values. The responsive
+[`waterfalls.html`](../../examples/chart/waterfalls.html) recipe enables motion
+by default and includes a table, visibility/update controls and missing, zero,
+negative and crossing-zero examples.
+
+### Sankey flows
+
+`SankeyChart` uses first-party Recharts `Sankey` for layout, native `node`/`link`
+object, element or callback renderers, child Tooltip, labels, SVG props and native
+events. `data` is `SankeyFlowData`: every node has a nonempty unique string `id`
+and string `name`; every link has its own unique `id`, a finite nonnegative
+`value`, and `source`/`target` as node IDs or integer array indices. String
+endpoints always mean IDs, including numeric-looking strings. No flow is
+synthesized, normalized or aggregated.
+
+`prepareSankeyData(data)` validates and copies input into native numeric
+endpoints. It rejects duplicate/empty identities, unknown IDs, out-of-range or
+fractional indices, missing/negative/nonfinite values, overflowing node totals
+and cycles, including zero links. Nodes with both incoming and outgoing links
+must balance to a relative tolerance of `1e-9`, with no absolute zero tolerance.
+Model losses/gains as explicit edges and boundary nodes. Boundary sources/sinks
+need no matching counterpart. Supply immutable data when changing a chart.
+
+Zero links and nodes without positive links remain in input and tables;
+`SankeyChart` excludes them from native layout. All-zero and empty charts display
+`empty` (default `No positive flows`). Native callback indices address this
+filtered rendering array. Renderer/event payloads retain typed `id` identities,
+including source/target node IDs on links. Native layout owns derived node
+values (maximum input/output). Never use a render index as an input identity.
+
+Finite values can still exceed native floating-point layout limits. At the
+native drawable height H, with N positive-flow nodes, the chart conservatively requires finite aggregate
+positive flow T, finite positive H/T, finite T*H and nonzero v*((H - (N-1)*padding)/T) for every
+positive link. It throws an explicit renderer-limit error rather than changing
+values. Supply explicitly rescaled units at your data boundary if necessary.
+Equal-value parallel positive links also throw a renderer-limit error because
+Recharts keys links by source, target and value. Distinct-value parallel links
+are supported; semantic validation and the table accept either. No duplicate
+flow is silently combined. These checks are separate from semantic validation. A frame too small for the
+conservative node-padding budget displays `Insufficient space for flows; use
+the data table` instead of negative native geometry. SSR and unmeasured frames
+also use this status until measured. Native ResponsiveContainer remains usable.
+
+`SankeyNode` and `SankeyLink` are optional native callback/element shapes, not
+series components. They accept SVG presentation/handlers and `rectProps` or
+`pathProps`. Computed coordinates, dimensions and link width win over supplied
+presentation attributes; link width also wins over inline CSS stroke width.
+`SankeyLink` supports `solid` and `gradient`, using native cubic coordinates and
+`linkWidth`. Gradient does not encode a second quantity. Paper, clay, glow,
+metal and glass are unsupported: widened strokes, shadows and extrusion can
+misrepresent flows. Consumers may supply a native custom renderer and own its
+visual semantics. External CSS/transform overrides remain consumer-owned.
+
+`SankeyTable` is an independently composable native table with required
+`caption`, all link identities, source/target names and exact zero values.
+`formatValue` controls units. Optional `onInspect` renders native buttons for
+Tab/Enter/Space inspection with controlled `activeLinkId` and `aria-pressed`.
+The callback receives the original link. Consumer state connects pointer/native
+events to the same table; table refs, attributes and handlers remain available.
+Pair diagrams with tables and a status description. Supply separate node
+metadata tables when isolated nodes carry information beyond flow quantities.
+
+`animate` defaults to false; recipes enable it. `animate={true}` uses 450ms;
+`animate={{ revealDurationMs: 800 }}` accepts a finite nonnegative duration. Motion reveals opacity only for
+450ms, without changing proportional widths or moving flows. Pointer down,
+focus, changed immutable data/layout/renderers, native measured frame resize and live
+reduced-motion preference stop playback and show final geometry. Unmount stops
+playback. Examples retain a readable minimum diagram width in a keyboard
+scrollable region on phones and viewport-fitting tables. No topology morph or
+width tween is promised. See `examples/chart/SANKEYS.md` and `/sankeys.html`.
+
+## Heatmap
+
+`HeatmapChart`, `HeatmapGrid`, `HeatmapLegend`, `HeatmapTooltip`, and `HeatmapDataTable` compose a two-dimensional categorical grid using native HTML table layout. They are independent of `Root` and Recharts chart contexts. The browser owns equal-cell geometry; ordered domains and data are consumer-owned. No new dependency or existing chart API change is required.
+
+```tsx
+import {
+  createHeatmapScale, HeatmapChart, HeatmapGrid,
+  HeatmapLegend, HeatmapTooltip, HeatmapDataTable,
+} from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const scale = createHeatmapScale({
+  domain: [-10, 10],
+  colors: ["#3b6fa8", "#f5f5ee", "#bf5b38"],
+});
+<HeatmapChart
+  rows={["API", "Worker"]}
+  columns={["East", "West"]}
+  data={[
+    { row: "API", column: "East", value: -4 },
+    { row: "API", column: "West", value: 0 },
+    { row: "Worker", column: "East", value: null },
+  ]}
+  scale={scale}
+  animate
+>
+  <HeatmapGrid caption="Latency change by service and region" />
+  <HeatmapTooltip />
+  <HeatmapLegend label="Change in milliseconds" />
+  <details>
+    <summary>View values</summary>
+    <HeatmapDataTable caption="Latency changes (ms)" />
+  </details>
+</HeatmapChart>;
+```
+
+- `rows` and `columns` are explicit ordered unique string domains. Unknown coordinates, duplicate domain entries, undefined/nonfinite values and overflowed sums throw actionable errors. An empty domain renders an empty grid message. Domains containing categories with no records still render missing cells. Supply new array identities when updating data/domains; inputs are treated as immutable.
+- A datum is `{ row: string; column: string; value: number | null }`. Absent records and explicit `null` are missing, while `0` remains measured zero. `createHeatmapModel` exposes every domain coordinate, indices, resolved value and original `sources` for typed customization and inspection.
+- `duplicates` defaults to `"error"`. `"first"` and `"last"` preserve the corresponding record, including null. `"sum"` sums finite records, ignores null when numbers exist, and keeps all-null cells missing. Negative/positive cancellation remains zero. `sources` retains all records in input order for every policy.
+- `createHeatmapScale({ domain, colors })` requires finite ascending endpoints and at least two opaque `#rrggbb` colors. It interpolates evenly spaced stops in sRGB and clamps out-of-domain values. A constant domain uses the palette midpoint. Explicit domains make comparisons across updates meaningful; automatic rescaling is not performed. Consumers should label any clamping and choose a palette suited to sequential or diverging values. The legend uses the same stops/endpoints, includes a positioned zero marker with a separate label for signed domains, and a separate missing key.
+- `formatValue(number)` and `missingLabel` are shared by cell labels, tooltip, legend and table. Default labels show values, with contrast-selected black/white text for numeric fills. Set both `--heatmap-missing` and `--heatmap-missing-foreground` when changing the missing swatch colors. Custom content owns its own text contrast. `HeatmapGrid` accepts a typed `Cell: ComponentType<HeatmapCellContentProps>` receiving `{ cell, fill, formattedValue }`, plus `cellProps(cell)` for native td refs/styles/handlers, and `rowLabel`/`columnLabel` for visible header content. Preserve opaque fills and a meaningful text alternative when customizing; nested interactive content needs host-specific keyboard handling. Grid role, tab stops, coordinate identity, accessible cell labels and background color remain component-owned; cell handlers are composed and a cancelled key event suppresses grid navigation.
+- Native DOM props, styles, refs and handlers are forwarded on the chart div, grid table, legend fieldset, tooltip div and static table. `HeatmapTooltip` accepts a typed `Content` component with the same cell contract. Compose one grid and at most one tooltip per chart; create separate chart boundaries for independent grids. Tooltip values derive from the latest active coordinate, so data changes and reorder do not leave stale payloads.
+- The grid has one roving tab stop. Arrow keys move within the ordered domains, Home/End move to the row endpoints, Ctrl+Home/End to the corners. Focus and pointer inspection open the tooltip; Escape closes it and Tab exits the grid. Native cell focus scrolls narrow containers. Long row headers and default cell text are clipped visually to preserve equal rows; cell accessible labels and the static data table retain the full values. Removing the focused category falls back to the first cell on the next Tab entry. The optional tooltip is an in-flow readout; the static data table is consumer-placed and has no roving focus behavior.
+- `animate` defaults off in the library and on in the recipes. The existing Motion peer animates only a short frame translation; cell fills stay opaque and values do not tween. Reduced-motion preferences disable translation. Host/card styling belongs to the consumer through native `className` and `style`; it is not a chart material. `HeatmapGrid material` accepts `HeatmapMaterial`: `"plain"` (default), `"paper"`, `"clay"`, or `"glow"`. These are static per-cell edge treatments, never card styling. Paper adds a fibrous, irregular ink rim; Clay adds a soft top-lit convex matte bevel; Glow adds a luminous rim contained within the cell. Only the outer 8% on each side is decorated: the central 84% by 84% (70.56% of the rectangular cell area, before text) remains the exact opaque scale color. Compare this center to the unmodified legend, not the decorative edge. Missing cells retain their pattern and never receive a finish. No filter, opacity, shadow, geometry or animation is added. Consumer background-image/size/repeat overrides still win, and custom content and native cell styles/filters/refs/events remain owned by the consumer. Consumer paint overrides can invalidate the encoding guarantee. Full-face texture, glossy clay and an external glow halo are intentionally unsupported because they would alter or bleed the numeric encoding; these are bounded rim materials.
+
+See [responsive matrix and activity recipes](../../examples/chart/HEATMAPS.md) for renderer research, behavior, verification and limitations. Native tables render every cell; virtualization, editing, range selection, inferred domains and automatic aggregation are outside this API. Automated Chromium checks cover tested interaction/layout paths; manual screen-reader coverage remains unverified.
