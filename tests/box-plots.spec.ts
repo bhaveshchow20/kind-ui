@@ -102,6 +102,7 @@ test("packed box plots: exact native geometry, domains, composition, null and co
   await expect(page.locator(marks)).toHaveCount(0);
   await expect(page.getByRole("table")).toContainText("-20, 16");
   await page.getByRole("button", { name: "Distribution", exact: true }).click();
+  await page.getByRole("button", { name: "Reorder", exact: true }).click();
   await page.getByRole("button", { name: "Resize", exact: true }).click();
   await check(true);
   await page.screenshot({ path: info.outputPath("box-packed-phone.png") });
