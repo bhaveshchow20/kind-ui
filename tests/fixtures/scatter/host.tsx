@@ -291,6 +291,7 @@ function Custom(point: ScatterShapeProps) {
   return <Symbols {...point} type="diamond" data-custom="function" />;
 }
 export function ScatterMaterialHost() {
+  const [pointClip, setPointClip] = useState(0);
   const [defaults, setDefaults] = useState(0);
   const [activeOwner, setActiveOwner] = useState(0);
   const [holes, setHoles] = useState(false);
@@ -329,7 +330,16 @@ export function ScatterMaterialHost() {
           {...(i === 3 ? { cx: 180, cy: 150, size: 16, sizeType: "diameter", type: "square" } : {})}
           fillOpacity={i === 4 ? 0 : 0.35}
           opacity={0.8}
-          style={{ opacity: 0.6, ...(thickStroke ? { strokeWidth: 12 } : {}) }}
+          {...(i === 5 && (pointClip === 1 || pointClip === 3)
+            ? { clipPath: pointClip === 1 ? "url(#point-clip)" : "url(#local-point-clip)" }
+            : {})}
+          style={{
+            opacity: 0.6,
+            ...(thickStroke ? { strokeWidth: 12 } : {}),
+            ...(i === 5 && (pointClip === 2 || pointClip === 4)
+              ? { clipPath: pointClip === 2 ? "url(#point-clip)" : "url(#local-point-clip)" }
+              : {}),
+          }}
         />
       ))}
       <LabelList dataKey="id" position="top" />
@@ -337,6 +347,12 @@ export function ScatterMaterialHost() {
   );
   const defs = (
     <defs>
+      <clipPath id="point-clip" clipPathUnits="objectBoundingBox">
+        <rect width={0.5} height={1} />
+      </clipPath>
+      <clipPath id="local-point-clip" clipPathUnits="userSpaceOnUse">
+        <rect x={-100} y={-100} width={100} height={200} />
+      </clipPath>
       <linearGradient id="alpha-paint">
         <stop stopColor={paint} stopOpacity={holes ? 0 : 0.2} />
         {holes && <stop offset="0.5" stopColor={paint} stopOpacity={0} />}
@@ -402,6 +418,9 @@ export function ScatterMaterialHost() {
       </div>
       <button type="button" onClick={() => setThickStroke(!thickStroke)}>
         Thick stroke
+      </button>
+      <button type="button" onClick={() => setPointClip((v) => (v + 1) % 5)}>
+        Point clip
       </button>
       <output aria-label="Clicks">{clicks}</output>
       <Chart.Root

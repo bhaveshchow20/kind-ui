@@ -21,6 +21,53 @@ async function pixels(page: Page, bytes: Buffer) {
   );
 }
 
+test("explicit Cell clip ownership retains native alpha with bounded Glow fallback in both coordinate systems", async ({
+  page,
+}, info) => {
+  await page.goto(url);
+  await page.addStyleTag({
+    content: `html, body { background: transparent !important; } svg text, svg line, ${paths} { visibility: hidden; } [data-alpha-proof] { visibility: visible !important; }`,
+  });
+  const chart = page.getByRole("application", { name: "Finished symbols" });
+  const native = page.getByRole("application", { name: "Native symbols" });
+  const mark = chart.locator("path#largest");
+  const box = await mark.boundingBox();
+  if (!box) throw new Error("Missing symbol");
+  const clip = {
+    x: Math.floor(box.x - 12),
+    y: Math.floor(box.y - 12),
+    width: Math.ceil(box.width + 25),
+    height: Math.ceil(box.height + 25),
+  };
+  for (const owner of ["bounds-prop", "bounds-style", "local-prop", "local-style"]) {
+    await page.getByRole("button", { name: "Point clip", exact: true }).click();
+    await page.getByRole("button", { name: "plain", exact: true }).click();
+    await mark.evaluate((n) => n.setAttribute("data-alpha-proof", ""));
+    const plain = await pixels(page, await page.screenshot({ clip, omitBackground: true }));
+    expect(plain.filter((a, i) => i % 4 === 3 && a > 0).length).toBeGreaterThan(0);
+    for (const material of ["paper", "clay", "glow"] as const) {
+      await page.getByRole("button", { name: material, exact: true }).click();
+      await mark.evaluate((n) => n.setAttribute("data-alpha-proof", ""));
+      for (const attribute of ["d", "transform", "clip-path", "style"])
+        expect(await mark.getAttribute(attribute)).toBe(
+          await native.locator("path#largest").getAttribute(attribute),
+        );
+      if (material === "glow") await expect(mark).not.toHaveAttribute("filter");
+      else await expect(mark).toHaveAttribute("filter", /kind-ui-scatter/);
+      const painted = await pixels(
+        page,
+        await page.screenshot({
+          clip,
+          omitBackground: true,
+          path: info.outputPath(`${owner}-${material}.png`),
+        }),
+      );
+      for (let i = 3; i < plain.length; i += 4)
+        expect(Math.abs((painted[i] ?? 0) - (plain[i] ?? 0))).toBeLessThanOrEqual(1);
+    }
+  }
+});
+
 test("tarball finishes preserve all seven native symbol paths, transforms, paint and labels at tiny and bubble sizes", async ({
   page,
 }) => {

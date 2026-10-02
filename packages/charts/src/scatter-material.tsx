@@ -17,6 +17,8 @@ export function ScatterMaterialSymbol({
   if (
     props.filter !== undefined ||
     props.style?.filter !== undefined ||
+    (material === "glow" &&
+      (props.clipPath !== undefined || props.style?.clipPath !== undefined)) ||
     props.cx == null ||
     props.cy == null ||
     !Number.isFinite(props.size) ||
