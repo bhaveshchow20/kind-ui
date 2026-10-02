@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-/** The proof may copy host fixtures, never library/example implementation. */
+/** The proof may copy host compositions, never library implementation. */
 export function assertLineConsumerSource(source) {
   const allowed = new Set([
     "@kind-ui/charts",
@@ -9,6 +9,9 @@ export function assertLineConsumerSource(source) {
     "react-dom/client",
     "recharts",
     "./host.js",
+    "./presentation.js",
+    "./use-reduced-motion.js",
+    "./presentation.css",
   ]);
   for (const match of source.matchAll(/(?:from\s*|import\s*\(?\s*)["']([^"']+)["']/g)) {
     assert.ok(allowed.has(match[1]), `Disallowed line consumer import: ${match[1]}`);

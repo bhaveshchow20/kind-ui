@@ -2,39 +2,58 @@ import * as Chart from "@kind-ui/charts";
 import { useMemo, useState } from "react";
 import { Cell, Label } from "recharts";
 
-const config = {
+const defaultConfig = {
   research: { label: "Research", color: "#6366f1", formatValue: (v: unknown) => `${v} hours` },
   delivery: { label: "Delivery", color: "#0d9488", formatValue: (v: unknown) => `${v} hours` },
   support: { label: "Support", color: "#f59e0b", formatValue: (v: unknown) => `${v} hours` },
   unplanned: { label: "Unplanned", color: "#db2777", formatValue: (v: unknown) => `${v} hours` },
 } satisfies Chart.SeriesConfig;
-const rows = [
+const defaultRows = [
   { id: "research", hours: 24 },
   { id: "delivery", hours: 48 },
   { id: "support", hours: 16 },
   { id: "unplanned", hours: 0 },
 ];
 const itemKey: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
-export function Allocation({ donut = false }: { donut?: boolean }) {
+export function Allocation({
+  donut = false,
+  config = defaultConfig,
+  rows = defaultRows,
+  animate: controlledAnimation,
+}: {
+  donut?: boolean;
+  config?: Chart.SeriesConfig;
+  rows?: { id: string; hours: number }[];
+  animate?: boolean;
+}) {
   const [visible, setVisible] = useState(Object.keys(config));
   const [material, setMaterial] = useState<Chart.PieMaterial>("plain");
-  const [animate, setAnimate] = useState(false);
+  const [localAnimation, setAnimate] = useState(false);
+  const animate = controlledAnimation ?? localAnimation;
   const [selected, setSelected] = useState<string>();
-  const data = useMemo(() => rows.filter((row) => visible.includes(row.id)), [visible]);
+  const data = useMemo(() => rows.filter((row) => visible.includes(row.id)), [visible, rows]);
   const total = data.reduce((sum, row) => sum + row.hours, 0);
   return (
     <article className="pie-card">
       <h2>{donut ? "Team capacity" : "Where the week went"}</h2>
       <p>Hours by category. The legend changes which categories contribute to the total.</p>
-      <label>
-        <input
-          type="checkbox"
-          checked={animate}
-          onChange={(event) => setAnimate(event.target.checked)}
-        />{" "}
-        Animate
-      </label>
-      <label style={{ display: "inline-flex", gap: 6, marginInlineStart: 12 }}>
+      {controlledAnimation === undefined && (
+        <label>
+          <input
+            type="checkbox"
+            checked={animate}
+            onChange={(event) => setAnimate(event.target.checked)}
+          />{" "}
+          Animate
+        </label>
+      )}
+      <label
+        style={{
+          display: "inline-flex",
+          gap: 6,
+          marginInlineStart: controlledAnimation === undefined ? 12 : 0,
+        }}
+      >
         Material
         <select
           aria-label="Material"
@@ -81,9 +100,7 @@ export function Allocation({ donut = false }: { donut?: boolean }) {
         <Chart.Legend />
         <p role="status">
           {total === 0 ? "No allocated hours in visible categories." : `${total} visible hours.`}{" "}
-          {selected
-            ? `Selected: ${config[selected as keyof typeof config].label}.`
-            : "Select a slice to inspect it."}
+          {selected ? `Selected: ${config[selected]?.label}.` : "Select a slice to inspect it."}
         </p>
         <table>
           <caption>Weekly hours</caption>
@@ -97,7 +114,7 @@ export function Allocation({ donut = false }: { donut?: boolean }) {
           <tbody>
             {rows.map((row) => (
               <tr key={row.id}>
-                <th>{config[row.id as keyof typeof config].label}</th>
+                <th>{config[row.id]?.label}</th>
                 <td>{row.hours}</td>
                 <td>{visible.includes(row.id) ? "Yes" : "No"}</td>
               </tr>

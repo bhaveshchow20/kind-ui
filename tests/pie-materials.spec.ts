@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, test } from "./browser";
 
 const url = process.env.KIND_UI_PIE_URL ?? "http://127.0.0.1:4180";
 const finishes = ["plain", "paper", "clay", "glow"] as const;

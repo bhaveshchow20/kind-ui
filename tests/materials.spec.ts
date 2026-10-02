@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 for (const mode of ["static", "motion"] as const) {
   test(`packed ${mode} materials retain geometry, colors, bounded filters and consumer shapes`, async ({

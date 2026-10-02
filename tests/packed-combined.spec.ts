@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 for (const material of ["paper", "clay", "glow"]) {
   test(`packed area/bar ${material} filters and visibility remain independent`, async ({

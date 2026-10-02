@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 for (const mode of ["static", "motion"] as const) {
   test(`packed area ${mode} materials preserve paths, shape/filter ownership and interactions`, async ({

@@ -110,14 +110,18 @@ export function PolarGalleryCard({
   kind,
   data,
   animate,
+  material = "plain",
   showText = true,
   tooltips = true,
+  categoryColors = colors,
 }: {
   kind: "radar" | "radial";
   data: readonly GalleryPoint[];
   animate: boolean | Chart.RadarAnimation;
+  material?: Chart.PolarMaterial;
   showText?: boolean;
   tooltips?: boolean;
+  categoryColors?: readonly string[];
 }) {
   const selectId = useId();
   const [radarVariant, setRadarVariant] = useState<RadarVariant>("default");
@@ -208,12 +212,14 @@ export function PolarGalleryCard({
                 />
               )}
               <Chart.RadarSeries
+                material={material}
                 dataKey="actual"
                 fillOpacity={radarVariant === "lines-only" ? 0 : 0.25}
                 dot={radarVariant === "dots" ? { r: 4, fillOpacity: 1 } : false}
               />
               {multiple && (
                 <Chart.RadarSeries
+                  material={material}
                   dataKey="target"
                   fillOpacity={radarVariant === "lines-only" ? 0 : 0.18}
                 />
@@ -271,6 +277,7 @@ export function PolarGalleryCard({
                 </>
               )}
               <Chart.RadialBarSeries
+                material={material}
                 dataKey="actual"
                 background={radialVariant !== "grid" && !stacked}
                 cornerRadius={singleRing ? 5 : 0}
@@ -278,7 +285,10 @@ export function PolarGalleryCard({
               >
                 {!singleRing &&
                   rows.map((row, index) => (
-                    <Cell key={row.category} fill={colors[index % colors.length] ?? "#334e68"} />
+                    <Cell
+                      key={row.category}
+                      fill={categoryColors[index % categoryColors.length] ?? "var(--color-actual)"}
+                    />
                   ))}
                 <LabelList
                   fill="white"
@@ -287,7 +297,12 @@ export function PolarGalleryCard({
                 />
               </Chart.RadialBarSeries>
               {stacked && (
-                <Chart.RadialBarSeries dataKey="target" stackId="scores" cornerRadius={5}>
+                <Chart.RadialBarSeries
+                  material={material}
+                  dataKey="target"
+                  stackId="scores"
+                  cornerRadius={5}
+                >
                   <LabelList
                     fill="white"
                     dataKey="target"

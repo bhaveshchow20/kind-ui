@@ -1,4 +1,8 @@
 @layer kind-ui {
+  :where(.kind-ui-combo-chart .recharts-area, .kind-ui-combo-chart .recharts-area-dots) {
+    clip-path: var(--kind-ui-combo-area-clip, none);
+  }
+
   :where(.kind-ui-area-chart .recharts-area, .kind-ui-area-chart .recharts-area-dots) {
     clip-path: var(--kind-ui-line-clip, none);
   }
@@ -98,6 +102,30 @@
     border-radius: 1px;
   }
 
+  :where([data-kind-ui="chart-tooltip-item"] [data-indicator="dot"]) {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  :where([data-kind-ui="chart-tooltip-item"] [data-indicator="dashed"]) {
+    background: transparent;
+    border-left: 2px dashed var(--kind-ui-chart-indicator-color, currentColor);
+    width: 0;
+    border-radius: 0;
+  }
+
+  :where([data-kind-ui="chart-icon"]) {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  :where([data-kind-ui="chart-icon"] > svg) {
+    width: 12px;
+    height: 12px;
+  }
+
   :where([data-kind-ui="chart-tooltip-label"], [data-kind-ui="chart-tooltip-value"]) {
     font-weight: 500;
   }
@@ -110,5 +138,167 @@
     margin-left: auto;
     padding-left: 4px;
     font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer kind-ui {
+  [data-kind-ui="heatmap"] {
+    --heatmap-missing: #e5e7eb;
+  }
+  [data-kind-ui="heatmap-scroll"] {
+    container-type: inline-size;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  [data-kind-ui="heatmap-grid"] {
+    border-spacing: 3px;
+    table-layout: fixed;
+    width: 100%;
+    min-width: calc(7rem + var(--heatmap-columns) * 3.25rem);
+  }
+  [data-kind-ui="heatmap-grid"] caption {
+    width: 100cqw;
+    max-width: 100cqw;
+    overflow-wrap: anywhere;
+    text-align: left;
+    font-weight: 600;
+    padding-bottom: 1rem;
+  }
+  [data-kind-ui="heatmap-grid"] th {
+    font-weight: 500;
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+    padding: 0.4rem;
+  }
+  [data-kind-ui="heatmap-grid"] th:first-child {
+    width: 6rem;
+    text-align: left;
+  }
+  [data-kind-ui="heatmap-grid"] td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: 2.6rem;
+    text-align: center;
+    border-radius: 3px;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.75rem;
+    cursor: default;
+  }
+  [data-kind-ui="heatmap-row-label"] {
+    display: block;
+    max-height: 1.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  [data-kind-ui="heatmap-grid"] td:focus-visible {
+    outline: 3px solid var(--foreground, #172033);
+    outline-offset: 1px;
+  }
+  [data-kind-ui="heatmap-grid"] td[data-missing="true"] {
+    background-image: repeating-linear-gradient(135deg, transparent 0 5px, #17203315 5px 6px);
+  }
+  [data-kind-ui="heatmap-tooltip"] {
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border, #d1d5db);
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+  [data-kind-ui="heatmap-tooltip"][hidden] {
+    display: none;
+  }
+  [data-kind-ui="heatmap-legend"] {
+    border: 0;
+    padding: 0;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    min-width: 0;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    max-width: 22rem;
+  }
+  [data-kind-ui="heatmap-ramp"] {
+    position: relative;
+    height: 0.65rem;
+    border-radius: 3px;
+    margin-top: 0.5rem;
+  }
+  [data-kind-ui="heatmap-ticks"] {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-top: 0.3rem;
+  }
+  [data-kind-ui="heatmap-missing-key"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+  [data-kind-ui="heatmap-missing-key"] i {
+    width: 0.85rem;
+    height: 0.85rem;
+    background:
+      repeating-linear-gradient(135deg, transparent 0 5px, #17203315 5px 6px),
+      var(--heatmap-missing);
+    border-radius: 2px;
+  }
+  [data-kind-ui="heatmap-data-table"] {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.8rem;
+  }
+  [data-kind-ui="heatmap-data-table"] :is(th, td) {
+    border: 1px solid var(--border, #d1d5db);
+    padding: 0.5rem;
+    text-align: left;
+  }
+  [data-kind-ui="heatmap-data-table"] caption {
+    padding: 0.75rem 0;
+    text-align: left;
+  }
+}
+
+@layer kind-ui {
+  [data-kind-ui="heatmap-zero-marker"] {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 1px;
+    background: var(--foreground, #172033);
+  }
+  [data-kind-ui="heatmap-zero-label"] {
+    display: block;
+    margin-top: 0.25rem;
+    overflow-wrap: anywhere;
+  }
+  [data-kind-ui="heatmap-ticks"] > span {
+    max-width: 48%;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Heatmap materials are background paint, confined to an 8% perimeter.
+   The quantitative center and native geometry are untouched. */
+@layer kind-ui {
+  [data-kind-ui="heatmap-grid"] td[data-material="paper"] {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cpattern%20id%3D%22grain%22%20width%3D%226%22%20height%3D%227%22%20patternUnits%3D%22userSpaceOnUse%22%3E%3Cpath%20d%3D%22M1%201h1M4%204h1M2%206h1%22%20stroke%3D%22%23705c48%22%20stroke-opacity%3D%22.32%22%20stroke-width%3D%22.6%22%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M0%200H100V100H0Z%20M8%208V92H92V8Z%22%20fill%3D%22%23eadac0%22%20fill-opacity%3D%22.7%22%20fill-rule%3D%22evenodd%22%2F%3E%3Cpath%20d%3D%22M0%200H100V100H0Z%20M8%208V92H92V8Z%22%20fill%3D%22url%28%23grain%29%22%20fill-rule%3D%22evenodd%22%2F%3E%3Cpath%20d%3D%22M3%205L26%203L50%205L75%203L97%205L95%2030L97%2055L95%2078L97%2096L72%2095L48%2097L25%2095L3%2097L5%2074L3%2049L5%2024Z%22%20fill%3D%22none%22%20stroke%3D%22%235c4938%22%20stroke-opacity%3D%22.65%22%20stroke-width%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M5%203L30%205L58%203L83%205L95%203M3%207L5%2035L3%2062L5%2090%22%20fill%3D%22none%22%20stroke%3D%22%23fffaf0%22%20stroke-opacity%3D%22.75%22%20stroke-width%3D%22.7%22%2F%3E%3C%2Fsvg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+  }
+  [data-kind-ui="heatmap-grid"] td[data-material="clay"] {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22top%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.7%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22bottom%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23172033%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23172033%22%20stop-opacity%3D%22.4%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22left%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.5%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22right%22%3E%3Cstop%20stop-color%3D%22%23172033%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23172033%22%20stop-opacity%3D%22.3%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M0%200H100V8H0Z%22%20fill%3D%22url%28%23top%29%22%2F%3E%3Cpath%20d%3D%22M0%2092H100V100H0Z%22%20fill%3D%22url%28%23bottom%29%22%2F%3E%3Cpath%20d%3D%22M0%208H8V92H0Z%22%20fill%3D%22url%28%23left%29%22%2F%3E%3Cpath%20d%3D%22M92%208H100V92H92Z%22%20fill%3D%22url%28%23right%29%22%2F%3E%3C%2Fsvg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+  }
+  [data-kind-ui="heatmap-grid"] td[data-material="glow"] {
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22top%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.95%22%2F%3E%3Cstop%20offset%3D%22.2%22%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22bottom%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%22.8%22%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.95%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22left%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.95%22%2F%3E%3Cstop%20offset%3D%22.2%22%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22right%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%22.8%22%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.95%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M0%200H100V8H0Z%22%20fill%3D%22url%28%23top%29%22%2F%3E%3Cpath%20d%3D%22M0%2092H100V100H0Z%22%20fill%3D%22url%28%23bottom%29%22%2F%3E%3Cpath%20d%3D%22M0%208H8V92H0Z%22%20fill%3D%22url%28%23left%29%22%2F%3E%3Cpath%20d%3D%22M92%208H100V92H92Z%22%20fill%3D%22url%28%23right%29%22%2F%3E%3C%2Fsvg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
   }
 }
