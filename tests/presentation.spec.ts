@@ -23,6 +23,9 @@ for (const family of ["line", "area", "bar"]) {
   }) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
     await page.goto(url);
     await page.getByLabel("Chart family").selectOption(family);
     await explore(page);
