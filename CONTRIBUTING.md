@@ -19,12 +19,19 @@ Kind UI is pre-release and unpublished. The repository uses an open-source contr
 - `npm run lint`: check formatting and lint rules
 - `npm run format`: apply formatting and safe lint fixes
 - `npm run check:package`: build, validate package-gate fixtures, then verify a tarball in an isolated consumer with pinned peers
+- `npm run pack:artifact`: run the same full package gate and retain the exact validated tarball and checksum in `artifacts/package/`
 - `npm test`: build and run public component tests
 - `npm run dev:chart`: run the minimal usage example
 - `npm run check:chart`: prepare the packed consumer, typecheck/build the example and run browser checks
 - `npm run check`: lint, component tests, packed-package gate and browser checks
 
 Component tests exercise zero/missing values, formatting, filtering, composition errors and native semantics. Browser checks cover controlled state, keyboard behavior, refs, resize and independent containers. The package gate checks required packed files, ESM import, and strict NodeNext/Bundler declaration resolution without workspace links. Its direct peers/type packages are pinned from the workspace; their installation may require npm registry access. Its small native Node tests prove missing outputs/docs and unwanted files fail validation. Each implementation PR must add its focused tests and include them in `check`. Package functionality must also be checked through packed public exports, rather than only workspace source imports.
+
+## Local artifact preparation
+
+From an installed source checkout, `npm pack --workspace @kind-ui/charts` runs `prepack`: it removes stale output, rebuilds, and verifies that every source module's runtime and declaration output, exported CSS, license and README will be packed. Build failures or missing outputs stop packing. Do not use `--ignore-scripts` for artifact preparation; that explicit npm override bypasses the lifecycle guard.
+
+Use `npm run pack:artifact` for a candidate that has also passed the isolated consumer gate. Only after all checks pass, it saves the exact installed/tested tarball as `artifacts/package/kind-ui-charts-0.0.0.tgz` and records its filename, SHA-256 and npm integrity in `validated-artifact.json`. A rerun removes any previous retained candidate. Compare the checksum before handoff. A future authorized release must use the retained, tested tarball rather than repacking a directory; any version/manifest/source change requires preparing and testing a new artifact. This command performs local packing and npm dependency reads only. It does not publish, and private/version policy still applies. It validates ESM import and declarations at the pinned peers; CommonJS, SSR hydration and additional peer versions remain outside this proof. Run the aggregate checks as well before proposing a release.
 
 ## Review expectations
 

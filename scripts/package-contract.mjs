@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-export function assertPackageContract(manifest, files) {
+export function assertPackageContract(manifest, files, sources = []) {
   assert.equal(manifest.private, true, "Package must remain private");
   assert.equal(manifest.type, "module", "Package must declare ESM");
   const entry = manifest.exports?.["."];
@@ -31,6 +31,11 @@ export function assertPackageContract(manifest, files) {
   );
   assert.deepEqual(manifest.sideEffects, ["**/*.css"], "CSS imports must remain side effects");
   required.push("dist/styles.css");
+  for (const source of sources) {
+    assert.ok(/\.tsx?$/.test(source) && !source.endsWith(".d.ts"), `Unexpected source: ${source}`);
+    const stem = source.replace(/\.tsx?$/, "");
+    required.push(`dist/${stem}.js`, `dist/${stem}.d.ts`);
+  }
   const allowed =
     /^(package\.json|README\.md|LICENSE|dist\/styles\.css|dist\/(?:[^/.][^/]*\/)*[^/.][^/]*\.(js|d\.ts))$/;
   for (const file of files) {
