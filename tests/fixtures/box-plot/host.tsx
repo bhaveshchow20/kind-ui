@@ -44,6 +44,8 @@ function Content({ active, payload, label }: Partial<TooltipContentProps>) {
   );
 }
 export function BoxHost() {
+  const [material, setMaterial] = useState<Chart.BoxPlotMaterial>("plain");
+  const [paint, setPaint] = useState(false);
   const [mode, setMode] = useState<"mixed" | "equal" | "missing">("mixed");
   const [horizontal, setHorizontal] = useState(false);
   const [reordered, setReordered] = useState(false);
@@ -97,6 +99,14 @@ export function BoxHost() {
       </button>
       <button type="button" onClick={() => setMode("missing")}>
         All missing
+      </button>
+      {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+        <button type="button" key={finish} onClick={() => setMaterial(finish)}>
+          {finish}
+        </button>
+      ))}
+      <button type="button" onClick={() => setPaint(!paint)}>
+        Paint
       </button>
       <output aria-label="Events">{events}</output>
       <Chart.Root
@@ -160,6 +170,7 @@ export function BoxHost() {
             ))}
             <Chart.Tooltip axisId={horizontal ? "y" : "x"} content={<Content />} maxWidth={250} />
             <Chart.BoxPlotSeries<Row>
+              material={material}
               dataKey="summary"
               seriesKey="distribution"
               xAxisId="x"
@@ -178,7 +189,7 @@ export function BoxHost() {
             >
               {rows.map((row) => (
                 <Cell
-                  fillOpacity={0}
+                  fillOpacity={paint ? 0.65 : 0}
                   clipPath="none"
                   mask="none"
                   visibility="visible"
@@ -228,3 +239,59 @@ export const rejected: Chart.BoxPlotSeriesProps = {
   // @ts-expect-error Summaries cannot be stacked.
   stackId: "total",
 };
+
+export function MaterialGallery() {
+  return (
+    <section
+      aria-label="Box material gallery"
+      style={{ display: "flex", flexWrap: "wrap", background: "#e9e9e7" }}
+    >
+      {(["plain", "paper", "clay", "glow"] as const).map((material) => (
+        <div key={material}>
+          <h2>{material}</h2>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={220}
+            height={220}
+            data-finish={material}
+            aria-label={`${material} summary`}
+          >
+            <Chart.BoxPlotMark
+              material={material}
+              coordinates={{
+                lowerWhisker: 40,
+                q1: 70,
+                median: 110,
+                q3: 140,
+                upperWhisker: 170,
+                outliers: [10, 195],
+              }}
+              center={100}
+              size={60}
+              fill="#176b69"
+              fillOpacity={0.65}
+              stroke="#176b69"
+              strokeWidth={2}
+            />
+          </svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={220}
+            height={60}
+            data-tiny={material}
+            aria-label={`${material} tiny summary`}
+          >
+            <Chart.BoxPlotMark
+              material={material}
+              coordinates={{ lowerWhisker: 30, q1: 30, median: 30, q3: 30, upperWhisker: 30 }}
+              center={30}
+              size={3}
+              fill="#176b69"
+              stroke="#176b69"
+            />
+          </svg>
+        </div>
+      ))}
+    </section>
+  );
+}

@@ -1,9 +1,10 @@
 "use client";
 
-import { type ComponentPropsWithRef, type ReactNode, useCallback, useMemo } from "react";
+import { type ComponentPropsWithRef, type ReactNode, useCallback, useId, useMemo } from "react";
 import { type BarShapeProps, useChartLayout, useXAxisScale, useYAxisScale } from "recharts";
 import { BarChart, type BarChartProps } from "./bar-chart.js";
 import { BarSeries, type BarSeriesProps } from "./bar-series.js";
+import { BoxMaterialFilter, type BoxPlotMaterial } from "./box-material.js";
 
 /** Caller-computed statistics; no sample, quartile or fence convention is inferred. */
 export type BoxPlotSummary = {
@@ -71,6 +72,8 @@ export type BoxPlotMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> & {
   size: number;
   orientation?: "vertical" | "horizontal";
   outlierRadius?: number | undefined;
+  /** Static finish; explicit filters/styles retain consumer ownership. */
+  material?: BoxPlotMaterial | undefined;
 };
 /** A reusable SVG mark. Zero IQR remains a line; no minimum numeric extent is invented. */
 export function BoxPlotMark({
@@ -80,8 +83,12 @@ export function BoxPlotMark({
   orientation = "vertical",
   outlierRadius = 3,
   strokeWidth = 1.5,
+  material = "plain",
   ...props
 }: BoxPlotMarkProps) {
+  const id = `kind-ui-box-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const materialized =
+    material !== "plain" && props.filter === undefined && props.style?.filter === undefined;
   const horizontal = orientation === "horizontal";
   const start = center - size / 2;
   const low = Math.min(c.q1, c.q3);
@@ -95,14 +102,8 @@ export function BoxPlotMark({
         : { x1: a, x2: b, y1: value, y2: value })}
     />
   );
-  return (
-    <g
-      data-kind-ui="box-plot-mark"
-      fill="currentColor"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      {...props}
-    >
+  const parts = (
+    <>
       <line
         data-box-part="whisker"
         {...(horizontal
@@ -135,6 +136,34 @@ export function BoxPlotMark({
           {...(horizontal ? { cx: value, cy: center } : { cx: center, cy: value })}
         />
       ))}
+    </>
+  );
+  return (
+    <g
+      data-kind-ui="box-plot-mark"
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      {...props}
+    >
+      {materialized ? (
+        <>
+          <defs data-kind-ui="box-material" data-material={material} pointerEvents="none">
+            <BoxMaterialFilter
+              material={material}
+              id={id}
+              coordinates={c}
+              center={center}
+              size={size}
+              horizontal={horizontal}
+              outlierRadius={outlierRadius}
+            />
+          </defs>
+          <g filter={`url(#${id})`}>{parts}</g>
+        </>
+      ) : (
+        parts
+      )}
     </g>
   );
 }
@@ -158,6 +187,7 @@ export type BoxPlotSeriesProps<Row extends object = Record<string, unknown>> = O
   dataKey: (keyof Row & string) | ((row: Row) => BoxPlotSummary | null | undefined);
   /** Required metadata/visibility key, independent of the computed native range. */
   seriesKey: string;
+  material?: BoxPlotMaterial | undefined;
   shape?: (props: BoxPlotShapeProps) => ReactNode;
   markProps?: Omit<ComponentPropsWithRef<"g">, "children">;
   outlierRadius?: number | undefined;
@@ -169,9 +199,11 @@ function ScaledMark({
   shape,
   markProps,
   outlierRadius,
+  material,
   xAxisId,
   yAxisId,
 }: {
+  material: BoxPlotMaterial;
   summary: BoxPlotSummary | null;
   native: BarShapeProps;
   shape: BoxPlotSeriesProps["shape"];
@@ -234,7 +266,7 @@ function ScaledMark({
   };
   if (shape) return shape(props);
   const { summary: _summary, native: _native, ...mark } = props;
-  return <BoxPlotMark {...mark} />;
+  return <BoxPlotMark {...mark} material={material} />;
 }
 
 /** Registered range Bar with truthful summary geometry through public scale hooks. */
@@ -244,6 +276,7 @@ export function BoxPlotSeries<Row extends object = Record<string, unknown>>({
   shape,
   markProps,
   outlierRadius,
+  material = "plain",
   ...props
 }: BoxPlotSeriesProps<Row>) {
   const read = useCallback(
@@ -266,13 +299,14 @@ export function BoxPlotSeries<Row extends object = Record<string, unknown>>({
         summary={read(native.payload)}
         native={native}
         shape={shape}
+        material={material}
         markProps={markProps}
         outlierRadius={outlierRadius}
         xAxisId={props.xAxisId}
         yAxisId={props.yAxisId}
       />
     ),
-    [read, shape, markProps, outlierRadius, props.xAxisId, props.yAxisId],
+    [read, shape, material, markProps, outlierRadius, props.xAxisId, props.yAxisId],
   );
   return (
     <BarSeries {...props} seriesKey={seriesKey} dataKey={extent} shape={render} activeBar={false} />
