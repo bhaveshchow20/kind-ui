@@ -9,45 +9,45 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  recover-evidence:
+  check:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
     steps:
-      - name: Recover only the two exact Node 24 failure traces
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 - <<'PY'
-          import io, json, os, urllib.request, urllib.error, zipfile
-          from pathlib import Path
-          class NoRedirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self, *args, **kwargs):
-                  return None
-          request = urllib.request.Request(
-              'https://api.github.com/repos/bhaveshchow20/kind-ui/actions/artifacts/11255647817/zip',
-              headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
-                       'Accept': 'application/vnd.github+json'})
-          try:
-              urllib.request.build_opener(NoRedirect).open(request)
-              raise RuntimeError('Expected artifact redirect')
-          except urllib.error.HTTPError as error:
-              if error.code != 302:
-                  raise
-              location = error.headers['Location']
-          with urllib.request.urlopen(location) as response:
-              archive = zipfile.ZipFile(io.BytesIO(response.read()))
-          count = 0
-          for entry in archive.infolist():
-              parts = Path(entry.filename).parts
-              if any(part.endswith('-repeat3') or part.endswith('-repeat32') for part in parts):
-                  archive.extract(entry, 'recovered')
-                  count += 1
-          if count == 0:
-              raise RuntimeError('Failure trace paths were not found')
-          print('Recovered', count, 'files from the exact failed diagnostic artifact')
-          PY
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          name: exact-node24-failure-traces
-          path: recovered/
+          persist-credentials: false
+          ref: 830f9c5d4607c7f78afa3814b53c1be3afcc32b3
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm install --global npm@11.9.0
+      - run: npm ci
+      - run: npm exec playwright install -- --with-deps chromium
+      # Paired after-proof: check out the exact clean fix, with no browser instrumentation.
+      - run: npm run build && npm exec vite build -- examples/chart
+      - name: Verify exact clean fix and write temporary focused config
+        run: |
+          test "$(git rev-parse HEAD)" = "830f9c5d4607c7f78afa3814b53c1be3afcc32b3"
+          cat > .bar-return.playwright.mjs <<'JS'
+          import { defineConfig } from "@playwright/test";
+          export default defineConfig({
+            testDir: "tests", testMatch: "bars.spec.ts", grep: /bar tooltip retargets/,
+            outputDir: "artifacts/bar-return-diagnostic", workers: 2,
+            use: { baseURL: "http://127.0.0.1:6473", viewport: { width: 1000, height: 900 },
+              reducedMotion: "reduce", trace: "retain-on-failure", screenshot: "only-on-failure" },
+            webServer: { command: "npm exec vite preview -- --outDir examples/chart/dist --host 127.0.0.1 --port 6473 --strictPort",
+              url: "http://127.0.0.1:6473" },
+          });
+          JS
+      - run: node node_modules/@playwright/test/cli.js test --config .bar-return.playwright.mjs --repeat-each 40
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: chart-screenshots-node-${{ matrix.node }}
+          path: artifacts/bar-return-diagnostic/
           if-no-files-found: error
           retention-days: 14
