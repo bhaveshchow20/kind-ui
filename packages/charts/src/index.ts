@@ -22,6 +22,31 @@ export {
 export type { BarMaterial } from "./bar-material.js";
 export { BarSeries, type BarSeriesProps } from "./bar-series.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
+export {
+  HeatmapCellContent,
+  type HeatmapCellContentProps,
+  HeatmapChart,
+  type HeatmapChartProps,
+  HeatmapDataTable,
+  type HeatmapDataTableProps,
+  HeatmapGrid,
+  type HeatmapGridProps,
+  HeatmapLegend,
+  type HeatmapLegendProps,
+  HeatmapTooltip,
+  type HeatmapTooltipProps,
+} from "./heatmap.js";
+export {
+  createHeatmapModel,
+  createHeatmapScale,
+  type HeatmapCell,
+  type HeatmapDatum,
+  type HeatmapDuplicatePolicy,
+  type HeatmapModel,
+  type HeatmapModelOptions,
+  type HeatmapScale,
+  type HeatmapScaleOptions,
+} from "./heatmap-model.js";
 export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";
 export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";

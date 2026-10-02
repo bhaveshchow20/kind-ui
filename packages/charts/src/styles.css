@@ -140,3 +140,145 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+@layer kind-ui {
+  [data-kind-ui="heatmap"] {
+    --heatmap-missing: #e5e7eb;
+  }
+  [data-kind-ui="heatmap-scroll"] {
+    container-type: inline-size;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  [data-kind-ui="heatmap-grid"] {
+    border-spacing: 3px;
+    table-layout: fixed;
+    width: 100%;
+    min-width: calc(7rem + var(--heatmap-columns) * 3.25rem);
+  }
+  [data-kind-ui="heatmap-grid"] caption {
+    width: 100cqw;
+    max-width: 100cqw;
+    overflow-wrap: anywhere;
+    text-align: left;
+    font-weight: 600;
+    padding-bottom: 1rem;
+  }
+  [data-kind-ui="heatmap-grid"] th {
+    font-weight: 500;
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+    padding: 0.4rem;
+  }
+  [data-kind-ui="heatmap-grid"] th:first-child {
+    width: 6rem;
+    text-align: left;
+  }
+  [data-kind-ui="heatmap-grid"] td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: 2.6rem;
+    text-align: center;
+    border-radius: 3px;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.75rem;
+    cursor: default;
+  }
+  [data-kind-ui="heatmap-row-label"] {
+    display: block;
+    max-height: 1.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  [data-kind-ui="heatmap-grid"] td:focus-visible {
+    outline: 3px solid var(--foreground, #172033);
+    outline-offset: 1px;
+  }
+  [data-kind-ui="heatmap-grid"] td[data-missing="true"] {
+    background-image: repeating-linear-gradient(135deg, transparent 0 5px, #17203315 5px 6px);
+  }
+  [data-kind-ui="heatmap-tooltip"] {
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border, #d1d5db);
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+  [data-kind-ui="heatmap-tooltip"][hidden] {
+    display: none;
+  }
+  [data-kind-ui="heatmap-legend"] {
+    border: 0;
+    padding: 0;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    min-width: 0;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    max-width: 22rem;
+  }
+  [data-kind-ui="heatmap-ramp"] {
+    position: relative;
+    height: 0.65rem;
+    border-radius: 3px;
+    margin-top: 0.5rem;
+  }
+  [data-kind-ui="heatmap-ticks"] {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-top: 0.3rem;
+  }
+  [data-kind-ui="heatmap-missing-key"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+  [data-kind-ui="heatmap-missing-key"] i {
+    width: 0.85rem;
+    height: 0.85rem;
+    background:
+      repeating-linear-gradient(135deg, transparent 0 5px, #17203315 5px 6px),
+      var(--heatmap-missing);
+    border-radius: 2px;
+  }
+  [data-kind-ui="heatmap-data-table"] {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.8rem;
+  }
+  [data-kind-ui="heatmap-data-table"] :is(th, td) {
+    border: 1px solid var(--border, #d1d5db);
+    padding: 0.5rem;
+    text-align: left;
+  }
+  [data-kind-ui="heatmap-data-table"] caption {
+    padding: 0.75rem 0;
+    text-align: left;
+  }
+}
+
+@layer kind-ui {
+  [data-kind-ui="heatmap-zero-marker"] {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 1px;
+    background: var(--foreground, #172033);
+  }
+  [data-kind-ui="heatmap-zero-label"] {
+    display: block;
+    margin-top: 0.25rem;
+    overflow-wrap: anywhere;
+  }
+  [data-kind-ui="heatmap-ticks"] > span {
+    max-width: 48%;
+    overflow-wrap: anywhere;
+  }
+}
