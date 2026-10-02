@@ -113,7 +113,11 @@ export function BoxPlotMark({
       {line(center - size / 4, center + size / 4, c.upperWhisker, "upper-cap")}
       <rect
         data-box-part="box"
-        fillOpacity={0.18}
+        fillOpacity={
+          props.fillOpacity === undefined && props.style?.fillOpacity === undefined
+            ? 0.18
+            : undefined
+        }
         {...(horizontal
           ? { x: low, y: start, width: length, height: size }
           : { x: start, y: low, width: size, height: length })}
@@ -216,6 +220,9 @@ function ScaledMark({
     className: native.className,
     style: native.style,
     filter: native.filter,
+    clipPath: native.clipPath,
+    mask: native.mask,
+    visibility: native.visibility,
     ...markProps,
     coordinates: { lowerWhisker, q1, median, q3, upperWhisker, outliers: outliers as number[] },
     center,

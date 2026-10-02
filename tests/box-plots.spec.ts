@@ -16,6 +16,15 @@ test("packed box plots: exact native geometry, domains, composition, null and co
   await expect(page.locator(`${marks}[data-mark-ref="yes"]`)).toHaveCount(3);
   await expect(page.locator(marks).first()).toHaveAttribute("stroke-width", "4");
   await expect(page.locator(marks).first()).toHaveAttribute("stroke-dasharray", "4 2");
+  await expect(page.locator(marks).first()).toHaveAttribute("clip-path", "none");
+  await expect(page.locator(marks).first()).toHaveAttribute("mask", "none");
+  await expect(page.locator(marks).first()).toHaveAttribute("visibility", "visible");
+  expect(
+    await page
+      .locator(part("box"))
+      .first()
+      .evaluate((node) => getComputedStyle(node).fillOpacity),
+  ).toBe("0");
   const measure = async (horizontal = false) =>
     page.locator(marks).evaluateAll(
       (nodes, horizontal) =>
@@ -37,30 +46,55 @@ test("packed box plots: exact native geometry, domains, composition, null and co
       horizontal,
     );
   const check = async (horizontal = false) => {
-    const result = await measure(horizontal);
-    const first = result[0];
-    if (!first) throw new Error("Missing mark");
-    const slope = (first.high - first.low) / 19; // whiskers -12 to 7
-    const coordinate = (value: number) => first.low + (value + 12) * slope;
-    expect(first.median).toBeCloseTo(coordinate(-3), 5);
-    expect(first.q1).toBeCloseTo(Math.min(coordinate(-8), coordinate(2)), 5);
-    expect(first.size).toBeCloseTo(Math.abs(10 * slope), 5);
-    expect(first.outliers[0]).toBeCloseTo(coordinate(-20), 5);
-    expect(first.outliers[1]).toBeCloseTo(coordinate(16), 5);
-    expect(result[1]?.size).toBe(0);
-    // Native auto domain covers the entire -20..24 extent, including all outliers.
-    const plot = await page.locator(".recharts-cartesian-grid").boundingBox();
-    const svg = await chart.boundingBox();
-    expect(plot && svg).toBeTruthy();
-    if (plot && svg) {
-      const start = horizontal ? plot.x - svg.x : plot.y - svg.y;
-      const end = start + (horizontal ? plot.width : plot.height);
-      for (const mark of result)
-        for (const value of [mark.low, mark.high, ...mark.outliers]) {
-          expect(value).toBeGreaterThanOrEqual(start - 1);
-          expect(value).toBeLessThanOrEqual(end + 1);
-        }
-    }
+    // ResizeObserver and the native axis registry settle asynchronously. Compare
+    // against separately rendered native ReferenceLines, never the Kind mark's scale.
+    await expect(async () => {
+      const result = await measure(horizontal);
+      const oracle = await page
+        .locator("[data-native-value]")
+        .evaluateAll(
+          (nodes, horizontal) =>
+            Object.fromEntries(
+              nodes.map((node) => [
+                node.getAttribute("data-native-value"),
+                Number(node.getAttribute(horizontal ? "x1" : "y1")),
+              ]),
+            ),
+          horizontal,
+        );
+      const first = result[0];
+      if (!first) throw new Error("Missing mark");
+      expect(first.low).toBeCloseTo(oracle[-12], 5);
+      expect(first.high).toBeCloseTo(oracle[7], 5);
+      expect(first.median).toBeCloseTo(oracle[-3], 5);
+      expect(first.q1).toBeCloseTo(Math.min(oracle[-8], oracle[2]), 5);
+      expect(first.size).toBeCloseTo(Math.abs(oracle[2] - oracle[-8]), 5);
+      expect(first.outliers[0]).toBeCloseTo(oracle[-20], 5);
+      expect(first.outliers[1]).toBeCloseTo(oracle[16], 5);
+      expect(result[1]?.size).toBe(0);
+      expect(result[1]?.median).toBeCloseTo(oracle[0], 5);
+      const positive = result[2];
+      if (!positive) throw new Error("Missing positive mark");
+      expect(positive.low).toBeCloseTo(oracle[3], 5);
+      expect(positive.high).toBeCloseTo(oracle[17], 5);
+      expect(positive.median).toBeCloseTo(oracle[8], 5);
+      expect(positive.q1).toBeCloseTo(Math.min(oracle[5], oracle[13]), 5);
+      expect(positive.size).toBeCloseTo(Math.abs(oracle[13] - oracle[5]), 5);
+      expect(positive.outliers).toEqual([oracle[24], oracle[24]]);
+      // Native auto domain covers the full extent, including all outliers.
+      const plot = await page.locator(".recharts-cartesian-grid").boundingBox();
+      const svg = await chart.boundingBox();
+      expect(plot && svg).toBeTruthy();
+      if (plot && svg) {
+        const start = horizontal ? plot.x - svg.x : plot.y - svg.y;
+        const end = start + (horizontal ? plot.width : plot.height);
+        for (const mark of result)
+          for (const value of [mark.low, mark.high, ...mark.outliers]) {
+            expect(value).toBeGreaterThanOrEqual(start - 1);
+            expect(value).toBeLessThanOrEqual(end + 1);
+          }
+      }
+    }).toPass({ timeout: 5000 });
   };
   await check();
   await expect(page.locator(part("collapsed-box"))).toHaveCount(1);

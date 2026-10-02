@@ -402,7 +402,8 @@ const data = [{ group: "A", summary: {
   controlled Root visibility. Native domain inference uses the complete extent,
   not just median or quartiles. Supply native axes and their IDs; for horizontal
   boxes use `layout="vertical"`, a numeric XAxis and categorical YAxis.
-- `barSize`, native series data, Cell styling, LabelList, axis IDs, chart/series
+- `barSize`, native series data, Cell paint, stroke, opacity, style, filter,
+  clipPath, mask and visibility, LabelList, axis IDs, chart/series
   handlers, chart refs, and consumer children retain their native ownership.
   LabelList's native position refers to the enclosing range; supply a label
   dataKey or custom content if the label should describe a statistic.

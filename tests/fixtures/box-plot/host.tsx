@@ -138,6 +138,26 @@ export function BoxHost() {
               {...(horizontal ? { x: 0 } : { y: 0 })}
               stroke="#444"
             />
+            {[-20, -12, -8, -3, 0, 2, 3, 5, 7, 8, 13, 16, 17, 24].map((value) => (
+              <ReferenceLine
+                key={value}
+                xAxisId="x"
+                yAxisId="y"
+                {...(horizontal ? { x: value } : { y: value })}
+                ifOverflow="visible"
+                shape={({ x1, x2, y1, y2 }: { x1: number; x2: number; y1: number; y2: number }) => (
+                  <line
+                    data-native-value={value}
+                    x1={x1}
+                    x2={x2}
+                    y1={y1}
+                    y2={y2}
+                    opacity={0}
+                    pointerEvents="none"
+                  />
+                )}
+              />
+            ))}
             <Chart.Tooltip axisId={horizontal ? "y" : "x"} content={<Content />} maxWidth={250} />
             <Chart.BoxPlotSeries<Row>
               dataKey="summary"
@@ -158,6 +178,10 @@ export function BoxHost() {
             >
               {rows.map((row) => (
                 <Cell
+                  fillOpacity={0}
+                  clipPath="none"
+                  mask="none"
+                  visibility="visible"
                   strokeWidth={4}
                   strokeDasharray="4 2"
                   key={row.category}
