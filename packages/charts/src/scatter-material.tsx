@@ -49,6 +49,17 @@ export function ScatterMaterialSymbol({
                 strokeWidth={props.strokeWidth ?? 0}
               />
             </clipPath>
+            <filter
+              id={`${id}-guard`}
+              x={-1}
+              y={-1}
+              width={3}
+              height={3}
+              filterUnits="objectBoundingBox"
+              primitiveUnits="userSpaceOnUse"
+            >
+              <feMorphology in="SourceGraphic" operator="dilate" radius={1} />
+            </filter>
             <mask
               id={`${id}-outside`}
               maskUnits="userSpaceOnUse"
@@ -64,14 +75,16 @@ export function ScatterMaterialSymbol({
                 height={extent * 2}
                 fill="#fff"
               />
-              <rect
-                x={(props.cx ?? 0) - extent}
-                y={(props.cy ?? 0) - extent}
-                width={extent * 2}
-                height={extent * 2}
-                fill="#000"
-                clipPath={`url(#${id}-geometry)`}
-              />
+              <g filter={`url(#${id}-guard)`}>
+                <rect
+                  x={(props.cx ?? 0) - extent}
+                  y={(props.cy ?? 0) - extent}
+                  width={extent * 2}
+                  height={extent * 2}
+                  fill="#000"
+                  clipPath={`url(#${id}-geometry)`}
+                />
+              </g>
             </mask>
             <filter
               id={`${id}-halo`}

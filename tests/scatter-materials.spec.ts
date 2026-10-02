@@ -57,7 +57,7 @@ test("tarball finishes preserve all seven native symbol paths, transforms, paint
       const ids = await finished
         .locator('[data-kind-ui="scatter-material"] filter')
         .evaluateAll((nodes) => nodes.map((n) => n.id));
-      expect(ids.length).toBe(material === "plain" ? 0 : material === "glow" ? 14 : 7);
+      expect(ids.length).toBe(material === "plain" ? 0 : material === "glow" ? 21 : 7);
       expect(new Set(ids).size).toBe(ids.length);
     }
   }
