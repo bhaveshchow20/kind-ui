@@ -6,8 +6,12 @@ const props = {
   data: [],
   scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#000000", "#ffffff"] }),
 };
-// @ts-expect-error Heatmap has no public material type; card styling is native host CSS.
-export type RemovedMaterial = Chart.HeatmapMaterial;
+export const materials: Chart.HeatmapMaterial[] = ["plain", "paper", "clay", "glow"];
+export const Materials = materials.map((material) => (
+  <Chart.HeatmapGrid key={material} caption="Materials" material={material} />
+));
+// @ts-expect-error Unsupported finishes must not silently become Plain.
+export const RejectedGridMaterial = <Chart.HeatmapGrid caption="Wrong" material="glass" />;
 // @ts-expect-error Heatmap has no material prop.
 export const RejectedMaterial = <Chart.HeatmapChart {...props} material="paper" />;
 export const NativeHost = (

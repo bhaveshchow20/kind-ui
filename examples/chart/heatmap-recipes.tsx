@@ -7,6 +7,7 @@ import {
   type HeatmapDatum,
   HeatmapGrid,
   HeatmapLegend,
+  type HeatmapMaterial,
   HeatmapTooltip,
 } from "@kind-ui/charts";
 import { useState } from "react";
@@ -68,16 +69,30 @@ export function HeatmapRecipes() {
   const [updated, setUpdated] = useState(false);
   const [empty, setEmpty] = useState(false);
   const [motion, setMotion] = useState(true);
+  const [material, setMaterial] = useState<HeatmapMaterial>("plain");
   return (
     <main className="heatmaps-page">
       <header>
         <p className="eyebrow">KIND UI / CATEGORICAL GRIDS</p>
         <h1>A field of values.</h1>
         <p>
-          Two dimensions, one quantitative color scale. Read the pattern, then inspect each cell.
+          Two dimensions, one quantitative color scale. Compare cell centers to the legend; rims are
+          decoration.
         </p>
       </header>
       <nav className="heatmaps-controls" aria-label="Heatmap controls">
+        <label>
+          Cell material
+          <select
+            value={material}
+            onChange={(event) => setMaterial(event.target.value as HeatmapMaterial)}
+          >
+            <option value="plain">Plain</option>
+            <option value="paper">Paper</option>
+            <option value="clay">Clay</option>
+            <option value="glow">Glow</option>
+          </select>
+        </label>
         <label>
           <input
             type="checkbox"
@@ -126,6 +141,7 @@ export function HeatmapRecipes() {
           animate={motion}
         >
           <HeatmapGrid
+            material={material}
             caption="Weekly latency change by service and region"
             Cell={Value}
             cellProps={(cell) =>
@@ -166,7 +182,11 @@ export function HeatmapRecipes() {
           formatValue={(value) => `${value} deployments`}
           missingLabel="Not yet observed"
         >
-          <HeatmapGrid caption="Deployment activity across 14 weeks" Cell={ActivityCell} />
+          <HeatmapGrid
+            material={material}
+            caption="Deployment activity across 14 weeks"
+            Cell={ActivityCell}
+          />
           <HeatmapTooltip />
           <HeatmapLegend label="Deployments per day" />
           <details>

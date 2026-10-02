@@ -100,7 +100,7 @@ for (const packed of [false, true]) {
       });
       await expect(chart).toHaveCSS("background-color", "rgb(250, 246, 240)");
       expect(await capture()).toEqual(plain);
-      await expect(page.getByRole("combobox")).toHaveCount(0);
+      await expect(page.getByRole("combobox", { name: "Cell material" })).toHaveValue("plain");
       await expect(page.locator('[data-kind-ui="heatmap"][data-material]')).toHaveCount(0);
     });
     test("phone layout contains overflow and reaches last activity cell", async ({ page }) => {
@@ -183,10 +183,13 @@ test("actual touch inspection opens zero and missing cells", async ({ browser })
   const page = await context.newPage();
   await page.goto(`http://127.0.0.1:${4190 + offset}`);
   const grid = page.getByRole("grid", { name: "Weekly latency" });
-  await grid.getByRole("gridcell").nth(2).tap();
-  await expect(page.getByRole("tooltip").first()).toHaveText("Platform, Europe: 0");
-  await grid.getByRole("gridcell").nth(4).tap();
-  await expect(page.getByRole("tooltip").first()).toHaveText("Platform, Oceania: No sample");
+  for (const material of ["plain", "paper", "clay", "glow"]) {
+    await page.getByRole("combobox", { name: "Cell material" }).selectOption(material);
+    await grid.getByRole("gridcell").nth(2).tap();
+    await expect(page.getByRole("tooltip").first()).toHaveText("Platform, Europe: 0");
+    await grid.getByRole("gridcell").nth(4).tap();
+    await expect(page.getByRole("tooltip").first()).toHaveText("Platform, Oceania: No sample");
+  }
   await context.close();
 });
 test("removed focused row has a valid tab reentry and custom missing foreground", async ({

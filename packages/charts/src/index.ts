@@ -33,6 +33,7 @@ export {
   type HeatmapGridProps,
   HeatmapLegend,
   type HeatmapLegendProps,
+  type HeatmapMaterial,
   HeatmapTooltip,
   type HeatmapTooltipProps,
 } from "./heatmap.js";
