@@ -93,7 +93,13 @@ function DataTable({ rows, size = false }: { rows: Observation[]; size?: boolean
   );
 }
 export function ScatterRecipes() {
-  const [animate, setAnimate] = useState(false);
+  const [animate, setAnimate] = useState(true);
+  const [material, setMaterial] = useState<Chart.ScatterMaterial>("plain");
+  const [color, setColor] = useState(false);
+  const purple = color ? "#7c5ce7" : "#606977";
+  const green = color ? "#169b83" : "#929aa5";
+  const blue = color ? "#5f79d9" : "#707988";
+  const orange = color ? "#d8844c" : "#747d89";
   const [visible, setVisible] = useState(["weekday", "weekend"]);
   const [period, setPeriod] = useState(false);
   const current = period
@@ -104,7 +110,11 @@ export function ScatterRecipes() {
       }))
     : weekday;
   return (
-    <main className="scatter-page">
+    <main
+      className="scatter-page"
+      data-material={material}
+      data-palette={color ? "color" : "monochrome"}
+    >
       <header className="scatter-header">
         <div>
           <p className="scatter-eyebrow">KIND UI / SCATTER</p>
@@ -120,6 +130,32 @@ export function ScatterRecipes() {
           Motion
         </label>
       </header>
+      <div className="scatter-controls">
+        <fieldset aria-label="Finish">
+          {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+            <button
+              key={finish}
+              type="button"
+              aria-pressed={material === finish}
+              onClick={() => setMaterial(finish)}
+            >
+              {finish.charAt(0).toUpperCase() + finish.slice(1)}
+            </button>
+          ))}
+        </fieldset>
+        <fieldset aria-label="Palette">
+          <button type="button" aria-pressed={!color} onClick={() => setColor(false)}>
+            Monochrome
+          </button>
+          <button type="button" aria-pressed={color} onClick={() => setColor(true)}>
+            Color
+          </button>
+        </fieldset>
+      </div>
+      <p className="scatter-note">
+        Paper adds inset pencil grain. Clay adds soft convex relief. Glow adds decorative light
+        outside the exact bubble area. Custom diamond renderers keep their own finish.
+      </p>
       <div className="scatter-grid">
         <section className="scatter-card scatter-wide" aria-labelledby="relationship-title">
           <header>
@@ -134,8 +170,8 @@ export function ScatterRecipes() {
           </header>
           <Chart.Root
             config={{
-              weekday: { label: "Weekday", color: "#7c5ce7" },
-              weekend: { label: "Weekend", color: "#169b83" },
+              weekday: { label: "Weekday", color: purple },
+              weekend: { label: "Weekend", color: green },
             }}
             visibleSeries={visible}
             onVisibleSeriesChange={setVisible}
@@ -172,8 +208,13 @@ export function ScatterRecipes() {
                 width={60}
               />
               <ReferenceLine y={90} stroke="#c4c9d5" strokeDasharray="4 4" />
-              <Chart.ScatterSeries seriesKey="weekday" data={current} />
-              <Chart.ScatterSeries seriesKey="weekend" data={weekend} shape="diamond" />
+              <Chart.ScatterSeries material={material} seriesKey="weekday" data={current} />
+              <Chart.ScatterSeries
+                material={material}
+                seriesKey="weekend"
+                data={weekend}
+                shape="diamond"
+              />
               <Chart.ScatterTooltip pointLabel={pointLabel} />
             </Chart.ScatterChart>
           </Chart.Root>
@@ -190,7 +231,7 @@ export function ScatterRecipes() {
               <p>Same positions. Bubble area maps requests from 0–300k.</p>
             </div>
           </header>
-          <Chart.Root config={{ tasks: { label: "Task workload", color: "#5f79d9" } }}>
+          <Chart.Root config={{ tasks: { label: "Task workload", color: blue } }}>
             <Chart.Legend />
             <Chart.ScatterChart
               responsive
@@ -224,10 +265,11 @@ export function ScatterRecipes() {
               />
               <ZAxis dataKey="z" domain={[0, 300]} range={[35, 1200]} name="Requests" unit="k" />
               <Chart.ScatterSeries
+                material={material}
                 seriesKey="tasks"
                 data={current}
                 fillOpacity={0.7}
-                stroke="#3e59b5"
+                stroke={color ? "#3e59b5" : "#505966"}
                 strokeWidth={1}
               />
               <Chart.ScatterTooltip pointLabel={pointLabel} />
@@ -247,7 +289,7 @@ export function ScatterRecipes() {
               <p>Zero stays at the origin. Two teams share one coordinate.</p>
             </div>
           </header>
-          <Chart.Root config={{ teams: { label: "Teams", color: "#d8844c" } }}>
+          <Chart.Root config={{ teams: { label: "Teams", color: orange } }}>
             <Chart.Legend />
             <Chart.ScatterChart
               responsive
@@ -282,16 +324,17 @@ export function ScatterRecipes() {
               <ReferenceLine x={0} stroke="#aeb5c4" />
               <ReferenceLine y={0} stroke="#aeb5c4" />
               <Chart.ScatterSeries
+                material={material}
                 seriesKey="teams"
                 data={signed.filter((row) => row.y !== null)}
                 shape={Diamond}
                 activeShape={Diamond}
               >
-                <Cell fill="#d8844c" />
-                <Cell fill="#d8844c" />
-                <Cell fill="#d8844c" />
-                <Cell fill="#d8844c" />
-                <Cell fill="#8558bf" />
+                <Cell fill={orange} />
+                <Cell fill={orange} />
+                <Cell fill={orange} />
+                <Cell fill={orange} />
+                <Cell fill={color ? "#8558bf" : "#a1a7b0"} />
                 <LabelList
                   dataKey={(row: unknown) =>
                     pointLabel(row) === "Ember"
@@ -335,7 +378,7 @@ export function ScatterRecipes() {
               </p>
             </div>
           </header>
-          <Chart.Root config={{ regions: { label: "Regions", color: "#169b83" } }}>
+          <Chart.Root config={{ regions: { label: "Regions", color: green } }}>
             <Chart.Legend />
             <Chart.ScatterChart
               responsive
@@ -369,6 +412,7 @@ export function ScatterRecipes() {
               />
               <ZAxis dataKey="z" domain={[0, 200]} range={[55, 1000]} name="Requests" unit="k" />
               <Chart.ScatterSeries
+                material={material}
                 seriesKey="regions"
                 data={coverage.filter((row) => row.z == null || row.z >= 0)}
                 fillOpacity={0.75}
