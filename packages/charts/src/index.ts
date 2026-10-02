@@ -37,6 +37,7 @@ export {
 export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
 export { Root, type RootProps } from "./root.js";
 export { type ScatterAnimation, ScatterChart, type ScatterChartProps } from "./scatter-chart.js";
+export type { ScatterMaterial } from "./scatter-material.js";
 export { ScatterSeries, type ScatterSeriesProps } from "./scatter-series.js";
 export {
   type ScatterSizeDimension,

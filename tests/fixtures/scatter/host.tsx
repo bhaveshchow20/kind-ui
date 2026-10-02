@@ -276,3 +276,178 @@ export function ScatterHost() {
     </main>
   );
 }
+
+const types = ["circle", "diamond", "square", "triangle", "star", "cross", "wye"] as const;
+const materialData = [
+  { id: "zero", x: 12, y: 45, z: 0 },
+  { id: "missing", x: 23, y: 35, z: null },
+  { id: "small", x: 34, y: 50, z: 1 },
+  { id: "medium", x: 47, y: 40, z: 16 },
+  { id: "large", x: 62, y: 60, z: 64 },
+  { id: "largest", x: 76, y: 35, z: 250 },
+  { id: "edge", x: 99, y: 55, z: 500 },
+];
+function Custom(point: ScatterShapeProps) {
+  return <Symbols {...point} type="diamond" data-custom="function" />;
+}
+export function ScatterMaterialHost() {
+  const [defaults, setDefaults] = useState(0);
+  const [subpixel, setSubpixel] = useState(false);
+  const [material, setMaterial] = useState<Chart.ScatterMaterial>("plain");
+  const [animate, setAnimate] = useState(true);
+  const [narrow, setNarrow] = useState(false);
+  const [pink, setPink] = useState(false);
+  const [gradient, setGradient] = useState(false);
+  const [symbol, setSymbol] = useState<(typeof types)[number]>("circle");
+  const nativeShape =
+    defaults === 1 ? true : defaults === 2 ? false : defaults === 3 ? undefined : symbol;
+  const [ownership, setOwnership] = useState(false);
+  const [update, setUpdate] = useState(false);
+  const [clicks, setClicks] = useState(0);
+  const values = update ? materialData.map((p) => ({ ...p, y: p.y + 4 })) : materialData;
+  const paint = pink ? "#efb4cb" : "#755ad8";
+  const axes = (
+    <>
+      <XAxis type="number" dataKey="x" domain={[0, 100]} allowDataOverflow />
+      <YAxis type="number" dataKey="y" domain={[0, 100]} allowDataOverflow />
+      <ZAxis dataKey="z" domain={[0, 500]} range={[subpixel ? 0.25 : 4, 1500]} name="Volume" />
+    </>
+  );
+  const cells = (
+    <>
+      {values.map((p, i) => (
+        <Cell
+          key={p.id}
+          fill={gradient ? "url(#alpha-paint)" : i === 3 ? "#169b83" : paint}
+          {...(i === 3 ? { cx: 300, cy: 150, size: 16, sizeType: "diameter", type: "square" } : {})}
+          fillOpacity={i === 4 ? 0 : 0.35}
+          opacity={0.8}
+          style={{ opacity: 0.6 }}
+        />
+      ))}
+      <LabelList dataKey="id" position="top" />
+    </>
+  );
+  const defs = (
+    <defs>
+      <linearGradient id="alpha-paint">
+        <stop stopColor={paint} stopOpacity={0.2} />
+        <stop offset="1" stopColor={paint} stopOpacity={0.9} />
+      </linearGradient>
+    </defs>
+  );
+  return (
+    <main style={{ fontFamily: "sans-serif" }}>
+      <h1>Packed Scatter materials</h1>
+      <div>
+        {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+          <button key={finish} type="button" onClick={() => setMaterial(finish)}>
+            {finish}
+          </button>
+        ))}
+      </div>
+      <div>
+        {types.map((type) => (
+          <button key={type} type="button" onClick={() => setSymbol(type)}>
+            {type}
+          </button>
+        ))}
+      </div>
+      <div>
+        <button type="button" onClick={() => setAnimate(!animate)}>
+          Motion
+        </button>
+        <button type="button" onClick={() => setNarrow(!narrow)}>
+          Resize
+        </button>
+        <button type="button" onClick={() => setPink(!pink)}>
+          Pink
+        </button>
+        <button type="button" onClick={() => setGradient(!gradient)}>
+          Gradient
+        </button>
+        <button type="button" onClick={() => setOwnership(!ownership)}>
+          Ownership
+        </button>
+        <button type="button" onClick={() => setUpdate(!update)}>
+          Update
+        </button>
+      </div>
+      <div>
+        <button type="button" onClick={() => setDefaults((n) => (n + 1) % 4)}>
+          Native defaults
+        </button>
+        <button type="button" onClick={() => setSubpixel(!subpixel)}>
+          Subpixel
+        </button>
+      </div>
+      <output aria-label="Clicks">{clicks}</output>
+      <Chart.Root
+        config={{ marks: { label: "Marks", color: paint } }}
+        style={{ width: narrow ? 280 : 700, maxWidth: "100%" }}
+      >
+        <Chart.Legend />
+        <Chart.ScatterChart
+          responsive
+          style={{ width: "100%", height: 260 }}
+          animate={animate}
+          aria-label="Finished symbols"
+          ref={(node) => node?.setAttribute("data-ref", node.tagName)}
+        >
+          {defs}
+          {axes}
+          <Chart.ScatterSeries
+            material={material}
+            data={values}
+            seriesKey="marks"
+            {...(nativeShape !== undefined ? { shape: nativeShape, activeShape: nativeShape } : {})}
+            onClick={() => setClicks((n) => n + 1)}
+          >
+            {cells}
+          </Chart.ScatterSeries>
+          {ownership && (
+            <>
+              <Chart.ScatterSeries
+                material={material}
+                data={[{ x: 30, y: 80 }]}
+                shape={Custom}
+                activeShape={Custom}
+              />
+              <Chart.ScatterSeries
+                material={material}
+                data={[{ x: 50, y: 80 }]}
+                shape={<Symbols type="star" data-custom="element" />}
+              />
+              <Chart.ScatterSeries
+                material={material}
+                data={[{ x: 70, y: 80 }]}
+                shape={{ fill: "red" }}
+              />
+              <Chart.ScatterSeries material={material} data={[{ x: 80, y: 80 }]}>
+                <Cell filter="none" />
+              </Chart.ScatterSeries>
+              <Chart.ScatterSeries material={material} data={[{ x: 90, y: 80 }]}>
+                <Cell style={{ filter: "none" }} />
+              </Chart.ScatterSeries>
+            </>
+          )}
+          <Chart.ScatterTooltip
+            pointLabel={(row) => String((row as { id: string }).id)}
+            zDimension={{ dataKey: "z", name: "Volume" }}
+          />
+        </Chart.ScatterChart>
+        <NativeChart responsive style={{ width: "100%", height: 260 }} aria-label="Native symbols">
+          {axes}
+          <Scatter
+            data={values}
+            fill={paint}
+            {...(nativeShape !== undefined ? { shape: nativeShape, activeShape: nativeShape } : {})}
+            isAnimationActive={false}
+          >
+            {cells}
+          </Scatter>
+        </NativeChart>
+      </Chart.Root>
+    </main>
+  );
+}
