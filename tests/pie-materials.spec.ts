@@ -273,7 +273,7 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
     const native = await pieNativeOwnership(chart);
     await writeFile(
       info.outputPath(`native-ownership-${override}-plain.png`),
-      Buffer.from(native.png.split(",")[1], "base64"),
+      Buffer.from(native.pngBase64, "base64"),
     );
     const captureBox = await chart.boundingBox();
     const nativeGeometry = await geometry(chart);
@@ -312,7 +312,7 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
       );
       await writeFile(
         info.outputPath(`native-ownership-${override}-${finish}.png`),
-        Buffer.from(actual.png.split(",")[1], "base64"),
+        Buffer.from(actual.pngBase64, "base64"),
       );
     }
     await attemptedFinishes.evaluate(({ observer }) => observer.disconnect());

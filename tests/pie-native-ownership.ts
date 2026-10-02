@@ -94,7 +94,7 @@ export async function pieNativeOwnership(chart: Locator) {
       );
     const attributes = (node: Element) =>
       Array.from(node.attributes)
-        .map(({ name, value }) => [
+        .map<[string, string]>(({ name, value }) => [
           name,
           name === "id"
             ? (ids.get(value) ?? value)
@@ -105,7 +105,7 @@ export async function pieNativeOwnership(chart: Locator) {
         .sort(([a], [b]) => a.localeCompare(b));
     const resolvedPaint = (node: Element) => {
       const style = getComputedStyle(node);
-      return paintProperties.map((property) => [
+      return paintProperties.map<[string, string]>((property) => [
         property,
         normalize(style.getPropertyValue(property)),
       ]);
@@ -189,7 +189,7 @@ export async function pieNativeOwnership(chart: Locator) {
     return {
       state: JSON.stringify({ tree, ancestors, width, height }),
       rgba: btoa(bytes),
-      png: canvas.toDataURL("image/png"),
+      pngBase64: canvas.toDataURL("image/png").slice("data:image/png;base64,".length),
       painted,
       width,
       height,
