@@ -61,7 +61,7 @@ export function BoxHost() {
   const markRef = useCallback((node: SVGGElement | null) => {
     if (node) node.dataset.markRef = "yes";
   }, []);
-  const base =
+  const base: Row[] =
     mode === "equal"
       ? ["A", "B"].map((category) => ({
           category,

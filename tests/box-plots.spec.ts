@@ -109,6 +109,7 @@ test("packed box plots: exact native geometry, domains, composition, null and co
   await expect(page.locator(marks)).toHaveCount(0);
   await expect(page.locator("tbody tr")).toHaveCount(0);
   await page.getByRole("button", { name: "Empty", exact: true }).click();
+  await page.getByRole("button", { name: "Domain", exact: true }).click();
   await page.getByRole("button", { name: "All equal", exact: true }).click();
   await expect(page.locator(marks)).toHaveCount(2);
   const equal = await measure(true);
