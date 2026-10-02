@@ -309,9 +309,9 @@ for (const paint of ["transparent-gradient", "stroke-only", "thick-gradient-stro
         ["opacity", "1"],
         ["fill-opacity", "1"],
         ["stroke-opacity", "1"],
-        ["style", "opacity: 1"],
       ])
         n.setAttribute(a ?? "", v ?? "");
+      (n as SVGElement).style.opacity = "1";
       return saved;
     });
     const geometry = await pixels(page, await page.screenshot({ clip, omitBackground: true }));
