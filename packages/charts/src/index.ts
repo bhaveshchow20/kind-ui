@@ -61,6 +61,18 @@ export {
   type HeatmapScale,
   type HeatmapScaleOptions,
 } from "./heatmap-model.js";
+export { HistogramChart, type HistogramChartProps } from "./histogram-chart.js";
+export {
+  binHistogram,
+  type HistogramBin,
+  type HistogramBinningResult,
+  type HistogramMeasure,
+} from "./histogram-data.js";
+export {
+  HistogramSeries,
+  type HistogramSeriesProps,
+  type HistogramShapeProps,
+} from "./histogram-series.js";
 export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";
 export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";

@@ -121,6 +121,7 @@ try {
         "heatmap",
         "waterfall",
         "sankey",
+        "histogram",
         "box-plot",
       ].includes(folder) &&
       file.endsWith(".tsx")
@@ -242,6 +243,10 @@ try {
   console.log(
     "All 18 polar gallery composition paths: guarded public imports, strict NodeNext/Bundler and tarball build passed",
   );
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("histogram", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-histogram");
+  console.log("Histogram tarball: strict NodeNext/Bundler and public-only production build passed");
   await copyFixture("combined", "host.tsx");
   await copyFixture("combined", "main.tsx", "combined.tsx");
   await copyFixture("combined", "index.html", "combined.html");

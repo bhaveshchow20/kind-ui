@@ -406,6 +406,41 @@ Use native `LabelList dataKey="dimension" fill="white" content={<Chart.RadialBar
 
 The [polar gallery audit](../../examples/chart/POLAR-GALLERY.md) maps all eighteen current first-party shadcn radar/radial variations to runnable public compositions.
 
+## Histogram family
+
+`HistogramChart`, `HistogramSeries`, and `binHistogram` are maintained public exports, with `HistogramBin`, `HistogramMeasure`, `HistogramBinningResult`, chart/series props and `HistogramShapeProps` types. No new dependency or package is introduced. This additive pre-release API remains private at `0.0.0`.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import { CartesianGrid } from "recharts";
+
+const result = Chart.binHistogram([0, 1, 2, 2, null, NaN, 9], [0, 1, 3]);
+<Chart.Root config={{ count: { label: "Density", color: "#167d77" } }}>
+  <Chart.HistogramChart bins={result.bins} measure="density" width={480} height={260}
+    xAxisProps={{ label: { value: "ms", position: "insideBottom" } }}>
+    <CartesianGrid vertical={false} />
+    <Chart.HistogramSeries />
+    <Chart.Tooltip shared={false} labelFormatter={(_label, entries) => {
+      const bin = entries[0]?.payload;
+      return bin ? `[${bin.lower}, ${bin.upper}${bin.upper === 3 ? "]" : ")"} ms` : "";
+    }} />
+  </Chart.HistogramChart>
+</Chart.Root>;
+```
+
+The helper owns raw-sample aggregation with **explicit edges**. Edges must be finite, strictly increasing, and have finite positive differences. Intervals are `[lower, upper)`, except the final upper edge is included, following [D3 bin](https://d3js.org/d3-array/bin) and [NumPy histogram](https://numpy.org/doc/stable/reference/generated/numpy.histogram.html). It returns every bin, including zero counts, plus `accepted`, `missing` (`null`/`undefined`), `nonfinite` (`NaN`/infinities), and `outOfRange` totals. It does not coerce, infer edges, round, impute, weight observations, or select a statistical binning estimator. Inputs are not mutated; work is O(samples × log(edges) + edges).
+
+For **pre-binned data**, callers supply ordered, nonoverlapping `{ lower, upper, count }` intervals and own aggregation and interval membership. Gaps are retained as quantitative space, rather than compressed into categories. Counts must be nonnegative safe integers; bounds, widths and overall domain span must be finite. Invalid bins, overlaps, unsafe totals, and nonfinite or underflowing positive density fail with actionable errors. Empty `bins=[]` uses a neutral `[0,1]` x-domain and no marks. All-zero bins retain zero height; density is zero when total count is zero.
+
+`measure` is always required. `count` means height = count. **With unequal widths, count-mode rectangle area does not represent frequency**; disclose that choice to readers. Prefer `density` for unequal bins: height = count / total count / bin width, so the sum of height × width is one when total is positive. Density units are the reciprocal of the input unit (e.g. ms⁻¹), rather than samples or percent. Counts remain available in the original tooltip payload and data table. No rounding is applied to bin edges or counts; native Recharts retains ownership of SVG coordinate serialization. Formatting belongs to the consumer.
+
+The chart reuses `BarChart`/`BarSeries`, visibility metadata, `Legend`, shared `Tooltip` presentation and interrupted/reduced Motion. It owns vertical layout and linear numeric axes (ID 0), maps x/width from actual bounds, and preserves the zero baseline. Use `xAxisProps`/`yAxisProps` for axis labels, ticks, styling and padding. Native `CartesianGrid`, `ReferenceLine`, SVG definitions, `Cell`, chart refs, attributes and handlers compose as children/props. `HistogramSeries.shape` receives native `BarShapeProps` with corrected x/width and `bin`; it owns its resulting SVG and can return a native `Rectangle`. Native bar Cells and events remain available. The default shape has square corners and no material styling. Materials are separate future work.
+
+Use `Tooltip shared={false}` for pointer hit testing against the actual bin rectangles; native shared-axis tooltip selection uses nearest midpoints. Native arrow-key selection remains available. Label the original interval and unit through `labelFormatter`, rather than presenting the midpoint as a bin boundary. A zero-height bin has no pointer target; keyboard selection and a complete table expose its value. The consumer owns the data alternative and units. The feature recipes at `/histograms.html` demonstrate raw rebinning with discard audit, unequal-bin density, native custom shapes/reference lines, controlled visibility, responsive layout and expandable tables.
+
+For labels, use the custom shape with its corrected geometry. Native Bar `LabelList` uses the engine’s original bar sizing and is not supported for unequal-bin edge positions.
+
+This bounded family does not support horizontal orientation, stacking, native bar sizing/minimum heights/backgrounds, automatic edges, weighted/fractional counts or nonlinear histogram axes. Do not add replacement primary axes or wrap the series in `BarStack`; native escape hatches remain the consumer's responsibility. Floating-point inputs follow JavaScript comparison without epsilon adjustments; extreme finite values that cannot produce a finite domain/density are rejected. Chromium and the pinned React/Recharts/Motion peers are the tested targets; there is no broader compatibility guarantee.
 ## Box plot: explicit statistics
 
 `BoxPlotChart` reuses Kind's `BarChart` (including optional `animate`) and public
