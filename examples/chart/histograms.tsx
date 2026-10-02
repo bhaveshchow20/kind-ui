@@ -43,12 +43,14 @@ function Distribution({
   unit,
   title,
   custom = false,
+  material = "plain",
 }: {
   bins: readonly Chart.HistogramBin[];
   measure: Chart.HistogramMeasure;
   unit: string;
   title: string;
   custom?: boolean;
+  material?: Chart.BarMaterial;
 }) {
   const [visible, setVisible] = useState(["count"]);
   const total = bins.reduce((sum, bin) => sum + bin.count, 0);
@@ -90,6 +92,7 @@ function Distribution({
           <CartesianGrid vertical={false} stroke="#dfe7e3" />
           {custom && <ReferenceLine x={20} stroke="#b66744" strokeDasharray="4 4" />}
           <Chart.HistogramSeries
+            material={material}
             shape={
               custom
                 ? (props) => (
@@ -199,4 +202,45 @@ function App() {
 }
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
-createRoot(root).render(<App />);
+function MaterialGallery() {
+  return (
+    <main>
+      <header>
+        <span className="eyebrow">KIND UI / HISTOGRAM MATERIALS</span>
+        <h1>Same intervals. Four finishes.</h1>
+        <p>Count ÷ total ÷ width. Square, exact bin boundaries across every material.</p>
+      </header>
+      <div className="recipe-grid">
+        {(["plain", "paper", "clay", "glow"] as const).map((material) => (
+          <article key={material} data-material={material}>
+            <span className="eyebrow">{material}</span>
+            <h2>
+              {material === "plain"
+                ? "Native paint"
+                : material === "paper"
+                  ? "Pencil and grain"
+                  : material === "clay"
+                    ? "Soft matte volume"
+                    : "Luminous edges"}
+            </h2>
+            <Distribution
+              bins={preBinned}
+              measure="density"
+              unit="ms"
+              title={`${material} density`}
+              material={material}
+            />
+            <p className="audit">60 samples · unequal intervals · empty 50–100 ms bin retained</p>
+          </article>
+        ))}
+      </div>
+      <footer>
+        Each density integral is one. Materials are static paint; keyboard navigation, visibility,
+        tables and reduced motion remain available.
+      </footer>
+    </main>
+  );
+}
+createRoot(root).render(
+  new URLSearchParams(window.location.search).has("materials") ? <MaterialGallery /> : <App />,
+);

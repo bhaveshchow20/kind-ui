@@ -25,6 +25,9 @@ export function HistogramHost() {
   const [visible, setVisible] = useState(["count"]);
   const [clicked, setClicked] = useState(0);
   const [custom, setCustom] = useState(false);
+  const [material, setMaterial] = useState<Chart.BarMaterial>("plain");
+  const [override, setOverride] = useState("none");
+  const [gradient, setGradient] = useState(false);
   const ref = useCallback((node: SVGSVGElement | null) => {
     if (node) node.dataset.hostRef = "yes";
   }, []);
@@ -51,6 +54,21 @@ export function HistogramHost() {
       <button type="button" onClick={() => setCustom(!custom)}>
         Custom shape
       </button>
+      {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+        <button type="button" key={finish} onClick={() => setMaterial(finish)}>
+          {finish}
+        </button>
+      ))}
+      {(["none", "series-filter", "series-style", "cell-filter", "cell-style"] as const).map(
+        (value) => (
+          <button type="button" key={value} onClick={() => setOverride(value)}>
+            {value}
+          </button>
+        ),
+      )}
+      <button type="button" onClick={() => setGradient(!gradient)}>
+        Gradient
+      </button>
       <output aria-label="Clicked">{clicked}</output>
       <Chart.Root
         config={{
@@ -74,9 +92,23 @@ export function HistogramHost() {
           aria-label="Histogram proof"
           xAxisProps={{ label: { value: "Duration (ms)", position: "insideBottom", offset: -5 } }}
         >
+          <defs>
+            <filter id="histogram-host-filter">
+              <feColorMatrix type="saturate" values="0.5" />
+            </filter>
+            <linearGradient id="histogram-host-gradient">
+              <stop stopColor="#187c79" stopOpacity={0.2} />
+              <stop offset="1" stopColor="#be7150" stopOpacity={0.8} />
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <ReferenceLine x={0} stroke="red" />
           <Chart.HistogramSeries
+            material={material}
+            filter={override === "series-filter" ? "url(#histogram-host-filter)" : undefined}
+            style={
+              override === "series-style" ? { filter: "url(#histogram-host-filter)" } : undefined
+            }
             fillOpacity={0.6}
             stroke="#183a36"
             strokeDasharray="2 2"
@@ -108,7 +140,23 @@ export function HistogramHost() {
             {bins.map((bin) => (
               <Cell
                 key={bin.lower}
-                fill={bin.lower === 0 ? "#be7150" : "#187c79"}
+                filter={
+                  override === "cell-filter" && bin.lower === 0
+                    ? "url(#histogram-host-filter)"
+                    : undefined
+                }
+                style={
+                  override === "cell-style" && bin.lower === 0
+                    ? { filter: "url(#histogram-host-filter)" }
+                    : undefined
+                }
+                fill={
+                  gradient
+                    ? "url(#histogram-host-gradient)"
+                    : bin.lower === 0
+                      ? "#be7150"
+                      : "#187c79"
+                }
                 fillOpacity={bin.lower === 0 ? 0.3 : 0.6}
               />
             ))}
