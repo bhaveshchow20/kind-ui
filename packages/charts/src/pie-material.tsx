@@ -3,6 +3,7 @@
 import type { LineMaterial } from "./line-material.js";
 
 export type PieMaterial = LineMaterial;
+export type PiePaintBounds = { x: number; y: number; width: number; height: number };
 
 /** Native Sector retains angles, radii and paint alpha; Glow alone emits a decorative halo. */
 export function PieMaterialFilter({
@@ -13,6 +14,7 @@ export function PieMaterialFilter({
   cx,
   cy,
   strokeWidth,
+  bounds,
 }: {
   material: Exclude<PieMaterial, "plain">;
   id: string;
@@ -21,6 +23,7 @@ export function PieMaterialFilter({
   cx: number;
   cy: number;
   strokeWidth: number;
+  bounds?: PiePaintBounds | undefined;
 }) {
   const relief = Math.max(1, Math.min(14, radius * 0.12, thickness * 0.22));
   const margin = 16 + strokeWidth / 2;
@@ -32,10 +35,10 @@ export function PieMaterialFilter({
     <filter
       id={id}
       filterUnits="userSpaceOnUse"
-      x={x}
-      y={y}
-      width={width}
-      height={height}
+      x={bounds?.x ?? x}
+      y={bounds?.y ?? y}
+      width={bounds?.width ?? width}
+      height={bounds?.height ?? height}
       colorInterpolationFilters="sRGB"
     >
       {material === "clay" ? (

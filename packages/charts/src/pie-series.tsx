@@ -17,7 +17,7 @@ import {
 import { Cell, Pie, type PieSectorShapeProps, Sector } from "recharts";
 import { useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
-import { type PieMaterial, PieMaterialFilter } from "./pie-material.js";
+import { type PieMaterial, PieMaterialFilter, type PiePaintBounds } from "./pie-material.js";
 
 export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
@@ -62,6 +62,9 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
   const resolvedStroke = Number(strokeWidth);
   const markGroup = useRef<SVGGElement>(null);
   const [paintFilter, setPaintFilter] = useState("none");
+  const [paintClip, setPaintClip] = useState("none");
+  const [clipTransform, setClipTransform] = useState({ forward: "", inverse: "" });
+  const [paintBounds, setPaintBounds] = useState<PiePaintBounds>();
   const [paintStroke, setPaintStroke] = useState(
     Number.isFinite(resolvedStroke) ? resolvedStroke : 0,
   );
@@ -78,15 +81,56 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     if (!path) return;
     const computed = getComputedStyle(path);
     if (computed.filter !== paintFilter) setPaintFilter(computed.filter);
+    if (computed.clipPath !== paintClip) setPaintClip(computed.clipPath);
     const width = Number.parseFloat(computed.strokeWidth);
     if (Number.isFinite(width) && width !== paintStroke) setPaintStroke(width);
+    const parentMatrix = markGroup.current?.getCTM();
+    const pathMatrix = path.getCTM();
+    if (parentMatrix && pathMatrix) {
+      if (parentMatrix.a * parentMatrix.d - parentMatrix.b * parentMatrix.c === 0) return;
+      const matrix = parentMatrix.inverse().multiply(pathMatrix);
+      if (matrix.a * matrix.d - matrix.b * matrix.c === 0) return;
+      const inverse = matrix.inverse();
+      const svgMatrix = (m: DOMMatrix) => `matrix(${m.a} ${m.b} ${m.c} ${m.d} ${m.e} ${m.f})`;
+      const nextTransform = { forward: svgMatrix(matrix), inverse: svgMatrix(inverse) };
+      setClipTransform((old) =>
+        old.forward === nextTransform.forward && old.inverse === nextTransform.inverse
+          ? old
+          : nextTransform,
+      );
+      const center = new DOMPoint(props.cx, props.cy).matrixTransform(matrix);
+      const radius = props.outerRadius + (Number.isFinite(width) ? width : 0) / 2;
+      const rx = Math.hypot(matrix.a, matrix.c) * radius + 16;
+      const ry = Math.hypot(matrix.b, matrix.d) * radius + 16;
+      const x = Math.floor(center.x - rx);
+      const y = Math.floor(center.y - ry);
+      const next = {
+        x,
+        y,
+        width: Math.ceil(center.x + rx) - x,
+        height: Math.ceil(center.y + ry) - y,
+      };
+      setPaintBounds((old) =>
+        old &&
+        Object.keys(next).every(
+          (key) => old[key as keyof PiePaintBounds] === next[key as keyof PiePaintBounds],
+        )
+          ? old
+          : next,
+      );
+    }
   }, [
     material,
     props.filter,
     props.style,
     props.className,
+    props.transform,
+    props.cx,
+    props.cy,
+    props.outerRadius,
     resolvedStroke,
     paintFilter,
+    paintClip,
     paintStroke,
   ]);
   const materialized =
@@ -126,18 +170,10 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     onMouseOut,
     onMouseEnter,
     onMouseLeave,
-    transform,
-    style,
     ...sector
   } = props;
-  // Transform the complete finish in the same coordinate system as its native paint.
-  const { transform: styleTransform, transformOrigin, transformBox, ...paintStyle } = style ?? {};
   return (
-    <g
-      ref={markGroup}
-      transform={transform}
-      style={{ transform: styleTransform, transformOrigin, transformBox }}
-    >
+    <g ref={markGroup}>
       {materialized && (
         <defs data-kind-ui="pie-material" data-material={material} pointerEvents="none">
           <PieMaterialFilter
@@ -152,15 +188,16 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
             cy={props.cy}
             radius={props.outerRadius}
             thickness={props.outerRadius - props.innerRadius}
+            bounds={paintBounds}
           />
           {inset && (
             <mask
               id={maskId}
               maskUnits="userSpaceOnUse"
-              x={Math.floor(props.cx - props.outerRadius - margin)}
-              y={Math.floor(props.cy - props.outerRadius - margin)}
-              width={Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
-              height={Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
+              x={paintBounds?.x ?? Math.floor(props.cx - props.outerRadius - margin)}
+              y={paintBounds?.y ?? Math.floor(props.cy - props.outerRadius - margin)}
+              width={paintBounds?.width ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
+              height={paintBounds?.height ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
               style={{ maskType: "alpha" }}
             >
               <use href={`#${sourceId}`} />
@@ -171,13 +208,19 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
       {materialized && material === "glow" && (
         // biome-ignore lint/a11y/noAriaHiddenOnFocusable: SVG decoration is explicitly nonfocusable and ignores pointer events.
         <g
-          filter={`url(#${filterId})`}
           pointerEvents="none"
           focusable="false"
           aria-hidden="true"
           data-kind-ui="pie-halo"
+          style={{ clipPath: paintClip }}
+          transform={paintClip !== "none" ? clipTransform.forward : undefined}
         >
-          <use href={`#${sourceId}`} />
+          <g
+            transform={paintClip !== "none" ? clipTransform.inverse : undefined}
+            filter={`url(#${filterId})`}
+          >
+            <use href={`#${sourceId}`} />
+          </g>
         </g>
       )}
       <g
@@ -187,7 +230,6 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
         <g id={sourceId}>
           <Sector
             {...sector}
-            {...(style ? { style: paintStyle } : {})}
             {...(onClick ? { onClick } : {})}
             {...(onMouseDown ? { onMouseDown } : {})}
             {...(onMouseUp ? { onMouseUp } : {})}

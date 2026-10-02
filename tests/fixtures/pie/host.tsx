@@ -356,6 +356,8 @@ function ContinuityHost() {
     <Cell
       key={row.id}
       fillOpacity={opacity}
+      {...(query.has("clip") ? { clipPath: "url(#host-clip)" } : {})}
+      {...(query.has("css-transform") ? { className: "host-transformed" } : {})}
       {...(query.has("transform") ? { transform: "translate(40 0) scale(.85)" } : {})}
       {...(query.has("style-transform")
         ? { style: { transform: "translate(40px, 0px) scale(.85)" } }
@@ -376,6 +378,9 @@ function ContinuityHost() {
   return (
     <section aria-label="Continuity proof">
       {query.has("css-filter") && <style>{".host-owned-filter {filter: grayscale(1);}"}</style>}
+      {query.has("css-transform") && (
+        <style>{".host-transformed {transform: translateX(50px);}"}</style>
+      )}
       {query.has("css-stroke") && (
         <style>{".host-thick-stroke {stroke: #db6baa; stroke-width: 60px;}"}</style>
       )}
@@ -414,6 +419,9 @@ function ContinuityHost() {
       <Chart.Root config={config} style={{ position: "relative", width: 300, background: "white" }}>
         <Chart.PieChart width={300} height={280} aria-label="Kind continuity">
           <defs>
+            <clipPath id="host-clip">
+              <rect x={120} y={0} width={30} height={1000} />
+            </clipPath>
             <filter id="host-filter">
               <feGaussianBlur stdDeviation={0.2} />
             </filter>

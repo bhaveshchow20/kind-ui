@@ -10,6 +10,10 @@ async function geometry(chart: Locator) {
       stroke: n.getAttribute("stroke"),
       fill: n.getAttribute("fill"),
       opacity: n.getAttribute("fill-opacity"),
+      transform: (() => {
+        const m = (n as SVGGraphicsElement).getCTM();
+        return m && [m.a, m.b, m.c, m.d, m.e, m.f];
+      })(),
     })),
   );
 }
@@ -69,10 +73,26 @@ test("packed finishes retain decoded native body alpha for translucent gradients
     "transparent",
     "alpha&transform",
     "alpha&style-transform",
+    "alpha&css-transform",
+    "alpha&css-transform&style-transform",
+    "alpha&clip",
+    "alpha&clip&transform",
+    "alpha&clip&css-transform",
   ]) {
     await page.goto(`${url}/?oracle&${paint}`);
     const proof = page.getByRole("region", { name: "Continuity proof" });
     const chart = proof.getByRole("application", { name: "Kind continuity" });
+    await expect
+      .poll(
+        async () =>
+          JSON.stringify(await geometry(chart)) ===
+          JSON.stringify(
+            await geometry(
+              proof.getByRole("application", { name: "Native oracle", includeHidden: true }),
+            ),
+          ),
+      )
+      .toBeTruthy();
     await page.addStyleTag({
       content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
     });
@@ -98,12 +118,14 @@ test("packed finishes retain decoded native body alpha for translucent gradients
         path: info.outputPath(`${finish}-${paint.replaceAll("&", "-")}.png`),
       });
       const difference = await page.evaluate(
-        async (pngs) => {
+        async ({ pngs, clippedBounds }) => {
+          let imageWidth = 0;
           const arrays = await Promise.all(
             pngs.map(async (png) => {
               const img = new Image();
               img.src = `data:image/png;base64,${png}`;
               await img.decode();
+              imageWidth = img.width;
               const c = document.createElement("canvas");
               c.width = img.width;
               c.height = img.height;
@@ -118,17 +140,34 @@ test("packed finishes retain decoded native body alpha for translucent gradients
           if (!a || !b || a.length !== b.length) throw Error("Dimensions");
           let bodyMax = 0,
             exteriorMax = 0,
-            painted = 0;
+            painted = 0,
+            clippedExteriorMax = 0;
           for (let i = 3; i < a.length; i += 4) {
             if ((a[i] ?? 0) > 0) bodyMax = Math.max(bodyMax, Math.abs((a[i] ?? 0) - (b[i] ?? 0)));
             else exteriorMax = Math.max(exteriorMax, b[i] ?? 0);
             if ((a[i] ?? 0) > 0) painted++;
+            const x = ((i - 3) / 4) % imageWidth;
+            if (
+              clippedBounds &&
+              (x < Math.floor(clippedBounds[0]) || x >= Math.ceil(clippedBounds[1]))
+            )
+              clippedExteriorMax = Math.max(clippedExteriorMax, b[i] ?? 0);
           }
-          return { bodyMax, exteriorMax, painted };
+          return { bodyMax, exteriorMax, painted, clippedExteriorMax };
         },
-        [baseline.toString("base64"), actual.toString("base64")],
+        {
+          pngs: [baseline.toString("base64"), actual.toString("base64")],
+          clippedBounds: paint.includes("clip")
+            ? paint.includes("css-transform")
+              ? [170, 200]
+              : paint.includes("transform")
+                ? [142, 167.5]
+                : [120, 150]
+            : null,
+        },
       );
       expect(difference.bodyMax).toBeLessThanOrEqual(1);
+      expect(difference.clippedExteriorMax).toBe(0);
       expect(difference.exteriorMax).toBeLessThanOrEqual(
         finish === "glow" && paint !== "transparent" ? (paint === "opaque" ? 96 : 40) : 1,
       );
