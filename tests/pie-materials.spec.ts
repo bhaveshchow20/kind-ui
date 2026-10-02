@@ -273,9 +273,28 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
     });
     const captureBox = await chart.boundingBox();
     const nativeGeometry = await geometry(chart);
+    const attemptedFinishes = await chart.evaluateHandle((node) => {
+      const definitions: string[] = [];
+      const observer = new MutationObserver((records) => {
+        for (const record of records)
+          for (const added of record.addedNodes) {
+            if (!(added instanceof Element)) continue;
+            const paints = added.matches('[data-kind-ui="pie-material"]')
+              ? [added]
+              : Array.from(added.querySelectorAll('[data-kind-ui="pie-material"]'));
+            for (const paint of paints) definitions.push(paint.getAttribute("data-material") ?? "");
+          }
+      });
+      observer.observe(node, { childList: true, subtree: true });
+      return { definitions, observer };
+    });
     for (const finish of finishes.slice(1)) {
       await proof.getByLabel("Oracle finish").selectOption(finish);
       await expect(chart.locator('[data-kind-ui="pie-material"]')).toHaveCount(0);
+      expect(
+        await attemptedFinishes.evaluate(({ definitions }) => definitions),
+        `No transient finish: ${override}/${finish}`,
+      ).toEqual([]);
       expect(await geometry(chart)).toEqual(nativeGeometry);
       expect(await chart.boundingBox(), `Stable capture: ${override}/${finish}`).toEqual(
         captureBox,
@@ -288,6 +307,8 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
         `Native ownership: ${override}/${finish}`,
       ).toEqual(native);
     }
+    await attemptedFinishes.evaluate(({ observer }) => observer.disconnect());
+    await attemptedFinishes.dispose();
   }
 });
 

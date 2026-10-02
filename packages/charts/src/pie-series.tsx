@@ -63,7 +63,8 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
   const markGroup = useRef<SVGGElement>(null);
   const [paintFilter, setPaintFilter] = useState("none");
   const [paintClip, setPaintClip] = useState("none");
-  const [cssTransformOwned, setCssTransformOwned] = useState(false);
+  // Measure native ownership before attaching paint, including the first non-Plain render.
+  const [cssTransformOwned, setCssTransformOwned] = useState<boolean>();
   const [clipTransform, setClipTransform] = useState({ forward: "", inverse: "" });
   const [paintBounds, setPaintBounds] = useState<PiePaintBounds>();
   const [paintStroke, setPaintStroke] = useState(
@@ -161,7 +162,7 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     props.filter === undefined &&
     props.style?.filter === undefined &&
     paintFilter === "none" &&
-    !cssTransformOwned &&
+    cssTransformOwned === false &&
     Number.isFinite(resolvedStroke);
   const inset = materialized && material !== "glow";
   const margin =
