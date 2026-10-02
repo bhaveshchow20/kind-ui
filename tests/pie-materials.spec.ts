@@ -1,4 +1,6 @@
+import { writeFile } from "node:fs/promises";
 import { expect, type Locator, test } from "./browser";
+import { pieNativeOwnership } from "./pie-native-ownership";
 
 const url = process.env.KIND_UI_PIE_URL ?? "http://127.0.0.1:4180";
 const finishes = ["plain", "paper", "clay", "glow"] as const;
@@ -267,10 +269,12 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
     await page.addStyleTag({
       content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
     });
-    const native = await chart.screenshot({
-      omitBackground: true,
-      path: info.outputPath(`native-ownership-${override}-plain.png`),
-    });
+    // Compare native ownership independently of live-inline Chromium paint-cache drift.
+    const native = await pieNativeOwnership(chart);
+    await writeFile(
+      info.outputPath(`native-ownership-${override}-plain.png`),
+      Buffer.from(native.png.split(",")[1], "base64"),
+    );
     const captureBox = await chart.boundingBox();
     const nativeGeometry = await geometry(chart);
     const attemptedFinishes = await chart.evaluateHandle((node) => {
@@ -299,16 +303,145 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
       expect(await chart.boundingBox(), `Stable capture: ${override}/${finish}`).toEqual(
         captureBox,
       );
-      expect(
-        await chart.screenshot({
-          omitBackground: true,
-          path: info.outputPath(`native-ownership-${override}-${finish}.png`),
-        }),
-        `Native ownership: ${override}/${finish}`,
-      ).toEqual(native);
+      const actual = await pieNativeOwnership(chart);
+      expect(actual.state, `Native topology and resolved paint: ${override}/${finish}`).toBe(
+        native.state,
+      );
+      expect(actual.rgba === native.rgba, `Exact serialized RGBA: ${override}/${finish}`).toBe(
+        true,
+      );
+      await writeFile(
+        info.outputPath(`native-ownership-${override}-${finish}.png`),
+        Buffer.from(actual.png.split(",")[1], "base64"),
+      );
     }
     await attemptedFinishes.evaluate(({ observer }) => observer.disconnect());
     await attemptedFinishes.dispose();
+  }
+});
+
+test("native ownership oracle rejects paint, geometry, wrappers and resource mutations", async ({
+  page,
+}) => {
+  await page.route("https://example.invalid/**", (route) => route.abort());
+  for (const mutation of [
+    "fill",
+    "fill-opacity",
+    "stroke",
+    "geometry",
+    "svg-transform",
+    "css-transform",
+    "individual-translate",
+    "individual-rotate",
+    "individual-scale",
+    "css-3d",
+    "clip-reference",
+    "clip-geometry",
+    "filter",
+    "mask",
+    "wrapper",
+    "wrapper-opacity",
+    "wrapper-transform",
+    "ancestor-opacity",
+    "ancestor-transform",
+    "decoration",
+    "gradient-resource",
+    "redirected-reference",
+    "broken-reference",
+    "external-reference",
+    "duplicate-id",
+    "consumer-id",
+  ]) {
+    await page.goto(`${url}/?oracle&alpha&gradient&clip&css-transform`);
+    const chart = page.getByRole("application", { name: "Kind continuity" });
+    if (mutation === "consumer-id")
+      await chart
+        .locator(mark)
+        .first()
+        .evaluate((node) => node.setAttribute("id", "kind-ui-pie-consumer-one-paint"));
+    const native = await pieNativeOwnership(chart);
+    await chart.evaluate((node, mutation) => {
+      const svg = node instanceof SVGSVGElement ? node : node.querySelector("svg");
+      const path = svg?.querySelector('[data-kind-ui="pie-sector"]');
+      if (!(svg instanceof SVGSVGElement) || !(path instanceof SVGElement))
+        throw Error("Expected Pie fixture");
+      const group = path.parentElement;
+      if (!(group instanceof SVGElement)) throw Error("Expected native source wrapper");
+      if (mutation === "consumer-id") path.id = "kind-ui-pie-consumer-two-paint";
+      if (mutation === "fill") path.style.fill = "#ff0000";
+      if (mutation === "fill-opacity") path.style.fillOpacity = "0.8";
+      if (mutation === "stroke") {
+        path.style.stroke = "#ff0000";
+        path.style.strokeWidth = "8px";
+      }
+      if (mutation === "geometry") path.setAttribute("d", "M 120 90 L 150 90 L 150 190 Z");
+      if (mutation === "svg-transform") path.setAttribute("transform", "translate(8 0)");
+      if (mutation === "css-transform") path.style.transform = "translateX(40px)";
+      if (mutation === "individual-translate") path.style.translate = "5px 0";
+      if (mutation === "individual-rotate") path.style.rotate = "10deg";
+      if (mutation === "individual-scale") path.style.scale = "0.95";
+      if (mutation === "css-3d") path.style.transform = "translateZ(2px)";
+      if (mutation === "clip-reference") path.style.clipPath = "none";
+      if (mutation === "clip-geometry")
+        svg.querySelector("#host-clip rect")?.setAttribute("width", "20");
+      if (mutation === "filter") group.style.filter = "url(#host-filter)";
+      if (mutation === "mask") {
+        const mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+        mask.id = "ownership-negative-mask";
+        const rect = document.createElementNS(mask.namespaceURI, "rect");
+        rect.setAttribute("width", "300");
+        rect.setAttribute("height", "280");
+        rect.setAttribute("fill", "white");
+        mask.append(rect);
+        svg.querySelector("defs")?.append(mask);
+        group.style.mask = "url(#ownership-negative-mask)";
+      }
+      if (mutation === "wrapper") {
+        const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        group.replaceChild(wrapper, path);
+        wrapper.append(path);
+      }
+      if (mutation === "wrapper-opacity") group.style.opacity = "0.5";
+      if (mutation === "wrapper-transform") group.setAttribute("transform", "translate(5 0)");
+      if (mutation === "ancestor-opacity") svg.parentElement?.style.setProperty("opacity", "0.5");
+      if (mutation === "ancestor-transform")
+        svg.parentElement?.style.setProperty("transform", "translateX(5px)");
+      if (mutation === "decoration") {
+        const extra = path.cloneNode(true);
+        if (!(extra instanceof SVGElement)) throw Error("Expected cloned path");
+        extra.removeAttribute("id");
+        group.append(extra);
+      }
+      if (mutation === "gradient-resource")
+        svg.querySelector("#host-gradient stop")?.setAttribute("stop-color", "#00ff00");
+      if (mutation === "redirected-reference") path.style.clipPath = "url(#host-filter)";
+      if (mutation === "broken-reference") path.style.clipPath = "url(#ownership-missing)";
+      if (mutation === "external-reference")
+        path.style.fill = "url(https://example.invalid/paint.svg#color)";
+      if (mutation === "duplicate-id")
+        svg.querySelector("#host-gradient")?.setAttribute("id", "host-clip");
+    }, mutation);
+    if (["broken-reference", "external-reference", "duplicate-id"].includes(mutation)) {
+      await expect(pieNativeOwnership(chart), mutation).rejects.toThrow(/fixture (resource|ID)/);
+      continue;
+    }
+    const changed = await pieNativeOwnership(chart);
+    expect(changed.state, `Ownership rejects ${mutation}`).not.toBe(native.state);
+    // A neutral wrapper proves structure is checked independently of pixels.
+    if (mutation === "wrapper") expect(changed.rgba).toBe(native.rgba);
+    if (
+      [
+        "gradient-resource",
+        "clip-geometry",
+        "fill",
+        "fill-opacity",
+        "ancestor-opacity",
+        "filter",
+        "css-transform",
+        "wrapper-transform",
+      ].includes(mutation)
+    )
+      expect(changed.rgba === native.rgba, `Serialized resource mutation: ${mutation}`).toBe(false);
   }
 });
 
@@ -328,10 +461,12 @@ test("packed controlled style, class, id, geometry and finish refresh native own
     await expect(definitions).toHaveCount(0);
     expect(await geometry(chart)).toEqual(await geometry(oracle));
     await proof.getByLabel("Oracle finish").selectOption("plain");
-    const native = await chart.screenshot({ omitBackground: true });
+    const native = await pieNativeOwnership(chart);
     await proof.getByLabel("Oracle finish").selectOption("clay");
     await expect(definitions).toHaveCount(0);
-    expect(await chart.screenshot({ omitBackground: true })).toEqual(native);
+    const actual = await pieNativeOwnership(chart);
+    expect(actual.state).toBe(native.state);
+    expect(actual.rgba === native.rgba, "Exact serialized native lifecycle RGBA").toBe(true);
   };
   for (const prop of ["style", "class", "id"]) {
     await proof.getByRole("button", { name: `Ownership ${prop}`, exact: true }).click();
