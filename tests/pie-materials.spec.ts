@@ -100,6 +100,7 @@ test("packed finishes retain decoded native body alpha for translucent gradients
     await page.goto(`${url}/?oracle&${paint}`);
     const proof = page.getByRole("region", { name: "Continuity proof" });
     const chart = proof.getByRole("application", { name: "Kind continuity" });
+    await proof.scrollIntoViewIfNeeded();
     await expect
       .poll(
         async () =>
@@ -125,8 +126,17 @@ test("packed finishes retain decoded native body alpha for translucent gradients
       omitBackground: true,
       path: info.outputPath(`native-${paint.replaceAll("&", "-")}.png`),
     });
+    const captureBox = await chart.boundingBox();
+    await proof.getByLabel("Oracle finish").selectOption("plain");
+    expect(
+      await chart.screenshot({ omitBackground: true }),
+      `Repeat native baseline: ${paint}`,
+    ).toEqual(baseline);
     for (const finish of finishes.slice(1)) {
       await proof.getByLabel("Oracle finish").selectOption(finish);
+      expect(await chart.boundingBox(), `Stable alpha capture: ${paint}/${finish}`).toEqual(
+        captureBox,
+      );
       await chart
         .locator(mark)
         .first()
@@ -184,7 +194,7 @@ test("packed finishes retain decoded native body alpha for translucent gradients
             : null,
         },
       );
-      expect(difference.bodyMax).toBeLessThanOrEqual(1);
+      expect(difference.bodyMax, `${paint}/${finish}`).toBeLessThanOrEqual(1);
       expect(difference.clippedExteriorMax).toBe(0);
       expect(difference.exteriorMax).toBeLessThanOrEqual(
         finish === "glow" && paint !== "transparent" ? (paint === "opaque" ? 96 : 40) : 1,
@@ -199,6 +209,7 @@ test("packed harmless CSS and SVG transform lists still receive every finish", a
     await page.goto(`${url}/?oracle&${customization}`);
     const proof = page.getByRole("region", { name: "Continuity proof" });
     const chart = proof.getByRole("application", { name: "Kind continuity" });
+    await proof.scrollIntoViewIfNeeded();
     await expect
       .poll(
         async () =>
@@ -241,6 +252,7 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
     await page.goto(`${url}/?oracle&alpha&${override}`);
     const proof = page.getByRole("region", { name: "Continuity proof" });
     const chart = proof.getByRole("application", { name: "Kind continuity" });
+    await proof.scrollIntoViewIfNeeded();
     await expect
       .poll(
         async () =>
@@ -256,12 +268,19 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
       content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
     });
     const native = await chart.screenshot({ omitBackground: true });
+    const captureBox = await chart.boundingBox();
     const nativeGeometry = await geometry(chart);
     for (const finish of finishes.slice(1)) {
       await proof.getByLabel("Oracle finish").selectOption(finish);
       await expect(chart.locator('[data-kind-ui="pie-material"]')).toHaveCount(0);
       expect(await geometry(chart)).toEqual(nativeGeometry);
-      expect(await chart.screenshot({ omitBackground: true })).toEqual(native);
+      expect(await chart.boundingBox(), `Stable capture: ${override}/${finish}`).toEqual(
+        captureBox,
+      );
+      expect(
+        await chart.screenshot({ omitBackground: true }),
+        `Native ownership: ${override}/${finish}`,
+      ).toEqual(native);
     }
   }
 });

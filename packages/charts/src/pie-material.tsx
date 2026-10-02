@@ -72,34 +72,38 @@ export function PieMaterialFilter({
         <>
           <feTurbulence
             type="fractalNoise"
-            baseFrequency="0.65 0.3"
+            x={bounds?.x ?? x}
+            y={bounds?.y ?? y}
+            width={32}
+            height={32}
+            baseFrequency="0.2 0.3"
             numOctaves={1}
             seed={7}
-            result="fiber"
+            result="fiberTile"
           />
+          {/* Repeat a small fiber field rather than evaluating noise over every animated pixel. */}
+          <feTile in="fiberTile" result="fiber" />
           <feFlood
             floodColor="var(--kind-ui-pie-paper-fiber, #fff)"
             floodOpacity="var(--kind-ui-pie-paper-grain, 0.16)"
           />
           <feComposite in2="fiber" operator="in" result="texture" />
           <feComposite in="texture" in2="SourceGraphic" operator="atop" result="paper" />
-          <feMorphology in="SourceAlpha" operator="erode" radius={0.85} result="inside" />
-          <feComposite in="SourceAlpha" in2="inside" operator="out" result="edge" />
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.08 0.2"
-            numOctaves={1}
-            seed={11}
-            result="pencil"
-          />
-          <feColorMatrix in="pencil" type="luminanceToAlpha" result="sketch" />
-          <feComposite in="edge" in2="sketch" operator="in" result="contour" />
+          <feComponentTransfer in="SourceAlpha" result="footprint">
+            <feFuncA type="linear" slope={100000} />
+          </feComponentTransfer>
+          <feGaussianBlur in="footprint" stdDeviation={1.2} result="inside" />
+          <feComposite in="footprint" in2="inside" operator="out" result="edge" />
+          <feComponentTransfer in="edge" result="pencilEdge">
+            <feFuncA type="linear" slope={6} />
+          </feComponentTransfer>
+          <feColorMatrix in="fiber" type="luminanceToAlpha" result="sketch" />
+          <feComposite in="pencilEdge" in2="sketch" operator="in" result="contour" />
           <feFlood floodColor="var(--kind-ui-pie-paper-ink, #17212b)" floodOpacity={0.72} />
           <feComposite in2="contour" operator="in" result="ink" />
           <feComposite in="ink" in2="paper" operator="atop" result="outlined" />
-          <feMorphology in="SourceAlpha" operator="erode" radius={2.8} result="inset" />
-          <feMorphology in="SourceAlpha" operator="erode" radius={3.5} result="deepInset" />
-          <feComposite in="inset" in2="deepInset" operator="out" result="pencilLine" />
+          <feOffset in="pencilEdge" dx={1.2} dy={1.2} result="inset" />
+          <feComposite in="inset" in2="footprint" operator="in" result="pencilLine" />
           <feComposite in="pencilLine" in2="sketch" operator="in" result="brokenLine" />
           <feFlood floodColor="var(--kind-ui-pie-paper-ink, #17212b)" floodOpacity={0.45} />
           <feComposite in2="brokenLine" operator="in" result="pencilPaint" />
