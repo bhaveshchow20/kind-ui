@@ -158,7 +158,9 @@ for (const packed of [false, true]) {
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({
           path: info.outputPath(`heatmap-${material}-${width}.png`),
-          fullPage: true,
+          // Chromium full-page capture can relayout native table headers.
+          // Capture the tested viewport without mutating later geometry checks.
+          fullPage: false,
         });
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
           true,

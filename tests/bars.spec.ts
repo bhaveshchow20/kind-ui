@@ -221,6 +221,8 @@ test("bar tooltip retargets and settles mid-flight when reduced motion or explic
   page,
 }, info) => {
   await page.clock.install();
+  // Keep the 80 ms retarget observations independent of time spent in browser calls.
+  await page.clock.pauseAt(new Date());
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/bars.html");
   await page.getByLabel("Motion", { exact: true }).check();
@@ -237,11 +239,21 @@ test("bar tooltip retargets and settles mid-flight when reduced motion or explic
   const firstX = await readX();
   await page.mouse.move(end.x + end.width / 2, end.y + 10);
   await page.clock.runFor(80);
-  expect(await readX()).toBeGreaterThan(firstX);
+  const outboundX = await readX();
+  expect(outboundX).toBeGreaterThan(firstX);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
   await page.clock.runFor(32);
   const finalX = await readX();
+  const chartBox = await chart.locator(".recharts-wrapper").boundingBox();
+  const frameBox = await chart.locator('[data-kind-ui="tooltip-frame"]').boundingBox();
+  if (!chartBox || !frameBox) throw new Error("Expected chart and tooltip bounds");
+  const targetX = Math.max(
+    0,
+    Math.min(Math.round(end.x + end.width / 2 - chartBox.x) + 12, chartBox.width - frameBox.width),
+  );
+  expect(finalX).toBeCloseTo(targetX, 1);
+  expect(outboundX).toBeLessThan(finalX);
   expect(finalX).toBeGreaterThan(firstX);
   await page.clock.runFor(1000);
   expect(await readX()).toBe(finalX);
@@ -251,7 +263,9 @@ test("bar tooltip retargets and settles mid-flight when reduced motion or explic
   await expect(page.locator("main")).toHaveAttribute("data-motion", "on");
   await page.mouse.move(start.x + start.width / 2, start.y + 10);
   await page.clock.runFor(80);
-  expect(await readX()).toBeGreaterThan(firstX);
+  const returningX = await readX();
+  expect(returningX).toBeGreaterThan(firstX);
+  expect(returningX).toBeLessThan(finalX);
   await page
     .getByLabel("Motion", { exact: true })
     .evaluate((node) => (node as HTMLInputElement).click());
