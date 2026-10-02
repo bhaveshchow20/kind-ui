@@ -61,7 +61,7 @@ export async function exampleCode(
         },
       ]),
     );
-    return `${source}\n\nimport "@kind-ui/charts/styles.css";\nconst sampleRows = ${JSON.stringify(rows, null, 2)};\nconst sampleConfig = ${JSON.stringify(config, null, 2)};\nfor (const series of Object.values(sampleConfig)) Object.assign(series, { formatValue: (value: unknown) => String(value) + " hours" });\nexport function GalleryExample() { return <Allocation rows={sampleRows} config={sampleConfig} donut={${example.id === "donut"}} animate={${animate}} />; }\n`;
+    return `${source}\n\nimport "@kind-ui/charts/styles.css";\nconst sampleRows = ${JSON.stringify(rows, null, 2)};\nconst sampleConfig = ${JSON.stringify(config, null, 2)};\nfor (const series of Object.values(sampleConfig)) Object.assign(series, { formatValue: (value: unknown) => String(value) + " hours" });\nexport function GalleryExample() { return <Allocation rows={sampleRows} config={sampleConfig} donut={${example.id === "donut"}} animate={${animate}} material="${material}" />; }\n`;
   }
   if (family === "radar" || family === "radial") {
     const source =

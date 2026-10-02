@@ -82,6 +82,7 @@ export {
 export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";
 export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";
+export type { PieMaterial } from "./pie-material.js";
 export { PieSeries, type PieSeriesProps } from "./pie-series.js";
 export {
   type RadarAnimation,
