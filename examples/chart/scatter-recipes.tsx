@@ -13,6 +13,7 @@ import {
 } from "recharts";
 
 export type Observation = { id: string; x: number; y: number | null; z?: number | null };
+const relationshipShapes = { weekday: "circle", weekend: "diamond" } as const;
 const weekday: Observation[] = [
   { id: "Search", x: 28, y: 84, z: 45 },
   { id: "Summarize", x: 45, y: 79, z: 90 },
@@ -170,8 +171,8 @@ export function ScatterRecipes() {
           </header>
           <Chart.Root
             config={{
-              weekday: { label: "Weekday", color: purple },
-              weekend: { label: "Weekend", color: green },
+              weekday: { label: "Weekday", color: purple, legendShape: relationshipShapes.weekday },
+              weekend: { label: "Weekend", color: green, legendShape: relationshipShapes.weekend },
             }}
             visibleSeries={visible}
             onVisibleSeriesChange={setVisible}
@@ -208,12 +209,17 @@ export function ScatterRecipes() {
                 width={60}
               />
               <ReferenceLine y={90} stroke="#c4c9d5" strokeDasharray="4 4" />
-              <Chart.ScatterSeries material={material} seriesKey="weekday" data={current} />
+              <Chart.ScatterSeries
+                material={material}
+                seriesKey="weekday"
+                data={current}
+                shape={relationshipShapes.weekday}
+              />
               <Chart.ScatterSeries
                 material={material}
                 seriesKey="weekend"
                 data={weekend}
-                shape="diamond"
+                shape={relationshipShapes.weekend}
               />
               <Chart.ScatterTooltip pointLabel={pointLabel} />
             </Chart.ScatterChart>

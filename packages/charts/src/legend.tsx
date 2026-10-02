@@ -1,11 +1,12 @@
 "use client";
 
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
+import { Symbols } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useEmphasis } from "./emphasis.js";
 
 export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
-  /** Use the existing color swatch instead of configured icons. */
+  /** Use the existing square color swatch instead of configured icons or symbols. */
   hideIcon?: boolean;
   /** Explicit series emphasis; visibility click behavior remains controlled by Root. */
   emphasis?: "none" | "series";
@@ -30,6 +31,17 @@ export function Legend({ hideIcon = false, emphasis = "none", children, ...props
             <span aria-hidden="true" data-kind-ui="chart-icon">
               <item.icon />
             </span>
+          ) : item.legendShape && !hideIcon ? (
+            <svg
+              aria-hidden="true"
+              focusable="false"
+              data-kind-ui="chart-indicator"
+              data-legend-shape={item.legendShape}
+              viewBox="-8 -8 16 16"
+              style={{ "--kind-ui-chart-indicator-color": `var(--color-${key})` } as CSSProperties}
+            >
+              <Symbols type={item.legendShape} cx={0} cy={0} size={64} />
+            </svg>
           ) : (
             <span
               aria-hidden="true"
