@@ -121,6 +121,7 @@ try {
         "heatmap",
         "waterfall",
         "sankey",
+        "box-plot",
       ].includes(folder) &&
       file.endsWith(".tsx")
     )
@@ -267,6 +268,11 @@ try {
     await copyFixture("styling", file);
   await typecheck(["index.tsx", "main.tsx", "motion.tsx"]);
   await production("index.html", "packed-chart");
+
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("box-plot", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-box-plot");
+  console.log("Box plot tarball: public-only strict NodeNext/Bundler and production build passed");
 
   // The actual presentation recipe is independently checked through the installed tarball.
   for (const file of [

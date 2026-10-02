@@ -16,6 +16,10 @@ export default defineConfig({
   },
   webServer: [
     {
+      command: `npm exec vite preview -- --outDir artifacts/packed-box-plot --host 127.0.0.1 --port ${port(4191)} --strictPort`,
+      url: `http://127.0.0.1:${port(4191)}`,
+    },
+    {
       command: `npm exec vite preview -- --outDir artifacts/packed-heatmap --host 127.0.0.1 --port ${port(4190)} --strictPort`,
       url: `http://127.0.0.1:${port(4190)}`,
     },
