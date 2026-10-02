@@ -131,16 +131,12 @@ void (<Bar<Row, number> ref={createRef<SVGPathElement>()} />);
 void (<Chart.LineSeries<Row, number> ref={createRef<SVGPathElement>()} />);
 // @ts-expect-error The public Bar retains the native ref boundary.
 void (<Chart.BarSeries<Row, number> ref={createRef<SVGPathElement>()} />);
+const htmlHandler = (curve: ComponentProps<typeof Curve>, event: MouseEvent<HTMLDivElement>) =>
+  void [curve, event];
 // @ts-expect-error Native Line's handler event targets an SVG path.
-void (
-  <Line<Row, number> onClick={(curve, event: MouseEvent<HTMLDivElement>) => void [curve, event]} />
-);
+void (<Line<Row, number> onClick={htmlHandler} />);
 // @ts-expect-error The public Line retains the native SVG event target.
-void (
-  <Chart.LineSeries<Row, number>
-    onClick={(curve, event: MouseEvent<HTMLDivElement>) => void [curve, event]}
-  />
-);
+void (<Chart.LineSeries<Row, number> onClick={htmlHandler} />);
 // @ts-expect-error Bar's first handler argument is a native rectangle, not the declared row.
 void (<Chart.BarSeries<Row, number> onClick={(row: Row) => void row} />);
 // @ts-expect-error Kind continues to own engine animation.
