@@ -4,6 +4,40 @@ import * as Chart from "@kind-ui/charts";
 import { Legend, Root, TooltipContent } from "@kind-ui/charts";
 import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
+import { ScatterChart as NativeScatterChart, Scatter, XAxis, YAxis } from "recharts";
+
+test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a data alternative", () => {
+  const axes = [
+    h(XAxis, { key: "x", type: "number", dataKey: "x" }),
+    h(YAxis, { key: "y", type: "number", dataKey: "y" }),
+  ];
+  const data = [{ x: 1, y: 2 }];
+  const native = render(
+    h(
+      NativeScatterChart,
+      { width: 320, height: 240 },
+      ...axes,
+      h(Scatter, { data, isAnimationActive: false }),
+    ),
+  );
+  const kind = render(
+    h(
+      Root,
+      { config: { points: { label: "Points", color: "#123456" } } },
+      h(
+        Chart.ScatterChart,
+        { width: 320, height: 240, animate: false },
+        ...axes,
+        h(Chart.ScatterSeries, { data, seriesKey: "points" }),
+      ),
+    ),
+  );
+  for (const html of [native, kind]) {
+    assert.match(html, /recharts-wrapper/);
+    assert.match(html, /width:320px;height:240px/);
+    assert.doesNotMatch(html, /<svg|recharts-scatter-symbol|<path/);
+  }
+});
 
 test("direct and namespace imports expose the same public components", () => {
   assert.deepEqual(Object.keys(Chart).sort(), [
