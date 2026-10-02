@@ -21,6 +21,7 @@ export {
 } from "./bar-chart.js";
 export type { BarMaterial } from "./bar-material.js";
 export { BarSeries, type BarSeriesProps } from "./bar-series.js";
+export type { BoxPlotMaterial } from "./box-material.js";
 export {
   BoxPlotChart,
   type BoxPlotChartProps,

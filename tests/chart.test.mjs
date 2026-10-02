@@ -424,6 +424,46 @@ test("box SVG primitive preserves numeric geometry, zero IQR and native attribut
   assert.match(collapsed, /data-box-part="collapsed-box"/);
 });
 
+test("box materials retain native geometry and consumer filter ownership, including collapsed marks", () => {
+  const attrs = {
+    coordinates: summary,
+    center: 30,
+    size: 20,
+    fillOpacity: 0,
+    strokeDasharray: "4 2",
+    clipPath: "url(#clip)",
+    mask: "url(#mask)",
+    visibility: "hidden",
+  };
+  const plain = render(h(Chart.BoxPlotMark, attrs));
+  const geometry = (svg) =>
+    [...svg.matchAll(/<(?:rect|line|circle)\b[^>]*>/g)].map((match) => match[0]);
+  for (const material of ["paper", "clay", "glow"]) {
+    const svg = render(h(Chart.BoxPlotMark, { ...attrs, material, filter: undefined }));
+    assert.match(svg, /data-kind-ui="box-plot-mark"[^>]*filter="url\(#kind-ui-box-/);
+    assert.deepEqual(geometry(svg), geometry(plain));
+    assert.match(svg, /filterUnits="userSpaceOnUse"/);
+    assert.match(svg, /fill-opacity="0"/);
+    assert.match(svg, /visibility="hidden"/);
+    for (const override of [{ filter: "none" }, { style: { filter: "none" } }]) {
+      assert.doesNotMatch(
+        render(h(Chart.BoxPlotMark, { ...attrs, material, ...override })),
+        /data-kind-ui="box-material"/,
+      );
+    }
+    const collapsed = render(
+      h(Chart.BoxPlotMark, {
+        material,
+        coordinates: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 },
+        center: 4,
+        size: 0.5,
+      }),
+    );
+    assert.match(collapsed, /data-box-part="collapsed-box"/);
+    assert.match(collapsed, /width="0.5"[^>]*height="0"/);
+  }
+});
+
 test("heatmap explicit domains preserve signed, zero, missing and ordering", () => {
   const model = Chart.createHeatmapModel({
     rows: ["B", "A"],

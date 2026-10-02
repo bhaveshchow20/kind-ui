@@ -1,9 +1,20 @@
 "use client";
 
-import { type ComponentPropsWithRef, type ReactNode, useCallback, useMemo } from "react";
+import {
+  type ComponentPropsWithRef,
+  type ReactNode,
+  useCallback,
+  useId,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { type BarShapeProps, useChartLayout, useXAxisScale, useYAxisScale } from "recharts";
 import { BarChart, type BarChartProps } from "./bar-chart.js";
 import { BarSeries, type BarSeriesProps } from "./bar-series.js";
+import { BoxMaterialFilter, type BoxPlotMaterial } from "./box-material.js";
 
 /** Caller-computed statistics; no sample, quartile or fence convention is inferred. */
 export type BoxPlotSummary = {
@@ -71,6 +82,8 @@ export type BoxPlotMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> & {
   size: number;
   orientation?: "vertical" | "horizontal";
   outlierRadius?: number | undefined;
+  /** Static finish; explicit filters/styles retain consumer ownership. */
+  material?: BoxPlotMaterial | undefined;
 };
 /** A reusable SVG mark. Zero IQR remains a line; no minimum numeric extent is invented. */
 export function BoxPlotMark({
@@ -80,8 +93,95 @@ export function BoxPlotMark({
   orientation = "vertical",
   outlierRadius = 3,
   strokeWidth = 1.5,
+  material = "plain",
   ...props
 }: BoxPlotMarkProps) {
+  const id = `kind-ui-box-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const node = useRef<SVGGElement>(null);
+  useImperativeHandle(props.ref, () => {
+    if (!node.current) throw new Error("Missing BoxPlot mark ref");
+    return node.current;
+  }, []);
+  const width = props.style?.strokeWidth ?? strokeWidth;
+  const resolvedWidth = Number.parseFloat(String(width));
+  const miter = Number(props.style?.strokeMiterlimit ?? props.strokeMiterlimit ?? 4);
+  const initialPadding =
+    Number.isFinite(resolvedWidth) && Number.isFinite(miter)
+      ? (Math.max(0, resolvedWidth) * Math.max(1, miter)) / 2
+      : 0;
+  const [paintPadding, setPaintPadding] = useState(initialPadding);
+  const materialized =
+    material !== "plain" && props.filter === undefined && props.style?.filter === undefined;
+  // Native child selectors can change individual stroke widths. Read their resolved
+  // paint after layout, before first paint, without moving the marks or their refs.
+  useLayoutEffect(() => {
+    const mark = node.current;
+    if (!materialized || !mark) return;
+    const measure = () => {
+      let padding = initialPadding;
+      for (const part of Array.from(mark.querySelectorAll<SVGElement>("[data-box-part]"))) {
+        const style = getComputedStyle(part);
+        let width = Number.parseFloat(style.strokeWidth);
+        if (style.strokeWidth.endsWith("%")) {
+          const svg = part.ownerSVGElement;
+          const viewport = svg?.viewBox.baseVal;
+          const w = viewport?.width || svg?.width.baseVal.value || 0;
+          const h = viewport?.height || svg?.height.baseVal.value || 0;
+          width = ((width / 100) * Math.hypot(w, h)) / Math.SQRT2;
+        }
+        const limit = Number.parseFloat(style.strokeMiterlimit);
+        if (Number.isFinite(width))
+          padding = Math.max(
+            padding,
+            (width * (Number.isFinite(limit) ? Math.max(1, limit) : 4)) / 2,
+          );
+      }
+      setPaintPadding((previous) => (previous === padding ? previous : padding));
+    };
+    measure();
+    // Stylesheets and ancestor theme classes can change paint without a React
+    // update. Observe the actual ownership chain, plus stylesheet loads/edits.
+    const observer = new MutationObserver(measure);
+    observer.observe(mark, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ["class", "style", "stroke", "stroke-width", "stroke-miterlimit"],
+    });
+    for (let ancestor = mark.parentElement; ancestor; ancestor = ancestor.parentElement)
+      observer.observe(ancestor, { attributes: true, attributeFilter: ["class", "style"] });
+    if (mark.ownerSVGElement)
+      observer.observe(mark.ownerSVGElement, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ["class", "style", "stroke", "stroke-width", "stroke-miterlimit"],
+      });
+    observer.observe(mark.ownerDocument.head, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+    });
+    const resize = new ResizeObserver(measure);
+    if (mark.ownerSVGElement) resize.observe(mark.ownerSVGElement);
+    const view = mark.ownerDocument.defaultView;
+    view?.addEventListener("resize", measure);
+    mark.ownerDocument.addEventListener("load", measure, true);
+    mark.addEventListener("pointerover", measure);
+    mark.addEventListener("pointerout", measure);
+    const dark = view?.matchMedia("(prefers-color-scheme: dark)");
+    dark?.addEventListener("change", measure);
+    return () => {
+      observer.disconnect();
+      resize.disconnect();
+      view?.removeEventListener("resize", measure);
+      mark.ownerDocument.removeEventListener("load", measure, true);
+      mark.removeEventListener("pointerover", measure);
+      mark.removeEventListener("pointerout", measure);
+      dark?.removeEventListener("change", measure);
+    };
+  });
   const horizontal = orientation === "horizontal";
   const start = center - size / 2;
   const low = Math.min(c.q1, c.q3);
@@ -95,14 +195,8 @@ export function BoxPlotMark({
         : { x1: a, x2: b, y1: value, y2: value })}
     />
   );
-  return (
-    <g
-      data-kind-ui="box-plot-mark"
-      fill="currentColor"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      {...props}
-    >
+  const parts = (
+    <>
       <line
         data-box-part="whisker"
         {...(horizontal
@@ -135,6 +229,33 @@ export function BoxPlotMark({
           {...(horizontal ? { cx: value, cy: center } : { cx: center, cy: value })}
         />
       ))}
+    </>
+  );
+  return (
+    <g
+      data-kind-ui="box-plot-mark"
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      {...props}
+      {...(materialized ? { filter: `url(#${id})` } : {})}
+      ref={node}
+    >
+      {materialized && (
+        <defs data-kind-ui="box-material" data-material={material} pointerEvents="none">
+          <BoxMaterialFilter
+            material={material}
+            id={id}
+            coordinates={c}
+            center={center}
+            size={size}
+            horizontal={horizontal}
+            outlierRadius={outlierRadius}
+            strokePadding={Math.max(initialPadding, paintPadding)}
+          />
+        </defs>
+      )}
+      {parts}
     </g>
   );
 }
@@ -158,6 +279,7 @@ export type BoxPlotSeriesProps<Row extends object = Record<string, unknown>> = O
   dataKey: (keyof Row & string) | ((row: Row) => BoxPlotSummary | null | undefined);
   /** Required metadata/visibility key, independent of the computed native range. */
   seriesKey: string;
+  material?: BoxPlotMaterial | undefined;
   shape?: (props: BoxPlotShapeProps) => ReactNode;
   markProps?: Omit<ComponentPropsWithRef<"g">, "children">;
   outlierRadius?: number | undefined;
@@ -169,9 +291,11 @@ function ScaledMark({
   shape,
   markProps,
   outlierRadius,
+  material,
   xAxisId,
   yAxisId,
 }: {
+  material: BoxPlotMaterial;
   summary: BoxPlotSummary | null;
   native: BarShapeProps;
   shape: BoxPlotSeriesProps["shape"];
@@ -234,7 +358,7 @@ function ScaledMark({
   };
   if (shape) return shape(props);
   const { summary: _summary, native: _native, ...mark } = props;
-  return <BoxPlotMark {...mark} />;
+  return <BoxPlotMark {...mark} material={material} />;
 }
 
 /** Registered range Bar with truthful summary geometry through public scale hooks. */
@@ -244,6 +368,7 @@ export function BoxPlotSeries<Row extends object = Record<string, unknown>>({
   shape,
   markProps,
   outlierRadius,
+  material = "plain",
   ...props
 }: BoxPlotSeriesProps<Row>) {
   const read = useCallback(
@@ -266,13 +391,14 @@ export function BoxPlotSeries<Row extends object = Record<string, unknown>>({
         summary={read(native.payload)}
         native={native}
         shape={shape}
+        material={material}
         markProps={markProps}
         outlierRadius={outlierRadius}
         xAxisId={props.xAxisId}
         yAxisId={props.yAxisId}
       />
     ),
-    [read, shape, markProps, outlierRadius, props.xAxisId, props.yAxisId],
+    [read, shape, material, markProps, outlierRadius, props.xAxisId, props.yAxisId],
   );
   return (
     <BarSeries {...props} seriesKey={seriesKey} dataKey={extent} shape={render} activeBar={false} />

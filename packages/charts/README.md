@@ -465,7 +465,7 @@ const data = [{ group: "A", summary: {
 
 Initial scope: linear numeric axes, categorical groups, two orientations, optional
 Bar reveal Motion with reduced-motion/interruption behavior. Stacking, minimum
-numeric sizes, native rectangle backgrounds/radius, material finishes, native
+numeric sizes, native rectangle backgrounds/radius, native
 active-bar duplication, raw-sample estimators, weighted quartiles, notches,
 variable-width-by-sample-size boxes, and quantitative category positioning are
 outside this family. Nonlinear numeric axes, Brush, mixed-series composition and
@@ -479,6 +479,14 @@ References: [NIST box plot definitions and variants](https://www.itl.nist.gov/di
 [public Y scale](https://recharts.github.io/en-US/api/useYAxisScale/).
 The sample estimator and whisker definition deliberately remain caller-owned.
 
+
+### Box plot materials
+
+`BoxPlotSeries` and the screen-space `BoxPlotMark` accept `material="plain" | "paper" | "clay" | "glow"` (`BoxPlotMaterial`). Plain is the default. Paper uses the existing bar grain and uneven inset pencil contour; Clay uses bar soft convex matte relief; Glow adds an exterior painted halo and a crisp lightened body. These static finishes are independent of color and Motion and preserve every whisker, quartile, median and outlier coordinate. Native stroke width/dashes remain the input silhouette. No extra minimum extent is introduced: all-equal and tiny marks receive a line finish; missing rows still have no marks.
+
+Each present native mark has its own React-generated filter ID and user-space region, including outliers and resolved child stroke widths/miter limits, so line-only summaries do not require nonzero bounding boxes. Use React `identifierPrefix` for independently mounted roots. Box finishes reuse the `--kind-ui-bar-*` tokens documented above. Body alpha is preserved, including zero fill opacity; glow/cast effects can paint only outside the native footprint. Tiny marks have less room for visible grain/relief. Bounds are refreshed for React updates, stylesheet edits/loads, ancestor theme classes, viewport changes and pointer entry/exit. Direct CSSOM rule mutations without one of those signals are not observed. The default box fill remains `0.18`; an explicit `fillOpacity` (for example `0.65`) makes broad surfaces easier to see.
+
+An explicit series/Cell/mark `filter`, or `style.filter`, including `none`, disables the built-in finish for that mark. Custom `shape` owns its markup and is not automatically materialized; it may explicitly return a materialized `BoxPlotMark`. Cells, gradients, native paint/opacity, mark styles, clipping, masks, visibility, refs, handlers and labels retain ownership. Filters run on the original consumer mark group (parts remain direct children) and existing reveal/plot clips, which may trim decorative halos. Chromium is verified; other SVG engines and print renderers remain unverified. No shared helper changes, dependencies, workflow changes or releases accompany this material stack.
 ### Shared presentation example
 
 `examples/chart/presentation.html` demonstrates the same public options for line, area and bar, icon/swatch fallback, composed legend labels, native formatter tuples/suppression, custom content and light/dark host CSS variables. It enables motion by default while following live reduced-motion preferences, and includes keyboard instructions and all-series table values. Its source is also compiled against an independently installed tarball, with guarded public imports, strict NodeNext/Bundler checks, and Chromium interactions. Theme colors remain host-owned CSS variables; this change does not add automatic light/dark config mapping. String labels/colors remain required.
