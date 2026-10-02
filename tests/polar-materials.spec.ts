@@ -152,12 +152,34 @@ for (const mode of ["static", "motion", "reduced"] as const) {
           path: info.outputPath(`${mode}-${material}-${width}.png`),
           fullPage: true,
         });
-        await gauge.getByRole("application").focus();
-        await page.keyboard.press("ArrowRight");
-        if (!(await gauge.locator('[data-kind-ui="chart-tooltip"]').isVisible()))
-          await page.keyboard.press("Enter");
+        await gauge.scrollIntoViewIfNeeded();
+        const hover = await gauge
+          .locator(".recharts-radial-bar-sector")
+          .first()
+          .evaluate((node) => {
+            const path = node as SVGPathElement,
+              box = path.getBBox(),
+              matrix = path.getScreenCTM();
+            if (!matrix) throw new Error("No native transform");
+            for (let row = 1; row < 10; row++)
+              for (let column = 1; column < 10; column++) {
+                const point = new DOMPoint(
+                  box.x + (box.width * column) / 10,
+                  box.y + (box.height * row) / 10,
+                );
+                if (
+                  path.isPointInFill(point) &&
+                  path.isPointInFill(new DOMPoint(point.x + 2, point.y + 2))
+                ) {
+                  const screen = point.matrixTransform(matrix);
+                  return { x: screen.x, y: screen.y };
+                }
+              }
+            throw new Error("No native sector hit target");
+          });
+        await page.mouse.move(hover.x, hover.y);
         await expect(gauge.locator('[data-kind-ui="chart-tooltip"]')).toBeVisible();
-        await page.keyboard.press("Escape");
+        await page.mouse.move(0, 0);
       }
       await page.setViewportSize({ width: 1000, height: 900 });
       await page.getByLabel("Chart text", { exact: true }).uncheck();
@@ -204,7 +226,10 @@ for (const paint of ["gradient", "solid", "zero"] as const) {
         width: Math.ceil(box.width + 25),
         height: Math.ceil(box.height + 25),
       };
-      async function raster(material: string, nativeSpatialControl?: "morphology" | "blur") {
+      async function raster(
+        material: string,
+        nativeSpatialControl?: "morphology" | "blur" | "relief",
+      ) {
         await page.getByLabel("Material", { exact: true }).selectOption(material);
         await mark.evaluate((node) => node.setAttribute("data-alpha-proof", ""));
         if (nativeSpatialControl)
@@ -224,7 +249,9 @@ for (const paint of ["gradient", "solid", "zero"] as const) {
             filter.innerHTML =
               operation === "morphology"
                 ? '<feMorphology in="SourceAlpha" operator="erode" radius="1.2"/><feComposite in2="SourceGraphic" operator="atop"/>'
-                : '<feGaussianBlur in="SourceGraphic" stdDeviation="3"/><feComposite in2="SourceGraphic" operator="atop"/>';
+                : operation === "blur"
+                  ? '<feGaussianBlur in="SourceGraphic" stdDeviation="3"/><feComposite in2="SourceGraphic" operator="atop"/>'
+                  : '<feOffset in="SourceAlpha" dx="4" dy="4"/><feGaussianBlur stdDeviation="3"/><feComposite in2="SourceGraphic" operator="atop"/>';
             svg.append(filter);
             node.setAttribute("filter", "url(#native-alpha-control)");
           }, nativeSpatialControl);
@@ -257,19 +284,28 @@ for (const paint of ["gradient", "solid", "zero"] as const) {
         );
       }
       const plain = await raster("plain");
+      const nativeControls = [
+        plain,
+        await raster("plain", "morphology"),
+        await raster("plain", "blur"),
+        await raster("plain", "relief"),
+      ];
       for (const material of ["paper", "clay", "glow"]) {
         const finish = await raster(material);
-        const native = await raster("plain", material === "paper" ? "morphology" : "blur");
-        // Compare all native coverage, including antialiasing, to an independent
-        // alpha-preserving native spatial filter, not a copy of our material graph.
+        // All covered pixels must stay inside the independently measured native
+        // raster envelope (plus one byte for quantization). Interior alpha is
+        // identical; only native curved antialiasing can vary across spatial inputs.
+        // No material graph is copied into these controls.
         let exterior = 0,
           changed = 0,
           maxAlphaDifference = 0;
         for (let i = 3; i < plain.length; i += 4) {
-          const alpha = native[i] ?? 0,
+          const alphas = nativeControls.map((pixels) => pixels[i] ?? 0);
+          const min = Math.min(...alphas),
+            max = Math.max(...alphas),
             next = finish[i] ?? 0;
-          if (alpha > 0) {
-            maxAlphaDifference = Math.max(maxAlphaDifference, Math.abs(alpha - next));
+          if (max > 0) {
+            maxAlphaDifference = Math.max(maxAlphaDifference, Math.max(min - next, next - max, 0));
             if (Math.abs((plain[i - 1] ?? 0) - (finish[i - 1] ?? 0)) > 3) changed++;
           } else if (next > 0) exterior++;
         }

@@ -132,8 +132,10 @@ export function PolarMaterialFilter({
             <feGaussianBlur in="luminousPaint" stdDeviation={3} result="halo" />
             <feFlood floodOpacity="var(--kind-ui-polar-glow-opacity, 0.65)" result="strength" />
             <feComposite in="halo" in2="strength" operator="in" result="softHalo" />
-            {/* Exterior light is decorative; interior coverage retains native alpha. */}
-            <feComposite in="softHalo" in2="footprint" operator="out" result="exterior" />
+            {/* Reserve the antialiased edge for native paint; decorative light starts
+                beyond its coverage rather than accumulating inside a partial pixel. */}
+            <feMorphology in="footprint" operator="dilate" radius={1} result="haloGuard" />
+            <feComposite in="softHalo" in2="haloGuard" operator="out" result="exterior" />
             <feMorphology in="footprint" operator="erode" radius={2.2} result="inside" />
             <feComposite
               in="footprint"
