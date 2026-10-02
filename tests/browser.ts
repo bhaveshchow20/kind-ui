@@ -12,7 +12,7 @@ export const test = base.extend({
         if (!/^https?:\/\//.test(address)) return navigate(address, options);
         const url = new URL(address, "http://127.0.0.1");
         const port = Number(url.port);
-        if (url.hostname === "127.0.0.1" && port >= 4173 && port <= 4184)
+        if (url.hostname === "127.0.0.1" && port >= 4173 && port <= 4186)
           url.port = String(port + offset);
         return navigate(url.href, options);
       };

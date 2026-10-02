@@ -231,6 +231,104 @@ Each series owns a unique filter that native rectangles apply independently with
 
 Bar finish tokens are `--kind-ui-bar-paper-fiber` (white), `--kind-ui-bar-paper-grain` (0.14), `--kind-ui-bar-clay-light` (white), `--kind-ui-bar-clay-shade` (#17212b), `--kind-ui-bar-clay-highlight` (0.48), `--kind-ui-bar-clay-shadow` (0.26), `--kind-ui-bar-glow-light` (white), and `--kind-ui-bar-glow-opacity` (0.6). Opacity tokens accept numbers from 0 to 1. Clay/Paper lighting and ink are composited atop native paint, preserving every painted pixel’s translucent alpha, including antialiasing. Clay’s decorative cast shadow is excluded from that footprint; only fully transparent exterior pixels acquire shade, derived from native alpha at a fixed 0.16 opacity. This shadow does not change the native data path, radius or stack clip, and native clipping can trim it. Lighting uses a silhouette so translucent fills retain the same matte relief. Pixel-sized light/blur offsets are capped for chart marks; tiny bars can show less relief. The raised direction follows shipped line Clay, with [clay.css](https://github.com/codeAdrian/clay.css) and [Malewicz’s Claymorphism tutorial](https://hype4.academy/articles/design/claymorphism-in-user-interfaces) as soft-volume references, adapted without copying assets or adding dependencies. Native shapes retain engine zero-label and background filtering. Clay and Paper primitives are bar-local; Glow reuses the coordinated filled-surface helper. Bar material rendering leaves line and area outputs unchanged. Validation covers Chromium; other browsers and print/export renderers remain unverified.
 
+## Scatter and bubble charts
+
+`ScatterChart`, `ScatterSeries`, `ScatterTooltip`, and `ScatterTooltipContent` are public exports with colocated prop types; `ScatterAnimation` shares the familiar `revealDurationMs`, `revealEasing`, and `hoverTransition` options. `ScatterChart` accepts native Recharts ScatterChart props and refs plus `animate={false | true | config}`. `ScatterSeries` accepts native Scatter composition (Cells, labels, custom/active shapes, native handlers, axis IDs, lines and fits), except `isAnimationActive`: Kind owns animation. Set `seriesKey` for controlled visibility because numeric axis keys describe dimensions, not series. Explicit native `hide` remains authoritative.
+
+```tsx
+import { Root, Legend, ScatterChart, ScatterSeries, ScatterTooltip } from "@kind-ui/charts";
+import { CartesianGrid, XAxis, YAxis, ZAxis } from "recharts";
+
+<Root config={{ tasks: { label: "Tasks", color: "#7c5ce7" } }}>
+  <Legend />
+  <ScatterChart responsive style={{ width: "100%", height: 320 }} animate={false}>
+    <CartesianGrid />
+    <XAxis type="number" dataKey="latency" name="Latency" unit=" ms" domain={[0, 100]} />
+    <YAxis type="number" dataKey="acceptance" name="Acceptance" unit="%" domain={[0, 100]} />
+    <ZAxis dataKey="requests" name="Requests" unit="k" domain={[0, 300]} range={[35, 1200]} />
+    <ScatterSeries seriesKey="tasks" data={observations} />
+    <ScatterTooltip zDimension={{ dataKey: "requests", name: "Requests", unit: "k" }} pointLabel={(record) =>
+      record && typeof record === "object" && "id" in record ? String(record.id) : "Task"
+    } />
+  </ScatterChart>
+</Root>
+```
+
+Native Recharts owns numeric axes, ZAxis area mapping and per-point selection. Use `ScatterTooltip` instead of the category-oriented default `TooltipContent`: its default content displays the actual selected record's dimension values, names and units; a point label comes from the supplied callback or configured series title. Optional metadata for a dimension's string dataKey uses the same `Root.config` `label`/`formatValue` contract; native `entry.formatter`/tooltip `formatter` takes precedence. `Legend` shows all config entries, so use native axis names/units or a tooltip formatter when dimension entries should not appear in the legend. Custom `content`, `frameProps`, frame refs, bounded positioning and shared Motion are retained. Use `<ScatterTooltipContent tooltip={nativeContentProps} />` to compose the default UI inside your own native content.
+
+No missing/zero/negative values are coerced or deduplicated by Kind. Default native symbols omit unresolvable x/y coordinates; custom shapes receive native nullable geometry and must guard it themselves. Recharts 3.10.1 uses the minimum Z range and omits the Z tooltip entry for both zero and missing z; default content displays only the native entries and does not invent a z value. Supply `zDimension={{ dataKey: "requests", name: "Requests", unit: "k" }}` to recover zero or missing size in maintained default content from the actual point record. `ScatterSizeDimension<Row>` also accepts a typed `(record: Row) => number | null | undefined` accessor without casts; reuse the accessor used by your ZAxis. String keys read own top-level properties only; use a function for nested paths. When native Recharts supplies a nonzero Z entry it remains intact, with its native formatter/name/unit. Mapping name/unit supplies the omitted entry, existing tooltip/series formatter and dimension config formatting apply, and missing entries use `missingValue` (default “No data”). No field is guessed when mapping is omitted. A table remains appropriate for all observations. Negative z is passed to the native scale; validate count domains in the host. Duplicate coordinates overlap but keep distinct record payloads/indexes. Custom Cells may override native geometry, exactly as with Recharts Scatter.
+
+Motion fades native marks without moving their coordinates; native geometry animation is disabled to avoid two animation engines. Shared tooltip positioning can animate. Reduced motion and SSR render final geometry with Motion off; interaction, x/y geometry, data/visibility changes and resize settle entrance, and stale pointer placement is discarded on geometry changes. Off/config switches preserve consumer content and handlers. Entrance does not replay after interaction. Consumers own input validation, data tables, errors/loading states and immutable data updates.
+
+For custom X axis IDs, set the matching native `ScatterTooltip axisId` so Recharts can resolve keyboard navigation. Native keyboard navigation visits points in the first registered series, in data order. Hover can select any series; arrows do not perform spatial or all-series navigation. Provide a keyboard-accessible data alternative for every series, especially overlapping points and missing measurements. Browser coverage is Chromium at the pinned peer versions; it is not a screen-reader/browser conformance claim or a large-dataset performance promise. See the [four bounded recipes](../../examples/chart/SCATTERS.md) and the isolated tarball consumer/browser proof in `tests/fixtures/scatter` and `tests/packed-scatter.spec.ts`.
+
+This adds a pre-release public API at private version `0.0.0`; no dependency, publication or release change is made. The internal frame reuses the approved standalone generic `engine + chartProps` seam shared by polar and Combo charts.
+
+## Combo / Composed charts
+
+`ComboChart`, `ComboChartProps`, and `ComboAnimation` are public root exports.
+`ComboChart` uses Recharts `ComposedChart` and accepts its native props, SVG ref,
+handlers, axes, margins, layout, stacks, and children. Compose the existing
+`LineSeries`, `AreaSeries`, and `BarSeries` under one `Root`; one `Tooltip` shows
+all registered visible series at the selected category. `Legend` uses the same
+consumer-owned `visibleSeries` and `onVisibleSeriesChange` contract.
+
+```tsx
+<Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+  <Legend />
+  <ResponsiveContainer width="100%" height={260}>
+  <ComboChart data={data}
+    animate={{ lineReveal: { revealDurationMs: 700 }, areaReveal: false,
+      barReveal: { revealDurationMs: 900 } }}>
+    <XAxis dataKey="period" />
+    <YAxis yAxisId="count" />
+    <YAxis yAxisId="ms" orientation="right" />
+    <AreaSeries dataKey="queued" yAxisId="count" fillOpacity={0.2} />
+    <BarSeries dataKey="completed" yAxisId="count" />
+    <LineSeries dataKey="latency" yAxisId="ms" dot={false} />
+    <Tooltip />
+  </ComboChart>
+  </ResponsiveContainer>
+</Root>
+```
+
+`animate` defaults to `false`; `true` uses the existing family defaults. An
+object accepts the same `revealDurationMs`, `revealEasing`, and shared
+`hoverTransition` as `LineChart`. Optional `lineReveal`, `areaReveal`, and
+`barReveal` override entrance timing/easing for each family; `false` disables
+that family's entrance. Hover/line visibility Motion remains shared, rather
+than separately controlled by these entrance options. Reduced motion disables
+all Kind Motion, including when the preference changes after mounting.
+
+Use Recharts `ResponsiveContainer` to mount at measured dimensions, as the
+recipes do. Native `responsive` sizing is accepted; a percentage placeholder
+followed by its first measured size can finish an entrance through the normal
+resize cancellation path.
+
+Line/area entrances sweep across the plot. Bars reuse `BarSeries`' own
+axis-specific, clamped zero baseline reveal for positive, negative and signed
+stacks. One interaction cancellation path finishes all active entrances when
+pointer/focus/keyboard input, visibility, data, geometry, bar layout, or native
+children change. A changed children identity conservatively finishes entrances,
+even if the parent merely rerendered; updates render immediately rather than
+replaying an entrance. Family completion removes only that family's clip.
+
+Colors remain independently supplied by `Root.config` or native series props.
+Native Recharts children, custom marks, cells, labels, filters and event handlers
+retain their ownership. Native marks do not register with Kind visibility or
+metadata; use the maintained series for the shared legend/tooltip contract.
+Native child animation props remain consumer-owned; managed series disable
+Recharts' competing animation as in their standalone families.
+
+Stack only compatible units on the same axes. Recharts owns stack semantics;
+use `stackOffset="sign"` for signed bar stacks. Separate axis IDs preserve
+unrelated units. `null` stays missing and `0` stays zero; `connectNulls` retains
+its native meaning. Native ComposedChart offers axis selection, not item-only
+bar selection. Supply a data table or equivalent text alternative.
+
+See [Combo recipes](../../examples/chart/COMBOS.md) for two axes, signed stacks,
+missing values, custom markers, independent legends and entrance controls.
+
 ## Pie and donut
 
 `PieChart`, `PieSeries`, `PieChartProps`, `PieSeriesProps` and `PieAnimation` are maintained public exports. A donut is a `PieSeries` with native `innerRadius`; it uses the same component and animation contract. No additional dependency or material API is introduced.

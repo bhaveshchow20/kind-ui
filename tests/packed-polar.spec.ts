@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "./browser";
 
-const url = "http://127.0.0.1:4178";
+const url = "http://127.0.0.1:4177";
 const radarPath = ".recharts-radar-polygon";
 const radialPath = ".recharts-radial-bar-sector";
 async function paths(scope: Locator, selector: string) {
@@ -150,7 +150,7 @@ for (const strict of [false, true]) {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.goto(`http://127.0.0.1:4179/?motion${strict ? "&strict" : ""}`);
+    await page.goto(`http://127.0.0.1:4178/?motion${strict ? "&strict" : ""}`);
     for (const kind of ["radar", "radial-bar"]) {
       const mark = page.locator(`[data-kind-ui="${kind}-reveal"]`).first();
       await expect.poll(() => opacity(mark)).toBeLessThan(0.95);

@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "./browser";
 
-const url = "http://127.0.0.1:4177";
+const url = "http://127.0.0.1:4180";
 const sectors = '[data-kind-ui="pie-sector"]';
 const revealing = '[data-kind-ui="pie-sector"][data-reveal="on"]';
 

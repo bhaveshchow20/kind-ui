@@ -15,6 +15,7 @@ export { AreaSeries, type AreaSeriesProps } from "./area-series.js";
 export { type BarAnimation, BarChart, type BarChartProps } from "./bar-chart.js";
 export type { BarMaterial } from "./bar-material.js";
 export { BarSeries, type BarSeriesProps } from "./bar-series.js";
+export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
 export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";
 export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";
@@ -35,5 +36,14 @@ export {
 } from "./polar-series.js";
 export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
 export { Root, type RootProps } from "./root.js";
+export { type ScatterAnimation, ScatterChart, type ScatterChartProps } from "./scatter-chart.js";
+export { ScatterSeries, type ScatterSeriesProps } from "./scatter-series.js";
+export {
+  type ScatterSizeDimension,
+  ScatterTooltip,
+  ScatterTooltipContent,
+  type ScatterTooltipContentProps,
+  type ScatterTooltipProps,
+} from "./scatter-tooltip.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 export type { SeriesConfig } from "./types.js";
