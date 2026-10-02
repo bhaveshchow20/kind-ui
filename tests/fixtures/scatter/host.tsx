@@ -294,6 +294,7 @@ export function ScatterMaterialHost() {
   const [defaults, setDefaults] = useState(0);
   const [activeOwner, setActiveOwner] = useState(0);
   const [holes, setHoles] = useState(false);
+  const [thickStroke, setThickStroke] = useState(false);
   const [strokeOnly, setStrokeOnly] = useState(false);
   const [subpixel, setSubpixel] = useState(false);
   const [material, setMaterial] = useState<Chart.ScatterMaterial>("plain");
@@ -322,13 +323,13 @@ export function ScatterMaterialHost() {
         <Cell
           key={p.id}
           fill={strokeOnly ? "none" : gradient ? "url(#alpha-paint)" : i === 3 ? "#169b83" : paint}
-          stroke={strokeOnly ? paint : "none"}
+          stroke={strokeOnly ? (gradient ? "url(#alpha-paint)" : paint) : "none"}
           strokeOpacity={0.35}
           strokeWidth={strokeOnly ? 1.5 : 0}
           {...(i === 3 ? { cx: 180, cy: 150, size: 16, sizeType: "diameter", type: "square" } : {})}
           fillOpacity={i === 4 ? 0 : 0.35}
           opacity={0.8}
-          style={{ opacity: 0.6 }}
+          style={{ opacity: 0.6, ...(thickStroke ? { strokeWidth: 12 } : {}) }}
         />
       ))}
       <LabelList dataKey="id" position="top" />
@@ -399,6 +400,9 @@ export function ScatterMaterialHost() {
           Stroke only
         </button>
       </div>
+      <button type="button" onClick={() => setThickStroke(!thickStroke)}>
+        Thick stroke
+      </button>
       <output aria-label="Clicks">{clicks}</output>
       <Chart.Root
         config={{ marks: { label: "Marks", color: paint } }}

@@ -25,12 +25,25 @@ export function ScatterMaterialSymbol({
     return <Symbols {...props} />;
   // No minimum pixel radius: effects shrink with small marks rather than enlarging them.
   const span = props.sizeType === "diameter" ? (props.size ?? 64) : Math.sqrt(props.size ?? 64);
+  const declaredStroke = props.style?.stroke ?? props.stroke;
+  const stroke =
+    declaredStroke === undefined || declaredStroke === "none"
+      ? 0
+      : Number(props.style?.strokeWidth ?? props.strokeWidth ?? 1);
+  const round =
+    (props.type ?? "circle") === "circle" ||
+    (props.style?.strokeLinejoin ?? props.strokeLinejoin) === "round";
+  const miter = Number(props.style?.strokeMiterlimit ?? props.strokeMiterlimit ?? 4);
+  const strokeExtent =
+    Math.abs(stroke) * (round ? 0.5 : Math.max(1, Number.isFinite(miter) ? miter : 4) / 2);
+  // A consumer stroke wider than the bounded filter region keeps native rendering.
+  if (!Number.isFinite(stroke) || strokeExtent > span) return <Symbols {...props} />;
+  const guard = 1 + strokeExtent;
   const rim = Math.min(0.9, span * 0.055);
   const relief = Math.min(3, span * 0.17);
   const soft = Math.min(2, span * 0.1);
   const halo = Math.min(1.8, span * 0.065);
-  const stroke = Number(props.style?.strokeWidth ?? props.strokeWidth ?? 0);
-  const extent = span * 3 + (Number.isFinite(stroke) ? Math.abs(stroke) : 0);
+  const extent = span * 3 + strokeExtent;
   return (
     <>
       <defs data-kind-ui="scatter-material" data-material={material} pointerEvents="none">
@@ -58,7 +71,7 @@ export function ScatterMaterialSymbol({
               filterUnits="objectBoundingBox"
               primitiveUnits="userSpaceOnUse"
             >
-              <feMorphology in="SourceGraphic" operator="dilate" radius={1} />
+              <feMorphology in="SourceGraphic" operator="dilate" radius={guard} />
             </filter>
             <mask
               id={`${id}-outside`}

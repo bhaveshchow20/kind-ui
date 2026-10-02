@@ -271,15 +271,19 @@ test("native boolean/default shapes retain finishes and subpixel areas remain na
   }
 });
 
-for (const paint of ["transparent-gradient", "stroke-only"] as const) {
+for (const paint of ["transparent-gradient", "stroke-only", "thick-gradient-stroke"] as const) {
   test(`Glow excludes native geometric interior for ${paint} paint and retains independently custom active ownership`, async ({
     page,
   }, info) => {
     await page.goto(url);
-    if (paint === "transparent-gradient") {
+    if (paint === "transparent-gradient" || paint === "thick-gradient-stroke") {
       await page.getByRole("button", { name: "Gradient", exact: true }).click();
       await page.getByRole("button", { name: "Transparent gradient", exact: true }).click();
     } else await page.getByRole("button", { name: "Stroke only", exact: true }).click();
+    if (paint === "thick-gradient-stroke") {
+      await page.getByRole("button", { name: "Stroke only", exact: true }).click();
+      await page.getByRole("button", { name: "Thick stroke", exact: true }).click();
+    }
     const chart = page.getByRole("application", { name: "Finished symbols" });
     const mark = chart.locator("path#largest");
     const box = await mark.boundingBox();
@@ -341,8 +345,15 @@ for (const paint of ["transparent-gradient", "stroke-only"] as const) {
     }
     expect(zeroInterior).toBeGreaterThan(0);
     expect(exterior).toBeGreaterThan(0);
-    if (paint === "stroke-only")
+    if (paint === "stroke-only" || paint === "thick-gradient-stroke")
       await page.getByRole("button", { name: "Stroke only", exact: true }).click();
+    if (paint === "thick-gradient-stroke") {
+      // The minimum native mark cannot contain a 12px stroke in the bounded finish region.
+      await page.getByRole("button", { name: "Stroke only", exact: true }).click();
+      await expect(chart.locator("path#zero")).not.toHaveAttribute("filter");
+      await page.getByRole("button", { name: "Stroke only", exact: true }).click();
+      await page.getByRole("button", { name: "Thick stroke", exact: true }).click();
+    }
     await page.addStyleTag({ content: `${paths} { visibility: visible !important; }` });
     for (const owner of ["function", "element", "object"]) {
       await page.getByRole("button", { name: "Active owner", exact: true }).click();
