@@ -12,6 +12,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         node: [22, 24]
     steps:
@@ -25,11 +26,13 @@ jobs:
       - run: npm install --global npm@11.9.0
       - run: npm ci
       - run: npm exec playwright install -- --with-deps chromium
-      - run: npm run check
+      # Temporary focused diagnostic; restore normal aggregate before any fix is reviewed.
+      - run: npm run build && npm exec vite build -- examples/chart
+      - run: node node_modules/@playwright/test/cli.js test --config bar-return.playwright.mjs --repeat-each 40
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: chart-screenshots-node-${{ matrix.node }}
-          path: artifacts/chart-tests/**/*.png
+          path: artifacts/bar-return-diagnostic/
           if-no-files-found: error
           retention-days: 14
