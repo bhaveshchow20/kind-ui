@@ -20,8 +20,10 @@ test("packed shared config renders all native symbols and default circle in mono
   const symbols = ["circle", "diamond", "cross", "square", "star", "triangle", "wye"];
   const paths = [];
   for (const [i, key] of keys.entries()) {
+    const shape = symbols[i];
+    if (!shape) throw new Error(`Missing native symbol for ${key}`);
     const marker = page.locator(`${series(key)} ${indicator}`);
-    await expect(marker).toHaveAttribute("data-legend-shape", symbols[i]);
+    await expect(marker).toHaveAttribute("data-legend-shape", shape);
     await expect(marker).toHaveAttribute("aria-hidden", "true");
     await expect(marker).toHaveAttribute("focusable", "false");
     await expect(marker).toHaveCSS("fill", "rgb(51, 51, 51)");
@@ -167,4 +169,31 @@ test("hideIcon restores square swatches and composed content keeps custom point 
     "data-legend-shape",
     "circle",
   );
+});
+
+test("maintained circle/diamond recipe shares native paths with its monochrome legend", async ({
+  page,
+}, info) => {
+  await page.goto("/scatters.html");
+  const card = page.locator('[aria-labelledby="relationship-title"]');
+  const chart = page.getByRole("application", { name: "Latency and acceptance by task" });
+  await expect(chart.locator(".recharts-scatter-symbol path:not(defs path)")).toHaveCount(11);
+  await page.addStyleTag({
+    content:
+      '[aria-labelledby="relationship-title"] [data-kind-ui="chart"] {--color-weekday:#333!important;--color-weekend:#333!important;}',
+  });
+  for (const [key, pointIndex] of [
+    ["weekday", 0],
+    ["weekend", 6],
+  ] as const) {
+    const marker = card.locator(`[data-series="${key}"] ${indicator}`);
+    expect(await marker.locator("path").getAttribute("d")).toBe(
+      await chart
+        .locator(".recharts-scatter-symbol path:not(defs path)")
+        .nth(pointIndex)
+        .getAttribute("d"),
+    );
+    await expect(marker).toHaveCSS("fill", "rgb(51, 51, 51)");
+  }
+  await card.screenshot({ path: info.outputPath("monochrome-after.png") });
 });

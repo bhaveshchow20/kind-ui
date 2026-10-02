@@ -214,12 +214,12 @@ for (const legendShape of [
     </Chart.Root>
   );
 }
-// @ts-expect-error Only native scatter symbols belong in legendShape; custom glyphs use icon/children.
 const invalidLegendShape: SeriesConfig = {
+  // @ts-expect-error Only native scatter symbols belong in legendShape; custom glyphs use icon/children.
   search: { label: "Search", color: "#333", legendShape: "hexagon" },
 };
-// @ts-expect-error Custom point callbacks are not legend renderers.
 const invalidLegendRenderer: SeriesConfig = {
+  // @ts-expect-error Custom point callbacks are not legend renderers.
   search: { label: "Search", color: "#333", legendShape: () => <svg /> },
 };
 void invalidLegendShape;
