@@ -11,12 +11,17 @@ test("direct and namespace imports expose the same public components", () => {
     "AreaSeries",
     "BarChart",
     "BarSeries",
+    "BoxPlotChart",
+    "BoxPlotMark",
+    "BoxPlotSeries",
     "Legend",
     "LineChart",
     "LineSeries",
     "Root",
     "Tooltip",
     "TooltipContent",
+    "boxPlotExtent",
+    "validateBoxPlotSummary",
   ]);
   assert.equal(Chart.Root, Root);
   assert.equal(Chart.Legend, Legend);
@@ -149,4 +154,62 @@ test("area composition requires Root and a chart interaction boundary", () => {
     () => render(h(Root, { config }, h(Chart.AreaSeries, { dataKey: "count" }))),
     /inside LineChart/,
   );
+});
+
+const summary = {
+  lowerWhisker: -5,
+  q1: -2,
+  median: 0,
+  q3: 3,
+  upperWhisker: 8,
+  outliers: [-10, 20, 20],
+};
+test("box summaries validate finite ordered values without selecting conventions", () => {
+  assert.equal(Chart.validateBoxPlotSummary(summary), summary);
+  assert.equal(Chart.validateBoxPlotSummary(null), null);
+  assert.equal(Chart.validateBoxPlotSummary(undefined), null);
+  assert.deepEqual(Chart.boxPlotExtent(summary), [-10, 20]);
+  assert.deepEqual(
+    Chart.boxPlotExtent({ lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 }),
+    [0, 0],
+  );
+  for (const field of ["lowerWhisker", "q1", "median", "q3", "upperWhisker"]) {
+    for (const invalid of [undefined, null, NaN, Infinity, -Infinity, "3"]) {
+      assert.throws(
+        () => Chart.validateBoxPlotSummary({ ...summary, [field]: invalid }),
+        /finite number/,
+      );
+    }
+  }
+  for (const invalid of ["1", [], 1]) assert.throws(() => Chart.validateBoxPlotSummary(invalid));
+  assert.throws(() => Chart.validateBoxPlotSummary({ ...summary, q1: 1 }), /requires/);
+  assert.throws(() => Chart.validateBoxPlotSummary({ ...summary, upperWhisker: 2 }), /requires/);
+  for (const outliers of [[0], [-5], [8], [NaN], [Infinity], [null], "invalid"]) {
+    assert.throws(() => Chart.validateBoxPlotSummary({ ...summary, outliers }), /outliers/);
+  }
+});
+test("box SVG primitive preserves numeric geometry, zero IQR and native attributes", () => {
+  const svg = render(
+    h(Chart.BoxPlotMark, {
+      coordinates: summary,
+      center: 30,
+      size: 20,
+      "aria-label": "distribution",
+      className: "custom",
+    }),
+  );
+  assert.match(svg, /data-box-part="box"[^>]*x="20"[^>]*y="-2"[^>]*width="20"[^>]*height="5"/);
+  assert.match(svg, /data-box-part="median"[^>]*y1="0"/);
+  assert.match(svg, /aria-label="distribution"/);
+  assert.equal((svg.match(/data-box-part="outlier"/g) ?? []).length, 3);
+  const collapsed = render(
+    h(Chart.BoxPlotMark, {
+      coordinates: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 },
+      center: 10,
+      size: 8,
+      orientation: "horizontal",
+    }),
+  );
+  assert.match(collapsed, /data-box-part="box"[^>]*width="0"/);
+  assert.match(collapsed, /data-box-part="collapsed-box"/);
 });

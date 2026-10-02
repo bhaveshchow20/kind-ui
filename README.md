@@ -25,3 +25,5 @@ Build with established UI libraries, not against them. Prefer familiar compositi
 Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). See [development direction and release policy](docs/development.md), [security reporting](SECURITY.md), and our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Nothing is published or deployed. MIT © 2026 Bhavesh Chowdhury.
+
+Box plot primitives accept caller-computed statistics with native quantitative axes. See the [public contract](packages/charts/README.md#box-plot-explicit-statistics) and [recipe studies](examples/chart/BOX-PLOTS.md).

@@ -1,0 +1,257 @@
+"use client";
+
+import { type ComponentPropsWithRef, type ReactNode, useCallback, useMemo } from "react";
+import { type BarShapeProps, useChartLayout, useXAxisScale, useYAxisScale } from "recharts";
+import { BarChart, type BarChartProps } from "./bar-chart.js";
+import { BarSeries, type BarSeriesProps } from "./bar-series.js";
+
+/** Caller-computed statistics; no sample, quartile or fence convention is inferred. */
+export type BoxPlotSummary = {
+  lowerWhisker: number;
+  q1: number;
+  median: number;
+  q3: number;
+  upperWhisker: number;
+  outliers?: readonly number[];
+};
+const fields = ["lowerWhisker", "q1", "median", "q3", "upperWhisker"] as const;
+
+/** Null/undefined mean missing. Malformed present summaries throw rather than fabricate values. */
+export function validateBoxPlotSummary(value: unknown): BoxPlotSummary | null {
+  if (value == null) return null;
+  if (typeof value !== "object") throw new Error("BoxPlot summary must be an object or null");
+  const record = value as Record<string, unknown>;
+  for (const field of fields) {
+    if (typeof record[field] !== "number" || !Number.isFinite(record[field]))
+      throw new Error(`BoxPlot ${field} must be a finite number`);
+  }
+  const summary = value as BoxPlotSummary;
+  if (
+    summary.lowerWhisker > summary.q1 ||
+    summary.q1 > summary.median ||
+    summary.median > summary.q3 ||
+    summary.q3 > summary.upperWhisker
+  )
+    throw new Error("BoxPlot requires lowerWhisker <= q1 <= median <= q3 <= upperWhisker");
+  if (summary.outliers !== undefined) {
+    if (!Array.isArray(summary.outliers)) throw new Error("BoxPlot outliers must be an array");
+    for (const outlier of summary.outliers) {
+      if (typeof outlier !== "number" || !Number.isFinite(outlier))
+        throw new Error("BoxPlot outliers must be finite numbers");
+      if (outlier >= summary.lowerWhisker && outlier <= summary.upperWhisker)
+        throw new Error("BoxPlot outliers must lie strictly outside the whiskers");
+    }
+  }
+  return summary;
+}
+
+/** The complete native range includes every explicitly supplied outlier. */
+export function boxPlotExtent(summary: BoxPlotSummary): [number, number] {
+  validateBoxPlotSummary(summary);
+  let low = summary.lowerWhisker;
+  let high = summary.upperWhisker;
+  for (const value of summary.outliers ?? []) {
+    low = Math.min(low, value);
+    high = Math.max(high, value);
+  }
+  return [low, high];
+}
+
+export type BoxPlotChartProps = BarChartProps;
+/** Public Bar composition; Recharts owns axes, layout, domains and keyboard selection. */
+export function BoxPlotChart(props: BoxPlotChartProps) {
+  return <BarChart {...props} />;
+}
+
+export type BoxPlotMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> & {
+  /** Screen coordinates, already mapped by the consumer's numeric axis. */
+  coordinates: BoxPlotSummary;
+  /** Center and width on the category axis, in chart pixels. */
+  center: number;
+  size: number;
+  orientation?: "vertical" | "horizontal";
+  outlierRadius?: number | undefined;
+};
+/** A reusable SVG mark. Zero IQR remains a line; no minimum numeric extent is invented. */
+export function BoxPlotMark({
+  coordinates: c,
+  center,
+  size,
+  orientation = "vertical",
+  outlierRadius = 3,
+  ...props
+}: BoxPlotMarkProps) {
+  const horizontal = orientation === "horizontal";
+  const start = center - size / 2;
+  const low = Math.min(c.q1, c.q3);
+  const length = Math.abs(c.q3 - c.q1);
+  const line = (a: number, b: number, value: number, key: string) => (
+    <line
+      key={key}
+      data-box-part={key}
+      {...(horizontal
+        ? { x1: value, x2: value, y1: a, y2: b }
+        : { x1: a, x2: b, y1: value, y2: value })}
+    />
+  );
+  return (
+    <g
+      data-kind-ui="box-plot-mark"
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      {...props}
+    >
+      <line
+        data-box-part="whisker"
+        {...(horizontal
+          ? { x1: c.lowerWhisker, x2: c.upperWhisker, y1: center, y2: center }
+          : { y1: c.lowerWhisker, y2: c.upperWhisker, x1: center, x2: center })}
+      />
+      {line(center - size / 4, center + size / 4, c.lowerWhisker, "lower-cap")}
+      {line(center - size / 4, center + size / 4, c.upperWhisker, "upper-cap")}
+      <rect
+        data-box-part="box"
+        fillOpacity={0.18}
+        {...(horizontal
+          ? { x: low, y: start, width: length, height: size }
+          : { x: start, y: low, width: size, height: length })}
+      />
+      {length === 0 && line(start, start + size, c.q1, "collapsed-box")}
+      {line(start, start + size, c.median, "median")}
+      {(c.outliers ?? []).map((value, index) => (
+        <circle
+          // Stateless duplicate observations retain their separate marks.
+          // biome-ignore lint/suspicious/noArrayIndexKey: Explicit duplicate outliers have no unique identity.
+          key={`${index}/${value}`}
+          data-box-part="outlier"
+          fill="none"
+          r={outlierRadius}
+          {...(horizontal ? { cx: value, cy: center } : { cx: center, cy: value })}
+        />
+      ))}
+    </g>
+  );
+}
+
+export type BoxPlotShapeProps = BoxPlotMarkProps & {
+  summary: BoxPlotSummary;
+  native: BarShapeProps;
+};
+export type BoxPlotSeriesProps<Row extends object = Record<string, unknown>> = Omit<
+  BarSeriesProps,
+  | "dataKey"
+  | "shape"
+  | "activeBar"
+  | "material"
+  | "stackId"
+  | "minPointSize"
+  | "background"
+  | "radius"
+> & {
+  /** Direct property name or accessor. Nested paths are not interpreted. */
+  dataKey: (keyof Row & string) | ((row: Row) => BoxPlotSummary | null | undefined);
+  /** Required metadata/visibility key, independent of the computed native range. */
+  seriesKey: string;
+  shape?: (props: BoxPlotShapeProps) => ReactNode;
+  markProps?: Omit<ComponentPropsWithRef<"g">, "children">;
+  outlierRadius?: number | undefined;
+};
+
+function ScaledMark({
+  summary,
+  native,
+  shape,
+  markProps,
+  outlierRadius,
+  xAxisId,
+  yAxisId,
+}: {
+  summary: BoxPlotSummary | null;
+  native: BarShapeProps;
+  shape: BoxPlotSeriesProps["shape"];
+  markProps: BoxPlotSeriesProps["markProps"];
+  outlierRadius: number | undefined;
+  xAxisId: BarSeriesProps["xAxisId"];
+  yAxisId: BarSeriesProps["yAxisId"];
+}) {
+  const layout = useChartLayout();
+  const xScale = useXAxisScale(xAxisId);
+  const yScale = useYAxisScale(yAxisId);
+  if (!summary) return null;
+  const horizontal = layout === "vertical";
+  const scale = horizontal ? xScale : yScale;
+  if (!scale) return null;
+  const values = fields.map((field) => scale(summary[field]));
+  const outliers = (summary.outliers ?? []).map((value) => scale(value));
+  if (
+    [...values, ...outliers].some((value) => typeof value !== "number" || !Number.isFinite(value))
+  )
+    return null;
+  const [lowerWhisker, q1, median, q3, upperWhisker] = values as [
+    number,
+    number,
+    number,
+    number,
+    number,
+  ];
+  const center = horizontal ? native.y + native.height / 2 : native.x + native.width / 2;
+  const size = Math.abs(horizontal ? native.height : native.width);
+  const props: BoxPlotShapeProps = {
+    fill: native.fill,
+    stroke: native.stroke ?? native.fill,
+    fillOpacity: native.fillOpacity,
+    filter: native.filter,
+    ...markProps,
+    coordinates: { lowerWhisker, q1, median, q3, upperWhisker, outliers: outliers as number[] },
+    center,
+    size,
+    orientation: horizontal ? "horizontal" : "vertical",
+    outlierRadius,
+    summary,
+    native,
+  };
+  if (shape) return shape(props);
+  const { summary: _summary, native: _native, ...mark } = props;
+  return <BoxPlotMark {...mark} />;
+}
+
+/** Registered range Bar with truthful summary geometry through public scale hooks. */
+export function BoxPlotSeries<Row extends object = Record<string, unknown>>({
+  dataKey,
+  seriesKey,
+  shape,
+  markProps,
+  outlierRadius,
+  ...props
+}: BoxPlotSeriesProps<Row>) {
+  const read = useCallback(
+    (row: Row) =>
+      validateBoxPlotSummary(typeof dataKey === "function" ? dataKey(row) : row[dataKey]),
+    [dataKey],
+  );
+  const extent = useCallback(
+    (row: unknown) => {
+      const summary = read(row as Row);
+      return summary ? boxPlotExtent(summary) : null;
+    },
+    [read],
+  );
+  const render = useMemo(
+    () => (native: BarShapeProps) => (
+      <ScaledMark
+        summary={read(native.payload)}
+        native={native}
+        shape={shape}
+        markProps={markProps}
+        outlierRadius={outlierRadius}
+        xAxisId={props.xAxisId}
+        yAxisId={props.yAxisId}
+      />
+    ),
+    [read, shape, markProps, outlierRadius, props.xAxisId, props.yAxisId],
+  );
+  return (
+    <BarSeries {...props} seriesKey={seriesKey} dataKey={extent} shape={render} activeBar={false} />
+  );
+}

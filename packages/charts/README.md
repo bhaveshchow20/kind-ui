@@ -230,3 +230,75 @@ Corner geometry remains native: use `radius={8}` for soft standalone bars. The e
 Each series owns a unique filter that native rectangles apply independently within bounded object-relative regions. Recharts plot/stack clipping and Kind reveal clipping remain in place, so halos at plot edges can be clipped. There is no displacement, animated noise or fabricated bar. Tiny bars show less relief and can clip the outer glow. Extreme stroke widths may need a custom filter with host bounds. Filters add raster work per rectangle; dense data can be more expensive than plain bars. The existing `/bars.html` recipes provide independent Material, Palette and Motion controls.
 
 Bar finish tokens are `--kind-ui-bar-paper-fiber` (white), `--kind-ui-bar-paper-grain` (0.14), `--kind-ui-bar-clay-light` (white), `--kind-ui-bar-clay-shade` (#17212b), `--kind-ui-bar-clay-highlight` (0.48), `--kind-ui-bar-clay-shadow` (0.26), `--kind-ui-bar-glow-light` (white), and `--kind-ui-bar-glow-opacity` (0.6). Opacity tokens accept numbers from 0 to 1. Clay/Paper lighting and ink are composited atop native paint, preserving every painted pixel’s translucent alpha, including antialiasing. Clay’s decorative cast shadow is excluded from that footprint; only fully transparent exterior pixels acquire shade, derived from native alpha at a fixed 0.16 opacity. This shadow does not change the native data path, radius or stack clip, and native clipping can trim it. Lighting uses a silhouette so translucent fills retain the same matte relief. Pixel-sized light/blur offsets are capped for chart marks; tiny bars can show less relief. The raised direction follows shipped line Clay, with [clay.css](https://github.com/codeAdrian/clay.css) and [Malewicz’s Claymorphism tutorial](https://hype4.academy/articles/design/claymorphism-in-user-interfaces) as soft-volume references, adapted without copying assets or adding dependencies. Native shapes retain engine zero-label and background filtering. Clay and Paper primitives are bar-local; Glow reuses the coordinated filled-surface helper. Bar material rendering leaves line and area outputs unchanged. Validation covers Chromium; other browsers and print/export renderers remain unverified.
+
+## Box plot: explicit statistics
+
+`BoxPlotChart` reuses Kind's `BarChart` (including optional `animate`) and public
+Recharts composition. Recharts has no native BoxPlot component: `BoxPlotSeries`
+registers a native range Bar and renders its summary with public axis-scale hooks.
+No new dependency or copied renderer is introduced.
+
+```tsx
+const data = [{ group: "A", summary: {
+  lowerWhisker: -5, q1: -2, median: 0, q3: 3, upperWhisker: 8,
+  outliers: [-10, 20],
+} }];
+<Root config={{ spread: { label: "Distribution", color: "#16756c" } }}>
+  <BoxPlotChart data={data} width={480} height={280}>
+    <XAxis dataKey="group" />
+    <YAxis type="number" domain={["dataMin", "dataMax"]} />
+    <BoxPlotSeries dataKey="summary" seriesKey="spread" />
+  </BoxPlotChart>
+</Root>
+```
+
+- `BoxPlotSummary` requires finite numbers in the order
+  `lowerWhisker <= q1 <= median <= q3 <= upperWhisker`.
+  `outliers?: readonly number[]` must be finite and strictly outside the supplied
+  whiskers. Duplicates are retained. Invalid present summaries throw actionable
+  errors; `null`/`undefined` summaries render no marks, and an empty dataset renders
+  no marks. Zero, negatives, equal quartiles and equal whiskers are valid.
+- The caller computes these statistics and chooses the quartile/fence convention.
+  Kind does not ingest raw samples, classify observations, remove outliers, or
+  fabricate statistics. `validateBoxPlotSummary(unknown)` returns the same summary
+  or null; `boxPlotExtent(summary)` validates and returns the complete min/max,
+  including every outlier. These helpers do not mutate input.
+- `BoxPlotSeries<Row>` accepts a direct property name or typed accessor in `dataKey`
+  (no nested-path interpretation). `seriesKey` is required for metadata and
+  controlled Root visibility. Native domain inference uses the complete extent,
+  not just median or quartiles. Supply native axes and their IDs; for horizontal
+  boxes use `layout="vertical"`, a numeric XAxis and categorical YAxis.
+- `barSize`, native series data, Cell styling, LabelList, axis IDs, chart/series
+  handlers, chart refs, and consumer children retain their native ownership.
+  LabelList's native position refers to the enclosing range; supply a label
+  dataKey or custom content if the label should describe a statistic.
+- `shape(props: BoxPlotShapeProps)` receives `summary`, `native: BarShapeProps`,
+  mapped `coordinates`, category `center`/`size` and `orientation`. It owns its
+  returned markup. `markProps` forwards SVG group attributes, styles, handlers and
+  refs (one group per present row). `BoxPlotMark` is the exported SVG primitive;
+  it accepts screen coordinates rather than statistical values. Degenerate boxes
+  get a collapsed line without inflating the numeric IQR. `outlierRadius` controls
+  the screen-space outlier symbol size.
+- Shared `Legend`, controlled visibility, `Tooltip`, and optional Motion remain
+  available. A native tooltip value is the enclosing numeric range; use custom
+  tooltip content to read the original payload and show quartiles/whiskers/
+  outliers. The recipe demonstrates that and a full, always-available table.
+  Recharts owns keyboard category selection; null rows have no numeric tooltip.
+  Arrow keys and Escape are checked in Chromium. Tables provide complete numeric
+  access independently of chart interaction and series visibility.
+
+Initial scope: linear numeric axes, categorical groups, two orientations, optional
+Bar reveal Motion with reduced-motion/interruption behavior. Stacking, minimum
+numeric sizes, native rectangle backgrounds/radius, material finishes, native
+active-bar duplication, raw-sample estimators, weighted quartiles, notches,
+variable-width-by-sample-size boxes, and quantitative category positioning are
+outside this family. Nonlinear numeric axes, Brush, mixed-series composition and
+performance at large sample/group counts are not verified. Custom SVG marks are
+consumer-owned. This change adds exports at private `0.0.0`; it does not publish
+or alter existing family contracts.
+
+References: [NIST box plot definitions and variants](https://www.itl.nist.gov/div898/handbook/eda/section3/boxplot.htm),
+[Recharts Bar](https://recharts.github.io/en-US/api/Bar/),
+[public X scale](https://recharts.github.io/en-US/api/useXAxisScale/),
+[public Y scale](https://recharts.github.io/en-US/api/useYAxisScale/).
+The sample estimator and whisker definition deliberately remain caller-owned.

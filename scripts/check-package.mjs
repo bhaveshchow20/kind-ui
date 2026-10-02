@@ -108,7 +108,7 @@ try {
   );
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
-    if (["line", "area", "bar", "combined"].includes(folder) && file.endsWith(".tsx"))
+    if (["line", "area", "bar", "combined", "box-plot"].includes(folder) && file.endsWith(".tsx"))
       assertLineConsumerSource(source);
     await writeFile(join(consumer, target), source);
   }
@@ -197,6 +197,11 @@ try {
     await copyFixture("styling", file);
   await typecheck(["index.tsx", "main.tsx", "motion.tsx"]);
   await production("index.html", "packed-chart");
+
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("box-plot", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-box-plot");
+  console.log("Box plot tarball: public-only strict NodeNext/Bundler and production build passed");
 
   // Separate host recipe evidence, outside the public line/area/bar fixture proof.
   const legacy = join(consumer, "legacy");
