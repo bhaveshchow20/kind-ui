@@ -232,7 +232,7 @@ test("packed harmless CSS and SVG transform lists still receive every finish", a
 
 test("packed consumer CSS transforms retain native paint ownership, precedence and clipping", async ({
   page,
-}) => {
+}, info) => {
   for (const override of [
     "style-transform",
     "css-transform",
@@ -267,7 +267,10 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
     await page.addStyleTag({
       content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
     });
-    const native = await chart.screenshot({ omitBackground: true });
+    const native = await chart.screenshot({
+      omitBackground: true,
+      path: info.outputPath(`native-ownership-${override}-plain.png`),
+    });
     const captureBox = await chart.boundingBox();
     const nativeGeometry = await geometry(chart);
     for (const finish of finishes.slice(1)) {
@@ -278,7 +281,10 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
         captureBox,
       );
       expect(
-        await chart.screenshot({ omitBackground: true }),
+        await chart.screenshot({
+          omitBackground: true,
+          path: info.outputPath(`native-ownership-${override}-${finish}.png`),
+        }),
         `Native ownership: ${override}/${finish}`,
       ).toEqual(native);
     }
@@ -395,6 +401,7 @@ test("actual recipes expose independent materials and preserve selection/totals 
   page,
 }, info) => {
   await page.goto("/pies.html");
+  await page.evaluate(() => document.fonts.ready);
   const charts = page.getByRole("application");
   const first = await geometry(charts.first()),
     second = await geometry(charts.nth(1));
@@ -424,8 +431,10 @@ test("actual recipes expose independent materials and preserve selection/totals 
             const point = new DOMPoint(box.x + box.width * x, box.y + box.height * y);
             if (!node.isPointInFill(point)) continue;
             const screen = point.matrixTransform(matrix);
-            if (document.elementFromPoint(screen.x, screen.y) === node)
-              return { x: screen.x, y: screen.y };
+            if (document.elementFromPoint(screen.x, screen.y) === node) {
+              const bounds = node.getBoundingClientRect();
+              return { x: screen.x - bounds.left, y: screen.y - bounds.top };
+            }
           }
         return undefined;
       });
@@ -433,7 +442,7 @@ test("actual recipes expose independent materials and preserve selection/totals 
     })
     .toBeTruthy();
   if (!interior) throw Error("No hittable native slice interior");
-  await page.mouse.click(interior.x, interior.y);
+  await slice.click({ position: interior });
   await expect(page.locator("article").first().locator("p[role=status]")).toContainText(
     "Selected:",
   );
