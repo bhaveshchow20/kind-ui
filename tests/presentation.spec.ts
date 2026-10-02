@@ -190,9 +190,9 @@ for (const family of ["line", "area", "bar"]) {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(url);
     await page.getByLabel("Chart family").selectOption(family);
-    await expect(page.locator('clipPath[id$="-reveal"] rect')).not.toHaveCount(0);
+    await expect(page.locator('[data-kind-ui="line-frame"]')).toHaveAttribute("data-motion", "on");
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await expect(page.locator('clipPath[id$="-reveal"] rect')).toHaveCount(0);
+    await expect(page.locator('[data-kind-ui="line-frame"]')).toHaveAttribute("data-motion", "off");
     await explore(page);
     await expect(page.locator(tipSelector)).toContainText("0 tasks");
   });
