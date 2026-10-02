@@ -68,7 +68,7 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
   const [paintStroke, setPaintStroke] = useState(
     Number.isFinite(resolvedStroke) ? resolvedStroke : 0,
   );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: class changes can change stylesheet-owned paint.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: class/id changes can change stylesheet-owned paint.
   useLayoutEffect(() => {
     if (
       material === "plain" ||
@@ -124,6 +124,8 @@ function EntranceSector({ material, ...props }: PieSectorShapeProps & { material
     props.filter,
     props.style,
     props.className,
+    props.id,
+    props.clipPath,
     props.transform,
     props.cx,
     props.cy,
