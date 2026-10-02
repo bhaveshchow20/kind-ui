@@ -21,7 +21,8 @@ export function SankeyFinishFilter({
 }) {
   const edge = Math.min(1.2, thickness / 6);
   const relief = Math.min(4, thickness / 4);
-  const halo = Math.min(0.6, thickness / 8);
+  // A 0.6px blur disappeared in Chromium probes; retain a measured thin-flow halo.
+  const halo = Math.min(1, Math.max(0.85, thickness / 4));
   return (
     <filter
       id={id}

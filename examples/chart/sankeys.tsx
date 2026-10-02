@@ -146,7 +146,7 @@ function App() {
           Toggle empty
         </button>
         <SankeyChart
-          width={300}
+          width={240}
           height={70}
           data={
             empty

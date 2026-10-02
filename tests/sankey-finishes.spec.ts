@@ -70,7 +70,24 @@ test("packed Sankey finishes preserve alpha and quantify thin/adjacent halo sepa
       gapAlpha = Math.max(gapAlpha, neighbor[i] ?? 0);
     }
     expect(gapAlpha).toBeLessThanOrEqual(finish === "glow" ? 20 : 0);
-    if (finish === "glow") expect(maxExteriorAlpha).toBeGreaterThan(0);
+    if (finish === "glow") {
+      expect(maxExteriorAlpha).toBeGreaterThan(0);
+      for (const [width, center] of [
+        [1, 20],
+        [3, 55],
+        [12, 90],
+        [32, 125],
+      ]) {
+        let flowHalo = 0;
+        for (let y = center - Math.ceil(width / 2) - 4; y <= center + Math.ceil(width / 2) + 4; y++)
+          for (let x = 40; x < 260; x++) {
+            const i = (y * 300 + x) * 4 + 3;
+            if (plain[i] === 0) flowHalo = Math.max(flowHalo, surface[i] ?? 0);
+          }
+        expect(flowHalo, `${width}px flow must have a real bounded halo`).toBeGreaterThan(0);
+        expect(flowHalo).toBeLessThanOrEqual(12);
+      }
+    }
     await info.attach(`${finish}-metrics`, {
       body: JSON.stringify({ maxBodyAlpha, maxExteriorAlpha, gapAlpha, colorChanges }),
       contentType: "application/json",
@@ -86,9 +103,7 @@ test("packed Sankey finishes preserve alpha and quantify thin/adjacent halo sepa
   }
 });
 
-test("Sankey repeated finish updates preserve IDs, labels, refs, clicks and native layout", async ({
-  page,
-}) => {
+test("Sankey repeated finish updates preserve IDs and native layout", async ({ page }) => {
   await page.goto(packed);
   const chart = page.locator('[data-kind-ui="sankey"]').first();
   const geometry = await chart
@@ -170,7 +185,15 @@ test("native custom renderer, ref, event, CSS filters and em node strokes keep o
       'url("#owned")',
     );
     expect(await wide.boundingBox()).toEqual(size);
-    await probe.getByLabel("owned-path", { exact: true }).click();
+    const point = await probe.getByLabel("owned-path", { exact: true }).evaluate((element) => {
+      const path = element as SVGPathElement;
+      const midpoint = path.getPointAtLength(path.getTotalLength() / 2);
+      const screen = new DOMPoint(midpoint.x, midpoint.y).matrixTransform(
+        path.getScreenCTM() ?? undefined,
+      );
+      return { x: screen.x, y: screen.y };
+    });
+    await page.mouse.click(point.x, point.y);
     await expect(page.getByLabel("Mark ownership", { exact: true })).toContainText("path");
     await expect(page.locator(".custom-native filter")).toHaveCount(0);
     await expect(page.getByLabel("custom-node", { exact: true })).toHaveCount(2);

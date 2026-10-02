@@ -552,8 +552,8 @@ is injected into custom renderers. Set finishes explicitly on the optional marks
 Paper uses static subtle grain and an uneven inset pencil contour. Clay uses
 broad upper-left light and diffuse lower-right shading to suggest convex matte
 volume, with quiet grain and no cast shadow. Glow has a soft white interior
-rim and a restrained neutral exterior halo; blur is capped at 0.6px (or flow
-width/8 for thin flows), halo opacity at 0.12. It is intentionally less expansive
+rim and a restrained neutral exterior halo; blur is 0.85–1px (flow width/4, bounded to a nonzero native blur
+kernel), halo opacity is capped at 0.12. It is intentionally less expansive
 than line Glow so adjacent flows retain their quantitative reading. Tiny marks
 show less relief. No finish displaces, widens, offsets or blurs native geometry.
 Paint RGB/semantic gradients remain the base; neutral surface decoration modifies
