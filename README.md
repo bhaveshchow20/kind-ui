@@ -2,7 +2,7 @@
 
 Kind UI is a UI library ecosystem intended to be kind to your AI agentic stack: performant, accessible, extensible, familiar, and easy to compose into agent-driven applications. These are design and verification goals, not delivered guarantees.
 
-This pre-release workspace exports `Root`, `Legend`, `TooltipContent`, `LineChart`, `LineSeries`, `AreaChart`, `AreaSeries`, `BarChart`, `BarSeries`, and `Tooltip` from `@kind-ui/charts`, with animation controlled by each chart’s `animate` prop. Kind owns shared interaction, bounded tooltip placement and controlled series visibility; consumers own data, axes and layout. See the [component API and usage](packages/charts/README.md). Nothing is published to npm; the working package name does not imply ownership or an installation route.
+This pre-release workspace exports `Root`, `Legend`, `TooltipContent`, `LineChart`, `LineSeries`, `AreaChart`, `AreaSeries`, `BarChart`, `BarSeries`, `PieChart`, `PieSeries`, and `Tooltip` from `@kind-ui/charts`, with animation controlled by each chart’s `animate` prop. Kind owns shared interaction, bounded tooltip placement and controlled series visibility; consumers own data, axes and layout. See the [component API and usage](packages/charts/README.md). Nothing is published to npm; the working package name does not imply ownership or an installation route.
 
 ## Local setup
 
@@ -25,3 +25,5 @@ Build with established UI libraries, not against them. Prefer familiar compositi
 Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). See [development direction and release policy](docs/development.md), [security reporting](SECURITY.md), and our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Nothing is published or deployed. MIT © 2026 Bhavesh Chowdhury.
+
+Radar and radial core recipes: open `/polar.html` in the chart example. See [polar recipes](examples/chart/POLAR.md) and the [public component contract](packages/charts/README.md#radar-and-radial-bars).

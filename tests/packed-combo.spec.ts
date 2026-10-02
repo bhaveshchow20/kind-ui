@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const url = "http://127.0.0.1:4177/combo.html";
+const url = "http://127.0.0.1:4186/combo.html";
 test("packed Combo matches native mixed geometry, axes and signed stacks including zero/missing", async ({
   page,
 }) => {

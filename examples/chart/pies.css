@@ -1,0 +1,60 @@
+@import "@fontsource-variable/geist";
+:root {
+  font-family: "Geist Variable", sans-serif;
+  color: #172033;
+  background: #f4f6fb;
+  --card: white;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 1100px;
+  padding: 48px 24px;
+  margin: auto;
+}
+h1 {
+  font-size: 42px;
+  letter-spacing: -0.04em;
+}
+p {
+  color: #536178;
+  line-height: 1.6;
+}
+a {
+  color: #4f46e5;
+}
+.pie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 32px;
+}
+.pie-card {
+  background: white;
+  border: 1px solid #dfe4ee;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 32px #14224708;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+caption {
+  text-align: left;
+  font-weight: 600;
+  margin: 18px 0 10px;
+}
+th,
+td {
+  padding: 10px 4px;
+  border-bottom: 1px solid #e9edf5;
+  text-align: left;
+}
+label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}

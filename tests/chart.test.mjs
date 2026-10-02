@@ -15,6 +15,13 @@ test("direct and namespace imports expose the same public components", () => {
     "Legend",
     "LineChart",
     "LineSeries",
+    "PieChart",
+    "PieSeries",
+    "RadarChart",
+    "RadarSeries",
+    "RadialBarChart",
+    "RadialBarLabel",
+    "RadialBarSeries",
     "Root",
     "Tooltip",
     "TooltipContent",
@@ -150,4 +157,67 @@ test("area composition requires Root and a chart interaction boundary", () => {
     () => render(h(Root, { config }, h(Chart.AreaSeries, { dataKey: "count" }))),
     /inside LineChart/,
   );
+});
+
+test("category itemKey resolves metadata, zero, formatting and visibility independently of dataKey", () => {
+  const payload = [entry(0, { payload: { id: "category" }, name: "Native name" })];
+  const categoryConfig = {
+    category: { label: "Category label", color: "red", formatValue: (v) => `${v} members` },
+  };
+  const renderCategory = (visibleSeries) =>
+    render(
+      h(
+        Root,
+        { config: categoryConfig, visibleSeries },
+        h(TooltipContent, {
+          tooltip: tooltip(payload),
+          itemKey: (item) => item.payload.id,
+        }),
+      ),
+    );
+  assert.match(renderCategory(["category"]), /Category label/);
+  assert.match(renderCategory(["category"]), /0 members/);
+  assert.match(renderCategory(["category"]), /data-series="category"/);
+  assert.doesNotMatch(renderCategory(["count"]), /chart-tooltip/);
+  assert.doesNotMatch(renderCategory(["category"]), /itemKey=/);
+});
+
+for (const [name, Component] of [
+  ["RadarSeries", Chart.RadarSeries],
+  ["RadialBarSeries", Chart.RadialBarSeries],
+]) {
+  test(`${name} rejects missing polar composition boundaries`, () => {
+    assert.throws(() => render(h(Component, { dataKey: "count" })), /inside Root/);
+    assert.throws(
+      () => render(h(Root, { config }, h(Component, { dataKey: "count" }))),
+      /inside LineChart/,
+    );
+  });
+}
+
+test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geometry", () => {
+  const viewBox = {
+    cx: 100,
+    cy: 100,
+    innerRadius: 60,
+    outerRadius: 80,
+    startAngle: 0,
+    endAngle: 180,
+  };
+  const props = { viewBox, value: 25, formatter: (value) => `${value} points` };
+  const markup = render(h("svg", null, h(Chart.RadialBarLabel, props)));
+  assert.match(markup, /25 points/);
+  assert.match(markup, /visibility:hidden/);
+  assert.doesNotMatch(markup, /NaN/);
+  for (const overrides of [
+    { show: false },
+    { viewBox: { ...viewBox, endAngle: 0 } },
+    { viewBox: { ...viewBox, outerRadius: 61 } },
+    { viewBox: { ...viewBox, cx: NaN } },
+    { value: null },
+  ])
+    assert.equal(
+      render(h(Chart.RadialBarLabel, { ...props, ...overrides, formatter: undefined })),
+      "",
+    );
 });
