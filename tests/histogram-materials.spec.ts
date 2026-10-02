@@ -262,9 +262,37 @@ test("four real finishes retain unequal density rectangles on desktop and phone"
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       width,
     );
-    await page.screenshot({
-      path: info.outputPath(`histogram-materials-${label}.png`),
-      fullPage: true,
-    });
+    for (const [palette, color, rgb] of [
+      ["Teal", "#167d77", "rgb(22, 125, 119)"],
+      ["Pink", "#ed79ae", "rgb(237, 121, 174)"],
+      ["Monochrome", "#888888", "rgb(136, 136, 136)"],
+    ] as const) {
+      await page.locator('[data-kind-ui="chart"]').evaluateAll((nodes, color) => {
+        for (const node of nodes)
+          if (node instanceof HTMLElement) node.style.setProperty("--color-count", color);
+      }, color);
+      for (const bin of await page.locator(marks).all()) await expect(bin).toHaveCSS("fill", rgb);
+      const recolored = await page
+        .locator("article")
+        .evaluateAll((nodes) =>
+          nodes.map((article) =>
+            Array.from(article.querySelectorAll('[data-kind-ui="histogram-bin"]')).map((node) => [
+              node.getAttribute("x"),
+              node.getAttribute("y"),
+              node.getAttribute("width"),
+              node.getAttribute("height"),
+            ]),
+          ),
+        );
+      expect(recolored).toEqual(geometry);
+      await page.screenshot({
+        path: info.outputPath(
+          palette === "Teal"
+            ? `histogram-materials-${label}.png`
+            : `histogram-materials-${palette}-${label}.png`,
+        ),
+        fullPage: true,
+      });
+    }
   }
 });
