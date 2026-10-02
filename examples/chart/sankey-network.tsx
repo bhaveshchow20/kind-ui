@@ -142,7 +142,8 @@ export function SankeyNetwork() {
                 title="Regional energy allocation: 180 MWh"
                 desc="Five stages connect 16 nodes through 39 flows. Gradient ribbons interpolate the source and destination colors; widths represent MWh. Use the table to inspect every route."
                 onClick={(item, kind) => {
-                  if (kind === "link") setActive(item.payload.id);
+                  if (kind === "link")
+                    setActive((current) => (current === item.payload.id ? null : item.payload.id));
                 }}
                 node={(props) => (
                   <g>
@@ -194,7 +195,7 @@ export function SankeyNetwork() {
         data={networkData}
         caption="All 39 routes · illustrative allocated MWh"
         activeLinkId={active}
-        onInspect={(link) => setActive(link.id)}
+        onInspect={(link) => setActive((current) => (current === link.id ? null : link.id))}
         formatValue={(value) => `${value} MWh`}
       />
     </article>

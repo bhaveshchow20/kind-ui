@@ -132,6 +132,12 @@ test("five-stage Sankey is balanced, proportional, colored and readable through 
   await expect(network.getByRole("status")).toHaveText("wind → south: 30 MWh");
   await network.getByRole("button", { name: "glow", exact: true }).click();
   await expect(network.getByRole("status")).toHaveText("wind → south: 30 MWh");
+  await network.getByRole("button", { name: "wind → south", exact: true }).click();
+  await expect(network.getByRole("status")).toContainText("Select a ribbon");
+  await expect(network.getByRole("button", { name: "wind → south", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
 });
 
 test("dense Sankey phone viewport scrolls independently and every route stays keyboard reachable", async ({
