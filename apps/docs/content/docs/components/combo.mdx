@@ -1,0 +1,18 @@
+---
+title: Combo Chart
+description: Compose area, bar and line components with independent axes.
+---
+
+<ComponentPlayground id="combo" />
+
+## How it works
+
+The native left axis measures tasks. The right axis measures milliseconds. Each series points to its corresponding `yAxisId`. A shared Root scopes config and controlled series visibility; the legend updates that list.
+
+The noon count of zero remains data. Missing values should be `null`, with `connectNulls={false}` on marks where gaps matter. Independent line/area/bar materials can be composed; this example uses plain marks. Root's emphasis policy does not make Combo automatically participate in bar category emphasis.
+
+## Props
+
+<ApiTable name="ComboChart" compact />
+
+Use native Recharts axes, grid and sizing. [Identity](/docs/concepts/identity/) and [core reference](/docs/reference/core/) explain config, tooltip and visibility.

@@ -1,0 +1,24 @@
+---
+title: Composition
+description: Keep presentation, native geometry and application state explicit.
+---
+
+## Ownership
+
+| Responsibility | Owner |
+| --- | --- |
+| Data, validation, filters, axes, domains, units and dimensions | Application |
+| Cartesian/polar geometry, Cells and native escape hatches | Recharts |
+| Scoped metadata, maintained marks, legends, tooltips and finishes | Kind UI |
+
+`Root.config` supplies labels, colors, formatters and optional icons. It does not map data or choose axes. Managed series preserve native composition. Native custom shapes, filters and renderers retain their own behavior and styling.
+
+## Dimensions and tokens
+
+Give a chart a measurable width and height. Examples use `ResponsiveContainer` or the chart's native `responsive` prop with an explicit height. The package stylesheet uses scoped colors from Root and application tokens such as `--foreground`, `--card`, `--border` and `--muted-foreground`; the complete examples include a small stylesheet defining them.
+
+## Motion and access
+
+`animate={false}` is the example default. Maintained entrance animations respect reduced-motion preferences. A keyboard tooltip does not expose every record in every native family: provide an accessible data alternative and meaningful axes/units. Scatter's native arrow traversal visits the first registered series in data order; a table exposes the rest.
+
+Avoid assuming a material changes the geometry, the values or the accessible data. Glass is paused and excluded from these docs.

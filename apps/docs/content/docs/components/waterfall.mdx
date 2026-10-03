@@ -1,0 +1,18 @@
+---
+title: Waterfall
+description: Keep changes, subtotals and explicit checkpoints distinct.
+---
+
+<ComponentPlayground id="waterfall" />
+
+## How it works
+
+`computeWaterfallData` turns entries into native range bars and connectors. Opening sets 80; sales adds 50 and costs subtracts 160, reaching −30. The subtotal records that balance without adding it again. The zero refund stays zero; recovery reaches 40 and an explicit closing checkpoint records 40.
+
+A missing value makes the running balance unknown until an explicit start/end checkpoint restores it. The helper does not repair business arithmetic. Native Cells color increases, decreases and checkpoints, while the data table exposes all computed balances. Narrow screens can scroll the plot.
+
+## Reference
+
+<ApiTable name="WaterfallSeries" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.

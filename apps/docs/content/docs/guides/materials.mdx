@@ -1,0 +1,36 @@
+---
+title: Materials
+description: Choose a supported finish for a maintained mark and preserve its quantitative reading.
+---
+
+The maintained material vocabulary is `plain`, `paper`, `clay` and `glow`. Plain is the initial docs example default. The other finishes are static decoration, independent of palette and chart motion. Glass is paused and unmerged; it is not a supported material value.
+
+Paper supplies grain and an inset pencil treatment; Clay supplies soft matte relief; Glow supplies a light rim and, where supported, decorative exterior light. Exact rendering differs by primitive. A material does not choose a chart schema, transform data or improve keyboard coverage.
+
+| Family | Public prop and type | Boundary |
+| --- | --- | --- |
+| Line | `LineSeries.material`, `LineMaterial` | Default curve; native dots and labels retain ownership |
+| Area | `AreaSeries.material`, `AreaMaterial` | Native path, gaps and baseline; low fill opacity softens the finish |
+| Bar | `BarSeries.material`, `BarMaterial` | Native rectangles; radius, stack caps and Cells stay consumer-owned |
+| Combo | Each composed series' `material` | Choose separately for Line, Area and Bar; no chart-wide material |
+| Pie / Donut | `PieSeries.material`, `PieMaterial` | Native sectors and radii; Glow can overlap adjacent sectors/rings |
+| Scatter / Bubble | `ScatterSeries.material`, `ScatterMaterial` | Built-in symbols and exact native Z area; halo is decorative light |
+| Radar | `RadarSeries.material`, `PolarMaterial` | Native polygons, dots and labels retain their roles |
+| Radial bar | `RadialBarSeries.material`, `PolarMaterial` | Native sectors; thin arcs show less relief |
+| Histogram | `HistogramSeries.material`, `BarMaterial` | Exact bin bounds; Clay exterior cast shadow is cropped on quantitative axes |
+| Box plot | `BoxPlotSeries.material` / `BoxPlotMark.material`, `BoxPlotMaterial` | Whiskers, quartiles, median and outlier coordinates remain exact |
+| Waterfall | `WaterfallSeries.material`, `BarMaterial` | Native floating range rectangles; chain arithmetic remains unchanged |
+| Sankey | `SankeyNode.finish` / `SankeyLink.finish`, `SankeyFinish` | Set on optional renderers; independent of Link `material="solid"` or `"gradient"` |
+| Heatmap | `HeatmapGrid.material`, `HeatmapMaterial` | Contained outer rim; central 84% × 84% retains exact opaque scale color; missing cells stay unstyled |
+
+## Consumer paint takes precedence
+
+Custom shapes and renderers retain their own finish. Explicit native SVG filters and corresponding inline filter styles can bypass maintained materials. Individual Cells may own their paint/filter. Native gradients, clipping, stroke, opacity and handlers remain under their documented contracts. An explicit filter value of `none` still declares ownership where the family supports that fallback.
+
+Pie CSS transforms and Scatter point clipping have additional native-rendering fallbacks. A requested material may therefore be inactive on a consumer-owned shape even though the material prop is valid. Read the installed declaration and [family reference](/docs/reference/families/) before relying on a custom renderer. Finishes are not a blanket guarantee for arbitrary SVG.
+
+## Choose a finish with representative data
+
+Inspect small marks, dense overlaps, chart edges, missing values, zero, dark mode and reduced motion. Thin or subpixel marks have little room for relief. SVG plot clipping can trim exterior effects. Filters add rendering work; plain marks are a useful comparison for dense plots. Glow's halo does not add bubble area, sector share, interval width or flow quantity.
+
+Keep labels and numeric boundaries legible. For Heatmap, compare the opaque center to the unmodified scale legend; custom cell paint can invalidate that encoding guarantee. Automated material coverage targets Chromium and pinned peers. Other browser/SVG engines and print/export renderers are not established by that evidence.

@@ -1,0 +1,18 @@
+---
+title: Box Plot
+description: Render supplied summaries without choosing a statistical convention.
+---
+
+<ComponentPlayground id="box-plot" />
+
+## How it works
+
+The caller supplies Q1, median, Q3, whiskers and optional outliers. `boxPlotExtent` helps choose a native axis domain that includes them. The package does not compute quartiles or decide an outlier rule.
+
+The dataset controls demonstrate latency, signed changes, and exact/zero/missing summaries. Equal statistics collapse to a line; a missing summary draws no mark. Horizontal layout changes native axes while retaining the same statistics and full data table.
+
+## Reference
+
+<ApiTable name="BoxPlotSeries" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.

@@ -1,0 +1,18 @@
+---
+title: Bar Chart
+description: Distinguish series filtering from supported category emphasis.
+---
+
+<ComponentPlayground id="bar" />
+
+## How it works
+
+This four-category, positive, scalar dataset explicitly opts into category emphasis through `BarChart`. Hover or keyboard inspection may soften neighboring marks while retaining their geometry and values. The legend controls the one series separately.
+
+The built-in bar path is deliberately conservative: zero or missing values, ranges, nested/function accessors, series-local data, custom peers and unsupported axis arrangements can make the whole plot ineligible. Root policy alone does not opt a BarChart into category emphasis. See the [emphasis guide](/docs/guides/emphasis/).
+
+## Reference
+
+<ApiTable name="BarSeries" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.

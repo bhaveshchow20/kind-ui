@@ -1,0 +1,272 @@
+.chart-example {
+  --foreground: #25252b;
+  --background: #fff;
+  --card: #fff;
+  --card-foreground: #25252b;
+  --border: #dfe2e8;
+  --muted: #f3f4f7;
+  --muted-foreground: #59616f;
+  --chart-1: #733bff;
+  --chart-2: #119548;
+  --chart-3: #d97706;
+  --chart-4: #f22e79;
+  color: var(--foreground);
+  background: var(--background);
+  font:
+    1rem / 1.6 system-ui,
+    sans-serif;
+  padding: 1rem;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+.dark .chart-example {
+  --foreground: #e9e9f0;
+  --background: #1c1c24;
+  --card: #252530;
+  --card-foreground: #e9e9f0;
+  --border: #454553;
+  --muted: #30303c;
+  --muted-foreground: #b2b2c0;
+}
+.chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+  min-width: 0;
+}
+.chart-controls legend {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.chart-controls label {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  font-size: 0.875rem;
+}
+.chart-controls input {
+  accent-color: #733bff;
+  width: 1rem;
+  height: 1rem;
+}
+.chart-controls select {
+  font: inherit;
+  color: var(--foreground);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.4rem;
+  min-height: 2rem;
+}
+.chart-help {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+  margin: 0.7rem 0;
+}
+.chart-example svg {
+  max-width: 100%;
+}
+.chart-example .recharts-text {
+  fill: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+.chart-example [data-kind-ui="chart-legend"] {
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0.7rem 0;
+}
+.chart-example [data-kind-ui="chart-legend-item"] {
+  padding: 0;
+  margin: 0;
+}
+.chart-example [data-kind-ui="chart-legend-item"]::before {
+  display: none;
+}
+.chart-example [data-kind-ui="chart-legend-item"]::marker {
+  content: "";
+}
+.chart-example table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+}
+.chart-example th,
+.chart-example td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0.6rem;
+  white-space: nowrap;
+}
+.chart-example caption {
+  text-align: left;
+  margin: 0.5rem 0;
+}
+.chart-example details {
+  margin-top: 0.8rem;
+}
+.chart-example summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.chart-example :focus-visible {
+  outline: 2px solid #733bff;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-example *,
+  .chart-example *::before,
+  .chart-example *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* A compact complete Combo consumer; shared shell controls remain framework-independent. */
+.combo-demo {
+  --background: #fff;
+  --foreground: #202028;
+  --border: #e9e9ed;
+  --muted-foreground: #72727a;
+  font-family: "Geist Variable", system-ui, sans-serif;
+}
+.dark .combo-demo {
+  --background: #111;
+  --foreground: #ededee;
+  --border: #292929;
+  --muted-foreground: #a0a0a5;
+}
+.combo-demo-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 36px 0 28px;
+}
+.combo-demo-heading h2 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.combo-demo-heading p {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 3px 0 0;
+  line-height: 1.5;
+}
+.chart-controls-compact {
+  margin: 0;
+  flex-shrink: 0;
+}
+.chart-controls-compact legend,
+.chart-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.chart-controls-compact label {
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+  flex-direction: row-reverse;
+  gap: 7px;
+}
+.chart-controls-compact input {
+  appearance: none;
+  width: 28px;
+  height: 16px;
+  border-radius: 20px;
+  background: var(--border);
+  position: relative;
+  cursor: pointer;
+}
+.chart-controls-compact input::before {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  background: var(--background);
+  box-shadow: 0 1px 2px #0002;
+}
+.chart-controls-compact input:checked {
+  background: #4055ee;
+}
+.chart-controls-compact input:checked::before {
+  left: 14px;
+  background: #fff;
+}
+.combo-plot {
+  height: 18.75rem;
+}
+.combo-demo .recharts-text {
+  font-size: 0.75rem;
+}
+.combo-demo [data-kind-ui="chart-legend"] {
+  justify-content: center;
+  gap: 20px;
+  margin: 18px 0 0;
+  font-size: 0.75rem;
+}
+.combo-demo [data-kind-ui="chart-legend"] button {
+  font-size: 0.75rem;
+}
+.combo-units {
+  text-align: center;
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+  margin: 12px 0 0;
+}
+.combo-units span {
+  margin: 0 5px;
+}
+.combo-demo details {
+  margin-top: 24px;
+}
+.combo-demo summary {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  width: fit-content;
+}
+@media (max-width: 640px) {
+  .combo-demo-heading {
+    margin: 32px 0 28px;
+    gap: 10px;
+  }
+  .combo-demo-heading h2 {
+    font-size: 0.8125rem;
+  }
+  .combo-demo-heading p {
+    font-size: 0.6875rem;
+    max-width: 190px;
+  }
+  .combo-plot {
+    height: 16.25rem;
+  }
+  .combo-demo [data-kind-ui="chart-legend"] {
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .combo-demo [data-kind-ui="chart-legend"] button {
+    font-size: 0.6875rem;
+  }
+}

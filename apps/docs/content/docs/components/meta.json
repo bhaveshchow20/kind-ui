@@ -1,0 +1,18 @@
+{
+  "title": "Examples",
+  "pages": [
+    "line",
+    "area",
+    "bar",
+    "combo",
+    "donut",
+    "scatter",
+    "radar",
+    "radial-bar",
+    "histogram",
+    "box-plot",
+    "waterfall",
+    "sankey",
+    "heatmap"
+  ]
+}

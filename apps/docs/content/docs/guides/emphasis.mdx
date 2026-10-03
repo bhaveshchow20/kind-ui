@@ -1,0 +1,41 @@
+---
+title: Selective emphasis
+description: Enable transient decoration only where a family or explicit mark adapter supports it.
+---
+
+Emphasis is temporary paint attention. It does not filter data, change values, recompute totals or replace controlled visibility. `Root emphasis="auto"` is the default policy; `none` disables maintained transient decoration. Participation is deliberately narrow.
+
+| Family | Maintained behavior |
+| --- | --- |
+| Bar | `BarChart emphasis="category"` explicitly opts an eligible native plot into category decoration; default is `none` |
+| Pie / Donut | Default native sectors use stable semantic `nameKey` or `emphasisKey` identity |
+| Line / Area / Combo | Native inspection; no automatic dimming |
+| Scatter / Bubble | Native point inspection; no automatic dimming |
+| Radar / Radial bar | Adapters unfinished; no automatic dimming |
+| Histogram / Box plot / Sankey | Adapters unfinished; no automatic dimming |
+| Waterfall | Step inspection preserves the numeric chain |
+| Heatmap | Cell inspection preserves numeric paint |
+
+Persistent controls and copied settings do not promise decoration in unsupported families. `Legend emphasis="series"` is a separate opt-in and needs participating marks or an explicit adapter. An emphasized legend item alone does not provide automatic mark support.
+
+## Bar category eligibility
+
+Eligibility applies to the entire visible comparison. Every visible Kind BarSeries must use chart-level rows, direct string numeric data keys, finite complete values different from the numeric baseline, native default shape/activeBar, and unique category identities. Ordinary category-axis strings need one domain entry per row. Numeric/index-only domains need a complete unique `emphasisKey` mapping, with the same stable ID across grouped/stacked series.
+
+Zero, missing, range, function or nested keys; per-series rows; ambiguous categories; an undefined identity; and custom-shape peers can make the whole plot fall back to native rendering without dimming. Hidden peers do not block eligibility. Raw engine/custom marks require explicit decoration. Root `emphasis="none"` also disables the Bar opt-in. A safe → sparse/custom → safe update does not revive an old hover target.
+
+## Stable identities and explicit adapters
+
+`dataKey` selects a value. `seriesKey` selects Root metadata/visibility. `emphasisKey` selects a stable datum identity. IDs must be unique within their category/sector scope; a changing index is not a stable ID. Independent plots need separate scopes. Pie visibility stays with its supplied rows and Cells.
+
+<ApiTable name="EmphasisTarget" />
+
+<ApiTable name="EmphasisMark" />
+
+Custom marks may opt in through `EmphasisMark` around their paint or `useEmphasis(target, enabled?)`. Keep labels/annotations outside the paint wrapper. The hook returns `active`, `dimmed`, `factor`, `enter("pointer" | "keyboard")` and `leave(channel)`. Apply `factor` once through an additional paint layer so native opacity, transparent fills and Motion multiply correctly. Set `enabled={false}` when the owning host hides/removes the mark. Share a scope only for the same comparison.
+
+## Input behavior and limits
+
+Pointer entry temporarily supersedes a retained keyboard candidate. Pointer leave restores it. A new explicit legend/custom keyboard or focus action supersedes pointer attention. Escape clears transient emphasis without changing controlled visibility. No new touch tap/click behavior is added. Marks remain hittable while dimmed; the stylesheet supplies an interruptible 160 ms opacity transition that reduced motion removes.
+
+The pinned Recharts public tooltip prioritizes a live mouse hover over arrow-key inspection. If the pointer stays on category A while arrows run, native tooltip and maintained emphasis may remain on A. Clean keyboard entry advances normally. After pointer exit, the last eligible retained candidate can remain while the native tooltip closes. Kind does not maintain a second keyboard index or synthesize host events; full pointer/keyboard equivalence is not claimed. Provide the [data alternative](/docs/guides/accessibility/) independently of this preview decoration.

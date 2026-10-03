@@ -1,0 +1,31 @@
+---
+title: Troubleshooting
+description: Resolve packaging and composition issues with the exact example and package snapshot.
+---
+
+| Symptom | Check |
+| --- | --- |
+| Registry install cannot find the package | This preview is unpublished; use the downloaded example's pinned vendor tarball |
+| Axis, Cell or ResponsiveContainer import unavailable | Import native composition from Recharts; check the [public import map](/docs/reference/exports/) |
+| Motion entry cannot resolve | Motion is a required peer; `@kind-ui/charts/motion` is not exported |
+| Chart has no size | Give its responsive parent measurable width and height |
+| Visibility callback throws | Supply `visibleSeries` whenever `onVisibleSeriesChange` is provided |
+| Function-key series ignores controlled visibility | Supply the metadata `seriesKey`; for Scatter, dimension keys never substitute for it |
+| Legend includes x/y/z items | Every Root config entry is a legend identity; keep dimension metadata on axes or tooltip formatters when separate legend entries are unwanted |
+| Pie legend changes but sectors do not | Filter rows and generate matching Cells from that same filtered array in the host |
+| Scatter legend glyph differs from the mark | Supply a matching config `icon` or Legend `children` render prop |
+| Bubble tooltip omits zero/missing size | Supply `ScatterTooltip zDimension` using the ZAxis key/accessor; this does not change native marker size |
+| Bar emphasis stops after a data update | Check the whole visible plot's [eligibility](/docs/guides/emphasis/#bar-category-eligibility), including zero/missing/range keys, category identity and custom peers |
+| Other family does not dim under Root auto | Root policy enables only supported contracts; inspect the [family matrix](/docs/guides/emphasis/) |
+| Arrows stay on a hovered category | Native Recharts prioritizes live pointer inspection; move the pointer out and use clean keyboard entry |
+| Material does not affect a custom mark | Explicit shapes, filters and family-specific consumer paint can retain ownership |
+| Histogram reports wrong-looking bin width | Supply exact numeric intervals; do not replace bounded primary axes or native bar sizing; count area differs from frequency for unequal widths |
+| Box tooltip shows a range instead of quartiles | Read the original summary through custom Tooltip content and provide a complete table |
+| Waterfall connectors bridge incorrectly after filtering | Supply the same subset and matching axis/series/hide state to series and connectors |
+| Sankey cannot render valid semantic data | Check drawable space and the documented native layout limits; retain SankeyTable as the complete alternative |
+| Heatmap rejects a record | Check explicit domains, finite/null values and the chosen duplicate policy |
+| Copied result uses earlier selected options | Copy again after changing persistent controls; verify settings in the complete consumer files |
+
+When reporting a failure, include the exact commit and [artifact provenance](/package-provenance.json), peer versions, complete copied example, commands and expected/observed behavior. Describe page, viewport and steps for website friction. Report observations as reproduced evidence rather than assuming an engine defect or a limitation in every consumer.
+
+Classify installation/export failures as packaging; unclear instructions as docs; correct documented composition with incorrect behavior as a candidate runtime defect. A missing convenience adapter is an API-design question until its contract is established. The [contribution guide](/docs/guides/contributing/) describes the repository workflow.

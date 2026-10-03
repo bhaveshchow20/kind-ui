@@ -1,0 +1,55 @@
+---
+title: Public exports and imports
+description: Find the maintained public components, data helpers, types and stylesheet entry.
+---
+
+The unpublished `@kind-ui/charts@0.0.0` preview has two public package entries: the root ESM module and `@kind-ui/charts/styles.css`. Use the exact tarball in a complete example download. The current docs package source is `aa7fe56b167554115555b13a1408fd4fecab8e90`; [package provenance](/package-provenance.json) identifies the installed artifact and checksum. This private docs preview does not establish anonymous public availability or registry publication.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import type { SeriesConfig, ComboChartProps } from "@kind-ui/charts";
+import { CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import "@kind-ui/charts/styles.css";
+```
+
+Named imports such as `import { Root, LineChart, LineSeries } from "@kind-ui/charts"` are also supported. Do not import package internals or assume a `/motion` entry. Motion's required peer is `motion`; native chart composition comes from `recharts`.
+
+## Components and helpers
+
+| Purpose | Public runtime exports |
+| --- | --- |
+| Shared metadata and UI | `Root`, `Legend`, `Tooltip`, `TooltipContent` |
+| Line | `LineChart`, `LineSeries` |
+| Area | `AreaChart`, `AreaSeries` |
+| Bar | `BarChart`, `BarSeries` |
+| Combo | `ComboChart`, composed with `LineSeries`, `AreaSeries`, `BarSeries` |
+| Pie and Donut | `PieChart`, `PieSeries`; native `innerRadius` makes the donut |
+| Scatter and Bubble | `ScatterChart`, `ScatterSeries`, `ScatterTooltip`, `ScatterTooltipContent`; native `ZAxis` maps bubble area |
+| Radar | `RadarChart`, `RadarSeries` |
+| Radial bar | `RadialBarChart`, `RadialBarSeries`, `RadialBarLabel` |
+| Histogram | `HistogramChart`, `HistogramSeries`, `binHistogram` |
+| Box plot | `BoxPlotChart`, `BoxPlotSeries`, `BoxPlotMark`, `validateBoxPlotSummary`, `boxPlotExtent` |
+| Waterfall | `WaterfallChart`, `WaterfallSeries`, `WaterfallConnectors`, `computeWaterfallData` |
+| Sankey | `SankeyChart`, `SankeyNode`, `SankeyLink`, `SankeyTable`, `prepareSankeyData` |
+| Heatmap | `HeatmapChart`, `HeatmapGrid`, `HeatmapCellContent`, `HeatmapTooltip`, `HeatmapLegend`, `HeatmapDataTable`, `createHeatmapModel`, `createHeatmapScale` |
+| Explicit emphasis adapters | `EmphasisMark`, `useEmphasis` |
+
+Each component exports its corresponding `*Props` type. Additional public types describe animation, materials, renderer callbacks and data; focused generated views appear in the [core](/docs/reference/core/), [family](/docs/reference/families/) and [data](/docs/reference/data/) references. A generated view selects relevant fields and does not claim to show every native prop.
+
+There is no `DonutChart`, `BubbleChart`, `ComboSeries` or standalone Waterfall geometry engine. `WaterfallChart` is the public BarChart alias. Recharts does not provide a native BoxPlot component; Kind's bounded box series uses a native range Bar with public axis scales. Heatmap uses native HTML tables independently of Root and Recharts chart contexts.
+
+## Import native composition from Recharts
+
+Axes, `ZAxis`, `CartesianGrid`, `Cell`, `LabelList`, `ReferenceLine`, `ResponsiveContainer`, native shapes and native stack primitives belong to Recharts. The host supplies domains, units, axis IDs, row order, labels and visibility state. Native shapes and renderers retain their explicit styling, refs and handlers where supported by the public prop declaration.
+
+| Type group | Public examples |
+| --- | --- |
+| Metadata and emphasis | `SeriesConfig`, `RootProps`, `EmphasisTarget`, `EmphasisMarkProps` |
+| Motion | `LineAnimation`, `AreaAnimation`, `BarAnimation`, `ComboAnimation`, `PieAnimation`, `ScatterAnimation`, `RadarAnimation`, `RadialBarAnimation`, `SankeyAnimation` |
+| Finishes | `LineMaterial`, `AreaMaterial`, `BarMaterial`, `PieMaterial`, `ScatterMaterial`, `PolarMaterial`, `BoxPlotMaterial`, `SankeyFinish`, `HeatmapMaterial` |
+| Sankey paint | `SankeyMaterial` (`solid` or `gradient`) is distinct from `SankeyFinish` |
+| Statistical data | `HistogramBin`, `HistogramMeasure`, `HistogramBinningResult`, `BoxPlotSummary`, `WaterfallEntry`, `WaterfallDatum` |
+| Flow and grid data | `SankeyFlowData`, `SankeyFlowNode`, `SankeyFlowLink`, `HeatmapDatum`, `HeatmapCell`, `HeatmapModel`, `HeatmapModelOptions`, `HeatmapDuplicatePolicy`, `HeatmapScale`, `HeatmapScaleOptions` |
+| Specialized renderer contracts | `HistogramShapeProps`, `BoxPlotShapeProps`, `HeatmapCellContentProps`, `ScatterSizeDimension` |
+
+Glass remains paused and unmerged. It is not a supported material value or documented package entry.

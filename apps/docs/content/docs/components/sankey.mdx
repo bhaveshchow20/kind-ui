@@ -1,0 +1,18 @@
+---
+title: Sankey
+description: Keep caller-owned nodes and flows auditable.
+---
+
+<ComponentPlayground id="sankey" />
+
+## How it works
+
+This acyclic flow graph conserves 100 units through the source and intermediate nodes. The caller owns node identities, link indices, values and balance validation. A zero-value link remains in the data table even though it has no visible width.
+
+`SankeyFinish` decorates maintained node/link shapes. It is separate from the `SankeyLink` paint mode (`material`); they are not interchangeable controls. Pointer inspection exposes a flow, and the data alternative provides keyboard buttons to inspect every supplied link. A clicked or table-selected flow is included in the copied settings. Transient pointer tooltip state is separate.
+
+## Reference
+
+<ApiTable name="SankeyChart" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.

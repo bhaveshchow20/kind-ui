@@ -1,0 +1,18 @@
+---
+title: Radial Bar Chart
+description: Use paired rings with an explicit angle domain and a readable subset.
+---
+
+<ComponentPlayground id="radial-bar" />
+
+## How it works
+
+Native polar axes map a fixed 0–100 score domain to a clockwise turn. The example chooses three of five source dimensions for readable actual/target bands; its data table marks the chart subset and includes all source rows. The bands compare scores and do not form an additive stack.
+
+The legend controls whole series. Maintained labels may omit text that does not fit; the values remain in the tooltip and table. Category paint emphasis is not implemented for radial bars.
+
+## Reference
+
+<ApiTable name="RadialBarSeries" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.

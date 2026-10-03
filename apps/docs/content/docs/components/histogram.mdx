@@ -1,0 +1,18 @@
+---
+title: Histogram
+description: Choose intervals and count or density deliberately.
+---
+
+<ComponentPlayground id="histogram" />
+
+## How it works
+
+`binHistogram` receives explicit edges, with the final upper edge included. Raw temperature samples report accepted, missing, nonfinite and out-of-range counts separately. The wider-interval control changes aggregation, not the original observations.
+
+The response-time dataset supplies unequal-width bins and uses density: count divided by total count and width. Rectangle area therefore represents probability, with height in ms⁻¹. A zero-count final interval remains in the data table. Dataset and interval selections are reproduced by Copy prompt and Download example.
+
+## Reference
+
+<ApiTable name="HistogramChart" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.

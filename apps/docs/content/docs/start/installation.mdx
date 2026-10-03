@@ -1,0 +1,31 @@
+---
+title: Installation
+description: Run the unpublished preview as a complete isolated consumer.
+---
+
+## Current package status
+
+`@kind-ui/charts` remains private at `0.0.0`. The docs preview uses a built tarball from `aa7fe56b167554115555b13a1408fd4fecab8e90`, through its public package exports. Download an example ZIP from a example page. It includes the pinned tarball, source and setup files.
+
+Use Node 22.12 or later and npm 11.9. Extract the ZIP, then run:
+
+```sh
+npm install
+npm run dev
+```
+
+Run `npm run build` to typecheck and produce the consumer build. The downloaded package manifest pins React and React DOM 19.3.0, Recharts 3.10.1 and Motion 13.4.6. These are the preview's tested dependencies; broader version support is not established.
+
+## Imports and CSS
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+import { CartesianGrid, Cell, XAxis, YAxis } from "recharts";
+import "@kind-ui/charts/styles.css";
+```
+
+Kind UI does not reexport Recharts axes, Cells or `ResponsiveContainer`. Motion is a required peer; there is no `@kind-ui/charts/motion` entry. Keep stylesheet imports at the application entry and provide the [theme tokens](/docs/concepts/composition/).
+
+## After a public release
+
+A future published version will replace the tarball setup with an exact registry version. Until then, avoid instructions that claim `npm install @kind-ui/charts` works from the registry. The package status and generated examples must change together.

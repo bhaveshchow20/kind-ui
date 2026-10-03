@@ -1,0 +1,54 @@
+---
+title: Core reference
+description: Focused tables generated from the installed public package declarations.
+---
+
+These tables resolve selected public types from the installed `@kind-ui/charts` package. They highlight Kind's composition contracts. Read the full exported `*Props` declarations for other available native props; some wrappers deliberately omit engine props they own. The tables do not replace the Recharts API reference.
+
+Start with the [public import map](/docs/reference/exports/) and [family reference](/docs/reference/families/). `Root` applies to the metadata-based Recharts compositions. The native-table Heatmap API has its own context.
+
+## Root
+
+<ApiTable name="Root" />
+
+`config` supplies presentation metadata and scoped `--color-{key}` properties. Each key must start with a letter and contain only letters, numbers, underscores or hyphens. Root does not choose axes, transform rows or infer dimensions.
+
+`visibleSeries` is consumer-controlled state. Providing `onVisibleSeriesChange` requires `visibleSeries`; omitting visibility leaves native rendering under consumer control. A callback makes the built-in Legend interactive. Registered series combine Root visibility with their native `hide` prop. Pie category filtering still requires the host to filter its data and matching Cells.
+
+Root defaults to `emphasis="auto"`, which enables only the [supported emphasis contracts](/docs/guides/emphasis/). It never filters records or changes selection callbacks.
+
+## Config entries
+
+<ApiTable name="SeriesMetadata" />
+
+`label`, `color`, optional decorative `icon` and `formatValue` describe an identity. `dataKey` selects a measured value; `seriesKey` selects metadata and registered visibility. A direct string data key supplies the identity for the maintained Cartesian series. Function and numeric keys need an explicit series key when visibility is controlled. Scatter requires its own series identity because x/y/z keys describe dimensions.
+
+## Legend
+
+<ApiTable name="Legend" />
+
+Legend renders every config entry. Keep Scatter dimension names and units on native axes or tooltip formatters when they should not become legend items. Icons come from config or the `children` render prop; a custom Scatter shape does not generate an icon. `hideIcon` uses the standard swatch.
+
+The render prop composes each item's noninteractive content while Kind retains the list, button and controlled visibility behavior. `emphasis="series"` is an explicit opt-in and paints only participating marks or explicit adapters.
+
+## Tooltip frame and content
+
+<ApiTable name="Tooltip" />
+
+The engine owns selection and payload. Kind measures and bounds the positioning frame. `frameProps` and the exported tooltip ref target that frame. Position, portal and engine animation props omitted by `TooltipProps` are owned by the wrapper.
+
+`itemKey` resolves item metadata identity, useful for Pie categories; it is separate from selecting a measured `dataKey`. Custom content receives the filtered native payload. When composing `TooltipContent` yourself, pass the same item resolver to it.
+
+<ApiTable name="TooltipContent" />
+
+Pass the native content callback's props through `tooltip`, rather than spreading engine-only props onto a DOM element. The maintained content preserves numeric zero, displays missing values alongside present measurements, and omits wholly missing categories. Native formatters take precedence over config formatting. Scatter has a [dimension-aware tooltip](/docs/reference/families/#scatter-and-bubble).
+
+## Motion options
+
+<ApiTable name="MotionOptions" />
+
+Line, Area, Bar, Pie, Scatter, Radar and Radial bar animation types share these option fields. Their chart `animate` prop accepts `false`, `true` or the corresponding exported animation type. Motion is a required peer even when animation is disabled. Histogram, Box plot and Waterfall compose the Bar motion contract.
+
+<ApiTable name="ComboMotion" />
+
+Combo can independently configure or disable line, area and bar entrances. Sankey accepts only its opacity-reveal duration; Heatmap accepts a boolean for frame translation. Maintained motion respects reduced-motion preferences. Data, values and native geometry remain under their documented owners. See [accessibility and motion](/docs/guides/accessibility/) before enabling animation.

@@ -1,0 +1,18 @@
+---
+title: Line Chart
+description: Show a measured zero and a missing observation without joining the gap.
+---
+
+<ComponentPlayground id="line" />
+
+## How it works
+
+The native `XAxis` selects day labels. The numeric domain starts at zero and ends at 60. `null` creates a gap because `connectNulls` is false; zero remains a measured value. Curve controls choose native linear, monotone or step geometry.
+
+Plain and Paper decorate the maintained line mark. Native tooltip inspection does not imply automatic category paint emphasis.
+
+## Reference
+
+<ApiTable name="LineSeries" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.
