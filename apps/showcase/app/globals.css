@@ -1123,61 +1123,108 @@ code,
   font-family: var(--font-mono);
 }
 
+/* Package manager command block. */
 .install-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 20px 30px;
+  gap: 20px;
+  padding: 0 20px 38px;
   margin-top: -12px;
   position: relative;
 }
-.install-command {
+.install-section > .install-built-with {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  text-align: center;
+  margin: 0;
+}
+.install-panel {
+  width: min(100%, 620px);
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--background) 88%, var(--foreground) 3%);
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+}
+.install-panel-header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  width: max-content;
-  max-width: 100%;
-  padding: 9px 10px 9px 18px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: #fafafa;
-  color: var(--foreground);
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
 }
-.install-command code {
+.install-manager-tabs {
+  background: transparent;
+  padding: 0;
+  gap: 2px;
+  height: 38px !important;
+}
+.install-manager-tabs [role="tab"] {
+  isolation: isolate;
+  flex: none;
+  min-width: 60px;
+  height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 11px;
+  box-shadow: none;
+  background: transparent !important;
+  font-size: 14px;
+}
+.install-manager-tabs .tab-selection,
+.dark .install-manager-tabs .tab-selection {
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--foreground) 7%, var(--background));
+  border: 1px solid var(--border);
+}
+.install-copy {
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  width: 38px;
+  height: 38px;
+}
+.install-panel-content {
+  margin: 0;
+  padding: 22px 24px;
+  overflow-x: auto;
+}
+.install-panel-content code {
   font-family: var(--font-mono);
   font-size: 14px;
   white-space: nowrap;
   user-select: all;
 }
-.install-prompt {
+.install-prompt { color: var(--muted-foreground); }
+.install-tool { color: #ac5f1c; }
+.install-package { color: #6e47c6; }
+.dark .install-tool { color: #ffb16b; }
+.dark .install-package { color: #c1a2ff; }
+.install-frameworks {
+  display: flex;
+  align-items: center;
+  gap: 26px;
   color: var(--muted-foreground);
-  font-family: var(--font-mono);
+}
+.framework-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
+  font-weight: 500;
 }
-.install-section > p {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  margin: 10px 0 0;
-}
-.dark .install-command {
-  background: #111;
-  border-color: #282828;
-}
+.framework-brand svg { width: 22px; height: 22px; }
+.react-brand-mark { color: #1697ba; }
+.dark .react-brand-mark { color: #61dafb; }
+.next-brand-mark { color: var(--foreground); }
 @media (max-width: 650px) {
-  .install-section {
-    margin-top: 0;
-    padding-bottom: 28px;
-  }
-  .install-command {
-    gap: 9px;
-    padding-left: 12px;
-  }
-  .install-command code {
-    font-size: 12px;
-  }
-  .install-prompt {
-    display: none;
-  }
+  .install-section { margin-top: 0; gap: 17px; padding-bottom: 30px; }
+  .install-panel-header { padding: 8px; gap: 4px; }
+  .install-manager-tabs [role="tab"] { min-width: 48px; padding: 0 10px; font-size: 13px; }
+  .install-panel-content { padding: 20px 16px; }
+  .install-panel-content code { font-size: 12px; }
 }
 
 .chart-card {
