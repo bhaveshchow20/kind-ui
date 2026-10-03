@@ -498,6 +498,76 @@ function ChartCard({
   );
 }
 
+const installCommands = {
+  npm: "npm install @kind-ui/charts",
+  pnpm: "pnpm add @kind-ui/charts",
+  yarn: "yarn add @kind-ui/charts",
+  bun: "bun add @kind-ui/charts",
+};
+type PackageManager = keyof typeof installCommands;
+
+function InstallSection() {
+  const [manager, setManager] = useState<PackageManager>("npm");
+  const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
+  async function copyCommand() {
+    try {
+      await navigator.clipboard.writeText(installCommands[manager]);
+      setCopied(true);
+      setCopyFailed(false);
+      clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopyFailed(true);
+    }
+  }
+  return (
+    <section className="install-section" aria-label="Install Kind UI Charts">
+      <p className="install-built-with">Built with Framer Motion and Recharts</p>
+      <Tabs className="install-panel" value={manager} onValueChange={(value) => {
+        setManager(value as PackageManager);
+        setCopied(false);
+        setCopyFailed(false);
+      }}>
+        <div className="install-panel-header">
+          <TabsList className="install-manager-tabs" aria-label="Package manager">
+            {(Object.keys(installCommands) as PackageManager[]).map((key) => (
+              <TabsTrigger key={key} value={key}>{key}</TabsTrigger>
+            ))}
+          </TabsList>
+          <Button variant="ghost" size="icon-sm" className="install-copy" onClick={copyCommand}
+            aria-label={copied ? "Install command copied" : "Copy install command"}>
+            {copied ? <Check /> : <Copy />}
+          </Button>
+        </div>
+        {(Object.keys(installCommands) as PackageManager[]).map((key) => (
+          <TabsContent key={key} value={key} className="install-panel-content">
+            <code><span className="install-prompt" aria-hidden="true">$ </span><span className="install-tool">{key}</span>{key === "npm" ? " install " : " add "}<span className="install-package">@kind-ui/charts</span></code>
+          </TabsContent>
+        ))}
+      </Tabs>
+      <div className="install-frameworks" aria-label="For React and Next.js">
+        <span className="framework-brand">
+          <svg viewBox="-12 -11 24 22" aria-hidden="true" className="react-brand-mark">
+            <circle r="2.05" fill="currentColor" />
+            {[0, 60, 120].map((angle) => <ellipse key={angle} rx="10.5" ry="4.1" fill="none" stroke="currentColor" strokeWidth="1" transform={`rotate(${angle})`} />)}
+          </svg>
+          React
+        </span>
+        <span className="framework-brand">
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="next-brand-mark">
+            <path d="M18.665 21.978C16.758 23.255 14.465 24 12 24 5.377 24 0 18.623 0 12S5.377 0 12 0s12 5.377 12 12c0 3.583-1.574 6.801-4.067 9.001L9.219 7.2H7.2v9.596h1.615V9.251l9.85 12.727Zm-3.332-8.533 1.6 2.061V7.2h-1.6v6.245Z" fill="currentColor" />
+          </svg>
+          Next.js
+        </span>
+      </div>
+      <span className="sr-only" role="status">{copied ? "Install command copied" : copyFailed ? "Could not copy. Select the command to copy manually." : ""}</span>
+    </section>
+  );
+}
+
 export default function Page() {
   const { resolvedTheme, setTheme } = useTheme();
   const reduceMotion = useReducedMotion();
@@ -524,18 +594,6 @@ export default function Page() {
   const [paletteEditor, setPaletteEditor] = useState(false);
   const [animate, setAnimate] = useState(true);
   const [replay, setReplay] = useState(0);
-  const [installCopied, setInstallCopied] = useState(false);
-  const [installCopyFailed, setInstallCopyFailed] = useState(false);
-  async function copyInstall() {
-    try {
-      await navigator.clipboard.writeText("npm install @kind-ui/charts");
-      setInstallCopied(true);
-      setInstallCopyFailed(false);
-      setTimeout(() => setInstallCopied(false), 1800);
-    } catch {
-      setInstallCopyFailed(true);
-    }
-  }
   useEffect(() => {
     const ctx = (
       document as Document & {
@@ -690,30 +748,7 @@ export default function Page() {
             </motion.p>
           </div>
         </section>
-        <div className="install-section">
-          <div className="install-command">
-            <span aria-hidden="true" className="install-prompt">
-              $
-            </span>
-            <code>npm install @kind-ui/charts</code>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={copyInstall}
-              aria-label={installCopied ? "Install command copied" : "Copy install command"}
-              title={installCopied ? "Copied" : "Copy command"}
-            >
-              {installCopied ? <Check /> : <Copy />}
-            </Button>
-          </div>
-          <span className="sr-only" role="status">
-            {installCopied
-              ? "Install command copied"
-              : installCopyFailed
-                ? "Could not copy. Select the command to copy manually."
-                : ""}
-          </span>
-        </div>
+        <InstallSection />
         <section id="showcase" className="showcase">
           <Tabs value={family} onValueChange={(v) => setFamily(v as Family)}>
             <div className="family-row">
