@@ -1174,3 +1174,35 @@ test("heatmap materials decorate measured cells only and retain custom content/s
     assert.doesNotMatch(markup, / material=/);
   }
 });
+
+test("explicit native legend symbols retain icon/children priority and square fallback", () => {
+  for (const shape of ["circle", "cross", "diamond", "square", "star", "triangle", "wye"]) {
+    const symbolConfig = { count: { ...config.count, legendShape: shape } };
+    const html = render(h(Root, { config: symbolConfig }, h(Legend)));
+    assert.match(html, new RegExp(`data-legend-shape="${shape}"`));
+    assert.match(html, /aria-hidden="true" focusable="false"/);
+    assert.match(html, /<path[^>]*d="M/);
+    const fallback = render(h(Root, { config: symbolConfig }, h(Legend, { hideIcon: true })));
+    assert.doesNotMatch(fallback, /data-legend-shape|<svg/);
+    assert.match(fallback, /chart-indicator/);
+    const icon = render(
+      h(Root, { config: { count: { ...symbolConfig.count, icon: Icon } } }, h(Legend)),
+    );
+    assert.match(icon, /data-icon="task"/);
+    assert.doesNotMatch(icon, /data-legend-shape/);
+    const custom = render(
+      h(
+        Root,
+        { config: symbolConfig },
+        h(Legend, {}, ({ label }) => h("span", { "data-custom-marker": true }, label)),
+      ),
+    );
+    assert.match(custom, /data-custom-marker/);
+    assert.doesNotMatch(custom, /data-legend-shape/);
+    const tooltipHtml = render(
+      h(Root, { config: symbolConfig }, h(TooltipContent, { tooltip: tooltip([entry(0)]) })),
+    );
+    assert.doesNotMatch(tooltipHtml, /data-legend-shape|<svg/);
+    assert.match(tooltipHtml, /data-indicator="line"/);
+  }
+});

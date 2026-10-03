@@ -254,6 +254,9 @@ try {
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("scatter", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-scatter");
+  for (const file of ["legend.tsx", "legend.html"]) await copyFixture("scatter", file);
+  await typecheck(["legend.tsx"]);
+  await production("legend.html", "packed-scatter-legend");
   console.log(
     "Scatter tarball consumer: guarded public imports, strict NodeNext/Bundler and production build passed",
   );

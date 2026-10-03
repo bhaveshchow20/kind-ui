@@ -20,6 +20,10 @@ export default defineConfig({
       url: `http://127.0.0.1:${port(4195)}`,
     },
     {
+      command: `npm exec vite preview -- --outDir artifacts/packed-scatter-legend --host 127.0.0.1 --port ${port(4194)} --strictPort`,
+      url: `http://127.0.0.1:${port(4194)}/legend.html`,
+    },
+    {
       command: `npm exec vite preview -- --outDir artifacts/packed-emphasis --host 127.0.0.1 --port ${port(4193)} --strictPort`,
       url: `http://127.0.0.1:${port(4193)}`,
     },

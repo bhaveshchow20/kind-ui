@@ -192,3 +192,35 @@ void (
 // @ts-expect-error Icons are renderable component types, not arbitrary strings.
 const invalidIcon: SeriesConfig = { count: { label: "Tasks", color: "red", icon: "task" } };
 void invalidIcon;
+
+for (const legendShape of [
+  "circle",
+  "cross",
+  "diamond",
+  "square",
+  "star",
+  "triangle",
+  "wye",
+] as const) {
+  const sharedConfig = {
+    search: { label: "Search", color: "#333", legendShape },
+  } satisfies SeriesConfig;
+  void (
+    <Chart.Root config={sharedConfig}>
+      <Chart.Legend />
+      <Chart.ScatterChart>
+        <Chart.ScatterSeries seriesKey="search" shape={sharedConfig.search.legendShape} />
+      </Chart.ScatterChart>
+    </Chart.Root>
+  );
+}
+const invalidLegendShape: SeriesConfig = {
+  // @ts-expect-error Only native scatter symbols belong in legendShape; custom glyphs use icon/children.
+  search: { label: "Search", color: "#333", legendShape: "hexagon" },
+};
+const invalidLegendRenderer: SeriesConfig = {
+  // @ts-expect-error Custom point callbacks are not legend renderers.
+  search: { label: "Search", color: "#333", legendShape: () => <svg /> },
+};
+void invalidLegendShape;
+void invalidLegendRenderer;
