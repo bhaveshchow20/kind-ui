@@ -20,7 +20,7 @@
     "pack:artifact": "node scripts/check-package.mjs --keep-artifact",
     "test": "npm run build && node --test tests/chart.test.mjs tests/configured-line.test.mjs",
     "dev:chart": "npm run build && vite examples/chart --host 127.0.0.1",
-    "check:chart": "npm run check:package && tsc -p examples/chart && node scripts/check-showcase-code.mjs && vite build examples/chart && playwright test && npm run test:composition && npm run test:configured-line",
+    "check:chart": "npm run pack:artifact && tsc -p examples/chart && node scripts/check-showcase-code.mjs && vite build examples/chart && playwright test && npm run test:composition && npm run test:configured-line && npm run check:line-integrations && npm run test:line-integrations",
     "dev:showcase": "npm run build && vite examples/chart --host 127.0.0.1 --port 4873 --open /showcase.html",
     "test:composition": "playwright test --config playwright.composition.config.mjs",
     "check:line-integrations": "node scripts/check-line-integrations.mjs",
