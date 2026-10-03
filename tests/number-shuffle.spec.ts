@@ -14,10 +14,12 @@ test("rolling digits reserve the full text line height", async ({ page }) => {
   await page.goto(route);
   await page.getByLabel("Shuffle values").check();
   const digit = valueRow(page.locator('[data-direct="true"]'), "count")
-    .locator('[data-kind-ui="tooltip-digit"]').first();
+    .locator('[data-kind-ui="tooltip-digit"]')
+    .first();
   const dimensions = await digit.evaluate((node) => ({
     slot: node.getBoundingClientRect().height,
-    row: node.querySelector('[data-kind-ui="tooltip-digit-reel"] > span')!.getBoundingClientRect().height,
+    row: node.querySelector('[data-kind-ui="tooltip-digit-reel"] > span')!.getBoundingClientRect()
+      .height,
     line: Number.parseFloat(getComputedStyle(node).lineHeight),
   }));
   expect(Math.abs(dimensions.slot - dimensions.line)).toBeLessThan(1);
