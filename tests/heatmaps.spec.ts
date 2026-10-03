@@ -147,8 +147,8 @@ test("desktop and phone visual evidence with motion enabled and reduced-motion s
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.addInitScript(() => {
     const sample = () => {
-      const node = document.querySelector('[data-kind-ui="heatmap-entrance"]');
-      if (node && new DOMMatrixReadOnly(getComputedStyle(node).transform).m42 > 0)
+      const node = document.querySelector('[data-kind-ui="heatmap-cell-entrance"]');
+      if (node && Number(getComputedStyle(node).opacity) < 1)
         document.documentElement.dataset.heatmapMoved = "yes";
       if (performance.now() < 1500) requestAnimationFrame(sample);
     };
@@ -225,17 +225,47 @@ test("removed focused row has a valid tab reentry and custom missing foreground"
   await expect(missing.locator("span")).toHaveCSS("color", "rgb(255, 255, 255)");
 });
 
-test("live reduced motion cancels an active entrance immediately", async ({ page }) => {
+test("diagonal cell entrance keeps native table geometry and reduced motion snaps immediately", async ({
+  page,
+}) => {
+  await page.clock.install();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/heatmaps.html", { waitUntil: "domcontentloaded" });
-  const entrance = page.locator('[data-kind-ui="heatmap-entrance"]').first();
+  const grid = page.getByRole("grid", { name: "Weekly latency" });
+  const cells = grid.getByRole("gridcell");
+  const bounds = await cells.evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const box = node.getBoundingClientRect();
+      return [box.x, box.y, box.width, box.height];
+    }),
+  );
+  await page.clock.runFor(100);
+  const alpha = await cells.evaluateAll((nodes) =>
+    nodes.map((node) => Number(getComputedStyle(node).opacity)),
+  );
+  expect(alpha[0]).toBeGreaterThan(alpha.at(-1) ?? 1);
+  expect(alpha.at(-1)).toBeLessThan(1);
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await expect
     .poll(() =>
-      entrance.evaluate((node) => new DOMMatrixReadOnly(getComputedStyle(node).transform).m42),
+      cells.evaluateAll((nodes) => nodes.every((node) => getComputedStyle(node).opacity === "1")),
     )
-    .toBeGreaterThan(0);
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(entrance).toHaveCSS("transform", "none", { timeout: 150 });
+    .toBe(true);
+  expect(
+    await cells.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const box = node.getBoundingClientRect();
+        return [box.x, box.y, box.width, box.height];
+      }),
+    ),
+  ).toEqual(bounds);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.clock.runFor(200);
+  expect(
+    await cells.evaluateAll((nodes) =>
+      nodes.every((node) => getComputedStyle(node).opacity === "1"),
+    ),
+  ).toBe(true);
 });
 
 test("long categories preserve equal rows and skewed signed legend stays readable", async ({
@@ -261,3 +291,46 @@ test("long categories preserve equal rows and skewed signed legend stays readabl
   const ramp = await legend.locator('[data-kind-ui="heatmap-ramp"]').boundingBox();
   expect((marker?.x ?? 0) - (ramp?.x ?? 0)).toBeCloseTo((ramp?.width ?? 0) / 101, 0);
 });
+
+for (const change of ["resize", "data", "domains"] as const) {
+  test(`heatmap diagonal reveal settles on ${change} and does not replay`, async ({ page }) => {
+    await page.clock.install();
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/heatmaps.html");
+    const cells = page.getByRole("grid", { name: "Weekly latency" }).getByRole("gridcell");
+    await page.clock.runFor(100);
+    expect(
+      await cells.evaluateAll((nodes) =>
+        nodes.some((node) => Number(getComputedStyle(node).opacity) < 1),
+      ),
+    ).toBe(true);
+    if (change === "resize") await page.setViewportSize({ width: 390, height: 844 });
+    else
+      await page
+        .getByRole("button", {
+          name: change === "data" ? "Update values" : "Reorder domains",
+          exact: true,
+        })
+        .evaluate((node) => (node as HTMLButtonElement).click());
+    await page.clock.runFor(50);
+    await expect
+      .poll(() =>
+        cells.evaluateAll((nodes) => nodes.every((node) => getComputedStyle(node).opacity === "1")),
+      )
+      .toBe(true);
+    if (change === "resize") await page.setViewportSize({ width: 1000, height: 900 });
+    else
+      await page
+        .getByRole("button", {
+          name: change === "data" ? "Update values" : "Reorder domains",
+          exact: true,
+        })
+        .evaluate((node) => (node as HTMLButtonElement).click());
+    await page.clock.runFor(150);
+    expect(
+      await cells.evaluateAll((nodes) =>
+        nodes.every((node) => getComputedStyle(node).opacity === "1"),
+      ),
+    ).toBe(true);
+  });
+}
