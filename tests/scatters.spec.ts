@@ -15,6 +15,13 @@ for (const phone of [false, true]) {
     });
     const signed = page.getByRole("application", { name: "Cost and quality change by team" });
     const coverage = page.getByRole("application", { name: "Coverage and adoption by region" });
+    const relationshipRoot = page.locator('[aria-labelledby="relationship-title"]');
+    await expect(
+      relationshipRoot.locator('[data-series="weekday"] [data-legend-shape]'),
+    ).toHaveAttribute("data-legend-shape", "circle");
+    await expect(
+      relationshipRoot.locator('[data-series="weekend"] [data-legend-shape]'),
+    ).toHaveAttribute("data-legend-shape", "diamond");
     await expect(relationship.locator(".recharts-scatter-symbol path:not(defs path)")).toHaveCount(
       11,
     );

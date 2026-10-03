@@ -23,6 +23,8 @@ import {
   type HeatmapModelOptions,
   type HeatmapScale,
 } from "./heatmap-model.js";
+import type { TooltipContentProps } from "./tooltip-content.js";
+import { TooltipNumber } from "./tooltip-number.js";
 
 export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
   HeatmapModelOptions & {
@@ -340,9 +342,11 @@ export function HeatmapGrid({
 
 export type HeatmapTooltipProps = Omit<ComponentPropsWithRef<"div">, "children" | "id"> & {
   Content?: ComponentType<HeatmapCellContentProps>;
+  /** Opt in for the built-in value only; Content keeps complete presentation ownership. */
+  valueAnimation?: TooltipContentProps["valueAnimation"];
 };
 /** In-flow tooltip stays within narrow containers and remains available for hover, focus and touch. */
-export function HeatmapTooltip({ Content, ...props }: HeatmapTooltipProps) {
+export function HeatmapTooltip({ Content, valueAnimation, ...props }: HeatmapTooltipProps) {
   const context = useHeatmap();
   useEffect(() => {
     context.setTooltipMounted(true);
@@ -372,6 +376,11 @@ export function HeatmapTooltip({ Content, ...props }: HeatmapTooltipProps) {
               cell.value === null ? context.missingLabel : context.formatValue(cell.value)
             }
           />
+        ) : valueAnimation === "shuffle" && cell.value !== null && Number.isFinite(cell.value) ? (
+          <>
+            {`${cell.row}, ${cell.column}: `}
+            <TooltipNumber value={context.formatValue(cell.value)} />
+          </>
         ) : (
           labelOf(cell, context)
         )

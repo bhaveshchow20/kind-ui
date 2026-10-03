@@ -7,6 +7,9 @@
     "**/*.css"
   ],
   "license": "MIT",
+  "scripts": {
+    "prepack": "node ../../scripts/prepare-package.mjs"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

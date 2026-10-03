@@ -3,7 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "Kind UI — Charts with character",
+  title: "Kind UI Charts",
   description: "Explore Kind UI's React line, area and bar charts. Play with materials, palettes and motion in the live component showcase.",
   icons: {
     icon: [

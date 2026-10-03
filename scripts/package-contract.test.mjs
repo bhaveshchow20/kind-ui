@@ -16,6 +16,22 @@ const files = [
 ];
 
 test("accepts the declared packed contract", () => assertPackageContract(manifest, files));
+test("requires runtime and declarations for every source module", () => {
+  const sources = ["index.ts", "nested/series.tsx"];
+  const complete = [...files, "dist/nested/series.js", "dist/nested/series.d.ts"];
+  assertPackageContract(manifest, complete, sources);
+  for (const missing of ["dist/nested/series.js", "dist/nested/series.d.ts"]) {
+    assert.throws(
+      () =>
+        assertPackageContract(
+          manifest,
+          complete.filter((file) => file !== missing),
+          sources,
+        ),
+      /Missing packed file/,
+    );
+  }
+});
 for (const missing of [
   "dist/index.js",
   "dist/index.d.ts",

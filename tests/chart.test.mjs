@@ -4,6 +4,40 @@ import * as Chart from "@kind-ui/charts";
 import { Legend, Root, TooltipContent } from "@kind-ui/charts";
 import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
+import { ScatterChart as NativeScatterChart, Scatter, XAxis, YAxis } from "recharts";
+
+test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a data alternative", () => {
+  const axes = [
+    h(XAxis, { key: "x", type: "number", dataKey: "x" }),
+    h(YAxis, { key: "y", type: "number", dataKey: "y" }),
+  ];
+  const data = [{ x: 1, y: 2 }];
+  const native = render(
+    h(
+      NativeScatterChart,
+      { width: 320, height: 240 },
+      ...axes,
+      h(Scatter, { data, isAnimationActive: false }),
+    ),
+  );
+  const kind = render(
+    h(
+      Root,
+      { config: { points: { label: "Points", color: "#123456" } } },
+      h(
+        Chart.ScatterChart,
+        { width: 320, height: 240, animate: false },
+        ...axes,
+        h(Chart.ScatterSeries, { data, seriesKey: "points" }),
+      ),
+    ),
+  );
+  for (const html of [native, kind]) {
+    assert.match(html, /recharts-wrapper/);
+    assert.match(html, /width:320px;height:240px/);
+    assert.doesNotMatch(html, /<svg|recharts-scatter-symbol|<path/);
+  }
+});
 
 test("direct and namespace imports expose the same public components", () => {
   assert.deepEqual(Object.keys(Chart).sort(), [
@@ -100,6 +134,33 @@ test("zero uses the series formatter; null and undefined remain missing", () => 
   assert.doesNotMatch(content([entry(undefined)]), /data-kind-ui="chart-tooltip"/);
   assert.match(content([entry(null), entry(0, { graphicalItemId: "other" })]), /No data/);
   assert.doesNotMatch(content([entry(null)]), /null tasks/);
+});
+
+test("optional numeric shuffle preserves exact SSR/default text and arbitrary formatter nodes", () => {
+  for (const Content of [Chart.TooltipContent, Chart.ScatterTooltipContent]) {
+    for (const value of [0, -12.5, 0.125, null, Number.NaN, Number.POSITIVE_INFINITY]) {
+      const props = { tooltip: tooltip([entry(value), entry(2, { graphicalItemId: "other" })]) };
+      const plain = render(h(Root, { config }, h(Content, props)));
+      const shuffle = render(
+        h(Root, { config }, h(Content, { ...props, valueAnimation: "shuffle" })),
+      );
+      assert.equal(
+        shuffle,
+        plain,
+        "SSR's reduced-motion snapshot must preserve exact final output",
+      );
+      assert.doesNotMatch(plain, /tooltip-number|valueAnimation/);
+    }
+    const props = {
+      tooltip: tooltip([entry(12)], {
+        formatter: () => [h("em", { "data-custom": "value" }, "Twelve"), "Custom"],
+      }),
+      valueAnimation: "shuffle",
+    };
+    const html = render(h(Root, { config }, h(Content, props)));
+    assert.match(html, /<em data-custom="value">Twelve<\/em>/);
+    assert.doesNotMatch(html, /tooltip-number|valueAnimation/);
+  }
 });
 test("upstream formatter, tuple label and label formatter remain usable", () => {
   const html = content([entry(0)], {
@@ -1111,5 +1172,37 @@ test("heatmap materials decorate measured cells only and retain custom content/s
     assert.match(markup, /<b>0<\/b>/);
     assert.match(markup, /aria-label="A, Y: Missing"/);
     assert.doesNotMatch(markup, / material=/);
+  }
+});
+
+test("explicit native legend symbols retain icon/children priority and square fallback", () => {
+  for (const shape of ["circle", "cross", "diamond", "square", "star", "triangle", "wye"]) {
+    const symbolConfig = { count: { ...config.count, legendShape: shape } };
+    const html = render(h(Root, { config: symbolConfig }, h(Legend)));
+    assert.match(html, new RegExp(`data-legend-shape="${shape}"`));
+    assert.match(html, /aria-hidden="true" focusable="false"/);
+    assert.match(html, /<path[^>]*d="M/);
+    const fallback = render(h(Root, { config: symbolConfig }, h(Legend, { hideIcon: true })));
+    assert.doesNotMatch(fallback, /data-legend-shape|<svg/);
+    assert.match(fallback, /chart-indicator/);
+    const icon = render(
+      h(Root, { config: { count: { ...symbolConfig.count, icon: Icon } } }, h(Legend)),
+    );
+    assert.match(icon, /data-icon="task"/);
+    assert.doesNotMatch(icon, /data-legend-shape/);
+    const custom = render(
+      h(
+        Root,
+        { config: symbolConfig },
+        h(Legend, {}, ({ label }) => h("span", { "data-custom-marker": true }, label)),
+      ),
+    );
+    assert.match(custom, /data-custom-marker/);
+    assert.doesNotMatch(custom, /data-legend-shape/);
+    const tooltipHtml = render(
+      h(Root, { config: symbolConfig }, h(TooltipContent, { tooltip: tooltip([entry(0)]) })),
+    );
+    assert.doesNotMatch(tooltipHtml, /data-legend-shape|<svg/);
+    assert.match(tooltipHtml, /data-indicator="line"/);
   }
 });

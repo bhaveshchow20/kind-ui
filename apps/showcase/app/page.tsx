@@ -23,7 +23,7 @@ type Material = "plain" | "paper" | "clay" | "glow";
 type Family = "All" | "Line" | "Area" | "Bar" | "Combo" | "Pie" | "Radar" | "Radial" | "Scatter" | "Heatmap" | "Waterfall" | "Sankey";
 const families: Family[] = ["All","Line","Area","Bar","Combo","Pie","Radar","Radial","Scatter","Heatmap","Waterfall","Sankey"];
 const repo = "https://github.com/bhaveshchow20/kind-ui";
-const palettes = { Pastel: ["#91a8e7", "#dda0b9", "#89bfb0"], Ink: ["#25252b", "#75757f", "#b0b0bb"], Neon: ["#733bff", "#119548", "#f22e79"] };
+const palettes = { Neon: ["#733bff", "#119548", "#f22e79"], Ink: ["#25252b", "#75757f", "#b0b0bb"], Pastel: ["#91a8e7", "#dda0b9", "#89bfb0"] };
 const darkPalettes = { Pastel: ["#a9b9f3", "#f0b5cf", "#9ad8c4"], Ink: ["#efeff2", "#a6a6b3", "#666675"], Neon: ["#b28aff", "#a3ff57", "#ff65b2"] };
 type Palette = keyof typeof palettes | "Custom";
 const recipes = [
@@ -32,7 +32,7 @@ const recipes = [
   { id: "area", family: "Area", title: "Room to grow", subtitle: "Monthly recurring revenue", stat: "$96", note: "The shape of steady growth", tag: "Recurring revenue", keys: ["a"], context: "Subscription revenue, Jan–Aug. Monthly recurring revenue increased from $42k to $96k." },
   { id: "bars", family: "Bar", title: "Make every month count", subtitle: "Orders fulfilled", stat: "495", note: "A strong finish to summer", tag: "Orders fulfilled", keys: ["a"], context: "Store orders, Jan–Aug. Fulfilment reached 980 orders in August after a softer March." },
   { id: "stacked", family: "Area", title: "The whole, in parts", subtitle: "Sessions by device", stat: "201", note: "Desktop, mobile & tablet", tag: "Sessions by device", keys: ["a", "b", "c"], context: "Product sessions, Jan–Aug. See how desktop, mobile, and tablet contribute to total usage." },
-  { id: "grouped", family: "Bar", title: "Side by side", subtitle: "New vs. returning customers", stat: "159", note: "August customer activity", tag: "New & returning customers", keys: ["a", "b"], context: "New and returning customers, Jan–Aug. 76 of August’s 159 customers are returning." },
+  { id: "grouped", family: "Bar", title: "Side by side", subtitle: "New vs. returning customers", stat: "159", note: "August customer activity", tag: "New & returning customers", keys: ["a", "b"], context: "New and returning customers, Jan–Aug. Hover a month to focus both customer groups." },
   { id: "steps", family: "Line", title: "One step at a time", subtitle: "Capacity added", stat: "96 units", note: "Growth happens in steps", tag: "Team capacity", keys: ["a"], context: "Available team seats, Jan–Aug. Capacity grows in discrete batches as new seats are purchased." },
   { id: "horizontal", family: "Bar", title: "A different perspective", subtitle: "Campaign conversions", stat: "96", note: "August leads the pack", tag: "Campaign leads", keys: ["a"], context: "June campaign leads. Compare six channels; email generated the most qualified leads." },
   { id: "signed", family: "Bar", title: "The ups and the downs", subtitle: "Net subscriber change", stat: "+170", note: "Every change deserves context", tag: "Subscriber growth", keys: ["a"], context: "Net subscriber changes, Jan–Aug. Gains and cancellations add up to 170 net new subscribers." },
@@ -76,11 +76,11 @@ const config: Chart.SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.
 export function Example() {
   const [visible, setVisible] = useState<string[]>(${JSON.stringify(r.keys)});
   return (
-    <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}
+    <Chart.Root emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}
       style={{ border: 0, padding: 0, background: "transparent" }}>
       <div style={{ height: 240, width: "100%" }}>
         <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <Chart.${family}Chart data={data} animate={${animate}} layout="${horizontal ? "vertical" : "horizontal"}"
+          <Chart.${family}Chart data={data} animate={${animate}} layout="${horizontal ? "vertical" : "horizontal"}"${r.id === "grouped" ? ' emphasis="category"' : ""}
             accessibilityLayer aria-label="${r.subtitle}"
             margin={{ top: 20, right: 18, left: ${horizontal ? 12 : -20}, bottom: 0 }}>
             <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
@@ -95,7 +95,7 @@ export function Example() {
               </linearGradient>
             </defs>` : ''}
 ${series}
-            <Chart.Tooltip cursor={${family === "Bar" ? '{ fill: "#a4a8be", fillOpacity: .09 }' : '{ stroke: "#8d8e9b", strokeDasharray: "3 4" }'}} />
+            <Chart.Tooltip cursor={${family === "Bar" ? '{ fill: "#a4a8be", fillOpacity: .09 }' : '{ stroke: "#8d8e9b", strokeDasharray: "3 4" }'}} valueAnimation={animate ? "shuffle" : undefined} />
           </Chart.${family}Chart>
         </Chart.ResponsiveContainer>
       </div>
@@ -114,20 +114,22 @@ function ChartCard({ r, material, colors, animate, replay }: { r: Recipe; materi
  const ChartComponent = r.family === "Line" ? Chart.LineChart : r.family === "Area" ? Chart.AreaChart : Chart.BarChart;
  const horizontal = r.id === "horizontal";
  const code = snippet(r,material,colors,animate);
- async function copyCode() { try { await navigator.clipboard.writeText(code); setCopied(true); setTimeout(()=>setCopied(false),1800); } catch { setCopied(false); } }
- return <motion.article initial={reduceMotion ? false : {opacity:0,y:14}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:0.12}} transition={{duration:0.5,ease:"easeOut"}} className={`chart-card ${r.id === 'multi' ? 'tinted' : ''}`}>
-   <div className="card-top"><h3 className="chart-tag">{r.tag}</h3><div className="card-code-actions"><Button variant="ghost" size="icon-sm" onClick={copyCode} aria-label={`Copy code for ${r.tag}`} title={copied ? "Copied" : "Copy code"}>{copied ? <Check/> : <Copy/>}</Button><span className="action-divider"/><Dialog><DialogTrigger asChild><Button variant="outline" size="sm" aria-label="View chart code">Code</Button></DialogTrigger><DialogContent className="code-dialog"><DialogTitle className="sr-only">{r.tag} code</DialogTitle><DialogDescription className="sr-only">A complete TSX example using Kind UI with the current finish, palette and motion settings.</DialogDescription><div className="code-block-header"><span className="code-file"><span className="typescript-badge">TS</span>chart-{r.id}.tsx</span><Button variant="ghost" size="icon-sm" onClick={copyCode} aria-label="Copy code" title={copied ? "Copied" : "Copy code"}>{copied ? <Check/> : <Copy/>}</Button></div><CodeBlock code={code}/><div className="code-block-note sr-only">Requires the built @kind-ui/charts workspace package.</div></DialogContent></Dialog></div></div>
-   <Chart.Root className="chart-root" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
-    <div className="chart-canvas"><Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-    <ChartComponent key={replay} data={chartData} animate={animate} layout={horizontal ? "vertical" : "horizontal"} accessibilityLayer aria-label={r.subtitle} margin={{top:20,right:18,left:horizontal?12:-20,bottom:0}}>
+ const chartChildren = <>
      <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5"/>
      <Chart.XAxis dataKey={horizontal?undefined:"month"} type={horizontal?"number":"category"} tickLine={false} axisLine={false} tick={{fontSize:12,fill:"var(--chart-axis)"}} tickMargin={10}/>
      <Chart.YAxis dataKey={horizontal?"month":undefined} type={horizontal?"category":"number"} tickLine={false} axisLine={false} tick={{fontSize:12,fill:"var(--chart-axis)"}} width={horizontal?80:55}/>
      {r.id === "signed" && <Chart.ReferenceLine y={0} stroke="var(--chart-axis)"/>}
      {r.id === "area" && <defs><linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={colors[0]} stopOpacity={0.48}/><stop offset="100%" stopColor={colors[0]} stopOpacity={0.03}/></linearGradient></defs>}
      {r.keys.map((k,i) => r.family === "Line" ? <Chart.LineSeries key={k} dataKey={k} type={r.id === "steps" ? "stepAfter" : "monotone"} dot={false} strokeWidth={material === "clay" ? 5 : 3} material={material}/> : r.family === "Area" ? <Chart.AreaSeries key={k} dataKey={k} type="monotone" material={material} stackId={r.id === "stacked" ? "devices" : undefined} fill={r.id === "area" ? "url(#area-fill)" : colors[i]} fillOpacity={r.id === "area" ? 1 : .5} strokeWidth={2.5}/> : <Chart.BarSeries key={k} dataKey={k} material={material} radius={5} maxBarSize={horizontal?18:35}/>)}
-     <Chart.Tooltip cursor={r.family === "Bar" ? {fill:"#a4a8be",fillOpacity:.09} : {stroke:"#8d8e9b",strokeDasharray:"3 4"}}/>
-    </ChartComponent></Chart.ResponsiveContainer></div>
+     <Chart.Tooltip cursor={r.family === "Bar" ? {fill:"#a4a8be",fillOpacity:.09} : {stroke:"#8d8e9b",strokeDasharray:"3 4"}} valueAnimation={animate ? "shuffle" : undefined}/>
+    </>;
+ async function copyCode() { try { await navigator.clipboard.writeText(code); setCopied(true); setTimeout(()=>setCopied(false),1800); } catch { setCopied(false); } }
+ return <motion.article initial={reduceMotion ? false : {opacity:0,y:14}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:0.12}} transition={{duration:0.5,ease:"easeOut"}} className={`chart-card ${r.id === 'multi' ? 'tinted' : ''}`}>
+   <div className="card-top"><h3 className="chart-tag">{r.tag}</h3><div className="card-code-actions"><Button variant="ghost" size="icon-sm" onClick={copyCode} aria-label={`Copy code for ${r.tag}`} title={copied ? "Copied" : "Copy code"}>{copied ? <Check/> : <Copy/>}</Button><span className="action-divider"/><Dialog><DialogTrigger asChild><Button variant="outline" size="sm" aria-label="View chart code">Code</Button></DialogTrigger><DialogContent className="code-dialog"><DialogTitle className="sr-only">{r.tag} code</DialogTitle><DialogDescription className="sr-only">A complete TSX example using Kind UI with the current finish, palette and motion settings.</DialogDescription><div className="code-block-header"><span className="code-file"><span className="typescript-badge">TS</span>chart-{r.id}.tsx</span><Button variant="ghost" size="icon-sm" onClick={copyCode} aria-label="Copy code" title={copied ? "Copied" : "Copy code"}>{copied ? <Check/> : <Copy/>}</Button></div><CodeBlock code={code}/><div className="code-block-note sr-only">Requires the built @kind-ui/charts workspace package.</div></DialogContent></Dialog></div></div>
+   <Chart.Root className="chart-root" emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+    <div className="chart-canvas"><Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+     {r.family === "Bar" ? <Chart.BarChart key={replay} data={chartData} emphasis={r.id === "grouped" ? "category" : "none"} animate={animate} layout={horizontal ? "vertical" : "horizontal"} accessibilityLayer aria-label={r.subtitle} margin={{top:20,right:18,left:horizontal?12:-20,bottom:0}}>{chartChildren}</Chart.BarChart> : <ChartComponent key={replay} data={chartData} animate={animate} layout="horizontal" accessibilityLayer aria-label={r.subtitle} margin={{top:20,right:18,left:-20,bottom:0}}>{chartChildren}</ChartComponent>}
+    </Chart.ResponsiveContainer></div>
     <Chart.Legend aria-label={`Visible series for ${r.tag}`}/>
    </Chart.Root>
    {!visible.length && <p className="all-hidden" role="status">All series hidden. Select a legend item to show it.</p>}
@@ -152,7 +154,7 @@ export default function Page() {
  const controlMotionId=useId();
  const [family, setFamily] = useState<Family>("All");
  const [material, setMaterial] = useState<Material>("plain");
- const [palette, setPalette] = useState<Palette>("Pastel");
+ const [palette, setPalette] = useState<Palette>("Neon");
  const [customColors, setCustomColors] = useState<string[]>([...palettes.Pastel]);
  const [hasCustom, setHasCustom] = useState(false);
  const [paletteEditor, setPaletteEditor] = useState(false);

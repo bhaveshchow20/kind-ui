@@ -258,7 +258,6 @@ test("bar tooltip retargets and settles mid-flight when reduced motion or explic
   await page.clock.runFor(1000);
   expect(await readX()).toBe(finalX);
   await expect(chart.getByRole("status")).toContainText("34 tasks");
-  await page.screenshot({ path: info.outputPath("bars-hover.png"), fullPage: true });
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await expect(page.locator("main")).toHaveAttribute("data-motion", "on");
   await page.mouse.move(start.x + start.width / 2, start.y + 10);
@@ -271,4 +270,6 @@ test("bar tooltip retargets and settles mid-flight when reduced motion or explic
     .evaluate((node) => (node as HTMLInputElement).click());
   await page.clock.runFor(32);
   expect(await readX()).toBeCloseTo(firstX, 1);
+  // Full-page capture can remount responsive charts; finish the stateful motion checks first.
+  await page.screenshot({ path: info.outputPath("bars-hover.png"), fullPage: true });
 });
