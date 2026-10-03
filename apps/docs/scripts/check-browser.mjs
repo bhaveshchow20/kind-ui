@@ -36,7 +36,7 @@ try {
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")));
   assert.deepEqual(
     links.filter((url) => url.startsWith("/docs/components/")),
-    ["/docs/components/line"],
+    ["/docs/components/line/"],
   );
   const curve = page.locator('[data-component="line-smooth"]');
   await curve.getByRole("combobox", { name: "Curve" }).click();
@@ -81,7 +81,11 @@ try {
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "200%";
   });
-  await page.waitForTimeout(500);
+  await page.waitForFunction(
+    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 2,
+    null,
+    { timeout: 3000 },
+  );
   assert.ok(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 2,
