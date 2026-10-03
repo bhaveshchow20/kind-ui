@@ -49,20 +49,17 @@ function RollingNumber({ text }: { text: string }) {
   useLayoutEffect(() => {
     const node = final.current;
     if (!node) return;
-    let controls: ReturnType<typeof animate> | undefined;
     const measure = () => {
       const next = node.getBoundingClientRect().width;
       if (next <= widest.current) return;
-      controls?.stop();
-      if (widest.current === 0) width.set(next);
-      else controls = animate(width, next, { duration: 0.16, ease: "easeOut" });
+      // Retain the widest value without revealing it through a clipping width.
+      width.set(next);
       widest.current = next;
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => {
-      controls?.stop();
       observer.disconnect();
     };
   }, [width]);

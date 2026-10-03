@@ -157,6 +157,7 @@
   :where([data-kind-ui="tooltip-number"]) {
     display: inline-block;
     position: relative;
+    min-width: max-content;
     overflow: clip;
     vertical-align: bottom;
     white-space: pre;
