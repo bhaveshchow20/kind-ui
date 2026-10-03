@@ -73,6 +73,20 @@
     background: currentColor;
   }
 
+  :where([data-kind-ui="chart-indicator"][data-legend-shape]) {
+    width: 12px;
+    height: 12px;
+    background: none;
+    fill: var(--kind-ui-chart-indicator-color, currentColor);
+  }
+
+  :where(
+    [data-kind-ui="chart-legend-button"][aria-pressed="false"]
+      [data-kind-ui="chart-indicator"][data-legend-shape]
+  ) {
+    fill: currentColor;
+  }
+
   :where([data-kind-ui="chart-tooltip"]) {
     padding: 6px 8px;
     background: var(--kind-ui-chart-popover, var(--popover, Canvas));
