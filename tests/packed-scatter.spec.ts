@@ -164,7 +164,7 @@ test("packed entrance fades actual native marks and interruptions settle without
   await page
     .getByRole("button", { name: "Animate", exact: true })
     .evaluate((node) => (node as HTMLButtonElement).click());
-  await page.clock.runFor(100);
+  await page.clock.runFor(500);
   const opacity = await fade.evaluate((node) => Number(getComputedStyle(node).opacity));
   expect(opacity).toBeGreaterThan(0);
   expect(opacity).toBeLessThan(1);

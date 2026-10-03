@@ -149,8 +149,11 @@ for (const strict of [false, true]) {
   test(`radial and radar Motion entrance resumes effect replay (StrictMode=${strict})`, async ({
     page,
   }) => {
+    await page.clock.install();
+    await page.clock.pauseAt(new Date(Date.now() + 1000));
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(`http://127.0.0.1:4178/?motion${strict ? "&strict" : ""}`);
+    await page.clock.runFor(100);
     for (const kind of ["radar", "radial-bar"]) {
       const mark = page.locator(`[data-kind-ui="${kind}-reveal"]`).first();
       if (kind === "radar") await expect.poll(() => opacity(mark)).toBeLessThan(0.95);
