@@ -1,0 +1,27 @@
+---
+title: Identity and visibility
+description: Separate measured values, metadata identity, category filtering and transient emphasis.
+---
+
+| Name | Job | Example |
+| --- | --- | --- |
+| `dataKey` | Read a measured field or native accessor | Combo `volume`; pie `hours`; scatter axis `x` |
+| `seriesKey` | Identify Root metadata and controlled series visibility | Explicit scatter `weekday`; explicit identity for a function key |
+| `Root.config` | Label/color/formatter/icon for an identity | `volume: { label: "Completed", color: "#733bff" }` |
+| `visibleSeries` and callback | Controlled identities and update request | A legend requests a new included list |
+| `Tooltip.itemKey` | Resolve native payload metadata | A pie payload's category `id` |
+| `emphasisKey` | Stable datum identity where supported | A maintained bar category key |
+
+## Series visibility
+
+A string Cartesian `dataKey` usually doubles as metadata identity. A function or numeric key needs an explicit `seriesKey` for controlled visibility. Each config entry appears in the legend; do not put scatter axis dimensions in config unless they should become legend items.
+
+## Category visibility
+
+Pie uses the same `hours` magnitude key for every category. `Root` does not rewrite pie data. The [filtered donut](/docs/components/donut/) applies the visible category list to rows, produces Cells from those rows, and calculates the included total from that same array.
+
+## Emphasis
+
+Emphasis changes attention temporarily. It does not remove a record, change a value or recompute a total. Root defaults to `emphasis="auto"`, but participation is family-specific. Pie uses semantic sectors; bar category emphasis needs an eligible plot and explicit BarChart opt-in. Other families preserve inspection or require an explicit mark adapter.
+
+`Legend emphasis="series"` is opt-in and requires participating marks or an adapter. An emphasized legend item does not imply automatic mark support in every family.

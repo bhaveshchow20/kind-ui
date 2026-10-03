@@ -1,0 +1,18 @@
+---
+title: Heatmap
+description: Compare signed latency changes on a fixed numeric scale.
+---
+
+<ComponentPlayground id="heatmap" />
+
+## How it works
+
+Heatmap uses its own HTML grid/table context outside `Chart.Root`. The caller supplies five service rows, five region columns and all 25 coordinates. A fixed −20 to +20 diverging scale expresses signed latency changes; all 25 measurements are present, and measured zero stays neutral.
+
+The curated grid uses Plain cells. When composing Paper, it decorates only the outer 8% rim on each side; the central 84% by 84% remains the opaque encoded color. Missing cells retain their pattern without a finish. Numeric fills do not participate in automatic category paint emphasis. The native grid scrolls on narrow screens and provides arrow-key navigation.
+
+## Reference
+
+<ApiTable name="HeatmapChart" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.

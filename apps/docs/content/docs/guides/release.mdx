@@ -1,0 +1,24 @@
+---
+title: Package and release status
+description: Understand the private local artifact, validation evidence and first-release boundary.
+---
+
+Kind UI is pre-release and unpublished. `@kind-ui/charts` remains `private: true` at `0.0.0`; CI performs checks and does not publish. The docs preview is a separate private Site. A Site URL or generated agent endpoint does not establish anonymous access or a public npm package.
+
+The current docs package source is <PackageSource />. The served [provenance JSON](/package-provenance.json) records the actual installed source commit, SHA-256 and npm integrity. Complete example downloads retain the pinned local tarball. Check provenance when reproducing a result; `0.0.0` alone does not distinguish private snapshots. Glass is paused and unmerged.
+
+## Preparing a local candidate
+
+From an installed source checkout, `npm pack --workspace @kind-ui/charts` runs a guard that removes stale output, rebuilds and checks the runtime modules, declarations, CSS, license and README. Do not use `--ignore-scripts` for candidate preparation.
+
+`npm run pack:artifact` runs the isolated consumer gate and, after success, retains the exact tested `artifacts/package/kind-ui-charts-0.0.0.tgz` with `validated-artifact.json`. That metadata includes filename, SHA-256 and npm integrity. Rerunning removes the previous candidate. Compare the checksum before a handoff; any source, manifest or version change requires a newly prepared and tested artifact.
+
+These local commands do not publish. The package gate proves ESM imports and strict NodeNext/Bundler declaration resolution through a packed consumer at pinned peers. It does not establish CommonJS, SSR hydration, all framework/browser versions or release authorization. Run the required aggregate checks as well before proposing release readiness.
+
+## Before the first public release
+
+The owner must explicitly decide the package set, supported environments, namespace ownership, security-reporting route and release authorization. Release tooling belongs in a separate reviewed setup change. Until then, document compatibility and user-visible changes in the PR rather than maintaining fictional release notes.
+
+The intended future policy is semantic versioning per independently versioned package. After release tooling is adopted, user-facing package changes need a reviewed changeset and compatibility decision, including the pre-1.0 breaking-change policy. Documentation, CI and development-only changes need no package release. Passing CI does not authorize publishing or merging.
+
+Read the source snapshot's [contribution workflow](https://github.com/bhaveshchow20/kind-ui/blob/aa7fe56b167554115555b13a1408fd4fecab8e90/CONTRIBUTING.md) and [development policy](https://github.com/bhaveshchow20/kind-ui/blob/aa7fe56b167554115555b13a1408fd4fecab8e90/docs/development.md) for the authoritative repository process.

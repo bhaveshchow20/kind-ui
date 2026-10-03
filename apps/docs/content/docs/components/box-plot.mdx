@@ -1,0 +1,18 @@
+---
+title: Box Plot
+description: Render supplied summaries without choosing a statistical convention.
+---
+
+<ComponentPlayground id="box-plot" />
+
+## How it works
+
+The caller supplies Q1, median, Q3, whiskers and optional outliers. `boxPlotExtent` helps choose a native axis domain that includes them. The package does not compute quartiles or decide an outlier rule.
+
+The curated composition compares supplied latency summaries for Search, Checkout and Profile in milliseconds, with Paper boxes and explicit outliers. The table exposes every supplied statistic. Equal statistics, signed values, missing summaries and horizontal composition are separate API capabilities; see the [data helpers](/docs/reference/data/).
+
+## Reference
+
+<ApiTable name="BoxPlotSeries" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.

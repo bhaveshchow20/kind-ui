@@ -1,0 +1,31 @@
+---
+title: Contributing
+description: Make focused, verifiable changes to the pre-release package and its consumers.
+---
+
+The source repository's [CONTRIBUTING.md](https://github.com/bhaveshchow20/kind-ui/blob/aa7fe56b167554115555b13a1408fd4fecab8e90/CONTRIBUTING.md) and [AGENTS.md](https://github.com/bhaveshchow20/kind-ui/blob/aa7fe56b167554115555b13a1408fd4fecab8e90/AGENTS.md) are authoritative. The public README describes component contracts. Kind UI uses an open-source contribution workflow while remaining private at `0.0.0`; no guaranteed review or support turnaround is promised.
+
+## A focused implementation
+
+Read the README and development direction, then use Node 22.12+ and npm 11.9 with the checked-in lockfile. Create one branch for one agreed purpose. Discuss a new public API, dependency or cross-package abstraction before implementing it. Keep geometry, axes, data and visibility state consumer-owned; compose established libraries through explicit public exports.
+
+Changes should have concrete behavior and focused evidence. For a runtime fix, add a regression through exported APIs and the affected packed-consumer path. Public API changes need a compatibility decision. Generated output, dependency folders, credentials, tarballs and build caches are not source contributions.
+
+```sh
+npm ci
+npm exec playwright install -- --with-deps chromium
+npm run format
+npm run check
+```
+
+The browser prerequisite may require administrator permission for Linux dependencies. Report exact passed, failed and unrun checks. The aggregate `check` covers lint, component tests, the packed-package gate and browser checks. `npm run typecheck` provides the strict TypeScript check; `npm run check:package` isolates the packing contract. Verification requires the public packed consumer, rather than only workspace source imports.
+
+Open a draft PR with the concrete problem, resulting behavior/API, relevant validation and known limits. For stacked work, target and link the immediately preceding branch/PR and describe the incremental change. Main requires a PR, passing Node 22/24 CI checks against its current base and resolved review conversations. A successful check is not permission to merge or publish.
+
+## Report a reproducible observation
+
+For a non-sensitive defect, include the source commit and artifact checksum, pinned peer versions, complete copied example, expected/observed behavior and commands. Include missing/zero data and native custom-renderer choices when relevant. Distinguish an import/packaging failure, an unclear instruction, a confirmed primitive behavior defect and a proposed convenience adapter.
+
+Treat website friction as a reproduced observation with page, viewport and steps. A difficult composition is not automatically a runtime defect or an established product-wide limitation. The [troubleshooting guide](/docs/guides/troubleshooting/) provides first checks.
+
+Use the repository's issue forms and Code of Conduct for participation. Follow [SECURITY.md](https://github.com/bhaveshchow20/kind-ui/blob/aa7fe56b167554115555b13a1408fd4fecab8e90/SECURITY.md) for security concerns. CodeRabbit configuration alone does not establish that its GitHub app has access or a review ran; inspect actual review and CI results. Release credentials, publication, deployment, merges and access changes require their separate authorization under the [release policy](/docs/guides/release/).

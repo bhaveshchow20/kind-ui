@@ -1,0 +1,70 @@
+---
+title: Data contracts
+description: Explicit statistical, flow and grid data without inferred geometry or fabricated values.
+---
+
+Hosts validate ordinary native-series data and choose units, categories, domains and missing-value meaning. The focused helpers below make bounded family semantics explicit. They are available from the public root module; no source import is required. Use immutable data updates. Zero is a value; missing data is not silently coerced to zero.
+
+## Histogram intervals and audit
+
+<ApiTable name="HistogramBin" />
+
+<ApiTable name="HistogramAudit" />
+
+`binHistogram(samples, edges)` accepts number/null/undefined samples and explicit finite, strictly increasing edges. Intervals include the lower bound and exclude the upper, except that the last upper edge is included. It returns every interval, including zero counts, and separate accepted/missing/nonfinite/out-of-range totals. It does not infer edges, coerce samples, weight observations or choose a statistical estimator.
+
+Pre-binned bounds must be finite, ordered and nonoverlapping, with finite positive widths. Counts are nonnegative safe integers. Gaps remain quantitative space. `measure="density"` uses count / total count / bin width, so positive-total area sums to one; all-zero counts produce zero density. Report discarded samples and label density in reciprocal input units. The [Histogram family contract](/docs/reference/families/#histogram) describes its axis and shape bounds.
+
+## Caller-computed box summaries
+
+<ApiTable name="BoxPlotSummary" />
+
+`validateBoxPlotSummary(value)` accepts `null`/`undefined` as missing and validates present summaries. Finite statistics must satisfy lower whisker ≤ q1 ≤ median ≤ q3 ≤ upper whisker. Every outlier is finite and strictly outside the supplied whiskers; duplicates remain data. Equal statistics, zero and negative values are valid. Invalid present input throws.
+
+`boxPlotExtent(summary)` includes all supplied outliers. The caller chooses the quartile estimator and whisker/fence convention; Kind does not ingest samples, classify outliers or manufacture a minimum IQR. Use an original-summary tooltip and table for the full values.
+
+## Waterfall arithmetic
+
+`computeWaterfallData(entries, initialBalance = 0)` accepts explicit unique IDs and labels with these kinds:
+
+| Kind | Value | Meaning |
+| --- | --- | --- |
+| `start`, `total`, `end` | Finite number or `null` | Supplied checkpoint; draw zero to value and establish the balance |
+| `delta` | Finite signed number or `null` | Change the previous known balance |
+| `subtotal` | No supplied value | Draw the current balance without adding it again |
+
+<ApiTable name="WaterfallDatum" />
+
+Pass `null` as the helper's second argument when the opening balance is unknown. A missing change makes later geometry unknown until a known checkpoint restores it; later original values remain available. A zero delta has equal endpoints and no fabricated minimum height. A checkpoint can intentionally differ from the preceding balance. `end` means a supplied checkpoint rather than an inferred final sum.
+
+Malformed kinds/IDs, nonfinite values, supplied subtotal values and arithmetic overflow throw. The helper returns fresh ordered rows without mutating entries. Connector geometry uses only adjacent known balances that agree.
+
+## Sankey flow identity
+
+<ApiTable name="SankeyFlowNode" />
+
+<ApiTable name="SankeyFlowLink" />
+
+Supply `{ nodes, links }` as `SankeyFlowData`. Node IDs and link IDs are unique nonempty strings; node names are strings. Link source/target can be node IDs or integer array indices. Numeric-looking strings mean IDs. Values are finite and nonnegative.
+
+`prepareSankeyData(data)` validates and copies the whole graph, including zero flows, into native numeric endpoints. It rejects cycles, bad identities/endpoints, missing/negative/nonfinite quantities and overflowing totals. Internal nodes with incoming and outgoing flows must balance to relative tolerance `1e-9`; express loss/gain as explicit edges. Boundary sources and sinks do not need a matching counterpart. No flow is inferred, aggregated or normalized.
+
+The chart also enforces native layout limits separately from semantic validation. In particular, equal-value parallel positive links cannot be rendered faithfully by the pinned engine and throw rather than merge. Zero links remain in `SankeyTable`; isolated-node metadata may require a separate host table. Use IDs to connect table and diagram inspection.
+
+## Heatmap coordinates and scale
+
+<ApiTable name="HeatmapDatum" />
+
+<ApiTable name="HeatmapScaleOptions" />
+
+`createHeatmapModel({ rows, columns, data, duplicates })` requires explicit ordered unique row/column strings. Unknown coordinates, duplicate domain entries and undefined/nonfinite values throw. Absent records and `null` are missing; measured zero stays zero. The result retains all input records at a coordinate in each cell's `sources`.
+
+| Duplicate policy | Resolved value |
+| --- | --- |
+| `error` (default) | Reject duplicate coordinates |
+| `first` / `last` | Keep the selected record, including `null` |
+| `sum` | Add finite values, ignore null when numbers exist; all-null stays missing |
+
+`createHeatmapScale({ domain, colors })` requires finite ascending endpoints and at least two opaque `#rrggbb` colors. A constant domain uses the palette midpoint. Stops interpolate evenly in sRGB; values outside the explicit domain clamp to the endpoints. The host labels clamping, selects an appropriate sequential/diverging palette and decides whether updates should share a comparable domain. Kind does not auto-rescale or infer categories.
+
+See [accessibility and data alternatives](/docs/guides/accessibility/) for complete records that native marks or inspection cannot reach.

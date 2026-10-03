@@ -1,0 +1,38 @@
+---
+title: Accessibility and motion
+description: Label quantitative meaning and provide complete data access beyond native chart inspection.
+---
+
+Give each chart a meaningful accessible name, describe its units and comparison, and expose the records through a table, list or summary appropriate to the task. Native SVG inspection and a tooltip do not provide every value in every family. Hosts own the accessible data alternative, loading/error/empty states and filtering meaning. The maintained Sankey and Heatmap tables help with their bounded contracts.
+
+## Native inspection limits
+
+| Composition | Access and limitation |
+| --- | --- |
+| Line / Area / Bar / Combo | Recharts owns category keyboard selection; use native `accessibilityLayer` where applicable and a complete data alternative |
+| Pie / Donut | Zero/missing categories can lack visible sectors; keep their meaning and values in a table/list |
+| Scatter / Bubble | Native arrows visit points in the first registered series in data order, rather than spatially across all series; overlapping points and other series need a complete alternative |
+| Radar / Radial bar | Native polar inspection does not establish complete access to all custom marks, labels or series; provide full values separately |
+| Histogram | Zero-height bins have no pointer hit target; keyboard selection and a table retain every interval/count |
+| Box plot | Native selection reports an enclosing range; custom tooltip/table must expose the caller's quartiles, whiskers and outliers; null rows have no numeric tooltip |
+| Waterfall | Expose original values, known/unknown balances and checkpoint meanings separately from range endpoints |
+| Sankey | Use `SankeyTable` for every link, including zero flows, and a status description; add node metadata when isolated nodes contain information |
+| Heatmap | Grid has its own bounded cell navigation; `HeatmapDataTable` supplies a complete static alternative |
+
+For custom Scatter X axis IDs, match `ScatterTooltip axisId` so the native engine can resolve keyboard inspection. Supply `zDimension` to distinguish a zero size measurement from missing Z in maintained tooltip content. Explicit config icons are decorative; they do not replace accessible labels or units.
+
+Native `accessibilityLayer` controls the status/live behavior of maintained TooltipContent and ScatterTooltipContent. Custom content owns its announcements. Test that naming and formatting are useful for the intended audience; automated Chromium tests do not establish manual screen-reader conformance. Broader browser, assistive-technology and large-dataset coverage remains unverified.
+
+## Heatmap and Sankey table access
+
+HeatmapGrid requires a caption and has one roving tab stop. Arrow keys follow the ordered row/column domains. Home/End move to row endpoints; Ctrl+Home/End move to grid corners. Focus or pointer inspection opens the in-flow tooltip; Escape closes it and Tab leaves the grid. Removing a focused category falls back to the first cell on the next Tab entry. Static HeatmapDataTable has ordinary table behavior. Custom nested interactive content needs host-specific keyboard handling; a cancelled key event suppresses grid navigation.
+
+SankeyTable requires a caption and includes all original links. With `onInspect`, native buttons allow Tab/Enter/Space inspection, and the host supplies controlled `activeLinkId`. Connect diagram pointer events through stable link IDs. Keep the table usable when the native renderer reports no positive flows, insufficient space or a layout limit.
+
+## Motion is an explicit choice
+
+Docs examples start with `animate={false}`. Turning on Animate entrance intentionally replays the example; turning it off returns to the still view. This is a example replay control, rather than automatic replay on unrelated settings. Enabling maintained animation respects live `prefers-reduced-motion` and settles on final geometry when interaction or relevant data/layout/visibility changes interrupt an entrance. Completed entrances do not replay merely because a palette or data value changes; remount only for an intentional replay. Native-series geometry animation excluded by the public series types stays disabled.
+
+Sankey animates opacity only; flow widths and topology do not tween. Heatmap translates its frame only; quantitative fills stay opaque. Scatter entrance fades native marks without moving coordinates. Material finishes are static. Explicit custom renderers own their own animation and reduced-motion behavior.
+
+Test narrow containers, independent charts, focus, Escape, missing and zero values with your copied example. The pinned Scatter server render contains an empty chart wrapper until client mount; keep a host summary/table available in server HTML. This preview does not claim general SSR geometry or hydration support. See [emphasis input limits](/docs/guides/emphasis/#input-behavior-and-limits) when combining pointer and keyboard inspection.

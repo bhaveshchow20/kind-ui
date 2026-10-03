@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.source/
+out/
+vendor/
+generated/
+public/markdown/
+public/examples/
+public/llms.txt
+public/llms-full.txt
+public/package-provenance.json
+next-env.d.ts
+*.tsbuildinfo
+artifacts/
+.sites-runtime/
+.openai/

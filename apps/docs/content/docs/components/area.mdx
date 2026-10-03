@@ -1,0 +1,18 @@
+---
+title: Area Chart
+description: Keep a truthful baseline while choosing a native curve.
+---
+
+<ComponentPlayground id="area" />
+
+## How it works
+
+The native axes use daily completed tasks and an explicit zero baseline. All seven daily observations are present; the native monotone curve connects them. The table retains every observation.
+
+An area is not automatically normalized or stacked. Supply native `stackId`, geometry and appropriate domains when your data calls for them. This composition uses a single Plain series; Paper is also supported by the maintained mark.
+
+## Reference
+
+<ApiTable name="AreaSeries" />
+
+[Identity and visibility](/docs/concepts/identity/) explain the public config contract. The [materials guide](/docs/guides/materials/) distinguishes primitive support from this selected example.

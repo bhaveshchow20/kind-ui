@@ -1,0 +1,142 @@
+---
+title: Chart family reference
+description: Public composition contracts for all thirteen maintained chart families.
+---
+
+The focused tables below come from installed public declarations. Recharts retains Cartesian, polar and flow layout; hosts own data, axes, domains, dimensions and native extensions. Histogram owns its bounded quantitative axes, Box plot adapts explicit summaries, and Waterfall binds range data. Heatmap uses native table geometry. Read [materials](/docs/guides/materials/), [emphasis](/docs/guides/emphasis/) and [data contracts](/docs/reference/data/) for the corresponding limits.
+
+## Line
+
+<ApiTable name="LineChart" />
+
+<ApiTable name="LineSeries" />
+
+Compose native axes and labels. The native curve owns interpolation and gaps. Set `connectNulls` deliberately; zero is measured data. Registered string data keys select Root metadata. Function or numeric keys need an explicit `seriesKey` for controlled visibility. Material applies to the default curve; custom shapes and filters own their paint. Line has native inspection without automatic dimming.
+
+## Area
+
+<ApiTable name="AreaChart" />
+
+<ApiTable name="AreaSeries" />
+
+Use native `stackId`, `baseValue`, interpolation and chart `stackOffset` for the intended geometry. The host owns percent formatting and all-zero stack meaning. Missing values are not imputed. Material decorates the native path and baseline; a custom shape or filter retains ownership. Area has native inspection without automatic dimming.
+
+## Bar
+
+<ApiTable name="BarChart" />
+
+<ApiTable name="BarSeries" />
+
+Native `layout="horizontal"` draws vertical bars; `layout="vertical"` uses numeric X and categorical Y for horizontal bars. Group through composition and stack through matching native axes and `stackId`. Radius and stack caps are consumer-owned. `BarChart emphasis="category"` requires the complete [eligibility contract](/docs/guides/emphasis/#bar-category-eligibility); it defaults to `none`.
+
+## Combo
+
+<ApiTable name="ComboChart" />
+
+Combo wraps Recharts `ComposedChart`. Compose maintained `LineSeries`, `AreaSeries` and `BarSeries` with native axes, Cells, labels, grids, references and axis IDs. A shared Tooltip follows the selected category and registered visible payload. Each mark has its own material; `ComboAnimation` can configure each family's entrance. Combo does not inherit automatic bar category dimming.
+
+## Pie and Donut
+
+<ApiTable name="PieChart" />
+
+<ApiTable name="PieSeries" />
+
+There is one Pie series API. Set native `innerRadius` for a donut and `paddingAngle` for intentional gaps. The host supplies nonnegative finite proportional data and filters category rows together with matching Cells; Root visibility does not rewrite sectors or totals. Semantic `nameKey` values or a unique `emphasisKey` identify default sectors. Zero categories have no invented minimum angular share. Custom shapes, active/inactive shapes, filters and consumer CSS transforms retain rendering ownership.
+
+## Scatter and Bubble
+
+<ApiTable name="ScatterChart" />
+
+<ApiTable name="ScatterSeries" />
+
+Native numeric X/Y axes map coordinates. Native `ZAxis` maps bubble area; there is no BubbleChart export. `seriesKey` identifies each registered series independently of dimension keys. Supply a config `icon` or Legend render prop for the intended legend glyph. Kind does not infer it from `shape`.
+
+<ApiTable name="ScatterTooltip" />
+
+<ApiTable name="ScatterZDimension" />
+
+Use `ScatterTooltip` to display the selected record's dimensions. Recharts omits Z entries for both zero and missing Z, so supply `zDimension` explicitly to distinguish them. Reuse the ZAxis key or typed accessor; strings read own top-level properties. This content mapping does not change native marker size. Native nonzero Z payloads remain intact. Native arrows visit the first registered series in data order; expose all series and overlapping observations in a data alternative. Scatter preserves native inspection without automatic dimming.
+
+## Radar
+
+<ApiTable name="RadarChart" />
+
+<ApiTable name="RadarSeries" />
+
+Compose native polar axes, domains, ticks and labels. Root metadata and registered visibility apply; the consumer decides the radial comparison scale. Finishes apply to maintained native marks. Custom shapes, dots, labels, filters and handlers remain native. Radar's emphasis adapter is unfinished; there is no automatic dimming.
+
+## Radial bar
+
+<ApiTable name="RadialBarChart" />
+
+<ApiTable name="RadialBarSeries" />
+
+Use native axes and start/end angles for the intended allocation or gauge. Series identity is separate from category row/Cell identity. Data meaning, scale, gauge text and category filtering stay with the host. Thin arcs show less material relief. Radial bar has no automatic dimming in this preview.
+
+<ApiTable name="RadialBarLabel" />
+
+Use this as native `LabelList` content for text along the actual sector's mid-radius. `show` controls visual labels independently of payload and tooltip state. The font fits within the native band and endpoint padding; a table or summary remains necessary when labels cannot fit.
+
+## Histogram
+
+<ApiTable name="HistogramChart" />
+
+<ApiTable name="HistogramSeries" />
+
+Supply explicit pre-binned intervals or use `binHistogram`. `measure` is required: `count` controls height, while `density` normalizes area using interval width. Unequal widths in count mode do not encode frequency through rectangle area. The bounded chart owns vertical layout and linear numeric axes; style and label them through `xAxisProps`/`yAxisProps`.
+
+Use `Tooltip shared={false}` for actual rectangle pointer hit testing, and label original bounds in `labelFormatter`. A zero-height bin lacks a pointer target; native keyboard inspection and a complete table expose it. The shape callback receives corrected x/width plus the original bin. Horizontal orientation, stacking, native bar minimum heights/backgrounds and replacement primary axes are outside this family. Histogram has no automatic dimming.
+
+## Box plot
+
+<ApiTable name="BoxPlotChart" />
+
+<ApiTable name="BoxPlotSeries" />
+
+The caller computes quartiles, whiskers and outliers. A direct property key or accessor selects the summary; `seriesKey` is required. A native range Bar and public linear axis scales retain every supplied outlier in the domain. For horizontal boxes use native vertical chart layout with numeric X and categorical Y. Custom tooltip content must read the original summary because the native value is the enclosing range.
+
+<ApiTable name="BoxPlotMark" />
+
+This standalone SVG mark accepts mapped screen coordinates, category center and pixel size. It does not compute statistics or map a domain. Collapsed quartiles remain a line. Stacking, notches, raw-sample estimators, nonlinear scales and arbitrary mixed-series behavior are outside the bounded contract. Box plot has no automatic dimming.
+
+## Waterfall
+
+<ApiTable name="WaterfallChart" />
+
+<ApiTable name="WaterfallSeries" />
+
+<ApiTable name="WaterfallConnectors" />
+
+WaterfallChart aliases BarChart. Supply `computeWaterfallData` rows to one unstacked WaterfallSeries and the same rows to connectors, with a categorical ID axis. The series binds range geometry and zero minimum size; it excludes native `data`, `dataKey`, `stackId` and `minPointSize`. Connectors join only adjacent known, agreeing balances. Match axis IDs, series key and native hide state; place connectors before bars.
+
+A semantic tooltip reads original/computed values rather than treating range endpoints as the change. Missing steps remain unknown until a known checkpoint. Brush-windowed connectors are not covered; explicitly subset both primitives. Inspection preserves the chain without automatic dimming.
+
+## Sankey
+
+<ApiTable name="SankeyChart" />
+
+<ApiTable name="SankeyNode" />
+
+<ApiTable name="SankeyLink" />
+
+Recharts owns flow layout and proportional widths. Kind validates stable node/link identities and a balanced directed acyclic graph. Zero links remain in data and the table, while only positive flows enter native layout. Use payload IDs for events; native callback indices address the filtered rendering array. The optional Node/Link components are renderers, not series. Set their `finish` explicitly; Link `material` independently chooses solid or gradient paint.
+
+<ApiTable name="SankeyTable" />
+
+Pair the diagram with this independently composable table. `onInspect` creates native keyboard buttons; the host controls `activeLinkId` and connects pointer inspection through the same IDs. Animation reveals opacity without changing widths. The native renderer has explicit space and numeric limits; use the table when geometry cannot be shown. Sankey has no automatic dimming.
+
+## Heatmap
+
+<ApiTable name="HeatmapChart" />
+
+<ApiTable name="HeatmapGrid" />
+
+Ordered row/column domains and scale are explicit. HTML tables own categorical geometry, independently of Root and Recharts. Compose one grid and at most one tooltip per chart boundary. `Cell` receives the resolved cell, exact fill and formatted value; native cell styles/refs/handlers use `cellProps`. Preserve meaningful text and contrast when supplying custom content.
+
+<ApiTable name="HeatmapTooltip" />
+
+<ApiTable name="HeatmapLegend" />
+
+<ApiTable name="HeatmapDataTable" />
+
+The grid provides bounded cell keyboard inspection and an in-flow tooltip; the static table provides an independent complete data view. Heatmap materials decorate a contained rim while leaving the central 84% by 84% in the exact opaque scale color. Missing cells retain missing styling. Animation translates the frame only. Cell numeric paint remains unchanged by emphasis; editing, virtualization and range selection are outside the API.
