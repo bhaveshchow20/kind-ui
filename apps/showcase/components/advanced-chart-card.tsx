@@ -63,14 +63,14 @@ function renderChartExample({
         animate={animate}
         accessibilityLayer
         aria-label={r.tag}
-        margin={{ top: 20, right: 18, left: -14, bottom: 0 }}
+        margin={{ top: 20, right: 18, left: 0, bottom: 0 }}
       >
         <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
         <Recharts.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
         <Recharts.YAxis
           tickLine={false}
           axisLine={false}
-          width={62}
+          width="auto"
           tickFormatter={(value) => (r.id === "combo" ? `$${value / 1000}k` : `${value} TB`)}
         />
         {r.id === "combo" ? (
@@ -203,7 +203,7 @@ function renderChartExample({
       animate={animate}
       accessibilityLayer
       aria-label={r.tag}
-      margin={{ top: 20, right: 18, left: -10, bottom: 10 }}
+      margin={{ top: 20, right: 18, left: 0, bottom: 10 }}
     >
       <Recharts.CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" />
       <Recharts.XAxis
@@ -220,7 +220,7 @@ function renderChartExample({
         type="number"
         name={r.id === "bubble" ? "Latency" : "Conversions"}
         unit={r.id === "bubble" ? " ms" : ""}
-        width={64}
+        width="auto"
         tickLine={false}
         axisLine={false}
         tick={{ fontSize: 11 }}
