@@ -1,6 +1,7 @@
 "use client";
 
 import * as Chart from "@kind-ui/charts";
+import * as Recharts from "recharts";
 import { Check, Copy, Moon, Pencil, Plus, RotateCcw, Sun } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
@@ -238,6 +239,7 @@ function snippet(r: Recipe, material: Material, colors: string[], animate: boole
 
 import { useState } from "react";
 import * as Chart from "@kind-ui/charts";
+import * as Recharts from "recharts";
 import "@kind-ui/charts/styles.css";
 
 const data = [
@@ -252,15 +254,15 @@ export function Example() {
     <Chart.Root emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}
       style={{ border: 0, padding: 0, background: "transparent" }}>
       <div style={{ height: 240, width: "100%" }}>
-        <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <Chart.${family}Chart data={data} animate={${animate}} layout="${horizontal ? "vertical" : "horizontal"}"${r.id === "grouped" ? ' emphasis="category"' : ""}
             accessibilityLayer aria-label="${r.subtitle}"
             margin={{ top: 20, right: 18, left: ${horizontal ? 12 : -20}, bottom: 0 }}>
-            <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
-            <Chart.XAxis ${horizontal ? 'type="number"' : 'dataKey="month" type="category"'} tickLine={false} axisLine={false}
+            <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
+            <Recharts.XAxis ${horizontal ? 'type="number"' : 'dataKey="month" type="category"'} tickLine={false} axisLine={false}
               tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} tickMargin={10} />
-            <Chart.YAxis ${horizontal ? 'dataKey="month" type="category"' : 'type="number"'} tickLine={false} axisLine={false}
-              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width={${horizontal ? 80 : 55}} />${r.id === "signed" ? '\n            <Chart.ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}${
+            <Recharts.YAxis ${horizontal ? 'dataKey="month" type="category"' : 'type="number"'} tickLine={false} axisLine={false}
+              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width={${horizontal ? 80 : 55}} />${r.id === "signed" ? '\n            <Recharts.ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}${
                 r.id === "area"
                   ? `
             <defs>
@@ -274,7 +276,7 @@ export function Example() {
 ${series}
             <Chart.Tooltip cursor={${family === "Bar" ? '{ fill: "#a4a8be", fillOpacity: .09 }' : '{ stroke: "#8d8e9b", strokeDasharray: "3 4" }'}} valueAnimation={animate ? "shuffle" : undefined} />
           </Chart.${family}Chart>
-        </Chart.ResponsiveContainer>
+        </Recharts.ResponsiveContainer>
       </div>
       <Chart.Legend aria-label="Visible series for ${r.tag}" />
     </Chart.Root>
@@ -315,8 +317,8 @@ function ChartCard({
   const code = snippet(r, material, colors, animate);
   const chartChildren = (
     <>
-      <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
-      <Chart.XAxis
+      <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
+      <Recharts.XAxis
         dataKey={horizontal ? undefined : "month"}
         type={horizontal ? "number" : "category"}
         tickLine={false}
@@ -324,7 +326,7 @@ function ChartCard({
         tick={{ fontSize: 12, fill: "var(--chart-axis)" }}
         tickMargin={10}
       />
-      <Chart.YAxis
+      <Recharts.YAxis
         dataKey={horizontal ? "month" : undefined}
         type={horizontal ? "category" : "number"}
         tickLine={false}
@@ -332,7 +334,7 @@ function ChartCard({
         tick={{ fontSize: 12, fill: "var(--chart-axis)" }}
         width={horizontal ? 80 : 55}
       />
-      {r.id === "signed" && <Chart.ReferenceLine y={0} stroke="var(--chart-axis)" />}
+      {r.id === "signed" && <Recharts.ReferenceLine y={0} stroke="var(--chart-axis)" />}
       {r.id === "area" && (
         <defs>
           <linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1">
@@ -454,7 +456,7 @@ function ChartCard({
         onVisibleSeriesChange={setVisible}
       >
         <div className="chart-canvas">
-          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
             {r.family === "Bar" ? (
               <Chart.BarChart
                 key={replay}
@@ -481,7 +483,7 @@ function ChartCard({
                 {chartChildren}
               </ChartComponent>
             )}
-          </Chart.ResponsiveContainer>
+          </Recharts.ResponsiveContainer>
         </div>
         <Chart.Legend aria-label={`Visible series for ${r.tag}`} />
       </Chart.Root>
