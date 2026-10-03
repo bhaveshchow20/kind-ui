@@ -22,6 +22,16 @@ import {
 
 export { advancedRecipes } from "@/lib/advanced-chart-recipes";
 
+function formatAdvancedValue(id: string, value: unknown) {
+  if (typeof value !== "number") return String(value);
+  const number = value.toLocaleString();
+  if (id === "combo" || id === "pie") return `${number}`;
+  if (id === "combo-area") return `${number} TB`;
+  if (id === "radial-stacked") return `${number} h`;
+  if (id === "gauge") return `${number}%`;
+  return number;
+}
+
 function renderChartExample({
   recipe: r,
   material,
@@ -53,14 +63,14 @@ function renderChartExample({
         animate={animate}
         accessibilityLayer
         aria-label={r.tag}
-        margin={{ top: 20, right: 18, left: -15, bottom: 0 }}
+        margin={{ top: 20, right: 18, left: 12, bottom: 0 }}
       >
         <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
         <Recharts.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
         <Recharts.YAxis
           tickLine={false}
           axisLine={false}
-          width={55}
+          width={68}
           tickFormatter={(value) => (r.id === "combo" ? `$${value / 1000}k` : `${value} TB`)}
         />
         {r.id === "combo" ? (
@@ -193,7 +203,7 @@ function renderChartExample({
       animate={animate}
       accessibilityLayer
       aria-label={r.tag}
-      margin={{ top: 20, right: 18, left: -10, bottom: 10 }}
+      margin={{ top: 20, right: 18, left: 12, bottom: 10 }}
     >
       <Recharts.CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" />
       <Recharts.XAxis
@@ -210,6 +220,7 @@ function renderChartExample({
         type="number"
         name={r.id === "bubble" ? "Latency" : "Conversions"}
         unit={r.id === "bubble" ? " ms" : ""}
+        width={72}
         tickLine={false}
         axisLine={false}
         tick={{ fontSize: 11 }}
@@ -259,6 +270,7 @@ export function AdvancedChartCard({
       {
         label: recipe.labels[i],
         color: colors[i],
+        formatValue: (value: unknown) => formatAdvancedValue(recipe.id, value),
         ...(recipe.id === "scatter" ? { legendShape: i === 0 ? "circle" : "diamond" } : {}),
       },
     ]),
