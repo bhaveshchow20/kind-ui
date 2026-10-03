@@ -628,7 +628,7 @@ function InstallSection() {
 }
 
 export default function Page() {
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   const [artReady, setArtReady] = useState(false);
@@ -776,6 +776,10 @@ export default function Page() {
                 <GitHubMark /><span className="nav-github-label">GitHub</span>
               </a>
               <ThemeSwitcher enabled={mounted} />
+              <Button className="nav-theme-toggle" variant="ghost" size="icon-sm" disabled={!mounted} onClick={() => setTheme(dark ? "light" : "dark")} aria-label={dark ? "Switch to light theme" : "Switch to dark theme"} title={dark ? "Switch to light theme" : "Switch to dark theme"}>
+                {dark ? <Sun size={15} /> : <Moon size={15} />}
+              </Button>
+              <a className="nav-mobile-docs" href={`${repo}/blob/main/packages/charts/README.md`} target="_blank" rel="noreferrer">Docs</a>
             </div>
           </motion.header>
           <div className="hero-content">
@@ -1029,24 +1033,13 @@ export default function Page() {
             <KindLogo />
           </p>
           <div className="footer-bottom">
+            <a className="footer-credit" href="https://x.com/BhaveshChow" target="_blank" rel="noreferrer">Created by Bhavesh Chowdhury</a>
             <nav aria-label="Footer">
-              <a
-                href={`${repo}/blob/main/packages/charts/README.md`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Docs
-              </a>
-              <a href={repo} target="_blank" rel="noreferrer">
-                GitHub
-              </a>
-              <a href={`${repo}/blob/main/LICENSE`} target="_blank" rel="noreferrer">
-                MIT
-              </a>
+              <a href={`${repo}/blob/main/packages/charts/README.md`} target="_blank" rel="noreferrer">Docs</a>
+              <button type="button" className="footer-sponsor">Sponsor <ArrowUpRight size={13} aria-hidden="true" /></button>
+              <a href={`${repo}/blob/main/LICENSE`} target="_blank" rel="noreferrer">MIT</a>
+              <a className="footer-top" href="#top">Back to top</a>
             </nav>
-            <a className="footer-top" href="#top">
-              Back to top
-            </a>
           </div>
         </motion.div>
       </footer>
