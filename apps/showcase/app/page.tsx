@@ -2,7 +2,7 @@
 
 import * as Chart from "@kind-ui/charts";
 import * as Recharts from "recharts";
-import { Check, Copy, Monitor, Moon, Pencil, Plus, RotateCcw, Search, Sun } from "lucide-react";
+import { ArrowUpRight, Check, Copy, Monitor, Moon, Pencil, Plus, RotateCcw, Search, Sun } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
@@ -599,7 +599,7 @@ function InstallSection() {
   }
   return (
     <section className="install-section" aria-label="Install Kind UI Charts">
-      <p className="install-built-with">Built with Framer Motion and Recharts</p>
+      <p className="install-built-with">Built on Framer Motion and Recharts</p>
       <Tabs className="install-panel" value={manager} onValueChange={(value) => {
         setManager(value as PackageManager);
         setCopied(false);
@@ -766,20 +766,17 @@ export default function Page() {
               <KindLogo />
               <span className="wordmark-package">/charts</span>
             </a>
-            <nav aria-label="Main">
-              <a
-                href={`${repo}/blob/main/packages/charts/README.md`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Docs
-              </a>
-              <a href={repo} target="_blank" rel="noreferrer" aria-label="GitHub">
+            <nav className="nav-center" aria-label="Main">
+              <a href={`${repo}/blob/main/packages/charts/README.md`} target="_blank" rel="noreferrer">Docs</a>
+              <button type="button" className="nav-sponsor">Sponsor <ArrowUpRight size={13} aria-hidden="true" /></button>
+            </nav>
+            <div className="nav-actions">
+              <DocumentationSearch />
+              <a className="nav-github" href={repo} target="_blank" rel="noreferrer" aria-label="GitHub">
                 <GitHubMark /><span className="nav-github-label">GitHub</span>
               </a>
-              <DocumentationSearch />
               <ThemeSwitcher enabled={mounted} />
-            </nav>
+            </div>
           </motion.header>
           <div className="hero-content">
             <motion.h1
