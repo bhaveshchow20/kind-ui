@@ -52,7 +52,7 @@ export function PolarHost() {
   const [domain, setDomain] = useState(100);
   const [small, setSmall] = useState(false);
   const [hide, setHide] = useState(false);
-  const [shift, setShift] = useState(false);
+  const [shift, setShift] = useState(params.has("partial"));
   const [custom, setCustom] = useState(false);
   const [content, setContent] = useState(false);
   const [clicks, setClicks] = useState(0);
@@ -218,6 +218,7 @@ export function PolarHost() {
           width={width}
           height={360}
           animate={animate}
+          animationDirection={params.has("anticlockwise") ? "anticlockwise" : "clockwise"}
           innerRadius="22%"
           outerRadius="88%"
           {...(params.has("thin") ? { barSize: 2 } : {})}
@@ -258,7 +259,9 @@ export function PolarHost() {
             hide={hide}
             {...(params.has("stack") ? { stackId: "scores" } : {})}
             cornerRadius={4}
-            background
+            background={
+              params.has("owned-background") ? { fill: "#123456", className: "owned-track" } : true
+            }
             shape={custom ? Shape : params.has("boolean-shape") ? true : undefined}
             onClick={() => setClicks((n) => n + 1)}
           >
