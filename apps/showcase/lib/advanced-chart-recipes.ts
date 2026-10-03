@@ -169,9 +169,9 @@ export function advancedData(id: string): Record<string, string | number | numbe
 export function advancedBody(r: AdvancedRecipe, material: Finish) {
   if (r.family === "Combo")
     return `<Chart.ComboChart data={data} animate={animate} accessibilityLayer aria-label="${r.tag}" margin={{top:20,right:18,left:-15,bottom:0}}>
-  <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
-  <Chart.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{fontSize:12}} />
-  <Chart.YAxis tickLine={false} axisLine={false} width={55} tickFormatter={value => ${r.id === "combo" ? "`$${value/1000}k`" : "`${value} TB`"}} />
+  <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
+  <Recharts.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{fontSize:12}} />
+  <Recharts.YAxis tickLine={false} axisLine={false} width={55} tickFormatter={value => ${r.id === "combo" ? "`$${value/1000}k`" : "`${value} TB`"}} />
   <Chart.${r.id === "combo" ? 'BarSeries dataKey="a" radius={4} maxBarSize={28}' : 'AreaSeries dataKey="a" type="monotone" fillOpacity={0.2}'} material="${material}" />
   <Chart.LineSeries dataKey="b" type="monotone" material="${material}" strokeDasharray="4 4" dot={false} strokeWidth={2.5} />
   <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
@@ -183,25 +183,25 @@ export function advancedBody(r: AdvancedRecipe, material: Finish) {
 </Chart.PieChart>`;
   if (r.family === "Radar")
     return `<Chart.RadarChart data={data} animate={animate} accessibilityLayer aria-label="${r.tag}" outerRadius="70%">
-  <Chart.PolarGrid gridType="${r.id === "radar-outline" ? "circle" : "polygon"}" stroke="var(--chart-grid, #e4e5eb)" />
-  <Chart.PolarAngleAxis dataKey="category" tick={{fontSize:11}} tickLine={false} />
-  <Chart.PolarRadiusAxis domain={[0,100]} tickCount={3} tick={{fontSize:10}} axisLine={false} />
+  <Recharts.PolarGrid gridType="${r.id === "radar-outline" ? "circle" : "polygon"}" stroke="var(--chart-grid, #e4e5eb)" />
+  <Recharts.PolarAngleAxis dataKey="category" tick={{fontSize:11}} tickLine={false} />
+  <Recharts.PolarRadiusAxis domain={[0,100]} tickCount={3} tick={{fontSize:10}} axisLine={false} />
   ${r.id === "radar-range" ? '<Chart.RadarSeries dataKey="range" seriesKey="a" isRange fillOpacity={0.2} />' : `<Chart.RadarSeries dataKey="a" fillOpacity={${r.id === "radar-outline" ? 0 : 0.18}} dot={${r.id === "radar-outline"}} />\n  <Chart.RadarSeries dataKey="b" fill="none" strokeDasharray="4 4" dot={${r.id === "radar-outline"}} />`}
   <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
 </Chart.RadarChart>`;
   if (r.family === "Radial")
     return `<Chart.RadialBarChart data={data} animate={animate} accessibilityLayer aria-label="${r.tag}" startAngle={${r.id === "gauge" ? 180 : 90}} endAngle={${r.id === "gauge" ? 0 : -270}} innerRadius="${r.id === "gauge" ? 55 : 20}%" outerRadius="90%" cy="${r.id === "gauge" ? 65 : 50}%" barGap={3}>
-  <Chart.PolarAngleAxis type="number" domain={[0,100]} tick={false} />
-  <Chart.PolarRadiusAxis type="category" dataKey="category" tick={false} axisLine={false} tickLine={false}>${r.id === "gauge" ? '\n    <Chart.Label position="center" value="72%" fill="currentColor" />\n  ' : ""}</Chart.PolarRadiusAxis>
-  <Chart.RadialBarSeries dataKey="a" background cornerRadius={4}${r.id === "radial-stacked" ? ' stackId="work"' : ""}>${r.id !== "gauge" ? '\n    <Chart.LabelList dataKey="category" fill="white" content={<Chart.RadialBarLabel fontSize={10} />} />\n  ' : ""}</Chart.RadialBarSeries>
+  <Recharts.PolarAngleAxis type="number" domain={[0,100]} tick={false} />
+  <Recharts.PolarRadiusAxis type="category" dataKey="category" tick={false} axisLine={false} tickLine={false}>${r.id === "gauge" ? '\n    <Recharts.Label position="center" value="72%" fill="currentColor" />\n  ' : ""}</Recharts.PolarRadiusAxis>
+  <Chart.RadialBarSeries dataKey="a" background cornerRadius={4}${r.id === "radial-stacked" ? ' stackId="work"' : ""}>${r.id !== "gauge" ? '\n    <Recharts.LabelList dataKey="category" fill="white" content={<Chart.RadialBarLabel fontSize={10} />} />\n  ' : ""}</Chart.RadialBarSeries>
   ${r.id === "gauge" ? "" : `<Chart.RadialBarSeries dataKey="b" fillOpacity={0.5} cornerRadius={4}${r.id === "radial-stacked" ? ' stackId="work"' : ""} />`}
   <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
 </Chart.RadialBarChart>`;
   return `<Chart.ScatterChart animate={animate} accessibilityLayer aria-label="${r.tag}" margin={{top:20,right:18,left:-10,bottom:10}}>
-  <Chart.CartesianGrid stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
-  <Chart.XAxis dataKey="x" type="number" name="${r.id === "bubble" ? "Traffic" : "Ad spend"}" unit="${r.id === "bubble" ? " req/s" : " USD"}" tickLine={false} axisLine={false} tick={{fontSize:11}} />
-  <Chart.YAxis dataKey="y" type="number" name="${r.id === "bubble" ? "Latency" : "Conversions"}" unit="${r.id === "bubble" ? " ms" : ""}" tickLine={false} axisLine={false} tick={{fontSize:11}} />
-  ${r.id === "bubble" ? '<Chart.ZAxis dataKey="z" name="Requests" range={[50,340]} />' : ""}
+  <Recharts.CartesianGrid stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
+  <Recharts.XAxis dataKey="x" type="number" name="${r.id === "bubble" ? "Traffic" : "Ad spend"}" unit="${r.id === "bubble" ? " req/s" : " USD"}" tickLine={false} axisLine={false} tick={{fontSize:11}} />
+  <Recharts.YAxis dataKey="y" type="number" name="${r.id === "bubble" ? "Latency" : "Conversions"}" unit="${r.id === "bubble" ? " ms" : ""}" tickLine={false} axisLine={false} tick={{fontSize:11}} />
+  ${r.id === "bubble" ? '<Recharts.ZAxis dataKey="z" name="Requests" range={[50,340]} />' : ""}
   <Chart.ScatterSeries data={data} seriesKey="a" shape="circle" />
   ${r.id === "bubble" ? "" : '<Chart.ScatterSeries data={data.map(row => ({...row,y:row.social}))} seriesKey="b" shape="diamond" />'}
   <Chart.ScatterTooltip${r.id === "bubble" ? ' zDimension={{dataKey:"z",name:"Requests"}}' : ""} valueAnimation={animate ? "shuffle" : undefined} />
@@ -223,5 +223,5 @@ export function advancedCode(
       },
     ]),
   );
-  return `"use client";\n\nimport { useState } from "react";\nimport * as Chart from "@kind-ui/charts";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst data = ${JSON.stringify(advancedData(r.id), null, 2)};\nconst config: Chart.SeriesConfig = ${JSON.stringify(config, null, 2)};\n\nexport function Example(){\n const [visible,setVisible] = useState<string[]>(${JSON.stringify(r.keys)});\n const animate = ${animate};\n return <Chart.Root emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>\n  <div style={{height:240,width:"100%"}}><Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>\n${advancedBody(r, material)}\n  </Chart.ResponsiveContainer></div>\n  <Chart.Legend />\n </Chart.Root>;\n}\n`;
+  return `"use client";\n\nimport { useState } from "react";\nimport * as Chart from "@kind-ui/charts";\nimport * as Recharts from "recharts";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst data = ${JSON.stringify(advancedData(r.id), null, 2)};\nconst config: Chart.SeriesConfig = ${JSON.stringify(config, null, 2)};\n\nexport function Example(){\n const [visible,setVisible] = useState<string[]>(${JSON.stringify(r.keys)});\n const animate = ${animate};\n return <Chart.Root emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>\n  <div style={{height:240,width:"100%"}}><Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>\n${advancedBody(r, material)}\n  </Recharts.ResponsiveContainer></div>\n  <Chart.Legend />\n </Chart.Root>;\n}\n`;
 }
