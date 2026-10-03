@@ -2203,3 +2203,69 @@ html:not(.dark) .site-nav .wordmark {
   .nav-theme-option { width: 28px; height: 28px; }
   .hero-frameworks svg { width: 18px; height: 18px; }
 }
+
+/* Consistent compact glass controls and responsive navigation. */
+.site-nav .nav-center { gap: 6px; }
+.site-nav .nav-center > a, .nav-sponsor, .nav-mobile-docs, .nav-theme-toggle {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid #ffffff30;
+  border-radius: 999px;
+  background: #ffffff24;
+  box-shadow: inset 0 1px 0 #ffffff20;
+  backdrop-filter: blur(12px);
+  font-size: 12px;
+  font-weight: 500;
+  color: inherit;
+}
+.site-nav .nav-center > a:hover, .nav-sponsor:hover { background: #ffffff40; opacity: 1; }
+.dark .site-nav .nav-center > a, .dark .nav-sponsor, .dark .nav-mobile-docs, .dark .nav-theme-toggle { background: #08080825; }
+.nav-mobile-docs, .nav-theme-toggle { display: none; }
+.footer-bottom { gap: 16px; }
+.footer-bottom nav { margin-left: auto; justify-content: flex-end; gap: 6px; }
+.footer-bottom nav > a, .footer-bottom nav > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--gallery-glass-edge);
+  border-radius: 999px;
+  background: var(--gallery-pill);
+  box-shadow: inset 0 1px 0 var(--gallery-glass-sheen);
+  backdrop-filter: blur(12px);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+.footer-bottom nav > a:hover, .footer-bottom nav > button:hover { background: var(--gallery-pill-hover); }
+.footer-bottom .footer-credit {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  border-radius: 0;
+  padding: 0;
+  min-height: 36px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--foreground);
+}
+.footer-bottom .footer-credit:hover { text-decoration: underline; background: transparent; }
+@media (max-width: 800px) {
+  .site-nav { grid-template-columns: minmax(0, 1fr) auto; }
+  .site-nav .nav-center { display: none; }
+  .nav-actions .nav-theme-switcher { display: none; }
+  .nav-mobile-docs, .nav-theme-toggle { display: inline-flex; align-items: center; justify-content: center; }
+  .nav-github-label { display: none; }
+  .nav-github, .nav-search, .nav-theme-toggle { width: 32px; height: 32px; min-height: 32px; padding: 0; }
+  .nav-mobile-docs { min-height: 32px; padding: 5px 9px; }
+  .nav-actions { gap: 4px; }
+}
+@media (max-width: 650px) {
+  .footer-bottom { flex-wrap: wrap; gap: 10px; }
+  .footer-bottom nav { margin-left: auto; }
+  .footer-bottom nav > a, .footer-bottom nav > button { min-height: 32px; padding: 5px 10px; }
+  .footer-bottom .footer-credit { font-size: 12px; min-height: 32px; }
+}
