@@ -1,5 +1,6 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
+import * as Recharts from "recharts";
 import { Check, Copy } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useMemo, useState } from "react";
@@ -63,7 +64,7 @@ function NewChart({
     return (
       <Chart.Root className="chart-root" config={{ range: { label: "Balance", color: colors[0] } }}>
         <div className="chart-canvas">
-          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <Chart.WaterfallChart
               data={water}
               animate={animate}
@@ -71,30 +72,30 @@ function NewChart({
               aria-label={r.tag}
               margin={{ top: 20, right: 12, left: 0, bottom: 0 }}
             >
-              <Chart.CartesianGrid
+              <Recharts.CartesianGrid
                 vertical={false}
                 stroke="var(--chart-grid)"
                 strokeDasharray="3 5"
               />
-              <Chart.XAxis
+              <Recharts.XAxis
                 dataKey="id"
                 tickFormatter={(id) => water.find((row) => row.id === id)?.label ?? String(id)}
                 tickLine={false}
                 axisLine={false}
                 tick={{ fontSize: 11 }}
               />
-              <Chart.YAxis
+              <Recharts.YAxis
                 width={48}
                 tickFormatter={(value) => `$${value / 1000}k`}
                 tickLine={false}
                 axisLine={false}
                 tick={{ fontSize: 11 }}
               />
-              <Chart.ReferenceLine y={0} stroke="var(--chart-axis)" />
+              <Recharts.ReferenceLine y={0} stroke="var(--chart-axis)" />
               <Chart.WaterfallConnectors data={water} stroke="var(--chart-axis)" />
               <Chart.WaterfallSeries material={material} radius={4}>
                 {water.map((row) => (
-                  <Chart.Cell
+                  <Recharts.Cell
                     key={row.id}
                     fill={colors[row.kind !== "delta" ? 0 : (row.value ?? 0) < 0 ? 2 : 1]}
                   />
@@ -107,14 +108,14 @@ function NewChart({
                 }}
               />
             </Chart.WaterfallChart>
-          </Chart.ResponsiveContainer>
+          </Recharts.ResponsiveContainer>
         </div>
       </Chart.Root>
     );
   return (
     <div className="showcase-sankey">
       <div className="chart-canvas">
-        <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <Chart.SankeyChart
             data={flow}
             animate={animate}
@@ -156,7 +157,7 @@ function NewChart({
               />
             )}
           />
-        </Chart.ResponsiveContainer>
+        </Recharts.ResponsiveContainer>
       </div>
       <Chart.SankeyTable data={flow} caption={r.tag} className="sr-only" />
     </div>
