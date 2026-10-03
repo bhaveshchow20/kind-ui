@@ -4,7 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "Kind UI Charts",
-  description: "Explore Kind UI's React line, area and bar charts. Play with materials, palettes and motion in the live component showcase.",
+  description:
+    "Explore Kind UI's React line, area and bar charts. Play with materials, palettes and motion in the live component showcase.",
   icons: {
     icon: [
       { url: "/kind-bloom.svg", type: "image/svg+xml" },
@@ -29,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased"><ThemeProvider>{children}</ThemeProvider></body>
+      <body className="antialiased">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

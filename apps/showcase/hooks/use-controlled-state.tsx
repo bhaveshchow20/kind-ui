@@ -1,5 +1,5 @@
 // Adapted from Animate UI (MIT + Commons Clause): https://animate-ui.com
-import * as React from 'react';
+import * as React from "react";
 
 interface CommonControlledStateProps<T> {
   value?: T;
