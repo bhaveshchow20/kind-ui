@@ -4,11 +4,14 @@ import { type ComponentPropsWithRef, type CSSProperties, type ReactNode, use } f
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
 import { useChart } from "./chart-context.js";
 import { LineInteraction } from "./line-chart.js";
+import { TooltipNumber } from "./tooltip-number.js";
 
 export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
   /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
   tooltip: UpstreamTooltipContentProps;
   missingValue?: ReactNode;
+  /** Opt in to decorative rolling digits for finite numeric text values. Default: off. */
+  valueAnimation?: "shuffle";
   /** Omit the heading; series labels and values remain accessible. */
   hideLabel?: boolean;
   /** Omit the decorative marker, including a configured icon. */
@@ -23,6 +26,7 @@ export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children">
 export function TooltipContent({
   tooltip,
   missingValue = "No data",
+  valueAnimation,
   itemKey,
   hideLabel = false,
   hideIndicator = false,
@@ -92,7 +96,16 @@ export function TooltipContent({
             />
           ))}
         <span>{name}</span>
-        <strong data-kind-ui="chart-tooltip-value">{value}</strong>
+        <strong data-kind-ui="chart-tooltip-value">
+          {valueAnimation === "shuffle" &&
+          typeof entry.value === "number" &&
+          Number.isFinite(entry.value) &&
+          (typeof value === "string" || (typeof value === "number" && Number.isFinite(value))) ? (
+            <TooltipNumber value={value} />
+          ) : (
+            value
+          )}
+        </strong>
       </li>
     );
   });

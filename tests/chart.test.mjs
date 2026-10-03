@@ -135,6 +135,33 @@ test("zero uses the series formatter; null and undefined remain missing", () => 
   assert.match(content([entry(null), entry(0, { graphicalItemId: "other" })]), /No data/);
   assert.doesNotMatch(content([entry(null)]), /null tasks/);
 });
+
+test("optional numeric shuffle preserves exact SSR/default text and arbitrary formatter nodes", () => {
+  for (const Content of [Chart.TooltipContent, Chart.ScatterTooltipContent]) {
+    for (const value of [0, -12.5, 0.125, null, Number.NaN, Number.POSITIVE_INFINITY]) {
+      const props = { tooltip: tooltip([entry(value), entry(2, { graphicalItemId: "other" })]) };
+      const plain = render(h(Root, { config }, h(Content, props)));
+      const shuffle = render(
+        h(Root, { config }, h(Content, { ...props, valueAnimation: "shuffle" })),
+      );
+      assert.equal(
+        shuffle,
+        plain,
+        "SSR's reduced-motion snapshot must preserve exact final output",
+      );
+      assert.doesNotMatch(plain, /tooltip-number|valueAnimation/);
+    }
+    const props = {
+      tooltip: tooltip([entry(12)], {
+        formatter: () => [h("em", { "data-custom": "value" }, "Twelve"), "Custom"],
+      }),
+      valueAnimation: "shuffle",
+    };
+    const html = render(h(Root, { config }, h(Content, props)));
+    assert.match(html, /<em data-custom="value">Twelve<\/em>/);
+    assert.doesNotMatch(html, /tooltip-number|valueAnimation/);
+  }
+});
 test("upstream formatter, tuple label and label formatter remain usable", () => {
   const html = content([entry(0)], {
     formatter: (value) => [`${value}%`, "Custom"],

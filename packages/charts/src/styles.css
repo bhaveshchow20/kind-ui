@@ -153,6 +153,49 @@
     padding-left: 4px;
     font-variant-numeric: tabular-nums;
   }
+
+  :where([data-kind-ui="tooltip-number"]) {
+    display: inline-block;
+    position: relative;
+    overflow: clip;
+    vertical-align: bottom;
+    white-space: pre;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :where([data-kind-ui="tooltip-number-final"]) {
+    display: inline-block;
+    opacity: 0;
+  }
+
+  :where([data-kind-ui="tooltip-number-visual"]) {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    direction: ltr;
+    pointer-events: none;
+  }
+
+  :where([data-kind-ui="tooltip-digit"]) {
+    position: relative;
+    display: inline-block;
+    width: 1ch;
+    height: 1em;
+    overflow: clip;
+    flex-shrink: 0;
+  }
+
+  :where([data-kind-ui="tooltip-digit-reel"]) {
+    display: block;
+    line-height: 1;
+  }
+
+  :where([data-kind-ui="tooltip-digit-reel"] > span) {
+    display: block;
+    height: 1em;
+  }
 }
 
 @layer kind-ui {

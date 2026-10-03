@@ -16,6 +16,10 @@ export default defineConfig({
   },
   webServer: [
     {
+      command: `npm exec vite preview -- --outDir artifacts/packed-number-shuffle --host 127.0.0.1 --port ${port(4195)} --strictPort`,
+      url: `http://127.0.0.1:${port(4195)}`,
+    },
+    {
       command: `npm exec vite preview -- --outDir artifacts/packed-scatter-legend --host 127.0.0.1 --port ${port(4194)} --strictPort`,
       url: `http://127.0.0.1:${port(4194)}/legend.html`,
     },

@@ -153,6 +153,7 @@ try {
         "sankey",
         "histogram",
         "box-plot",
+        "number-shuffle",
       ].includes(folder) &&
       file.endsWith(".tsx")
     )
@@ -212,6 +213,12 @@ try {
     await readFile(join(root, "tests/chart.test.mjs"), "utf8"),
   );
   run(process.execPath, ["--test", "chart.test.mjs"], consumer);
+  for (const file of ["index.html", "main.tsx"]) await copyFixture("number-shuffle", file);
+  await typecheck(["main.tsx"]);
+  await production("index.html", "packed-number-shuffle");
+  console.log(
+    "Optional tooltip shuffle: public-only tarball NodeNext/Bundler types and production build passed",
+  );
   for (const file of ["host.tsx", "static.tsx", "static.html"]) await copyFixture("line", file);
   await typecheck(["index.tsx", "host.tsx", "static.tsx"]);
   await production("static.html", "packed-line-static");
