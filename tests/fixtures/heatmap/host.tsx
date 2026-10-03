@@ -69,6 +69,7 @@ export function HeatmapRecipes() {
   const [updated, setUpdated] = useState(false);
   const [empty, setEmpty] = useState(false);
   const [motion, setMotion] = useState(true);
+  const [consumerOpacity, setConsumerOpacity] = useState<number>();
   const [material, setMaterial] = useState<HeatmapMaterial>("plain");
   return (
     <main className="heatmaps-page">
@@ -101,6 +102,9 @@ export function HeatmapRecipes() {
           />
           Motion
         </label>
+        <button type="button" onClick={() => setConsumerOpacity(0.4)}>
+          Consumer opacity
+        </button>
         <button type="button" onClick={() => setReversed(!reversed)}>
           Reorder domains
         </button>
@@ -147,6 +151,7 @@ export function HeatmapRecipes() {
             cellProps={(cell) =>
               ({
                 "data-coordinate": `${cell.row}/${cell.column}`,
+                ...(consumerOpacity === undefined ? {} : { style: { opacity: consumerOpacity } }),
               }) as React.ComponentPropsWithRef<"td">
             }
           />

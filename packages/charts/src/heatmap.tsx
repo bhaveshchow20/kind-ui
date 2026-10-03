@@ -1,6 +1,6 @@
 "use client";
 
-import { animate as animateValue } from "motion/react";
+import { animateMini, animate as animateValue } from "motion/react";
 import {
   type ComponentPropsWithRef,
   type ComponentType,
@@ -113,10 +113,10 @@ export function HeatmapChart({
     observer.observe(node);
     return () => observer.disconnect();
   }, [entrance, interrupt]);
-  const previous = useRef([model, scale]);
+  const previous = useRef([model, scale, children]);
   const previousEnabled = useRef(enabled);
   useLayoutEffect(() => {
-    const inputs = [model, scale];
+    const inputs = [model, scale, children];
     if (
       inputs.some((value, index) => value !== previous.current[index]) ||
       (previousEnabled.current && !enabled)
@@ -202,22 +202,29 @@ function EntranceCell({ diagonal, ...props }: ComponentPropsWithRef<"td"> & { di
     },
     [consumerRef],
   );
+  const latestOpacity = useRef(props.style?.opacity);
+  latestOpacity.current = props.style?.opacity;
   useLayoutEffect(() => {
     const node = cell.current;
     if (!node || !entrance) return;
     const original = node.style.opacity;
+    const declaredOpacity = props.style?.opacity;
     const opacity = Number(getComputedStyle(node).opacity);
     const delay = (diagonal / Math.max(1, model.rows.length + model.columns.length - 2)) * 0.55;
-    const controls = animateValue(
+    const controls = animateMini(
       node,
       { opacity: [0, opacity] },
       { delay, duration: 0.25, ease: "easeOut" },
     );
     return () => {
       controls.stop();
-      node.style.opacity = original;
+      node.style.opacity = Object.is(latestOpacity.current, declaredOpacity)
+        ? original
+        : latestOpacity.current === undefined
+          ? ""
+          : String(latestOpacity.current);
     };
-  }, [entrance, diagonal, model]);
+  }, [entrance, diagonal, model, props.style?.opacity]);
   return <td {...props} ref={ref} data-kind-ui="heatmap-cell-entrance" />;
 }
 
