@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { chromium } from "@playwright/test";
+import { swipeUp } from "./touch-swipe.mjs";
 
 const browser = await chromium.launch();
 const url = "http://127.0.0.1:6373/docs/components/line/";
@@ -33,11 +34,10 @@ try {
     await table.scrollIntoViewIfNeeded();
     const before = await page.evaluate(() => scrollY);
     const box = await table.boundingBox();
-    await cdp.send("Input.synthesizeScrollGesture", {
+    await swipeUp(cdp, {
       x: 200,
       y: Math.max(160, Math.min(650, box.y + 70)),
-      yDistance: -180,
-      gestureSourceType: "touch",
+      distance: 180,
     });
     await page.waitForTimeout(250);
     assert.ok((await page.evaluate(() => scrollY)) > before + 40, `Table ${i} traps touch`);

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { swipeUp } from "./touch-swipe.mjs";
 
 const b = await chromium.launch();
 const evidence = { wheel: [], touch: [], navigation: [], errors: [] };
@@ -125,11 +126,10 @@ try {
   await m.locator(".recharts-line-curve").first().waitFor();
   await m.waitForTimeout(400);
   const cdp = await mobile.newCDPSession(m);
-  await cdp.send("Input.synthesizeScrollGesture", {
+  await swipeUp(cdp, {
     x: 210,
     y: 450,
-    yDistance: -250,
-    gestureSourceType: "touch",
+    distance: 250,
   });
   await m.waitForTimeout(300);
   const touchScroll = await m.evaluate(() => scrollY);
