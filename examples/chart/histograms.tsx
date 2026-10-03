@@ -1,7 +1,8 @@
 import * as Chart from "@kind-ui/charts";
+import { CartesianGrid, Rectangle, ReferenceLine } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { CartesianGrid, Rectangle, ReferenceLine } from "recharts";
+
 import "@kind-ui/charts/styles.css";
 import "./histograms.css";
 

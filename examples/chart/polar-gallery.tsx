@@ -1,5 +1,4 @@
 import * as Chart from "@kind-ui/charts";
-import { type ComponentProps, useId, useState } from "react";
 import {
   Cell,
   Label,
@@ -9,7 +8,8 @@ import {
   PolarGrid,
   PolarRadiusAxis,
   ResponsiveContainer,
-} from "recharts";
+} from "@kind-ui/charts";
+import { type ComponentProps, useId, useState } from "react";
 
 export type GalleryPoint = { category: string; actual: number; target: number };
 export const radarVariants = [
