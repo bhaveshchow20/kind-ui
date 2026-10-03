@@ -228,9 +228,9 @@ test("removed focused row has a valid tab reentry and custom missing foreground"
 test("diagonal cell entrance keeps native table geometry and reduced motion snaps immediately", async ({
   page,
 }) => {
-  await page.clock.install();
+  await page.goto("/heatmaps.html");
+  await page.evaluate(() => document.fonts.ready);
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/heatmaps.html", { waitUntil: "domcontentloaded" });
   const grid = page.getByRole("grid", { name: "Weekly latency" });
   const cells = grid.getByRole("gridcell");
   const bounds = await cells.evaluateAll((nodes) =>
@@ -239,7 +239,7 @@ test("diagonal cell entrance keeps native table geometry and reduced motion snap
       return [box.x, box.y, box.width, box.height];
     }),
   );
-  await page.clock.runFor(100);
+  await page.waitForTimeout(100);
   const alpha = await cells.evaluateAll((nodes) =>
     nodes.map((node) => Number(getComputedStyle(node).opacity)),
   );
@@ -260,7 +260,7 @@ test("diagonal cell entrance keeps native table geometry and reduced motion snap
     ),
   ).toEqual(bounds);
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.clock.runFor(200);
+  await page.waitForTimeout(200);
   expect(
     await cells.evaluateAll((nodes) =>
       nodes.every((node) => getComputedStyle(node).opacity === "1"),
@@ -294,11 +294,11 @@ test("long categories preserve equal rows and skewed signed legend stays readabl
 
 for (const change of ["resize", "data", "domains"] as const) {
   test(`heatmap diagonal reveal settles on ${change} and does not replay`, async ({ page }) => {
-    await page.clock.install();
-    await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto("/heatmaps.html");
+    await page.evaluate(() => document.fonts.ready);
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     const cells = page.getByRole("grid", { name: "Weekly latency" }).getByRole("gridcell");
-    await page.clock.runFor(100);
+    await page.waitForTimeout(100);
     expect(
       await cells.evaluateAll((nodes) =>
         nodes.some((node) => Number(getComputedStyle(node).opacity) < 1),
@@ -312,7 +312,7 @@ for (const change of ["resize", "data", "domains"] as const) {
           exact: true,
         })
         .evaluate((node) => (node as HTMLButtonElement).click());
-    await page.clock.runFor(50);
+    await page.waitForTimeout(50);
     await expect
       .poll(() =>
         cells.evaluateAll((nodes) => nodes.every((node) => getComputedStyle(node).opacity === "1")),
@@ -326,7 +326,7 @@ for (const change of ["resize", "data", "domains"] as const) {
           exact: true,
         })
         .evaluate((node) => (node as HTMLButtonElement).click());
-    await page.clock.runFor(150);
+    await page.waitForTimeout(150);
     expect(
       await cells.evaluateAll((nodes) =>
         nodes.every((node) => getComputedStyle(node).opacity === "1"),
@@ -338,11 +338,11 @@ for (const change of ["resize", "data", "domains"] as const) {
 test("heatmap interruption preserves a consumer opacity change during entrance", async ({
   page,
 }) => {
-  await page.clock.install();
-  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto(`http://127.0.0.1:${4190 + offset}`);
+  await page.evaluate(() => document.fonts.ready);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   const cells = page.getByRole("grid", { name: "Weekly latency" }).getByRole("gridcell");
-  await page.clock.runFor(100);
+  await page.waitForTimeout(100);
   await page
     .getByRole("button", { name: "Consumer opacity", exact: true })
     .evaluate((node) => (node as HTMLButtonElement).click());
@@ -351,7 +351,7 @@ test("heatmap interruption preserves a consumer opacity change during entrance",
       cells.evaluateAll((nodes) => nodes.every((node) => getComputedStyle(node).opacity === "0.4")),
     )
     .toBe(true);
-  await page.clock.runFor(1000);
+  await page.waitForTimeout(1000);
   expect(
     await cells.evaluateAll((nodes) =>
       nodes.every((node) => getComputedStyle(node).opacity === "0.4"),
