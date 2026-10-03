@@ -155,7 +155,10 @@ test("packed entrance fades actual native marks and interruptions settle without
   await page.clock.install();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto(url);
-  const fade = page.locator('[data-kind-ui="scatter-fade"]').first();
+  const fade = page
+    .locator('[data-kind-ui="scatter-point-entrance"]')
+    .filter({ has: page.locator(mark("signed")) })
+    .first();
   const chart = page.getByRole("application", { name: "Packed scatter" });
   const before = await chart.locator(mark("signed")).getAttribute("d");
   await page
@@ -165,6 +168,18 @@ test("packed entrance fades actual native marks and interruptions settle without
   const opacity = await fade.evaluate((node) => Number(getComputedStyle(node).opacity));
   expect(opacity).toBeGreaterThan(0);
   expect(opacity).toBeLessThan(1);
+  const stagger = await chart
+    .locator('[data-kind-ui="scatter-point-entrance"]')
+    .evaluateAll((nodes) =>
+      nodes
+        .map((node) => ({
+          x: Number((node as SVGElement).dataset.entranceX),
+          opacity: Number(getComputedStyle(node).opacity),
+        }))
+        .sort((a, b) => a.x - b.x),
+    );
+  expect(stagger.length).toBeGreaterThan(2);
+  expect(stagger[0]?.opacity).toBeGreaterThan(stagger.at(-1)?.opacity ?? 1);
   await page.clock.runFor(200);
   expect(await fade.evaluate((node) => Number(getComputedStyle(node).opacity))).toBeGreaterThan(
     opacity,
