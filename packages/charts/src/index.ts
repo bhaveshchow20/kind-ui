@@ -99,6 +99,7 @@ export {
   RadialBarSeries,
   type RadialBarSeriesProps,
 } from "./polar-series.js";
+export type { RadarSelectionProps } from "./radar-interaction.js";
 export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
 export { Root, type RootProps } from "./root.js";
 export { type SankeyAnimation, SankeyChart, type SankeyChartProps } from "./sankey-chart.js";

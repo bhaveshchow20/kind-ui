@@ -1,13 +1,19 @@
 "use client";
 
 import { animate, motion, useMotionValue } from "motion/react";
-import { type ComponentProps, use, useId, useLayoutEffect, useRef } from "react";
+import { type ComponentProps, memo, use, useId, useLayoutEffect, useRef } from "react";
 import { DefaultZIndexes, Radar, RadialBar, ZIndexLayer } from "recharts";
 import { ActiveMarker } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { PolarMotion } from "./polar-chart.js";
 import { type PolarMaterial, PolarMaterialFilter } from "./polar-material.js";
+import { RadarSelectionLayer, useRadarSelectionDot } from "./radar-interaction.js";
+
+// Native Radar uses a props-identity animation key even with animation disabled.
+// Avoid replacing its polygon for unrelated frame state during a pointer press.
+const StableRadar = memo(Radar) as typeof Radar;
+const radarActiveDot = <ActiveMarker />;
 
 export type RadarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Radar<DataPoint, Value>>,
@@ -96,6 +102,10 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
     props.baseLinePoints,
     props.isRange,
   ]);
+  const selectionDot = useRadarSelectionDot(
+    props.dot,
+    seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
+  );
   const filterId = `kind-ui-polar-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const materialized =
     material !== "plain" &&
@@ -112,27 +122,33 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
           <style>{`.${filterId} .recharts-radar-polygon > .recharts-polygon { filter: url(#${filterId}); }`}</style>
         </>
       )}
-      <motion.g data-kind-ui="radar-reveal" initial={false} style={{ opacity: series.opacity }}>
-        <Radar<DataPoint, Value>
-          activeDot={<ActiveMarker />}
-          {...props}
-          id={series.id}
-          hide={series.hide}
-          isAnimationActive={false}
-          zIndex={0}
-          {...(stroke !== undefined
-            ? { stroke }
-            : series.color !== undefined
-              ? { stroke: series.color }
-              : {})}
-          {...(fill !== undefined
-            ? { fill }
-            : series.color !== undefined
-              ? { fill: series.color }
-              : {})}
-          className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
-        />
-      </motion.g>
+      <RadarSelectionLayer
+        seriesKey={seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)}
+        hidden={series.hide}
+      >
+        <motion.g data-kind-ui="radar-reveal" initial={false} style={{ opacity: series.opacity }}>
+          <StableRadar<DataPoint, Value>
+            activeDot={radarActiveDot}
+            {...props}
+            {...(selectionDot !== undefined ? { dot: selectionDot } : {})}
+            id={series.id}
+            hide={series.hide}
+            isAnimationActive={false}
+            zIndex={0}
+            {...(stroke !== undefined
+              ? { stroke }
+              : series.color !== undefined
+                ? { stroke: series.color }
+                : {})}
+            {...(fill !== undefined
+              ? { fill }
+              : series.color !== undefined
+                ? { fill: series.color }
+                : {})}
+            className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
+          />
+        </motion.g>
+      </RadarSelectionLayer>
     </ZIndexLayer>
   );
 }

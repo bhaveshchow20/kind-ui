@@ -1,8 +1,19 @@
 // Host composition only; the installed tarball supplies every Kind component.
 import * as Chart from "@kind-ui/charts";
-import { type ComponentProps, useCallback, useState } from "react";
+import {
+  type ComponentProps,
+  type MouseEventHandler,
+  type Ref,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import {
   Cell,
+  type DotItemDotProps,
   LabelList,
   Radar as NativeRadar,
   RadarChart as NativeRadarChart,
@@ -26,6 +37,55 @@ const other = (row: (typeof initial)[number]) => row.other;
 function Shape(props: ComponentProps<typeof Sector>) {
   return <Sector {...props} data-host-shape="radial" />;
 }
+function ConsumerDot({
+  circleRef,
+  onClick,
+  ...props
+}: Partial<DotItemDotProps> & {
+  circleRef?: Ref<SVGCircleElement>;
+  onClick?: MouseEventHandler<SVGCircleElement>;
+}) {
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Consumer pointer dot; the series control provides the keyboard equivalent.
+    <circle
+      ref={circleRef}
+      data-custom-dot="true"
+      data-row={props.payload?.id}
+      cx={props.cx}
+      cy={props.cy}
+      r={props.r ?? 3}
+      fill={props.fill}
+      stroke={props.stroke}
+      opacity={props.opacity}
+      onClick={onClick}
+    />
+  );
+}
+function DotEvents({
+  ref,
+}: {
+  ref: Ref<{ click: MouseEventHandler<SVGCircleElement>; move: () => void }>;
+}) {
+  const [clicks, setClicks] = useState(0);
+  const [target, setTarget] = useState("none");
+  const [moves, setMoves] = useState(0);
+  useImperativeHandle(
+    ref,
+    () => ({
+      move: () => setMoves((old) => old + 1),
+      click: (event) => {
+        setClicks((old) => old + 1);
+        setTarget(event.currentTarget.tagName);
+      },
+    }),
+    [],
+  );
+  return (
+    <span>
+      dot clicks {clicks}; dot target {target}; moves {moves}
+    </span>
+  );
+}
 function Content({ label }: { label?: string | number }) {
   const [count, setCount] = useState(0);
   return (
@@ -38,7 +98,7 @@ function Content({ label }: { label?: string | number }) {
   );
 }
 export function PolarHost() {
-  const params = new URLSearchParams(window.location.search);
+  const [params] = useState(() => new URLSearchParams(window.location.search));
   const [animate, setAnimate] = useState<boolean | Chart.RadarAnimation>(
     params.has("motion") ? { revealDurationMs: 2400 } : false,
   );
@@ -56,31 +116,111 @@ export function PolarHost() {
   const [custom, setCustom] = useState(false);
   const [content, setContent] = useState(false);
   const [clicks, setClicks] = useState(0);
-  const [moves, setMoves] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [requests, setRequests] = useState<(string | null)[]>([]);
+  const [frozen, setFrozen] = useState(false);
+  const [selectionEnabled, setSelectionEnabled] = useState(params.has("selection"));
+  const [emphasisEnabled, setEmphasisEnabled] = useState(true);
+  const dotEvents = useRef<{ click: MouseEventHandler<SVGCircleElement>; move: () => void }>(null);
+  const [portalTarget, setPortalTarget] = useState<SVGSVGElement | null>(null);
+  const dotAttachments = useRef(0);
+  const dotRef = useCallback((node: SVGCircleElement | null) => {
+    if (node) node.dataset.attachments = String(++dotAttachments.current);
+  }, []);
+  const nativeDotClick = useCallback<MouseEventHandler<SVGCircleElement>>((event) => {
+    dotEvents.current?.click(event);
+  }, []);
+  const dot = useMemo<Chart.RadarSeriesProps["dot"]>(
+    () =>
+      params.has("dot-off") ? (
+        false
+      ) : params.has("dot-object") ? (
+        {
+          r: 7,
+          opacity: 0.4,
+          onClick: (_props, event) => {
+            nativeDotClick(event);
+            if (params.has("dot-veto")) event.preventDefault();
+          },
+        }
+      ) : params.has("dot-element") ? (
+        <ConsumerDot circleRef={dotRef} onClick={nativeDotClick} />
+      ) : params.has("dot-function") ? (
+        (props) => <ConsumerDot {...props} circleRef={dotRef} onClick={nativeDotClick} />
+      ) : params.has("portal-dot") ? (
+        (props) =>
+          portalTarget ? (
+            createPortal(<ConsumerDot {...props} onClick={nativeDotClick} />, portalTarget)
+          ) : (
+            <g />
+          )
+      ) : (
+        true
+      ),
+    [params, dotRef, nativeDotClick, portalTarget],
+  );
+  const nativeClick = useCallback<NonNullable<Chart.RadarSeriesProps["onClick"]>>(
+    (event) => {
+      if (params.has("selection")) setClicks((n) => n + 1);
+      if (params.has("veto")) event.preventDefault();
+    },
+    [params],
+  );
+  const nativeShape = useMemo(() => <Polygon data-host-shape="radar" />, []);
+  const portalShape = useCallback(
+    (props: ComponentProps<typeof Polygon>) =>
+      portalTarget ? (
+        createPortal(<Polygon {...props} data-host-shape="portal" />, portalTarget)
+      ) : (
+        <g />
+      ),
+    [portalTarget],
+  );
+  const selectionProps: Chart.RadarSelectionProps = params.has("controlled")
+    ? {
+        selection: selectionEnabled ? "series" : "none",
+        selectedSeries: selected,
+        onSelectedSeriesChange: (next) => {
+          setRequests((old) => [...old, next]);
+          if (!frozen) setSelected(next);
+        },
+      }
+    : {
+        selection: selectionEnabled ? "series" : "none",
+        ...(params.has("bare")
+          ? {}
+          : {
+              onSelectedSeriesChange: (next: string | null) => setRequests((old) => [...old, next]),
+            }),
+      };
   const ref = useCallback((node: SVGSVGElement | null) => {
     if (node) {
       node.dataset.hostRef = "attached";
       node.dataset.refCount = String(Number(node.dataset.refCount ?? 0) + 1);
     }
   }, []);
-  let data = initial.map((row) => ({
-    ...row,
-    value: zero
-      ? 0
-      : params.has("short")
-        ? 0.3
-        : params.has("signed")
-          ? row.value - 50
-          : updated
-            ? 100 - row.value
-            : row.value,
-  }));
-  if (reverse) data = [...data].reverse();
-  if (empty) data = [];
+  const data = useMemo(() => {
+    let rows = initial.map((row) => ({
+      ...row,
+      value: zero
+        ? 0
+        : params.has("short")
+          ? 0.3
+          : params.has("signed")
+            ? row.value - 50
+            : updated
+              ? 100 - row.value
+              : row.value,
+    }));
+    if (reverse) rows = [...rows].reverse();
+    if (params.has("single")) rows = rows.slice(0, 1);
+    return empty ? [] : rows;
+  }, [params, zero, updated, reverse, empty]);
   const config = {
     value: { label: "Actual", color: "#3161bd", formatValue: (value: unknown) => `${value} pts` },
     alias: { label: "Target", color: "#c16a31", formatValue: (value: unknown) => `${value} pts` },
   } satisfies Chart.SeriesConfig;
+  const radiusDomain = useMemo(() => [params.has("signed") ? -100 : 0, domain], [params, domain]);
   const width = small ? 330 : 520;
   return (
     <main>
@@ -141,17 +281,33 @@ export function PolarHost() {
       <button type="button" onClick={() => setContent(!content)}>
         Content
       </button>
+      {params.has("selection") && (
+        <>
+          <button type="button" onClick={() => setFrozen(!frozen)}>
+            Freeze selection
+          </button>
+          <button type="button" onClick={() => setSelectionEnabled(!selectionEnabled)}>
+            Selection mode
+          </button>
+          <button type="button" onClick={() => setEmphasisEnabled(!emphasisEnabled)}>
+            Emphasis mode
+          </button>
+        </>
+      )}
       <output>
-        Clicks {clicks}; moves {moves}
+        Clicks {clicks}; selected {selected ?? "none"}; requests {JSON.stringify(requests)};{" "}
+        <DotEvents ref={dotEvents} />
       </output>
       <Chart.Root
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
         data-host="radar"
+        emphasis={emphasisEnabled ? "auto" : "none"}
       >
         <Chart.Legend aria-label="Radar series" />
         <Chart.RadarChart
+          {...selectionProps}
           ref={ref}
           data={data}
           width={width}
@@ -160,7 +316,7 @@ export function PolarHost() {
           cx={shift ? "40%" : "50%"}
           startAngle={shift ? 0 : 90}
           aria-label="Radar comparison"
-          onMouseMove={() => setMoves((n) => n + 1)}
+          onMouseMove={() => dotEvents.current?.move()}
         >
           <defs>
             <linearGradient id="polar-paint">
@@ -173,7 +329,7 @@ export function PolarHost() {
           </defs>
           <PolarGrid />
           <PolarAngleAxis dataKey="category" />
-          <PolarRadiusAxis domain={[params.has("signed") ? -100 : 0, domain]} />
+          <PolarRadiusAxis domain={radiusDomain} />
           <Chart.RadarSeries<(typeof initial)[number], number | [number, number]>
             dataKey={params.has("range") ? range : "value"}
             seriesKey="value"
@@ -181,7 +337,13 @@ export function PolarHost() {
             material={material}
             filter={nativeFilter ? "url(#host-filter)" : undefined}
             style={params.has("style-filter") ? { filter: "none" } : undefined}
-            shape={params.has("radar-shape") ? <Polygon data-host-shape="radar" /> : undefined}
+            shape={
+              params.has("portal-shape")
+                ? portalShape
+                : params.has("radar-shape")
+                  ? nativeShape
+                  : undefined
+            }
             fill={
               params.has("paint")
                 ? params.has("solid")
@@ -192,8 +354,13 @@ export function PolarHost() {
             stroke={params.has("paint") ? "none" : undefined}
             fillOpacity={params.has("transparent") ? 0 : 0.25}
             hide={hide}
-            dot
-            label
+            dot={dot}
+            label={
+              !["single", "dot-object", "dot-element", "dot-function"].some((key) =>
+                params.has(key),
+              )
+            }
+            onClick={nativeClick}
           />
           <Chart.RadarSeries<(typeof initial)[number], number>
             dataKey={other}
@@ -205,6 +372,15 @@ export function PolarHost() {
           <Chart.Tooltip content={content ? <Content /> : undefined} />
         </Chart.RadarChart>
       </Chart.Root>
+      {(params.has("portal-dot") || params.has("portal-shape")) && (
+        <svg
+          width={520}
+          height={360}
+          ref={setPortalTarget}
+          aria-label="Consumer portal"
+          data-host="portal"
+        />
+      )}
       <Chart.Root
         config={config}
         visibleSeries={visible}
@@ -234,11 +410,7 @@ export function PolarHost() {
               <feOffset dx={0} dy={0} />
             </filter>
           </defs>
-          <PolarAngleAxis
-            type="number"
-            domain={[params.has("signed") ? -100 : 0, domain]}
-            tick={false}
-          />
+          <PolarAngleAxis type="number" domain={radiusDomain} tick={false} />
           <PolarRadiusAxis type="category" dataKey="category" tick />
           <Chart.RadialBarSeries<(typeof initial)[number], number | [number, number]>
             dataKey={params.has("radial-range") ? range : "value"}
@@ -291,7 +463,7 @@ export function PolarHost() {
         >
           <PolarGrid />
           <PolarAngleAxis dataKey="category" />
-          <PolarRadiusAxis domain={[params.has("signed") ? -100 : 0, domain]} />
+          <PolarRadiusAxis domain={radiusDomain} />
           <NativeRadar<(typeof initial)[number], number | [number, number]>
             stroke={params.has("paint") ? "none" : "#3161bd"}
             dataKey={params.has("range") ? range : "value"}
@@ -310,11 +482,7 @@ export function PolarHost() {
           startAngle={shift ? 180 : 90}
           endAngle={shift ? 0 : -270}
         >
-          <PolarAngleAxis
-            type="number"
-            domain={[params.has("signed") ? -100 : 0, domain]}
-            tick={false}
-          />
+          <PolarAngleAxis type="number" domain={radiusDomain} tick={false} />
           <PolarRadiusAxis type="category" dataKey="category" tick />
           <NativeRadialBar<(typeof initial)[number], number | [number, number]>
             dataKey={params.has("radial-range") ? range : "value"}
