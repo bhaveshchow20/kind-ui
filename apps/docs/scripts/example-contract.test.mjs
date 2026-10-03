@@ -7,53 +7,30 @@ import { filesFor, promptFor } from "../lib/example-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
-test("every family has a public-export-only complete consumer", () => {
-  assert.equal(examples.length, 13);
+test("only the published Line component has a complete public consumer", () => {
   assert.deepEqual(
-    Object.keys(bundles),
     examples.map((example) => example.id),
+    ["line"],
   );
-  for (const bundle of Object.values(bundles)) {
-    const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
-    assert.ok(source);
-    const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)].map((match) => match[1]);
+  assert.deepEqual(Object.keys(bundles), ["line"]);
+  const bundle = bundles.line;
+  assert.match(bundle.files["src/main.tsx"], /@kind-ui\/charts\/styles\.css/);
+  const manifest = JSON.parse(bundle.files["package.json"]);
+  assert.equal(manifest.private, true);
+  assert.equal(manifest.dependencies["@kind-ui/charts"], "file:vendor/kind-ui-charts-0.0.0.tgz");
+  const lock = JSON.parse(bundle.files["package-lock.json"]);
+  assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, provenance.integrity);
+  for (const file of [
+    "package.json",
+    "package-lock.json",
+    "src/main.tsx",
+    "src/example.css",
+    "src/examples/line/example.tsx",
+  ])
     assert.ok(
-      imports.every((value) =>
-        ["@kind-ui/charts", "react", "recharts", "../shared/controls", "./settings"].includes(
-          value,
-        ),
-      ),
-      `${bundle.id}: ${imports}`,
+      bundle.files["README.md"].includes(`/examples/line/${file}`),
+      `Setup link missing: ${file}`,
     );
-    assert.match(bundle.files["src/main.tsx"], /@kind-ui\/charts\/styles\.css/);
-    const manifest = JSON.parse(bundle.files["package.json"]);
-    assert.equal(manifest.private, true);
-    assert.equal(manifest.dependencies["@kind-ui/charts"], "file:vendor/kind-ui-charts-0.0.0.tgz");
-    const lock = JSON.parse(bundle.files["package-lock.json"]);
-    assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, provenance.integrity);
-  }
-});
-test("selected state replaces the actual settings source without mutating defaults", () => {
-  const bundle = bundles.donut;
-  const selected = {
-    ...bundle.settings,
-    visible: ["delivery"],
-    material: "paper",
-    hole: 36,
-    animate: true,
-    emphasis: "none",
-  };
-  const original = JSON.stringify(bundle);
-  const files = filesFor(bundle, selected);
-  assert.match(files["src/examples/donut/settings.ts"], /"visible": \[\s*"delivery"/);
-  assert.match(files["src/examples/donut/settings.ts"], /"hole": 36/);
-  assert.equal(JSON.stringify(bundle), original);
-  const prompt = promptFor(bundle, selected, "https://docs.example.test");
-  assert.ok(prompt.includes(JSON.stringify(selected)));
-  assert.ok(prompt.includes(files["src/examples/donut/settings.ts"]));
-  assert.match(prompt, /https:\/\/docs.example.test\/markdown\/components\/donut.md/);
-  assert.ok(prompt.length < 7000, `Compact prompt is ${prompt.length} characters`);
-  assert.ok(!prompt.includes(bundle.files["src/examples/donut/example.tsx"]));
 });
 test("download package bytes match the validated snapshot", () => {
   const digest = createHash("sha256")

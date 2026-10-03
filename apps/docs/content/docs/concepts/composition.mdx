@@ -1,24 +1,24 @@
 ---
 title: Composition
-description: Keep presentation, native geometry and application state explicit.
+description: Keep Line context, plot parts and application data explicit.
 ---
 
 ## Ownership
 
 | Responsibility | Owner |
 | --- | --- |
-| Data, validation, filters, axes, domains, units and dimensions | Application |
-| Cartesian/polar geometry, Cells and native escape hatches | Recharts |
-| Scoped metadata, maintained marks, legends, tooltips and finishes | Kind UI |
+| Data, units, domains and application state | Application |
+| Native plot geometry and axis semantics | Recharts |
+| Chart context, configured defaults, responsive sizing, series, legend and tooltip presentation | Kind UI |
 
-`Root.config` supplies labels, colors, formatters and optional icons. It does not map data or choose axes. Managed series preserve native composition. Native custom shapes, filters and renderers retain their own behavior and styling.
+Configured `LineChart` owns its `Root`. Pass `data` and `config`, then compose the exported grid, axes, `LineSeries` and `Tooltip` as children. `legend={{}}` enables the internally positioned legend. Do not add another `Root` around configured `LineChart`.
+
+Omit explicit children and pass `xDataKey` to use generated parts. Without `config`, the legacy `Root` + `LineChart` composition remains available. See the [Line API](/docs/components/line/#api-reference) for these two modes and their defaults.
 
 ## Dimensions and tokens
 
-Give a chart a measurable width and height. Examples use `ResponsiveContainer` or the chart's native `responsive` prop with an explicit height. The package stylesheet uses scoped colors from Root and application tokens such as `--foreground`, `--card`, `--border` and `--muted-foreground`; the complete examples include a small stylesheet defining them.
+Give the chart measurable space. Configured `LineChart` defaults to full width and 280px height, with dimensions overridable by props and styles. The package stylesheet uses scoped config colors and application tokens such as `--foreground`, `--card`, `--border` and `--muted-foreground`; the complete consumer includes a stylesheet defining them.
 
 ## Motion and access
 
-`animate={false}` is the example default. Maintained entrance animations respect reduced-motion preferences. A keyboard tooltip does not expose every record in every native family: provide an accessible data alternative and meaningful axes/units. Scatter's native arrow traversal visits the first registered series in data order; a table exposes the rest.
-
-Avoid assuming a material changes the geometry, the values or the accessible data. Glass is paused and excluded from these docs.
+Configured Line defaults to maintained motion and respects reduced-motion preferences; `animate={false}` disables it. Provide an accessible name, meaningful axes/units and a [complete data alternative](/docs/guides/accessibility/). Custom shapes, filters and renderers retain their own behavior and styling. Materials decorate lines without changing data or geometry.

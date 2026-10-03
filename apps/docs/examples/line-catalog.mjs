@@ -36,7 +36,6 @@ export const lineDataLabels = {
     caption: "Revenue and target ($ thousands)",
     columns: { period: "Month", actual: "Revenue ($k)", target: "Target ($k)" },
   },
-  "line-step": { caption: "Allocated seats", columns: { period: "Day", seats: "Allocated seats" } },
   "line-markers": {
     caption: "Response time (milliseconds)",
     columns: { period: "Day", response: "Response time (ms)" },

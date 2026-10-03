@@ -73,26 +73,23 @@ function literal(node) {
   if (node.kind === ts.SyntaxKind.NullKeyword) return null;
   throw new Error("Settings must contain only JSON literals");
 }
+// Rebuild the published asset sets so removed pages and examples cannot survive.
+rmSync("public/examples", { recursive: true, force: true });
+rmSync("public/markdown", { recursive: true, force: true });
+rmSync("generated", { recursive: true, force: true });
+const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
 const bundles = {};
 for (const example of [...examples, ...lineExamples]) {
-  const isLine = Object.hasOwn(lineDataLabels, example.id);
+  if (!Object.hasOwn(lineDataLabels, example.id))
+    throw new Error(`Only published Line examples are supported: ${example.id}`);
   const exampleSource = read(`examples/${example.id}/example.tsx`);
   const componentName = exampleSource.match(/export function (\w+)/)?.[1] ?? "Example";
-  const settingsSource = isLine ? "" : read(`examples/${example.id}/settings.ts`);
-  const parsed = ts.createSourceFile(
-    isLine ? "example.tsx" : "settings.ts",
-    isLine ? exampleSource : settingsSource,
-    ts.ScriptTarget.Latest,
-    true,
-  );
+  const parsed = ts.createSourceFile("example.tsx", exampleSource, ts.ScriptTarget.Latest, true);
   const variable = parsed.statements
     .flatMap((s) => (ts.isVariableStatement(s) ? [...s.declarationList.declarations] : []))
-    .find((v) => v.name.getText(parsed) === (isLine ? "data" : "defaultSettings"));
+    .find((v) => v.name.getText(parsed) === "data");
   if (!variable?.initializer) throw new Error(`Missing example data/settings for ${example.id}`);
-  const settings = isLine ? {} : literal(variable.initializer);
-  const dataAlternative = isLine
-    ? { ...lineDataLabels[example.id], rows: literal(variable.initializer) }
-    : undefined;
+  const dataAlternative = { ...lineDataLabels[example.id], rows: literal(variable.initializer) };
   const variantDefinition = lineVariants[example.id];
   const variants = variantDefinition
     ? Object.fromEntries(
@@ -133,19 +130,21 @@ for (const example of [...examples, ...lineExamples]) {
       ) + "\n",
     "src/main.tsx": `import { StrictMode } from "react";\nimport { createRoot } from "react-dom/client";\nimport { ${componentName} } from "./examples/${example.id}/example";\nimport "@kind-ui/charts/styles.css";\nimport "./example.css";\nconst root = document.getElementById("root");\nif (!root) throw new Error("Missing mount element");\ncreateRoot(root).render(<StrictMode><${componentName} /></StrictMode>);\n`,
     "src/example.css": read("examples/shared/example.css"),
-    ...(!isLine
-      ? { "src/examples/shared/controls.tsx": read("examples/shared/controls.tsx") }
-      : {}),
     [`src/examples/${example.id}/example.tsx`]: exampleSource,
-    ...(!isLine ? { [`src/examples/${example.id}/settings.ts`]: settingsSource } : {}),
-    "README.md": `# ${example.title} — complete consumer\n\n${status}.\n\nNode 22.12+ and npm 11.9. ${local ? (isLine ? "Use the pinned vendor tarball identified by provenance. This package is not on npm; do not replace it with a registry install." : "The downloaded ZIP includes the exact vendor tarball. This package is not on npm; do not replace it with a registry install.") : "This bundle pins the published package version."}\n\nRun npm install (or npm ci when the lockfile is present), then npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\n${isLine ? "Paste example.tsx into your app. It includes its data and public imports; the configured chart owns default legend visibility. No demo modules are required." : `Selected options are in src/examples/${example.id}/settings.ts. Chart geometry and filtering stay in example.tsx.`} ${isLine ? `Documentation consumer of package source ${provenance.sourceCommit}.` : `Source adapted from ${example.source} at ${provenance.sourceCommit}; original repository MIT license.`}\n\n${local ? `Vendor SHA-256: ${provenance.sha256}.` : ""}\n`,
+    "README.md": `# ${example.title} — complete consumer\n\n${status}.\n\nNode 22.12+ and npm 11.9. Use the pinned vendor tarball identified by provenance; this package is not on npm.\n\nUse these complete files, preserving their directory structure. Put the exact package asset at vendor/kind-ui-charts-0.0.0.tgz. Run npm ci, then npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports; configured LineChart owns default legend visibility. No demo modules are required. Documentation consumer of package source ${provenance.sourceCommit}.\n\nVendor SHA-256: ${provenance.sha256}.\n`,
     LICENSE: read("../../LICENSE"),
   };
   if (existsSync("examples/shared/consumer-package-lock.json"))
     files["package-lock.json"] = read("examples/shared/consumer-package-lock.json");
+  files["README.md"] +=
+    "\n## Complete setup files\n\n" +
+    Object.keys(files)
+      .filter((file) => file !== "README.md")
+      .map((file) => `- [${file}](${origin}/examples/${example.id}/${file})`)
+      .join("\n") +
+    `\n- [Pinned tarball](${origin}/examples/package/kind-ui-charts-0.0.0.tgz)\n- [Provenance](${origin}/package-provenance.json)\n`;
   bundles[example.id] = {
     ...example,
-    settings,
     ...(dataAlternative ? { dataAlternative } : {}),
     ...(variants
       ? {
@@ -159,7 +158,6 @@ for (const example of [...examples, ...lineExamples]) {
     localPackage: local,
     version: provenance.version,
   };
-  if (isLine) rmSync(`public/examples/${example.id}`, { recursive: true, force: true });
   if (variants)
     for (const [value, variant] of Object.entries(variants))
       write(`public/examples/${example.id}/variants/${value}/example.tsx`, variant.source);
@@ -217,7 +215,7 @@ const api = Object.fromEntries(
     })),
   ]),
 );
-if (!api.Root?.length || !api.PieSeries?.length || !api.ComboChart?.length)
+if (!api.Root?.length || !api.LineSeries?.length || !api.LineChart?.length)
   throw new Error("Public API generation returned incomplete tables");
 write("generated/api.json", JSON.stringify(api, null, 2) + "\n");
 const tableMarkdown = (name) => {
@@ -233,7 +231,6 @@ const tableMarkdown = (name) => {
   );
 };
 const index = [];
-const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
 for (const entry of readdirSync("content/docs", { recursive: true }).filter((entry) =>
   String(entry).endsWith(".mdx"),
 )) {
@@ -244,8 +241,6 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   let body = original.replace(/^---\n[\s\S]*?\n---\n/, "");
   body = body.replace(/<PackageSource\s*\/>/g, `\`${provenance.sourceCommit}\``);
   body = body.replace(/<(?:ComponentPlayground|LineExample) id="([\w-]+)"\s*\/>/g, (_, id) => {
-    const isLine = id === "line" || id.startsWith("line-");
-    const docId = isLine ? "line" : id;
     const bundle = bundles[id];
     if (!bundle) throw new Error(`Unknown example ${id}`);
     const inline = Object.entries(bundle.files).filter(
@@ -255,7 +250,7 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
       (file) => !inline.some(([name]) => name === file),
     );
     return (
-      `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\n${bundle.packageStatus}. ${isLine ? "Pinned package asset:" : `Use Download example at ${origin}/docs/components/${docId}/; the ZIP includes the vendor tarball. Direct package asset:`} ${origin}/examples/package/kind-ui-charts-0.0.0.tgz.\n\n` +
+      `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\n${bundle.packageStatus}. Pinned package asset: ${origin}/examples/package/kind-ui-charts-0.0.0.tgz.\n\n` +
       inline
         .map(
           ([file, source]) =>
@@ -283,5 +278,5 @@ write(
 );
 write("public/llms-full.txt", index.map(({ markdown }) => markdown).join("\n\n---\n\n"));
 console.log(
-  `Generated ${examples.length} complete examples, ${Object.keys(api).length} public API tables and ${index.length} Markdown pages.`,
+  `Generated ${Object.keys(bundles).length} complete Line examples, ${Object.keys(api).length} public API tables and ${index.length} Markdown pages.`,
 );

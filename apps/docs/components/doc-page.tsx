@@ -4,7 +4,6 @@ import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layo
 import defaultComponents from "fumadocs-ui/mdx";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import bundles from "@/generated/examples.json";
 import lineBundles from "@/generated/line-examples.json";
 import { source } from "@/lib/source";
 import packageProvenance from "@/vendor/provenance.json";
@@ -17,15 +16,6 @@ import {
 import { CopyMarkdown } from "./copy-markdown";
 import { MobileDocsNavigation } from "./glass-docs-layout";
 
-async function ComponentExample({ id }: { id: ComponentId }) {
-  const bundle = (bundles as unknown as Record<ComponentId, ComponentBundle>)[id];
-  const sourceCode = await highlight(bundle.files[`src/examples/${id}/example.tsx`], {
-    lang: "tsx",
-    themes: { light: "github-light", dark: "github-dark" },
-    defaultColor: false,
-  });
-  return <ComponentPlayground key={id} bundle={bundle} sourceCode={sourceCode} />;
-}
 async function LineExample({ id }: { id: ComponentId }) {
   const bundle = (lineBundles as unknown as Record<ComponentId, ComponentBundle>)[id];
   async function codeBlock(code: string) {
@@ -66,7 +56,6 @@ async function LineExample({ id }: { id: ComponentId }) {
       bundle={bundle}
       sourceCode={sourceCode}
       variantCode={variantCode}
-      compactLine
     />
   );
 }
@@ -95,7 +84,6 @@ export function renderDoc(slug?: string[]) {
           <Content
             components={{
               ...defaultComponents,
-              ComponentPlayground: ComponentExample,
               LineExample,
               ApiTable,
               PackageSource: () => <code>{packageProvenance.sourceCommit}</code>,

@@ -1,16 +1,16 @@
 ---
 title: Consumer guide for agents
-description: Use the pinned package and complete public example without inventing an interface.
+description: Use the pinned Line package and standalone source without inventing an interface.
 ---
 
-1. Read [installation](/docs/start/installation/) and the exact example Markdown from [llms.txt](/llms.txt). This initial Site is owner-private; anonymous public retrieval is not established.
-2. Download the complete example. Use the included pinned tarball while the package is unpublished. Do not reach into repository implementation paths.
-3. Apply the copied prompt's selected settings file. Keep chart imports, native engine imports and stylesheet setup explicit.
-4. Typecheck/build the consumer, then verify legend/filter behavior, zero/missing values, sizing, keyboard access and the data alternative.
-5. Report failures with evidence. Separate packaging, API, docs, runtime and agent mistakes.
+1. Read [installation](/docs/start/installation/) and [Line Markdown](/markdown/components/line.md), indexed by [llms.txt](/llms.txt). This Site is owner-private; anonymous public retrieval is not established.
+2. Retrieve the selected source from Copy prompt and use the exact [pinned artifact](/examples/package/kind-ui-charts-0.0.0.tgz). Preserve the [locked setup files](/examples/line/README.md); do not reach into repository implementation paths or invent a registry install.
+3. Import the public Line parts and stylesheet. The source includes data/config, and configured `LineChart` owns context, sizing and legend defaults.
+4. Typecheck/build the consumer and verify curve/material selection, legend toggles, missing/zero values, sizing, keyboard access and a complete data alternative.
+5. Report failures with the exact source/checksum and reproducible evidence.
 
-The page Copy prompt includes persistent control/visibility settings and acceptance criteria. Transient pointer or keyboard emphasis is not copied as an initial state. Copy Markdown contains the canonical default consumer files and generated public types. Copy prompt and Download example carry the selected settings; it does not dump unresolved MDX or repository internals.
+Copy prompt links the selected curve/material source; Copy Markdown contains canonical default consumer files. Legend toggles are runtime inspection state and are not serialized into the prompt. Keep controlled visibility explicit when needed.
 
 ## Reader and contributor instructions
 
-This guide is for package consumers. Repository `AGENTS.md` governs contributors, source changes and release boundaries. A docs build or passing consumer does not authorize npm publication, a main merge or a public audience change.
+This guide is for package consumers. Repository `AGENTS.md` governs contributors, source changes and release boundaries. Passing checks does not authorize npm publication, a main merge or an audience change. Other component documentation will be reviewed in separate PRs.
