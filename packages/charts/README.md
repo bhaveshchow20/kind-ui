@@ -1,6 +1,6 @@
 # Kind UI charts
 
-React components compose real Recharts lines, areas and bars with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. Each chart accepts `animate={false | true | config}` for coordinated reveal and hover animation. Consumers own data shape, scales, axes, grids, reference lines, custom marks, copy and layout.
+React components compose real Recharts lines, areas and bars with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. Each chart accepts `animate={false | true | config}` for coordinated reveal and hover animation. Consumers own data shape, reference lines, custom marks, copy and data alternatives. Explicit compositions also own scales, axes, grids and layout; configured Line composition provides overridable defaults.
 
 Pre-release and unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, Motion 13.4.6, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
 
@@ -52,15 +52,41 @@ This consolidates application imports; Recharts remains a required peer dependen
 
 For Next, import the package from a client component when supplying callbacks, accessors, refs or stateful content. The published entry retains `"use client"`; consolidation does not make function props serializable across a server boundary. Charts still need an accessible name and a host-owned data alternative; native SSR can render an empty chart wrapper before client layout.
 
+## Configured Line Component
+
+Passing `config` opts the existing `LineChart` into package-owned composition. Provide `data`, `config` and an accessible name (`aria-label` or `aria-labelledby`); add `xDataKey` when generating parts and omit it when supplying explicit children. Do not add a surrounding `Root`.
+
+```tsx
+import { LineChart, type SeriesConfig } from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const config = {
+  tasks: { label: "Tasks", color: "#3659b8" },
+} satisfies SeriesConfig;
+
+<LineChart
+  data={[{ day: "Mon", tasks: 0 }, { day: "Tue", tasks: 12 }]}
+  config={config}
+  xDataKey="day"
+  aria-label="Tasks by day"
+/>;
+```
+
+Configured mode owns Root, responsive sizing (100% width and 280px default height), default axes/grid/series/Tooltip/Legend and uncontrolled visibility. Override sizing through `className`, `style`, `width` or `height`; use `rootProps` for the surrounding Root. `defaultVisibleSeries` seeds uncontrolled visibility; `visibleSeries` and `onVisibleSeriesChange` provide controlled visibility. A controlled chart without a change handler is read-only. Keep controlled mode stable or remount with a new key.
+
+Omitted children generate parts. Override `xAxis`, `yAxis`, `grid`, `tooltip` or `legend` with their existing props or `false`; `curve` and `material` set series defaults. The optional typed `series` array supplies native LineSeries props with explicit `seriesKey` identities matching config, including function/numeric data keys. `ConfiguredLineChartProps<Row>` and `ConfiguredLineSeries<Row>` preserve row typing; the existing `LineChartProps` continues to describe explicit composition.
+
+Explicit children replace generated parts, including when children are `null` or empty. Omit `xDataKey` and generated-part options in this mode; compose native axes/grid and Kind series/Tooltip yourself. Explicit children do not add a legend unless `legend` props are supplied. Root and visibility remain owned by configured mode. Both paths share the existing implementations and native geometry. Configured motion defaults on, honors reduced motion and accepts `animate={false}`; explicit Root + LineChart composition retains its off default. The consumer still owns the accessible name and data alternative.
+
 ## Line ownership and API
 
 | Owner | Responsibilities |
 | --- | --- |
 | Kind | Root metadata and colors, LineSeries visibility, shared pointer/keyboard modality, measured tooltip bounds, optional reveal/default active-marker/tooltip motion |
 | Recharts | Geometry, curve interpolation, axes/scales, graphical-item registration, payload and active selection, keyboard traversal and Escape/blur dismissal |
-| Consumer | Data and ordering, controlled visibleSeries, sizing, axes/grid/reference lines, custom dot/activeDot/shape/content, labels, styling, accessible name/instructions and data alternative |
+| Consumer | Data and ordering, controlled visibleSeries, sizing/part overrides (or explicit sizing and axes/grid), reference lines, custom dot/activeDot/shape/content, labels, styling, accessible name and data alternative; explicit compositions also own instructions |
 
-Render `LineChart` inside `Root`, and `LineSeries`/`Tooltip` inside `LineChart`. Engine children such as `XAxis`, `YAxis`, `CartesianGrid`, `ReferenceLine`, `LabelList` and `ErrorBar` keep their native composition path. There is no prescribed data schema, card or layout. The wrappers render registered Recharts components, rather than inspecting child display names or wrapping native composition parts.
+For legacy composition without `config`, render `LineChart` inside `Root`, and `LineSeries`/`Tooltip` inside `LineChart`. Engine children such as `XAxis`, `YAxis`, `CartesianGrid`, `ReferenceLine`, `LabelList` and `ErrorBar` keep their native composition path. There is no prescribed data schema, card or layout. The wrappers render registered Recharts components, rather than inspecting child display names or wrapping native composition parts.
 
 - `LineChart`: native Recharts chart props and SVG ref. Kind composes `onMouseMove`/`onMouseLeave` with its own pointer tracking and captures focus/keyboard changes without replacing Root handlers. The ref targets `SVGSVGElement`, including React 19 callback cleanup. The internal frame uses `display: contents` so sizing stays with the engine or `ResponsiveContainer`.
 - `LineSeries`: native `Line` props/children/custom `dot`, `activeDot`, `shape` and handlers. Motion owns animation, so `isAnimationActive` is excluded and Recharts animation is always disabled. `stroke` defaults to Root's color. A Root-hidden series stays hidden even with `hide={false}`; `hide={true}` additionally hides a series. String `dataKey` is the default metadata identity. Use `seriesKey` for function/numeric data keys, required with controlled visibility. Native tooltip payloads remain unchanged; Kind's default content resolves registered identities for metadata and filtering. Recharts Line has no public component ref in 3.10.1: use refs on your custom mark/shape nodes, retaining the engine shape's `pathRef` where needed.
@@ -70,7 +96,7 @@ Custom shape/content functions should be stable component types defined outside 
 
 ## Line animation
 
-Import the same components from `@kind-ui/charts` in every mode. `LineChart` accepts `animate`, defaulting to `false`: `false` renders immediately, `true` enables defaults, and a `LineAnimation` object enables animation with overrides. It exposes `revealDurationMs` (1000 by default), Motion `revealEasing` and `hoverTransition` (spring by default). Import the stylesheet for shared SVG reveal clipping:
+Import the same components from `@kind-ui/charts` in every mode. `LineChart` accepts `animate`, defaulting to `false` in legacy Root + LineChart composition and `true` in configured mode: `false` renders immediately, `true` enables defaults, and a `LineAnimation` object enables animation with overrides. It exposes `revealDurationMs` (1000 by default), Motion `revealEasing` and `hoverTransition` (spring by default). Import the stylesheet for shared SVG reveal clipping:
 
 ```tsx
 import { Root, LineChart, LineSeries, Tooltip } from "@kind-ui/charts";
