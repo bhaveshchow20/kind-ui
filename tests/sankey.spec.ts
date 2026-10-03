@@ -86,10 +86,16 @@ for (const interruption of ["pointer", "focus", "resize", "data", "reduced"] as 
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(packed, { waitUntil: "commit" });
     const chart = page.locator('[data-kind-ui="sankey"]').first();
-    await expect(chart.locator(".recharts-sankey-links path")).toHaveCount(1);
-    expect(await chart.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeLessThan(1);
+    await expect(
+      chart.locator(".recharts-sankey-links path:not([data-kind-ui=sankey-link-entrance])"),
+    ).toHaveCount(1);
+    const streams = chart.locator('[data-kind-ui="sankey-link-entrance"]');
+    await expect(streams.first()).toBeAttached();
+    const initialDash = await streams.first().getAttribute("stroke-dasharray");
+    await expect.poll(() => streams.first().getAttribute("stroke-dasharray")).not.toBe(initialDash);
+    await expect(chart).toHaveCSS("opacity", "1");
     const before = await chart
-      .locator(".recharts-sankey-links path")
+      .locator(".recharts-sankey-links path:not([data-kind-ui=sankey-link-entrance])")
       .evaluateAll((marks) => marks.map((m) => m.getAttribute("stroke-width")));
     if (interruption === "pointer") await chart.dispatchEvent("pointerdown");
     if (interruption === "focus") await chart.locator("svg").first().focus();
@@ -99,8 +105,9 @@ for (const interruption of ["pointer", "focus", "resize", "data", "reduced"] as 
     await expect
       .poll(() => chart.evaluate((el) => Number(getComputedStyle(el).opacity)), { timeout: 300 })
       .toBe(1);
+    await expect(streams).toHaveCount(0);
     const after = await chart
-      .locator(".recharts-sankey-links path")
+      .locator(".recharts-sankey-links path:not([data-kind-ui=sankey-link-entrance])")
       .evaluateAll((marks) => marks.map((m) => m.getAttribute("stroke-width")));
     expect(after).toEqual(before);
   });
@@ -132,4 +139,29 @@ test("Sankey too-small frame keeps the full data alternative", async ({ page }) 
   await page.getByRole("button", { name: "Narrow frame" }).click();
   await expect(page.getByRole("status")).toContainText("Insufficient space");
   await expect(page.getByRole("table")).toContainText("zero");
+});
+
+test("our SankeyLink flows while consumer paint refs and handlers remain owned; raw custom renderer stays native", async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(`${packed}/?ownership`);
+  const custom = page.getByLabel("custom-link");
+  await expect(custom).toHaveAttribute("stroke", "pink");
+  await expect(
+    custom
+      .locator("xpath=ancestor::*[@data-kind-ui='sankey']")
+      .locator('[data-kind-ui="sankey-link-entrance"]'),
+  ).toHaveCount(0);
+  const chart = page.locator('[data-kind-ui="sankey"]').last();
+  const paths = page.locator('[data-consumer-ref="attached"]');
+  await expect(paths.first()).toHaveCSS("opacity", "0.7");
+  await expect(paths.first()).toHaveAttribute("stroke-width", /[0-9]/);
+  const streams = chart.locator('[data-kind-ui="sankey-link-entrance"]');
+  await expect(streams.first()).toBeAttached();
+  const d = await paths.first().getAttribute("d");
+  expect(await streams.first().getAttribute("d")).toBe(d);
+  await page.screenshot({ path: info.outputPath("sankey-stream-entrance.png") });
+  await paths.first().dispatchEvent("click");
+  await expect(page.getByRole("region", { name: "Mark ownership" })).toContainText("1 /");
 });
