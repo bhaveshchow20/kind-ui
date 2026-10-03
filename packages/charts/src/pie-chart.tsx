@@ -65,10 +65,12 @@ export function PieChart({
   const [progress, setProgress] = useState(1);
   const duration = options.revealDurationMs ?? 1000;
   const easing = options.revealEasing ?? "easeOut";
+  const started = useRef(false);
   const previous = useRef([duration, easing, animationDirection]);
   useLayoutEffect(() => {
     const inputs = [duration, easing, animationDirection];
-    if (inputs.some((value, index) => value !== previous.current[index])) finish();
+    if (started.current && inputs.some((value, index) => value !== previous.current[index]))
+      finish();
     previous.current = inputs;
   });
   useLayoutEffect(() => {
@@ -76,6 +78,7 @@ export function PieChart({
       setProgress(1);
       return;
     }
+    started.current = true;
     setProgress(0);
     const controls = animateValue(0, 1, {
       duration: Math.max(0, duration) / 1000,

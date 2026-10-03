@@ -439,10 +439,13 @@ for (const direction of ["clockwise", "anticlockwise"] as const) {
     test(`packed pie sweeps ${direction} continuously (${span || "native full"}) without changing geometry`, async ({
       page,
     }, info) => {
+      await page.clock.install();
+      await page.clock.pauseAt(new Date(Date.now() + 1000));
       await page.emulateMedia({ reducedMotion: "no-preference" });
       await page.goto(
         `${url}/?motion${direction === "anticlockwise" ? "&anticlockwise" : ""}${span}`,
       );
+      await page.clock.runFor(100);
       const windows = page.locator('[data-kind-ui="pie-entrance-window"]');
       await expect(windows.first()).toHaveAttribute("data-direction", direction);
       const nativePaths = await page
@@ -450,7 +453,8 @@ for (const direction of ["clockwise", "anticlockwise"] as const) {
         .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
       const window = windows.first();
       const first = await window.getAttribute("d");
-      await expect.poll(() => window.getAttribute("d")).not.toBe(first);
+      await page.clock.runFor(100);
+      expect(await window.getAttribute("d")).not.toBe(first);
       const d = await window.getAttribute("d");
       const arc = d
         ?.split("A")[1]
@@ -474,6 +478,7 @@ for (const direction of ["clockwise", "anticlockwise"] as const) {
           .locator(sectors)
           .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
       ).toEqual(nativePaths);
+      await page.clock.runFor(1000);
       await expect(windows).toHaveCount(0);
       expect(
         await page
