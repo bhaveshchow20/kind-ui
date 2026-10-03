@@ -1,8 +1,9 @@
 "use client";
 
-import { animate as animateValue, motion, useMotionValue } from "motion/react";
+import { animate as animateValue, type MotionValue, useMotionValue } from "motion/react";
 import {
   type ComponentProps,
+  createContext,
   type ReactNode,
   useCallback,
   useLayoutEffect,
@@ -64,10 +65,16 @@ export type SankeyChartProps = Omit<
   onClick?: IdentityEvent;
   onMouseEnter?: IdentityEvent;
   onMouseLeave?: IdentityEvent;
-  /** Opacity reveal only: geometry and proportional widths never animate. */
+  /** Kind SankeyLink paint flows along unchanged paths; custom renderers retain ownership. */
   animate?: boolean | SankeyAnimation;
   empty?: ReactNode;
 };
+
+export const SankeyMotion = createContext<{
+  reveal: boolean;
+  progress: MotionValue<number> | null;
+  width: number;
+}>({ reveal: false, progress: null, width: 1 });
 
 /** Recharts owns layout, renderers, labels and events. Zero flows remain in the data alternative. */
 export function SankeyChart({
@@ -114,6 +121,7 @@ export function SankeyChart({
     setSize(measured.current);
   }, []);
   const inputs = [
+    duration,
     data,
     props.width,
     props.height,
@@ -133,17 +141,26 @@ export function SankeyChart({
     if (inputs.some((value, index) => value !== previous.current[index])) setInterrupted(true);
     previous.current = inputs;
   });
-  const enabled = Boolean(animate) && !reduced && !interrupted && size !== null;
-  const opacity = useMotionValue(1);
+  const enabled = Boolean(animate) && !reduced;
+  const previousEnabled = useRef(enabled);
   useLayoutEffect(() => {
-    if (!enabled) {
-      opacity.set(1);
+    if (previousEnabled.current && !enabled) setInterrupted(true);
+    previousEnabled.current = enabled;
+  }, [enabled]);
+  const reveal = enabled && !interrupted && size !== null;
+  const progress = useMotionValue(1);
+  useLayoutEffect(() => {
+    if (!reveal) {
+      progress.set(1);
       return;
     }
-    opacity.set(0);
-    const playback = animateValue(opacity, 1, { duration: duration / 1000 });
+    progress.set(0);
+    const playback = animateValue(progress, 1, {
+      duration: duration / 1000,
+      onComplete: () => setInterrupted(true),
+    });
     return () => playback.stop();
-  }, [enabled, opacity, duration]);
+  }, [reveal, progress, duration]);
   const margin = { top: 5, bottom: 5, left: 5, right: 5, ...props.margin };
   const height = size ? size.height - margin.top - margin.bottom : 0;
   const width = size ? size.width - margin.left - margin.right : 0;
@@ -166,28 +183,30 @@ export function SankeyChart({
       );
   }
   return (
-    <motion.div
-      data-kind-ui="sankey"
-      onPointerDownCapture={() => setInterrupted(true)}
-      onFocusCapture={() => setInterrupted(true)}
-      style={{ opacity, position: "relative", width: "fit-content", height: "fit-content" }}
-    >
-      <EngineSankey
-        {...(props as NativeProps)}
-        data={drawable && links.length ? { nodes, links } : { nodes: [], links: [] }}
+    <SankeyMotion value={{ reveal, progress, width: size?.width ?? 1 }}>
+      <div
+        data-kind-ui="sankey"
+        onPointerDownCapture={() => setInterrupted(true)}
+        onFocusCapture={() => setInterrupted(true)}
+        style={{ position: "relative", width: "fit-content", height: "fit-content" }}
       >
-        <NativeSize onSize={onSize} />
-        {props.children}
-      </EngineSankey>
-      {!links.length ? (
-        <div role="status" style={{ position: "absolute", inset: 0 }}>
-          {empty}
-        </div>
-      ) : !drawable ? (
-        <div role="status" style={{ position: "absolute", inset: 0 }}>
-          Insufficient space for flows; use the data table
-        </div>
-      ) : null}
-    </motion.div>
+        <EngineSankey
+          {...(props as NativeProps)}
+          data={drawable && links.length ? { nodes, links } : { nodes: [], links: [] }}
+        >
+          <NativeSize onSize={onSize} />
+          {props.children}
+        </EngineSankey>
+        {!links.length ? (
+          <div role="status" style={{ position: "absolute", inset: 0 }}>
+            {empty}
+          </div>
+        ) : !drawable ? (
+          <div role="status" style={{ position: "absolute", inset: 0 }}>
+            Insufficient space for flows; use the data table
+          </div>
+        ) : null}
+      </div>
+    </SankeyMotion>
   );
 }
