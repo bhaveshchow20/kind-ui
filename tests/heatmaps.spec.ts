@@ -334,3 +334,27 @@ for (const change of ["resize", "data", "domains"] as const) {
     ).toBe(true);
   });
 }
+
+test("heatmap interruption preserves a consumer opacity change during entrance", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(`http://127.0.0.1:${4190 + offset}`);
+  const cells = page.getByRole("grid", { name: "Weekly latency" }).getByRole("gridcell");
+  await page.clock.runFor(100);
+  await page
+    .getByRole("button", { name: "Consumer opacity", exact: true })
+    .evaluate((node) => (node as HTMLButtonElement).click());
+  await expect
+    .poll(() =>
+      cells.evaluateAll((nodes) => nodes.every((node) => getComputedStyle(node).opacity === "0.4")),
+    )
+    .toBe(true);
+  await page.clock.runFor(1000);
+  expect(
+    await cells.evaluateAll((nodes) =>
+      nodes.every((node) => getComputedStyle(node).opacity === "0.4"),
+    ),
+  ).toBe(true);
+});
