@@ -311,14 +311,9 @@ test.describe("selection during Motion entrance", () => {
   }) => {
     await page.goto(`${url}?selection&motion`);
     const host = page.locator(radar);
-    await expect
-      .poll(() =>
-        host
-          .locator("[data-kind-ui=radar-reveal]")
-          .first()
-          .evaluate((node) => Number(getComputedStyle(node).opacity)),
-      )
-      .toBeLessThan(1);
+    const entrance = host.locator('[data-kind-ui="radar-entrance-window"]').first();
+    await expect(entrance).toBeAttached();
+    await expect.poll(async () => Number(await entrance.getAttribute("r"))).toBeGreaterThan(0);
     const actual = host.getByRole("button", { name: "Highlight Actual", exact: true });
     await actual.focus();
     await page.keyboard.press("Enter");
@@ -338,6 +333,7 @@ test.describe("selection during Motion entrance", () => {
             .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
         );
       await expect(host.locator("[data-kind-ui=radar-reveal]").first()).toHaveCSS("opacity", "1");
+      await expect(host.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(0);
     }
     await expect(host.locator("svg[data-ref-count='1']")).toHaveCount(1);
   });
