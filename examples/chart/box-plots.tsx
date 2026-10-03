@@ -1,15 +1,16 @@
 import * as Chart from "@kind-ui/charts";
-import { useState } from "react";
-import { createRoot } from "react-dom/client";
 import {
   CartesianGrid,
   Cell,
   ReferenceLine,
   ResponsiveContainer,
-  type TooltipContentProps,
+  type TooltipRenderProps as TooltipContentProps,
   XAxis,
   YAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useState } from "react";
+import { createRoot } from "react-dom/client";
+
 import "@kind-ui/charts/styles.css";
 import "./box-plots.css";
 

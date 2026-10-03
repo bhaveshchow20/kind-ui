@@ -1,6 +1,6 @@
 import * as Chart from "@kind-ui/charts";
+import { CartesianGrid, Cell, Rectangle, ReferenceLine } from "@kind-ui/charts";
 import { useCallback, useState } from "react";
-import { CartesianGrid, Cell, Rectangle, ReferenceLine } from "recharts";
 
 const original: readonly Chart.HistogramBin[] = [
   { lower: -2, upper: 0, count: 2 },

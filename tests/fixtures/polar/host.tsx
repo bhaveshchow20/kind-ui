@@ -1,18 +1,20 @@
 // Host composition only; the installed tarball supplies every Kind component.
 import * as Chart from "@kind-ui/charts";
-import { type ComponentProps, useCallback, useState } from "react";
 import {
   Cell,
   LabelList,
-  Radar as NativeRadar,
-  RadarChart as NativeRadarChart,
-  RadialBar as NativeRadialBar,
-  RadialBarChart as NativeRadialBarChart,
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
   Polygon,
   Sector,
+} from "@kind-ui/charts";
+import { type ComponentProps, useCallback, useState } from "react";
+import {
+  Radar as NativeRadar,
+  RadarChart as NativeRadarChart,
+  RadialBar as NativeRadialBar,
+  RadialBarChart as NativeRadialBarChart,
 } from "recharts";
 
 const initial = [
