@@ -176,16 +176,20 @@ test("continuous angular entrance preserves native paths, finishes, and repeated
   await chart.focus();
   await page.keyboard.press("ArrowRight");
   await expect(page.locator('[data-kind-ui="chart-tooltip"]')).toContainText("Beta");
-  const tooltip = await page.locator('[data-kind-ui="tooltip-frame"]').boundingBox();
-  const bounds = await chart.boundingBox();
-  expect(
-    tooltip &&
-      bounds &&
-      tooltip.x >= bounds.x - 1 &&
-      tooltip.y >= bounds.y - 1 &&
-      tooltip.x + tooltip.width <= bounds.x + bounds.width + 1 &&
-      tooltip.y + tooltip.height <= bounds.y + bounds.height + 1,
-  ).toBeTruthy();
+  await expect
+    .poll(async () => {
+      const tooltip = await page.locator('[data-kind-ui="tooltip-frame"]').boundingBox();
+      const bounds = await chart.boundingBox();
+      return Boolean(
+        tooltip &&
+          bounds &&
+          tooltip.x >= bounds.x - 1 &&
+          tooltip.y >= bounds.y - 1 &&
+          tooltip.x + tooltip.width <= bounds.x + bounds.width + 1 &&
+          tooltip.y + tooltip.height <= bounds.y + bounds.height + 1,
+      );
+    })
+    .toBe(true);
 });
 
 test("native chart data, function keys, variable radius, multiple rings and click selection compose", async ({
