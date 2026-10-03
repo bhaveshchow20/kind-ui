@@ -136,9 +136,15 @@ export function SankeyChart({
     props.node,
     props.link,
   ];
+  const started = useRef(false);
   const previous = useRef(inputs);
   useLayoutEffect(() => {
-    if (inputs.some((value, index) => value !== previous.current[index])) setInterrupted(true);
+    if (
+      inputs.some(
+        (value, index) => (index !== 0 || started.current) && value !== previous.current[index],
+      )
+    )
+      setInterrupted(true);
     previous.current = inputs;
   });
   const enabled = Boolean(animate) && !reduced;
@@ -154,6 +160,7 @@ export function SankeyChart({
       progress.set(1);
       return;
     }
+    started.current = true;
     progress.set(0);
     const playback = animateValue(progress, 1, {
       duration: duration / 1000,
