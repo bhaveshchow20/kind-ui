@@ -79,8 +79,6 @@ export {
 
 export {
   type LineAnimation,
-  LineChart,
-  type LineChartProps,
   LineSeries,
   type LineSeriesProps,
   Tooltip,
@@ -112,6 +110,12 @@ export {
   validateBoxPlotSummary,
 } from "./box-plot.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
+export {
+  type ConfiguredLineChartProps,
+  type ConfiguredLineSeries,
+  LineChart,
+  type LineChartProps,
+} from "./configured-line-chart.js";
 export {
   EmphasisMark,
   type EmphasisMarkProps,

@@ -154,7 +154,7 @@ export function Compositions({ api = parts }: { api?: typeof parts }) {
               <C.Cell fill="#123456" />
               <C.Cell fill="#234567" />
               <C.Cell fill="#345678" />
-              <C.LabelList dataKey="y" />
+              <C.LabelList dataKey="y" position="top" />
             </C.ScatterSeries>
             <C.Tooltip />
           </C.ScatterChart>
@@ -178,7 +178,7 @@ export function Compositions({ api = parts }: { api?: typeof parts }) {
               <C.Cell fill="#234567" />
               <C.Cell fill="#345678" />
               <C.Label value="Total" position="center" />
-              <C.LabelList dataKey="category" />
+              <C.LabelList dataKey="category" position="outside" />
             </C.PieSeries>
             <C.Tooltip />
           </C.PieChart>

@@ -218,6 +218,17 @@ try {
     "Single-package named/namespace Cartesian, polar, scatter and pie compositions: strict NodeNext/Bundler parity and production build passed",
   );
 
+  assertCompositionConsumerSource(
+    await readFile(join(root, "tests/fixtures/configured-line/host.tsx"), "utf8"),
+  );
+  for (const file of ["host.tsx", "main.tsx", "contract.tsx", "index.html"])
+    await copyFixture("configured-line", file);
+  await typecheck(["host.tsx", "main.tsx", "contract.tsx"]);
+  await production("index.html", "packed-configured-line");
+  console.log(
+    "Configured LineChart: public-only standalone/explicit/controlled consumers, generic props and strict NodeNext/Bundler passed",
+  );
+
   // Compare the public surface with the same native-only consumer. A primitive
   // import must not pull Kind interaction/Motion into the production bundle.
   const bundleSizes = [];
@@ -268,7 +279,11 @@ try {
     join(consumer, "chart.test.mjs"),
     await readFile(join(root, "tests/chart.test.mjs"), "utf8"),
   );
-  run(process.execPath, ["--test", "chart.test.mjs"], consumer);
+  await writeFile(
+    join(consumer, "configured-line.test.mjs"),
+    await readFile(join(root, "tests/configured-line.test.mjs"), "utf8"),
+  );
+  run(process.execPath, ["--test", "chart.test.mjs", "configured-line.test.mjs"], consumer);
   for (const file of ["index.html", "main.tsx"]) await copyFixture("number-shuffle", file);
   await typecheck(["main.tsx"]);
   await production("index.html", "packed-number-shuffle");

@@ -45,10 +45,7 @@ test("named and namespace single-package compositions retain native geometry, de
   for (const kind of ["named", "namespace", "native"]) {
     const scope = page.locator(`[data-import="${kind}"]`);
     await expect(scope.locator('[data-composition-ref="attached"]')).toHaveCount(1);
-    await scope
-      .locator('[data-family="line"] .recharts-xAxis .recharts-cartesian-axis-tick')
-      .first()
-      .click();
+    await scope.locator('[data-family="line"] .recharts-xAxis-tick-labels text').first().click();
     await expect(scope.locator("[data-clicks]")).toHaveText("1");
     await scope.locator('[data-family="scatter"] .recharts-symbols').first().click();
     await expect(scope.locator("[data-clicks]")).toHaveText("2");
@@ -60,12 +57,13 @@ test("named and namespace single-package compositions retain native geometry, de
     await expect(
       scope.locator('[data-family="line"] [data-kind-ui="tooltip-frame"]'),
     ).toBeVisible();
+    await page.keyboard.press("Escape");
     const brush = scope.locator('[data-family="line"] .recharts-brush-traveller').first();
     const box = await brush.boundingBox();
     if (!box) throw new Error("Brush traveller missing");
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
-    await page.mouse.move(box.x + 100, box.y + box.height / 2, { steps: 8 });
+    await page.mouse.move(box.x + 250, box.y + box.height / 2, { steps: 8 });
     await page.mouse.up();
     await expect(scope.locator("[data-range]")).not.toBeEmpty();
     await scope.getByRole("button", { name: "Resize" }).click();
