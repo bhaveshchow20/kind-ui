@@ -257,12 +257,12 @@ export function Example() {
         <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <Chart.${family}Chart data={data} animate={${animate}} layout="${horizontal ? "vertical" : "horizontal"}"${r.id === "grouped" ? ' emphasis="category"' : ""}
             accessibilityLayer aria-label="${r.subtitle}"
-            margin={{ top: 20, right: 18, left: ${horizontal ? 12 : 12}, bottom: 0 }}>
+            margin={{ top: 20, right: 18, left: ${horizontal ? 12 : -16}, bottom: 0 }}>
             <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
             <Recharts.XAxis ${horizontal ? 'type="number"' : 'dataKey="month" type="category"'} tickLine={false} axisLine={false}
               tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} tickMargin={10} />
             <Recharts.YAxis ${horizontal ? 'dataKey="month" type="category"' : 'type="number"'} tickLine={false} axisLine={false}
-              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width={${horizontal ? 80 : 68}} />${r.id === "signed" ? '\n            <Recharts.ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}${
+              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width={${horizontal ? 80 : 60}} />${r.id === "signed" ? '\n            <Recharts.ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}${
                 r.id === "area"
                   ? `
             <defs>
@@ -332,7 +332,7 @@ function ChartCard({
         tickLine={false}
         axisLine={false}
         tick={{ fontSize: 12, fill: "var(--chart-axis)" }}
-        width={horizontal ? 80 : 68}
+        width={horizontal ? 80 : 60}
       />
       {r.id === "signed" && <Recharts.ReferenceLine y={0} stroke="var(--chart-axis)" />}
       {r.id === "area" && (
@@ -466,7 +466,7 @@ function ChartCard({
                 layout={horizontal ? "vertical" : "horizontal"}
                 accessibilityLayer
                 aria-label={r.subtitle}
-                margin={{ top: 20, right: 18, left: 12, bottom: 0 }}
+                margin={{ top: 20, right: 18, left: horizontal ? 12 : -16, bottom: 0 }}
               >
                 {chartChildren}
               </Chart.BarChart>
@@ -478,7 +478,7 @@ function ChartCard({
                 layout="horizontal"
                 accessibilityLayer
                 aria-label={r.subtitle}
-                margin={{ top: 20, right: 18, left: 12, bottom: 0 }}
+                margin={{ top: 20, right: 18, left: -16, bottom: 0 }}
               >
                 {chartChildren}
               </ChartComponent>
