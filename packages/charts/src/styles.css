@@ -182,19 +182,19 @@
     position: relative;
     display: inline-block;
     width: 1ch;
-    height: 1em;
+    height: 1lh;
     overflow: clip;
     flex-shrink: 0;
   }
 
   :where([data-kind-ui="tooltip-digit-reel"]) {
     display: block;
-    line-height: 1;
+    line-height: inherit;
   }
 
   :where([data-kind-ui="tooltip-digit-reel"] > span) {
     display: block;
-    height: 1em;
+    height: 1lh;
   }
 }
 
