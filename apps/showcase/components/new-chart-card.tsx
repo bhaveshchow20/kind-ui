@@ -70,7 +70,7 @@ function NewChart({
               animate={animate}
               accessibilityLayer
               aria-label={r.tag}
-              margin={{ top: 20, right: 12, left: 12, bottom: 0 }}
+              margin={{ top: 20, right: 12, left: -8, bottom: 0 }}
             >
               <Recharts.CartesianGrid
                 vertical={false}
@@ -85,7 +85,7 @@ function NewChart({
                 tick={{ fontSize: 11 }}
               />
               <Recharts.YAxis
-                width={64}
+                width={58}
                 tickFormatter={(value) => `$${value / 1000}k`}
                 tickLine={false}
                 axisLine={false}
