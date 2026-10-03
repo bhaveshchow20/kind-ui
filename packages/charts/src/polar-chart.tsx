@@ -1,6 +1,6 @@
 "use client";
 
-import type { Transition } from "motion/react";
+import { animate as animateValue, type Transition } from "motion/react";
 import {
   type ComponentProps,
   createContext,
@@ -25,10 +25,17 @@ export type RadialBarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadialBarChart<DataPoint>
 > & {
   animate?: boolean | RadialBarAnimation | undefined;
+  /** Entrance direction only; native chart and axis angles stay consumer-owned. */
+  animationDirection?: "clockwise" | "anticlockwise" | undefined;
 };
 export const PolarMotion = createContext<{ reveal: boolean; options: RadarAnimation }>({
   reveal: false,
   options: {},
+});
+export const RadialMotion = createContext({
+  reveal: false,
+  progress: 1,
+  direction: "clockwise" as "clockwise" | "anticlockwise",
 });
 const query = "(prefers-reduced-motion: reduce)";
 function subscribe(change: () => void) {
@@ -116,23 +123,52 @@ export function RadarChart<DataPoint = unknown>({
 
 export function RadialBarChart<DataPoint = unknown>({
   animate = false,
+  animationDirection = "clockwise",
   children,
   ...props
 }: RadialBarChartProps<DataPoint>) {
   const { enabled, options, reveal, interrupt } = usePolarMotion(animate);
+  const [progress, setProgress] = useState(1);
+  const duration = options.revealDurationMs ?? 1000;
+  const easing = options.revealEasing ?? "easeOut";
+  const previous = useRef([duration, easing, animationDirection]);
+  const previousEnabled = useRef(enabled);
+  useLayoutEffect(() => {
+    const inputs = [duration, easing, animationDirection];
+    if (previousEnabled.current && !enabled) interrupt();
+    previousEnabled.current = enabled;
+    if (inputs.some((value, index) => value !== previous.current[index])) interrupt();
+    previous.current = inputs;
+  });
+  useLayoutEffect(() => {
+    if (!reveal) {
+      setProgress(1);
+      return;
+    }
+    setProgress(0);
+    const controls = animateValue(0, 1, {
+      duration: Math.max(0, duration) / 1000,
+      ease: easing,
+      onUpdate: setProgress,
+      onComplete: interrupt,
+    });
+    return () => controls.stop();
+  }, [reveal, duration, easing, interrupt]);
   return (
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
-      <PolarMotion value={{ reveal, options }}>
-        <LineChartFrame
-          engine={EngineRadialBarChart<DataPoint>}
-          chartProps={props}
-          motionEnabled={enabled}
-          interrupt={interrupt}
-        >
-          <PolarLifecycle {...props}>{children}</PolarLifecycle>
-          {children}
-        </LineChartFrame>
-      </PolarMotion>
+      <RadialMotion value={{ reveal, progress, direction: animationDirection }}>
+        <PolarMotion value={{ reveal, options }}>
+          <LineChartFrame
+            engine={EngineRadialBarChart<DataPoint>}
+            chartProps={props}
+            motionEnabled={enabled}
+            interrupt={interrupt}
+          >
+            <PolarLifecycle {...props}>{children}</PolarLifecycle>
+            {children}
+          </LineChartFrame>
+        </PolarMotion>
+      </RadialMotion>
     </MotionContext>
   );
 }
