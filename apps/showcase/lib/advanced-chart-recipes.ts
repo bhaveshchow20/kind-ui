@@ -168,10 +168,10 @@ export function advancedData(id: string): Record<string, string | number | numbe
 }
 export function advancedBody(r: AdvancedRecipe, material: Finish) {
   if (r.family === "Combo")
-    return `<Chart.ComboChart data={data} animate={animate} accessibilityLayer aria-label="${r.tag}" margin={{top:20,right:18,left:12,bottom:0}}>
+    return `<Chart.ComboChart data={data} animate={animate} accessibilityLayer aria-label="${r.tag}" margin={{top:20,right:18,left:-14,bottom:0}}>
   <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
   <Recharts.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{fontSize:12}} />
-  <Recharts.YAxis tickLine={false} axisLine={false} width={68} tickFormatter={value => ${r.id === "combo" ? "`$${value/1000}k`" : "`${value} TB`"}} />
+  <Recharts.YAxis tickLine={false} axisLine={false} width={62} tickFormatter={value => ${r.id === "combo" ? "`$${value/1000}k`" : "`${value} TB`"}} />
   <Chart.${r.id === "combo" ? 'BarSeries dataKey="a" radius={4} maxBarSize={28}' : 'AreaSeries dataKey="a" type="monotone" fillOpacity={0.2}'} material="${material}" />
   <Chart.LineSeries dataKey="b" type="monotone" material="${material}" strokeDasharray="4 4" dot={false} strokeWidth={2.5} />
   <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
@@ -197,10 +197,10 @@ export function advancedBody(r: AdvancedRecipe, material: Finish) {
   ${r.id === "gauge" ? "" : `<Chart.RadialBarSeries dataKey="b" fillOpacity={0.5} cornerRadius={4}${r.id === "radial-stacked" ? ' stackId="work"' : ""} />`}
   <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
 </Chart.RadialBarChart>`;
-  return `<Chart.ScatterChart animate={animate} accessibilityLayer aria-label="${r.tag}" margin={{top:20,right:18,left:12,bottom:10}}>
+  return `<Chart.ScatterChart animate={animate} accessibilityLayer aria-label="${r.tag}" margin={{top:20,right:18,left:-10,bottom:10}}>
   <Recharts.CartesianGrid stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
   <Recharts.XAxis dataKey="x" type="number" name="${r.id === "bubble" ? "Traffic" : "Ad spend"}" unit="${r.id === "bubble" ? " req/s" : " USD"}" tickLine={false} axisLine={false} tick={{fontSize:11}} />
-  <Recharts.YAxis width={72} dataKey="y" type="number" name="${r.id === "bubble" ? "Latency" : "Conversions"}" unit="${r.id === "bubble" ? " ms" : ""}" tickLine={false} axisLine={false} tick={{fontSize:11}} />
+  <Recharts.YAxis width={64} dataKey="y" type="number" name="${r.id === "bubble" ? "Latency" : "Conversions"}" unit="${r.id === "bubble" ? " ms" : ""}" tickLine={false} axisLine={false} tick={{fontSize:11}} />
   ${r.id === "bubble" ? '<Recharts.ZAxis dataKey="z" name="Requests" range={[50,340]} />' : ""}
   <Chart.ScatterSeries data={data} seriesKey="a" shape="circle" />
   ${r.id === "bubble" ? "" : '<Chart.ScatterSeries data={data.map(row => ({...row,y:row.social}))} seriesKey="b" shape="diamond" />'}
