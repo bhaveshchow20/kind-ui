@@ -15,7 +15,9 @@ const reel = Array.from({ length: 30 }, (_, index) => index);
 
 // Keep a bounded repeating reel. Interrupted transitions start at the currently painted digit.
 function Digit({ digit }: { digit: number }) {
-  const position = useMotionValue(10);
+  // Newly opened tooltips should paint their actual value immediately.
+  // Subsequent value updates still animate from the painted digit.
+  const position = useMotionValue(digit + 10);
   const y = useTransform(position, (value) => `${-value}em`);
   useLayoutEffect(() => {
     const current = position.get();
