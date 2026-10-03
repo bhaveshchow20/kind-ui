@@ -2140,3 +2140,66 @@ html:not(.dark) .site-nav .wordmark {
   .site-nav nav > a[aria-label="GitHub"] { width: 44px; padding: 0; }
   .nav-theme-option { width: 34px; }
 }
+
+/* Compact three-part navigation. */
+.hero-content p { gap: 6px 8px; }
+.hero-frameworks { gap: 8px; }
+.hero-frameworks .framework-brand { gap: 5px; }
+.hero-frameworks svg { width: 19px; height: 19px; }
+.site-nav {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+.site-nav .wordmark { justify-self: start; }
+.site-nav .nav-center { margin: 0; justify-self: center; gap: 20px; flex-wrap: nowrap; }
+.site-nav .nav-center > a, .nav-sponsor {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 4px 0;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 0;
+}
+.site-nav .nav-center > a:hover, .nav-sponsor:hover { background: transparent; opacity: 0.8; }
+.nav-actions { display: flex; align-items: center; gap: 6px; justify-self: end; }
+.nav-search { width: 36px; height: 36px; }
+.nav-github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #ffffff30;
+  border-radius: 999px;
+  background: #ffffff24;
+  backdrop-filter: blur(12px);
+  font-size: 12px;
+  font-weight: 500;
+  color: inherit;
+}
+.dark .nav-github { background: #08080825; }
+.nav-theme-switcher { padding: 2px; }
+.nav-theme-option { width: 30px; height: 30px; }
+.nav-theme-option svg { width: 15px; height: 15px; }
+.nav-search svg, .nav-github svg { width: 15px; height: 15px; }
+@media (max-width: 650px) {
+  .site-nav { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; }
+  .site-nav .nav-center { grid-row: 2; grid-column: 1 / -1; gap: 22px; }
+  .site-nav .kind-logo-name { font-size: 21px; }
+  .site-nav .wordmark-package { font-size: 16px; }
+  .nav-actions { gap: 4px; }
+  .nav-github-label { display: none; }
+  .nav-github, .nav-search { width: 32px; height: 32px; min-height: 32px; padding: 0; }
+  .nav-theme-option { width: 28px; height: 28px; }
+  .hero-frameworks svg { width: 18px; height: 18px; }
+}
