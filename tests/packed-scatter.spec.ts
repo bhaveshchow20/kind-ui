@@ -154,7 +154,7 @@ test("packed entrance fades actual native marks and interruptions settle without
 }) => {
   await page.clock.install();
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto(url);
+  await page.goto(`${url}/?builtin`);
   const fade = page
     .locator('[data-kind-ui="scatter-point-entrance"]')
     .filter({ has: page.locator(mark("signed")) })
@@ -227,3 +227,17 @@ for (const functional of [false, true]) {
     expect((await tip.textContent())?.match(/60 jobs/g)).toHaveLength(1);
   });
 }
+
+test("consumer-owned scatter renderers remain native while entrance is enabled", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(url);
+  const point = page.locator('[data-point="signed"]').first();
+  const path = await point.getAttribute("d");
+  await page
+    .getByRole("button", { name: "Animate", exact: true })
+    .evaluate((node) => (node as HTMLButtonElement).click());
+  await expect(page.locator('[data-kind-ui="scatter-point-entrance"]')).toHaveCount(0);
+  expect(await point.getAttribute("d")).toBe(path);
+});

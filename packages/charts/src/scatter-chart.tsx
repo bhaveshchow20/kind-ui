@@ -53,12 +53,13 @@ export function ScatterChart({ animate = false, children, ...props }: ScatterCha
   const progress = useMotionValue(1);
   const duration = options.revealDurationMs ?? 700;
   const easing = options.revealEasing ?? "easeOut";
+  const started = useRef(false);
   const previous = useRef([duration, easing]);
   const previousEnabled = useRef(enabled);
   useLayoutEffect(() => {
     const inputs = [duration, easing];
     if (
-      inputs.some((value, index) => value !== previous.current[index]) ||
+      (started.current && inputs.some((value, index) => value !== previous.current[index])) ||
       (previousEnabled.current && !enabled)
     )
       interact();
@@ -70,6 +71,7 @@ export function ScatterChart({ animate = false, children, ...props }: ScatterCha
       progress.set(1);
       return;
     }
+    started.current = true;
     progress.set(0);
     const controls = animateValue(progress, 1, {
       duration: Math.max(0, duration) / 1000,
