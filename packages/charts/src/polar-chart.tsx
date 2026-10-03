@@ -131,13 +131,15 @@ export function RadialBarChart<DataPoint = unknown>({
   const [progress, setProgress] = useState(1);
   const duration = options.revealDurationMs ?? 1000;
   const easing = options.revealEasing ?? "easeOut";
+  const started = useRef(false);
   const previous = useRef([duration, easing, animationDirection]);
   const previousEnabled = useRef(enabled);
   useLayoutEffect(() => {
     const inputs = [duration, easing, animationDirection];
     if (previousEnabled.current && !enabled) interrupt();
     previousEnabled.current = enabled;
-    if (inputs.some((value, index) => value !== previous.current[index])) interrupt();
+    if (started.current && inputs.some((value, index) => value !== previous.current[index]))
+      interrupt();
     previous.current = inputs;
   });
   useLayoutEffect(() => {
@@ -145,6 +147,7 @@ export function RadialBarChart<DataPoint = unknown>({
       setProgress(1);
       return;
     }
+    started.current = true;
     setProgress(0);
     const controls = animateValue(0, 1, {
       duration: Math.max(0, duration) / 1000,
