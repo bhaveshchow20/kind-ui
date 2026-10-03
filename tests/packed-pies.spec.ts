@@ -76,7 +76,15 @@ test("empty, all-zero and missing categories remain truthful with a data alterna
   await expect(page.locator(".recharts-pie-sector")).toHaveCount(0);
 });
 
-for (const action of ["Update", "Resize", "Donut", "Angles", "Reorder", "Native hide"]) {
+for (const action of [
+  "Update",
+  "Resize",
+  "Donut",
+  "Angles",
+  "Reorder",
+  "Native hide",
+  "Direction",
+]) {
   test(`Motion pie entrance stops on ${action} without replay`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(`${url}/?motion`);
@@ -141,14 +149,23 @@ test("pie and donut recipes use public controls and expose the zero category", a
   await page.screenshot({ path: info.outputPath("pie-donut-recipes.png"), fullPage: true });
 });
 
-test("sector entrance changes native paths, finishes, and repeated category toggles do not revive it", async ({
+test("continuous angular entrance preserves native paths, finishes, and repeated category toggles do not revive it", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto(`${url}/?motion`);
   const sector = page.locator(sectors).first();
   const firstPath = await sector.getAttribute("d");
-  await expect.poll(() => sector.getAttribute("d")).not.toBe(firstPath);
+  const windows = page.locator('[data-kind-ui="pie-entrance-window"]');
+  const initialProgress = Number(await windows.first().getAttribute("data-progress"));
+  await expect
+    .poll(async () => Number(await windows.first().getAttribute("data-progress")))
+    .toBeGreaterThan(initialProgress);
+  const progress = await windows.evaluateAll((nodes) =>
+    nodes.map((node) => node.getAttribute("data-progress")),
+  );
+  expect(new Set(progress).size).toBe(1);
+  expect(await sector.getAttribute("d")).toBe(firstPath);
   await expect(page.locator(revealing)).toHaveCount(0);
   for (let i = 0; i < 3; i++) {
     await page.getByRole("button", { name: "Beta", exact: true }).click();
@@ -415,4 +432,74 @@ test("recipes remain continuous before hover, after selection, filter/unhide and
     path: info.outputPath("continuous-recipes-desktop.png"),
     fullPage: true,
   });
+});
+
+for (const direction of ["clockwise", "anticlockwise"] as const) {
+  for (const span of ["", "&positive", "&partial", "&partial&positive"]) {
+    test(`packed pie sweeps ${direction} continuously (${span || "native full"}) without changing geometry`, async ({
+      page,
+    }, info) => {
+      await page.emulateMedia({ reducedMotion: "no-preference" });
+      await page.goto(
+        `${url}/?motion${direction === "anticlockwise" ? "&anticlockwise" : ""}${span}`,
+      );
+      const windows = page.locator('[data-kind-ui="pie-entrance-window"]');
+      await expect(windows.first()).toHaveAttribute("data-direction", direction);
+      const nativePaths = await page
+        .locator(sectors)
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+      const window = windows.first();
+      const first = await window.getAttribute("d");
+      await expect.poll(() => window.getAttribute("d")).not.toBe(first);
+      const d = await window.getAttribute("d");
+      const arc = d
+        ?.split("A")[1]
+        ?.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/g)
+        ?.map(Number);
+      // SVG positive sweep flag is physically clockwise (screen Y points down).
+      expect(arc?.[4]).toBe(direction === "clockwise" ? 1 : 0);
+      if (span.includes("partial")) {
+        const start = d
+          ?.split("A")[0]
+          ?.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/g)
+          ?.map(Number);
+        expect(start).toHaveLength(2);
+        expect(start?.[1]).toBeCloseTo(150, 3);
+        if (direction === "clockwise") expect(start?.[0]).toBeLessThan(240);
+        else expect(start?.[0]).toBeGreaterThan(240);
+      }
+      await page.screenshot({ path: info.outputPath(`pie-${direction}-entrance.png`) });
+      expect(
+        await page
+          .locator(sectors)
+          .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
+      ).toEqual(nativePaths);
+      await expect(windows).toHaveCount(0);
+      expect(
+        await page
+          .locator(sectors)
+          .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
+      ).toEqual(nativePaths);
+      await page.screenshot({ path: info.outputPath(`pie-${direction}-settled.png`) });
+    });
+  }
+}
+
+test("stylesheet transformed native sectors retain paint and handler ownership during entrance", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(`${url}/?motion&css-transform`);
+  await expect(page.locator(sectors)).not.toHaveCount(0);
+  await expect(page.locator('[data-kind-ui="pie-entrance-window"]')).toHaveCount(0);
+  expect(
+    await page
+      .locator(sectors)
+      .first()
+      .evaluate((node) => getComputedStyle(node).transform),
+  ).not.toBe("none");
+  const chart = page.getByRole("application", { name: "Packed pie chart" });
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator('[data-kind-ui="chart-tooltip"]')).toContainText("Beta");
 });

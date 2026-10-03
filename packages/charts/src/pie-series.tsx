@@ -1,6 +1,5 @@
 "use client";
 
-import { animate } from "motion/react";
 import {
   Children,
   type ComponentProps,
@@ -54,20 +53,25 @@ function sameCells(previous: Record<string, unknown>[], next: Record<string, unk
   );
 }
 
-// Motion interpolates only the native sector's angular span; Recharts owns all polar geometry.
+// One chart-level angular window reveals unchanged native sectors.
 function EntranceSector({
   material,
   emphasisKey,
   scope,
   enabled,
+  seriesStartAngle,
+  seriesEndAngle,
   ...props
 }: PieSectorShapeProps & {
   material: PieMaterial;
   emphasisKey?: PieSeriesProps["emphasisKey"];
   scope: string;
   enabled: boolean;
+  seriesStartAngle: number;
+  seriesEndAngle: number;
 }) {
   const keyboard = useChartKeyboard();
+  const { reveal, progress, direction } = use(PieMotion);
   const semantic = emphasisKey ? emphasisKey(props.payload) : props.name;
   const generatedId = useId();
   const sourceId = `kind-ui-pie-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "_")}-paint`;
@@ -89,7 +93,7 @@ function EntranceSector({
   // biome-ignore lint/correctness/useExhaustiveDependencies: class/id changes can change stylesheet-owned paint.
   useLayoutEffect(() => {
     if (
-      material === "plain" ||
+      (material === "plain" && !reveal) ||
       props.filter !== undefined ||
       props.style?.filter !== undefined ||
       !Number.isFinite(resolvedStroke)
@@ -158,6 +162,7 @@ function EntranceSector({
       );
     }
   }, [
+    reveal,
     material,
     props.filter,
     props.style,
@@ -183,23 +188,18 @@ function EntranceSector({
   const inset = materialized && material !== "glow";
   const margin =
     16 + Math.max(Number.isFinite(resolvedStroke) ? resolvedStroke : 0, paintStroke) / 2;
-  const { reveal, options, finish } = use(PieMotion);
-  const [progress, setProgress] = useState(reveal ? 0 : 1);
-  useLayoutEffect(() => {
-    if (!reveal) {
-      setProgress(1);
-      return;
-    }
-    setProgress(0);
-    const controls = animate(0, 1, {
-      duration: Math.max(0, options.revealDurationMs ?? 1000) / 1000,
-      ease: options.revealEasing ?? [0.25, 0.1, 0.25, 1],
-      onUpdate: setProgress,
-      onComplete: finish,
-    });
-    return () => controls.stop();
-  }, [reveal, options.revealDurationMs, options.revealEasing, finish]);
-  const { startAngle, endAngle } = props;
+  const entranceId = `${sourceId}-entrance`;
+  // A mask affects paint only: native hit targets and event ownership stay intact.
+  const maskEntrance =
+    reveal &&
+    cssTransformOwned === false &&
+    props.transform === undefined &&
+    props.style?.transform === undefined;
+  const nativeSpan = Math.max(-360, Math.min(360, seriesEndAngle - seriesStartAngle));
+  const clockwise = direction === "clockwise";
+  const fromStart = clockwise ? nativeSpan < 0 : nativeSpan >= 0;
+  const revealStart = fromStart ? seriesStartAngle : seriesStartAngle + nativeSpan;
+  const revealSpan = Math.abs(nativeSpan) * (clockwise ? -1 : 1);
   const {
     className,
     cornerRadius,
@@ -223,87 +223,114 @@ function EntranceSector({
       keyboardActive={keyboard && props.isActive}
     >
       <g ref={markGroup}>
-        {materialized && (
-          <defs data-kind-ui="pie-material" data-material={material} pointerEvents="none">
-            <PieMaterialFilter
-              material={material}
-              id={filterId}
-              strokeWidth={Math.max(
-                0,
-                Number.isFinite(resolvedStroke) ? resolvedStroke : 0,
-                paintStroke,
-              )}
-              cx={props.cx}
-              cy={props.cy}
-              radius={props.outerRadius}
-              thickness={props.outerRadius - props.innerRadius}
-              bounds={paintBounds}
-            />
-            {inset && (
-              <mask
-                id={maskId}
-                maskUnits="userSpaceOnUse"
-                x={paintBounds?.x ?? Math.floor(props.cx - props.outerRadius - margin)}
-                y={paintBounds?.y ?? Math.floor(props.cy - props.outerRadius - margin)}
-                width={paintBounds?.width ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
-                height={paintBounds?.height ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
-                style={{ maskType: "alpha" }}
-              >
-                <use href={`#${sourceId}`} />
-              </mask>
-            )}
+        {maskEntrance && (
+          <defs>
+            <mask
+              id={entranceId}
+              maskUnits="userSpaceOnUse"
+              x={props.cx - props.outerRadius - margin}
+              y={props.cy - props.outerRadius - margin}
+              width={(props.outerRadius + margin) * 2}
+              height={(props.outerRadius + margin) * 2}
+              style={{ maskType: "alpha" }}
+            >
+              <Sector
+                fill="white"
+                data-kind-ui="pie-entrance-window"
+                data-direction={direction}
+                data-progress={progress}
+                cx={props.cx}
+                cy={props.cy}
+                innerRadius={0}
+                outerRadius={props.outerRadius + margin}
+                startAngle={revealStart}
+                endAngle={revealStart + revealSpan * progress}
+              />
+            </mask>
           </defs>
         )}
-        {materialized && material === "glow" && (
-          // biome-ignore lint/a11y/noAriaHiddenOnFocusable: SVG decoration is explicitly nonfocusable and ignores pointer events.
-          <g
-            pointerEvents="none"
-            focusable="false"
-            aria-hidden="true"
-            data-kind-ui="pie-halo"
-            style={{ clipPath: paintClip }}
-            transform={paintClip !== "none" ? clipTransform.forward : undefined}
-          >
-            <g
-              transform={paintClip !== "none" ? clipTransform.inverse : undefined}
-              filter={`url(#${filterId})`}
-            >
-              <use href={`#${sourceId}`} />
-            </g>
-          </g>
-        )}
-        <g
-          {...(inset ? { filter: `url(#${filterId})` } : {})}
-          {...(inset ? { mask: `url(#${maskId})` } : {})}
-        >
-          <g id={sourceId}>
-            {materialized && (
-              <rect
-                x={paintBounds?.x ?? props.cx - props.outerRadius - margin}
-                y={paintBounds?.y ?? props.cy - props.outerRadius - margin}
-                width={paintBounds?.width ?? props.outerRadius * 2 + margin * 2}
-                height={paintBounds?.height ?? props.outerRadius * 2 + margin * 2}
-                fill="white"
-                fillOpacity={0}
-                pointerEvents="none"
+        <g mask={maskEntrance ? `url(#${entranceId})` : undefined}>
+          {materialized && (
+            <defs data-kind-ui="pie-material" data-material={material} pointerEvents="none">
+              <PieMaterialFilter
+                material={material}
+                id={filterId}
+                strokeWidth={Math.max(
+                  0,
+                  Number.isFinite(resolvedStroke) ? resolvedStroke : 0,
+                  paintStroke,
+                )}
+                cx={props.cx}
+                cy={props.cy}
+                radius={props.outerRadius}
+                thickness={props.outerRadius - props.innerRadius}
+                bounds={paintBounds}
               />
-            )}
-            <Sector
-              {...sector}
-              {...(onClick ? { onClick } : {})}
-              {...(onMouseDown ? { onMouseDown } : {})}
-              {...(onMouseUp ? { onMouseUp } : {})}
-              {...(onMouseMove ? { onMouseMove } : {})}
-              {...(onMouseOver ? { onMouseOver } : {})}
-              {...(onMouseOut ? { onMouseOut } : {})}
-              {...(onMouseEnter ? { onMouseEnter } : {})}
-              {...(onMouseLeave ? { onMouseLeave } : {})}
-              {...(className !== undefined ? { className } : {})}
-              {...(cornerRadius !== undefined ? { cornerRadius } : {})}
-              data-kind-ui="pie-sector"
-              data-reveal={reveal ? "on" : "off"}
-              endAngle={reveal ? startAngle + (endAngle - startAngle) * progress : endAngle}
-            />
+              {inset && (
+                <mask
+                  id={maskId}
+                  maskUnits="userSpaceOnUse"
+                  x={paintBounds?.x ?? Math.floor(props.cx - props.outerRadius - margin)}
+                  y={paintBounds?.y ?? Math.floor(props.cy - props.outerRadius - margin)}
+                  width={paintBounds?.width ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
+                  height={paintBounds?.height ?? Math.ceil(props.outerRadius * 2 + margin * 2) + 1}
+                  style={{ maskType: "alpha" }}
+                >
+                  <use href={`#${sourceId}`} />
+                </mask>
+              )}
+            </defs>
+          )}
+          {materialized && material === "glow" && (
+            // biome-ignore lint/a11y/noAriaHiddenOnFocusable: SVG decoration is explicitly nonfocusable and ignores pointer events.
+            <g
+              pointerEvents="none"
+              focusable="false"
+              aria-hidden="true"
+              data-kind-ui="pie-halo"
+              style={{ clipPath: paintClip }}
+              transform={paintClip !== "none" ? clipTransform.forward : undefined}
+            >
+              <g
+                transform={paintClip !== "none" ? clipTransform.inverse : undefined}
+                filter={`url(#${filterId})`}
+              >
+                <use href={`#${sourceId}`} />
+              </g>
+            </g>
+          )}
+          <g
+            {...(inset ? { filter: `url(#${filterId})` } : {})}
+            {...(inset ? { mask: `url(#${maskId})` } : {})}
+          >
+            <g id={sourceId}>
+              {materialized && (
+                <rect
+                  x={paintBounds?.x ?? props.cx - props.outerRadius - margin}
+                  y={paintBounds?.y ?? props.cy - props.outerRadius - margin}
+                  width={paintBounds?.width ?? props.outerRadius * 2 + margin * 2}
+                  height={paintBounds?.height ?? props.outerRadius * 2 + margin * 2}
+                  fill="white"
+                  fillOpacity={0}
+                  pointerEvents="none"
+                />
+              )}
+              <Sector
+                {...sector}
+                {...(onClick ? { onClick } : {})}
+                {...(onMouseDown ? { onMouseDown } : {})}
+                {...(onMouseUp ? { onMouseUp } : {})}
+                {...(onMouseMove ? { onMouseMove } : {})}
+                {...(onMouseOver ? { onMouseOver } : {})}
+                {...(onMouseOut ? { onMouseOut } : {})}
+                {...(onMouseEnter ? { onMouseEnter } : {})}
+                {...(onMouseLeave ? { onMouseLeave } : {})}
+                {...(className !== undefined ? { className } : {})}
+                {...(cornerRadius !== undefined ? { cornerRadius } : {})}
+                data-kind-ui="pie-sector"
+                data-reveal={maskEntrance ? "on" : "off"}
+              />
+            </g>
           </g>
         </g>
       </g>
@@ -327,9 +354,19 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
         scope={scope}
         emphasisKey={emphasisKey}
         enabled={props.activeShape === undefined && props.inactiveShape === undefined}
+        seriesStartAngle={props.startAngle ?? 0}
+        seriesEndAngle={props.endAngle ?? 360}
       />
     ),
-    [material, scope, emphasisKey, props.activeShape, props.inactiveShape],
+    [
+      material,
+      scope,
+      emphasisKey,
+      props.activeShape,
+      props.inactiveShape,
+      props.startAngle,
+      props.endAngle,
+    ],
   );
   const inputs = [
     props.data,

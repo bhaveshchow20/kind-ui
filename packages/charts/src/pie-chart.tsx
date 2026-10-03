@@ -1,5 +1,6 @@
 "use client";
 
+import { animate as animateValue } from "motion/react";
 import {
   type ComponentProps,
   createContext,
@@ -16,15 +17,19 @@ import { LineChartFrame } from "./line-chart.js";
 export type PieAnimation = LineAnimation;
 export type PieChartProps = ComponentProps<typeof EnginePieChart> & {
   animate?: boolean | PieAnimation | undefined;
+  /** Entrance sweep only; native start/end angles and data order are unchanged. */
+  animationDirection?: "clockwise" | "anticlockwise" | undefined;
 };
 export const PieMotion = createContext<{
   reveal: boolean;
   options: PieAnimation;
-  finish: () => void;
+  progress: number;
+  direction: "clockwise" | "anticlockwise";
 }>({
   reveal: false,
   options: {},
-  finish: () => {},
+  progress: 1,
+  direction: "clockwise",
 });
 const query = "(prefers-reduced-motion: reduce)";
 function subscribe(change: () => void) {
@@ -37,7 +42,12 @@ const serverSnapshot = () => true;
 const defaultHover = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } as const;
 
 /** Native polar composition, shared interaction, and optional Motion-owned sector entrance. */
-export function PieChart({ animate = false, children, ...props }: PieChartProps) {
+export function PieChart({
+  animate = false,
+  animationDirection = "clockwise",
+  children,
+  ...props
+}: PieChartProps) {
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
   const finish = useCallback(() => setInteracted(true), []);
@@ -51,9 +61,33 @@ export function PieChart({ animate = false, children, ...props }: PieChartProps)
     if (previousEnabled.current && !enabled) finish();
     previousEnabled.current = enabled;
   }, [enabled, finish]);
+  const reveal = enabled && !interacted;
+  const [progress, setProgress] = useState(1);
+  const duration = options.revealDurationMs ?? 1000;
+  const easing = options.revealEasing ?? "easeOut";
+  const previous = useRef([duration, easing, animationDirection]);
+  useLayoutEffect(() => {
+    const inputs = [duration, easing, animationDirection];
+    if (inputs.some((value, index) => value !== previous.current[index])) finish();
+    previous.current = inputs;
+  });
+  useLayoutEffect(() => {
+    if (!reveal) {
+      setProgress(1);
+      return;
+    }
+    setProgress(0);
+    const controls = animateValue(0, 1, {
+      duration: Math.max(0, duration) / 1000,
+      ease: easing,
+      onUpdate: setProgress,
+      onComplete: finish,
+    });
+    return () => controls.stop();
+  }, [reveal, duration, easing, finish]);
   return (
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
-      <PieMotion value={{ reveal: enabled && !interacted, options, finish }}>
+      <PieMotion value={{ reveal, options, progress, direction: animationDirection }}>
         <LineChartFrame
           chartProps={props}
           engine={EnginePieChart}
