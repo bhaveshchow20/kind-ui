@@ -2,7 +2,7 @@
 
 import * as Chart from "@kind-ui/charts";
 import * as Recharts from "recharts";
-import { Check, Copy, Moon, Pencil, Plus, RotateCcw, Sun } from "lucide-react";
+import { Check, Copy, Monitor, Moon, Pencil, Plus, RotateCcw, Search, Sun } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
@@ -498,6 +498,80 @@ function ChartCard({
   );
 }
 
+function GitHubMark() {
+  return <svg viewBox="0 0 24 24" width={17} height={17} aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" fill="currentColor" /></svg>;
+}
+
+function FrameworkNames() {
+  return (
+      <span className="hero-frameworks">
+        <span className="framework-brand">
+          <svg viewBox="-12 -11 24 22" aria-hidden="true" className="react-brand-mark">
+            <circle r="2.05" fill="currentColor" />
+            {[0, 60, 120].map((angle) => <ellipse key={angle} rx="10.5" ry="4.1" fill="none" stroke="currentColor" strokeWidth="1" transform={`rotate(${angle})`} />)}
+          </svg>
+          React
+        </span>
+        <span className="hero-framework-divider">&amp;</span>
+        <span className="framework-brand">
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="next-brand-mark">
+            <path d="M18.665 21.978C16.758 23.255 14.465 24 12 24 5.377 24 0 18.623 0 12S5.377 0 12 0s12 5.377 12 12c0 3.583-1.574 6.801-4.067 9.001L9.219 7.2H7.2v9.596h1.615V9.251l9.85 12.727Zm-3.332-8.533 1.6 2.061V7.2h-1.6v6.245Z" fill="currentColor" />
+          </svg>
+          Next.js
+        </span>
+      </span>
+  );
+}
+
+function ThemeSwitcher({ enabled }: { enabled: boolean }) {
+  const { theme, setTheme } = useTheme();
+  const id = useId();
+  const reduced = useReducedMotion();
+  return <RadioGroup className="nav-theme-switcher" aria-label="Appearance" value={enabled ? theme ?? "system" : "system"} onValueChange={setTheme} disabled={!enabled}>
+    {([{ value: "light", label: "Light", Icon: Sun }, { value: "dark", label: "Dark", Icon: Moon }, { value: "system", label: "System", Icon: Monitor }] as const).map(({ value, label, Icon }) => (
+      <label className="nav-theme-option" key={value} title={label}>
+        <RadioGroupItem value={value} className="sr-only" aria-label={label} />
+        {(enabled ? theme ?? "system" : "system") === value && <motion.span className="nav-theme-selection" aria-hidden="true" layoutId={reduced ? undefined : `${id}-theme`} transition={{ type: "spring", stiffness: 430, damping: 36 }} />}
+        <Icon size={17} aria-hidden="true" />
+      </label>
+    ))}
+  </RadioGroup>;
+}
+
+const documentationCharts = ["Line", "Area", "Bar", "Combo", "Pie", "Donut", "Radar", "Radial Bar", "Gauge", "Scatter", "Bubble", "Heatmap", "Waterfall", "Sankey", "Histogram", "Box Plot"];
+function DocumentationSearch() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    function shortcut(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setOpen((value) => !value);
+      }
+    }
+    window.addEventListener("keydown", shortcut);
+    return () => window.removeEventListener("keydown", shortcut);
+  }, []);
+  const filtered = documentationCharts.filter((name) => name.toLowerCase().includes(query.trim().toLowerCase()));
+  return <Dialog open={open} onOpenChange={(value) => { setOpen(value); if (!value) setQuery(""); }}>
+    <DialogTrigger asChild><Button className="nav-search" variant="ghost" size="icon-sm" aria-label="Search documentation" title="Search documentation (⌘K / Ctrl+K)"><Search size={17} /></Button></DialogTrigger>
+    <DialogContent className="documentation-search" showCloseButton={false}>
+      <DialogTitle className="sr-only">Search documentation</DialogTitle>
+      <DialogDescription className="sr-only">Search chart components in Kind UI Charts.</DialogDescription>
+      <div className="documentation-search-input">
+        <Search size={19} aria-hidden="true" />
+        <input aria-label="Search components" placeholder="Search components…" value={query} onChange={(event) => setQuery(event.target.value)} />
+        <button type="button" onClick={() => setOpen(false)} aria-label="Close search">Esc</button>
+      </div>
+      <div className="documentation-search-results">
+        <h2>Components</h2>
+        <ul>{filtered.map((name) => <li key={name}><span className="documentation-chart-dot" aria-hidden="true" />{name} Chart</li>)}</ul>
+        {!filtered.length && <p>No components found.</p>}
+      </div>
+    </DialogContent>
+  </Dialog>;
+}
+
 const installCommands = {
   npm: "npm install @kind-ui/charts",
   pnpm: "pnpm add @kind-ui/charts",
@@ -548,28 +622,13 @@ function InstallSection() {
           </TabsContent>
         ))}
       </Tabs>
-      <div className="install-frameworks" aria-label="For React and Next.js">
-        <span className="framework-brand">
-          <svg viewBox="-12 -11 24 22" aria-hidden="true" className="react-brand-mark">
-            <circle r="2.05" fill="currentColor" />
-            {[0, 60, 120].map((angle) => <ellipse key={angle} rx="10.5" ry="4.1" fill="none" stroke="currentColor" strokeWidth="1" transform={`rotate(${angle})`} />)}
-          </svg>
-          React
-        </span>
-        <span className="framework-brand">
-          <svg viewBox="0 0 24 24" aria-hidden="true" className="next-brand-mark">
-            <path d="M18.665 21.978C16.758 23.255 14.465 24 12 24 5.377 24 0 18.623 0 12S5.377 0 12 0s12 5.377 12 12c0 3.583-1.574 6.801-4.067 9.001L9.219 7.2H7.2v9.596h1.615V9.251l9.85 12.727Zm-3.332-8.533 1.6 2.061V7.2h-1.6v6.245Z" fill="currentColor" />
-          </svg>
-          Next.js
-        </span>
-      </div>
       <span className="sr-only" role="status">{copied ? "Install command copied" : copyFailed ? "Could not copy. Select the command to copy manually." : ""}</span>
     </section>
   );
 }
 
 export default function Page() {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   const [artReady, setArtReady] = useState(false);
@@ -715,19 +774,11 @@ export default function Page() {
               >
                 Docs
               </a>
-              <a href={repo} target="_blank" rel="noreferrer">
-                GitHub
+              <a href={repo} target="_blank" rel="noreferrer" aria-label="GitHub">
+                <GitHubMark /><span className="nav-github-label">GitHub</span>
               </a>
-              <button
-                className="theme-toggle"
-                type="button"
-                onClick={() => setTheme(dark ? "light" : "dark")}
-                disabled={!mounted}
-                aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
-                title={dark ? "Switch to light theme" : "Switch to dark theme"}
-              >
-                {dark ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
+              <DocumentationSearch />
+              <ThemeSwitcher enabled={mounted} />
             </nav>
           </motion.header>
           <div className="hero-content">
@@ -744,7 +795,7 @@ export default function Page() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.4 }}
             >
-              Composable charts for React.
+              <span>Composable charts for</span> <FrameworkNames />
             </motion.p>
           </div>
         </section>
