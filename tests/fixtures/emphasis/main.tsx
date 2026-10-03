@@ -10,6 +10,7 @@ import {
   LabelList,
   Rectangle,
   ReferenceLine,
+  ResponsiveContainer,
   XAxis,
   YAxis,
 } from "recharts";
@@ -98,36 +99,32 @@ function App() {
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
       >
-        <section id="bars">
+        <section id="bars" style={{ width: "min(440px, calc(100vw - 48px))" }}>
           <h2>Grouped category inspection</h2>
-          <Chart.BarChart
-            width={440}
-            height={250}
-            data={data}
-            accessibilityLayer
-            emphasis="category"
-          >
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="category" />
-            <YAxis />
-            <ReferenceLine y={10} label="Reference" />
-            <Chart.BarSeries
-              dataKey="first"
-              material="paper"
-              opacity={0.5}
-              {...(stacked ? { stackId: "stack" } : {})}
-              onClick={() => setClicks(clicks + 1)}
-            >
-              <LabelList dataKey="first" />
-            </Chart.BarSeries>
-            <Chart.BarSeries
-              dataKey="second"
-              material="clay"
-              {...(customPeer ? { shape: nativeShape } : {})}
-              {...(stacked ? { stackId: "stack" } : {})}
-            />
-            <Chart.Tooltip />
-          </Chart.BarChart>
+          <ResponsiveContainer width="100%" height={250}>
+            <Chart.BarChart data={data} accessibilityLayer emphasis="category">
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="category" />
+              <YAxis />
+              <ReferenceLine y={10} label="Reference" />
+              <Chart.BarSeries
+                dataKey="first"
+                material="paper"
+                opacity={0.5}
+                {...(stacked ? { stackId: "stack" } : {})}
+                onClick={() => setClicks(clicks + 1)}
+              >
+                <LabelList dataKey="first" />
+              </Chart.BarSeries>
+              <Chart.BarSeries
+                dataKey="second"
+                material="clay"
+                {...(customPeer ? { shape: nativeShape } : {})}
+                {...(stacked ? { stackId: "stack" } : {})}
+              />
+              <Chart.Tooltip />
+            </Chart.BarChart>
+          </ResponsiveContainer>
           <Chart.Legend emphasis="series" />
         </section>
         <section id="oracle">
