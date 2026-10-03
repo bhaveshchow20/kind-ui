@@ -1,5 +1,6 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
+import * as Recharts from "recharts";
 import { Check, Copy } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
@@ -54,9 +55,9 @@ function renderChartExample({
         aria-label={r.tag}
         margin={{ top: 20, right: 18, left: -15, bottom: 0 }}
       >
-        <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
-        <Chart.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-        <Chart.YAxis
+        <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
+        <Recharts.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+        <Recharts.YAxis
           tickLine={false}
           axisLine={false}
           width={55}
@@ -105,12 +106,12 @@ function renderChartExample({
         aria-label={r.tag}
         outerRadius="70%"
       >
-        <Chart.PolarGrid
+        <Recharts.PolarGrid
           gridType={r.id === "radar-outline" ? "circle" : "polygon"}
           stroke="var(--chart-grid)"
         />
-        <Chart.PolarAngleAxis dataKey="category" tick={{ fontSize: 11 }} tickLine={false} />
-        <Chart.PolarRadiusAxis
+        <Recharts.PolarAngleAxis dataKey="category" tick={{ fontSize: 11 }} tickLine={false} />
+        <Recharts.PolarRadiusAxis
           domain={[0, 100]}
           tickCount={3}
           tick={{ fontSize: 10 }}
@@ -151,16 +152,16 @@ function renderChartExample({
         cy={r.id === "gauge" ? "65%" : "50%"}
         barGap={3}
       >
-        <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-        <Chart.PolarRadiusAxis
+        <Recharts.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+        <Recharts.PolarRadiusAxis
           type="category"
           dataKey="category"
           tick={false}
           axisLine={false}
           tickLine={false}
         >
-          {r.id === "gauge" && <Chart.Label position="center" value="72%" fill="currentColor" />}
-        </Chart.PolarRadiusAxis>
+          {r.id === "gauge" && <Recharts.Label position="center" value="72%" fill="currentColor" />}
+        </Recharts.PolarRadiusAxis>
         <Chart.RadialBarSeries
           dataKey="a"
           background
@@ -168,7 +169,7 @@ function renderChartExample({
           stackId={r.id === "radial-stacked" ? "work" : undefined}
         >
           {r.id !== "gauge" && (
-            <Chart.LabelList
+            <Recharts.LabelList
               dataKey="category"
               fill="white"
               content={<Chart.RadialBarLabel fontSize={10} />}
@@ -194,8 +195,8 @@ function renderChartExample({
       aria-label={r.tag}
       margin={{ top: 20, right: 18, left: -10, bottom: 10 }}
     >
-      <Chart.CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" />
-      <Chart.XAxis
+      <Recharts.CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" />
+      <Recharts.XAxis
         dataKey="x"
         type="number"
         name={r.id === "bubble" ? "Traffic" : "Ad spend"}
@@ -204,7 +205,7 @@ function renderChartExample({
         axisLine={false}
         tick={{ fontSize: 11 }}
       />
-      <Chart.YAxis
+      <Recharts.YAxis
         dataKey="y"
         type="number"
         name={r.id === "bubble" ? "Latency" : "Conversions"}
@@ -213,7 +214,7 @@ function renderChartExample({
         axisLine={false}
         tick={{ fontSize: 11 }}
       />
-      {r.id === "bubble" && <Chart.ZAxis dataKey="z" name="Requests" range={[50, 340]} />}
+      {r.id === "bubble" && <Recharts.ZAxis dataKey="z" name="Requests" range={[50, 340]} />}
       <Chart.ScatterSeries data={data} seriesKey="a" shape="circle" />
       {r.id !== "bubble" && (
         <Chart.ScatterSeries
@@ -231,9 +232,9 @@ function renderChartExample({
 }
 function ChartExample(props: Parameters<typeof renderChartExample>[0]) {
   return (
-    <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+    <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
       {renderChartExample(props)}
-    </Chart.ResponsiveContainer>
+    </Recharts.ResponsiveContainer>
   );
 }
 export function AdvancedChartCard({
