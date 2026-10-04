@@ -312,7 +312,7 @@ try {
   await copyFixture("activity-rings", "index.html", "activity-rings.html");
   await copyFixture("activity-rings", "main.tsx");
   await typecheck(["main.tsx"]);
-  await production("activity-rings.html", "artifacts/packed-activity-rings");
+  await production("activity-rings.html", "packed-activity-rings");
   await writeFile(
     join(consumer, "activity-rings.test.mjs"),
     await readFile(join(root, "tests/activity-rings.test.mjs"), "utf8"),
