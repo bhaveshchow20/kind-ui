@@ -49,7 +49,13 @@ export function AllocationMaterialChart({
             {data.map((row) => (
               <Chart.Cell key={row.key} fill={config[row.key].color} />
             ))}
-            <Chart.LabelList dataKey="share" position="inside" fill="white" stroke="none" />
+            <Chart.LabelList
+              dataKey="share"
+              position="inside"
+              fill="white"
+              stroke="none"
+              style={{ fill: "white", fontWeight: 600 }}
+            />
           </Chart.PieSeries>
           <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
         </Chart.PieChart>
