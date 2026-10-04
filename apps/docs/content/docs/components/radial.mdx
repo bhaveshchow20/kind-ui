@@ -7,7 +7,7 @@ description: Show completion and capacity with concentric rings, gauges and stac
 
 ## Usage
 
-`Root` supplies series metadata. `RadialBarChart` owns motion; native polar axes map values and categories to angles and rings. The first Code tab contains the complete `ProjectProgressChart` file, including data, config and public imports.
+`Root` supplies metadata; `RadialBarChart` owns motion. Native polar axes map values and categories to angles and rings.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -25,25 +25,25 @@ description: Show completion and capacity with concentric rings, gauges and stac
 </Chart.Root>
 ```
 
-Each category creates a ring. `Cell` colors belong to individual rows; the config key identifies the progress series, so a series legend would describe “Complete” rather than the three stages. `RadialBarLabel` follows the actual arc and hides text that cannot fit. The hidden data table retains every value.
+Each category forms a ring with its own `Cell` color. Config describes the progress series, not individual stages. Arc labels hide when they cannot fit.
 
 ## Capacity gauge
 
-A gauge is an explicit `RadialBarChart` composition; Kind exports no `Gauge` component. A numeric domain of `[0, 100]` makes 72 GB occupy 72% of the semicircle. `startAngle={180}` and `endAngle={0}` define its final geometry. The pale background is the full track; a custom native `Label` owns the center summary.
+Compose a gauge with `RadialBarChart`; there is no `Gauge` export. `[0, 100]` and angles `180` to `0` produce a semicircle; native `Label` supplies the center summary.
 
 <ChartExample id="radial-gauge" />
 
-Choose an entrance direction beside Preview/Code. `animationDirection` changes the reveal sweep without changing the domain, final arc or track. This component remounts the chart when its direction changes so the entrance plays again; changing that prop on an already revealed chart does not restart it. Reduced motion shows the final geometry immediately. Supplying a custom sector `shape` takes ownership of rendering and bypasses Kind's default directional reveal; transformed sectors also bypass its reveal mask.
+Choose the entrance sweep beside Preview/Code. The example remounts to replay it; final angles, domain and track stay fixed.
 
 ## Stacked capacity
 
-Two series with the same `stackId` share one ring. Committed and reserved time total 86 hours on a fixed 100-hour scale, leaving 14 hours available. The chart covers 240 degrees. The legend updates consumer-owned visibility; hiding a series recalculates the native stack while the domain stays fixed.
+Matching `stackId` values share one ring. Committed and reserved total 86 of 100 hours. Legend toggles recalculate the stack while preserving the fixed domain.
 
 <ChartExample id="radial-stacked" />
 
 ## API reference
 
-Kind adds metadata, visibility and chart-owned motion to Recharts composition. Data, polar geometry, tracks and custom labels remain consumer-owned. These focused props cover the components above; linked upstream references cover further native options.
+Focused props for explicit polar composition. Data, tracks and custom center labels remain consumer-owned.
 
 ### Root
 
@@ -74,6 +74,8 @@ Kind adds metadata, visibility and chart-owned motion to Recharts composition. D
 
 </div>
 
+Changing direction after reveal does not replay it. Custom sectors or transformed marks bypass directional reveal. Reduced motion shows final geometry.
+
 See [Recharts RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChart/).
 
 ### RadialBarSeries
@@ -93,11 +95,11 @@ See [Recharts RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChar
 
 </div>
 
-Native per-series animation is disabled so the chart owns motion. This page demonstrates the plain finish and does not claim automatic radial paint emphasis on inspection. See [Recharts RadialBar](https://recharts.github.io/en-US/api/RadialBar/).
+Per-series animation is disabled. These examples use plain paint without automatic radial inspection emphasis. See [Recharts RadialBar](https://recharts.github.io/en-US/api/RadialBar/).
 
 ### RadialBarLabel
 
-Use as `LabelList` content, so native sector geometry reaches the label. This is arc text, not a gauge center label.
+Use as `LabelList` content for sector-aware arc text. Center summaries use native `Label`.
 
 <div className="line-props-scroll" role="region" aria-label="RadialBarLabel props" tabIndex={0}>
 
@@ -143,7 +145,7 @@ See [Recharts PolarRadiusAxis](https://recharts.github.io/en-US/api/PolarRadiusA
 
 ### LabelList, Label and Cell
 
-Native composition parts retain Recharts ownership. `LabelList` obtains each sector's geometry, `Label` supports a custom center renderer, and `Cell` overrides category paint.
+`LabelList` receives sector geometry; `Label` supplies custom center content; `Cell` sets row paint.
 
 <div className="line-props-scroll" role="region" aria-label="Native label and cell props" tabIndex={0}>
 
@@ -169,7 +171,7 @@ See [Recharts LabelList](https://recharts.github.io/en-US/api/LabelList/), [Labe
 
 </div>
 
-Place outside `ResponsiveContainer`. With both Root visibility props, items are keyboard-operable buttons; otherwise they are labels.
+Place outside `ResponsiveContainer`. Root visibility and its callback enable toggles; otherwise items are labels.
 
 ### Tooltip
 
@@ -182,7 +184,7 @@ Place outside `ResponsiveContainer`. With both Root visibility props, items are 
 
 </div>
 
-Compose inside the chart. Kind supplies series labels and formatters; native Recharts owns polar inspection. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+Kind supplies labels and formatters; Recharts owns polar inspection. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
 
 ### ResponsiveContainer
 

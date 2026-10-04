@@ -7,7 +7,7 @@ description: Compare two product profiles across six dimensions on a shared nume
 
 ## Usage
 
-`Root` supplies series labels, colors and visibility. `RadarChart` owns motion and native spoke inspection; Recharts computes polar geometry. Compose the grid, category and numeric axes, series and tooltip explicitly. The first Code tab includes the complete named component and dataset.
+`Root` supplies metadata; `RadarChart` owns motion and spoke inspection. Compose the polar grid, axes, series and tooltip explicitly.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -25,39 +25,39 @@ description: Compare two product profiles across six dimensions on a shared nume
 </Chart.Root>
 ```
 
-Use comparable units across spokes: these illustrative research scores all use a 0–100 scale. Fixing the domain keeps profiles comparable. `Legend` belongs outside the responsive plot; its labels become visibility buttons only when `Root` receives both `visibleSeries` and `onVisibleSeriesChange`.
+Use comparable units and a fixed domain across spokes. These research scores share a 0–100 scale.
 
 ## Center-out motion
 
-`animate` reveals the default polygon outward from the chart center without interpolating its quantitative coordinates. The entrance runs once per mount and finishes on interaction, data or layout changes; reduced motion shows the final geometry immediately. Native per-series animation is disabled. Dots and labels retain native rendering, and custom shapes or consumer-owned masks, filters and transforms can bypass the entrance mask.
+`animate` reveals the polygon from its center. Interaction or data/layout changes finish it; reduced motion skips it. Custom shapes, masks, filters or transforms can bypass the reveal.
 
 ## Series selection
 
-Click a polygon, or Tab to a series and press Enter or Space, to highlight it persistently. Repeat the action to clear it; Escape from a descendant clears selection. The other profile dims without changing its values or visibility.
+Click a polygon or press Enter/Space on its series control to select it. Repeat to clear; Escape clears selection. Values and visibility stay unchanged.
 
 <ChartExample id="radar-selection" />
 
-`selection="series"` opts in; the default is `"none"`. Omit `selectedSeries` for local uncontrolled state, optionally observing requests with `onSelectedSeriesChange`. This component uses controlled state: a supplied `selectedSeries`, including `null`, requires a callback, and the consumer decides whether to accept each request.
+Enable `selection="series"`. Omit `selectedSeries` for local state, or pair it with `onSelectedSeriesChange` for controlled selection.
 
-Native spoke hover shows both profiles' values for a category. It does not select a series, and persistent selection does not restrict tooltip payloads. Selection requires `Root` emphasis to remain `"auto"`. An uncontrolled hidden or unavailable selection clears locally without a synthetic callback; a controlled value remains consumer-owned and has no selected paint while unavailable.
+Selection dims paint, not spoke tooltip values. Keep Root emphasis at `"auto"`; visibility and persistent selection remain separate.
 
-Series controls expose a label and pressed state, but they are SVG controls, not a complete keyboard navigation model for spokes. Radar does not provide Line's arrow-key point inspection. Keep a meaningful chart name and an accessible data alternative; each preview includes a hidden table. Verify SVG control support in your target assistive technologies.
+SVG series controls expose labels and pressed state, but provide no arrow-key spoke navigation. Keep the accessible data alternative and verify support in your target assistive technologies.
 
 ## Materials
 
-Choose plain, paper, clay or glow. Paper adds inset pencil texture, clay adds matte relief, and glow adds rim light outside the native polygon. The glow halo is decorative, not a score boundary.
+Choose plain, paper, clay or glow. Glow’s exterior halo is decorative, not a score boundary.
 
 <ChartExample id="radar-materials" />
 
-Custom `shape`, `filter` or `style.filter` takes ownership and suppresses the material. Dots and labels keep native rendering. See [material support](/docs/guides/materials/).
+Custom `shape`, `filter` or `style.filter` overrides the finish. Dots and labels retain native rendering. See [material support](/docs/guides/materials/).
 
 ## API reference
 
-Kind adds shared metadata, visibility, chart-owned motion and optional persistent selection. The focused props below describe this composition; upstream references cover native geometry and additional options.
+Focused props for explicit Radar composition; upstream links cover native geometry.
 
 ### Root
 
-Required around the composition; data and layout stay consumer-owned.
+Shares metadata and visibility; data and layout stay consumer-owned.
 
 <div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
 
@@ -90,11 +90,13 @@ Use inside `Root` and a sized `ResponsiveContainer`.
 
 </div>
 
-`RadarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` (default `"easeOut"`) and `hoverTransition` (the shared spring). See [Recharts RadarChart](https://recharts.github.io/en-US/api/RadarChart/).
+Entrance runs once per mount. Unavailable uncontrolled selections clear without a callback; controlled values remain consumer-owned and show no selected paint while unavailable.
+
+`RadarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` (default `"easeOut"`) and `hoverTransition` (shared spring). See [Recharts RadarChart](https://recharts.github.io/en-US/api/RadarChart/).
 
 ### RadarSeries
 
-A string `dataKey` identifies its config entry. Use `seriesKey` for accessor or numeric keys when controlling visibility or enabling selection.
+String `dataKey` values identify config entries. Use `seriesKey` for numeric keys or accessors with visibility or selection.
 
 <div className="line-props-scroll" role="region" aria-label="RadarSeries props" tabIndex={0}>
 
@@ -112,7 +114,7 @@ A string `dataKey` identifies its config entry. Use `seriesKey` for accessor or 
 
 </div>
 
-Native per-series `isAnimationActive` is excluded. Native refs belong on custom marks; Recharts exposes no Radar series component ref. See [Recharts Radar](https://recharts.github.io/en-US/api/Radar/).
+Per-series animation is disabled. Recharts exposes no Radar series component ref; attach refs to custom marks. See [Recharts Radar](https://recharts.github.io/en-US/api/Radar/).
 
 ### PolarAngleAxis
 
@@ -164,7 +166,7 @@ See [Recharts PolarGrid](https://recharts.github.io/en-US/api/PolarGrid/).
 
 ### Legend
 
-Place outside `ResponsiveContainer`. Labels become keyboard-operable visibility buttons with controlled Root visibility; they do not toggle Radar's persistent selection.
+Place outside `ResponsiveContainer`. Root visibility and its callback enable toggles; they do not change persistent selection.
 
 <div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
 
@@ -176,7 +178,7 @@ Place outside `ResponsiveContainer`. Labels become keyboard-operable visibility 
 
 ### Tooltip
 
-Native spoke inspection provides the category payload. Kind formats labels and values, excludes hidden series and bounds the panel; selected-series dimming does not filter it.
+Formats spoke payloads and excludes hidden series. Persistent selection does not filter tooltip values.
 
 <div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
 
@@ -191,7 +193,7 @@ See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
 
 ### ResponsiveContainer
 
-Give the plot a measurable height; these components use `280` pixels.
+Requires a measurable parent; these examples use a 280px height.
 
 <div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
 
