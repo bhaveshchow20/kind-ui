@@ -7,7 +7,11 @@ async function paths(scope: Locator, selector: string) {
   return scope
     .locator(selector)
     .evaluateAll((nodes) =>
-      nodes.map((node) => node.getAttribute("d") ?? node.getAttribute("points")),
+      nodes.flatMap((node) =>
+        (node.matches("path") ? [node] : [...node.querySelectorAll("path")]).map((path) =>
+          path.getAttribute("d"),
+        ),
+      ),
     );
 }
 async function geometry(page: Page) {
@@ -112,20 +116,24 @@ test("Motion entrance preserves native geometry and stops on interruption/reduce
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto(`${url}/?motion`);
   const marks = page.locator('[data-host="radar"] [data-kind-ui="radar-reveal"]').first();
-  await expect.poll(() => opacity(marks)).toBeLessThan(0.95);
+  await expect(marks.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(1);
   await geometry(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect.poll(() => opacity(marks)).toBe(1);
+  await expect(marks.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(0);
+  await expect(marks).toHaveCSS("opacity", "1");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect.poll(() => opacity(marks)).toBe(1);
+  await expect(marks.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(0);
+  await expect(marks).toHaveCSS("opacity", "1");
   await page.reload();
-  await expect.poll(() => opacity(marks)).toBeLessThan(0.95);
+  await expect(marks.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(1);
   await page.getByRole("button", { name: "Update", exact: true }).click();
-  await expect.poll(() => opacity(marks)).toBe(1);
+  await expect(marks.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(0);
+  await expect(marks).toHaveCSS("opacity", "1");
   await geometry(page);
   await page.getByRole("button", { name: "Motion", exact: true }).click();
   await page.getByRole("button", { name: "Motion", exact: true }).click();
-  await expect.poll(() => opacity(marks)).toBe(1);
+  await expect(marks.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(0);
+  await expect(marks).toHaveCSS("opacity", "1");
 });
 
 test("pointer interruption finishes entrance; reduced mode renders full geometry immediately", async ({
@@ -135,13 +143,15 @@ test("pointer interruption finishes entrance; reduced mode renders full geometry
   await page.goto(`${url}/?motion`);
   const host = page.locator('[data-host="radar"]');
   const mark = host.locator('[data-kind-ui="radar-reveal"]').first();
-  await expect.poll(() => opacity(mark)).toBeLessThan(0.95);
+  await expect(mark.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(1);
   await host.locator("svg").hover({ position: { x: 260, y: 90 } });
-  await expect.poll(() => opacity(mark)).toBe(1);
+  await expect(mark.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(0);
+  await expect(mark).toHaveCSS("opacity", "1");
   await expect(page.locator("output")).not.toContainText("moves 0");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
-  await expect.poll(() => opacity(mark)).toBe(1);
+  await expect(mark.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(0);
+  await expect(mark).toHaveCSS("opacity", "1");
   await geometry(page);
 });
 
@@ -156,12 +166,18 @@ for (const strict of [false, true]) {
     await page.clock.runFor(100);
     for (const kind of ["radar", "radial-bar"]) {
       const mark = page.locator(`[data-kind-ui="${kind}-reveal"]`).first();
-      if (kind === "radar") await expect.poll(() => opacity(mark)).toBeLessThan(0.95);
+      if (kind === "radar")
+        await expect(mark.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(1);
       else {
-        await expect(
-          mark.locator('[data-kind-ui="radial-entrance-window"]').first(),
-        ).toBeAttached();
+        const window = mark.locator('[data-kind-ui="radial-entrance-window"]').first();
+        await expect(window).toBeAttached();
         await expect(mark).toHaveCSS("opacity", "1");
+        const firstSweep = await window.getAttribute("d");
+        expect(firstSweep).toBeTruthy();
+        const nativeArcs = await paths(page.locator('[data-host="native"]'), radialPath);
+        await page.clock.runFor(150);
+        expect(await window.getAttribute("d")).not.toBe(firstSweep);
+        expect(await paths(page.locator('[data-host="radial"]'), radialPath)).toEqual(nativeArcs);
       }
     }
     await page.locator('[data-host="radial"] svg').focus();

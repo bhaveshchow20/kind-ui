@@ -1,6 +1,5 @@
 // Host composition only: all Waterfall behavior comes from the installed tarball.
 import * as Chart from "@kind-ui/charts";
-import { useMemo, useState } from "react";
 import {
   Cell,
   LabelList,
@@ -10,7 +9,8 @@ import {
   useYAxisScale,
   XAxis,
   YAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useMemo, useState } from "react";
 
 const entries: Chart.WaterfallEntry[] = [
   { id: "a", label: "Opening", kind: "start", value: 80 },

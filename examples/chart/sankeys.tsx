@@ -1,4 +1,5 @@
 import {
+  ResponsiveContainer,
   SankeyChart,
   type SankeyFinish,
   type SankeyFlowData,
@@ -9,7 +10,7 @@ import {
 } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { ResponsiveContainer, Tooltip } from "recharts";
+import { Tooltip } from "recharts";
 import "./sankeys.css";
 import { SankeyNetwork } from "./sankey-network.js";
 
