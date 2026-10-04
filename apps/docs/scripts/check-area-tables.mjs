@@ -28,6 +28,8 @@ try {
   });
   const page = await mobile.newPage();
   await page.goto(url);
+  await page.waitForLoadState("networkidle");
+  await page.evaluate(() => document.fonts.ready);
   const cdp = await mobile.newCDPSession(page);
   const mobileTables = page.locator(".line-props-scroll");
   for (let i = 0; i < (await mobileTables.count()); i++) {
