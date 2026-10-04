@@ -68,6 +68,12 @@ jobs:
           node --test scripts/check-sankey-source.test.mjs
           node scripts/start-sankey-checks.mjs
         working-directory: apps/docs
+      - name: Check histogram documentation
+        run: |
+          node --test scripts/histogram-contract.test.mjs
+          node scripts/check-histogram-consumers.mjs
+          node scripts/start-histogram-checks.mjs
+        working-directory: apps/docs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
