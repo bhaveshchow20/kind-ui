@@ -91,9 +91,11 @@ Neither is a package peer. Native
 React SVG components fit `SeriesConfig.icon`; no universal icon/Tailwind v3 claim.
 
 The root entry retains `"use client"`. The existing pinned Next `16.3.8` consumer tests
-a server page supplying serializable props, and a client component owning state,
-callbacks and a Lucide icon. It uses a production static export, verifies package
-SSR shell/content and tests hydration/controlled legend interaction via localhost.
+a server page passing a serializable title to a client component. The client
+fixture defines static chart data, a tooltip formatter and a Lucide icon. It uses
+a Webpack production App Router static export, verifies package SSR shell/content
+and tests hydration and internal legend interaction via localhost. It does not
+exercise dynamic data or externally controlled legend state.
 There is no `transpilePackages`, `ssr: false`, workspace link, copied library code,
 deployment or external font fetch. Next is installed only in the temporary test
 consumer. This is a representative configured line-chart
