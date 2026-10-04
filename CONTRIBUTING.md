@@ -20,7 +20,6 @@ Kind UI is pre-release and unpublished. The repository uses an open-source contr
 - `npm run format`: apply formatting and safe lint fixes
 - `npm run check:package`: build, validate package-gate fixtures, then verify a tarball in an isolated consumer with pinned peers
 - `npm run pack:artifact`: run the same full package gate and retain the exact validated tarball and checksum in `artifacts/package/`
-- `npm run check:next`: validate the retained tarball in a pinned Next App Router production consumer, including server HTML, hydration and interaction
 - `npm test`: build and run public component tests
 - `npm run dev:chart`: run the minimal usage example
 - `npm run check:chart`: prepare the packed consumer, typecheck/build the example and run browser checks
@@ -36,7 +35,7 @@ Use `npm run pack:artifact` for a candidate that has also passed the isolated co
 
 ## Review expectations
 
-The retained receipt also identifies the source commit/dirty flag, tool versions and pinned consumer versions. It proves the package gate only. The aggregate now includes a separate pinned Next App Router production/hydration check for the same checksum. CI retains package candidates only after the full aggregate passes. See [first-release readiness](docs/release-readiness.md) for support boundaries, install examples and the remaining owner decisions; this does not authorize publication.
+The retained receipt also identifies the source commit/dirty flag, tool versions and pinned consumer versions. It proves the package gate only. The existing `check:line-integrations` and `test:line-integrations` additionally check a pinned Next App Router static export, SSR shell and browser hydration, Tailwind v4 overrides and named Lucide icons for the same checksum. CI retains package candidates and integration evidence only after the full aggregate passes. See [first-release readiness](docs/release-readiness.md) for support boundaries, install examples and the remaining owner decisions; this does not authorize publication.
 
 Evaluate proposals against Kind UI’s goals: performance, accessibility, extensibility, familiarity, and interoperability with agentic applications. Turn the relevant goals into focused acceptance checks; do not describe goals as guarantees before testing them.
 
