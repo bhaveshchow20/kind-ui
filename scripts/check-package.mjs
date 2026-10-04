@@ -236,6 +236,7 @@ try {
         "histogram",
         "box-plot",
         "number-shuffle",
+        "activity-rings",
       ].includes(folder) &&
       file.endsWith(".tsx")
     )
@@ -306,6 +307,19 @@ try {
   await production("index.html", "packed-configured-line");
   console.log(
     "Configured LineChart: public-only standalone/explicit/controlled consumers, generic props and strict NodeNext/Bundler passed",
+  );
+
+  await copyFixture("activity-rings", "index.html", "activity-rings.html");
+  await copyFixture("activity-rings", "main.tsx");
+  await typecheck(["main.tsx"]);
+  await production("activity-rings.html", "artifacts/packed-activity-rings");
+  await writeFile(
+    join(consumer, "activity-rings.test.mjs"),
+    await readFile(join(root, "tests/activity-rings.test.mjs"), "utf8"),
+  );
+  run(process.execPath, ["--test", "activity-rings.test.mjs"], consumer);
+  console.log(
+    "ActivityRings: packed component tests, strict NodeNext/Bundler and production build passed",
   );
 
   // Compare the public surface with the same native-only consumer. A primitive

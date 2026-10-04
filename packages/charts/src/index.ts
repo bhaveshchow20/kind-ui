@@ -76,7 +76,12 @@ export {
   ZAxis,
   type ZAxisProps,
 } from "recharts";
-
+export {
+  type ActivityRing,
+  type ActivityRingDatum,
+  ActivityRings,
+  type ActivityRingsProps,
+} from "./activity-rings.js";
 export {
   type LineAnimation,
   LineSeries,
