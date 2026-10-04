@@ -1,0 +1,218 @@
+---
+title: BoxPlot
+description: Compare distributions with explicit quartiles, whiskers and outliers.
+---
+
+<ChartExample id="box-plot" />
+
+## Usage
+
+`Root` supplies series labels and colors. `BoxPlotChart` composes native axes with `BoxPlotSeries`, which maps caller-computed summaries through the numeric scale. The first Code tab is a complete named component with three response time distributions.
+
+```tsx title="Composition"
+<Chart.Root config={config}>
+  <Chart.Legend />
+  <Chart.ResponsiveContainer width="100%" height={280}>
+    <Chart.BoxPlotChart data={data} animate accessibilityLayer aria-label="Response time distributions">
+      <Chart.CartesianGrid vertical={false} />
+      <Chart.XAxis dataKey="period" />
+      <Chart.YAxis type="number" domain={[0, 180]} />
+      <Chart.BoxPlotSeries
+        dataKey={(row) => ({ ...row, outliers: [row.outlier] })}
+        seriesKey="latency"
+        barSize={32}
+      />
+      <Chart.Tooltip content={({ active, payload }) =>
+        active && payload?.[0] ? (
+          <div data-kind-ui="chart-tooltip">
+            Median: {payload[0].payload.median} ms
+          </div>
+        ) : null
+      } />
+    </Chart.BoxPlotChart>
+  </Chart.ResponsiveContainer>
+</Chart.Root>
+```
+
+The complete component defines tooltip content inline. Native tooltip values describe the enclosing range; read the original row from `payload` to label individual statistics. Axes, domains, data and visibility remain consumer-owned. A read-only legend labels the series; toggles require `visibleSeries` and `onVisibleSeriesChange` on `Root`.
+
+## Summary contract
+
+Supply finite numbers ordered as `lowerWhisker <= q1 <= median <= q3 <= upperWhisker`. Every optional outlier must be finite and strictly outside the whiskers. Duplicate outliers remain separate marks, which may overlap.
+
+Compute quartiles, whiskers and outlier classification before rendering. Kind accepts summaries, not raw samples, and chooses no quartile interpolation or fence convention. The box spans Q1 to Q3, the interior line marks the median, the capped line spans the whiskers, and circles mark supplied outliers. Native domain inference includes the full extent, including outliers.
+
+Equal quartiles render a collapsed line without a fabricated minimum IQR. Equal whiskers, all-equal summaries, zero and negative values are valid. `null` or `undefined` summaries produce no marks; an empty dataset also produces none. Invalid present summaries throw instead of silently substituting values. A configured category can still have an axis label when its summary is missing.
+
+## Collapsed and missing summaries
+
+Stable has identical quartiles and whiskers; Zero is a valid all-zero summary. Pending has no summary and therefore no mark. The axis retains its category label. Negative values and outliers in Variable use the same numeric scale.
+
+<ChartExample id="box-plot-edge-cases" />
+
+## Horizontal distributions
+
+Use `layout="vertical"` with a numeric X axis and categorical Y axis. The same values map to horizontal boxes; orientation follows native chart layout.
+
+<ChartExample id="box-plot-horizontal" />
+
+## Materials
+
+Choose plain, paper, clay or glow. These static SVG finishes preserve quartiles, whiskers, medians and outliers, including collapsed boxes. An explicit `filter` or `style.filter`, including `none`, overrides a built-in finish. Custom `shape` owns its returned markup; it can explicitly compose a materialized `BoxPlotMark`.
+
+<ChartExample id="box-plot-materials" />
+
+## API reference
+
+BoxPlot registers a native Recharts range Bar and renders its marks through public axis-scale hooks. It has no configured wrapper. Use the exported components below with explicit axes and a sized container.
+
+### BoxPlotChart
+
+<div className="line-props-scroll" role="region" aria-label="BoxPlotChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `Row[]` | — | Consumer-owned observations containing summaries or accessor inputs. |
+| `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | Native layout; `"vertical"` gives horizontal boxes with numeric X and categorical Y axes. |
+| `animate` | `boolean \| BarAnimation` | `false` | Chart-owned clipped entrance; respects reduced motion. Native per-series animation is disabled. |
+| `accessibilityLayer` | `boolean` | `true` in Recharts | Native keyboard inspection. Set explicitly in these components. |
+| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
+| `children` | `ReactNode` | — | Explicit series, axes, grid and tooltip. |
+
+</div>
+
+BoxPlot uses a custom range shape, so Bar category paint emphasis does not apply. Tooltip inspection remains available. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
+
+### BoxPlotSeries
+
+<div className="line-props-scroll" role="region" aria-label="BoxPlotSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `(keyof Row & string) \| ((row: Row) => BoxPlotSummary \| null \| undefined)` | Required | Direct property name or accessor; nested string paths are not interpreted. |
+| `seriesKey` | `string` | Required | Root metadata, color and visibility identity, independent of the generated range accessor. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static mark finish. Explicit filters and custom shapes retain ownership. |
+| `barSize` | `number \| string` | Native automatic sizing | Category-axis width; numbers are pixels, native percentage strings are also accepted. |
+| `outlierRadius` | `number` | `3` | Radius of each outlier circle in screen pixels. |
+| `shape` | `(props: BoxPlotShapeProps) => ReactNode` | Built-in mark | Receives original summary, native Bar shape props and mapped coordinates. Owns returned markup. |
+| `markProps` | SVG group props, excluding `children` | — | Attributes, styles, handlers and refs forwarded to each present mark group. |
+| `xAxisId` / `yAxisId` | `string \| number` | `0` | Native axes used to map statistical values. |
+| `hide` | `boolean` | `false` | Native hiding; Root controlled visibility also applies. |
+
+</div>
+
+Stacking, `minPointSize`, background, radius and `activeBar` are omitted from this contract. Native Cell paint, labels and handlers remain available. LabelList positions refer to the enclosing range; supply an explicit label field or custom content for a particular statistic. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
+
+### BoxPlotMark
+
+Use this exported SVG primitive when the caller already owns screen coordinates. It does not compute statistics or map a numeric domain.
+
+<div className="line-props-scroll" role="region" aria-label="BoxPlotMark props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `coordinates` | `BoxPlotSummary` | Required | Already mapped screen coordinates; these can reverse on a vertical numeric scale. |
+| `center` | `number` | Required | Category-axis center in pixels. |
+| `size` | `number` | Required | Category-axis mark width in pixels. |
+| `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | Direction of the quantitative geometry. |
+| `outlierRadius` | `number` | `3` | Screen-space circle radius. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static finish; explicit group filters take precedence. |
+| `strokeWidth` | SVG stroke width | `1.5` | Native stroke width; explicit SVG paint stays consumer-owned. |
+
+</div>
+
+### BoxPlotSummary and helpers
+
+<div className="line-props-scroll" role="region" aria-label="BoxPlotSummary fields" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `lowerWhisker` / `upperWhisker` | `number` | Required | Caller-defined finite whisker endpoints. |
+| `q1` / `q3` | `number` | Required | Caller-computed finite quartiles, ordered within whiskers. |
+| `median` | `number` | Required | Finite value between Q1 and Q3. |
+| `outliers` | `readonly number[]` | — | Finite observations strictly outside the supplied whiskers. |
+
+</div>
+
+`validateBoxPlotSummary(value: unknown): BoxPlotSummary | null` returns the same valid summary or null for missing input, and throws for malformed present input. `boxPlotExtent(summary: BoxPlotSummary): [number, number]` validates and returns the full minimum and maximum including outliers. Neither helper mutates the input.
+
+### Root
+
+<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series labels, colors and optional value formatters. |
+| `visibleSeries` | `readonly string[]` | All series | Consumer-owned visibility. |
+| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables Legend buttons; requires controlled selection. |
+
+</div>
+
+### Legend
+
+Place outside `ResponsiveContainer`. Without controlled Root visibility it displays series labels; with a visibility callback, it renders keyboard-operable buttons.
+
+<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `hideIcon` | `boolean` | `false` | Show swatches instead of configured icons. |
+
+</div>
+
+### Tooltip
+
+Native arrow keys inspect categories and Escape dismisses inspection. Custom content owns its markup and reads the original row from the payload.
+
+<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `content` | Native content element or render function | Kind content | Native values are enclosing ranges; use original payload for summary statistics. |
+| `maxWidth` | `number` | `180` | Measured tooltip width bound in pixels. |
+
+</div>
+
+See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+
+### XAxis and YAxis
+
+Axes own numeric scales and category labels. Domains must include every outlier; formatting changes labels, not values.
+
+<div className="line-props-scroll" role="region" aria-label="Axis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `type` | `"number" \| "category"` | X: `"category"`; Y: `"number"` | Swap for horizontal distributions. |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Category label field or accessor. |
+| `domain` | Native numeric domain | `[0, "auto"]` | Numeric bounds; native inferred extents include supplied outliers. |
+| `tickMargin` | `number` | `5` | Space between axis and tick text. |
+
+</div>
+
+See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/) and [YAxis](https://recharts.github.io/en-US/api/YAxis/).
+
+### CartesianGrid
+
+<div className="line-props-scroll" role="region" aria-label="CartesianGrid props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `horizontal` / `vertical` | `boolean` | `true` | Native quantitative guides; these components disable guides along the category axis. |
+| `strokeDasharray` | `string` | — | Native guide dash pattern. |
+
+</div>
+
+The edge-case component omits guides so collapsed lines remain visible. See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
+
+### ResponsiveContainer
+
+<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` / `height` | `number` or percentage | `"100%"` | Give the plot measurable dimensions; these components use height `280`. |
+
+</div>
+
+See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
