@@ -38,6 +38,38 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`${origin}/docs/components/line/`);
   await page.locator(".recharts-line-curve").first().waitFor();
+  await page.evaluate(() => (document.documentElement.style.fontSize = "200%"));
+  const enlargedSidebar = await page.locator("#nd-sidebar").evaluate((sidebar) => {
+    const search = sidebar.querySelector(".glass-sidebar-search > button");
+    const selection = sidebar.querySelector(':scope > button[aria-haspopup="dialog"] > span');
+    const wordmark = sidebar.querySelector(".kind-wordmark").getBoundingClientRect();
+    const github = sidebar.querySelector('a[aria-label="GitHub"]').getBoundingClientRect();
+    return {
+      searchWidth: search.clientWidth,
+      searchContentWidth: search.scrollWidth,
+      selectionWidth: selection.clientWidth,
+      selectionContentWidth: selection.scrollWidth,
+      selectionOverflow: getComputedStyle(selection).textOverflow,
+      wordmarkRight: wordmark.right,
+      githubLeft: github.left,
+    };
+  });
+  assert.ok(
+    enlargedSidebar.searchContentWidth <= enlargedSidebar.searchWidth + 1 &&
+      enlargedSidebar.selectionContentWidth <= enlargedSidebar.selectionWidth + 1 &&
+      enlargedSidebar.selectionOverflow !== "ellipsis" &&
+      enlargedSidebar.wordmarkRight <= enlargedSidebar.githubLeft,
+    JSON.stringify(enlargedSidebar),
+  );
+  const sectionTrigger = page.locator('#nd-sidebar > button[aria-haspopup="dialog"]');
+  await sectionTrigger.focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("dialog").getByRole("link", { name: "Guides", exact: true }).waitFor();
+  await page.keyboard.press("Escape");
+  await page.locator(".glass-sidebar-search > button").click();
+  await page.getByRole("dialog").getByRole("combobox").waitFor();
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => (document.documentElement.style.fontSize = ""));
   const links = await page
     .locator("#nd-sidebar a[href]")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")));
@@ -160,6 +192,7 @@ try {
         navigationLinks: links.filter((url) => url.startsWith("/docs/components/")),
         removedRoutes: unpublishedFamilies,
         navigationSearch: "passed",
+        enlargedSidebar,
         visibility: "passed",
         darkMobileEnlarged: "passed",
         errors,
