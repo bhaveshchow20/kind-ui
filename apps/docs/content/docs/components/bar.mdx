@@ -1,0 +1,206 @@
+---
+title: Bar Chart
+description: Compare categories with columns, grouped or stacked series, and horizontal bars.
+---
+
+<ChartExample id="bar" />
+
+## Usage
+
+`Root` shares series labels, colors and visibility. `ResponsiveContainer` sizes the plot; `BarChart` owns motion and inspection. Compose axes, `BarSeries` and `Tooltip` explicitly. The first Code tab contains the complete pickup-orders component and dataset.
+
+```tsx title="Composition"
+<Chart.Root config={config}>
+  <Chart.Legend />
+  <Chart.ResponsiveContainer width="100%" height={280}>
+    <Chart.BarChart data={data} animate accessibilityLayer aria-label="Pickup orders by location">
+      <Chart.CartesianGrid vertical={false} />
+      <Chart.XAxis dataKey="period" />
+      <Chart.YAxis />
+      <Chart.BarSeries dataKey="orders" radius={[5, 5, 0, 0]} />
+      <Chart.Tooltip />
+    </Chart.BarChart>
+  </Chart.ResponsiveContainer>
+</Chart.Root>
+```
+
+You own data, category order, axes and sizing. Place `Legend` outside the responsive plot. Bar has no configured wrapper: supply `config` to `Root` and compose each series explicitly. Enable legend toggles with both `visibleSeries` and `onVisibleSeriesChange`, as below.
+
+## Grouped and stacked series
+
+Grouped bars compare print and digital loans directly. Choose Stacked to show their contribution to each subject's total: matching `stackId` values on the same axes stack the series. Legend buttons update consumer-owned visibility; hiding a series recalculates grouping or stacking.
+
+<ChartExample id="bar-comparison" />
+
+## Horizontal bars
+
+Long category names fit beside horizontal bars. Native `layout="vertical"` makes the X axis numeric and Y axis categorical. Set both axis types explicitly; orientation stays consumer-owned.
+
+<ChartExample id="bar-horizontal" />
+
+## Materials
+
+Plain, paper, clay and glow finish native rectangles without changing their values. Rounded corners are explicit through `radius`; Kind does not infer rounded stack caps. Finishes are static and independent of `animate`. Custom `shape`, `filter` or a non-boolean `activeBar` retains paint ownership. Plot clipping can trim decorative halos at edges.
+
+<ChartExample id="bar-materials" />
+
+## Category emphasis
+
+These complete comparisons opt in with `BarChart emphasis="category"`. Pointer hover and native keyboard inspection keep the selected category at full strength while dimming other categories. `Root emphasis="none"` disables paint emphasis; tooltips still inspect data.
+
+Every visible peer must use native rectangles, chart-level rows, a string value `dataKey`, and finite values different from its numeric baseline (normally zero). Categories must be unique strings, or supply `emphasisKey` returning a unique defined identity for every chart row. Numeric/index-only categories need that explicit identity. Missing, null, zero/baseline, range values, per-series data, custom shapes or non-boolean active bars make a visible peer ineligible; the whole chart then falls back to ordinary inspection. Hidden peers do not block eligibility. Sparse data is never automatically emphasized. Touch inspection does not activate pointer-hover emphasis.
+
+## API reference
+
+Kind supplies metadata, visibility, bounded tooltips and chart-owned motion. Recharts owns geometry, grouping, stacking and native axis selection. These focused props cover the components above; upstream references cover additional native options.
+
+### Root
+
+Supplies series metadata and consumer-owned visibility, independently of data and dimensions.
+
+<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Labels, colors and optional value formatters keyed by series. |
+| `visibleSeries` | `readonly string[]` | All series | Consumer-owned selection. |
+| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend buttons; requires `visibleSeries`. |
+| `emphasis` | `"auto" \| "none"` | `"auto"` | Allows supported emphasis; category emphasis still requires chart opt-in and eligible peers. |
+
+</div>
+
+### BarChart
+
+Use inside `Root` and a sized `ResponsiveContainer`.
+
+<div className="line-props-scroll" role="region" aria-label="BarChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `Row[]` | — | Consumer-owned category observations. |
+| `animate` | `boolean \| BarAnimation` | `false` | Reveal from numeric zero or nearest domain edge; respects reduced motion. |
+| `emphasis` | `"none" \| "category"` | `"none"` | Opt in to eligible category comparisons. |
+| `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | `"horizontal"` draws columns; `"vertical"` draws horizontal bars. |
+| `barGap` | `number \| string` | `4` | Gap between grouped bars. |
+| `barCategoryGap` | `number \| string` | `"10%"` | Space between category groups. |
+| `stackOffset` | `"none" \| "expand" \| "wiggle" \| "silhouette" \| "sign" \| "positive"` | `"none"` | Native stack calculation; use `"sign"` for separate positive/negative stacks. |
+| `accessibilityLayer` | `boolean` | `true` in Recharts | Native keyboard inspection; explicit in these components. |
+| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
+| `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Space around plot parts. |
+| `children` | `ReactNode` | — | Explicit axes, series, grid and tooltip. |
+
+</div>
+
+Entrance motion stops on interaction or geometry/data changes and does not replay on updates. Remount to replay. `BarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
+
+### BarSeries
+
+A registered native Bar. String value keys identify config entries; controlled numeric/function keys require `seriesKey`.
+
+<div className="line-props-scroll" role="region" aria-label="BarSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Value field or accessor. |
+| `seriesKey` | `string` | String `dataKey` | Metadata and visibility identity. |
+| `stackId` | `string \| number` | — | Stack series with matching axis IDs. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Native-rectangle finish; custom paint takes precedence. |
+| `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | — | Unique category identity; does not make invalid values or custom shapes eligible. |
+| `radius` | `number \| [number, number, number, number]` | `0` | Native corner rounding: top-left, top-right, bottom-right, bottom-left. |
+| `maxBarSize` | `number` | — | Limit each bar's thickness. |
+| `fill` | `string` | Config color | Native fill override; Cells can customize individual bars. |
+| `hide` | `boolean` | `false` | Native hide and Root selection both apply. |
+| `children` | `ReactNode` | — | Native Cells, LabelList and ErrorBar composition. |
+
+</div>
+
+Native zero, missing, signed and two-value range inputs retain Recharts geometry. Native per-series animation is disabled; `BarChart` owns motion. Consumer shapes, labels and handlers retain native composition. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/) and [material support](/docs/guides/materials/).
+
+### Legend
+
+Place outside `ResponsiveContainer`. Without a Root visibility callback, legend items are labels. With controlled visibility, they are keyboard-operable buttons.
+
+<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `hideIcon` | `boolean` | `false` | Use swatches instead of configured icons. |
+| `emphasis` | `"none" \| "series"` | `"none"` | Requests series emphasis on hover or focus; supported paint behavior is family-specific. |
+
+</div>
+
+### Tooltip
+
+Compose inside `BarChart`. Kind supplies config labels, formatters and bounded positioning. Hidden series are excluded; Native arrow-key navigation inspects categories, and Escape dismisses inspection.
+
+<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `cursor` | Native cursor props or renderer | `false` | Optional inspection guide. |
+| `maxWidth` | `number` | `180` | Tooltip width bound in pixels. |
+
+</div>
+
+See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+
+### XAxis
+
+Native category axis for columns; use `type="number"` for horizontal bars.
+
+<div className="line-props-scroll" role="region" aria-label="XAxis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Category label field or accessor. |
+| `axisLine` / `tickLine` | Native line props | `true` | Axis and tick strokes; shown components disable both. |
+| `tickMargin` | `number` | `5` | Label breathing room; columns use `16`. |
+
+</div>
+
+See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/).
+
+### YAxis
+
+Native numeric axis for columns; use `type="category"` and a `dataKey` for horizontal bars.
+
+<div className="line-props-scroll" role="region" aria-label="YAxis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `domain` | Native domain | `[0, "auto"]` | Numeric scale bounds. |
+| `tickFormatter` | `(value: number, index: number) => string` | — | Format tick labels. |
+| `width` | `number \| "auto"` | `60` | Space reserved for labels; columns use `80`, horizontal bars use `160`. |
+
+</div>
+
+See [Recharts YAxis](https://recharts.github.io/en-US/api/YAxis/).
+
+### CartesianGrid
+
+Native scale guides. Columns use horizontal guides; horizontal bars use vertical guides.
+
+<div className="line-props-scroll" role="region" aria-label="CartesianGrid props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `vertical` | `boolean` | `true` | Draw vertical guides. |
+| `strokeDasharray` | `string` | — | Guide dash pattern. |
+
+</div>
+
+See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
+
+### Responsive<wbr />Container
+
+Owns responsive layout. Give the container a measurable height; these components use `280` pixels.
+
+<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` / `height` | `number` or percentage | `"100%"` | Plot dimensions relative to the parent. |
+
+</div>
+
+See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
