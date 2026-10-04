@@ -129,6 +129,7 @@ export function ComponentPlayground({
             </thead>
             <tbody>
               {dataAlternative.rows.map((row, index) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: Build-time snapshot order is fixed; preserve duplicate observations.
                 <tr key={index}>
                   {Object.keys(dataAlternative.columns).map((key, index) =>
                     index === 0 ? (
