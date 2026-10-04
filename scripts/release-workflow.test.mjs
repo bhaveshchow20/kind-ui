@@ -74,5 +74,5 @@ test("manual validation defaults to the reviewed package candidate version", asy
     await readFile(new URL("../packages/charts/package.json", import.meta.url), "utf8"),
   );
   assert.equal(workflow.on.workflow_dispatch.inputs.version.default, manifest.version);
-  assert.equal(manifest.private, true);
+  assert.equal(manifest.private, undefined);
 });

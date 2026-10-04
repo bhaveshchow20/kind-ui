@@ -57,14 +57,19 @@ for (const extra of ["src/index.ts", ".env", "dist/.tsbuildinfo", "dist/node_mod
     assert.throws(() => assertPackageContract(manifest, [...files, extra]));
   });
 }
-test("rejects publication enablement", () => {
-  assert.throws(() => assertPackageContract({ ...manifest, private: false }, files), /private/);
-});
+for (const privateFlag of [true, false]) {
+  test(`rejects an unreviewed private flag ${privateFlag}`, () => {
+    assert.throws(
+      () => assertPackageContract({ ...manifest, private: privateFlag }, files),
+      /private flag/,
+    );
+  });
+}
 for (const version of ["0.0.0", "0.1.1", "1.0.0", "0.1.0-preview.1"]) {
   test(`rejects unreviewed candidate version ${version}`, () => {
     assert.throws(
       () => assertPackageContract({ ...manifest, version }, files),
-      /reviewed private candidate/,
+      /reviewed public candidate/,
     );
   });
 }

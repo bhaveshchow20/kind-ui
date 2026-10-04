@@ -1,6 +1,6 @@
 # First charts release readiness
 
-The current local candidate is private `@kind-ui/charts@0.1.0`; the workspace
+The current local candidate is public `@kind-ui/charts@0.1.0`; the workspace
 remains private at `0.0.0`. The manual validation workflow keeps publishing
 hard-disabled and grants no OIDC permission. No release tag, GitHub Release,
 credential/trust setup or publication is authorized by candidate preparation.
@@ -160,10 +160,10 @@ homepage work and draft editorial branches are outside this change.
 
 ## Proposed versioning and separately approved setup
 
-Propose a reviewed `0.1.0` first version; the owner must choose version/dist-tag.
+The reviewed first candidate is `0.1.0`, with `latest` as its intended dist-tag. Publication remains separately authorized.
 For pre-1.0, breaking APIs increment minor; compatible fixes increment patch.
 Document this before users install. The reviewed Changesets setup uses its standard CLI for version and changelog
-changes. The private `0.1.0` candidate includes its initial API notes and the
+changes. The public `0.1.0` candidate includes its initial API notes and the
 reviewed entrance-settlement patch. One package needs no custom version script,
 release bot or multi-package orchestration layer.
 
