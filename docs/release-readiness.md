@@ -91,8 +91,8 @@ Neither is a package peer. Native
 React SVG components fit `SeriesConfig.icon`; no universal icon/Tailwind v3 claim.
 
 The root entry retains `"use client"`. The existing pinned Next `16.3.8` consumer tests
-a server page passing a serializable title to a client component. The client
-fixture defines static chart data, a tooltip formatter and a Lucide icon. It uses
+a server page supplying serializable chart props and rendering a client host.
+The client fixture defines static chart data, a tooltip formatter and a Lucide icon. It uses
 a Webpack production App Router static export, verifies package SSR shell/content
 and tests hydration and internal legend interaction via localhost. It does not
 exercise dynamic data or externally controlled legend state.
