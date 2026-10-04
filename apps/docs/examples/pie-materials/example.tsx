@@ -44,7 +44,7 @@ export function AllocationMaterialChart({
             innerRadius={58}
             material={material}
             outerRadius={108}
-            paddingAngle={2}
+            paddingAngle={0}
           >
             {data.map((row) => (
               <Chart.Cell key={row.key} fill={config[row.key].color} />

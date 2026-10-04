@@ -39,7 +39,7 @@ export function TeamAllocationChart({ shape = "pie" }: { shape?: "pie" | "donut"
             nameKey="key"
             innerRadius={shape === "donut" ? 58 : 0}
             outerRadius={108}
-            paddingAngle={2}
+            paddingAngle={0}
           >
             {data.map((row) => (
               <Chart.Cell key={row.key} fill={config[row.key].color} />
