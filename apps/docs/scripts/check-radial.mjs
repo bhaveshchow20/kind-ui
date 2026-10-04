@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const browser = await chromium.launch(
@@ -111,10 +111,8 @@ try {
       await rings.scrollIntoViewIfNeeded();
       await rings.getByRole("tab", { name: "Code", exact: true }).focus();
       await page.keyboard.press("ArrowLeft");
-      assert.equal(
-        await rings
-          .getByRole("tab", { name: "Preview", exact: true })
-          .getAttribute("aria-selected"),
+      await expect(rings.getByRole("tab", { name: "Preview", exact: true })).toHaveAttribute(
+        "aria-selected",
         "true",
       );
       await page.keyboard.press("ArrowRight");
@@ -137,14 +135,36 @@ try {
       assert.ok((await page.evaluate(() => scrollY)) > start + 50);
       evidence.scroll.push({ codeInternalAndEdge: "passed" });
       await rings.getByRole("tab", { name: "Preview", exact: true }).click();
+      const titleSize = await page
+        .locator(".doc-heading h1")
+        .evaluate((n) => Number.parseFloat(getComputedStyle(n).fontSize));
       await page.evaluate(() => {
-        document.documentElement.style.fontSize = "32px";
+        const nodes = [...document.querySelectorAll("#docs-content *")].filter(
+          (n) => n instanceof HTMLElement,
+        );
+        window.radialTextStyles = nodes.map((n) => [n, n.style.cssText]);
+        const sizes = nodes.map((n) => [
+          n,
+          Number.parseFloat(getComputedStyle(n).fontSize),
+          Number.parseFloat(getComputedStyle(n).lineHeight),
+        ]);
+        for (const [node, font, line] of sizes) {
+          node.style.fontSize = `${font * 2}px`;
+          if (Number.isFinite(line)) node.style.lineHeight = `${line * 2}px`;
+        }
       });
+      assert.equal(
+        await page
+          .locator(".doc-heading h1")
+          .evaluate((n) => Number.parseFloat(getComputedStyle(n).fontSize)),
+        titleSize * 2,
+      );
       await page.evaluate(() => scrollTo(0, 0));
       await page.screenshot({ path: "artifacts/radial/200-percent-text.png" });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       await page.evaluate(() => {
-        document.documentElement.style.fontSize = "";
+        for (const [node, style] of window.radialTextStyles) node.style.cssText = style;
+        delete window.radialTextStyles;
       });
       const toc = page.locator("#nd-toc");
       const tocBox = await toc.boundingBox();
