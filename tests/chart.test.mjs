@@ -1274,3 +1274,32 @@ test("composition components and helpers preserve native identity", () => {
     assert.equal(Chart[name], Native[name], `${name} must preserve registration and defaults`);
   }
 });
+
+test("Radar selection is SSR-safe without state glue and rejects ownerless controlled state", () => {
+  const config = { value: { label: "Actual", color: "#3161bd" } };
+  const props = {
+    width: 400,
+    height: 250,
+    data: [{ category: "A", value: 10 }],
+    selection: "series",
+  };
+  assert.doesNotThrow(() => render(h(Chart.Root, { config }, h(Chart.RadarChart, props))));
+  assert.throws(
+    () =>
+      render(h(Chart.Root, { config }, h(Chart.RadarChart, { ...props, selectedSeries: "value" }))),
+    /requires onSelectedSeriesChange for controlled selectedSeries/,
+  );
+  assert.doesNotThrow(() =>
+    render(
+      h(
+        Chart.Root,
+        { config },
+        h(Chart.RadarChart, {
+          ...props,
+          selectedSeries: null,
+          onSelectedSeriesChange: () => assert.fail("SSR must not emit selection changes"),
+        }),
+      ),
+    ),
+  );
+});
