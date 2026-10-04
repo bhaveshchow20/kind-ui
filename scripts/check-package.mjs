@@ -16,7 +16,10 @@ import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "vite";
 import { assertDocumentationContract } from "./documentation-contract.mjs";
-import { assertLineConsumerSource } from "./line-consumer-contract.mjs";
+import {
+  assertCompositionConsumerSource,
+  assertLineConsumerSource,
+} from "./line-consumer-contract.mjs";
 import { assertPackageContract } from "./package-contract.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -199,6 +202,70 @@ try {
       },
     });
   }
+  assert.match(
+    await readFile(join(installed, "dist/index.js"), "utf8"),
+    /^"use client";/,
+    "Public reexports must retain the Next client boundary",
+  );
+  assertCompositionConsumerSource(
+    await readFile(join(root, "tests/fixtures/composition/host.tsx"), "utf8"),
+  );
+  for (const file of ["host.tsx", "main.tsx", "contract.tsx", "index.html"])
+    await copyFixture("composition", file);
+  await typecheck(["host.tsx", "main.tsx", "contract.tsx"]);
+  await production("index.html", "packed-composition");
+  console.log(
+    "Single-package named/namespace Cartesian, polar, scatter and pie compositions: strict NodeNext/Bundler parity and production build passed",
+  );
+
+  assertCompositionConsumerSource(
+    await readFile(join(root, "tests/fixtures/configured-line/host.tsx"), "utf8"),
+  );
+  for (const file of ["host.tsx", "main.tsx", "contract.tsx", "index.html"])
+    await copyFixture("configured-line", file);
+  await typecheck(["host.tsx", "main.tsx", "contract.tsx"]);
+  await production("index.html", "packed-configured-line");
+  console.log(
+    "Configured LineChart: public-only standalone/explicit/controlled consumers, generic props and strict NodeNext/Bundler passed",
+  );
+
+  // Compare the public surface with the same native-only consumer. A primitive
+  // import must not pull Kind interaction/Motion into the production bundle.
+  const bundleSizes = [];
+  for (const source of ["@kind-ui/charts", "recharts"]) {
+    await writeFile(
+      join(consumer, "primitive.tsx"),
+      `import { XAxis } from "${source}"; window.axis = XAxis;`,
+    );
+    const result = await build({
+      configFile: false,
+      root: consumer,
+      logLevel: "silent",
+      build: { write: false, rolldownOptions: { input: join(consumer, "primitive.tsx") } },
+    });
+    const chunks = result.output.filter((item) => item.type === "chunk");
+    bundleSizes.push(chunks.reduce((bytes, chunk) => bytes + Buffer.byteLength(chunk.code), 0));
+    for (const chunk of chunks) {
+      assert.ok(
+        !chunk.moduleIds.some((id) =>
+          /(?:motion|framer-motion|motion-dom|motion-utils)\//.test(id),
+        ),
+        "Primitive consumer must tree-shake Motion",
+      );
+      assert.ok(
+        !chunk.moduleIds.some((id) => /@kind-ui\/charts\/dist\/(?!index\.js)/.test(id)),
+        "Primitive consumer must tree-shake Kind runtime",
+      );
+    }
+  }
+  assert.ok(
+    Math.abs(bundleSizes[0] - bundleSizes[1]) <= 100,
+    `Public/native primitive bundle difference must remain negligible: ${bundleSizes}`,
+  );
+  console.log(
+    `Primitive-only production tree-shaking: public/native bytes ${bundleSizes.join("/")}; no Kind interaction or Motion runtime`,
+  );
+
   const genericsConsumer = await readFile(join(root, "tests/series-generics-consumer.tsx"), "utf8");
   assertLineConsumerSource(genericsConsumer);
   await writeFile(join(consumer, "series-generics-consumer.tsx"), genericsConsumer);
@@ -212,7 +279,11 @@ try {
     join(consumer, "chart.test.mjs"),
     await readFile(join(root, "tests/chart.test.mjs"), "utf8"),
   );
-  run(process.execPath, ["--test", "chart.test.mjs"], consumer);
+  await writeFile(
+    join(consumer, "configured-line.test.mjs"),
+    await readFile(join(root, "tests/configured-line.test.mjs"), "utf8"),
+  );
+  run(process.execPath, ["--test", "chart.test.mjs", "configured-line.test.mjs"], consumer);
   for (const file of ["index.html", "main.tsx"]) await copyFixture("number-shuffle", file);
   await typecheck(["main.tsx"]);
   await production("index.html", "packed-number-shuffle");

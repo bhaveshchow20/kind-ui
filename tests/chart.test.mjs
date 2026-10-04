@@ -4,6 +4,7 @@ import * as Chart from "@kind-ui/charts";
 import { Legend, Root, TooltipContent } from "@kind-ui/charts";
 import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
+import * as Native from "recharts";
 import { ScatterChart as NativeScatterChart, Scatter, XAxis, YAxis } from "recharts";
 
 test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a data alternative", () => {
@@ -42,14 +43,22 @@ test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a da
 test("direct and namespace imports expose the same public components", () => {
   assert.deepEqual(Object.keys(Chart).sort(), [
     "AreaChart",
+    "AreaRevealShape",
     "AreaSeries",
     "BarChart",
     "BarSeries",
+    "BarStack",
     "BoxPlotChart",
     "BoxPlotMark",
     "BoxPlotSeries",
+    "Brush",
+    "CartesianGrid",
+    "Cell",
     "ComboChart",
+    "Curve",
+    "Dot",
     "EmphasisMark",
+    "ErrorBar",
     "HeatmapCellContent",
     "HeatmapChart",
     "HeatmapDataTable",
@@ -58,16 +67,28 @@ test("direct and namespace imports expose the same public components", () => {
     "HeatmapTooltip",
     "HistogramChart",
     "HistogramSeries",
+    "Label",
+    "LabelList",
     "Legend",
     "LineChart",
+    "LineDrawShape",
     "LineSeries",
     "PieChart",
     "PieSeries",
+    "PolarAngleAxis",
+    "PolarGrid",
+    "PolarRadiusAxis",
+    "Polygon",
     "RadarChart",
     "RadarSeries",
     "RadialBarChart",
     "RadialBarLabel",
     "RadialBarSeries",
+    "Rectangle",
+    "ReferenceArea",
+    "ReferenceDot",
+    "ReferenceLine",
+    "ResponsiveContainer",
     "Root",
     "SankeyChart",
     "SankeyLink",
@@ -77,18 +98,28 @@ test("direct and namespace imports expose the same public components", () => {
     "ScatterSeries",
     "ScatterTooltip",
     "ScatterTooltipContent",
+    "Sector",
+    "Symbols",
     "Tooltip",
     "TooltipContent",
     "WaterfallChart",
     "WaterfallConnectors",
     "WaterfallSeries",
+    "XAxis",
+    "YAxis",
+    "ZAxis",
     "binHistogram",
     "boxPlotExtent",
     "computeWaterfallData",
     "createHeatmapModel",
     "createHeatmapScale",
+    "getRelativeCoordinate",
     "prepareSankeyData",
+    "useChartHeight",
+    "useChartWidth",
     "useEmphasis",
+    "useXAxisScale",
+    "useYAxisScale",
     "validateBoxPlotSummary",
   ]);
   assert.equal(Chart.Root, Root);
@@ -1204,5 +1235,42 @@ test("explicit native legend symbols retain icon/children priority and square fa
     );
     assert.doesNotMatch(tooltipHtml, /data-legend-shape|<svg/);
     assert.match(tooltipHtml, /data-indicator="line"/);
+  }
+});
+
+test("composition components and helpers preserve native identity", () => {
+  for (const name of [
+    "CartesianGrid",
+    "XAxis",
+    "YAxis",
+    "ZAxis",
+    "PolarGrid",
+    "PolarAngleAxis",
+    "PolarRadiusAxis",
+    "ResponsiveContainer",
+    "Cell",
+    "Label",
+    "LabelList",
+    "BarStack",
+    "ReferenceLine",
+    "ReferenceDot",
+    "ReferenceArea",
+    "Brush",
+    "ErrorBar",
+    "Dot",
+    "Curve",
+    "Rectangle",
+    "Sector",
+    "Polygon",
+    "Symbols",
+    "AreaRevealShape",
+    "LineDrawShape",
+    "getRelativeCoordinate",
+    "useChartHeight",
+    "useChartWidth",
+    "useXAxisScale",
+    "useYAxisScale",
+  ]) {
+    assert.equal(Chart[name], Native[name], `${name} must preserve registration and defaults`);
   }
 });

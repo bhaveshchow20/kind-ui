@@ -1,16 +1,8 @@
 // Host composition only; the installed tarball owns all chart behavior.
 import * as Chart from "@kind-ui/charts";
+import { Cell, Label, LabelList, type PieSectorShapeProps, Sector } from "@kind-ui/charts";
 import { useCallback, useMemo, useState } from "react";
-import {
-  Cell,
-  Label,
-  LabelList,
-  PieChart as NativePieChart,
-  Tooltip as NativeTooltip,
-  Pie,
-  type PieSectorShapeProps,
-  Sector,
-} from "recharts";
+import { PieChart as NativePieChart, Tooltip as NativeTooltip, Pie } from "recharts";
 
 const config = {
   alpha: { label: "Alpha", color: "#4f46e5", formatValue: (v: unknown) => `${v} seats` },
