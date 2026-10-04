@@ -2,12 +2,7 @@ import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-const bundles = {
-  ...JSON.parse(readFileSync("generated/examples.json", "utf8")),
-  ...JSON.parse(readFileSync("generated/line-examples.json", "utf8")),
-};
-const areaBundles = JSON.parse(readFileSync("generated/area-examples.json", "utf8"));
-Object.assign(bundles, areaBundles);
+const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const root = path.resolve("artifacts/consumer");
 mkdirSync(root, { recursive: true });
 const first = Object.values(bundles)[0];

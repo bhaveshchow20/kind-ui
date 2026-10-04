@@ -2,17 +2,20 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { examples } from "../examples/catalog.mjs";
+import { allExamples, examples, families } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
-test("only the published Line and Area components has a complete public consumer", () => {
+test("each registered family has a complete public consumer", () => {
   assert.deepEqual(
     examples.map((example) => example.id),
-    ["line", "area"],
+    families.map((family) => family.id),
   );
-  assert.deepEqual(Object.keys(bundles), ["line", "area"]);
+  assert.deepEqual(
+    Object.keys(bundles),
+    examples.map((example) => example.id),
+  );
   const bundle = bundles.line;
   assert.match(bundle.files["src/main.tsx"], /@kind-ui\/charts\/styles\.css/);
   const manifest = JSON.parse(bundle.files["package.json"]);
@@ -101,4 +104,22 @@ test("Area consumers preserve explicit composition and consumer-owned stacked vi
     areas["area-stacked"].files["src/examples/area-stacked/example.tsx"],
     /onVisibleSeriesChange={setVisibleSeries}/,
   );
+});
+
+test("every family recipe is generated with its own prompt route and complete data alternative", () => {
+  const all = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
+  assert.deepEqual(Object.keys(all).sort(), allExamples.map(({ id }) => id).sort());
+  for (const example of allExamples) {
+    const bundle = all[example.id];
+    assert.equal(bundle.family, example.family);
+    assert.ok(
+      promptFor(bundle, {}, "https://docs.example").includes(`/docs/components/${example.family}/`),
+    );
+    assert.ok(bundle.dataAlternative.rows.length > 0);
+    for (const row of bundle.dataAlternative.rows)
+      for (const column of Object.keys(bundle.dataAlternative.columns))
+        assert.ok(Object.hasOwn(row, column));
+    for (const [value, variant] of Object.entries(bundle.variants ?? {}))
+      assert.notEqual(variant.source, "", `${example.id}:${value}`);
+  }
 });
