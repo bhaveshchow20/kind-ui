@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = "http://127.0.0.1:6373";
 const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
+  executablePath:
+    process.env.CHROMIUM_PATH ||
+    (existsSync("/usr/bin/chromium") ? "/usr/bin/chromium" : undefined),
 });
 mkdirSync("artifacts/box-plot", { recursive: true });
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
