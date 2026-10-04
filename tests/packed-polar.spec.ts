@@ -169,10 +169,15 @@ for (const strict of [false, true]) {
       if (kind === "radar")
         await expect(mark.locator('[data-kind-ui="radar-entrance-window"]')).toHaveCount(1);
       else {
-        await expect(
-          mark.locator('[data-kind-ui="radial-entrance-window"]').first(),
-        ).toBeAttached();
+        const window = mark.locator('[data-kind-ui="radial-entrance-window"]').first();
+        await expect(window).toBeAttached();
         await expect(mark).toHaveCSS("opacity", "1");
+        const firstSweep = await window.getAttribute("d");
+        expect(firstSweep).toBeTruthy();
+        const nativeArcs = await paths(page.locator('[data-host="native"]'), radialPath);
+        await page.clock.runFor(150);
+        expect(await window.getAttribute("d")).not.toBe(firstSweep);
+        expect(await paths(page.locator('[data-host="radial"]'), radialPath)).toEqual(nativeArcs);
       }
     }
     await page.locator('[data-host="radial"] svg').focus();
