@@ -156,7 +156,7 @@ for (const mode of ["static", "motion", "reduced"] as const) {
         const hover = await gauge
           .locator(".recharts-radial-bar-sector")
           .first()
-          .evaluate((node) => {
+          .evaluate(async (node) => {
             const path = node as SVGPathElement,
               box = path.getBBox(),
               matrix = path.getScreenCTM();
@@ -175,7 +175,58 @@ for (const mode of ["static", "motion", "reduced"] as const) {
                   return { x: screen.x, y: screen.y };
                 }
               }
-            throw new Error("No native sector hit target");
+            // Keep a miss as a failure; subsequent frames only diagnose reconciliation.
+            const svg = path.ownerSVGElement;
+            const describe = (candidate: SVGPathElement | null) => {
+              if (!candidate) return null;
+              const bounds = candidate.getBBox(),
+                transform = candidate.getScreenCTM(),
+                css = getComputedStyle(candidate);
+              let hits = 0;
+              for (let row = 1; row < 10; row++)
+                for (let column = 1; column < 10; column++) {
+                  const point = new DOMPoint(
+                    bounds.x + (bounds.width * column) / 10,
+                    bounds.y + (bounds.height * row) / 10,
+                  );
+                  if (
+                    candidate.isPointInFill(point) &&
+                    candidate.isPointInFill(new DOMPoint(point.x + 2, point.y + 2))
+                  )
+                    hits++;
+                }
+              return {
+                connected: candidate.isConnected,
+                d: candidate.getAttribute("d"),
+                bounds: [bounds.x, bounds.y, bounds.width, bounds.height],
+                transform: transform && [
+                  transform.a,
+                  transform.b,
+                  transform.c,
+                  transform.d,
+                  transform.e,
+                  transform.f,
+                ],
+                fill: css.fill,
+                display: css.display,
+                visibility: css.visibility,
+                hits,
+              };
+            };
+            const samples = [
+              {
+                original: describe(path),
+                current: describe(svg?.querySelector(".recharts-radial-bar-sector") ?? null),
+              },
+            ];
+            for (let frame = 0; frame < 3; frame++) {
+              await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+              samples.push({
+                original: describe(path),
+                current: describe(svg?.querySelector(".recharts-radial-bar-sector") ?? null),
+              });
+            }
+            throw new Error(`No native sector hit target: ${JSON.stringify(samples)}`);
           });
         await page.mouse.move(hover.x, hover.y);
         await expect(gauge.locator('[data-kind-ui="chart-tooltip"]')).toBeVisible();

@@ -1,6 +1,6 @@
 "use client";
 
-import { animate as animateValue, motion, useMotionValue } from "motion/react";
+import { animateMini, animate as animateValue } from "motion/react";
 import {
   type ComponentPropsWithRef,
   type ComponentType,
@@ -8,6 +8,7 @@ import {
   createContext,
   type ReactNode,
   use,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -31,11 +32,12 @@ export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
     scale: HeatmapScale;
     formatValue?: (value: number) => string;
     missingLabel?: string;
-    /** Animate frame entrance only; quantitative cell fills remain opaque. */
+    /** Diagonal cell entrance; quantitative colors and table geometry are unchanged. */
     animate?: boolean;
   };
 type Context = {
   model: HeatmapModel;
+  entrance: boolean;
   scale: HeatmapScale;
   formatValue: (value: number) => string;
   missingLabel: string;
@@ -86,17 +88,48 @@ export function HeatmapChart({
   const tooltipId = useId();
   const [tooltipMounted, setTooltipMounted] = useState(false);
   const reduced = useSyncExternalStore(subscribeReduced, reducedSnapshot, reducedServerSnapshot);
-  const y = useMotionValue(0);
+  const [finished, setFinished] = useState(false);
+  const interrupt = useCallback(() => setFinished(true), []);
   const enabled = animate && !reduced;
+  const entrance = enabled && !finished;
+  const root = useRef<HTMLDivElement | null>(null);
+  const consumerRef = props.ref;
+  const ref = useCallback(
+    (node: HTMLDivElement | null) => {
+      root.current = node;
+      if (typeof consumerRef === "function") return consumerRef(node);
+      if (consumerRef) consumerRef.current = node;
+    },
+    [consumerRef],
+  );
   useLayoutEffect(() => {
-    if (!enabled) {
-      y.set(0);
-      return;
-    }
-    y.set(8);
-    const controls = animateValue(y, 0, { duration: 0.35 });
+    const node = root.current;
+    if (!node || !entrance) return;
+    const initial = node.getBoundingClientRect();
+    const observer = new ResizeObserver(() => {
+      const next = node.getBoundingClientRect();
+      if (next.width !== initial.width || next.height !== initial.height) interrupt();
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [entrance, interrupt]);
+  const previous = useRef([model, scale, children]);
+  const previousEnabled = useRef(enabled);
+  useLayoutEffect(() => {
+    const inputs = [model, scale, children];
+    if (
+      inputs.some((value, index) => value !== previous.current[index]) ||
+      (previousEnabled.current && !enabled)
+    )
+      interrupt();
+    previous.current = inputs;
+    previousEnabled.current = enabled;
+  });
+  useLayoutEffect(() => {
+    if (!entrance) return;
+    const controls = animateValue(0, 1, { duration: 0.8, onComplete: interrupt });
     return () => controls.stop();
-  }, [enabled, y]);
+  }, [entrance, interrupt]);
   useEffect(() => {
     if (!active || !tooltipMounted) return;
     const dismiss = (event: KeyboardEvent) => {
@@ -109,6 +142,7 @@ export function HeatmapChart({
     <HeatmapContext
       value={{
         model,
+        entrance,
         scale,
         formatValue,
         missingLabel,
@@ -121,7 +155,24 @@ export function HeatmapChart({
     >
       <div
         {...props}
+        ref={ref}
         data-kind-ui="heatmap"
+        onFocusCapture={(event) => {
+          props.onFocusCapture?.(event);
+          interrupt();
+        }}
+        onPointerMoveCapture={(event) => {
+          props.onPointerMoveCapture?.(event);
+          interrupt();
+        }}
+        onPointerDownCapture={(event) => {
+          props.onPointerDownCapture?.(event);
+          interrupt();
+        }}
+        onKeyDownCapture={(event) => {
+          props.onKeyDownCapture?.(event);
+          interrupt();
+        }}
         onPointerLeave={(event) => {
           onPointerLeave?.(event);
           if (!active) return;
@@ -132,12 +183,49 @@ export function HeatmapChart({
           setActive(cell ? [cell.row, cell.column] : null);
         }}
       >
-        <motion.div data-kind-ui="heatmap-entrance" initial={false} style={{ y }}>
-          {children}
-        </motion.div>
+        <div data-kind-ui="heatmap-entrance">{children}</div>
       </div>
     </HeatmapContext>
   );
+}
+
+// A native cell keeps its styles, ref and handlers. Motion temporarily multiplies its opacity.
+function EntranceCell({ diagonal, ...props }: ComponentPropsWithRef<"td"> & { diagonal: number }) {
+  const { entrance, model } = useHeatmap();
+  const cell = useRef<HTMLTableCellElement | null>(null);
+  const consumerRef = props.ref;
+  const ref = useCallback(
+    (node: HTMLTableCellElement | null) => {
+      cell.current = node;
+      if (typeof consumerRef === "function") return consumerRef(node);
+      if (consumerRef) consumerRef.current = node;
+    },
+    [consumerRef],
+  );
+  const latestOpacity = useRef(props.style?.opacity);
+  latestOpacity.current = props.style?.opacity;
+  useLayoutEffect(() => {
+    const node = cell.current;
+    if (!node || !entrance) return;
+    const original = node.style.opacity;
+    const declaredOpacity = props.style?.opacity;
+    const opacity = Number(getComputedStyle(node).opacity);
+    const delay = (diagonal / Math.max(1, model.rows.length + model.columns.length - 2)) * 0.55;
+    const controls = animateMini(
+      node,
+      { opacity: [0, opacity] },
+      { delay, duration: 0.25, ease: "easeOut" },
+    );
+    return () => {
+      controls.stop();
+      node.style.opacity = Object.is(latestOpacity.current, declaredOpacity)
+        ? original
+        : latestOpacity.current === undefined
+          ? ""
+          : String(latestOpacity.current);
+    };
+  }, [entrance, diagonal, model, props.style?.opacity]);
+  return <td {...props} ref={ref} data-kind-ui="heatmap-cell-entrance" />;
 }
 
 export type HeatmapCellContentProps = { cell: HeatmapCell; fill: string; formattedValue: string };
@@ -286,17 +374,17 @@ export function HeatmapGrid({
                   {rowLabel?.(row) ?? row}
                 </span>
               </th>
-              {model.cells[r]?.map((cell) => {
+              {model.cells[r]?.map((cell, c) => {
                 const extra = cellProps?.(cell) ?? {};
                 const fill =
                   cell.value === null ? "var(--heatmap-missing, #e5e7eb)" : scale.color(cell.value);
                 const formattedValue =
                   cell.value === null ? context.missingLabel : context.formatValue(cell.value);
                 return (
-                  <td
+                  <EntranceCell
+                    diagonal={r + c}
                     {...extra}
                     key={cell.column}
-                    // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: Owned focusable cell in the native-table ARIA grid.
                     role="gridcell"
                     data-cell-key={keyOf(cell)}
                     data-missing={cell.value === null ? "true" : "false"}
@@ -326,7 +414,7 @@ export function HeatmapGrid({
                     }}
                   >
                     <Cell cell={cell} fill={fill} formattedValue={formattedValue} />
-                  </td>
+                  </EntranceCell>
                 );
               })}
             </tr>

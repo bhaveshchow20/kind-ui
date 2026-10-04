@@ -113,8 +113,9 @@ export function ScatterHost() {
     xAxisId: "latency",
     yAxisId: "change",
     zAxisId: "volume",
-    shape: Shape,
-    activeShape: Shape,
+    ...(new URLSearchParams(location.search).has("builtin")
+      ? {}
+      : { shape: Shape, activeShape: Shape }),
     onClick: () => setEvents((v) => ({ ...v, click: v.click + 1 })),
     onMouseEnter: () => setEvents((v) => ({ ...v, enter: v.enter + 1 })),
     onMouseLeave: () => setEvents((v) => ({ ...v, leave: v.leave + 1 })),
@@ -122,7 +123,13 @@ export function ScatterHost() {
   const cells = (
     <>
       {values.map((p, i) => (
-        <Cell key={p.id} fill={i === 1 ? "#ea580c" : "#7c3aed"} stroke="#fff" strokeWidth={2} />
+        <Cell
+          key={p.id}
+          data-point={p.id}
+          fill={i === 1 ? "#ea580c" : "#7c3aed"}
+          stroke="#fff"
+          strokeWidth={2}
+        />
       ))}
       <LabelList dataKey="id" position="top" />
     </>

@@ -154,17 +154,32 @@ test("packed entrance fades actual native marks and interruptions settle without
 }) => {
   await page.clock.install();
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto(url);
-  const fade = page.locator('[data-kind-ui="scatter-fade"]').first();
+  await page.goto(`${url}/?builtin`);
+  const fade = page
+    .locator('[data-kind-ui="scatter-point-entrance"]')
+    .filter({ has: page.locator(mark("signed")) })
+    .first();
   const chart = page.getByRole("application", { name: "Packed scatter" });
   const before = await chart.locator(mark("signed")).getAttribute("d");
   await page
     .getByRole("button", { name: "Animate", exact: true })
     .evaluate((node) => (node as HTMLButtonElement).click());
-  await page.clock.runFor(100);
+  await page.clock.runFor(500);
   const opacity = await fade.evaluate((node) => Number(getComputedStyle(node).opacity));
   expect(opacity).toBeGreaterThan(0);
   expect(opacity).toBeLessThan(1);
+  const stagger = await chart
+    .locator('[data-kind-ui="scatter-point-entrance"]')
+    .evaluateAll((nodes) =>
+      nodes
+        .map((node) => ({
+          x: Number((node as SVGElement).dataset.entranceX),
+          opacity: Number(getComputedStyle(node).opacity),
+        }))
+        .sort((a, b) => a.x - b.x),
+    );
+  expect(stagger.length).toBeGreaterThan(2);
+  expect(stagger[0]?.opacity).toBeGreaterThan(stagger.at(-1)?.opacity ?? 1);
   await page.clock.runFor(200);
   expect(await fade.evaluate((node) => Number(getComputedStyle(node).opacity))).toBeGreaterThan(
     opacity,
@@ -212,3 +227,17 @@ for (const functional of [false, true]) {
     expect((await tip.textContent())?.match(/60 jobs/g)).toHaveLength(1);
   });
 }
+
+test("consumer-owned scatter renderers remain native while entrance is enabled", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(url);
+  const point = page.locator('[data-point="signed"]').first();
+  const path = await point.getAttribute("d");
+  await page
+    .getByRole("button", { name: "Animate", exact: true })
+    .evaluate((node) => (node as HTMLButtonElement).click());
+  await expect(page.locator('[data-kind-ui="scatter-point-entrance"]')).toHaveCount(0);
+  expect(await point.getAttribute("d")).toBe(path);
+});

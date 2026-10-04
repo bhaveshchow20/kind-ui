@@ -169,6 +169,7 @@ export function Host() {
       {new URLSearchParams(window.location.search).has("ownership") && (
         <SankeyChart
           className="custom-native"
+          animate={{ revealDurationMs: 3000 }}
           width={300}
           height={80}
           data={data}
@@ -212,7 +213,19 @@ export function Host() {
                   {...props}
                   material={paint}
                   finish={finish}
-                  pathProps={{ "aria-label": props.payload.id, style: { strokeWidth: 99 } }}
+                  pathProps={{
+                    "aria-label": props.payload.id,
+                    ref: (node) => {
+                      if (node) node.dataset.consumerRef = "attached";
+                    },
+                    onClick: () => setClicks((count) => count + 1),
+                    style: {
+                      strokeWidth: 99,
+                      ...(new URLSearchParams(location.search).has("ownership")
+                        ? { opacity: 0.7 }
+                        : {}),
+                    },
+                  }}
                 />
               )}
               onClick={(item, type, event) => {
