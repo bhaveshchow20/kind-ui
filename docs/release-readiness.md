@@ -35,19 +35,31 @@ animation engine. Disabling animation does not remove static Motion imports.
 | Package-owned engine dependencies | Kind installs/selects engine versions for the normal consumer across managers. React/DOM remain host peers. | All parts reexported by Kind use its resolved engine. A separate host Recharts/Motion version may be a second instance: mixed chart registration/context or Motion provider settings cannot be assumed to work. Declarations referencing those engines still resolve through Kind's installed dependencies; ownership does not erase their public types. |
 | Owned Motion, peer Recharts | Removes one portable setup burden while preserving the current native-engine interoperability contract. | Low-risk first ownership change: Kind already owns animation through props. Raw Recharts extension paths remain host-owned. |
 
-Recommendation for the requested portable, Kind-owned setup: aim for package-owned
-Motion and Recharts, plus a matching React-is dependency for the supported React
-19 host, with React/DOM as peers. Start engine ownership at the exact tested
-`motion@13.4.6`, `recharts@3.10.1`, `react-is@19.3.0`; broaden owned ranges only after
-testing updates. Keep native axes, shapes and hooks consumed through Kind's
-existing public reexports so the default path has one engine instance and one
-library import. This requires a separate reviewed dependency PR, not relocation
-in this head. That PR must exercise hosts with no engines and with a different
-pre-existing engine, declaration resolution, bundle deduplication and the existing
-raw Recharts escape hatches (notably Sankey's native Tooltip). If shared identity
-cannot be preserved for those documented paths, ship the concrete intermediate
-choice: own Motion, keep Recharts peer, and document the native-extension setup.
-Do not silently break existing composition in pursuit of a one-install promise.
+Decision for the first `0.1.0`: retain the current required engine peers. A local
+33-cell comparison at frozen `67c12cd` tested current peers, owned Motion, and
+owned Motion/Recharts/React-is with npm `11.9.0`, pnpm `12.9.1` and Yarn `4.18.1`.
+The supported npm/pnpm hosts passed Kind-only imports, SSR, configured component
+tests and strict NodeNext/Bundler declarations; matching native hosts preserved
+axis/hook identity and passed 66 component tests. Strict npm/pnpm checks rejected
+out-of-range peers without force/legacy-peer overrides.
+
+Owned-all allowed host Recharts `3.9.0` beside internal `3.10.1`, then failed the
+unchanged native identity oracle. This deliberately out-of-range native mix is
+unsupported; today's peers reject it at installation. Owned Motion retained that
+Recharts protection, passed its full installed-package gate and focused native
+composition, Sankey/Tooltip, CSS and Motion wrapper browser probes. None of the
+ownership variants received a new full aggregate or Next integration run. The
+supported mixed Motion `13.5.1` production probe retained one Framer runtime and
+the same JS byte count for all strategies, so no bundle regression was observed
+in that host. These are bounded experiment findings, not universal support.
+
+Yarn PnP missing-peer hosts failed imports as expected. Matching hosts ran public
+component tests, but strict declarations failed in Recharts `3.10.1` on undeclared
+`redux` imports under all strategies; ownership does not repair this upstream
+boundary. Yarn's `node-modules` linker passed the tested matching-peer/default
+consumer, and the owned-all no-engine consumer, with strict types. Retain explicit
+engine setup for Yarn hosts and do not advertise strict PnP support. Further
+engine ownership is deferred rather than becoming a release dependency.
 
 [npm 7+ installs peers by default](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/#peerdependencies).
 [pnpm's autoInstallPeers defaults to true](https://pnpm.io/settings/peer-dependencies),
@@ -55,8 +67,8 @@ but conflicts can leave a peer unresolved and hosts can disable it; default
 pnpm warns, while `strictPeerDependencies` controls command failure.
 [Yarn peers are inherited from the ancestor](https://yarnpkg.com/configuration/manifest#peerDependencies);
 its documented peer-with-default option is not a cross-manager guarantee.
-Only npm 11.9 is exercised here; pnpm/Yarn behavior is sourced, not a tested
-support promise. The ordinary-host gate installs Kind alone into a React/DOM host
+The local experiment exercised the pinned managers above; only those bounded
+host/linker combinations are evidence. The ordinary-host gate installs Kind alone into a React/DOM host
 without declared engines, records what npm resolves and runs public component
 tests and strict NodeNext/Bundler types. The fully pinned consumer remains a
 separate reproducibility gate. A single npm install can therefore work with today's
@@ -234,3 +246,6 @@ export function TasksChart() {
 Include a host-owned data alternative. Function accessors, icons, callbacks, refs
 and state originate inside the client boundary. CommonJS `require()` is not an
 advertised export.
+
+The implemented manual pipeline and exact owner setup/activation steps are in
+[the Changesets release handoff](../.changeset/README.md). Publication remains disabled.
