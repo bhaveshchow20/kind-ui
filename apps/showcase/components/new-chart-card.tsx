@@ -1,8 +1,8 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
 import { Check, Copy } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
-import { useMemo, useState } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
+import { useMemo, useRef, useState } from "react";
 import { CodeBlock } from "@/components/code-block";
 import { Button } from "@/components/ui/button";
 import {
@@ -348,6 +348,9 @@ export function NewChartCard({
   replay: number;
 }) {
   const reduced = useReducedMotion();
+  const cardRef = useRef<HTMLElement>(null);
+  const entered = useInView(cardRef, { once: true, amount: 0.3 });
+  const chartAnimate = animate && entered;
   const [copied, setCopied] = useState(false);
   const code = newCode(recipe, material, colors, animate);
   async function copy() {
@@ -361,6 +364,7 @@ export function NewChartCard({
   }
   return (
     <motion.article
+      ref={cardRef}
       className="chart-card"
       initial={reduced ? false : { opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -405,11 +409,11 @@ export function NewChartCard({
         </div>
       </div>
       <NewChart
-        key={replay}
+        key={`${replay}-${entered}`}
         recipe={recipe}
         material={material}
         colors={colors}
-        animate={animate}
+        animate={chartAnimate}
       />
       <p className="chart-context">{recipe.context}</p>
     </motion.article>
