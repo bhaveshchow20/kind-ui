@@ -1,7 +1,15 @@
-import { Legend, LineChart, LineSeries, Root, Tooltip, TooltipContent } from "@kind-ui/charts";
+import {
+  Legend,
+  LineChart,
+  LineSeries,
+  ResponsiveContainer,
+  Root,
+  Tooltip,
+  TooltipContent,
+} from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { ResponsiveContainer } from "recharts";
+
 import "./style.css";
 
 function Fixture({ name, color }: { name: string; color: string }) {

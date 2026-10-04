@@ -1,5 +1,6 @@
 import {
   prepareSankeyData,
+  ResponsiveContainer,
   SankeyChart,
   type SankeyFinish,
   type SankeyFlowData,
@@ -10,7 +11,7 @@ import {
   SankeyTable,
 } from "@kind-ui/charts";
 import { useRef, useState } from "react";
-import { ResponsiveContainer, Tooltip } from "recharts";
+import { Tooltip } from "recharts";
 
 const data: SankeyFlowData = {
   nodes: [

@@ -1,8 +1,8 @@
 import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
+import { type TooltipRenderProps as TooltipContentProps, XAxis, YAxis } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { type TooltipContentProps, XAxis, YAxis } from "recharts";
 
 const points = [
   { day: "Jul 9", count: 13, x: 0, y: 13 },
