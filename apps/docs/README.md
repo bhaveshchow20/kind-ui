@@ -6,7 +6,7 @@ Standalone Fumadocs/Next MDX application with build-time typed API and Markdown 
 
 Use Node 22.12+ and npm 11.9. From the repository root run `npm ci`. In this directory:
 
-1. `node scripts/verify-pinned-package.mjs` verifies the checked-in validated PR57 artifact against `vendor/provenance.json`. The Line page uses PR57’s configured composition API, which is not yet on main. CI deliberately consumes those exact bytes rather than repacking main. `prepare:package` remains available for an explicitly reviewed future artifact refresh.
+1. `node scripts/verify-pinned-package.mjs` verifies the checked-in validated PR57 artifact against `vendor/provenance.json`. The Line page uses the configured composition API from the PR57 source snapshot recorded in provenance. CI deliberately consumes those exact bytes rather than repacking main. `prepare:package` remains available for an explicitly reviewed future artifact refresh.
 2. `npm ci` installs the isolated app from its lockfile. If the package artifact changes, use `npm install --save-exact ./vendor/kind-ui-charts-0.0.0.tgz` to update the lockfile and install it.
 3. `npm run generate`, `npm run check:consumers`, then `npm run generate` establishes the consumer lock when preparing a new artifact.
 4. `npm run build` exports static `out/`; `npm run check` verifies app types, selected-state contracts and exported links. `npm run preview` serves only reserved port 6373. `node scripts/check-browser.mjs` checks the built preview.
