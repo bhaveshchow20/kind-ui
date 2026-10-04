@@ -144,6 +144,7 @@ try {
         .locator('.chart-example svg, .chart-example [data-kind-ui="heatmap-grid"]')
         .first()
         .waitFor();
+      await mobilePage.waitForLoadState("networkidle");
       await mobilePage.addStyleTag({ content: "html { font-size: 200% !important; }" });
       const layout = await mobilePage.evaluate(async () => {
         await document.fonts.ready;
