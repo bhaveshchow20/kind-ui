@@ -1303,3 +1303,53 @@ test("Radar selection is SSR-safe without state glue and rejects ownerless contr
     ),
   );
 });
+
+test("heatmap compact controls retain caption, scoped associated headers and custom cell ownership", () => {
+  const grid = (layout, extra = {}) =>
+    render(
+      h(
+        Chart.HeatmapChart,
+        {
+          rows: ["A"],
+          columns: ["X"],
+          data: [{ row: "A", column: "X", value: 0 }],
+          scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
+        },
+        h(Chart.HeatmapGrid, { caption: "Compact", layout, ...extra }),
+      ),
+    );
+  const markup = grid(
+    { cellSize: 12, gap: 0, rowLabels: "hidden", columnLabels: "hidden" },
+    {
+      Cell: ({ formattedValue }) => h("em", { "data-consumer": "cell" }, formattedValue),
+      cellProps: () => ({ style: { height: 20, opacity: 0.5 }, className: "consumer-cell" }),
+      style: { borderSpacing: 8 },
+    },
+  );
+  assert.match(markup, /<caption>Compact<\/caption>/);
+  assert.match(markup, /scope="row" id="([^"]+)">/);
+  assert.match(markup, /scope="col"[^>]*id="([^"]+)">X/);
+  const rowId = markup.match(/scope="row" id="([^"]+)"/)[1];
+  const columnId = markup.match(/scope="col"[^>]*id="([^"]+)"/)[1];
+  assert.ok(markup.includes(`headers="${rowId} ${columnId}"`));
+  assert.match(markup, /--heatmap-cell-size:12px/);
+  assert.match(markup, /--heatmap-gap:0px/);
+  assert.match(markup, /data-row-labels="hidden"/);
+  assert.match(markup, /data-column-labels="hidden"/);
+  assert.match(markup, /border-spacing:8px/);
+  assert.match(markup, /height:20px;opacity:0.5;background-color:#ffffff/);
+  assert.match(markup, /class="consumer-cell"/);
+  assert.match(markup, /<em data-consumer="cell">0<\/em>/);
+  assert.doesNotMatch(
+    grid(undefined),
+    /data-cell-sizing|data-row-labels|data-column-labels|--heatmap-cell-size/,
+  );
+  assert.match(
+    grid({ cellSize: "1rem", gap: "0.25rem" }),
+    /--heatmap-cell-size:1rem;--heatmap-gap:0.25rem/,
+  );
+  for (const cellSize of [0, -1, NaN, Infinity])
+    assert.throws(() => grid({ cellSize }), /cellSize.*finite.*positive/);
+  for (const gap of [-1, NaN, Infinity])
+    assert.throws(() => grid({ gap }), /gap.*finite.*nonnegative/);
+});
