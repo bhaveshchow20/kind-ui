@@ -68,3 +68,11 @@ for (const [name, mutate] of [
     mutate(w);
     assert.throws(() => assertDisabledRelease(w));
   });
+
+test("manual validation defaults to the reviewed package candidate version", async () => {
+  const manifest = JSON.parse(
+    await readFile(new URL("../packages/charts/package.json", import.meta.url), "utf8"),
+  );
+  assert.equal(workflow.on.workflow_dispatch.inputs.version.default, manifest.version);
+  assert.equal(manifest.private, true);
+});
