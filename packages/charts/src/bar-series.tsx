@@ -91,10 +91,15 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
       yScale?.(value, { position: "end" }),
     ]),
   ];
-  const geometry =
-    area && zero !== undefined
-      ? `${area.x}/${area.y}/${area.width}/${area.height}/${zero}/${xScale?.(1)}/${yScale?.(1)}/${JSON.stringify([xDomain, yDomain, axisCoordinates])}/${layout}`
-      : undefined;
+  const usablePlot =
+    area &&
+    zero !== undefined &&
+    area.width > 0 &&
+    area.height > 0 &&
+    [area.x, area.y, area.width, area.height, zero].every(Number.isFinite);
+  const geometry = usablePlot
+    ? `${area.x}/${area.y}/${area.width}/${area.height}/${zero}/${xScale?.(1)}/${yScale?.(1)}/${JSON.stringify([xDomain, yDomain, axisCoordinates])}/${layout}`
+    : undefined;
   const inputs = {
     hide: effectiveHide,
     dataKey: props.dataKey,
@@ -107,6 +112,16 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
     geometry,
   };
   const previous = useRef(inputs);
+  const layoutEstablished = useRef(false);
+  useLayoutEffect(() => {
+    if (geometry === undefined || layoutEstablished.current) return;
+    // Native axes register and measure auto tick widths in layout effects. Treat
+    // that pre-frame geometry as provisional, then preserve normal interruption.
+    const frame = requestAnimationFrame(() => {
+      layoutEstablished.current = true;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [geometry]);
   useLayoutEffect(() => {
     const old = previous.current;
     if (
@@ -118,7 +133,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
       props.minPointSize !== old.minPointSize ||
       props.barSize !== old.barSize ||
       props.maxBarSize !== old.maxBarSize ||
-      (old.geometry !== undefined && geometry !== old.geometry)
+      (layoutEstablished.current && old.geometry !== undefined && geometry !== old.geometry)
     )
       invalidate();
     previous.current = inputs;
@@ -174,7 +189,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
     ),
     [key, emphasisKey, horizontal, props.xAxisId, props.yAxisId],
   );
-  const clipped = reveal && !effectiveHide && area && zero !== undefined && Number.isFinite(zero);
+  const clipped = reveal && !effectiveHide && usablePlot;
   return (
     <>
       {/* Bar marks render through Recharts portals; put the variable on their generated class. */}
@@ -183,6 +198,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
         <defs>
           <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
             <motion.rect
+              key={geometry}
               data-kind-ui="bar-reveal"
               initial={
                 horizontal
