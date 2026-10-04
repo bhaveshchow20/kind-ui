@@ -1,31 +1,15 @@
 "use client";
 
 import * as Chart from "@kind-ui/charts";
-import {
-  ArrowUpRight,
-  Check,
-  Copy,
-  Monitor,
-  Moon,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Search,
-  Sun,
-} from "lucide-react";
+import { ArrowUpRight, Check, Copy, Monitor, Moon, RotateCcw, Search, Sun } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AdvancedChartCard, advancedRecipes } from "@/components/advanced-chart-card";
 import { CodeBlock } from "@/components/code-block";
 import { KindLogo } from "@/components/kind-logo";
-import {
-  MorphingPopover as Popover,
-  MorphingPopoverContent as PopoverContent,
-  MorphingPopoverTrigger as PopoverTrigger,
-} from "@/components/morphing-popover";
 import { NewChartCard } from "@/components/new-chart-card";
-import { PaletteColorInput } from "@/components/palette-color-input";
+import { CustomPaletteEditor } from "@/components/palette-color-input";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -796,7 +780,6 @@ export default function Page() {
   const [palette, setPalette] = useState<Palette>("Neon");
   const [customColors, setCustomColors] = useState<string[]>([...palettes.Pastel]);
   const [hasCustom, setHasCustom] = useState(false);
-  const [paletteEditor, setPaletteEditor] = useState(false);
   const [animate, setAnimate] = useState(true);
   const [replay, setReplay] = useState(0);
   useEffect(() => {
@@ -1120,37 +1103,15 @@ export default function Page() {
                     </RadioGroupItem>
                   )}
                 </RadioGroup>
-                <Popover open={paletteEditor} onOpenChange={setPaletteEditor}>
-                  <PopoverTrigger
-                    className="custom-palette-button"
-                    aria-label={hasCustom ? "Edit custom palette" : "Create custom palette"}
-                  >
-                    {hasCustom ? <Pencil /> : <Plus />}
-                    <span className="sr-only">Custom palette</span>
-                  </PopoverTrigger>
-                  <PopoverContent className="palette-editor">
-                    <h3>Your palette</h3>
-                    {customColors.map((c, i) => (
-                      <PaletteColorInput
-                        key={paletteColorSlots[i]}
-                        color={c}
-                        index={i}
-                        onChange={(value) =>
-                          setCustomColors((v) => v.map((old, n) => (n === i ? value : old)))
-                        }
-                      />
-                    ))}
-                    <Button
-                      onClick={() => {
-                        setHasCustom(true);
-                        setPalette("Custom");
-                        setPaletteEditor(false);
-                      }}
-                    >
-                      Use palette
-                    </Button>
-                  </PopoverContent>
-                </Popover>
+                <CustomPaletteEditor
+                  colors={customColors}
+                  hasCustom={hasCustom}
+                  onApply={(nextColors) => {
+                    setCustomColors(nextColors);
+                    setHasCustom(true);
+                    setPalette("Custom");
+                  }}
+                />
               </div>
               <div className="motion-control">
                 <label htmlFor="motion">Motion</label>
