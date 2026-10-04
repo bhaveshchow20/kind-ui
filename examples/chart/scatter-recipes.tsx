@@ -1,5 +1,4 @@
 import * as Chart from "@kind-ui/charts";
-import { useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -10,7 +9,8 @@ import {
   XAxis,
   YAxis,
   ZAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useState } from "react";
 
 export type Observation = { id: string; x: number; y: number | null; z?: number | null };
 const relationshipShapes = { weekday: "circle", weekend: "diamond" } as const;

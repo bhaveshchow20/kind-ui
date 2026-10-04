@@ -1,8 +1,5 @@
 import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
-import { useState } from "react";
-import { createPortal } from "react-dom";
-import { createRoot } from "react-dom/client";
 import {
   type BarShapeProps,
   CartesianGrid,
@@ -12,7 +9,10 @@ import {
   ReferenceLine,
   XAxis,
   YAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import { createRoot } from "react-dom/client";
 
 const config = {
   first: { label: "First", color: "#635bff" },

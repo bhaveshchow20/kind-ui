@@ -1,6 +1,7 @@
 import * as Chart from "@kind-ui/charts";
+import { Cell, Curve, LabelList, Rectangle } from "@kind-ui/charts";
 import { type ComponentProps, createRef, type MouseEvent } from "react";
-import { Bar, Cell, Curve, LabelList, Line, Rectangle } from "recharts";
+import { Bar, Line } from "recharts";
 
 type Row = { id: string; value: number; nullable: number | null; range: [number, number] };
 const rows: Row[] = [{ id: "a", value: 2, nullable: null, range: [1, 3] }];
