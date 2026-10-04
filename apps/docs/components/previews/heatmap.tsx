@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { type ComponentType, memo } from "react";
+import { type ComponentType, memo, type ReactNode, useLayoutEffect, useRef } from "react";
 import type { PreviewProps } from "./types";
 
 function Loading() {
@@ -31,10 +31,47 @@ const Material = dynamic(
     ssr: false,
   },
 );
+// Native matrices and their in-flow tooltips determine the shared Preview/Code height.
+function Frame({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    const workbench = node?.closest<HTMLElement>(".component-workbench");
+    const panel = node?.closest<HTMLElement>(".preview-panel");
+    if (!node || !workbench || !panel) return;
+    const measure = () => {
+      const padding = getComputedStyle(panel);
+      const height = Math.ceil(
+        node.getBoundingClientRect().height +
+          Number.parseFloat(padding.paddingTop) +
+          Number.parseFloat(padding.paddingBottom),
+      );
+      workbench.style.setProperty("--line-panel-height", `${height}px`);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    measure();
+    return () => {
+      observer.disconnect();
+      workbench.style.removeProperty("--line-panel-height");
+    };
+  }, []);
+  return <div ref={ref}>{children}</div>;
+}
 export const previews = {
-  heatmap: Support,
-  "heatmap-diverging": Regional,
+  heatmap: () => (
+    <Frame>
+      <Support />
+    </Frame>
+  ),
+  "heatmap-diverging": () => (
+    <Frame>
+      <Regional />
+    </Frame>
+  ),
   "heatmap-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+    <Frame>
+      <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+    </Frame>
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;
