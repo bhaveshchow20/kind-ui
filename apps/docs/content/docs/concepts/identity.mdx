@@ -1,0 +1,21 @@
+---
+title: Identity and visibility
+description: Separate measured Line values from metadata and visibility.
+---
+
+| Name | Job | Example |
+| --- | --- | --- |
+| `dataKey` | Read a measured field or accessor | `visitors` |
+| `seriesKey` | Identify config and visibility when separate identity is needed | A key for a function accessor |
+| `config` | Label, color, formatter and optional decorative icon | `visitors: { label: "Visitors", color: "#733bff" }` |
+| `visibleSeries` and callback | Controlled identities and update request | A legend requests a new visible list |
+
+## Series visibility
+
+A string `LineSeries.dataKey` identifies its config entry. Function and numeric keys need an explicit `seriesKey` when visibility is controlled; configured `series` entries always supply a unique key in config. Keep config entries aligned with plotted series. When supplying a configured `series` array, the legend uses those series identities.
+
+Configured `LineChart` toggles series automatically in uncontrolled mode. `defaultVisibleSeries` sets its initial list. For controlled visibility, provide `visibleSeries` with `onVisibleSeriesChange`; without a callback, the controlled list is read-only. Keep the visibility mode stable or remount to change it.
+
+## Inspection and emphasis
+
+Tooltip inspection does not automatically emphasize a line category. Legend emphasis is an explicit presentation choice. Inspection and emphasis preserve the measured values; hiding a series does not rewrite the original dataset. See the [Line API](/docs/components/line/#api-reference) for the owned legend and tooltip contracts.

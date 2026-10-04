@@ -1,0 +1,16 @@
+---
+title: Consumer guide for agents
+description: Use the pinned Line package and standalone source without inventing an interface.
+---
+
+1. Read [installation](/docs/start/installation/) and [Line Markdown](/markdown/components/line.md), indexed by [llms.txt](/llms.txt). This Site is owner-private; anonymous public retrieval is not established.
+2. Retrieve the selected source from Copy prompt and use the exact [pinned artifact](/examples/package/kind-ui-charts-0.0.0.tgz). Preserve the [locked setup files](/examples/line/README.md); do not reach into repository implementation paths or invent a registry install.
+3. Import the public Line parts and stylesheet. The source includes data/config, and configured `LineChart` owns context, sizing and legend defaults.
+4. Typecheck/build the consumer and verify curve/material selection, legend toggles, missing/zero values, sizing, keyboard access and a complete data alternative.
+5. Report failures with the exact source/checksum and reproducible evidence.
+
+Copy prompt links the selected curve/material source; Copy Markdown contains canonical default consumer files. Legend toggles are runtime inspection state and are not serialized into the prompt. Keep controlled visibility explicit when needed.
+
+## Reader and contributor instructions
+
+This guide is for package consumers. Repository `AGENTS.md` governs contributors, source changes and release boundaries. Passing checks does not authorize npm publication, a main merge or an audience change. Other component documentation will be reviewed in separate PRs.

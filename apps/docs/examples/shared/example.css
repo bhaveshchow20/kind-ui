@@ -1,0 +1,119 @@
+.chart-example {
+  --foreground: #25252b;
+  --background: #fff;
+  --card: #fff;
+  --card-foreground: #25252b;
+  --border: #dfe2e8;
+  --muted: #f3f4f7;
+  --muted-foreground: #59616f;
+  --chart-1: #733bff;
+  --chart-2: #119548;
+  --chart-3: #d97706;
+  --chart-4: #f22e79;
+  color: var(--foreground);
+  background: var(--background);
+  font:
+    1rem / 1.6 system-ui,
+    sans-serif;
+  padding: 1rem;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+.dark .chart-example {
+  --foreground: #e9e9f0;
+  --background: #1c1c24;
+  --card: #252530;
+  --card-foreground: #e9e9f0;
+  --border: #454553;
+  --muted: #30303c;
+  --muted-foreground: #b2b2c0;
+}
+.chart-help {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+  margin: 0.7rem 0;
+}
+.chart-example svg {
+  max-width: 100%;
+}
+.chart-example .recharts-text {
+  fill: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+.chart-example [data-kind-ui="chart-legend"] {
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0.7rem 0;
+}
+.chart-example [data-kind-ui="chart-legend-item"] {
+  padding: 0;
+  margin: 0;
+}
+.chart-example [data-kind-ui="chart-legend-item"]::before {
+  display: none;
+}
+.chart-example [data-kind-ui="chart-legend-item"]::marker {
+  content: "";
+}
+.chart-example table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+}
+.chart-example th,
+.chart-example td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0.6rem;
+  white-space: nowrap;
+}
+.chart-example caption {
+  text-align: left;
+  margin: 0.5rem 0;
+}
+.chart-example details {
+  margin-top: 0.8rem;
+}
+.chart-example summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.chart-example :focus-visible {
+  outline: 2px solid #733bff;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-example *,
+  .chart-example *::before,
+  .chart-example *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.chart-example > h2 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0 0 1.5rem;
+}
+.chart-example details {
+  margin-top: 1.5rem;
+}
+.chart-example .recharts-text {
+  font-size: 0.75rem;
+}
+.chart-example [data-kind-ui="chart-legend"] {
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0 0;
+}
+.chart-example [data-kind-ui="chart-legend"] button {
+  font-size: 0.75rem;
+}
