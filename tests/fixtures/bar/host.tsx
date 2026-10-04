@@ -1,8 +1,7 @@
 // Host composition only: the tarball supplies the entire bar implementation.
 import * as Chart from "@kind-ui/charts";
-import { useCallback, useState } from "react";
-import type { BarShapeProps } from "recharts";
 import {
+  type BarShapeProps,
   BarStack,
   CartesianGrid,
   Cell,
@@ -11,7 +10,8 @@ import {
   ReferenceLine,
   XAxis,
   YAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useCallback, useState } from "react";
 
 const data = [
   { category: "A", value: 8, other: 60 },

@@ -9,6 +9,26 @@ const visual = '[data-kind-ui="tooltip-number-visual"]';
 const reels = '[data-kind-ui="tooltip-digit-reel"]';
 const valueRow = (root: Locator, key: string) => root.locator(`[data-series="${key}"]`);
 
+test("rolling digits reserve the full text line height", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(route);
+  await page.getByLabel("Shuffle values").check();
+  const digit = valueRow(page.locator('[data-direct="true"]'), "count")
+    .locator('[data-kind-ui="tooltip-digit"]')
+    .first();
+  const dimensions = await digit.evaluate((node) => {
+    const row = node.querySelector('[data-kind-ui="tooltip-digit-reel"] > span');
+    if (!row) throw new Error("Missing digit reel row");
+    return {
+      slot: node.getBoundingClientRect().height,
+      row: row.getBoundingClientRect().height,
+      line: Number.parseFloat(getComputedStyle(node).lineHeight),
+    };
+  });
+  expect(Math.abs(dimensions.slot - dimensions.line)).toBeLessThan(1);
+  expect(Math.abs(dimensions.row - dimensions.line)).toBeLessThan(1);
+});
+
 test("supported ASCII digits retain their formatted order in an RTL container", async ({
   page,
 }) => {
@@ -65,7 +85,7 @@ test("rapid updates retarget rolling digits, retain exact accessible final value
   const direct = page.locator('[data-direct="true"]');
   const row = valueRow(direct, "count");
   await expect(row.locator(final)).toHaveText("13 commits");
-  await expect.poll(() => row.locator(reels).first().getAttribute("style")).toContain("-11em");
+  await expect.poll(() => row.locator(reels).first().getAttribute("style")).toContain("-11lh");
   const widthBefore = await row
     .locator('[data-kind-ui="tooltip-number"]')
     .evaluate((node) => node.getBoundingClientRect().width);
@@ -95,7 +115,7 @@ test("rapid updates retarget rolling digits, retain exact accessible final value
     }
   });
   await expect(row.locator(final)).toHaveText("4 commits");
-  await expect.poll(() => row.locator(reels).getAttribute("style")).toContain("-14em");
+  await expect.poll(() => row.locator(reels).getAttribute("style")).toContain("-14lh");
   await page.getByRole("button", { name: "Value -12.5", exact: true }).click();
   await expect(row.locator(final)).toHaveText("-12.5 commits");
   await page.getByRole("button", { name: "Value 123456.75", exact: true }).click();
@@ -186,7 +206,7 @@ test("shared and Scatter tooltip forwarding respects keyboard selection and cust
   await expect(scatterTip.locator(final)).toHaveText(["1", "8"]);
   await expect
     .poll(() => scatterTip.locator(reels).first().getAttribute("style"))
-    .toContain("-11em");
+    .toContain("-11lh");
   const settled = await scatterTip.locator(reels).first().getAttribute("style");
   const node = await scatterTip.locator(reels).first().elementHandle();
   await page
@@ -241,4 +261,123 @@ test("Heatmap default-off, hover/leave/re-enter, keyboard, touch and custom Cont
   await cell.hover();
   await expect(tip.locator('[data-custom="heatmap"]')).toHaveText("13 commits");
   await expect(tip.locator(reels)).toHaveCount(0);
+});
+
+test("wider values stay fully visible on every retarget frame", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(route);
+  await page.getByLabel("Shuffle values").check();
+  const samples = await page.evaluate(async () => {
+    const root = document.querySelector('[data-direct="true"] [data-series="count"]');
+    if (!root) throw new Error("Missing numeric tooltip row");
+    const samples: { value: string; width: number; required: number; outside: number }[] = [];
+    for (const value of [123456.75, 4, -12.5, 123456.75, 0]) {
+      const button = [...document.querySelectorAll("button")].find(
+        (node) => node.textContent === `Value ${value}`,
+      );
+      if (!button) throw new Error("Missing value control");
+      button.click();
+      for (let frame = 0; frame < 12; frame++) {
+        await new Promise(requestAnimationFrame);
+        const number = root.querySelector('[data-kind-ui="tooltip-number"]');
+        const final = root.querySelector('[data-kind-ui="tooltip-number-final"]');
+        const visual = root.querySelector('[data-kind-ui="tooltip-number-visual"]');
+        if (!number || !final || !visual) throw new Error("Missing rolling number");
+        const bounds = number.getBoundingClientRect();
+        samples.push({
+          value: final.textContent ?? "",
+          width: bounds.width,
+          required: final.getBoundingClientRect().width,
+          outside: [...visual.children].filter((node) => {
+            const part = node.getBoundingClientRect();
+            return part.left < bounds.left - 0.5 || part.right > bounds.right + 0.5;
+          }).length,
+        });
+      }
+    }
+    return samples;
+  });
+  expect(samples).toHaveLength(60);
+  for (const sample of samples) {
+    expect(sample.width, sample.value).toBeGreaterThanOrEqual(sample.required - 0.5);
+    expect(sample.outside, sample.value).toBe(0);
+  }
+});
+
+test("font and zoom changes reserve complete values in a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 900 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(route);
+  await page.getByLabel("Shuffle values").check();
+  const widths = await page.evaluate(async () => {
+    const root = document.querySelector<HTMLElement>('[data-direct="true"]');
+    if (!root) throw new Error("Missing direct tooltip");
+    const widths: { actual: number; required: number }[] = [];
+    for (const font of ["20px/30px Georgia", "30px/45px system-ui", "16px/24px Arial"]) {
+      root.style.font = font;
+      root.style.zoom = "1.25";
+      for (let frame = 0; frame < 4; frame++) {
+        await new Promise(requestAnimationFrame);
+        for (const number of root.querySelectorAll('[data-kind-ui="tooltip-number"]')) {
+          const final = number.querySelector('[data-kind-ui="tooltip-number-final"]');
+          if (!final) throw new Error("Missing accessible numeric text");
+          widths.push({
+            actual: number.getBoundingClientRect().width,
+            required: final.getBoundingClientRect().width,
+          });
+        }
+      }
+    }
+    return widths;
+  });
+  expect(widths.length).toBeGreaterThan(0);
+  for (const width of widths) expect(width.actual).toBeGreaterThanOrEqual(width.required - 0.5);
+});
+
+test("settled digits retain full glyph bounds with inherited line height", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(route);
+  await page.getByLabel("Shuffle values").check();
+  await page.getByRole("button", { name: "Value 123456.75", exact: true }).click();
+  await page.addStyleTag({
+    content: '[data-direct="true"] { font: 24px/36px system-ui; zoom: 1.25; }',
+  });
+  await expect
+    .poll(() =>
+      page
+        .locator('[data-direct="true"] [data-kind-ui="tooltip-digit"]')
+        .evaluateAll((nodes) =>
+          nodes.every((node) =>
+            [...node.querySelectorAll('[data-kind-ui="tooltip-digit-reel"] > span')].some(
+              (row) =>
+                Math.abs(row.getBoundingClientRect().top - node.getBoundingClientRect().top) < 0.5,
+            ),
+          ),
+        ),
+    )
+    .toBe(true);
+  const glyphs = await page
+    .locator('[data-direct="true"] [data-kind-ui="tooltip-digit"]')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const slot = node.getBoundingClientRect();
+        const row = [...node.querySelectorAll('[data-kind-ui="tooltip-digit-reel"] > span')].find(
+          (row) => Math.abs(row.getBoundingClientRect().top - slot.top) < 0.5,
+        );
+        if (!row) throw new Error("Digit has not settled on its visible row");
+        const range = document.createRange();
+        range.selectNodeContents(row);
+        const text = range.getBoundingClientRect();
+        return {
+          top: text.top - slot.top,
+          bottom: slot.bottom - text.bottom,
+          left: text.left - slot.left,
+          right: slot.right - text.right,
+        };
+      }),
+    );
+  expect(glyphs.length).toBeGreaterThan(0);
+  for (const glyph of glyphs) {
+    for (const edge of Object.values(glyph)) expect(edge).toBeGreaterThanOrEqual(-0.5);
+  }
 });

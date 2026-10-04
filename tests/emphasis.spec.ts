@@ -357,3 +357,55 @@ test("incoming Histogram and Box materials retain native paint and controlled vi
   await region.getByRole("button", { name: "Distribution", exact: true }).click();
   await expect(region.locator("[data-kind-ui=box-plot-mark]")).toHaveCount(0);
 });
+
+test("native category cursor drives emphasis through plot whitespace and grouped gaps", async ({
+  page,
+}) => {
+  const plot = page.locator("#bars");
+  const native = plot.locator(".recharts-rectangle");
+  const surface = await plot.locator(".recharts-surface").boundingBox();
+  const first = await native.nth(0).boundingBox();
+  const peer = await native.nth(3).boundingBox();
+  if (!surface || !first || !peer) throw new Error("Missing native grouped geometry");
+  const positions = [first.x + first.width / 2, (first.x + first.width + peer.x) / 2];
+  for (let repeat = 0; repeat < 3; repeat++) {
+    for (const x of positions) {
+      await page.mouse.move(x, surface.y + 15);
+      await expect(plot.locator("[data-kind-ui=chart-tooltip]")).toContainText("A");
+      await expect(plot.locator(dimmed)).toHaveCount(4);
+      await expect(plot.locator(marks).nth(0)).toHaveAttribute("data-emphasis", "baseline");
+      await expect(plot.locator(marks).nth(3)).toHaveAttribute("data-emphasis", "baseline");
+    }
+    await page.mouse.move(0, 0);
+    await expect(plot.locator(dimmed)).toHaveCount(0);
+  }
+  await page.getByRole("button", { name: "Toggle stack" }).click();
+  const stacked = await native.first().boundingBox();
+  if (!stacked) throw new Error("Missing stacked geometry");
+  await page.mouse.move(stacked.x + stacked.width / 2, surface.y + 15);
+  await expect(plot.locator("[data-kind-ui=chart-tooltip]")).toContainText("A");
+  await expect(plot.locator(dimmed)).toHaveCount(4);
+  await page.mouse.move(0, 0);
+  await expect(plot.locator(dimmed)).toHaveCount(0);
+});
+
+test("category whitespace follows native inspection after responsive resize", async ({ page }) => {
+  const plot = page.locator("#bars");
+  for (const width of [1000, 375, 800]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(plot.locator(".recharts-surface")).toHaveAttribute(
+      "width",
+      String(Math.min(440, width - 48)),
+    );
+    const surface = await plot.locator(".recharts-surface").boundingBox();
+    const bar = await plot.locator(".recharts-rectangle").nth(1).boundingBox();
+    if (!surface || !bar) throw new Error("Missing responsive native geometry");
+    await page.mouse.move(bar.x + bar.width / 2, surface.y + 15);
+    await expect(plot.locator("[data-kind-ui=chart-tooltip]")).toContainText("B");
+    await expect(plot.locator(dimmed)).toHaveCount(4);
+    await expect(plot.locator(marks).nth(1)).toHaveAttribute("data-emphasis", "baseline");
+    await expect(plot.locator(marks).nth(4)).toHaveAttribute("data-emphasis", "baseline");
+    await page.mouse.move(0, 0);
+    await expect(plot.locator(dimmed)).toHaveCount(0);
+  }
+});

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertLineConsumerSource } from "./line-consumer-contract.mjs";
+import {
+  assertCompositionConsumerSource,
+  assertLineConsumerSource,
+} from "./line-consumer-contract.mjs";
 
 test("line proof accepts public package and host dependencies", () => {
   assertLineConsumerSource(
@@ -23,3 +26,17 @@ for (const specifier of [
     assert.throws(() => assertLineConsumerSource(`await import("${specifier}");`), /Disallowed/);
   });
 }
+
+test("complete compositions reject a second chart import source", () => {
+  assertCompositionConsumerSource(
+    'import * as Chart from "@kind-ui/charts"; import { XAxis, type XAxisProps } from "@kind-ui/charts";',
+  );
+  assert.throws(
+    () => assertCompositionConsumerSource('import { XAxis } from "recharts";'),
+    /Complete composition/,
+  );
+  assert.throws(
+    () => assertCompositionConsumerSource('await import("recharts");'),
+    /Complete composition/,
+  );
+});
