@@ -40,6 +40,8 @@ try {
     assert.equal(await tooltip.textContent(), "Mon, 08:00: 12");
     await cell.hover();
     assert.equal(await tooltip.textContent(), "Mon, 08:00: 12");
+    await page.waitForTimeout(80);
+    await primary.screenshot({ path: `artifacts/heatmap/tooltip-${width}.png` });
     const tooltipBox = await tooltip.boundingBox();
     const usageBox = await page.locator("h2#usage").boundingBox();
     assert.ok(tooltipBox.y + tooltipBox.height < usageBox.y, "Tooltip must remain above Usage");
@@ -114,6 +116,17 @@ try {
         .evaluate((node) => getComputedStyle(node).backgroundColor),
       "rgb(255, 247, 237)",
     );
+    await signed.locator('[data-kind-ui="heatmap-grid"] td').first().focus();
+    await page.waitForTimeout(80);
+    const signedLayout = await signed.evaluate((node) => ({
+      tooltip: node.querySelector('[role="tooltip"]').getBoundingClientRect().bottom,
+      next: node.nextElementSibling.getBoundingClientRect().top,
+    }));
+    assert.ok(
+      signedLayout.tooltip < signedLayout.next,
+      "Signed tooltip must remain above following prose",
+    );
+    await page.keyboard.press("Escape");
     await signed.screenshot({ path: `artifacts/heatmap/signed-${width}.png` });
     const material = page.locator('[data-component="heatmap-materials"]');
     await material.scrollIntoViewIfNeeded();
@@ -187,7 +200,18 @@ try {
     "1",
   );
   await page.addStyleTag({ content: "html { font-size: 200%; }" });
+  await page.waitForTimeout(100);
   await page.screenshot({ path: "artifacts/heatmap/text-200.png" });
+  const enlarged = page.locator('[data-component="heatmap"]');
+  await enlarged.locator('[data-kind-ui="heatmap-grid"] td').first().focus();
+  await enlarged.getByRole("tooltip").waitFor({ state: "visible" });
+  await page.waitForTimeout(100);
+  const enlargedLayout = await enlarged.evaluate((node) => ({
+    tooltip: node.querySelector('[role="tooltip"]').getBoundingClientRect().bottom,
+    next: node.nextElementSibling.getBoundingClientRect().top,
+  }));
+  assert.ok(enlargedLayout.tooltip < enlargedLayout.next, "200% text must retain tooltip space");
+  await enlarged.screenshot({ path: "artifacts/heatmap/matrix-text-200.png" });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await page.goto(`${origin}/docs/components/line/`);
   await page.locator(".recharts-line-curve").first().waitFor();
