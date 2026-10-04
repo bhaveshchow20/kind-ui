@@ -1,0 +1,59 @@
+name: Heatmap Escape diagnostic — DO NOT MERGE
+on:
+  pull_request:
+    branches: [docs/components-concise]
+    paths:
+      - .github/workflows/heatmap-escape-diagnostics.yml
+      - .github/workflows/ci.yml
+      - .github/scripts/heatmap-escape-diagnostics.mjs
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    if: github.head_ref == 'diagnostics/heatmap-escape-linux'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/docs/package-lock.json
+      - run: npm install --global npm@11.9.0
+      - run: npm ci
+      - run: node apps/docs/scripts/verify-pinned-package.mjs
+      - run: npm ci
+        working-directory: apps/docs
+      - run: npm run build
+        working-directory: apps/docs
+        env:
+          KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
+      - run: npm exec playwright install -- --with-deps chromium
+      - name: Unchanged reference check
+        working-directory: apps/docs
+        run: |
+          mkdir -p artifacts/heatmap-escape-diagnostic
+          set +e
+          node scripts/start-heatmap-checks.mjs > artifacts/heatmap-escape-diagnostic/reference.log 2>&1
+          result=$?
+          set -e
+          echo "$result" > artifacts/heatmap-escape-diagnostic/reference-exit-code.txt
+          tail -n 50 artifacts/heatmap-escape-diagnostic/reference.log
+      - name: Same assertions with trace and passive observations
+        working-directory: apps/docs
+        run: node ../../.github/scripts/heatmap-escape-diagnostics.mjs
+      - name: Preserve reference failure result
+        working-directory: apps/docs
+        run: test "$(cat artifacts/heatmap-escape-diagnostic/reference-exit-code.txt)" -eq 0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: heatmap-escape-diagnostic
+          path: apps/docs/artifacts/heatmap-escape-diagnostic/
+          if-no-files-found: warn
+          retention-days: 14
