@@ -1,4 +1,6 @@
+@layer theme, base, components, kind-ui, utilities;
 @import "tailwindcss";
+@import "@kind-ui/charts/styles.css";
 @import "fumadocs-ui/css/generated/glass.css";
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
