@@ -22,3 +22,15 @@ export function assertLineConsumerSource(source) {
     "Line consumer cannot resolve workspace implementation",
   );
 }
+
+/** Complete application compositions use one chart import source. */
+export function assertCompositionConsumerSource(source) {
+  assertLineConsumerSource(source);
+  for (const match of source.matchAll(/(?:from\s*|import\s*\(?\s*)["']([^"']+)["']/g)) {
+    assert.notEqual(
+      match[1],
+      "recharts",
+      "Complete composition must import chart parts from @kind-ui/charts",
+    );
+  }
+}

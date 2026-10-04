@@ -11,6 +11,7 @@ import {
 } from "react";
 import { BarChart as EngineBarChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
+import { BarCategoryBoundary } from "./bar-category.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 
 export type BarAnimation = LineAnimation;
@@ -72,16 +73,18 @@ export function BarChart({
   return (
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
       <BarMotion value={{ reveal: enabled && !interacted, options, finish }}>
-        <LineChartFrame
-          chartProps={props}
-          categoryEmphasis={emphasis === "category"}
-          engine={EngineBarChart}
-          motionEnabled={enabled}
-          interrupt={finish}
-        >
-          <BarLifecycle {...props} />
-          {children}
-        </LineChartFrame>
+        <BarCategoryBoundary>
+          <LineChartFrame
+            chartProps={props}
+            categoryEmphasis={emphasis === "category"}
+            engine={EngineBarChart}
+            motionEnabled={enabled}
+            interrupt={finish}
+          >
+            <BarLifecycle {...props} />
+            {children}
+          </LineChartFrame>
+        </BarCategoryBoundary>
       </BarMotion>
     </MotionContext>
   );

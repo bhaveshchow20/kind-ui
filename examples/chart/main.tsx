@@ -1,7 +1,15 @@
 import * as Chart from "@kind-ui/charts";
+import {
+  CartesianGrid,
+  type DotProps,
+  ResponsiveContainer,
+  Symbols,
+  XAxis,
+  YAxis,
+} from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { CartesianGrid, type DotProps, ResponsiveContainer, Symbols, XAxis, YAxis } from "recharts";
+
 import "./style.css";
 
 const config = {

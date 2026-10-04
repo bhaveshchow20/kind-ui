@@ -1,8 +1,6 @@
 import type { LineAnimation, LineMaterial } from "@kind-ui/charts";
 import * as Chart from "@kind-ui/charts";
 import * as Line from "@kind-ui/charts";
-import type { ComponentProps, ReactNode } from "react";
-import { useId } from "react";
 import {
   CartesianGrid,
   type DotProps,
@@ -11,7 +9,9 @@ import {
   ResponsiveContainer,
   XAxis,
   YAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import type { ComponentProps, ReactNode } from "react";
+import { useId } from "react";
 
 export type { LineAnimation } from "@kind-ui/charts";
 export type TrendPoint = { period: string; value: number | null };

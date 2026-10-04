@@ -1,13 +1,19 @@
 "use client";
 
 import { animate, motion, useMotionValue } from "motion/react";
-import { type ComponentProps, use, useId, useLayoutEffect, useRef, useState } from "react";
-import { DefaultZIndexes, Radar, RadialBar, Sector, ZIndexLayer } from "recharts";
+import { type ComponentProps, memo, use, useId, useLayoutEffect, useRef, useState } from "react";
+import { DefaultZIndexes, Polygon, Radar, RadialBar, Sector, ZIndexLayer } from "recharts";
 import { ActiveMarker } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
-import { PolarMotion, RadialMotion } from "./polar-chart.js";
+import { PolarMotion, RadarMotion, RadialMotion } from "./polar-chart.js";
 import { type PolarMaterial, PolarMaterialFilter } from "./polar-material.js";
+import { RadarSelectionLayer, useRadarSelectionDot } from "./radar-interaction.js";
+
+// Native Radar uses a props-identity animation key even with animation disabled.
+// Avoid replacing its polygon for unrelated frame state during a pointer press.
+const StableRadar = memo(Radar) as typeof Radar;
+const radarActiveDot = <ActiveMarker />;
 
 export type RadarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Radar<DataPoint, Value>>,
@@ -78,6 +84,84 @@ function usePolarSeries(
   return { id, hide, color, opacity };
 }
 
+type RadarPaintProps = Parameters<NonNullable<RadarSeriesProps["onMouseEnter"]>>[0];
+
+// Recharts injects its original computed points and callback props into this renderer.
+// Only the native default polygon is masked; dots, labels and custom renderers stay owned.
+function RadarEntrancePolygon(props: RadarPaintProps) {
+  const { reveal, progress } = use(RadarMotion);
+  const maskId = `kind-ui-radar-entrance-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const center = props.points?.find(
+    (point) => Number.isFinite(point.cx) && Number.isFinite(point.cy),
+  );
+  const cx = center?.cx ?? 0;
+  const cy = center?.cy ?? 0;
+  const points = [...(props.points ?? []), ...(props.isRange ? (props.baseLinePoints ?? []) : [])];
+  const radius = Math.max(
+    0,
+    ...points.map((point) => Math.hypot(point.x - cx, point.y - cy)).filter(Number.isFinite),
+  );
+  const owned =
+    props.mask !== undefined ||
+    props.filter !== undefined ||
+    props.transform !== undefined ||
+    props.style?.transform !== undefined ||
+    props.style?.mask !== undefined ||
+    props.style?.filter !== undefined;
+  const masked = reveal && center !== undefined && radius > 0 && !owned;
+  const {
+    baseLinePoints,
+    onClick,
+    onMouseDown,
+    onMouseUp,
+    onMouseMove,
+    onMouseOver,
+    onMouseOut,
+    ...paint
+  } = props;
+  return (
+    <>
+      {masked && (
+        <defs>
+          <mask
+            id={maskId}
+            maskUnits="userSpaceOnUse"
+            x={cx - radius - 32}
+            y={cy - radius - 32}
+            width={radius * 2 + 64}
+            height={radius * 2 + 64}
+            style={{ maskType: "alpha" }}
+          >
+            <circle
+              data-kind-ui="radar-entrance-window"
+              cx={cx}
+              cy={cy}
+              r={(radius + 32) * progress}
+              fill="white"
+            />
+          </mask>
+        </defs>
+      )}
+      <Polygon
+        {...paint}
+        key="paint"
+        points={props.points}
+        {...(onClick ? { onClick } : {})}
+        {...(onMouseDown ? { onMouseDown } : {})}
+        {...(onMouseUp ? { onMouseUp } : {})}
+        {...(onMouseMove ? { onMouseMove } : {})}
+        {...(onMouseOver ? { onMouseOver } : {})}
+        {...(onMouseOut ? { onMouseOut } : {})}
+        {...(props.isRange ? { baseLinePoints } : {})}
+        onMouseEnter={(event) => props.onMouseEnter?.(props, event)}
+        onMouseLeave={(event) => props.onMouseLeave?.(props, event)}
+        {...(masked ? { mask: `url(#${maskId})` } : {})}
+      />
+    </>
+  );
+}
+const renderRadarEntrance = (props: RadarPaintProps) => <RadarEntrancePolygon {...props} />;
+
 /** Registered native Radar; custom shapes, dots, labels and handlers remain native. */
 export function RadarSeries<DataPoint = unknown, Value = unknown>({
   seriesKey,
@@ -96,6 +180,10 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
     props.baseLinePoints,
     props.isRange,
   ]);
+  const selectionDot = useRadarSelectionDot(
+    props.dot,
+    seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
+  );
   const filterId = `kind-ui-polar-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const materialized =
     material !== "plain" &&
@@ -112,27 +200,34 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
           <style>{`.${filterId} .recharts-radar-polygon > .recharts-polygon { filter: url(#${filterId}); }`}</style>
         </>
       )}
-      <motion.g data-kind-ui="radar-reveal" initial={false} style={{ opacity: series.opacity }}>
-        <Radar<DataPoint, Value>
-          activeDot={<ActiveMarker />}
-          {...props}
-          id={series.id}
-          hide={series.hide}
-          isAnimationActive={false}
-          zIndex={0}
-          {...(stroke !== undefined
-            ? { stroke }
-            : series.color !== undefined
-              ? { stroke: series.color }
-              : {})}
-          {...(fill !== undefined
-            ? { fill }
-            : series.color !== undefined
-              ? { fill: series.color }
-              : {})}
-          className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
-        />
-      </motion.g>
+      <RadarSelectionLayer
+        seriesKey={seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)}
+        hidden={series.hide}
+      >
+        <motion.g data-kind-ui="radar-reveal" initial={false}>
+          <StableRadar<DataPoint, Value>
+            activeDot={radarActiveDot}
+            {...props}
+            {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
+            {...(selectionDot !== undefined ? { dot: selectionDot } : {})}
+            id={series.id}
+            hide={series.hide}
+            isAnimationActive={false}
+            zIndex={0}
+            {...(stroke !== undefined
+              ? { stroke }
+              : series.color !== undefined
+                ? { stroke: series.color }
+                : {})}
+            {...(fill !== undefined
+              ? { fill }
+              : series.color !== undefined
+                ? { fill: series.color }
+                : {})}
+            className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
+          />
+        </motion.g>
+      </RadarSelectionLayer>
     </ZIndexLayer>
   );
 }
