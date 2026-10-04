@@ -79,7 +79,8 @@ try {
   await page.waitForFunction(() => document.documentElement.classList.contains("dark"));
   await page.setViewportSize({ width: 320, height: 812 });
   // The narrow layout hides visible labels; all five controls must stay named.
-  assert.equal(await page.getByRole("button", { name: "Copy prompt", exact: true }).count(), 5);
+  assert.equal(await page.getByRole("button", { name: "Copy prompt", exact: true }).count(), 4);
+  assert.equal(await curve.getByRole("button", { name: "Copied", exact: true }).count(), 1);
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "200%";
   });
