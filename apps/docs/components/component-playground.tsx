@@ -15,6 +15,22 @@ function Loading() {
   );
 }
 const components = {
+  area: dynamic(() => import("@/examples/area/example").then((m) => memo(m.VisitorAreaChart)), {
+    loading: Loading,
+    ssr: false,
+  }),
+  "area-curves": dynamic(
+    () => import("@/examples/area-curves/example").then((m) => memo(m.VisitorAreaCurveChart)),
+    { loading: Loading, ssr: false },
+  ),
+  "area-stacked": dynamic(
+    () => import("@/examples/area-stacked/example").then((m) => memo(m.DeviceAreaChart)),
+    { loading: Loading, ssr: false },
+  ),
+  "area-materials": dynamic(
+    () => import("@/examples/area-materials/example").then((m) => memo(m.MaterialAreaChart)),
+    { loading: Loading, ssr: false },
+  ),
   line: dynamic(() => import("@/examples/line/example").then((m) => memo(m.VisitorTrendChart)), {
     loading: Loading,
     ssr: false,
@@ -37,6 +53,7 @@ const components = {
   ),
 };
 const componentsLine = { Curve: components["line-smooth"], Material: components["line-paper"] };
+const componentsArea = { Curve: components["area-curves"], Material: components["area-materials"] };
 export type ComponentId = keyof typeof components;
 export interface ComponentBundle {
   id: ComponentId;
@@ -85,7 +102,7 @@ export function ComponentPlayground({
       onValueChange={setTab}
       className="component-workbench line-workbench"
       data-component={id}
-      id={id !== "line" ? `example-${id}` : "component-preview"}
+      id={id !== "line" && id !== "area" ? `example-${id}` : "component-preview"}
     >
       <div className="playground-header">
         <TabsList aria-label={`${bundle.title} component`} className="preview-tabs">
@@ -142,7 +159,11 @@ export function ComponentPlayground({
         className="preview-panel"
       >
         <div className="chart-example">
-          {id === "line-smooth" ? (
+          {id === "area-curves" ? (
+            <componentsArea.Curve curve={variant as "monotone" | "linear" | "stepAfter"} />
+          ) : id === "area-materials" ? (
+            <componentsArea.Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+          ) : id === "line-smooth" ? (
             <componentsLine.Curve curve={variant as "monotone" | "linear" | "stepAfter"} />
           ) : id === "line-paper" ? (
             <componentsLine.Material material={variant as "plain" | "paper" | "clay" | "glow"} />

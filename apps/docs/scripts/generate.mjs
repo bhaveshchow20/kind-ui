@@ -11,9 +11,12 @@ import {
 import path from "node:path";
 import { createGenerator, createProject } from "fumadocs-typescript";
 import ts from "typescript";
+import { areaDataLabels, areaExamples, areaVariants } from "../examples/area-catalog.mjs";
 import { examples } from "../examples/catalog.mjs";
 import { lineDataLabels, lineExamples, lineVariants } from "../examples/line-catalog.mjs";
 
+const dataLabels = { ...lineDataLabels, ...areaDataLabels };
+const variantDefinitions = { ...lineVariants, ...areaVariants };
 const read = (file) => readFileSync(file, "utf8");
 const write = (file, text) => {
   mkdirSync(path.dirname(file), { recursive: true });
@@ -79,9 +82,9 @@ rmSync("public/markdown", { recursive: true, force: true });
 rmSync("generated", { recursive: true, force: true });
 const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
 const bundles = {};
-for (const example of [...examples, ...lineExamples]) {
-  if (!Object.hasOwn(lineDataLabels, example.id))
-    throw new Error(`Only published Line examples are supported: ${example.id}`);
+for (const example of [...examples, ...lineExamples, ...areaExamples]) {
+  if (!Object.hasOwn(dataLabels, example.id))
+    throw new Error(`Unknown component example: ${example.id}`);
   const exampleSource = read(`examples/${example.id}/example.tsx`);
   const componentName = exampleSource.match(/export function (\w+)/)?.[1] ?? "Example";
   const parsed = ts.createSourceFile("example.tsx", exampleSource, ts.ScriptTarget.Latest, true);
@@ -89,8 +92,8 @@ for (const example of [...examples, ...lineExamples]) {
     .flatMap((s) => (ts.isVariableStatement(s) ? [...s.declarationList.declarations] : []))
     .find((v) => v.name.getText(parsed) === "data");
   if (!variable?.initializer) throw new Error(`Missing example data/settings for ${example.id}`);
-  const dataAlternative = { ...lineDataLabels[example.id], rows: literal(variable.initializer) };
-  const variantDefinition = lineVariants[example.id];
+  const dataAlternative = { ...dataLabels[example.id], rows: literal(variable.initializer) };
+  const variantDefinition = variantDefinitions[example.id];
   const variants = variantDefinition
     ? Object.fromEntries(
         variantDefinition.options.map((option) => [
@@ -131,7 +134,7 @@ for (const example of [...examples, ...lineExamples]) {
     "src/main.tsx": `import { StrictMode } from "react";\nimport { createRoot } from "react-dom/client";\nimport { ${componentName} } from "./examples/${example.id}/example";\nimport "@kind-ui/charts/styles.css";\nimport "./example.css";\nconst root = document.getElementById("root");\nif (!root) throw new Error("Missing mount element");\ncreateRoot(root).render(<StrictMode><${componentName} /></StrictMode>);\n`,
     "src/example.css": read("examples/shared/example.css"),
     [`src/examples/${example.id}/example.tsx`]: exampleSource,
-    "README.md": `# ${example.title} — complete consumer\n\n${status}.\n\nNode 22.12+ and npm 11.9. Use the pinned vendor tarball identified by provenance; this package is not on npm.\n\nUse these complete files, preserving their directory structure. Put the exact package asset at vendor/kind-ui-charts-0.0.0.tgz. Run npm ci, then npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports; configured LineChart owns default legend visibility. No demo modules are required. Documentation consumer of package source ${provenance.sourceCommit}.\n\nVendor SHA-256: ${provenance.sha256}.\n`,
+    "README.md": `# ${example.title} — complete consumer\n\n${status}.\n\nNode 22.12+ and npm 11.9. Use the pinned vendor tarball identified by provenance; this package is not on npm.\n\nUse these complete files, preserving their directory structure. Put the exact package asset at vendor/kind-ui-charts-0.0.0.tgz. Run npm ci, then npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports; ${example.id.startsWith("area") ? "Area uses Root and ResponsiveContainer; stacked legend visibility is consumer-owned." : "configured LineChart owns default legend visibility."} No demo modules are required. Documentation consumer of package source ${provenance.sourceCommit}.\n\nVendor SHA-256: ${provenance.sha256}.\n`,
     LICENSE: read("../../LICENSE"),
   };
   if (existsSync("examples/shared/consumer-package-lock.json"))
@@ -172,6 +175,14 @@ write(
   "generated/line-examples.json",
   JSON.stringify(
     Object.fromEntries([examples[0], ...lineExamples].map(({ id }) => [id, bundles[id]])),
+    null,
+    2,
+  ) + "\n",
+);
+write(
+  "generated/area-examples.json",
+  JSON.stringify(
+    Object.fromEntries([examples[1], ...areaExamples].map(({ id }) => [id, bundles[id]])),
     null,
     2,
   ) + "\n",
@@ -240,31 +251,34 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   const key = String(entry).replace(/\.mdx$/, "");
   let body = original.replace(/^---\n[\s\S]*?\n---\n/, "");
   body = body.replace(/<PackageSource\s*\/>/g, `\`${provenance.sourceCommit}\``);
-  body = body.replace(/<(?:ComponentPlayground|LineExample) id="([\w-]+)"\s*\/>/g, (_, id) => {
-    const bundle = bundles[id];
-    if (!bundle) throw new Error(`Unknown example ${id}`);
-    const inline = Object.entries(bundle.files).filter(
-      ([file]) => !["package-lock.json", "LICENSE", "README.md"].includes(file),
-    );
-    const linked = Object.keys(bundle.files).filter(
-      (file) => !inline.some(([name]) => name === file),
-    );
-    return (
-      `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\n${bundle.packageStatus}. Pinned package asset: ${origin}/examples/package/kind-ui-charts-0.0.0.tgz.\n\n` +
-      inline
-        .map(
-          ([file, source]) =>
-            `### ${file}\n\n\`\`\`${file.endsWith("tsx") ? "tsx" : file.endsWith("ts") ? "ts" : file.endsWith("css") ? "css" : file.endsWith("json") ? "json" : "text"}\n${source.trimEnd()}\n\`\`\``,
-        )
-        .join("\n\n") +
-      "\n\nComplete setup files:\n" +
-      linked.map((file) => `- [${file}](${origin}/examples/${id}/${file})`).join("\n")
-    );
-  });
+  body = body.replace(
+    /<(?:ComponentPlayground|LineExample|AreaExample) id="([\w-]+)"\s*\/>/g,
+    (_, id) => {
+      const bundle = bundles[id];
+      if (!bundle) throw new Error(`Unknown example ${id}`);
+      const inline = Object.entries(bundle.files).filter(
+        ([file]) => !["package-lock.json", "LICENSE", "README.md"].includes(file),
+      );
+      const linked = Object.keys(bundle.files).filter(
+        (file) => !inline.some(([name]) => name === file),
+      );
+      return (
+        `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\n${bundle.packageStatus}. Pinned package asset: ${origin}/examples/package/kind-ui-charts-0.0.0.tgz.\n\n` +
+        inline
+          .map(
+            ([file, source]) =>
+              `### ${file}\n\n\`\`\`${file.endsWith("tsx") ? "tsx" : file.endsWith("ts") ? "ts" : file.endsWith("css") ? "css" : file.endsWith("json") ? "json" : "text"}\n${source.trimEnd()}\n\`\`\``,
+          )
+          .join("\n\n") +
+        "\n\nComplete setup files:\n" +
+        linked.map((file) => `- [${file}](${origin}/examples/${id}/${file})`).join("\n")
+      );
+    },
+  );
   body = body.replace(/<ApiTable name="([\w]+)"(?:\s+compact)?\s*\/>/g, (_, name) =>
     tableMarkdown(name),
   );
-  if (/<(?:ComponentPlayground|LineExample|ApiTable)\b/.test(body))
+  if (/<(?:ComponentPlayground|LineExample|AreaExample|ApiTable)\b/.test(body))
     throw new Error(`Unresolved MDX in ${key}`);
   const markdown = `# ${title}\n\n${description}\n\nPackage snapshot: ${status}.\n\n${body.trim()}\n`;
   write(`public/markdown/${key}.md`, markdown);
@@ -278,5 +292,5 @@ write(
 );
 write("public/llms-full.txt", index.map(({ markdown }) => markdown).join("\n\n---\n\n"));
 console.log(
-  `Generated ${Object.keys(bundles).length} complete Line examples, ${Object.keys(api).length} public API tables and ${index.length} Markdown pages.`,
+  `Generated ${Object.keys(bundles).length} complete chart components, ${Object.keys(api).length} public API tables and ${index.length} Markdown pages.`,
 );

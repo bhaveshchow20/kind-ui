@@ -2,7 +2,7 @@
 
 Read repository AGENTS.md and CONTRIBUTING.md first. This application is independently installed, with its own pinned npm lockfile; do not turn it into a second chart package or change library APIs while writing docs.
 
-Use public @kind-ui/charts exports and pinned peers in examples. This PR publishes only Line. Maintain its five complete consumers and keep curve/material choices synchronized with Code and Copy prompt. Other component pages belong in separate reviewed PRs. Generated files are outputs; edit source examples, MDX or public type aliases instead.
+Use public @kind-ui/charts exports and pinned peers in examples. Only Line and Area are documented. Maintain the five Line and four Area complete consumers and keep curve/material choices synchronized with Code and Copy prompt. Other component pages belong in separate reviewed PRs. Generated files are outputs; edit source examples, MDX or public type aliases instead.
 
 Read actual declarations before writing generated reference aliases. Clearly distinguish built-in, explicit composition and unsupported behavior. Materials are family-specific. Automatic paint emphasis is narrower than tooltip inspection. Glass stays paused.
 

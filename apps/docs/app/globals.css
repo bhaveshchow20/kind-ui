@@ -811,7 +811,7 @@ input:focus-visible {
   margin-top: 8px;
 }
 
-.doc-article[data-doc="components/line"] .doc-body > figure pre {
+.doc-article:is([data-doc="components/line"], [data-doc="components/area"]) .doc-body > figure pre {
   max-height: calc(280px + 7rem);
   overflow: auto;
 }
@@ -830,7 +830,7 @@ input:focus-visible {
   outline: 2px solid var(--color-fd-ring);
   outline-offset: 2px;
 }
-.doc-article[data-doc="components/line"] .doc-body > h3 > a {
+.doc-article:is([data-doc="components/line"], [data-doc="components/area"]) .doc-body > h3 > a {
   min-width: 0;
   overflow-wrap: anywhere;
 }

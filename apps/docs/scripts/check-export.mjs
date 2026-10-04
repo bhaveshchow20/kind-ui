@@ -7,9 +7,16 @@ const html = readdirSync(root, { recursive: true }).filter(
   (file) => String(file).endsWith(".html") && !String(file).startsWith("examples/"),
 );
 const componentRoutes = html.filter((file) => String(file).startsWith("docs/components/"));
-assert.deepEqual(componentRoutes, ["docs/components/line/index.html"]);
-assert.deepEqual(readdirSync(path.join(root, "markdown/components")), ["line.md"]);
+assert.deepEqual(componentRoutes, [
+  "docs/components/area/index.html",
+  "docs/components/line/index.html",
+]);
+assert.deepEqual(readdirSync(path.join(root, "markdown/components")), ["area.md", "line.md"]);
 assert.deepEqual(readdirSync(path.join(root, "examples")).sort(), [
+  "area",
+  "area-curves",
+  "area-materials",
+  "area-stacked",
   "line",
   "line-comparison",
   "line-markers",
@@ -20,7 +27,7 @@ assert.deepEqual(readdirSync(path.join(root, "examples")).sort(), [
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;
 for (const id of searchIds.filter((id) => id.startsWith("/docs/components/")))
-  assert.ok(/^\/docs\/components\/line(?:-\d+)?$/.test(id), `Search exposes ${id}`);
+  assert.ok(/^\/docs\/components\/(?:line|area)(?:-\d+)?$/.test(id), `Search exposes ${id}`);
 const missing = new Set();
 let links = 0;
 for (const file of html) {
@@ -45,13 +52,18 @@ for (const file of readdirSync(path.join(root, "markdown"), { recursive: true })
   String(name).endsWith(".md"),
 )) {
   const body = readFileSync(path.join(root, "markdown", file), "utf8");
-  if (/<(?:ComponentPlayground|LineExample|PackageSource|ApiTable|Snapshot)\b/.test(body))
+  if (
+    /<(?:ComponentPlayground|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(body)
+  )
     throw new Error(`Unresolved MDX in ${file}`);
 }
 for (const file of ["llms.txt", "llms-full.txt"]) {
   const body = readFileSync(path.join(root, file), "utf8");
   for (const match of body.matchAll(/\/(?:docs|markdown)\/components\/([^/\s)#?]+)/g))
-    assert.ok(["line", "line.md"].includes(match[1]), `${file} exposes ${match[1]}`);
+    assert.ok(
+      ["line", "line.md", "area", "area.md"].includes(match[1]),
+      `${file} exposes ${match[1]}`,
+    );
 }
 if (missing.size) throw new Error([...missing].join("\n"));
 console.log(

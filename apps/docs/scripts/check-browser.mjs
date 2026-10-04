@@ -5,7 +5,6 @@ import { chromium } from "@playwright/test";
 const origin = "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
 const removedFamilies = [
-  "area",
   "bar",
   "combo",
   "donut",
@@ -36,7 +35,7 @@ try {
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")));
   assert.deepEqual(
     links.filter((url) => url.startsWith("/docs/components/")),
-    ["/docs/components/line/"],
+    ["/docs/components/line/", "/docs/components/area/"],
   );
   const curve = page.locator('[data-component="line-smooth"]');
   await curve.getByRole("combobox", { name: "Curve" }).click();
@@ -113,7 +112,7 @@ try {
   );
   await context.close();
   console.log(
-    "Line-only navigation/search/routes, selected prompt/source, legend visibility and dark mobile enlarged text passed.",
+    "Line/Area navigation/search/routes, selected prompt/source, legend visibility and dark mobile enlarged text passed.",
   );
 } finally {
   await browser.close();
