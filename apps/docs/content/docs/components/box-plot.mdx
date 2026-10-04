@@ -17,8 +17,15 @@ description: Compare distributions with explicit quartiles, whiskers and outlier
       <Chart.CartesianGrid vertical={false} />
       <Chart.XAxis dataKey="period" />
       <Chart.YAxis type="number" domain={[0, 180]} />
-      <Chart.BoxPlotSeries
-        dataKey={(row) => ({ ...row, outliers: [row.outlier] })}
+      <Chart.BoxPlotSeries<(typeof data)[number]>
+        dataKey={(row) => ({
+          lowerWhisker: row.lowerWhisker,
+          q1: row.q1,
+          median: row.median,
+          q3: row.q3,
+          upperWhisker: row.upperWhisker,
+          outliers: [row.outlier],
+        })}
         seriesKey="latency"
         barSize={32}
       />
