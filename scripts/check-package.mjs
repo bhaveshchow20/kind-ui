@@ -78,6 +78,14 @@ try {
     ]),
   );
   assert.equal(packed.filename, basename(packed.filename), "Unexpected tarball path");
+  const tarball = join(scratch, packed.filename);
+  const tarballBytes = await readFile(tarball);
+  const sha256 = createHash("sha256").update(tarballBytes).digest("hex");
+  assert.equal(
+    `sha512-${createHash("sha512").update(tarballBytes).digest("base64")}`,
+    packed.integrity,
+    "Tarball must match npm pack integrity before installation",
+  );
   const consumer = join(scratch, "consumer");
   await mkdir(consumer);
   await writeFile(
@@ -444,10 +452,13 @@ try {
   if (process.argv.includes("--keep-artifact")) {
     const destination = artifactDestination;
     await mkdir(destination, { recursive: true });
-    const tarball = join(scratch, packed.filename);
-    const sha256 = createHash("sha256")
-      .update(await readFile(tarball))
-      .digest("hex");
+    assert.equal(
+      createHash("sha256")
+        .update(await readFile(tarball))
+        .digest("hex"),
+      sha256,
+      "Tested tarball must not change before retention",
+    );
     await copyFile(tarball, join(destination, packed.filename));
     assert.equal(
       createHash("sha256")
@@ -457,7 +468,30 @@ try {
     );
     await writeFile(
       join(destination, "validated-artifact.json"),
-      `${JSON.stringify({ filename: packed.filename, sha256, integrity: packed.integrity }, null, 2)}\n`,
+      `${JSON.stringify(
+        {
+          filename: packed.filename,
+          sha256,
+          integrity: packed.integrity,
+          package: { name: manifest.name, version: manifest.version },
+          source: {
+            commit: run("git", ["rev-parse", "HEAD"]).trim(),
+            dirty: run("git", ["status", "--porcelain"]).trim().length > 0,
+          },
+          tools: {
+            node: process.version,
+            npm: run(process.execPath, [npm, "--version"]).trim(),
+            typescript: rootManifest.devDependencies.typescript,
+            vite: rootManifest.devDependencies.vite,
+          },
+          consumerVersions: Object.fromEntries(
+            peerNames.map((name) => [name, rootManifest.devDependencies[name]]),
+          ),
+          validation: "installed tarball package gate; aggregate browser checks are separate",
+        },
+        null,
+        2,
+      )}\n`,
     );
     console.log(`Validated artifact: ${join(destination, packed.filename)} (SHA-256 ${sha256})`);
   }

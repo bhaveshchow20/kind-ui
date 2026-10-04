@@ -2,6 +2,23 @@ import assert from "node:assert/strict";
 
 export function assertPackageContract(manifest, files, sources = []) {
   assert.equal(manifest.private, true, "Package must remain private");
+  assert.equal(manifest.version, "0.0.0", "Version requires separate release authorization");
+  assert.ok(manifest.description?.trim(), "Package must describe its purpose");
+  assert.equal(manifest.license, "MIT", "Package must declare its license");
+  assert.deepEqual(
+    manifest.repository,
+    {
+      type: "git",
+      url: "git+https://github.com/bhaveshchow20/kind-ui.git",
+      directory: "packages/charts",
+    },
+    "Repository metadata must identify the package source for provenance",
+  );
+  assert.equal(manifest.bugs?.url, "https://github.com/bhaveshchow20/kind-ui/issues");
+  assert.equal(
+    manifest.homepage,
+    "https://github.com/bhaveshchow20/kind-ui/tree/main/packages/charts#readme",
+  );
   assert.equal(manifest.type, "module", "Package must declare ESM");
   const entry = manifest.exports?.["."];
   assert.ok(entry && typeof entry === "object", "Root export must declare import and types");
