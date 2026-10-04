@@ -59,6 +59,10 @@ jobs:
           node --test scripts/pie-contract.test.mjs
           node scripts/start-pie-checks.mjs
         working-directory: apps/docs
+      - name: Check radar documentation
+        run: |
+          node scripts/start-radar-checks.mjs
+        working-directory: apps/docs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -69,5 +73,7 @@ jobs:
             apps/docs/artifacts/screenshots/*.png
             apps/docs/artifacts/pie/*.png
             apps/docs/artifacts/pie/*.json
+            apps/docs/artifacts/radar/*.png
+            apps/docs/artifacts/radar/*.json
           if-no-files-found: warn
           retention-days: 14
