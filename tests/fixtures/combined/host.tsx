@@ -1,7 +1,7 @@
 // Host-only proof that both families coexist through packed public exports.
 import * as Chart from "@kind-ui/charts";
+import { XAxis, YAxis } from "@kind-ui/charts";
 import { useState } from "react";
-import { XAxis, YAxis } from "recharts";
 
 const data = [
   { category: "A", value: 8, other: 4 },

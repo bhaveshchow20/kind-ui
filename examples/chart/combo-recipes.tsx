@@ -1,6 +1,6 @@
 import * as Chart from "@kind-ui/charts";
+import { CartesianGrid, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "@kind-ui/charts";
 import { useState } from "react";
-import { CartesianGrid, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 export type ComboPoint = {
   period: string;

@@ -1,6 +1,6 @@
 import * as Chart from "@kind-ui/charts";
+import { Cell, Label } from "@kind-ui/charts";
 import { useMemo, useState } from "react";
-import { Cell, Label } from "recharts";
 
 const defaultConfig = {
   research: { label: "Research", color: "#6366f1", formatValue: (v: unknown) => `${v} hours` },
