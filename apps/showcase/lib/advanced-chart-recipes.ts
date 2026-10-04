@@ -128,8 +128,8 @@ export function advancedData(id: string): Record<string, string | number | numbe
   if (id.startsWith("radar"))
     return ["Delivery", "Quality", "Access", "Reliability", "Support"].map((category, i) => ({
       category,
-      a: [76, 84, 92, 88, 73][i],
-      b: [80, 85, 85, 85, 80][i],
+      a: (id === "radar-outline" ? [68, 92, 77, 85, 63] : [76, 84, 92, 88, 73])[i],
+      b: (id === "radar-outline" ? [89, 75, 91, 68, 82] : [85, 72, 80, 74, 88])[i],
       range: [
         [68, 79],
         [76, 88],
@@ -186,7 +186,7 @@ export function advancedBody(r: AdvancedRecipe, material: Finish) {
   <Chart.PolarGrid gridType="${r.id === "radar-outline" ? "circle" : "polygon"}" stroke="var(--chart-grid, #e4e5eb)" />
   <Chart.PolarAngleAxis dataKey="category" tick={{fontSize:11}} tickLine={false} />
   <Chart.PolarRadiusAxis domain={[0,100]} tickCount={3} tick={{fontSize:10}} axisLine={false} />
-  ${r.id === "radar-range" ? '<Chart.RadarSeries dataKey="range" seriesKey="a" isRange fillOpacity={0.2} />' : `<Chart.RadarSeries dataKey="a" fillOpacity={${r.id === "radar-outline" ? 0 : 0.18}} dot={${r.id === "radar-outline"}} />\n  <Chart.RadarSeries dataKey="b" fill="none" strokeDasharray="4 4" dot={${r.id === "radar-outline"}} />`}
+  ${r.id === "radar-range" ? '<Chart.RadarSeries dataKey="range" seriesKey="a" isRange fillOpacity={0.2} />' : `<Chart.RadarSeries dataKey="a" fillOpacity={${r.id === "radar-outline" ? 0 : 0.18}} dot={{r:3,fill:config.a.color,stroke:"var(--background)",strokeWidth:1.5}} />\n  <Chart.RadarSeries dataKey="b" fill="none" strokeDasharray="4 4" dot={props => <Chart.Symbols cx={props.cx} cy={props.cy} type="diamond" size={70} fill={config.b.color} stroke="var(--background)" strokeWidth={1.5} />} />`}
   <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
 </Chart.RadarChart>`;
   if (r.family === "Radial")
@@ -219,7 +219,9 @@ export function advancedCode(
       {
         label: r.labels[i],
         color: colors[i],
-        ...(r.id === "scatter" ? { legendShape: i === 0 ? "circle" : "diamond" } : {}),
+        ...(r.id === "scatter" || (r.family === "Radar" && r.id !== "radar-range")
+          ? { legendShape: i === 0 ? "circle" : "diamond" }
+          : {}),
       },
     ]),
   );
