@@ -109,21 +109,63 @@ for (const [lower, strokeMode] of [
       content: `html, body, section { background: transparent !important; } svg text, .recharts-cartesian-grid, .recharts-reference-line, .recharts-cartesian-axis, .recharts-tooltip-cursor, ${marks} { visibility: hidden; } ${marks}[data-lower="${lower}"] { visibility: visible; }`,
     });
     const bin = page.locator(`${marks}[data-lower="${lower}"]`);
-    async function pixels(bytes: Buffer) {
+    async function comparePixels(
+      plain: Buffer,
+      finished: Buffer,
+      bounds: { x: number; y: number; width: number; height: number },
+      pixelWidth: number,
+    ) {
       return page.evaluate(
-        async (src) => {
-          const img = new Image();
-          img.src = src;
-          await img.decode();
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) throw new Error("No canvas");
-          ctx.drawImage(img, 0, 0);
-          return Array.from(ctx.getImageData(0, 0, img.width, img.height).data);
+        async ({ before, after, bounds, pixelWidth }) => {
+          async function pixels(src: string) {
+            const img = new Image();
+            img.src = src;
+            await img.decode();
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) throw new Error("No canvas");
+            ctx.drawImage(img, 0, 0);
+            return ctx.getImageData(0, 0, img.width, img.height).data;
+          }
+          const [plain, finished] = await Promise.all([pixels(before), pixels(after)]);
+          let delta = 0,
+            rgb = 0,
+            samples = 0;
+          for (let i = 0; i < plain.length; i += 4) {
+            const pixel = i / 4;
+            const px = pixel % pixelWidth;
+            const py = Math.floor(pixel / pixelWidth);
+            const interior =
+              px > bounds.x + 3 &&
+              px < bounds.x + bounds.width - 3 &&
+              py > bounds.y + 3 &&
+              py < bounds.y + bounds.height - 3;
+            if ((plain[i + 3] ?? 0) > 0 || interior)
+              delta = Math.max(delta, Math.abs((plain[i + 3] ?? 0) - (finished[i + 3] ?? 0)));
+            if ((plain[i + 3] ?? 0) > 40) {
+              rgb +=
+                Math.abs((plain[i] ?? 0) - (finished[i] ?? 0)) +
+                Math.abs((plain[i + 1] ?? 0) - (finished[i + 1] ?? 0)) +
+                Math.abs((plain[i + 2] ?? 0) - (finished[i + 2] ?? 0));
+              samples += 3;
+            }
+          }
+          return {
+            plainLength: plain.length,
+            finishedLength: finished.length,
+            delta,
+            rgb,
+            samples,
+          };
         },
-        `data:image/png;base64,${bytes.toString("base64")}`,
+        {
+          before: `data:image/png;base64,${plain.toString("base64")}`,
+          after: `data:image/png;base64,${finished.toString("base64")}`,
+          bounds,
+          pixelWidth,
+        },
       );
     }
     for (const gradient of [false, true]) {
@@ -139,38 +181,20 @@ for (const [lower, strokeMode] of [
       const chartBounds = await chart.boundingBox();
       if (!chartBounds) throw new Error("No chart bounds");
       const pixelWidth = Math.ceil(chartBounds.x + chartBounds.width) - Math.floor(chartBounds.x);
-      const plain = await pixels(await chart.screenshot({ omitBackground: true }));
+      const plain = await chart.screenshot({ omitBackground: true });
       for (const material of ["paper", "clay", "glow"] as const) {
         await page.getByRole("button", { name: material, exact: true }).click();
-        const finished = await pixels(
-          await chart.screenshot({
-            omitBackground: true,
-            path: info.outputPath(`${material}-${gradient ? "gradient" : "solid"}.png`),
-          }),
+        const finished = await chart.screenshot({
+          omitBackground: true,
+          path: info.outputPath(`${material}-${gradient ? "gradient" : "solid"}.png`),
+        });
+        const { plainLength, finishedLength, delta, rgb, samples } = await comparePixels(
+          plain,
+          finished,
+          bounds,
+          pixelWidth,
         );
-        expect(finished.length).toBe(plain.length);
-        let delta = 0,
-          rgb = 0,
-          samples = 0;
-        for (let i = 0; i < plain.length; i += 4) {
-          const pixel = i / 4;
-          const px = pixel % pixelWidth;
-          const py = Math.floor(pixel / pixelWidth);
-          const interior =
-            px > bounds.x + 3 &&
-            px < bounds.x + bounds.width - 3 &&
-            py > bounds.y + 3 &&
-            py < bounds.y + bounds.height - 3;
-          if ((plain[i + 3] ?? 0) > 0 || interior)
-            delta = Math.max(delta, Math.abs((plain[i + 3] ?? 0) - (finished[i + 3] ?? 0)));
-          if ((plain[i + 3] ?? 0) > 40) {
-            rgb +=
-              Math.abs((plain[i] ?? 0) - (finished[i] ?? 0)) +
-              Math.abs((plain[i + 1] ?? 0) - (finished[i + 1] ?? 0)) +
-              Math.abs((plain[i + 2] ?? 0) - (finished[i + 2] ?? 0));
-            samples += 3;
-          }
-        }
+        expect(finishedLength).toBe(plainLength);
         expect(delta).toBeLessThanOrEqual(1);
         expect(rgb / samples).toBeGreaterThan(0.5);
       }
