@@ -17,6 +17,10 @@ export default defineConfig({
   },
   webServer: [
     {
+      command: `npm exec vite preview -- --outDir artifacts/packed-identity-colors --host 127.0.0.1 --port ${port(4198)} --strictPort`,
+      url: `http://127.0.0.1:${port(4198)}`,
+    },
+    {
       command: `npm exec vite preview -- --outDir artifacts/packed-bar-entrance --host 127.0.0.1 --port ${port(4196)} --strictPort`,
       url: `http://127.0.0.1:${port(4196)}/entrance.html`,
     },

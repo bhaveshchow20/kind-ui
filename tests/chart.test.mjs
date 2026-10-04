@@ -91,6 +91,7 @@ test("direct and namespace imports expose the same public components", () => {
     "ResponsiveContainer",
     "Root",
     "SankeyChart",
+    "SankeyLegend",
     "SankeyLink",
     "SankeyNode",
     "SankeyTable",
@@ -1301,5 +1302,47 @@ test("Radar selection is SSR-safe without state glue and rejects ownerless contr
         }),
       ),
     ),
+  );
+});
+
+test("category mode rejects missing data and unconfigured identities", () => {
+  const config = { alpha: { label: "Alpha", color: "red" } };
+  for (const props of [
+    { categoryKey: "id", dataKey: "value" },
+    { categoryKey: "id", dataKey: "value", data: [{ id: "missing", value: 1 }] },
+  ])
+    assert.throws(
+      () => render(h(Root, { config }, h(Chart.PieSeries, props))),
+      /explicit data|Root.config/,
+    );
+  assert.throws(
+    () => render(h(Root, { config }, h(Chart.RadialBarChart, { categoryKey: "id" }))),
+    /explicit chart data/,
+  );
+});
+test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/explicit paint", () => {
+  const config = { "node / a": { label: "Input", color: "#123456" } };
+  const legend = render(h(Chart.SankeyLegend, { config }));
+  assert.match(legend, /data-node="node \/ a"/);
+  assert.match(legend, /--kind-ui-chart-indicator-color:#123456/);
+  const props = {
+    x: 0,
+    y: 0,
+    width: 10,
+    height: 20,
+    index: 0,
+    payload: { id: "node / a", name: "Input", value: 1 },
+  };
+  assert.match(render(h(Chart.SankeyNode, props)), /fill="#4f46e5"/);
+  assert.match(render(h(Chart.SankeyNode, { ...props, color: "#abcdef" })), /fill="#abcdef"/);
+  assert.throws(
+    () =>
+      render(
+        h(Chart.SankeyChart, {
+          nodeConfig: config,
+          data: { nodes: [{ id: "unknown", name: "Other" }], links: [] },
+        }),
+      ),
+    /requires metadata/,
   );
 });

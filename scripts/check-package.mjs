@@ -225,6 +225,7 @@ try {
         "bar",
         "emphasis",
         "pie",
+        "identity-colors",
         "combined",
         "polar",
         "combo",
@@ -423,6 +424,13 @@ try {
   await production("index.html", "packed-heatmap");
   console.log(
     "Heatmap tarball: public composition, strict NodeNext/Bundler and production build passed",
+  );
+  for (const file of ["host.tsx", "main.tsx", "index.html"])
+    await copyFixture("identity-colors", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-identity-colors");
+  console.log(
+    "Identity colors: packed public consumer, strict NodeNext/Bundler and production build passed",
   );
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("pie", file);
   await typecheck(["host.tsx", "main.tsx"]);

@@ -184,6 +184,7 @@ export type { RadarSelectionProps } from "./radar-interaction.js";
 export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
 export { Root, type RootProps } from "./root.js";
 export { type SankeyAnimation, SankeyChart, type SankeyChartProps } from "./sankey-chart.js";
+export type { SankeyNodeConfig } from "./sankey-colors.js";
 export {
   prepareSankeyData,
   type SankeyFlowData,
@@ -191,6 +192,7 @@ export {
   type SankeyFlowNode,
 } from "./sankey-data.js";
 export type { SankeyFinish } from "./sankey-finish.js";
+export { SankeyLegend, type SankeyLegendProps } from "./sankey-legend.js";
 export {
   SankeyLink,
   type SankeyLinkProps,
