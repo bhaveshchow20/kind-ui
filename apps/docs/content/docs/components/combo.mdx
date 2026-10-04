@@ -1,0 +1,236 @@
+---
+title: Combo Chart
+description: Combine bars, lines and areas to compare related measures.
+---
+
+Bars show shipped units, the shaded area shows available capacity, and the dashed line marks the production target. All three use the same unit and scale.
+
+<ChartExample id="combo" />
+
+## Usage
+
+`Root` supplies series metadata and colors. `ComboChart` shares native category geometry and tooltip inspection across explicitly composed series; `ResponsiveContainer` provides measured dimensions. The first Code tab contains a complete named component with its data and imports.
+
+```tsx title="Composition"
+<Chart.Root config={config}>
+  <Chart.Legend />
+  <Chart.ResponsiveContainer width="100%" height={280}>
+    <Chart.ComboChart data={data} animate accessibilityLayer aria-label="Monthly production in units">
+      <Chart.CartesianGrid vertical={false} />
+      <Chart.XAxis dataKey="period" />
+      <Chart.YAxis domain={[0, 1200]} />
+      <Chart.AreaSeries dataKey="capacity" type="stepAfter" fillOpacity={0.18} />
+      <Chart.BarSeries dataKey="shipped" maxBarSize={32} />
+      <Chart.LineSeries dataKey="target" type="linear" dot={false} strokeDasharray="6 4" />
+      <Chart.Tooltip />
+    </Chart.ComboChart>
+  </Chart.ResponsiveContainer>
+</Chart.Root>
+```
+
+Recharts owns scales, axes and stacking; Kind supplies registered metadata, controlled visibility and chart motion. Choose each series' interpolation, paint and mark props directly. The step area represents capacity changes; the dashed target stays distinct from actual shipments. `ComboChart` accepts native composed-chart props rather than Line's configured `series` or `xDataKey` shortcuts.
+
+## Stacks and two axes
+
+Retail and wholesale bars share `stackId="revenue"` and `yAxisId="revenue"`. Their heights add in USD. Margin belongs to `yAxisId="margin"` on the right, with a percentage domain and percentage ticks. Legend labels and tooltip formatters keep the units visible. Compare revenue totals and margin trends using their own axes; their vertical positions do not express equal values.
+
+<ChartExample id="combo-stacked" />
+
+The legend controls consumer-owned visibility through `Root`. Hiding a revenue series recalculates its native stack; hiding margin leaves the revenue stack intact. Stacks remain native to each series family and matching axes: a shared `stackId` does not turn a line into a stacked bar or merge bar and area geometry. `stackOffset="expand"` changes stack calculation, so normalized axis labels and tooltip percentages need explicit consumer formatting.
+
+## Family motion
+
+Choose independent timing, a shared entrance, or line-only motion. Independent timing shows capacity immediately, reveals bars over 1000 ms and draws the target over 600 ms. Changing the selection remounts this example to replay its entrance; that replay is owned by the example.
+
+<ChartExample id="combo-motion" />
+
+Line and Area reveal across the plot; Bar reveals outward from its own numeric-axis zero baseline, clamped to the domain. Family options affect entrances only. Hover transitions remain shared. Pointer, focus or keyboard input finishes active entrances; data, visibility, size or composition changes also cancel them. Reduced motion shows final geometry and disables Kind motion, including when the preference changes after mounting.
+
+## API reference
+
+These focused props describe the maintained composition. Native Recharts props remain available through the public types; upstream references cover additional geometry options.
+
+### Root
+
+<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Labels, colors and optional `formatValue` for all composed families. |
+| `visibleSeries` | `readonly string[]` | All series | Consumer-owned selection across the shared Root. |
+| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend toggles with controlled `visibleSeries`. |
+| `emphasis` | `"auto" \| "none"` | `"auto"` | Shared emphasis policy; Combo inspection does not automatically dim marks. |
+
+</div>
+
+### ComboChart
+
+<div className="line-props-scroll" role="region" aria-label="ComboChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `Row[]` | — | Shared category observations; Kind does not aggregate or transform them. |
+| `animate` | `boolean \| ComboAnimation` | `false` | Chart-owned entrance and inspection motion, respecting reduced motion. |
+| `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | Native chart orientation; supply matching category and numeric axes. |
+| `stackOffset` | `"none" \| "expand" \| "wiggle" \| "silhouette" \| "sign" \| "positive"` | `"none"` | Native stack calculation; formatting remains consumer-owned. |
+| `barCategoryGap` / `barGap` | `number \| string` | `"10%"` / `4` | Category and grouped-bar spacing in native geometry. |
+| `accessibilityLayer` | `boolean` | `true` in Recharts | Keyboard category inspection; enabled explicitly in these components. |
+| `aria-label` / `aria-labelledby` | `string` | — | Consumer-supplied accessible plot name. |
+| `children` | `ReactNode` | — | Explicit axes, grid, series and tooltip. |
+
+</div>
+
+See [Recharts ComposedChart](https://recharts.github.io/en-US/api/ComposedChart/).
+
+### ComboAnimation
+
+Pass this object to `ComboChart.animate`.
+
+<div className="line-props-scroll" role="region" aria-label="ComboAnimation options" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `revealDurationMs` | `number` | `1000` | Shared entrance duration in milliseconds. |
+| `revealEasing` | `Transition["ease"]` | `[0.25, 0.1, 0.25, 1]` | Motion entrance easing. |
+| `lineReveal` / `areaReveal` / `barReveal` | `false \| { revealDurationMs?: number; revealEasing?: Transition["ease"] }` | Shared options | Override one family's duration or easing; `false` skips its entrance. |
+| `hoverTransition` | `Transition` | Spring: `210` stiffness, `28` damping, `0.8` mass | Shared inspection motion; family entrance options do not override it. |
+
+</div>
+
+### BarSeries
+
+<div className="line-props-scroll" role="region" aria-label="BarSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Native value field or accessor. |
+| `seriesKey` | `string` | String `dataKey` | Config and visibility identity; supply for controlled accessor or numeric keys. |
+| `yAxisId` / `xAxisId` | `string \| number` | `0` | Match the explicit native axes. |
+| `stackId` | `string \| number` | — | Stack bars on matching axes; omit for grouped bars. |
+| `maxBarSize` | `number` | — | Bound native bar thickness. |
+| `radius` | `number \| [number, number, number, number]` | `0` | Native corners; stack cap geometry remains consumer-owned. |
+| `fill` | `string` | Config color | Explicit paint override. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static bar finish; custom shape, filter or active renderer retains ownership. |
+
+</div>
+
+Kind disables native per-series animation so `ComboChart` owns entrances. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
+
+### LineSeries
+
+<div className="line-props-scroll" role="region" aria-label="LineSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Native line values. |
+| `seriesKey` | `string` | String `dataKey` | Config and visibility identity. |
+| `yAxisId` / `xAxisId` | `string \| number` | `0` | Bind the line to its scale; margin uses the percentage axis. |
+| `type` | `"basis" \| "basisClosed" \| "basisOpen" \| "bumpX" \| "bumpY" \| "bump" \| "linear" \| "linearClosed" \| "natural" \| "monotoneX" \| "monotoneY" \| "monotone" \| "step" \| "stepBefore" \| "stepAfter"` or custom curve function | `"linear"` | Native interpolation. |
+| `stroke` / `strokeDasharray` | `string` | Config color / — | Override line paint and distinguish targets with dashes. |
+| `dot` | `boolean` or native dot props/renderer | `true` | Ordinary point marks; these components disable them. |
+| `connectNulls` | `boolean` | `false` | Connect gaps explicitly. |
+
+</div>
+
+Line material choices apply to the line independently of Area and Bar. See [Recharts Line](https://recharts.github.io/en-US/api/Line/) and [Line components](/docs/components/line/).
+
+### AreaSeries
+
+<div className="line-props-scroll" role="region" aria-label="AreaSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Native area values. |
+| `seriesKey` | `string` | String `dataKey` | Config and visibility identity. |
+| `yAxisId` / `xAxisId` | `string \| number` | `0` | Bind the area to matching axes. |
+| `type` | `"basis" \| "basisClosed" \| "basisOpen" \| "bumpX" \| "bumpY" \| "bump" \| "linear" \| "linearClosed" \| "natural" \| "monotoneX" \| "monotoneY" \| "monotone" \| "step" \| "stepBefore" \| "stepAfter"` or custom curve function | `"linear"` | Choose interpolation per area. |
+| `stackId` | `string \| number` | — | Stack areas on matching axes. |
+| `fill` / `stroke` | `string` | Config color | Override fill and outline independently. |
+| `fillOpacity` | `number` | `0.6` in Recharts | Keep the filled context legible behind other marks. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static area finish; explicit shape or filter wins. |
+
+</div>
+
+See [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [Area components](/docs/components/area/).
+
+### XAxis
+
+<div className="line-props-scroll" role="region" aria-label="XAxis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Shared category labels. |
+| `tickMargin` | `number` | `5` | Space between axis and labels; these components use `10`. |
+| `height` | `number` | `30` | Reserve category label space; these components use `40`. |
+
+</div>
+
+See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/).
+
+### YAxis
+
+<div className="line-props-scroll" role="region" aria-label="YAxis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `yAxisId` | `string \| number` | `0` | Match each series to the intended numeric scale. |
+| `orientation` | `"left" \| "right"` | `"left"` | Position separate axes. |
+| `domain` | Native domain | `[0, "auto"]` | Bounds in the axis' own units. |
+| `tickFormatter` | `(value: number, index: number) => string` | — | Display USD or percentage without changing data. |
+| `width` | `number \| "auto"` | `60` | Reserve label space; production and revenue use `"auto"` to measure their labels; the motion component reserves `96` px to keep entrance geometry stable. |
+
+</div>
+
+See [Recharts YAxis](https://recharts.github.io/en-US/api/YAxis/).
+
+### Legend
+
+Place outside the sized plot. Without controlled visibility the legend labels are static; with both Root visibility props they become keyboard-operable buttons.
+
+<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `hideIcon` | `boolean` | `false` | Prefer swatches to configured icons. |
+
+</div>
+
+### Tooltip
+
+Place inside `ComboChart`. One tooltip uses the config labels and formatters for visible series across all composed families. ArrowLeft and ArrowRight inspect categories; Escape dismisses inspection.
+
+<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `cursor` | Native cursor props or renderer | `false` | Optional native inspection guide. |
+| `maxWidth` | `number` | `180` | Kind tooltip width bound in pixels. |
+
+</div>
+
+See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+
+### ResponsiveContainer
+
+<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` / `height` | `number` or percentage | `"100%"` | Measured plot dimensions; these components provide a `280` px height. |
+
+</div>
+
+See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
+
+### CartesianGrid
+
+<div className="line-props-scroll" role="region" aria-label="CartesianGrid props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `vertical` | `boolean` | `true` | Vertical guides; these components use horizontal guides only. |
+| `strokeDasharray` | `string` | — | Native guide dash pattern. |
+
+</div>
+
+See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/). Preserve an accessible data alternative for every series when copying a chart; previews include a hidden table with complete values.
