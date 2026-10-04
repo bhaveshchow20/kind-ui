@@ -952,6 +952,8 @@ input:focus-visible {
   }
   #nd-toc.docs-visible-toc h3 + div {
     --row: 1.5rem;
+    grid-template-rows: none !important;
+    grid-auto-rows: minmax(1.5rem, auto);
     pointer-events: auto;
   }
   #nd-toc.docs-visible-toc a {
@@ -959,6 +961,10 @@ input:focus-visible {
   }
   #nd-toc.docs-visible-toc a span {
     opacity: 1;
+    min-width: 0;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
   }
 }
 

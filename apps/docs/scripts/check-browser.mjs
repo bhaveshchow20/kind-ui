@@ -119,6 +119,23 @@ try {
     await searchPage.waitForURL(
       (url) => url.pathname.replace(/\/$/, "") === `/docs/components/${id}`,
     );
+    await searchPage.getByRole("heading", { name: title, exact: true, level: 1 }).waitFor();
+    await searchPage.evaluate(() => (document.documentElement.style.fontSize = "200%"));
+    const clippedToc = await searchPage
+      .locator("#nd-toc a span")
+      .evaluateAll((labels) =>
+        labels
+          .filter(
+            (label, index) =>
+              label.scrollWidth > label.clientWidth + 1 ||
+              (labels[index + 1] &&
+                label.getBoundingClientRect().bottom >
+                  labels[index + 1].getBoundingClientRect().top + 1),
+          )
+          .map((label) => label.textContent),
+      );
+    assert.deepEqual(clippedToc, [], `${id}: TOC labels must remain readable at 200% text`);
+    await searchPage.evaluate(() => (document.documentElement.style.fontSize = ""));
     assert.equal((await context.request.get(`${origin}/docs/components/${id}/`)).status(), 200);
     assert.equal(
       (await context.request.get(`${origin}/markdown/components/${id}.md`)).status(),
