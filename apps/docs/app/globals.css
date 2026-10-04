@@ -896,6 +896,21 @@ input:focus-visible {
 }
 .glass-sidebar-search > button {
   width: 100%;
+  flex-wrap: wrap;
+}
+#nd-sidebar .kind-wordmark {
+  flex-wrap: wrap;
+  max-width: 100%;
+  row-gap: 0.2em;
+}
+#nd-sidebar > button[aria-haspopup="dialog"] {
+  flex-wrap: wrap;
+}
+#nd-sidebar > button[aria-haspopup="dialog"] > span {
+  flex-shrink: 0;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
 }
 .glass-sidebar-footer {
   display: flex;
