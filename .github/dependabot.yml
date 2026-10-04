@@ -5,3 +5,21 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 2
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: npm
+    directory: "/apps/docs"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+    # This local tarball is refreshed only through the reviewed package gate.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@kind-ui/charts"
