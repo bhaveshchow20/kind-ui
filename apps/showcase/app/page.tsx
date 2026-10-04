@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AdvancedChartCard, advancedRecipes } from "@/components/advanced-chart-card";
 import { CodeBlock } from "@/components/code-block";
 import { KindLogo } from "@/components/kind-logo";
@@ -323,16 +323,20 @@ function ChartCard({
   const chartAnimate = animate && entered;
   const [visible, setVisible] = useState<string[]>([...r.keys]);
   const [copied, setCopied] = useState(false);
-  const chartData = recipeData(r.id);
-  const config = Object.fromEntries(
-    r.keys.map((k, i) => [
-      k,
-      {
-        label: r.keys.length === 1 ? r.subtitle : recipeLabels(r.id)[k],
-        color: colors[i],
-        formatValue: (v: unknown) => (typeof v === "number" ? v.toLocaleString() : String(v)),
-      },
-    ]),
+  const chartData = useMemo(() => recipeData(r.id), [r.id]);
+  const config = useMemo(
+    () =>
+      Object.fromEntries(
+        r.keys.map((k, i) => [
+          k,
+          {
+            label: r.keys.length === 1 ? r.subtitle : recipeLabels(r.id)[k],
+            color: colors[i],
+            formatValue: (v: unknown) => (typeof v === "number" ? v.toLocaleString() : String(v)),
+          },
+        ]),
+      ),
+    [r, colors],
   );
   const ChartComponent =
     r.family === "Line" ? Chart.LineChart : r.family === "Area" ? Chart.AreaChart : Chart.BarChart;
@@ -1164,7 +1168,7 @@ export default function Page() {
             </div>
             {families.map((f) => (
               <TabsContent key={f} value={f}>
-                <div className="chart-grid">
+                <div className="chart-grid" key={family}>
                   {shown.map((r) => (
                     <ChartCard
                       key={r.id}
