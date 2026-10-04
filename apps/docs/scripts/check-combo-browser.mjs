@@ -107,13 +107,18 @@ try {
   );
   await page.keyboard.press("Enter");
   assert.match(await motion.getByRole("combobox", { name: "Entrance" }).innerText(), /Together/);
+  await expect(page.getByRole("listbox")).toBeHidden();
+  await expect(motion.getByRole("combobox", { name: "Entrance" })).toBeFocused();
   await motion.getByRole("tab", { name: "Preview", exact: true }).focus();
+  await expect(motion.getByRole("tab", { name: "Preview", exact: true })).toBeFocused();
   await page.keyboard.press("ArrowRight");
+  await expect(motion.getByRole("tab", { name: "Code", exact: true })).toBeFocused();
   await expect(motion.getByRole("tab", { name: "Code", exact: true })).toHaveAttribute(
     "aria-selected",
     "true",
   );
   await page.keyboard.press("ArrowLeft");
+  await expect(motion.getByRole("tab", { name: "Preview", exact: true })).toBeFocused();
   await expect(motion.getByRole("tab", { name: "Preview", exact: true })).toHaveAttribute(
     "aria-selected",
     "true",

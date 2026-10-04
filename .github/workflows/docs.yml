@@ -90,6 +90,12 @@ jobs:
           node scripts/check-box-plot-consumers.mjs
           node scripts/start-box-plot-checks.mjs
         working-directory: apps/docs
+      - name: Check combo documentation
+        run: |
+          node --test scripts/combo-contract.test.mjs
+          node scripts/check-combo-consumers.mjs
+          node scripts/start-combo-checks.mjs
+        working-directory: apps/docs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -110,5 +116,6 @@ jobs:
             apps/docs/artifacts/waterfall/*.json
             apps/docs/artifacts/box-plot/*.png
             apps/docs/artifacts/box-plot/*.json
+            apps/docs/artifacts/combo-*.png
           if-no-files-found: warn
           retention-days: 14
