@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { validRange } from "semver";
 
 export async function verifyReleaseArtifact(directory, expected, { requirePublic = false } = {}) {
   assert.match(expected.commit, /^[a-f0-9]{40}$/, "Expected an immutable checkout commit");
@@ -19,6 +20,7 @@ export async function verifyReleaseArtifact(directory, expected, { requirePublic
     "Expected a stable package version",
   );
   assert.match(expected.tag, /^[a-z][a-z0-9-]*$/, "Expected a plain npm dist-tag");
+  assert.equal(validRange(expected.tag), null, "npm dist-tag must not be a SemVer range");
   const receipt = JSON.parse(await readFile(join(directory, "package/validated-artifact.json")));
   assert.equal(
     receipt.filename,

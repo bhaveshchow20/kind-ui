@@ -171,3 +171,14 @@ test("rejects shell syntax in a tag before reading candidate files", async () =>
     /dist-tag/,
   );
 });
+test("rejects npm dist-tags that parse as SemVer ranges", async () => {
+  for (const tag of ["v1", "v2", "x"]) {
+    await assert.rejects(verifyReleaseArtifact("/absent", { ...expected, tag }), /SemVer range/);
+  }
+});
+test("accepts plain release-channel tags", async (t) => {
+  const f = await fixture(t);
+  for (const tag of ["latest", "next", "beta", "canary", "release-1"]) {
+    assert.equal((await verifyReleaseArtifact(f.root, { ...expected, tag })).tag, tag);
+  }
+});

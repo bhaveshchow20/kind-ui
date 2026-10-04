@@ -68,6 +68,9 @@ jobs:
         with:
           name: charts-release-${{ github.run_attempt }}-node-24
           path: artifacts/release-candidate
+      # semver is pinned in the development lockfile; do not run install scripts.
+      # Candidate bytes come exclusively from the downloaded artifact.
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - id: candidate
         run: node scripts/verify-release-artifact.mjs artifacts/release-candidate
         env:
@@ -94,6 +97,7 @@ jobs:
         with:
           name: charts-release-${{ github.run_attempt }}-node-24
           path: artifacts/release-candidate
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node scripts/verify-release-artifact.mjs artifacts/release-candidate --require-public
         env:
           RELEASE_COMMIT: ${{ github.sha }}

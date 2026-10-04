@@ -28,6 +28,15 @@ Node 22/24 validation, retains the exact tested tarballs, then downloads the Nod
 integration evidence. The verification summary is the review handoff. A private
 `0.0.0` run is a rehearsal, not a publishable candidate.
 
+If a run fails, choose **Re-run all jobs**. Artifact names and receipts include
+the run attempt, so a partial verification/publish retry cannot reuse a candidate
+from an earlier attempt. This rejection is intentional; keep it intact.
+After an ambiguous publication result, inspect the registry version and
+`dist.integrity` against the selected candidate before attempting any retry.
+An already-published version is immutable: do not republish it or silently select
+new bytes/version; investigate a mismatch and prepare a separately reviewed
+version if necessary. A successful matching publication needs no publish retry.
+
 The publishing job is hard-disabled. This PR grants no OIDC permission, creates no
 GitHub environment/trust/account/credential, publishes nothing and creates no
 tags or GitHub Releases. After owner approval, the activation change must replace
