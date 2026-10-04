@@ -247,3 +247,15 @@ export function CompleteNamespaceChart() {
     </Chart.Root>
   );
 }
+
+const clockwisePie = {
+  animate: true,
+  animationDirection: "clockwise",
+} satisfies Chart.PieChartProps;
+const anticlockwisePie = {
+  animate: { revealDurationMs: 600 },
+  animationDirection: "anticlockwise",
+} satisfies Chart.PieChartProps;
+// @ts-expect-error Entrance direction has two explicit physical sweep values.
+const invalidPieDirection = { animationDirection: "reverse" } satisfies Chart.PieChartProps;
+void [clockwisePie, anticlockwisePie, invalidPieDirection];
