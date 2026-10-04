@@ -111,12 +111,19 @@ try {
       await rings.scrollIntoViewIfNeeded();
       await rings.getByRole("tab", { name: "Code", exact: true }).focus();
       await page.keyboard.press("ArrowLeft");
+      await expect(rings.getByRole("tab", { name: "Preview", exact: true })).toBeFocused();
       await expect(rings.getByRole("tab", { name: "Preview", exact: true })).toHaveAttribute(
         "aria-selected",
         "true",
       );
       await page.keyboard.press("ArrowRight");
+      await expect(rings.getByRole("tab", { name: "Code", exact: true })).toBeFocused();
+      await expect(rings.getByRole("tab", { name: "Code", exact: true })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
       const viewport = rings.locator(".line-code-viewport");
+      await expect(viewport).toBeVisible();
       const box = await viewport.boundingBox();
       const start = await page.evaluate(() => scrollY);
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

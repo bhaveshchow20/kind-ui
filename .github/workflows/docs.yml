@@ -74,6 +74,11 @@ jobs:
           node scripts/check-histogram-consumers.mjs
           node scripts/start-histogram-checks.mjs
         working-directory: apps/docs
+      - name: Check radial documentation
+        run: |
+          set -o pipefail
+          node scripts/start-radial-checks.mjs 2>&1 | tee artifacts/radial-check.log
+        working-directory: apps/docs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -88,5 +93,7 @@ jobs:
             apps/docs/artifacts/radar/*.json
             apps/docs/artifacts/sankey/*.png
             apps/docs/artifacts/sankey/*.json
+            apps/docs/artifacts/radial/*.png
+            apps/docs/artifacts/radial/*.json
           if-no-files-found: warn
           retention-days: 14
