@@ -13,7 +13,7 @@ import {
   Search,
   Sun,
 } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
 import { AdvancedChartCard, advancedRecipes } from "@/components/advanced-chart-card";
@@ -318,6 +318,9 @@ function ChartCard({
   replay: number;
 }) {
   const reduceMotion = useReducedMotion();
+  const cardRef = useRef<HTMLElement>(null);
+  const entered = useInView(cardRef, { once: true, amount: 0.3 });
+  const chartAnimate = animate && entered;
   const [visible, setVisible] = useState<string[]>([...r.keys]);
   const [copied, setCopied] = useState(false);
   const chartData = recipeData(r.id);
@@ -400,7 +403,7 @@ function ChartCard({
             ? { fill: "#a4a8be", fillOpacity: 0.09 }
             : { stroke: "#8d8e9b", strokeDasharray: "3 4" }
         }
-        valueAnimation={animate ? "shuffle" : undefined}
+        valueAnimation={chartAnimate ? "shuffle" : undefined}
       />
     </>
   );
@@ -415,6 +418,7 @@ function ChartCard({
   }
   return (
     <motion.article
+      ref={cardRef}
       initial={reduceMotion ? false : { opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.12 }}
@@ -479,10 +483,10 @@ function ChartCard({
           <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
             {r.family === "Bar" ? (
               <Chart.BarChart
-                key={replay}
+                key={`${replay}-${entered}`}
                 data={chartData}
                 emphasis={r.id === "grouped" ? "category" : "none"}
-                animate={animate}
+                animate={chartAnimate}
                 layout={horizontal ? "vertical" : "horizontal"}
                 accessibilityLayer
                 aria-label={r.subtitle}
@@ -492,9 +496,9 @@ function ChartCard({
               </Chart.BarChart>
             ) : (
               <ChartComponent
-                key={replay}
+                key={`${replay}-${entered}`}
                 data={chartData}
-                animate={animate}
+                animate={chartAnimate}
                 layout="horizontal"
                 accessibilityLayer
                 aria-label={r.subtitle}
