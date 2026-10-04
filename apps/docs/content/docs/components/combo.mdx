@@ -2,14 +2,13 @@
 title: Combo Chart
 description: Combine bars, lines and areas to compare related measures.
 ---
-
-Bars show shipped units, the shaded area shows available capacity, and the dashed line marks the production target. All three use the same unit and scale.
+Bars show shipments, an area shows capacity, and a dashed line marks the target on one shared scale.
 
 <ChartExample id="combo" />
 
 ## Usage
 
-`Root` supplies series metadata and colors. `ComboChart` shares native category geometry and tooltip inspection across explicitly composed series; `ResponsiveContainer` provides measured dimensions. The first Code tab contains a complete named component with its data and imports.
+`Root` supplies metadata; `ResponsiveContainer` sizes the plot. Compose series, axes and `Tooltip` inside `ComboChart`; Recharts owns their scales and geometry.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -28,27 +27,27 @@ Bars show shipped units, the shaded area shows available capacity, and the dashe
 </Chart.Root>
 ```
 
-Recharts owns scales, axes and stacking; Kind supplies registered metadata, controlled visibility and chart motion. Choose each series' interpolation, paint and mark props directly. The step area represents capacity changes; the dashed target stays distinct from actual shipments. `ComboChart` accepts native composed-chart props rather than Line's configured `series` or `xDataKey` shortcuts.
+Choose each series’ interpolation and paint explicitly. `ComboChart` uses native composed-chart props, without Line’s configured `series` or `xDataKey` shortcuts.
 
 ## Stacks and two axes
 
-Retail and wholesale bars share `stackId="revenue"` and `yAxisId="revenue"`. Their heights add in USD. Margin belongs to `yAxisId="margin"` on the right, with a percentage domain and percentage ticks. Legend labels and tooltip formatters keep the units visible. Compare revenue totals and margin trends using their own axes; their vertical positions do not express equal values.
+Revenue bars share stack and axis IDs; margin uses a separate percentage axis. Compare each measure on its own scale; matching vertical positions do not mean equal values.
 
 <ChartExample id="combo-stacked" />
 
-The legend controls consumer-owned visibility through `Root`. Hiding a revenue series recalculates its native stack; hiding margin leaves the revenue stack intact. Stacks remain native to each series family and matching axes: a shared `stackId` does not turn a line into a stacked bar or merge bar and area geometry. `stackOffset="expand"` changes stack calculation, so normalized axis labels and tooltip percentages need explicit consumer formatting.
+Legend toggles recalculate visible stacks. Matching `stackId` values stack compatible series on matching axes; they do not merge families. Normalized stacks require explicit axis and tooltip formatting.
 
 ## Family motion
 
-Choose independent timing, a shared entrance, or line-only motion. Independent timing shows capacity immediately, reveals bars over 1000 ms and draws the target over 600 ms. Changing the selection remounts this example to replay its entrance; that replay is owned by the example.
+Choose independent, shared or line-only timing. Independent mode reveals bars over 1000ms and the line over 600ms, showing Area immediately. The example remounts to replay.
 
 <ChartExample id="combo-motion" />
 
-Line and Area reveal across the plot; Bar reveals outward from its own numeric-axis zero baseline, clamped to the domain. Family options affect entrances only. Hover transitions remain shared. Pointer, focus or keyboard input finishes active entrances; data, visibility, size or composition changes also cancel them. Reduced motion shows final geometry and disables Kind motion, including when the preference changes after mounting.
+Line/Area reveal across the plot; Bar reveals from numeric zero clamped to its domain. Interaction or data/layout/visibility changes finish entrance; reduced motion disables Kind motion.
 
 ## API reference
 
-These focused props describe the maintained composition. Native Recharts props remain available through the public types; upstream references cover additional geometry options.
+Focused props for explicit composition; upstream references cover additional native geometry.
 
 ### Root
 
@@ -84,7 +83,7 @@ See [Recharts ComposedChart](https://recharts.github.io/en-US/api/ComposedChart/
 
 ### ComboAnimation
 
-Pass this object to `ComboChart.animate`.
+Pass to `ComboChart.animate`. Family options affect entrances only; hover transitions remain shared. Live reduced-motion changes also settle motion.
 
 <div className="line-props-scroll" role="region" aria-label="ComboAnimation options" tabIndex={0}>
 
@@ -185,7 +184,7 @@ See [Recharts YAxis](https://recharts.github.io/en-US/api/YAxis/).
 
 ### Legend
 
-Place outside the sized plot. Without controlled visibility the legend labels are static; with both Root visibility props they become keyboard-operable buttons.
+Place outside the plot. Root visibility and its callback enable toggles; otherwise items are labels.
 
 <div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
 
@@ -197,7 +196,7 @@ Place outside the sized plot. Without controlled visibility the legend labels ar
 
 ### Tooltip
 
-Place inside `ComboChart`. One tooltip uses the config labels and formatters for visible series across all composed families. ArrowLeft and ArrowRight inspect categories; Escape dismisses inspection.
+One tooltip formats visible series across families. ArrowLeft/ArrowRight inspect categories; Escape dismisses inspection.
 
 <div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
 
@@ -233,4 +232,4 @@ See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/Responsi
 
 </div>
 
-See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/). Preserve an accessible data alternative for every series when copying a chart; previews include a hidden table with complete values.
+Keep a complete accessible data alternative for every series. See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).

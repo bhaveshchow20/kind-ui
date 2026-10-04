@@ -7,7 +7,7 @@ description: Compare numeric intensity across two ordered domains with native ta
 
 ## Usage
 
-`HeatmapChart` owns the matrix model, inspection and diagonal entrance. Supply ordered row and column domains, numeric records and one scale; compose the grid, legend and tooltip as children. The first Code tab contains a complete named component, including every observation and the color scale.
+`HeatmapChart` owns the matrix model and inspection. Supply ordered domains, numeric records and one scale; compose the grid, legend and tooltip as children.
 
 ```tsx title="Composition"
 <Chart.HeatmapChart
@@ -20,31 +20,31 @@ description: Compare numeric intensity across two ordered domains with native ta
 </Chart.HeatmapChart>
 ```
 
-The browser lays out equal cells in a native table. Domain order controls geometry; absent records and `null` become patterned missing cells. Zero remains a measured value. Use one grid and at most one tooltip per chart boundary. Each complete component also includes a visually hidden `HeatmapDataTable` with exact values.
+Domain order determines equal-cell layout. Missing records and `null` use patterned cells; zero remains measured. Compose one grid and at most one tooltip per chart.
 
 ## Signed comparisons
 
-Compare regional orders with their monthly target. A symmetric `[-20, 20]` domain places zero at the neutral middle stop, with orange below target and blue above. The legend identifies endpoints, zero and missing observations. Keep the same domain when comparing multiple matrices; values outside it clamp to the endpoint colors.
+A symmetric `[-20, 20]` scale centers zero between below-target orange and above-target blue. Keep the same domain for comparisons; out-of-range values clamp to endpoint colors.
 
 <ChartExample id="heatmap-diverging" />
 
-For nonnegative counts, use a light-to-dark sequential palette as in the first component. A calendar-like matrix is possible by supplying your own day/week domains and records; date parsing, week alignment and calendar labels remain consumer-owned.
+Use sequential palettes for nonnegative counts. Calendar layouts require consumer-owned day/week domains, date parsing and labels.
 
 ## Cell materials
 
-Plain, paper, clay and glow decorate only cell edges. The central 84% of each dimension retains the exact opaque scale color; compare that center with the unmodified legend. Missing cells keep their pattern without a material. Consumer paint overrides can change the encoding.
+Choose plain, paper, clay or glow on cell edges. The central 84% retains the exact scale color; missing cells retain their pattern. Consumer paint overrides can change encoding.
 
 <ChartExample id="heatmap-materials" />
 
 ## Keyboard and motion
 
-Tab enters the grid at one cell. Arrow keys move within the row and column bounds; Home and End move to the first and last cell of the current row. Ctrl+Home and Ctrl+End move to the matrix corners. Focus, hover and touch inspect the same exact value; Escape dismisses the tooltip, and Tab leaves the grid. The legend is a numeric key rather than a visibility control. This composition follows the [WAI-ARIA data grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/).
+Tab enters/leaves the grid; arrows move between cells. Home/End reach row ends; Ctrl+Home/End reach matrix corners. Escape dismisses inspection. See the [data grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/).
 
-`animate` reveals cells diagonally by opacity without changing their scale colors or geometry. Focus, pointer movement, input changes or resizing finish the entrance. Reduced motion skips it. `valueAnimation="shuffle"` separately rolls eligible numeric tooltip digits; assistive text always exposes the final value immediately, and reduced motion uses plain text.
+Entrance fades cells diagonally, preserving geometry and colors. Interaction, input changes or resize finish it; reduced motion skips it.
 
 ## API reference
 
-Heatmap components use native HTML elements and their public Kind contracts. Their context is independent of `Root` and Recharts. The focused props below cover the matrix composition; native attributes, refs and handlers remain available.
+Native HTML components with an independent Kind context; no `Root` or Recharts composition is needed.
 
 ### HeatmapChart
 
@@ -75,11 +75,11 @@ Produces the `HeatmapScale` passed to `HeatmapChart`.
 
 </div>
 
-The returned `color(value: number)` interpolates opaque hex colors and clamps finite values to the domain. It rejects nonfinite input. It does not infer the domain from data or generate categorical palettes.
+`color(value)` interpolates opaque hex colors and clamps to the explicit domain. Nonfinite values throw; data does not infer the scale or categorical palette.
 
 ### HeatmapGrid
 
-Renders a captioned native table with row/column headers, `role="grid"` and roving cell focus. Empty domains display an empty-state message. Wide matrices scroll horizontally.
+Captioned native table with row/column headers and roving grid focus. Empty domains show an empty state; wide matrices scroll horizontally.
 
 <div className="line-props-scroll" role="region" aria-label="HeatmapGrid props" tabIndex={0}>
 
@@ -93,11 +93,11 @@ Renders a captioned native table with row/column headers, `role="grid"` and rovi
 
 </div>
 
-`HeatmapCell` includes `row`, `column`, `rowIndex`, `columnIndex`, `value` and `sources` (all original records for that coordinate). The default `HeatmapCellContent` displays the formatted value with black or white text chosen from hex-fill luminance. See [native table semantics](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/table).
+Each `HeatmapCell` retains row/column identities, indices, value and every source record. See [native table semantics](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/table).
 
 ### HeatmapCellContent
 
-The default numeric cell renderer can also be composed inside a custom `Cell`. It chooses black or white text from the hex fill's luminance.
+Formats values and chooses black/white text from hex-fill luminance. Also usable inside a custom `Cell`.
 
 <div className="line-props-scroll" role="region" aria-label="HeatmapCellContent props" tabIndex={0}>
 
@@ -119,11 +119,13 @@ The default numeric cell renderer can also be composed inside a custom `Cell`. I
 
 </div>
 
-Uses the chart's scale and formatter for the ramp endpoints. Domains spanning negative and positive values include a positioned zero marker. The missing swatch uses `missingLabel`. No series toggle or categorical legend is provided.
+Shows scale endpoints, zero for signed domains and the `missingLabel` swatch. It is a numeric key, without series toggles.
 
 ### HeatmapTooltip
 
-An in-flow tooltip below the matrix, associated with the active cell through `aria-describedby`.
+In-flow inspection below the grid, linked to the active cell by `aria-describedby`. Focus, hover and touch inspect the same value.
+
+Shuffle affects numeric digits only; assistive text exposes the final value immediately. Reduced motion uses plain text.
 
 <div className="line-props-scroll" role="region" aria-label="HeatmapTooltip props" tabIndex={0}>
 
@@ -136,7 +138,7 @@ An in-flow tooltip below the matrix, associated with the active cell through `ar
 
 ### HeatmapDataTable
 
-A static native table using the same model, formatter and missing label. It has no inspection behavior; the consumer owns whether it is visible or visually hidden.
+Static table using the shared model and formatter. The consumer chooses visible or visually hidden presentation; these examples preserve every observation.
 
 <div className="line-props-scroll" role="region" aria-label="HeatmapDataTable props" tabIndex={0}>
 
@@ -148,4 +150,4 @@ A static native table using the same model, formatter and missing label. It has 
 
 ### createHeatmapModel
 
-Available for consumer-side inspection of the normalized matrix. It accepts the same `rows`, `columns`, `data` and `duplicates` options as `HeatmapChart`, returning ordered domains and a two-dimensional `cells` array. It fills missing coordinates with `null`, preserves every source record and validates domains, coordinates, duplicate policies and numeric values.
+Normalizes ordered domains into a two-dimensional cell array, filling missing coordinates with null and retaining source records. Accepts the chart’s rows, columns, data and duplicate policy; invalid input throws.
