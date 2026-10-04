@@ -1,19 +1,18 @@
 // Only host composition: all maintained behavior comes from the packed public exports.
 import * as Chart from "@kind-ui/charts";
-import { useState } from "react";
 import {
   CartesianGrid,
   Cell,
   LabelList,
-  ScatterChart as NativeChart,
-  Scatter,
   type ScatterShapeProps,
   Symbols,
-  type TooltipContentProps,
+  type TooltipRenderProps as TooltipContentProps,
   XAxis,
   YAxis,
   ZAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useState } from "react";
+import { ScatterChart as NativeChart, Scatter } from "recharts";
 
 const data = [
   { id: "origin", x: 0, y: 0, z: 0 },

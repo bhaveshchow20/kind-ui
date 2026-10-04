@@ -1,6 +1,6 @@
 import * as Chart from "@kind-ui/charts";
+import { CartesianGrid, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "@kind-ui/charts";
 import { type ReactNode, useId } from "react";
-import { CartesianGrid, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 export type AreaPoint = { period: string; value: number | null };
 /** A complete stack has numeric values for every series at each period. */
