@@ -110,6 +110,10 @@ try {
     `Named icon import must retain only the selected Lucide icon: ${bundledIcons.size}`,
   );
   await mkdir(join(scratch, "app"));
+  await writeFile(
+    join(scratch, "app/icon.svg"),
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="red"/></svg>',
+  );
   await writeFile(join(scratch, "app/charts.tsx"), '"use client";\n' + source);
   await writeFile(
     join(scratch, "app/layout.tsx"),
