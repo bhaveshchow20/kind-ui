@@ -7,7 +7,7 @@ description: Show response-time distributions with explicit numeric bins.
 
 ## Usage
 
-`binHistogram` assigns samples to explicit edges. `Root` supplies metadata; `ResponsiveContainer` sizes the plot. `HistogramChart` owns the numeric axes and reuses Bar entrance motion. Compose `HistogramSeries`, grid and tooltip inside it. The first Code tab contains the complete named component and dataset.
+`binHistogram` creates numeric bins. `Root` supplies metadata; `ResponsiveContainer` sizes the plot. `HistogramChart` owns axes and motion; compose `HistogramSeries`, grid and tooltip inside it.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -21,25 +21,25 @@ description: Show response-time distributions with explicit numeric bins.
 </Chart.Root>
 ```
 
-Bins include their lower edge and exclude their upper edge, except the final bin includes the final edge. An interior-edge sample goes into the bin on its right. Here, `200` is accepted and `260` is out of range. The result separately counts accepted, missing (`null` or `undefined`), nonfinite and out-of-range samples; no coercion or inferred edges occur.
+Bins include their lower edge; only the last bin includes its upper edge. Interior-edge samples go right. Accepted, missing, nonfinite and out-of-range samples are counted separately.
 
-Count height means observations per bin. These equal-width bins make heights easy to compare. Width is the numeric interval span, not an arbitrary category bar size.
+Count height shows observations; rectangle width is the numeric interval span.
 
 ## Unequal-width density
 
-The same samples use edges `[0, 25, 50, 100, 200]`. Wider intervals occupy more horizontal space. Density is `count / (accepted × bin width)`, in probability per millisecond. Rectangle areas sum to one for a nonempty sample; heights need not sum to one. Empty totals produce zero density. Discarded samples are excluded from normalization.
+Density is `count / (accepted × bin width)`. Nonempty rectangle areas sum to one; heights need not. Empty totals yield zero density, and discarded samples do not enter normalization.
 
 <ChartExample id="histogram-density" />
 
 ## Materials
 
-Plain, paper, clay and glow preserve each bin's numeric bounds. The selected finish drives the preview and complete source. A custom `shape`, `filter` or `style.filter` takes paint ownership.
+Choose plain, paper, clay or glow. Numeric bounds stay fixed; custom `shape`, `filter` or `style.filter` owns paint.
 
 <ChartExample id="histogram-materials" />
 
 ## API reference
 
-Histogram composes Kind metadata and native Recharts plot parts. It owns quantitative geometry; use `xAxisProps` and `yAxisProps` for tick presentation rather than adding category axes.
+Use `xAxisProps` and `yAxisProps` for tick presentation; Histogram owns quantitative axes and geometry.
 
 ### binHistogram
 
@@ -52,7 +52,9 @@ Histogram composes Kind metadata and native Recharts plot parts. It owns quantit
 
 </div>
 
-Returns `HistogramBinningResult`: `bins`, `accepted`, `missing`, `nonfinite` and `outOfRange`. Each `HistogramBin` has numeric `lower`, `upper` and `count`. Pre-aggregated bins may have gaps, but must be ordered, nonoverlapping and finite with positive finite widths; counts and their total must be nonnegative safe integers. `HistogramChart` validates these constraints.
+Returns `HistogramBinningResult`: `bins`, `accepted`, `missing`, `nonfinite` and `outOfRange`. Each bin has `lower`, `upper` and `count`. No coercion or edge inference occurs.
+
+Pre-aggregated bins may have gaps. Bounds must be ordered, nonoverlapping and finite with positive finite widths; counts and their total must be nonnegative safe integers.
 
 ### Root
 
@@ -83,7 +85,7 @@ Returns `HistogramBinningResult`: `bins`, `accepted`, `missing`, `nonfinite` and
 
 </div>
 
-Data, vertical layout, axis scales and bar spacing are owned by HistogramChart. See native [XAxis](https://recharts.github.io/en-US/api/XAxis/), [YAxis](https://recharts.github.io/en-US/api/YAxis/) and [BarChart](https://recharts.github.io/en-US/api/BarChart/) for inherited presentation options.
+Owns data, vertical layout, scales and spacing. See [XAxis](https://recharts.github.io/en-US/api/XAxis/), [YAxis](https://recharts.github.io/en-US/api/YAxis/) and [BarChart](https://recharts.github.io/en-US/api/BarChart/) for presentation options.
 
 ### HistogramSeries
 
@@ -99,7 +101,7 @@ Data, vertical layout, axis scales and bar spacing are owned by HistogramChart. 
 
 </div>
 
-Requires HistogramChart. Plain bins use square corners and zero minimum height. Native Cells and events remain available; stacking, labels, background, activeBar, bar sizing and axis identity are excluded from this public series contract. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
+Requires `HistogramChart`. Plain bins have square corners and no minimum height. Cells/events remain available; stacking, labels, background, activeBar, bar sizing and axis identity are excluded. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
 
 ### Tooltip
 
@@ -113,7 +115,7 @@ Requires HistogramChart. Plain bins use square corners and zero minimum height. 
 
 </div>
 
-Root formatters label count or density values. ArrowLeft and ArrowRight inspect bins; Escape dismisses inspection. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+Root formatters label count or density. ArrowLeft/ArrowRight inspect bins; Escape dismisses inspection. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
 
 ### CartesianGrid
 
