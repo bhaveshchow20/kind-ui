@@ -56,6 +56,7 @@ function Host() {
   const [small, setSmall] = useState(false);
   const [long, setLong] = useState(params.has("long"));
   const [serif, setSerif] = useState(params.has("serif"));
+  const [collapsed, setCollapsed] = useState(params.has("zero"));
   const data = useMemo(
     () =>
       updated
@@ -82,7 +83,7 @@ function Host() {
   );
   const yAxisProps = {
     width: params.has("fixed") ? 80 : "auto",
-    tick: { fontFamily: serif ? "serif" : "sans-serif" },
+    tick: { fontFamily: params.has("webfont") ? "Entrance Font" : serif ? "serif" : "sans-serif" },
     tickFormatter: (value: unknown) => (long ? `${value} fulfilled orders` : String(value)),
   } as const;
   const chartProps = { animate: animation, "aria-label": "Entrance proof" };
@@ -110,51 +111,54 @@ function Host() {
           ["Resize", () => setSmall(!small)],
           ["Labels", () => setLong(!long)],
           ["Font", () => setSerif(!serif)],
+          ["Expand", () => setCollapsed(false)],
         ] as const
       ).map(([label, onClick]) => (
         <button type="button" key={label} onClick={onClick}>
           {label}
         </button>
       ))}
-      {active && (
-        <Chart.Root key={replay} config={config} visibleSeries={shown ? visible : hidden}>
-          <Chart.ResponsiveContainer width="100%" height={240}>
-            {family === "histogram" ? (
-              <Chart.HistogramChart
-                {...chartProps}
-                bins={histogramBins}
-                measure="count"
-                yAxisProps={yAxisProps}
-              >
-                <Chart.HistogramSeries seriesKey="orders" />
-                <GeometryProbe />
-              </Chart.HistogramChart>
-            ) : family === "box" ? (
-              <Chart.BoxPlotChart {...chartProps} data={data}>
-                {axes}
-                <Chart.BoxPlotSeries dataKey="summary" seriesKey="orders" />
-                <GeometryProbe />
-              </Chart.BoxPlotChart>
-            ) : family === "waterfall" ? (
-              <Chart.WaterfallChart {...chartProps} data={bridge}>
-                {axes}
-                <Chart.WaterfallSeries seriesKey="orders" />
-                <GeometryProbe />
-              </Chart.WaterfallChart>
-            ) : (
-              <Chart.BarChart
-                {...chartProps}
-                data={data}
-                layout={horizontal ? "vertical" : "horizontal"}
-              >
-                {axes}
-                <Chart.BarSeries dataKey="orders" />
-                <GeometryProbe />
-              </Chart.BarChart>
-            )}
-          </Chart.ResponsiveContainer>
-        </Chart.Root>
-      )}
+      <div style={{ width: collapsed ? 0 : "100%" }}>
+        {active && (
+          <Chart.Root key={replay} config={config} visibleSeries={shown ? visible : hidden}>
+            <Chart.ResponsiveContainer width="100%" height={240}>
+              {family === "histogram" ? (
+                <Chart.HistogramChart
+                  {...chartProps}
+                  bins={histogramBins}
+                  measure="count"
+                  yAxisProps={yAxisProps}
+                >
+                  <Chart.HistogramSeries seriesKey="orders" />
+                  <GeometryProbe />
+                </Chart.HistogramChart>
+              ) : family === "box" ? (
+                <Chart.BoxPlotChart {...chartProps} data={data}>
+                  {axes}
+                  <Chart.BoxPlotSeries dataKey="summary" seriesKey="orders" />
+                  <GeometryProbe />
+                </Chart.BoxPlotChart>
+              ) : family === "waterfall" ? (
+                <Chart.WaterfallChart {...chartProps} data={bridge}>
+                  {axes}
+                  <Chart.WaterfallSeries seriesKey="orders" />
+                  <GeometryProbe />
+                </Chart.WaterfallChart>
+              ) : (
+                <Chart.BarChart
+                  {...chartProps}
+                  data={data}
+                  layout={horizontal ? "vertical" : "horizontal"}
+                >
+                  {axes}
+                  <Chart.BarSeries dataKey="orders" />
+                  <GeometryProbe />
+                </Chart.BarChart>
+              )}
+            </Chart.ResponsiveContainer>
+          </Chart.Root>
+        )}
+      </div>
     </main>
   );
 }

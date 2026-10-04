@@ -392,6 +392,10 @@ try {
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-bar");
   for (const file of ["entrance.tsx", "entrance.html"]) await copyFixture("bar", file);
+  await copyFile(
+    join(root, "node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2"),
+    join(consumer, "entrance-font.woff2"),
+  );
   await typecheck(["entrance.tsx"]);
   await production("entrance.html", "packed-bar-entrance");
   console.log(
