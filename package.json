@@ -15,7 +15,7 @@
     "typecheck": "npm run build",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "check": "npm run check:release && npm run lint && npm run test && npm run check:chart",
+    "check": "npm run check:ci && npm run check:release && npm run lint && npm run test && npm run check:chart",
     "check:package": "node scripts/check-package.mjs",
     "pack:artifact": "node scripts/check-package.mjs --keep-artifact",
     "test": "npm run build && node --test tests/chart.test.mjs tests/configured-line.test.mjs",
@@ -30,6 +30,7 @@
     "changeset": "changeset",
     "release:status": "changeset status",
     "release:version": "changeset version && npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
+    "check:ci": "node --test scripts/ci-workflow.test.mjs",
     "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs && node scripts/check-release-versioning.mjs"
   },
   "devDependencies": {

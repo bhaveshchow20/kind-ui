@@ -11,7 +11,9 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
+      fail-fast: false
       matrix:
         node: [22, 24]
     steps:
@@ -24,6 +26,7 @@ jobs:
           cache: npm
       - run: npm install --global npm@11.9.0
       - run: npm ci
+      - run: npm audit --audit-level=high --include=dev
       - run: npm exec playwright install -- --with-deps chromium
       - run: npm run check
         env:
@@ -43,6 +46,11 @@ jobs:
         if: always()
         with:
           name: chart-screenshots-node-${{ matrix.node }}
-          path: artifacts/chart-tests/**/*.png
+          path: |
+            artifacts/chart-tests/
+            artifacts/composition-tests/
+            artifacts/configured-line-tests/
+            artifacts/line-integration-tests/
+            artifacts/line-integrations/next-build.log
           if-no-files-found: error
           retention-days: 14
