@@ -42,6 +42,7 @@ test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a da
 
 test("direct and namespace imports expose the same public components", () => {
   assert.deepEqual(Object.keys(Chart).sort(), [
+    "ActivityRings",
     "AreaChart",
     "AreaRevealShape",
     "AreaSeries",
