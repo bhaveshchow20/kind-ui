@@ -125,6 +125,7 @@ export function ComponentPlayground({
             variant="ghost"
             size="sm"
             className="copy-prompt"
+            aria-label={status === "Prompt copied" ? "Copied" : "Copy prompt"}
             onClick={() => copy(promptFor(bundle, {}, location.origin, variant), "Prompt")}
           >
             {status === "Prompt copied" ? <Check size={14} /> : <Copy size={14} />}

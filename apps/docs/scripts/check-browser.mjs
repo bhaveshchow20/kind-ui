@@ -78,6 +78,8 @@ try {
   await page.getByRole("button", { name: "Toggle Theme", exact: false }).click();
   await page.waitForFunction(() => document.documentElement.classList.contains("dark"));
   await page.setViewportSize({ width: 320, height: 812 });
+  // The narrow layout hides visible labels; all five controls must stay named.
+  assert.equal(await page.getByRole("button", { name: "Copy prompt", exact: true }).count(), 5);
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "200%";
   });
