@@ -33,7 +33,17 @@ jobs:
         working-directory: apps/docs
       - run: npm audit --audit-level=high --include=dev
         working-directory: apps/docs
-      - run: npm run generate && npm run check:consumers && npm run build && npm run check
+      - run: |
+          mkdir -p artifacts
+          npm run generate
+          if npm run check:consumers > artifacts/consumers.log 2>&1; then
+            tail -n 12 artifacts/consumers.log
+          else
+            tail -n 100 artifacts/consumers.log
+            exit 1
+          fi
+          npm run build
+          npm run check
         working-directory: apps/docs
         env:
           KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
@@ -49,6 +59,7 @@ jobs:
         with:
           name: docs-verification
           path: |
+            apps/docs/artifacts/*.log
             apps/docs/artifacts/*-results.json
             apps/docs/artifacts/screenshots/*.png
           if-no-files-found: warn
