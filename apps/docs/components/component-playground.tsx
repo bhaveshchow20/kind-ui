@@ -158,7 +158,7 @@ export function ComponentPlayground({
         inert={tab !== "preview"}
         className="preview-panel"
       >
-        <div className="chart-example">
+        <div className="chart-example not-prose">
           {id === "area-curves" ? (
             <componentsArea.Curve curve={variant as "monotone" | "linear" | "stepAfter"} />
           ) : id === "area-materials" ? (

@@ -17,6 +17,7 @@ try {
   });
   for (const script of [
     "check-area-glass.mjs",
+    "check-docs-tooltips.mjs",
     "check-area-motion.mjs",
     "check-area-scroll.mjs",
     "check-area-tables.mjs",
