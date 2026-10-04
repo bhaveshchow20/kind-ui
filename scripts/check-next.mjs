@@ -136,6 +136,8 @@ try {
   const html = await response.text();
   assert.match(html, /Packed chart App Router consumer/);
   assert.match(html, /Tasks data/);
+  assert.match(html, /data-kind-ui="chart"/, "Server HTML must include the chart shell");
+  assert.match(html, /data-kind-ui="chart-legend"/, "Server HTML must render package content");
   browser = await chromium.launch(
     process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
   );
