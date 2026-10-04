@@ -38,23 +38,17 @@ jobs:
         working-directory: apps/docs
         run: |
           mkdir -p artifacts/heatmap-escape-diagnostic
-          set -o pipefail
-          {
-            npm run check:browser
-            node scripts/start-line-checks.mjs
-            node scripts/start-area-checks.mjs
-            node scripts/start-pie-checks.mjs
-            node scripts/start-radar-checks.mjs
-            node scripts/start-sankey-checks.mjs
-            node scripts/start-histogram-checks.mjs
-            node scripts/start-radial-checks.mjs
-            node scripts/start-waterfall-checks.mjs
-            node scripts/start-box-plot-checks.mjs
-            node scripts/start-combo-checks.mjs
-            node scripts/start-scatter-checks.mjs
-            node scripts/start-bar-checks.mjs
-            node scripts/check-heatmap-consumers.mjs
-          } 2>&1 | tee artifacts/heatmap-escape-diagnostic/prior-flow.log
+          result=0
+          for script in start-browser-check start-line-checks start-area-checks start-pie-checks start-radar-checks start-sankey-checks start-histogram-checks start-radial-checks start-waterfall-checks start-box-plot-checks start-combo-checks start-scatter-checks start-bar-checks check-heatmap-consumers; do
+            echo "CHECK $script" >> artifacts/heatmap-escape-diagnostic/prior-flow.log
+            if node "scripts/$script.mjs" >> artifacts/heatmap-escape-diagnostic/prior-flow.log 2>&1; then
+              echo "$script PASS" >> artifacts/heatmap-escape-diagnostic/prior-flow-status.txt
+            else
+              result=1
+              echo "$script FAIL" >> artifacts/heatmap-escape-diagnostic/prior-flow-status.txt
+            fi
+          done
+          echo "$result" > artifacts/heatmap-escape-diagnostic/prior-flow-exit-code.txt
       - name: Five unchanged reference checks and five bounded hidden checks
         working-directory: apps/docs
         run: |
@@ -75,7 +69,9 @@ jobs:
           grep -F 'locator.waitFor: Timeout 1000ms exceeded' artifacts/heatmap-escape-diagnostic/negative.log
       - name: Preserve repeated failure results
         working-directory: apps/docs
-        run: test "$(cat artifacts/heatmap-escape-diagnostic/repeated-exit-code.txt)" -eq 0
+        run: |
+          test "$(cat artifacts/heatmap-escape-diagnostic/prior-flow-exit-code.txt)" -eq 0
+          test "$(cat artifacts/heatmap-escape-diagnostic/repeated-exit-code.txt)" -eq 0
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
