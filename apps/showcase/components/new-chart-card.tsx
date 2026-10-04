@@ -39,6 +39,8 @@ function NewChart({
   const [distributionVisible, setDistributionVisible] = useState([
     r.family === "Histogram" ? "count" : "spread",
   ]);
+  const bins = useMemo(() => histogramBins(r.id), [r.id]);
+  const rows = useMemo(() => boxRows(r.id), [r.id]);
   const heat = useMemo(() => heatmapData(r.id), [r.id]);
   const water = useMemo(() => Chart.computeWaterfallData(waterfallEntries(r.id)), [r.id]);
   const flow = useMemo(() => sankeyData(r.id), [r.id]);
@@ -75,7 +77,6 @@ function NewChart({
   }
   if (r.family === "Histogram") {
     const density = r.id === "histogram-latency";
-    const bins = histogramBins(r.id);
     return (
       <Chart.Root
         className="chart-root"
@@ -133,7 +134,6 @@ function NewChart({
   }
   if (r.family === "Box Plot") {
     const horizontal = r.id === "box-regions";
-    const rows = boxRows(r.id);
     return (
       <Chart.Root
         className="chart-root"
