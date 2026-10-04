@@ -1,5 +1,6 @@
 interface ExampleBundle {
   id: string;
+  family: string;
   title?: string;
   files: Record<string, string>;
   variants?: Record<string, { label: string; source: string }>;

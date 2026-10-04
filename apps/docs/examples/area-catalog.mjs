@@ -51,3 +51,18 @@ export const areaVariants = {
     ],
   },
 };
+
+export const family = {
+  id: "area",
+  examples: [
+    {
+      id: "area",
+      title: "Area Chart",
+      notes: "A single area with complete monthly visitor data.",
+      acceptance: "Twelve monthly observations match the public source and accessible data table.",
+    },
+    ...areaExamples,
+  ],
+  dataLabels: areaDataLabels,
+  variants: areaVariants,
+};

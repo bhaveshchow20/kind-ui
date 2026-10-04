@@ -1,63 +1,17 @@
 "use client";
 import * as Select from "@radix-ui/react-select";
 import { Check, ChevronDown, Copy } from "lucide-react";
-import dynamic from "next/dynamic";
-import { memo, type ReactNode, useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 import { promptFor } from "@/lib/example-files.mjs";
+import { previews } from "./previews";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
-function Loading() {
-  return (
-    <p className="component-loading" role="status">
-      Loading chart…
-    </p>
-  );
-}
-const components = {
-  area: dynamic(() => import("@/examples/area/example").then((m) => memo(m.VisitorAreaChart)), {
-    loading: Loading,
-    ssr: false,
-  }),
-  "area-curves": dynamic(
-    () => import("@/examples/area-curves/example").then((m) => memo(m.VisitorAreaCurveChart)),
-    { loading: Loading, ssr: false },
-  ),
-  "area-stacked": dynamic(
-    () => import("@/examples/area-stacked/example").then((m) => memo(m.DeviceAreaChart)),
-    { loading: Loading, ssr: false },
-  ),
-  "area-materials": dynamic(
-    () => import("@/examples/area-materials/example").then((m) => memo(m.MaterialAreaChart)),
-    { loading: Loading, ssr: false },
-  ),
-  line: dynamic(() => import("@/examples/line/example").then((m) => memo(m.VisitorTrendChart)), {
-    loading: Loading,
-    ssr: false,
-  }),
-  "line-smooth": dynamic(
-    () => import("@/examples/line-smooth/example").then((m) => memo(m.VisitorCurveChart)),
-    { loading: Loading, ssr: false },
-  ),
-  "line-comparison": dynamic(
-    () => import("@/examples/line-comparison/example").then((m) => memo(m.RevenueComparisonChart)),
-    { loading: Loading, ssr: false },
-  ),
-  "line-markers": dynamic(
-    () => import("@/examples/line-markers/example").then((m) => memo(m.ResponseTimeChart)),
-    { loading: Loading, ssr: false },
-  ),
-  "line-paper": dynamic(
-    () => import("@/examples/line-paper/example").then((m) => memo(m.MaterialLineChart)),
-    { loading: Loading, ssr: false },
-  ),
-};
-const componentsLine = { Curve: components["line-smooth"], Material: components["line-paper"] };
-const componentsArea = { Curve: components["area-curves"], Material: components["area-materials"] };
-export type ComponentId = keyof typeof components;
+export type ComponentId = keyof typeof previews;
 export interface ComponentBundle {
   id: ComponentId;
   title: string;
+  family: string;
   files: Record<string, string>;
   packageStatus: string;
   localPackage: boolean;
@@ -86,7 +40,7 @@ export function ComponentPlayground({
   const controlId = useId();
   const [status, setStatus] = useState("");
   const [tab, setTab] = useState("preview");
-  const Preview = components[id];
+  const Preview = previews[id];
   const dataAlternative = bundle.dataAlternative;
   async function copy(text: string, label: string) {
     try {
@@ -102,7 +56,7 @@ export function ComponentPlayground({
       onValueChange={setTab}
       className="component-workbench line-workbench"
       data-component={id}
-      id={id !== "line" && id !== "area" ? `example-${id}` : "component-preview"}
+      id={id !== bundle.family ? `example-${id}` : "component-preview"}
     >
       <div className="playground-header">
         <TabsList aria-label={`${bundle.title} component`} className="preview-tabs">
@@ -159,17 +113,7 @@ export function ComponentPlayground({
         className="preview-panel"
       >
         <div className="chart-example not-prose">
-          {id === "area-curves" ? (
-            <componentsArea.Curve curve={variant as "monotone" | "linear" | "stepAfter"} />
-          ) : id === "area-materials" ? (
-            <componentsArea.Material material={variant as "plain" | "paper" | "clay" | "glow"} />
-          ) : id === "line-smooth" ? (
-            <componentsLine.Curve curve={variant as "monotone" | "linear" | "stepAfter"} />
-          ) : id === "line-paper" ? (
-            <componentsLine.Material material={variant as "plain" | "paper" | "clay" | "glow"} />
-          ) : (
-            <Preview />
-          )}
+          <Preview variant={variant} />
         </div>
         {dataAlternative && (
           <table className="sr-only" aria-label={`${bundle.title} data`}>
@@ -184,8 +128,8 @@ export function ComponentPlayground({
               </tr>
             </thead>
             <tbody>
-              {dataAlternative.rows.map((row) => (
-                <tr key={row.period}>
+              {dataAlternative.rows.map((row, index) => (
+                <tr key={index}>
                   {Object.keys(dataAlternative.columns).map((key, index) =>
                     index === 0 ? (
                       <th scope="row" key={key}>
