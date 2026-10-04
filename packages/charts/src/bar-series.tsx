@@ -9,16 +9,18 @@ import {
   useActiveTooltipDataPoints,
   useActiveTooltipLabel,
   useChartLayout,
+  useIsTooltipActive,
   usePlotArea,
   useXAxisDomain,
   useXAxisScale,
   useYAxisDomain,
   useYAxisScale,
 } from "recharts";
+import { useBarCategoryHover } from "./bar-category.js";
 import { BarMotion } from "./bar-chart.js";
 import { type BarMaterial, BarMaterialFilter } from "./bar-material.js";
 import { useChart } from "./chart-context.js";
-import { EmphasisMark } from "./emphasis.js";
+import { useEmphasis } from "./emphasis.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 
 export type BarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
@@ -231,8 +233,9 @@ function CategoryBar({
   emphasisKey: BarSeriesProps["emphasisKey"];
   axisId: BarSeriesProps["xAxisId"];
 }) {
-  const { emphasisScope } = useLineInteraction();
+  const { emphasisScope, pointer } = useLineInteraction();
   const keyboard = useChartKeyboard();
+  const hover = useBarCategoryHover();
   const layout = useChartLayout();
   const xDomain = useXAxisDomain(axisId);
   const yDomain = useYAxisDomain(axisId);
@@ -243,19 +246,30 @@ function CategoryBar({
     emphasisKey !== undefined ? semantic !== undefined : typeof semantic === "string";
   const activeLabel = useActiveTooltipLabel();
   const activePoints = useActiveTooltipDataPoints();
-  const active = keyboard && (activePoints?.includes(props.payload) || activeLabel === semantic);
+  const nativeActive = useIsTooltipActive();
+  const active =
+    nativeActive && (activePoints?.includes(props.payload) || activeLabel === semantic);
+  const emphasis = useEmphasis(
+    {
+      kind: "category",
+      key: String(semantic),
+      scope: `${emphasisScope}/${String(axisId ?? 0)}`,
+      seriesKey,
+    },
+    eligible,
+  );
+  // Native axis inspection owns the category, including whitespace above and between bars.
+  // A painted mark's leave must not clear a category while the cursor remains in its band.
+  useLayoutEffect(() => {
+    if (active && keyboard) emphasis.enter("keyboard");
+    if (active && pointer && !keyboard && hover) emphasis.enter("pointer");
+    else if (!hover || (pointer && !active)) emphasis.leave("pointer");
+  }, [active, keyboard, pointer, hover, emphasis.enter, emphasis.leave]);
   return (
-    <EmphasisMark
-      enabled={eligible}
-      target={{
-        kind: "category",
-        key: String(semantic),
-        scope: `${emphasisScope}/${String(axisId ?? 0)}`,
-        seriesKey,
-      }}
-      keyboardActive={Boolean(active)}
-    >
-      <Rectangle {...props} />
-    </EmphasisMark>
+    <g data-kind-ui="emphasis-mark" data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
+      <g data-kind-ui="emphasis-paint" style={{ opacity: emphasis.factor }}>
+        <Rectangle {...props} />
+      </g>
+    </g>
   );
 }
