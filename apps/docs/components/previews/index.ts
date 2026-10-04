@@ -1,5 +1,6 @@
 "use client";
 import { previews as area } from "./area";
+import { previews as bar } from "./bar";
 import { previews as boxPlot } from "./box-plot";
 import { previews as combo } from "./combo";
 import { previews as histogram } from "./histogram";
@@ -13,6 +14,7 @@ import { previews as waterfall } from "./waterfall";
 export const previews = {
   ...line,
   ...area,
+  ...bar,
   ...combo,
   ...pie,
   ...radar,
