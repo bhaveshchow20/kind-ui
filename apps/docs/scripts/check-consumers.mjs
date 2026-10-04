@@ -6,6 +6,8 @@ const bundles = {
   ...JSON.parse(readFileSync("generated/examples.json", "utf8")),
   ...JSON.parse(readFileSync("generated/line-examples.json", "utf8")),
 };
+const areaBundles = JSON.parse(readFileSync("generated/area-examples.json", "utf8"));
+Object.assign(bundles, areaBundles);
 const root = path.resolve("artifacts/consumer");
 mkdirSync(root, { recursive: true });
 const first = Object.values(bundles)[0];
@@ -55,12 +57,46 @@ for (const bundle of consumers) {
     writeFileSync(target, body);
   }
   execFileSync("npm", ["run", "build"], { cwd: root, stdio: "inherit" });
+  writeFileSync(
+    path.join(root, "tsconfig.nodenext.json"),
+    JSON.stringify({
+      extends: "./tsconfig.json",
+      compilerOptions: {
+        module: "NodeNext",
+        moduleResolution: "NodeNext",
+        skipLibCheck: false,
+        types: ["react", "react-dom"],
+      },
+      include: ["src/examples/**/*.tsx"],
+    }),
+  );
+  execFileSync("npm", ["exec", "tsc", "--", "-p", "tsconfig.nodenext.json"], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  execFileSync(
+    "npm",
+    [
+      "exec",
+      "tsc",
+      "--",
+      "-p",
+      "tsconfig.nodenext.json",
+      "--module",
+      "ESNext",
+      "--moduleResolution",
+      "Bundler",
+    ],
+    { cwd: root, stdio: "inherit" },
+  );
   evidence.push({
     id: bundle.id,
     status: "passed",
     package: installed.version,
     source: "generated complete consumer files",
     workspaceImports: false,
+    declarationModes: ["NodeNext", "Bundler"],
+    skipLibCheck: false,
   });
 }
 writeFileSync("artifacts/consumer-results.json", JSON.stringify(evidence, null, 2) + "\n");

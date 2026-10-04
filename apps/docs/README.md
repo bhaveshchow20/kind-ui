@@ -17,9 +17,9 @@ When the tarball changes, delete only this app's `examples/shared/consumer-packa
 
 ## Canonical examples
 
-Only Line is published in this PR. Five `examples/<id>/example.tsx` sources drive the actual previews and complete consumer files; curve and material choices use the same selected source in Code and Copy prompt. The generator extracts literal defaults without executing source and produces consumer packages with public imports only. The selected source feeds code and compact prompts. Usage shows integration with the included example; Code shows complete consumer source, not chart implementation internals.
+Line and Area are documented. Five Line and four Area `examples/<id>/example.tsx` sources drive the actual previews and complete consumer files; curve and material choices use the same selected source in Code and Copy prompt. The generator extracts literal defaults without executing source and produces consumer packages with public imports only. The selected source feeds code and compact prompts. Usage shows integration with the included example; Code shows complete consumer source, not chart implementation internals.
 
-`lib/public-types.ts` selects focused public declaration contracts for generated tables; engine-native props remain documented through Recharts. Content is grouped into Start, Concepts, Components (Line only), Guides and Agents. `public/AGENTS.md`, generated Markdown, llms.txt and llms-full.txt are synchronized with package provenance.
+`lib/public-types.ts` selects focused public declaration contracts for generated tables; engine-native props remain documented through Recharts. Content is grouped into Start, Concepts, Components (Line and Area), Guides and Agents. `public/AGENTS.md`, generated Markdown, llms.txt and llms-full.txt are synchronized with package provenance.
 
 ## Verification and deployment
 
@@ -28,3 +28,5 @@ The root guarded tarball gate verifies runtime/declarations/CSS/license and isol
 Native Sites hosting owns only the new owner-private docs project. `snapshot:site -- /absolute/generated/site/checkout` copies static output and provenance while preserving its hosting project ID. Use the official Sites workflow to commit/push/package the snapshot and deploy that exact version privately. Never run these scripts against the existing showcase Site.
 
 MIT for original contributions; see `THIRD_PARTY_NOTICES.md` for dependencies and reference provenance. The validated private 0.0.0 tarball is retained solely as the explicitly requested reproducible documentation pin, alongside its source and checksum provenance. Do not commit generated output, screenshots, tokens, caches or node_modules.
+
+Area keeps explicit Root + ResponsiveContainer + AreaChart composition and consumer-owned legend selection. The pinned PR57 artifact supports Area motion, stacking and all four materials; provenance stays unchanged. Area browser checks run through `node scripts/start-area-checks.mjs` and record responsive, selected-source, keyboard, motion and scroll evidence.

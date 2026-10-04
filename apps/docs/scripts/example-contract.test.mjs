@@ -7,12 +7,12 @@ import { filesFor, promptFor } from "../lib/example-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
-test("only the published Line component has a complete public consumer", () => {
+test("only the published Line and Area components has a complete public consumer", () => {
   assert.deepEqual(
     examples.map((example) => example.id),
-    ["line"],
+    ["line", "area"],
   );
-  assert.deepEqual(Object.keys(bundles), ["line"]);
+  assert.deepEqual(Object.keys(bundles), ["line", "area"]);
   const bundle = bundles.line;
   assert.match(bundle.files["src/main.tsx"], /@kind-ui\/charts\/styles\.css/);
   const manifest = JSON.parse(bundle.files["package.json"]);
@@ -73,4 +73,32 @@ test("Line variant sources match selected public defaults without runtime compil
       );
     }
   }
+});
+
+test("Area consumers preserve explicit composition and consumer-owned stacked visibility", () => {
+  const areas = JSON.parse(readFileSync("generated/area-examples.json", "utf8"));
+  assert.deepEqual(Object.keys(areas), ["area", "area-curves", "area-stacked", "area-materials"]);
+  for (const bundle of Object.values(areas)) {
+    const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
+    assert.match(source, /"use client"/);
+    assert.match(source, /satisfies Chart.SeriesConfig/);
+    assert.match(source, /<Chart.Root\s+config=\{config\}/);
+    assert.match(source, /<Chart.ResponsiveContainer width="100%" height=\{280\}>/);
+    assert.match(source, /<Chart.AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
+    assert.match(source, /<Chart.AreaSeries/);
+    assert.equal(bundle.dataAlternative.rows.length, 12);
+    assert.ok(!/settings|controls|<Chart.AreaChart[^>]*config=/s.test(source));
+    assert.ok(promptFor(bundle, {}, "https://docs.example").includes("/docs/components/area/"));
+    for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
+      assert.equal(
+        filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
+        variant.source,
+      );
+      assert.ok(variant.source.includes(`${bundle.variantControl.toLowerCase()} = "${value}"`));
+    }
+  }
+  assert.match(
+    areas["area-stacked"].files["src/examples/area-stacked/example.tsx"],
+    /onVisibleSeriesChange={setVisibleSeries}/,
+  );
 });
