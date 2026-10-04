@@ -9,6 +9,7 @@
     "radar",
     "radial",
     "scatter",
+    "heatmap",
     "waterfall",
     "sankey",
     "histogram",
