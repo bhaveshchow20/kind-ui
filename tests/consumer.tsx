@@ -224,3 +224,38 @@ const invalidLegendRenderer: SeriesConfig = {
 };
 void invalidLegendShape;
 void invalidLegendRenderer;
+
+export function CompleteNamespaceChart() {
+  return (
+    <Chart.Root config={{ count: { label: "Count", color: "#4055ee" } }}>
+      <Chart.ResponsiveContainer width="100%" height={240}>
+        <Chart.LineChart
+          data={[{ month: "Jan", count: 0 }]}
+          animate
+          accessibilityLayer
+          aria-label="Count by month"
+        >
+          <Chart.CartesianGrid vertical={false} />
+          <Chart.XAxis dataKey="month" />
+          <Chart.YAxis />
+          <Chart.ReferenceLine y={0} />
+          <Chart.LineSeries dataKey="count" />
+          <Chart.Tooltip />
+        </Chart.LineChart>
+      </Chart.ResponsiveContainer>
+      <Chart.Legend />
+    </Chart.Root>
+  );
+}
+
+const clockwisePie = {
+  animate: true,
+  animationDirection: "clockwise",
+} satisfies Chart.PieChartProps;
+const anticlockwisePie = {
+  animate: { revealDurationMs: 600 },
+  animationDirection: "anticlockwise",
+} satisfies Chart.PieChartProps;
+// @ts-expect-error Entrance direction has two explicit physical sweep values.
+const invalidPieDirection = { animationDirection: "reverse" } satisfies Chart.PieChartProps;
+void [clockwisePie, anticlockwisePie, invalidPieDirection];

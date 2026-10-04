@@ -1,0 +1,24 @@
+---
+title: Composition
+description: Keep Line context, plot parts and application data explicit.
+---
+
+## Ownership
+
+| Responsibility | Owner |
+| --- | --- |
+| Data, units, domains and application state | Application |
+| Native plot geometry and axis semantics | Recharts |
+| Chart context, configured defaults, responsive sizing, series, legend and tooltip presentation | Kind UI |
+
+Configured `LineChart` owns its `Root`. Pass `data` and `config`, then compose the exported grid, axes, `LineSeries` and `Tooltip` as children. `legend={{}}` enables the internally positioned legend. Do not add another `Root` around configured `LineChart`.
+
+Omit explicit children and pass `xDataKey` to use generated parts. Without `config`, the legacy `Root` + `LineChart` composition remains available. See the [Line API](/docs/components/line/#api-reference) for these two modes and their defaults.
+
+## Dimensions and tokens
+
+Give the chart measurable space. Configured `LineChart` defaults to full width and 280px height, with dimensions overridable by props and styles. The package stylesheet uses scoped config colors and application tokens such as `--foreground`, `--card`, `--border` and `--muted-foreground`; the complete consumer includes a stylesheet defining them.
+
+## Motion and access
+
+Configured Line defaults to maintained motion and respects reduced-motion preferences; `animate={false}` disables it. Provide an accessible name, meaningful axes/units and a [complete data alternative](/docs/guides/accessibility/). Custom shapes, filters and renderers retain their own behavior and styling. Materials decorate lines without changing data or geometry.

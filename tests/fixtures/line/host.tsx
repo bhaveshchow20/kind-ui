@@ -1,16 +1,17 @@
 // Host-only fixture: chart data, controls and engine extensions. No chart implementation.
 import * as Static from "@kind-ui/charts";
-import { type CSSProperties, useCallback, useState } from "react";
-import type { DotProps, LineDrawShapeProps } from "recharts";
 import {
   CartesianGrid,
   Curve,
+  type DotProps,
   LabelList,
+  type LineDrawShapeProps,
   ReferenceLine,
   ResponsiveContainer,
   XAxis,
   YAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { type CSSProperties, useCallback, useState } from "react";
 
 const data = [
   { time: "A", value: 5, other: 8 },

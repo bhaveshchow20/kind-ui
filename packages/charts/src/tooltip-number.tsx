@@ -15,8 +15,10 @@ const reel = Array.from({ length: 30 }, (_, index) => index);
 
 // Keep a bounded repeating reel. Interrupted transitions start at the currently painted digit.
 function Digit({ digit }: { digit: number }) {
-  const position = useMotionValue(10);
-  const y = useTransform(position, (value) => `${-value}em`);
+  // Newly opened tooltips should paint their actual value immediately.
+  // Subsequent value updates still animate from the painted digit.
+  const position = useMotionValue(digit + 10);
+  const y = useTransform(position, (value) => `${-value}lh`);
   useLayoutEffect(() => {
     const current = position.get();
     const target = [digit, digit + 10, digit + 20].reduce((closest, next) =>
@@ -47,20 +49,17 @@ function RollingNumber({ text }: { text: string }) {
   useLayoutEffect(() => {
     const node = final.current;
     if (!node) return;
-    let controls: ReturnType<typeof animate> | undefined;
     const measure = () => {
       const next = node.getBoundingClientRect().width;
       if (next <= widest.current) return;
-      controls?.stop();
-      if (widest.current === 0) width.set(next);
-      else controls = animate(width, next, { duration: 0.16, ease: "easeOut" });
+      // Retain the widest value without revealing it through a clipping width.
+      width.set(next);
       widest.current = next;
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => {
-      controls?.stop();
       observer.disconnect();
     };
   }, [width]);

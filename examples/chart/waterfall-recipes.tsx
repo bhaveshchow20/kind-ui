@@ -1,5 +1,4 @@
 import * as Chart from "@kind-ui/charts";
-import { useId } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -8,7 +7,8 @@ import {
   ResponsiveContainer,
   XAxis,
   YAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useId } from "react";
 
 export const waterfallSample: Chart.WaterfallEntry[] = [
   { id: "opening", label: "Opening", kind: "start", value: 80 },

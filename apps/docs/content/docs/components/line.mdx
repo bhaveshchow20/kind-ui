@@ -1,0 +1,223 @@
+---
+title: Line Chart
+description: Compose a line chart with axes, lines and tooltips.
+---
+
+<LineExample id="line" />
+
+## Usage
+
+`LineChart` owns the chart context, responsive sizing and configured defaults. Pass `data` and `config`, then compose the exported plot parts as children. The first Code tab includes the complete component and dataset.
+
+`legend={{}}` enables the internally positioned `Chart.Legend`; `LineChart` owns its context and placement. The package is [private and unpublished](/docs/guides/release/).
+
+```tsx title="Imports"
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+```
+
+```tsx title="Composition"
+<Chart.LineChart data={data} config={config} legend={{}} aria-label="Monthly visitors">
+  <Chart.CartesianGrid vertical={false} />
+  <Chart.XAxis dataKey="period" />
+  <Chart.YAxis />
+  <Chart.LineSeries dataKey="visitors" type="monotone" />
+  <Chart.Tooltip />
+</Chart.LineChart>
+```
+
+The grid guides comparison, axes label the scale, `LineSeries` draws the values, and `Tooltip` shows the inspected point. Omit explicit children and pass `xDataKey="period"` to use generated parts.
+
+## Curve types
+
+Choose smooth, linear or step-after interpolation. The code follows the selected curve.
+
+<LineExample id="line-smooth" />
+
+## Multiple series
+
+Compare revenue with a dashed target. Use the legend to hide either series.
+
+<LineExample id="line-comparison" />
+
+## Dots and labels
+
+Explicit children add diamond markers and labels. `LineChart` still owns sizing, visibility and motion.
+
+<LineExample id="line-markers" />
+
+## Materials
+
+Choose plain, paper, clay or glow.
+
+<LineExample id="line-paper" />
+
+## API reference
+
+Passing `config` enables the defaults below. Omit `config` for the existing `Root` + `LineChart` composition.
+
+### LineChart
+
+Configured `LineChart` owns its `Root`; do not wrap it in another one. Each config key generates a series unless you provide `series` or explicit children.
+
+<div className="line-props-scroll" role="region" aria-label="LineChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `readonly Row[]` | Required | Observations to plot. |
+| `config` | `SeriesConfig` | Required in configured mode | Series labels, colors and optional value formatters. |
+| `xDataKey` | `DataKey<Row>` | Required with generated parts | Field or accessor for x-axis labels. Omit with explicit children. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. Keyboard inspection instructions are provided. |
+| `height` / `width` | Native chart dimensions | `280px` / `100%` | Responsive plot dimensions; `style` and `className` can also override sizing. |
+| `curve` | Recharts curve type | `"monotone"` | Curve for generated series; use `"linear"` or `"stepAfter"` here. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Finish for generated series, including `"paper"`. |
+| `series` | `ConfiguredLineSeries<Row>[]` | Config keys | Per-series props; each entry needs `dataKey` and a unique `seriesKey` in config. |
+| `xAxis` / `yAxis` / `grid` | Native props or `false` | Styled axes and horizontal grid | Override generated parts or hide them. |
+| `tooltip` / `legend` | Kind props or `false` | Enabled with generated parts | Override or hide the tooltip and legend. Explicit children need `legend={{}}` to add a legend. |
+| `animate` | `boolean` or `LineAnimation` | `true` configured; `false` legacy | Entrance and emphasis motion; respects reduced motion. |
+| `defaultVisibleSeries` | `readonly string[]` | All series | Initial uncontrolled selection. Legend toggles update it automatically. |
+| `visibleSeries` / `onVisibleSeriesChange` | `readonly string[]` / callback | Uncontrolled | Provide both for controlled toggles. Without a callback, controlled visibility is read-only. |
+| `children` | `ReactNode` | Generated parts | Explicit children replace the plot parts, including `null` or an empty fragment. |
+
+</div>
+
+With explicit children, omit `xDataKey`, `curve`, `material`, `series` and generated-part options. Keep visibility mode stable or remount to change it. See [Recharts LineChart](https://recharts.github.io/en-US/api/LineChart/) for native plot props.
+
+### Root
+
+Use `Root` only with legacy explicit composition. Configured `LineChart` creates it internally; `rootProps` can style that wrapper.
+
+<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Metadata shared by series, tooltip and legend. |
+| `visibleSeries` | `readonly string[]` | All series | Series to display. |
+| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Pair with `visibleSeries` for legacy legend toggles. |
+
+</div>
+
+### LineSeries
+
+Use `LineSeries` inside explicit children, or pass its props in the configured `series` array. String `dataKey` values identify their config entry; `seriesKey` supplies a separate identity for accessor or numeric keys.
+
+<div className="line-props-scroll" role="region" aria-label="LineSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `DataKey<Row>` | Required | Value field or accessor. |
+| `seriesKey` | `string` | String `dataKey` | Config and visibility identity; required in a `series` array. |
+| `type` | Recharts curve type | `"linear"` explicit; `"monotone"` generated | Curve for this line. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Line finish; custom `shape` or `filter` takes precedence. |
+| `dot` | Native dot props or renderer | `true` explicit; radius `2.5` generated | Point markers; use `false` to hide them. |
+| `strokeWidth` / `strokeDasharray` | `number` / `string` | Width `1` explicit / `2` generated; no dashes | Stroke weight and dash pattern. |
+
+</div>
+
+Missing values remain gaps unless `connectNulls` is enabled. See [Recharts Line](https://recharts.github.io/en-US/api/Line/) for native marks and [material support](/docs/guides/materials/) for finishes.
+
+### Legend
+
+The configured legend toggles series automatically. Use `legend` props to customize it; explicit children need `legend={{}}` to show it.
+
+<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `hideIcon` | `boolean` | `false` | Use swatches instead of configured icons. |
+| `emphasis` | `"none"` or `"series"` | `"none"` | Emphasize a series on hover or focus. |
+
+</div>
+
+### Tooltip
+
+Generated by default. Use `tooltip` props to customize it, or place `Tooltip` inside explicit children. Kind supplies labels, formatters and bounded positioning.
+
+<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `cursor` | Native cursor props or renderer | `false` | Optional inspection guide. |
+| `maxWidth` | `number` | `180` | Tooltip width bound in pixels. |
+
+</div>
+
+Hidden series are excluded; inspection does not automatically emphasize a line category. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/) for native options.
+
+### XAxis
+
+Override the generated axis through `xAxis`, or compose the public `XAxis` with explicit children. It retains Recharts semantics.
+
+<div className="line-props-scroll" role="region" aria-label="XAxis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `DataKey<Row>` | Configured `xDataKey` | Category label field. |
+| `axisLine` / `tickLine` | Native line props | `false` generated | Axis and tick strokes. |
+| `tickMargin` | `number` | `5` | Gap between plot and labels; shown charts use `12`. |
+
+</div>
+
+See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/).
+
+### YAxis
+
+Override the generated scale through `yAxis`, or compose `YAxis` with explicit children. The revenue chart uses `tickFormatter`.
+
+<div className="line-props-scroll" role="region" aria-label="YAxis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `domain` | Native domain | `[0, "auto"]` | Numeric scale bounds. |
+| `tickFormatter` | `function` | — | Format axis labels without changing data. |
+| `axisLine` / `tickLine` | Native line props | `false` generated | Axis and tick strokes. |
+| `tickMargin` | `number` | `5` | Gap between plot and labels; shown charts use `12`. |
+
+</div>
+
+See [Recharts YAxis](https://recharts.github.io/en-US/api/YAxis/).
+
+### CartesianGrid
+
+Use `grid` props for generated scale guides, or compose `CartesianGrid` with explicit children.
+
+<div className="line-props-scroll" role="region" aria-label="CartesianGrid props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `vertical` | `boolean` | `false` generated | Vertical scale guides. |
+| `strokeDasharray` | `string` | `"3 3"` generated | Guide dash pattern. |
+
+</div>
+
+See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
+
+### ResponsiveContainer
+
+Configured `LineChart` handles responsive sizing. Use `ResponsiveContainer` when owning layout in legacy composition.
+
+<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` / `height` | `number` or percentage | `"100%"` | Dimensions relative to a sized parent. |
+
+</div>
+
+See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
+
+### LabelList
+
+Nest `LabelList` inside an explicit `LineSeries` to label values, as in Dots and labels.
+
+<div className="line-props-scroll" role="region" aria-label="LabelList props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `DataKey<Row>` | — | Value to label. |
+| `position` | Native label position | — | Placement, such as `"top"`. |
+| `offset` | `number` | `5` | Distance from the point in pixels. |
+
+</div>
+
+See [Recharts LabelList](https://recharts.github.io/en-US/api/LabelList/) for custom label content.

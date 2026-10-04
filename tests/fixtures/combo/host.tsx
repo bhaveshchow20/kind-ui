@@ -1,7 +1,8 @@
 // Public-only host proof; native marks are a geometry oracle, not copied implementation.
 import * as Chart from "@kind-ui/charts";
+import { ReferenceLine, XAxis, YAxis } from "@kind-ui/charts";
 import { createRef, useState } from "react";
-import { Area, Bar, ComposedChart, Line, ReferenceLine, XAxis, YAxis } from "recharts";
+import { Area, Bar, ComposedChart, Line } from "recharts";
 
 const points = [
   { category: "A", bar: 8, stacked: 4, area: 6, line: 40 },

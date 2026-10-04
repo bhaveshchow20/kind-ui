@@ -1,6 +1,7 @@
 import * as Chart from "@kind-ui/charts";
+import { Cell, ResponsiveContainer, XAxis, YAxis } from "@kind-ui/charts";
 import { useState } from "react";
-import { Bar, Cell, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Bar } from "recharts";
 import { useReducedMotionPreference } from "./use-reduced-motion.js";
 
 function TaskIcon() {

@@ -1,11 +1,13 @@
 "use client";
 
-import { type SVGProps, useId } from "react";
+import { motion, useMotionValue, useTransform } from "motion/react";
+import { type SVGProps, use, useId, useLayoutEffect, useRef, useState } from "react";
 import type {
   SankeyLinkProps as NativeLinkProps,
   SankeyNodeProps as NativeNodeProps,
 } from "recharts";
 
+import { SankeyMotion } from "./sankey-chart.js";
 import { type SankeyFinish, SankeyFinishFilter } from "./sankey-finish.js";
 
 export type SankeyMaterial = "solid" | "gradient";
@@ -42,6 +44,33 @@ export function SankeyLink({
   ...presentation
 }: SankeyLinkProps) {
   const id = `sankey-${useId().replace(/:/g, "")}`;
+  const { reveal, progress, width } = use(SankeyMotion);
+  const settled = useMotionValue(1);
+  const delay = Math.max(0, Math.min(1, sourceX / Math.max(1, width))) * 0.55;
+  const dash = useTransform(
+    progress ?? settled,
+    (value) => `${Math.max(0, Math.min(1, (value - delay) / 0.45))} 1`,
+  );
+  const native = useRef<SVGGElement>(null);
+  const [transformed, setTransformed] = useState<boolean>();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: consumer styles/classes can own transforms.
+  useLayoutEffect(() => {
+    const path = native.current?.querySelector("path:not([data-kind-ui])");
+    if (!path) return;
+    const css = getComputedStyle(path);
+    setTransformed(
+      css.transform !== "none" ||
+        css.translate !== "none" ||
+        css.rotate !== "none" ||
+        css.scale !== "none",
+    );
+  }, [pathProps, presentation.className, presentation.style, presentation.transform]);
+  const mask =
+    reveal &&
+    transformed === false &&
+    presentation.transform === undefined &&
+    pathProps?.transform === undefined;
+  const d = `M${sourceX},${sourceY}C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`;
   const finished =
     finish !== "plain" &&
     presentation.filter == null &&
@@ -59,7 +88,27 @@ export function SankeyLink({
     height: Math.abs(targetY - sourceY) + pad * 2,
   };
   return (
-    <g>
+    <g ref={native} mask={mask ? `url(#${id}-entrance)` : undefined}>
+      {mask && (
+        <defs>
+          <mask
+            id={`${id}-entrance`}
+            maskUnits="userSpaceOnUse"
+            {...bounds}
+            style={{ maskType: "alpha" }}
+          >
+            <motion.path
+              data-kind-ui="sankey-link-entrance"
+              d={d}
+              fill="none"
+              stroke="white"
+              strokeWidth={linkWidth + 6}
+              pathLength={1}
+              strokeDasharray={dash}
+            />
+          </mask>
+        </defs>
+      )}
       {finished && (
         <defs>
           <SankeyFinishFilter
@@ -91,7 +140,7 @@ export function SankeyLink({
         filter={
           pathProps?.filter ?? presentation.filter ?? (finished ? `url(#${id}-finish)` : undefined)
         }
-        d={`M${sourceX},${sourceY}C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`}
+        d={d}
         fill="none"
         stroke={material === "gradient" ? `url(#${id})` : color}
         strokeWidth={linkWidth}

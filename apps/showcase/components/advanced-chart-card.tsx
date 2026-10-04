@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import * as Recharts from "recharts";
 import { Check, Copy } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
@@ -25,7 +24,7 @@ export { advancedRecipes } from "@/lib/advanced-chart-recipes";
 function formatAdvancedValue(id: string, value: unknown) {
   if (typeof value !== "number") return String(value);
   const number = value.toLocaleString();
-  if (id === "combo" || id === "pie") return `${number}`;
+  if (id === "combo" || id === "pie") return `$${number}`;
   if (id === "combo-area") return `${number} TB`;
   if (id === "radial-stacked") return `${number} h`;
   if (id === "gauge") return `${number}%`;
@@ -65,9 +64,9 @@ function renderChartExample({
         aria-label={r.tag}
         margin={{ top: 20, right: 18, left: 0, bottom: 0 }}
       >
-        <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
-        <Recharts.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-        <Recharts.YAxis
+        <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
+        <Chart.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+        <Chart.YAxis
           tickLine={false}
           axisLine={false}
           width="auto"
@@ -115,13 +114,14 @@ function renderChartExample({
         accessibilityLayer
         aria-label={r.tag}
         outerRadius="70%"
+        selection={r.id === "radar" ? "series" : "none"}
       >
-        <Recharts.PolarGrid
+        <Chart.PolarGrid
           gridType={r.id === "radar-outline" ? "circle" : "polygon"}
           stroke="var(--chart-grid)"
         />
-        <Recharts.PolarAngleAxis dataKey="category" tick={{ fontSize: 11 }} tickLine={false} />
-        <Recharts.PolarRadiusAxis
+        <Chart.PolarAngleAxis dataKey="category" tick={{ fontSize: 11 }} tickLine={false} />
+        <Chart.PolarRadiusAxis
           domain={[0, 100]}
           tickCount={3}
           tick={{ fontSize: 10 }}
@@ -162,16 +162,16 @@ function renderChartExample({
         cy={r.id === "gauge" ? "65%" : "50%"}
         barGap={3}
       >
-        <Recharts.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-        <Recharts.PolarRadiusAxis
+        <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+        <Chart.PolarRadiusAxis
           type="category"
           dataKey="category"
           tick={false}
           axisLine={false}
           tickLine={false}
         >
-          {r.id === "gauge" && <Recharts.Label position="center" value="72%" fill="currentColor" />}
-        </Recharts.PolarRadiusAxis>
+          {r.id === "gauge" && <Chart.Label position="center" value="72%" fill="currentColor" />}
+        </Chart.PolarRadiusAxis>
         <Chart.RadialBarSeries
           dataKey="a"
           background
@@ -179,7 +179,7 @@ function renderChartExample({
           stackId={r.id === "radial-stacked" ? "work" : undefined}
         >
           {r.id !== "gauge" && (
-            <Recharts.LabelList
+            <Chart.LabelList
               dataKey="category"
               fill="white"
               content={<Chart.RadialBarLabel fontSize={10} />}
@@ -205,8 +205,8 @@ function renderChartExample({
       aria-label={r.tag}
       margin={{ top: 20, right: 18, left: 0, bottom: 10 }}
     >
-      <Recharts.CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" />
-      <Recharts.XAxis
+      <Chart.CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" />
+      <Chart.XAxis
         dataKey="x"
         type="number"
         name={r.id === "bubble" ? "Traffic" : "Ad spend"}
@@ -215,7 +215,7 @@ function renderChartExample({
         axisLine={false}
         tick={{ fontSize: 11 }}
       />
-      <Recharts.YAxis
+      <Chart.YAxis
         dataKey="y"
         type="number"
         name={r.id === "bubble" ? "Latency" : "Conversions"}
@@ -225,7 +225,7 @@ function renderChartExample({
         axisLine={false}
         tick={{ fontSize: 11 }}
       />
-      {r.id === "bubble" && <Recharts.ZAxis dataKey="z" name="Requests" range={[50, 340]} />}
+      {r.id === "bubble" && <Chart.ZAxis dataKey="z" name="Requests" range={[50, 340]} />}
       <Chart.ScatterSeries data={data} seriesKey="a" shape="circle" />
       {r.id !== "bubble" && (
         <Chart.ScatterSeries
@@ -243,9 +243,9 @@ function renderChartExample({
 }
 function ChartExample(props: Parameters<typeof renderChartExample>[0]) {
   return (
-    <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+    <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
       {renderChartExample(props)}
-    </Recharts.ResponsiveContainer>
+    </Chart.ResponsiveContainer>
   );
 }
 export function AdvancedChartCard({
@@ -318,7 +318,8 @@ export function AdvancedChartCard({
               </DialogDescription>
               <div className="code-block-header">
                 <span className="code-file">
-                  <span className="typescript-badge">TS</span>chart-{recipe.id}.tsx
+                  <span className="typescript-badge">TS</span>chart-{recipe.id}
+                  .tsx
                 </span>
                 <Button variant="ghost" size="icon-sm" onClick={copy} aria-label="Copy code">
                   {copied ? <Check /> : <Copy />}

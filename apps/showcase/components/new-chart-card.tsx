@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import * as Recharts from "recharts";
 import { Check, Copy } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useMemo, useState } from "react";
@@ -16,6 +15,10 @@ import {
 import type { Finish } from "@/lib/advanced-chart-recipes";
 import {
   heatmapData,
+  conversionData,
+  histogramBins,
+  boxRows,
+  type BoxRow,
   type NewRecipe,
   newCode,
   sankeyData,
@@ -33,6 +36,9 @@ function NewChart({
   colors: string[];
   animate: boolean;
 }) {
+  const [distributionVisible, setDistributionVisible] = useState([
+    r.family === "Histogram" ? "count" : "spread",
+  ]);
   const heat = useMemo(() => heatmapData(r.id), [r.id]);
   const water = useMemo(() => Chart.computeWaterfallData(waterfallEntries(r.id)), [r.id]);
   const flow = useMemo(() => sankeyData(r.id), [r.id]);
@@ -40,6 +46,171 @@ function NewChart({
     () => Chart.createHeatmapScale({ domain: [0, heat.max], colors }),
     [heat.max, colors],
   );
+  if (r.family === "Line") {
+    return (
+      <Chart.LineChart
+        data={conversionData}
+        config={{
+          trials: { label: "Trial starts", color: colors[0] },
+          paid: { label: "Paid conversions", color: colors[1] },
+        }}
+        xDataKey="month"
+        responsive
+        style={{ width: "100%", height: 280 }}
+        rootProps={{ className: "chart-root" }}
+        animate={animate}
+        material={material}
+        curve="monotone"
+        aria-label={r.tag}
+        yAxis={{ width: "auto", tick: { fontSize: 11 } }}
+        xAxis={{ tick: { fontSize: 11 } }}
+        grid={{
+          stroke: "var(--chart-grid)",
+          vertical: false,
+          strokeDasharray: "3 5",
+        }}
+        tooltip={{ valueAnimation: animate ? "shuffle" : undefined }}
+      />
+    );
+  }
+  if (r.family === "Histogram") {
+    const density = r.id === "histogram-latency";
+    const bins = histogramBins(r.id);
+    return (
+      <Chart.Root
+        className="chart-root"
+        visibleSeries={distributionVisible}
+        onVisibleSeriesChange={setDistributionVisible}
+        config={{
+          count: { label: density ? "Density" : "Orders", color: colors[0] },
+        }}
+      >
+        <div className="chart-canvas">
+          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <Chart.HistogramChart
+              bins={bins}
+              measure={density ? "density" : "count"}
+              animate={animate}
+              aria-label={r.tag}
+              margin={{ top: 16, right: 12, left: 0, bottom: 8 }}
+              xAxisProps={{
+                tickLine: false,
+                axisLine: false,
+                tick: { fontSize: 11 },
+                tickFormatter: (value) => (density ? `${value} ms` : `$${value}`),
+              }}
+              yAxisProps={{
+                width: "auto",
+                tickLine: false,
+                axisLine: false,
+                tick: { fontSize: 11 },
+                ...(density ? { tickFormatter: (value: number) => value.toFixed(3) } : {}),
+              }}
+            >
+              <Chart.CartesianGrid
+                vertical={false}
+                stroke="var(--chart-grid)"
+                strokeDasharray="3 5"
+              />
+              <Chart.HistogramSeries material={material} />
+              <Chart.Tooltip
+                valueAnimation={animate ? "shuffle" : undefined}
+                labelFormatter={(_label, entries) => {
+                  const bin = entries[0]?.payload as Chart.HistogramBin | undefined;
+                  return bin ? `${bin.lower}–${bin.upper} ${density ? "ms" : "USD"}` : "";
+                }}
+                formatter={(value) => [
+                  density ? Number(value).toFixed(4) : String(value),
+                  density ? "Density per ms" : "Orders",
+                ]}
+              />
+            </Chart.HistogramChart>
+          </Chart.ResponsiveContainer>
+        </div>
+        <Chart.Legend />
+      </Chart.Root>
+    );
+  }
+  if (r.family === "Box Plot") {
+    const horizontal = r.id === "box-regions";
+    const rows = boxRows(r.id);
+    return (
+      <Chart.Root
+        className="chart-root"
+        visibleSeries={distributionVisible}
+        onVisibleSeriesChange={setDistributionVisible}
+        config={{
+          spread: {
+            label: horizontal ? "Weekly growth" : "Request time",
+            color: colors[0],
+          },
+        }}
+      >
+        <div className="chart-canvas">
+          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <Chart.BoxPlotChart
+              data={rows}
+              layout={horizontal ? "vertical" : "horizontal"}
+              animate={animate}
+              aria-label={r.tag}
+              margin={{ top: 16, right: 12, left: 0, bottom: 8 }}
+            >
+              <Chart.CartesianGrid
+                vertical={horizontal}
+                horizontal={!horizontal}
+                stroke="var(--chart-grid)"
+                strokeDasharray="3 5"
+              />
+              <Chart.XAxis
+                type={horizontal ? "number" : "category"}
+                {...(horizontal
+                  ? {
+                      domain: ["dataMin", "dataMax"],
+                      tickFormatter: (value: number) => `${value} pp`,
+                    }
+                  : { dataKey: "category" })}
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11 }}
+              />
+              <Chart.YAxis
+                width="auto"
+                type={horizontal ? "category" : "number"}
+                {...(horizontal
+                  ? { dataKey: "category" }
+                  : {
+                      domain: [0, "dataMax"],
+                      tickFormatter: (value: number) => `${value} ms`,
+                    })}
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11 }}
+              />
+              <Chart.ReferenceLine
+                {...(horizontal ? { x: 0 } : { y: 0 })}
+                stroke="var(--chart-axis)"
+              />
+              <Chart.BoxPlotSeries<BoxRow>
+                dataKey="summary"
+                seriesKey="spread"
+                barSize={32}
+                material={material}
+                fillOpacity={0.65}
+              />
+              <Chart.Tooltip
+                valueAnimation={animate ? "shuffle" : undefined}
+                formatter={(_value, _name, item) => [
+                  String((item.payload as BoxRow).summary.median) + (horizontal ? " pp" : " ms"),
+                  "Median",
+                ]}
+              />
+            </Chart.BoxPlotChart>
+          </Chart.ResponsiveContainer>
+        </div>
+        <Chart.Legend />
+      </Chart.Root>
+    );
+  }
   if (r.family === "Heatmap")
     return (
       <Chart.HeatmapChart
@@ -64,7 +235,7 @@ function NewChart({
     return (
       <Chart.Root className="chart-root" config={{ range: { label: "Balance", color: colors[0] } }}>
         <div className="chart-canvas">
-          <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <Chart.WaterfallChart
               data={water}
               animate={animate}
@@ -72,30 +243,30 @@ function NewChart({
               aria-label={r.tag}
               margin={{ top: 20, right: 12, left: 0, bottom: 0 }}
             >
-              <Recharts.CartesianGrid
+              <Chart.CartesianGrid
                 vertical={false}
                 stroke="var(--chart-grid)"
                 strokeDasharray="3 5"
               />
-              <Recharts.XAxis
+              <Chart.XAxis
                 dataKey="id"
                 tickFormatter={(id) => water.find((row) => row.id === id)?.label ?? String(id)}
                 tickLine={false}
                 axisLine={false}
                 tick={{ fontSize: 11 }}
               />
-              <Recharts.YAxis
+              <Chart.YAxis
                 width="auto"
                 tickFormatter={(value) => `$${value / 1000}k`}
                 tickLine={false}
                 axisLine={false}
                 tick={{ fontSize: 11 }}
               />
-              <Recharts.ReferenceLine y={0} stroke="var(--chart-axis)" />
+              <Chart.ReferenceLine y={0} stroke="var(--chart-axis)" />
               <Chart.WaterfallConnectors data={water} stroke="var(--chart-axis)" />
               <Chart.WaterfallSeries material={material} radius={4}>
                 {water.map((row) => (
-                  <Recharts.Cell
+                  <Chart.Cell
                     key={row.id}
                     fill={colors[row.kind !== "delta" ? 0 : (row.value ?? 0) < 0 ? 2 : 1]}
                   />
@@ -108,14 +279,14 @@ function NewChart({
                 }}
               />
             </Chart.WaterfallChart>
-          </Recharts.ResponsiveContainer>
+          </Chart.ResponsiveContainer>
         </div>
       </Chart.Root>
     );
   return (
     <div className="showcase-sankey">
       <div className="chart-canvas">
-        <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <Chart.SankeyChart
             data={flow}
             animate={animate}
@@ -157,7 +328,7 @@ function NewChart({
               />
             )}
           />
-        </Recharts.ResponsiveContainer>
+        </Chart.ResponsiveContainer>
       </div>
       <Chart.SankeyTable data={flow} caption={r.tag} className="sr-only" />
     </div>
@@ -221,7 +392,8 @@ export function NewChartCard({
               </DialogDescription>
               <div className="code-block-header">
                 <span className="code-file">
-                  <span className="typescript-badge">TS</span>chart-{recipe.id}.tsx
+                  <span className="typescript-badge">TS</span>chart-{recipe.id}
+                  .tsx
                 </span>
                 <Button variant="ghost" size="icon-sm" onClick={copy} aria-label="Copy code">
                   {copied ? <Check /> : <Copy />}

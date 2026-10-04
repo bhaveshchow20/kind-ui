@@ -1,8 +1,18 @@
 "use client";
 
 import * as Chart from "@kind-ui/charts";
-import * as Recharts from "recharts";
-import { ArrowUpRight, Check, Copy, Monitor, Moon, Pencil, Plus, RotateCcw, Search, Sun } from "lucide-react";
+import {
+  ArrowUpRight,
+  Check,
+  Copy,
+  Monitor,
+  Moon,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Search,
+  Sun,
+} from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
@@ -42,7 +52,9 @@ type Family =
   | "Scatter"
   | "Heatmap"
   | "Waterfall"
-  | "Sankey";
+  | "Sankey"
+  | "Histogram"
+  | "Box Plot";
 const families: Family[] = [
   "All",
   "Line",
@@ -56,6 +68,8 @@ const families: Family[] = [
   "Heatmap",
   "Waterfall",
   "Sankey",
+  "Histogram",
+  "Box Plot",
 ];
 const repo = "https://github.com/bhaveshchow20/kind-ui";
 const paletteColorSlots = ["custom-color-1", "custom-color-2", "custom-color-3"] as const;
@@ -195,7 +209,10 @@ function recipeData(id: string) {
       b: [540, 630, 590, 760, 820, 900, 970, 1080],
       c: [120, 140, 130, 170, 190, 210, 235, 260],
     },
-    grouped: { a: [46, 52, 49, 61, 65, 73, 79, 83], b: [28, 34, 31, 42, 50, 59, 68, 76] },
+    grouped: {
+      a: [46, 52, 49, 61, 65, 73, 79, 83],
+      b: [28, 34, 31, 42, 50, 59, 68, 76],
+    },
     steps: { a: [20, 20, 35, 35, 50, 50, 75, 96] },
     horizontal: {
       a: [96, 82, 61, 48, 35, 29],
@@ -232,14 +249,16 @@ function snippet(r: Recipe, material: Material, colors: string[], animate: boole
   const config = Object.fromEntries(
     r.keys.map((k, i) => [
       k,
-      { label: r.keys.length === 1 ? r.subtitle : recipeLabels(r.id)[k], color: colors[i] },
+      {
+        label: r.keys.length === 1 ? r.subtitle : recipeLabels(r.id)[k],
+        color: colors[i],
+      },
     ]),
   );
   return `"use client";
 
 import { useState } from "react";
 import * as Chart from "@kind-ui/charts";
-import * as Recharts from "recharts";
 import "@kind-ui/charts/styles.css";
 
 const data = [
@@ -249,20 +268,21 @@ ${chartData.map((d) => `  ${JSON.stringify(d)},`).join("\n")}
 const config: Chart.SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.stringify(config, null, 2)}).map(([key, value]) => [key, {\n    ...value, formatValue: (v: unknown) => typeof v === "number" ? v.toLocaleString() : String(v)\n  }])\n);
 
 export function Example() {
+  const animate = ${animate};
   const [visible, setVisible] = useState<string[]>(${JSON.stringify(r.keys)});
   return (
     <Chart.Root emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}
       style={{ border: 0, padding: 0, background: "transparent" }}>
       <div style={{ height: 240, width: "100%" }}>
-        <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <Chart.${family}Chart data={data} animate={${animate}} layout="${horizontal ? "vertical" : "horizontal"}"${r.id === "grouped" ? ' emphasis="category"' : ""}
             accessibilityLayer aria-label="${r.subtitle}"
             margin={{ top: 20, right: 18, left: 0, bottom: 0 }}>
-            <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
-            <Recharts.XAxis ${horizontal ? 'type="number"' : 'dataKey="month" type="category"'} tickLine={false} axisLine={false}
+            <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
+            <Chart.XAxis ${horizontal ? 'type="number"' : 'dataKey="month" type="category"'} tickLine={false} axisLine={false}
               tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} tickMargin={10} />
-            <Recharts.YAxis ${horizontal ? 'dataKey="month" type="category"' : 'type="number"'} tickLine={false} axisLine={false}
-              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width="auto" />${r.id === "signed" ? '\n            <Recharts.ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}${
+            <Chart.YAxis ${horizontal ? 'dataKey="month" type="category"' : 'type="number"'} tickLine={false} axisLine={false}
+              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width="auto" />${r.id === "signed" ? '\n            <Chart.ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}${
                 r.id === "area"
                   ? `
             <defs>
@@ -276,7 +296,7 @@ export function Example() {
 ${series}
             <Chart.Tooltip cursor={${family === "Bar" ? '{ fill: "#a4a8be", fillOpacity: .09 }' : '{ stroke: "#8d8e9b", strokeDasharray: "3 4" }'}} valueAnimation={animate ? "shuffle" : undefined} />
           </Chart.${family}Chart>
-        </Recharts.ResponsiveContainer>
+        </Chart.ResponsiveContainer>
       </div>
       <Chart.Legend aria-label="Visible series for ${r.tag}" />
     </Chart.Root>
@@ -317,8 +337,8 @@ function ChartCard({
   const code = snippet(r, material, colors, animate);
   const chartChildren = (
     <>
-      <Recharts.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
-      <Recharts.XAxis
+      <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
+      <Chart.XAxis
         dataKey={horizontal ? undefined : "month"}
         type={horizontal ? "number" : "category"}
         tickLine={false}
@@ -326,7 +346,7 @@ function ChartCard({
         tick={{ fontSize: 12, fill: "var(--chart-axis)" }}
         tickMargin={10}
       />
-      <Recharts.YAxis
+      <Chart.YAxis
         dataKey={horizontal ? "month" : undefined}
         type={horizontal ? "category" : "number"}
         tickLine={false}
@@ -334,7 +354,7 @@ function ChartCard({
         tick={{ fontSize: 12, fill: "var(--chart-axis)" }}
         width="auto"
       />
-      {r.id === "signed" && <Recharts.ReferenceLine y={0} stroke="var(--chart-axis)" />}
+      {r.id === "signed" && <Chart.ReferenceLine y={0} stroke="var(--chart-axis)" />}
       {r.id === "area" && (
         <defs>
           <linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1">
@@ -456,7 +476,7 @@ function ChartCard({
         onVisibleSeriesChange={setVisible}
       >
         <div className="chart-canvas">
-          <Recharts.ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
             {r.family === "Bar" ? (
               <Chart.BarChart
                 key={replay}
@@ -483,7 +503,7 @@ function ChartCard({
                 {chartChildren}
               </ChartComponent>
             )}
-          </Recharts.ResponsiveContainer>
+          </Chart.ResponsiveContainer>
         </div>
         <Chart.Legend aria-label={`Visible series for ${r.tag}`} />
       </Chart.Root>
@@ -499,27 +519,47 @@ function ChartCard({
 }
 
 function GitHubMark() {
-  return <svg viewBox="0 0 24 24" width={17} height={17} aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" fill="currentColor" /></svg>;
+  return (
+    <svg viewBox="0 0 24 24" width={17} height={17} aria-hidden="true">
+      <path
+        d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+        fill="currentColor"
+      />
+    </svg>
+  );
 }
 
 function FrameworkNames() {
   return (
-      <span className="hero-frameworks">
-        <span className="framework-brand">
-          <svg viewBox="-12 -11 24 22" aria-hidden="true" className="react-brand-mark">
-            <circle r="2.05" fill="currentColor" />
-            {[0, 60, 120].map((angle) => <ellipse key={angle} rx="10.5" ry="4.1" fill="none" stroke="currentColor" strokeWidth="1" transform={`rotate(${angle})`} />)}
-          </svg>
-          React
-        </span>
-        <span className="hero-framework-divider">&amp;</span>
-        <span className="framework-brand">
-          <svg viewBox="0 0 24 24" aria-hidden="true" className="next-brand-mark">
-            <path d="M18.665 21.978C16.758 23.255 14.465 24 12 24 5.377 24 0 18.623 0 12S5.377 0 12 0s12 5.377 12 12c0 3.583-1.574 6.801-4.067 9.001L9.219 7.2H7.2v9.596h1.615V9.251l9.85 12.727Zm-3.332-8.533 1.6 2.061V7.2h-1.6v6.245Z" fill="currentColor" />
-          </svg>
-          Next.js
-        </span>
+    <span className="hero-frameworks">
+      <span className="framework-brand">
+        <svg viewBox="-12 -11 24 22" aria-hidden="true" className="react-brand-mark">
+          <circle r="2.05" fill="currentColor" />
+          {[0, 60, 120].map((angle) => (
+            <ellipse
+              key={angle}
+              rx="10.5"
+              ry="4.1"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1"
+              transform={`rotate(${angle})`}
+            />
+          ))}
+        </svg>
+        React
       </span>
+      <span className="hero-framework-divider">&amp;</span>
+      <span className="framework-brand">
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="next-brand-mark">
+          <path
+            d="M18.665 21.978C16.758 23.255 14.465 24 12 24 5.377 24 0 18.623 0 12S5.377 0 12 0s12 5.377 12 12c0 3.583-1.574 6.801-4.067 9.001L9.219 7.2H7.2v9.596h1.615V9.251l9.85 12.727Zm-3.332-8.533 1.6 2.061V7.2h-1.6v6.245Z"
+            fill="currentColor"
+          />
+        </svg>
+        Next.js
+      </span>
+    </span>
   );
 }
 
@@ -527,18 +567,56 @@ function ThemeSwitcher({ enabled }: { enabled: boolean }) {
   const { theme, setTheme } = useTheme();
   const id = useId();
   const reduced = useReducedMotion();
-  return <RadioGroup className="nav-theme-switcher" aria-label="Appearance" value={enabled ? theme ?? "system" : "system"} onValueChange={setTheme} disabled={!enabled}>
-    {([{ value: "light", label: "Light", Icon: Sun }, { value: "dark", label: "Dark", Icon: Moon }, { value: "system", label: "System", Icon: Monitor }] as const).map(({ value, label, Icon }) => (
-      <label className="nav-theme-option" key={value} title={label}>
-        <RadioGroupItem value={value} className="sr-only" aria-label={label} />
-        {(enabled ? theme ?? "system" : "system") === value && <motion.span className="nav-theme-selection" aria-hidden="true" layoutId={reduced ? undefined : `${id}-theme`} transition={{ type: "spring", stiffness: 430, damping: 36 }} />}
-        <Icon size={17} aria-hidden="true" />
-      </label>
-    ))}
-  </RadioGroup>;
+  return (
+    <RadioGroup
+      className="nav-theme-switcher"
+      aria-label="Appearance"
+      value={enabled ? (theme ?? "system") : "system"}
+      onValueChange={setTheme}
+      disabled={!enabled}
+    >
+      {(
+        [
+          { value: "light", label: "Light", Icon: Sun },
+          { value: "dark", label: "Dark", Icon: Moon },
+          { value: "system", label: "System", Icon: Monitor },
+        ] as const
+      ).map(({ value, label, Icon }) => (
+        <label className="nav-theme-option" key={value} title={label}>
+          <RadioGroupItem value={value} className="sr-only" aria-label={label} />
+          {(enabled ? (theme ?? "system") : "system") === value && (
+            <motion.span
+              className="nav-theme-selection"
+              aria-hidden="true"
+              layoutId={reduced ? undefined : `${id}-theme`}
+              transition={{ type: "spring", stiffness: 430, damping: 36 }}
+            />
+          )}
+          <Icon size={17} aria-hidden="true" />
+        </label>
+      ))}
+    </RadioGroup>
+  );
 }
 
-const documentationCharts = ["Line", "Area", "Bar", "Combo", "Pie", "Donut", "Radar", "Radial Bar", "Gauge", "Scatter", "Bubble", "Heatmap", "Waterfall", "Sankey", "Histogram", "Box Plot"];
+const documentationCharts = [
+  "Line",
+  "Area",
+  "Bar",
+  "Combo",
+  "Pie",
+  "Donut",
+  "Radar",
+  "Radial Bar",
+  "Gauge",
+  "Scatter",
+  "Bubble",
+  "Heatmap",
+  "Waterfall",
+  "Sankey",
+  "Histogram",
+  "Box Plot",
+];
 function DocumentationSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -552,24 +630,60 @@ function DocumentationSearch() {
     window.addEventListener("keydown", shortcut);
     return () => window.removeEventListener("keydown", shortcut);
   }, []);
-  const filtered = documentationCharts.filter((name) => name.toLowerCase().includes(query.trim().toLowerCase()));
-  return <Dialog open={open} onOpenChange={(value) => { setOpen(value); if (!value) setQuery(""); }}>
-    <DialogTrigger asChild><Button className="nav-search" variant="ghost" size="icon-sm" aria-label="Search documentation" title="Search documentation (⌘K / Ctrl+K)"><Search size={17} /></Button></DialogTrigger>
-    <DialogContent className="documentation-search" showCloseButton={false}>
-      <DialogTitle className="sr-only">Search documentation</DialogTitle>
-      <DialogDescription className="sr-only">Search chart components in Kind UI Charts.</DialogDescription>
-      <div className="documentation-search-input">
-        <Search size={19} aria-hidden="true" />
-        <input aria-label="Search components" placeholder="Search components…" value={query} onChange={(event) => setQuery(event.target.value)} />
-        <button type="button" onClick={() => setOpen(false)} aria-label="Close search">Esc</button>
-      </div>
-      <div className="documentation-search-results">
-        <h2>Components</h2>
-        <ul>{filtered.map((name) => <li key={name}><span className="documentation-chart-dot" aria-hidden="true" />{name} Chart</li>)}</ul>
-        {!filtered.length && <p>No components found.</p>}
-      </div>
-    </DialogContent>
-  </Dialog>;
+  const filtered = documentationCharts.filter((name) =>
+    name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        setOpen(value);
+        if (!value) setQuery("");
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button
+          className="nav-search"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Search documentation"
+          title="Search documentation (⌘K / Ctrl+K)"
+        >
+          <Search size={17} />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="documentation-search" showCloseButton={false}>
+        <DialogTitle className="sr-only">Search documentation</DialogTitle>
+        <DialogDescription className="sr-only">
+          Search chart components in Kind UI Charts.
+        </DialogDescription>
+        <div className="documentation-search-input">
+          <Search size={19} aria-hidden="true" />
+          <input
+            aria-label="Search components"
+            placeholder="Search components…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <button type="button" onClick={() => setOpen(false)} aria-label="Close search">
+            Esc
+          </button>
+        </div>
+        <div className="documentation-search-results">
+          <h2>Components</h2>
+          <ul>
+            {filtered.map((name) => (
+              <li key={name}>
+                <span className="documentation-chart-dot" aria-hidden="true" />
+                {name} Chart
+              </li>
+            ))}
+          </ul>
+          {!filtered.length && <p>No components found.</p>}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 const installCommands = {
@@ -600,29 +714,53 @@ function InstallSection() {
   return (
     <section className="install-section" aria-label="Install Kind UI Charts">
       <p className="install-built-with">Built on Framer Motion and Recharts</p>
-      <Tabs className="install-panel" value={manager} onValueChange={(value) => {
-        setManager(value as PackageManager);
-        setCopied(false);
-        setCopyFailed(false);
-      }}>
+      <Tabs
+        className="install-panel"
+        value={manager}
+        onValueChange={(value) => {
+          setManager(value as PackageManager);
+          setCopied(false);
+          setCopyFailed(false);
+        }}
+      >
         <div className="install-panel-header">
           <TabsList className="install-manager-tabs" aria-label="Package manager">
             {(Object.keys(installCommands) as PackageManager[]).map((key) => (
-              <TabsTrigger key={key} value={key}>{key}</TabsTrigger>
+              <TabsTrigger key={key} value={key}>
+                {key}
+              </TabsTrigger>
             ))}
           </TabsList>
-          <Button variant="ghost" size="icon-sm" className="install-copy" onClick={copyCommand}
-            aria-label={copied ? "Install command copied" : "Copy install command"}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="install-copy"
+            onClick={copyCommand}
+            aria-label={copied ? "Install command copied" : "Copy install command"}
+          >
             {copied ? <Check /> : <Copy />}
           </Button>
         </div>
         {(Object.keys(installCommands) as PackageManager[]).map((key) => (
           <TabsContent key={key} value={key} className="install-panel-content">
-            <code><span className="install-prompt" aria-hidden="true">$ </span><span className="install-tool">{key}</span>{key === "npm" ? " install " : " add "}<span className="install-package">@kind-ui/charts</span></code>
+            <code>
+              <span className="install-prompt" aria-hidden="true">
+                ${" "}
+              </span>
+              <span className="install-tool">{key}</span>
+              {key === "npm" ? " install " : " add "}
+              <span className="install-package">@kind-ui/charts</span>
+            </code>
           </TabsContent>
         ))}
       </Tabs>
-      <span className="sr-only" role="status">{copied ? "Install command copied" : copyFailed ? "Could not copy. Select the command to copy manually." : ""}</span>
+      <span className="sr-only" role="status">
+        {copied
+          ? "Install command copied"
+          : copyFailed
+            ? "Could not copy. Select the command to copy manually."
+            : ""}
+      </span>
     </section>
   );
 }
@@ -656,7 +794,9 @@ export default function Page() {
   useEffect(() => {
     const ctx = (
       document as Document & {
-        modelContext?: { registerTool: (tool: unknown, options: unknown) => void | Promise<void> };
+        modelContext?: {
+          registerTool: (tool: unknown, options: unknown) => void | Promise<void>;
+        };
       }
     ).modelContext;
     if (!ctx?.registerTool) return;
@@ -683,9 +823,14 @@ export default function Page() {
               "Heatmap",
               "Waterfall",
               "Sankey",
+              "Histogram",
+              "Box Plot",
             ],
           },
-          material: { type: "string", enum: ["plain", "paper", "clay", "glow"] },
+          material: {
+            type: "string",
+            enum: ["plain", "paper", "clay", "glow"],
+          },
           palette: { type: "string", enum: ["Pastel", "Ink", "Neon"] },
           animate: { type: "boolean" },
         },
@@ -712,6 +857,8 @@ export default function Page() {
               "Heatmap",
               "Waterfall",
               "Sankey",
+              "Histogram",
+              "Box Plot",
             ].includes(v.family as string)) ||
           (v.material !== undefined &&
             !["plain", "paper", "clay", "glow"].includes(v.material as string)) ||
@@ -767,19 +914,49 @@ export default function Page() {
               <span className="wordmark-package">/charts</span>
             </a>
             <nav className="nav-center" aria-label="Main">
-              <a href={`${repo}/blob/main/packages/charts/README.md`} target="_blank" rel="noreferrer">Docs</a>
-              <button type="button" className="nav-sponsor">Sponsor <ArrowUpRight size={13} aria-hidden="true" /></button>
+              <a
+                href={`${repo}/blob/main/packages/charts/README.md`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Docs
+              </a>
+              <button type="button" className="nav-sponsor">
+                Sponsor <ArrowUpRight size={13} aria-hidden="true" />
+              </button>
             </nav>
             <div className="nav-actions">
               <DocumentationSearch />
-              <a className="nav-github" href={repo} target="_blank" rel="noreferrer" aria-label="GitHub">
-                <GitHubMark /><span className="nav-github-label">GitHub</span>
+              <a
+                className="nav-github"
+                href={repo}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="GitHub"
+              >
+                <GitHubMark />
+                <span className="nav-github-label">GitHub</span>
               </a>
               <ThemeSwitcher enabled={mounted} />
-              <Button className="nav-theme-toggle" variant="ghost" size="icon-sm" disabled={!mounted} onClick={() => setTheme(dark ? "light" : "dark")} aria-label={dark ? "Switch to light theme" : "Switch to dark theme"} title={dark ? "Switch to light theme" : "Switch to dark theme"}>
+              <Button
+                className="nav-theme-toggle"
+                variant="ghost"
+                size="icon-sm"
+                disabled={!mounted}
+                onClick={() => setTheme(dark ? "light" : "dark")}
+                aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+                title={dark ? "Switch to light theme" : "Switch to dark theme"}
+              >
                 {dark ? <Sun size={15} /> : <Moon size={15} />}
               </Button>
-              <a className="nav-mobile-docs" href={`${repo}/blob/main/packages/charts/README.md`} target="_blank" rel="noreferrer">Docs</a>
+              <a
+                className="nav-mobile-docs"
+                href={`${repo}/blob/main/packages/charts/README.md`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Docs
+              </a>
             </div>
           </motion.header>
           <div className="hero-content">
@@ -844,7 +1021,11 @@ export default function Page() {
                             transition={
                               reduceMotion
                                 ? { duration: 0 }
-                                : { type: "spring", stiffness: 430, damping: 36 }
+                                : {
+                                    type: "spring",
+                                    stiffness: 430,
+                                    damping: 36,
+                                  }
                             }
                           />
                         )}
@@ -876,7 +1057,11 @@ export default function Page() {
                             transition={
                               reduceMotion
                                 ? { duration: 0 }
-                                : { type: "spring", stiffness: 430, damping: 36 }
+                                : {
+                                    type: "spring",
+                                    stiffness: 430,
+                                    damping: 36,
+                                  }
                             }
                           />
                         )}
@@ -907,7 +1092,11 @@ export default function Page() {
                             transition={
                               reduceMotion
                                 ? { duration: 0 }
-                                : { type: "spring", stiffness: 430, damping: 36 }
+                                : {
+                                    type: "spring",
+                                    stiffness: 430,
+                                    damping: 36,
+                                  }
                             }
                           />
                         )}
@@ -1033,12 +1222,31 @@ export default function Page() {
             <KindLogo />
           </p>
           <div className="footer-bottom">
-            <a className="footer-credit" href="https://x.com/BhaveshChow" target="_blank" rel="noreferrer">Created by Bhavesh Chowdhury</a>
+            <a
+              className="footer-credit"
+              href="https://x.com/BhaveshChow"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Created by Bhavesh Chowdhury
+            </a>
             <nav aria-label="Footer">
-              <a href={`${repo}/blob/main/packages/charts/README.md`} target="_blank" rel="noreferrer">Docs</a>
-              <button type="button" className="footer-sponsor">Sponsor <ArrowUpRight size={13} aria-hidden="true" /></button>
-              <a href={`${repo}/blob/main/LICENSE`} target="_blank" rel="noreferrer">MIT</a>
-              <a className="footer-top" href="#top">Back to top</a>
+              <a
+                href={`${repo}/blob/main/packages/charts/README.md`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Docs
+              </a>
+              <button type="button" className="footer-sponsor">
+                Sponsor <ArrowUpRight size={13} aria-hidden="true" />
+              </button>
+              <a href={`${repo}/blob/main/LICENSE`} target="_blank" rel="noreferrer">
+                MIT
+              </a>
+              <a className="footer-top" href="#top">
+                Back to top
+              </a>
             </nav>
           </div>
         </motion.div>
