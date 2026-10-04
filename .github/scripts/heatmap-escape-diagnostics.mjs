@@ -1,12 +1,17 @@
 // Temporary Linux diagnosis only. Never merge this branch.
 // Import the original check without altering its actions or assertions.
+import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { chromium } from "@playwright/test";
 
-const artifacts = resolve("artifacts/heatmap-escape-diagnostic");
+const mode = process.env.KIND_HEATMAP_DIAGNOSTIC_MODE ?? "reference";
+const artifacts = resolve(
+  "artifacts/heatmap-escape-diagnostic",
+  process.env.KIND_HEATMAP_DIAGNOSTIC_LABEL ?? mode,
+);
 mkdirSync(artifacts, { recursive: true });
 writeFileSync(
   resolve(artifacts, "identity.json"),
@@ -29,6 +34,7 @@ const saved = new WeakSet();
 const labels = new WeakMap();
 let contextCount = 0;
 async function saveContext(context) {
+  if (mode === "retry") return;
   if (saved.has(context)) return;
   saved.add(context);
   const label = labels.get(context);
@@ -56,12 +62,23 @@ chromium.launch = async (...args) => {
   const newContext = browser.newContext.bind(browser);
   browser.newContext = async (...contextArgs) => {
     const context = await newContext(...contextArgs);
+    // Candidate repetitions change only the assertion, without tracing or event probes.
+    if (mode === "retry") return context;
     labels.set(
       context,
       `${++contextCount}-${contextArgs[0]?.viewport?.width ?? "unknown"}-${contextArgs[0]?.reducedMotion ?? "default"}`,
     );
     await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
-    await context.addInitScript(() => {
+    await context.addInitScript((mode) => {
+      if (mode === "negative") {
+        window.addEventListener(
+          "keydown",
+          (event) => {
+            if (event.key === "Escape") event.stopImmediatePropagation();
+          },
+          true,
+        );
+      }
       const events = [];
       Object.defineProperty(window, "__kindHeatmapEscapeDiagnostic", { value: events });
       const describe = (node) =>
@@ -115,7 +132,47 @@ chromium.launch = async (...args) => {
         childList: true,
         characterData: true,
       });
-    });
+    }, mode);
+    if (mode === "snapshot") {
+      const newPage = context.newPage.bind(context);
+      context.newPage = async (...args) => {
+        const page = await newPage(...args);
+        const press = page.keyboard.press.bind(page.keyboard);
+        let escapeCount = 0;
+        page.keyboard.press = async (key, ...args) => {
+          if (key !== "Escape") return press(key, ...args);
+          const snapshot = await page.evaluate(() => {
+            const target = document.activeElement;
+            const tooltip = document.querySelector(
+              '[data-component="heatmap"] [data-kind-ui="heatmap-tooltip"]',
+            );
+            const beforeHidden = tooltip.hidden;
+            target.dispatchEvent(
+              new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+            );
+            const immediatelyHidden = tooltip.hidden;
+            target.dispatchEvent(
+              new KeyboardEvent("keyup", { key: "Escape", bubbles: true, cancelable: true }),
+            );
+            return {
+              beforeHidden,
+              immediatelyHidden,
+              focusedCell: target.getAttribute("data-cell-key"),
+            };
+          });
+          // Only the first Escape targets the primary tooltip; later examples differ.
+          if (escapeCount === 0) {
+            assert.equal(snapshot.beforeHidden, false);
+            assert.equal(snapshot.immediatelyHidden, false);
+          }
+          writeFileSync(
+            resolve(artifacts, `synchronous-${labels.get(context)}-${++escapeCount}.json`),
+            JSON.stringify(snapshot, null, 2),
+          );
+        };
+        return page;
+      };
+    }
     const close = context.close.bind(context);
     context.close = async (...closeArgs) => {
       try {
@@ -137,6 +194,18 @@ chromium.launch = async (...args) => {
   return browser;
 };
 
+const originalPath = resolve("scripts/check-heatmap-browser.mjs");
+const temporaryPath = resolve("scripts/.heatmap-diagnostic-check.mjs");
+const snapshotAssertion = "assert.equal(await tooltip.isVisible(), false);";
+const hiddenAssertion = 'await tooltip.waitFor({ state: "hidden", timeout: 1000 });';
+let checkPath = originalPath;
+if (["retry", "negative", "snapshot"].includes(mode)) {
+  const original = readFileSync(originalPath, "utf8");
+  if (original.split(snapshotAssertion).length !== 2)
+    throw new Error("Expected exactly one Escape snapshot assertion");
+  writeFileSync(temporaryPath, original.replace(snapshotAssertion, hiddenAssertion));
+  checkPath = temporaryPath;
+}
 const preview = spawn(process.execPath, ["scripts/serve.mjs"], {
   stdio: ["ignore", "pipe", "inherit"],
 });
@@ -155,10 +224,11 @@ try {
       }
     });
   });
-  await import(resolve("scripts/check-heatmap-browser.mjs"));
+  await import(checkPath);
 } catch (error) {
   writeFileSync(resolve(artifacts, "failure.txt"), error.stack ?? String(error));
   throw error;
 } finally {
   preview.kill("SIGTERM");
+  if (checkPath === temporaryPath) unlinkSync(temporaryPath);
 }

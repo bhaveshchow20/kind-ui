@@ -12,7 +12,7 @@ jobs:
   diagnostic:
     if: github.head_ref == 'diagnostics/heatmap-escape-linux'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -34,22 +34,48 @@ jobs:
         env:
           KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
       - run: npm exec playwright install -- --with-deps chromium
-      - name: Unchanged reference check
+      - name: Replay preceding docs browser flow
         working-directory: apps/docs
         run: |
           mkdir -p artifacts/heatmap-escape-diagnostic
-          set +e
-          node scripts/start-heatmap-checks.mjs > artifacts/heatmap-escape-diagnostic/reference.log 2>&1
-          result=$?
-          set -e
-          echo "$result" > artifacts/heatmap-escape-diagnostic/reference-exit-code.txt
-          tail -n 50 artifacts/heatmap-escape-diagnostic/reference.log
-      - name: Same assertions with trace and passive observations
+          set -o pipefail
+          {
+            npm run check:browser
+            node scripts/start-line-checks.mjs
+            node scripts/start-area-checks.mjs
+            node scripts/start-pie-checks.mjs
+            node scripts/start-radar-checks.mjs
+            node scripts/start-sankey-checks.mjs
+            node scripts/start-histogram-checks.mjs
+            node scripts/start-radial-checks.mjs
+            node scripts/start-waterfall-checks.mjs
+            node scripts/start-box-plot-checks.mjs
+            node scripts/start-combo-checks.mjs
+            node scripts/start-scatter-checks.mjs
+            node scripts/start-bar-checks.mjs
+            node scripts/check-heatmap-consumers.mjs
+          } 2>&1 | tee artifacts/heatmap-escape-diagnostic/prior-flow.log
+      - name: Five unchanged reference checks and five bounded hidden checks
         working-directory: apps/docs
-        run: node ../../.github/scripts/heatmap-escape-diagnostics.mjs
-      - name: Preserve reference failure result
+        run: |
+          result=0
+          for iteration in 1 2 3 4 5; do
+            node scripts/start-heatmap-checks.mjs > "artifacts/heatmap-escape-diagnostic/reference-$iteration.log" 2>&1 || result=1
+            KIND_HEATMAP_DIAGNOSTIC_MODE=retry KIND_HEATMAP_DIAGNOSTIC_LABEL="retry-$iteration" node ../../.github/scripts/heatmap-escape-diagnostics.mjs > "artifacts/heatmap-escape-diagnostic/retry-$iteration.log" 2>&1 || result=1
+          done
+          echo "$result" > artifacts/heatmap-escape-diagnostic/repeated-exit-code.txt
+      - name: Synchronous snapshot and disabled dismissal controls
         working-directory: apps/docs
-        run: test "$(cat artifacts/heatmap-escape-diagnostic/reference-exit-code.txt)" -eq 0
+        run: |
+          KIND_HEATMAP_DIAGNOSTIC_MODE=snapshot node ../../.github/scripts/heatmap-escape-diagnostics.mjs
+          if KIND_HEATMAP_DIAGNOSTIC_MODE=negative node ../../.github/scripts/heatmap-escape-diagnostics.mjs > artifacts/heatmap-escape-diagnostic/negative.log 2>&1; then
+            echo "Negative control unexpectedly passed"
+            exit 1
+          fi
+          grep -F 'locator.waitFor: Timeout 1000ms exceeded' artifacts/heatmap-escape-diagnostic/negative.log
+      - name: Preserve repeated failure results
+        working-directory: apps/docs
+        run: test "$(cat artifacts/heatmap-escape-diagnostic/repeated-exit-code.txt)" -eq 0
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
