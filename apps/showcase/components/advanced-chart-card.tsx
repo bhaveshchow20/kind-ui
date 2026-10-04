@@ -2,7 +2,7 @@
 import * as Chart from "@kind-ui/charts";
 import { Check, Copy } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CodeBlock } from "@/components/code-block";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,14 +46,18 @@ function renderChartExample({
   animate: boolean;
   replay: number;
 }) {
-  const data = advancedData(r.id);
-  const pieData = data
-    .filter((row) => visible.includes(String(row.id)))
-    .map((row) => ({
-      id: String(row.id),
-      value: Number(row.value),
-      fill: config[String(row.id)]?.color,
-    }));
+  const data = useMemo(() => advancedData(r.id), [r.id]);
+  const pieData = useMemo(
+    () =>
+      data
+        .filter((row) => visible.includes(String(row.id)))
+        .map((row) => ({
+          id: String(row.id),
+          value: Number(row.value),
+          fill: config[String(row.id)]?.color,
+        })),
+    [data, visible, config],
+  );
   if (r.family === "Combo")
     return (
       <Chart.ComboChart
@@ -134,13 +138,23 @@ function renderChartExample({
             <Chart.RadarSeries
               dataKey="a"
               fillOpacity={r.id === "radar-outline" ? 0 : 0.18}
-              dot={r.id === "radar-outline"}
+              dot={{ r: 3, fill: config.a.color, stroke: "var(--background)", strokeWidth: 1.5 }}
             />
             <Chart.RadarSeries
               dataKey="b"
               fill="none"
               strokeDasharray="4 4"
-              dot={r.id === "radar-outline"}
+              dot={(props) => (
+                <Chart.Symbols
+                  cx={props.cx}
+                  cy={props.cy}
+                  type="diamond"
+                  size={70}
+                  fill={config.b.color}
+                  stroke="var(--background)"
+                  strokeWidth={1.5}
+                />
+              )}
             />
           </>
         )}
@@ -267,16 +281,23 @@ export function AdvancedChartCard({
   const chartAnimate = animate && entered;
   const [visible, setVisible] = useState<string[]>([...recipe.keys]);
   const [copied, setCopied] = useState(false);
-  const config: Chart.SeriesConfig = Object.fromEntries(
-    recipe.keys.map((k, i) => [
-      k,
-      {
-        label: recipe.labels[i],
-        color: colors[i],
-        formatValue: (value: unknown) => formatAdvancedValue(recipe.id, value),
-        ...(recipe.id === "scatter" ? { legendShape: i === 0 ? "circle" : "diamond" } : {}),
-      },
-    ]),
+  const config: Chart.SeriesConfig = useMemo(
+    () =>
+      Object.fromEntries(
+        recipe.keys.map((k, i) => [
+          k,
+          {
+            label: recipe.labels[i],
+            color: colors[i],
+            formatValue: (value: unknown) => formatAdvancedValue(recipe.id, value),
+            ...(recipe.id === "scatter" ||
+            (recipe.family === "Radar" && recipe.id !== "radar-range")
+              ? { legendShape: i === 0 ? "circle" : "diamond" }
+              : {}),
+          },
+        ]),
+      ),
+    [recipe, colors],
   );
   const code = advancedCode(recipe, material, colors, animate);
   async function copy() {
