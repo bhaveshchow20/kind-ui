@@ -16,7 +16,7 @@ description: Compare parts of a whole with explicit category identity and native
     <Chart.PieChart animate accessibilityLayer aria-label="Team allocation">
       <Chart.PieSeries data={data} dataKey="hours" nameKey="key" innerRadius={58} outerRadius={108}>
         {data.map((row) => <Chart.Cell key={row.key} fill={config[row.key].color} />)}
-        <Chart.LabelList dataKey="share" position="inside" fill="white" stroke="none" />
+        <Chart.LabelList dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
       </Chart.PieSeries>
       <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
     </Chart.PieChart>
