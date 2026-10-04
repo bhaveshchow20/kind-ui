@@ -4,6 +4,26 @@ React components compose real Recharts lines, areas and bars with shared pointer
 
 Public `0.1.0` candidate; unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, Motion 13.4.6, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
 
+## Installation and version
+
+This `0.1.0` candidate is not yet available from npm. For local validation, use the exact reviewed tarball and the pinned peer versions:
+
+```sh
+npm install --save-exact ./kind-ui-charts-0.1.0.tgz react@19.3.0 react-dom@19.3.0 recharts@3.10.1 motion@13.4.6
+```
+
+Check the tarball's SHA-256 against its validation receipt before installing. After a separately authorized `0.1.0` publication, the equivalent version-pinned npm command will be:
+
+```sh
+npm install --save-exact @kind-ui/charts@0.1.0 react@19.3.0 react-dom@19.3.0 recharts@3.10.1 motion@13.4.6
+```
+
+The intended dist-tag is `latest`; use the explicit version for documentation and site builds. This package is ESM and requires React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Import components and types from `@kind-ui/charts` and import `@kind-ui/charts/styles.css` once in the host. TypeScript consumers have passed strict NodeNext and Bundler resolution. Next hosts need a client component boundary for callbacks, refs and state, plus a host-owned accessible name and data alternative.
+
+Moving from the local `0.0.0` workspace package to this `0.1.0` candidate requires a dependency/version and lockfile update; this release preparation changes no component props, public exports, peer ranges or styling path. The [changelog](CHANGELOG.md) includes the initial API and the entrance-settlement fix already present in the integration base. Docs and showcase owners should validate their exact `0.1.0` bytes and imports before launch; neither site is updated or deployed by this candidate.
+
+## Basic usage
+
 ```tsx
 import { useState } from "react";
 import * as Chart from "@kind-ui/charts";
@@ -50,7 +70,7 @@ Custom marks can also import `BarShapeProps`, `PieSectorShapeProps`, `PieLabelRe
 
 This consolidates application imports; Recharts remains a required peer dependency, alongside React, React DOM and Motion. This workspace is private and unpublished. Sankey's native tooltip and specialized engine-only integrations still use an explicit Recharts import; the bounded Cartesian Tooltip is not a Sankey adapter. Comparison fixtures deliberately retain native chart imports as independent test oracles.
 
-For Next, import the package from a client component when supplying callbacks, accessors, refs or stateful content. The published entry retains `"use client"`; consolidation does not make function props serializable across a server boundary. Charts still need an accessible name and a host-owned data alternative; native SSR can render an empty chart wrapper before client layout.
+For Next, import the package from a client component when supplying callbacks, accessors, refs or stateful content. The packed entry retains `"use client"`; consolidation does not make function props serializable across a server boundary. Charts still need an accessible name and a host-owned data alternative; native SSR can render an empty chart wrapper before client layout.
 
 ## Configured Line Component
 

@@ -14,9 +14,13 @@ npm exec playwright install -- --with-deps chromium
 npm run check
 ```
 
-`npm run dev:chart` starts the minimal usage example. `check` runs lint, component tests, the actual packed-package gate, strict consumer typechecks, and Chromium interaction checks. Linux browser dependencies may require administrator permission. All packages remain private at `0.0.0`.
+`npm run dev:chart` starts the minimal usage example. `check` runs lint, component tests, the actual packed-package gate, strict consumer typechecks, and Chromium interaction checks. Linux browser dependencies may require administrator permission. The workspace remains private at `0.0.0`; `@kind-ui/charts` is the reviewed public `0.1.0` candidate, still unpublished. Publishing remains disabled.
 
 `npm run dev:showcase` opens the feature gallery at `/showcase.html` on port 4873. Color presets and a custom color picker are independent of finish; motion is on by default and follows reduced-motion preferences. Chart-family tabs switch between area, bar, line, pie, radar, and radial examples. The showcase offers finishes for Cartesian charts and pie/donut; native geometry remains unchanged.
+
+## Charts 0.1.0 candidate
+
+The [package README](packages/charts/README.md#installation-and-version) records exact-version installation, required peers and stylesheet imports. The [changelog](packages/charts/CHANGELOG.md) records the initial API and entrance-settlement fix. Before publication, validate the reviewed local tarball; the npm install command is reserved for the authorized release. Version-matched package documentation, the GitHub README and both sites must be ready before mass release. Docs and showcase deployment are separate launch steps.
 
 ## Direction
 
