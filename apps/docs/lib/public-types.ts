@@ -35,3 +35,10 @@ export type AreaSeries = Pick<
   Chart.AreaSeriesProps,
   "dataKey" | "seriesKey" | "material" | "type" | "stackId" | "connectNulls" | "fillOpacity"
 >;
+
+export type PieChart = Pick<Chart.PieChartProps, "animate" | "accessibilityLayer">;
+export type PieSeries = Pick<
+  Chart.PieSeriesProps,
+  "data" | "dataKey" | "nameKey" | "innerRadius" | "outerRadius" | "material" | "emphasisKey"
+>;
+export type PieMotionOptions = Chart.PieAnimation;
