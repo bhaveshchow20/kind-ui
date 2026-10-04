@@ -1,5 +1,12 @@
 "use client";
+import { Pencil, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  MorphingPopover as Popover,
+  MorphingPopoverContent as PopoverContent,
+  MorphingPopoverTrigger as PopoverTrigger,
+} from "@/components/morphing-popover";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 export function PaletteColorInput({
   color,
@@ -37,5 +44,53 @@ export function PaletteColorInput({
         }}
       />
     </div>
+  );
+}
+
+// Draft changes stay in this subtree: dragging a native picker must not rerender
+// the gallery (including chart geometry, motion, and generated code examples).
+export function CustomPaletteEditor({
+  colors,
+  hasCustom,
+  onApply,
+}: {
+  colors: string[];
+  hasCustom: boolean;
+  onApply: (colors: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(colors);
+  useEffect(() => setDraft(colors), [colors]);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        className="custom-palette-button"
+        aria-label={hasCustom ? "Edit custom palette" : "Create custom palette"}
+      >
+        {hasCustom ? <Pencil /> : <Plus />}
+        <span className="sr-only">Custom palette</span>
+      </PopoverTrigger>
+      <PopoverContent className="palette-editor">
+        <h3>Your palette</h3>
+        {draft.map((color, index) => (
+          <PaletteColorInput
+            key={index}
+            color={color}
+            index={index}
+            onChange={(value) =>
+              setDraft((previous) => previous.map((old, slot) => (slot === index ? value : old)))
+            }
+          />
+        ))}
+        <Button
+          onClick={() => {
+            onApply([...draft]);
+            setOpen(false);
+          }}
+        >
+          Use palette
+        </Button>
+      </PopoverContent>
+    </Popover>
   );
 }
