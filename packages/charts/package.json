@@ -2,6 +2,23 @@
   "name": "@kind-ui/charts",
   "version": "0.0.0",
   "private": true,
+  "description": "Composable React chart components built on Recharts and Motion.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bhaveshchow20/kind-ui.git",
+    "directory": "packages/charts"
+  },
+  "homepage": "https://github.com/bhaveshchow20/kind-ui/tree/main/packages/charts#readme",
+  "bugs": {
+    "url": "https://github.com/bhaveshchow20/kind-ui/issues"
+  },
+  "keywords": [
+    "react",
+    "charts",
+    "recharts",
+    "motion",
+    "typescript"
+  ],
   "type": "module",
   "sideEffects": [
     "**/*.css"

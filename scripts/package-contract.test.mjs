@@ -58,6 +58,19 @@ for (const extra of ["src/index.ts", ".env", "dist/.tsbuildinfo", "dist/node_mod
 test("rejects publication enablement", () => {
   assert.throws(() => assertPackageContract({ ...manifest, private: false }, files), /private/);
 });
+test("rejects a version change before release authorization", () => {
+  assert.throws(
+    () => assertPackageContract({ ...manifest, version: "0.1.0" }, files),
+    /authorization/,
+  );
+});
+test("rejects missing or incorrect source metadata", () => {
+  assert.throws(
+    () => assertPackageContract({ ...manifest, repository: undefined }, files),
+    /provenance/,
+  );
+  assert.throws(() => assertPackageContract({ ...manifest, description: "" }, files), /purpose/);
+});
 test("rejects CSS that bundlers may drop or consumers cannot resolve", () => {
   assert.throws(
     () => assertPackageContract({ ...manifest, sideEffects: false }, files),

@@ -8,6 +8,9 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:6898",
     viewport: { width: 1000, height: 1000 },
     reducedMotion: "reduce",
+    ...(process.env.KIND_UI_CHROMIUM_PATH
+      ? { launchOptions: { executablePath: process.env.KIND_UI_CHROMIUM_PATH } }
+      : {}),
   },
   webServer: {
     command:
