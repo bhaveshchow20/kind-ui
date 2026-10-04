@@ -832,7 +832,7 @@ input:focus-visible {
   outline: 2px solid var(--color-fd-ring);
   outline-offset: 2px;
 }
-.doc-article:is([data-doc="components/line"], [data-doc="components/area"]) .doc-body > h3 > a {
+.doc-article[data-doc^="components/"] .doc-body > h3 > a {
   min-width: 0;
   overflow-wrap: anywhere;
 }

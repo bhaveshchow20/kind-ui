@@ -99,6 +99,8 @@ try {
       .getAttribute("aria-pressed"),
     "false",
   );
+  const mobilePage = await context.newPage();
+  mobilePage.on("pageerror", (error) => errors.push(error.message));
   const searchPage = await context.newPage();
   searchPage.on("pageerror", (error) => errors.push(error.message));
   await searchPage.goto(`${origin}/docs/components/line/`);
@@ -135,6 +137,35 @@ try {
           .map((label) => label.textContent),
       );
     assert.deepEqual(clippedToc, [], `${id}: TOC labels must remain readable at 200% text`);
+    for (const width of [375, 320]) {
+      await mobilePage.setViewportSize({ width, height: 900 });
+      await mobilePage.goto(`${origin}/docs/components/${id}/`);
+      await mobilePage
+        .locator('.chart-example svg, .chart-example [data-kind-ui="heatmap-grid"]')
+        .first()
+        .waitFor();
+      await mobilePage.addStyleTag({ content: "html { font-size: 200% !important; }" });
+      const layout = await mobilePage.evaluate(async () => {
+        await document.fonts.ready;
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+        return {
+          fontSize: getComputedStyle(document.documentElement).fontSize,
+          pageWidth: document.documentElement.scrollWidth,
+          viewportWidth: document.documentElement.clientWidth,
+        };
+      });
+      if (layout.pageWidth > layout.viewportWidth + 1)
+        await mobilePage.screenshot({
+          path: `artifacts/screenshots/${id}-text200-${width}-overflow.png`,
+          fullPage: true,
+        });
+      assert.equal(layout.fontSize, "32px", `${id}: verify actual 200% root text`);
+      assert.ok(
+        layout.pageWidth <= layout.viewportWidth + 1,
+        `${id}: page overflow at ${width}/200: ${JSON.stringify(layout)}`,
+      );
+    }
     await searchPage.evaluate(() => (document.documentElement.style.fontSize = ""));
     assert.equal((await context.request.get(`${origin}/docs/components/${id}/`)).status(), 200);
     assert.equal(
