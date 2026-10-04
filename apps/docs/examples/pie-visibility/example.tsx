@@ -46,7 +46,7 @@ export function VisibleAllocationChart() {
             nameKey="key"
             innerRadius={58}
             outerRadius={108}
-            paddingAngle={2}
+            paddingAngle={0}
           >
             {selected.map((row) => (
               <Chart.Cell key={row.key} fill={config[row.key].color} />
