@@ -1,19 +1,18 @@
 // Only host composition: all maintained behavior comes from the packed public exports.
 import * as Chart from "@kind-ui/charts";
-import { useState } from "react";
 import {
   CartesianGrid,
   Cell,
   LabelList,
-  ScatterChart as NativeChart,
-  Scatter,
   type ScatterShapeProps,
   Symbols,
-  type TooltipContentProps,
+  type TooltipRenderProps as TooltipContentProps,
   XAxis,
   YAxis,
   ZAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useState } from "react";
+import { ScatterChart as NativeChart, Scatter } from "recharts";
 
 const data = [
   { id: "origin", x: 0, y: 0, z: 0 },
@@ -114,8 +113,9 @@ export function ScatterHost() {
     xAxisId: "latency",
     yAxisId: "change",
     zAxisId: "volume",
-    shape: Shape,
-    activeShape: Shape,
+    ...(new URLSearchParams(location.search).has("builtin")
+      ? {}
+      : { shape: Shape, activeShape: Shape }),
     onClick: () => setEvents((v) => ({ ...v, click: v.click + 1 })),
     onMouseEnter: () => setEvents((v) => ({ ...v, enter: v.enter + 1 })),
     onMouseLeave: () => setEvents((v) => ({ ...v, leave: v.leave + 1 })),
@@ -123,7 +123,13 @@ export function ScatterHost() {
   const cells = (
     <>
       {values.map((p, i) => (
-        <Cell key={p.id} fill={i === 1 ? "#ea580c" : "#7c3aed"} stroke="#fff" strokeWidth={2} />
+        <Cell
+          key={p.id}
+          data-point={p.id}
+          fill={i === 1 ? "#ea580c" : "#7c3aed"}
+          stroke="#fff"
+          strokeWidth={2}
+        />
       ))}
       <LabelList dataKey="id" position="top" />
     </>

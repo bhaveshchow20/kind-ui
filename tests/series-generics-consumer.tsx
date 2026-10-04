@@ -1,6 +1,7 @@
 import * as Chart from "@kind-ui/charts";
+import { Cell, Curve, LabelList, Rectangle } from "@kind-ui/charts";
 import { type ComponentProps, createRef, type MouseEvent } from "react";
-import { Bar, Cell, Curve, LabelList, Line, Rectangle } from "recharts";
+import { Bar, Line } from "recharts";
 
 type Row = { id: string; value: number; nullable: number | null; range: [number, number] };
 const rows: Row[] = [{ id: "a", value: 2, nullable: null, range: [1, 3] }];
@@ -147,3 +148,34 @@ void (<Chart.BarSeries<Row, number> isAnimationActive />);
 void (<Chart.LineSeries<Row, number> material="metal" />);
 // @ts-expect-error Existing material vocabulary stays bounded.
 void (<Chart.BarSeries<Row, number> material="metal" />);
+
+// Radar selection preserves typed native composition and makes controlled ownership explicit.
+void (
+  <Chart.RadarChart<Row>
+    selection="series"
+    data={rows}
+    selectedSeries="value"
+    onSelectedSeriesChange={(next: string | null) => void next}
+  >
+    <Chart.RadarSeries<Row, number> dataKey="value" />
+  </Chart.RadarChart>
+);
+void (
+  <Chart.RadarChart<Row>
+    selection="series"
+    data={rows}
+    onSelectedSeriesChange={(next: string | null) => void next}
+  />
+);
+const radarSelection: Chart.RadarSelectionProps = {
+  selection: "series",
+  selectedSeries: null,
+  onSelectedSeriesChange: (next) => void next,
+};
+void radarSelection;
+// @ts-expect-error Controlled Radar selection requires its owner callback.
+void (<Chart.RadarChart selectedSeries="value" selection="series" />);
+// @ts-expect-error The selection target is a series key, never a row index.
+void (<Chart.RadarChart selectedSeries={1} onSelectedSeriesChange={() => {}} />);
+// @ts-expect-error No implicit spoke selection or universal emphasis mode is exposed.
+void (<Chart.RadarChart selection="category" />);

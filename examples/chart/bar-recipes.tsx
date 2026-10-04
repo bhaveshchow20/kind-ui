@@ -1,5 +1,4 @@
 import * as Chart from "@kind-ui/charts";
-import { type ReactNode, useId } from "react";
 import {
   type BarShapeProps,
   BarStack,
@@ -14,7 +13,8 @@ import {
   useYAxisScale,
   XAxis,
   YAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { type ReactNode, useId } from "react";
 
 export type BarPoint = { category: string; value: number | null };
 export type GroupedBarPoint = {

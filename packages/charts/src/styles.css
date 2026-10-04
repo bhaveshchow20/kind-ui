@@ -1,4 +1,26 @@
 @layer kind-ui {
+  :where(.kind-ui-configured-line-root) {
+    font-family: var(--kind-ui-chart-font, ui-sans-serif, system-ui, sans-serif);
+  }
+
+  :where(.kind-ui-configured-line-chart) {
+    width: 100%;
+    height: var(--kind-ui-chart-height, 280px);
+    min-width: 0;
+  }
+
+  :where([data-kind-ui="chart-instructions"]) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
   :where(.kind-ui-combo-chart .recharts-area, .kind-ui-combo-chart .recharts-area-dots) {
     clip-path: var(--kind-ui-combo-area-clip, none);
   }
@@ -157,6 +179,7 @@
   :where([data-kind-ui="tooltip-number"]) {
     display: inline-block;
     position: relative;
+    min-width: max-content;
     overflow: clip;
     vertical-align: bottom;
     white-space: pre;
@@ -182,19 +205,19 @@
     position: relative;
     display: inline-block;
     width: 1ch;
-    height: 1em;
+    height: 1lh;
     overflow: clip;
     flex-shrink: 0;
   }
 
   :where([data-kind-ui="tooltip-digit-reel"]) {
     display: block;
-    line-height: 1;
+    line-height: inherit;
   }
 
   :where([data-kind-ui="tooltip-digit-reel"] > span) {
     display: block;
-    height: 1em;
+    height: 1lh;
   }
 }
 

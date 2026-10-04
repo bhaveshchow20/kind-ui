@@ -1,16 +1,8 @@
 // Host composition only; the installed tarball owns all chart behavior.
 import * as Chart from "@kind-ui/charts";
+import { Cell, Label, LabelList, type PieSectorShapeProps, Sector } from "@kind-ui/charts";
 import { useCallback, useMemo, useState } from "react";
-import {
-  Cell,
-  Label,
-  LabelList,
-  PieChart as NativePieChart,
-  Tooltip as NativeTooltip,
-  Pie,
-  type PieSectorShapeProps,
-  Sector,
-} from "recharts";
+import { PieChart as NativePieChart, Tooltip as NativeTooltip, Pie } from "recharts";
 
 const config = {
   alpha: { label: "Alpha", color: "#4f46e5", formatValue: (v: unknown) => `${v} seats` },
@@ -73,6 +65,9 @@ export function PieHost() {
   const [animate, setAnimate] = useState<boolean | Chart.PieAnimation>(
     new URLSearchParams(window.location.search).has("motion"),
   );
+  const [direction, setDirection] = useState<"clockwise" | "anticlockwise">(
+    new URLSearchParams(location.search).has("anticlockwise") ? "anticlockwise" : "clockwise",
+  );
   const [material, setMaterial] = useState<Chart.PieMaterial>(
     (new URLSearchParams(location.search).get("material") as Chart.PieMaterial) ?? "plain",
   );
@@ -85,7 +80,7 @@ export function PieHost() {
   const [customContent, setCustomContent] = useState(false);
   const [empty, setEmpty] = useState(false);
   const [allZero, setAllZero] = useState(false);
-  const [angles, setAngles] = useState(false);
+  const [angles, setAngles] = useState(new URLSearchParams(location.search).has("partial"));
   const [hidden, setHidden] = useState(false);
   const [clicked, setClicked] = useState("none");
   const [moved, setMoved] = useState(0);
@@ -168,8 +163,16 @@ export function PieHost() {
       </output>
       <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
         <Chart.Legend />
+        <button
+          type="button"
+          onClick={() => setDirection(direction === "clockwise" ? "anticlockwise" : "clockwise")}
+        >
+          Direction
+        </button>
+        <style>{".owned-pie-transform { transform: translate(8px, 4px); }"}</style>
         <Chart.PieChart
           animate={animate}
+          animationDirection={direction}
           width={small ? 220 : 480}
           height={300}
           ref={ref}
@@ -184,8 +187,18 @@ export function PieHost() {
             nameKey="id"
             innerRadius={donut ? "45%" : 0}
             outerRadius="75%"
-            startAngle={angles ? 180 : 90}
-            endAngle={angles ? 0 : -270}
+            startAngle={
+              new URLSearchParams(location.search).has("positive") ? 0 : angles ? 180 : 90
+            }
+            endAngle={
+              new URLSearchParams(location.search).has("positive")
+                ? angles
+                  ? 180
+                  : 360
+                : angles
+                  ? 0
+                  : -270
+            }
             paddingAngle={0}
             cornerRadius={3}
             hide={hidden}
@@ -193,7 +206,15 @@ export function PieHost() {
             onClick={(row) => setClicked(String(row.payload.id))}
           >
             {data.map((row) => (
-              <Cell key={row.id} fill={`var(--color-${row.id})`} />
+              <Cell
+                key={row.id}
+                className={
+                  new URLSearchParams(location.search).has("css-transform")
+                    ? "owned-pie-transform"
+                    : undefined
+                }
+                fill={`var(--color-${row.id})`}
+              />
             ))}
             <LabelList dataKey="id" position="outside" />
             {donut && <Label position="center" value="Seats" />}

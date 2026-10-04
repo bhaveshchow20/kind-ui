@@ -1,12 +1,12 @@
 "use client";
 
-import { animate, motion, useMotionValue } from "motion/react";
+import { motion, useMotionValue, useTransform } from "motion/react";
 import { type ComponentProps, use, useId, useLayoutEffect, useMemo, useRef } from "react";
 import {
   DefaultZIndexes,
   Scatter,
   type ScatterShapeProps,
-  type Symbols,
+  Symbols,
   usePlotArea,
   useXAxisDomain,
   useXAxisScale,
@@ -26,6 +26,42 @@ export type ScatterSeriesProps = Omit<ComponentProps<typeof Scatter>, "isAnimati
   material?: ScatterMaterial | undefined;
 };
 
+// Delay by native screen X, rather than sorting or changing quantitative data.
+function EntranceSymbol({
+  material,
+  type,
+  ...props
+}: ComponentProps<typeof Symbols> & { material: ScatterMaterial }) {
+  const { progress } = use(ScatterMotion);
+  const settled = useMotionValue(1);
+  const area = usePlotArea();
+  const x =
+    area && area.width > 0
+      ? Math.max(0, Math.min(1, ((props.cx ?? area.x) - area.x) / area.width))
+      : 0;
+  const opacity = useTransform(progress ?? settled, (value) =>
+    Math.max(0, Math.min(1, (value - x * 0.65) / 0.35)),
+  );
+  return (
+    <motion.g
+      data-kind-ui="scatter-point-entrance"
+      data-entrance-x={props.cx}
+      initial={false}
+      style={{ opacity }}
+    >
+      {material === "plain" ? (
+        <Symbols {...props} {...(type !== undefined ? { type } : {})} />
+      ) : (
+        <ScatterMaterialSymbol
+          {...props}
+          material={material}
+          {...(type !== undefined ? { type } : {})}
+        />
+      )}
+    </motion.g>
+  );
+}
+
 /** Native Scatter owns marks, Cells, labels, handlers, axis mapping and point payloads. */
 export function ScatterSeries({
   seriesKey,
@@ -36,16 +72,12 @@ export function ScatterSeries({
 }: ScatterSeriesProps) {
   const { config, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
-  const { reveal, options } = use(ScatterMotion);
   const shapes = useMemo(() => {
     function finish(option: ScatterSeriesProps["shape"]) {
-      if (
-        material === "plain" ||
-        (option !== undefined && typeof option !== "string" && typeof option !== "boolean")
-      )
+      if (option !== undefined && typeof option !== "string" && typeof option !== "boolean")
         return option;
       return (point: ScatterShapeProps) => (
-        <ScatterMaterialSymbol
+        <EntranceSymbol
           material={material}
           type={typeof option === "string" ? option : "circle"}
           {...(point as ComponentProps<typeof Symbols>)}
@@ -97,25 +129,12 @@ export function ScatterSeries({
   useLayoutEffect(() => {
     if (key !== undefined) return registerSeries(id, key);
   }, [id, key, registerSeries]);
-  const opacity = useMotionValue(reveal ? 0 : 1);
-  useLayoutEffect(() => {
-    if (!reveal || hidden) {
-      opacity.set(1);
-      return;
-    }
-    opacity.set(0);
-    const controls = animate(opacity, 1, {
-      duration: Math.max(0, options.revealDurationMs ?? 700) / 1000,
-      ease: options.revealEasing ?? "easeOut",
-    });
-    return () => controls.stop();
-  }, [reveal, hidden, options.revealDurationMs, options.revealEasing, opacity]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("ScatterSeries requires seriesKey for controlled non-string dataKey");
   const color = fill ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.scatter}>
-      <motion.g data-kind-ui="scatter-fade" initial={false} style={{ opacity }}>
+      <g data-kind-ui="scatter-fade">
         <Scatter
           {...props}
           {...(shapes.shape !== undefined ? { shape: shapes.shape } : {})}
@@ -126,7 +145,7 @@ export function ScatterSeries({
           zIndex={0}
           isAnimationActive={false}
         />
-      </motion.g>
+      </g>
     </ZIndexLayer>
   );
 }
