@@ -1,8 +1,16 @@
 // Host-only fixture: chart data, controls and engine extensions. No chart implementation.
 import * as Static from "@kind-ui/charts";
+import {
+  AreaRevealShape,
+  type AreaRevealShapeProps,
+  CartesianGrid,
+  type DotProps,
+  LabelList,
+  ReferenceLine,
+  XAxis,
+  YAxis,
+} from "@kind-ui/charts";
 import { useCallback, useState } from "react";
-import type { AreaRevealShapeProps, DotProps } from "recharts";
-import { AreaRevealShape, CartesianGrid, LabelList, ReferenceLine, XAxis, YAxis } from "recharts";
 
 const data = [
   { time: "A", value: 5, other: 8 },
