@@ -1,16 +1,16 @@
 // Host composition only. All statistics validation and marks come from the tarball.
 import * as Chart from "@kind-ui/charts";
-import { useCallback, useState } from "react";
 import {
   CartesianGrid,
   Cell,
   LabelList,
   ReferenceLine,
   ResponsiveContainer,
-  type TooltipContentProps,
+  type TooltipRenderProps as TooltipContentProps,
   XAxis,
   YAxis,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useCallback, useState } from "react";
 
 type Row = { category: string; summary: Chart.BoxPlotSummary | null };
 const data: Row[] = [

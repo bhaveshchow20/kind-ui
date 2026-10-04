@@ -1,5 +1,11 @@
 import * as Chart from "@kind-ui/charts";
 import {
+  getRelativeCoordinate,
+  type TooltipRenderProps as TooltipContentProps,
+  useChartHeight,
+  useChartWidth,
+} from "@kind-ui/charts";
+import {
   type MotionValue,
   motion,
   type Transition,
@@ -7,12 +13,7 @@ import {
   useMotionValueEvent,
 } from "motion/react";
 import { type MouseEvent, useId, useLayoutEffect, useRef, useState } from "react";
-import {
-  getRelativeCoordinate,
-  type TooltipContentProps,
-  useChartHeight,
-  useChartWidth,
-} from "recharts";
+
 import { useReducedMotionPreference } from "./use-reduced-motion.js";
 
 /** Recipe-local animation controls; omit motion to render and update immediately. */
