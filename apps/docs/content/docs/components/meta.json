@@ -1,4 +1,14 @@
 {
   "title": "Components",
-  "pages": ["line", "area", "pie", "radar", "radial", "waterfall", "sankey", "histogram"]
+  "pages": [
+    "line",
+    "area",
+    "pie",
+    "radar",
+    "radial",
+    "waterfall",
+    "sankey",
+    "histogram",
+    "box-plot"
+  ]
 }
