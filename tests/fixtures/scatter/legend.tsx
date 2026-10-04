@@ -1,8 +1,9 @@
 // Host-only fixture: all chart behavior comes from the installed public tarball.
 import * as Chart from "@kind-ui/charts";
+import { type ScatterShapeProps, Symbols, XAxis, YAxis } from "@kind-ui/charts";
 import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { type ScatterShapeProps, Symbols, XAxis, YAxis } from "recharts";
+
 import "@kind-ui/charts/styles.css";
 
 const symbols = ["circle", "diamond", "cross", "square", "star", "triangle", "wye"] as const;

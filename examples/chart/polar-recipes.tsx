@@ -1,5 +1,4 @@
 import * as Chart from "@kind-ui/charts";
-import { useState } from "react";
 import {
   Label,
   LabelList,
@@ -8,7 +7,8 @@ import {
   PolarGrid,
   PolarRadiusAxis,
   ResponsiveContainer,
-} from "recharts";
+} from "@kind-ui/charts";
+import { useState } from "react";
 
 export type PolarPoint = {
   category: string;

@@ -1,5 +1,6 @@
 import {
   prepareSankeyData,
+  ResponsiveContainer,
   SankeyChart,
   type SankeyFinish,
   type SankeyFlowData,
@@ -8,7 +9,6 @@ import {
   SankeyTable,
 } from "@kind-ui/charts";
 import { useState } from "react";
-import { ResponsiveContainer } from "recharts";
 
 const nodes = [
   { id: "solar", name: "Solar", color: "#d99a16", value: 60 },
