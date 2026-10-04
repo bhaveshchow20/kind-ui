@@ -153,81 +153,81 @@ for (const mode of ["static", "motion", "reduced"] as const) {
           fullPage: true,
         });
         await gauge.scrollIntoViewIfNeeded();
-        const hover = await gauge
-          .locator(".recharts-radial-bar-sector")
-          .first()
-          .evaluate(async (node) => {
-            const path = node as SVGPathElement,
-              box = path.getBBox(),
-              matrix = path.getScreenCTM();
-            if (!matrix) throw new Error("No native transform");
+        // Resolve the native mark inside the stable card in the same browser task
+        // as measurement: Recharts can replace sectors between locator resolution
+        // and evaluation during animation, measurement, or consumer updates.
+        const hover = await gauge.evaluate(async (card) => {
+          const path = card.querySelector<SVGPathElement>(".recharts-radial-bar-sector");
+          if (!path) throw new Error("No native sector");
+          const box = path.getBBox(),
+            matrix = path.getScreenCTM();
+          if (!matrix) throw new Error("No native transform");
+          for (let row = 1; row < 10; row++)
+            for (let column = 1; column < 10; column++) {
+              const point = new DOMPoint(
+                box.x + (box.width * column) / 10,
+                box.y + (box.height * row) / 10,
+              );
+              if (
+                path.isPointInFill(point) &&
+                path.isPointInFill(new DOMPoint(point.x + 2, point.y + 2))
+              ) {
+                const screen = point.matrixTransform(matrix);
+                return { x: screen.x, y: screen.y };
+              }
+            }
+          // Keep a miss as a failure; subsequent frames only diagnose reconciliation.
+          const describe = (candidate: SVGPathElement | null) => {
+            if (!candidate) return null;
+            const bounds = candidate.getBBox(),
+              transform = candidate.getScreenCTM(),
+              css = getComputedStyle(candidate);
+            let hits = 0;
             for (let row = 1; row < 10; row++)
               for (let column = 1; column < 10; column++) {
                 const point = new DOMPoint(
-                  box.x + (box.width * column) / 10,
-                  box.y + (box.height * row) / 10,
+                  bounds.x + (bounds.width * column) / 10,
+                  bounds.y + (bounds.height * row) / 10,
                 );
                 if (
-                  path.isPointInFill(point) &&
-                  path.isPointInFill(new DOMPoint(point.x + 2, point.y + 2))
-                ) {
-                  const screen = point.matrixTransform(matrix);
-                  return { x: screen.x, y: screen.y };
-                }
+                  candidate.isPointInFill(point) &&
+                  candidate.isPointInFill(new DOMPoint(point.x + 2, point.y + 2))
+                )
+                  hits++;
               }
-            // Keep a miss as a failure; subsequent frames only diagnose reconciliation.
-            const svg = path.ownerSVGElement;
-            const describe = (candidate: SVGPathElement | null) => {
-              if (!candidate) return null;
-              const bounds = candidate.getBBox(),
-                transform = candidate.getScreenCTM(),
-                css = getComputedStyle(candidate);
-              let hits = 0;
-              for (let row = 1; row < 10; row++)
-                for (let column = 1; column < 10; column++) {
-                  const point = new DOMPoint(
-                    bounds.x + (bounds.width * column) / 10,
-                    bounds.y + (bounds.height * row) / 10,
-                  );
-                  if (
-                    candidate.isPointInFill(point) &&
-                    candidate.isPointInFill(new DOMPoint(point.x + 2, point.y + 2))
-                  )
-                    hits++;
-                }
-              return {
-                connected: candidate.isConnected,
-                d: candidate.getAttribute("d"),
-                bounds: [bounds.x, bounds.y, bounds.width, bounds.height],
-                transform: transform && [
-                  transform.a,
-                  transform.b,
-                  transform.c,
-                  transform.d,
-                  transform.e,
-                  transform.f,
-                ],
-                fill: css.fill,
-                display: css.display,
-                visibility: css.visibility,
-                hits,
-              };
+            return {
+              connected: candidate.isConnected,
+              d: candidate.getAttribute("d"),
+              bounds: [bounds.x, bounds.y, bounds.width, bounds.height],
+              transform: transform && [
+                transform.a,
+                transform.b,
+                transform.c,
+                transform.d,
+                transform.e,
+                transform.f,
+              ],
+              fill: css.fill,
+              display: css.display,
+              visibility: css.visibility,
+              hits,
             };
-            const samples = [
-              {
-                original: describe(path),
-                current: describe(svg?.querySelector(".recharts-radial-bar-sector") ?? null),
-              },
-            ];
-            for (let frame = 0; frame < 3; frame++) {
-              await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-              samples.push({
-                original: describe(path),
-                current: describe(svg?.querySelector(".recharts-radial-bar-sector") ?? null),
-              });
-            }
-            throw new Error(`No native sector hit target: ${JSON.stringify(samples)}`);
-          });
+          };
+          const samples = [
+            {
+              original: describe(path),
+              current: describe(card.querySelector<SVGPathElement>(".recharts-radial-bar-sector")),
+            },
+          ];
+          for (let frame = 0; frame < 3; frame++) {
+            await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+            samples.push({
+              original: describe(path),
+              current: describe(card.querySelector<SVGPathElement>(".recharts-radial-bar-sector")),
+            });
+          }
+          throw new Error(`No native sector hit target: ${JSON.stringify(samples)}`);
+        });
         await page.mouse.move(hover.x, hover.y);
         await expect(gauge.locator('[data-kind-ui="chart-tooltip"]')).toBeVisible();
         await page.mouse.move(0, 0);
