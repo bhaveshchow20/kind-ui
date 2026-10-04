@@ -54,6 +54,17 @@ try {
   assert.equal(status.releases.length, 1);
   assert.equal(status.releases[0].newVersion, "0.1.0");
   run(["version"]);
+  execFileSync(
+    "npm",
+    ["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund"],
+    { cwd: scratch, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] },
+  );
+  const lock = JSON.parse(await readFile(join(scratch, "package-lock.json")));
+  assert.equal(lock.packages["packages/charts"].version, "0.1.0");
+  assert.equal(
+    execFileSync("git", ["tag", "--list"], { cwd: scratch, encoding: "utf8" }).trim(),
+    "",
+  );
   const versioned = JSON.parse(await readFile(join(scratch, "packages/charts/package.json")));
   assert.equal(versioned.version, "0.1.0");
   assert.equal(versioned.private, true);

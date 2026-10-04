@@ -10,7 +10,8 @@ npm run release:version
 
 Add a changeset for package behavior changes; documentation/tooling-only changes
 need none. Before 1.0, use a minor bump for breaking APIs and patch for compatible
-fixes. Review generated package versions, changelog and npm lockfile together.
+fixes. The version command also regenerates the npm lockfile. Review generated package
+versions, changelog and lockfile together.
 The workspace stays private. Private package versioning is enabled so a reviewed
 first-version commit can be prepared before publication; tagging is disabled.
 No first-release changeset/changelog is invented by this tooling setup.

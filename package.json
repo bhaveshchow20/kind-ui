@@ -29,7 +29,7 @@
     "test:line-integrations": "playwright test --config playwright.line-integrations.config.mjs",
     "changeset": "changeset",
     "release:status": "changeset status",
-    "release:version": "changeset version",
+    "release:version": "changeset version && npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
     "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs && node scripts/check-release-versioning.mjs"
   },
   "devDependencies": {
