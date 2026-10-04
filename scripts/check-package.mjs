@@ -86,6 +86,76 @@ try {
     packed.integrity,
     "Tarball must match npm pack integrity before installation",
   );
+  // Ordinary React host: installing Kind alone must resolve its required engine
+  // peers. Keep this distinct from the fully pinned reproducibility consumer.
+  const ordinary = join(scratch, "ordinary-host");
+  await mkdir(ordinary);
+  await writeFile(
+    join(ordinary, "package.json"),
+    JSON.stringify({
+      private: true,
+      type: "module",
+      dependencies: {
+        react: rootManifest.devDependencies.react,
+        "react-dom": rootManifest.devDependencies["react-dom"],
+      },
+      devDependencies: {
+        "@types/react": rootManifest.devDependencies["@types/react"],
+        "@types/react-dom": rootManifest.devDependencies["@types/react-dom"],
+      },
+    }),
+  );
+  run(
+    process.execPath,
+    [
+      npm,
+      "install",
+      "--no-audit",
+      "--no-fund",
+      "--package-lock=false",
+      "--workspaces=false",
+      tarball,
+    ],
+    ordinary,
+  );
+  run(process.execPath, [npm, "ls", "--all", "--json"], ordinary);
+  const ordinaryConsumerVersions = {};
+  for (const name of ["react", "react-dom", "react-is", "recharts", "motion"]) {
+    ordinaryConsumerVersions[name] = JSON.parse(
+      await readFile(join(ordinary, "node_modules", name, "package.json"), "utf8"),
+    ).version;
+  }
+  for (const file of ["chart.test.mjs", "configured-line.test.mjs", "consumer.tsx"]) {
+    await copyFile(join(root, "tests", file), join(ordinary, file));
+  }
+  run(process.execPath, ["--test", "chart.test.mjs", "configured-line.test.mjs"], ordinary);
+  for (const mode of ["NodeNext", "Bundler"]) {
+    await writeFile(
+      join(ordinary, "tsconfig.json"),
+      JSON.stringify({
+        compilerOptions: {
+          target: "ES2022",
+          jsx: "react-jsx",
+          esModuleInterop: true,
+          module: mode === "Bundler" ? "ESNext" : mode,
+          moduleResolution: mode,
+          strict: true,
+          skipLibCheck: false,
+          noEmit: true,
+          typeRoots: [join(ordinary, "node_modules/@types")],
+        },
+        files: ["consumer.tsx"],
+      }),
+    );
+    run(
+      process.execPath,
+      [join(root, "node_modules/typescript/bin/tsc"), "-p", "tsconfig.json"],
+      ordinary,
+    );
+  }
+  console.log(
+    `Ordinary npm React host: Kind-only install, peer graph, component tests and strict types passed (${JSON.stringify(ordinaryConsumerVersions)})`,
+  );
   const consumer = join(scratch, "consumer");
   await mkdir(consumer);
   await writeFile(
@@ -475,8 +545,18 @@ try {
           integrity: packed.integrity,
           package: { name: manifest.name, version: manifest.version },
           source: {
-            commit: run("git", ["rev-parse", "HEAD"]).trim(),
+            checkoutCommit: run("git", ["rev-parse", "HEAD"]).trim(),
+            pullRequestHeadCommit: process.env.KIND_UI_PR_HEAD_SHA || null,
+            pullRequestBaseCommit: process.env.KIND_UI_PR_BASE_SHA || null,
             dirty: run("git", ["status", "--porcelain"]).trim().length > 0,
+          },
+          workflow: {
+            runId: process.env.GITHUB_RUN_ID || null,
+            runAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
+            event: process.env.GITHUB_EVENT_NAME || null,
+            runUrl: process.env.GITHUB_RUN_ID
+              ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+              : null,
           },
           tools: {
             node: process.version,
@@ -487,6 +567,7 @@ try {
           consumerVersions: Object.fromEntries(
             peerNames.map((name) => [name, rootManifest.devDependencies[name]]),
           ),
+          ordinaryConsumerVersions,
           validation: "installed tarball package gate; aggregate browser checks are separate",
         },
         null,

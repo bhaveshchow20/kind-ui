@@ -155,11 +155,20 @@ try {
   await writeFile(join(root, "artifacts/line-integrations/next-build.log"), nextLog);
   const html = await readFile(join(scratch, "out/index.html"), "utf8");
   assert.match(html, /Server boundary totals/);
+  assert.match(html, /data-kind-ui="chart"/, "SSR must include the package chart shell");
+  assert.match(html, /data-kind-ui="chart-legend"/, "SSR must include package content");
   // Native responsive SSR emits an empty wrapper; the client supplies SVG ARIA.
   assert.match(html, /lucide-trending-up/);
   const nextOutput = join(root, "artifacts/packed-line-next");
   await rm(nextOutput, { recursive: true, force: true });
   await cp(join(scratch, "out"), nextOutput, { recursive: true });
+  assert.equal(
+    createHash("sha256")
+      .update(await readFile(tarball))
+      .digest("hex"),
+    evidence.sha256,
+    "Tested candidate must not change during integration validation",
+  );
   await writeFile(
     join(root, "artifacts/line-integrations/evidence.json"),
     JSON.stringify(
@@ -169,6 +178,13 @@ try {
         tailwind: manifest.devDependencies.tailwindcss,
         lucide: "1.50.0",
         iconModules: [...bundledIcons].map((id) => id.slice(id.indexOf("lucide-react/"))),
+        checks: [
+          "Next production static export",
+          "package SSR shell/content",
+          "Tailwind production build",
+          "named icon tree-shaking",
+        ],
+        validation: "build checks only; browser hydration/interaction checks run separately",
       },
       null,
       2,
