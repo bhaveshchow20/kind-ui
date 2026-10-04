@@ -8,6 +8,7 @@ import { previews as pie } from "./pie";
 import { previews as radar } from "./radar";
 import { previews as radial } from "./radial";
 import { previews as sankey } from "./sankey";
+import { previews as scatter } from "./scatter";
 import { previews as waterfall } from "./waterfall";
 export const previews = {
   ...line,
@@ -16,6 +17,7 @@ export const previews = {
   ...pie,
   ...radar,
   ...radial,
+  ...scatter,
   ...waterfall,
   ...sankey,
   ...histogram,
