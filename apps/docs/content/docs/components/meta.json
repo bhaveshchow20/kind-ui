@@ -3,6 +3,7 @@
   "pages": [
     "line",
     "area",
+    "combo",
     "pie",
     "radar",
     "radial",
