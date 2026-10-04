@@ -9,6 +9,23 @@ const visual = '[data-kind-ui="tooltip-number-visual"]';
 const reels = '[data-kind-ui="tooltip-digit-reel"]';
 const valueRow = (root: Locator, key: string) => root.locator(`[data-series="${key}"]`);
 
+test("rolling digits reserve the full text line height", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(route);
+  await page.getByLabel("Shuffle values").check();
+  const digit = valueRow(page.locator('[data-direct="true"]'), "count")
+    .locator('[data-kind-ui="tooltip-digit"]')
+    .first();
+  const dimensions = await digit.evaluate((node) => ({
+    slot: node.getBoundingClientRect().height,
+    row: node.querySelector('[data-kind-ui="tooltip-digit-reel"] > span')!.getBoundingClientRect()
+      .height,
+    line: Number.parseFloat(getComputedStyle(node).lineHeight),
+  }));
+  expect(Math.abs(dimensions.slot - dimensions.line)).toBeLessThan(1);
+  expect(Math.abs(dimensions.row - dimensions.line)).toBeLessThan(1);
+});
+
 test("supported ASCII digits retain their formatted order in an RTL container", async ({
   page,
 }) => {
@@ -65,7 +82,7 @@ test("rapid updates retarget rolling digits, retain exact accessible final value
   const direct = page.locator('[data-direct="true"]');
   const row = valueRow(direct, "count");
   await expect(row.locator(final)).toHaveText("13 commits");
-  await expect.poll(() => row.locator(reels).first().getAttribute("style")).toContain("-11em");
+  await expect.poll(() => row.locator(reels).first().getAttribute("style")).toContain("-11lh");
   const widthBefore = await row
     .locator('[data-kind-ui="tooltip-number"]')
     .evaluate((node) => node.getBoundingClientRect().width);
@@ -95,7 +112,7 @@ test("rapid updates retarget rolling digits, retain exact accessible final value
     }
   });
   await expect(row.locator(final)).toHaveText("4 commits");
-  await expect.poll(() => row.locator(reels).getAttribute("style")).toContain("-14em");
+  await expect.poll(() => row.locator(reels).getAttribute("style")).toContain("-14lh");
   await page.getByRole("button", { name: "Value -12.5", exact: true }).click();
   await expect(row.locator(final)).toHaveText("-12.5 commits");
   await page.getByRole("button", { name: "Value 123456.75", exact: true }).click();
@@ -186,7 +203,7 @@ test("shared and Scatter tooltip forwarding respects keyboard selection and cust
   await expect(scatterTip.locator(final)).toHaveText(["1", "8"]);
   await expect
     .poll(() => scatterTip.locator(reels).first().getAttribute("style"))
-    .toContain("-11em");
+    .toContain("-11lh");
   const settled = await scatterTip.locator(reels).first().getAttribute("style");
   const node = await scatterTip.locator(reels).first().elementHandle();
   await page
