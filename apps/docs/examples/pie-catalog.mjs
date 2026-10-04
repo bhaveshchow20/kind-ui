@@ -49,3 +49,10 @@ export const pieVariants = {
     ],
   },
 };
+
+export const family = {
+  id: "pie",
+  examples: pieExamples,
+  dataLabels: pieDataLabels,
+  variants: pieVariants,
+};

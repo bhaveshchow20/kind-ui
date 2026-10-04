@@ -6,17 +6,17 @@ const config = {
   design: { label: "Design", color: "#733bff", formatValue: (value: unknown) => `${value} hours` },
   engineering: {
     label: "Engineering",
-    color: "#2675e8",
+    color: "#2469d4",
     formatValue: (value: unknown) => `${value} hours`,
   },
   operations: {
     label: "Operations",
-    color: "#d87427",
+    color: "#b65c16",
     formatValue: (value: unknown) => `${value} hours`,
   },
   research: {
     label: "Research",
-    color: "#188e78",
+    color: "#147c68",
     formatValue: (value: unknown) => `${value} hours`,
   },
 } satisfies Chart.SeriesConfig;
