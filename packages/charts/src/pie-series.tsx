@@ -14,6 +14,8 @@ import {
   useState,
 } from "react";
 import { Cell, Pie, type PieSectorShapeProps, Sector } from "recharts";
+import { type CategoryKey, categoryCells } from "./category-cells.js";
+import { useChart } from "./chart-context.js";
 import { EmphasisMark } from "./emphasis.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
@@ -23,6 +25,8 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
   "isAnimationActive"
 > & {
+  /** Opt-in category colors from Root.config; requires explicit series data. */
+  categoryKey?: CategoryKey<DataPoint> | undefined;
   /** Finish on default native sectors; custom shapes, filters and CSS transforms keep ownership. */
   material?: PieMaterial | undefined;
   /** Stable sector identity; defaults to the native nameKey value. */
@@ -342,7 +346,12 @@ function EntranceSector({
 export function PieSeries<DataPoint = unknown, Value = unknown>(
   props: PieSeriesProps<DataPoint, Value>,
 ) {
-  const { material = "plain", emphasisKey, ...nativeProps } = props;
+  const { material = "plain", emphasisKey, categoryKey, ...nativeProps } = props;
+  const { config } = useChart();
+  const children =
+    categoryKey === undefined
+      ? props.children
+      : categoryCells(props.data, categoryKey, config, props.children, props.fill);
   const seriesId = useId();
   const { invalidate, emphasisScope } = useLineInteraction();
   const scope = `${emphasisScope}/${seriesId}`;
@@ -405,6 +414,8 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
       stroke={props.stroke ?? "none"}
       shape={props.shape ?? sectorShape}
       isAnimationActive={false}
-    />
+    >
+      {children}
+    </Pie>
   );
 }

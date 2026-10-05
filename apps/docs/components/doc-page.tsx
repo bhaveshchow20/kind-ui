@@ -4,7 +4,7 @@ import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layo
 import defaultComponents from "fumadocs-ui/mdx";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import lineBundles from "@/generated/line-examples.json";
+import bundles from "@/generated/all-examples.json";
 import { source } from "@/lib/source";
 import packageProvenance from "@/vendor/provenance.json";
 import { ApiTable } from "./api-table";
@@ -17,7 +17,7 @@ import { CopyMarkdown } from "./copy-markdown";
 import { MobileDocsNavigation } from "./glass-docs-layout";
 
 async function LineExample({ id }: { id: ComponentId }) {
-  const bundle = (lineBundles as unknown as Record<ComponentId, ComponentBundle>)[id];
+  const bundle = (bundles as unknown as Record<ComponentId, ComponentBundle>)[id];
   async function codeBlock(code: string) {
     return highlight(code, {
       lang: "tsx",
@@ -67,7 +67,9 @@ export function renderDoc(slug?: string[]) {
   return (
     <DocsPage
       toc={
-        key === "components/line" ? page.data.toc.filter((item) => item.depth === 2) : page.data.toc
+        key.startsWith("components/")
+          ? page.data.toc.filter((item) => item.depth === 2)
+          : page.data.toc
       }
       tableOfContent={{ container: { className: "docs-visible-toc" } }}
     >
@@ -85,12 +87,14 @@ export function renderDoc(slug?: string[]) {
             components={{
               ...defaultComponents,
               LineExample,
+              ChartExample: LineExample,
+              AreaExample: LineExample,
               ApiTable,
               PackageSource: () => <code>{packageProvenance.sourceCommit}</code>,
             }}
           />
         </DocsBody>
-        {key !== "components/line" && (
+        {!key.startsWith("components/") && (
           <footer className="doc-footer">
             <span>Unpublished preview · 0.0.0</span>
             <Link href="/docs/guides/release/">Package status</Link>

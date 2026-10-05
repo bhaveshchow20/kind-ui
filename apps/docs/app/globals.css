@@ -1,4 +1,6 @@
+@layer theme, base, components, kind-ui, utilities;
 @import "tailwindcss";
+@import "@kind-ui/charts/styles.css";
 @import "fumadocs-ui/css/generated/glass.css";
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
@@ -811,7 +813,7 @@ input:focus-visible {
   margin-top: 8px;
 }
 
-.doc-article[data-doc="components/line"] .doc-body > figure pre {
+.doc-article:is([data-doc="components/line"], [data-doc="components/area"]) .doc-body > figure pre {
   max-height: calc(280px + 7rem);
   overflow: auto;
 }
@@ -830,7 +832,7 @@ input:focus-visible {
   outline: 2px solid var(--color-fd-ring);
   outline-offset: 2px;
 }
-.doc-article[data-doc="components/line"] .doc-body > h3 > a {
+.doc-article[data-doc^="components/"] .doc-body > h3 > a {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -894,6 +896,21 @@ input:focus-visible {
 }
 .glass-sidebar-search > button {
   width: 100%;
+  flex-wrap: wrap;
+}
+#nd-sidebar .kind-wordmark {
+  flex-wrap: wrap;
+  max-width: 100%;
+  row-gap: 0.2em;
+}
+#nd-sidebar > button[aria-haspopup="dialog"] {
+  flex-wrap: wrap;
+}
+#nd-sidebar > button[aria-haspopup="dialog"] > span {
+  flex-shrink: 0;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
 }
 .glass-sidebar-footer {
   display: flex;
@@ -935,6 +952,8 @@ input:focus-visible {
   }
   #nd-toc.docs-visible-toc h3 + div {
     --row: 1.5rem;
+    grid-template-rows: none !important;
+    grid-auto-rows: minmax(1.5rem, auto);
     pointer-events: auto;
   }
   #nd-toc.docs-visible-toc a {
@@ -942,6 +961,10 @@ input:focus-visible {
   }
   #nd-toc.docs-visible-toc a span {
     opacity: 1;
+    min-width: 0;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
   }
 }
 

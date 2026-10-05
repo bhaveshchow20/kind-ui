@@ -1,0 +1,141 @@
+---
+title: Histogram
+description: Show response-time distributions with explicit numeric bins.
+---
+
+<ChartExample id="histogram" />
+
+## Usage
+
+`binHistogram` assigns samples to explicit edges. `Root` supplies metadata; `ResponsiveContainer` sizes the plot. `HistogramChart` owns the numeric axes and reuses Bar entrance motion. Compose `HistogramSeries`, grid and tooltip inside it. The first Code tab contains the complete named component and dataset.
+
+```tsx title="Composition"
+<Chart.Root config={config}>
+  <Chart.ResponsiveContainer width="100%" height={280}>
+    <Chart.HistogramChart bins={result.bins} measure="count" animate accessibilityLayer>
+      <Chart.CartesianGrid vertical={false} />
+      <Chart.HistogramSeries />
+      <Chart.Tooltip />
+    </Chart.HistogramChart>
+  </Chart.ResponsiveContainer>
+</Chart.Root>
+```
+
+Bins include their lower edge and exclude their upper edge, except the final bin includes the final edge. An interior-edge sample goes into the bin on its right. Here, `200` is accepted and `260` is out of range. The result separately counts accepted, missing (`null` or `undefined`), nonfinite and out-of-range samples; no coercion or inferred edges occur.
+
+Count height means observations per bin. These equal-width bins make heights easy to compare. Width is the numeric interval span, not an arbitrary category bar size.
+
+## Unequal-width density
+
+The same samples use edges `[0, 25, 50, 100, 200]`. Wider intervals occupy more horizontal space. Density is `count / (accepted × bin width)`, in probability per millisecond. Rectangle areas sum to one for a nonempty sample; heights need not sum to one. Empty totals produce zero density. Discarded samples are excluded from normalization.
+
+<ChartExample id="histogram-density" />
+
+## Materials
+
+Plain, paper, clay and glow preserve each bin's numeric bounds. The selected finish drives the preview and complete source. A custom `shape`, `filter` or `style.filter` takes paint ownership.
+
+<ChartExample id="histogram-materials" />
+
+## API reference
+
+Histogram composes Kind metadata and native Recharts plot parts. It owns quantitative geometry; use `xAxisProps` and `yAxisProps` for tick presentation rather than adding category axes.
+
+### binHistogram
+
+<div className="line-props-scroll" role="region" aria-label="binHistogram parameters" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `samples` | `readonly (number \| null \| undefined)[]` | Required | Raw observations; missing, nonfinite and out-of-range values are counted separately. |
+| `edges` | `readonly number[]` | Required | At least two finite, strictly increasing edges with finite positive widths. Invalid edges throw. |
+
+</div>
+
+Returns `HistogramBinningResult`: `bins`, `accepted`, `missing`, `nonfinite` and `outOfRange`. Each `HistogramBin` has numeric `lower`, `upper` and `count`. Pre-aggregated bins may have gaps, but must be ordered, nonoverlapping and finite with positive finite widths; counts and their total must be nonnegative safe integers. `HistogramChart` validates these constraints.
+
+### Root
+
+<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Labels, colors and optional value formatters. Default HistogramSeries identity is `"count"` for either measure. |
+| `visibleSeries` | `readonly string[]` | All series | Consumer-owned visibility. |
+| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables controlled legend buttons when paired with `visibleSeries`. |
+
+</div>
+
+### HistogramChart
+
+<div className="line-props-scroll" role="region" aria-label="HistogramChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `bins` | `readonly HistogramBin[]` | Required | Validated intervals; their first lower and final upper bounds define the horizontal domain. |
+| `measure` | `"count" \| "density"` | Required | Count height or normalized probability density. Numerically unrepresentable density throws. |
+| `animate` | `boolean \| BarAnimation` | `false` | Reuses chart-owned Bar entrance and reduced-motion handling. Options include `revealDurationMs`, `revealEasing` and `hoverTransition`. |
+| `xAxisProps` | Native XAxis presentation props | — | Ticks, tick formatting and spacing; numeric scale, domain, axis identity and bin midpoint are owned. |
+| `yAxisProps` | Native YAxis presentation props | — | Tick presentation; numeric domain is `[0, "dataMax"]`. |
+| `accessibilityLayer` | `boolean` | `true` in Recharts | Arrow-key inspection; set explicitly in these components. |
+| `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Plot spacing. |
+| `children` | `ReactNode` | — | Explicit histogram series, grid and tooltip. |
+
+</div>
+
+Data, vertical layout, axis scales and bar spacing are owned by HistogramChart. See native [XAxis](https://recharts.github.io/en-US/api/XAxis/), [YAxis](https://recharts.github.io/en-US/api/YAxis/) and [BarChart](https://recharts.github.io/en-US/api/BarChart/) for inherited presentation options.
+
+### HistogramSeries
+
+<div className="line-props-scroll" role="region" aria-label="HistogramSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `seriesKey` | `string` | `"count"` | Root metadata and visibility identity; internal `dataKey` is owned. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Finish on corrected bin rectangles. |
+| `shape` | `(props: HistogramShapeProps) => ReactElement` | — | Native bar shape props with corrected numeric `x`, `width` and original `bin`; custom geometry becomes consumer-owned. |
+| `fill` / `stroke` | `string` | Config color / unset | Explicit paint overrides. |
+| `hide` | `boolean` | `false` | Hides the series; Root visibility also applies. |
+
+</div>
+
+Requires HistogramChart. Plain bins use square corners and zero minimum height. Native Cells and events remain available; stacking, labels, background, activeBar, bar sizing and axis identity are excluded from this public series contract. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
+
+### Tooltip
+
+<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `labelFormatter` | Native tooltip label formatter | — | These components read original bin bounds from payload to label intervals. |
+| `cursor` | Native cursor props or renderer | `false` | Optional inspection guide. |
+| `maxWidth` | `number` | `180` | Width bound in pixels. |
+
+</div>
+
+Root formatters label count or density values. ArrowLeft and ArrowRight inspect bins; Escape dismisses inspection. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+
+### CartesianGrid
+
+<div className="line-props-scroll" role="region" aria-label="CartesianGrid props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `vertical` | `boolean` | `true` | These components disable vertical guides. |
+| `strokeDasharray` | `string` | — | Horizontal guide dash pattern. |
+
+</div>
+
+See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
+
+### ResponsiveContainer
+
+<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` / `height` | `number` or percentage | `"100%"` | Measurable responsive dimensions; these components use a 280px plot height. |
+
+</div>
+
+See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).

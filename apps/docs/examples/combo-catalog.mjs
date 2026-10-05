@@ -1,0 +1,65 @@
+export const comboExamples = [
+  {
+    id: "combo",
+    title: "Production and capacity",
+    notes: "Shipped units, available capacity and a production target on one numeric scale.",
+    acceptance:
+      "Six monthly observations agree across the three composed families, source and hidden data alternative.",
+  },
+  {
+    id: "combo-stacked",
+    title: "Revenue and margin",
+    notes:
+      "Stacked retail and wholesale revenue in USD, with margin percentage on a separate right axis.",
+    acceptance:
+      "Native stacks and axis IDs remain explicit; controlled legend buttons update marks and tooltip rows.",
+  },
+  {
+    id: "combo-motion",
+    title: "Family entrances",
+    notes: "Independent, shared or line-only entrances with chart-owned motion.",
+    acceptance:
+      "Selected entrance, complete code and copied source agree; reduced motion displays final geometry.",
+  },
+];
+const production = {
+  caption: "Monthly production in units",
+  columns: {
+    period: "Month",
+    capacity: "Capacity (units)",
+    shipped: "Shipped (units)",
+    target: "Target (units)",
+  },
+};
+export const comboDataLabels = {
+  combo: production,
+  "combo-stacked": {
+    caption: "Monthly revenue and margin",
+    columns: {
+      period: "Month",
+      retail: "Retail (USD)",
+      wholesale: "Wholesale (USD)",
+      margin: "Margin (%)",
+    },
+  },
+  "combo-motion": production,
+};
+export const comboVariants = {
+  "combo-motion": {
+    control: "Entrance",
+    prop: "entrance",
+    default: "independent",
+    options: [
+      { value: "independent", label: "Independent" },
+      { value: "together", label: "Together" },
+      { value: "lineOnly", label: "Line only" },
+    ],
+  },
+};
+
+export const family = {
+  id: "combo",
+  examples: comboExamples,
+  dataLabels: comboDataLabels,
+  variants: comboVariants,
+};
