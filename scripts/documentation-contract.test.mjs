@@ -7,7 +7,7 @@ const readme = await readFile(new URL("../packages/charts/README.md", import.met
 const recipes = await readdir(new URL("../examples/chart/", import.meta.url));
 const files = ["README.md", "CHANGELOG.md", "LICENSE", "package.json"];
 
-test("shipped README links use available versioned recipes", () => {
+test("shipped README links use available canonical recipes", () => {
   assertDocumentationContract(readme, recipes, files);
 });
 test("rejects recipe links outside the tarball", () => {
@@ -18,18 +18,18 @@ test("rejects recipe links outside the tarball", () => {
         recipes,
         files,
       ),
-    /verified source snapshot/,
+    /canonical repository recipe route/,
   );
 });
-test("rejects mutable recipe references", () => {
+test("rejects recipe references on an unsupported route", () => {
   assert.throws(
     () =>
       assertDocumentationContract(
-        readme.replace(recipeSourcePrefix, recipeSourcePrefix.replace(/blob\/[^/]+/, "blob/main")),
+        readme.replace(recipeSourcePrefix, recipeSourcePrefix.replace("blob/main", "blob/unknown")),
         recipes,
         files,
       ),
-    /verified source snapshot/,
+    /canonical repository recipe route/,
   );
 });
 test("rejects missing recipe targets and other unpacked local files", () => {
@@ -40,7 +40,7 @@ test("rejects missing recipe targets and other unpacked local files", () => {
         recipes.filter((file) => file !== "BARS.md"),
         files,
       ),
-    /Missing versioned recipe/,
+    /Missing recipe/,
   );
   assert.throws(
     () => assertDocumentationContract(`${readme}\n[guide](../../docs/guide.md)`, recipes, files),
