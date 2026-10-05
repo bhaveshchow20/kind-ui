@@ -1,0 +1,184 @@
+---
+title: Scatter and Bubble Chart
+description: Compare numeric relationships across series and encode a third measure with bubble area.
+---
+
+Illustrative task observations compare latency and acceptance across weekday and weekend traffic.
+
+<ChartExample id="scatter" />
+
+## Usage
+
+`Root` supplies series labels, colors and controlled visibility. `ScatterChart` owns motion and native point inspection. Each `ScatterSeries` supplies its own records; both axes explicitly use numeric scales. The first Code tab contains the complete named component, dataset and public imports.
+
+```tsx title="Composition"
+<Chart.Root config={config} visibleSeries={visibleSeries} onVisibleSeriesChange={setVisibleSeries}>
+  <Chart.Legend />
+  <Chart.ResponsiveContainer width="100%" height={280}>
+    <Chart.ScatterChart animate accessibilityLayer aria-label="Latency and acceptance by cohort">
+      <Chart.CartesianGrid />
+      <Chart.XAxis type="number" dataKey="latency" name="Latency" unit=" ms" />
+      <Chart.YAxis type="number" dataKey="acceptance" name="Acceptance" unit="%" />
+      <Chart.ScatterSeries seriesKey="weekday" data={data.filter((row) => row.cohort === "weekday")} shape="circle" />
+      <Chart.ScatterSeries seriesKey="weekend" data={data.filter((row) => row.cohort === "weekend")} shape="diamond" />
+      <Chart.ScatterTooltip<(typeof data)[number]> pointLabel={(row) => row.period} />
+    </Chart.ScatterChart>
+  </Chart.ResponsiveContainer>
+</Chart.Root>
+```
+
+Series identity is separate from numeric dimension keys. Reuse each symbol in the config entry’s `legendShape` and the series `shape`; the legend does not infer shapes from children. Legend buttons update consumer-owned visibility. Axis names and units describe dimensions without adding dimension entries to the legend.
+
+## Bubble size
+
+A bubble chart composes `ZAxis` with `ScatterChart`; there is no separate `BubbleChart` export. Here native Z scaling maps request volume to symbol area, with a declared domain and range.
+
+<ChartExample id="scatter-bubble" />
+
+Recharts uses the minimum Z range for both zero and missing size, and omits their native Z tooltip entries. `zDimension` recovers the raw size from the selected record: Classify shows `0k`; Extract shows `No data`. It does not change either bubble's geometry. Without this mapping, default content shows only native entries and guesses no missing size.
+
+String mapping keys read own top-level properties. For a nested field, reuse the same typed accessor for `ZAxis` and the tooltip’s `zDimension` mapping. Nonzero native Z entries retain native names, units and formatters. Negative size passes through to the native scale; validate count domains in the host.
+
+## Materials
+
+Choose plain, paper, clay or glow on built-in symbols. The selected finish drives the preview, full source and copied prompt.
+
+<ChartExample id="scatter-materials" />
+
+Finishes preserve native coordinates, symbol paths and Z area. Glow's exterior halo is decorative light, not measured bubble area. Custom shapes retain ownership; explicit point filters or clip paths bypass the finish. Small marks can retain accurate geometry while their finish becomes indistinguishable.
+
+## Interaction and accessibility
+
+Pointer inspection selects an actual point record from any visible series. Native Left/Right navigation visits the first registered series in data order; it does not navigate spatially or traverse every series. Escape dismisses inspection. Match `ScatterTooltip.axisId` to a custom X axis ID when using one. Keep a complete accessible data alternative for every series, including overlapping observations and missing measurements; these previews include hidden tables.
+
+Chart motion fades marks in place, with native per-series animation disabled. Pointer, focus and keyboard interaction settle entrance; data, visibility, geometry changes and resize also settle it. Entrance does not replay after interaction. Reduced motion renders final client geometry with Motion off. Native fixed-size server rendering has no Scatter SVG marks at the pinned peer version; provide host-owned server-rendered data or a summary.
+
+## API reference
+
+Compose the public parts explicitly. Kind owns shared metadata, visibility and motion; Recharts owns numeric scales, symbol geometry and item selection.
+
+### Root
+
+<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series labels, colors, optional icons and `legendShape`. |
+| `visibleSeries` | `readonly string[]` | All | Consumer-owned series selection. |
+| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend buttons with controlled selection. |
+| `emphasis` | `"auto" \| "none"` | `"auto"` | Scatter has no automatic paint dimming during inspection. |
+
+</div>
+
+### ScatterChart
+
+<div className="line-props-scroll" role="region" aria-label="ScatterChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `animate` | `boolean \| ScatterAnimation` | `false` | In-place entrance fade and shared tooltip motion; respects reduced motion. |
+| `accessibilityLayer` | `boolean` | `true` in Recharts | Native first-series keyboard inspection; set explicitly here. |
+| `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each | Plot spacing for axes and marks. |
+| `children` | `ReactNode` | — | Explicit axes, grid, series and Scatter tooltip. |
+| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
+
+</div>
+
+See [Recharts ScatterChart](https://recharts.github.io/en-US/api/ScatterChart/). This component has no configured Line conveniences such as `config`, `xDataKey` or `series`.
+
+### ScatterSeries
+
+<div className="line-props-scroll" role="region" aria-label="ScatterSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `Row[]` | — | Native point records; axis keys read these records. |
+| `seriesKey` | `string` | String `dataKey` | Config and visibility identity; use explicitly for cohorts. |
+| `shape` | `"circle" \| "cross" \| "diamond" \| "square" \| "star" \| "triangle" \| "wye"` or native custom shape | `"circle"` | Built-in symbol or consumer-owned renderer. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Finish for built-in symbols, preserving native geometry. |
+| `fill` | `string` | Config color when identified | Explicit color overrides metadata. |
+| `hide` | `boolean` | `false` | Native hiding; Root selection also applies. |
+| `xAxisId` / `yAxisId` / `zAxisId` | `string \| number` | `0` | Native axis association. |
+
+</div>
+
+Cells, labels, handlers and custom shapes remain native consumer composition. Kind disables native `isAnimationActive` so the chart owns motion. Unresolvable X/Y coordinates retain native behavior; Kind does not coerce or deduplicate values. See [Recharts Scatter](https://recharts.github.io/en-US/api/Scatter/).
+
+### ScatterTooltip
+
+<div className="line-props-scroll" role="region" aria-label="ScatterTooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `pointLabel` | `(record: Row) => ReactNode` | Config series label | Receives the actual selected native record. |
+| `zDimension` | `ScatterSizeDimension<Row>` | — | Explicit raw zero/missing size recovery; no geometry change. |
+| `missingValue` | `ReactNode` | `"No data"` | Text for a recovered missing measurement. |
+| `axisId` | `string \| number` | `0` | Match a custom X axis ID for native keyboard navigation. |
+| `maxWidth` | `number` | `180` | Kind tooltip width bound in pixels. |
+| `content` | `ReactElement \| ((props: TooltipRenderProps) => ReactNode)` | Kind Scatter content | Custom content owns dimension rendering. |
+
+</div>
+
+The typed size mapping has `dataKey: string | ((record: Row) => number | null | undefined)` and optional `name` / `unit` strings. Native formatters take precedence over dimension config formatting. Use [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/) for additional native props.
+
+### ScatterTooltip<wbr />Content
+
+<div className="line-props-scroll" role="region" aria-label="ScatterTooltipContent props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tooltip` | `TooltipRenderProps` | Required | Native tooltip content callback payload. |
+| `pointLabel` / `zDimension` / `missingValue` | Same as `ScatterTooltip` | Same | Compose Kind dimension content inside a custom native adapter. |
+| `valueAnimation` | `"shuffle"` | — | Optional numeric readout motion. |
+
+</div>
+
+### XAxis and YAxis
+
+<div className="line-props-scroll" role="region" aria-label="Numeric axis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `type` | `"number" \| "category"` | X: `"category"`; Y: `"number"` | Set both to `"number"` for quantitative relationships. |
+| `dataKey` | `string \| number \| ((record: Row) => unknown)` | — | X or Y measurement field. |
+| `name` / `unit` | `string` | — | Native dimension title and tooltip unit. |
+| `domain` | Native numeric domain | `[0, "auto"]` | Consumer-owned numeric bounds. |
+| `tickMargin` | `number` | `5` | Tick spacing; examples use `10`. |
+| `height` (X) / `width` (Y) | `number` / `number \| "auto"` | `30` / `60` | Reserve tick-label space. |
+
+</div>
+
+See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/) and [YAxis](https://recharts.github.io/en-US/api/YAxis/).
+
+### ZAxis
+
+<div className="line-props-scroll" role="region" aria-label="ZAxis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string \| number \| ((record: Row) => unknown)` | — | Size measurement field or accessor. |
+| `range` | `[number, number]` | `[64, 64]` | Native symbol area range; not radius. |
+| `domain` | Native numeric domain | `[0, "auto"]` | Native size scale bounds. |
+| `name` / `unit` | `string` | — | Native nonzero Z tooltip metadata. |
+
+</div>
+
+See [Recharts ZAxis](https://recharts.github.io/en-US/api/ZAxis/).
+
+### Legend
+
+Place outside the responsive plot. Configured `legendShape` supports the same seven native symbols as `ScatterSeries.shape`; reuse the value explicitly. `icon` takes priority over a configured symbol. Without controlled visibility, items are labels; with visibility and callback, buttons support Enter and Space.
+
+<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `hideIcon` | `boolean` | `false` | Use swatches instead of configured icons or symbols. |
+| `children` | `(item: { key: string; label: string; visible: boolean; marker: ReactNode }) => ReactNode` | — | Custom noninteractive item content; Kind retains button and state ownership. |
+| `emphasis` | `"none" \| "series"` | `"none"` | Shared emphasis request; no automatic Scatter paint dimming. |
+
+</div>
+
+### Responsive<wbr />Container and CartesianGrid
+
+`ResponsiveContainer` measures a parent with usable dimensions; these examples set `width="100%"` and `height={280}`. Native `CartesianGrid` draws guides on both numeric scales; `strokeDasharray="3 3"` sets the guide pattern. See [ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/) and [CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
