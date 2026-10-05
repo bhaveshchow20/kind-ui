@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "line-chart",
+  "type": "registry:component",
+  "title": "Revenue momentum",
+  "description": "Compare two revenue trends with editable line styling, package-owned inspection and series visibility, and a native data table.",
+  "dependencies": [
+    "@kind-ui/charts@^0.1.0",
+    "react@^19.3.0",
+    "react-dom@^19.3.0",
+    "recharts@^3.10.1",
+    "motion@^13.4.6"
+  ],
+  "registryDependencies": [
+    "card",
+    "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/kind-chart-styles.json"
+  ],
+  "files": [
+    {
+      "path": "registry/charts/line-chart.tsx",
+      "type": "registry:component",
+      "target": "@components/charts/line-chart.tsx",
+      "content": "\"use client\";\n\nimport * as Chart from \"@kind-ui/charts\";\nimport { useState } from \"react\";\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from \"@/components/ui/card\";\nimport \"@kind-ui/charts/styles.css\";\nimport \"./kind-chart.css\";\n\nexport type LineChartDatum = { period: string; current: number; previous: number };\nexport const lineChartData: LineChartDatum[] = [\n  { period: \"Jan\", current: 38, previous: 24 },\n  { period: \"Feb\", current: 52, previous: 33 },\n  { period: \"Mar\", current: 45, previous: 30 },\n  { period: \"Apr\", current: 68, previous: 47 },\n  { period: \"May\", current: 61, previous: 42 },\n  { period: \"Jun\", current: 84, previous: 59 },\n];\nconst config = {\n  current: { label: \"This year\", color: \"var(--kind-recipe-1)\" },\n  previous: { label: \"Last year\", color: \"var(--kind-recipe-2)\" },\n} satisfies Chart.SeriesConfig;\n\n/** Editable presentation; chart inspection, visibility and motion come from Kind UI. */\nexport function KindLineChart({ data = lineChartData }: { data?: LineChartDatum[] }) {\n  const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config));\n  return (\n    <Card className=\"kind-recipe kind-recipe-line\">\n      <CardHeader>\n        <p className=\"kind-recipe-eyebrow\">THE BIG PICTURE</p>\n        <CardTitle>Revenue momentum</CardTitle>\n        <CardDescription>A clear view of the rhythm behind your revenue.</CardDescription>\n      </CardHeader>\n      <CardContent>\n        <p className=\"kind-recipe-metric\">\n          {data.reduce((sum, row) => sum + row.current, 0).toLocaleString()}\n          <span> thousand USD · this year</span>\n        </p>\n        <Chart.Root\n          config={config}\n          visibleSeries={visibleSeries}\n          onVisibleSeriesChange={setVisibleSeries}\n        >\n          <Chart.Legend aria-label=\"Choose visible revenue momentum series\" />\n          <div className=\"kind-recipe-plot\">\n            <Chart.ResponsiveContainer width=\"100%\" height=\"100%\">\n              <Chart.LineChart\n                data={data}\n                animate\n                accessibilityLayer\n                aria-label=\"Revenue momentum by month\"\n                margin={{ top: 16, right: 12, bottom: 0, left: 0 }}\n              >\n                <Chart.CartesianGrid vertical={false} stroke=\"var(--kind-recipe-grid)\" />\n                <Chart.XAxis\n                  dataKey=\"period\"\n                  tickLine={false}\n                  axisLine={false}\n                  tickMargin={12}\n                  minTickGap={16}\n                />\n                <Chart.YAxis tickLine={false} axisLine={false} width={36} />\n                <Chart.LineSeries dataKey=\"current\" strokeWidth={3} dot={false} />\n                <Chart.LineSeries dataKey=\"previous\" strokeWidth={3} dot={false} />\n                <Chart.Tooltip />\n              </Chart.LineChart>\n            </Chart.ResponsiveContainer>\n          </div>\n        </Chart.Root>\n        <details className=\"kind-recipe-values\">\n          <summary>View chart data</summary>\n          <div className=\"kind-recipe-table-scroll\">\n            <table>\n              <caption>Revenue momentum (thousand USD)</caption>\n              <thead>\n                <tr>\n                  <th scope=\"col\">Month</th>\n                  <th scope=\"col\">This year</th>\n                  <th scope=\"col\">Last year</th>\n                </tr>\n              </thead>\n              <tbody>\n                {data.map((row) => (\n                  <tr key={row.period}>\n                    <th scope=\"row\">{row.period}</th>\n                    <td>{row.current.toLocaleString()}</td>\n                    <td>{row.previous.toLocaleString()}</td>\n                  </tr>\n                ))}\n              </tbody>\n            </table>\n          </div>\n        </details>\n      </CardContent>\n    </Card>\n  );\n}\n"
+    }
+  ]
+}

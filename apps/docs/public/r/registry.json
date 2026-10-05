@@ -1,0 +1,127 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "kindui",
+  "homepage": "https://github.com/bhaveshchow20/kind-ui",
+  "items": [
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "kind-chart-styles",
+      "type": "registry:style",
+      "title": "Kind chart styling",
+      "description": "Editable scoped palettes, typography, framing, responsive layout and table styling for Kind chart recipes.",
+      "files": [
+        {
+          "path": "registry/charts/kind-chart.css",
+          "type": "registry:file",
+          "target": "@components/charts/kind-chart.css",
+          "content": ".kind-recipe,\n.kind-dashboard {\n  --kind-recipe-1: #396b57;\n  --kind-recipe-2: #8573b1;\n  --kind-recipe-grid: #e5e9e2;\n  color: #253d32;\n  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);\n}\n.kind-recipe {\n  min-width: 0;\n  border: 1px solid #e2e7dc;\n  border-radius: 1.25rem;\n  background: #fffef9;\n  box-shadow: 0 4px 18px #253d3205;\n}\n.kind-recipe-area {\n  --kind-recipe-1: #376b99;\n  --kind-recipe-2: #ac7353;\n}\n.kind-recipe-bar {\n  --kind-recipe-1: #78629c;\n  --kind-recipe-2: #4a827d;\n}\n.kind-recipe-eyebrow {\n  margin: 0 0 0.65rem;\n  font-size: 0.65rem;\n  letter-spacing: 0.16em;\n  font-weight: 700;\n  color: #667568;\n}\n.kind-recipe-metric {\n  margin: 0 0 1.2rem;\n  font-size: 2.6rem;\n  line-height: 1.1;\n  letter-spacing: -0.06em;\n  font-weight: 600;\n}\n.kind-recipe-metric span {\n  margin-left: 0.6rem;\n  font-size: 0.75rem;\n  font-weight: 400;\n  letter-spacing: 0;\n  color: #687367;\n}\n.kind-recipe-plot {\n  height: 260px;\n  width: 100%;\n  min-width: 0;\n  margin-top: 0.8rem;\n}\n.kind-recipe-values {\n  margin-top: 1.4rem;\n  border-top: 1px solid var(--kind-recipe-grid);\n  padding-top: 1rem;\n  font-size: 0.8rem;\n}\n.kind-recipe-values summary {\n  cursor: pointer;\n  width: fit-content;\n}\n.kind-recipe-table-scroll {\n  overflow-x: auto;\n}\n.kind-recipe-values table {\n  border-collapse: collapse;\n  width: 100%;\n  margin-top: 1rem;\n}\n.kind-recipe-values caption {\n  text-align: left;\n  padding-bottom: 0.75rem;\n}\n.kind-recipe-values th,\n.kind-recipe-values td {\n  text-align: left;\n  padding: 0.5rem;\n  border-bottom: 1px solid var(--kind-recipe-grid);\n}\n.kind-dashboard {\n  padding: clamp(1rem, 4vw, 3.5rem);\n  background: #f3f4ed;\n  border-radius: 1.5rem;\n}\n.kind-dashboard-header {\n  display: flex;\n  align-items: end;\n  justify-content: space-between;\n  flex-wrap: wrap;\n  gap: 1.5rem;\n  margin-bottom: 2rem;\n}\n.kind-dashboard-header h1 {\n  margin: 0;\n  max-width: 18ch;\n  font-size: clamp(2rem, 4vw, 3.8rem);\n  font-weight: 500;\n  line-height: 1.08;\n  letter-spacing: -0.055em;\n}\n.kind-dashboard-header p:last-child {\n  color: #667568;\n}\n.kind-dashboard-filter {\n  display: grid;\n  gap: 0.5rem;\n  font-size: 0.75rem;\n}\n.kind-dashboard-filter select {\n  border: 1px solid #c8d0c3;\n  background: #fffef9;\n  color: inherit;\n  font: inherit;\n  padding: 0.7rem 1rem;\n  border-radius: 0.6rem;\n}\n.kind-dashboard-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 1.25rem;\n}\n.kind-dashboard-grid > :first-child {\n  grid-column: 1 / -1;\n}\n.kind-recipe :focus-visible,\n.kind-dashboard :focus-visible {\n  outline: 2px solid #396b57;\n  outline-offset: 4px;\n}\n@media (max-width: 640px) {\n  .kind-dashboard-grid {\n    grid-template-columns: minmax(0, 1fr);\n  }\n  .kind-recipe-plot {\n    height: 220px;\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "line-chart",
+      "type": "registry:component",
+      "title": "Revenue momentum",
+      "description": "Compare two revenue trends with editable line styling, package-owned inspection and series visibility, and a native data table.",
+      "dependencies": [
+        "@kind-ui/charts@^0.1.0",
+        "react@^19.3.0",
+        "react-dom@^19.3.0",
+        "recharts@^3.10.1",
+        "motion@^13.4.6"
+      ],
+      "registryDependencies": [
+        "card",
+        "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/kind-chart-styles.json"
+      ],
+      "files": [
+        {
+          "path": "registry/charts/line-chart.tsx",
+          "type": "registry:component",
+          "target": "@components/charts/line-chart.tsx",
+          "content": "\"use client\";\n\nimport * as Chart from \"@kind-ui/charts\";\nimport { useState } from \"react\";\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from \"@/components/ui/card\";\nimport \"@kind-ui/charts/styles.css\";\nimport \"./kind-chart.css\";\n\nexport type LineChartDatum = { period: string; current: number; previous: number };\nexport const lineChartData: LineChartDatum[] = [\n  { period: \"Jan\", current: 38, previous: 24 },\n  { period: \"Feb\", current: 52, previous: 33 },\n  { period: \"Mar\", current: 45, previous: 30 },\n  { period: \"Apr\", current: 68, previous: 47 },\n  { period: \"May\", current: 61, previous: 42 },\n  { period: \"Jun\", current: 84, previous: 59 },\n];\nconst config = {\n  current: { label: \"This year\", color: \"var(--kind-recipe-1)\" },\n  previous: { label: \"Last year\", color: \"var(--kind-recipe-2)\" },\n} satisfies Chart.SeriesConfig;\n\n/** Editable presentation; chart inspection, visibility and motion come from Kind UI. */\nexport function KindLineChart({ data = lineChartData }: { data?: LineChartDatum[] }) {\n  const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config));\n  return (\n    <Card className=\"kind-recipe kind-recipe-line\">\n      <CardHeader>\n        <p className=\"kind-recipe-eyebrow\">THE BIG PICTURE</p>\n        <CardTitle>Revenue momentum</CardTitle>\n        <CardDescription>A clear view of the rhythm behind your revenue.</CardDescription>\n      </CardHeader>\n      <CardContent>\n        <p className=\"kind-recipe-metric\">\n          {data.reduce((sum, row) => sum + row.current, 0).toLocaleString()}\n          <span> thousand USD · this year</span>\n        </p>\n        <Chart.Root\n          config={config}\n          visibleSeries={visibleSeries}\n          onVisibleSeriesChange={setVisibleSeries}\n        >\n          <Chart.Legend aria-label=\"Choose visible revenue momentum series\" />\n          <div className=\"kind-recipe-plot\">\n            <Chart.ResponsiveContainer width=\"100%\" height=\"100%\">\n              <Chart.LineChart\n                data={data}\n                animate\n                accessibilityLayer\n                aria-label=\"Revenue momentum by month\"\n                margin={{ top: 16, right: 12, bottom: 0, left: 0 }}\n              >\n                <Chart.CartesianGrid vertical={false} stroke=\"var(--kind-recipe-grid)\" />\n                <Chart.XAxis\n                  dataKey=\"period\"\n                  tickLine={false}\n                  axisLine={false}\n                  tickMargin={12}\n                  minTickGap={16}\n                />\n                <Chart.YAxis tickLine={false} axisLine={false} width={36} />\n                <Chart.LineSeries dataKey=\"current\" strokeWidth={3} dot={false} />\n                <Chart.LineSeries dataKey=\"previous\" strokeWidth={3} dot={false} />\n                <Chart.Tooltip />\n              </Chart.LineChart>\n            </Chart.ResponsiveContainer>\n          </div>\n        </Chart.Root>\n        <details className=\"kind-recipe-values\">\n          <summary>View chart data</summary>\n          <div className=\"kind-recipe-table-scroll\">\n            <table>\n              <caption>Revenue momentum (thousand USD)</caption>\n              <thead>\n                <tr>\n                  <th scope=\"col\">Month</th>\n                  <th scope=\"col\">This year</th>\n                  <th scope=\"col\">Last year</th>\n                </tr>\n              </thead>\n              <tbody>\n                {data.map((row) => (\n                  <tr key={row.period}>\n                    <th scope=\"row\">{row.period}</th>\n                    <td>{row.current.toLocaleString()}</td>\n                    <td>{row.previous.toLocaleString()}</td>\n                  </tr>\n                ))}\n              </tbody>\n            </table>\n          </div>\n        </details>\n      </CardContent>\n    </Card>\n  );\n}\n"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "area-chart",
+      "type": "registry:component",
+      "title": "Audience growth",
+      "description": "Compare audience growth with soft area fills, package-owned inspection and series visibility, and a native data table.",
+      "dependencies": [
+        "@kind-ui/charts@^0.1.0",
+        "react@^19.3.0",
+        "react-dom@^19.3.0",
+        "recharts@^3.10.1",
+        "motion@^13.4.6"
+      ],
+      "registryDependencies": [
+        "card",
+        "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/kind-chart-styles.json"
+      ],
+      "files": [
+        {
+          "path": "registry/charts/area-chart.tsx",
+          "type": "registry:component",
+          "target": "@components/charts/area-chart.tsx",
+          "content": "\"use client\";\n\nimport * as Chart from \"@kind-ui/charts\";\nimport { useState } from \"react\";\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from \"@/components/ui/card\";\nimport \"@kind-ui/charts/styles.css\";\nimport \"./kind-chart.css\";\n\nexport type AreaChartDatum = { period: string; current: number; previous: number };\nexport const areaChartData: AreaChartDatum[] = [\n  { period: \"Jan\", current: 38, previous: 24 },\n  { period: \"Feb\", current: 52, previous: 33 },\n  { period: \"Mar\", current: 45, previous: 30 },\n  { period: \"Apr\", current: 68, previous: 47 },\n  { period: \"May\", current: 61, previous: 42 },\n  { period: \"Jun\", current: 84, previous: 59 },\n];\nconst config = {\n  current: { label: \"This year\", color: \"var(--kind-recipe-1)\" },\n  previous: { label: \"Last year\", color: \"var(--kind-recipe-2)\" },\n} satisfies Chart.SeriesConfig;\n\n/** Editable presentation; chart inspection, visibility and motion come from Kind UI. */\nexport function KindAreaChart({ data = areaChartData }: { data?: AreaChartDatum[] }) {\n  const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config));\n  return (\n    <Card className=\"kind-recipe kind-recipe-area\">\n      <CardHeader>\n        <p className=\"kind-recipe-eyebrow\">THE BIG PICTURE</p>\n        <CardTitle>Audience growth</CardTitle>\n        <CardDescription>See how your audience builds over time.</CardDescription>\n      </CardHeader>\n      <CardContent>\n        <p className=\"kind-recipe-metric\">\n          {data.reduce((sum, row) => sum + row.current, 0).toLocaleString()}\n          <span> thousand visitors · this year</span>\n        </p>\n        <Chart.Root\n          config={config}\n          visibleSeries={visibleSeries}\n          onVisibleSeriesChange={setVisibleSeries}\n        >\n          <Chart.Legend aria-label=\"Choose visible audience growth series\" />\n          <div className=\"kind-recipe-plot\">\n            <Chart.ResponsiveContainer width=\"100%\" height=\"100%\">\n              <Chart.AreaChart\n                data={data}\n                animate\n                accessibilityLayer\n                aria-label=\"Audience growth by month\"\n                margin={{ top: 16, right: 12, bottom: 0, left: 0 }}\n              >\n                <Chart.CartesianGrid vertical={false} stroke=\"var(--kind-recipe-grid)\" />\n                <Chart.XAxis\n                  dataKey=\"period\"\n                  tickLine={false}\n                  axisLine={false}\n                  tickMargin={12}\n                  minTickGap={16}\n                />\n                <Chart.YAxis tickLine={false} axisLine={false} width={36} />\n                <Chart.AreaSeries dataKey=\"current\" fillOpacity={0.18} strokeWidth={2} />\n                <Chart.AreaSeries dataKey=\"previous\" fillOpacity={0.18} strokeWidth={2} />\n                <Chart.Tooltip />\n              </Chart.AreaChart>\n            </Chart.ResponsiveContainer>\n          </div>\n        </Chart.Root>\n        <details className=\"kind-recipe-values\">\n          <summary>View chart data</summary>\n          <div className=\"kind-recipe-table-scroll\">\n            <table>\n              <caption>Audience growth (thousand visitors)</caption>\n              <thead>\n                <tr>\n                  <th scope=\"col\">Month</th>\n                  <th scope=\"col\">This year</th>\n                  <th scope=\"col\">Last year</th>\n                </tr>\n              </thead>\n              <tbody>\n                {data.map((row) => (\n                  <tr key={row.period}>\n                    <th scope=\"row\">{row.period}</th>\n                    <td>{row.current.toLocaleString()}</td>\n                    <td>{row.previous.toLocaleString()}</td>\n                  </tr>\n                ))}\n              </tbody>\n            </table>\n          </div>\n        </details>\n      </CardContent>\n    </Card>\n  );\n}\n"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "bar-chart",
+      "type": "registry:component",
+      "title": "Orders by channel",
+      "description": "Compare direct and partner orders with grouped bars, package-owned inspection and series visibility, and a native data table.",
+      "dependencies": [
+        "@kind-ui/charts@^0.1.0",
+        "react@^19.3.0",
+        "react-dom@^19.3.0",
+        "recharts@^3.10.1",
+        "motion@^13.4.6"
+      ],
+      "registryDependencies": [
+        "card",
+        "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/kind-chart-styles.json"
+      ],
+      "files": [
+        {
+          "path": "registry/charts/bar-chart.tsx",
+          "type": "registry:component",
+          "target": "@components/charts/bar-chart.tsx",
+          "content": "\"use client\";\n\nimport * as Chart from \"@kind-ui/charts\";\nimport { useState } from \"react\";\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from \"@/components/ui/card\";\nimport \"@kind-ui/charts/styles.css\";\nimport \"./kind-chart.css\";\n\nexport type BarChartDatum = { period: string; direct: number; partner: number };\nexport const barChartData: BarChartDatum[] = [\n  { period: \"Jan\", direct: 38, partner: 24 },\n  { period: \"Feb\", direct: 52, partner: 33 },\n  { period: \"Mar\", direct: 45, partner: 30 },\n  { period: \"Apr\", direct: 68, partner: 47 },\n  { period: \"May\", direct: 61, partner: 42 },\n  { period: \"Jun\", direct: 84, partner: 59 },\n];\nconst config = {\n  direct: { label: \"Direct\", color: \"var(--kind-recipe-1)\" },\n  partner: { label: \"Partners\", color: \"var(--kind-recipe-2)\" },\n} satisfies Chart.SeriesConfig;\n\n/** Editable presentation; chart inspection, visibility and motion come from Kind UI. */\nexport function KindBarChart({ data = barChartData }: { data?: BarChartDatum[] }) {\n  const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config));\n  return (\n    <Card className=\"kind-recipe kind-recipe-bar\">\n      <CardHeader>\n        <p className=\"kind-recipe-eyebrow\">THE BIG PICTURE</p>\n        <CardTitle>Orders by channel</CardTitle>\n        <CardDescription>Compare the channels bringing people to your work.</CardDescription>\n      </CardHeader>\n      <CardContent>\n        <p className=\"kind-recipe-metric\">\n          {data.reduce((sum, row) => sum + row.direct, 0).toLocaleString()}\n          <span> direct orders</span>\n        </p>\n        <Chart.Root\n          config={config}\n          visibleSeries={visibleSeries}\n          onVisibleSeriesChange={setVisibleSeries}\n        >\n          <Chart.Legend aria-label=\"Choose visible orders by channel series\" />\n          <div className=\"kind-recipe-plot\">\n            <Chart.ResponsiveContainer width=\"100%\" height=\"100%\">\n              <Chart.BarChart\n                data={data}\n                animate\n                accessibilityLayer\n                aria-label=\"Orders by channel by month\"\n                margin={{ top: 16, right: 12, bottom: 0, left: 0 }}\n              >\n                <Chart.CartesianGrid vertical={false} stroke=\"var(--kind-recipe-grid)\" />\n                <Chart.XAxis\n                  dataKey=\"period\"\n                  tickLine={false}\n                  axisLine={false}\n                  tickMargin={12}\n                  minTickGap={16}\n                />\n                <Chart.YAxis tickLine={false} axisLine={false} width={36} />\n                <Chart.BarSeries dataKey=\"direct\" radius={[5, 5, 0, 0]} />\n                <Chart.BarSeries dataKey=\"partner\" radius={[5, 5, 0, 0]} />\n                <Chart.Tooltip />\n              </Chart.BarChart>\n            </Chart.ResponsiveContainer>\n          </div>\n        </Chart.Root>\n        <details className=\"kind-recipe-values\">\n          <summary>View chart data</summary>\n          <div className=\"kind-recipe-table-scroll\">\n            <table>\n              <caption>Orders by channel (orders)</caption>\n              <thead>\n                <tr>\n                  <th scope=\"col\">Month</th>\n                  <th scope=\"col\">Direct</th>\n                  <th scope=\"col\">Partners</th>\n                </tr>\n              </thead>\n              <tbody>\n                {data.map((row) => (\n                  <tr key={row.period}>\n                    <th scope=\"row\">{row.period}</th>\n                    <td>{row.direct.toLocaleString()}</td>\n                    <td>{row.partner.toLocaleString()}</td>\n                  </tr>\n                ))}\n              </tbody>\n            </table>\n          </div>\n        </details>\n      </CardContent>\n    </Card>\n  );\n}\n"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "charts-dashboard",
+      "type": "registry:block",
+      "title": "Business overview dashboard",
+      "description": "A responsive editorial dashboard composing Line, Area and Bar recipes with an application-owned reporting-period filter. Edit data, copy and layout locally.",
+      "dependencies": [
+        "@kind-ui/charts@^0.1.0",
+        "react@^19.3.0",
+        "react-dom@^19.3.0",
+        "recharts@^3.10.1",
+        "motion@^13.4.6"
+      ],
+      "registryDependencies": [
+        "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/line-chart.json",
+        "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/area-chart.json",
+        "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/bar-chart.json"
+      ],
+      "files": [
+        {
+          "path": "registry/charts/charts-dashboard.tsx",
+          "type": "registry:component",
+          "target": "@components/charts/charts-dashboard.tsx",
+          "content": "\"use client\";\n\nimport { useId, useState } from \"react\";\nimport { areaChartData, KindAreaChart } from \"@/components/charts/area-chart\";\nimport { barChartData, KindBarChart } from \"@/components/charts/bar-chart\";\nimport { KindLineChart, lineChartData } from \"@/components/charts/line-chart\";\nimport \"./kind-chart.css\";\n\nexport function ChartsDashboard() {\n  const [period, setPeriod] = useState(\"half\");\n  const id = useId();\n  const start = period === \"quarter\" ? 3 : 0;\n  return (\n    <section className=\"kind-dashboard\" aria-labelledby={`${id}-title`}>\n      <header className=\"kind-dashboard-header\">\n        <div>\n          <p className=\"kind-recipe-eyebrow\">YOUR BUSINESS, IN FOCUS</p>\n          <h1 id={`${id}-title`}>Small signals. Clear direction.</h1>\n          <p>A little perspective for your next big decision.</p>\n        </div>\n        <label className=\"kind-dashboard-filter\">\n          Reporting period\n          <select value={period} onChange={(event) => setPeriod(event.target.value)}>\n            <option value=\"half\">January – June</option>\n            <option value=\"quarter\">April – June</option>\n          </select>\n        </label>\n      </header>\n      <div className=\"kind-dashboard-grid\">\n        <KindLineChart data={lineChartData.slice(start)} />\n        <KindAreaChart data={areaChartData.slice(start)} />\n        <KindBarChart data={barChartData.slice(start)} />\n      </div>\n    </section>\n  );\n}\n"
+        }
+      ]
+    }
+  ]
+}

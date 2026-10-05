@@ -1,0 +1,108 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "kindui",
+  "homepage": "https://github.com/bhaveshchow20/kind-ui",
+  "items": [
+    {
+      "name": "kind-chart-styles",
+      "type": "registry:style",
+      "title": "Kind chart styling",
+      "description": "Editable scoped palettes, typography, framing, responsive layout and table styling for Kind chart recipes.",
+      "files": [
+        {
+          "path": "registry/charts/kind-chart.css",
+          "type": "registry:file",
+          "target": "@components/charts/kind-chart.css"
+        }
+      ]
+    },
+    {
+      "name": "line-chart",
+      "type": "registry:component",
+      "title": "Revenue momentum",
+      "description": "Compare two revenue trends with editable line styling, package-owned inspection and series visibility, and a native data table.",
+      "dependencies": [
+        "@kind-ui/charts@^0.1.0",
+        "react@^19.3.0",
+        "react-dom@^19.3.0",
+        "recharts@^3.10.1",
+        "motion@^13.4.6"
+      ],
+      "registryDependencies": ["card", "bhaveshchow20/kind-ui/kind-chart-styles"],
+      "files": [
+        {
+          "path": "registry/charts/line-chart.tsx",
+          "type": "registry:component",
+          "target": "@components/charts/line-chart.tsx"
+        }
+      ]
+    },
+    {
+      "name": "area-chart",
+      "type": "registry:component",
+      "title": "Audience growth",
+      "description": "Compare audience growth with soft area fills, package-owned inspection and series visibility, and a native data table.",
+      "dependencies": [
+        "@kind-ui/charts@^0.1.0",
+        "react@^19.3.0",
+        "react-dom@^19.3.0",
+        "recharts@^3.10.1",
+        "motion@^13.4.6"
+      ],
+      "registryDependencies": ["card", "bhaveshchow20/kind-ui/kind-chart-styles"],
+      "files": [
+        {
+          "path": "registry/charts/area-chart.tsx",
+          "type": "registry:component",
+          "target": "@components/charts/area-chart.tsx"
+        }
+      ]
+    },
+    {
+      "name": "bar-chart",
+      "type": "registry:component",
+      "title": "Orders by channel",
+      "description": "Compare direct and partner orders with grouped bars, package-owned inspection and series visibility, and a native data table.",
+      "dependencies": [
+        "@kind-ui/charts@^0.1.0",
+        "react@^19.3.0",
+        "react-dom@^19.3.0",
+        "recharts@^3.10.1",
+        "motion@^13.4.6"
+      ],
+      "registryDependencies": ["card", "bhaveshchow20/kind-ui/kind-chart-styles"],
+      "files": [
+        {
+          "path": "registry/charts/bar-chart.tsx",
+          "type": "registry:component",
+          "target": "@components/charts/bar-chart.tsx"
+        }
+      ]
+    },
+    {
+      "name": "charts-dashboard",
+      "type": "registry:block",
+      "title": "Business overview dashboard",
+      "description": "A responsive editorial dashboard composing Line, Area and Bar recipes with an application-owned reporting-period filter. Edit data, copy and layout locally.",
+      "dependencies": [
+        "@kind-ui/charts@^0.1.0",
+        "react@^19.3.0",
+        "react-dom@^19.3.0",
+        "recharts@^3.10.1",
+        "motion@^13.4.6"
+      ],
+      "registryDependencies": [
+        "bhaveshchow20/kind-ui/line-chart",
+        "bhaveshchow20/kind-ui/area-chart",
+        "bhaveshchow20/kind-ui/bar-chart"
+      ],
+      "files": [
+        {
+          "path": "registry/charts/charts-dashboard.tsx",
+          "type": "registry:component",
+          "target": "@components/charts/charts-dashboard.tsx"
+        }
+      ]
+    }
+  ]
+}

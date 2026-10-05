@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "charts-dashboard",
+  "type": "registry:block",
+  "title": "Business overview dashboard",
+  "description": "A responsive editorial dashboard composing Line, Area and Bar recipes with an application-owned reporting-period filter. Edit data, copy and layout locally.",
+  "dependencies": [
+    "@kind-ui/charts@^0.1.0",
+    "react@^19.3.0",
+    "react-dom@^19.3.0",
+    "recharts@^3.10.1",
+    "motion@^13.4.6"
+  ],
+  "registryDependencies": [
+    "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/line-chart.json",
+    "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/area-chart.json",
+    "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/bar-chart.json"
+  ],
+  "files": [
+    {
+      "path": "registry/charts/charts-dashboard.tsx",
+      "type": "registry:component",
+      "target": "@components/charts/charts-dashboard.tsx",
+      "content": "\"use client\";\n\nimport { useId, useState } from \"react\";\nimport { areaChartData, KindAreaChart } from \"@/components/charts/area-chart\";\nimport { barChartData, KindBarChart } from \"@/components/charts/bar-chart\";\nimport { KindLineChart, lineChartData } from \"@/components/charts/line-chart\";\nimport \"./kind-chart.css\";\n\nexport function ChartsDashboard() {\n  const [period, setPeriod] = useState(\"half\");\n  const id = useId();\n  const start = period === \"quarter\" ? 3 : 0;\n  return (\n    <section className=\"kind-dashboard\" aria-labelledby={`${id}-title`}>\n      <header className=\"kind-dashboard-header\">\n        <div>\n          <p className=\"kind-recipe-eyebrow\">YOUR BUSINESS, IN FOCUS</p>\n          <h1 id={`${id}-title`}>Small signals. Clear direction.</h1>\n          <p>A little perspective for your next big decision.</p>\n        </div>\n        <label className=\"kind-dashboard-filter\">\n          Reporting period\n          <select value={period} onChange={(event) => setPeriod(event.target.value)}>\n            <option value=\"half\">January – June</option>\n            <option value=\"quarter\">April – June</option>\n          </select>\n        </label>\n      </header>\n      <div className=\"kind-dashboard-grid\">\n        <KindLineChart data={lineChartData.slice(start)} />\n        <KindAreaChart data={areaChartData.slice(start)} />\n        <KindBarChart data={barChartData.slice(start)} />\n      </div>\n    </section>\n  );\n}\n"
+    }
+  ]
+}
