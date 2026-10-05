@@ -7,7 +7,36 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const ci = parse(await read(".github/workflows/ci.yml"));
 const docs = parse(await read(".github/workflows/docs.yml"));
 const release = parse(await read(".github/workflows/release.yml"));
+const codeql = parse(await read(".github/workflows/codeql.yml"));
 const dependabot = parse(await read(".github/dependabot.yml"));
+
+test("CodeQL scans JavaScript and TypeScript with only job-scoped findings upload permission", () => {
+  assert.deepEqual(codeql.permissions, { contents: "read" });
+  assert.deepEqual(codeql.on.push, { branches: ["main"] });
+  assert.deepEqual(codeql.on.pull_request, { branches: ["main"] });
+  assert.deepEqual(codeql.on.schedule, [{ cron: "17 6 * * 2" }]);
+  assert.deepEqual(Object.keys(codeql.on).sort(), ["pull_request", "push", "schedule"]);
+  assert.deepEqual(Object.keys(codeql.jobs), ["analyze"]);
+  const job = codeql.jobs.analyze;
+  assert.deepEqual(job.permissions, { contents: "read", "security-events": "write" });
+  assert.equal(job["timeout-minutes"], 30);
+  assert.equal(job["runs-on"], "ubuntu-latest");
+  assert.equal(job.steps.length, 3);
+  for (const step of job.steps) {
+    assert.match(step.uses, /@[a-f0-9]{40}$/);
+    assert.equal(step.run, undefined);
+  }
+  assert.equal(job.steps[0].with["persist-credentials"], false);
+  assert.match(job.steps[0].uses, /^actions\/checkout@/);
+  assert.match(job.steps[1].uses, /^github\/codeql-action\/init@/);
+  assert.deepEqual(job.steps[1].with, { languages: "javascript-typescript", "build-mode": "none" });
+  assert.match(job.steps[2].uses, /^github\/codeql-action\/analyze@/);
+  assert.deepEqual(job.steps[2].with, {
+    category: "/language:javascript-typescript",
+    "upload-database": false,
+  });
+  assert.equal(JSON.stringify(codeql).includes("secrets."), false);
+});
 
 test("PR checks run without trigger exclusions and preserve required receipts", () => {
   assert.equal(ci.on.pull_request, null);

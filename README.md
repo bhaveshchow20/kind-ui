@@ -1,6 +1,7 @@
 # Kind UI
 
 [![CI](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/bhaveshchow20/kind-ui/actions/workflows/codeql.yml/badge.svg)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/codeql.yml)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bhaveshchow20/kind-ui)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![npm version](https://img.shields.io/npm/v/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
