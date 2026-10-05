@@ -90,11 +90,13 @@ export function ActivityRings({
       throw new Error("ActivityRings values must be finite numbers");
     return {
       ...ring,
+      // biome-ignore lint/style/noNonNullAssertion: Object.hasOwn above rejects ring keys absent from config.
       label: config[ring.key]!.label,
       rawValue: ring.value,
       progress: Math.max(0, Math.min(100, ((ring.value - min) / (max - min)) * 100)),
     };
   });
+  // biome-ignore lint/style/noNonNullAssertion: Every key was validated against config while constructing data.
   const activeConfig = Object.fromEntries(keys.map((key) => [key, config[key]!]));
   const describedBy = [chartProps["aria-describedby"], descriptionId].filter(Boolean).join(" ");
   return (
@@ -103,6 +105,7 @@ export function ActivityRings({
         {data.map((ring) => (
           <div key={ring.key}>
             <dt>{ring.label}</dt>
+            {/* biome-ignore lint/style/noNonNullAssertion: Every rendered ring key was validated against config above. */}
             <dd>{config[ring.key]!.formatValue?.(ring.rawValue) ?? ring.rawValue}</dd>
           </div>
         ))}

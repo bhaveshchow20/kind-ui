@@ -219,7 +219,7 @@ try {
   await page.locator(".recharts-area-area").first().waitFor();
   evidence.push({ motionFinal: "passed", text200: "passed", lineAreaShell: "passed" });
   await context.close();
-  writeFileSync("artifacts/heatmap/browser-results.json", JSON.stringify(evidence, null, 2) + "\n");
+  writeFileSync("artifacts/heatmap/browser-results.json", `${JSON.stringify(evidence, null, 2)}\n`);
 } finally {
   await browser.close();
 }

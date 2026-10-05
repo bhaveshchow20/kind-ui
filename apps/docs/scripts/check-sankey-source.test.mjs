@@ -30,18 +30,34 @@ for (const example of family.examples) {
       .find((declaration) => declaration.name.getText(ast) === "data");
     const data = literal(variable.initializer);
     assert.deepEqual(family.dataLabels[example.id].rows, data.links);
-    assert.equal(data.nodes.length, 9);
-    assert.equal(data.links.length, 18);
-    assert.equal(prepareSankeyData(data).links.length, 18);
-    assert.equal(
-      data.links
-        .filter((link) => ["solar", "wind", "hydro"].includes(link.source))
-        .reduce((sum, link) => sum + link.value, 0),
-      180,
-    );
+    if (example.id === "sankey-config") {
+      assert.deepEqual(
+        data.nodes.map((node) => node.id),
+        ["solar", "wind", "homes", "industry"],
+      );
+      assert.equal(data.links.length, 4);
+      assert.equal(prepareSankeyData(data).links.length, 4);
+      assert.equal(
+        data.links.reduce((sum, link) => sum + link.value, 0),
+        100,
+      );
+      assert.match(source, /nodeConfig=\{nodeConfig\}/);
+      assert.match(source, /<Chart\.SankeyLegend config=\{nodeConfig\}/);
+      assert.doesNotMatch(source, /<Chart\.SankeyLink|animate=/);
+    } else {
+      assert.equal(data.nodes.length, 9);
+      assert.equal(data.links.length, 18);
+      assert.equal(prepareSankeyData(data).links.length, 18);
+      assert.equal(
+        data.links
+          .filter((link) => ["solar", "wind", "hydro"].includes(link.source))
+          .reduce((sum, link) => sum + link.value, 0),
+        180,
+      );
+      assert.match(source, /<Chart\.SankeyLink/);
+      assert.match(source, /animate=\{\{ revealDurationMs: 900 \}\}/);
+    }
     assert.match(source, /^"use client";/);
-    assert.match(source, /<Chart\.SankeyLink/);
-    assert.match(source, /animate=\{\{ revealDurationMs: 900 \}\}/);
     assert.doesNotMatch(source, /from ["'](?:@\/|\.\.\/)/);
     const bundle = JSON.parse(
       readFileSync(new URL("../generated/all-examples.json", import.meta.url), "utf8"),

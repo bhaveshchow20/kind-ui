@@ -162,7 +162,8 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   const categoryDomain = horizontal ? yDomain : xDomain;
   const explicitIdentities = emphasisKey ? data?.map(emphasisKey) : undefined;
   const semanticCategories = emphasisKey
-    ? explicitIdentities !== undefined &&
+    ? // biome-ignore lint/complexity/useOptionalChain: This guard must produce boolean false, not undefined, for category eligibility.
+      explicitIdentities !== undefined &&
       explicitIdentities.every((key) => key !== undefined) &&
       new Set(explicitIdentities.map(String)).size === explicitIdentities.length
     : categoryDomain !== undefined &&

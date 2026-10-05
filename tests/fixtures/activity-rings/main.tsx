@@ -194,4 +194,6 @@ function App() {
     </>
   );
 }
-createRoot(document.getElementById("root")!).render(<App />);
+const root = document.getElementById("root");
+if (!root) throw new Error("Missing activity rings root");
+createRoot(root).render(<App />);

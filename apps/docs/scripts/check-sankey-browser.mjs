@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { chromium } from "playwright";
+import { chromium, expect } from "@playwright/test";
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
@@ -18,9 +18,11 @@ try {
     const flows = first.locator('path[role="button"]');
     await flows.first().waitFor({ state: "attached" });
     assert.equal(await flows.count(), 18);
-    assert.equal(await first.locator('[data-kind-ui="sankey-link-entrance"]').count(), 18);
-    await page.waitForTimeout(1000);
-    assert.equal(await first.locator('[data-kind-ui="sankey-link-entrance"]').count(), 0);
+    const entrance = first.locator('[data-kind-ui="sankey-link-entrance"]');
+    assert.equal(await entrance.count(), 18);
+    // Completion removes the masks; observe that contract rather than assuming
+    // the 900 ms animation and its React update finish inside a fixed 1 s sleep.
+    await expect(entrance).toHaveCount(0, { timeout: 5000 });
     await flows.first().focus();
     await page.keyboard.press("Enter");
     assert.equal(await flows.first().getAttribute("aria-pressed"), "true");

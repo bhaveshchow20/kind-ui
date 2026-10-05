@@ -182,7 +182,8 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
       throw new Error(`LineChart seriesKey "${key}" must exist in config`);
   const activeConfig =
     generated && series !== undefined
-      ? Object.fromEntries(identities.map((key) => [key, config[key]!]))
+      ? // biome-ignore lint/style/noNonNullAssertion: The preceding loop rejects each identity absent from config.
+        Object.fromEntries(identities.map((key) => [key, config[key]!]))
       : config;
   const candidate = (visibleSeries ?? selection ?? identities).filter((key) =>
     identities.includes(key),
