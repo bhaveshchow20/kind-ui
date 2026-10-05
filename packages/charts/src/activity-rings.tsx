@@ -23,6 +23,8 @@ export type ActivityRing = {
 export type ActivityRingDatum = ActivityRing & {
   label: string;
   progress: number;
+  /** Preserved through native computed sector payloads, whose value is normalized. */
+  rawValue: number;
 };
 type Name =
   | { "aria-label": string; "aria-labelledby"?: string }
@@ -87,6 +89,7 @@ export function ActivityRings({
     return {
       ...ring,
       label: config[ring.key]!.label,
+      rawValue: ring.value,
       progress: Math.max(0, Math.min(100, ((ring.value - min) / (max - min)) * 100)),
     };
   });
@@ -98,7 +101,7 @@ export function ActivityRings({
         {data.map((ring) => (
           <div key={ring.key}>
             <dt>{ring.label}</dt>
-            <dd>{config[ring.key]!.formatValue?.(ring.value) ?? ring.value}</dd>
+            <dd>{config[ring.key]!.formatValue?.(ring.rawValue) ?? ring.rawValue}</dd>
           </div>
         ))}
       </dl>
@@ -142,7 +145,7 @@ export function ActivityRings({
               return (
                 <div data-kind-ui="tooltip-content">
                   <strong>{ring.label}</strong>{" "}
-                  {config[ring.key]!.formatValue?.(ring.value) ?? ring.value}
+                  {config[ring.key]!.formatValue?.(ring.rawValue) ?? ring.rawValue}
                 </div>
               );
             }}

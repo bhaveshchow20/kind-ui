@@ -58,7 +58,11 @@ test("native overrides, mixed paint, normalized geometry and raw-value tooltip",
   await expect(page.locator('#overrides [data-kind-ui="chart-instructions"]')).toContainText(
     "Move25Exercise300Stand-10",
   );
-  await paths.nth(1).hover({ force: true });
+  await paths.nth(1).scrollIntoViewIfNeeded();
+  const arc = await paths.nth(1).boundingBox();
+  if (!arc) throw new Error("Expected a painted exercise arc");
+  // The half-circle bounding-box center lies in its empty interior.
+  await page.mouse.move(arc.x + arc.width / 2, arc.y + 5);
   await expect(page.locator('#overrides [data-kind-ui="tooltip-content"]')).toContainText(
     "Exercise 300",
   );

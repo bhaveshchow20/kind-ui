@@ -16,7 +16,7 @@
 />
 ```
 
-`ActivityRings` owns Root and uses the shared RadialBarChart category identity/color seam. Required chart naming is `aria-label` or `aria-labelledby`; `aria-describedby` is appended to an original-value data alternative. Config labels, icons, colors and value formatters keep their existing contracts. Native tooltip payload retains `value` and adds `progress` (0–100). Default tooltip displays the original value; `tooltip={false}` disables it and a custom content option owns rendering.
+`ActivityRings` owns Root and uses the shared RadialBarChart category identity/color seam. Required chart naming is `aria-label` or `aria-labelledby`; `aria-describedby` is appended to an original-value data alternative. Config labels, icons, colors and value formatters keep their existing contracts. Native tooltip sector payload preserves `rawValue` and `progress` (0–100); Recharts uses its `value` field for normalized geometry. The original nested datum also retains `value`. Default tooltip displays the original value; `tooltip={false}` disables it and a custom content option owns rendering.
 
 Defaults: domain `[0,100]`, clockwise full sweep from 90 to -270 degrees, inner radius 30%, outer radius 90%, category gap 15%, tracks and rounded ends, height 300, responsive width, animation disabled (native default), static legend, visual labels off. Ring order follows array order, from inner to outer. Finite values outside each finite increasing domain clamp visually while retaining the original value; invalid values/domains and duplicate/unknown keys throw actionable errors. Empty arrays are valid.
 
