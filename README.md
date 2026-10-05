@@ -7,7 +7,7 @@ data, units and layout.
 ## Install
 
 ```sh
-npm install @kind-ui/charts react react-dom recharts motion
+npm install @kind-ui/charts
 ```
 
 Import `@kind-ui/charts/styles.css` once at your application entry. Read the

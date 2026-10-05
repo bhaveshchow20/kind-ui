@@ -8,12 +8,12 @@ description: Build and adapt React charts using @kind-ui/charts public APIs, or 
 ## Install and retrieve the contract
 
 ```sh
-npm install @kind-ui/charts react react-dom recharts motion
+npm install @kind-ui/charts
 ```
 
 Import `@kind-ui/charts/styles.css` once at the application entry. React and
-React DOM, Recharts and Motion are required peers; inspect the installed package
-manifest for supported ranges. Motion remains required with `animate={false}`.
+React DOM, Recharts and Motion are required peers installed automatically by npm.
+Inspect the installed package manifest for supported ranges. Motion remains required with `animate={false}`.
 For Next applications put interactive chart components behind `"use client"`.
 
 Read the selected family in the [public package reference](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/README.md).
