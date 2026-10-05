@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { allExamples, examples, families } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
@@ -35,12 +35,14 @@ test("each registered family has a complete public consumer", () => {
       `Setup link missing: ${file}`,
     );
 });
-test("download package bytes match the validated snapshot", () => {
+test("private package bytes match validation without public provenance or archives", () => {
   const digest = createHash("sha256")
-    .update(readFileSync("public/examples/package/kind-ui-charts-0.1.0.tgz"))
+    .update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz"))
     .digest("hex");
   assert.equal(digest, provenance.sha256);
   assert.equal(provenance.guardedArtifact, true);
+  assert.equal(existsSync("public/package-provenance.json"), false);
+  assert.equal(existsSync("public/examples/package"), false);
 });
 
 test("Line snippets are standalone public consumers with a shared data alternative", () => {

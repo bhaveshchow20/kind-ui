@@ -37,7 +37,13 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     await runChecks(["check:ci", "check:release", "lint", "registry:check"]);
   } else if (process.argv[2] === "consumers") {
     // Prepared once before this phase; suites own separate ports/output paths.
-    await runChecks(["test:chart", "test:composition", "test:configured-line", "check:framework"]);
+    await runChecks([
+      "test:chart",
+      "test:composition",
+      "test:configured-line",
+      "check:framework",
+      "registry:consumer",
+    ]);
   } else {
     throw new Error("Expected check phase: preflight or consumers");
   }

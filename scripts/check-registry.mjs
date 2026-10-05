@@ -46,11 +46,8 @@ for (const item of catalog.items) {
 }
 console.log("Official schema and CLI build passed.");
 if (!process.argv.includes("--consumer")) process.exit(0);
-const archive = process.env.KIND_CHARTS_ARCHIVE;
-if (!archive)
-  throw new Error(
-    "Set KIND_CHARTS_ARCHIVE to the validated package archive for preliminary consumer checks.",
-  );
+const archive =
+  process.env.KIND_CHARTS_ARCHIVE || resolve(root, "artifacts/package/kind-ui-charts-0.1.0.tgz");
 const receipt = JSON.parse(
   await readFile(resolve(dirname(archive), "validated-artifact.json"), "utf8"),
 );

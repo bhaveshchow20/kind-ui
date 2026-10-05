@@ -35,7 +35,8 @@
     "test:chart": "playwright test",
     "check:framework": "npm run check:line-integrations && npm run test:line-integrations",
     "registry:build": "node scripts/build-registry.mjs",
-    "registry:check": "node scripts/build-registry.mjs --check && node --test scripts/registry.test.mjs && node scripts/check-registry.mjs"
+    "registry:check": "node scripts/build-registry.mjs --check && node --test scripts/registry.test.mjs && node scripts/check-registry.mjs",
+    "registry:consumer": "node scripts/check-registry.mjs --consumer && node scripts/check-registry-browser.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

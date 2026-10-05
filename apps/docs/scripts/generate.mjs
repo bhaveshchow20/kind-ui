@@ -1,13 +1,5 @@
 import { createHash } from "node:crypto";
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { createGenerator, createProject } from "fumadocs-typescript";
 import ts from "typescript";
@@ -200,11 +192,8 @@ for (const family of families)
       2,
     )}\n`,
   );
-write("public/package-provenance.json", `${JSON.stringify(provenance, null, 2)}\n`);
-if (local) {
-  mkdirSync("public/examples/package", { recursive: true });
-  cpSync("vendor/kind-ui-charts-0.1.0.tgz", "public/examples/package/kind-ui-charts-0.1.0.tgz");
-}
+// Retain package provenance in vendor/evidence; never expose internal source receipts.
+rmSync("public/package-provenance.json", { force: true });
 const project = await createProject({ tsconfigPath: "tsconfig.json" });
 const generator = createGenerator({ project });
 const typePaths = [
