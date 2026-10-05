@@ -10,7 +10,7 @@ export function ApiTable({
   return (
     <div className="table-scroll">
       <table className="api-table">
-        <caption>{name} · generated from installed public declarations</caption>
+        <caption>{name} props</caption>
         <thead>
           <tr>
             <th scope="col">Prop</th>

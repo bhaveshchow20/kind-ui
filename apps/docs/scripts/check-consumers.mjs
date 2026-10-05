@@ -1,12 +1,14 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { consumerShard, expandConsumers } from "./consumer-shards.mjs";
+import { verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const root = path.resolve("artifacts/consumer");
 mkdirSync(root, { recursive: true });
 const first = Object.values(bundles)[0];
-for (const [name, body] of Object.entries(first.files)) {
+for (const [name, body] of Object.entries(verificationFiles(first))) {
   const target = path.join(root, name);
   mkdirSync(path.dirname(target), { recursive: true });
   writeFileSync(target, body);
@@ -15,37 +17,20 @@ if (first.localPackage) {
   mkdirSync(path.join(root, "vendor"), { recursive: true });
   cpSync("vendor/kind-ui-charts-0.1.0.tgz", path.join(root, "vendor/kind-ui-charts-0.1.0.tgz"));
 }
-execFileSync(
-  "npm",
-  [
-    existsSync(path.join(root, "package-lock.json")) ? "ci" : "install",
-    "--ignore-scripts",
-    "--no-audit",
-    "--no-fund",
-  ],
-  { cwd: root, stdio: "inherit" },
-);
-if (!existsSync("examples/shared/consumer-package-lock.json"))
-  cpSync(path.join(root, "package-lock.json"), "examples/shared/consumer-package-lock.json");
+execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
+  cwd: root,
+  stdio: "inherit",
+});
 const installed = JSON.parse(
   readFileSync(path.join(root, "node_modules/@kind-ui/charts/package.json"), "utf8"),
 );
 if (installed.version !== first.version)
   throw new Error("Consumer installed the wrong package version");
 const evidence = [];
-const consumers = Object.values(bundles).flatMap((bundle) => [
-  bundle,
-  ...Object.entries(bundle.variants ?? {})
-    .filter(([value]) => value !== bundle.defaultVariant)
-    .map(([value, variant]) => ({
-      ...bundle,
-      id: `${bundle.id}:${value}`,
-      files: { ...bundle.files, [`src/examples/${bundle.id}/example.tsx`]: variant.source },
-    })),
-]);
+const { consumers, suffix } = consumerShard(expandConsumers(bundles), process.argv.slice(2));
 for (const bundle of consumers) {
   rmSync(path.join(root, "src"), { recursive: true, force: true });
-  for (const [name, body] of Object.entries(bundle.files)) {
+  for (const [name, body] of Object.entries(verificationFiles(bundle))) {
     if (name === "package-lock.json") continue;
     const target = path.join(root, name);
     mkdirSync(path.dirname(target), { recursive: true });
@@ -94,7 +79,7 @@ for (const bundle of consumers) {
     skipLibCheck: false,
   });
 }
-writeFileSync("artifacts/consumer-results.json", `${JSON.stringify(evidence, null, 2)}\n`);
+writeFileSync(`artifacts/consumer-results${suffix}.json`, `${JSON.stringify(evidence, null, 2)}\n`);
 console.log(
   `${evidence.length} copied consumers passed strict TypeScript and Vite production builds.`,
 );

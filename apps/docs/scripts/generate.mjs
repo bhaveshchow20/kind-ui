@@ -1,13 +1,5 @@
 import { createHash } from "node:crypto";
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { createGenerator, createProject } from "fumadocs-typescript";
 import ts from "typescript";
@@ -46,7 +38,7 @@ const manifest = {
   type: "module",
   scripts: { dev: "vite --host 127.0.0.1", build: "tsc --noEmit && vite build" },
   dependencies: {
-    "@kind-ui/charts": local ? "file:vendor/kind-ui-charts-0.1.0.tgz" : provenance.version,
+    "@kind-ui/charts": `^${provenance.version}`,
     react: "19.3.0",
     "react-dom": "19.3.0",
     recharts: "3.10.1",
@@ -59,9 +51,7 @@ const manifest = {
     vite: "8.3.1",
   },
 };
-const status = local
-  ? `unpublished @kind-ui/charts@${provenance.version}, source ${provenance.sourceCommit.slice(0, 7)}, SHA-256 ${provenance.sha256}`
-  : `published @kind-ui/charts@${provenance.version}`;
+const status = "@kind-ui/charts";
 function literal(node) {
   if (ts.isObjectLiteralExpression(node))
     return Object.fromEntries(
@@ -156,18 +146,17 @@ for (const example of allExamples) {
     "src/main.tsx": `import { StrictMode } from "react";\nimport { createRoot } from "react-dom/client";\nimport { ${componentName} } from "./examples/${example.id}/example";\nimport "@kind-ui/charts/styles.css";\nimport "./example.css";\nconst root = document.getElementById("root");\nif (!root) throw new Error("Missing mount element");\ncreateRoot(root).render(<StrictMode><${componentName} /></StrictMode>);\n`,
     "src/example.css": read("examples/shared/example.css"),
     [`src/examples/${example.id}/example.tsx`]: exampleSource,
-    "README.md": `# ${example.title} — complete consumer\n\n${status}.\n\nNode 22.12+ and npm 11.9. Use the pinned vendor tarball identified by provenance; this package is not on npm.\n\nUse these complete files, preserving their directory structure. Put the exact package asset at vendor/kind-ui-charts-0.1.0.tgz. Run npm ci, then npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports; ${example.id.startsWith("area") ? "Area uses Root and ResponsiveContainer; stacked legend visibility is consumer-owned." : "Preserve the documented family composition and visibility ownership."} No demo modules are required. Documentation consumer of package source ${provenance.sourceCommit}.\n\nVendor SHA-256: ${provenance.sha256}.\n`,
+    "README.md": `# ${example.title} — complete consumer\n\nInstall dependencies with npm install, then run npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports. Preserve the documented family composition and visibility ownership. Import @kind-ui/charts/styles.css once at the application entry.\n`,
     LICENSE: read("../../LICENSE"),
   };
-  if (existsSync("examples/shared/consumer-package-lock.json"))
-    files["package-lock.json"] = read("examples/shared/consumer-package-lock.json");
+
   files["README.md"] +=
     "\n## Complete setup files\n\n" +
     Object.keys(files)
       .filter((file) => file !== "README.md")
       .map((file) => `- [${file}](${link(`/examples/${example.id}/${file}`)})`)
       .join("\n") +
-    `\n- [Pinned tarball](${link("/examples/package/kind-ui-charts-0.1.0.tgz")})\n- [Provenance](${link("/package-provenance.json")})\n`;
+    "\n";
   bundles[example.id] = {
     ...example,
     ...(dataAlternative ? { dataAlternative } : {}),
@@ -203,11 +192,8 @@ for (const family of families)
       2,
     )}\n`,
   );
-write("public/package-provenance.json", `${JSON.stringify(provenance, null, 2)}\n`);
-if (local) {
-  mkdirSync("public/examples/package", { recursive: true });
-  cpSync("vendor/kind-ui-charts-0.1.0.tgz", "public/examples/package/kind-ui-charts-0.1.0.tgz");
-}
+// Retain package provenance in vendor/evidence; never expose internal source receipts.
+rmSync("public/package-provenance.json", { force: true });
 const project = await createProject({ tsconfigPath: "tsconfig.json" });
 const generator = createGenerator({ project });
 const typePaths = [
@@ -276,7 +262,6 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   const description = original.match(/^description:\s*(.+)$/m)?.[1] || "";
   const key = String(entry).replace(/\.mdx$/, "");
   let body = original.replace(/^---\n[\s\S]*?\n---\n/, "");
-  body = body.replace(/<PackageSource\s*\/>/g, `\`${provenance.sourceCommit}\``);
   body = body.replace(
     /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample) id="([\w-]+)"\s*\/>/g,
     (_, id) => {
@@ -289,7 +274,7 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
         (file) => !inline.some(([name]) => name === file),
       );
       return (
-        `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\n${bundle.packageStatus}. Pinned package asset: ${link("/examples/package/kind-ui-charts-0.1.0.tgz")}.\n\n` +
+        `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\nInstall dependencies with npm install.\n\n` +
         inline
           .map(
             ([file, source]) =>
@@ -313,13 +298,13 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
       index % 2 ? part : part.replace(/\]\((\/(?!\/)[^\s)]+)\)/g, (_, path) => `](${link(path)})`),
     )
     .join("");
-  const markdown = `# ${title}\n\n${description}\n\nPackage snapshot: ${status}.\n\n${body.trim()}\n`;
+  const markdown = `# ${title}\n\n${description}\n\n${body.trim()}\n`;
   write(`public/markdown/${key}.md`, markdown);
   index.push({ key, title, markdown });
 }
 write(
   "public/llms.txt",
-  `# Kind UI charts documentation\n\nPre-release documentation preview. ${status}. This Site is initially owner-private; its URLs are not an anonymous public-docs availability claim. No registry installation is available in local mode.\n\nUse the consumer guidance, then retrieve the exact example and public type reference. Geometry and data stay consumer-owned. Glass is paused.\n\n` +
+  `# Kind UI charts documentation\n\nInstall @kind-ui/charts and its peers, then import the stylesheet. Start with the AI agents guide and retrieve the relevant family Markdown. Keep data and composition in your application.\n\n` +
     index.map(({ key, title }) => `- [${title}](${link(`/markdown/${key}.md`)})`).join("\n") +
     "\n",
 );

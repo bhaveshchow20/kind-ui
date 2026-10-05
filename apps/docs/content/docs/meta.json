@@ -1,1 +1,3 @@
-{ "pages": ["index", "start", "concepts", "components", "guides", "agents"] }
+{
+  "pages": ["index", "start", "concepts", "components", "chart-components", "guides", "agents"]
+}

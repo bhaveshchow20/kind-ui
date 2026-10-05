@@ -5,7 +5,7 @@ on:
       version:
         description: Expected reviewed package version (private packages rehearse the pipeline)
         required: true
-        default: 0.1.0
+        default: 0.1.1
         type: string
       dist_tag:
         description: Proposed npm dist-tag, recorded for review
@@ -22,10 +22,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [22, 24]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -33,17 +29,27 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 22
           package-manager-cache: false
       - run: npm install --global npm@11.9.0
       - run: npm ci
       - run: npm audit --audit-level=high --include=dev
       - run: npm run release:status
-      - run: npm exec playwright install -- --with-deps chromium
+      - id: playwright-version
+        run: echo "version=$(node -p 'require("./node_modules/@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
+      - id: browsers
+        uses: actions/cache@3edfce9056124e459a23f683a21433670d47daca # pinned
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright-version.outputs.version }}-chromium
+      # OS libraries are outside the browser cache and must exist on every VM.
+      - run: npm exec playwright install-deps -- chromium
+      - run: npm exec playwright install -- chromium
+        if: steps.browsers.outputs.cache-hit != 'true'
       - run: npm run check
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: charts-release-${{ github.run_attempt }}-node-${{ matrix.node }}
+          name: charts-release-${{ github.run_attempt }}-node-22
           path: |
             artifacts/package/
             artifacts/line-integrations/evidence.json
@@ -54,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: charts-release-evidence-${{ github.run_attempt }}-node-${{ matrix.node }}
+          name: charts-release-evidence-${{ github.run_attempt }}-node-22
           path: |
             artifacts/chart-tests/
             artifacts/composition-tests/
@@ -78,11 +84,11 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version: 22
           package-manager-cache: false
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: charts-release-${{ github.run_attempt }}-node-24
+          name: charts-release-${{ github.run_attempt }}-node-22
           path: artifacts/release-candidate
       # semver is pinned in the development lockfile; do not run install scripts.
       # Candidate bytes come exclusively from the downloaded artifact.
@@ -107,12 +113,12 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version: 22
           package-manager-cache: false
       - run: npm install --global npm@11.9.0
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: charts-release-${{ github.run_attempt }}-node-24
+          name: charts-release-${{ github.run_attempt }}-node-22
           path: artifacts/release-candidate
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: node scripts/verify-release-artifact.mjs artifacts/release-candidate --require-public

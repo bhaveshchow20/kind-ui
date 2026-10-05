@@ -7,7 +7,6 @@ import { notFound } from "next/navigation";
 import bundles from "@/generated/all-examples.json";
 import { docRoute, publicPath } from "@/lib/routing.mjs";
 import { source } from "@/lib/source";
-import packageProvenance from "@/vendor/provenance.json";
 import { ApiTable } from "./api-table";
 import {
   type ComponentBundle,
@@ -94,14 +93,13 @@ export function renderDoc(slug?: string[]) {
               ChartExample: LineExample,
               AreaExample: LineExample,
               ApiTable,
-              PackageSource: () => <code>{packageProvenance.sourceCommit}</code>,
             }}
           />
         </DocsBody>
         {!key.startsWith("components/") && (
           <footer className="doc-footer">
-            <span>Unpublished preview · 0.0.0</span>
-            <Link href={docRoute("/docs/guides/release/")}>Package status</Link>
+            <span>Kind UI charts</span>
+            <Link href={docRoute("/docs/guides/release/")}>Package integration</Link>
           </footer>
         )}
       </article>

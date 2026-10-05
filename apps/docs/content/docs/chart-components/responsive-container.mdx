@@ -1,0 +1,29 @@
+---
+title: ResponsiveContainer
+description: Size a composed chart to fit its container.
+---
+
+Kind exports Recharts' `ResponsiveContainer` directly. Give the plot a measurable width and height.
+
+## Usage
+
+```tsx
+<Chart.Root config={config}>
+  <Chart.ResponsiveContainer width="100%" height={280}>
+    <Chart.BarChart data={data} aria-label="Daily orders">
+      <Chart.XAxis dataKey="day" />
+      <Chart.BarSeries dataKey="orders" />
+    </Chart.BarChart>
+  </Chart.ResponsiveContainer>
+</Chart.Root>
+```
+
+Keep [Legend](/docs/chart-components/legend/) outside this container. Configured [LineChart](/docs/components/line/) handles its own responsive sizing; use this component for explicit composition.
+
+## Sizing
+
+`width` and `height` accept pixel numbers or percentage strings and default to `"100%"`. A percentage height needs a parent with a defined height. Use `aspect` to derive height from width, or `minHeight` and `minWidth` to set lower bounds.
+
+In flex and grid layouts, allow the chart's parent to shrink with `min-width: 0`. Check narrow layouts with long axis labels as well as the plot itself.
+
+For resize callbacks and the full prop reference, see [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).

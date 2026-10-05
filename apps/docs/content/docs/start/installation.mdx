@@ -1,21 +1,15 @@
 ---
 title: Installation
-description: Run the docs examples with the exact pinned package.
+description: Install charts and import the public components and stylesheet.
 ---
 
-## Current package status
-
-The docs pin is the integrated `@kind-ui/charts@0.1.0` release candidate, from source <PackageSource />. It remains unpublished, with publishing disabled; use the retained artifact rather than a registry install. Inspect [provenance JSON](/package-provenance.json) for its checksum and npm integrity; these examples and lockfiles use those exact validated bytes.
-
-Use Node 22.12 or later and npm 11.9. The generated [Line setup files](/examples/line/README.md) link the complete consumer configuration and lockfile. Preserve their directory structure and put the [pinned tarball](/examples/package/kind-ui-charts-0.1.0.tgz) at `vendor/kind-ui-charts-0.1.0.tgz`, then run:
-
 ```sh
-npm ci
-npm run dev
-# Verify with npm run build
+npm install @kind-ui/charts
 ```
 
-The consumer manifest pins React and React DOM 19.3.0, Recharts 3.10.1 and Motion 13.4.6. These are tested preview dependencies; broader version support is not established.
+npm installs the required peers automatically. The package is ESM. Supported peers
+are React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Motion is
+required even when animation is disabled.
 
 ## Imports and CSS
 
@@ -24,8 +18,12 @@ import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
 ```
 
-The pinned package exports the composition parts used here: `CartesianGrid`, `XAxis`, `YAxis`, `LineSeries`, `Tooltip`, `Legend`, `ResponsiveContainer` and `LabelList`. Import them through the public package as shown on the [Line page](/docs/components/line/). Motion is a required peer; there is no `@kind-ui/charts/motion` entry. Import the stylesheet at the application entry and provide the [theme tokens](/docs/concepts/composition/).
+Import the stylesheet once at the application entry. Use public composition parts
+such as `CartesianGrid`, `XAxis`, `YAxis`, `ResponsiveContainer` and `LabelList`.
+There is no `@kind-ui/charts/motion` entry. Next applications need a client
+component boundary when supplying callbacks, refs or state.
 
-## After a public release
-
-A verified public release can replace the artifact with an exact registry version and matching integrity. See [release status](/docs/guides/release/) for the candidate and final-artifact boundary. Until then, avoid instructions claiming `npm install @kind-ui/charts` works from the registry. Package provenance and generated consumers must change together.
+Use the complete consumer files on each component page or adapt their chart
+composition into your app. Supply chart sizing, an accessible name and a complete
+[data alternative](/docs/guides/accessibility/). See [composition](/docs/concepts/composition/)
+for styling and [AI agents](/docs/agents/consumer/) for example retrieval and verification.

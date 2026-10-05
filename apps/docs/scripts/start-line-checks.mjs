@@ -15,7 +15,12 @@ try {
       }
     });
   });
-  for (const script of ["check-line-glass.mjs", "check-line-scroll.mjs", "check-line-tables.mjs"]) {
+  for (const script of [
+    "check-line-glass.mjs",
+    "check-line-scroll.mjs",
+    "check-line-tables.mjs",
+    "check-shared-tables.mjs",
+  ]) {
     await new Promise((resolve, reject) => {
       const child = spawn(process.execPath, [`scripts/${script}`], { stdio: "inherit" });
       child.once("error", reject);
