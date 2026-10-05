@@ -3,12 +3,14 @@ import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
 
 const data = [
-  { period: "Design", label: "Design 92%", progress: 92, fill: "#733bff" },
-  { period: "Build", label: "Build 76%", progress: 76, fill: "#008b83" },
-  { period: "Review", label: "Review 58%", progress: 58, fill: "#b85c13" },
+  { period: "Design", label: "Design 92%", progress: 92 },
+  { period: "Build", label: "Build 76%", progress: 76 },
+  { period: "Review", label: "Review 58%", progress: 58 },
 ];
 const config = {
-  progress: { label: "Complete", color: "#733bff", formatValue: (value: unknown) => `${value}%` },
+  Design: { label: "Design", color: "#733bff", formatValue: (value: unknown) => `${value}%` },
+  Build: { label: "Build", color: "#008b83", formatValue: (value: unknown) => `${value}%` },
+  Review: { label: "Review", color: "#b85c13", formatValue: (value: unknown) => `${value}%` },
 } satisfies Chart.SeriesConfig;
 
 export function ProjectProgressChart() {
@@ -17,6 +19,7 @@ export function ProjectProgressChart() {
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.RadialBarChart
           data={data}
+          categoryKey="period"
           animate
           animationDirection="clockwise"
           startAngle={90}
@@ -33,16 +36,13 @@ export function ProjectProgressChart() {
             background={{ fill: "#e9e5f1" }}
             cornerRadius={5}
           >
-            {data.map((row) => (
-              <Chart.Cell key={row.period} fill={row.fill} />
-            ))}
             <Chart.LabelList
               fill="white"
               dataKey="label"
               content={<Chart.RadialBarLabel fontSize={11} />}
             />
           </Chart.RadialBarSeries>
-          <Chart.Tooltip />
+          <Chart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
         </Chart.RadialBarChart>
       </Chart.ResponsiveContainer>
     </Chart.Root>

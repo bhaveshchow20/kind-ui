@@ -1,0 +1,93 @@
+---
+title: Quickstart
+description: Build a small chart, then add sizing, inspection and composition.
+---
+
+Use the [pinned setup](/docs/start/installation/) first. Each example below is a complete component with public imports. Keep the stylesheet at your application entry when combining them.
+
+## 1. Start with a chart
+
+Configured `LineChart` supplies its own context, axes and series. `dataKey` reads a value; config supplies its label and color. Here `visitors` serves both roles. Tooltip, legend and motion are disabled for this first step.
+
+```tsx title="MinimalChart.tsx"
+"use client";
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }];
+const config = { visitors: { label: "Visitors", color: "#733bff" } };
+
+export function MinimalChart() {
+  return <Chart.LineChart data={data} config={config} xDataKey="month"
+    tooltip={false} legend={false} animate={false} aria-label="Monthly visitors" />;
+}
+```
+
+## 2. Size and color it
+
+Configured Line fills its parent width and defaults to 280px height. Set `height` for your layout; let a shrinking flex/grid host use `minWidth: 0`. A stable config key keeps metadata separate from the measured values. Changing its color changes the series paint; it does not change the data.
+
+```tsx title="SizedChart.tsx"
+"use client";
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }];
+const config = { visitors: { label: "Visitors", color: "#327448" } };
+
+export function SizedChart() {
+  return <div style={{ maxWidth: 640, minWidth: 0 }}>
+    <Chart.LineChart data={data} config={config} xDataKey="month" height={240}
+      tooltip={false} legend={false} animate={false} aria-label="Monthly visitors" />
+  </div>;
+}
+```
+
+Explicit families use `Root` and `ResponsiveContainer` inside a measurable host; see [composition](/docs/concepts/composition/). Colors follow series metadata, with native paint overrides available. See [identity and colors](/docs/concepts/identity/) for category and Sankey contracts.
+
+## 3. Add inspection and motion
+
+Generated parts include tooltip and legend unless disabled. The legend toggles configured Line series without application wiring. `animate` is on by default here; the object form tunes its entrance. Hover inspection uses a separate transition. Reduced-motion preferences skip Kind motion.
+
+```tsx title="InspectedChart.tsx"
+"use client";
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }];
+const config = { visitors: { label: "Visitors", color: "#327448" } };
+
+export function InspectedChart() {
+  return <Chart.LineChart data={data} config={config} xDataKey="month" height={240}
+    tooltip={{}} legend={{}} animate={{ revealDurationMs: 600 }}
+    aria-label="Monthly visitors" />;
+}
+```
+
+For controlled visibility, pair `visibleSeries` with `onVisibleSeriesChange`. Use `animate={false}` when a video timeline or application owns frame timing. See [motion defaults](/docs/guides/motion/) and the [Line API](/docs/components/line/#api-reference).
+
+## 4. Compose the parts
+
+Explicit children replace generated plot parts. Configured Line still owns its context, sizing and visibility; omit `xDataKey` and compose the axes yourself. Enable its positioned legend with `legend={{}}`.
+
+```tsx title="ComposedChart.tsx"
+"use client";
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }];
+const config = { visitors: { label: "Visitors", color: "#327448" } };
+
+export function ComposedChart() {
+  return <Chart.LineChart data={data} config={config} height={240} legend={{}}
+    animate={false} aria-label="Monthly visitors">
+    <Chart.CartesianGrid vertical={false} />
+    <Chart.XAxis dataKey="month" />
+    <Chart.YAxis />
+    <Chart.LineSeries dataKey="visitors" type="linear" />
+    <Chart.Tooltip />
+  </Chart.LineChart>;
+}
+```
+
+Choose explicit `Root` composition for full native axes, geometry and state ownership. The [Components](/docs/components/area/) show family-specific paths. Data, units, layout, accessible alternatives and [inter-chart choreography](/docs/guides/motion/#custom-choreography) remain application-owned.

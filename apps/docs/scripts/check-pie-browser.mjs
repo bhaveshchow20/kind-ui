@@ -24,6 +24,18 @@ try {
   await first.locator('[data-kind-ui="pie-sector"]').first().waitFor();
   await page.waitForTimeout(1200);
   assert.equal(await first.locator('[data-kind-ui="pie-sector"]').count(), 4);
+  const categoryColors = [
+    "rgb(115, 59, 255)",
+    "rgb(36, 105, 212)",
+    "rgb(182, 92, 22)",
+    "rgb(20, 124, 104)",
+  ];
+  const fills = (card) =>
+    card
+      .locator('[data-kind-ui="pie-sector"]')
+      .evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).fill));
+  assert.deepEqual(await fills(first), categoryColors);
+
   assert.deepEqual(await first.locator(".recharts-label-list text").allTextContents(), [
     "42%",
     "31%",
@@ -98,6 +110,7 @@ try {
   await page.keyboard.press("Space");
   assert.equal(await design.getAttribute("aria-pressed"), "false");
   assert.equal(await visible.locator('[data-kind-ui="pie-sector"]').count(), 3);
+  assert.deepEqual(await fills(visible), categoryColors.slice(1));
   assert.ok(
     (await visible.getByRole("status").allTextContents()).join().includes("580 hours selected"),
   );
@@ -109,6 +122,7 @@ try {
   );
   await design.click();
   assert.equal(await visible.locator('[data-kind-ui="pie-sector"]').count(), 1);
+  assert.deepEqual(await fills(visible), [categoryColors[0]]);
   const materials = page.locator('[data-component="pie-materials"]');
   await materials.getByRole("combobox", { name: "Material" }).click();
   await page.getByRole("option", { name: "Glow", exact: true }).click();

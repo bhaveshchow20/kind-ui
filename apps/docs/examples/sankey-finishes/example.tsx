@@ -6,15 +6,15 @@ import { Tooltip } from "recharts";
 
 const data = {
   nodes: [
-    { id: "solar", name: "Solar", color: "#d29319" },
-    { id: "wind", name: "Wind", color: "#159c91" },
-    { id: "hydro", name: "Hydro", color: "#447fd1" },
-    { id: "north", name: "North", color: "#8865ce" },
-    { id: "central", name: "Central", color: "#d27559" },
-    { id: "south", name: "South", color: "#569951" },
-    { id: "homes", name: "Homes", color: "#d29319" },
-    { id: "industry", name: "Industry", color: "#447fd1" },
-    { id: "services", name: "Services", color: "#159c91" },
+    { id: "solar", name: "Solar" },
+    { id: "wind", name: "Wind" },
+    { id: "hydro", name: "Hydro" },
+    { id: "north", name: "North" },
+    { id: "central", name: "Central" },
+    { id: "south", name: "South" },
+    { id: "homes", name: "Homes" },
+    { id: "industry", name: "Industry" },
+    { id: "services", name: "Services" },
   ],
   links: [
     { id: "solar-north", source: "solar", target: "north", value: 30 },
@@ -37,7 +37,17 @@ const data = {
     { id: "south-services", source: "south", target: "services", value: 25 },
   ],
 } satisfies Chart.SankeyFlowData;
-const colors = new Map(data.nodes.map((node) => [node.id, node.color]));
+const nodeConfig = {
+  solar: { label: "Solar", color: "#d29319" },
+  wind: { label: "Wind", color: "#159c91" },
+  hydro: { label: "Hydro", color: "#447fd1" },
+  north: { label: "North", color: "#8865ce" },
+  central: { label: "Central", color: "#d27559" },
+  south: { label: "South", color: "#569951" },
+  homes: { label: "Homes", color: "#d29319" },
+  industry: { label: "Industry", color: "#447fd1" },
+  services: { label: "Services", color: "#159c91" },
+} satisfies Chart.SankeyNodeConfig;
 const names = new Map(data.nodes.map((node) => [node.id, node.name]));
 
 export function EnergyFlowFinishChart({ finish = "paper" }: { finish?: Chart.SankeyFinish }) {
@@ -67,6 +77,7 @@ export function EnergyFlowFinishChart({ finish = "paper" }: { finish?: Chart.San
           <Chart.ResponsiveContainer width="100%" height={250}>
             <Chart.SankeyChart
               data={data}
+              nodeConfig={nodeConfig}
               animate={{ revealDurationMs: 900 }}
               nodeWidth={10}
               nodePadding={16}
@@ -76,11 +87,7 @@ export function EnergyFlowFinishChart({ finish = "paper" }: { finish?: Chart.San
               desc="Nine nodes and eighteen flows. Ribbon widths represent MWh. Select a flow with a click, Enter or Space; Escape clears selection."
               node={(props) => (
                 <g>
-                  <Chart.SankeyNode
-                    {...props}
-                    finish={finish}
-                    color={colors.get(props.payload.id)}
-                  />
+                  <Chart.SankeyNode {...props} finish={finish} />
                   <text
                     x={props.x + props.width / 2}
                     y={props.y - 7}
@@ -97,8 +104,6 @@ export function EnergyFlowFinishChart({ finish = "paper" }: { finish?: Chart.San
                   {...props}
                   finish={finish}
                   material="gradient"
-                  color={colors.get(props.payload.source.id)}
-                  targetColor={colors.get(props.payload.target.id)}
                   pathProps={{
                     role: "button",
                     tabIndex: 0,
@@ -122,6 +127,7 @@ export function EnergyFlowFinishChart({ finish = "paper" }: { finish?: Chart.San
           </Chart.ResponsiveContainer>
         </div>
       </section>
+      <Chart.SankeyLegend config={nodeConfig} />
       <p role="status" style={{ fontSize: 12, margin: "8px 0 0" }}>
         {selected
           ? `${names.get(selected.source)} → ${names.get(selected.target)}: ${selected.value} MWh`

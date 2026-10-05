@@ -13,12 +13,15 @@ import { PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
+import { DocsThemeSwitch } from "@/components/theme-switch";
+import { docRoute } from "@/lib/routing.mjs";
+
 function NavigationTitle() {
   const { slots, props } = useGlassLayout();
   const Title = props.nav?.title;
   return (
     <div className="glass-nav-title">
-      <Link href={props.nav?.url ?? "/docs/"} className="font-semibold">
+      <Link href={props.nav?.url ?? docRoute("/docs/")} className="font-semibold">
         {typeof Title === "function" ? <Title /> : Title}
       </Link>
       <div className="glass-mobile-tools md:hidden">
@@ -100,25 +103,28 @@ export function GlassDocsLayout({ children, tree, ...props }: GlassLayoutProps) 
       tabs={[
         {
           title: "Components",
-          url: "/docs/components/line/",
+          url: docRoute("/docs/components/line/"),
           urls: new Set(
             urls.filter(
-              (url) => !url.startsWith("/docs/guides/") && !url.startsWith("/docs/agents/"),
+              (url) =>
+                !url.startsWith(docRoute("/docs/guides/")) &&
+                !url.startsWith(docRoute("/docs/agents/")),
             ),
           ),
         },
         {
           title: "Guides",
-          url: "/docs/guides/materials/",
-          urls: new Set(urls.filter((url) => url.startsWith("/docs/guides/"))),
+          url: docRoute("/docs/guides/materials/"),
+          urls: new Set(urls.filter((url) => url.startsWith(docRoute("/docs/guides/")))),
         },
         {
           title: "Agents",
-          url: "/docs/agents/consumer/",
-          urls: new Set(urls.filter((url) => url.startsWith("/docs/agents/"))),
+          url: docRoute("/docs/agents/consumer/"),
+          urls: new Set(urls.filter((url) => url.startsWith(docRoute("/docs/agents/")))),
         },
       ]}
       slots={{
+        themeSwitch: DocsThemeSwitch,
         header: () => null,
         navTitle: NavigationTitle,
         sidebar: {

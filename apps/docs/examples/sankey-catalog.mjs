@@ -7,6 +7,13 @@ export const sankeyExamples = [
       "All eighteen routes retain their IDs; selection, tooltip units and hidden data alternative agree.",
   },
   {
+    id: "sankey-config",
+    title: "Configured flows",
+    notes: "One node-ID metadata map supplies default node/source-link colors and a static legend.",
+    acceptance:
+      "Four named nodes and four flows share configured paint, tooltip values and the complete data alternative.",
+  },
+  {
     id: "sankey-finishes",
     title: "Flow finishes",
     notes: "Plain, paper, clay and glow on native gradient flow geometry.",
@@ -124,6 +131,16 @@ const rows = [
   },
 ];
 export const sankeyDataLabels = {
+  "sankey-config": {
+    caption: "Configured energy allocation (MWh)",
+    columns: { id: "Flow", source: "Source ID", target: "Target ID", value: "MWh" },
+    rows: [
+      { id: "solar-homes", source: "solar", target: "homes", value: 35 },
+      { id: "solar-industry", source: "solar", target: "industry", value: 25 },
+      { id: "wind-homes", source: "wind", target: "homes", value: 15 },
+      { id: "wind-industry", source: "wind", target: "industry", value: 25 },
+    ],
+  },
   sankey: {
     caption: "Illustrative energy allocation (MWh)",
     columns: { id: "Flow", source: "Source ID", target: "Target ID", value: "MWh" },
