@@ -63,9 +63,11 @@ test("native overrides, mixed paint, normalized geometry and raw-value tooltip",
   if (!arc) throw new Error("Expected a painted exercise arc");
   // The half-circle bounding-box center lies in its empty interior.
   await page.mouse.move(arc.x + arc.width / 2, arc.y + 5);
-  await expect(page.locator('#overrides [data-kind-ui="chart-tooltip"]')).toContainText(
-    "Exercise 300",
+  const tooltip = page.locator(
+    '#overrides [data-kind-ui="chart-tooltip-item"][data-series="exercise"]',
   );
+  await expect(tooltip).toContainText("Exercise");
+  await expect(tooltip.locator('[data-kind-ui="chart-tooltip-value"]')).toHaveText("300");
   await page.screenshot({ path: "artifacts/chart-tests/activity-rings-overrides.png" });
 });
 
