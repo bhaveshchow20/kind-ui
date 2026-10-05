@@ -1,0 +1,163 @@
+---
+title: Sankey Chart
+description: Trace quantities through branching and recombining flows.
+---
+
+<ChartExample id="sankey" />
+
+## Usage
+
+`SankeyChart` validates a directed, balanced flow graph and delegates layout to Recharts. Compose `SankeyNode` and `SankeyLink` in native renderer callbacks; their geometry comes from the chart. The first Code tab includes a complete named component, all nine nodes and eighteen routes.
+
+```tsx title="Composition"
+<Chart.ResponsiveContainer width="100%" height={250}>
+  <Chart.SankeyChart
+    data={data}
+    animate={{ revealDurationMs: 900 }}
+    node={(props) => <Chart.SankeyNode {...props} />}
+    link={(props) => <Chart.SankeyLink {...props} material="gradient" />}
+  >
+    <Tooltip isAnimationActive={false} />
+  </Chart.SankeyChart>
+</Chart.ResponsiveContainer>
+```
+
+Sankey is independent of `Root`, series config, Cartesian axes and `Legend`. Here `Tooltip` is imported from **Recharts**; the consumer formats its values in MWh. Nodes own names and colors, links own quantities, and consumer state owns selection. Gradient paint connects source and destination colors; ribbon width encodes quantity.
+
+## Identities and selection
+
+Every node and link needs its own unique nonempty string `id`. Link endpoints accept node IDs or integer indices into the original node array. Numeric-looking strings remain IDs. Renderer `payload.id` is the stable identity; renderer indices refer to the filtered layout array and must not become application keys.
+
+Select a ribbon by click, Enter or Space; Escape clears selection. The complete component connects path handlers, `aria-pressed`, paint opacity and the status text to one selected link ID. Pointer hover uses the native tooltip. Selection does not remove routes or recalculate quantities. The hidden native `SankeyTable` retains every input link for assistive technology; the diagram scrolls horizontally on narrow screens.
+
+Intermediate nodes must balance incoming and outgoing values. This illustrative system has 180 MWh entering and leaving each stage, before conversion losses. Model a loss or gain explicitly as a link and boundary node. Validation rejects cycles, invalid endpoints, duplicate IDs and negative or nonfinite quantities. Zero links remain in the table but leave the plotted geometry; isolated nodes also leave the plot.
+
+## Flow finishes
+
+Choose plain, paper, clay or glow using the Finish control. `material="gradient"` controls color interpolation; `finish` controls the surface treatment of each node and link. Labels are consumer-owned siblings outside the finish filters.
+
+<ChartExample id="sankey-finishes" />
+
+## Motion and geometry
+
+`animate` reveals supported `SankeyLink` paint along the existing cubic paths, staggered by source position. Proportional widths and node positions stay fixed. Reduced motion shows the final diagram. Focus, pointer down, data/layout/renderer changes and measured resize finish the entrance; selection rerenders therefore settle motion. Custom link renderers retain motion ownership.
+
+Recharts computes node coordinates, link control points and proportional widths. Kind's marks preserve those computed values even when presentation props supply alternate coordinates, paths or inline widths. Choose `nodeWidth`, `nodePadding`, margins and labels at the composition boundary. A frame too small for the conservative padding budget displays a status instead of drawing invalid geometry.
+
+## API reference
+
+These are the focused public props used by this composition. Native SVG presentation and Recharts layout options remain available through the public types.
+
+### SankeyChart
+
+<div className="line-props-scroll" role="region" aria-label="SankeyChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `SankeyFlowData` | Required | Immutable nodes and links; validates identities, quantities, acyclicity and intermediate balance. |
+| `node` | Native object, element or `(props: SankeyNodeProps) => ReactNode` | Native node | Receives computed geometry and typed node identity. |
+| `link` | Native object, element or native-compatible callback using `SankeyLinkProps` | Native link | Compose `SankeyLink` for Kind paint and motion. |
+| `animate` | `boolean \| { revealDurationMs?: number }` | `false` | Flow paint reveal; `true` uses 450ms. Duration must be finite and nonnegative. |
+| `empty` | `ReactNode` | `"No positive flows"` | Status for empty or all-zero data. |
+| `nodeWidth` | `number` | `10` | Native node rectangle width. |
+| `nodePadding` | `number` | `10` | Native vertical gap between nodes. |
+| `sort` | `boolean` | `true` | Native node ordering; these components use `false`. |
+| `linkCurvature` | `number` | `0.5` | Native cubic link curvature. |
+| `iterations` | `number` | `32` | Native layout relaxation iterations. |
+| `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Reserve space for consumer labels. |
+| `onClick` / `onMouseEnter` / `onMouseLeave` | `(item, type, event) => void` | — | Native event with typed node/link IDs; `type` is `"node" \| "link"`. |
+| `children` | `ReactNode` | — | Native tooltip or other supported children. |
+
+</div>
+
+See [Recharts Sankey](https://recharts.github.io/en-US/api/Sankey/). Equal-value parallel positive links are rejected because the native renderer cannot distinguish their keys; distinct-value parallel links are supported. Extreme numeric ranges can exceed native layout limits; explicitly rescale units at your data boundary.
+
+### SankeyNode
+
+<div className="line-props-scroll" role="region" aria-label="SankeyNode props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| Native renderer geometry and `payload` | `SankeyNodeProps` | Required | Spread the complete callback props; computed rectangle dimensions win. |
+| `color` | `string` | `"#4f46e5"` | Node fill; not read automatically from node metadata. |
+| `finish` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static surface filter; explicit filters take precedence. |
+| `rectProps` | `SVGProps<SVGRectElement>` | — | Presentation, semantics and handlers on the original rectangle. |
+
+</div>
+
+Node labels are explicit sibling SVG text. Kind does not synthesize labels, legend entries or selection state.
+
+### SankeyLink
+
+<div className="line-props-scroll" role="region" aria-label="SankeyLink props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| Native renderer geometry and `payload` | `SankeyLinkProps` | Required | Spread the complete callback props; path and flow width stay native. |
+| `material` | `"solid" \| "gradient"` | `"solid"` | Single-color stroke or source-to-target gradient. |
+| `color` | `string` | `"#4f46e5"` | Source paint color. |
+| `targetColor` | `string` | `"#06b6d4"` | Destination color for gradient paint. |
+| `finish` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static treatment independent of material and flow width. |
+| `pathProps` | `SVGProps<SVGPathElement>` | — | Presentation, keyboard handlers and semantics on the original path; computed geometry wins. |
+
+</div>
+
+Explicit filters disable built-in finishes. Transformed paths skip built-in reveal. Glow is decorative and does not encode additional quantity or enlarge hit targets.
+
+### SankeyTable
+
+<div className="line-props-scroll" role="region" aria-label="SankeyTable props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `SankeyFlowData` | Required | Complete input, including zero flows; validated independently. |
+| `caption` | `string` | Required | Accessible table name. |
+| `formatValue` | `(value: number) => string` | `String` | Consumer-owned units. |
+| `onInspect` | `(link: SankeyFlowLink) => void` | — | Adds native inspection buttons receiving the original link. |
+| `activeLinkId` | `string \| null` | — | Controlled selected row and button `aria-pressed`. |
+
+</div>
+
+Native table attributes and refs remain available. These components visually hide the table; `onInspect` is available when composing a visible keyboard inspector in your own application.
+
+### Flow data
+
+<div className="line-props-scroll" role="region" aria-label="Flow data fields" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `nodes` | `readonly SankeyFlowNode[]` | Required | Each node has unique `id: string` and `name: string`; extra metadata is retained. |
+| `links` | `readonly SankeyFlowLink[]` | Required | Each link has unique `id: string`, endpoints and a value. |
+| `source` / `target` | `string \| number` | Required | Node ID or original node-array integer index. |
+| `value` | `number` | Required | Finite nonnegative flow quantity. |
+
+</div>
+
+`prepareSankeyData(data)` validates and copies input, resolving endpoints to numeric indices. It does not aggregate, normalize or infer missing flows.
+
+### ResponsiveContainer
+
+<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` / `height` | `number` or percentage | `"100%"` | Plot dimensions relative to the parent; provide a measurable height. |
+
+</div>
+
+### Tooltip
+
+Imported from Recharts for Sankey inspection.
+
+<div className="line-props-scroll" role="region" aria-label="Native Tooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `formatter` | Native value formatter | — | Formats the tooltip value; this component adds MWh units. |
+| `isAnimationActive` | `boolean \| "auto"` | `"auto"` | Native tooltip transition respecting reduced motion in auto mode; these components explicitly disable it. |
+
+</div>
+
+`ResponsiveContainer` owns sizing; supply a measurable height. These components reserve a 540px minimum diagram width for readable labels and let the surrounding region scroll horizontally. Native Recharts `Tooltip` owns hover inspection and formatting; it does not supply keyboard selection for Sankey. The path handlers and status text provide that composition here.
+
+See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/) and [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).

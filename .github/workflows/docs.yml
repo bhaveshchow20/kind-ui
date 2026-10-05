@@ -1,10 +1,10 @@
 name: Docs
 on:
   pull_request:
-    paths: ["apps/docs/**", "packages/charts/**", "scripts/check-package.mjs", "scripts/prepare-package.mjs", ".github/workflows/docs.yml"]
+    paths: ["apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
   push:
     branches: [main]
-    paths: ["apps/docs/**", "packages/charts/**", "scripts/check-package.mjs", "scripts/prepare-package.mjs", ".github/workflows/docs.yml"]
+    paths: ["apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
 permissions:
   contents: read
 concurrency:
@@ -13,6 +13,7 @@ concurrency:
 jobs:
   docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -26,10 +27,23 @@ jobs:
             apps/docs/package-lock.json
       - run: npm install --global npm@11.9.0
       - run: npm ci
+      - run: npm audit --audit-level=high --include=dev
       - run: node apps/docs/scripts/verify-pinned-package.mjs
       - run: npm ci
         working-directory: apps/docs
-      - run: npm run generate && npm run check:consumers && npm run build && npm run check
+      - run: npm audit --audit-level=high --include=dev
+        working-directory: apps/docs
+      - run: |
+          mkdir -p artifacts
+          npm run generate
+          if npm run check:consumers > artifacts/consumers.log 2>&1; then
+            tail -n 12 artifacts/consumers.log
+          else
+            tail -n 100 artifacts/consumers.log
+            exit 1
+          fi
+          npm run build
+          npm run check
         working-directory: apps/docs
         env:
           KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
@@ -38,12 +52,78 @@ jobs:
         working-directory: apps/docs
       - run: node scripts/start-line-checks.mjs
         working-directory: apps/docs
+      - run: node scripts/start-area-checks.mjs
+        working-directory: apps/docs
+      - name: Check pie documentation
+        run: |
+          node --test scripts/pie-contract.test.mjs
+          node scripts/start-pie-checks.mjs
+        working-directory: apps/docs
+      - name: Check radar documentation
+        run: |
+          node scripts/start-radar-checks.mjs
+        working-directory: apps/docs
+      - name: Check sankey documentation
+        run: |
+          node --test scripts/check-sankey-source.test.mjs
+          node scripts/start-sankey-checks.mjs
+        working-directory: apps/docs
+      - name: Check histogram documentation
+        run: |
+          node --test scripts/histogram-contract.test.mjs
+          node scripts/check-histogram-consumers.mjs
+          node scripts/start-histogram-checks.mjs
+        working-directory: apps/docs
+      - name: Check radial documentation
+        run: |
+          set -o pipefail
+          node scripts/start-radial-checks.mjs 2>&1 | tee artifacts/radial-check.log
+        working-directory: apps/docs
+      - name: Check waterfall documentation
+        run: |
+          node --test scripts/waterfall-contract.test.mjs
+          node scripts/check-waterfall-consumers.mjs
+          node scripts/start-waterfall-checks.mjs
+        working-directory: apps/docs
+      - name: Check box-plot documentation
+        run: |
+          node scripts/check-box-plot-consumers.mjs
+          node scripts/start-box-plot-checks.mjs
+        working-directory: apps/docs
+      - name: Check combo documentation
+        run: |
+          node --test scripts/combo-contract.test.mjs
+          node scripts/check-combo-consumers.mjs
+          node scripts/start-combo-checks.mjs
+        working-directory: apps/docs
+      - name: Check scatter documentation
+        run: |
+          node scripts/start-scatter-checks.mjs
+        working-directory: apps/docs
+      - name: Check bar documentation
+        run: |
+          node scripts/start-bar-checks.mjs
+        working-directory: apps/docs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: docs-verification
           path: |
+            apps/docs/artifacts/*.log
             apps/docs/artifacts/*-results.json
             apps/docs/artifacts/screenshots/*.png
+            apps/docs/artifacts/pie/*.png
+            apps/docs/artifacts/pie/*.json
+            apps/docs/artifacts/radar/*.png
+            apps/docs/artifacts/radar/*.json
+            apps/docs/artifacts/sankey/*.png
+            apps/docs/artifacts/sankey/*.json
+            apps/docs/artifacts/radial/*.png
+            apps/docs/artifacts/radial/*.json
+            apps/docs/artifacts/waterfall/*.png
+            apps/docs/artifacts/waterfall/*.json
+            apps/docs/artifacts/box-plot/*.png
+            apps/docs/artifacts/box-plot/*.json
+            apps/docs/artifacts/combo-*.png
           if-no-files-found: warn
           retention-days: 14

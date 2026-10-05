@@ -342,40 +342,46 @@ test("settled digits retain full glyph bounds with inherited line height", async
   await page.addStyleTag({
     content: '[data-direct="true"] { font: 24px/36px system-ui; zoom: 1.25; }',
   });
+  let glyphs: { top: number; bottom: number; left: number; right: number }[] = [];
   await expect
-    .poll(() =>
-      page
-        .locator('[data-direct="true"] [data-kind-ui="tooltip-digit"]')
-        .evaluateAll((nodes) =>
-          nodes.every((node) =>
-            [...node.querySelectorAll('[data-kind-ui="tooltip-digit-reel"] > span')].some(
-              (row) =>
-                Math.abs(row.getBoundingClientRect().top - node.getBoundingClientRect().top) < 0.5,
-            ),
-          ),
-        ),
-    )
+    .poll(async () => {
+      // Capture settlement and glyph bounds together: separate browser calls can
+      // observe an intermediate aligned row and then a moving reel.
+      const measured = await page
+        .locator('[data-direct="true"] [data-kind-ui="tooltip-number"]')
+        .evaluateAll((numbers) => {
+          const bounds = [];
+          for (const number of numbers) {
+            const digits = number
+              .querySelector('[data-kind-ui="tooltip-number-final"]')
+              ?.textContent?.match(/[0-9]/g);
+            const slots = [...number.querySelectorAll('[data-kind-ui="tooltip-digit"]')];
+            if (!digits || slots.length !== digits.length) return null;
+            for (const [index, node] of slots.entries()) {
+              const slot = node.getBoundingClientRect();
+              // Completion resets each reel to its actual digit in the middle cycle.
+              const row = node.querySelectorAll('[data-kind-ui="tooltip-digit-reel"] > span')[
+                Number(digits[index]) + 10
+              ];
+              if (!row || Math.abs(row.getBoundingClientRect().top - slot.top) >= 0.5) return null;
+              const range = document.createRange();
+              range.selectNodeContents(row);
+              const text = range.getBoundingClientRect();
+              bounds.push({
+                top: text.top - slot.top,
+                bottom: slot.bottom - text.bottom,
+                left: text.left - slot.left,
+                right: slot.right - text.right,
+              });
+            }
+          }
+          return bounds;
+        });
+      if (!measured?.length) return false;
+      glyphs = measured;
+      return true;
+    })
     .toBe(true);
-  const glyphs = await page
-    .locator('[data-direct="true"] [data-kind-ui="tooltip-digit"]')
-    .evaluateAll((nodes) =>
-      nodes.map((node) => {
-        const slot = node.getBoundingClientRect();
-        const row = [...node.querySelectorAll('[data-kind-ui="tooltip-digit-reel"] > span')].find(
-          (row) => Math.abs(row.getBoundingClientRect().top - slot.top) < 0.5,
-        );
-        if (!row) throw new Error("Digit has not settled on its visible row");
-        const range = document.createRange();
-        range.selectNodeContents(row);
-        const text = range.getBoundingClientRect();
-        return {
-          top: text.top - slot.top,
-          bottom: slot.bottom - text.bottom,
-          left: text.left - slot.left,
-          right: slot.right - text.right,
-        };
-      }),
-    );
   expect(glyphs.length).toBeGreaterThan(0);
   for (const glyph of glyphs) {
     for (const edge of Object.values(glyph)) expect(edge).toBeGreaterThanOrEqual(-0.5);

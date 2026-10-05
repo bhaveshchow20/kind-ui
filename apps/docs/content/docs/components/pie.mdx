@@ -1,0 +1,173 @@
+---
+title: Pie and Donut
+description: Compare parts of a whole with explicit category identity and native sectors.
+---
+
+<ChartExample id="pie" />
+
+## Usage
+
+`Root` owns category metadata; `PieSeries` owns rows and geometry. Compose `Cell` colors, percentage labels and `Tooltip` explicitly. A positive `innerRadius` turns the same Pie composition into a Donut. The first Code tab contains a complete named component and dataset.
+
+```tsx title="Composition"
+<Chart.Root config={config}>
+  <Chart.Legend />
+  <Chart.ResponsiveContainer width="100%" height={280}>
+    <Chart.PieChart animate accessibilityLayer aria-label="Team allocation">
+      <Chart.PieSeries data={data} dataKey="hours" nameKey="key" innerRadius={58} outerRadius={108}>
+        {data.map((row) => <Chart.Cell key={row.key} fill={config[row.key].color} />)}
+        <Chart.LabelList dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
+      </Chart.PieSeries>
+      <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
+    </Chart.PieChart>
+  </Chart.ResponsiveContainer>
+</Chart.Root>
+```
+
+Use stable category keys such as `design` for config and `nameKey`; labels such as “Design” remain display metadata. `Cell` applies each configured color explicitly. `Tooltip.itemKey` resolves that same category identity instead of the shared value field `hours`. Pie has no configured wrapper or separate Donut export.
+
+The pinned package supports a continuous chart-owned angular entrance and reduced motion. `animationDirection` controls the entrance sweep; native `startAngle`, `endAngle` and data order remain unchanged. Changing the reveal duration, easing or direction during entrance finishes it.
+
+## Controlled categories
+
+Legend buttons update consumer-owned state. `Root.visibleSeries` controls legend state and tooltip filtering; it does not remove Pie rows. Filter both the data and mapped Cells explicitly. Remaining sectors are recalculated against the selected total. The example reports that total and permits an empty selection; it omits the original percentage labels because those would no longer describe the visible whole.
+
+<ChartExample id="pie-visibility" />
+
+## Materials
+
+Choose plain, paper, clay or glow on native donut sectors. Finishes preserve native geometry and hit targets. Explicit shapes, filters and CSS transforms keep their rendering ownership and can bypass Kind's finish. This example keeps percentage labels inside the sectors and category names in the legend to leave enough room at narrow widths.
+
+<ChartExample id="pie-materials" />
+
+## API reference
+
+Kind wraps Recharts composition with shared metadata, tooltip inspection and optional motion. These are the focused props used here; upstream references cover additional native options.
+
+### Root
+
+Required around the composition; metadata does not supply Pie's data or colors automatically.
+
+<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Category labels, colors and optional value formatters. |
+| `visibleSeries` | `readonly string[]` | All config keys | Controlled legend and tooltip visibility; filter Pie data separately. |
+| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend buttons together with `visibleSeries`. |
+| `emphasis` | `"auto" \| "none"` | `"auto"` | Shared paint emphasis for supported native sectors. |
+
+</div>
+
+### PieChart
+
+Place inside a sized `ResponsiveContainer`. Motion belongs to the chart, while the consumer owns its children and geometry.
+
+<div className="line-props-scroll" role="region" aria-label="PieChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `animate` | `boolean \| PieAnimation` | `false` | Sector entrance and interaction motion; respects reduced motion. |
+| `animationDirection` | `"clockwise" \| "anticlockwise"` | `"clockwise"` | Continuous entrance sweep; native geometry and row order stay unchanged. |
+| `accessibilityLayer` | `boolean` | `true` in Recharts | Enables native keyboard inspection; set explicitly here. |
+| `aria-label` / `aria-labelledby` | `string` | — | Accessible chart name. |
+| `children` | `ReactNode` | — | Explicit PieSeries, labels and tooltip. |
+
+</div>
+
+`PieAnimation` in this snapshot accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. Native per-series animation is disabled. See [Recharts PieChart](https://recharts.github.io/en-US/api/PieChart/).
+
+### PieSeries
+
+A native Pie with Kind's default sector paint. Values and category identity are separate fields.
+
+<div className="line-props-scroll" role="region" aria-label="PieSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `Row[]` | — | Consumer-owned category rows. |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | `"value"` in Recharts | Numeric value field or accessor; set explicitly here. |
+| `nameKey` | `string \| number \| ((row: Row) => unknown)` | `"name"` | Native category name; use config keys for semantic identity. |
+| `innerRadius` | `number` or percentage | `0` | A positive radius produces a Donut. |
+| `outerRadius` | `number` or percentage | `"80%"` | Sector size; percentages use Recharts' available radius. |
+| `startAngle` / `endAngle` | `number` | `0` / `360` | Native angular geometry in degrees. |
+| `paddingAngle` | `number` | `0` | Gap between sectors in degrees. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Finish on default sectors; consumer rendering can take precedence. |
+| `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | Native name | Optional semantic sector identity for paint emphasis; does not configure tooltip identity. |
+| `stroke` | `string` | `"none"` | Native sector outline. |
+
+</div>
+
+`Root.visibleSeries` does not hide sectors automatically. PieSeries has no `seriesKey` prop. See [Recharts Pie](https://recharts.github.io/en-US/api/Pie/).
+
+### Cell
+
+Explicit per-category paint. Map Cells in the same order as the supplied rows, including after filtering.
+
+<div className="line-props-scroll" role="region" aria-label="Cell props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fill` | `string` | Native inherited fill | Set each sector's configured color explicitly. |
+
+</div>
+
+See [Recharts Cell](https://recharts.github.io/en-US/api/Cell/).
+
+### LabelList
+
+Native labels; this page uses `position="inside"` and precomputed shares of the complete dataset.
+
+<div className="line-props-scroll" role="region" aria-label="LabelList props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Label field; independent of the numeric sector value. |
+| `fill` / `stroke` | `string` | Native inherited paint | Explicit readable label paint. |
+
+</div>
+
+See [Recharts LabelList](https://recharts.github.io/en-US/api/LabelList/).
+
+### Legend
+
+Place outside `ResponsiveContainer`. Items are labels until Root receives controlled visibility and a callback.
+
+<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `hideIcon` | `boolean` | `false` | Use swatches instead of configured icons. |
+| `emphasis` | `"none" \| "series"` | `"none"` | Request category paint emphasis on hover or focus. |
+
+</div>
+
+### Tooltip
+
+Compose inside PieChart. Category `itemKey` enables config labels, value formatting and controlled filtering. Native keyboard inspection and Escape dismissal stay chart-owned.
+
+<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `itemKey` | `(entry: TooltipPayloadEntry) => string` | Native item identity | Resolve the category key from payload; the default often resolves to the numeric field. |
+| `maxWidth` | `number` | `180` | Bound tooltip width in pixels. |
+| `cursor` | Native cursor props or renderer | `false` | Optional native inspection guide. |
+
+</div>
+
+See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+
+### ResponsiveContainer
+
+Give the plot a measurable height; these components use `280` pixels.
+
+<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` / `height` | `number` or percentage | `"100%"` | Responsive plot dimensions. |
+
+</div>
+
+See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).

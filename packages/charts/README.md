@@ -2,7 +2,37 @@
 
 React components compose real Recharts lines, areas and bars with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. Each chart accepts `animate={false | true | config}` for coordinated reveal and hover animation. Consumers own data shape, reference lines, custom marks, copy and data alternatives. Explicit compositions also own scales, axes, grids and layout; configured Line composition provides overridable defaults.
 
-Pre-release and unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, Motion 13.4.6, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
+Public `0.1.0` candidate; unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, Motion 13.4.6, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
+
+## Installation and version
+
+This `0.1.0` candidate is not yet available from npm. For local validation, use the exact reviewed tarball and the pinned peer versions:
+
+```sh
+npm install --save-exact ./kind-ui-charts-0.1.0.tgz react@19.3.0 react-dom@19.3.0 recharts@3.10.1 motion@13.4.6
+```
+
+Check the tarball's SHA-256 against its validation receipt before installing. After a separately authorized `0.1.0` publication, the equivalent version-pinned npm command will be:
+
+```sh
+npm install --save-exact @kind-ui/charts@0.1.0 react@19.3.0 react-dom@19.3.0 recharts@3.10.1 motion@13.4.6
+```
+
+The intended dist-tag is `latest`; use the explicit version for documentation and site builds. This package is ESM and requires React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Import components and types from `@kind-ui/charts` and import `@kind-ui/charts/styles.css` once in the host. TypeScript consumers have passed strict NodeNext and Bundler resolution. Next hosts need a client component boundary for callbacks, refs and state, plus a host-owned accessible name and data alternative.
+
+Moving from the local `0.0.0` workspace package to this `0.1.0` candidate requires a dependency/version and lockfile update; the integrated candidate adds the three APIs below while retaining existing import paths and peer ranges. The [changelog](CHANGELOG.md) includes the initial API and the entrance-settlement fix already present in the integration base. Docs and showcase owners should validate their exact `0.1.0` bytes and imports before launch; neither site is updated or deployed by this candidate.
+
+## Integrated 0.1.0 additions
+
+This artifact is a launch candidate; site readiness and the separate Docs Heatmap Escape investigation remain outside this package validation.
+
+- `HeatmapGrid.layout` accepts `cellSize`, `gap`, `rowLabels` and `columnLabels`. Omission retains the fluid table. Visual label hiding preserves native header associations; custom content/styles can enlarge native table cells. Keep the horizontal scroll host width-constrained and import the stylesheet. This is programmatic Chromium validation, not manual screen-reader conformance.
+- `PieSeries.categoryKey` (with explicit series data) and `RadialBarChart.categoryKey` resolve own top-level fields or typed accessors to string keys in `Root.config`. Colors follow IDs through reorder/filtering; explicit series/datum/Cell paint remains authoritative. Category filtering remains consumer-owned. `SankeyChart.nodeConfig` supplies node metadata and source/target link colors, with standalone static `SankeyLegend`; it does not create flow selection or rewrite custom SVG renderers.
+- `ActivityRings` owns Root and accepts ordered `rings`, `config` and an accessible name. A ring has a unique config `key`, finite `value`, optional domain and native `cellProps`. Default domain is `[0, 100]`; visual progress clamps while raw values remain in tooltip payloads. `series`, `labels`, `legend`, `tooltip` and native chart geometry provide bounded overrides. Do not nest it inside Root; use explicit `RadialBarChart` composition for that case. Hosts still own data alternatives and sizing.
+
+These additions are included in the packed changelog and checked through public tarball imports. They do not establish compatibility beyond the documented pinned and ordinary-consumer checks.
+
+## Basic usage
 
 ```tsx
 import { useState } from "react";
@@ -50,7 +80,7 @@ Custom marks can also import `BarShapeProps`, `PieSectorShapeProps`, `PieLabelRe
 
 This consolidates application imports; Recharts remains a required peer dependency, alongside React, React DOM and Motion. This workspace is private and unpublished. Sankey's native tooltip and specialized engine-only integrations still use an explicit Recharts import; the bounded Cartesian Tooltip is not a Sankey adapter. Comparison fixtures deliberately retain native chart imports as independent test oracles.
 
-For Next, import the package from a client component when supplying callbacks, accessors, refs or stateful content. The published entry retains `"use client"`; consolidation does not make function props serializable across a server boundary. Charts still need an accessible name and a host-owned data alternative; native SSR can render an empty chart wrapper before client layout.
+For Next, import the package from a client component when supplying callbacks, accessors, refs or stateful content. The packed entry retains `"use client"`; consolidation does not make function props serializable across a server boundary. Charts still need an accessible name and a host-owned data alternative; native SSR can render an empty chart wrapper before client layout.
 
 ## Configured Line Component
 
@@ -275,7 +305,7 @@ import "@kind-ui/charts/styles.css";
 - `BarSeriesProps` retains native Bar props, children, cells, shapes, active bars, backgrounds, label/error-bar composition and handlers. It excludes `isAnimationActive`; Motion owns animation and the engine tween is always disabled. `fill` defaults to the Root color, with explicit fill and Cell overrides retaining native semantics. String data keys supply the metadata identity; set `seriesKey` for controlled numeric/function keys. Root visibility and native `hide` combine exactly as on `LineSeries`. Recharts Bar has no public component ref in the tested version; refs belong on custom shape nodes.
 - Group bars by composing series; stack them with matching native axis IDs and `stackId`. Use `stackOffset="sign"` for separate positive/negative stacks, and native `LabelList`, `Cell`, `Rectangle`, `ReferenceLine` and `activeBar` for labels, category colors, highlights and signed baselines. The public API does not impose category/value field names or coerce null/zero values. Default tooltip content shows null as missing alongside available series, retains zero and signed values, and suppresses entirely missing categories.
 
-`BarChart animate` accepts `false` (default), `true`, or `BarAnimation` with the same `revealDurationMs`, `revealEasing` and `hoverTransition` options as line. Each series opens a plot clip outward from the engine's zero coordinate (or nearest domain edge when zero is excluded) on its own numeric axis ID; negative values and both orientations retain their geometry. Grouped and stacked series share chart timing. A scale without a finite zero coordinate renders immediately. Ranged bars retain native geometry; their reveal also opens from numeric zero. Custom labels outside the plot appear fully when reveal completes.
+`BarChart animate` accepts `false` (default), `true`, or `BarAnimation` with the same `revealDurationMs`, `revealEasing` and `hoverTransition` options as line. Each series opens a plot clip outward from the engine's zero coordinate (or nearest domain edge when zero is excluded) on its own numeric axis ID; negative values and both orientations retain their geometry. Grouped and stacked series share chart timing. A scale without a finite zero coordinate renders immediately. Initial axis registration and automatic tick-width measurement settle before geometry changes count as entrance interruptions; later font/label measurements that move the plot still finish the entrance immediately. Ranged bars retain native geometry; their reveal also opens from numeric zero. Custom labels outside the plot appear fully when reveal completes.
 
 Pointer/focus interaction, data/size/domain/orientation changes and native or controlled visibility changes finish entrance motion and discard stale pointer coordinates. Completed/interrupted reveals do not restart on data updates or palette changes. Tooltip springs retarget through the existing shared implementation and settle immediately when `animate={false}` or reduced motion applies. Neither animation nor geometry invalidation remounts custom tooltip content. Mount a new chart to replay entrance motion. Import the default stylesheet; per-series dynamic clip variables account for Recharts' portal-rendered marks without wrapping or replacing custom shapes. No new dependency, gallery, publication or registry work is included.
 
@@ -918,7 +948,7 @@ the transition. Import `@kind-ui/charts/styles.css` for these defaults.
 
 The public packed recipe in `tests/fixtures/emphasis` demonstrates category,
 sector, custom portal, visibility, and independent-plot composition. This preview
-is additive and private at `0.0.0`; adapters beyond the matrix above are not claimed.
+is additive in the unpublished `0.1.0` candidate; adapters beyond the matrix above are not claimed.
 
 Identity relationships: `dataKey` selects measured values; it is not a category ID.
 `seriesKey` selects Root metadata and controlled series visibility (or a string

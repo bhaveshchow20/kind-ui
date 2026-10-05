@@ -9,6 +9,7 @@ const manifest = JSON.parse(
 const files = [
   "package.json",
   "README.md",
+  "CHANGELOG.md",
   "LICENSE",
   "dist/index.js",
   "dist/index.d.ts",
@@ -38,6 +39,7 @@ for (const missing of [
   "dist/styles.css",
   "LICENSE",
   "README.md",
+  "CHANGELOG.md",
 ]) {
   test(`rejects a missing ${missing}`, () => {
     assert.throws(
@@ -55,8 +57,28 @@ for (const extra of ["src/index.ts", ".env", "dist/.tsbuildinfo", "dist/node_mod
     assert.throws(() => assertPackageContract(manifest, [...files, extra]));
   });
 }
-test("rejects publication enablement", () => {
-  assert.throws(() => assertPackageContract({ ...manifest, private: false }, files), /private/);
+for (const privateFlag of [true, false]) {
+  test(`rejects an unreviewed private flag ${privateFlag}`, () => {
+    assert.throws(
+      () => assertPackageContract({ ...manifest, private: privateFlag }, files),
+      /private flag/,
+    );
+  });
+}
+for (const version of ["0.0.0", "0.1.1", "1.0.0", "0.1.0-preview.1"]) {
+  test(`rejects unreviewed candidate version ${version}`, () => {
+    assert.throws(
+      () => assertPackageContract({ ...manifest, version }, files),
+      /reviewed public candidate/,
+    );
+  });
+}
+test("rejects missing or incorrect source metadata", () => {
+  assert.throws(
+    () => assertPackageContract({ ...manifest, repository: undefined }, files),
+    /provenance/,
+  );
+  assert.throws(() => assertPackageContract({ ...manifest, description: "" }, files), /purpose/);
 });
 test("rejects CSS that bundlers may drop or consumers cannot resolve", () => {
   assert.throws(
