@@ -86,8 +86,14 @@ function assertDisabledRelease(w) {
   );
   assert.deepEqual(w.permissions, { contents: "read" }, "No publishing identity is granted");
   assert.equal(w.jobs.validate.if, "github.ref == 'refs/heads/main'", "Candidate uses main only");
-  assert.deepEqual(w.jobs.validate.strategy.matrix.node, [22, 24]);
-  assert.equal(w.jobs.verify.needs, "validate", "Both matrix jobs must pass before handoff");
+  assert.equal(w.jobs.validate.strategy, undefined);
+  for (const job of Object.values(w.jobs)) {
+    assert.equal(
+      job.steps.find((s) => s.uses?.startsWith("actions/setup-node@"))?.with["node-version"],
+      22,
+    );
+  }
+  assert.equal(w.jobs.verify.needs, "validate", "Validation must pass before handoff");
   assert.equal(w.jobs.publish.needs, "verify");
   // biome-ignore lint/suspicious/noTemplateCurlyInString: Literal GitHub Actions expression.
   assert.equal(w.jobs.publish.if, "${{ false }}", "Publishing remains hard-disabled");

@@ -10,7 +10,7 @@ Import `@kind-ui/charts/styles.css` once at your application entry. See the [com
 
 ## Local setup
 
-Requires Node 22.12+ (Node 24 recommended) and npm 11.9.
+Requires Node 22.12+ (CI uses Node 22) and npm 11.9.
 
 ```sh
 npm ci
