@@ -88,3 +88,24 @@ test("empty, zero/full rings and reduced-motion settle with bounded visual label
   for (const label of await page.locator('#zero [data-kind-ui="radial-label"]').all())
     if (await label.isVisible()) await expect(label).toHaveAttribute("data-fit", "yes");
 });
+
+test("tooltip identity/animation options and custom native payload semantics remain consumer-owned", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const hover = async () => {
+    const path = page.locator("#overrides .recharts-radial-bar-sector").nth(1);
+    await path.scrollIntoViewIfNeeded();
+    const arc = await path.boundingBox();
+    if (!arc) throw new Error("Expected a painted exercise arc");
+    await page.mouse.move(arc.x + arc.width / 2, arc.y + 5);
+  };
+  await page.goto(`${url}?tooltip=options`);
+  await hover();
+  const owned = page.locator('#overrides [data-kind-ui="chart-tooltip-item"][data-series="move"]');
+  await expect(owned).toContainText("Move");
+  await expect(owned.locator('[data-kind-ui="tooltip-number-final"]')).toHaveText("300");
+  await page.goto(`${url}?tooltip=custom`);
+  await hover();
+  await expect(page.locator('[data-test="custom-ring-tooltip"]')).toHaveText("300/100/100/300");
+});

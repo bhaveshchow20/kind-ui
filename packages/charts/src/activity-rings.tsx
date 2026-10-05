@@ -72,6 +72,7 @@ export function ActivityRings({
   ...chartProps
 }: ActivityRingsProps) {
   const parent = useContext(ChartContext);
+  const tooltipOptions = tooltip === false ? undefined : tooltip;
   const descriptionId = useId();
   if (parent)
     throw new Error("ActivityRings owns Root; use native RadialBarChart inside Root instead");
@@ -149,13 +150,18 @@ export function ActivityRings({
                     return rawValue === undefined ? entry : { ...entry, value: rawValue };
                   }),
                 }}
-                itemKey={(entry) =>
-                  (entry.payload as ActivityRingDatum | undefined)?.key ?? String(entry.dataKey)
+                itemKey={
+                  tooltipOptions?.itemKey ??
+                  ((entry) =>
+                    (entry.payload as ActivityRingDatum | undefined)?.key ?? String(entry.dataKey))
                 }
+                {...(tooltipOptions?.valueAnimation
+                  ? { valueAnimation: tooltipOptions.valueAnimation }
+                  : {})}
                 hideLabel
               />
             )}
-            {...tooltip}
+            {...tooltipOptions}
           />
         )}
       </RadialBarChart>

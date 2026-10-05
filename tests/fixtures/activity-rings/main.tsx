@@ -1,5 +1,6 @@
 import {
   type ActivityRing,
+  type ActivityRingDatum,
   ActivityRings,
   type ActivityRingsProps,
   Cell,
@@ -40,6 +41,7 @@ void invalidValue;
 
 function App() {
   const [rings, setRings] = useState(initial);
+  const tooltipMode = new URLSearchParams(window.location.search).get("tooltip");
   return (
     <>
       <button type="button" onClick={() => setRings([...rings].reverse())}>
@@ -164,6 +166,24 @@ function App() {
           endAngle={0}
           barCategoryGap="25%"
           series={{ background: { fill: "#ddd" }, cornerRadius: 0, fill: "orange" }}
+          tooltip={
+            tooltipMode === "options"
+              ? { itemKey: () => "move", valueAnimation: "shuffle" }
+              : tooltipMode === "custom"
+                ? {
+                    content: ({ active, payload }) => {
+                      const ring = payload[0]?.payload as
+                        | (ActivityRingDatum & { payload?: ActivityRingDatum })
+                        | undefined;
+                      return active && ring ? (
+                        <output data-test="custom-ring-tooltip">
+                          {ring.rawValue}/{ring.progress}/{ring.value}/{ring.payload?.value}
+                        </output>
+                      ) : null;
+                    },
+                  }
+                : {}
+          }
           labels={{ position: "insideStart", content: undefined }}
           legend={false}
           responsive={false}
