@@ -1,16 +1,75 @@
 ---
-title: Consumer guide for agents
-description: Use the pinned Line package and standalone source without inventing an interface.
+title: AI agents
+description: Install the consumer skill and build charts with public APIs or editable registry designs.
 ---
 
-1. Read [installation](/docs/start/installation/) and [Line Markdown](/markdown/components/line.md), indexed by [llms.txt](/llms.txt). This Site is owner-private; anonymous public retrieval is not established.
-2. Retrieve the selected source from Copy prompt and use the exact [pinned artifact](/examples/package/kind-ui-charts-0.1.0.tgz). Preserve the [locked setup files](/examples/line/README.md); do not reach into repository implementation paths or invent a registry install.
-3. Import the public Line parts and stylesheet. The source includes data/config, and configured `LineChart` owns context, sizing and legend defaults.
-4. Typecheck/build the consumer and verify curve/material selection, legend toggles, missing/zero values, sizing, keyboard access and a complete data alternative.
-5. Report failures with the exact source/checksum and reproducible evidence.
+## Consumer skill
 
-Copy prompt links the selected curve/material source; Copy Markdown contains canonical default consumer files. Legend toggles are runtime inspection state and are not serialized into the prompt. Keep controlled visibility explicit when needed.
+```sh
+npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts
+```
 
-## Reader and contributor instructions
+The skill covers chart choice, installation and composition. It is separate from
+repository maintainer instructions in `.agents/skills`.
 
-This guide is for package consumers. Repository `AGENTS.md` governs contributors, source changes and release boundaries. Passing checks does not authorize npm publication, a main merge or an audience change. Other component documentation will be reviewed in separate PRs.
+Start with [installation](/docs/start/installation/), then use [llms.txt](/llms.txt)
+to retrieve canonical family Markdown. [llms-full.txt](/llms-full.txt) contains the
+same pages, complete consumer code and public API tables. Copy prompt follows
+the selected example; Copy Markdown contains its canonical default.
+
+## shadcn MCP
+
+Use the [official shadcn MCP setup](https://ui.shadcn.com/docs/mcp) for your client.
+For Claude Code, run:
+
+```sh
+npx shadcn@latest mcp init --client claude
+```
+
+For Codex, add the official server to `~/.codex/config.toml` and restart Codex:
+
+```toml
+[mcp_servers.shadcn]
+command = "npx"
+args = ["shadcn@latest", "mcp"]
+```
+
+Merge this mapping into the existing `components.json`, preserving aliases,
+style settings and other registries:
+
+```json
+{
+  "registries": {
+    "@kindui": "https://raw.githubusercontent.com/bhaveshchow20/kind-ui/main/apps/docs/public/r/{name}.json"
+  }
+}
+```
+
+The namespace gives MCP and the CLI the same items: `line-chart`, `bar-chart`,
+`area-chart` and `charts-dashboard`. CLI installation also works:
+
+```sh
+npx shadcn@latest add @kindui/line-chart
+```
+
+Review existing-file changes with `--diff`; use `--overwrite` when replacing
+those files is intended. Read the [namespace documentation](https://ui.shadcn.com/docs/registry/namespace)
+for registry configuration.
+
+## Try these prompts
+
+- “Inspect @kindui/line-chart and its dependencies, then add a weekly tasks chart with an accessible data table.”
+- “Use @kind-ui/charts to compare signed revenue by category. Keep zero and missing observations distinct and verify keyboard access.”
+- “Add @kindui/charts-dashboard, adapt its cards to our theme, and keep date filters in application state.”
+
+## Ownership and verification
+
+The npm package supplies usable, design-neutral charts and shared interaction,
+visibility, motion and accessibility behavior. Registry items supply editable
+art direction and dashboard composition over public exports. App-specific filters
+may stay in the application; reusable chart behavior stays in npm.
+
+Import public components and the stylesheet. Configured `LineChart` owns Root and
+sizing defaults; Area and Bar use explicit composition. Provide chart names and
+complete data alternatives. Typecheck/build the consumer and inspect mobile
+layout, keyboard behavior, legend toggles, missing/zero values and reduced motion.

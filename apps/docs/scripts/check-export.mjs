@@ -74,13 +74,31 @@ for (const file of html) {
   }
 }
 const index = readFileSync(path.join(root, "llms.txt"), "utf8");
-const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
-if (!index.includes(provenance.sourceCommit.slice(0, 7)))
-  throw new Error("Agent index does not identify the approved package snapshot");
-for (const file of readdirSync(path.join(root, "markdown"), { recursive: true }).filter((name) =>
-  String(name).endsWith(".md"),
-)) {
+for (const file of ["llms.txt", "llms-full.txt", "AGENTS.md"])
+  assert.equal(
+    readFileSync(path.join(root, file), "utf8"),
+    readFileSync(path.join("public", file), "utf8"),
+    `Stale exported agent asset: ${file}`,
+  );
+const fullIndex = readFileSync(path.join(root, "llms-full.txt"), "utf8");
+const markdownFiles = (directory) =>
+  readdirSync(directory, { recursive: true })
+    .filter((name) => String(name).endsWith(".md"))
+    .sort();
+assert.deepEqual(
+  markdownFiles(path.join(root, "markdown")),
+  markdownFiles("public/markdown"),
+  "Exported canonical Markdown pages differ from generated pages",
+);
+for (const file of markdownFiles("public/markdown")) {
   const body = readFileSync(path.join(root, "markdown", file), "utf8");
+  assert.equal(
+    body,
+    readFileSync(path.join("public/markdown", file), "utf8"),
+    `Stale Markdown: ${file}`,
+  );
+  assert.ok(index.includes(publicPath(`/markdown/${file}`)), `Agent index omits ${file}`);
+  assert.ok(fullIndex.includes(body.trimEnd()), `Full agent index omits canonical ${file}`);
   if (
     /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(
       body,

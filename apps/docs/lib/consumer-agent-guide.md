@@ -1,11 +1,22 @@
 # Kind UI chart consumer guidance
 
-Use /llms.txt for the documented component list. The docs pin is the integrated 0.1.0 release candidate and remains unpublished. Use /package-provenance.json and the exact /examples/package/kind-ui-charts-0.1.0.tgz from the guarded source snapshot recorded in provenance; do not substitute main or a registry install.
+Install the consumer skill with `npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`.
+Install charts with `npm install @kind-ui/charts react react-dom recharts motion`.
+Import `@kind-ui/charts/styles.css` once at the application entry.
 
-Start with /llms.txt, /markdown/start/installation.md and /markdown/components/line.md and /markdown/components/area.md. Markdown includes standalone public consumer source and links to locked setup files. Copy prompt links the selected curve/material source; runtime legend toggles are not serialized.
+Start with /llms.txt, /markdown/start/installation.md and /markdown/agents/consumer.md.
+Retrieve the relevant family Markdown; /llms-full.txt contains complete consumer
+code and API tables. Copy prompt follows the selected recipe. Runtime legend
+choices remain application state.
 
-Import LineChart, CartesianGrid, XAxis, YAxis, LineSeries, Tooltip and styles.css through @kind-ui/charts public exports. Configured LineChart owns Root, responsive sizing and configured defaults; explicit children need legend={{}} for its internally positioned legend. The application owns data, domains, units and controlled visibility. Motion is a required peer; there is no /motion entry.
+Configured LineChart owns Root, responsive sizing and defaults. Area and Bar use
+explicit Root and ResponsiveContainer composition. Import only public package
+exports. The application owns data, domains, units, chart names and complete data
+alternatives. Motion is a required peer; there is no /motion entry.
 
-Preserve the complete data, accessible name, data alternative, keyboard behavior, contrast and reduced motion. Use plain, paper, clay or glow; Glass remains paused. Typecheck/build the copied consumer and report exact reproducible failures. These owner-private URLs do not establish anonymous docs access or a package release.
+The npm package owns reusable chart behavior. Registry designs add editable art
+direction and composition; application filters can remain local. The AI agents
+page documents official shadcn MCP setup and the @kindui namespace mapping.
 
-Area uses public Root, ResponsiveContainer, AreaChart and AreaSeries exports with explicit axes, grid and tooltip. AreaChart has no configured wrapper conveniences. Place Legend outside the responsive plot; pass visibleSeries and onVisibleSeriesChange to Root for interactive toggles. Matching stackId values stack series. The four Area components and selected curve/material sources consume the same guarded artifact recorded in provenance.
+Typecheck/build the consumer and inspect narrow layout, keyboard access, contrast,
+legend toggles, missing/zero values and reduced motion. Report reproducible failures.

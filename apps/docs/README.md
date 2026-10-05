@@ -6,28 +6,28 @@ Standalone Fumadocs/Next MDX application with build-time typed API and Markdown 
 
 Use Node 22.12+ and npm 11.9. From the repository root run `npm ci`. In this directory:
 
-1. `node scripts/verify-pinned-package.mjs` verifies the checked-in guarded artifact against `vendor/provenance.json`. The current integrated 0.1.0 candidate pin is built from source `d66ad717eaa0220b83b60de9420c94b65d67118c`, including category/Sankey metadata defaults, compact Heatmap and ActivityRings. CI consumes those exact bytes rather than repacking main. Artifact refreshes are owned centrally and require a new package gate, app/consumer locks and consumer verification.
+1. `node scripts/verify-pinned-package.mjs` verifies the checked-in guarded artifact against `vendor/provenance.json`. The internal validation pin includes category/Sankey metadata defaults, compact Heatmap and ActivityRings. CI consumes those exact bytes rather than repacking main. Artifact refreshes are owned centrally and require a new package gate, app/consumer locks and consumer verification.
 2. `npm ci` installs the isolated app from its lockfile. If the package artifact changes, use `npm install --save-exact ./vendor/kind-ui-charts-0.1.0.tgz` to update the lockfile and install it.
 3. `npm run generate`, `npm run check:consumers`, then `npm run generate` establishes the consumer lock when preparing a new artifact.
 4. `npm run build` exports static `out/`; `npm run check` verifies app types, selected-state contracts and exported links. `npm run preview` serves only reserved port 6373. `node scripts/check-browser.mjs` checks the built preview.
 
 When the tarball changes, delete only this app's `examples/shared/consumer-package-lock.json` and ignored `artifacts/consumer/` before regenerating the clean consumer lock. Never reuse a lock from a different artifact just because they share a version.
 
-`KIND_DOCS_ORIGIN` sets absolute canonical agent retrieval links at generation/build time. `KIND_DOCS_RELEASE_VERSION` supports a future exact authorized published version; keep local mode until a release actually exists. A release/version change needs a new package gate, both lockfiles, consumers, docs export and review. This app does not change root private/version policy.
+`KIND_DOCS_ORIGIN` sets absolute canonical agent retrieval links at generation/build time. `KIND_DOCS_RELEASE_VERSION` selects the package version for validation. A release/version change needs a new package gate, both lockfiles, consumers, docs export and review. This app does not change root private/version policy.
 
 ## Canonical examples
 
 Line and Area are documented. Five Line and four Area `examples/<id>/example.tsx` sources drive the actual previews and complete consumer files; curve and material choices use the same selected source in Code and Copy prompt. The generator extracts literal defaults without executing source and produces consumer packages with public imports only. The selected source feeds code and compact prompts. Usage shows integration with the included example; Code shows complete consumer source, not chart implementation internals.
 
-`lib/public-types.ts` and optional family-owned `lib/public-types/<family>.ts` select uniquely named focused public declaration contracts for generated tables; engine-native props remain documented through Recharts. Content is grouped into Start, Concepts, Components (Line and Area), Guides and Agents. `public/AGENTS.md`, generated Markdown, llms.txt and llms-full.txt are synchronized with package provenance.
+`lib/public-types.ts` and optional family-owned `lib/public-types/<family>.ts` select uniquely named focused public declaration contracts for generated tables; engine-native props remain documented through Recharts. Content is grouped into Start, Concepts, Components (Line and Area), Guides and Agents. `public/AGENTS.md`, generated Markdown, llms.txt and llms-full.txt are generated from canonical consumer content. Internal validation remains synchronized with package provenance.
 
 ## Verification and deployment
 
 The root guarded tarball gate verifies runtime/declarations/CSS/license and isolated typed production consumers. Docs additionally build every copied example, verify pinned assets/selected prompts and run one local Chromium pass. Root aggregate browser fleets are excluded from this delegated scope to preserve other sessions' ports. Passing this preview does not establish anonymous retrieval, registry installation, assistive-technology support or untested browsers.
 
-Native Sites hosting owns only the new owner-private docs project. `snapshot:site -- /absolute/generated/site/checkout` copies static output and provenance while preserving its hosting project ID. Use the official Sites workflow to commit/push/package the snapshot and deploy that exact version privately. Never run these scripts against the existing showcase Site.
+Native Sites hosting owns only the docs project. `snapshot:site -- /absolute/generated/site/checkout` copies static output and provenance while preserving its hosting project ID. Use the official Sites workflow to commit/push/package the snapshot and deploy that exact version according to its configured hosting audience. Never run these scripts against the existing showcase Site.
 
-MIT for original contributions; see `THIRD_PARTY_NOTICES.md` for dependencies and reference provenance. The validated unpublished 0.1.0 candidate tarball is retained solely as the explicitly requested reproducible documentation pin, alongside its source and checksum provenance. Do not commit generated output, screenshots, tokens, caches or node_modules.
+MIT for original contributions; see `THIRD_PARTY_NOTICES.md` for dependencies and reference provenance. The guarded tarball is retained as an internal reproducible validation fixture, alongside checksum provenance. Generated public consumers use npm dependencies; local validation substitutes the fixture without changing public instructions. Do not commit generated output, screenshots, tokens, caches or node_modules.
 
 Area keeps explicit Root + ResponsiveContainer + AreaChart composition and consumer-owned legend selection. Area and Line consume the same guarded artifact recorded in provenance. Area browser checks run through `node scripts/start-area-checks.mjs` and record responsive, selected-source, keyboard, motion and scroll evidence.
 
@@ -43,6 +43,6 @@ Use `<ChartExample id="…" />` in MDX; the existing LineExample and AreaExample
 
 ## Optional application prefix
 
-The default build keeps `/docs/` pages and the current private preview. To prepare a separate docs application mounted at `/charts/docs/`, build and check with `KIND_DOCS_BASE_PATH=/charts/docs`. The prefix is compiled into routes, navigation, search, assets and retrieval links; changing it requires rebuilding. Component pages then live at `/charts/docs/components/line/`, without another `/docs/` segment.
+The default build keeps `/docs/` pages and the local preview. To prepare a separate docs application mounted at `/charts/docs/`, build and check with `KIND_DOCS_BASE_PATH=/charts/docs`. The prefix is compiled into routes, navigation, search, assets and retrieval links; changing it requires rebuilding. Component pages then live at `/charts/docs/components/line/`, without another `/docs/` segment.
 
 `KIND_DOCS_BASE_PATH=/charts/docs KIND_DOCS_PORT=7174 npm run preview` mounts `out/` beneath that prefix locally. An integration harness must strip `/charts/docs` before reading the intact export, serve directory `index.html` files for deep reloads, and keep this application's `_next`, Markdown, examples and search endpoint under the docs prefix. `KIND_DOCS_ORIGIN` may supply a verified origin for absolute retrieval links; it does not choose a host or configure DNS. This optional build does not establish production hosting or deployment.

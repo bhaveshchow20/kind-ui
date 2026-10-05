@@ -1,12 +1,12 @@
 ---
 title: Troubleshooting
-description: Resolve Line setup and composition issues with the exact package snapshot.
+description: Resolve Line setup and composition issues through public package APIs.
 ---
 
 | Symptom | Check |
 | --- | --- |
-| Registry cannot find the package | This preview is unpublished; use the [pinned artifact and setup files](/docs/start/installation/) |
-| Composition import unavailable | Use the pinned public exports; the configured Line API is from the guarded source snapshot recorded in provenance |
+| Registry cannot find the package | Check the package name, registry configuration and network access; follow [installation](/docs/start/installation/) |
+| Composition import unavailable | Use documented public exports and check the installed package types for configured Line props |
 | Motion entry cannot resolve | Motion is a required peer; `@kind-ui/charts/motion` is not exported |
 | Chart has no size | Give its responsive parent measurable space; check configured width/height and styles |
 | Configured chart reports a nested Root | Remove the outer Root; configured `LineChart` owns it |
@@ -17,4 +17,4 @@ description: Resolve Line setup and composition issues with the exact package sn
 | Material does not affect a custom mark | Explicit shapes and filters retain ownership |
 | Copied source has an earlier curve or material | Copy again after selecting the desired variant |
 
-Report failures with the exact [artifact provenance](/package-provenance.json), peer versions, complete copied example, commands and expected/observed behavior. For website friction, include the page, viewport and steps. Classify installation/export failures as packaging, unclear instructions as docs, and incorrect behavior of documented composition as a candidate runtime defect.
+Report failures with the installed package and peer versions, complete copied example, commands and expected/observed behavior. For website friction, include the page, viewport and steps. Classify installation/export failures as packaging, unclear instructions as docs, and incorrect behavior of documented composition as a runtime defect.

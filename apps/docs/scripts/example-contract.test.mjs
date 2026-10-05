@@ -22,12 +22,10 @@ test("each registered family has a complete public consumer", () => {
   assert.match(bundle.files["src/main.tsx"], /@kind-ui\/charts\/styles\.css/);
   const manifest = JSON.parse(bundle.files["package.json"]);
   assert.equal(manifest.private, true);
-  assert.equal(manifest.dependencies["@kind-ui/charts"], "file:vendor/kind-ui-charts-0.1.0.tgz");
-  const lock = JSON.parse(bundle.files["package-lock.json"]);
-  assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, provenance.integrity);
+  assert.equal(manifest.dependencies["@kind-ui/charts"], `^${provenance.version}`);
+  assert.ok(!Object.hasOwn(bundle.files, "package-lock.json"));
   for (const file of [
     "package.json",
-    "package-lock.json",
     "src/main.tsx",
     "src/example.css",
     "src/examples/line/example.tsx",
