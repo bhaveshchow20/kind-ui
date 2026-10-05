@@ -1,0 +1,197 @@
+---
+title: Radial Chart
+description: Show completion and capacity with concentric rings, gauges and stacked arcs.
+---
+
+<ChartExample id="radial" />
+
+## Usage
+
+`Root` supplies series metadata. `RadialBarChart` owns motion; native polar axes map values and categories to angles and rings. The first Code tab contains the complete `ProjectProgressChart` file, including data, config and public imports.
+
+```tsx title="Composition"
+<Chart.Root config={config}>
+  <Chart.ResponsiveContainer width="100%" height={280}>
+    <Chart.RadialBarChart data={data} animate startAngle={90} endAngle={-270} innerRadius="18%" outerRadius="94%">
+      <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+      <Chart.PolarRadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
+      <Chart.RadialBarSeries dataKey="progress" background={{ fill: "#e9e5f1" }}>
+        {data.map((row) => <Chart.Cell key={row.period} fill={row.fill} />)}
+        <Chart.LabelList fill="white" dataKey="label" content={<Chart.RadialBarLabel />} />
+      </Chart.RadialBarSeries>
+      <Chart.Tooltip />
+    </Chart.RadialBarChart>
+  </Chart.ResponsiveContainer>
+</Chart.Root>
+```
+
+Each category creates a ring. `Cell` colors belong to individual rows; the config key identifies the progress series, so a series legend would describe “Complete” rather than the three stages. `RadialBarLabel` follows the actual arc and hides text that cannot fit. The hidden data table retains every value.
+
+## Capacity gauge
+
+A gauge is an explicit `RadialBarChart` composition; Kind exports no `Gauge` component. A numeric domain of `[0, 100]` makes 72 GB occupy 72% of the semicircle. `startAngle={180}` and `endAngle={0}` define its final geometry. The pale background is the full track; a custom native `Label` owns the center summary.
+
+<ChartExample id="radial-gauge" />
+
+Choose an entrance direction beside Preview/Code. `animationDirection` changes the reveal sweep without changing the domain, final arc or track. This component remounts the chart when its direction changes so the entrance plays again; changing that prop on an already revealed chart does not restart it. Reduced motion shows the final geometry immediately. Supplying a custom sector `shape` takes ownership of rendering and bypasses Kind's default directional reveal; transformed sectors also bypass its reveal mask.
+
+## Stacked capacity
+
+Two series with the same `stackId` share one ring. Committed and reserved time total 86 hours on a fixed 100-hour scale, leaving 14 hours available. The chart covers 240 degrees. The legend updates consumer-owned visibility; hiding a series recalculates the native stack while the domain stays fixed.
+
+<ChartExample id="radial-stacked" />
+
+## API reference
+
+Kind adds metadata, visibility and chart-owned motion to Recharts composition. Data, polar geometry, tracks and custom labels remain consumer-owned. These focused props cover the components above; linked upstream references cover further native options.
+
+### Root
+
+<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series labels, colors and value formatters. Category colors use native Cells. |
+| `visibleSeries` | `readonly string[]` | All series | Consumer-owned series visibility. |
+| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend toggles together with `visibleSeries`. |
+
+</div>
+
+### RadialBarChart
+
+<div className="line-props-scroll" role="region" aria-label="RadialBarChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `Row[]` | — | Categories and numeric values; each row can create a separate ring. |
+| `animate` | `boolean \| RadialBarAnimation` | `false` | Chart-owned entrance; respects reduced motion. Options include `revealDurationMs` and `revealEasing`. |
+| `animationDirection` | `"clockwise" \| "anticlockwise"` | `"clockwise"` | Entrance direction only; preserves final native geometry. |
+| `startAngle` / `endAngle` | `number` | `0` / `360` in Recharts | Native angular extent in degrees. Examples explicitly set both. |
+| `innerRadius` / `outerRadius` | `number \| string` | `"0%"` / `"80%"` in Recharts | Pixels or percentages of the native maximum radius. |
+| `cx` / `cy` | `number \| string` | `"50%"` | Native center position; the gauge lowers `cy` for its semicircle. |
+| `barCategoryGap` | `number \| string` | `"10%"` in Recharts | Space between category bands. |
+| `aria-label` | `string` | — | Accessible plot name; include a separate data alternative. |
+
+</div>
+
+See [Recharts RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChart/).
+
+### RadialBarSeries
+
+<div className="line-props-scroll" role="region" aria-label="RadialBarSeries props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Value field or accessor. |
+| `seriesKey` | `string` | String `dataKey` | Config and visibility identity; needed for controlled accessor keys. |
+| `background` | `boolean \| object \| ReactElement \| function` | `false` | `true` supplies a pale Kind track using `--kind-ui-radial-track`, fallback `#f1f1f1`; explicit background props/renderers own the track. |
+| `stackId` | `string \| number` | — | Matching IDs stack series in one category band. |
+| `cornerRadius` | `number \| string` | `0` in Recharts | Native rounded sector corners. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Native mark finish; custom shapes, active shapes and filters retain rendering ownership. |
+| `fill` | `string` | Config color | Series paint; native Cells can override individual rows. |
+| `hide` | `boolean` | `false` | Explicit hiding; Root visibility also applies. |
+
+</div>
+
+Native per-series animation is disabled so the chart owns motion. This page demonstrates the plain finish and does not claim automatic radial paint emphasis on inspection. See [Recharts RadialBar](https://recharts.github.io/en-US/api/RadialBar/).
+
+### RadialBarLabel
+
+Use as `LabelList` content, so native sector geometry reaches the label. This is arc text, not a gauge center label.
+
+<div className="line-props-scroll" role="region" aria-label="RadialBarLabel props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `show` | `boolean` | `true` | Independently hides visual text. |
+| `fontSize` | `number` | `11` | Requested SVG pixel size, reduced to fit the ring band. |
+| `minFontSize` | `number` | `9` | Minimum fit size; unfitting measured glyph bounds hide the text. |
+| `padding` | `number` | `2` | Space at arc endpoints and band edges. |
+| `fill` | `string` | `"white"` | Text paint. |
+| `formatter` | Native label formatter | — | Formats the value provided by `LabelList`. |
+
+</div>
+
+### PolarAngleAxis
+
+<div className="line-props-scroll" role="region" aria-label="PolarAngleAxis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `type` | `"number" \| "category"` | `"category"` | Set `"number"` to map capacity values onto angles. |
+| `domain` | Native axis domain | Native numeric scale | Set explicit limits such as `[0, 100]`; automatic limits can make a partial value appear full. |
+| `tick` | `boolean \| object \| ReactElement \| function` | `true` | These compositions hide native angular ticks. |
+
+</div>
+
+See [Recharts PolarAngleAxis](https://recharts.github.io/en-US/api/PolarAngleAxis/).
+
+### PolarRadiusAxis
+
+<div className="line-props-scroll" role="region" aria-label="PolarRadiusAxis props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `type` | `"number" \| "category"` | `"number"` | Set `"category"` to allocate ring bands. |
+| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Category field; examples use `period`. |
+| `tick` / `axisLine` | Native props | `true` | These components disable radial ticks and line. |
+| `children` | `ReactNode` | — | Native `Label` may supply consumer-owned center content. |
+
+</div>
+
+See [Recharts PolarRadiusAxis](https://recharts.github.io/en-US/api/PolarRadiusAxis/).
+
+### LabelList, Label and Cell
+
+Native composition parts retain Recharts ownership. `LabelList` obtains each sector's geometry, `Label` supports a custom center renderer, and `Cell` overrides category paint.
+
+<div className="line-props-scroll" role="region" aria-label="Native label and cell props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `LabelList.dataKey` | Native data key | — | Label value field, such as the category name. |
+| `LabelList.content` | `ReactElement \| function` | Native label | Supply `<RadialBarLabel />` for measured arc text. |
+| `Label.content` | `ReactElement \| function` | Native text | Own SVG markup and fit for custom summaries. |
+| `Cell.fill` | `string` | Series fill | Overrides one row's color. |
+
+</div>
+
+See [Recharts LabelList](https://recharts.github.io/en-US/api/LabelList/), [Label](https://recharts.github.io/en-US/api/Label/) and [Cell](https://recharts.github.io/en-US/api/Cell/).
+
+### Legend
+
+<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `hideIcon` | `boolean` | `false` | Uses swatches instead of configured icons. |
+| `emphasis` | `"none" \| "series"` | `"none"` | Requests shared series emphasis; radial marks do not add automatic hover dimming. |
+
+</div>
+
+Place outside `ResponsiveContainer`. With both Root visibility props, items are keyboard-operable buttons; otherwise they are labels.
+
+### Tooltip
+
+<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `cursor` | Native cursor props or renderer | `false` | Optional native inspection guide. |
+| `maxWidth` | `number` | `180` | Kind's bounded tooltip width in pixels. |
+
+</div>
+
+Compose inside the chart. Kind supplies series labels and formatters; native Recharts owns polar inspection. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+
+### ResponsiveContainer
+
+<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `width` / `height` | `number \| string` | `"100%"` | Give the parent measurable dimensions. These components use a 280-pixel plot height. |
+
+</div>
+
+See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).

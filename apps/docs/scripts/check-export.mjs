@@ -1,26 +1,56 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { allExamples, families } from "../examples/catalog.mjs";
+
+const familyIds = families.map(({ id }) => id);
 
 const root = path.resolve("out");
 const html = readdirSync(root, { recursive: true }).filter(
   (file) => String(file).endsWith(".html") && !String(file).startsWith("examples/"),
 );
 const componentRoutes = html.filter((file) => String(file).startsWith("docs/components/"));
-assert.deepEqual(componentRoutes, ["docs/components/line/index.html"]);
-assert.deepEqual(readdirSync(path.join(root, "markdown/components")), ["line.md"]);
-assert.deepEqual(readdirSync(path.join(root, "examples")).sort(), [
-  "line",
-  "line-comparison",
-  "line-markers",
-  "line-paper",
-  "line-smooth",
-  "package",
-]);
+assert.deepEqual(
+  componentRoutes.sort(),
+  familyIds.map((id) => `docs/components/${id}/index.html`).sort(),
+);
+assert.deepEqual(
+  readdirSync(path.join(root, "markdown/components")).sort(),
+  familyIds.map((id) => `${id}.md`).sort(),
+);
+assert.deepEqual(
+  readdirSync(path.join(root, "examples")).sort(),
+  [...allExamples.map(({ id }) => id), "package"].sort(),
+);
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;
 for (const id of searchIds.filter((id) => id.startsWith("/docs/components/")))
-  assert.ok(/^\/docs\/components\/line(?:-\d+)?$/.test(id), `Search exposes ${id}`);
+  assert.ok(
+    familyIds.some(
+      (family) =>
+        id === `/docs/components/${family}` ||
+        new RegExp(`^/docs/components/${family}-\\d+$`).test(id),
+    ),
+    `Search exposes ${id}`,
+  );
+const navigation = JSON.parse(readFileSync("content/docs/components/meta.json", "utf8"));
+assert.deepEqual([...navigation.pages].sort(), [...familyIds].sort());
+for (const id of familyIds) {
+  assert.ok(
+    searchIds.some((key) => key === `/docs/components/${id}`),
+    `Search omits ${id}`,
+  );
+  assert.ok(
+    readFileSync(path.join(root, "llms.txt"), "utf8").includes(`/markdown/components/${id}.md`),
+    `Agent index omits ${id}`,
+  );
+  assert.ok(
+    readFileSync(path.join(root, "llms-full.txt"), "utf8").includes(
+      readFileSync(path.join(root, `markdown/components/${id}.md`), "utf8"),
+    ),
+    `Full agent index omits ${id}`,
+  );
+}
 const missing = new Set();
 let links = 0;
 for (const file of html) {
@@ -45,13 +75,20 @@ for (const file of readdirSync(path.join(root, "markdown"), { recursive: true })
   String(name).endsWith(".md"),
 )) {
   const body = readFileSync(path.join(root, "markdown", file), "utf8");
-  if (/<(?:ComponentPlayground|LineExample|PackageSource|ApiTable|Snapshot)\b/.test(body))
+  if (
+    /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(
+      body,
+    )
+  )
     throw new Error(`Unresolved MDX in ${file}`);
 }
 for (const file of ["llms.txt", "llms-full.txt"]) {
   const body = readFileSync(path.join(root, file), "utf8");
   for (const match of body.matchAll(/\/(?:docs|markdown)\/components\/([^/\s)#?]+)/g))
-    assert.ok(["line", "line.md"].includes(match[1]), `${file} exposes ${match[1]}`);
+    assert.ok(
+      familyIds.some((id) => match[1] === id || match[1] === `${id}.md`),
+      `${file} exposes ${match[1]}`,
+    );
 }
 if (missing.size) throw new Error([...missing].join("\n"));
 console.log(
