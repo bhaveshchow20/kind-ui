@@ -20,7 +20,17 @@ npm install --save-exact @kind-ui/charts@0.1.0 react@19.3.0 react-dom@19.3.0 rec
 
 The intended dist-tag is `latest`; use the explicit version for documentation and site builds. This package is ESM and requires React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Import components and types from `@kind-ui/charts` and import `@kind-ui/charts/styles.css` once in the host. TypeScript consumers have passed strict NodeNext and Bundler resolution. Next hosts need a client component boundary for callbacks, refs and state, plus a host-owned accessible name and data alternative.
 
-Moving from the local `0.0.0` workspace package to this `0.1.0` candidate requires a dependency/version and lockfile update; this release preparation changes no component props, public exports, peer ranges or styling path. The [changelog](CHANGELOG.md) includes the initial API and the entrance-settlement fix already present in the integration base. Docs and showcase owners should validate their exact `0.1.0` bytes and imports before launch; neither site is updated or deployed by this candidate.
+Moving from the local `0.0.0` workspace package to this `0.1.0` candidate requires a dependency/version and lockfile update; the integrated candidate adds the three APIs below while retaining existing import paths and peer ranges. The [changelog](CHANGELOG.md) includes the initial API and the entrance-settlement fix already present in the integration base. Docs and showcase owners should validate their exact `0.1.0` bytes and imports before launch; neither site is updated or deployed by this candidate.
+
+## Integrated 0.1.0 additions
+
+This artifact is a launch candidate; site readiness and the separate Docs Heatmap Escape investigation remain outside this package validation.
+
+- `HeatmapGrid.layout` accepts `cellSize`, `gap`, `rowLabels` and `columnLabels`. Omission retains the fluid table. Visual label hiding preserves native header associations; custom content/styles can enlarge native table cells. Keep the horizontal scroll host width-constrained and import the stylesheet. This is programmatic Chromium validation, not manual screen-reader conformance.
+- `PieSeries.categoryKey` (with explicit series data) and `RadialBarChart.categoryKey` resolve own top-level fields or typed accessors to string keys in `Root.config`. Colors follow IDs through reorder/filtering; explicit series/datum/Cell paint remains authoritative. Category filtering remains consumer-owned. `SankeyChart.nodeConfig` supplies node metadata and source/target link colors, with standalone static `SankeyLegend`; it does not create flow selection or rewrite custom SVG renderers.
+- `ActivityRings` owns Root and accepts ordered `rings`, `config` and an accessible name. A ring has a unique config `key`, finite `value`, optional domain and native `cellProps`. Default domain is `[0, 100]`; visual progress clamps while raw values remain in tooltip payloads. `series`, `labels`, `legend`, `tooltip` and native chart geometry provide bounded overrides. Do not nest it inside Root; use explicit `RadialBarChart` composition for that case. Hosts still own data alternatives and sizing.
+
+These additions are included in the packed changelog and checked through public tarball imports. They do not establish compatibility beyond the documented pinned and ordinary-consumer checks.
 
 ## Basic usage
 
@@ -938,7 +948,7 @@ the transition. Import `@kind-ui/charts/styles.css` for these defaults.
 
 The public packed recipe in `tests/fixtures/emphasis` demonstrates category,
 sector, custom portal, visibility, and independent-plot composition. This preview
-is additive and private at `0.0.0`; adapters beyond the matrix above are not claimed.
+is additive in the unpublished `0.1.0` candidate; adapters beyond the matrix above are not claimed.
 
 Identity relationships: `dataKey` selects measured values; it is not a category ID.
 `seriesKey` selects Root metadata and controlled series visibility (or a string
