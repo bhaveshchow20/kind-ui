@@ -189,8 +189,36 @@ test("Docs separates copied consumers without dropping any browser or build gate
     docs.jobs.consumers.steps.some((s) => s.run?.includes("npm run check:consumers -- --shard=")),
   );
   assert.deepEqual(docs.jobs.browsers.needs, "build");
+  assert.deepEqual(docs.jobs.browsers.strategy.matrix.group, [
+    "general",
+    "polar",
+    "advanced",
+    "cartesian",
+  ]);
+  assert.equal(docs.jobs.browsers.strategy["fail-fast"], false);
+  const browserChecks = docs.jobs.browsers.steps.filter(
+    (s) =>
+      s["working-directory"] === "apps/docs" &&
+      s.run !== "npm ci" &&
+      s.run !== "npm audit --audit-level=high --include=dev",
+  );
+  assert.equal(browserChecks.length, 14);
+  for (const step of browserChecks) {
+    assert.ok(
+      docs.jobs.browsers.strategy.matrix.group.some(
+        (group) => step.if === `matrix.group == '${group}'`,
+      ),
+    );
+  }
+  assert.equal(new Set(browserChecks.map((s) => s.if)).size, 4);
   assert.deepEqual(docs.jobs.docs.needs, ["build", "consumers", "browsers"]);
   assert.equal(docs.jobs.docs.if, "always()");
+  const fixtures = docs.jobs.build.steps.find((s) => s.with?.name === "docs-browser-fixtures");
+  for (const path of ["apps/docs/out/", "apps/docs/generated/", "apps/docs/public/"])
+    assert.ok(
+      fixtures.with.path.split("\n").includes(path),
+      `Missing Docs browser fixture: ${path}`,
+    );
   const build = docs.jobs.build.steps.map((s) => s.run ?? "").join("\n");
   for (const command of ["npm run generate", "npm run build", "npm run check"])
     assert.ok(build.includes(command));

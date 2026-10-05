@@ -78,9 +78,10 @@ label does not run Node 24 or duplicate tests. Targets are fast feedback under
 3 minutes and all required checks under 10 minutes, including fixture preparation.
 
 The Docs workflow also separates site build/export checks, four copied-consumer
-shards, and browser checks. All complete examples and non-default variants retain
+shards, and four browser groups. All complete examples and non-default variants retain
 Vite production builds and strict NodeNext/Bundler checks. Docs browsers start
-when the site is ready rather than waiting for every copied consumer. The `docs`
+when the site is ready rather than waiting for every copied consumer; family checks
+run once across four independent groups. The `docs`
 completion receipt requires all three stages to pass. For a local shard, run
 `npm run check:consumers -- --shard=1/4` in `apps/docs`; omitting `--shard` still
 checks every copied consumer.

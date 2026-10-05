@@ -48,6 +48,7 @@ jobs:
           path: |
             apps/docs/out/
             apps/docs/generated/
+            apps/docs/public/
           if-no-files-found: error
           retention-days: 14
   consumers:
@@ -101,6 +102,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [general, polar, advanced, cartesian]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -137,62 +142,76 @@ jobs:
       - run: npm exec playwright install -- chromium
         if: steps.browsers.outputs.cache-hit != 'true'
       - run: npm run check:browser
+        if: matrix.group == 'general'
         working-directory: apps/docs
       - run: node scripts/start-line-checks.mjs
+        if: matrix.group == 'general'
         working-directory: apps/docs
       - run: node scripts/start-area-checks.mjs
+        if: matrix.group == 'general'
         working-directory: apps/docs
       - name: Check pie documentation
+        if: matrix.group == 'polar'
         run: |
           node --test scripts/pie-contract.test.mjs
           node scripts/start-pie-checks.mjs
         working-directory: apps/docs
       - name: Check radar documentation
+        if: matrix.group == 'polar'
         run: |
           node scripts/start-radar-checks.mjs
         working-directory: apps/docs
       - name: Check sankey documentation
+        if: matrix.group == 'advanced'
         run: |
           node --test scripts/check-sankey-source.test.mjs
           node scripts/start-sankey-checks.mjs
         working-directory: apps/docs
       - name: Check histogram documentation
+        if: matrix.group == 'advanced'
         run: |
           node --test scripts/histogram-contract.test.mjs
           node scripts/check-histogram-consumers.mjs
           node scripts/start-histogram-checks.mjs
         working-directory: apps/docs
       - name: Check radial documentation
+        if: matrix.group == 'polar'
         run: |
           set -o pipefail
           node scripts/start-radial-checks.mjs 2>&1 | tee artifacts/radial-check.log
         working-directory: apps/docs
       - name: Check waterfall documentation
+        if: matrix.group == 'advanced'
         run: |
           node --test scripts/waterfall-contract.test.mjs
           node scripts/check-waterfall-consumers.mjs
           node scripts/start-waterfall-checks.mjs
         working-directory: apps/docs
       - name: Check box-plot documentation
+        if: matrix.group == 'cartesian'
         run: |
           node scripts/check-box-plot-consumers.mjs
           node scripts/start-box-plot-checks.mjs
         working-directory: apps/docs
       - name: Check combo documentation
+        if: matrix.group == 'cartesian'
         run: |
           node --test scripts/combo-contract.test.mjs
           node scripts/check-combo-consumers.mjs
           node scripts/start-combo-checks.mjs
         working-directory: apps/docs
       - name: Check scatter documentation
+        if: matrix.group == 'cartesian'
         run: |
           node scripts/start-scatter-checks.mjs
         working-directory: apps/docs
       - name: Check bar documentation
+        if: matrix.group == 'cartesian'
         run: |
           node scripts/start-bar-checks.mjs
         working-directory: apps/docs
       - name: Check heatmap documentation
+        if: matrix.group == 'polar'
         run: |
           node --test scripts/heatmap-contract.test.mjs
           node scripts/check-heatmap-consumers.mjs
@@ -201,7 +220,7 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: docs-browser-verification
+          name: docs-browser-verification-${{ matrix.group }}
           path: |
             apps/docs/artifacts/*.log
             apps/docs/artifacts/*-results.json
