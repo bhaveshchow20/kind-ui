@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   changes:
+    name: "Changed paths"
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
@@ -29,6 +30,7 @@ jobs:
           DIFF_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
           DIFF_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
   fast:
+    name: "Lint, types & unit tests"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -47,6 +49,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:unit
   packed:
+    name: "Packed package"
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -85,6 +88,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
   playwright:
+    name: "Browser tests · shard ${{ matrix.shard }}/4"
     needs: [changes, packed]
     if: needs.changes.outputs.browsers == 'true'
     runs-on: ubuntu-latest

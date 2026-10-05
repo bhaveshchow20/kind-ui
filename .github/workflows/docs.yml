@@ -12,6 +12,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
+    name: "Build & links"
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -52,6 +53,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   consumers:
+    name: "Copied examples · shard ${{ matrix.shard }}/4"
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -99,6 +101,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   browsers:
+    name: "Browser checks · ${{ matrix.group }}"
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -243,6 +246,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
   docs:
+    name: "All docs checks"
     needs: [build, consumers, browsers]
     if: always()
     runs-on: ubuntu-latest
