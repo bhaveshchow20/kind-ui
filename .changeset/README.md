@@ -22,6 +22,15 @@ The action runs the existing `npm run release:version` command, which regenerate
 the npm lockfile. Review package versions, changelog and lockfile together. GitHub
 Actions must be allowed to create pull requests in repository Actions settings.
 This workflow does not change that persistent setting or introduce credentials.
+The default GitHub token creates PR check runs in an approval-required state;
+approve those runs before review/merge. Unattended checks would require a
+separately approved GitHub App or token, not a silent credential addition. See
+[GitHub token workflow behavior](https://docs.github.com/en/actions/concepts/security/github_token).
+
+The first-release package contract deliberately requires exactly `0.1.0`. Keep
+that gate for this release. Before a later version PR can pass, review the
+version-policy adjustment that validates its new version against the release
+plan. This work does not publish or prepare another package version.
 
 Merge the reviewed version PR after the required checks pass. Publication then
 uses the release handoff below. Automated publication after that merge requires
