@@ -68,7 +68,7 @@ recipe; verify the chosen family rather than assuming all families share props.
 
 The npm package owns complete usable, design-neutral charts, interaction,
 visibility, motion and accessibility behavior. Registry files provide editable
-art direction, cards and dashboard composition using those exports. Do not copy
+art direction and cards using those exports. Do not copy
 package internals into a registry item or recreate reusable chart behavior.
 App-specific filters may remain in the copied application composition.
 
@@ -85,7 +85,7 @@ For registry designs merge this namespace into the application's existing
 
 Use the official shadcn MCP server to inspect items and dependencies before
 installation, or `npx shadcn@latest add @kindui/line-chart`. The registry includes
-`line-chart`, `bar-chart`, `area-chart` and `charts-dashboard`. Preserve the host's
+`line-chart`, `bar-chart` and `area-chart`. Preserve the host's
 aliases and styling setup; use `--diff` to review changes and `--overwrite` only
 when replacing the selected local files is intended.
 

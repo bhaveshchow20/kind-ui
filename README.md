@@ -16,7 +16,7 @@ requirements and chart-family contracts.
 
 The npm package provides usable, design-neutral charts and their interaction,
 motion and accessibility behavior. The [registry](registry/README.md) adds
-editable visual designs and dashboard composition over those public exports.
+editable visual designs over those public exports.
 Application filters and business state stay in the application.
 
 ## AI agents

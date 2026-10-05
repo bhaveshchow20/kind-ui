@@ -83,12 +83,7 @@ try {
   await page.keyboard.press("Escape");
   await page.locator(".kind-recipe-values summary").first().click();
   await expect(page.locator(".kind-recipe-line tbody tr")).toHaveCount(6);
-  await page.getByLabel("Reporting period").selectOption("quarter");
-  await expect(page.locator(".kind-recipe-line tbody tr")).toHaveCount(3);
-  await expect(page.locator(".kind-recipe-line .kind-recipe-metric")).toContainText("213");
-  await expect(page.locator(".kind-recipe-bar .recharts-bar-rectangle")).toHaveCount(6);
-  await page.getByLabel("Reporting period").selectOption("half");
-  await page.screenshot({ path: resolve(output, "dashboard-desktop.png"), fullPage: true });
+  await page.screenshot({ path: resolve(output, "charts-desktop.png"), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
@@ -105,7 +100,7 @@ try {
   );
   assert.equal(boxes[0].x, boxes[1].x);
   assert.ok(boxes.every((box) => box.width > 250 && box.width < 390));
-  await page.screenshot({ path: resolve(output, "dashboard-mobile.png"), fullPage: true });
+  await page.screenshot({ path: resolve(output, "charts-mobile.png"), fullPage: true });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
   await expect(page.locator(".kind-recipe svg.recharts-surface")).toHaveCount(3);
@@ -119,12 +114,11 @@ try {
       "keyboard legend visibility",
       "keyboard chart inspection",
       "native data alternative",
-      "reporting period filter",
       "mobile layout without page overflow",
       "reduced-motion rendering",
       "no browser errors",
     ],
-    screenshots: ["dashboard-desktop.png", "dashboard-mobile.png"],
+    screenshots: ["charts-desktop.png", "charts-mobile.png"],
     consumer,
   };
   await writeFile(resolve(output, "browser.json"), `${JSON.stringify(evidence, null, 2)}\n`);

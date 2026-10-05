@@ -7,6 +7,8 @@ const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
 test("catalog has complete unique items and safe source/target paths", async () => {
   const names = catalog.items.map((item) => item.name);
+  assert.deepEqual(names, ["kind-chart-styles", "line-chart", "area-chart", "bar-chart"]);
+  assert.ok(catalog.items.every((item) => item.type !== "registry:block"));
   assert.equal(new Set(names).size, names.length);
   for (const item of catalog.items) {
     assert.ok(item.description.length > 40);

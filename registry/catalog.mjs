@@ -50,17 +50,5 @@ export const catalog = {
       registryDependencies: ["card", `${githubRepository}/kind-chart-styles`],
       files: [file(`${family}-chart.tsx`)],
     })),
-    {
-      name: "charts-dashboard",
-      type: "registry:block",
-      title: "Business overview dashboard",
-      description:
-        "A responsive editorial dashboard composing Line, Area and Bar recipes with an application-owned reporting-period filter. Edit data, copy and layout locally.",
-      dependencies,
-      registryDependencies: ["line-chart", "area-chart", "bar-chart"].map(
-        (name) => `${githubRepository}/${name}`,
-      ),
-      files: [file("charts-dashboard.tsx")],
-    },
   ],
 };

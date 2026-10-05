@@ -167,7 +167,16 @@ try {
   await child("npm", ["install", "--no-audit", "--no-fund"], consumer);
   await child(
     process.execPath,
-    [cli, "add", "@kindui/charts-dashboard", "--yes", "--cwd", consumer],
+    [
+      cli,
+      "add",
+      "@kindui/line-chart",
+      "@kindui/area-chart",
+      "@kindui/bar-chart",
+      "--yes",
+      "--cwd",
+      consumer,
+    ],
     consumer,
   );
   if (publicPackage) {
@@ -196,7 +205,16 @@ try {
   const lockBeforeDiff = await readFile(resolve(consumer, "package-lock.json"), "utf8");
   await child(
     process.execPath,
-    [cli, "add", "@kindui/charts-dashboard", "--diff", "--cwd", consumer],
+    [
+      cli,
+      "add",
+      "@kindui/line-chart",
+      "@kindui/area-chart",
+      "@kindui/bar-chart",
+      "--diff",
+      "--cwd",
+      consumer,
+    ],
     consumer,
   );
   assert.equal(
@@ -215,7 +233,7 @@ try {
   );
   await writeFile(
     resolve(consumer, "src/main.tsx"),
-    'import { createRoot } from "react-dom/client";\nimport { ChartsDashboard } from "@/components/charts/charts-dashboard";\nimport "./index.css";\ncreateRoot(document.getElementById("root")!).render(<ChartsDashboard />);\n',
+    'import { createRoot } from "react-dom/client";\nimport { KindLineChart } from "@/components/charts/line-chart";\nimport { KindAreaChart } from "@/components/charts/area-chart";\nimport { KindBarChart } from "@/components/charts/bar-chart";\nimport "./index.css";\ncreateRoot(document.getElementById("root")!).render(<main style={{ display: "grid", gap: "1rem", padding: "1rem", maxWidth: "960px", margin: "auto" }}><KindLineChart /><KindAreaChart /><KindBarChart /></main>);\n',
   );
   await writeFile(
     resolve(consumer, "vite.config.mjs"),

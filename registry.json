@@ -78,31 +78,6 @@
           "target": "@components/charts/bar-chart.tsx"
         }
       ]
-    },
-    {
-      "name": "charts-dashboard",
-      "type": "registry:block",
-      "title": "Business overview dashboard",
-      "description": "A responsive editorial dashboard composing Line, Area and Bar recipes with an application-owned reporting-period filter. Edit data, copy and layout locally.",
-      "dependencies": [
-        "@kind-ui/charts@^0.1.0",
-        "react@^19.3.0",
-        "react-dom@^19.3.0",
-        "recharts@^3.10.1",
-        "motion@^13.4.6"
-      ],
-      "registryDependencies": [
-        "bhaveshchow20/kind-ui/line-chart",
-        "bhaveshchow20/kind-ui/area-chart",
-        "bhaveshchow20/kind-ui/bar-chart"
-      ],
-      "files": [
-        {
-          "path": "registry/charts/charts-dashboard.tsx",
-          "type": "registry:component",
-          "target": "@components/charts/charts-dashboard.tsx"
-        }
-      ]
     }
   ]
 }

@@ -46,7 +46,7 @@ style settings and other registries:
 ```
 
 The namespace gives MCP and the CLI the same items: `line-chart`, `bar-chart`,
-`area-chart` and `charts-dashboard`. CLI installation also works:
+`area-chart`. CLI installation also works:
 
 ```sh
 npx shadcn@latest add @kindui/line-chart
@@ -60,13 +60,13 @@ for registry configuration.
 
 - “Inspect @kindui/line-chart and its dependencies, then add a weekly tasks chart with an accessible data table.”
 - “Use @kind-ui/charts to compare signed revenue by category. Keep zero and missing observations distinct and verify keyboard access.”
-- “Add @kindui/charts-dashboard, adapt its cards to our theme, and keep date filters in application state.”
+- “Add @kindui/area-chart and adapt its palette and card copy to our theme.”
 
 ## Ownership and verification
 
 The npm package supplies usable, design-neutral charts and shared interaction,
 visibility, motion and accessibility behavior. Registry items supply editable
-art direction and dashboard composition over public exports. App-specific filters
+art direction over public exports. App-specific filters
 may stay in the application; reusable chart behavior stays in npm.
 
 Import public components and the stylesheet. Configured `LineChart` owns Root and
