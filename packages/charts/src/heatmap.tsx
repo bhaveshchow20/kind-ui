@@ -257,6 +257,15 @@ export type HeatmapMaterial = "plain" | "paper" | "clay" | "glow";
 export type HeatmapGridProps = Omit<ComponentPropsWithRef<"table">, "children"> & {
   /** Required accessible name, also rendered as a native caption. */
   caption: string;
+  /** Optional fixed square cells, spacing and visual labels; accessible headers remain. */
+  layout?: {
+    /** Positive CSS length or finite positive pixels. Omit to retain fluid cells. */
+    cellSize?: number | string;
+    /** Nonnegative CSS length or finite nonnegative pixels. Defaults to 3px. */
+    gap?: number | string;
+    rowLabels?: "visible" | "hidden";
+    columnLabels?: "visible" | "hidden";
+  };
   /** Static edge treatment; the central 84% × 84% remains the exact scale color. */
   material?: HeatmapMaterial;
   Cell?: ComponentType<HeatmapCellContentProps>;
@@ -269,6 +278,7 @@ export type HeatmapGridProps = Omit<ComponentPropsWithRef<"table">, "children"> 
 export function HeatmapGrid({
   caption,
   material = "plain",
+  layout,
   Cell = HeatmapCellContent,
   cellProps,
   rowLabel,
@@ -280,6 +290,22 @@ export function HeatmapGrid({
   ...props
 }: HeatmapGridProps) {
   const context = useHeatmap();
+  const headerId = useId();
+  for (const [name, value] of [
+    ["cellSize", layout?.cellSize],
+    ["gap", layout?.gap],
+  ] as const) {
+    if (
+      typeof value === "number" &&
+      (!Number.isFinite(value) || (name === "cellSize" ? value <= 0 : value < 0))
+    ) {
+      throw new Error(
+        `HeatmapGrid layout.${name} must be finite and ${name === "cellSize" ? "positive" : "nonnegative"}`,
+      );
+    }
+  }
+  const length = (value: number | string | undefined) =>
+    typeof value === "number" ? `${value}px` : value;
   const { model, scale, active, setActive, tooltipId } = context;
   const [focusedKey, setFocusedKey] = useState<string | null>(null);
   const table = useRef<HTMLTableElement | null>(null);
@@ -347,7 +373,19 @@ export function HeatmapGrid({
         role="grid"
         aria-label={caption}
         data-kind-ui="heatmap-grid"
-        style={{ "--heatmap-columns": model.columns.length, ...style } as CSSProperties}
+        data-cell-sizing={layout?.cellSize === undefined ? undefined : "fixed"}
+        data-row-labels={layout?.rowLabels}
+        data-column-labels={layout?.columnLabels}
+        style={
+          {
+            "--heatmap-columns": model.columns.length,
+            ...(layout?.cellSize === undefined
+              ? {}
+              : { "--heatmap-cell-size": length(layout.cellSize) }),
+            ...(layout?.gap === undefined ? {} : { "--heatmap-gap": length(layout.gap) }),
+            ...style,
+          } as CSSProperties
+        }
         onKeyDown={move}
         onBlur={(event) => {
           onBlur?.(event);
@@ -356,11 +394,19 @@ export function HeatmapGrid({
         onPointerLeave={onPointerLeave}
       >
         <caption>{caption}</caption>
+        {layout?.cellSize === undefined ? null : (
+          <colgroup>
+            <col data-kind-ui="heatmap-row-column" />
+            {model.columns.map((column) => (
+              <col key={column} />
+            ))}
+          </colgroup>
+        )}
         <thead>
           <tr>
             <th scope="col">Row / column</th>
-            {model.columns.map((column) => (
-              <th scope="col" key={column}>
+            {model.columns.map((column, c) => (
+              <th scope="col" key={column} id={`${headerId}-column-${c}`}>
                 {columnLabel?.(column) ?? column}
               </th>
             ))}
@@ -369,7 +415,7 @@ export function HeatmapGrid({
         <tbody>
           {model.rows.map((row, r) => (
             <tr key={row}>
-              <th scope="row">
+              <th scope="row" id={`${headerId}-row-${r}`}>
                 <span data-kind-ui="heatmap-row-label" title={row}>
                   {rowLabel?.(row) ?? row}
                 </span>
@@ -386,6 +432,7 @@ export function HeatmapGrid({
                     {...extra}
                     key={cell.column}
                     role="gridcell"
+                    headers={`${headerId}-row-${r} ${headerId}-column-${c}`}
                     data-cell-key={keyOf(cell)}
                     data-missing={cell.value === null ? "true" : "false"}
                     data-material={cell.value === null ? undefined : material}
