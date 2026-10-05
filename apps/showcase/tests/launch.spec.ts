@@ -80,10 +80,12 @@ for (const name of ["Bar", "Histogram", "Box Plot", "Waterfall"]) {
       .first();
     await expect(reveal).toBeAttached();
     await page.clock.runFor(120);
-    const early = Number(await reveal.getAttribute("height"));
+    const early = await reveal.evaluate((node) => (node as SVGRectElement).height.baseVal.value);
     expect(early).toBeGreaterThan(0);
     await page.clock.runFor(250);
-    expect(Number(await reveal.getAttribute("height"))).toBeGreaterThan(early);
+    expect(
+      await reveal.evaluate((node) => (node as SVGRectElement).height.baseVal.value),
+    ).toBeGreaterThan(early);
     await page.clock.runFor(1400);
     await expect(page.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
     await page.getByRole("button", { name: "Replay chart animations" }).click();
