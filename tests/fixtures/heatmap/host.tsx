@@ -433,7 +433,12 @@ export function DismissalHeatmaps() {
         />
         Prevent dismissal Escape
       </label>
-      <output aria-label="Dismissal callbacks">{JSON.stringify(events)}</output>
+      <output
+        aria-label="Dismissal callbacks"
+        style={{ display: "block", height: 96, overflow: "auto" }}
+      >
+        {JSON.stringify(events)}
+      </output>
       {["First", "Second"].map((name) => (
         <HeatmapChart
           key={name}
