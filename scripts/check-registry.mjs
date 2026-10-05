@@ -46,6 +46,7 @@ for (const item of catalog.items) {
 }
 console.log("Official schema and CLI build passed.");
 if (!process.argv.includes("--consumer")) process.exit(0);
+const publicPackage = process.argv.includes("--public-package");
 const archive =
   process.env.KIND_CHARTS_ARCHIVE || resolve(root, "artifacts/package/kind-ui-charts-0.1.0.tgz");
 const receipt = JSON.parse(
@@ -73,9 +74,10 @@ const server = createServer(async (req, res) => {
     const name = new URL(req.url, fixtureBase).pathname.split("/").at(-1);
     assert.ok(catalog.items.some((item) => `${item.name}.json` === name));
     const item = JSON.parse(await readFile(resolve(root, `apps/docs/public/r/${name}`), "utf8"));
-    item.dependencies = item.dependencies?.map((dep) =>
-      dep === "@kind-ui/charts@^0.1.0" ? archive : dep,
-    );
+    if (!publicPackage)
+      item.dependencies = item.dependencies?.map((dep) =>
+        dep === "@kind-ui/charts@^0.1.0" ? archive : dep,
+      );
     item.registryDependencies = item.registryDependencies?.map((dep) =>
       dep.replace(httpBase, fixtureBase),
     );
@@ -108,7 +110,7 @@ try {
         "tailwind-merge": "3.6.0",
         react: "19.3.0",
         "react-dom": "19.3.0",
-        "@kind-ui/charts": `file:${archive}`,
+        ...(!publicPackage ? { "@kind-ui/charts": `file:${archive}` } : {}),
         recharts: "3.10.1",
         motion: "13.4.6",
         tailwindcss: "4.3.3",
@@ -168,6 +170,26 @@ try {
     [cli, "add", "@kindui/charts-dashboard", "--yes", "--cwd", consumer],
     consumer,
   );
+  if (publicPackage) {
+    const authoritativeIntegrity = run(
+      "npm",
+      ["view", "@kind-ui/charts@0.1.0", "dist.integrity"],
+      consumer,
+    ).stdout.trim();
+    assert.equal(
+      authoritativeIntegrity,
+      receipt.integrity,
+      "Published package differs from reviewed artifact",
+    );
+    const installedManifest = JSON.parse(
+      await readFile(resolve(consumer, "node_modules/@kind-ui/charts/package.json"), "utf8"),
+    );
+    const installedLock = JSON.parse(await readFile(resolve(consumer, "package-lock.json"), "utf8"))
+      .packages["node_modules/@kind-ui/charts"];
+    assert.equal(installedManifest.version, "0.1.0");
+    assert.equal(installedLock.integrity, authoritativeIntegrity);
+    assert.match(installedLock.resolved, /^https:\/\/registry\.npmjs\.org\//);
+  }
   const editedFile = resolve(consumer, "src/components/charts/line-chart.tsx");
   const editedContent = `${await readFile(editedFile, "utf8")}\n// Consumer-owned customization.\n`;
   await writeFile(editedFile, editedContent);
@@ -207,7 +229,7 @@ try {
   run(process.execPath, [resolve(consumer, "node_modules/vite/bin/vite.js"), "build"], consumer);
   await writeFile(
     resolve(output, "consumer.json"),
-    `${JSON.stringify({ consumer, tooling: { shadcn: cliPackage.version, node: process.version, npm: npmVersion }, dependencyProof: "local validated archive; public npm and remote GitHub routing require separate live verification", archive, sha256: receipt.sha256 }, null, 2)}\n`,
+    `${JSON.stringify({ consumer, tooling: { shadcn: cliPackage.version, node: process.version, npm: npmVersion }, dependencyProof: publicPackage ? "actual public npm package; localhost HTTP registry fixture; live remote GitHub routing remains separate" : "local validated archive; public npm and remote GitHub routing require separate live verification", archive: publicPackage ? null : archive, sha256: receipt.sha256 }, null, 2)}\n`,
   );
   console.log(`Clean CLI consumer types/build passed: ${consumer}`);
 } finally {
