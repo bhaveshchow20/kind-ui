@@ -7,7 +7,7 @@ description: Trace signed contributions from an opening balance to a closing tot
 
 ## Usage
 
-Compute ordered rows once for `WaterfallChart` and `WaterfallConnectors`. Inside `Root`, compose native axes, `WaterfallSeries`, Cells and a semantic tooltip.
+Use `computeWaterfallData` to prepare rows for the bars and connectors.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -89,20 +89,6 @@ Focused props for ordered data and explicit Recharts composition; native axes, C
 
 Returns `WaterfallDatum[]` with IDs, labels, kinds, original/computed values, endpoints and balances. `range` sorts endpoints or becomes null; use `value` for direction because sorting loses sign.
 
-### Root
-
-<div className="line-props-scroll" role="region" aria-label="Waterfall Root props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Metadata and color keyed by `range` in these examples. |
-| `visibleSeries` | `readonly string[]` | All series | Whole-series visibility; does not recompute inputs. |
-| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Consumer-owned legend selection callback. |
-
-</div>
-
-Use matching visibility identities to hide bars and connectors together. Filtering contributions requires consumer-owned recomputation.
-
 ### WaterfallChart
 
 <div className="line-props-scroll" role="region" aria-label="WaterfallChart props" tabIndex={0}>
@@ -154,34 +140,6 @@ Binds `range` with zero minimum size; rejects `data`, `dataKey`, `stackId` and `
 
 Native `ReferenceLine` segments without pointer capture; `x`, `y`, `segment` and `children` are excluded. See [Recharts ReferenceLine](https://recharts.github.io/en-US/api/ReferenceLine/).
 
-### Tooltip
+## Shared components
 
-<div className="line-props-scroll" role="region" aria-label="Waterfall Tooltip props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `content` | Native tooltip element or renderer | Kind content | Render semantic signed values from the matching computed row. Custom content owns its value animation. |
-| `filterNull` | `boolean` | `false` in Kind | Keep unknown steps inspectable. |
-| `maxWidth` | `number` | `180` | Measured tooltip width bound in pixels. |
-| `cursor` | Native cursor props or renderer | `false` | Optional category guide. |
-
-</div>
-
-Arrow keys inspect categories; Escape dismisses inspection. The accessible data alternative retains zero and unknown values. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
-
-### Axes and sizing
-
-<div className="line-props-scroll" role="region" aria-label="Waterfall axes and sizing props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `XAxis.type` | `"number" \| "category"` | `"category"` | Use `"number"` for horizontal-bar values. |
-| `XAxis.domain` | Native numeric domain | `[0, "auto"]` | Include zero; use `["auto", "auto"]` when balances can be negative. |
-| `YAxis.type` | `"number" \| "category"` | `"number"` | Use `"category"` for horizontal-bar steps. |
-| `YAxis.dataKey` | Native data key | — | Use `"id"` so connectors share the category identity. |
-| `YAxis.width` | `number \| "auto"` | `60` | Step-label space; these components use `76`. |
-| `ResponsiveContainer.height` | `number` or percentage | `"100%"` | Provide a measurable height; these components use `280`. |
-
-</div>
-
-See [XAxis](https://recharts.github.io/en-US/api/XAxis/), [YAxis](https://recharts.github.io/en-US/api/YAxis/) and [ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
+[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/).

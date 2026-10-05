@@ -58,7 +58,9 @@ try {
         await card.getByRole("button", { name: "Copy prompt", exact: true }).click();
         const prompt = await page.evaluate(() => navigator.clipboard.readText());
         assert.ok(prompt.includes(origin + publicPath(`/docs/components/${family}/`)));
-        assert.ok(prompt.includes(publicPath("/examples/package/kind-ui-charts-0.1.0.tgz")));
+        assert.ok(prompt.includes("Install @kind-ui/charts"));
+        assert.ok(!prompt.includes(".tgz"));
+        assert.ok(!prompt.includes("sourceCommit"));
         assert.equal(
           Math.round((await card.locator(".code-files").boundingBox()).height),
           Math.round(previewHeight),
@@ -162,18 +164,13 @@ try {
     }
   }
   const provenance = await context.request.get(origin + publicPath("/package-provenance.json"));
-  assert.equal(
-    (await provenance.json()).sha256,
-    JSON.parse(readFileSync("vendor/provenance.json", "utf8")).sha256,
-  );
+  assert.equal(provenance.status(), 404, "Internal provenance must not be public");
   const download = await context.request.get(
     origin + publicPath("/examples/package/kind-ui-charts-0.1.0.tgz"),
   );
-  assert.equal(download.status(), 200);
+  assert.equal(download.status(), 404, "Local validation archive must not be public");
   assert.equal(
-    createHash("sha256")
-      .update(await download.body())
-      .digest("hex"),
+    createHash("sha256").update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz")).digest("hex"),
     JSON.parse(readFileSync("vendor/provenance.json", "utf8")).sha256,
   );
   assert.deepEqual(errors, []);

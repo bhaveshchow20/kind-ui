@@ -7,7 +7,7 @@ description: Compare parts of a whole with explicit category identity and native
 
 ## Usage
 
-`Root` supplies category metadata. `PieSeries` owns rows and geometry; set `categoryKey` for config colors, then compose labels and `Tooltip`. Set `innerRadius` for a Donut.
+Set `categoryKey` for stable slice colors and `innerRadius` for a donut.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -42,21 +42,6 @@ Choose plain, paper, clay or glow. Percentage labels remain inside sectors; cate
 ## API reference
 
 Focused props for explicit Pie composition; upstream links cover native options.
-
-### Root
-
-Supplies metadata for category defaults and inspection; PieSeries still owns its data.
-
-<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Category labels, colors and optional value formatters. |
-| `visibleSeries` | `readonly string[]` | All config keys | Controlled legend and tooltip visibility; filter Pie data separately. |
-| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend buttons together with `visibleSeries`. |
-| `emphasis` | `"auto" \| "none"` | `"auto"` | Shared paint emphasis for supported native sectors. |
-
-</div>
 
 ### PieChart
 
@@ -100,74 +85,6 @@ Value and category identity use separate fields.
 
 Explicit series fill disables category defaults; datum or Cell fill wins over them. Custom shapes retain rendering control. Filter rows explicitly; `PieSeries` has no `seriesKey`. Custom shapes, filters or transforms can bypass Kind paint. See [Recharts Pie](https://recharts.github.io/en-US/api/Pie/).
 
-### Cell
+## Shared components
 
-Use Cells for explicit per-row overrides; map them in the same order as rows after filtering.
-
-<div className="line-props-scroll" role="region" aria-label="Cell props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `fill` | `string` | Native inherited fill | Override one category's paint. |
-
-</div>
-
-See [Recharts Cell](https://recharts.github.io/en-US/api/Cell/).
-
-### LabelList
-
-Native labels. These precomputed percentages describe the complete dataset; recalculate or omit them after filtering.
-
-<div className="line-props-scroll" role="region" aria-label="LabelList props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Label field; independent of the numeric sector value. |
-| `fill` / `stroke` | `string` | Native inherited paint | Explicit readable label paint. |
-
-</div>
-
-See [Recharts LabelList](https://recharts.github.io/en-US/api/LabelList/).
-
-### Legend
-
-Place outside `ResponsiveContainer`. Root visibility and its callback enable toggles.
-
-<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `hideIcon` | `boolean` | `false` | Use swatches instead of configured icons. |
-| `emphasis` | `"none" \| "series"` | `"none"` | Request category paint emphasis on hover or focus. |
-
-</div>
-
-### Tooltip
-
-`itemKey` resolves category labels, formatting and filtering. Native keyboard inspection and Escape dismissal remain chart-owned.
-
-<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `itemKey` | `(entry: TooltipPayloadEntry) => string` | Native item identity | Resolve the category key from payload; the default often resolves to the numeric field. |
-| `maxWidth` | `number` | `180` | Bound tooltip width in pixels. |
-| `cursor` | Native cursor props or renderer | `false` | Optional native inspection guide. |
-
-</div>
-
-See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
-
-### ResponsiveContainer
-
-Requires a measurable parent; these examples use a 280px height.
-
-<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` / `height` | `number` or percentage | `"100%"` | Responsive plot dimensions. |
-
-</div>
-
-See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
+[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Labels and cells](/docs/chart-components/labels/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [ResponsiveContainer](/docs/chart-components/responsive-container/).

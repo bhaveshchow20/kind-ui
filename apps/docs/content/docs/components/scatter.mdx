@@ -3,13 +3,11 @@ title: Scatter and Bubble Chart
 description: Compare numeric relationships across series and encode a third measure with bubble area.
 ---
 
-Illustrative task observations compare latency and acceptance across weekday and weekend traffic.
-
 <ChartExample id="scatter" />
 
 ## Usage
 
-`Root` supplies metadata; `ScatterChart` owns motion and point inspection. Each `ScatterSeries` supplies its records. Compose numeric X/Y axes explicitly.
+Supply records to each `ScatterSeries` and numeric keys to the X and Y axes.
 
 ```tsx title="Composition"
 <Chart.Root config={config} visibleSeries={visibleSeries} onVisibleSeriesChange={setVisibleSeries}>
@@ -56,19 +54,6 @@ Motion fades marks in place. Interaction or data/visibility/geometry changes fin
 ## API reference
 
 Focused props for explicit numeric composition; Recharts owns scales, symbols and point selection.
-
-### Root
-
-<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series labels, colors, optional icons and `legendShape`. |
-| `visibleSeries` | `readonly string[]` | All | Consumer-owned series selection. |
-| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend buttons with controlled selection. |
-| `emphasis` | `"auto" \| "none"` | `"auto"` | Scatter has no automatic paint dimming during inspection. |
-
-</div>
 
 ### ScatterChart
 
@@ -137,52 +122,6 @@ Preserve accessible data for every series, including overlapping observations an
 
 </div>
 
-### XAxis and YAxis
+## Shared components
 
-<div className="line-props-scroll" role="region" aria-label="Numeric axis props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `type` | `"number" \| "category"` | X: `"category"`; Y: `"number"` | Set both to `"number"` for quantitative relationships. |
-| `dataKey` | `string \| number \| ((record: Row) => unknown)` | — | X or Y measurement field. |
-| `name` / `unit` | `string` | — | Native dimension title and tooltip unit. |
-| `domain` | Native numeric domain | `[0, "auto"]` | Consumer-owned numeric bounds. |
-| `tickMargin` | `number` | `5` | Tick spacing; examples use `10`. |
-| `height` (X) / `width` (Y) | `number` / `number \| "auto"` | `30` / `60` | Reserve tick-label space. |
-
-</div>
-
-See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/) and [YAxis](https://recharts.github.io/en-US/api/YAxis/).
-
-### ZAxis
-
-<div className="line-props-scroll" role="region" aria-label="ZAxis props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((record: Row) => unknown)` | — | Size measurement field or accessor. |
-| `range` | `[number, number]` | `[64, 64]` | Native symbol area range; not radius. |
-| `domain` | Native numeric domain | `[0, "auto"]` | Native size scale bounds. |
-| `name` / `unit` | `string` | — | Native nonzero Z tooltip metadata. |
-
-</div>
-
-See [Recharts ZAxis](https://recharts.github.io/en-US/api/ZAxis/).
-
-### Legend
-
-Place outside the plot. Reuse `legendShape` explicitly; `icon` takes priority. Root visibility and its callback enable Enter/Space toggles.
-
-<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `hideIcon` | `boolean` | `false` | Use swatches instead of configured icons or symbols. |
-| `children` | `(item: { key: string; label: string; visible: boolean; marker: ReactNode }) => ReactNode` | — | Custom noninteractive item content; Kind retains button and state ownership. |
-| `emphasis` | `"none" \| "series"` | `"none"` | Shared emphasis request; no automatic Scatter paint dimming. |
-
-</div>
-
-### Responsive<wbr />Container and CartesianGrid
-
-Give `ResponsiveContainer` measurable dimensions and compose native guides. See [ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/) and [CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
+[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Axes and grid](/docs/chart-components/axes-grid/), [Legend](/docs/chart-components/legend/), [ResponsiveContainer](/docs/chart-components/responsive-container/).

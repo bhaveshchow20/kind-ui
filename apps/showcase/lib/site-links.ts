@@ -4,7 +4,7 @@ export const showcaseBasePath = process.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH ?? ""
 export const showcaseAsset = (path: string) => `${showcaseBasePath}${path}`;
 const docsDestination =
   process.env.NEXT_PUBLIC_DOCS_URL ??
-  "https://kind-ui-charts-docs.angrypirate20.chatgpt.site/docs/";
+  "https://kind-ui-charts.angrypirate20.chatgpt.site/charts/docs/";
 
 export const siteLinks = {
   home: showcaseBasePath || "/",
@@ -13,8 +13,7 @@ export const siteLinks = {
   creator: "https://x.com/BhaveshChow",
 };
 
-export const docsAccessNote =
-  "Docs are private to the owner; other visitors may see an access error.";
+export const docsAccessNote = "Explore chart examples and API references.";
 
 // Names such as Donut and Gauge share their documented family page.
 export const documentationCharts = [

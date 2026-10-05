@@ -2,13 +2,12 @@
 title: Combo Chart
 description: Combine bars, lines and areas to compare related measures.
 ---
-Bars show shipments, an area shows capacity, and a dashed line marks the target on one shared scale.
 
 <ChartExample id="combo" />
 
 ## Usage
 
-`Root` supplies metadata; `ResponsiveContainer` sizes the plot. Compose series, axes and `Tooltip` inside `ComboChart`; Recharts owns their scales and geometry.
+Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -48,19 +47,6 @@ Line/Area reveal across the plot; Bar reveals from numeric zero clamped to its d
 ## API reference
 
 Focused props for explicit composition; upstream references cover additional native geometry.
-
-### Root
-
-<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Labels, colors and optional `formatValue` for all composed families. |
-| `visibleSeries` | `readonly string[]` | All series | Consumer-owned selection across the shared Root. |
-| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend toggles with controlled `visibleSeries`. |
-| `emphasis` | `"auto" \| "none"` | `"auto"` | Shared emphasis policy; Combo inspection does not automatically dim marks. |
-
-</div>
 
 ### ComboChart
 
@@ -152,84 +138,6 @@ Line material choices apply to the line independently of Area and Bar. See [Rech
 
 See [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [Area components](/docs/components/area/).
 
-### XAxis
+## Shared components
 
-<div className="line-props-scroll" role="region" aria-label="XAxis props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Shared category labels. |
-| `tickMargin` | `number` | `5` | Space between axis and labels; these components use `10`. |
-| `height` | `number` | `30` | Reserve category label space; these components use `40`. |
-
-</div>
-
-See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/).
-
-### YAxis
-
-<div className="line-props-scroll" role="region" aria-label="YAxis props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `yAxisId` | `string \| number` | `0` | Match each series to the intended numeric scale. |
-| `orientation` | `"left" \| "right"` | `"left"` | Position separate axes. |
-| `domain` | Native domain | `[0, "auto"]` | Bounds in the axis' own units. |
-| `tickFormatter` | `(value: number, index: number) => string` | — | Display USD or percentage without changing data. |
-| `width` | `number \| "auto"` | `60` | Reserve label space; production and revenue use `"auto"` to measure their labels; the motion component reserves `96` px to keep entrance geometry stable. |
-
-</div>
-
-See [Recharts YAxis](https://recharts.github.io/en-US/api/YAxis/).
-
-### Legend
-
-Place outside the plot. Root visibility and its callback enable toggles; otherwise items are labels.
-
-<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `hideIcon` | `boolean` | `false` | Prefer swatches to configured icons. |
-
-</div>
-
-### Tooltip
-
-One tooltip formats visible series across families. ArrowLeft/ArrowRight inspect categories; Escape dismisses inspection.
-
-<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `cursor` | Native cursor props or renderer | `false` | Optional native inspection guide. |
-| `maxWidth` | `number` | `180` | Kind tooltip width bound in pixels. |
-
-</div>
-
-See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
-
-### ResponsiveContainer
-
-<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` / `height` | `number` or percentage | `"100%"` | Measured plot dimensions; these components provide a `280` px height. |
-
-</div>
-
-See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
-
-### CartesianGrid
-
-<div className="line-props-scroll" role="region" aria-label="CartesianGrid props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `vertical` | `boolean` | `true` | Vertical guides; these components use horizontal guides only. |
-| `strokeDasharray` | `string` | — | Native guide dash pattern. |
-
-</div>
-
-Keep a complete accessible data alternative for every series. See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
+[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Axes and grid](/docs/chart-components/axes-grid/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [ResponsiveContainer](/docs/chart-components/responsive-container/).

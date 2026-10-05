@@ -5,8 +5,22 @@ import path from "node:path";
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const root = path.resolve("artifacts/consumer");
 mkdirSync(root, { recursive: true });
+function verificationFiles(bundle) {
+  const files = { ...bundle.files };
+  if (bundle.localPackage) {
+    const manifest = JSON.parse(files["package.json"]);
+    manifest.dependencies["@kind-ui/charts"] = "file:vendor/kind-ui-charts-0.1.0.tgz";
+    files["package.json"] = `${JSON.stringify(manifest, null, 2)}\n`;
+    if (existsSync("examples/shared/consumer-package-lock.json"))
+      files["package-lock.json"] = readFileSync(
+        "examples/shared/consumer-package-lock.json",
+        "utf8",
+      );
+  }
+  return files;
+}
 const first = Object.values(bundles)[0];
-for (const [name, body] of Object.entries(first.files)) {
+for (const [name, body] of Object.entries(verificationFiles(first))) {
   const target = path.join(root, name);
   mkdirSync(path.dirname(target), { recursive: true });
   writeFileSync(target, body);
@@ -45,7 +59,7 @@ const consumers = Object.values(bundles).flatMap((bundle) => [
 ]);
 for (const bundle of consumers) {
   rmSync(path.join(root, "src"), { recursive: true, force: true });
-  for (const [name, body] of Object.entries(bundle.files)) {
+  for (const [name, body] of Object.entries(verificationFiles(bundle))) {
     if (name === "package-lock.json") continue;
     const target = path.join(root, name);
     mkdirSync(path.dirname(target), { recursive: true });
