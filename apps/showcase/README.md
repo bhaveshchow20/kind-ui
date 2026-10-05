@@ -57,7 +57,7 @@ Run `npm run test:browser` with the same environment used for the production bui
 
 ## Exact candidate consumer check
 
-The checked-in dependency still describes local repository consumption; it is not an npm release pin. The latest validation temporarily installed the supplied `@kind-ui/charts@0.1.0` archive after verifying SHA-256 `837f4b48a464e631abc37695903168110dc5833e21946bc9129ffe997ab295a9` and the owner's receipt. All 121 installed files match that archive. To reproduce with the supplied file after the normal clean install:
+The checked-in dependency still describes local repository consumption; it is not an npm release pin. The latest validation temporarily installed the supplied `@kind-ui/charts@0.1.0` archive after verifying SHA-256 `d26d3edb360a274acf306f66e1413316fd4c18596b138c87e97e34db049273b5` and the clean source receipt for `d66ad717eaa0220b83b60de9420c94b65d67118c`. This remains an unpublished candidate. All 121 installed files match that archive. To reproduce with the supplied file after the normal clean install:
 
 ```sh
 npm install --no-save --package-lock=false /path/to/kind-ui-charts-0.1.0.tgz
