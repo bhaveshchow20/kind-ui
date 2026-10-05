@@ -666,19 +666,92 @@ function DocumentationSearch() {
   );
 }
 
+const installCommands = {
+  npm: "npm install @kind-ui/charts",
+  pnpm: "pnpm add @kind-ui/charts",
+  yarn: "yarn add @kind-ui/charts",
+  bun: "bun add @kind-ui/charts",
+};
+type PackageManager = keyof typeof installCommands;
+
 function InstallSection() {
+  const [manager, setManager] = useState<PackageManager>("npm");
+  const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const copyRequest = useRef(0);
+  useEffect(
+    () => () => {
+      copyRequest.current += 1;
+      clearTimeout(copyTimer.current);
+    },
+    [],
+  );
+  async function copyCommand() {
+    const request = ++copyRequest.current;
+    try {
+      await navigator.clipboard.writeText(installCommands[manager]);
+      if (request !== copyRequest.current) return;
+      setCopied(true);
+      setCopyFailed(false);
+      clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 1800);
+    } catch {
+      if (request === copyRequest.current) setCopyFailed(true);
+    }
+  }
   return (
     <section className="install-section" aria-label="Install Kind UI Charts">
       <p className="install-built-with">Built on Framer Motion and Recharts</p>
-      <div className="install-panel">
+      <Tabs
+        className="install-panel"
+        value={manager}
+        onValueChange={(value) => {
+          copyRequest.current += 1;
+          clearTimeout(copyTimer.current);
+          setManager(value as PackageManager);
+          setCopied(false);
+          setCopyFailed(false);
+        }}
+      >
         <div className="install-panel-header">
-          <span className="package-preview-label">Install charts</span>
+          <TabsList className="install-manager-tabs" aria-label="Package manager">
+            {(Object.keys(installCommands) as PackageManager[]).map((key) => (
+              <TabsTrigger key={key} value={key}>
+                {key}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="install-copy"
+            onClick={copyCommand}
+            aria-label={copied ? "Install command copied" : "Copy install command"}
+          >
+            {copied ? <Check /> : <Copy />}
+          </Button>
         </div>
-        <div className="install-panel-content">
-          <code className="install-package">npm install @kind-ui/charts</code>
-          <p className="package-preview-note">Import the stylesheet, then compose your chart</p>
-        </div>
-      </div>
+        {(Object.keys(installCommands) as PackageManager[]).map((key) => (
+          <TabsContent key={key} value={key} className="install-panel-content">
+            <code>
+              <span className="install-prompt" aria-hidden="true">
+                ${" "}
+              </span>
+              <span className="install-tool">{key}</span>
+              {key === "npm" ? " install " : " add "}
+              <span className="install-package">@kind-ui/charts</span>
+            </code>
+          </TabsContent>
+        ))}
+      </Tabs>
+      <span className="sr-only" role="status">
+        {copied
+          ? "Install command copied"
+          : copyFailed
+            ? "Could not copy. Select the command to copy manually."
+            : ""}
+      </span>
     </section>
   );
 }
