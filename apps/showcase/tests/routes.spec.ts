@@ -38,7 +38,11 @@ test("home redirects only in prefixed mode and direct refresh loads assets", asy
 
 test("Docs links, search aliases and page anchors have real destinations", async ({ page }) => {
   await page.goto("./");
-  const docs = page.getByRole("link", { name: "Docs (owner-private)", exact: true });
+  const docs = page.getByRole("link", {
+    name: "Docs (owner-private)",
+    exact: true,
+    includeHidden: true,
+  });
   await expect(docs).toHaveCount(3);
   for (const link of await docs.all()) await expect(link).toHaveAttribute("href", siteLinks.docs);
   await expect(page.locator(".docs-preview-note")).toContainText("private to the owner");

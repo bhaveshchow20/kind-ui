@@ -8,11 +8,13 @@ const geist = localFont({
   src: "../public/fonts/geist-variable.ttf",
   variable: "--font-geist",
   display: "swap",
+  weight: "100 900",
 });
 const geistMono = localFont({
   src: "../public/fonts/geist-mono-variable.ttf",
   variable: "--font-geist-mono",
   display: "swap",
+  weight: "100 900",
 });
 
 export const metadata: Metadata = {
