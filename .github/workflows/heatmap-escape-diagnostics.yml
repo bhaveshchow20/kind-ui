@@ -7,13 +7,14 @@ on:
       - .github/workflows/heatmap-escape-diagnostics.yml
       - .github/workflows/ci.yml
       - .github/scripts/heatmap-escape-diagnostics.mjs
+      - .github/scripts/heatmap-escape-direct.mjs
 permissions:
   contents: read
 jobs:
   diagnostic:
     if: github.head_ref == 'diagnostics/heatmap-escape-linux' || github.ref_name == 'diagnostics/heatmap-escape-linux'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -34,48 +35,10 @@ jobs:
         working-directory: apps/docs
         env:
           KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
-      - name: Full copied-consumer warmup
-        working-directory: apps/docs
-        run: npm run check:consumers
       - run: npm exec playwright install -- --with-deps chromium
-      - name: Replay preceding docs browser flow
+      - name: Direct stationary-pointer trials and disabled Escape control
         working-directory: apps/docs
-        run: |
-          mkdir -p artifacts/heatmap-escape-diagnostic
-          result=0
-          for script in start-browser-check start-line-checks start-area-checks start-pie-checks start-radar-checks start-sankey-checks check-histogram-consumers start-histogram-checks start-radial-checks check-waterfall-consumers start-waterfall-checks check-box-plot-consumers start-box-plot-checks check-combo-consumers start-combo-checks start-scatter-checks start-bar-checks check-heatmap-consumers; do
-            echo "CHECK $script" >> artifacts/heatmap-escape-diagnostic/prior-flow.log
-            if node "scripts/$script.mjs" >> artifacts/heatmap-escape-diagnostic/prior-flow.log 2>&1; then
-              echo "$script PASS" >> artifacts/heatmap-escape-diagnostic/prior-flow-status.txt
-            else
-              result=1
-              echo "$script FAIL" >> artifacts/heatmap-escape-diagnostic/prior-flow-status.txt
-            fi
-          done
-          echo "$result" > artifacts/heatmap-escape-diagnostic/prior-flow-exit-code.txt
-      - name: Three paired full Heatmap checks with stationary versus parked pointer
-        working-directory: apps/docs
-        run: |
-          result=0
-          for iteration in 1 2 3; do
-            for mode in pointer parked; do
-              KIND_HEATMAP_DIAGNOSTIC_MODE="$mode" KIND_HEATMAP_DIAGNOSTIC_LABEL="$mode-$iteration" node ../../.github/scripts/heatmap-escape-diagnostics.mjs > "artifacts/heatmap-escape-diagnostic/$mode-$iteration.log" 2>&1 || result=1
-            done
-          done
-          echo "$result" > artifacts/heatmap-escape-diagnostic/repeated-exit-code.txt
-      - name: Disabled dismissal negative control with pointer parked
-        working-directory: apps/docs
-        run: |
-          if KIND_HEATMAP_DIAGNOSTIC_MODE=negative-parked node ../../.github/scripts/heatmap-escape-diagnostics.mjs > artifacts/heatmap-escape-diagnostic/negative-parked.log 2>&1; then
-            echo "Negative control unexpectedly passed"
-            exit 1
-          fi
-          grep -F 'locator.waitFor: Timeout 1000ms exceeded' artifacts/heatmap-escape-diagnostic/negative-parked.log
-      - name: Preserve repeated failure results
-        working-directory: apps/docs
-        run: |
-          test "$(cat artifacts/heatmap-escape-diagnostic/prior-flow-exit-code.txt)" -eq 0
-          test "$(cat artifacts/heatmap-escape-diagnostic/repeated-exit-code.txt)" -eq 0
+        run: node ../../.github/scripts/heatmap-escape-direct.mjs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
