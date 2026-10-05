@@ -22,6 +22,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { newRecipes } from "@/lib/new-chart-recipes";
+import { docsAccessNote, documentationCharts, showcaseAsset, siteLinks } from "@/lib/site-links";
 import { useCopyCode } from "@/lib/use-copy-code";
 
 type Material = "plain" | "paper" | "clay" | "glow";
@@ -56,7 +57,7 @@ const families: Family[] = [
   "Histogram",
   "Box Plot",
 ];
-const repo = "https://github.com/bhaveshchow20/kind-ui";
+const repo = siteLinks.repository;
 const paletteColorSlots = ["custom-color-1", "custom-color-2", "custom-color-3"] as const;
 const palettes = {
   Neon: ["#733bff", "#119548", "#f22e79"],
@@ -588,24 +589,6 @@ function ThemeSwitcher({ enabled }: { enabled: boolean }) {
   );
 }
 
-const documentationCharts = [
-  "Line",
-  "Area",
-  "Bar",
-  "Combo",
-  "Pie",
-  "Donut",
-  "Radar",
-  "Radial Bar",
-  "Gauge",
-  "Scatter",
-  "Bubble",
-  "Heatmap",
-  "Waterfall",
-  "Sankey",
-  "Histogram",
-  "Box Plot",
-];
 function DocumentationSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -619,7 +602,7 @@ function DocumentationSearch() {
     window.addEventListener("keydown", shortcut);
     return () => window.removeEventListener("keydown", shortcut);
   }, []);
-  const filtered = documentationCharts.filter((name) =>
+  const filtered = documentationCharts.filter(({ name }) =>
     name.toLowerCase().includes(query.trim().toLowerCase()),
   );
   return (
@@ -662,14 +645,17 @@ function DocumentationSearch() {
         {/* biome-ignore lint/a11y/noNoninteractiveTabindex: Scrollable content needs keyboard access. */}
         <section className="documentation-search-results" tabIndex={0} aria-label="Results">
           <h2>Components</h2>
+          <p className="docs-access-note">{docsAccessNote}</p>
           <span className="sr-only" role="status">
             {filtered.length} components found
           </span>
           <ul>
-            {filtered.map((name) => (
+            {filtered.map(({ name, href }) => (
               <li key={name}>
-                <span className="documentation-chart-dot" aria-hidden="true" />
-                {name} Chart
+                <a href={href} target="_blank" rel="noreferrer" title={docsAccessNote}>
+                  <span className="documentation-chart-dot" aria-hidden="true" />
+                  {name} Chart
+                </a>
               </li>
             ))}
           </ul>
@@ -825,7 +811,7 @@ export default function Page() {
           <motion.img
             ref={artRef}
             className="hero-art"
-            src="/hero-art.webp"
+            src={showcaseAsset("/hero-art.webp")}
             alt=""
             width={2048}
             height={1365}
@@ -843,13 +829,15 @@ export default function Page() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.55, delay: 0.15 }}
           >
-            <a className="wordmark" href="/" aria-label="Kind UI Charts home">
+            <a className="wordmark" href={siteLinks.home} aria-label="Kind UI Charts home">
               <KindLogo />
               <span className="wordmark-package">/charts</span>
             </a>
             <nav className="nav-center" aria-label="Main">
               <a
-                href={`${repo}/blob/main/packages/charts/README.md`}
+                href={siteLinks.docs}
+                title={docsAccessNote}
+                aria-label="Docs (owner-private)"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -890,7 +878,9 @@ export default function Page() {
               </Button>
               <a
                 className="nav-mobile-docs"
-                href={`${repo}/blob/main/packages/charts/README.md`}
+                href={siteLinks.docs}
+                title={docsAccessNote}
+                aria-label="Docs (owner-private)"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -917,6 +907,13 @@ export default function Page() {
           </div>
         </section>
         <InstallSection />
+        <p className="docs-preview-note">
+          {docsAccessNote}{" "}
+          <a href={`${repo}/blob/main/packages/charts/README.md`} target="_blank" rel="noreferrer">
+            Read the source API reference
+          </a>
+          .
+        </p>
         <section id="showcase" className="showcase" tabIndex={-1} aria-label="Chart showcase">
           <Tabs value={family} onValueChange={(v) => setFamily(v as Family)}>
             <div className="family-row">
@@ -1122,7 +1119,7 @@ export default function Page() {
       <footer className="cloud-footer">
         <img
           className="footer-art"
-          src="/footer-clouds.webp"
+          src={showcaseAsset("/footer-clouds.webp")}
           alt=""
           width={2172}
           height={724}
@@ -1140,17 +1137,14 @@ export default function Page() {
             <KindLogo />
           </p>
           <div className="footer-bottom">
-            <a
-              className="footer-credit"
-              href="https://x.com/BhaveshChow"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a className="footer-credit" href={siteLinks.creator} target="_blank" rel="noreferrer">
               Created by Bhavesh Chowdhury
             </a>
             <nav aria-label="Footer">
               <a
-                href={`${repo}/blob/main/packages/charts/README.md`}
+                href={siteLinks.docs}
+                title={docsAccessNote}
+                aria-label="Docs (owner-private)"
                 target="_blank"
                 rel="noreferrer"
               >

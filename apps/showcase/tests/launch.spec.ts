@@ -8,7 +8,7 @@ async function family(page: Page, name: string) {
 test("navigation, code modal and pending-install copy are keyboard accessible", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Bring your data\s*to life/);
   await expect(page.locator(".install-section")).not.toContainText("npm install");
   await page.keyboard.press("Control+k");
@@ -29,7 +29,7 @@ test("navigation, code modal and pending-install copy are keyboard accessible", 
 for (const width of [320, 375, 768, 1280]) {
   test(`layout stays inside ${width}px and theme controls remain reachable`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
+    await page.goto("./");
     await expect(page.getByRole("button", { name: "Search documentation" })).toBeVisible();
     await expect(page.locator(".wordmark")).toBeVisible();
     if (width <= 800) {
@@ -50,7 +50,7 @@ for (const width of [320, 375, 768, 1280]) {
 test("custom palette drafting waits for apply and does not open a native picker on focus", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Create custom palette" }).click();
   await expect(page.locator(".palette-editor")).toBeFocused();
   await page.getByRole("textbox", { name: "Hex for custom color 1" }).fill("#ff0033");
@@ -69,7 +69,7 @@ for (const name of ["Bar", "Histogram", "Box Plot", "Waterfall"]) {
   test(`${name} reveals visibly, replays, and settles on interruptions`, async ({ page }) => {
     await page.clock.install();
     await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.goto("/");
+    await page.goto("./");
     await family(page, name);
     await page.mouse.move(0, 0);
     await page.getByRole("button", { name: "Replay chart animations" }).click();
@@ -104,7 +104,7 @@ for (const name of ["Bar", "Histogram", "Box Plot", "Waterfall"]) {
 }
 
 test("replay preserves distribution legend selections", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   await family(page, "Histogram");
   const legend = page
     .locator(".chart-card")
@@ -119,7 +119,7 @@ test("replay preserves distribution legend selections", async ({ page }) => {
 for (const name of ["Line", "Bar", "Histogram", "Box Plot"]) {
   test(`${name} keyboard tooltips and axis numbers remain inside the card`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await page.goto("./");
     await family(page, name);
     const card = page.locator(".chart-card").first();
     const chart = card.getByRole("application").first();
@@ -157,7 +157,7 @@ test("clipboard denial leaves a readable recovery message", async ({ page }) => 
       configurable: true,
     });
   });
-  await page.goto("/");
+  await page.goto("./");
   await family(page, "Line");
   await page
     .getByRole("button", { name: /^Copy code for/ })
@@ -168,7 +168,7 @@ test("clipboard denial leaves a readable recovery message", async ({ page }) => 
 
 test("animated tooltip final digits fit their value container", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/");
+  await page.goto("./");
   await family(page, "Line");
   const card = page.locator(".chart-card").first();
   await card.getByRole("application").focus();

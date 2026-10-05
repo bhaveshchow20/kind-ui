@@ -1,6 +1,19 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
+import { showcaseAsset } from "@/lib/site-links";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+
+const geist = localFont({
+  src: "../public/fonts/geist-variable.ttf",
+  variable: "--font-geist",
+  display: "swap",
+});
+const geistMono = localFont({
+  src: "../public/fonts/geist-mono-variable.ttf",
+  variable: "--font-geist-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Kind UI Charts",
@@ -8,11 +21,11 @@ export const metadata: Metadata = {
     "Explore composable React charts with real-world examples, palettes, finishes and motion. Kind UI Charts is in pre-release.",
   icons: {
     icon: [
-      { url: "/kind-bloom.svg", type: "image/svg+xml" },
-      { url: "/kind-bloom.ico", sizes: "16x16 32x32 48x48 64x64" },
+      { url: showcaseAsset("/kind-bloom.svg"), type: "image/svg+xml" },
+      { url: showcaseAsset("/kind-bloom.ico"), sizes: "16x16 32x32 48x48 64x64" },
     ],
-    shortcut: "/kind-bloom.ico",
-    apple: "/kind-bloom-apple.png",
+    shortcut: showcaseAsset("/kind-bloom.ico"),
+    apple: showcaseAsset("/kind-bloom-apple.png"),
   },
 };
 
@@ -30,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

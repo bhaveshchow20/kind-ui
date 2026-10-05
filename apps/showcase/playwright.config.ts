@@ -1,14 +1,17 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const basePath = process.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH ?? "";
+
 export default defineConfig({
   testDir: "./tests",
   timeout: 30_000,
   fullyParallel: false,
-  use: { baseURL: "http://127.0.0.1:4875", trace: "retain-on-failure" },
+  workers: 1,
+  use: { baseURL: `http://127.0.0.1:7273${basePath}/`, trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: "npm run start -- --hostname 127.0.0.1 --port 4875",
-    url: "http://127.0.0.1:4875",
+    command: "npm run start -- --hostname 127.0.0.1 --port 7273",
+    url: "http://127.0.0.1:7273",
     reuseExistingServer: false,
     timeout: 60_000,
   },
