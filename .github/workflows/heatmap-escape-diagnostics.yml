@@ -1,5 +1,6 @@
 name: Heatmap Escape diagnostic — DO NOT MERGE
 on:
+  workflow_dispatch:
   pull_request:
     branches: [docs/components-concise]
     paths:
@@ -10,7 +11,7 @@ permissions:
   contents: read
 jobs:
   diagnostic:
-    if: github.head_ref == 'diagnostics/heatmap-escape-linux'
+    if: github.head_ref == 'diagnostics/heatmap-escape-linux' || github.ref_name == 'diagnostics/heatmap-escape-linux'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
