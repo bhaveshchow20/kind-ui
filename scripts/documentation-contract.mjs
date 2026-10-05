@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
-// These recipes are available in the verified pre-release source snapshot.
-export const recipeSourceRef = "931eb002287e300d220023a45d3ab8ff8ee86a37";
+// Recipe links resolve on the canonical repository branch and name existing files.
+export const recipeSourceRef = "main";
 export const recipeSourcePrefix = `https://github.com/bhaveshchow20/kind-ui/blob/${recipeSourceRef}/examples/chart/`;
 
 export function assertDocumentationContract(readme, recipeFiles, packedFiles) {
@@ -9,10 +9,10 @@ export function assertDocumentationContract(readme, recipeFiles, packedFiles) {
   for (const [, target] of readme.matchAll(/\]\(([^)]+)\)/g)) {
     if (target.startsWith(recipeSourcePrefix)) {
       const file = target.slice(recipeSourcePrefix.length).split("#")[0];
-      assert.ok(recipeFiles.includes(file), `Missing versioned recipe source: ${file}`);
+      assert.ok(recipeFiles.includes(file), `Missing recipe source: ${file}`);
       recipes.push(file);
     } else if (target.includes("/examples/chart/") || target.startsWith("../../examples")) {
-      assert.fail(`Recipe link must use the verified source snapshot: ${target}`);
+      assert.fail(`Recipe link must use the canonical repository recipe route: ${target}`);
     } else if (!/^(https?:|#)/.test(target)) {
       assert.ok(packedFiles.includes(target.split("#")[0]), `Link leaves the package: ${target}`);
     }
