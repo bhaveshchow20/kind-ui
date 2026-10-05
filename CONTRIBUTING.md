@@ -76,3 +76,11 @@ receipts for the same Node 22 pipeline. Both reject failed or cancelled gates an
 accept skipped browsers only after successful docs-only detection. The `(24)`
 label does not run Node 24 or duplicate tests. Targets are fast feedback under
 3 minutes and all required checks under 10 minutes, including fixture preparation.
+
+The Docs workflow also separates site build/export checks, four copied-consumer
+shards, and browser checks. All complete examples and non-default variants retain
+Vite production builds and strict NodeNext/Bundler checks. Docs browsers start
+when the site is ready rather than waiting for every copied consumer. The `docs`
+completion receipt requires all three stages to pass. For a local shard, run
+`npm run check:consumers -- --shard=1/4` in `apps/docs`; omitting `--shard` still
+checks every copied consumer.

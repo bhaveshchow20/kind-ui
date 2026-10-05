@@ -100,11 +100,11 @@ test("both test pipelines retain every aggregate browser suite's available failu
 });
 
 test("advisory checks include development tooling and npm updates cover both lockfiles", async () => {
-  for (const job of [ci.jobs.fast, docs.jobs.docs, release.jobs.validate]) {
+  for (const job of [ci.jobs.fast, docs.jobs.build, release.jobs.validate]) {
     assert.ok(job.steps.some((step) => step.run === "npm audit --audit-level=high --include=dev"));
   }
   assert.ok(
-    docs.jobs.docs.steps.some(
+    docs.jobs.build.steps.some(
       (step) =>
         step.run === "npm audit --audit-level=high --include=dev" &&
         step["working-directory"] === "apps/docs",
@@ -165,7 +165,7 @@ test("split CI covers all aggregate gates and sends shard args to every browser 
 });
 
 test("cached browser binaries do not replace OS dependency installation", () => {
-  for (const job of [ci.jobs.playwright, docs.jobs.docs, release.jobs.validate]) {
+  for (const job of [ci.jobs.playwright, docs.jobs.browsers, release.jobs.validate]) {
     const steps = job.steps;
     const cache = steps.find((s) => s.uses?.startsWith("actions/cache@"));
     assert.equal(cache.with.path, "~/.cache/ms-playwright");
@@ -178,4 +178,49 @@ test("cached browser binaries do not replace OS dependency installation", () => 
     const install = steps.find((s) => s.run === "npm exec playwright install -- chromium");
     assert.equal(install.if, "steps.browsers.outputs.cache-hit != 'true'");
   }
+});
+
+test("Docs separates copied consumers without dropping any browser or build gate", () => {
+  assert.equal(docs.jobs.build.needs, undefined);
+  assert.equal(docs.jobs.consumers.needs, undefined);
+  assert.deepEqual(docs.jobs.consumers.strategy.matrix.shard, [1, 2, 3, 4]);
+  assert.equal(docs.jobs.consumers.strategy["fail-fast"], false);
+  assert.ok(
+    docs.jobs.consumers.steps.some((s) => s.run?.includes("npm run check:consumers -- --shard=")),
+  );
+  assert.deepEqual(docs.jobs.browsers.needs, "build");
+  assert.deepEqual(docs.jobs.docs.needs, ["build", "consumers", "browsers"]);
+  assert.equal(docs.jobs.docs.if, "always()");
+  const build = docs.jobs.build.steps.map((s) => s.run ?? "").join("\n");
+  for (const command of ["npm run generate", "npm run build", "npm run check"])
+    assert.ok(build.includes(command));
+  const browsers = docs.jobs.browsers.steps.map((s) => s.run ?? "").join("\n");
+  assert.ok(browsers.includes("npm run check:browser"));
+  for (const family of [
+    "line",
+    "area",
+    "pie",
+    "radar",
+    "sankey",
+    "histogram",
+    "radial",
+    "waterfall",
+    "box-plot",
+    "combo",
+    "scatter",
+    "bar",
+    "heatmap",
+  ])
+    assert.ok(browsers.includes(`start-${family}-checks.mjs`));
+  for (const contract of [
+    "pie-contract",
+    "check-sankey-source",
+    "histogram-contract",
+    "waterfall-contract",
+    "combo-contract",
+    "heatmap-contract",
+  ])
+    assert.ok(browsers.includes(`${contract}.test.mjs`));
+  for (const family of ["histogram", "waterfall", "box-plot", "combo", "heatmap"])
+    assert.ok(browsers.includes(`check-${family}-consumers.mjs`));
 });

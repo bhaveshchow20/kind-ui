@@ -11,7 +11,7 @@ concurrency:
   group: docs-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  docs:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -36,17 +36,95 @@ jobs:
       - run: |
           mkdir -p artifacts
           npm run generate
-          if npm run check:consumers > artifacts/consumers.log 2>&1; then
-            tail -n 12 artifacts/consumers.log
-          else
-            tail -n 100 artifacts/consumers.log
-            exit 1
-          fi
           npm run build
           npm run check
         working-directory: apps/docs
         env:
           KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
+      - name: Retain the built docs site and generated browser fixtures
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docs-browser-fixtures
+          path: |
+            apps/docs/out/
+            apps/docs/generated/
+          if-no-files-found: error
+          retention-days: 14
+  consumers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/docs/package-lock.json
+      - run: npm install --global npm@11.9.0
+      - run: npm ci
+      - run: npm audit --audit-level=high --include=dev
+      - run: node apps/docs/scripts/verify-pinned-package.mjs
+      - run: npm ci
+        working-directory: apps/docs
+      - run: npm audit --audit-level=high --include=dev
+        working-directory: apps/docs
+      - name: Check copied consumers and every variant in this shard
+        run: |
+          mkdir -p artifacts
+          npm run generate
+          if npm run check:consumers -- --shard=${{ matrix.shard }}/4 > artifacts/consumers.log 2>&1; then
+            tail -n 12 artifacts/consumers.log
+          else
+            tail -n 100 artifacts/consumers.log
+            exit 1
+          fi
+        working-directory: apps/docs
+      - name: Retain strict consumer evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: docs-consumer-evidence-shard-${{ matrix.shard }}
+          path: |
+            apps/docs/artifacts/consumers.log
+            apps/docs/artifacts/consumer-results*.json
+          if-no-files-found: error
+          retention-days: 14
+  browsers:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/docs/package-lock.json
+      - run: npm install --global npm@11.9.0
+      - run: npm ci
+      - run: npm audit --audit-level=high --include=dev
+      - run: node apps/docs/scripts/verify-pinned-package.mjs
+      - run: npm ci
+        working-directory: apps/docs
+      - run: npm audit --audit-level=high --include=dev
+        working-directory: apps/docs
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: docs-browser-fixtures
+          # Both uploaded paths share apps/docs as their common ancestor.
+          path: apps/docs
       - id: playwright-version
         run: echo "version=$(node -p 'require("./node_modules/@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
       - id: browsers
@@ -123,7 +201,7 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: docs-verification
+          name: docs-browser-verification
           path: |
             apps/docs/artifacts/*.log
             apps/docs/artifacts/*-results.json
@@ -145,3 +223,17 @@ jobs:
             apps/docs/artifacts/heatmap/*.json
           if-no-files-found: warn
           retention-days: 14
+  docs:
+    needs: [build, consumers, browsers]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: |
+          test "$BUILD" = success
+          test "$CONSUMERS" = success
+          test "$BROWSERS" = success
+        env:
+          BUILD: ${{ needs.build.result }}
+          CONSUMERS: ${{ needs.consumers.result }}
+          BROWSERS: ${{ needs.browsers.result }}
