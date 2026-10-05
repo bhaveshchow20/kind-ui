@@ -9,6 +9,7 @@ import { RadialBarChart, type RadialBarChartProps } from "./polar-chart.js";
 import { RadialBarSeries, type RadialBarSeriesProps } from "./polar-series.js";
 import { RadialBarLabel } from "./radial-bar-label.js";
 import { Root, type RootProps } from "./root.js";
+import { TooltipContent } from "./tooltip-content.js";
 import type { SeriesConfig } from "./types.js";
 
 export type ActivityRing = {
@@ -139,16 +140,21 @@ export function ActivityRings({
         </RadialBarSeries>
         {tooltip !== false && (
           <Tooltip
-            content={({ active, payload }) => {
-              const ring = payload?.[0]?.payload as ActivityRingDatum | undefined;
-              if (!active || !ring) return null;
-              return (
-                <div data-kind-ui="tooltip-content">
-                  <strong>{ring.label}</strong>{" "}
-                  {config[ring.key]!.formatValue?.(ring.rawValue) ?? ring.rawValue}
-                </div>
-              );
-            }}
+            content={(native) => (
+              <TooltipContent
+                tooltip={{
+                  ...native,
+                  payload: native.payload.map((entry) => {
+                    const rawValue = (entry.payload as ActivityRingDatum | undefined)?.rawValue;
+                    return rawValue === undefined ? entry : { ...entry, value: rawValue };
+                  }),
+                }}
+                itemKey={(entry) =>
+                  (entry.payload as ActivityRingDatum | undefined)?.key ?? String(entry.dataKey)
+                }
+                hideLabel
+              />
+            )}
             {...tooltip}
           />
         )}
