@@ -1,24 +1,11 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const root = path.resolve("artifacts/consumer");
 mkdirSync(root, { recursive: true });
-function verificationFiles(bundle) {
-  const files = { ...bundle.files };
-  if (bundle.localPackage) {
-    const manifest = JSON.parse(files["package.json"]);
-    manifest.dependencies["@kind-ui/charts"] = "file:vendor/kind-ui-charts-0.1.0.tgz";
-    files["package.json"] = `${JSON.stringify(manifest, null, 2)}\n`;
-    if (existsSync("examples/shared/consumer-package-lock.json"))
-      files["package-lock.json"] = readFileSync(
-        "examples/shared/consumer-package-lock.json",
-        "utf8",
-      );
-  }
-  return files;
-}
 const first = Object.values(bundles)[0];
 for (const [name, body] of Object.entries(verificationFiles(first))) {
   const target = path.join(root, name);
@@ -29,18 +16,10 @@ if (first.localPackage) {
   mkdirSync(path.join(root, "vendor"), { recursive: true });
   cpSync("vendor/kind-ui-charts-0.1.0.tgz", path.join(root, "vendor/kind-ui-charts-0.1.0.tgz"));
 }
-execFileSync(
-  "npm",
-  [
-    existsSync(path.join(root, "package-lock.json")) ? "ci" : "install",
-    "--ignore-scripts",
-    "--no-audit",
-    "--no-fund",
-  ],
-  { cwd: root, stdio: "inherit" },
-);
-if (!existsSync("examples/shared/consumer-package-lock.json"))
-  cpSync(path.join(root, "package-lock.json"), "examples/shared/consumer-package-lock.json");
+execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
+  cwd: root,
+  stdio: "inherit",
+});
 const installed = JSON.parse(
   readFileSync(path.join(root, "node_modules/@kind-ui/charts/package.json"), "utf8"),
 );

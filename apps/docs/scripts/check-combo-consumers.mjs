@@ -2,12 +2,13 @@ import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { filesFor } from "../lib/example-files.mjs";
+import { verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/combo-examples.json", "utf8"));
 const root = path.resolve("artifacts/combo-consumer");
 mkdirSync(root, { recursive: true });
 const first = Object.values(bundles)[0];
-for (const [file, body] of Object.entries(first.files)) {
+for (const [file, body] of Object.entries(verificationFiles(first))) {
   const target = path.join(root, file);
   mkdirSync(path.dirname(target), { recursive: true });
   writeFileSync(target, body);
@@ -23,7 +24,9 @@ const results = [];
 for (const bundle of Object.values(bundles)) {
   for (const variant of bundle.variants ? Object.keys(bundle.variants) : [undefined]) {
     rmSync(path.join(root, "src"), { recursive: true, force: true });
-    for (const [file, body] of Object.entries(filesFor(bundle, {}, variant))) {
+    for (const [file, body] of Object.entries(
+      verificationFiles(bundle, filesFor(bundle, {}, variant)),
+    )) {
       const target = path.join(root, file);
       mkdirSync(path.dirname(target), { recursive: true });
       writeFileSync(target, body);

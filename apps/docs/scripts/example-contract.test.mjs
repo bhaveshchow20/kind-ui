@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { allExamples, examples, families } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
 import { publicPath } from "../lib/routing.mjs";
+import { verificationFiles } from "./consumer-validation-files.mjs";
 import "./routing-contract.test.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
@@ -165,4 +166,34 @@ test("shared references are registered and chart pages retain family APIs", () =
       `${id} duplicates shared API`,
     );
   }
+});
+
+test("internal checks preserve the locked fixture across all public variants", () => {
+  const before = JSON.stringify(completeBundles);
+  const integrity = `sha512-${createHash("sha512").update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz")).digest("base64")}`;
+  for (const bundle of Object.values(completeBundles)) {
+    for (const variant of [undefined, ...Object.keys(bundle.variants ?? {})]) {
+      const publicFiles = filesFor(bundle, {}, variant);
+      const files = verificationFiles(bundle, publicFiles);
+      assert.ok(!Object.hasOwn(publicFiles, "package-lock.json"), bundle.id);
+      const manifest = JSON.parse(files["package.json"]);
+      const lock = JSON.parse(files["package-lock.json"]);
+      assert.equal(
+        manifest.dependencies["@kind-ui/charts"],
+        "file:vendor/kind-ui-charts-0.1.0.tgz",
+      );
+      assert.deepEqual(manifest.dependencies, lock.packages[""].dependencies);
+      assert.deepEqual(manifest.devDependencies, lock.packages[""].devDependencies);
+      assert.equal(
+        lock.packages["node_modules/@kind-ui/charts"].resolved,
+        "file:vendor/kind-ui-charts-0.1.0.tgz",
+      );
+      assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, integrity);
+      assert.equal(lock.packages["node_modules/@kind-ui/charts"].version, provenance.version);
+      for (const [name, body] of Object.entries(publicFiles)) {
+        if (name !== "package.json") assert.equal(files[name], body, `${bundle.id}: ${name}`);
+      }
+    }
+  }
+  assert.equal(JSON.stringify(completeBundles), before);
 });

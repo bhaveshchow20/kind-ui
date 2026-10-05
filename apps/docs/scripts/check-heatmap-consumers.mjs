@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/heatmap-examples.json", "utf8"));
 const root = path.resolve("artifacts/heatmap-consumer");
@@ -12,7 +13,7 @@ function writeFiles(files) {
     writeFileSync(target, body);
   }
 }
-writeFiles(bundles.heatmap.files);
+writeFiles(verificationFiles(bundles.heatmap));
 mkdirSync(path.join(root, "vendor"), { recursive: true });
 cpSync("vendor/kind-ui-charts-0.1.0.tgz", path.join(root, "vendor/kind-ui-charts-0.1.0.tgz"));
 execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
@@ -26,7 +27,12 @@ for (const bundle of Object.values(bundles)) {
   };
   for (const [variant, { source }] of Object.entries(sources)) {
     rmSync(path.join(root, "src"), { recursive: true, force: true });
-    writeFiles({ ...bundle.files, [`src/examples/${bundle.id}/example.tsx`]: source });
+    writeFiles(
+      verificationFiles(bundle, {
+        ...bundle.files,
+        [`src/examples/${bundle.id}/example.tsx`]: source,
+      }),
+    );
     execFileSync("npm", ["run", "build"], { cwd: root, stdio: "inherit" });
     writeFileSync(
       path.join(root, "tsconfig.strict.json"),
