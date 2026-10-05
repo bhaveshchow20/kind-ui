@@ -1194,7 +1194,7 @@ code,
   }
 }
 .hero h1 {
-  font-family: Georgia, serif;
+  font-family: var(--font-instrument-serif), Georgia, serif;
   font-weight: 400;
   font-size: clamp(62px, 7.3vw, 100px);
   letter-spacing: -0.025em;
