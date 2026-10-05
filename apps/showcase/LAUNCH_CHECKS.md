@@ -2,7 +2,7 @@
 
 PR #53 remains a draft. No deployment, public preview, visibility/domain change, merge, npm publication or announcement was performed in this preparation pass.
 
-## Current tested baseline
+## Historical tested baseline
 
 - Installed package: `@kind-ui/charts@0.0.0`, from the existing validated tarball, not PR #102’s final successor.
 - Baseline library source: `68ce9ad10d617faae3f08c562cb2768035167ee3`.
@@ -26,7 +26,7 @@ Keep the artwork and layout direction. Narrow-screen navigation and titles recei
 
 ## Pending / blockers
 
-- The final integrated artifact has not been supplied. PR #102 is not treated as that artifact; compact Heatmap #96, color/legend defaults #97 and activity rings #99 remain separately owned. No substitute APIs or library-internal patches were introduced here.
+- At the historical baseline pass, the final integrated artifact had not been supplied. The candidate receipt below supersedes that absence for local consumer testing. PR #102 is not treated as that artifact; compact Heatmap #96, color/legend defaults #97 and activity rings #99 remain separately owned. No substitute APIs or library-internal patches were introduced here.
 - Issue #71 is closed upstream; the axis-measurement entrance fix is present in main via #89. The tested older baseline predates it. Do not report Bar, Histogram, Box Plot or Waterfall entrances as fixed in this app until the final package is installed and browser progression/interruption checks pass.
 - Browser execution was unavailable: the managed preview requires the unavailable control-browser capability, and Chromium is not installed. No alternate browser/server workflow was improvised. Full aggregate `npm run check` is not complete; an initial attempt stopped at lint before generated-output exclusions/fixes, and browser stages remain unrun. Final standalone lint/component checks pass separately.
 - The suite covers keyboard dialogs/tooltips, viewport containment, themes, native-picker focus safety, palette apply/dismissal, clipboard denial, legend-preserving replay, visible reveal progression and repeated/interrupted/reduced-motion behavior for the four bar-based families, plus tooltip final-digit bounds. These tests must execute against the final bytes; mobile Safari/native color-panel behavior and visual artwork/spacing review also need browser/device confirmation.
@@ -37,3 +37,12 @@ Keep the artwork and layout direction. Narrow-screen navigation and titles recei
 See `ROUTE_AUDIT.md` for the new MacBook execution receipt. It supersedes the earlier browser-unavailable note only for the explicitly recorded older-source website tests: 13/17 original cases pass; the four progression gates remain failures. Three added route/interaction cases and the 16-case prefixed website suite pass. This does not supersede the final integrated-artifact or registry-publication blockers above. Docs sharing remains owner-private. Routing preparation is opt-in; no hosting/DNS deployment occurred.
 
 The subsequent local combined-origin mount also passes against the docs owner's final immutable `c2d9933` export: 21 recorded routing/access-resource checks with no local page errors/failed requests. This proves the local prefix boundary, not production hosting or the paused Next security patch. See `ROUTE_AUDIT.md` for the exact receipt.
+
+
+## Integrated candidate verification
+
+Exact supplied `@kind-ui/charts@0.1.0`, source `97aeef132fd3a83bd0cf0e79c9977442dcbaaeae`, SHA-256 `837f4b48a464e631abc37695903168110dc5833e21946bc9129ffe997ab295a9`, now passes the showcase production build/typecheck, all 256 snippets and complete 20-case browser suite in both default and `/charts` modes. All 121 installed files match the exact tarball; no repacking or tracked dependency/lockfile change occurred. The four animation cases now execute progression, completion, repeated replay, interruption, resize, family-switch and reduced-motion assertions. Their old `Number("21px")` test bug was corrected to the browser's resolved SVG numeric length and independently reviewed.
+
+This supersedes the earlier four failures for these exact candidate bytes. Registry-only installation/publication, a committed release pin, the paused Next security dependency patch, production hosting, mobile Safari/native picker and manual screen-reader checks remain separate gates. The docs side of the combined prefix proof retains its independently owned older package pin.
+
+Combined local routing also passes with the integrated showcase: 21 navigation/resource checks plus eight native-clock rendered progression image pairs at desktop/mobile, zero local page errors/failed requests. The immutable docs export still uses its older `0.0.0` pin; final updated docs candidate QA belongs to its owner.
