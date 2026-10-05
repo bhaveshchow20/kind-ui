@@ -70,7 +70,7 @@ chromium.launch = async (...args) => {
     );
     await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
     await context.addInitScript((mode) => {
-      if (mode === "negative") {
+      if (["negative", "negative-parked"].includes(mode)) {
         window.addEventListener(
           "keydown",
           (event) => {
@@ -91,7 +91,9 @@ chromium.launch = async (...args) => {
               label: node.getAttribute("aria-label"),
             }
           : null;
+      let pointer = { x: 0, y: 0 };
       const record = (type, event) => {
+        if (event?.clientX !== undefined) pointer = { x: event.clientX, y: event.clientY };
         const tooltip = document.querySelector(
           '[data-component="heatmap"] [data-kind-ui="heatmap-tooltip"]',
         );
@@ -103,6 +105,17 @@ chromium.launch = async (...args) => {
           prevented: event?.defaultPrevented ?? null,
           target: describe(event?.target),
           focus: describe(document.activeElement),
+          focusRect: document.activeElement?.getBoundingClientRect?.().toJSON(),
+          pointer,
+          pointerTarget: describe(document.elementFromPoint(pointer.x, pointer.y)),
+          viewport: { width: innerWidth, height: innerHeight, x: scrollX, y: scrollY },
+          scroll: Array.from(
+            document.querySelectorAll('[data-component="heatmap"] [data-kind-ui="heatmap-scroll"]'),
+          ).map((node) => ({
+            left: node.scrollLeft,
+            top: node.scrollTop,
+            rect: node.getBoundingClientRect().toJSON(),
+          })),
           hidden: tooltip.hidden,
           display: getComputedStyle(tooltip).display,
           text: tooltip.textContent,
@@ -112,7 +125,14 @@ chromium.launch = async (...args) => {
         document.addEventListener(name, (event) => record(`${name}:capture`, event), true);
         document.addEventListener(name, (event) => record(`${name}:bubble`, event));
       }
-      for (const name of ["focusin", "focusout", "pointerover", "pointerout", "pointermove"]) {
+      for (const name of [
+        "focusin",
+        "focusout",
+        "pointerover",
+        "pointerout",
+        "pointermove",
+        "scroll",
+      ]) {
         document.addEventListener(name, (event) => record(name, event), true);
       }
       new MutationObserver((records) => {
@@ -133,6 +153,22 @@ chromium.launch = async (...args) => {
         characterData: true,
       });
     }, mode);
+    if (["parked", "negative-parked"].includes(mode)) {
+      const newPage = context.newPage.bind(context);
+      context.newPage = async (...args) => {
+        const page = await newPage(...args);
+        const press = page.keyboard.press.bind(page.keyboard);
+        let parked = false;
+        page.keyboard.press = async (key, ...args) => {
+          if (!parked && key === "ArrowRight") {
+            await page.mouse.move(1, 1);
+            parked = true;
+          }
+          return press(key, ...args);
+        };
+        return page;
+      };
+    }
     if (mode === "snapshot") {
       const newPage = context.newPage.bind(context);
       context.newPage = async (...args) => {
@@ -199,7 +235,7 @@ const temporaryPath = resolve("scripts/.heatmap-diagnostic-check.mjs");
 const snapshotAssertion = "assert.equal(await tooltip.isVisible(), false);";
 const hiddenAssertion = 'await tooltip.waitFor({ state: "hidden", timeout: 1000 });';
 let checkPath = originalPath;
-if (["retry", "negative", "snapshot"].includes(mode)) {
+if (["retry", "negative", "snapshot", "pointer", "parked", "negative-parked"].includes(mode)) {
   const original = readFileSync(originalPath, "utf8");
   if (original.split(snapshotAssertion).length !== 2)
     throw new Error("Expected exactly one Escape snapshot assertion");
