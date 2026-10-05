@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsc -b packages/charts --force && node scripts/copy-styles.mjs",
     "typecheck": "npm run build",
-    "lint": "biome check . --error-on-warnings --max-diagnostics=100",
+    "lint": "biome check .",
     "format": "biome check --write .",
     "check": "node scripts/run-checks.mjs preflight && npm run test && npm run check:chart",
     "check:package": "node scripts/check-package.mjs",

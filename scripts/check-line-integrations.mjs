@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -155,17 +155,23 @@ try {
   // Actual App Router server -> package client boundary plus a callback/icon client host.
   const nextLogPath = join(root, "artifacts/line-integrations/next-build.log");
   await mkdir(join(root, "artifacts/line-integrations"), { recursive: true });
-  try {
-    const nextLog = run(process.execPath, [
-      join(scratch, "node_modules/next/dist/bin/next"),
-      "build",
-      "--webpack",
-    ]);
-    await writeFile(nextLogPath, nextLog);
-  } catch (error) {
-    await writeFile(nextLogPath, `${error.stdout ?? ""}\n${error.stderr ?? ""}\n${error.message}`);
-    throw error;
-  }
+  const nextBuild = spawnSync(
+    process.execPath,
+    [join(scratch, "node_modules/next/dist/bin/next"), "build", "--webpack"],
+    {
+      cwd: scratch,
+      encoding: "utf8",
+      env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1", NODE_PATH: "" },
+    },
+  );
+  if (nextBuild.stdout) process.stdout.write(nextBuild.stdout);
+  if (nextBuild.stderr) process.stderr.write(nextBuild.stderr);
+  await writeFile(
+    nextLogPath,
+    `${nextBuild.stdout ?? ""}\n${nextBuild.stderr ?? ""}${nextBuild.error ? `\n${nextBuild.error.message}` : ""}`,
+  );
+  if (nextBuild.error) throw nextBuild.error;
+  assert.equal(nextBuild.status, 0, `Next build failed (${nextBuild.signal ?? nextBuild.status})`);
   const html = await readFile(join(scratch, "out/index.html"), "utf8");
   assert.match(html, /Server boundary totals/);
   assert.match(html, /data-kind-ui="chart"/, "SSR must include the package chart shell");
