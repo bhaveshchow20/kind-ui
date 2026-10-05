@@ -25,9 +25,7 @@
     {
       "type": "required_status_checks",
       "parameters": {
-        "required_status_checks": [
-          { "context": "All checks", "integration_id": 15368 }
-        ],
+        "required_status_checks": [{ "context": "All checks", "integration_id": 15368 }],
         "strict_required_status_checks_policy": true
       }
     }
