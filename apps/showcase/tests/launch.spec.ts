@@ -5,12 +5,10 @@ async function family(page: Page, name: string) {
   await page.locator(".chart-card").first().scrollIntoViewIfNeeded();
 }
 
-test("navigation, code modal and pending-install copy are keyboard accessible", async ({
-  page,
-}) => {
+test("navigation, code modal and installation are keyboard accessible", async ({ page }) => {
   await page.goto("./");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Bring your data\s*to life/);
-  await expect(page.locator(".install-section")).not.toContainText("npm install");
+  await expect(page.locator(".install-section")).toContainText("npm install @kind-ui/charts");
   await page.keyboard.press("Control+k");
   await expect(page.getByRole("textbox", { name: "Search components" })).toBeFocused();
   await page.getByRole("textbox", { name: "Search components" }).fill("no-such-chart");
@@ -159,7 +157,7 @@ test("clipboard denial leaves a readable recovery message", async ({ page }) => 
       configurable: true,
     });
   });
-  await page.goto("./");
+  await page.goto("./", { waitUntil: "networkidle" });
   await family(page, "Line");
   await page
     .getByRole("button", { name: /^Copy code for/ })
@@ -170,7 +168,7 @@ test("clipboard denial leaves a readable recovery message", async ({ page }) => 
 
 test("animated tooltip final digits fit their value container", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("./");
+  await page.goto("./", { waitUntil: "networkidle" });
   await family(page, "Line");
   const card = page.locator(".chart-card").first();
   await card.getByRole("application").focus();
@@ -195,4 +193,62 @@ test("animated tooltip final digits fit their value container", async ({ page })
       }),
     )
     .toBe(true);
+});
+
+for (const width of [375, 1280]) {
+  test(`package manager tabs copy their commands at ${width}px`, async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("./", { waitUntil: "networkidle" });
+    const install = page.getByRole("region", { name: "Install Kind UI Charts" });
+    for (const manager of ["npm", "pnpm", "yarn", "bun"]) {
+      const command = `${manager} ${manager === "npm" ? "install" : "add"} @kind-ui/charts`;
+      await install.getByRole("tab", { name: manager, exact: true }).click();
+      await expect(install.getByRole("tabpanel")).toContainText(command);
+      await install.getByRole("button", { name: "Copy install command", exact: true }).click();
+      await expect(install.getByRole("button", { name: "Install command copied" })).toBeVisible();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(command);
+    }
+    const npm = install.getByRole("tab", { name: "npm", exact: true });
+    await npm.click();
+    await npm.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(install.getByRole("tab", { name: "pnpm", exact: true })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await page.keyboard.press("End");
+    await expect(install.getByRole("tab", { name: "bun", exact: true })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    const bounds = await install.boundingBox();
+    expect(bounds?.x).toBeGreaterThanOrEqual(0);
+    expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(width);
+  });
+}
+
+test("package manager copy feedback ignores a write completed after switching tabs", async ({
+  page,
+}) => {
+  await page.goto("./", { waitUntil: "networkidle" });
+  const install = page.getByRole("region", { name: "Install Kind UI Charts" });
+  await page.evaluate(() => {
+    Object.defineProperty(navigator.clipboard, "writeText", {
+      configurable: true,
+      value: () =>
+        new Promise<void>((resolve) => {
+          Object.assign(window, { finishInstallCopy: resolve });
+        }),
+    });
+  });
+  await install.getByRole("button", { name: "Copy install command", exact: true }).click();
+  await install.getByRole("tab", { name: "pnpm", exact: true }).click();
+  await page.evaluate(() =>
+    (window as Window & { finishInstallCopy: () => void }).finishInstallCopy(),
+  );
+  await expect(
+    install.getByRole("button", { name: "Copy install command", exact: true }),
+  ).toBeVisible();
+  await expect(install.getByRole("button", { name: "Install command copied" })).toHaveCount(0);
 });

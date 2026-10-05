@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { consumerShard, expandConsumers } from "./consumer-shards.mjs";
 import { verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
@@ -26,16 +27,7 @@ const installed = JSON.parse(
 if (installed.version !== first.version)
   throw new Error("Consumer installed the wrong package version");
 const evidence = [];
-const consumers = Object.values(bundles).flatMap((bundle) => [
-  bundle,
-  ...Object.entries(bundle.variants ?? {})
-    .filter(([value]) => value !== bundle.defaultVariant)
-    .map(([value, variant]) => ({
-      ...bundle,
-      id: `${bundle.id}:${value}`,
-      files: { ...bundle.files, [`src/examples/${bundle.id}/example.tsx`]: variant.source },
-    })),
-]);
+const { consumers, suffix } = consumerShard(expandConsumers(bundles), process.argv.slice(2));
 for (const bundle of consumers) {
   rmSync(path.join(root, "src"), { recursive: true, force: true });
   for (const [name, body] of Object.entries(verificationFiles(bundle))) {
@@ -87,7 +79,7 @@ for (const bundle of consumers) {
     skipLibCheck: false,
   });
 }
-writeFileSync("artifacts/consumer-results.json", `${JSON.stringify(evidence, null, 2)}\n`);
+writeFileSync(`artifacts/consumer-results${suffix}.json`, `${JSON.stringify(evidence, null, 2)}\n`);
 console.log(
   `${evidence.length} copied consumers passed strict TypeScript and Vite production builds.`,
 );
