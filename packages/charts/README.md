@@ -2,29 +2,23 @@
 
 React components compose real Recharts lines, areas and bars with shared pointer/keyboard state, measured tooltip placement, metadata and controlled visibility. Each chart accepts `animate={false | true | config}` for coordinated reveal and hover animation. Consumers own data shape, reference lines, custom marks, copy and data alternatives. Explicit compositions also own scales, axes, grids and layout; configured Line composition provides overridable defaults.
 
-Public `0.1.0` candidate; unpublished. The examples below use this workspace's built `@kind-ui/charts` package, not an npm installation claim. Tested with React/React DOM 19.3.0, Recharts 3.10.1, Motion 13.4.6, and TypeScript 5.9.3. The package declares compatible peers; the workspace pins the tested versions.
-
-## Installation and version
-
-This `0.1.0` candidate is not yet available from npm. For local validation, use the exact reviewed tarball and the pinned peer versions:
+## Installation
 
 ```sh
-npm install --save-exact ./kind-ui-charts-0.1.0.tgz react@19.3.0 react-dom@19.3.0 recharts@3.10.1 motion@13.4.6
+npm install @kind-ui/charts react react-dom recharts motion
 ```
 
-Check the tarball's SHA-256 against its validation receipt before installing. After a separately authorized `0.1.0` publication, the equivalent version-pinned npm command will be:
+Import components and types from `@kind-ui/charts` and import
+`@kind-ui/charts/styles.css` once at the application entry. The package is ESM
+and requires React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`.
+Motion remains required when animation is disabled. TypeScript consumers use
+NodeNext or Bundler resolution. Next applications need a client component
+boundary for callbacks, refs and state. Provide an accessible name and a
+host-owned data alternative.
 
-```sh
-npm install --save-exact @kind-ui/charts@0.1.0 react@19.3.0 react-dom@19.3.0 recharts@3.10.1 motion@13.4.6
-```
+See the [changelog](CHANGELOG.md) for API changes.
 
-The intended dist-tag is `latest`; use the explicit version for documentation and site builds. This package is ESM and requires React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Import components and types from `@kind-ui/charts` and import `@kind-ui/charts/styles.css` once in the host. TypeScript consumers have passed strict NodeNext and Bundler resolution. Next hosts need a client component boundary for callbacks, refs and state, plus a host-owned accessible name and data alternative.
-
-Moving from the local `0.0.0` workspace package to this `0.1.0` candidate requires a dependency/version and lockfile update; the integrated candidate adds the three APIs below while retaining existing import paths and peer ranges. The [changelog](CHANGELOG.md) includes the initial API and the entrance-settlement fix already present in the integration base. Docs and showcase owners should validate their exact `0.1.0` bytes and imports before launch; neither site is updated or deployed by this candidate.
-
-## Integrated 0.1.0 additions
-
-This artifact is a launch candidate; site readiness and the separate Docs Heatmap Escape investigation remain outside this package validation.
+## Identity, layout and activity components
 
 - `HeatmapGrid.layout` accepts `cellSize`, `gap`, `rowLabels` and `columnLabels`. Omission retains the fluid table. Visual label hiding preserves native header associations; custom content/styles can enlarge native table cells. Keep the horizontal scroll host width-constrained and import the stylesheet. This is programmatic Chromium validation, not manual screen-reader conformance.
 - `PieSeries.categoryKey` (with explicit series data) and `RadialBarChart.categoryKey` resolve own top-level fields or typed accessors to string keys in `Root.config`. Colors follow IDs through reorder/filtering; explicit series/datum/Cell paint remains authoritative. Category filtering remains consumer-owned. `SankeyChart.nodeConfig` supplies node metadata and source/target link colors, with standalone static `SankeyLegend`; it does not create flow selection or rewrite custom SVG renderers.
@@ -78,7 +72,7 @@ Each Component has an exported native `*Props` type. These are direct reexports:
 
 Custom marks can also import `BarShapeProps`, `PieSectorShapeProps`, `PieLabelRenderProps`, `ScatterShapeProps`, `RadialBarSectorProps`, `ActiveDotProps`, `DotItemDotProps`, `XAxisTickContentProps` and `YAxisTickContentProps`. Native tooltip callback props are `TooltipRenderProps<TValue, TName>`; `TooltipContentProps` continues to describe Kind's content Component. Supporting types include `DataKey`, `Coordinate`, `AxisDomainItem`, `NumberDomain`, `Margin`, `ScaleFunction`, `TooltipPayloadEntry` and `TooltipValueType`. The maintained custom-mark helpers `useXAxisScale`, `useYAxisScale`, `useChartWidth`, `useChartHeight` and `getRelativeCoordinate` are exported unchanged.
 
-This consolidates application imports; Recharts remains a required peer dependency, alongside React, React DOM and Motion. This workspace is private and unpublished. Sankey's native tooltip and specialized engine-only integrations still use an explicit Recharts import; the bounded Cartesian Tooltip is not a Sankey adapter. Comparison fixtures deliberately retain native chart imports as independent test oracles.
+This consolidates application imports; Recharts remains a required peer dependency, alongside React, React DOM and Motion. Sankey's native tooltip and specialized engine-only integrations still use an explicit Recharts import; the bounded Cartesian Tooltip is not a Sankey adapter. Comparison fixtures deliberately retain native chart imports as independent test oracles.
 
 For Next, import the package from a client component when supplying callbacks, accessors, refs or stateful content. The packed entry retains `"use client"`; consolidation does not make function props serializable across a server boundary. Charts still need an accessible name and a host-owned data alternative; native SSR can render an empty chart wrapper before client layout.
 
@@ -143,7 +137,7 @@ import "@kind-ui/charts/styles.css";
 </Root>
 ```
 
-Motion is a required peer, including when `animate={false}`. This prop controls behavior; it does not remove Motion installation or bundle bytes. We use synchronous `motion/react` imports to keep component identities and customization stable across modes, without asynchronous loading/error states. Motion's [LazyMotion](https://motion.dev/docs/react-lazy-motion) can defer features, but that is a separate loading/bundle strategy, not a consequence of disabling animation. The prior unpublished `/motion` export, `motion` prop and `LineMotion` type are removed; migrate imports to the root and use `animate` and `LineAnimation`. All packages remain private at `0.0.0`; this is a pre-release API revision, with no publication or release.
+Motion is a required peer, including when `animate={false}`. This prop controls behavior; it does not remove Motion installation or bundle bytes. We use synchronous `motion/react` imports to keep component identities and customization stable across modes, without asynchronous loading/error states. Motion's [LazyMotion](https://motion.dev/docs/react-lazy-motion) can defer features, but that is a separate loading/bundle strategy, not a consequence of disabling animation. Use root imports with `animate` and `LineAnimation`; there is no `/motion` entry.
 
 The single-prop mode follows the familiar behavioral toggle in [Nivo](https://nivo.rocks/line/); [EvilCharts](https://evilcharts.com/docs/recharts/line-chart/static) also exposes a disabled intro mode. These are API references, not reused implementations or additional renderers. Recharts still owns geometry and selection. Motion owns one chart-space clip for all line strokes and resting dots, the default active marker and tooltip translation. Engine animation is forced off and excluded from `LineSeriesProps`. Custom marks/shapes/content retain consumer ownership; custom active dots replace the default animated mark. Arbitrary path morphing and animation of axes are outside this contract.
 
@@ -179,7 +173,7 @@ These tokens work in plain CSS and Tailwind arbitrary properties, such as `[--ki
 
 Materials apply only to the default line shape. An explicit native `shape` or `filter` takes precedence, disables built-in material rendering and retains consumer ownership. Dots, active marks, error bars, axes, labels, tooltip content and legends keep their existing rendering; custom shapes need their own surface treatment. The filtered curve retains the engine pathRef and plot clipping, and Motion still controls the shared reveal clip and hover motion. Off/reduced-motion modes keep static materials. Hidden series allocate no rendered filters after their visibility exit completes. Each mounted series has its own filter ID independent of a supplied Line ID; separately mounted React roots should use React's `identifierPrefix` to avoid document-wide ID collisions.
 
-Only curves are filtered, with bounds padded by half the numeric `strokeWidth` plus 6 SVG units (a 12-unit width allowance for nonnumeric widths). Set a numeric `strokeWidth` for unusually wide strokes instead of overriding it only in CSS. Bounds use engine point extents, so custom curve interpolation that overshoots those extents may require a consumer shape/filter. Paper uses one static turbulence octave; Clay uses alpha blur and lighting; Glow uses two small static painted-stroke blurs and a light core composited inside the original stroke. No filter time animation, shader engine, additional dependency or canvas-wide filter is introduced. Filters add browser raster work proportional to each curve's bounding rectangle; many long overlapping series can be costly. Plain avoids this work. Current visual/interaction evidence covers Chromium, including narrow, flat and colored lines; other browsers, print/export renderers and dark host surfaces need their own verification. This additive pre-release API keeps packages private at `0.0.0`; no release or publication is implied.
+Only curves are filtered, with bounds padded by half the numeric `strokeWidth` plus 6 SVG units (a 12-unit width allowance for nonnumeric widths). Set a numeric `strokeWidth` for unusually wide strokes instead of overriding it only in CSS. Bounds use engine point extents, so custom curve interpolation that overshoots those extents may require a consumer shape/filter. Paper uses one static turbulence octave; Clay uses alpha blur and lighting; Glow uses two small static painted-stroke blurs and a light core composited inside the original stroke. No filter time animation, shader engine, additional dependency or canvas-wide filter is introduced. Filters add browser raster work proportional to each curve's bounding rectangle; many long overlapping series can be costly. Plain avoids this work. Current visual/interaction evidence covers Chromium, including narrow, flat and colored lines; other browsers, print/export renderers and dark host surfaces need their own verification.
 
 ## Contracts
 
@@ -244,7 +238,7 @@ Per-instance series colors and per-entry indicator color values remain inline CS
 
 At the repository root: `npm ci`, then `npm exec playwright install -- --with-deps chromium` (Linux dependencies may need administrator permission). Run `npm run dev:chart` for the example, or `npm run check` for library, packed-consumer, type and browser checks.
 
-The pack lifecycle rebuilds from clean output and rejects missing runtime modules, declarations, CSS or documentation. Recipe links below use the verified pre-release source snapshot so they remain available outside the repository. The packed check creates an actual tarball, installs it and the pinned peer/type dependencies into an isolated consumer, then checks public APIs with NodeNext and Bundler resolution. With the required Motion peer installed, it checks root imports/declarations and builds disabled and animated line/area consumers using the same exports; it also proves the removed `/motion` path cannot resolve. The bar consumer and a combined area/bar consumer use the same tarball and strict resolution checks. The combined browser proof checks native geometry, unique material filter IDs and independent visibility when both families share a page. These fixtures contain only public package imports and host data/extensions; no example implementation is copied into the proof. Migrated area and bar host recipes are typechecked separately. It also builds a plain-CSS production consumer for the browser checks, verifying CSS delivery and application overrides. Peer installation can require npm registry access; the package under test always comes from the local tarball, never a workspace link or registry copy.
+The pack lifecycle rebuilds from clean output and rejects missing runtime modules, declarations, CSS or documentation. Recipe links below use the repository recipe pages so they remain available outside the repository. The packed check creates an actual tarball, installs it and the pinned peer/type dependencies into an isolated consumer, then checks public APIs with NodeNext and Bundler resolution. With the required Motion peer installed, it checks root imports/declarations and builds disabled and animated line/area consumers using the same exports; it also proves the removed `/motion` path cannot resolve. The bar consumer and a combined area/bar consumer use the same tarball and strict resolution checks. The combined browser proof checks native geometry, unique material filter IDs and independent visibility when both families share a page. These fixtures contain only public package imports and host data/extensions; no example implementation is copied into the proof. Migrated area and bar host recipes are typechecked separately. It also builds a plain-CSS production consumer for the browser checks, verifying CSS delivery and application overrides. Peer installation can require npm registry access; the package under test always comes from the local tarball, never a workspace link or registry copy.
 
 ## Area ownership and API
 
@@ -278,7 +272,7 @@ Implementation references: [Recharts AreaChart](https://recharts.github.io/en-US
 </Chart.AreaChart>
 ```
 
-Explicit `shape` or `filter` takes precedence over the material; consumer gradients, fill opacity, stroke widths and handlers remain intact. Low fill opacity also softens the finish. Filter IDs are unique per mounted series, independent of consumer IDs. Area filters use geometry bounds including baselines and remain inside the engine/chart clipping and Motion reveal. Materials are static SVG filters and add no animation. Use `--kind-ui-area-paper-fiber`, `--kind-ui-area-paper-grain`, `--kind-ui-area-clay-light`, `--kind-ui-area-clay-shade`, `--kind-ui-area-clay-highlight` (default `0.48`), `--kind-ui-area-clay-shadow` (default `0.28`), `--kind-ui-area-clay-cast` (default `0.12`), `--kind-ui-area-glow-light`, and `--kind-ui-area-glow-opacity` on the chart root to tune the finish. No new dependencies or release/version change; the package remains private at `0.0.0`.
+Explicit `shape` or `filter` takes precedence over the material; consumer gradients, fill opacity, stroke widths and handlers remain intact. Low fill opacity also softens the finish. Filter IDs are unique per mounted series, independent of consumer IDs. Area filters use geometry bounds including baselines and remain inside the engine/chart clipping and Motion reveal. Materials are static SVG filters and add no animation. Use `--kind-ui-area-paper-fiber`, `--kind-ui-area-paper-grain`, `--kind-ui-area-clay-light`, `--kind-ui-area-clay-shade`, `--kind-ui-area-clay-highlight` (default `0.48`), `--kind-ui-area-clay-shadow` (default `0.28`), `--kind-ui-area-clay-cast` (default `0.12`), `--kind-ui-area-glow-light`, and `--kind-ui-area-glow-opacity` on the chart root to tune the finish.
 
 ## Bar ownership and API
 
@@ -309,7 +303,7 @@ import "@kind-ui/charts/styles.css";
 
 Pointer/focus interaction, data/size/domain/orientation changes and native or controlled visibility changes finish entrance motion and discard stale pointer coordinates. Completed/interrupted reveals do not restart on data updates or palette changes. Tooltip springs retarget through the existing shared implementation and settle immediately when `animate={false}` or reduced motion applies. Neither animation nor geometry invalidation remounts custom tooltip content. Mount a new chart to replay entrance motion. Import the default stylesheet; per-series dynamic clip variables account for Recharts' portal-rendered marks without wrapping or replacing custom shapes. No new dependency, gallery, publication or registry work is included.
 
-The existing [ten bar compositions](https://github.com/bhaveshchow20/kind-ui/blob/931eb002287e300d220023a45d3ab8ff8ee86a37/examples/chart/BARS.md) exercise vertical, horizontal, grouped, stacked, labels, custom labels, category colors, highlight, signed and interactive use. The isolated packed consumer copies only host data/composition fixtures, checks public imports and strict NodeNext/Bundler declarations, builds production output and runs Chromium contracts against the tarball. These checks do not establish screen-reader conformance.
+The existing [ten bar compositions](https://github.com/bhaveshchow20/kind-ui/blob/main/examples/chart/BARS.md) exercise vertical, horizontal, grouped, stacked, labels, custom labels, category colors, highlight, signed and interactive use. The isolated packed consumer copies only host data/composition fixtures, checks public imports and strict NodeNext/Bundler declarations, builds production output and runs Chromium contracts against the tarball. These checks do not establish screen-reader conformance.
 
 ## Bar materials
 
@@ -362,9 +356,9 @@ No missing/zero/negative values are coerced or deduplicated by Kind. Default nat
 
 Motion fades native marks without moving their coordinates; native geometry animation is disabled to avoid two animation engines. Shared tooltip positioning can animate. Reduced motion renders final client geometry with Motion off. With the pinned Recharts 3.10.1, server rendering a fixed-size Scatter chart produces an empty chart wrapper, without SVG axes or point marks; geometry appears after client mount. Keep a host-owned table or summary available in the server HTML. Motion starts off during SSR; this is not an SSR geometry or hydration support guarantee. On the client, interaction, x/y geometry, data/visibility changes and resize settle entrance, and stale pointer placement is discarded on geometry changes. Off/config switches preserve consumer content and handlers. Entrance does not replay after interaction. Consumers own input validation, data tables, errors/loading states and immutable data updates.
 
-For custom X axis IDs, set the matching native `ScatterTooltip axisId` so Recharts can resolve keyboard navigation. Native keyboard navigation visits points in the first registered series, in data order. Hover can select any series; arrows do not perform spatial or all-series navigation. Provide a keyboard-accessible data alternative for every series, especially overlapping points and missing measurements. Browser coverage is Chromium at the pinned peer versions; it is not a screen-reader/browser conformance claim or a large-dataset performance promise. See the [four bounded recipes](https://github.com/bhaveshchow20/kind-ui/blob/931eb002287e300d220023a45d3ab8ff8ee86a37/examples/chart/SCATTERS.md) and the isolated tarball consumer/browser proof in `tests/fixtures/scatter` and `tests/packed-scatter.spec.ts`.
+For custom X axis IDs, set the matching native `ScatterTooltip axisId` so Recharts can resolve keyboard navigation. Native keyboard navigation visits points in the first registered series, in data order. Hover can select any series; arrows do not perform spatial or all-series navigation. Provide a keyboard-accessible data alternative for every series, especially overlapping points and missing measurements. Browser coverage is Chromium at the pinned peer versions; it is not a screen-reader/browser conformance claim or a large-dataset performance promise. See the [four bounded recipes](https://github.com/bhaveshchow20/kind-ui/blob/main/examples/chart/SCATTERS.md) and the isolated tarball consumer/browser proof in `tests/fixtures/scatter` and `tests/packed-scatter.spec.ts`.
 
-This adds a pre-release public API at private version `0.0.0`; no dependency, publication or release change is made. The internal frame reuses the approved standalone generic `engine + chartProps` seam shared by polar and Combo charts.
+The internal frame reuses the approved standalone generic `engine + chartProps` seam shared by polar and Combo charts.
 
 ## Combo / Composed charts
 
@@ -428,7 +422,7 @@ unrelated units. `null` stays missing and `0` stays zero; `connectNulls` retains
 its native meaning. Native ComposedChart offers axis selection, not item-only
 bar selection. Supply a data table or equivalent text alternative.
 
-See [Combo recipes](https://github.com/bhaveshchow20/kind-ui/blob/931eb002287e300d220023a45d3ab8ff8ee86a37/examples/chart/COMBOS.md) for two axes, signed stacks,
+See [Combo recipes](https://github.com/bhaveshchow20/kind-ui/blob/main/examples/chart/COMBOS.md) for two axes, signed stacks,
 missing values, custom markers, independent legends and entrance controls.
 
 ## Pie and donut
@@ -517,7 +511,7 @@ The shared `Legend`, `Tooltip` and `TooltipContent` provide the same formatting,
 
 The `/polar.html` showcase uses public APIs for comparison, outline and range radar, grouped rings, stacked arcs and a half-circle gauge. It includes explicit domains, controlled legends, Motion/data/update controls and value tables. `tests/fixtures/polar` installs the actual tarball in an isolated consumer, checks strict NodeNext/Bundler declarations and production builds, and compares browser paths against native Recharts charts.
 
-First-party references: [Radar API](https://recharts.github.io/en-US/api/Radar/), [RadialBar API](https://recharts.github.io/en-US/api/RadialBar/), and the tested package's `types/polar` and `es6/polar` sources. No new dependencies, package boundary or publishing accompanies these exports. The package remains private at `0.0.0`.
+First-party references: [Radar API](https://recharts.github.io/en-US/api/Radar/), [RadialBar API](https://recharts.github.io/en-US/api/RadialBar/), and the tested package's `types/polar` and `es6/polar` sources.
 
 ### Radial band labels
 
@@ -525,11 +519,11 @@ Use native `LabelList dataKey="dimension" fill="white" content={<Chart.RadialBar
 
 `show={false}` controls only this visual label; it does not filter series, data, tooltip payload or Root metadata. Control tooltip visibility independently with native `Tooltip active={false}`. Labels render hidden during SSR until client SVG measurement; retain a value table for an immediate data alternative. Arbitrary geometry transforms or inherited letter/word styling can change available space; measurement conservatively hides labels when their glyph bounding boxes exceed the native sector.
 
-The [polar gallery audit](https://github.com/bhaveshchow20/kind-ui/blob/931eb002287e300d220023a45d3ab8ff8ee86a37/examples/chart/POLAR-GALLERY.md) maps all eighteen current first-party shadcn radar/radial variations to runnable public compositions.
+The [polar gallery audit](https://github.com/bhaveshchow20/kind-ui/blob/main/examples/chart/POLAR-GALLERY.md) maps all eighteen current first-party shadcn radar/radial variations to runnable public compositions.
 
 ## Histogram family
 
-`HistogramChart`, `HistogramSeries`, and `binHistogram` are maintained public exports, with `HistogramBin`, `HistogramMeasure`, `HistogramBinningResult`, chart/series props and `HistogramShapeProps` types. No new dependency or package is introduced. This additive pre-release API remains private at `0.0.0`.
+`HistogramChart`, `HistogramSeries`, and `binHistogram` are maintained public exports, with `HistogramBin`, `HistogramMeasure`, `HistogramBinningResult`, chart/series props and `HistogramShapeProps` types.
 
 ```tsx
 import * as Chart from "@kind-ui/charts";
@@ -626,8 +620,7 @@ active-bar duplication, raw-sample estimators, weighted quartiles, notches,
 variable-width-by-sample-size boxes, and quantitative category positioning are
 outside this family. Nonlinear numeric axes, Brush, mixed-series composition and
 performance at large sample/group counts are not verified. Custom SVG marks are
-consumer-owned. This change adds exports at private `0.0.0`; it does not publish
-or alter existing family contracts.
+consumer-owned.
 
 References: [NIST box plot definitions and variants](https://www.itl.nist.gov/div898/handbook/eda/section3/boxplot.htm),
 [Recharts Bar](https://recharts.github.io/en-US/api/Bar/),
@@ -662,7 +655,7 @@ An explicit series/Cell/mark `filter`, or `style.filter`, including `none`, disa
 
 Custom Radar `shape`, RadialBar `shape` or custom `activeShape`, a series `filter`, or `style.filter` owns rendering and suppresses the material. Cell filter/style overrides retain native precedence. Dots, backgrounds, labels, refs and handlers remain native. Unique per-series filters use chart-space bounds so short/thin/empty arcs do not depend on nonzero object bounds. Native SVG and consumer clipping still apply. Optional CSS variables use `--kind-ui-polar-paper-{fiber,grain}`, `--kind-ui-polar-clay-{light,highlight,shade,shadow}` and `--kind-ui-polar-glow-{light,opacity}`.
 
-The polar recipes/gallery share a Material control and enable Motion by default, respecting reduced motion. Gauge text remains large in the center whitespace; ordinary radial labels remain at band center with independent Chart text visibility. This is an additive pre-release API at private version `0.0.0`.
+The polar recipes/gallery share a Material control and enable Motion by default, respecting reduced motion. Gauge text remains large in the center whitespace; ordinary radial labels remain at band center with independent Chart text visibility.
 
 ## Waterfall
 
@@ -738,10 +731,10 @@ material adapter or shared API change is needed.
 
 A native range tooltip reports range endpoints. For semantic values, compose
 `Tooltip` content using the original/computed row (as in
-[`waterfall-recipes.tsx`](https://github.com/bhaveshchow20/kind-ui/blob/931eb002287e300d220023a45d3ab8ff8ee86a37/examples/chart/waterfall-recipes.tsx)); use
+[`waterfall-recipes.tsx`](https://github.com/bhaveshchow20/kind-ui/blob/main/examples/chart/waterfall-recipes.tsx)); use
 `filterNull={false}` when showing unknown steps. The host owns formatting,
 accessible data tables and source values. The responsive
-[`waterfalls.html`](https://github.com/bhaveshchow20/kind-ui/blob/931eb002287e300d220023a45d3ab8ff8ee86a37/examples/chart/waterfalls.html) recipe enables motion
+[`waterfalls.html`](https://github.com/bhaveshchow20/kind-ui/blob/main/examples/chart/waterfalls.html) recipe enables motion
 by default and includes a table, visibility/update controls and missing, zero,
 negative and crossing-zero examples.
 
@@ -818,8 +811,7 @@ exterior Glow. Node labels are consumer siblings, outside mark filters. Native
 custom node/link callbacks and elements retain complete rendering ownership.
 Separately mounted React roots should use `identifierPrefix` for unique IDs.
 Finishes are static and follow the chart's existing reduced-motion reveal rules.
-This is an additive pre-release API with no dependency or version change; the
-package stays private at `0.0.0`. Validation targets Chromium; other browsers,
+Validation targets Chromium; other browsers,
 print/export renderers and richer configurable material tokens are unverified.
 
 `SankeyTable` is an independently composable native table with required
@@ -885,7 +877,7 @@ const scale = createHeatmapScale({
 - The grid has one roving tab stop. Arrow keys move within the ordered domains, Home/End move to the row endpoints, Ctrl+Home/End to the corners. Focus and pointer inspection open the tooltip; Escape closes it and Tab exits the grid. Native cell focus scrolls narrow containers. Long row headers and default cell text are clipped visually to preserve equal rows; cell accessible labels and the static data table retain the full values. Removing the focused category falls back to the first cell on the next Tab entry. The optional tooltip is an in-flow readout; the static data table is consumer-placed and has no roving focus behavior.
 - `animate` defaults off in the library and on in the recipes. The existing Motion peer animates only a short frame translation; cell fills stay opaque and values do not tween. Reduced-motion preferences disable translation. Host/card styling belongs to the consumer through native `className` and `style`; it is not a chart material. `HeatmapGrid material` accepts `HeatmapMaterial`: `"plain"` (default), `"paper"`, `"clay"`, or `"glow"`. These are static per-cell edge treatments, never card styling. Paper adds a fibrous, irregular ink rim; Clay adds a soft top-lit convex matte bevel; Glow adds a luminous rim contained within the cell. Only the outer 8% on each side is decorated: the central 84% by 84% (70.56% of the rectangular cell area, before text) remains the exact opaque scale color. Compare this center to the unmodified legend, not the decorative edge. Missing cells retain their pattern and never receive a finish. No filter, opacity, shadow, geometry or animation is added. Consumer background-image/size/repeat overrides still win, and custom content and native cell styles/filters/refs/events remain owned by the consumer. Consumer paint overrides can invalidate the encoding guarantee. Full-face texture, glossy clay and an external glow halo are intentionally unsupported because they would alter or bleed the numeric encoding; these are bounded rim materials.
 
-See [responsive matrix and activity recipes](https://github.com/bhaveshchow20/kind-ui/blob/931eb002287e300d220023a45d3ab8ff8ee86a37/examples/chart/HEATMAPS.md) for renderer research, behavior, verification and limitations. Native tables render every cell; virtualization, editing, range selection, inferred domains and automatic aggregation are outside this API. Automated Chromium checks cover tested interaction/layout paths; manual screen-reader coverage remains unverified.
+See [responsive matrix and activity recipes](https://github.com/bhaveshchow20/kind-ui/blob/main/examples/chart/HEATMAPS.md) for renderer research, behavior, verification and limitations. Native tables render every cell; virtualization, editing, range selection, inferred domains and automatic aggregation are outside this API. Automated Chromium checks cover tested interaction/layout paths; manual screen-reader coverage remains unverified.
 
 Pie finishes preserve consumer CSS transform ownership by rendering the original native Sector when an inline transform or a stylesheet transform overrides its SVG transform attribute. This fallback preserves antialiased paint, clipping and hit targets; it does not apply the requested finish. Ordinary CSS colors/classes/styles and explicit SVG `transform` attributes continue to support finishes. CSS individual `translate`, `rotate` and `scale` properties also retain native ownership. Ambient stylesheet/media/pseudo-class changes without a relevant React prop update do not refresh material ownership. Stylesheet ownership is sampled when the finish, center, outer radius, SVG transform, style, class or id changes. For transforms that change later through media queries, ancestor state or pseudo-classes, use a consumer `style` prop or change the finish/style/class/id to refresh ownership. Custom shapes and filters also retain native ownership.
 
@@ -947,8 +939,7 @@ hittable and uses a 160ms interruptible opacity transition; reduced motion remov
 the transition. Import `@kind-ui/charts/styles.css` for these defaults.
 
 The public packed recipe in `tests/fixtures/emphasis` demonstrates category,
-sector, custom portal, visibility, and independent-plot composition. This preview
-is additive in the unpublished `0.1.0` candidate; adapters beyond the matrix above are not claimed.
+sector, custom portal, visibility, and independent-plot composition. Supported adapters are listed in the matrix above.
 
 Identity relationships: `dataKey` selects measured values; it is not a category ID.
 `seriesKey` selects Root metadata and controlled series visibility (or a string

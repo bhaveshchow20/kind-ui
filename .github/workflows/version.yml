@@ -1,0 +1,43 @@
+name: Version packages
+on:
+  push:
+    branches: [main]
+    paths:
+      - .changeset/**
+      - .github/workflows/version.yml
+permissions:
+  contents: read
+concurrency:
+  group: charts-version
+  cancel-in-progress: false
+jobs:
+  version:
+    if: github.repository == 'bhaveshchow20/kind-ui' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm install --global npm@11.9.0
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - id: plan
+        name: Only prepare versions for pending package changesets
+        run: |
+          npm run release:status -- --output /tmp/kind-version-status.json
+          node --input-type=module -e 'import { readFileSync, appendFileSync } from "node:fs"; const status = JSON.parse(readFileSync("/tmp/kind-version-status.json", "utf8")); appendFileSync(process.env.GITHUB_OUTPUT, `has_changesets=${status.releases.length > 0}\n`);'
+      - name: Open or update the reviewed version and changelog PR
+        if: steps.plan.outputs.has_changesets == 'true'
+        uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2, compatible with Changesets CLI 3
+        with:
+          script: npm run release:version
+          pr-title: Version packages
+          pr-draft: create

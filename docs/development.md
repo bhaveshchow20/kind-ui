@@ -30,8 +30,16 @@ Implementation PRs must add tests for their public contracts and relevant packed
 
 ## Versioning and release policy
 
-The workspace stays private at `0.0.0`; `@kind-ui/charts` is a public `0.1.0` candidate. CI validates code and artifacts; publishing remains hard-disabled. No releases, npm publication, deployments, credentials, or package/scope ownership are implied.
+The workspace stays private at `0.0.0`; `@kind-ui/charts` is independently
+versioned. User-facing package changes require a reviewed changeset and a
+compatibility decision. Before 1.0, breaking APIs increment minor and compatible
+fixes increment patch. Documentation, CI and development-only changes need no
+package release.
 
-Before a first public release, explicitly decide the package set, supported environments, namespace ownership, security-reporting route, and release authorization. The reviewed Changesets setup prepares versions and changelogs locally. A versioned public candidate does not authorize publication; release setup and account/access decisions remain separate.
-
-The intended release policy is semantic versioning per independently versioned package. After release tooling is adopted, user-facing package changes require a reviewed changeset and compatibility decision, including the policy for pre-1.0 breaking changes. Documentation, CI, and development-only changes need no package release. A successful CI run never authorizes publishing or merging.
+The Changesets version workflow opens a draft version/changelog PR for pending
+package changesets on main. The version command also updates the lockfile.
+Ordinary merges do not bump versions. After the reviewed version PR merges,
+publication follows the [exact artifact release handoff](../.changeset/README.md):
+full checks, retained tested tarball, integrity verification, then publication
+using approved authentication. CI success alone does not authorize publishing,
+merging or persistent account/security changes.
