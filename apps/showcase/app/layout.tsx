@@ -16,6 +16,14 @@ const geistMono = localFont({
   display: "swap",
   weight: "100 900",
 });
+const instrumentSerif = localFont({
+  src: "../public/fonts/instrument-serif-regular.ttf",
+  variable: "--font-instrument-serif",
+  display: "swap",
+  weight: "400",
+  style: "normal",
+  adjustFontFallback: false,
+});
 
 export const metadata: Metadata = {
   title: "Kind UI Charts",
@@ -45,7 +53,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased`}
+      >
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
