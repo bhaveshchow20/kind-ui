@@ -5,6 +5,7 @@ import defaultComponents from "fumadocs-ui/mdx";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import bundles from "@/generated/all-examples.json";
+import { docRoute, publicPath } from "@/lib/routing.mjs";
 import { source } from "@/lib/source";
 import packageProvenance from "@/vendor/provenance.json";
 import { ApiTable } from "./api-table";
@@ -78,7 +79,7 @@ export function renderDoc(slug?: string[]) {
         <header className="doc-heading">
           <div className="doc-title-row">
             <DocsTitle>{page.data.title}</DocsTitle>
-            <CopyMarkdown path={`/markdown/${key}.md`} />
+            <CopyMarkdown path={publicPath(`/markdown/${key}.md`)} />
           </div>
           <DocsDescription>{page.data.description}</DocsDescription>
         </header>
@@ -86,6 +87,9 @@ export function renderDoc(slug?: string[]) {
           <Content
             components={{
               ...defaultComponents,
+              a: ({ href = "#", ...props }) => (
+                <defaultComponents.a {...props} href={docRoute(href)} />
+              ),
               LineExample,
               ChartExample: LineExample,
               AreaExample: LineExample,
@@ -97,7 +101,7 @@ export function renderDoc(slug?: string[]) {
         {!key.startsWith("components/") && (
           <footer className="doc-footer">
             <span>Unpublished preview · 0.0.0</span>
-            <Link href="/docs/guides/release/">Package status</Link>
+            <Link href={docRoute("/docs/guides/release/")}>Package status</Link>
           </footer>
         )}
       </article>

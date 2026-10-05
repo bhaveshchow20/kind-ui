@@ -1,1 +1,4 @@
-{ "title": "Start", "pages": ["installation"] }
+{
+  "title": "Start",
+  "pages": ["installation", "quickstart"]
+}

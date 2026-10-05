@@ -9,7 +9,7 @@ export const pieExamples = [
     id: "pie-visibility",
     title: "Controlled categories",
     notes: "Consumer-owned category filtering and selected total.",
-    acceptance: "Legend buttons filter rows and Cells; tooltip category identity matches config.",
+    acceptance: "Legend buttons filter rows; category colors and tooltip identity match config.",
   },
   {
     id: "pie-materials",

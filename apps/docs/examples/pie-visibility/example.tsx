@@ -44,14 +44,11 @@ export function VisibleAllocationChart() {
             data={selected}
             dataKey="hours"
             nameKey="key"
+            categoryKey="key"
             innerRadius={58}
             outerRadius={108}
-            paddingAngle={2}
-          >
-            {selected.map((row) => (
-              <Chart.Cell key={row.key} fill={config[row.key].color} />
-            ))}
-          </Chart.PieSeries>
+            paddingAngle={0}
+          ></Chart.PieSeries>
           <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
         </Chart.PieChart>
       </Chart.ResponsiveContainer>

@@ -1,0 +1,43 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { test } from "node:test";
+import { normalizeBasePath } from "../lib/routing.mjs";
+
+test("default and prefixed builds keep separate page and retrieval contracts", () => {
+  for (const prefix of ["", "/charts/docs"]) {
+    const result = JSON.parse(
+      execFileSync(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `
+      import {docRoute, publicPath, docSlugs} from './lib/routing.mjs';
+      console.log(JSON.stringify({
+        page:docRoute('/docs/components/line/'),
+        retrieval:publicPath('/markdown/components/line.md'),
+        repeated:publicPath(publicPath('/docs/components/line/')),
+        hash:docRoute('/docs/#setup'),
+        external:publicPath('https://example.com/docs/'),
+        slugs:docSlugs(${JSON.stringify(prefix ? ["components", "line"] : ["docs", "components", "line"])}),
+      }));`,
+        ],
+        { env: { ...process.env, NEXT_PUBLIC_KIND_DOCS_BASE_PATH: prefix }, encoding: "utf8" },
+      ),
+    );
+    assert.deepEqual(result, {
+      page: prefix ? "/components/line/" : "/docs/components/line/",
+      retrieval: `${prefix}/markdown/components/line.md`,
+      repeated: `${prefix}${prefix ? "" : "/docs"}/components/line/`,
+      hash: prefix ? "/#setup" : "/docs/#setup",
+      external: "https://example.com/docs/",
+      slugs: ["components", "line"],
+    });
+  }
+});
+test("prefix accepts plain path segments and rejects origins or ambiguous paths", () => {
+  assert.equal(normalizeBasePath("/charts/docs/"), "/charts/docs");
+  for (const value of ["https://kindui.dev", "//charts", "/charts/../docs", "/charts?docs", "/"]) {
+    assert.throws(() => normalizeBasePath(value));
+  }
+});

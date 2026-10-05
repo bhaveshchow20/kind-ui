@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { families } from "../examples/catalog.mjs";
+import { checkThemeSwitch } from "./check-theme-switch-browser.mjs";
 
 const origin = "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
@@ -251,6 +252,7 @@ try {
     ),
   );
   await context.close();
+  await checkThemeSwitch(browser, origin);
   console.log(
     "Registered component navigation/search/routes, removed routes, Line selected prompt/source, legend visibility and dark mobile enlarged text passed.",
   );

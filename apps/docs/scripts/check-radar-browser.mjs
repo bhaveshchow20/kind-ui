@@ -92,6 +92,12 @@ try {
     node.scrollTop = node.scrollHeight;
   });
   const before = await page.evaluate(() => scrollY);
+  assert.ok(
+    await page.evaluate(() => document.documentElement.scrollHeight - innerHeight > scrollY + 350),
+  );
+  await page.mouse.wheel(0, 350);
+  await page.waitForTimeout(200);
+  // Exercise the boundary handoff across two wheel events, as Line and Area do.
   await page.mouse.wheel(0, 350);
   await page.waitForTimeout(200);
   assert.ok((await page.evaluate(() => scrollY)) > before);

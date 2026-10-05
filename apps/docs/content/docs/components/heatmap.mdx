@@ -1,0 +1,164 @@
+---
+title: Heatmap
+description: Compare numeric intensity across two ordered domains with native table cells.
+---
+
+<ChartExample id="heatmap" />
+
+## Usage
+
+`HeatmapChart` owns the matrix model and inspection. Supply ordered domains, numeric records and one scale; compose the grid, legend and tooltip as children.
+
+```tsx title="Composition"
+<Chart.HeatmapChart
+  rows={rows} columns={columns} data={data} scale={scale}
+  animate missingLabel="No report"
+>
+  <Chart.HeatmapGrid caption="Support requests by day and hour" />
+  <Chart.HeatmapLegend label="Requests per two-hour interval" />
+  <Chart.HeatmapTooltip valueAnimation="shuffle" />
+</Chart.HeatmapChart>
+```
+
+Domain order determines equal-cell layout. Missing records and `null` use patterned cells; zero remains measured. Compose one grid and at most one tooltip per chart.
+
+## Compact activity grid
+
+`layout` gives contributions fixed square cells and visual header controls. The grid keeps row/column headers and explicit cell associations when labels are hidden.
+
+<ChartExample id="heatmap-compact" />
+
+Numbers use pixels; valid CSS lengths such as `"1rem"` work too. Omit `cellSize` for fluid sizing. A width-constrained host retains horizontal scrolling; custom content or native cell styles can enlarge cells. Use `min-width: 0` when a flex/grid host must shrink.
+
+## Signed comparisons
+
+A symmetric `[-20, 20]` scale centers zero between below-target orange and above-target blue. Keep the same domain for comparisons; out-of-range values clamp to endpoint colors.
+
+<ChartExample id="heatmap-diverging" />
+
+Use sequential palettes for nonnegative counts. Calendar layouts require consumer-owned day/week domains, date parsing and labels.
+
+## Cell materials
+
+Choose plain, paper, clay or glow on cell edges. The central 84% retains the exact scale color; missing cells retain their pattern. Consumer paint overrides can change encoding.
+
+<ChartExample id="heatmap-materials" />
+
+## Keyboard and motion
+
+Tab enters/leaves the grid; arrows move between cells. Home/End reach row ends; Ctrl+Home/End reach matrix corners. Escape dismisses inspection. See the [data grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/).
+
+Entrance fades cells diagonally, preserving geometry and colors. Interaction, input changes or resize finish it; reduced motion skips it.
+
+## API reference
+
+Native HTML components with an independent Kind context; no `Root` or Recharts composition is needed.
+
+### HeatmapChart
+
+<div className="line-props-scroll" role="region" aria-label="HeatmapChart props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rows` / `columns` | `readonly string[]` | Required | Unique, explicitly ordered domains. Records outside them throw. |
+| `data` | `readonly HeatmapDatum[]` | Required | Records shaped as `{ row: string; column: string; value: number \| null }`. Nonfinite values throw. |
+| `scale` | `HeatmapScale` | Required | Shared numeric encoding for grid, legend and tooltip content. |
+| `duplicates` | `"error" \| "first" \| "last" \| "sum"` | `"error"` | Coordinate collision policy. Sum ignores null records; all-null coordinates stay missing. Nonfinite sums throw. |
+| `formatValue` | `(value: number) => string` | `String` conversion | Formats cells, tooltip, legend and data table without changing the numeric scale. |
+| `missingLabel` | `string` | `"Missing"` | Text used for absent or null observations. |
+| `animate` | `boolean` | `false` | Diagonal cell entrance; respects reduced motion and interaction. |
+
+</div>
+
+### createHeatmapScale
+
+Produces the `HeatmapScale` passed to `HeatmapChart`.
+
+<div className="line-props-scroll" role="region" aria-label="createHeatmapScale options" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `domain` | `readonly [number, number]` | Required | Finite ascending endpoints; their difference must also be finite. Equal endpoints use the palette midpoint. |
+| `colors` | `readonly string[]` | Required | At least two opaque `#rrggbb` stops, evenly spaced in sRGB. |
+
+</div>
+
+`color(value)` interpolates opaque hex colors and clamps to the explicit domain. Nonfinite values throw; data does not infer the scale or categorical palette.
+
+### HeatmapGrid
+
+Captioned native table with row/column headers and roving grid focus. Empty domains show an empty state; wide matrices scroll horizontally.
+
+<div className="line-props-scroll" role="region" aria-label="HeatmapGrid props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `caption` | `string` | Required | Visible table caption and accessible grid name. |
+| `layout` | `{ cellSize?: number \| string; gap?: number \| string; rowLabels?: "visible" \| "hidden"; columnLabels?: "visible" \| "hidden" }` | Fluid cells; `gap: 3`; labels visible | Optional fixed cells, spacing and independent visual headers. |
+| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static cell-edge finish; missing cells do not receive it. |
+| `Cell` | `ComponentType<HeatmapCellContentProps>` | `HeatmapCellContent` | Custom cell content receives `cell`, `fill` and `formattedValue`. Keep content compatible with grid navigation. |
+| `cellProps` | `(cell: HeatmapCell) => ComponentPropsWithRef<"td">` | — | Native styles, refs and handlers. The grid still owns cell semantics, focus and background color. |
+| `rowLabel` / `columnLabel` | `(key: string) => ReactNode` | Domain key | Customize visible headers; coordinate identities and inspection labels remain domain keys. |
+
+</div>
+
+`cellSize` must be positive; `gap` must be nonnegative, including zero. Numeric values must be finite. Native table `style`, custom `Cell` and `cellProps` keep their existing overrides. Hidden labels retain grid names, header IDs and keyboard navigation; `HeatmapDataTable` is independent.
+
+Each `HeatmapCell` retains row/column identities, indices, value and every source record. See [native table semantics](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/table).
+
+### HeatmapCellContent
+
+Formats values and chooses black/white text from hex-fill luminance. Also usable inside a custom `Cell`.
+
+<div className="line-props-scroll" role="region" aria-label="HeatmapCellContent props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `cell` | `HeatmapCell` | Required | Normalized coordinate supplied to a custom cell component. |
+| `fill` | `string` | Required | Opaque scale hex color or the missing-fill CSS variable. |
+| `formattedValue` | `string` | Required | Display text; the default renderer does not format the number again. |
+
+</div>
+
+### HeatmapLegend
+
+<div className="line-props-scroll" role="region" aria-label="HeatmapLegend props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | Required | Fieldset legend describing the numeric encoding. |
+
+</div>
+
+Shows scale endpoints, zero for signed domains and the `missingLabel` swatch. It is a numeric key, without series toggles.
+
+### HeatmapTooltip
+
+In-flow inspection below the grid, linked to the active cell by `aria-describedby`. Focus, hover and touch inspect the same value.
+
+Shuffle affects numeric digits only; assistive text exposes the final value immediately. Reduced motion uses plain text.
+
+<div className="line-props-scroll" role="region" aria-label="HeatmapTooltip props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `Content` | `ComponentType<HeatmapCellContentProps>` | Coordinate and value text | Custom content receives the active `cell`, `fill` and `formattedValue`; presentation stays consumer-owned. |
+| `valueAnimation` | `"shuffle"` | Off | Optional digit motion for built-in numeric content. Missing cells remain text; custom `Content` receives no injected animation. |
+
+</div>
+
+### HeatmapDataTable
+
+Static table using the shared model and formatter. The consumer chooses visible or visually hidden presentation; these examples preserve every observation.
+
+<div className="line-props-scroll" role="region" aria-label="HeatmapDataTable props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `caption` | `string` | Required | Native data table caption. |
+
+</div>
+
+### createHeatmapModel
+
+Normalizes ordered domains into a two-dimensional cell array, filling missing coordinates with null and retaining source records. Accepts the chart’s rows, columns, data and duplicate policy; invalid input throws.

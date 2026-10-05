@@ -1,1 +1,4 @@
-{ "title": "Guides", "pages": ["materials", "accessibility", "troubleshooting", "release"] }
+{
+  "title": "Guides",
+  "pages": ["materials", "motion", "candidate-apis", "accessibility", "troubleshooting", "release"]
+}

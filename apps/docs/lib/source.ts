@@ -1,3 +1,4 @@
 import { loader } from "fumadocs-core/source";
 import { docs } from "../.source/server";
-export const source = loader({ baseUrl: "/docs", source: docs.toFumadocsSource() });
+import { docsBaseUrl } from "./routing.mjs";
+export const source = loader({ baseUrl: docsBaseUrl, source: docs.toFumadocsSource() });

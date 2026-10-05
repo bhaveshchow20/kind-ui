@@ -7,7 +7,7 @@ description: Trace signed contributions from an opening balance to a closing tot
 
 ## Usage
 
-`Root` supplies series metadata. Compute ordered rows once, then pass the same rows to `WaterfallChart` and `WaterfallConnectors`. `WaterfallSeries` draws floating ranges; native `Cell` children supply increase, decrease and checkpoint colors. The first Code tab is a complete named client component with its cash-flow inputs and semantic tooltip.
+Compute ordered rows once for `WaterfallChart` and `WaterfallConnectors`. Inside `Root`, compose native axes, `WaterfallSeries`, Cells and a semantic tooltip.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -28,11 +28,11 @@ description: Trace signed contributions from an opening balance to a closing tot
 </Chart.Root>
 ```
 
-Keep one unstacked series on these axes. `layout="vertical"` is Recharts terminology for horizontal bars. Use `id` on the category axis and format it into a readable label. The application owns arithmetic inputs, units, axis domains and tooltip content. The example's color key labels step roles; it does not toggle individual contributions, which would change the chain's meaning.
+Use one unstacked series. `layout="vertical"` produces horizontal bars. Label the category axis from `id`; the color key describes step roles rather than toggling contributions.
 
 ## Inputs and checkpoints
 
-`computeWaterfallData(entries, initialBalance = 0)` returns new rows in input order without mutating entries. Values here are USD thousands.
+`computeWaterfallData(entries, initialBalance = 0)` returns new ordered rows. These values are USD thousands.
 
 <div className="line-props-scroll" role="region" aria-label="Waterfall input kinds" tabIndex={0}>
 
@@ -46,35 +46,35 @@ Keep one unstacked series on these axes. `layout="vertical"` is Recharts termino
 
 </div>
 
-The opening $120k plus sales $75k and refunds −$15k gives the $180k subtotal. Costs −$65k and tax −$20k leave $95k. The closing entry explicitly supplies $95k. Kind names express intent, with no positional restrictions; a checkpoint may intentionally disagree with the preceding computed balance.
+Opening $120k, sales and refunds produce a $180k subtotal; costs and tax leave $95k. Checkpoints supply explicit balances and may intentionally differ from the preceding result.
 
-Connectors join adjacent known balances only when they agree. They do not bridge missing geometry or connect to a differing checkpoint. Place them before the bars so their category-center endpoints sit underneath. When subsetting data, subset both chart and connectors together.
+Connectors join adjacent known, matching balances. Place them before bars; subset chart and connector rows together. Missing geometry or disagreeing checkpoints break the connection.
 
 ## Missing and zero values
 
-A `null` change makes the balance unknown until a known checkpoint restores it. Later changes retain their original values even while their geometry is unknown. A `null` checkpoint also establishes an unknown balance. Pass `null` as the second function argument when the opening balance is unknown: `computeWaterfallData(entries, null)`.
+A null change/checkpoint makes the balance unknown until a known checkpoint restores it. To start unknown, call `computeWaterfallData(entries, null)`.
 
 <ChartExample id="waterfall-missing" />
 
-Pending is unknown, so Fees has a known −$10k change with unknown endpoints. Audited restores the balance to $105k. No change is a real zero delta: its range is `[105, 105]`, with no invented minimum bar size. Inspect that category with the tooltip; the hidden data alternative also preserves zero and unknown values.
+Pending leaves Fees’ −$10k value known but its geometry unknown; Audited restores $105k. Zero changes retain zero-width geometry, with no fabricated minimum bar.
 
-Values must be finite numbers or explicit `null`; omission is invalid except for subtotals, which must omit `value`. Empty or duplicate IDs, unknown kinds, nonfinite values, supplied subtotal values and arithmetic overflow throw.
+Values must be finite or null; subtotals must omit `value`. Invalid kinds/IDs, duplicate IDs, omitted change/checkpoint values, nonfinite values and arithmetic overflow throw.
 
 ## Materials
 
-Choose paper, plain, clay or glow on the same signed contribution flow. Each finish applies to native floating rectangles without changing the arithmetic or connector chain. Custom `shape` or `filter` takes ownership of the finish.
+Choose paper, plain, clay or glow. Custom `shape` or `filter` owns the finish; arithmetic and connectors stay unchanged.
 
 <ChartExample id="waterfall-materials" />
 
 ## Motion and inspection
 
-`WaterfallChart` is the public alias of `BarChart`. `animate` enables chart-owned Motion reveal from the numeric zero baseline; it does not animate the arithmetic or increment contributions sequentially. Pointer or keyboard interaction interrupts the reveal, and reduced motion disables it. Native per-series Recharts animation stays disabled.
+`WaterfallChart` aliases `BarChart`. Entrance reveals ranges from numeric zero, not sequential arithmetic. Interaction finishes it; reduced motion skips it. Native per-series animation stays disabled.
 
-The composed tooltip uses the row's `value`, `start` and `balance`; a default native range tooltip would report endpoints instead of the signed contribution. `filterNull={false}` permits inspection of unknown steps. Focus the plot and use arrow keys to inspect categories; Escape dismisses the tooltip. Range bars do not qualify for Bar's scalar category paint emphasis. These examples do not request it or toggle contributions.
+Use `value`, `start` and `balance` in tooltip content; native range payloads contain endpoints. `filterNull={false}` permits unknown-step inspection. Range bars cannot use scalar category emphasis.
 
 ## API reference
 
-Use public `@kind-ui/charts` exports. Kind adds metadata, motion and the ordered data helper to explicit Recharts composition. Native axes, cells, grid and reference lines retain upstream geometry semantics.
+Focused props for ordered data and explicit Recharts composition; native axes, Cells and reference lines retain their geometry.
 
 ### computeWaterfallData
 
@@ -87,7 +87,7 @@ Use public `@kind-ui/charts` exports. Kind adds metadata, motion and the ordered
 
 </div>
 
-Returns `WaterfallDatum[]`. Each row retains `id`, `label` and `kind`. `value` is the original change/checkpoint or computed subtotal; `start`, `end` and `balance` are directed endpoints and running balance. `range` is the sorted `[number, number]` pair for native bars, or `null` when geometry is unknown. Use `value` to determine change direction; sorting the range loses the sign.
+Returns `WaterfallDatum[]` with IDs, labels, kinds, original/computed values, endpoints and balances. `range` sorts endpoints or becomes null; use `value` for direction because sorting loses sign.
 
 ### Root
 
@@ -101,7 +101,7 @@ Returns `WaterfallDatum[]`. Each row retains `id`, `label` and `kind`. `value` i
 
 </div>
 
-To hide the whole flow, use matching visibility identities for bars and connectors. Individual contribution filtering requires the application to decide and recompute the intended chain.
+Use matching visibility identities to hide bars and connectors together. Filtering contributions requires consumer-owned recomputation.
 
 ### WaterfallChart
 
@@ -118,7 +118,7 @@ To hide the whole flow, use matching visibility identities for bars and connecto
 
 </div>
 
-`BarAnimation` shares `LineAnimation`: `revealDurationMs` defaults to `1000`, `revealEasing` to `[0.25, 0.1, 0.25, 1]`, and `hoverTransition` controls supported inspection motion. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
+`BarAnimation` shares `LineAnimation`: default duration `1000`, easing `[0.25, 0.1, 0.25, 1]`, and supported inspection `hoverTransition`. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
 
 ### WaterfallSeries
 
@@ -134,7 +134,7 @@ To hide the whole flow, use matching visibility identities for bars and connecto
 
 </div>
 
-Binds `dataKey="range"` and `minPointSize={0}`. It excludes and rejects `data`, `dataKey`, `stackId` and `minPointSize`. Native shapes, active bars, events and refs remain available. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/) and [Cell](https://recharts.github.io/en-US/api/Cell/).
+Binds `range` with zero minimum size; rejects `data`, `dataKey`, `stackId` and `minPointSize`. Native shapes/events remain available. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/) and [Cell](https://recharts.github.io/en-US/api/Cell/).
 
 ### WaterfallConnectors
 
@@ -152,7 +152,7 @@ Binds `dataKey="range"` and `minPointSize={0}`. It excludes and rejects `data`, 
 
 </div>
 
-Uses native `ReferenceLine` segments with no pointer capture. `x`, `y`, `segment` and `children` are excluded. See [Recharts ReferenceLine](https://recharts.github.io/en-US/api/ReferenceLine/).
+Native `ReferenceLine` segments without pointer capture; `x`, `y`, `segment` and `children` are excluded. See [Recharts ReferenceLine](https://recharts.github.io/en-US/api/ReferenceLine/).
 
 ### Tooltip
 
@@ -167,7 +167,7 @@ Uses native `ReferenceLine` segments with no pointer capture. `x`, `y`, `segment
 
 </div>
 
-See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+Arrow keys inspect categories; Escape dismisses inspection. The accessible data alternative retains zero and unknown values. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
 
 ### Axes and sizing
 
