@@ -289,6 +289,10 @@
   [data-kind-ui="heatmap-grid"][data-cell-sizing="fixed"] col[data-kind-ui="heatmap-row-column"] {
     width: var(--heatmap-row-width);
   }
+  [data-kind-ui="heatmap-grid"][data-cell-sizing="fixed"] tbody th {
+    padding-block: 0;
+    line-height: var(--heatmap-cell-size);
+  }
   [data-kind-ui="heatmap-grid"][data-cell-sizing="fixed"] td {
     box-sizing: border-box;
     width: var(--heatmap-cell-size);

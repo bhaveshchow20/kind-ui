@@ -100,6 +100,7 @@ for (const width of [1000, 320]) {
     await expect(grid.locator("..").locator("..").getByRole("tooltip")).toHaveCount(0);
     await page.getByRole("button", { name: "Toggle compact labels" }).click();
     await expect(grid).toHaveAttribute("data-row-labels", "visible");
+    expect((await cells.first().boundingBox())?.height).toBeCloseTo(12, 1);
     const row = grid.getByRole("rowheader", { name: "Day: Monday", exact: true });
     expect((await row.boundingBox())?.width).toBeGreaterThan(90);
     const column = grid.getByRole("columnheader", { name: "Period: Week 1", exact: true });
