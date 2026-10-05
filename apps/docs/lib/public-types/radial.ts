@@ -1,6 +1,7 @@
 import type * as Chart from "@kind-ui/charts";
 export type RadialBarChart = Pick<
   Chart.RadialBarChartProps,
+  | "categoryKey"
   | "data"
   | "animate"
   | "animationDirection"
@@ -17,3 +18,9 @@ export type RadialBarLabel = Pick<
   Chart.RadialBarLabelProps,
   "show" | "fontSize" | "minFontSize" | "padding"
 >;
+
+export type ActivityRingsReference = Pick<
+  Chart.ActivityRingsProps,
+  "rings" | "config" | "domain" | "animate" | "height" | "series" | "labels" | "legend" | "tooltip"
+>;
+export type ActivityRingReference = Chart.ActivityRing;

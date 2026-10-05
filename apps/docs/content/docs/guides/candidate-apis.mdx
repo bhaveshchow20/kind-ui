@@ -1,9 +1,9 @@
 ---
 title: Candidate API examples
-description: Short public consumers for the upcoming API additions.
+description: Short public consumers for the integrated release candidate.
 ---
 
-These examples target the tested feature branches for [identity colors](https://github.com/bhaveshchow20/kind-ui/pull/104), [compact Heatmap](https://github.com/bhaveshchow20/kind-ui/pull/105) and [ActivityRings](https://github.com/bhaveshchow20/kind-ui/pull/106). They are draft release guidance. The live docs pin does not export these additions; use their branch handoffs until the final integrated artifact and provenance are supplied. No registry install is available yet.
+These recipes use the integrated `0.1.0` candidate installed in this preview. Its retained artifact includes identity colors, compact Heatmap layout and ActivityRings; [provenance](/package-provenance.json) identifies the exact bytes. No registry installation is claimed. For full Preview/Code examples and props, see [Pie](/docs/components/pie/), [Heatmap](/docs/components/heatmap/), [Radial](/docs/components/radial/) and [Sankey](/docs/components/sankey/).
 
 ## Category colors
 
@@ -58,7 +58,7 @@ export function CompactActivity() {
 }
 ```
 
-Numbers use pixels; valid CSS lengths are also supported. Cell size must be positive and gap nonnegative. Omitted layout retains fluid cells, 3px spacing and visible labels. Custom cell content/styles can enlarge cells; native table composition remains available. The branch checks keyboard, narrow-width scrolling and programmatic accessibility; manual screen-reader listening remains untested.
+Numbers use pixels; valid CSS lengths are also supported. Cell size must be positive and gap nonnegative. Omitted layout retains fluid cells, 3px spacing and visible labels. Custom cell content/styles can enlarge cells; native table composition remains available. The packed feature checks cover keyboard, narrow-width scrolling and programmatic accessibility; manual screen-reader listening remains untested.
 
 ## Activity rings
 

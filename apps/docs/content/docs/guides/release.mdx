@@ -3,17 +3,17 @@ title: Package and release status
 description: Distinguish the live docs pin, release candidate and verified registry package.
 ---
 
-Kind UI is pre-release and unpublished. The release candidate in [PR102](https://github.com/bhaveshchow20/kind-ui/pull/102) is `0.1.0` at `ff53677`, with publishing disabled. Its artifact is not final until the API improvements are integrated and validated. A candidate version, passing CI or docs URL does not establish npm availability.
+Kind UI is pre-release and unpublished. Release work in [PR102](https://github.com/bhaveshchow20/kind-ui/pull/102) keeps publishing disabled. These docs consume a retained `0.1.0` candidate from <PackageSource />, including the integrated APIs and Heatmap dismissal correction. A candidate version or passing CI does not establish npm availability.
 
 ## Reproduce this preview
 
-The live docs pin is a separate private `0.0.0` snapshot from <PackageSource />. The served [provenance JSON](/package-provenance.json) records its source commit, SHA-256 and npm integrity. Use the [setup files](/examples/line/README.md), lockfile and [pinned tarball](/examples/package/kind-ui-charts-0.0.0.tgz) together. Follow [installation](/docs/start/installation/); `0.0.0` alone does not distinguish snapshots.
+The served [provenance JSON](/package-provenance.json) records source commit, SHA-256 and npm integrity. Use the [setup files](/examples/line/README.md), lockfile and [pinned tarball](/examples/package/kind-ui-charts-0.1.0.tgz) together. Follow [installation](/docs/start/installation/); a version alone does not distinguish candidate builds.
 
-The pin includes the merged APIs from main `68ce9ad10d617faae3f08c562cb2768035167ee3`. It does not include the candidate category/Sankey defaults, compact Heatmap layout or ActivityRings. Their tested branch handoffs are linked from [identity and colors](/docs/concepts/identity/). These content drafts do not replace the vendor artifact or establish integrated consumer support.
+This pin includes category/Sankey metadata defaults, compact Heatmap layout and ActivityRings. Their [component examples](/docs/guides/candidate-apis/) use the same integrated artifact. Glass remains paused.
 
 ## Validate the final candidate
 
-The release owner must supply the exact integrated package and provenance. Source or manifest changes require a new package gate and retained tarball. Compare the tested bytes' checksum with the receipt; do not substitute a repack. Update the docs pin, app/consumer lockfiles and generated setup together, then rerun strict copied consumers, source/Code/Copy parity, docs build, links and focused browser checks.
+The release owner supplied the exact integrated package and provenance for this pin. Any further source or manifest change requires a new package gate and retained tarball. Compare the tested bytes' checksum with the receipt; do not substitute a repack. Update the docs pin, app/consumer lockfiles and generated setup together, then rerun strict copied consumers, source/Code/Copy parity, docs build, links and focused browser checks.
 
 The packed-package gate proves ESM imports and strict NodeNext/Bundler declarations at pinned peers. Framework integration and browser support need their corresponding test evidence. Candidate branch checks do not prove the final integrated artifact, registry installation, every browser or manual assistive-technology use.
 
@@ -21,4 +21,4 @@ The packed-package gate proves ESM imports and strict NodeNext/Bundler declarati
 
 Only show a registry install command after verifying the exact public package/version and matching integrity against the tested release receipt. Record the published version, source commit and registry provenance, then verify the documented install in a clean consumer. Preserve exact-version instructions and the supported peer/test boundary. Until then, use the local-artifact path above.
 
-Publication, deployment and merging remain separate owner actions. See the source snapshot's [contribution workflow](https://github.com/bhaveshchow20/kind-ui/blob/68ce9ad10d617faae3f08c562cb2768035167ee3/CONTRIBUTING.md) and [development policy](https://github.com/bhaveshchow20/kind-ui/blob/68ce9ad10d617faae3f08c562cb2768035167ee3/docs/development.md).
+Publication, deployment and merging remain separate owner actions. See the source snapshot's [contribution workflow](https://github.com/bhaveshchow20/kind-ui/blob/d66ad717eaa0220b83b60de9420c94b65d67118c/CONTRIBUTING.md) and [development policy](https://github.com/bhaveshchow20/kind-ui/blob/d66ad717eaa0220b83b60de9420c94b65d67118c/docs/development.md).

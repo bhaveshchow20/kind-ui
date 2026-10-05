@@ -22,6 +22,14 @@ description: Compare numeric intensity across two ordered domains with native ta
 
 Domain order determines equal-cell layout. Missing records and `null` use patterned cells; zero remains measured. Compose one grid and at most one tooltip per chart.
 
+## Compact activity grid
+
+`layout` gives contributions fixed square cells and visual header controls. The grid keeps row/column headers and explicit cell associations when labels are hidden.
+
+<ChartExample id="heatmap-compact" />
+
+Numbers use pixels; valid CSS lengths such as `"1rem"` work too. Omit `cellSize` for fluid sizing. A width-constrained host retains horizontal scrolling; custom content or native cell styles can enlarge cells. Use `min-width: 0` when a flex/grid host must shrink.
+
 ## Signed comparisons
 
 A symmetric `[-20, 20]` scale centers zero between below-target orange and above-target blue. Keep the same domain for comparisons; out-of-range values clamp to endpoint colors.
@@ -86,12 +94,15 @@ Captioned native table with row/column headers and roving grid focus. Empty doma
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `caption` | `string` | Required | Visible table caption and accessible grid name. |
+| `layout` | `{ cellSize?: number \| string; gap?: number \| string; rowLabels?: "visible" \| "hidden"; columnLabels?: "visible" \| "hidden" }` | Fluid cells; `gap: 3`; labels visible | Optional fixed cells, spacing and independent visual headers. |
 | `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static cell-edge finish; missing cells do not receive it. |
 | `Cell` | `ComponentType<HeatmapCellContentProps>` | `HeatmapCellContent` | Custom cell content receives `cell`, `fill` and `formattedValue`. Keep content compatible with grid navigation. |
 | `cellProps` | `(cell: HeatmapCell) => ComponentPropsWithRef<"td">` | — | Native styles, refs and handlers. The grid still owns cell semantics, focus and background color. |
 | `rowLabel` / `columnLabel` | `(key: string) => ReactNode` | Domain key | Customize visible headers; coordinate identities and inspection labels remain domain keys. |
 
 </div>
+
+`cellSize` must be positive; `gap` must be nonnegative, including zero. Numeric values must be finite. Native table `style`, custom `Cell` and `cellProps` keep their existing overrides. Hidden labels retain grid names, header IDs and keyboard navigation; `HeatmapDataTable` is independent.
 
 Each `HeatmapCell` retains row/column identities, indices, value and every source record. See [native table semantics](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/table).
 

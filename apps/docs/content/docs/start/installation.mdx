@@ -5,9 +5,9 @@ description: Run the docs examples with the exact pinned package.
 
 ## Current package status
 
-The live docs pin is private `@kind-ui/charts@0.0.0`. The separate `0.1.0` release candidate awaits API integration and registry verification; it is not a registry install target. These docs use the guarded artifact from source <PackageSource />. Inspect [provenance JSON](/package-provenance.json) for its checksum and npm integrity; use those exact bytes when reproducing these examples.
+The docs pin is the integrated `@kind-ui/charts@0.1.0` release candidate, from source <PackageSource />. It remains unpublished, with publishing disabled; use the retained artifact rather than a registry install. Inspect [provenance JSON](/package-provenance.json) for its checksum and npm integrity; these examples and lockfiles use those exact validated bytes.
 
-Use Node 22.12 or later and npm 11.9. The generated [Line setup files](/examples/line/README.md) link the complete consumer configuration and lockfile. Preserve their directory structure and put the [pinned tarball](/examples/package/kind-ui-charts-0.0.0.tgz) at `vendor/kind-ui-charts-0.0.0.tgz`, then run:
+Use Node 22.12 or later and npm 11.9. The generated [Line setup files](/examples/line/README.md) link the complete consumer configuration and lockfile. Preserve their directory structure and put the [pinned tarball](/examples/package/kind-ui-charts-0.1.0.tgz) at `vendor/kind-ui-charts-0.1.0.tgz`, then run:
 
 ```sh
 npm ci

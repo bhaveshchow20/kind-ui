@@ -31,6 +31,13 @@ export const family = {
         "Twenty-four cells preserve zero, null and absent observations, with numeric tooltip inspection and native keyboard navigation.",
     },
     {
+      id: "heatmap-compact",
+      title: "Compact activity grid",
+      notes: "Seven days and twenty-six weeks use fixed square cells and visually hidden headers.",
+      acceptance:
+        "182 cells retain their value names and header associations; narrow hosts scroll without enlarging the page.",
+    },
+    {
       id: "heatmap-diverging",
       title: "Signed comparisons",
       notes: "Regional orders compared with their monthly target on a symmetric scale.",
@@ -46,6 +53,17 @@ export const family = {
     },
   ],
   dataLabels: {
+    "heatmap-compact": {
+      caption: "Contributions by day and week",
+      columns: { row: "Day", column: "Week", value: "Contributions" },
+      rows: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].flatMap((row, r) =>
+        Array.from({ length: 26 }, (_, c) => ({
+          row,
+          column: `Week ${c + 1}`,
+          value: (r + c) % 5,
+        })),
+      ),
+    },
     heatmap: supportLabels,
     "heatmap-materials": supportLabels,
     "heatmap-diverging": {

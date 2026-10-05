@@ -18,7 +18,13 @@ const Finish = dynamic(
   () => import("@/examples/sankey-finishes/example").then((m) => memo(m.EnergyFlowFinishChart)),
   { loading: Loading, ssr: false },
 );
+const Configured = dynamic(
+  () => import("@/examples/sankey-config/example").then((m) => memo(m.ConfiguredFlowChart)),
+  { loading: Loading, ssr: false },
+);
 export const previews = {
+  "sankey-config": Configured,
+
   sankey: Energy,
   "sankey-finishes": ({ variant }: PreviewProps) => (
     <Finish finish={variant as "plain" | "paper" | "clay" | "glow"} />

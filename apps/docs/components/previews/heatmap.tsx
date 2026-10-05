@@ -58,7 +58,19 @@ function Frame({ children }: { children: ReactNode }) {
   }, []);
   return <div ref={ref}>{children}</div>;
 }
+const Compact = dynamic(
+  () => import("@/examples/heatmap-compact/example").then((m) => memo(m.CompactActivityHeatmap)),
+  { loading: Loading, ssr: false },
+);
 export const previews = {
+  "heatmap-compact": () => (
+    <Frame>
+      <div className="not-prose">
+        <Compact />
+      </div>
+    </Frame>
+  ),
+
   heatmap: () => (
     <Frame>
       <Support />
