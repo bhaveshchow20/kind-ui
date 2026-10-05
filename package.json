@@ -33,7 +33,9 @@
     "check:ci": "node --test scripts/ci-workflow.test.mjs scripts/ci-tools.test.mjs",
     "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs && node scripts/check-release-versioning.mjs",
     "test:chart": "playwright test",
-    "check:framework": "npm run check:line-integrations && npm run test:line-integrations"
+    "check:framework": "npm run check:line-integrations && npm run test:line-integrations",
+    "registry:build": "node scripts/build-registry.mjs",
+    "registry:check": "node scripts/build-registry.mjs --check && node --test scripts/registry.test.mjs && node scripts/check-registry.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
@@ -53,6 +55,7 @@
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vite": "8.3.1",
-    "yaml": "2.9.1"
+    "yaml": "2.9.1",
+    "shadcn": "4.21.2"
   }
 }
