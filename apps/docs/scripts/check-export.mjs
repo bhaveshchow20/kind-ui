@@ -3,9 +3,13 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { basePath, publicPath } from "../lib/routing.mjs";
 
+import { assertPublicCopy } from "./public-copy.mjs";
+
 const routePrefix = basePath ? "" : "docs/";
 
 import { allExamples, families } from "../examples/catalog.mjs";
+
+const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
 
 const familyIds = families.map(({ id }) => id);
 
@@ -24,8 +28,26 @@ assert.deepEqual(
 );
 assert.deepEqual(
   readdirSync(path.join(root, "examples")).sort(),
-  [...allExamples.map(({ id }) => id), "package"].sort(),
+  allExamples.map(({ id }) => id).sort(),
 );
+assert.equal(
+  existsSync(path.join(root, "package-provenance.json")),
+  false,
+  "Internal package provenance must not be exported",
+);
+assert.equal(
+  existsSync(path.join(root, "examples/package")),
+  false,
+  "Validation archives must not be exported",
+);
+for (const file of readdirSync(root, { recursive: true }).filter((name) =>
+  /\.(?:html|md|txt|json)$/.test(String(name)),
+)) {
+  const body = readFileSync(path.join(root, file), "utf8");
+  assertPublicCopy(body, file);
+  for (const receipt of [provenance.sourceCommit, provenance.sha256])
+    assert.ok(!body.includes(receipt), `Internal receipt exposed in ${file}`);
+}
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;
 for (const id of searchIds.filter((id) => id.startsWith(publicPath("/docs/components/"))))
@@ -74,13 +96,31 @@ for (const file of html) {
   }
 }
 const index = readFileSync(path.join(root, "llms.txt"), "utf8");
-const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
-if (!index.includes(provenance.sourceCommit.slice(0, 7)))
-  throw new Error("Agent index does not identify the approved package snapshot");
-for (const file of readdirSync(path.join(root, "markdown"), { recursive: true }).filter((name) =>
-  String(name).endsWith(".md"),
-)) {
+for (const file of ["llms.txt", "llms-full.txt", "AGENTS.md"])
+  assert.equal(
+    readFileSync(path.join(root, file), "utf8"),
+    readFileSync(path.join("public", file), "utf8"),
+    `Stale exported agent asset: ${file}`,
+  );
+const fullIndex = readFileSync(path.join(root, "llms-full.txt"), "utf8");
+const markdownFiles = (directory) =>
+  readdirSync(directory, { recursive: true })
+    .filter((name) => String(name).endsWith(".md"))
+    .sort();
+assert.deepEqual(
+  markdownFiles(path.join(root, "markdown")),
+  markdownFiles("public/markdown"),
+  "Exported canonical Markdown pages differ from generated pages",
+);
+for (const file of markdownFiles("public/markdown")) {
   const body = readFileSync(path.join(root, "markdown", file), "utf8");
+  assert.equal(
+    body,
+    readFileSync(path.join("public/markdown", file), "utf8"),
+    `Stale Markdown: ${file}`,
+  );
+  assert.ok(index.includes(publicPath(`/markdown/${file}`)), `Agent index omits ${file}`);
+  assert.ok(fullIndex.includes(body.trimEnd()), `Full agent index omits canonical ${file}`);
   if (
     /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(
       body,

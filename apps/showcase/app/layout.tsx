@@ -20,7 +20,7 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Kind UI Charts",
   description:
-    "Explore composable React charts with real-world examples, palettes, finishes and motion. Kind UI Charts is in pre-release.",
+    "Explore composable React charts with real-world examples, palettes, finishes and motion.",
   icons: {
     icon: [
       { url: showcaseAsset("/kind-bloom.svg"), type: "image/svg+xml" },

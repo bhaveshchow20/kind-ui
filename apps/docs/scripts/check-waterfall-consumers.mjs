@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/waterfall-examples.json", "utf8"));
 const root = path.resolve("artifacts/waterfall-consumer");
@@ -12,7 +13,7 @@ function writeFiles(files) {
     writeFileSync(target, body);
   }
 }
-writeFiles(bundles.waterfall.files);
+writeFiles(verificationFiles(bundles.waterfall));
 mkdirSync(path.join(root, "vendor"), { recursive: true });
 cpSync("vendor/kind-ui-charts-0.1.0.tgz", path.join(root, "vendor/kind-ui-charts-0.1.0.tgz"));
 const run = (args) => execFileSync("npm", args, { cwd: root, stdio: "inherit" });
@@ -30,7 +31,7 @@ const variants = Object.values(bundles).flatMap((b) => [
 const evidence = [];
 for (const b of variants) {
   rmSync(path.join(root, "src"), { recursive: true, force: true });
-  writeFiles(b.files);
+  writeFiles(verificationFiles(b));
   run(["run", "build"]);
   writeFileSync(
     path.join(root, "tsconfig.strict.json"),

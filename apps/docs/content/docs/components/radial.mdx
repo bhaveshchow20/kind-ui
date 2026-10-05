@@ -74,18 +74,6 @@ Focused props for explicit polar composition. Data, tracks and custom center lab
 
 Native chart props override center, radii, angles, gaps and motion. Ring `cellProps` retains paint/handlers and wins over series fill. Custom paint may differ from legend metadata; update config or supply custom/disabled legend content.
 
-### Root
-
-<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series labels, colors and value formatters. Category colors use `RadialBarChart.categoryKey`; Cells remain explicit overrides. |
-| `visibleSeries` | `readonly string[]` | All series | Consumer-owned series visibility. |
-| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend toggles together with `visibleSeries`. |
-
-</div>
-
 ### RadialBarChart
 
 <div className="line-props-scroll" role="region" aria-label="RadialBarChart props" tabIndex={0}>
@@ -144,86 +132,6 @@ Use as `LabelList` content for sector-aware arc text. Center summaries use nativ
 
 </div>
 
-### PolarAngleAxis
+## Shared components
 
-<div className="line-props-scroll" role="region" aria-label="PolarAngleAxis props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `type` | `"number" \| "category"` | `"category"` | Set `"number"` to map capacity values onto angles. |
-| `domain` | Native axis domain | Native numeric scale | Set explicit limits such as `[0, 100]`; automatic limits can make a partial value appear full. |
-| `tick` | `boolean \| object \| ReactElement \| function` | `true` | These compositions hide native angular ticks. |
-
-</div>
-
-See [Recharts PolarAngleAxis](https://recharts.github.io/en-US/api/PolarAngleAxis/).
-
-### PolarRadiusAxis
-
-<div className="line-props-scroll" role="region" aria-label="PolarRadiusAxis props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `type` | `"number" \| "category"` | `"number"` | Set `"category"` to allocate ring bands. |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Category field; examples use `period`. |
-| `tick` / `axisLine` | Native props | `true` | These components disable radial ticks and line. |
-| `children` | `ReactNode` | — | Native `Label` may supply consumer-owned center content. |
-
-</div>
-
-See [Recharts PolarRadiusAxis](https://recharts.github.io/en-US/api/PolarRadiusAxis/).
-
-### LabelList, Label and Cell
-
-`LabelList` receives sector geometry; `Label` supplies custom center content; `Cell` sets row paint.
-
-<div className="line-props-scroll" role="region" aria-label="Native label and cell props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `LabelList.dataKey` | Native data key | — | Label value field, such as the category name. |
-| `LabelList.content` | `ReactElement \| function` | Native label | Supply `<RadialBarLabel />` for measured arc text. |
-| `Label.content` | `ReactElement \| function` | Native text | Own SVG markup and fit for custom summaries. |
-| `Cell.fill` | `string` | Series fill | Overrides one row's color. |
-
-</div>
-
-See [Recharts LabelList](https://recharts.github.io/en-US/api/LabelList/), [Label](https://recharts.github.io/en-US/api/Label/) and [Cell](https://recharts.github.io/en-US/api/Cell/).
-
-### Legend
-
-<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `hideIcon` | `boolean` | `false` | Uses swatches instead of configured icons. |
-| `emphasis` | `"none" \| "series"` | `"none"` | Requests shared series emphasis; radial marks do not add automatic hover dimming. |
-
-</div>
-
-Place outside `ResponsiveContainer`. Root visibility and its callback enable toggles; otherwise items are labels.
-
-### Tooltip
-
-<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `cursor` | Native cursor props or renderer | `false` | Optional native inspection guide. |
-| `maxWidth` | `number` | `180` | Kind's bounded tooltip width in pixels. |
-
-</div>
-
-Kind supplies labels and formatters; Recharts owns polar inspection. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
-
-### ResponsiveContainer
-
-<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` / `height` | `number \| string` | `"100%"` | Give the parent measurable dimensions. These components use a 280-pixel plot height. |
-
-</div>
-
-See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
+[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Axes and grid](/docs/chart-components/axes-grid/), [Labels and cells](/docs/chart-components/labels/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [ResponsiveContainer](/docs/chart-components/responsive-container/).

@@ -1,0 +1,50 @@
+---
+title: Axes and Grid
+description: Set scales, tick labels and guides for Cartesian and polar charts.
+---
+
+Kind exports these Recharts components directly. Compose them inside the chart; their props and defaults remain native.
+
+## XAxis and YAxis
+
+For category columns and time-series plots, use a category X axis and numeric Y axis.
+
+```tsx
+<Chart.XAxis dataKey="day" axisLine={false} tickLine={false} tickMargin={12} />
+<Chart.YAxis domain={[0, "auto"]} tickFormatter={(value) => `${value}`} />
+<Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
+```
+
+Use `type="number"` on both axes for [Scatter](/docs/components/scatter/). For horizontal [Bar](/docs/components/bar/) charts, use numeric X and category Y with `layout="vertical"`.
+
+`dataKey` selects a field or accessor. `domain` sets numeric bounds, `tickFormatter` formats labels, and `height` (X) or `width` (Y) reserves label space. Match each series' axis IDs when composing multiple scales.
+
+See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/) and [YAxis](https://recharts.github.io/en-US/api/YAxis/).
+
+## CartesianGrid
+
+Use `horizontal` and `vertical` to choose guide directions. `stroke` and `strokeDasharray` style the guides independently of series paint.
+
+See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
+
+## ZAxis
+
+For bubble plots, `ZAxis` maps a third measurement to symbol area, not radius.
+
+```tsx
+<Chart.ZAxis dataKey="volume" range={[40, 320]} name="Volume" unit=" requests" />
+```
+
+Set `domain` for consistent size comparisons. See [Recharts ZAxis](https://recharts.github.io/en-US/api/ZAxis/) and the [Scatter size guidance](/docs/components/scatter/#bubble-size) for zero or missing measurements.
+
+## Polar axes and grid
+
+`PolarAngleAxis` labels radar dimensions or maps numeric values onto angles. `PolarRadiusAxis` defines the radial scale or category ring bands. Set explicit bounds for comparable scores and progress values.
+
+```tsx
+<Chart.PolarAngleAxis dataKey="dimension" />
+<Chart.PolarRadiusAxis domain={[0, 100]} />
+<Chart.PolarGrid gridType="polygon" radialLines={false} />
+```
+
+`PolarGrid` supports polygon or circular guides. See [Recharts PolarAngleAxis](https://recharts.github.io/en-US/api/PolarAngleAxis/), [PolarRadiusAxis](https://recharts.github.io/en-US/api/PolarRadiusAxis/) and [PolarGrid](https://recharts.github.io/en-US/api/PolarGrid/).

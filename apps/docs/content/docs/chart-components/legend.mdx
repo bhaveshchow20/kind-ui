@@ -1,0 +1,39 @@
+---
+title: Legend
+description: Display series labels and let readers toggle their visibility.
+---
+
+`Legend` reads labels and markers from [Root](/docs/chart-components/root/). Place it outside the plot's [ResponsiveContainer](/docs/chart-components/responsive-container/).
+
+## Usage
+
+```tsx
+<Chart.Root config={config} visibleSeries={visibleSeries} onVisibleSeriesChange={setVisibleSeries}>
+  <Chart.Legend />
+  {/* ResponsiveContainer and plot */}
+</Chart.Root>
+```
+
+With controlled visibility and a change callback, items are buttons with `aria-pressed` and Enter/Space support. Otherwise they display labels.
+
+## Markers and content
+
+Configured icons take priority over `legendShape`; otherwise items use color swatches. `hideIcon` forces swatches. For Scatter, set the same symbol on `legendShape` and `ScatterSeries.shape`.
+
+Use the render callback for custom item content. Kind keeps the surrounding button and visibility state, so return noninteractive content.
+
+```tsx
+<Chart.Legend>
+  {({ label, marker, visible }) => (
+    <span>{marker}{label}{visible ? "" : " (hidden)"}</span>
+  )}
+</Chart.Legend>
+```
+
+## Props
+
+<ApiTable name="Legend" />
+
+`hideIcon` defaults to `false`; `emphasis` defaults to `"none"`. Use `emphasis="series"` to request highlighting on hover or focus in supported chart families. Scatter does not automatically dim marks.
+
+`Legend` accepts native `ul` props and a ref. This is Kind's legend; [Recharts Legend](https://recharts.github.io/en-US/api/Legend/) has a separate API.

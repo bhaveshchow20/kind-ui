@@ -1,0 +1,43 @@
+---
+title: SeriesConfig
+description: Define labels, colors and value formatting for chart series.
+---
+
+`SeriesConfig` maps stable series or category keys to labels, colors and optional formatting. Pass it to [Root](/docs/chart-components/root/) or directly to a configured [LineChart](/docs/components/line/).
+
+## Usage
+
+```tsx title="config.ts"
+import type { SeriesConfig } from "@kind-ui/charts";
+
+export const config = {
+  visitors: {
+    label: "Visitors",
+    color: "#733bff",
+    formatValue: (value) =>
+      typeof value === "number" ? value.toLocaleString("en-US") : String(value),
+  },
+  subscribers: {
+    label: "Subscribers",
+    color: "#1c9d8f",
+  },
+} satisfies SeriesConfig;
+```
+
+Use the same keys in `dataKey` or `seriesKey`. For category charts, match the category identity instead of the measured value. See [Identity and colors](/docs/concepts/identity/) for accessor and category examples.
+
+Keys must start with a letter and contain only letters, numbers, underscores or hyphens. `Root` exposes each color as `--color-<key>`; for example, `var(--color-visitors)`.
+
+## Metadata
+
+Each config entry has the following fields:
+
+<ApiTable name="SeriesMetadata" />
+
+- `label` appears in the built-in legend and tooltip.
+- `color` supplies the default series color and marker color. Explicit series paint takes precedence.
+- `icon` supplies a decorative React component for the legend and tooltip.
+- `legendShape` selects a Recharts symbol for the legend. A configured icon takes precedence; use the same shape on `ScatterSeries` when its marks should match.
+- `formatValue` formats non-null tooltip values and returns a React node. A tooltip or payload formatter takes precedence.
+
+The legend follows config insertion order. Config describes presentation; chart data and visibility remain separate.

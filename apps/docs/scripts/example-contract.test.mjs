@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { allExamples, examples, families } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
 import { publicPath } from "../lib/routing.mjs";
+import { verificationFiles } from "./consumer-validation-files.mjs";
 import "./routing-contract.test.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
+const completeBundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
 test("each registered family has a complete public consumer", () => {
   assert.deepEqual(
@@ -22,12 +24,10 @@ test("each registered family has a complete public consumer", () => {
   assert.match(bundle.files["src/main.tsx"], /@kind-ui\/charts\/styles\.css/);
   const manifest = JSON.parse(bundle.files["package.json"]);
   assert.equal(manifest.private, true);
-  assert.equal(manifest.dependencies["@kind-ui/charts"], "file:vendor/kind-ui-charts-0.1.0.tgz");
-  const lock = JSON.parse(bundle.files["package-lock.json"]);
-  assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, provenance.integrity);
+  assert.equal(manifest.dependencies["@kind-ui/charts"], `^${provenance.version}`);
+  assert.ok(!Object.hasOwn(bundle.files, "package-lock.json"));
   for (const file of [
     "package.json",
-    "package-lock.json",
     "src/main.tsx",
     "src/example.css",
     "src/examples/line/example.tsx",
@@ -37,12 +37,14 @@ test("each registered family has a complete public consumer", () => {
       `Setup link missing: ${file}`,
     );
 });
-test("download package bytes match the validated snapshot", () => {
+test("private package bytes match validation without public provenance or archives", () => {
   const digest = createHash("sha256")
-    .update(readFileSync("public/examples/package/kind-ui-charts-0.1.0.tgz"))
+    .update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz"))
     .digest("hex");
   assert.equal(digest, provenance.sha256);
   assert.equal(provenance.guardedArtifact, true);
+  assert.equal(existsSync("public/package-provenance.json"), false);
+  assert.equal(existsSync("public/examples/package"), false);
 });
 
 test("Line snippets are standalone public consumers with a shared data alternative", () => {
@@ -128,4 +130,70 @@ test("every family recipe is generated with its own prompt route and complete da
     for (const [value, variant] of Object.entries(bundle.variants ?? {}))
       assert.notEqual(variant.source, "", `${example.id}:${value}`);
   }
+});
+
+test("public copy rejects stale release receipts and registry install claims", async () => {
+  const { assertPublicCopy } = await import("./public-copy.mjs");
+  for (const stale of [
+    "These examples use the validated, integrated release candidate",
+    "Registry installation remains unverified",
+    "See /package-provenance.json",
+    "Download /examples/package/kind-ui-charts-0.1.0.tgz",
+    "npx shadcn@latest add @kindui/line-chart",
+  ])
+    assert.throws(() => assertPublicCopy(stale, "fixture"));
+  assert.doesNotThrow(() => assertPublicCopy("npm install @kind-ui/charts", "fixture"));
+  for (const [id, bundle] of Object.entries(completeBundles)) {
+    assertPublicCopy(promptFor(bundle, {}, "https://example.com"), `${id} prompt`);
+    for (const [name, body] of Object.entries(bundle.files))
+      if (/\.(?:md|json)$/.test(name)) assertPublicCopy(body, `${id}/${name}`);
+  }
+});
+
+test("shared references are registered and chart pages retain family APIs", () => {
+  const meta = JSON.parse(readFileSync("content/docs/meta.json", "utf8"));
+  assert.ok(meta.pages.includes("chart-components"));
+  const shared = JSON.parse(readFileSync("content/docs/chart-components/meta.json", "utf8"));
+  assert.equal(shared.title, "Chart Components");
+  for (const slug of shared.pages)
+    assert.ok(existsSync(`public/markdown/chart-components/${slug}.md`), slug);
+  for (const { id } of families) {
+    const body = readFileSync(`content/docs/components/${id}.mdx`, "utf8");
+    assert.ok(body.includes("## API reference"), `${id} family API`);
+    assert.doesNotMatch(
+      body,
+      /^### (?:Root|Legend|Tooltip|Responsive(?:<wbr \/>)?Container|XAxis|YAxis|CartesianGrid)$/m,
+      `${id} duplicates shared API`,
+    );
+  }
+});
+
+test("internal checks preserve the locked fixture across all public variants", () => {
+  const before = JSON.stringify(completeBundles);
+  const integrity = `sha512-${createHash("sha512").update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz")).digest("base64")}`;
+  for (const bundle of Object.values(completeBundles)) {
+    for (const variant of [undefined, ...Object.keys(bundle.variants ?? {})]) {
+      const publicFiles = filesFor(bundle, {}, variant);
+      const files = verificationFiles(bundle, publicFiles);
+      assert.ok(!Object.hasOwn(publicFiles, "package-lock.json"), bundle.id);
+      const manifest = JSON.parse(files["package.json"]);
+      const lock = JSON.parse(files["package-lock.json"]);
+      assert.equal(
+        manifest.dependencies["@kind-ui/charts"],
+        "file:vendor/kind-ui-charts-0.1.0.tgz",
+      );
+      assert.deepEqual(manifest.dependencies, lock.packages[""].dependencies);
+      assert.deepEqual(manifest.devDependencies, lock.packages[""].devDependencies);
+      assert.equal(
+        lock.packages["node_modules/@kind-ui/charts"].resolved,
+        "file:vendor/kind-ui-charts-0.1.0.tgz",
+      );
+      assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, integrity);
+      assert.equal(lock.packages["node_modules/@kind-ui/charts"].version, provenance.version);
+      for (const [name, body] of Object.entries(publicFiles)) {
+        if (name !== "package.json") assert.equal(files[name], body, `${bundle.id}: ${name}`);
+      }
+    }
+  }
+  assert.equal(JSON.stringify(completeBundles), before);
 });
