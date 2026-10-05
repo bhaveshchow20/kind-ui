@@ -12,13 +12,14 @@ Add a changeset for package behavior changes; documentation/tooling-only changes
 need none. Before 1.0, use a minor bump for breaking APIs and patch for compatible
 fixes. The version command also regenerates the npm lockfile. Review generated package
 versions, changelog and lockfile together.
-The workspace stays private. Private package versioning is enabled so a reviewed
-first-version commit can be prepared before publication; tagging is disabled.
-No first-release changeset/changelog is invented by this tooling setup.
+The workspace stays private. Private package versioning remains enabled for
+local preparation; no tag-generating command or workflow is authorized.
+The first reviewed candidate is `0.1.0`, including its generated changelog.
 
-The package currently remains private at `0.0.0`. Its existing package contract
-rejects other versions/publication enablement until a separately approved
-first-release change updates that policy. Running `release:version` is an explicit
+The reviewed package candidate is public `0.1.0`, with `latest` as its intended
+dist-tag; it remains unpublished. Its package contract requires that exact
+version and omission of the private flag. The workspace stays private and the
+publishing workflow stays hard-disabled until separately approved activation. Running `release:version` is an explicit
 local source edit, never an automatic merge action. Do not use `changeset publish`:
 it does not implement this repository's exact-tested-tarball handoff.
 
@@ -26,7 +27,7 @@ it does not implement this repository's exact-tested-tarball handoff.
 Node 22/24 validation, retains the exact tested tarballs, then downloads the Node
 24 candidate from the same run and verifies its receipt, checksums, source and
 integration evidence. The verification summary is the review handoff. A private
-`0.0.0` run is a rehearsal, not a publishable candidate.
+versioned run is a rehearsal, not a publishable candidate.
 
 If a run fails, choose **Re-run all jobs**. Artifact names and receipts include
 the run attempt, so a partial verification/publish retry cannot reuse a candidate

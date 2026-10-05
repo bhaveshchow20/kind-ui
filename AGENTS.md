@@ -40,7 +40,7 @@ Never edit `node_modules/`, `dist/`, artifacts, or caches as source. Regenerate 
 
 Never add secrets, credentials, telemetry, external uploads, or hidden network behavior. Follow [SECURITY.md](SECURITY.md) for security findings. Do not publish, deploy, merge, create release credentials, or change visibility/access unless explicitly authorized.
 
-All packages remain `private: true` and `0.0.0`. Follow the versioning and changeset policy in [docs/development.md](docs/development.md); no automated publishing is configured. Preserve existing user work and report blockers instead of bypassing permissions or verification.
+The workspace remains private at `0.0.0`; `@kind-ui/charts` is a reviewed public `0.1.0` candidate. Publication still requires separate authorization. Follow the versioning and changeset policy in [docs/development.md](docs/development.md); no automated publishing is configured. Preserve existing user work and report blockers instead of bypassing permissions or verification.
 
 ## Optional React agent skills
 
