@@ -1,0 +1,44 @@
+{
+  "filename": "kind-ui-charts-0.1.0.tgz",
+  "sha256": "d26d3edb360a274acf306f66e1413316fd4c18596b138c87e97e34db049273b5",
+  "integrity": "sha512-2yTnGCSId6n8fB8n9Xnd9RhpVXD+ROKZAHKhrFrKC0AHRazogvPgaUf7lTWvglS3ffVnKYCK7kN8dMczaRqMLw==",
+  "package": {
+    "name": "@kind-ui/charts",
+    "version": "0.1.0"
+  },
+  "source": {
+    "checkoutCommit": "d66ad717eaa0220b83b60de9420c94b65d67118c",
+    "pullRequestHeadCommit": null,
+    "pullRequestBaseCommit": null,
+    "dirty": false
+  },
+  "workflow": {
+    "runId": null,
+    "runAttempt": null,
+    "event": null,
+    "runUrl": null
+  },
+  "tools": {
+    "node": "v22.16.0",
+    "npm": "11.9.0",
+    "typescript": "5.9.3",
+    "vite": "8.3.1"
+  },
+  "consumerVersions": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-is": "19.3.0",
+    "recharts": "3.10.1",
+    "motion": "13.4.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  },
+  "ordinaryConsumerVersions": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-is": "19.3.0",
+    "recharts": "3.10.1",
+    "motion": "13.5.1"
+  },
+  "validation": "installed tarball package gate; aggregate browser checks are separate"
+}
