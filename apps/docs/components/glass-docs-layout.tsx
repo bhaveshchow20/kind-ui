@@ -13,6 +13,7 @@ import { PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
+import { DocsThemeSwitch } from "@/components/theme-switch";
 import { docRoute } from "@/lib/routing.mjs";
 
 function NavigationTitle() {
@@ -123,6 +124,7 @@ export function GlassDocsLayout({ children, tree, ...props }: GlassLayoutProps) 
         },
       ]}
       slots={{
+        themeSwitch: DocsThemeSwitch,
         header: () => null,
         navTitle: NavigationTitle,
         sidebar: {

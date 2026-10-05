@@ -2,37 +2,16 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { createHeatmapModel, createHeatmapScale } from "@kind-ui/charts";
-import ts from "typescript";
 import { family } from "../examples/heatmap-catalog.mjs";
 import { filesFor } from "../lib/example-files.mjs";
+import { extractHeatmapData } from "./heatmap-source-data.mjs";
+import "./heatmap-source-data.test.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/heatmap-examples.json", "utf8"));
-function literal(node) {
-  if (ts.isArrayLiteralExpression(node)) return node.elements.map(literal);
-  if (ts.isObjectLiteralExpression(node))
-    return Object.fromEntries(
-      node.properties.map((property) => [property.name.text, literal(property.initializer)]),
-    );
-  if (ts.isStringLiteral(node)) return node.text;
-  if (ts.isNumericLiteral(node)) return Number(node.text);
-  if (ts.isPrefixUnaryExpression(node)) return -literal(node.operand);
-  if (node.kind === ts.SyntaxKind.NullKeyword) return null;
-  throw new Error(`Unsupported literal ${node.getText()}`);
-}
 for (const example of family.examples) {
   test(`${example.id}: accessible data covers every normalized source coordinate`, () => {
     const source = readFileSync(`examples/${example.id}/example.tsx`, "utf8");
-    const parsed = ts.createSourceFile("example.tsx", source, ts.ScriptTarget.Latest, true);
-    const variables = parsed.statements
-      .filter(ts.isVariableStatement)
-      .flatMap((statement) => [...statement.declarationList.declarations]);
-    const values = Object.fromEntries(
-      variables
-        .filter((declaration) =>
-          ["rows", "columns", "data"].includes(declaration.name.getText(parsed)),
-        )
-        .map((declaration) => [declaration.name.getText(parsed), literal(declaration.initializer)]),
-    );
+    const values = extractHeatmapData(source);
     const model = createHeatmapModel(values);
     assert.deepEqual(
       family.dataLabels[example.id].rows,
@@ -41,8 +20,16 @@ for (const example of family.examples) {
         .map((cell) => ({ row: cell.row, column: cell.column, value: cell.value ?? "No report" })),
     );
     assert.equal(bundles[example.id].files[`src/examples/${example.id}/example.tsx`], source);
-    assert.match(source, /<Chart.HeatmapDataTable/);
-    assert.match(source, /<Chart.HeatmapTooltip valueAnimation="shuffle"/);
+    if (example.id === "heatmap-compact") {
+      assert.match(
+        source,
+        /layout=\{\{ cellSize: 12, gap: 3, rowLabels: "hidden", columnLabels: "hidden" \}\}/,
+      );
+      assert.match(source, /<Chart.HeatmapTooltip/);
+    } else {
+      assert.match(source, /<Chart.HeatmapDataTable/);
+      assert.match(source, /<Chart.HeatmapTooltip valueAnimation="shuffle"/);
+    }
     assert.ok(!/from ["']\.\.?\//.test(source));
     for (const [variant, selection] of Object.entries(bundles[example.id].variants ?? {})) {
       assert.equal(

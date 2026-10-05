@@ -171,7 +171,9 @@ try {
   );
   assert.equal(download.status(), 200);
   assert.equal(
-    createHash("sha256").update(await download.body()).digest("hex"),
+    createHash("sha256")
+      .update(await download.body())
+      .digest("hex"),
     JSON.parse(readFileSync("vendor/provenance.json", "utf8")).sha256,
   );
   assert.deepEqual(errors, []);
