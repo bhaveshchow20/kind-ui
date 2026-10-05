@@ -114,6 +114,7 @@ for (const width of [1000, 320]) {
     expect((await cells.first().boundingBox())?.width).toBeCloseTo(12, 1);
     const independent = page.getByRole("grid", { name: "Independent headers" });
     await expect(independent).toHaveAttribute("data-row-labels", "hidden");
+    expect((await independent.getByRole("gridcell").boundingBox())?.height).toBeCloseTo(12, 1);
     expect(
       (await independent.getByRole("columnheader", { name: "X", exact: true }).boundingBox())
         ?.height,

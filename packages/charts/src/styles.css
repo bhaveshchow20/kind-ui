@@ -297,6 +297,7 @@
     box-sizing: border-box;
     width: var(--heatmap-cell-size);
     height: var(--heatmap-cell-size);
+    line-height: var(--heatmap-cell-size);
     padding: 0;
   }
   [data-kind-ui="heatmap-grid"][data-row-labels="hidden"] th:first-child,
