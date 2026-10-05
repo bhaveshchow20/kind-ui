@@ -15,6 +15,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "vite";
+import { browserDirectives } from "./browser-directives.mjs";
+import { checkTypes } from "./check-types.mjs";
 import { assertDocumentationContract } from "./documentation-contract.mjs";
 import {
   assertCompositionConsumerSource,
@@ -244,33 +246,12 @@ try {
     await writeFile(join(consumer, target), source);
   }
   async function typecheck(files) {
-    for (const mode of ["NodeNext", "Bundler"]) {
-      await writeFile(
-        join(consumer, "tsconfig.json"),
-        JSON.stringify({
-          compilerOptions: {
-            target: "ES2022",
-            jsx: "react-jsx",
-            esModuleInterop: true,
-            module: mode === "Bundler" ? "ESNext" : mode,
-            moduleResolution: mode,
-            strict: true,
-            skipLibCheck: false,
-            noEmit: true,
-            typeRoots: [join(consumer, "node_modules", "@types")],
-          },
-          files,
-        }),
-      );
-      run(
-        process.execPath,
-        [join(root, "node_modules/typescript/bin/tsc"), "-p", "tsconfig.json"],
-        consumer,
-      );
-    }
+    await checkTypes(consumer, join(root, "node_modules/typescript/bin/tsc"), files);
   }
   async function production(entry, outDir, developmentReact = false) {
+    const diagnostics = browserDirectives(consumer, [join(consumer, "host.tsx")]);
     await build({
+      plugins: [diagnostics.plugin],
       configFile: false,
       root: consumer,
       logLevel: "warn",
@@ -278,7 +259,7 @@ try {
       build: {
         outDir: join(root, "artifacts", outDir),
         emptyOutDir: true,
-        rolldownOptions: { input: join(consumer, entry) },
+        rolldownOptions: { input: join(consumer, entry), onwarn: diagnostics.onwarn },
       },
     });
   }
@@ -333,7 +314,7 @@ try {
     const result = await build({
       configFile: false,
       root: consumer,
-      logLevel: "silent",
+      logLevel: "warn",
       build: { write: false, rolldownOptions: { input: join(consumer, "primitive.tsx") } },
     });
     const chunks = result.output.filter((item) => item.type === "chunk");

@@ -15,12 +15,12 @@
     "typecheck": "npm run build",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "check": "npm run check:ci && npm run check:release && npm run lint && npm run test && npm run check:chart",
+    "check": "node scripts/run-checks.mjs preflight && npm run test && npm run check:chart",
     "check:package": "node scripts/check-package.mjs",
     "pack:artifact": "node scripts/check-package.mjs --keep-artifact",
     "test": "npm run build && node --test tests/chart.test.mjs tests/configured-line.test.mjs tests/activity-rings.test.mjs",
     "dev:chart": "npm run build && vite examples/chart --host 127.0.0.1",
-    "check:chart": "npm run pack:artifact && tsc -p examples/chart && node scripts/check-showcase-code.mjs && vite build examples/chart && playwright test && npm run test:composition && npm run test:configured-line && npm run check:line-integrations && npm run test:line-integrations",
+    "check:chart": "npm run pack:artifact && tsc -p examples/chart && node scripts/check-showcase-code.mjs && vite build examples/chart && node scripts/run-checks.mjs consumers",
     "dev:showcase": "npm run build && vite examples/chart --host 127.0.0.1 --port 4873 --open /showcase.html",
     "test:composition": "playwright test --config playwright.composition.config.mjs",
     "check:line-integrations": "node scripts/check-line-integrations.mjs",
@@ -30,8 +30,10 @@
     "changeset": "changeset",
     "release:status": "changeset status",
     "release:version": "changeset version && npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
-    "check:ci": "node --test scripts/ci-workflow.test.mjs",
-    "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs && node scripts/check-release-versioning.mjs"
+    "check:ci": "node --test scripts/ci-workflow.test.mjs scripts/ci-tools.test.mjs",
+    "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs && node scripts/check-release-versioning.mjs",
+    "test:chart": "playwright test",
+    "check:framework": "npm run check:line-integrations && npm run test:line-integrations"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

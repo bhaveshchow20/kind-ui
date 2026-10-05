@@ -5,6 +5,11 @@ import { Legend, Root, TooltipContent } from "@kind-ui/charts";
 import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 import * as Native from "recharts";
+
+// Standalone SVG marks need the same namespace as their chart host. Return the
+// inner markup so existing geometry and direct-root assertions stay unchanged.
+const renderSvg = (element) => render(h("svg", null, element)).slice(5, -6);
+
 import { ScatterChart as NativeScatterChart, Scatter, XAxis, YAxis } from "recharts";
 
 test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a data alternative", () => {
@@ -609,7 +614,7 @@ test("box summaries validate finite ordered values without selecting conventions
   }
 });
 test("box SVG primitive preserves numeric geometry, zero IQR and native attributes", () => {
-  const svg = render(
+  const svg = renderSvg(
     h(Chart.BoxPlotMark, {
       coordinates: summary,
       center: 30,
@@ -622,7 +627,7 @@ test("box SVG primitive preserves numeric geometry, zero IQR and native attribut
   assert.match(svg, /data-box-part="median"[^>]*y1="0"/);
   assert.match(svg, /aria-label="distribution"/);
   assert.equal((svg.match(/data-box-part="outlier"/g) ?? []).length, 3);
-  const collapsed = render(
+  const collapsed = renderSvg(
     h(Chart.BoxPlotMark, {
       coordinates: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 },
       center: 10,
@@ -645,11 +650,11 @@ test("box materials retain native geometry and consumer filter ownership, includ
     mask: "url(#mask)",
     visibility: "hidden",
   };
-  const plain = render(h(Chart.BoxPlotMark, attrs));
+  const plain = renderSvg(h(Chart.BoxPlotMark, attrs));
   const geometry = (svg) =>
     [...svg.matchAll(/<(?:rect|line|circle)\b[^>]*>/g)].map((match) => match[0]);
   for (const material of ["paper", "clay", "glow"]) {
-    const svg = render(h(Chart.BoxPlotMark, { ...attrs, material, filter: undefined }));
+    const svg = renderSvg(h(Chart.BoxPlotMark, { ...attrs, material, filter: undefined }));
     assert.match(svg, /data-kind-ui="box-plot-mark"[^>]*filter="url\(#kind-ui-box-/);
     assert.deepEqual(geometry(svg), geometry(plain));
     assert.match(svg, /filterUnits="userSpaceOnUse"/);
@@ -657,11 +662,11 @@ test("box materials retain native geometry and consumer filter ownership, includ
     assert.match(svg, /visibility="hidden"/);
     for (const override of [{ filter: "none" }, { style: { filter: "none" } }]) {
       assert.doesNotMatch(
-        render(h(Chart.BoxPlotMark, { ...attrs, material, ...override })),
+        renderSvg(h(Chart.BoxPlotMark, { ...attrs, material, ...override })),
         /data-kind-ui="box-material"/,
       );
     }
-    const collapsed = render(
+    const collapsed = renderSvg(
       h(Chart.BoxPlotMark, {
         material,
         coordinates: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 },
@@ -1083,7 +1088,7 @@ test("Sankey finishes keep computed curve and width even with competing presenta
   };
   for (const finish of ["plain", "paper", "clay", "glow"])
     for (const material of ["solid", "gradient"]) {
-      const markup = render(
+      const markup = renderSvg(
         h(Chart.SankeyLink, {
           ...props,
           material,
@@ -1130,18 +1135,18 @@ test("Sankey explicit filters own surfaces and plain nodes retain direct rectang
   const node = { x: 10, y: 20, width: 14, height: 50, index: 0, payload: {} };
   for (const finish of ["paper", "clay", "glow"]) {
     for (const rectProps of [{ filter: "url(#custom)" }, { style: { filter: "none" } }]) {
-      const markup = render(h(Chart.SankeyNode, { ...node, finish, rectProps }));
+      const markup = renderSvg(h(Chart.SankeyNode, { ...node, finish, rectProps }));
       assert.doesNotMatch(markup, /<filter/);
       assert.match(markup, /width="14"/);
       assert.match(markup, /height="50"/);
     }
   }
-  assert.match(render(h(Chart.SankeyNode, node)), /^<rect/);
+  assert.match(renderSvg(h(Chart.SankeyNode, node)), /^<rect/);
 });
 
 test("Sankey undefined filters retain generated finishes and wide node strokes retain bounds", () => {
   for (const finish of ["paper", "clay", "glow"]) {
-    const markup = render(
+    const markup = renderSvg(
       h(Chart.SankeyNode, {
         x: 10,
         y: 20,
@@ -1156,7 +1161,7 @@ test("Sankey undefined filters retain generated finishes and wide node strokes r
     );
     assert.match(markup, /<rect[^>]*filter="url\(#/);
     assert.match(markup, /x="-100%" y="-100%" width="300%" height="300%"/);
-    const link = render(
+    const link = renderSvg(
       h(Chart.SankeyLink, {
         sourceX: 0,
         sourceY: 20,
@@ -1273,6 +1278,7 @@ test("composition components and helpers preserve native identity", () => {
     "useXAxisScale",
     "useYAxisScale",
   ]) {
+    // biome-ignore lint/performance/noDynamicNamespaceImportAccess: This test intentionally compares every public named export with its native registration.
     assert.equal(Chart[name], Native[name], `${name} must preserve registration and defaults`);
   }
 });
@@ -1384,8 +1390,8 @@ test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/ex
     index: 0,
     payload: { id: "node / a", name: "Input", value: 1 },
   };
-  assert.match(render(h(Chart.SankeyNode, props)), /fill="#4f46e5"/);
-  assert.match(render(h(Chart.SankeyNode, { ...props, color: "#abcdef" })), /fill="#abcdef"/);
+  assert.match(renderSvg(h(Chart.SankeyNode, props)), /fill="#4f46e5"/);
+  assert.match(renderSvg(h(Chart.SankeyNode, { ...props, color: "#abcdef" })), /fill="#abcdef"/);
   assert.throws(
     () =>
       render(

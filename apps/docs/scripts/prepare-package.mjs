@@ -81,7 +81,7 @@ if (release) {
 const sha = createHash("sha256").update(readFileSync(canonical)).digest("hex");
 writeFileSync(
   "vendor/provenance.json",
-  JSON.stringify(
+  `${JSON.stringify(
     {
       mode: release ? "registry" : "local",
       version: packed.version,
@@ -94,7 +94,7 @@ writeFileSync(
     },
     null,
     2,
-  ) + "\n",
+  )}\n`,
 );
 console.log(
   `Pinned ${packed.name}@${packed.version} (${release ? "registry" : commit.slice(0, 7)})`,

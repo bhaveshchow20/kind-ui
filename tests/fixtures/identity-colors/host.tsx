@@ -124,6 +124,7 @@ export function Host() {
                 : {})}
             >
               {/* Exercise native Cell discovery through nested fragments. */}
+              {/* biome-ignore lint/complexity/noUselessFragments: Preserve fragment-wrapped Cell discovery regression coverage. */}
               <>{data.map(cell)}</>
             </PieSeries>
           </PieChart>

@@ -308,6 +308,7 @@ function CellHost() {
           aria-label="Cell data chart"
         >
           <Chart.PieSeries dataKey="value" nameKey="id" outerRadius={100}>
+            {/* biome-ignore lint/complexity/noUselessFragments: Preserve fragment-wrapped Cell discovery regression coverage. */}
             <>
               <Cell {...{ id: "alpha", value: updated ? 20 : 60 }} fill="var(--color-alpha)" />
               <Cell {...{ id: "beta", value: 40 }} fill="var(--color-beta)" />

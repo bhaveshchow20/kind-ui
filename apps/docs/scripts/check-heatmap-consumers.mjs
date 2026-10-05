@@ -71,7 +71,7 @@ for (const bundle of Object.values(bundles)) {
     });
   }
 }
-writeFileSync("artifacts/heatmap-consumer-results.json", JSON.stringify(results, null, 2) + "\n");
+writeFileSync("artifacts/heatmap-consumer-results.json", `${JSON.stringify(results, null, 2)}\n`);
 console.log(
   `${results.length} installed-artifact Heatmap consumers passed production and strict declaration modes.`,
 );

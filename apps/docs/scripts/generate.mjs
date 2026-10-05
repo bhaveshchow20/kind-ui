@@ -132,28 +132,27 @@ for (const example of allExamples) {
       )
     : undefined;
   const files = {
-    "package.json": JSON.stringify(manifest, null, 2) + "\n",
+    "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
     "index.html":
       '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kind UI chart example</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>\n',
-    "tsconfig.json":
-      JSON.stringify(
-        {
-          compilerOptions: {
-            target: "ES2022",
-            lib: ["ES2022", "DOM", "DOM.Iterable"],
-            module: "ESNext",
-            moduleResolution: "Bundler",
-            jsx: "react-jsx",
-            strict: true,
-            skipLibCheck: true,
-            noEmit: true,
-            esModuleInterop: true,
-          },
-          include: ["src"],
+    "tsconfig.json": `${JSON.stringify(
+      {
+        compilerOptions: {
+          target: "ES2022",
+          lib: ["ES2022", "DOM", "DOM.Iterable"],
+          module: "ESNext",
+          moduleResolution: "Bundler",
+          jsx: "react-jsx",
+          strict: true,
+          skipLibCheck: true,
+          noEmit: true,
+          esModuleInterop: true,
         },
-        null,
-        2,
-      ) + "\n",
+        include: ["src"],
+      },
+      null,
+      2,
+    )}\n`,
     "src/main.tsx": `import { StrictMode } from "react";\nimport { createRoot } from "react-dom/client";\nimport { ${componentName} } from "./examples/${example.id}/example";\nimport "@kind-ui/charts/styles.css";\nimport "./example.css";\nconst root = document.getElementById("root");\nif (!root) throw new Error("Missing mount element");\ncreateRoot(root).render(<StrictMode><${componentName} /></StrictMode>);\n`,
     "src/example.css": read("examples/shared/example.css"),
     [`src/examples/${example.id}/example.tsx`]: exampleSource,
@@ -192,19 +191,19 @@ for (const example of allExamples) {
 }
 write(
   "generated/examples.json",
-  JSON.stringify(Object.fromEntries(examples.map(({ id }) => [id, bundles[id]])), null, 2) + "\n",
+  `${JSON.stringify(Object.fromEntries(examples.map(({ id }) => [id, bundles[id]])), null, 2)}\n`,
 );
-write("generated/all-examples.json", JSON.stringify(bundles, null, 2) + "\n");
+write("generated/all-examples.json", `${JSON.stringify(bundles, null, 2)}\n`);
 for (const family of families)
   write(
     `generated/${family.id}-examples.json`,
-    JSON.stringify(
+    `${JSON.stringify(
       Object.fromEntries(family.examples.map(({ id }) => [id, bundles[id]])),
       null,
       2,
-    ) + "\n",
+    )}\n`,
   );
-write("public/package-provenance.json", JSON.stringify(provenance, null, 2) + "\n");
+write("public/package-provenance.json", `${JSON.stringify(provenance, null, 2)}\n`);
 if (local) {
   mkdirSync("public/examples/package", { recursive: true });
   cpSync("vendor/kind-ui-charts-0.1.0.tgz", "public/examples/package/kind-ui-charts-0.1.0.tgz");
@@ -255,7 +254,7 @@ const api = Object.fromEntries(
 );
 if (!api.Root?.length || !api.LineSeries?.length || !api.LineChart?.length)
   throw new Error("Public API generation returned incomplete tables");
-write("generated/api.json", JSON.stringify(api, null, 2) + "\n");
+write("generated/api.json", `${JSON.stringify(api, null, 2)}\n`);
 const tableMarkdown = (name) => {
   if (!api[name]) throw new Error(`Unknown API table ${name}`);
   return (

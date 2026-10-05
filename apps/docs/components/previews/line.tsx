@@ -36,7 +36,7 @@ const components = {
 const Curve = components["line-smooth"];
 const Material = components["line-paper"];
 export const previews = {
-  line: components["line"],
+  line: components.line,
   "line-smooth": ({ variant }: PreviewProps) => (
     <Curve curve={variant as "monotone" | "linear" | "stepAfter"} />
   ),
