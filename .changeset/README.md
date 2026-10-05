@@ -1,79 +1,73 @@
 # Versioning and release handoff
 
-Use the pinned official Changesets CLI for version/changelog preparation:
+Add a changeset for user-facing package behavior changes:
 
 ```sh
 npm run changeset
 npm run release:status
-npm run release:version
 ```
 
-Add a changeset for package behavior changes; documentation/tooling-only changes
-need none. Before 1.0, use a minor bump for breaking APIs and patch for compatible
-fixes. The version command also regenerates the npm lockfile. Review generated package
-versions, changelog and lockfile together.
-The workspace stays private. Private package versioning remains enabled for
-local preparation; no tag-generating command or workflow is authorized.
-The first reviewed candidate is `0.1.0`, including its generated changelog.
+Documentation and tooling changes need no package release. Before 1.0, breaking
+APIs increment minor; compatible fixes increment patch. The workspace remains
+private at `0.0.0`. Kind charts are independently versioned.
 
-The reviewed package candidate is public `0.1.0`, with `latest` as its intended
-dist-tag; it remains unpublished. Its package contract requires that exact
-version and omission of the private flag. The workspace stays private and the
-publishing workflow stays hard-disabled until separately approved activation. Running `release:version` is an explicit
-local source edit, never an automatic merge action. Do not use `changeset publish`:
-it does not implement this repository's exact-tested-tarball handoff.
+## Version and changelog pull requests
 
-`.github/workflows/release.yml` is manual and restricted to `main`. It runs full
-Node 22/24 validation, retains the exact tested tarballs, then downloads the Node
-24 candidate from the same run and verifies its receipt, checksums, source and
-integration evidence. The verification summary is the review handoff. A private
-versioned run is a rehearsal, not a publishable candidate.
+`.github/workflows/version.yml` uses the official Changesets version action
+compatible with the pinned CLI 3. It opens or updates a draft version/changelog
+PR when package changesets reach main. It does not bump versions on ordinary
+merges, publish packages, create tags or create GitHub Releases.
 
-If a run fails, choose **Re-run all jobs**. Artifact names and receipts include
-the run attempt, so a partial verification/publish retry cannot reuse a candidate
-from an earlier attempt. This rejection is intentional; keep it intact.
-After an ambiguous publication result, inspect the registry version and
-`dist.integrity` against the selected candidate before attempting any retry.
-An already-published version is immutable: do not republish it or silently select
-new bytes/version; investigate a mismatch and prepare a separately reviewed
-version if necessary. A successful matching publication needs no publish retry.
+The action runs the existing `npm run release:version` command, which regenerates
+the npm lockfile. Review package versions, changelog and lockfile together. GitHub
+Actions must be allowed to create pull requests in repository Actions settings.
+This workflow does not change that persistent setting or introduce credentials.
 
-The publishing job is hard-disabled. This PR grants no OIDC permission, creates no
-GitHub environment/trust/account/credential, publishes nothing and creates no
-tags or GitHub Releases. After owner approval, the activation change must replace
-that disabled condition with the manual-main condition, add job-scoped
-`id-token: write` to that job and bind it to the protected `npm-release`
-environment. Preserve `contents: read` and leave PR CI without publishing identity.
+Merge the reviewed version PR after the required checks pass. Publication then
+uses the release handoff below. Automated publication after that merge requires
+a separately approved publishing identity; the version action never substitutes
+`changeset publish` for the exact tested tarball.
 
-Current repository setup values for the proposed npm trusted publisher (reconfirm
-identity before activation if an organization/repository move is approved):
+## Exact artifact release
 
-| Field | Value |
-| --- | --- |
-| GitHub organization/user | `bhaveshchow20` |
-| Repository | `kind-ui` |
-| Workflow filename | `release.yml` |
-| Environment | `npm-release` |
-| Allowed action for this direct-publish design | `npm publish` |
+`.github/workflows/release.yml` validates main on Node 22 and 24, retains tested
+tarballs, downloads the Node 24 candidate from the same run, and verifies source,
+receipt, SHA-256, npm integrity and matching integration evidence. Its publishing
+job is disabled until publishing authentication is approved and configured.
+PR validation has no publishing identity. Account, secret and trusted-publisher
+setup are separate security decisions.
 
-The owner must confirm scope/name control, approve first version/dist-tag/support
-boundaries, establish private security reporting, and configure environment
-reviewers plus npm trust. These account/access decisions remain outside this PR.
-[npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) needs npm
-11.5.1+ and Node 22.14+; Node 24/npm 11.9 meet that requirement. OIDC publishing
-from a public repository/package generates provenance automatically.
+For local preparation, use Node 22.12+ and npm 11.9 on PATH, including child
+commands. Run `npm run check` from a clean source commit. It retains the installed
+and tested artifact in `artifacts/package/`; inspect `validated-artifact.json`
+and the aggregate output together. The receipt alone proves the package gate.
+Version, manifest or package-source changes require a fresh tested candidate.
 
-Bootstrap decision: recommend an owner-authenticated first publication of the
-selected, verified versioned tarball with 2FA, then configure package-level trust
-for subsequent manual runs. Never send credentials/OTP in chat. Alternatively,
-[npm staging](https://docs.npmjs.com/staged-publishing/) requires npm 11.15+ and
-creates a publicly visible `0.0.0-stage` placeholder for a new package. It requires
-separate publication approval and a reviewed npm upgrade; it is not a dry run.
-No bootstrap action is performed here.
+An authorized first publication with existing npm authentication uses those
+exact bytes:
 
-After an explicitly authorized publication, compare the registry version,
-`dist.integrity` and downloaded package with the selected candidate, verify its
-provenance, and rerun an ordinary registry-installed consumer. Only then migrate
-docs installation examples to that verified version, retain stylesheet/client
-boundary instructions and the tested package-manager caveats, and remove local
-tarball references from user-facing installs. Docs app/homepage edits are separate.
+```sh
+npm whoami --registry=https://registry.npmjs.org
+npm publish ./artifacts/package/kind-ui-charts-0.1.0.tgz --ignore-scripts --access public --tag latest --registry=https://registry.npmjs.org
+```
+
+Check the receipt's SHA-256 before publication. Never repack at publication or
+use `changeset publish`, which does not preserve this artifact handoff. Do not
+send credentials or OTPs in chat, create placeholder versions, or upgrade npm to
+introduce another publishing route.
+
+If a workflow run fails, rerun all jobs. Receipt/run-attempt checks intentionally
+reject artifacts from an earlier attempt. After an ambiguous publication result,
+inspect the registry version and `dist.integrity` before retrying. A matching
+published version needs no retry; published versions are immutable.
+
+Verify `@kind-ui/charts@0.1.0` in a fresh registry-installed consumer, including
+strict TypeScript, the stylesheet and a rendered LineChart. Compare registry
+integrity with the retained artifact. Record publication and consumer results in
+the release evidence; an authenticated website session alone does not establish
+CLI authentication or package publish rights.
+
+For subsequent GitHub-hosted publication, preserve the same full validation and
+exact-artifact checks. Trusted publishing uses job-scoped `id-token: write` and a
+protected release environment; adding trust or persistent permissions requires
+approval. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).

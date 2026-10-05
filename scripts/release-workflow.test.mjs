@@ -6,6 +6,78 @@ import { parse } from "yaml";
 const workflow = parse(
   await readFile(new URL("../.github/workflows/release.yml", import.meta.url), "utf8"),
 );
+const versionWorkflow = parse(
+  await readFile(new URL("../.github/workflows/version.yml", import.meta.url), "utf8"),
+);
+
+function assertVersionPullRequests(w) {
+  assert.deepEqual(Object.keys(w.on), ["push"]);
+  assert.deepEqual(w.on.push.branches, ["main"]);
+  assert.deepEqual(w.on.push.paths, [".changeset/**", ".github/workflows/version.yml"]);
+  assert.deepEqual(w.permissions, { contents: "read" });
+  assert.deepEqual(Object.keys(w.jobs), ["version"]);
+  const job = w.jobs.version;
+  assert.equal(
+    job.if,
+    "github.repository == 'bhaveshchow20/kind-ui' && github.ref == 'refs/heads/main'",
+  );
+  assert.deepEqual(job.permissions, { contents: "write", "pull-requests": "write" });
+  assert.equal(job.environment, undefined);
+  const plan = job.steps.find((step) => step.id === "plan");
+  assert.match(plan.run, /npm run release:status/);
+  assert.match(plan.run, /status\.releases\.length > 0/);
+  const action = job.steps.find((step) => step.uses?.startsWith("changesets/"));
+  assert.equal(action.uses, "changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51");
+  assert.equal(action.if, "steps.plan.outputs.has_changesets == 'true'");
+  assert.deepEqual(action.with, {
+    script: "npm run release:version",
+    "pr-title": "Version packages",
+    "pr-draft": "create",
+  });
+  assert.ok(!JSON.stringify(w).includes("secrets."));
+  for (const step of job.steps) {
+    if (step.uses) assert.match(step.uses, /@[a-f0-9]{40}$/);
+    if (step.uses?.startsWith("actions/checkout@"))
+      assert.equal(step.with["persist-credentials"], false);
+    assert.ok(!/npm publish|changeset publish/.test(step.run ?? ""));
+  }
+}
+
+test("Changesets opens draft version PRs only for pending changes on main", () =>
+  assertVersionPullRequests(versionWorkflow));
+for (const [name, mutate] of [
+  [
+    "untrusted trigger",
+    (w) => {
+      w.on.pull_request = null;
+    },
+  ],
+  [
+    "publishing permission",
+    (w) => {
+      w.jobs.version.permissions["id-token"] = "write";
+    },
+  ],
+  [
+    "unconditional version bump",
+    (w) => {
+      w.jobs.version.steps.at(-1).if = undefined;
+    },
+  ],
+  [
+    "publishing action",
+    (w) => {
+      w.jobs.version.steps.at(-1).uses =
+        "changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51";
+    },
+  ],
+]) {
+  test(`version PR workflow rejects ${name}`, () => {
+    const w = structuredClone(versionWorkflow);
+    mutate(w);
+    assert.throws(() => assertVersionPullRequests(w));
+  });
+}
 function assertDisabledRelease(w) {
   assert.deepEqual(
     Object.keys(w.on),
