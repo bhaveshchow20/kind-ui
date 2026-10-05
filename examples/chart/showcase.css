@@ -1,3 +1,11 @@
+.gallery-chart .recharts-polar-angle-axis-tick text,
+.gallery-chart .recharts-polar-radius-axis-tick text {
+  fill: var(--muted-foreground);
+  font-size: 11px;
+}
+.switch-track {
+  pointer-events: none;
+}
 * {
   box-sizing: border-box;
 }
@@ -469,9 +477,7 @@ pre:focus-visible {
 .gallery-chart .recipe-chart svg text {
   font-size: 11px;
 }
-.switch-track {
-  pointer-events: none;
-}
+
 .gallery-chart .recipe-chart {
   display: flex;
   flex-direction: column;
@@ -531,11 +537,7 @@ pre:focus-visible {
   border-radius: 5px;
   padding: 4px;
 }
-.gallery-chart .recharts-polar-angle-axis-tick text,
-.gallery-chart .recharts-polar-radius-axis-tick text {
-  fill: var(--muted-foreground);
-  font-size: 11px;
-}
+
 .gallery-chart [data-gauge-value] {
   fill: var(--foreground);
   font-size: 36px;

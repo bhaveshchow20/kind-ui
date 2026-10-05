@@ -93,7 +93,9 @@
   .chart-example *,
   .chart-example *::before,
   .chart-example *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: Honor reduced motion over component animations. */
     animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: Honor reduced motion over component transitions. */
     transition-duration: 0.01ms !important;
   }
 }

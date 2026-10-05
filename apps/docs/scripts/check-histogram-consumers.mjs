@@ -96,7 +96,7 @@ for (const bundle of consumers) {
 }
 writeFileSync(
   "artifacts/histogram-consumer-results.json",
-  JSON.stringify(evidence, null, 2) + "\n",
+  `${JSON.stringify(evidence, null, 2)}\n`,
 );
 console.log(
   `${evidence.length} copied consumers passed strict TypeScript and Vite production builds.`,

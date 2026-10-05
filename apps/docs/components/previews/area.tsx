@@ -32,7 +32,7 @@ const components = {
 const Curve = components["area-curves"];
 const Material = components["area-materials"];
 export const previews = {
-  area: components["area"],
+  area: components.area,
   "area-curves": ({ variant }: PreviewProps) => (
     <Curve curve={variant as "monotone" | "linear" | "stepAfter"} />
   ),

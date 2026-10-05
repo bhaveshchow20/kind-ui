@@ -94,7 +94,7 @@ for (const bundle of consumers) {
     skipLibCheck: false,
   });
 }
-writeFileSync("artifacts/consumer-results.json", JSON.stringify(evidence, null, 2) + "\n");
+writeFileSync("artifacts/consumer-results.json", `${JSON.stringify(evidence, null, 2)}\n`);
 console.log(
   `${evidence.length} copied consumers passed strict TypeScript and Vite production builds.`,
 );

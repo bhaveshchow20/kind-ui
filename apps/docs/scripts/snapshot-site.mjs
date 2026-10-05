@@ -15,13 +15,13 @@ mkdirSync(path.dirname(manifestPath), { recursive: true });
 const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : {};
 writeFileSync(
   manifestPath,
-  JSON.stringify({ ...manifest, static: { directory: "out" } }, null, 2) + "\n",
+  `${JSON.stringify({ ...manifest, static: { directory: "out" } }, null, 2)}\n`,
 );
 const commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 const packageInfo = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
 writeFileSync(
   path.join(destination, "provenance.json"),
-  JSON.stringify(
+  `${JSON.stringify(
     {
       editableSource: "https://github.com/bhaveshchow20/kind-ui",
       appPath: "apps/docs",
@@ -32,7 +32,7 @@ writeFileSync(
     },
     null,
     2,
-  ) + "\n",
+  )}\n`,
 );
 writeFileSync(
   path.join(destination, "README.md"),

@@ -1,10 +1,14 @@
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
+import { browserDirectives } from "../../scripts/browser-directives.mjs";
+
+const diagnostics = browserDirectives(fileURLToPath(new URL("../../", import.meta.url)));
 export default defineConfig({
-  plugins: [tailwindcss()],
+  plugins: [tailwindcss(), diagnostics.plugin],
   build: {
     rolldownOptions: {
+      onwarn: diagnostics.onwarn,
       input: {
         presentation: fileURLToPath(new URL("./presentation.html", import.meta.url)),
         example: fileURLToPath(new URL("./index.html", import.meta.url)),

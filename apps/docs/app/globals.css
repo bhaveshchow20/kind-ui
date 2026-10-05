@@ -5,6 +5,29 @@
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 @import "../examples/shared/example.css";
+.line-code-block pre {
+  margin: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+.file-picker > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-slot="button"],
+.github-icon {
+  touch-action: manipulation;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
 @theme inline {
   --font-sans: "Geist Variable", system-ui, sans-serif;
   --color-background: var(--color-fd-background);
@@ -254,6 +277,7 @@ input:focus-visible {
 }
 .preview-tabs {
   min-height: 38px;
+  /* biome-ignore lint/complexity/noImportantStyles: Override the imported Fumadocs component style at this scoped integration point. */
   height: auto !important;
   padding: 3px;
   border-radius: 999px;
@@ -279,6 +303,7 @@ input:focus-visible {
   color: var(--color-fd-muted-foreground);
 }
 .preview-tabs [data-state="active"] {
+  /* biome-ignore lint/complexity/noImportantStyles: Override the imported Fumadocs component style at this scoped integration point. */
   background: transparent !important;
   color: var(--color-fd-foreground);
   box-shadow:
@@ -392,11 +417,7 @@ input:focus-visible {
     SFMono-Regular,
     monospace;
 }
-.file-picker > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+
 .file-picker > svg {
   flex-shrink: 0;
 }
@@ -408,6 +429,7 @@ input:focus-visible {
 }
 .source-code pre {
   max-height: 480px;
+  /* biome-ignore lint/complexity/noImportantStyles: Override the imported Fumadocs component style at this scoped integration point. */
   background: var(--color-fd-background) !important;
   border-radius: 0;
 }
@@ -425,6 +447,7 @@ input:focus-visible {
   margin: 10px 0 0;
 }
 .component-workbench [hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: Keep hidden panels hidden despite imported component display styles. */
   display: none !important;
 }
 .select-content,
@@ -496,6 +519,7 @@ input:focus-visible {
   color: var(--color-fd-muted-foreground);
 }
 .api-table code {
+  /* biome-ignore lint/complexity/noImportantStyles: Override the imported Fumadocs component style at this scoped integration point. */
   font-size: 0.6875rem !important;
   white-space: normal;
   overflow-wrap: anywhere;
@@ -543,6 +567,10 @@ input:focus-visible {
     font-size: 0;
     gap: 0;
   }
+  .playground-actions .copy-prompt svg {
+    width: 12px;
+    height: 12px;
+  }
   .copy-page > button:first-child svg {
     width: 15px;
     height: 15px;
@@ -566,10 +594,7 @@ input:focus-visible {
     padding-right: 5px;
     font-size: 0.6875rem;
   }
-  .playground-actions .copy-prompt svg {
-    width: 12px;
-    height: 12px;
-  }
+
   .playground-actions [data-size="icon-sm"] {
     width: 28px;
   }
@@ -604,8 +629,11 @@ input:focus-visible {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: Honor reduced motion even when component animations declare their own duration. */
     scroll-behavior: auto !important;
+    /* biome-ignore lint/complexity/noImportantStyles: Honor reduced motion even when component animations declare their own duration. */
     animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: Honor reduced motion even when component animations declare their own duration. */
     transition-duration: 0.01ms !important;
   }
 }
@@ -665,15 +693,7 @@ input:focus-visible {
     inset 0 1px 0 var(--control-sheen),
     0 2px 8px var(--control-shadow);
 }
-[data-slot="button"],
-.github-icon {
-  touch-action: manipulation;
-  transition:
-    background-color 160ms ease,
-    color 160ms ease,
-    transform 160ms ease,
-    box-shadow 160ms ease;
-}
+
 [data-slot="button"]:active {
   transform: scale(0.96);
 }
@@ -686,9 +706,7 @@ input:focus-visible {
 .file-picker {
   flex: 1;
 }
-.file-picker > span {
-  min-width: 0;
-}
+
 .select-content,
 .dropdown-content {
   transform-origin: var(
@@ -754,13 +772,16 @@ input:focus-visible {
   position: relative;
 }
 .component-workbench .preview-panel[data-inactive="true"] {
+  /* biome-ignore lint/complexity/noImportantStyles: Inactive panels must remain measurable while overriding native hidden and descendant visibility. */
   display: block !important;
   position: absolute;
   inset: 0 0 auto;
+  /* biome-ignore lint/complexity/noImportantStyles: Inactive panels must remain measurable while overriding native hidden and descendant visibility. */
   visibility: hidden !important;
   pointer-events: none;
 }
 .component-workbench .preview-panel[data-inactive="true"] * {
+  /* biome-ignore lint/complexity/noImportantStyles: Inactive panels must remain measurable while overriding native hidden and descendant visibility. */
   visibility: hidden !important;
 }
 
@@ -856,11 +877,6 @@ input:focus-visible {
   overscroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
 }
-.line-code-block pre {
-  margin: 0;
-  max-height: none;
-  overflow: visible;
-}
 
 .line-workbench .playground-header {
   justify-content: flex-start;
@@ -952,6 +968,7 @@ input:focus-visible {
   }
   #nd-toc.docs-visible-toc h3 + div {
     --row: 1.5rem;
+    /* biome-ignore lint/complexity/noImportantStyles: Override the imported Fumadocs component style at this scoped integration point. */
     grid-template-rows: none !important;
     grid-auto-rows: minmax(1.5rem, auto);
     pointer-events: auto;
