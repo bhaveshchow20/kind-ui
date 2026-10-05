@@ -1,6 +1,11 @@
 name: Heatmap Escape diagnostic — DO NOT MERGE
 on:
   workflow_dispatch:
+    inputs:
+      guard:
+        description: Diagnostic-only causal boundary guard
+        type: boolean
+        default: false
   pull_request:
     branches: [docs/components-concise]
     paths:
@@ -39,6 +44,8 @@ jobs:
       - name: Direct stationary-pointer trials and disabled Escape control
         working-directory: apps/docs
         run: node ../../.github/scripts/heatmap-escape-direct.mjs
+        env:
+          KIND_HEATMAP_DIRECT_GUARD: ${{ inputs.guard && '1' || '0' }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:

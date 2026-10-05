@@ -5,7 +5,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 
-const root = resolve("artifacts/heatmap-escape-diagnostic/direct");
+const guard = process.env.KIND_HEATMAP_DIRECT_GUARD === "1";
+const root = resolve(`artifacts/heatmap-escape-diagnostic/${guard ? "direct-guard" : "direct"}`);
 mkdirSync(root, { recursive: true });
 writeFileSync(resolve(root, "identity.json"), JSON.stringify({ sha: process.env.GITHUB_SHA ?? null, node: process.version, platform: process.platform, provenance: JSON.parse(readFileSync("vendor/provenance.json", "utf8")) }, null, 2));
 const preview = spawn(process.execPath, ["scripts/serve.mjs"], { stdio: ["ignore", "pipe", "inherit"] });
@@ -42,7 +43,7 @@ async function runCase(width, iteration, negative) {
   let failure;
   let stage = "navigation";
   try {
-    await page.addInitScript(negative => {
+    await page.addInitScript(({ negative, guard }) => {
       const events = [];
       window.__kindHeatmapDirect = events;
       let pointer = null;
@@ -88,10 +89,25 @@ async function runCase(width, iteration, negative) {
       document.addEventListener("scroll", event => {
         if (event.target instanceof Element && event.target.closest('[data-component="heatmap"]')) record("scroll", event, { left: event.target.scrollLeft, top: event.target.scrollTop });
       }, true);
+      if (guard) {
+        let dismissedPointer = null;
+        window.addEventListener("keydown", event => {
+          if (event.key === "Escape" && pointer?.pointerType === "mouse") dismissedPointer = { ...pointer };
+        }, true);
+        for (const type of ["pointerover", "pointerout"]) window.addEventListener(type, event => {
+          if (!dismissedPointer) return;
+          if (event.clientX !== dismissedPointer.x || event.clientY !== dismissedPointer.y) { dismissedPointer = null; return; }
+          const destination = type === "pointerout" ? event.relatedTarget : event.target;
+          if (destination instanceof Element && destination.closest('[data-component="heatmap"] td[data-cell-key]')) {
+            record("suppressed-passive-boundary", event, { destination: describe(destination), nativeType: type });
+            event.stopPropagation();
+          }
+        }, true);
+      }
       if (negative) window.addEventListener("keydown", event => {
         if (event.key === "Escape") { mutations(observer.takeRecords(), "before-disabled-key"); record("disabled-escape", event); event.stopImmediatePropagation(); }
       }, true);
-    }, negative);
+    }, { negative, guard });
     await page.goto("http://127.0.0.1:6373/docs/components/heatmap/");
     const primary = page.locator('[data-component="heatmap"]');
     const grid = primary.locator('[data-kind-ui="heatmap-grid"]');
@@ -129,6 +145,12 @@ async function runCase(width, iteration, negative) {
       return events.some(event => event.sequence > escape.sequence && event.type === "hidden-mutation" && event.newValue === null);
     }), false, "Escape must not transiently reopen without deliberate input");
     assert.equal(await page.locator("td:focus").getAttribute("aria-label"), "Thu, 18:00: No report");
+    if (guard) {
+      await page.mouse.move(1, 1);
+      await cell.hover();
+      await tip.waitFor({ state: "visible", timeout: 1000 });
+      assert.equal(await tip.textContent(), "Mon, 08:00: 12", "Deliberate hover must reactivate");
+    }
     assert.deepEqual(errors, []);
   } catch (error) {
     failure = error.stack ?? String(error);
