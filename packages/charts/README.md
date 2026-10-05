@@ -4,7 +4,8 @@ Composable React charts built on Recharts and Motion, with shared interaction,
 controlled visibility and optional animation. Start with a complete chart, then
 customize its parts through public components and typed props.
 
-[Documentation](https://github.com/bhaveshchow20/kind-ui/tree/main/apps/docs/content/docs) ·
+[Website](https://kindui.dev/charts) ·
+[Documentation](https://kindui.dev/charts/docs/) ·
 [Examples](https://github.com/bhaveshchow20/kind-ui/tree/main/examples/chart) ·
 [GitHub](https://github.com/bhaveshchow20/kind-ui)
 
@@ -74,7 +75,7 @@ export function TasksChart() {
 }
 ```
 
-Use the [Line guide](https://github.com/bhaveshchow20/kind-ui/blob/main/apps/docs/content/docs/components/line.mdx)
+Use the [Line guide](https://kindui.dev/charts/docs/components/line/)
 for composition and customization. The documentation covers chart selection,
 peer requirements, styling, motion and accessibility; applications own their
 data, domains and business state.

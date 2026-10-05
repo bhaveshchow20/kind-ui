@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 
 export const repositorySourcePrefix = "https://github.com/bhaveshchow20/kind-ui/";
-export const documentationSource = `${repositorySourcePrefix}tree/main/apps/docs/content/docs`;
+export const documentationSource = "https://kindui.dev/charts/docs/";
 export const recipeSourcePrefix = `${repositorySourcePrefix}blob/main/examples/chart/`;
 
 export function assertDocumentationContract(readme, recipeFiles, packedFiles) {
