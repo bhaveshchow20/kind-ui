@@ -8,6 +8,7 @@ import { publicPath } from "../lib/routing.mjs";
 import "./routing-contract.test.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
+const completeBundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
 test("each registered family has a complete public consumer", () => {
   assert.deepEqual(
@@ -127,5 +128,43 @@ test("every family recipe is generated with its own prompt route and complete da
         assert.ok(Object.hasOwn(row, column));
     for (const [value, variant] of Object.entries(bundle.variants ?? {}))
       assert.notEqual(variant.source, "", `${example.id}:${value}`);
+  }
+});
+
+test("public copy rejects stale release receipts and permits registry installation", async () => {
+  const { assertPublicCopy } = await import("./public-copy.mjs");
+  for (const stale of [
+    "These examples use the validated, integrated release candidate",
+    "Registry installation remains unverified",
+    "See /package-provenance.json",
+    "Download /examples/package/kind-ui-charts-0.1.0.tgz",
+  ])
+    assert.throws(() => assertPublicCopy(stale, "fixture"));
+  assert.doesNotThrow(() => assertPublicCopy("npm install @kind-ui/charts", "fixture"));
+  assert.doesNotThrow(() =>
+    assertPublicCopy("npx shadcn@latest add @kindui/line-chart", "fixture"),
+  );
+  for (const [id, bundle] of Object.entries(completeBundles)) {
+    assertPublicCopy(promptFor(bundle, {}, "https://example.com"), `${id} prompt`);
+    for (const [name, body] of Object.entries(bundle.files))
+      if (/\.(?:md|json)$/.test(name)) assertPublicCopy(body, `${id}/${name}`);
+  }
+});
+
+test("shared references are registered and chart pages retain family APIs", () => {
+  const meta = JSON.parse(readFileSync("content/docs/meta.json", "utf8"));
+  assert.ok(meta.pages.includes("chart-components"));
+  const shared = JSON.parse(readFileSync("content/docs/chart-components/meta.json", "utf8"));
+  assert.equal(shared.title, "Chart Components");
+  for (const slug of shared.pages)
+    assert.ok(existsSync(`public/markdown/chart-components/${slug}.md`), slug);
+  for (const { id } of families) {
+    const body = readFileSync(`content/docs/components/${id}.mdx`, "utf8");
+    assert.ok(body.includes("## API reference"), `${id} family API`);
+    assert.doesNotMatch(
+      body,
+      /^### (?:Root|Legend|Tooltip|Responsive(?:<wbr \/>)?Container|XAxis|YAxis|CartesianGrid)$/m,
+      `${id} duplicates shared API`,
+    );
   }
 });

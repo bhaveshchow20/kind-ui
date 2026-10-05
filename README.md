@@ -1,40 +1,28 @@
 # Kind UI
 
-Kind UI provides composable React charts with shared interaction, accessible
-semantics, controlled visibility and optional motion. Applications own their
-data, units and layout.
-
-## Install
+Composable React charts built on Recharts and Motion. Choose a chart, adapt a complete example and keep control of your data, styling and interactions.
 
 ```sh
 npm install @kind-ui/charts
 ```
 
-Import `@kind-ui/charts/styles.css` once at your application entry. Read the
-[package API and examples](packages/charts/README.md) for composition, peer
-requirements and chart-family contracts.
+Import `@kind-ui/charts/styles.css` once at your application entry. See the [component API and usage](packages/charts/README.md) for composition, accessibility and motion.
 
-The npm package provides usable, design-neutral charts and their interaction,
-motion and accessibility behavior. The [registry](registry/README.md) adds
-editable visual designs over those public exports.
-Application filters and business state stay in the application.
+Explore the [documentation](https://kindui.dev/charts/docs/) and [chart gallery](https://kindui.dev/charts).
 
-## AI agents
+## Registry designs and AI agents
 
-Install the consumer skill:
+The [registry](registry/README.md) provides editable Line, Area and Bar designs over the public chart exports.
 
 ```sh
 npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts
 ```
 
-Read the [agent guide](apps/docs/content/docs/agents/consumer.mdx) for chart
-selection, canonical Markdown and shadcn MCP setup. The consumer skill lives in
-[skills/kind-ui-charts](skills/kind-ui-charts/SKILL.md); `.agents/skills` contains
-repository maintainer guidance.
+Use the [agent guide](apps/docs/content/docs/agents/consumer.mdx) for chart selection, canonical Markdown and shadcn MCP setup. The consumer skill lives in [skills/kind-ui-charts](skills/kind-ui-charts/SKILL.md).
 
-## Develop locally
+## Local setup
 
-Use Node 22.12+ and npm 11.9.
+Requires Node 22.12+ (Node 24 recommended) and npm 11.9.
 
 ```sh
 npm ci
@@ -42,12 +30,28 @@ npm exec playwright install -- --with-deps chromium
 npm run check
 ```
 
-`npm run dev:chart` starts the minimal example; `npm run dev:showcase` opens the
-feature gallery. Checks cover component behavior, packed public exports,
-consumer types and Chromium interaction.
+`npm run dev:chart` starts the minimal usage example. `check` runs lint, component tests, the actual packed-package gate, strict consumer typechecks, and Chromium interaction checks. Linux browser dependencies may require administrator permission.
 
-Start contributions with [CONTRIBUTING.md](CONTRIBUTING.md) and
-[AGENTS.md](AGENTS.md). See [development policy](docs/development.md),
-[security reporting](SECURITY.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+`npm run dev:showcase` opens the feature gallery at `/showcase.html` on port 4873. Color presets and a custom color picker are independent of finish; motion is on by default and follows reduced-motion preferences. Chart-family tabs switch between area, bar, line, pie, radar, and radial examples. The showcase offers finishes for Cartesian charts and pie/donut; native geometry remains unchanged.
+
+## Updates
+
+See the [changelog](packages/charts/CHANGELOG.md) for package changes.
+
+## Direction
+
+Build with established UI libraries, not against them. Prefer familiar composition and existing primitives, styling, and motion capabilities. Introduce a new pattern only for a concrete need that existing options do not meet. Future architecture and package boundaries will be reviewed in small steps; compatibility claims require tested consumers.
+
+## Contributing
+
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). See [development direction and release policy](docs/development.md), [security reporting](SECURITY.md), and our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 MIT © 2026 Bhavesh Chowdhury.
+
+Waterfall technical recipe: open `/waterfalls.html` in the chart example. It uses native numeric floating bars, explicit totals and subtotals, unknown-balance gaps, an accessible data table, and motion enabled by default. See the [Waterfall public contract](packages/charts/README.md#waterfall).
+
+Radar and radial core recipes: open `/polar.html` in the chart example. See [polar recipes](examples/chart/POLAR.md) and the [public component contract](packages/charts/README.md#radar-and-radial-bars).
+
+Box plot primitives accept caller-computed statistics with native quantitative axes. See the [public contract](packages/charts/README.md#box-plot-explicit-statistics) and [recipe studies](examples/chart/BOX-PLOTS.md).
+
+Heatmap matrix and activity recipes: open `/heatmaps.html` in the chart example. See [heatmap recipes and renderer research](examples/chart/HEATMAPS.md) and the [public Heatmap contract](packages/charts/README.md#heatmap).

@@ -7,7 +7,7 @@ description: Show response-time distributions with explicit numeric bins.
 
 ## Usage
 
-`binHistogram` creates numeric bins. `Root` supplies metadata; `ResponsiveContainer` sizes the plot. `HistogramChart` owns axes and motion; compose `HistogramSeries`, grid and tooltip inside it.
+Use `binHistogram` to prepare numeric bins for `HistogramSeries`.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -56,18 +56,6 @@ Returns `HistogramBinningResult`: `bins`, `accepted`, `missing`, `nonfinite` and
 
 Pre-aggregated bins may have gaps. Bounds must be ordered, nonoverlapping and finite with positive finite widths; counts and their total must be nonnegative safe integers.
 
-### Root
-
-<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Labels, colors and optional value formatters. Default HistogramSeries identity is `"count"` for either measure. |
-| `visibleSeries` | `readonly string[]` | All series | Consumer-owned visibility. |
-| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables controlled legend buttons when paired with `visibleSeries`. |
-
-</div>
-
 ### HistogramChart
 
 <div className="line-props-scroll" role="region" aria-label="HistogramChart props" tabIndex={0}>
@@ -103,41 +91,6 @@ Owns data, vertical layout, scales and spacing. See [XAxis](https://recharts.git
 
 Requires `HistogramChart`. Plain bins have square corners and no minimum height. Cells/events remain available; stacking, labels, background, activeBar, bar sizing and axis identity are excluded. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
 
-### Tooltip
+## Shared components
 
-<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `labelFormatter` | Native tooltip label formatter | — | These components read original bin bounds from payload to label intervals. |
-| `cursor` | Native cursor props or renderer | `false` | Optional inspection guide. |
-| `maxWidth` | `number` | `180` | Width bound in pixels. |
-
-</div>
-
-Root formatters label count or density. ArrowLeft/ArrowRight inspect bins; Escape dismisses inspection. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
-
-### CartesianGrid
-
-<div className="line-props-scroll" role="region" aria-label="CartesianGrid props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `vertical` | `boolean` | `true` | These components disable vertical guides. |
-| `strokeDasharray` | `string` | — | Horizontal guide dash pattern. |
-
-</div>
-
-See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
-
-### ResponsiveContainer
-
-<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` / `height` | `number` or percentage | `"100%"` | Measurable responsive dimensions; these components use a 280px plot height. |
-
-</div>
-
-See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
+[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/).

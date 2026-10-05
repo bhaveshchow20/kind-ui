@@ -3,9 +3,13 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { basePath, publicPath } from "../lib/routing.mjs";
 
+import { assertPublicCopy } from "./public-copy.mjs";
+
 const routePrefix = basePath ? "" : "docs/";
 
 import { allExamples, families } from "../examples/catalog.mjs";
+
+const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
 
 const familyIds = families.map(({ id }) => id);
 
@@ -36,6 +40,14 @@ assert.equal(
   false,
   "Validation archives must not be exported",
 );
+for (const file of readdirSync(root, { recursive: true }).filter((name) =>
+  /\.(?:html|md|txt|json)$/.test(String(name)),
+)) {
+  const body = readFileSync(path.join(root, file), "utf8");
+  assertPublicCopy(body, file);
+  for (const receipt of [provenance.sourceCommit, provenance.sha256])
+    assert.ok(!body.includes(receipt), `Internal receipt exposed in ${file}`);
+}
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;
 for (const id of searchIds.filter((id) => id.startsWith(publicPath("/docs/components/"))))

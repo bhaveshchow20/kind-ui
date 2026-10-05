@@ -154,29 +154,8 @@ Native attributes/refs remain available. These examples hide the table; `onInspe
 
 Zero links remain in the table but leave plotted geometry; isolated nodes also leave the plot.
 
-### ResponsiveContainer
+## Shared components
 
-<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
+[ResponsiveContainer](/docs/chart-components/responsive-container/), [Tooltip](/docs/chart-components/tooltip/).
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` / `height` | `number` or percentage | `"100%"` | Plot dimensions relative to the parent; provide a measurable height. |
-
-</div>
-
-### Tooltip
-
-Imported from Recharts for Sankey inspection.
-
-<div className="line-props-scroll" role="region" aria-label="Native Tooltip props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `formatter` | Native value formatter | — | Formats the tooltip value; this component adds MWh units. |
-| `isAnimationActive` | `boolean \| "auto"` | `"auto"` | Native tooltip transition respecting reduced motion in auto mode; these components explicitly disable it. |
-
-</div>
-
-Supply a measurable height. These examples use a 540px minimum diagram width. Native Tooltip owns hover; explicit path handlers and status text provide keyboard selection.
-
-See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/) and [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
+Sankey uses the native Recharts Tooltip for hover inspection. Path handlers and status text provide keyboard selection. Give the diagram a measurable height; these examples use a 540px minimum width.

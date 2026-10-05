@@ -262,7 +262,6 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   const description = original.match(/^description:\s*(.+)$/m)?.[1] || "";
   const key = String(entry).replace(/\.mdx$/, "");
   let body = original.replace(/^---\n[\s\S]*?\n---\n/, "");
-  body = body.replace(/<PackageSource\s*\/>/g, "@kind-ui/charts");
   body = body.replace(
     /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample) id="([\w-]+)"\s*\/>/g,
     (_, id) => {
@@ -305,7 +304,7 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
 }
 write(
   "public/llms.txt",
-  `# Kind UI charts documentation\n\nInstall @kind-ui/charts and its peers, then import the stylesheet. Start with the AI agents guide and retrieve the relevant family Markdown. npm supplies chart behavior; registry designs supply editable art direction and composition.\n\n` +
+  `# Kind UI charts documentation\n\nInstall @kind-ui/charts, then import the stylesheet. Start with the AI agents guide and retrieve the relevant family Markdown. npm supplies chart behavior; registry designs supply editable art direction. Keep data and composition in your application.\n\n` +
     index.map(({ key, title }) => `- [${title}](${link(`/markdown/${key}.md`)})`).join("\n") +
     "\n",
 );

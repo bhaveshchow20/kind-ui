@@ -93,7 +93,6 @@ export function renderDoc(slug?: string[]) {
               ChartExample: LineExample,
               AreaExample: LineExample,
               ApiTable,
-              PackageSource: () => <code>@kind-ui/charts</code>,
             }}
           />
         </DocsBody>

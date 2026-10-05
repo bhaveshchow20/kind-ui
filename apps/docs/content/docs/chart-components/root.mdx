@@ -1,0 +1,53 @@
+---
+title: Root
+description: Share series labels, colors and visibility across a chart.
+---
+
+`Root` connects your plot, legend and tooltip to a [series config](/docs/chart-components/series-config/).
+
+## Usage
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+
+const config = {
+  orders: { label: "Orders", color: "#4477aa" },
+} satisfies Chart.SeriesConfig;
+
+<Chart.Root config={config}>
+  <Chart.Legend />
+  <Chart.ResponsiveContainer width="100%" height={280}>
+    <Chart.BarChart data={[{ day: "Mon", orders: 24 }]} aria-label="Daily orders">
+      <Chart.XAxis dataKey="day" />
+      <Chart.BarSeries dataKey="orders" />
+      <Chart.Tooltip />
+    </Chart.BarChart>
+  </Chart.ResponsiveContainer>
+</Chart.Root>
+```
+
+## Visibility
+
+Pass `visibleSeries` to select which configured series are shown. Add `onVisibleSeriesChange` to make [Legend](/docs/chart-components/legend/) items toggle buttons. The callback requires `visibleSeries`; keep that selection in your own state.
+
+```tsx
+import { useState } from "react";
+
+const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config));
+
+<Chart.Root
+  config={config}
+  visibleSeries={visibleSeries}
+  onVisibleSeriesChange={setVisibleSeries}
+>
+  {/* Legend and plot */}
+</Chart.Root>
+```
+
+## Props
+
+<ApiTable name="Root" compact />
+
+`emphasis` defaults to `"auto"`. Set `"none"` to disable Kind emphasis within this root; individual chart families define which marks support it.
+
+`Root` accepts native `div` props and a ref. Each config key supplies a `--color-{key}` CSS variable on that element.

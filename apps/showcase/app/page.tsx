@@ -668,16 +668,15 @@ function DocumentationSearch() {
 
 function InstallSection() {
   return (
-    <section className="install-section" aria-label="Kind UI Charts package preview">
+    <section className="install-section" aria-label="Install Kind UI Charts">
       <p className="install-built-with">Built on Framer Motion and Recharts</p>
       <div className="install-panel">
         <div className="install-panel-header">
-          <span className="package-preview-label">Package preview</span>
-          <span className="package-preview-status">Pre-release</span>
+          <span className="package-preview-label">Install charts</span>
         </div>
         <div className="install-panel-content">
-          <code className="install-package">@kind-ui/charts</code>
-          <p className="package-preview-note">Registry installation is not yet verified</p>
+          <code className="install-package">npm install @kind-ui/charts</code>
+          <p className="package-preview-note">Import the stylesheet, then compose your chart</p>
         </div>
       </div>
     </section>
@@ -910,7 +909,7 @@ export default function Page() {
         <p className="docs-preview-note">
           {docsAccessNote}{" "}
           <a href={`${repo}/blob/main/packages/charts/README.md`} target="_blank" rel="noreferrer">
-            Read the source API reference
+            Read the API reference
           </a>
           .
         </p>

@@ -7,7 +7,7 @@ description: Compare distributions with explicit quartiles, whiskers and outlier
 
 ## Usage
 
-`Root` supplies metadata. Compose native axes and `BoxPlotSeries` inside `BoxPlotChart`; the series maps caller-computed summaries to the numeric scale.
+Supply caller-computed quartiles, whiskers and outliers to `BoxPlotSeries`.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -46,6 +46,8 @@ The tooltip reads the original row from `payload` to label statistics; native ra
 ## Summary contract
 
 Supply finite ordered statistics: `lowerWhisker <= q1 <= median <= q3 <= upperWhisker`. Outliers must be finite and strictly outside the whiskers; duplicates remain separate, possibly overlapping marks.
+
+Numeric domains must include every outlier; native domain inference includes them.
 
 Compute quartiles, whiskers and outliers before rendering; Kind chooses no statistical convention. Boxes span Q1–Q3, lines mark medians and whiskers, and circles show outliers.
 
@@ -143,83 +145,6 @@ Renders caller-owned screen coordinates; it neither computes statistics nor maps
 
 `validateBoxPlotSummary` returns valid input unchanged, returns null for missing input, and throws for malformed summaries. `boxPlotExtent` returns the validated minimum/maximum including outliers. Neither mutates input.
 
-### Root
+## Shared components
 
-<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series labels, colors and optional value formatters. |
-| `visibleSeries` | `readonly string[]` | All series | Consumer-owned visibility. |
-| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables Legend buttons; requires controlled selection. |
-
-</div>
-
-### Legend
-
-Place outside `ResponsiveContainer`. Root visibility and its callback enable toggles; otherwise items are labels.
-
-<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `hideIcon` | `boolean` | `false` | Show swatches instead of configured icons. |
-
-</div>
-
-### Tooltip
-
-Arrow keys inspect categories; Escape dismisses inspection. Custom content reads individual statistics from the original payload row.
-
-<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `content` | Native content element or render function | Kind content | Native values are enclosing ranges; use original payload for summary statistics. |
-| `maxWidth` | `number` | `180` | Measured tooltip width bound in pixels. |
-
-</div>
-
-See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
-
-### XAxis and YAxis
-
-Numeric domains must include every outlier; native inference includes them. Formatting changes labels, not values.
-
-<div className="line-props-scroll" role="region" aria-label="Axis props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `type` | `"number" \| "category"` | X: `"category"`; Y: `"number"` | Swap for horizontal distributions. |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Category label field or accessor. |
-| `domain` | Native numeric domain | `[0, "auto"]` | Numeric bounds; native inferred extents include supplied outliers. |
-| `tickMargin` | `number` | `5` | Space between axis and tick text. |
-
-</div>
-
-See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/) and [YAxis](https://recharts.github.io/en-US/api/YAxis/).
-
-### CartesianGrid
-
-<div className="line-props-scroll" role="region" aria-label="CartesianGrid props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `horizontal` / `vertical` | `boolean` | `true` | Native quantitative guides; these components disable guides along the category axis. |
-| `strokeDasharray` | `string` | — | Native guide dash pattern. |
-
-</div>
-
-The edge-case example omits guides to expose collapsed lines. See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
-
-### ResponsiveContainer
-
-<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` / `height` | `number` or percentage | `"100%"` | Give the plot measurable dimensions; these components use height `280`. |
-
-</div>
-
-See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
+[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/).

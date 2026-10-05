@@ -7,7 +7,7 @@ description: Show change over time with filled areas and stacked series.
 
 ## Usage
 
-`Root` supplies metadata; `ResponsiveContainer` sizes the plot. Compose axes, `AreaSeries` and `Tooltip` inside `AreaChart`, which owns motion and inspection.
+Add one `AreaSeries` per measure. Use `stackId` to stack related series.
 
 ```tsx title="Composition"
 <Chart.Root config={config}>
@@ -47,21 +47,6 @@ Choose plain, paper, clay or glow.
 ## API reference
 
 Focused props for the composition above; upstream links cover additional native options.
-
-### Root
-
-Shares metadata and visibility; data and sizing belong to the plot.
-
-<div className="line-props-scroll" role="region" aria-label="Root props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series labels, colors and optional value formatters. |
-| `visibleSeries` | `readonly string[]` | All series | Consumer-owned series selection. |
-| `onVisibleSeriesChange` | `(keys: string[]) => void` | — | Enables legend buttons; requires `visibleSeries`. |
-| `emphasis` | `"auto" \| "none"` | `"auto"` | Enables supported paint emphasis; tooltip inspection does not automatically emphasize an area. |
-
-</div>
 
 ### AreaChart
 
@@ -105,91 +90,6 @@ String `dataKey` values identify config entries. Use `seriesKey` for numeric key
 
 Numbers and two-value ranges retain native geometry. `AreaChart` owns motion; per-series animation is disabled. See [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [material support](/docs/guides/materials/).
 
-### Legend
+## Shared components
 
-Place outside `ResponsiveContainer`. Root visibility and its callback enable keyboard-operable toggles; otherwise items are labels.
-
-<div className="line-props-scroll" role="region" aria-label="Legend props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `hideIcon` | `boolean` | `false` | Use swatches instead of configured icons. |
-| `emphasis` | `"none" \| "series"` | `"none"` | Requests series emphasis on hover or focus; supported paint behavior is family-specific. |
-
-</div>
-
-### Tooltip
-
-Compose inside `AreaChart`. Hidden series are excluded. ArrowLeft/ArrowRight inspect observations; Escape dismisses inspection.
-
-<div className="line-props-scroll" role="region" aria-label="Tooltip props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `cursor` | Native cursor props or renderer | `false` | Optional inspection guide. |
-| `maxWidth` | `number` | `180` | Tooltip width bound in pixels. |
-
-</div>
-
-See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
-
-### XAxis
-
-Labels the category scale.
-
-<div className="line-props-scroll" role="region" aria-label="XAxis props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Category label field or accessor. |
-| `axisLine` / `tickLine` | Native line props | `true` | Axis and tick strokes; shown components disable both. |
-| `tickMargin` | `number` | `5` | Label breathing room; shown components use `12`. |
-
-</div>
-
-See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/).
-
-### YAxis
-
-Formats numeric labels without changing values.
-
-<div className="line-props-scroll" role="region" aria-label="YAxis props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `domain` | Native domain | `[0, "auto"]` | Numeric scale bounds. |
-| `tickFormatter` | `(value: number, index: number) => string` | — | Format tick labels. |
-| `width` | `number \| "auto"` | `60` | Space reserved for labels; shown components use `88`. |
-
-</div>
-
-See [Recharts YAxis](https://recharts.github.io/en-US/api/YAxis/).
-
-### CartesianGrid
-
-Native scale guides.
-
-<div className="line-props-scroll" role="region" aria-label="CartesianGrid props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `vertical` | `boolean` | `true` | Draw vertical guides. |
-| `strokeDasharray` | `string` | — | Guide dash pattern. |
-
-</div>
-
-See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/).
-
-### ResponsiveContainer
-
-Requires a measurable parent; these examples use a 280px height.
-
-<div className="line-props-scroll" role="region" aria-label="ResponsiveContainer props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` / `height` | `number` or percentage | `"100%"` | Plot dimensions relative to the parent. |
-
-</div>
-
-See [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).
+[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/).

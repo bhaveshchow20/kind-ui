@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
-const origin = "http://127.0.0.1:6373";
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/pie-examples.json", "utf8"));
 const artifact = "artifacts/pie";
 mkdirSync(artifact, { recursive: true });
@@ -143,7 +143,7 @@ try {
     await page.waitForTimeout(200);
     assert.ok(await page.evaluate((value) => scrollY > value, before));
   }
-  const table = page.getByRole("region", { name: "Root props", exact: true });
+  const table = page.getByRole("region", { name: "PieChart props", exact: true });
   await table.scrollIntoViewIfNeeded();
   await table.hover();
   const beforeTable = await page.evaluate(() => scrollY);

@@ -1,7 +1,7 @@
 # Kind UI chart consumer guidance
 
 Install the consumer skill with `npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`.
-Install charts with `npm install @kind-ui/charts react react-dom recharts motion`.
+Install charts with `npm install @kind-ui/charts`.
 Import `@kind-ui/charts/styles.css` once at the application entry.
 
 Start with /llms.txt, /markdown/start/installation.md and /markdown/agents/consumer.md.
