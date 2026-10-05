@@ -1,0 +1,81 @@
+name: Heatmap Escape diagnostic — DO NOT MERGE
+on:
+  pull_request:
+    branches: [docs/components-concise]
+    paths:
+      - .github/workflows/heatmap-escape-diagnostics.yml
+      - .github/workflows/ci.yml
+      - .github/scripts/heatmap-escape-diagnostics.mjs
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    if: github.head_ref == 'diagnostics/heatmap-escape-linux'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/docs/package-lock.json
+      - run: npm install --global npm@11.9.0
+      - run: npm ci
+      - run: node apps/docs/scripts/verify-pinned-package.mjs
+      - run: npm ci
+        working-directory: apps/docs
+      - run: npm run build
+        working-directory: apps/docs
+        env:
+          KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
+      - run: npm exec playwright install -- --with-deps chromium
+      - name: Replay preceding docs browser flow
+        working-directory: apps/docs
+        run: |
+          mkdir -p artifacts/heatmap-escape-diagnostic
+          result=0
+          for script in start-browser-check start-line-checks start-area-checks start-pie-checks start-radar-checks start-sankey-checks start-histogram-checks start-radial-checks start-waterfall-checks start-box-plot-checks start-combo-checks start-scatter-checks start-bar-checks check-heatmap-consumers; do
+            echo "CHECK $script" >> artifacts/heatmap-escape-diagnostic/prior-flow.log
+            if node "scripts/$script.mjs" >> artifacts/heatmap-escape-diagnostic/prior-flow.log 2>&1; then
+              echo "$script PASS" >> artifacts/heatmap-escape-diagnostic/prior-flow-status.txt
+            else
+              result=1
+              echo "$script FAIL" >> artifacts/heatmap-escape-diagnostic/prior-flow-status.txt
+            fi
+          done
+          echo "$result" > artifacts/heatmap-escape-diagnostic/prior-flow-exit-code.txt
+      - name: Five unchanged reference checks and five bounded hidden checks
+        working-directory: apps/docs
+        run: |
+          result=0
+          for iteration in 1 2 3 4 5; do
+            node scripts/start-heatmap-checks.mjs > "artifacts/heatmap-escape-diagnostic/reference-$iteration.log" 2>&1 || result=1
+            KIND_HEATMAP_DIAGNOSTIC_MODE=retry KIND_HEATMAP_DIAGNOSTIC_LABEL="retry-$iteration" node ../../.github/scripts/heatmap-escape-diagnostics.mjs > "artifacts/heatmap-escape-diagnostic/retry-$iteration.log" 2>&1 || result=1
+          done
+          echo "$result" > artifacts/heatmap-escape-diagnostic/repeated-exit-code.txt
+      - name: Synchronous snapshot and disabled dismissal controls
+        working-directory: apps/docs
+        run: |
+          KIND_HEATMAP_DIAGNOSTIC_MODE=snapshot node ../../.github/scripts/heatmap-escape-diagnostics.mjs
+          if KIND_HEATMAP_DIAGNOSTIC_MODE=negative node ../../.github/scripts/heatmap-escape-diagnostics.mjs > artifacts/heatmap-escape-diagnostic/negative.log 2>&1; then
+            echo "Negative control unexpectedly passed"
+            exit 1
+          fi
+          grep -F 'locator.waitFor: Timeout 1000ms exceeded' artifacts/heatmap-escape-diagnostic/negative.log
+      - name: Preserve repeated failure results
+        working-directory: apps/docs
+        run: |
+          test "$(cat artifacts/heatmap-escape-diagnostic/prior-flow-exit-code.txt)" -eq 0
+          test "$(cat artifacts/heatmap-escape-diagnostic/repeated-exit-code.txt)" -eq 0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: heatmap-escape-diagnostic
+          path: apps/docs/artifacts/heatmap-escape-diagnostic/
+          if-no-files-found: warn
+          retention-days: 14
