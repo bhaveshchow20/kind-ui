@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 
-export async function runChecks(scripts) {
+export async function runChecks(scripts, args = []) {
   assert.ok(process.env.npm_execpath, "Run checks through npm scripts");
   const results = await Promise.all(
     scripts.map(
@@ -12,10 +12,14 @@ export async function runChecks(scripts) {
         new Promise((resolve) => {
           const start = performance.now();
           console.log(`[check] ${script} started ${new Date().toISOString()}`);
-          const child = spawn(process.execPath, [process.env.npm_execpath, "run", script], {
-            stdio: "inherit",
-            env: process.env,
-          });
+          const child = spawn(
+            process.execPath,
+            [process.env.npm_execpath, "run", script, ...(args.length ? ["--", ...args] : [])],
+            {
+              stdio: "inherit",
+              env: process.env,
+            },
+          );
           child.on("error", (error) => {
             console.error(error);
             resolve(false);
@@ -37,7 +41,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     await runChecks(["check:ci", "check:release", "lint"]);
   } else if (process.argv[2] === "consumers") {
     // Prepared once before this phase; suites own separate ports/output paths.
-    await runChecks(["test:chart", "test:composition", "test:configured-line", "check:framework"]);
+    await runChecks(
+      ["test:chart", "test:composition", "test:configured-line", "test:line-integrations"],
+      process.argv.slice(3),
+    );
   } else {
     throw new Error("Expected check phase: preflight or consumers");
   }
