@@ -336,6 +336,10 @@ input:focus-visible {
   --muted-foreground: var(--color-fd-muted-foreground);
   font-family: var(--font-sans);
 }
+/* Keep the native grid spacing when the docs base reset collapses tables. */
+.component-workbench [data-kind-ui="heatmap-grid"] {
+  border-collapse: separate;
+}
 .component-loading {
   min-height: 440px;
   display: grid;

@@ -1,21 +1,48 @@
 ---
-title: Identity and visibility
-description: Separate measured Line values from metadata and visibility.
+title: Identity and colors
+description: Separate measured values, stable identities and presentation metadata.
 ---
 
 | Name | Job | Example |
 | --- | --- | --- |
-| `dataKey` | Read a measured field or accessor | `visitors` |
-| `seriesKey` | Identify config and visibility when separate identity is needed | A key for a function accessor |
-| `config` | Label, color, formatter and optional decorative icon | `visitors: { label: "Visitors", color: "#733bff" }` |
-| `visibleSeries` and callback | Controlled identities and update request | A legend requests a new visible list |
+| `dataKey` | Read a measured field or accessor | `"visitors"` reads each row's value |
+| `seriesKey` | Identify series metadata and visibility separately | `"visitors"` identifies an accessor series |
+| Category identity | Identify one row/category independently of its value | `"search"` identifies a slice whose `value` is 35 |
+| `config` | Label, color, formatter and optional icon | `visitors: { label: "Visitors", color: "#733bff" }` |
 
-## Series visibility
+## Series
 
-A string `LineSeries.dataKey` identifies its config entry. Function and numeric keys need an explicit `seriesKey` when visibility is controlled; configured `series` entries always supply a unique key in config. Keep config entries aligned with plotted series. When supplying a configured `series` array, the legend uses those series identities.
+A string series `dataKey` normally identifies its config entry. Function and numeric keys need `seriesKey` for controlled visibility. Configured Line's `series` entries always supply unique keys in config. An accessor can change how a value is read without changing its identity:
 
-Configured `LineChart` toggles series automatically in uncontrolled mode. `defaultVisibleSeries` sets its initial list. For controlled visibility, provide `visibleSeries` with `onVisibleSeriesChange`; without a callback, the controlled list is read-only. Keep the visibility mode stable or remount to change it.
+```tsx title="AccessorChart.tsx"
+"use client";
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [{ month: "Jan", count: 42 }, { month: "Feb", count: 58 }];
+const config = { visitors: { label: "Visitors", color: "#733bff" } };
+
+export function AccessorChart() {
+  return <Chart.LineChart data={data} config={config} xDataKey="month"
+    series={[{ dataKey: (row) => row.count, seriesKey: "visitors" }]}
+    animate={false} aria-label="Monthly visitors" />;
+}
+```
+
+Series metadata supplies default paint; explicit native paint and custom renderers retain control. Configured Line toggles series automatically. `defaultVisibleSeries` sets the initial list; controlled visibility needs `visibleSeries` and `onVisibleSeriesChange`. Without the callback, the list is read-only. Keep the visibility mode stable or remount to change it.
+
+## Category and node colors
+
+The integrated `0.1.0` docs pin includes these APIs. Try the short [candidate API recipes](/docs/guides/candidate-apis/) or the complete Components examples; installation still uses the retained artifact.
+
+- [Pie/Donut and Radial category defaults](https://github.com/bhaveshchow20/kind-ui/blob/d66ad717eaa0220b83b60de9420c94b65d67118c/docs/features/identity-colors.md): `PieSeries.categoryKey` reads explicit series rows; `RadialBarChart.categoryKey` reads chart rows. A row such as `{ id: "search", value: 35 }` uses `dataKey="value"` for geometry and `categoryKey="id"` for config color. IDs must resolve to string keys in `Root.config`; use an accessor for nested fields. Reorder/filter keeps color tied to identity. Legend order follows config order; category filtering stays application-owned.
+- [Sankey metadata](https://github.com/bhaveshchow20/kind-ui/blob/d66ad717eaa0220b83b60de9420c94b65d67118c/docs/features/identity-colors.md): `SankeyChart.nodeConfig` maps node IDs to labels/colors. Default nodes use their own color; solid links use the source color. Composed gradient links resolve both endpoints. `SankeyLegend` receives the same config explicitly and remains a static list.
+- [ActivityRings](https://github.com/bhaveshchow20/kind-ui/blob/d66ad717eaa0220b83b60de9420c94b65d67118c/tests/fixtures/activity-rings/API.md): ring `key` identifies config; `value` and optional `domain` determine progress. The helper supplies radial composition and preserves original values for its default tooltip. Explicit Radial composition remains available.
+
+Category defaults fill missing native paint. Explicit series fill disables them; datum/Cell fill takes precedence. Existing Cell props/handlers and custom shapes remain authoritative. Overrides can intentionally differ from legend metadata; update config too when the legend should match. No positional palette or universal identity schema is implied.
+
+Heatmap uses row/column identity and a quantitative scale, rather than series colors. Its [compact layout](https://github.com/bhaveshchow20/kind-ui/blob/d66ad717eaa0220b83b60de9420c94b65d67118c/docs/heatmap-compact-layout.md) adds `HeatmapGrid.layout` for cell size, gap and visual headers; accessible headers and keyboard navigation remain present.
 
 ## Inspection and emphasis
 
-Tooltip inspection does not automatically emphasize a line category. Legend emphasis is an explicit presentation choice. Inspection and emphasis preserve the measured values; hiding a series does not rewrite the original dataset. See the [Line API](/docs/components/line/#api-reference) for the owned legend and tooltip contracts.
+Tooltip inspection and paint emphasis are separate contracts. Hiding series does not rewrite the dataset. Automatic emphasis is family-specific; custom renderers keep their own behavior. See the relevant Components page for supported inspection, legend and emphasis options.

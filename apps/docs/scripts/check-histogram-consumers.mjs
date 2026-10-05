@@ -13,7 +13,7 @@ for (const [name, body] of Object.entries(first.files)) {
 }
 if (first.localPackage) {
   mkdirSync(path.join(root, "vendor"), { recursive: true });
-  cpSync("vendor/kind-ui-charts-0.0.0.tgz", path.join(root, "vendor/kind-ui-charts-0.0.0.tgz"));
+  cpSync("vendor/kind-ui-charts-0.1.0.tgz", path.join(root, "vendor/kind-ui-charts-0.1.0.tgz"));
 }
 execFileSync(
   "npm",

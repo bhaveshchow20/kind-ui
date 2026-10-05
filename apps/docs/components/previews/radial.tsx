@@ -22,7 +22,13 @@ const Capacity = dynamic(
   () => import("@/examples/radial-stacked/example").then((m) => memo(m.TeamCapacityChart)),
   { loading: Loading, ssr: false },
 );
+const Activity = dynamic(
+  () => import("@/examples/radial-activity/example").then((m) => memo(m.DailyActivityChart)),
+  { loading: Loading, ssr: false },
+);
 export const previews = {
+  "radial-activity": Activity,
+
   radial: Progress,
   "radial-gauge": ({ variant }: PreviewProps) => (
     <Gauge direction={variant as "clockwise" | "anticlockwise"} />

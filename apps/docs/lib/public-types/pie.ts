@@ -5,6 +5,13 @@ export type PieChartReference = Pick<
 >;
 export type PieSeriesReference = Pick<
   Chart.PieSeriesProps,
-  "data" | "dataKey" | "nameKey" | "innerRadius" | "outerRadius" | "material" | "emphasisKey"
+  | "data"
+  | "dataKey"
+  | "categoryKey"
+  | "nameKey"
+  | "innerRadius"
+  | "outerRadius"
+  | "material"
+  | "emphasisKey"
 >;
 export type PieMotionReference = Chart.PieAnimation;

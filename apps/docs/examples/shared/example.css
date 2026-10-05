@@ -58,19 +58,19 @@
 .chart-example [data-kind-ui="chart-legend-item"]::marker {
   content: "";
 }
-.chart-example table {
+.chart-example table:not([data-kind-ui^="heatmap-"]) {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
   text-align: left;
 }
-.chart-example th,
-.chart-example td {
+.chart-example table:not([data-kind-ui^="heatmap-"]) th,
+.chart-example table:not([data-kind-ui^="heatmap-"]) td {
   border-bottom: 1px solid var(--border);
   padding: 0.5rem 0.6rem;
   white-space: nowrap;
 }
-.chart-example caption {
+.chart-example table:not([data-kind-ui^="heatmap-"]) caption {
   text-align: left;
   margin: 0.5rem 0;
 }

@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { allExamples, examples, families } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
+import { publicPath } from "../lib/routing.mjs";
+import "./routing-contract.test.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
@@ -20,7 +22,7 @@ test("each registered family has a complete public consumer", () => {
   assert.match(bundle.files["src/main.tsx"], /@kind-ui\/charts\/styles\.css/);
   const manifest = JSON.parse(bundle.files["package.json"]);
   assert.equal(manifest.private, true);
-  assert.equal(manifest.dependencies["@kind-ui/charts"], "file:vendor/kind-ui-charts-0.0.0.tgz");
+  assert.equal(manifest.dependencies["@kind-ui/charts"], "file:vendor/kind-ui-charts-0.1.0.tgz");
   const lock = JSON.parse(bundle.files["package-lock.json"]);
   assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, provenance.integrity);
   for (const file of [
@@ -37,7 +39,7 @@ test("each registered family has a complete public consumer", () => {
 });
 test("download package bytes match the validated snapshot", () => {
   const digest = createHash("sha256")
-    .update(readFileSync("public/examples/package/kind-ui-charts-0.0.0.tgz"))
+    .update(readFileSync("public/examples/package/kind-ui-charts-0.1.0.tgz"))
     .digest("hex");
   assert.equal(digest, provenance.sha256);
   assert.equal(provenance.guardedArtifact, true);
@@ -91,7 +93,9 @@ test("Area consumers preserve explicit composition and consumer-owned stacked vi
     assert.match(source, /<Chart.AreaSeries/);
     assert.equal(bundle.dataAlternative.rows.length, 12);
     assert.ok(!/settings|controls|<Chart.AreaChart[^>]*config=/s.test(source));
-    assert.ok(promptFor(bundle, {}, "https://docs.example").includes("/docs/components/area/"));
+    assert.ok(
+      promptFor(bundle, {}, "https://docs.example").includes(publicPath("/docs/components/area/")),
+    );
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
@@ -113,7 +117,9 @@ test("every family recipe is generated with its own prompt route and complete da
     const bundle = all[example.id];
     assert.equal(bundle.family, example.family);
     assert.ok(
-      promptFor(bundle, {}, "https://docs.example").includes(`/docs/components/${example.family}/`),
+      promptFor(bundle, {}, "https://docs.example").includes(
+        publicPath(`/docs/components/${example.family}/`),
+      ),
     );
     assert.ok(bundle.dataAlternative.rows.length > 0);
     for (const row of bundle.dataAlternative.rows)

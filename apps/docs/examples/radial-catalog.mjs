@@ -9,6 +9,14 @@ export const family = {
         "Three category-colored rings show 92%, 76% and 58%; labels and hidden data agree.",
     },
     {
+      id: "radial-activity",
+      title: "Activity rings",
+      notes:
+        "Three original values use their own domains; tracks, tooltip and static legend come from ActivityRings.",
+      acceptance:
+        "Move350/500, Exercise30/60 and Stand9/12 normalize to70%,50%,75% while retaining original units and motion-off defaults.",
+    },
+    {
       id: "radial-gauge",
       title: "Capacity gauge",
       notes:
@@ -25,6 +33,15 @@ export const family = {
     },
   ],
   dataLabels: {
+    "radial-activity": {
+      caption: "Daily activity: Move (kcal), Exercise (minutes), Stand (hours)",
+      columns: { key: "Activity", value: "Original value" },
+      rows: [
+        { key: "move", value: 350 },
+        { key: "exercise", value: 30 },
+        { key: "stand", value: 9 },
+      ],
+    },
     radial: {
       caption: "Project completion",
       columns: { period: "Stage", progress: "Complete (%)" },
