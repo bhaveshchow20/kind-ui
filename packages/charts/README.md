@@ -8,6 +8,18 @@ customize its parts through public components and typed props.
 [Examples](https://github.com/bhaveshchow20/kind-ui/tree/main/examples/chart) ·
 [GitHub](https://github.com/bhaveshchow20/kind-ui)
 
+## Chart types
+
+| Family | Charts |
+| --- | --- |
+| Cartesian | Line, Area, Bar, Combo |
+| Polar | Pie/Donut, Radar, Radial/ActivityRings |
+| Relationships | Scatter/Bubble, Heatmap |
+| Distributions | Histogram, BoxPlot |
+| Flow & change | Sankey, Waterfall |
+
+Donut and Bubble use `PieChart` and `ScatterChart` composition.
+
 ## Install
 
 ```sh
@@ -63,8 +75,7 @@ export function TasksChart() {
 ```
 
 Use the [Line guide](https://github.com/bhaveshchow20/kind-ui/blob/main/apps/docs/content/docs/components/line.mdx)
-for composition and customization, or the [full API reference](https://github.com/bhaveshchow20/kind-ui/tree/main/docs)
-for detailed contracts. The documentation covers chart selection,
+for composition and customization. The documentation covers chart selection,
 peer requirements, styling, motion and accessibility; applications own their
 data, domains and business state.
 
