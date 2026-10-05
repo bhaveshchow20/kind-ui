@@ -57,7 +57,7 @@ try {
       "Thu, 18:00: No report",
     );
     await page.keyboard.press("Escape");
-    assert.equal(await tooltip.isVisible(), false);
+    await tooltip.waitFor({ state: "hidden", timeout: 1000 });
     await page.keyboard.press("Control+Home");
     await page.keyboard.press("Tab");
     assert.equal(await grid.locator("td:focus").count(), 0);
