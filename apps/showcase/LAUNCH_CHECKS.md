@@ -35,3 +35,5 @@ Keep the artwork and layout direction. Narrow-screen navigation and titles recei
 ## Subsequent isolated website audit
 
 See `ROUTE_AUDIT.md` for the new MacBook execution receipt. It supersedes the earlier browser-unavailable note only for the explicitly recorded older-source website tests: 13/17 original cases pass; the four progression gates remain failures. Three added route/interaction cases and the 16-case prefixed website suite pass. This does not supersede the final integrated-artifact or registry-publication blockers above. Docs sharing remains owner-private. Routing preparation is opt-in; no hosting/DNS deployment occurred.
+
+The subsequent local combined-origin mount also passes against the docs owner's final immutable `c2d9933` export: 21 recorded routing/access-resource checks with no local page errors/failed requests. This proves the local prefix boundary, not production hosting or the paused Next security patch. See `ROUTE_AUDIT.md` for the exact receipt.
