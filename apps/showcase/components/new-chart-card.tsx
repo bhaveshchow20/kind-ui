@@ -14,27 +14,30 @@ import {
 } from "@/components/ui/dialog";
 import type { Finish } from "@/lib/advanced-chart-recipes";
 import {
-  heatmapData,
-  conversionData,
-  histogramBins,
-  boxRows,
   type BoxRow,
+  boxRows,
+  conversionData,
+  heatmapData,
+  histogramBins,
   type NewRecipe,
   newCode,
   sankeyData,
   waterfallEntries,
 } from "@/lib/new-chart-recipes";
+import { useCopyCode } from "@/lib/use-copy-code";
 
 function NewChart({
   recipe: r,
   material,
   colors,
   animate,
+  entranceKey,
 }: {
   recipe: NewRecipe;
   material: Finish;
   colors: string[];
   animate: boolean;
+  entranceKey: string;
 }) {
   const [distributionVisible, setDistributionVisible] = useState([
     r.family === "Histogram" ? "count" : "spread",
@@ -51,6 +54,7 @@ function NewChart({
   if (r.family === "Line") {
     return (
       <Chart.LineChart
+        key={entranceKey}
         data={conversionData}
         config={{
           trials: { label: "Trial starts", color: colors[0] },
@@ -79,6 +83,7 @@ function NewChart({
     const density = r.id === "histogram-latency";
     return (
       <Chart.Root
+        key={entranceKey}
         className="chart-root"
         visibleSeries={distributionVisible}
         onVisibleSeriesChange={setDistributionVisible}
@@ -136,6 +141,7 @@ function NewChart({
     const horizontal = r.id === "box-regions";
     return (
       <Chart.Root
+        key={entranceKey}
         className="chart-root"
         visibleSeries={distributionVisible}
         onVisibleSeriesChange={setDistributionVisible}
@@ -214,6 +220,7 @@ function NewChart({
   if (r.family === "Heatmap")
     return (
       <Chart.HeatmapChart
+        key={entranceKey}
         className="showcase-heatmap"
         rows={heat.rows}
         columns={heat.columns}
@@ -233,7 +240,11 @@ function NewChart({
     );
   if (r.family === "Waterfall")
     return (
-      <Chart.Root className="chart-root" config={{ range: { label: "Balance", color: colors[0] } }}>
+      <Chart.Root
+        key={entranceKey}
+        className="chart-root"
+        config={{ range: { label: "Balance", color: colors[0] } }}
+      >
         <div className="chart-canvas">
           <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <Chart.WaterfallChart
@@ -275,7 +286,7 @@ function NewChart({
               <Chart.Tooltip
                 formatter={(_value, _name, item) => {
                   const row = item.payload as Chart.WaterfallDatum;
-                  return [`$${row.value?.toLocaleString()}`, row.label];
+                  return [`$${row.value?.toLocaleString("en-US")}`, row.label];
                 }}
               />
             </Chart.WaterfallChart>
@@ -288,6 +299,7 @@ function NewChart({
       <div className="chart-canvas">
         <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <Chart.SankeyChart
+            key={entranceKey}
             data={flow}
             animate={animate}
             nodeWidth={12}
@@ -350,18 +362,9 @@ export function NewChartCard({
   const reduced = useReducedMotion();
   const cardRef = useRef<HTMLElement>(null);
   const entered = useInView(cardRef, { once: true, amount: 0.3 });
-  const chartAnimate = animate && entered;
-  const [copied, setCopied] = useState(false);
+  const chartAnimate = animate && entered && !reduced;
   const code = newCode(recipe, material, colors, animate);
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      setCopied(false);
-    }
-  }
+  const { copy, copied, message: copyMessage } = useCopyCode(code);
   return (
     <motion.article
       ref={cardRef}
@@ -371,6 +374,9 @@ export function NewChartCard({
       viewport={{ once: true, amount: 0.12 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
+      <p className="copy-feedback" role="status">
+        {copyMessage}
+      </p>
       <div className="card-top">
         <h3 className="chart-tag">{recipe.tag}</h3>
         <div className="card-code-actions">
@@ -409,7 +415,7 @@ export function NewChartCard({
         </div>
       </div>
       <NewChart
-        key={`${replay}-${entered}`}
+        entranceKey={`${replay}-${entered}`}
         recipe={recipe}
         material={material}
         colors={colors}

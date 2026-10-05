@@ -22,6 +22,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { newRecipes } from "@/lib/new-chart-recipes";
+import { useCopyCode } from "@/lib/use-copy-code";
 
 type Material = "plain" | "paper" | "clay" | "glow";
 type Family =
@@ -249,7 +250,7 @@ const data = [
 ${chartData.map((d) => `  ${JSON.stringify(d)},`).join("\n")}
 ];
 
-const config: Chart.SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.stringify(config, null, 2)}).map(([key, value]) => [key, {\n    ...value, formatValue: (v: unknown) => typeof v === "number" ? v.toLocaleString() : String(v)\n  }])\n);
+const config: Chart.SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.stringify(config, null, 2)}).map(([key, value]) => [key, {\n    ...value, formatValue: (v: unknown) => typeof v === "number" ? v.toLocaleString("en-US") : String(v)\n  }])\n);
 
 export function Example() {
   const animate = ${animate};
@@ -304,9 +305,8 @@ function ChartCard({
   const reduceMotion = useReducedMotion();
   const cardRef = useRef<HTMLElement>(null);
   const entered = useInView(cardRef, { once: true, amount: 0.3 });
-  const chartAnimate = animate && entered;
+  const chartAnimate = animate && entered && !reduceMotion;
   const [visible, setVisible] = useState<string[]>([...r.keys]);
-  const [copied, setCopied] = useState(false);
   const chartData = useMemo(() => recipeData(r.id), [r.id]);
   const config = useMemo(
     () =>
@@ -316,7 +316,8 @@ function ChartCard({
           {
             label: r.keys.length === 1 ? r.subtitle : recipeLabels(r.id)[k],
             color: colors[i],
-            formatValue: (v: unknown) => (typeof v === "number" ? v.toLocaleString() : String(v)),
+            formatValue: (v: unknown) =>
+              typeof v === "number" ? v.toLocaleString("en-US") : String(v),
           },
         ]),
       ),
@@ -395,15 +396,7 @@ function ChartCard({
       />
     </>
   );
-  async function copyCode() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      setCopied(false);
-    }
-  }
+  const { copy: copyCode, copied, message: copyMessage } = useCopyCode(code);
   return (
     <motion.article
       ref={cardRef}
@@ -413,6 +406,9 @@ function ChartCard({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={`chart-card ${r.id === "multi" ? "tinted" : ""}`}
     >
+      <p className="copy-feedback" role="status">
+        {copyMessage}
+      </p>
       <div className="card-top">
         <h3 className="chart-tag">{r.tag}</h3>
         <div className="card-code-actions">
@@ -574,18 +570,19 @@ function ThemeSwitcher({ enabled }: { enabled: boolean }) {
           { value: "system", label: "System", Icon: Monitor },
         ] as const
       ).map(({ value, label, Icon }) => (
-        <label className="nav-theme-option" key={value} title={label}>
-          <RadioGroupItem value={value} className="sr-only" aria-label={label} />
-          {(enabled ? (theme ?? "system") : "system") === value && (
-            <motion.span
-              className="nav-theme-selection"
-              aria-hidden="true"
-              layoutId={reduced ? undefined : `${id}-theme`}
-              transition={{ type: "spring", stiffness: 430, damping: 36 }}
-            />
-          )}
-          <Icon size={17} aria-hidden="true" />
-        </label>
+        <RadioGroupItem asChild key={value} value={value} aria-label={label}>
+          <button type="button" className="nav-theme-option" title={label}>
+            {(enabled ? (theme ?? "system") : "system") === value && (
+              <motion.span
+                className="nav-theme-selection"
+                aria-hidden="true"
+                layoutId={reduced ? undefined : `${id}-theme`}
+                transition={{ type: "spring", stiffness: 430, damping: 36 }}
+              />
+            )}
+            <Icon size={17} aria-hidden="true" />
+          </button>
+        </RadioGroupItem>
       ))}
     </RadioGroup>
   );
@@ -614,7 +611,7 @@ function DocumentationSearch() {
   const [query, setQuery] = useState("");
   useEffect(() => {
     function shortcut(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k" && !event.repeat) {
         event.preventDefault();
         setOpen((value) => !value);
       }
@@ -658,11 +655,16 @@ function DocumentationSearch() {
             onChange={(event) => setQuery(event.target.value)}
           />
           <button type="button" onClick={() => setOpen(false)} aria-label="Close search">
-            Esc
+            Close
           </button>
         </div>
-        <div className="documentation-search-results">
+        {/* Keyboard focus enables scrolling this results panel. */}
+        {/* biome-ignore lint/a11y/noNoninteractiveTabindex: Scrollable content needs keyboard access. */}
+        <section className="documentation-search-results" tabIndex={0} aria-label="Results">
           <h2>Components</h2>
+          <span className="sr-only" role="status">
+            {filtered.length} components found
+          </span>
           <ul>
             {filtered.map((name) => (
               <li key={name}>
@@ -672,87 +674,26 @@ function DocumentationSearch() {
             ))}
           </ul>
           {!filtered.length && <p>No components found.</p>}
-        </div>
+        </section>
       </DialogContent>
     </Dialog>
   );
 }
 
-const installCommands = {
-  npm: "npm install @kind-ui/charts",
-  pnpm: "pnpm add @kind-ui/charts",
-  yarn: "yarn add @kind-ui/charts",
-  bun: "bun add @kind-ui/charts",
-};
-type PackageManager = keyof typeof installCommands;
-
 function InstallSection() {
-  const [manager, setManager] = useState<PackageManager>("npm");
-  const [copied, setCopied] = useState(false);
-  const [copyFailed, setCopyFailed] = useState(false);
-  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(copyTimer.current), []);
-  async function copyCommand() {
-    try {
-      await navigator.clipboard.writeText(installCommands[manager]);
-      setCopied(true);
-      setCopyFailed(false);
-      clearTimeout(copyTimer.current);
-      copyTimer.current = setTimeout(() => setCopied(false), 1800);
-    } catch {
-      setCopyFailed(true);
-    }
-  }
   return (
-    <section className="install-section" aria-label="Install Kind UI Charts">
+    <section className="install-section" aria-label="Kind UI Charts package preview">
       <p className="install-built-with">Built on Framer Motion and Recharts</p>
-      <Tabs
-        className="install-panel"
-        value={manager}
-        onValueChange={(value) => {
-          setManager(value as PackageManager);
-          setCopied(false);
-          setCopyFailed(false);
-        }}
-      >
+      <div className="install-panel">
         <div className="install-panel-header">
-          <TabsList className="install-manager-tabs" aria-label="Package manager">
-            {(Object.keys(installCommands) as PackageManager[]).map((key) => (
-              <TabsTrigger key={key} value={key}>
-                {key}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="install-copy"
-            onClick={copyCommand}
-            aria-label={copied ? "Install command copied" : "Copy install command"}
-          >
-            {copied ? <Check /> : <Copy />}
-          </Button>
+          <span className="package-preview-label">Package preview</span>
+          <span className="package-preview-status">Pre-release</span>
         </div>
-        {(Object.keys(installCommands) as PackageManager[]).map((key) => (
-          <TabsContent key={key} value={key} className="install-panel-content">
-            <code>
-              <span className="install-prompt" aria-hidden="true">
-                ${" "}
-              </span>
-              <span className="install-tool">{key}</span>
-              {key === "npm" ? " install " : " add "}
-              <span className="install-package">@kind-ui/charts</span>
-            </code>
-          </TabsContent>
-        ))}
-      </Tabs>
-      <span className="sr-only" role="status">
-        {copied
-          ? "Install command copied"
-          : copyFailed
-            ? "Could not copy. Select the command to copy manually."
-            : ""}
-      </span>
+        <div className="install-panel-content">
+          <code className="install-package">@kind-ui/charts</code>
+          <p className="package-preview-note">Registry installation is not yet verified</p>
+        </div>
+      </div>
     </section>
   );
 }
@@ -889,6 +830,8 @@ export default function Page() {
             width={2048}
             height={1365}
             onLoad={() => setArtReady(true)}
+            onError={() => setArtReady(false)}
+            fetchPriority="high"
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: artReady ? 1 : 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.9, ease: "easeOut" }}
@@ -912,7 +855,12 @@ export default function Page() {
               >
                 Docs
               </a>
-              <button type="button" className="nav-sponsor">
+              <button
+                type="button"
+                className="nav-sponsor"
+                disabled
+                title="Sponsorship is not available yet"
+              >
                 Sponsor <ArrowUpRight size={13} aria-hidden="true" />
               </button>
             </nav>
@@ -969,7 +917,7 @@ export default function Page() {
           </div>
         </section>
         <InstallSection />
-        <section id="showcase" className="showcase">
+        <section id="showcase" className="showcase" tabIndex={-1} aria-label="Chart showcase">
           <Tabs value={family} onValueChange={(v) => setFamily(v as Family)}>
             <div className="family-row">
               <TabsList className="family-tabs" aria-label="Chart families">
@@ -992,7 +940,7 @@ export default function Page() {
                 <span className="control-label">Finish</span>
                 <RadioGroup
                   disabled={["Pie", "Radar", "Radial", "Scatter", "Sankey"].includes(family)}
-                  title="Finishes apply to line, area, bar, combo, heatmap, and waterfall"
+                  title="Finishes apply to line, area, bar, combo, heatmap, waterfall, histogram, and box plot"
                   className="finish-options"
                   value={material}
                   onValueChange={(v) => setMaterial(v as Material)}
@@ -1120,6 +1068,7 @@ export default function Page() {
                   type="button"
                   className="replay"
                   onClick={() => setReplay((n) => n + 1)}
+                  disabled={!animate || !!reduceMotion}
                   aria-label="Replay chart animations"
                 >
                   <RotateCcw size={15} />
@@ -1207,7 +1156,12 @@ export default function Page() {
               >
                 Docs
               </a>
-              <button type="button" className="footer-sponsor">
+              <button
+                type="button"
+                className="footer-sponsor"
+                disabled
+                title="Sponsorship is not available yet"
+              >
                 Sponsor <ArrowUpRight size={13} aria-hidden="true" />
               </button>
               <a href={`${repo}/blob/main/LICENSE`} target="_blank" rel="noreferrer">

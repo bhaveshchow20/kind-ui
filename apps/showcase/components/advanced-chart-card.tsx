@@ -18,12 +18,13 @@ import {
   advancedData,
   type Finish,
 } from "@/lib/advanced-chart-recipes";
+import { useCopyCode } from "@/lib/use-copy-code";
 
 export { advancedRecipes } from "@/lib/advanced-chart-recipes";
 
 function formatAdvancedValue(id: string, value: unknown) {
   if (typeof value !== "number") return String(value);
-  const number = value.toLocaleString();
+  const number = value.toLocaleString("en-US");
   if (id === "combo" || id === "pie") return `$${number}`;
   if (id === "combo-area") return `${number} TB`;
   if (id === "radial-stacked") return `${number} h`;
@@ -31,7 +32,7 @@ function formatAdvancedValue(id: string, value: unknown) {
   return number;
 }
 
-function renderChartExample({
+function useChartExample({
   recipe: r,
   material,
   config,
@@ -255,13 +256,15 @@ function renderChartExample({
     </Chart.ScatterChart>
   );
 }
-function ChartExample(props: Parameters<typeof renderChartExample>[0]) {
+function ChartExample(props: Parameters<typeof useChartExample>[0]) {
+  const chart = useChartExample(props);
   return (
     <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-      {renderChartExample(props)}
+      {chart}
     </Chart.ResponsiveContainer>
   );
 }
+
 export function AdvancedChartCard({
   recipe,
   material,
@@ -278,9 +281,8 @@ export function AdvancedChartCard({
   const reduced = useReducedMotion();
   const cardRef = useRef<HTMLElement>(null);
   const entered = useInView(cardRef, { once: true, amount: 0.3 });
-  const chartAnimate = animate && entered;
+  const chartAnimate = animate && entered && !reduced;
   const [visible, setVisible] = useState<string[]>([...recipe.keys]);
-  const [copied, setCopied] = useState(false);
   const config: Chart.SeriesConfig = useMemo(
     () =>
       Object.fromEntries(
@@ -300,15 +302,7 @@ export function AdvancedChartCard({
     [recipe, colors],
   );
   const code = advancedCode(recipe, material, colors, animate);
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      setCopied(false);
-    }
-  }
+  const { copy, copied, message: copyMessage } = useCopyCode(code);
   return (
     <motion.article
       ref={cardRef}
@@ -318,6 +312,9 @@ export function AdvancedChartCard({
       viewport={{ once: true, amount: 0.12 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
+      <p className="copy-feedback" role="status">
+        {copyMessage}
+      </p>
       <div className="card-top">
         <h3 className="chart-tag">{recipe.tag}</h3>
         <div className="card-code-actions">

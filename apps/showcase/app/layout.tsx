@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 export const metadata: Metadata = {
   title: "Kind UI Charts",
   description:
-    "Explore Kind UI's React line, area and bar charts. Play with materials, palettes and motion in the live component showcase.",
+    "Explore composable React charts with real-world examples, palettes, finishes and motion. Kind UI Charts is in pre-release.",
   icons: {
     icon: [
       { url: "/kind-bloom.svg", type: "image/svg+xml" },

@@ -229,7 +229,7 @@ export function advancedCode(
   ...entry,
   formatValue: (value: unknown) => {
     if (typeof value !== "number") return String(value);
-    const number = value.toLocaleString();
+    const number = value.toLocaleString("en-US");
     return ${r.id === "combo" || r.id === "pie" ? '"$" + number' : r.id === "combo-area" ? 'number + " TB"' : r.id === "radial-stacked" ? 'number + " h"' : r.id === "gauge" ? 'number + "%"' : "number"};
   }
 }]));\n\nexport function Example(){\n const [visible,setVisible] = useState<string[]>(${JSON.stringify(r.keys)});\n const animate = ${animate};\n return <Chart.Root emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>\n  <div style={{height:240,width:"100%"}}><Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>\n${advancedBody(r, material)}\n  </Chart.ResponsiveContainer></div>\n  <Chart.Legend />\n </Chart.Root>;\n}\n`;

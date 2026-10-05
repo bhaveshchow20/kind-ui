@@ -8,6 +8,9 @@ import {
 } from "@/components/morphing-popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const colorSlots = ["first", "second", "third"] as const;
+
 export function PaletteColorInput({
   color,
   index,
@@ -74,7 +77,7 @@ export function CustomPaletteEditor({
         <h3>Your palette</h3>
         {draft.map((color, index) => (
           <PaletteColorInput
-            key={index}
+            key={colorSlots[index]}
             color={color}
             index={index}
             onChange={(value) =>
