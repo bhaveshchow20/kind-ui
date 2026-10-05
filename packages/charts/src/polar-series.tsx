@@ -4,11 +4,13 @@ import { animate, motion, useMotionValue } from "motion/react";
 import { type ComponentProps, memo, use, useId, useLayoutEffect, useRef, useState } from "react";
 import { DefaultZIndexes, Polygon, Radar, RadialBar, Sector, ZIndexLayer } from "recharts";
 import { ActiveMarker } from "./animation.js";
+import { categoryCells } from "./category-cells.js";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { PolarMotion, RadarMotion, RadialMotion } from "./polar-chart.js";
 import { type PolarMaterial, PolarMaterialFilter } from "./polar-material.js";
 import { RadarSelectionLayer, useRadarSelectionDot } from "./radar-interaction.js";
+import { RadialCategory } from "./radial-category.js";
 
 // Native Radar uses a props-identity animation key even with animation disabled.
 // Avoid replacing its polygon for unrelated frame state during a pointer press.
@@ -306,6 +308,11 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
   material = "plain",
   ...props
 }: RadialBarSeriesProps<DataPoint, Value>) {
+  const categories = use(RadialCategory);
+  const { config } = useChart();
+  const children = categories
+    ? categoryCells(categories.data, categories.key, config, props.children, fill)
+    : props.children;
   const series = usePolarSeries("RadialBarSeries", { ...props, seriesKey, hide }, [
     props.dataKey,
     seriesKey,
@@ -344,7 +351,9 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
               ? { fill: series.color }
               : {})}
           className={["kind-ui-radial-bar-series", className].filter(Boolean).join(" ")}
-        />
+        >
+          {children}
+        </RadialBar>
       </motion.g>
     </ZIndexLayer>
   );
