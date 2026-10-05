@@ -43,6 +43,8 @@ type Context = {
   missingLabel: string;
   active: readonly [string, string] | null;
   setActive: (key: readonly [string, string] | null) => void;
+  dismiss: () => void;
+  inspectPointer: (event: React.PointerEvent, key: readonly [string, string]) => void;
   tooltipId: string;
   tooltipMounted: boolean;
   setTooltipMounted: (mounted: boolean) => void;
@@ -63,6 +65,19 @@ const reducedSnapshot = () => window.matchMedia(reducedQuery).matches;
 const reducedServerSnapshot = () => true;
 const number = (value: number) => String(value);
 const keyOf = (cell: HeatmapCell) => JSON.stringify([cell.row, cell.column]);
+type PointerPosition = Pick<PointerEvent, "pointerId" | "pointerType" | "clientX" | "clientY">;
+const pointerPosition = (event: PointerPosition): PointerPosition => ({
+  pointerId: event.pointerId,
+  pointerType: event.pointerType,
+  clientX: event.clientX,
+  clientY: event.clientY,
+});
+const samePointer = (a: PointerPosition | null, b: PointerPosition) =>
+  a !== null &&
+  a.pointerId === b.pointerId &&
+  a.pointerType === b.pointerType &&
+  a.clientX === b.clientX &&
+  a.clientY === b.clientY;
 const labelOf = (cell: HeatmapCell, context: Context) =>
   `${cell.row}, ${cell.column}: ${cell.value === null ? context.missingLabel : context.formatValue(cell.value)}`;
 
@@ -84,7 +99,26 @@ export function HeatmapChart({
     () => createHeatmapModel({ rows, columns, data, ...(duplicates ? { duplicates } : {}) }),
     [rows, columns, data, duplicates],
   );
-  const [active, setActive] = useState<readonly [string, string] | null>(null);
+  const [active, updateActive] = useState<readonly [string, string] | null>(null);
+  const pointer = useRef<PointerPosition | null>(null);
+  const dismissed = useRef(false);
+  const setActive = useCallback((key: readonly [string, string] | null) => {
+    if (key) dismissed.current = false;
+    updateActive(key);
+  }, []);
+  const dismiss = useCallback(() => {
+    dismissed.current = true;
+    updateActive(null);
+  }, []);
+  const inspectPointer = useCallback(
+    (event: React.PointerEvent, key: readonly [string, string]) => {
+      const stationary = samePointer(pointer.current, event);
+      pointer.current = pointerPosition(event);
+      if (dismissed.current && stationary) return;
+      setActive(key);
+    },
+    [setActive],
+  );
   const tooltipId = useId();
   const [tooltipMounted, setTooltipMounted] = useState(false);
   const reduced = useSyncExternalStore(subscribeReduced, reducedSnapshot, reducedServerSnapshot);
@@ -93,6 +127,27 @@ export function HeatmapChart({
   const enabled = animate && !reduced;
   const entrance = enabled && !finished;
   const root = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!tooltipMounted) return;
+    // Keep the Escape baseline current even before focus/hover activates a cell.
+    // Layout/scroll can send boundary events without new pointer input. Only actual
+    // movement clears dismissal, including movement outside or within an entered cell.
+    const move = (event: PointerEvent) => {
+      const stationary = samePointer(pointer.current, event);
+      pointer.current = pointerPosition(event);
+      if (!dismissed.current || stationary) return;
+      dismissed.current = false;
+      const target =
+        event.target instanceof Element ? event.target.closest("td[data-cell-key]") : null;
+      if (!target || !root.current?.contains(target)) return;
+      const cell = model.cells
+        .flat()
+        .find((item) => keyOf(item) === target.getAttribute("data-cell-key"));
+      if (cell) setActive([cell.row, cell.column]);
+    };
+    document.addEventListener("pointermove", move, true);
+    return () => document.removeEventListener("pointermove", move, true);
+  }, [tooltipMounted, model, setActive]);
   const consumerRef = props.ref;
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
@@ -132,12 +187,12 @@ export function HeatmapChart({
   }, [entrance, interrupt]);
   useEffect(() => {
     if (!active || !tooltipMounted) return;
-    const dismiss = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setActive(null);
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) dismiss();
     };
-    document.addEventListener("keydown", dismiss);
-    return () => document.removeEventListener("keydown", dismiss);
-  }, [active, tooltipMounted]);
+    document.addEventListener("keydown", keydown);
+    return () => document.removeEventListener("keydown", keydown);
+  }, [active, tooltipMounted, dismiss]);
   return (
     <HeatmapContext
       value={{
@@ -148,6 +203,8 @@ export function HeatmapChart({
         missingLabel,
         active,
         setActive,
+        dismiss,
+        inspectPointer,
         tooltipId,
         tooltipMounted,
         setTooltipMounted,
@@ -343,7 +400,7 @@ export function HeatmapGrid({
         if (event.ctrlKey) r = model.rows.length - 1;
         break;
       case "Escape":
-        setActive(null);
+        context.dismiss();
         event.preventDefault();
         return;
       default:
@@ -357,7 +414,10 @@ export function HeatmapGrid({
       const element = Array.from(
         table.current?.querySelectorAll<HTMLTableCellElement>("td[data-cell-key]") ?? [],
       ).find((td) => td.dataset.cellKey === keyOf(next));
-      element?.focus();
+      if (element) {
+        setActive([next.row, next.column]);
+        element.focus();
+      }
     }
   }
   return (
@@ -453,11 +513,12 @@ export function HeatmapGrid({
                     }}
                     onPointerDown={(event) => {
                       extra.onPointerDown?.(event);
+                      // A press is deliberate even at the dismissed pointer position.
                       setActive([cell.row, cell.column]);
                     }}
                     onPointerEnter={(event) => {
                       extra.onPointerEnter?.(event);
-                      setActive([cell.row, cell.column]);
+                      context.inspectPointer(event, [cell.row, cell.column]);
                     }}
                   >
                     <Cell cell={cell} fill={fill} formattedValue={formattedValue} />

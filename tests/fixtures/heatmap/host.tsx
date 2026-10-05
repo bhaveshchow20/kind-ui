@@ -400,3 +400,86 @@ export const InvalidChartLayout = (
   // @ts-expect-error Layout belongs to the grid, not its context provider.
   <HeatmapChart rows={[]} columns={[]} data={[]} scale={scale} layout={{ cellSize: 12 }} />
 );
+
+export function DismissalHeatmaps() {
+  const [compact, setCompact] = useState(false);
+  const [updated, setUpdated] = useState(false);
+  const [blocked, setBlocked] = useState(false);
+  const [prevented, setPrevented] = useState(false);
+  const [events, setEvents] = useState<Record<string, number>>({});
+  const count = (name: string) =>
+    setEvents((value) => ({ ...value, [name]: (value[name] ?? 0) + 1 }));
+  return (
+    <section aria-label="Dismissal fixtures" style={{ padding: 16 }}>
+      <button type="button" onClick={() => setCompact(!compact)}>
+        Change dismissal layout
+      </button>
+      <button type="button" onClick={() => setUpdated(!updated)}>
+        Change dismissal data
+      </button>
+      <label>
+        <input
+          type="checkbox"
+          checked={blocked}
+          onChange={(event) => setBlocked(event.target.checked)}
+        />
+        Block dismissal Escape
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={prevented}
+          onChange={(event) => setPrevented(event.target.checked)}
+        />
+        Prevent dismissal Escape
+      </label>
+      <output
+        aria-label="Dismissal callbacks"
+        style={{ display: "block", height: 96, overflow: "auto" }}
+      >
+        {JSON.stringify(events)}
+      </output>
+      {["First", "Second"].map((name) => (
+        <HeatmapChart
+          key={name}
+          rows={["Mon", "Thu"]}
+          columns={Array.from({ length: 20 }, (_, i) => String(i + 1))}
+          data={[{ row: "Mon", column: "1", value: updated ? 2 : 1 }]}
+          scale={scale}
+          style={{ maxWidth: 500 }}
+          onPointerMoveCapture={() => count(`${name}-move`)}
+          onPointerDownCapture={() => count(`${name}-press`)}
+          onKeyDownCapture={(event) => {
+            if (prevented && event.key === "Escape") event.preventDefault();
+          }}
+        >
+          <HeatmapGrid
+            caption={`${name} dismissal grid`}
+            layout={
+              compact
+                ? { cellSize: 12, gap: 3, rowLabels: "hidden", columnLabels: "hidden" }
+                : { cellSize: 24 }
+            }
+            Cell={Dot}
+            onKeyDown={() => count(`${name}-key`)}
+            cellProps={() => ({
+              onPointerEnter: () => {
+                count(`${name}-enter`);
+              },
+              onPointerDown: () => count(`${name}-down`),
+              onPointerMove: () => count(`${name}-cell-move`),
+              onFocus: () => count(`${name}-focus`),
+              onKeyDown: (event) => {
+                if (blocked && event.key === "Escape") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+              },
+            })}
+          />
+          <HeatmapTooltip />
+        </HeatmapChart>
+      ))}
+    </section>
+  );
+}

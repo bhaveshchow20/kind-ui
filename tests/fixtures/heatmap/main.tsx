@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import "@kind-ui/charts/styles.css";
-import { CompactHeatmap, Edges, HeatmapRecipes } from "./host.js";
+import { CompactHeatmap, DismissalHeatmaps, Edges, HeatmapRecipes } from "./host.js";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
@@ -10,5 +10,6 @@ createRoot(root).render(
     <HeatmapRecipes />
     <Edges />
     <CompactHeatmap />
+    <DismissalHeatmaps />
   </>,
 );
