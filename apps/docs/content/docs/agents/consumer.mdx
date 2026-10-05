@@ -7,12 +7,43 @@ Start with [installation](/docs/start/installation/) and [llms.txt](/llms.txt), 
 
 Copy prompt follows the selected example, curve and material. Copy Markdown provides the page and its default examples.
 
+## Consumer skill
+
+```sh
+npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts
+```
+
+The skill covers chart choice, npm installation, public API composition and
+consumer verification. It is separate from repository maintainer guidance in
+`.agents/skills`.
+
+## MCP documentation retrieval
+
+Use your agent's existing documentation or web-fetch tools to retrieve the
+canonical HTTP resources. An already-configured MCP web/docs tool can use the
+same links:
+
+- [Documentation index](/llms.txt)
+- [Complete documentation](/llms-full.txt)
+- [Installation Markdown](/markdown/start/installation.md)
+- [Line Markdown](/markdown/components/line.md)
+- [SeriesConfig Markdown](/markdown/chart-components/series-config.md)
+
+These links are documentation resources, not MCP server configuration. Retrieve
+the relevant chart family and shared component guidance before writing code.
+
 ## Build a chart
 
 - Import components from `@kind-ui/charts` and its stylesheet once at the application entry.
 - Use configured `LineChart` for Root and sizing defaults. Area and Bar use explicit composition.
 - Keep data, units, domains and visibility state in your application.
 - Include a chart name and complete data alternative.
+
+## Try these prompts
+
+- “Build a weekly tasks line chart with @kind-ui/charts. Include zero observations and a complete accessible data table.”
+- “Compare signed revenue by category using BarChart. Keep visibility controlled by application state and check keyboard access.”
+- “Adapt the documented Area composition to our app's colors. Preserve missing-value gaps and reduced-motion behavior.”
 
 ## Verify
 
