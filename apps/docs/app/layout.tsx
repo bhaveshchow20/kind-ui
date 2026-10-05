@@ -1,5 +1,4 @@
 import "@fontsource-variable/geist";
-import "@kind-ui/charts/styles.css";
 import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";

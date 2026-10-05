@@ -2,10 +2,9 @@
   "mode": "local",
   "version": "0.0.0",
   "package": "@kind-ui/charts",
-  "integrity": "sha512-reFuaFnxQxCeXITypxf5RqGMwh5y1deAgUClD6gcLA33+LDemB6/ML2K16Aas3Y8cJ0ONuxfuKqVEaACyO+1zg==",
-  "sha256": "07502d1cec7796111975c3a724bdfd538b7b9560f883f80f1d2388105af0df36",
-  "sourceCommit": "0dc0f8c167373ee4a52fb011bff57227ea0168b5",
+  "integrity": "sha512-Q0eMtAJg5AA+EfkfxrYLS1aoqZN55RWw4OK+vHADUPhdCwOR55tkTEblqW/yzeKli/EY2r4n4aKmTLKlO/TM/Q==",
+  "sha256": "d6aa8a7ccc432ab5c46c78620a20642186e1d27fc65ffee10481598d19953a03",
+  "sourceCommit": "68ce9ad10d617faae3f08c562cb2768035167ee3",
   "publicExportsOnly": true,
-  "guardedArtifact": true,
-  "sourcePullRequest": "https://github.com/bhaveshchow20/kind-ui/pull/57"
+  "guardedArtifact": true
 }

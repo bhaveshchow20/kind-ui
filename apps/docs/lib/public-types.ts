@@ -26,3 +26,12 @@ export type LineSeries = Pick<
   "dataKey" | "seriesKey" | "material" | "type" | "connectNulls" | "hide" | "yAxisId"
 >;
 export type MotionOptions = Chart.LineAnimation;
+
+export type AreaChart = Pick<
+  Chart.AreaChartProps,
+  "data" | "animate" | "stackOffset" | "accessibilityLayer"
+>;
+export type AreaSeries = Pick<
+  Chart.AreaSeriesProps,
+  "dataKey" | "seriesKey" | "material" | "type" | "stackId" | "connectNulls" | "fillOpacity"
+>;

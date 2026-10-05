@@ -1,1 +1,17 @@
-{ "title": "Components", "pages": ["line"] }
+{
+  "title": "Components",
+  "pages": [
+    "line",
+    "area",
+    "bar",
+    "combo",
+    "pie",
+    "radar",
+    "radial",
+    "scatter",
+    "waterfall",
+    "sankey",
+    "histogram",
+    "box-plot"
+  ]
+}

@@ -1,23 +1,30 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { families } from "../examples/catalog.mjs";
 
 const origin = "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
-const removedFamilies = [
-  "area",
+const familyIds = families.map(({ id }) => id);
+const navigation = JSON.parse(readFileSync("content/docs/components/meta.json", "utf8")).pages;
+assert.deepEqual([...navigation].sort(), [...familyIds].sort());
+const unpublishedFamilies = [
   "bar",
   "combo",
+  "pie",
   "donut",
+  "bubble",
+  "gauge",
   "scatter",
   "radar",
+  "radial",
   "radial-bar",
   "histogram",
   "box-plot",
   "waterfall",
   "sankey",
   "heatmap",
-];
+].filter((id) => !familyIds.includes(id));
 mkdirSync("artifacts", { recursive: true });
 const browser = await chromium.launch();
 try {
@@ -31,12 +38,44 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`${origin}/docs/components/line/`);
   await page.locator(".recharts-line-curve").first().waitFor();
+  await page.evaluate(() => (document.documentElement.style.fontSize = "200%"));
+  const enlargedSidebar = await page.locator("#nd-sidebar").evaluate((sidebar) => {
+    const search = sidebar.querySelector(".glass-sidebar-search > button");
+    const selection = sidebar.querySelector(':scope > button[aria-haspopup="dialog"] > span');
+    const wordmark = sidebar.querySelector(".kind-wordmark").getBoundingClientRect();
+    const github = sidebar.querySelector('a[aria-label="GitHub"]').getBoundingClientRect();
+    return {
+      searchWidth: search.clientWidth,
+      searchContentWidth: search.scrollWidth,
+      selectionWidth: selection.clientWidth,
+      selectionContentWidth: selection.scrollWidth,
+      selectionOverflow: getComputedStyle(selection).textOverflow,
+      wordmarkRight: wordmark.right,
+      githubLeft: github.left,
+    };
+  });
+  assert.ok(
+    enlargedSidebar.searchContentWidth <= enlargedSidebar.searchWidth + 1 &&
+      enlargedSidebar.selectionContentWidth <= enlargedSidebar.selectionWidth + 1 &&
+      enlargedSidebar.selectionOverflow !== "ellipsis" &&
+      enlargedSidebar.wordmarkRight <= enlargedSidebar.githubLeft,
+    JSON.stringify(enlargedSidebar),
+  );
+  const sectionTrigger = page.locator('#nd-sidebar > button[aria-haspopup="dialog"]');
+  await sectionTrigger.focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("dialog").getByRole("link", { name: "Guides", exact: true }).waitFor();
+  await page.keyboard.press("Escape");
+  await page.locator(".glass-sidebar-search > button").click();
+  await page.getByRole("dialog").getByRole("combobox").waitFor();
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => (document.documentElement.style.fontSize = ""));
   const links = await page
     .locator("#nd-sidebar a[href]")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")));
   assert.deepEqual(
     links.filter((url) => url.startsWith("/docs/components/")),
-    ["/docs/components/line/"],
+    navigation.map((id) => `/docs/components/${id}/`),
   );
   const curve = page.locator('[data-component="line-smooth"]');
   await curve.getByRole("combobox", { name: "Curve" }).click();
@@ -60,15 +99,112 @@ try {
       .getAttribute("aria-pressed"),
     "false",
   );
-  await page.getByRole("button", { name: "Search", exact: false }).first().click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByRole("combobox").fill("Line");
-  await dialog.getByText("Line Chart", { exact: true }).first().waitFor();
-  await dialog.getByRole("combobox").fill("Combo Chart");
-  await page.waitForTimeout(500);
-  assert.equal(await dialog.getByText("Combo Chart", { exact: true }).count(), 0);
-  await page.keyboard.press("Escape");
-  for (const family of removedFamilies) {
+  const mobilePage = await context.newPage();
+  mobilePage.on("pageerror", (error) => errors.push(error.message));
+  const searchPage = await context.newPage();
+  searchPage.on("pageerror", (error) => errors.push(error.message));
+  await searchPage.goto(`${origin}/docs/components/line/`);
+  for (const id of familyIds) {
+    const title = readFileSync(`content/docs/components/${id}.mdx`, "utf8")
+      .match(/^title:\s*(.+)$/m)?.[1]
+      .replace(/^["']|["']$/g, "");
+    assert.ok(title, `Missing component title: ${id}`);
+    await searchPage.getByRole("button", { name: "Search", exact: false }).first().click();
+    const dialog = searchPage.getByRole("dialog");
+    await dialog.getByRole("combobox").fill(title);
+    const result = dialog
+      .getByRole("option")
+      .filter({ has: searchPage.getByText(title, { exact: true }) })
+      .first();
+    await result.waitFor();
+    await result.click();
+    await searchPage.waitForURL(
+      (url) => url.pathname.replace(/\/$/, "") === `/docs/components/${id}`,
+    );
+    await searchPage.getByRole("heading", { name: title, exact: true, level: 1 }).waitFor();
+    await searchPage.evaluate(() => (document.documentElement.style.fontSize = "200%"));
+    const clippedToc = await searchPage
+      .locator("#nd-toc a span")
+      .evaluateAll((labels) =>
+        labels
+          .filter(
+            (label, index) =>
+              label.scrollWidth > label.clientWidth + 1 ||
+              (labels[index + 1] &&
+                label.getBoundingClientRect().bottom >
+                  labels[index + 1].getBoundingClientRect().top + 1),
+          )
+          .map((label) => label.textContent),
+      );
+    assert.deepEqual(clippedToc, [], `${id}: TOC labels must remain readable at 200% text`);
+    for (const width of [375, 320]) {
+      await mobilePage.setViewportSize({ width, height: 900 });
+      await mobilePage.goto(`${origin}/docs/components/${id}/`);
+      await mobilePage
+        .locator('.chart-example svg, .chart-example [data-kind-ui="heatmap-grid"]')
+        .first()
+        .waitFor();
+      await mobilePage.waitForLoadState("networkidle");
+      await mobilePage.addStyleTag({ content: "html { font-size: 200% !important; }" });
+      const layout = await mobilePage.evaluate(async () => {
+        await document.fonts.ready;
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+        return {
+          fontSize: getComputedStyle(document.documentElement).fontSize,
+          pageWidth: document.documentElement.scrollWidth,
+          viewportWidth: document.documentElement.clientWidth,
+        };
+      });
+      if (layout.pageWidth > layout.viewportWidth + 1)
+        await mobilePage.screenshot({
+          path: `artifacts/screenshots/${id}-text200-${width}-overflow.png`,
+          fullPage: true,
+        });
+      assert.equal(layout.fontSize, "32px", `${id}: verify actual 200% root text`);
+      assert.ok(
+        layout.pageWidth <= layout.viewportWidth + 1,
+        `${id}: page overflow at ${width}/200: ${JSON.stringify(layout)}`,
+      );
+    }
+    await searchPage.evaluate(() => (document.documentElement.style.fontSize = ""));
+    assert.equal((await context.request.get(`${origin}/docs/components/${id}/`)).status(), 200);
+    assert.equal(
+      (await context.request.get(`${origin}/markdown/components/${id}.md`)).status(),
+      200,
+    );
+  }
+  if (!familyIds.includes("combo")) {
+    await searchPage.getByRole("button", { name: "Search", exact: false }).first().click();
+    const dialog = searchPage.getByRole("dialog");
+    await dialog.getByRole("combobox").fill("Combo Chart");
+    await searchPage.waitForTimeout(500);
+    assert.equal(await dialog.getByText("Combo Chart", { exact: true }).count(), 0);
+  }
+  await searchPage.close();
+  const searchResponse = await context.request.get(`${origin}/api/search`);
+  assert.equal(searchResponse.status(), 200);
+  const searchIds = (await searchResponse.json()).internalDocumentIDStore.internalIdToId;
+  for (const id of searchIds.filter((id) => id.startsWith("/docs/components/")))
+    assert.ok(
+      familyIds.some(
+        (family) =>
+          id === `/docs/components/${family}` ||
+          new RegExp(`^/docs/components/${family}-\\d+$`).test(id),
+      ),
+      `Unexpected component search entry ${id}`,
+    );
+  for (const id of familyIds)
+    assert.ok(searchIds.includes(`/docs/components/${id}`), `Search omits ${id}`);
+  for (const family of unpublishedFamilies) {
+    assert.ok(
+      !searchIds.some(
+        (id) =>
+          id === `/docs/components/${family}` ||
+          new RegExp(`^/docs/components/${family}-\\d+$`).test(id),
+      ),
+      `Search exposes unpublished ${family}`,
+    );
     assert.equal((await context.request.get(`${origin}/docs/components/${family}/`)).status(), 404);
     assert.equal(
       (await context.request.get(`${origin}/markdown/components/${family}.md`)).status(),
@@ -101,8 +237,11 @@ try {
       {
         publishedComponent: "line",
         selectedPrompt: "stepAfter",
-        removedRoutes: removedFamilies,
+        registeredComponents: familyIds,
+        navigationLinks: links.filter((url) => url.startsWith("/docs/components/")),
+        removedRoutes: unpublishedFamilies,
         navigationSearch: "passed",
+        enlargedSidebar,
         visibility: "passed",
         darkMobileEnlarged: "passed",
         errors,
@@ -113,7 +252,7 @@ try {
   );
   await context.close();
   console.log(
-    "Line-only navigation/search/routes, selected prompt/source, legend visibility and dark mobile enlarged text passed.",
+    "Registered component navigation/search/routes, removed routes, Line selected prompt/source, legend visibility and dark mobile enlarged text passed.",
   );
 } finally {
   await browser.close();

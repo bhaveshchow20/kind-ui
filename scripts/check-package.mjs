@@ -78,6 +78,84 @@ try {
     ]),
   );
   assert.equal(packed.filename, basename(packed.filename), "Unexpected tarball path");
+  const tarball = join(scratch, packed.filename);
+  const tarballBytes = await readFile(tarball);
+  const sha256 = createHash("sha256").update(tarballBytes).digest("hex");
+  assert.equal(
+    `sha512-${createHash("sha512").update(tarballBytes).digest("base64")}`,
+    packed.integrity,
+    "Tarball must match npm pack integrity before installation",
+  );
+  // Ordinary React host: installing Kind alone must resolve its required engine
+  // peers. Keep this distinct from the fully pinned reproducibility consumer.
+  const ordinary = join(scratch, "ordinary-host");
+  await mkdir(ordinary);
+  await writeFile(
+    join(ordinary, "package.json"),
+    JSON.stringify({
+      private: true,
+      type: "module",
+      dependencies: {
+        react: rootManifest.devDependencies.react,
+        "react-dom": rootManifest.devDependencies["react-dom"],
+      },
+      devDependencies: {
+        "@types/react": rootManifest.devDependencies["@types/react"],
+        "@types/react-dom": rootManifest.devDependencies["@types/react-dom"],
+      },
+    }),
+  );
+  run(
+    process.execPath,
+    [
+      npm,
+      "install",
+      "--no-audit",
+      "--no-fund",
+      "--package-lock=false",
+      "--workspaces=false",
+      tarball,
+    ],
+    ordinary,
+  );
+  run(process.execPath, [npm, "ls", "--all", "--json"], ordinary);
+  const ordinaryConsumerVersions = {};
+  for (const name of ["react", "react-dom", "react-is", "recharts", "motion"]) {
+    ordinaryConsumerVersions[name] = JSON.parse(
+      await readFile(join(ordinary, "node_modules", name, "package.json"), "utf8"),
+    ).version;
+  }
+  for (const file of ["chart.test.mjs", "configured-line.test.mjs", "consumer.tsx"]) {
+    await copyFile(join(root, "tests", file), join(ordinary, file));
+  }
+  run(process.execPath, ["--test", "chart.test.mjs", "configured-line.test.mjs"], ordinary);
+  for (const mode of ["NodeNext", "Bundler"]) {
+    await writeFile(
+      join(ordinary, "tsconfig.json"),
+      JSON.stringify({
+        compilerOptions: {
+          target: "ES2022",
+          jsx: "react-jsx",
+          esModuleInterop: true,
+          module: mode === "Bundler" ? "ESNext" : mode,
+          moduleResolution: mode,
+          strict: true,
+          skipLibCheck: false,
+          noEmit: true,
+          typeRoots: [join(ordinary, "node_modules/@types")],
+        },
+        files: ["consumer.tsx"],
+      }),
+    );
+    run(
+      process.execPath,
+      [join(root, "node_modules/typescript/bin/tsc"), "-p", "tsconfig.json"],
+      ordinary,
+    );
+  }
+  console.log(
+    `Ordinary npm React host: Kind-only install, peer graph, component tests and strict types passed (${JSON.stringify(ordinaryConsumerVersions)})`,
+  );
   const consumer = join(scratch, "consumer");
   await mkdir(consumer);
   await writeFile(
@@ -147,6 +225,7 @@ try {
         "bar",
         "emphasis",
         "pie",
+        "identity-colors",
         "combined",
         "polar",
         "combo",
@@ -157,6 +236,7 @@ try {
         "histogram",
         "box-plot",
         "number-shuffle",
+        "activity-rings",
       ].includes(folder) &&
       file.endsWith(".tsx")
     )
@@ -227,6 +307,19 @@ try {
   await production("index.html", "packed-configured-line");
   console.log(
     "Configured LineChart: public-only standalone/explicit/controlled consumers, generic props and strict NodeNext/Bundler passed",
+  );
+
+  await copyFixture("activity-rings", "index.html", "activity-rings.html");
+  await copyFixture("activity-rings", "main.tsx");
+  await typecheck(["main.tsx"]);
+  await production("activity-rings.html", "packed-activity-rings");
+  await writeFile(
+    join(consumer, "activity-rings.test.mjs"),
+    await readFile(join(root, "tests/activity-rings.test.mjs"), "utf8"),
+  );
+  run(process.execPath, ["--test", "activity-rings.test.mjs"], consumer);
+  console.log(
+    "ActivityRings: packed component tests, strict NodeNext/Bundler and production build passed",
   );
 
   // Compare the public surface with the same native-only consumer. A primitive
@@ -313,6 +406,13 @@ try {
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("bar", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-bar");
+  for (const file of ["entrance.tsx", "entrance.html"]) await copyFixture("bar", file);
+  await copyFile(
+    join(root, "node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2"),
+    join(consumer, "entrance-font.woff2"),
+  );
+  await typecheck(["entrance.tsx"]);
+  await production("entrance.html", "packed-bar-entrance");
   console.log(
     "Bar tarball consumer: guarded public imports, strict NodeNext/Bundler and production build passed",
   );
@@ -338,6 +438,13 @@ try {
   await production("index.html", "packed-heatmap");
   console.log(
     "Heatmap tarball: public composition, strict NodeNext/Bundler and production build passed",
+  );
+  for (const file of ["host.tsx", "main.tsx", "index.html"])
+    await copyFixture("identity-colors", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-identity-colors");
+  console.log(
+    "Identity colors: packed public consumer, strict NodeNext/Bundler and production build passed",
   );
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("pie", file);
   await typecheck(["host.tsx", "main.tsx"]);
@@ -444,10 +551,13 @@ try {
   if (process.argv.includes("--keep-artifact")) {
     const destination = artifactDestination;
     await mkdir(destination, { recursive: true });
-    const tarball = join(scratch, packed.filename);
-    const sha256 = createHash("sha256")
-      .update(await readFile(tarball))
-      .digest("hex");
+    assert.equal(
+      createHash("sha256")
+        .update(await readFile(tarball))
+        .digest("hex"),
+      sha256,
+      "Tested tarball must not change before retention",
+    );
     await copyFile(tarball, join(destination, packed.filename));
     assert.equal(
       createHash("sha256")
@@ -457,7 +567,41 @@ try {
     );
     await writeFile(
       join(destination, "validated-artifact.json"),
-      `${JSON.stringify({ filename: packed.filename, sha256, integrity: packed.integrity }, null, 2)}\n`,
+      `${JSON.stringify(
+        {
+          filename: packed.filename,
+          sha256,
+          integrity: packed.integrity,
+          package: { name: manifest.name, version: manifest.version },
+          source: {
+            checkoutCommit: run("git", ["rev-parse", "HEAD"]).trim(),
+            pullRequestHeadCommit: process.env.KIND_UI_PR_HEAD_SHA || null,
+            pullRequestBaseCommit: process.env.KIND_UI_PR_BASE_SHA || null,
+            dirty: run("git", ["status", "--porcelain"]).trim().length > 0,
+          },
+          workflow: {
+            runId: process.env.GITHUB_RUN_ID || null,
+            runAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
+            event: process.env.GITHUB_EVENT_NAME || null,
+            runUrl: process.env.GITHUB_RUN_ID
+              ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+              : null,
+          },
+          tools: {
+            node: process.version,
+            npm: run(process.execPath, [npm, "--version"]).trim(),
+            typescript: rootManifest.devDependencies.typescript,
+            vite: rootManifest.devDependencies.vite,
+          },
+          consumerVersions: Object.fromEntries(
+            peerNames.map((name) => [name, rootManifest.devDependencies[name]]),
+          ),
+          ordinaryConsumerVersions,
+          validation: "installed tarball package gate; aggregate browser checks are separate",
+        },
+        null,
+        2,
+      )}\n`,
     );
     console.log(`Validated artifact: ${join(destination, packed.filename)} (SHA-256 ${sha256})`);
   }

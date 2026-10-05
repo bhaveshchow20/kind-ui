@@ -30,8 +30,8 @@ Implementation PRs must add tests for their public contracts and relevant packed
 
 ## Versioning and release policy
 
-Root and package stay private at `0.0.0`; CI only checks code. No releases, npm publication, deployments, credentials, or package/scope ownership are implied.
+The workspace stays private at `0.0.0`; `@kind-ui/charts` is a public `0.1.0` candidate. CI validates code and artifacts; publishing remains hard-disabled. No releases, npm publication, deployments, credentials, or package/scope ownership are implied.
 
-Before a first public release, explicitly decide the package set, supported environments, namespace ownership, security-reporting route, and release authorization. Adopt release tooling in a separate release-setup PR once those decisions are made. Until then, record compatibility and user-visible changes in the PR instead of maintaining fictional release notes.
+Before a first public release, explicitly decide the package set, supported environments, namespace ownership, security-reporting route, and release authorization. The reviewed Changesets setup prepares versions and changelogs locally. A versioned public candidate does not authorize publication; release setup and account/access decisions remain separate.
 
 The intended release policy is semantic versioning per independently versioned package. After release tooling is adopted, user-facing package changes require a reviewed changeset and compatibility decision, including the policy for pre-1.0 breaking changes. Documentation, CI, and development-only changes need no package release. A successful CI run never authorizes publishing or merging.
