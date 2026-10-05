@@ -47,7 +47,7 @@ keyboard, accessibility attributes and reduced-motion tests.
 
 ## Retained artifact and publication evidence
 
-`npm run check` retains `artifacts/package/kind-ui-charts-0.1.0.tgz` and its
+`npm run check` retains `artifacts/package/kind-ui-charts-0.1.1.tgz` and its
 `validated-artifact.json`. The receipt identifies source cleanliness, checksum,
 npm integrity, tool versions and consumer versions. GitHub runs additionally
 identify the run and attempt. The package receipt alone proves the package gate;
