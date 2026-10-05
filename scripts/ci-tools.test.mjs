@@ -124,7 +124,7 @@ test("docs-only filter is conservative for mixed changes and executable paths", 
 test("required CI receipts reject failed, cancelled and unexpected skipped prerequisites", async () => {
   const { parse } = await import("yaml");
   const ci = parse(await readFile(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8"));
-  for (const id of ["check22", "check24"]) {
+  for (const id of ["check"]) {
     const command = ci.jobs[id].steps[0].run;
     const env = {
       ...process.env,

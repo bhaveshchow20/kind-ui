@@ -12,10 +12,7 @@ const dependabot = parse(await read(".github/dependabot.yml"));
 test("PR checks run without trigger exclusions and preserve required receipts", () => {
   assert.equal(ci.on.pull_request, null);
   assert.deepEqual(ci.on.push.branches, ["main"]);
-  for (const [id, name] of [
-    ["check22", "check (22)"],
-    ["check24", "check (24)"],
-  ]) {
+  for (const [id, name] of [["check", "All checks"]]) {
     const job = ci.jobs[id];
     assert.equal(job.name, name);
     assert.equal(job.if, "always()");

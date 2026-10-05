@@ -30,13 +30,13 @@ Use an **active branch ruleset** targeting exactly `refs/heads/main`, with no by
 | Required approving reviews | Zero |
 | Require code-owner or latest-push approval | Disabled |
 | Resolve review conversations | Required |
-| Required status checks | `check (22)` and `check (24)` |
+| Required status checks | `All checks` |
 | Expected check source | GitHub Actions, app ID `15368` |
 | Require branch to be up to date | Enabled |
 
 GitHub permits required PRs without approvals. Zero approvals avoids a sole maintainer needing a second reviewer for their own PR. Review and address feedback before merging; automatic review does not replace the existing contribution expectations. Deletion and force-push restrictions preserve branch history. Strict checks validate against the current base, at the cost of rerunning CI after another merge. Binding checks to an expected app prevents another source from satisfying them. [Available rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets).
 
-Both required names were observed on successful GitHub Actions check runs. They are now compatibility receipts in [the CI workflow](../.github/workflows/ci.yml) for the same Node 22 pipeline: fast checks, the full packed-package gate and all four browser shards. The `(24)` label preserves the existing rule without running Node 24. Both receipts fail on failed/cancelled prerequisites and accept skipped browsers only after successful docs-only detection. Require both receipts, rather than the workflow title `CI`. Keep these names unique and coordinate any future rename with this ruleset. [Required check naming](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/troubleshooting-rules).
+The required `All checks` completion check in [the CI workflow](../.github/workflows/ci.yml) covers the Node 22 pipeline: fast checks, the full packed-package gate and all four browser shards. It fails on failed/cancelled prerequisites and accepts skipped browsers only after successful docs-only detection. Require this check, rather than the workflow title `CI`. Keep the name unique and coordinate any future rename with this ruleset. [Required check naming](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/troubleshooting-rules).
 
 Do not require CodeRabbit, paid integrations, deployments, signing or a merge queue for this setup. The repository's current scope provides no need for those gates. A merge queue also requires a `merge_group` workflow trigger that this CI does not have. [GitHub merge queue requirements](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue).
 

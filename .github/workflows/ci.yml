@@ -136,33 +136,9 @@ jobs:
             artifacts/line-integrations/next-build.log
           if-no-files-found: error
           retention-days: 14
-  # Preserve the two required status names in the active main ruleset. These
-  # receipts fail closed on every failed/cancelled/missing prerequisite.
-  check22:
-    name: check (22)
-    needs: [changes, fast, packed, playwright]
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    steps:
-      - run: |
-          test "$CHANGES" = success
-          test "$FAST" = success
-          test "$PACKED" = success
-          if [ "$RUN_BROWSERS" = true ]; then
-            test "$BROWSERS" = success
-          else
-            test "$RUN_BROWSERS" = false
-            test "$BROWSERS" = skipped
-          fi
-        env:
-          CHANGES: ${{ needs.changes.result }}
-          FAST: ${{ needs.fast.result }}
-          PACKED: ${{ needs.packed.result }}
-          RUN_BROWSERS: ${{ needs.changes.outputs.browsers }}
-          BROWSERS: ${{ needs.playwright.result }}
-  check24:
-    name: check (24)
+  # The required completion check fails closed on every incomplete prerequisite.
+  check:
+    name: All checks
     needs: [changes, fast, packed, playwright]
     if: always()
     runs-on: ubuntu-latest

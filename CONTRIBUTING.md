@@ -71,11 +71,10 @@ Only changes entirely within root Markdown files, `docs/`, `apps/docs/`, or
 paths run it. The packed gate always checks package documentation contracts, and
 the separate Docs workflow continues to validate docs consumers and browsers.
 
-The existing required `check (22)` and `check (24)` names are compatibility
-receipts for the same Node 22 pipeline. Both reject failed or cancelled gates and
-accept skipped browsers only after successful docs-only detection. The `(24)`
-label does not run Node 24 or duplicate tests. Targets are fast feedback under
-3 minutes and all required checks under 10 minutes, including fixture preparation.
+The required `All checks` completion check covers the Node 22 pipeline. It rejects
+failed or cancelled gates and accepts skipped browsers only after successful
+docs-only detection. Targets are fast feedback under 3 minutes and all required
+checks under 10 minutes, including fixture preparation.
 
 The Docs workflow also separates site build/export checks, four copied-consumer
 shards, and four browser groups. All complete examples and non-default variants retain
