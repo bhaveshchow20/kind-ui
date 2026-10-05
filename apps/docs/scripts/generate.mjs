@@ -18,6 +18,7 @@ import {
   families,
   variantDefinitions,
 } from "../examples/catalog.mjs";
+import { publicPath } from "../lib/routing.mjs";
 
 const read = (file) => readFileSync(file, "utf8");
 const write = (file, text) => {
@@ -87,6 +88,7 @@ rmSync("public/examples", { recursive: true, force: true });
 rmSync("public/markdown", { recursive: true, force: true });
 rmSync("generated", { recursive: true, force: true });
 const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
+const link = (path) => `${origin}${publicPath(path)}`;
 const bundles = {};
 for (const example of allExamples) {
   if (!Object.hasOwn(dataLabels, example.id))
@@ -164,9 +166,9 @@ for (const example of allExamples) {
     "\n## Complete setup files\n\n" +
     Object.keys(files)
       .filter((file) => file !== "README.md")
-      .map((file) => `- [${file}](${origin}/examples/${example.id}/${file})`)
+      .map((file) => `- [${file}](${link(`/examples/${example.id}/${file}`)})`)
       .join("\n") +
-    `\n- [Pinned tarball](${origin}/examples/package/kind-ui-charts-0.0.0.tgz)\n- [Provenance](${origin}/package-provenance.json)\n`;
+    `\n- [Pinned tarball](${link("/examples/package/kind-ui-charts-0.0.0.tgz")})\n- [Provenance](${link("/package-provenance.json")})\n`;
   bundles[example.id] = {
     ...example,
     ...(dataAlternative ? { dataAlternative } : {}),
@@ -288,7 +290,7 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
         (file) => !inline.some(([name]) => name === file),
       );
       return (
-        `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\n${bundle.packageStatus}. Pinned package asset: ${origin}/examples/package/kind-ui-charts-0.0.0.tgz.\n\n` +
+        `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\n${bundle.packageStatus}. Pinned package asset: ${link("/examples/package/kind-ui-charts-0.0.0.tgz")}.\n\n` +
         inline
           .map(
             ([file, source]) =>
@@ -296,7 +298,7 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
           )
           .join("\n\n") +
         "\n\nComplete setup files:\n" +
-        linked.map((file) => `- [${file}](${origin}/examples/${id}/${file})`).join("\n")
+        linked.map((file) => `- [${file}](${link(`/examples/${id}/${file}`)})`).join("\n")
       );
     },
   );
@@ -305,6 +307,13 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   );
   if (/<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|ApiTable)\b/.test(body))
     throw new Error(`Unresolved MDX in ${key}`);
+  // Rewrite retrieval links outside fences; copied consumer source stays byte-for-byte unchanged.
+  body = body
+    .split(/(```[^\n]*\n[\s\S]*?\n```)/g)
+    .map((part, index) =>
+      index % 2 ? part : part.replace(/\]\((\/(?!\/)[^\s)]+)\)/g, (_, path) => `](${link(path)})`),
+    )
+    .join("");
   const markdown = `# ${title}\n\n${description}\n\nPackage snapshot: ${status}.\n\n${body.trim()}\n`;
   write(`public/markdown/${key}.md`, markdown);
   index.push({ key, title, markdown });
@@ -312,8 +321,15 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
 write(
   "public/llms.txt",
   `# Kind UI charts documentation\n\nPre-release documentation preview. ${status}. This Site is initially owner-private; its URLs are not an anonymous public-docs availability claim. No registry installation is available in local mode.\n\nUse the consumer guidance, then retrieve the exact example and public type reference. Geometry and data stay consumer-owned. Glass is paused.\n\n` +
-    index.map(({ key, title }) => `- [${title}](${origin}/markdown/${key}.md)`).join("\n") +
+    index.map(({ key, title }) => `- [${title}](${link(`/markdown/${key}.md`)})`).join("\n") +
     "\n",
+);
+write(
+  "public/AGENTS.md",
+  read("lib/consumer-agent-guide.md").replace(
+    /\/(?:llms(?:-full)?\.txt|markdown\/[\w/.-]+|package-provenance\.json|examples\/[\w/.-]+)/g,
+    (path) => link(path),
+  ),
 );
 write("public/llms-full.txt", index.map(({ markdown }) => markdown).join("\n\n---\n\n"));
 console.log(

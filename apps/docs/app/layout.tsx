@@ -4,12 +4,13 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { GlassDocsLayout } from "@/components/glass-docs-layout";
 import { Provider } from "@/components/provider";
+import { docRoute, publicPath } from "@/lib/routing.mjs";
 import { source } from "@/lib/source";
 
 export const metadata: Metadata = {
   title: { default: "Kind UI charts · Documentation", template: "%s · Kind UI charts" },
   description: "React chart components with native Recharts composition and complete examples.",
-  icons: { icon: "/favicon.svg" },
+  icons: { icon: publicPath("/favicon.svg") },
   robots: { index: false, follow: false },
 };
 export default function Layout({ children }: { children: ReactNode }) {
@@ -29,7 +30,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   <small>charts</small>
                 </span>
               ),
-              url: "/docs/",
+              url: docRoute("/docs/"),
             }}
             githubUrl="https://github.com/bhaveshchow20/kind-ui"
           >

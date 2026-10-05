@@ -2,6 +2,8 @@ import { readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
 
+import { basePath } from "../lib/routing.mjs";
+
 const root = path.resolve("out");
 const mime = {
   ".html": "text/html",
@@ -16,7 +18,11 @@ const mime = {
 };
 const server = createServer((request, response) => {
   try {
-    const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
+    let pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
+    if (basePath) {
+      if (pathname !== basePath && !pathname.startsWith(`${basePath}/`)) throw new Error();
+      pathname = pathname.slice(basePath.length) || "/";
+    }
     let file = path.resolve(root, `.${pathname}`);
     if (file !== root && !file.startsWith(`${root}${path.sep}`)) throw new Error();
     if (statSync(file).isDirectory()) file = path.join(file, "index.html");
@@ -27,4 +33,7 @@ const server = createServer((request, response) => {
     response.end("Not found");
   }
 });
-server.listen(6373, "127.0.0.1", () => console.log("Docs static preview: http://127.0.0.1:6373"));
+const port = Number(process.env.KIND_DOCS_PORT || 6373);
+server.listen(port, "127.0.0.1", () =>
+  console.log(`Docs static preview: http://127.0.0.1:${port}${basePath}/`),
+);

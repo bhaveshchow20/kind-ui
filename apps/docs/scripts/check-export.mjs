@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { basePath, publicPath } from "../lib/routing.mjs";
+
+const routePrefix = basePath ? "" : "docs/";
+
 import { allExamples, families } from "../examples/catalog.mjs";
 
 const familyIds = families.map(({ id }) => id);
@@ -9,10 +13,10 @@ const root = path.resolve("out");
 const html = readdirSync(root, { recursive: true }).filter(
   (file) => String(file).endsWith(".html") && !String(file).startsWith("examples/"),
 );
-const componentRoutes = html.filter((file) => String(file).startsWith("docs/components/"));
+const componentRoutes = html.filter((file) => String(file).startsWith(`${routePrefix}components/`));
 assert.deepEqual(
   componentRoutes.sort(),
-  familyIds.map((id) => `docs/components/${id}/index.html`).sort(),
+  familyIds.map((id) => `${routePrefix}components/${id}/index.html`).sort(),
 );
 assert.deepEqual(
   readdirSync(path.join(root, "markdown/components")).sort(),
@@ -24,12 +28,12 @@ assert.deepEqual(
 );
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;
-for (const id of searchIds.filter((id) => id.startsWith("/docs/components/")))
+for (const id of searchIds.filter((id) => id.startsWith(publicPath("/docs/components/"))))
   assert.ok(
     familyIds.some(
       (family) =>
-        id === `/docs/components/${family}` ||
-        new RegExp(`^/docs/components/${family}-\\d+$`).test(id),
+        id === publicPath(`/docs/components/${family}`) ||
+        new RegExp(`^${publicPath(`/docs/components/${family}`)}-\\d+$`).test(id),
     ),
     `Search exposes ${id}`,
   );
@@ -37,7 +41,7 @@ const navigation = JSON.parse(readFileSync("content/docs/components/meta.json", 
 assert.deepEqual([...navigation.pages].sort(), [...familyIds].sort());
 for (const id of familyIds) {
   assert.ok(
-    searchIds.some((key) => key === `/docs/components/${id}`),
+    searchIds.some((key) => key === publicPath(`/docs/components/${id}`)),
     `Search omits ${id}`,
   );
   assert.ok(
@@ -58,7 +62,9 @@ for (const file of html) {
   for (const match of body.matchAll(/(?:href|src)="(\/[^"#?]*)/g)) {
     const url = decodeURIComponent(match[1]);
     if (url.startsWith("//")) continue;
-    const target = path.join(root, url);
+    if (basePath && !url.startsWith(`${basePath}/`))
+      throw new Error(`${file}: internal URL escaped docs prefix: ${url}`);
+    const target = path.join(root, basePath ? url.slice(basePath.length) : url);
     if (
       !existsSync(target) ||
       (statSync(target).isDirectory() && !existsSync(path.join(target, "index.html")))

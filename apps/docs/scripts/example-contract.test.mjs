@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { allExamples, examples, families } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
+import { publicPath } from "../lib/routing.mjs";
+import "./routing-contract.test.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
@@ -91,7 +93,9 @@ test("Area consumers preserve explicit composition and consumer-owned stacked vi
     assert.match(source, /<Chart.AreaSeries/);
     assert.equal(bundle.dataAlternative.rows.length, 12);
     assert.ok(!/settings|controls|<Chart.AreaChart[^>]*config=/s.test(source));
-    assert.ok(promptFor(bundle, {}, "https://docs.example").includes("/docs/components/area/"));
+    assert.ok(
+      promptFor(bundle, {}, "https://docs.example").includes(publicPath("/docs/components/area/")),
+    );
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
@@ -113,7 +117,9 @@ test("every family recipe is generated with its own prompt route and complete da
     const bundle = all[example.id];
     assert.equal(bundle.family, example.family);
     assert.ok(
-      promptFor(bundle, {}, "https://docs.example").includes(`/docs/components/${example.family}/`),
+      promptFor(bundle, {}, "https://docs.example").includes(
+        publicPath(`/docs/components/${example.family}/`),
+      ),
     );
     assert.ok(bundle.dataAlternative.rows.length > 0);
     for (const row of bundle.dataAlternative.rows)
