@@ -7,7 +7,8 @@ npm run changeset
 npm run release:status
 ```
 
-Documentation and tooling changes need no package release. Before 1.0, breaking
+Documentation and tooling changes normally need no package release. An approved
+package README refresh can use a patch changeset to update the npm page. Before 1.0, breaking
 APIs increment minor; compatible fixes increment patch. The workspace remains
 private at `0.0.0`. Kind charts are independently versioned.
 
@@ -27,10 +28,10 @@ approve those runs before review/merge. Unattended checks would require a
 separately approved GitHub App or token, not a silent credential addition. See
 [GitHub token workflow behavior](https://docs.github.com/en/actions/concepts/security/github_token).
 
-The first-release package contract deliberately requires exactly `0.1.0`. Keep
-that gate for this release. Before a later version PR can pass, review the
-version-policy adjustment that validates its new version against the release
-plan. This work does not publish or prepare another package version.
+The package contract deliberately requires exactly the reviewed `0.1.1`
+candidate. Each later version PR must include a reviewed adjustment to this
+exact-version guard and the manual validation default. Preparing and testing a
+version does not authorize its publication.
 
 Merge the reviewed version PR after the required checks pass. Publication then
 uses the release handoff below. Automated publication after that merge requires
@@ -52,12 +53,12 @@ and tested artifact in `artifacts/package/`; inspect `validated-artifact.json`
 and the aggregate output together. The receipt alone proves the package gate.
 Version, manifest or package-source changes require a fresh tested candidate.
 
-An authorized first publication with existing npm authentication uses those
+An explicitly authorized publication with existing npm authentication uses those
 exact bytes:
 
 ```sh
 npm whoami --registry=https://registry.npmjs.org
-npm publish ./artifacts/package/kind-ui-charts-0.1.0.tgz --ignore-scripts --access public --tag latest --registry=https://registry.npmjs.org
+npm publish ./artifacts/package/kind-ui-charts-0.1.1.tgz --ignore-scripts --access public --tag latest --registry=https://registry.npmjs.org
 ```
 
 Check the receipt's SHA-256 before publication. Never repack at publication or
@@ -70,7 +71,7 @@ reject artifacts from an earlier attempt. After an ambiguous publication result,
 inspect the registry version and `dist.integrity` before retrying. A matching
 published version needs no retry; published versions are immutable.
 
-Verify `@kind-ui/charts@0.1.0` in a fresh registry-installed consumer, including
+Verify `@kind-ui/charts@0.1.1` in a fresh registry-installed consumer, including
 strict TypeScript, the stylesheet and a rendered LineChart. Compare registry
 integrity with the retained artifact. Record publication and consumer results in
 the release evidence; an authenticated website session alone does not establish

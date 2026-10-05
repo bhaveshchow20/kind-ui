@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 
 export function assertPackageContract(manifest, files, sources = []) {
   assert.equal(manifest.private, undefined, "Reviewed public candidate must omit the private flag");
-  assert.equal(manifest.version, "0.1.0", "Version must match the reviewed public candidate");
+  assert.equal(manifest.version, "0.1.1", "Version must match the reviewed public candidate");
   assert.ok(manifest.description?.trim(), "Package must describe its purpose");
   assert.equal(manifest.license, "MIT", "Package must declare its license");
   assert.deepEqual(
