@@ -53,7 +53,7 @@ npm integrity, tool versions and consumer versions. GitHub runs additionally
 identify the run and attempt. The package receipt alone proves the package gate;
 record the aggregate result alongside it.
 
-CI uploads successful candidates only after the full Node 22/24 aggregate passes.
+CI prepares and uploads the validated package/build candidate once on Node 22, then tests those exact consumer builds in four browser shards. Require both aggregate completion receipts before treating the candidate as fully validated. The legacy `check (24)` name is a compatibility receipt, not a Node 24 test run.
 The release verifier rejects dirty sources, mismatched runs/attempts/checksums and
 integration evidence from different bytes. Publish the selected tested tarball
 with lifecycle scripts disabled. Never rebuild during publication. A package

@@ -94,3 +94,81 @@ test("parallel aggregate waits for sibling evidence and propagates failure", asy
     await rm(scratch, { recursive: true, force: true });
   }
 });
+
+test("docs-only filter is conservative for mixed changes and executable paths", async () => {
+  const { needsBrowsers, changedPaths } = await import("./ci-paths.mjs");
+  assert.equal(
+    needsBrowsers([
+      "README.md",
+      "docs/development.md",
+      "apps/docs/src/page.tsx",
+      "packages/charts/README.md",
+    ]),
+    false,
+  );
+  for (const path of [
+    "packages/charts/src/index.ts",
+    "tests/chart.spec.ts",
+    "scripts/ci-paths.mjs",
+    ".github/workflows/ci.yml",
+    "package-lock.json",
+    "examples/chart/index.html",
+    "unknown/new-file",
+  ])
+    assert.equal(needsBrowsers(["docs/readme.md", path]), true, path);
+  assert.equal(needsBrowsers([]), true);
+  assert.equal(changedPaths("0".repeat(40), "a".repeat(40)), null);
+  assert.equal(changedPaths("--invalid", "a".repeat(40)), null);
+});
+
+test("required CI receipts reject failed, cancelled and unexpected skipped prerequisites", async () => {
+  const { parse } = await import("yaml");
+  const ci = parse(await readFile(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8"));
+  for (const id of ["check22", "check24"]) {
+    const command = ci.jobs[id].steps[0].run;
+    const env = {
+      ...process.env,
+      CHANGES: "success",
+      FAST: "success",
+      PACKED: "success",
+      RUN_BROWSERS: "true",
+      BROWSERS: "success",
+    };
+    const run = (overrides) =>
+      execFileSync("bash", ["-e", "-c", command], { env: { ...env, ...overrides }, stdio: "pipe" });
+    run({});
+    run({ RUN_BROWSERS: "false", BROWSERS: "skipped" });
+    for (const status of ["failure", "cancelled", "skipped", ""]) {
+      for (const gate of ["CHANGES", "FAST", "PACKED"])
+        assert.throws(() => run({ [gate]: status }));
+      assert.throws(() => run({ BROWSERS: status }));
+    }
+    assert.throws(() => run({ RUN_BROWSERS: "", BROWSERS: "skipped" }));
+    assert.throws(() => run({ RUN_BROWSERS: "false", BROWSERS: "failure" }));
+  }
+});
+
+test("parallel browser runner forwards the shard to every suite", async () => {
+  const scratch = await mkdtemp(join(tmpdir(), "kind-shard-probe-"));
+  try {
+    const fakeNpm = join(scratch, "npm.mjs");
+    await writeFile(fakeNpm, "console.log(JSON.stringify(process.argv.slice(2)));");
+    const stdout = execFileSync(
+      process.execPath,
+      [fileURLToPath(new URL("./run-checks.mjs", import.meta.url)), "consumers", "--shard=2/4"],
+      {
+        encoding: "utf8",
+        env: { ...process.env, npm_execpath: fakeNpm },
+      },
+    );
+    for (const suite of [
+      "test:chart",
+      "test:composition",
+      "test:configured-line",
+      "test:line-integrations",
+    ])
+      assert.ok(stdout.includes(JSON.stringify(["run", suite, "--", "--shard=2/4"])));
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+});

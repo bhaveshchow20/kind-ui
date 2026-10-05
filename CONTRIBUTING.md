@@ -5,12 +5,12 @@ Kind UI is pre-release and unpublished. The repository uses an open-source contr
 ## Start here
 
 1. Read [README.md](README.md), [AGENTS.md](AGENTS.md), and the [development direction](docs/development.md).
-2. Use Node 22.12+ (Node 24 recommended) and npm 11.9, then run `npm ci` and `npm exec playwright install -- --with-deps chromium` (Linux dependencies may need administrator permission).
+2. Use Node 22.12+ (CI uses Node 22) and npm 11.9, then run `npm ci` and `npm exec playwright install -- --with-deps chromium` (Linux dependencies may need administrator permission).
 3. Create one focused branch for the agreed scope. Discuss a new feature, public API, dependency, or cross-package abstraction before implementing it.
 4. Run `npm run format` and `npm run check`. Report exactly what was checked and anything blocked.
 5. Open a draft PR describing the purpose, changed behavior/API, verification, and known limits. For stacked work, name and link its immediate base PR.
 
-`main` requires a pull request, passing Node 22/24 CI checks against the current base, and resolved review conversations. Force pushes and deletion are blocked. See the [branch protection policy](docs/branch-protection.md) for the ruleset configuration, OSS references, and maintenance instructions.
+`main` requires a pull request, passing Node 22 CI checks against the current base, and resolved review conversations. Force pushes and deletion are blocked. See the [branch protection policy](docs/branch-protection.md) for the ruleset configuration, OSS references, and maintenance instructions.
 
 ## Commands
 
@@ -23,7 +23,10 @@ Kind UI is pre-release and unpublished. The repository uses an open-source contr
 - `npm test`: build and run public component tests
 - `npm run dev:chart`: run the minimal usage example
 - `npm run check:chart`: prepare the packed consumer, typecheck/build the example and run browser checks
-- `npm run check`: lint, component tests, packed-package gate and browser checks
+- `npm run check:fast`: lint, CI/release contracts, strict library typecheck and component tests
+- `npm run check:packed`: full packed-package gate, example typecheck/build and Next/Tailwind/Lucide build checks
+- `npm run check:browsers -- --shard=1/4`: browser shard against fixtures prepared by `check:packed`
+- `npm run check`: all fast, packed-package and browser gates locally
 
 Component tests exercise zero/missing values, formatting, filtering, composition errors and native semantics. Browser checks cover controlled state, keyboard behavior, refs, resize and independent containers. The package gate checks required packed files, ESM import, and strict NodeNext/Bundler declaration resolution without workspace links. Its direct peers/type packages are pinned from the workspace; their installation may require npm registry access. Its small native Node tests prove missing outputs/docs and unwanted files fail validation. Each implementation PR must add its focused tests and include them in `check`. Package functionality must also be checked through packed public exports, rather than only workspace source imports.
 
@@ -35,7 +38,7 @@ Use `npm run pack:artifact` for a candidate that has also passed the isolated co
 
 ## Review expectations
 
-The retained receipt also identifies the source commit/dirty flag, tool versions and pinned consumer versions. It proves the package gate only. The existing `check:line-integrations` and `test:line-integrations` additionally check a pinned Next App Router static export, SSR shell and browser hydration, Tailwind v4 overrides and named Lucide icons for the same checksum. CI retains package candidates and integration evidence only after the full aggregate passes. See [first-release readiness](docs/release-readiness.md) for support boundaries, install examples and the remaining owner decisions; this does not authorize publication.
+The retained receipt also identifies the source commit/dirty flag, tool versions and pinned consumer versions. It proves the package gate only. The existing `check:line-integrations` and `test:line-integrations` additionally check a pinned Next App Router static export, SSR shell and browser hydration, Tailwind v4 overrides and named Lucide icons for the same checksum. CI prepares the candidate and integration build evidence once, then gives the same packed-consumer production builds to four Playwright shards. The retained receipt proves package/build checks; require the aggregate completion checks before treating the candidate as browser-tested. See [first-release readiness](docs/release-readiness.md) for support boundaries, install examples and the remaining owner decisions; this does not authorize publication.
 
 Evaluate proposals against Kind UI’s goals: performance, accessibility, extensibility, familiarity, and interoperability with agentic applications. Turn the relevant goals into focused acceptance checks; do not describe goals as guarantees before testing them.
 
@@ -54,3 +57,22 @@ Use the issue forms for reproducible non-sensitive bugs or focused proposals. Fo
 ## CodeRabbit review setup
 
 The [repository configuration](.coderabbit.yaml) requests CodeRabbit reviews for draft PRs, stacked base branches, and subsequent pushes. The owner must separately install/approve the GitHub app for this repository; configuration alone does not grant access or establish that a review ran. Repository visibility and any paid plan require a separate owner decision. Automatic review remains subject to [CodeRabbit eligibility and limits](https://docs.coderabbit.ai/management/plans); an explicit `@coderabbitai review` trigger may be required. Inspect the actual review and CI results before merging, and address relevant feedback in a focused change. Automatic code changes and unrelated automation are disabled in the project configuration.
+
+## CI timing and path filtering
+
+CI runs on Node 22. Fast checks and the packed-package gate start independently;
+browser shards wait only for packed fixture preparation and change detection.
+All four browser configurations receive `--shard`, with no tests excluded.
+Browser binaries are cached by Playwright version, OS and architecture; OS
+libraries are still installed on every runner.
+
+Only changes entirely within root Markdown files, `docs/`, `apps/docs/`, or
+`packages/charts/*.md` skip the library Playwright suite. Mixed changes and unknown
+paths run it. The packed gate always checks package documentation contracts, and
+the separate Docs workflow continues to validate docs consumers and browsers.
+
+The existing required `check (22)` and `check (24)` names are compatibility
+receipts for the same Node 22 pipeline. Both reject failed or cancelled gates and
+accept skipped browsers only after successful docs-only detection. The `(24)`
+label does not run Node 24 or duplicate tests. Targets are fast feedback under
+3 minutes and all required checks under 10 minutes, including fixture preparation.

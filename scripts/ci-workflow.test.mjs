@@ -9,13 +9,29 @@ const docs = parse(await read(".github/workflows/docs.yml"));
 const release = parse(await read(".github/workflows/release.yml"));
 const dependabot = parse(await read(".github/dependabot.yml"));
 
-test("PR checks retain the protected Node status names and run without path exclusions", () => {
+test("PR checks run without trigger exclusions and preserve required receipts", () => {
   assert.equal(ci.on.pull_request, null);
   assert.deepEqual(ci.on.push.branches, ["main"]);
-  assert.ok(ci.jobs.check, "Required check job must remain present");
-  assert.equal(ci.jobs.check.name, undefined);
-  assert.deepEqual(ci.jobs.check.strategy.matrix.node, [22, 24]);
-  assert.equal(ci.jobs.check.strategy["fail-fast"], false);
+  for (const [id, name] of [
+    ["check22", "check (22)"],
+    ["check24", "check (24)"],
+  ]) {
+    const job = ci.jobs[id];
+    assert.equal(job.name, name);
+    assert.equal(job.if, "always()");
+    assert.deepEqual(job.needs, ["changes", "fast", "packed", "playwright"]);
+  }
+  assert.equal(ci.jobs.fast.needs, undefined);
+  assert.equal(ci.jobs.packed.needs, undefined);
+  assert.equal(ci.jobs.fast.strategy, undefined);
+  for (const workflow of [ci, docs, release]) {
+    for (const job of Object.values(workflow.jobs)) {
+      assert.equal(job.strategy?.matrix.node, undefined);
+      for (const step of job.steps.filter((s) => s.uses?.startsWith("actions/setup-node@"))) {
+        assert.equal(step.with["node-version"], 22);
+      }
+    }
+  }
 });
 
 test("all workflows keep untrusted code read-only, pinned, and bounded", () => {
@@ -66,7 +82,7 @@ test("both test pipelines retain every aggregate browser suite's available failu
       return config.outputDir;
     }),
   );
-  for (const job of [ci.jobs.check, release.jobs.validate]) {
+  for (const job of [ci.jobs.playwright, release.jobs.validate]) {
     const uploads = job.steps.filter(
       (step) => step.uses?.startsWith("actions/upload-artifact@") && step.if === "always()",
     );
@@ -84,7 +100,7 @@ test("both test pipelines retain every aggregate browser suite's available failu
 });
 
 test("advisory checks include development tooling and npm updates cover both lockfiles", async () => {
-  for (const job of [ci.jobs.check, docs.jobs.docs, release.jobs.validate]) {
+  for (const job of [ci.jobs.fast, docs.jobs.docs, release.jobs.validate]) {
     assert.ok(job.steps.some((step) => step.run === "npm audit --audit-level=high --include=dev"));
   }
   assert.ok(
@@ -101,5 +117,65 @@ test("advisory checks include development tooling and npm updates cover both loc
         (update) => update["package-ecosystem"] === "npm" && update.directory === directory,
       ),
     );
+  }
+});
+
+test("split CI covers all aggregate gates and sends shard args to every browser suite", async () => {
+  const { scripts } = JSON.parse(await read("package.json"));
+  const fastRuns = ci.jobs.fast.steps.map((s) => s.run).filter(Boolean);
+  for (const command of ["npm run check:preflight", "npm run typecheck", "npm run test:unit"])
+    assert.ok(fastRuns.includes(command));
+  assert.equal(scripts["check:preflight"], "node scripts/run-checks.mjs preflight");
+  assert.ok(ci.jobs.packed.steps.some((s) => s.run === "npm run check:packed"));
+  for (const gate of [
+    "pack:artifact",
+    "check-showcase-code.mjs",
+    "tsc -p examples/chart",
+    "vite build examples/chart",
+    "check:line-integrations",
+  ])
+    assert.ok(scripts["check:packed"].includes(gate), `Missing gate: ${gate}`);
+  assert.deepEqual(ci.jobs.playwright.needs, ["changes", "packed"]);
+  assert.equal(ci.jobs.playwright.if, "needs.changes.outputs.browsers == 'true'");
+  assert.deepEqual(ci.jobs.playwright.strategy.matrix.shard, [1, 2, 3, 4]);
+  assert.equal(ci.jobs.playwright.strategy["fail-fast"], false);
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: Literal GitHub Actions expression.
+  assert.ok(ci.jobs.playwright.steps.some((s) => s.run?.includes("--shard=${{ matrix.shard }}/4")));
+  const runner = await read("scripts/run-checks.mjs");
+  for (const suite of [
+    "test:chart",
+    "test:composition",
+    "test:configured-line",
+    "test:line-integrations",
+  ])
+    assert.ok(runner.includes(`"${suite}"`));
+  assert.match(runner, /process\.argv\.slice\(3\)/);
+  const upload = ci.jobs.packed.steps.find((s) => s.with?.name === "charts-browser-fixtures");
+  const download = ci.jobs.playwright.steps.find((s) =>
+    s.uses?.startsWith("actions/download-artifact@"),
+  );
+  assert.equal(download.with.name, upload.with.name);
+  for (const path of [
+    "artifacts/package/",
+    "artifacts/packed-*/",
+    "artifacts/line-integrations/",
+    "examples/chart/dist/",
+  ])
+    assert.ok(upload.with.path.split("\n").includes(path));
+});
+
+test("cached browser binaries do not replace OS dependency installation", () => {
+  for (const job of [ci.jobs.playwright, docs.jobs.docs, release.jobs.validate]) {
+    const steps = job.steps;
+    const cache = steps.find((s) => s.uses?.startsWith("actions/cache@"));
+    assert.equal(cache.with.path, "~/.cache/ms-playwright");
+    assert.ok(cache.with.key.includes("runner.os"));
+    assert.ok(cache.with.key.includes("runner.arch"));
+    assert.ok(cache.with.key.includes("playwright-version.outputs.version"));
+    assert.equal(cache.with["restore-keys"], undefined);
+    const deps = steps.find((s) => s.run === "npm exec playwright install-deps -- chromium");
+    assert.equal(deps.if, undefined);
+    const install = steps.find((s) => s.run === "npm exec playwright install -- chromium");
+    assert.equal(install.if, "steps.browsers.outputs.cache-hit != 'true'");
   }
 });
