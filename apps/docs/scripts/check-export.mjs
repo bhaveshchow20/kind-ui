@@ -24,7 +24,17 @@ assert.deepEqual(
 );
 assert.deepEqual(
   readdirSync(path.join(root, "examples")).sort(),
-  [...allExamples.map(({ id }) => id), "package"].sort(),
+  allExamples.map(({ id }) => id).sort(),
+);
+assert.equal(
+  existsSync(path.join(root, "package-provenance.json")),
+  false,
+  "Internal package provenance must not be exported",
+);
+assert.equal(
+  existsSync(path.join(root, "examples/package")),
+  false,
+  "Validation archives must not be exported",
 );
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;
