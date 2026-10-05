@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
+import { assertToc } from "./docs-browser-contracts.mjs";
+
 const bundles = JSON.parse(readFileSync("generated/area-examples.json", "utf8"));
 const browser = await chromium.launch();
 const evidence = { variants: [], viewports: [], keyboard: [], errors: [] };
-const origin = "http://127.0.0.1:6373";
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 try {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1080 },
@@ -24,7 +26,14 @@ try {
   assert.equal(await p.locator(".doc-footer").count(), 0);
   assert.equal(await p.getByRole("heading", { name: "Basic", exact: true }).count(), 0);
   assert.equal(await p.locator("[data-area-reveal]").count(), 0);
-  assert.equal(await p.locator("#nd-toc a").count(), 5);
+  await assertToc(p, [
+    "Usage",
+    "Curve types",
+    "Stacked series",
+    "Materials",
+    "API reference",
+    "Shared components",
+  ]);
   for (const [id, bundle] of Object.entries(bundles)) {
     const card = p.locator(`[data-component="${id}"]`);
     for (const [value, variant] of Object.entries(

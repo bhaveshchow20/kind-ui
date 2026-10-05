@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { assertToc } from "./docs-browser-contracts.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const b = await chromium.launch();
@@ -11,7 +12,7 @@ const context = await b.newContext({
 });
 const p = await context.newPage();
 p.on("pageerror", (e) => evidence.errors.push(e.message));
-const url = "http://127.0.0.1:6373/docs/components/area/";
+const url = `${process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373"}/docs/components/area/`;
 try {
   await p.goto(url);
   await p.locator(".recharts-area-area").first().waitFor();
@@ -25,7 +26,14 @@ try {
   const sidebar = p.locator("#nd-sidebar");
   const toc = p.locator("#nd-toc");
   assert.equal(await toc.locator("h3").textContent(), "On this page");
-  assert.equal(await toc.locator("a").count(), 5);
+  await assertToc(p, [
+    "Usage",
+    "Curve types",
+    "Stacked series",
+    "Materials",
+    "API reference",
+    "Shared components",
+  ]);
   assert.equal(
     await toc
       .locator("a")
