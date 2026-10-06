@@ -31,7 +31,7 @@ export function LineSeries<
   renderWhileHidden = false,
   ...props
 }: LineSeriesProps<DataPoint, Value> & { renderWhileHidden?: boolean }) {
-  const { config, visibleSeries } = useChart();
+  const { config, paints, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
   const id = props.id || generatedId;
@@ -55,7 +55,7 @@ export function LineSeries<
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("LineSeries requires seriesKey for controlled non-string dataKey");
-  const color = stroke ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
+  const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <Line<DataPoint, Value>
       isAnimationActive={false}

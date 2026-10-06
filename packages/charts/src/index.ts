@@ -222,7 +222,7 @@ export {
   type ScatterTooltipProps,
 } from "./scatter-tooltip.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
-export type { SeriesConfig } from "./types.js";
+export type { SeriesColor, SeriesConfig } from "./types.js";
 export {
   computeWaterfallData,
   type WaterfallDatum,

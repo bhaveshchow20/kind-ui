@@ -97,7 +97,7 @@ export function Compositions({ api = parts }: { api?: typeof parts }) {
               }}
             >
               <C.CartesianGrid />
-              <C.XAxis dataKey="category" onClick={() => setClicks(clicks + 1)}>
+              <C.XAxis dataKey="category" onClick={() => setClicks((count) => count + 1)}>
                 <C.Label value="Category" position="insideBottom" />
               </C.XAxis>
               <C.YAxis />
@@ -149,7 +149,7 @@ export function Compositions({ api = parts }: { api?: typeof parts }) {
               data={rows}
               seriesKey="value"
               shape={<C.Symbols type="diamond" />}
-              onClick={() => setClicks(clicks + 1)}
+              onClick={() => setClicks((count) => count + 1)}
             >
               <C.Cell fill="#123456" />
               <C.Cell fill="#234567" />
@@ -172,7 +172,7 @@ export function Compositions({ api = parts }: { api?: typeof parts }) {
               dataKey="value"
               nameKey="category"
               innerRadius={30}
-              onClick={() => setClicks(clicks + 1)}
+              onClick={() => setClicks((count) => count + 1)}
             >
               <C.Cell fill="#123456" />
               <C.Cell fill="#234567" />

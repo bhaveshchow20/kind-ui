@@ -4,6 +4,7 @@ import { type ComponentPropsWithRef, type CSSProperties, type ReactNode, use } f
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
 import { useChart } from "./chart-context.js";
 import { LineInteraction } from "./line-chart.js";
+import { colorStopToken } from "./series-color.js";
 import { TooltipNumber } from "./tooltip-number.js";
 
 export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
@@ -88,6 +89,9 @@ export function TooltipContent({
               data-indicator={indicator}
               style={
                 {
+                  "--kind-ui-chart-indicator-background": item
+                    ? `var(${colorStopToken(key, "gradient")})`
+                    : (entry.color ?? "currentColor"),
                   "--kind-ui-chart-indicator-color": item
                     ? `var(--color-${key})`
                     : (entry.color ?? "currentColor"),

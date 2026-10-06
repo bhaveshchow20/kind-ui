@@ -88,3 +88,38 @@ test("Next pattern legends keep server IDs through hydration and native bars sta
   expect(await swatches.evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(serverIds);
   expect(errors).toEqual([]);
 });
+
+test("Next color resources retain server IDs through hydration and theme changes", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  const response = await page.request.get("http://127.0.0.1:6901");
+  const html = await response.text();
+  const serverIds = [...html.matchAll(/<linearGradient[^>]*id="(kind-ui-color-[^"]+)"/g)].map(
+    (match) => match[1],
+  );
+  expect(serverIds).toHaveLength(2);
+  expect(new Set(serverIds).size).toBe(2);
+  await page.goto("http://127.0.0.1:6901");
+  const proof = page.locator("[data-color-hydration]");
+  const resources = proof.locator('[data-kind-ui="color-resources"] linearGradient');
+  await expect(resources).toHaveCount(2);
+  expect(await resources.evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(serverIds);
+  const marks = proof.locator(".recharts-line-curve");
+  await expect(marks).toHaveCount(2);
+  const before = await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+  await page.getByRole("button", { name: "Color theme", exact: true }).click();
+  await expect(resources.first().locator("stop").first()).toHaveCSS(
+    "stop-color",
+    "rgb(255, 255, 255)",
+  );
+  expect(await resources.evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(serverIds);
+  expect(await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")))).toEqual(
+    before,
+  );
+  expect(errors).toEqual([]);
+});
