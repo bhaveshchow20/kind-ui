@@ -441,8 +441,47 @@ try {
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("pie", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-pie");
+  // Emit only the already strictly checked host fixture beside the installed tarball.
+  // Node SSR and browser hydration both consume that package, never workspace source.
+  run(
+    process.execPath,
+    [
+      join(root, "node_modules/typescript/bin/tsc"),
+      "-p",
+      "tsconfig.NodeNext.json",
+      "--noEmit",
+      "false",
+      "--outDir",
+      "pie-ssr",
+    ],
+    consumer,
+  );
+  const pieSsr = run(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `
+      import { createElement } from 'react';
+      import { renderToString } from 'react-dom/server';
+      import { SelectiveGlowHost } from './pie-ssr/host.js';
+      console.log(JSON.stringify({
+        field: renderToString(createElement(SelectiveGlowHost, { accessor: false })),
+        accessor: renderToString(createElement(SelectiveGlowHost, { accessor: true })),
+      }));
+    `,
+    ],
+    consumer,
+  );
+  const pieShells = JSON.parse(pieSsr);
+  for (const markup of [pieShells.field, pieShells.accessor]) {
+    assert.equal(typeof markup, "string");
+    assert.match(markup, /Glow allocation/);
+    assert.doesNotMatch(markup, /pie-halo/);
+  }
+  await writeFile(join(root, "artifacts/packed-pie/ssr.json"), pieSsr);
   console.log(
-    "Pie tarball consumer: guarded public imports, strict NodeNext/Bundler and production build passed",
+    "Pie tarball consumer: guarded public imports, strict NodeNext/Bundler, production build and Node SSR shells passed",
   );
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("polar", file);
   await typecheck(["host.tsx", "main.tsx"]);
