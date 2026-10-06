@@ -18,8 +18,7 @@ Motion deliberately remounts only the recipe plot to demonstrate an entrance;
 controlled legend visibility remains mounted. Ordinary hover or color updates
 preserve plot DOM and finish an active entrance without replay. Bar
 entrance can be disabled separately; reduced motion disables all Kind Motion.
-The chart height is explicit and responsive, following the composition and
-container sizing baseline in [shadcn Chart](https://ui.shadcn.com/docs/components/chart).
+The chart height is explicit and responsive.
 No new material styles or dependencies are introduced.
 
 The isolated tarball fixture compares actual mixed SVG geometry to native

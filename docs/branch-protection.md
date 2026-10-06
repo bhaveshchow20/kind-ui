@@ -4,20 +4,6 @@ Kind UI uses a small, owner-led contribution workflow. Protect `main` with pull 
 
 The [live main ruleset](https://github.com/bhaveshchow20/kind-ui/rules/24283802) was enabled on September 30, 2026. GitHub API read-back confirmed active enforcement, no bypass actors, all four rule types and `main` reporting `protected: true`. This records configuration verification; the next ordinary PR should verify the merge experience.
 
-## Lessons from established OSS projects
-
-Research checked on September 30, 2026, against these source snapshots:
-
-| Project | Observable practice | Application to Kind UI |
-| --- | --- | --- |
-| React | Its runtime workflow runs on pull requests and pushes to `main`/release branches, uses a frozen lockfile, and separates runtime jobs from compiler changes. | Check proposed changes before merge and keep checking the default branch afterward. Preserve npm and the existing lockfile here. |
-| Radix Primitives | Its PR build workflow runs lint, composed-ref checks, builds and tests; a separate SSR workflow checks its Next.js consumer. | Require existing component, package-consumer and browser contracts, rather than adding unrelated checks. |
-| TanStack Query | Its PR workflow gives the test job an explicit name, cancels superseded runs, and separates testing from preview/version jobs. | Gate on predictable test check names. Keep optional review tooling separate from required CI. |
-
-Sources: [React runtime workflow](https://github.com/facebook/react/blob/7c6ac13e19fef500b7f669a16bbd01ecc95965ca/.github/workflows/runtime_build_and_test.yml), [Radix build workflow](https://github.com/radix-ui/primitives/blob/f7ecd5ab16f5e1e820eb5786a1419a98a2d594ae/.github/workflows/build.yml), [Radix SSR workflow](https://github.com/radix-ui/primitives/blob/f7ecd5ab16f5e1e820eb5786a1419a98a2d594ae/.github/workflows/ssr.yml), and [TanStack PR workflow](https://github.com/TanStack/query/blob/381e25494dab66c9c09a64e209e8c4ca7d36aad3/.github/workflows/pr.yml).
-
-These are observations of public source files, not claims about those repositories' required checks, approval counts or administrator bypass settings. The policy below is a recommendation for Kind UI, informed by those workflows and GitHub's rule semantics.
-
 ## Policy
 
 Use an **active branch ruleset** targeting exactly `refs/heads/main`, with no bypass actors. Keep feature and stacked PR branches outside its scope. Rulesets expose active rules to readers and combine with other applicable protections; inspect existing rules before adding or changing them. [GitHub ruleset overview](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets).
