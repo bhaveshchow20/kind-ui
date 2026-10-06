@@ -5,7 +5,8 @@ export type SeriesConfig = Readonly<
   Record<
     string,
     {
-      label: string;
+      /** Inferred from the matching key when omitted; explicit text takes precedence. */
+      label?: string;
       color: string;
       /** Decorative glyph shared by built-in legend and tooltip content. */
       icon?: ComponentType;

@@ -30,6 +30,16 @@ npm install @kind-ui/charts
 Import `@kind-ui/charts/styles.css` once at your application entry. In Next.js,
 place interactive chart code in a client component.
 
+## Series labels
+
+Configuration keys must match the series `dataKey` (or its explicit `seriesKey`).
+When `label` is omitted, built-in labels use the matching key: `visitors` becomes
+`Visitors` and `monthlyVisitors` becomes `Monthly visitors`. Camel-case and acronym
+boundaries, underscores and hyphens become spaces; words are lowercased, then the
+first letter is capitalized. Supply an explicit label to preserve custom casing
+or wording, including an intentionally empty label. Keys and colors are unchanged.
+Category charts use their configured category identity for this inference.
+
 ## Quick start
 
 Configured `LineChart` supplies responsive sizing, axes, series, tooltip and
