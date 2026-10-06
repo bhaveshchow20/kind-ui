@@ -43,7 +43,13 @@ export function ChartBackgroundPattern({
   const identity = useId();
   const encodedId = Array.from(identity, (char) => char.codePointAt(0)?.toString(16)).join("-");
   const id = `kind-ui-background-${encodedId}`;
-  if (!Number.isFinite(size) || size <= 0 || !Number.isFinite(opacity) || opacity < 0 || opacity > 1)
+  if (
+    !Number.isFinite(size) ||
+    size <= 0 ||
+    !Number.isFinite(opacity) ||
+    opacity < 0 ||
+    opacity > 1
+  )
     throw new Error("ChartBackgroundPattern requires positive finite size and opacity in [0, 1]");
   if (
     typeof pattern === "string"
@@ -72,6 +78,7 @@ export function ChartBackgroundPattern({
     );
   return (
     <ZIndexLayer zIndex={DefaultZIndexes.grid - 1}>
+      {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: SVG decoration is explicitly nonfocusable and ignores pointer events. */}
       <g
         data-kind-ui="chart-background-pattern"
         aria-hidden="true"
@@ -95,13 +102,7 @@ export function ChartBackgroundPattern({
             {tile}
           </pattern>
         </defs>
-        <rect
-          x={area.x}
-          y={area.y}
-          width={area.width}
-          height={area.height}
-          fill={`url(#${id})`}
-        />
+        <rect x={area.x} y={area.y} width={area.width} height={area.height} fill={`url(#${id})`} />
       </g>
     </ZIndexLayer>
   );

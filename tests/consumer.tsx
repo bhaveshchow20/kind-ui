@@ -322,7 +322,12 @@ void (<Chart.ChartBackgroundPattern pattern={{ kind: "hatch" }} />);
 void (
   (
     // @ts-expect-error Explicit children replace generated decoration too.
-    <Chart.LineChart config={config} data={[]} aria-label="Explicit" backgroundPattern={{ pattern: "pinpoints" }}>
+    <Chart.LineChart
+      config={config}
+      data={[]}
+      aria-label="Explicit"
+      backgroundPattern={{ pattern: "pinpoints" }}
+    >
       {null}
     </Chart.LineChart>
   )

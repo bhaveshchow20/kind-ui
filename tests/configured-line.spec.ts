@@ -151,7 +151,6 @@ test("single-point and sparse line values remain visible without inventing inter
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).toContainText("0");
 });
 
-
 test("backgrounds clip, scope paint and preserve data interaction", async ({ page }) => {
   await page.goto("/");
   const basic = page.locator('[data-case="basic"]');

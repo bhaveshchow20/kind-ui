@@ -114,6 +114,13 @@ export {
   boxPlotExtent,
   validateBoxPlotSummary,
 } from "./box-plot.js";
+export {
+  ChartBackgroundPattern,
+  type ChartBackgroundPatternDefinition,
+  type ChartBackgroundPatternProps,
+  type ChartBackgroundPatternRenderProps,
+  defineChartBackgroundPattern,
+} from "./chart-background-pattern.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
 export {
   type ConfiguredLineChartProps,
@@ -234,11 +241,3 @@ export {
   WaterfallSeries,
   type WaterfallSeriesProps,
 } from "./waterfall-series.js";
-
-export {
-  ChartBackgroundPattern,
-  type ChartBackgroundPatternProps,
-  type ChartBackgroundPatternDefinition,
-  type ChartBackgroundPatternRenderProps,
-  defineChartBackgroundPattern,
-} from "./chart-background-pattern.js";

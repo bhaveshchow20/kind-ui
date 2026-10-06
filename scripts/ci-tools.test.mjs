@@ -188,7 +188,6 @@ test("Docs completion receipt fails on every incomplete prerequisite", async () 
       assert.throws(() => run({ [gate]: status }));
 });
 
-
 test("background chrome preserves series and native export boundaries", async () => {
   const root = new URL("../", import.meta.url);
   const source = await readFile(

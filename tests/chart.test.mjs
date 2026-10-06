@@ -1678,7 +1678,10 @@ test("background validation runs even before plot geometry is available", () => 
     { pattern: "waves", opacity: 1.1 },
     { pattern: "waves", opacity: NaN },
   ]) {
-    assert.throws(() => renderSvg(h(Chart.ChartBackgroundPattern, props)), /ChartBackgroundPattern/);
+    assert.throws(
+      () => renderSvg(h(Chart.ChartBackgroundPattern, props)),
+      /ChartBackgroundPattern/,
+    );
   }
   assert.equal(renderSvg(h(Chart.ChartBackgroundPattern, { pattern: "pinpoints" })), "");
 });
