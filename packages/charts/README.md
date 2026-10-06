@@ -28,7 +28,19 @@ npm install @kind-ui/charts
 ```
 
 Import `@kind-ui/charts/styles.css` once at your application entry. In Next.js,
-place interactive chart code in a client component.
+import it in the root layout and place interactive chart code in a client component.
+Development builds warn once per document if mounted chart roots lack the stylesheet,
+after the document and pending stylesheets load. The warning does not run during SSR
+or in production. Keep the import in copied examples.
+
+CSS remains explicit: importing it from the ESM entry would break plain Node imports;
+runtime injection would change CSS layer ordering and require inline-style CSP permission.
+No styles are injected or fetched. Core styles and tokens remain in the stylesheet;
+consumer overrides still win. If you intentionally replace all chart styles, set
+`--kind-ui-styles-loaded: 1` on your chart roots to acknowledge that setup.
+The diagnostic conservatively waits on unresolved stylesheet links. A link which
+failed before mounting after document load can therefore defer the warning; it
+does not guess a timeout and warn while a slow stylesheet is still loading.
 
 ## Series labels
 
