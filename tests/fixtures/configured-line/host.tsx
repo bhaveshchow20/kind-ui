@@ -48,6 +48,13 @@ export function ConfiguredHost() {
   const currentConfig = extra ? { ...config, added: { label: "Added", color: "red" } } : config;
   return (
     <main>
+      <ProjectionCases />
+      <Boundary>
+        <ProjectionGeometry />
+      </Boundary>
+      {new URLSearchParams(window.location.search).has("projection-contract") && (
+        <ProjectionContract />
+      )}
       <button type="button" onClick={() => setWidth(width === 500 ? 360 : 500)}>
         Resize
       </button>
@@ -247,5 +254,293 @@ export function ConfiguredHost() {
         </Chart.Root>
       </section>
     </main>
+  );
+}
+
+const geometryRows = [
+  { month: "Jan", total: 1, projected: false },
+  { month: "Feb", total: 6, projected: false },
+  { month: "Mar", total: 3, projected: false },
+  { month: "Apr", total: 7, projected: true },
+  { month: "May", total: 5, projected: true },
+];
+
+const geometryModes = ["linear", "monotone", "bump", "step", "basis", "basisOpen"] as const;
+function ProjectionGeometry() {
+  return (
+    <section data-case="projection-geometry">
+      <style>{`[data-case="projection-geometry"] svg.recharts-surface { overflow: visible; }`}</style>
+      {geometryModes.map((type) => (
+        <section data-curve={type} key={type}>
+          {[false, true].map((projected) => (
+            <section data-geometry={projected ? "projected" : "native"} key={String(projected)}>
+              <Chart.Root config={config}>
+                <Chart.ComboChart
+                  width={500}
+                  height={280}
+                  data={geometryRows}
+                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                >
+                  <Chart.XAxis dataKey="month" hide />
+                  <Chart.YAxis hide domain={[1, 7]} />
+                  <Chart.LineSeries<(typeof geometryRows)[number], number>
+                    dataKey="total"
+                    type={type}
+                    strokeWidth={20}
+                    {...(projected
+                      ? {
+                          projected: {
+                            isProjected: (row: (typeof geometryRows)[number]) => row.projected,
+                          },
+                        }
+                      : {})}
+                  />
+                </Chart.ComboChart>
+              </Chart.Root>
+            </section>
+          ))}
+        </section>
+      ))}
+      <Chart.Root config={config}>
+        <Chart.ComboChart
+          width={500}
+          height={280}
+          data={geometryRows}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        >
+          <Chart.XAxis dataKey="month" hide reversed />
+          <Chart.YAxis hide domain={[1, 7]} />
+          <Chart.LineSeries<(typeof geometryRows)[number], number>
+            dataKey="total"
+            type="monotone"
+            material="glow"
+            projected={{ isProjected: (row) => row.projected }}
+          />
+        </Chart.ComboChart>
+      </Chart.Root>
+      <section data-vertical="true">
+        <Chart.Root config={config}>
+          <Chart.ComboChart width={500} height={280} data={geometryRows} layout="vertical">
+            <Chart.XAxis type="number" />
+            <Chart.YAxis type="category" dataKey="month" reversed />
+            <Chart.LineSeries<(typeof geometryRows)[number], number>
+              dataKey="total"
+              type="monotoneY"
+              projected={{ isProjected: (row) => row.projected }}
+            />
+          </Chart.ComboChart>
+        </Chart.Root>
+      </section>
+    </section>
+  );
+}
+
+function ProjectionContract() {
+  const unsupported = [
+    "natural",
+    "basisClosed",
+    "linearClosed",
+    "stepBefore",
+    "stepAfter",
+    "monotoneY",
+  ] as const;
+  return (
+    <section data-case="projection-contract">
+      {unsupported.map((type) => (
+        <section data-invalid={type} key={type}>
+          <Boundary>
+            <Chart.LineChart
+              width={500}
+              data={geometryRows}
+              config={config}
+              xDataKey="month"
+              aria-label={`Monthly projected totals with ${type} interpolation`}
+              series={[
+                {
+                  seriesKey: "total",
+                  dataKey: "total",
+                  type,
+                  projected: { isProjected: (row) => row.projected },
+                },
+              ]}
+            />
+          </Boundary>
+        </section>
+      ))}
+      {[
+        [0, 2, 1, 3, 4],
+        [0, 1, 1, 3, 4],
+      ].map((xs, index) => (
+        <section data-invalid={index === 0 ? "reordered" : "repeated"} key={xs.join(",")}>
+          <Boundary>
+            <Chart.Root config={config}>
+              <Chart.ComboChart
+                width={500}
+                height={280}
+                data={geometryRows.map((row, i) => ({ ...row, category: xs[i] }))}
+              >
+                <Chart.XAxis type="number" dataKey="category" />
+                <Chart.YAxis />
+                <Chart.LineSeries<
+                  (typeof geometryRows)[number] & { category: number | undefined },
+                  number
+                >
+                  dataKey="total"
+                  type="linear"
+                  projected={{ isProjected: (row) => row.projected }}
+                />
+              </Chart.ComboChart>
+            </Chart.Root>
+          </Boundary>
+        </section>
+      ))}
+    </section>
+  );
+}
+const projectionSource = [
+  { month: "Jan", total: 3, projected: false },
+  { month: "Feb", total: null, projected: false },
+  { month: "Mar", total: 7, projected: true },
+  { month: "Apr", total: 0, projected: true },
+];
+const projectionConfig = { total: { label: "Total", color: "#4055ee" } };
+const projectionOption = {
+  isProjected: (row: (typeof projectionSource)[number]) => row.projected,
+  strokeDasharray: "6 3",
+};
+
+function ProjectionCases() {
+  const [order, setOrder] = useState(false);
+  const [single, setSingle] = useState(false);
+  const [emptyProjection, setEmptyProjection] = useState(false);
+  const [missingProjection, setMissingProjection] = useState(false);
+  const selected = single
+    ? projectionSource.slice(-1)
+    : order
+      ? [...projectionSource].reverse()
+      : projectionSource;
+  const rows = emptyProjection
+    ? []
+    : missingProjection
+      ? selected.map((row) => (row.month === "Apr" ? { ...row, total: null } : row))
+      : selected;
+  const start = Chart.getProjectedStart(rows, projectionOption.isProjected);
+  return (
+    <section data-case="projection-cases">
+      <button type="button" onClick={() => setOrder(!order)}>
+        Reorder projection
+      </button>
+      <button type="button" onClick={() => setSingle(!single)}>
+        Filter projection
+      </button>
+      <button type="button" onClick={() => setEmptyProjection(!emptyProjection)}>
+        Empty projection
+      </button>
+      <button type="button" onClick={() => setMissingProjection(!missingProjection)}>
+        Missing projection
+      </button>
+      {[false, true].map((connectNulls) => (
+        <section data-projection-connect={String(connectNulls)} key={String(connectNulls)}>
+          <Chart.LineChart
+            width={500}
+            data={rows}
+            config={projectionConfig}
+            xDataKey="month"
+            aria-label={`Projected totals ${connectNulls}`}
+            series={[
+              {
+                seriesKey: "total",
+                dataKey: "total",
+                projected: projectionOption,
+                connectNulls,
+                type: "monotone",
+                strokeWidth: 3,
+                strokeDasharray: "2 1",
+                pointStyle: "border",
+                activePointStyle: "colored-border",
+              },
+            ]}
+          />
+        </section>
+      ))}
+      <section data-case="projection-combo">
+        <Chart.Root config={projectionConfig}>
+          <Chart.ComboChart width={500} height={280} data={rows}>
+            <Chart.XAxis dataKey="month" />
+            <Chart.YAxis />
+            <Chart.BarSeries dataKey="total" />
+            <Chart.LineSeries<(typeof projectionSource)[number], number | null>
+              dataKey="total"
+              projected={projectionOption}
+              connectNulls
+            />
+            <Chart.Tooltip />
+          </Chart.ComboChart>
+        </Chart.Root>
+      </section>
+      <section data-case="projection-per-series">
+        <Chart.Root config={config}>
+          <Chart.LineChart
+            width={500}
+            height={280}
+            data={rows.map((row) => ({ ...row, total: 100 }))}
+          >
+            <Chart.XAxis dataKey="month" />
+            <Chart.YAxis />
+            <Chart.LineSeries<(typeof projectionSource)[number], number | null>
+              data={rows}
+              dataKey="total"
+              seriesKey="total"
+              projected={projectionOption}
+              connectNulls
+            />
+            <Chart.LineSeries<(typeof projectionSource)[number], number | null>
+              data={rows}
+              dataKey={(row) => row.total}
+              seriesKey="other"
+              projected={{ isProjected: () => false }}
+              connectNulls
+            />
+            <Chart.Tooltip />
+          </Chart.LineChart>
+        </Chart.Root>
+      </section>
+      <section data-case="projection-native-shape">
+        <Chart.LineChart
+          width={500}
+          data={rows}
+          config={projectionConfig}
+          xDataKey="month"
+          aria-label="Custom projection shape"
+          series={[
+            {
+              seriesKey: "total",
+              dataKey: "total",
+              projected: projectionOption,
+              shape: (props) => <Chart.Curve {...props} data-custom-projection="owned" />,
+            },
+          ]}
+        />
+      </section>
+      <table>
+        <caption>Caller-supplied monthly totals</caption>
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={row.month}>
+              <th scope="row">{row.month}</th>
+              <td>{row.total ?? "No data"}</td>
+              <td>{index >= start ? "Projected" : "Historical"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   );
 }

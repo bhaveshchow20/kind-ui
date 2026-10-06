@@ -134,6 +134,72 @@ empty-input, resize and interrupted-update controls.
 
 [MIT](LICENSE) © 2026 Bhavesh Chowdhury.
 
+### Projected trailing line data
+
+`LineSeries` accepts `projected={{ isProjected: (row) => row.estimated,
+strokeDasharray: "6 3" }}`. The accessor flags caller-supplied values; Kind UI
+does not compute forecasts. Only a contiguous flagged suffix in the supplied
+data order is projected. Flags before the final historical row are ignored.
+Filtering or reordering data recomputes that suffix; keep stable row objects
+within an update and replace the data array when values or flags change.
+
+Omitting `projected` retains the existing native rendering. With projection,
+one native Line retains series/category identity, dots, custom marker renderers,
+axes, labels and tooltip entries. Its default stroke is painted by two native
+Curves, each receiving the complete original points, interpolation type and
+`connectNulls` option. Complementary clips change paint at the historical
+category coordinate without recomputing the spline. With `connectNulls=false`,
+a missing boundary point remains a native gap; with `true`, the paint boundary
+uses the last available historical point. No missing values are synthesized.
+
+Mixed historical/projected automatic paint requires distinct monotonic
+category coordinates and an aligned open interpolation mode: `linear`,
+`monotone`, `bump`, `step`, `basis`, `basisOpen`, plus `monotoneX`/`bumpX` for
+horizontal layouts or `monotoneY`/`bumpY` for vertical layouts. Closed, custom,
+`natural`, `stepBefore`, `stepAfter`, opposite-axis interpolation, repeated
+numeric coordinates and reordered numeric coordinates throw an actionable
+error. A half-plane clip cannot assign a backtracking or boundary-aligned stroke
+unambiguously; explicit custom shapes retain their own drawing contract.
+Reordering ordinal category data remains supported because the engine positions
+categories in the new supplied order. Fully projected or fully historical
+series need no seam and keep native interpolation without these restrictions.
+
+Empty data paints nothing. A single point retains its native dot and projected
+tooltip status without inventing a segment. An entirely flagged series is
+projected. Historical stroke/dash options are retained; projected dash defaults
+to `"4 4"`. Both paints retain stroke, width, opacity and handlers. Mixed automatic paint
+requires declared finite numeric stroke width and miter limit. Clip extents
+include cap/join padding and the known material filter region, including chart
+overflow outside zero margins. CSS stroke metrics cannot exceed those declared
+bounds. Guards run on React commits; CSS-only changes between commits must
+stay within the declared bounds. External filters, transforms and non-scaling strokes require a custom
+shape; automatic paint throws explicitly rather than silently cropping them.
+Existing line materials apply independently to each complete-path paint.
+These interpolation and paint restrictions leave issue #139 partially implemented. Explicit native `shape` owns all stroke
+rendering, so it bypasses automatic projection paint while keeping status.
+
+The default tooltip says “Projected” for projected rows. Custom tooltip content
+and data alternatives remain caller-owned. `getProjectedStart(data,
+isProjected)` returns the first projected index, or `data.length` when there is
+no trailing projection; use the same data and accessor for an accessible table.
+Missing flagged rows should retain both “No data” and “Projected” in that table.
+The option also works in configured `LineChart.series` objects and composed
+`ComboChart` children without adding a second series or legend entry.
+
+```tsx
+const isProjected = (row: Row) => row.estimated;
+const start = getProjectedStart(data, isProjected);
+<LineSeries<Row> dataKey="total" projected={{ isProjected }} />;
+// In the caller-owned table: index >= start ? "Projected" : "Historical".
+```
+
+The focused public fixture in `tests/fixtures/configured-line/host.tsx`
+shows configured lines, gaps, filtering/reordering, a Combo and a status table.
+`examples/chart/projected-line.tsx` is a small copyable Combo/table example.
+Plain projection paint forwards native `LineDrawShape` animation props and a
+complete-path ref; materials retain their existing native-shape behavior.
+The existing loading state and reduced-motion policy stay chart-owned.
+
 
 ### Point marker styles
 

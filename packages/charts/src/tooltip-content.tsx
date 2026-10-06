@@ -51,6 +51,9 @@ export function TooltipContent({
   if (!entries.some((entry) => entry.value != null)) return null;
   let hasVisibleValue = false;
   const items = entries.map((entry, index) => {
+    const projected = entry.graphicalItemId
+      ? line?.projections.get(entry.graphicalItemId)?.(entry.payload, tooltip.activeIndex)
+      : undefined;
     const key = identity(entry);
     const item = Object.hasOwn(config, key) ? config[key] : undefined;
     let name: ReactNode = item?.label ?? entry.name ?? key;
@@ -75,6 +78,7 @@ export function TooltipContent({
         key={entry.graphicalItemId ?? `${key}-${index}`}
         data-kind-ui="chart-tooltip-item"
         data-series={key}
+        data-projected={projected || undefined}
       >
         {!hideIndicator &&
           (item?.icon ? (
@@ -96,6 +100,7 @@ export function TooltipContent({
             />
           ))}
         <span>{name}</span>
+        {projected && <span data-kind-ui="projection-status">Projected</span>}
         <strong data-kind-ui="chart-tooltip-value">
           {valueAnimation === "shuffle" &&
           typeof entry.value === "number" &&
