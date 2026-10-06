@@ -83,3 +83,36 @@ data, domains and business state.
 ## License
 
 [MIT](LICENSE) © 2026 Bhavesh Chowdhury.
+
+### Sankey node labels
+
+Compose `SankeyNodeLabel` beside `SankeyNode` in the native `node` callback:
+
+```tsx
+node={(node) => (
+  <g>
+    <SankeyNode {...node} />
+    <SankeyNodeLabel node={node} data={data} position="outside" showValues
+      valueFormatter={(value) => `${value} MWh`} />
+  </g>
+)}
+```
+
+Identity is resolved by `node.payload.id` against `data`, never callback index or
+name. Supply the same data to the chart, label and `SankeyTable`, and reuse the
+formatter as the table's `formatValue`. A node value is the maximum of incoming
+and outgoing flow sums: sources use outgoing, sinks incoming, balanced intermediate
+nodes count throughput once, and disconnected or measured-zero nodes total zero.
+Existing data validation rejects unbalanced intermediate nodes outside its rounding
+tolerance; the larger sum handles that tolerance consistently with native sizing.
+No extra totals or inferred flows are added to the table.
+
+`position="inside"` centers text and clips it to the exact node rectangle, including
+small or zero-size nodes. It does not shrink text, expand geometry or avoid collisions.
+Use outside labels for narrow nodes; they default right for sources/intermediates and
+left for sinks. `side`, `offset`, native text props, styles and refs remain consumer-owned.
+Reserve margins for outside text; the native SVG viewport still clips overflow.
+The full name/value remains in a SVG title even when inside text clips. Keep the table
+as the complete accessible data alternative. Custom `children` (including `tspan`)
+replace visual text while preserving the default title. No label or animation is
+installed implicitly. `/sankeys.html` demonstrates both positions.
