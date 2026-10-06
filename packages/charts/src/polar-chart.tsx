@@ -18,8 +18,8 @@ import { PolarLoadingDesign } from "./loading-polar-designs.js";
 import { type RadarSelectionProps, RadarSelectionProvider } from "./radar-interaction.js";
 import { RadialCategory } from "./radial-category.js";
 
-export type RadarAnimation = LineAnimation;
-export type RadialBarAnimation = LineAnimation;
+export type RadarAnimation = Omit<LineAnimation, "revealDirection">;
+export type RadialBarAnimation = Omit<LineAnimation, "revealDirection">;
 export type RadarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadarChart<DataPoint>
 > &

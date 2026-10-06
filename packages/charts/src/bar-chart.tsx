@@ -15,7 +15,7 @@ import { BarCategoryBoundary } from "./bar-category.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 
-export type BarAnimation = LineAnimation;
+export type BarAnimation = Omit<LineAnimation, "revealDirection">;
 export type BarChartProps = ComponentProps<typeof EngineBarChart> & {
   animate?: boolean | BarAnimation | undefined;
   loading?: boolean | undefined;

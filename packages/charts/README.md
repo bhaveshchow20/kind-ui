@@ -170,3 +170,47 @@ series options. Bar, Pie and other shape families are outside this API.
 
 Run `npm run dev:chart` and visit `/point-markers.html` for the marker gallery and
 its accessible data table.
+
+### Directional Line and Area entrances
+
+`LineAnimation` and `AreaAnimation` accept `revealDirection`:
+
+- `"left-to-right"` (default): expand from the left edge.
+- `"right-to-left"`: expand from the right edge.
+- `"center-out"`: expand equally from the horizontal center.
+- `"edges-in"`: expand two edge regions toward the horizontal center.
+
+Directions are physical horizontal screen-space reveals for both native layouts;
+they do not reverse data order or follow a vertical category axis. Timing remains
+`revealDurationMs` / `revealEasing`. The temporary family clip leaves native paths,
+axes, margins and transforms intact and is removed on completion or interruption
+(including resize/data changes). Disabled/reduced motion shows complete content.
+Existing loading illustrations keep their independent design. Replay uses the
+existing remount or loading-to-ready lifecycle, not hover or color updates.
+
+```tsx
+<LineChart animate={{ revealDirection: "right-to-left", revealDurationMs: 800 }}>
+  <LineSeries dataKey="total" pointStyle="border" />
+</LineChart>
+<AreaChart animate={{ revealDirection: "center-out" }}>
+  <AreaSeries dataKey="total" />
+</AreaChart>
+<ComboChart animate={{
+  revealDirection: "center-out",
+  lineReveal: { revealDirection: "right-to-left" },
+  areaReveal: { revealDirection: "edges-in", revealDurationMs: 1200 },
+  barReveal: false,
+}}>
+  <LineSeries dataKey="total" />
+  <AreaSeries dataKey="forecast" />
+</ComboChart>
+```
+
+Combo inherits the chart direction for Line/Area unless the corresponding family
+object overrides it; `false` disables that family entrance. Bar keeps its existing
+entrance configuration. All managed series in a family share its entrance clip;
+individual series rendering/visibility props remain available, but there is no
+per-series direction prop. Explicit native children and consumer clip/shape
+ownership retain their existing contracts. `RevealDirection` is exported for
+consumer controls. The packed Line/Area motion fixtures accept `?direction=...`
+and the Combo fixture accepts `?directional` to exercise the family overrides.

@@ -29,9 +29,12 @@ import {
   type LineSeriesProps as StaticLineSeriesProps,
 } from "./line-series.js";
 import { markerPaint, type PointStyle } from "./point-marker.js";
+import { RevealClip, type RevealDirection } from "./reveal-clip.js";
 import { TooltipBase, type TooltipFrameProps, type TooltipProps } from "./tooltip.js";
 
 export type LineAnimation = {
+  /** Physical horizontal entrance direction, independent of native chart layout. */
+  revealDirection?: RevealDirection;
   revealDurationMs?: number;
   revealEasing?: Transition["ease"];
   hoverTransition?: Transition;
@@ -89,23 +92,7 @@ export function LineChart({
         interrupt={interrupt}
         {...(reveal ? { clip: `url(#${id}-reveal)` } : {})}
       >
-        {reveal && (
-          <defs>
-            <clipPath id={`${id}-reveal`} clipPathUnits="userSpaceOnUse">
-              <motion.rect
-                x={0}
-                y={0}
-                height="100%"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{
-                  duration: Math.max(0, options.revealDurationMs ?? 1000) / 1000,
-                  ease: options.revealEasing ?? [0.25, 0.1, 0.25, 1],
-                }}
-              />
-            </clipPath>
-          </defs>
-        )}
+        {reveal && <RevealClip id={`${id}-reveal`} options={options} finish={interrupt} />}
         {children}
       </LineChartFrame>
     </MotionContext>

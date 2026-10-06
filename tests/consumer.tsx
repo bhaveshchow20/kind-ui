@@ -259,3 +259,35 @@ const anticlockwisePie = {
 // @ts-expect-error Entrance direction has two explicit physical sweep values.
 const invalidPieDirection = { animationDirection: "reverse" } satisfies Chart.PieChartProps;
 void [clockwisePie, anticlockwisePie, invalidPieDirection];
+
+for (const revealDirection of [
+  "left-to-right",
+  "right-to-left",
+  "center-out",
+  "edges-in",
+] satisfies Chart.RevealDirection[]) {
+  const line = { revealDirection } satisfies Chart.LineAnimation;
+  const area = { revealDirection } satisfies Chart.AreaAnimation;
+  const combo = {
+    revealDirection,
+    lineReveal: { revealDirection: "right-to-left" },
+    areaReveal: { revealDirection: "edges-in" },
+    barReveal: false,
+  } satisfies Chart.ComboAnimation;
+  void (<Chart.LineChart animate={line} />);
+  void (<Chart.AreaChart animate={area} />);
+  void (<Chart.ComboChart animate={combo} />);
+}
+// @ts-expect-error Direction names are a closed physical-direction union.
+const invalidReveal: Chart.LineAnimation = { revealDirection: "up" };
+// @ts-expect-error Direction overrides belong to Line and Area families only.
+const invalidBarReveal: Chart.ComboAnimation = { barReveal: { revealDirection: "center-out" } };
+// @ts-expect-error Entrance configuration is chart/family-owned, not a native series prop.
+void (<Chart.LineSeries dataKey="count" revealDirection="center-out" />);
+void [invalidReveal, invalidBarReveal];
+
+// @ts-expect-error Horizontal reveal directions do not belong to Bar entrances.
+const invalidBarDirection: Chart.BarAnimation = { revealDirection: "edges-in" };
+// @ts-expect-error Polar sweeps keep their existing direction contract.
+const invalidPieReveal: Chart.PieAnimation = { revealDirection: "center-out" };
+void [invalidBarDirection, invalidPieReveal];

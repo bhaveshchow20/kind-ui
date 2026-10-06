@@ -15,7 +15,7 @@ import { type LineAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 
-export type ScatterAnimation = LineAnimation;
+export type ScatterAnimation = Omit<LineAnimation, "revealDirection">;
 export type ScatterChartProps = ComponentProps<typeof EngineScatterChart> & {
   animate?: boolean | ScatterAnimation | undefined;
   loading?: boolean | undefined;

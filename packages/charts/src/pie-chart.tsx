@@ -15,7 +15,7 @@ import { type LineAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
 
-export type PieAnimation = LineAnimation;
+export type PieAnimation = Omit<LineAnimation, "revealDirection">;
 export type PieChartProps = ComponentProps<typeof EnginePieChart> & {
   animate?: boolean | PieAnimation | undefined;
   loading?: boolean | undefined;
