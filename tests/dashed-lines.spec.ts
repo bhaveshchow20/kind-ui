@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 
 test("dash motion stays independent of reveal, native paint and lifecycle", async ({ page }) => {
@@ -53,4 +54,43 @@ test("dash motion stays independent of reveal, native paint and lifecycle", asyn
     await expect.poll(name).toBe("kind-ui-line-dash");
   }
   expect(errors).toEqual([]);
+});
+
+test("reduced motion stops stylesheet dashes without a React commit", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setContent(
+    `<svg class="kind-ui-line-dash" style="--kind-ui-dash-duration:800ms;--kind-ui-dash-cycle:10px;--kind-ui-dash-offset:3px;--kind-ui-dash-direction:normal"><path class="recharts-line-curve" d="M0,0L100,100" stroke="teal" stroke-dasharray="6 4" stroke-dashoffset="3" /></svg>`,
+  );
+  await page.addStyleTag({
+    content: await readFile(new URL("../packages/charts/dist/styles.css", import.meta.url), "utf8"),
+  });
+  const path = page.locator("path");
+  await expect(path).toHaveCSS("animation-name", "kind-ui-line-dash");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(path).toHaveCSS("animation-name", "none");
+  await expect(path).toHaveCSS("stroke-dashoffset", "3px");
+});
+
+test("unsupported Area dashes preserve native paint and diagnose only in development", async ({
+  page,
+}) => {
+  const warnings: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "warning") warnings.push(message.text());
+  });
+  await page.goto("/dashed-lines.html?unsupported-area");
+  const area = page.locator(".recharts-area-area");
+  await expect(area).toHaveCount(1);
+  await expect(area).toHaveAttribute("fill-opacity", "0.2");
+  await expect(area).not.toHaveCSS("animation-name", "kind-ui-line-dash");
+  await expect(page.locator("[dashAnimation], [dashanimation]")).toHaveCount(0);
+  const unsupported = warnings.filter((message) =>
+    message.includes("AreaSeries does not support dashAnimation"),
+  );
+  if (process.env.KIND_UI_TEST_DEVELOPMENT === "1") {
+    expect(unsupported).toHaveLength(1);
+    expect(unsupported[0]).toContain("Remove it or use LineSeries with strokeDasharray");
+  } else {
+    expect(unsupported).toEqual([]);
+  }
 });

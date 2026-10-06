@@ -8,6 +8,10 @@ const data = [
   { x: "B", value: 8 },
   { x: "C", value: 6 },
 ];
+// Test-only JavaScript/spread misuse; normal examples keep the supported Area API.
+const unsupportedAreaInput = location.search.includes("unsupported-area")
+  ? { dashAnimation: { durationMs: 800 } }
+  : {};
 function Example() {
   const [animate, setAnimate] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -67,7 +71,12 @@ function Example() {
               >
                 <Chart.XAxis dataKey="x" />
                 <Chart.YAxis />
-                <Chart.AreaSeries dataKey="value" stroke="none" fillOpacity={0.2} />
+                <Chart.AreaSeries
+                  {...unsupportedAreaInput}
+                  dataKey="value"
+                  stroke="none"
+                  fillOpacity={0.2}
+                />
                 <Chart.LineSeries
                   dataKey="value"
                   className="reverse-dashes"

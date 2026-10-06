@@ -193,8 +193,7 @@ patterns stay static. Odd lists repeat twice per cycle, matching SVG.
 
 Load the package stylesheet. Motion stops with chart `animate={false}`, reduced
 motion, loading, or hidden series. Disabling restores the native dash offset;
-reenabling starts a fresh cycle. The static entry point has no chart `animate`
-control; use `dashAnimation={false}` there. Native width, dash array, offset and
+reenabling starts a fresh cycle. Use `dashAnimation={false}` to disable an individual series. Native width, dash array, offset and
 styles remain intact; style dash values take precedence. Custom shapes own their
 animation and are never decorated; explicit native entrance animation on the
 static series also retains ownership. Entrance clip reveal timing is independent.

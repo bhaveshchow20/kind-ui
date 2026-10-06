@@ -34,6 +34,14 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
   className,
   ...props
 }: AreaSeriesProps<DataPoint, Value>) {
+  // Diagnose unsupported JavaScript/spread input without adding it to the public Area API.
+  const { dashAnimation, ...nativeProps } = props as typeof props & { dashAnimation?: unknown };
+  useLayoutEffect(() => {
+    if (dashAnimation !== undefined && process.env.NODE_ENV === "development")
+      console.warn(
+        "AreaSeries does not support dashAnimation. Remove it or use LineSeries with strokeDasharray for animated dashes.",
+      );
+  }, [dashAnimation]);
   const { config, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
@@ -57,7 +65,7 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
   return (
     <Area
       activeDot={<ActiveMarker variant={activePointStyle} />}
-      {...props}
+      {...nativeProps}
       {...(props.dot === undefined && pointStyle !== "default"
         ? { dot: <PointMarker variant={pointStyle} /> }
         : {})}
