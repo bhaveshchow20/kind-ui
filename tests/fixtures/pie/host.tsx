@@ -581,3 +581,82 @@ export function MaterialGallery() {
     </main>
   );
 }
+
+const selectiveConfig = {
+  alpha: { label: "Alpha", color: "#4f46e5" },
+  beta: { label: "Beta", color: "#0891b2" },
+} satisfies Chart.SeriesConfig;
+const selectiveRows = [
+  { id: "alpha", category: "alpha", value: 60, fill: "#c026d3" },
+  { id: "beta", category: "beta", value: 40 },
+];
+const betaGlow = ["beta", "unknown", "beta"] as const;
+const alphaGlow = ["alpha"] as const;
+const noGlow = [] as const;
+const categoryAccessor = (row: (typeof selectiveRows)[number]) => row.category;
+
+// Also rendered to the native SSR shell before hydration in main.tsx.
+export function SelectiveGlowHost({ accessor = false }: { accessor?: boolean }) {
+  const [reverse, setReverse] = useState(false);
+  const [included, setIncluded] = useState(true);
+  const [selected, setSelected] = useState(true);
+  const [material, setMaterial] = useState<Chart.PieMaterial>("plain");
+  const [owner, setOwner] = useState("none");
+  const [clicked, setClicked] = useState("none");
+  const [dark, setDark] = useState(false);
+  const data = selectiveRows.filter((row) => included || row.id !== "beta");
+  if (reverse) data.reverse();
+  return (
+    <main className={dark ? "dark" : undefined}>
+      <button type="button" onClick={() => setReverse(!reverse)}>Reorder glow</button>
+      <button type="button" onClick={() => setIncluded(!included)}>Filter beta</button>
+      <button type="button" onClick={() => setSelected(!selected)}>Toggle glow</button>
+      <button type="button" onClick={() => setDark(!dark)}>Theme</button>
+      <label>
+        Base finish
+        <select value={material} onChange={(e) => setMaterial(e.target.value as Chart.PieMaterial)}>
+          {["plain", "paper", "clay", "glow"].map((v) => <option key={v}>{v}</option>)}
+        </select>
+      </label>
+      <label>
+        Paint owner
+        <select value={owner} onChange={(e) => setOwner(e.target.value)}>
+          {["none", "filter", "shape", "active"].map((v) => <option key={v}>{v}</option>)}
+        </select>
+      </label>
+      <output aria-label="Glow event">{clicked}</output>
+      {[0, 1].map((chart) => (
+        <Chart.Root key={chart} config={selectiveConfig} style={{ background: dark ? "#111827" : "white" }}>
+          <Chart.PieChart width={320} height={300} animate={false} accessibilityLayer aria-label={`Selective glow ${chart}`}>
+            {[0, 1].map((ring) => (
+              <Chart.PieSeries
+                key={ring}
+                data={data}
+                dataKey="value"
+                nameKey="id"
+                categoryKey={accessor ? categoryAccessor : "category"}
+                glowCategories={selected ? ring === 0 ? betaGlow : alphaGlow : noGlow}
+                material={material}
+                innerRadius={ring === 0 ? 40 : 105}
+                outerRadius={ring === 0 ? 95 : 125}
+                {...(owner === "shape" ? { shape: CustomShape } : {})}
+                {...(owner === "active" ? { activeShape: CustomShape } : {})}
+                {...(owner === "filter" ? { filter: "grayscale(1)" } : {})}
+                onClick={(row) => setClicked(String(row.name))}
+              >
+                {data.map((row) => (
+                  <Cell key={row.id} {...{ category: "alpha" }} data-category={row.id} {...(row.id === "beta" ? { fill: "#0e7490" } : {})} />
+                ))}
+              </Chart.PieSeries>
+            ))}
+            <Chart.Tooltip itemKey={identity} />
+          </Chart.PieChart>
+        </Chart.Root>
+      ))}
+      <table>
+        <caption>Glow allocation</caption>
+        <tbody>{data.map((row) => <tr key={row.id}><th scope="row">{row.id}</th><td>{row.value}</td></tr>)}</tbody>
+      </table>
+    </main>
+  );
+}
