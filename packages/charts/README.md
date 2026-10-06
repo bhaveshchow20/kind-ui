@@ -113,7 +113,9 @@ chart with a short opacity reveal. Reduced motion disables both effects. Rapid
 updates follow the current prop without queued completions or forced delays.
 `animate` still controls native mark animation; native entrances may finish while
 hidden and are not replayed by loading. Omitting the prop retains existing chart
-markup. Supply a chart-specific label and accessible data alternative. Consumer portals outside the chart remain consumer-owned.
+markup. Supply a chart-specific label and accessible data alternative. Consumer portals outside the chart remain consumer-owned. Loading
+dots use the native container positioning; custom position overrides can relocate
+them.
 
 This draft supports line and bar loading, including the bar-backed
 `WaterfallChart`, `BoxPlotChart` and `HistogramChart`. Other chart families do not
