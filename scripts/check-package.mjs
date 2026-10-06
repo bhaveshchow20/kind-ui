@@ -384,7 +384,8 @@ try {
   console.log(
     "Packed area public exports: strict NodeNext/Bundler and static/Motion production builds passed; host fixtures only, no implementation copying",
   );
-  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("bar", file);
+  for (const file of ["host.tsx", "main.tsx", "patterns.tsx", "index.html"])
+    await copyFixture("bar", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-bar");
   for (const file of ["entrance.tsx", "entrance.html"]) await copyFixture("bar", file);

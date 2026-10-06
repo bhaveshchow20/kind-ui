@@ -21,6 +21,7 @@ import { BarMotion } from "./bar-chart.js";
 import { type BarMaterial, BarMaterialFilter } from "./bar-material.js";
 import { useChart } from "./chart-context.js";
 import { useEmphasis } from "./emphasis.js";
+import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 
 export type BarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
@@ -33,6 +34,8 @@ export type BarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   emphasisKey?: ((payload: unknown) => string | number | undefined) | undefined;
   /** Finish on native rectangles; custom shapes and filters retain ownership. */
   material?: BarMaterial | undefined;
+  /** Static encoding for implicit fills; explicit fills/Cells/custom shapes retain ownership. */
+  pattern?: FillPattern | "none" | undefined;
 };
 
 /** A registered native Bar; axes, shape, cells, labels and handlers stay consumer-owned. */
@@ -44,6 +47,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   className,
   style,
   material = "plain",
+  pattern,
   ...props
 }: BarSeriesProps<DataPoint, Value>) {
   const { config, visibleSeries } = useChart();
@@ -144,6 +148,15 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("BarSeries requires seriesKey for controlled non-string dataKey");
+  const configuredPattern = key && Object.hasOwn(config, key) ? config[key]?.pattern : undefined;
+  const resolvedPattern = pattern === "none" ? undefined : (pattern ?? configuredPattern);
+  const patternId = patternResourceId(generatedId);
+  const patterned =
+    resolvedPattern !== undefined &&
+    fill === undefined &&
+    style?.fill === undefined &&
+    props.shape === undefined &&
+    (props.activeBar === undefined || typeof props.activeBar === "boolean");
   const color = fill ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
   const nativeRows =
     (!("data" in props) &&
@@ -216,6 +229,15 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
           </clipPath>
         </defs>
       )}
+      {patterned && (
+        <defs pointerEvents="none">
+          <FillPatternDefinition
+            id={patternId}
+            pattern={resolvedPattern}
+            baseColor={color ?? "currentColor"}
+          />
+        </defs>
+      )}
       {materialized && (
         <defs data-kind-ui="bar-material" data-material={material} pointerEvents="none">
           <BarMaterialFilter material={material} id={filterId} horizontal={horizontal} />
@@ -231,7 +253,11 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
         {...(materialized ? { filter: `url(#${filterId})` } : {})}
         id={id}
         hide={effectiveHide}
-        {...(color !== undefined ? { fill: color } : {})}
+        {...(patterned
+          ? { fill: `url(#${patternId})` }
+          : color !== undefined
+            ? { fill: color }
+            : {})}
         className={["kind-ui-bar-series", selector, className].filter(Boolean).join(" ")}
         style={style}
         isAnimationActive={false}
