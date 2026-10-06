@@ -41,6 +41,8 @@ Choose plain, paper, clay or glow. Percentage labels remain inside sectors; cate
 
 ### Selective glow
 
+`glowCategories` is a source-package addition. The deployed previews continue to use the centrally pinned package; the runnable example is in `examples/chart/pie-selective-glow.tsx` until coordinated package integration.
+
 Use `glowCategories={["design"]}` with `categoryKey="key"` to give only Design a halo. Selection uses original row IDs, so reorder and filtering retain category colors and membership. Unknown or removed IDs are ignored; restoring a row restores its glow. An empty list retains the series `material`. Selected sectors use glow instead of paper or clay; `material="glow"` still glows every default sector.
 
 ```tsx title="Selected category on a rounded donut"
