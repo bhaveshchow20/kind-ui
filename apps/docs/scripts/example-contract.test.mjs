@@ -18,7 +18,7 @@ test("Introduction is the first Get Started page at the preserved docs root", ()
   assert.ok(!root.pages.includes("index"));
   assert.deepEqual(start, {
     title: "Get Started",
-    pages: ["../index", "installation", "quickstart"],
+    pages: ["../index", "../installation", "../quickstart"],
   });
   assert.match(readFileSync("content/docs/index.mdx", "utf8"), /^title: Introduction$/m);
   assert.match(readFileSync("public/markdown/index.md", "utf8"), /^# Introduction\n/);
@@ -27,6 +27,14 @@ test("Introduction is the first Get Started page at the preserved docs root", ()
       `[Introduction](${publicPath("/markdown/index.md")})`,
     ),
   );
+  const index = readFileSync("public/llms.txt", "utf8");
+  assert.ok(!index.includes("/markdown/start/"));
+  for (const page of ["installation", "quickstart"]) {
+    assert.equal(
+      readFileSync(`public/markdown/start/${page}.md`, "utf8"),
+      readFileSync(`public/markdown/${page}.md`, "utf8"),
+    );
+  }
 });
 test("each registered family has a complete public consumer", () => {
   assert.deepEqual(
