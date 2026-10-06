@@ -2,4 +2,4 @@
 "@kind-ui/charts": patch
 ---
 
-Add a controlled ChartLoading presentation boundary that preserves mounted chart layout and state, announces loading, and respects reduced motion.
+Add controlled loading and loadingLabel props to line and bar charts, preserving mounted chart layout and state, announcing loading, and respecting reduced motion.

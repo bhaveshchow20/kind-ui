@@ -17,6 +17,8 @@ import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 export type BarAnimation = LineAnimation;
 export type BarChartProps = ComponentProps<typeof EngineBarChart> & {
   animate?: boolean | BarAnimation | undefined;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
   /** Opt in only for complete native category comparisons; any unsafe visible peer falls back. */
   emphasis?: "none" | "category" | undefined;
 };
@@ -61,6 +63,8 @@ export function BarLifecycle({
 /** Native Recharts composition with Kind interaction and optional Motion. */
 export function BarChart({
   animate = false,
+  loading,
+  loadingLabel,
   emphasis = "none",
   children,
   ...props
@@ -76,6 +80,8 @@ export function BarChart({
         <BarCategoryBoundary>
           <LineChartFrame
             chartProps={props}
+            loading={loading}
+            loadingLabel={loadingLabel}
             categoryEmphasis={emphasis === "category"}
             engine={EngineBarChart}
             motionEnabled={enabled}

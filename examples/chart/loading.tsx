@@ -17,13 +17,15 @@ function Preview() {
   const [empty, setEmpty] = useState(false);
   const [wide, setWide] = useState(true);
   const [events, setEvents] = useState(0);
+  const [enabled, setEnabled] = useState(true);
+  const [partialSize, setPartialSize] = useState(false);
   const rows = empty ? [] : data;
   return (
     <main>
       <p className="eyebrow">Kind UI / loading study</p>
       <h1>A quiet pause, then your chart.</h1>
       <p>
-        The boundary keeps real charts mounted. Use Load to finish immediately, or interrupt the
+        The loading prop keeps real charts mounted. Use Load to finish immediately, or interrupt the
         reveal with Replay. Your operating system’s reduced motion preference disables the pulse and
         fade.
       </p>
@@ -53,6 +55,22 @@ function Preview() {
           />{" "}
           Wide layout
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(event) => setEnabled(event.target.checked)}
+          />{" "}
+          Enable loading prop
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={partialSize}
+            onChange={(event) => setPartialSize(event.target.checked)}
+          />{" "}
+          Partial percentage size
+        </label>
       </nav>
       <p role="status">
         {loading ? "Request pending" : empty ? "Loaded: no results" : "Loaded: five months"}
@@ -60,33 +78,27 @@ function Preview() {
       <section className="charts" style={{ maxWidth: wide ? 900 : 520 }}>
         <article>
           <h2>Configured line</h2>
-          <Chart.ChartLoading
-            loading={loading}
-            label="Loading monthly sales"
-            data-testid="line-loading"
-          >
-            <Chart.LineChart
-              config={config}
-              data={rows}
-              xDataKey="month"
-              aria-label="Monthly sales"
-              height={280}
-              animate={false}
-            />
-            {empty && <p>No sales found.</p>}
-          </Chart.ChartLoading>
+          <Chart.LineChart
+            loading={enabled ? loading : undefined}
+            loadingLabel="Loading monthly sales"
+            config={config}
+            data={rows}
+            xDataKey="month"
+            aria-label="Monthly sales"
+            height={280}
+            animate={false}
+          />
+          {empty && !loading && <p>No sales found.</p>}
         </article>
         <article>
           <h2>Composed bar</h2>
           <Chart.Root config={config}>
-            <Chart.ChartLoading
-              loading={loading}
-              label="Loading sales bars"
-              style={{ height: 280 }}
-              data-testid="bar-loading"
-            >
-              <Chart.ResponsiveContainer width="100%" height="100%">
+            <Chart.ResponsiveContainer width="100%" height={280}>
+              <div style={{ width: "100%", height: 280 }}>
                 <Chart.BarChart
+                  loading={enabled ? loading : undefined}
+                  loadingLabel="Loading sales bars"
+                  style={partialSize ? { width: "50%", height: "50%" } : undefined}
                   aria-label="Monthly sales bars"
                   data={rows}
                   animate={false}
@@ -98,8 +110,8 @@ function Preview() {
                   <Chart.BarSeries dataKey="sales" seriesKey="sales" />
                   <Chart.Tooltip />
                 </Chart.BarChart>
-              </Chart.ResponsiveContainer>
-            </Chart.ChartLoading>
+              </div>
+            </Chart.ResponsiveContainer>
             <Chart.Legend />
             {empty && !loading && <p>No sales found.</p>}
           </Chart.Root>
@@ -128,9 +140,9 @@ function Preview() {
         </table>
       )}
       <p>
-        Line legend is inside its boundary; bar legend is outside and remains available. The same
-        neutral loading presentation can wrap other families; it does not animate their marks or
-        reset their entrance animation. Keep an accessible data alternative alongside your chart.
+        Legends remain available while chart content loads. This draft supports line and bar loading
+        props; it does not reset their native entrance animation. Keep an accessible data
+        alternative alongside your chart.
       </p>
     </main>
   );
