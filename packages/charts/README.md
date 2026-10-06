@@ -195,8 +195,7 @@ Load the package stylesheet. Motion stops with chart `animate={false}`, reduced
 motion, loading, or hidden series. Disabling restores the native dash offset;
 reenabling starts a fresh cycle. Use `dashAnimation={false}` to disable an individual series. Native width, dash array, offset and
 styles remain intact; style dash values take precedence. Custom shapes own their
-animation and are never decorated; explicit native entrance animation on the
-static series also retains ownership. Entrance clip reveal timing is independent.
+animation and are never decorated. Entrance clip reveal timing is independent.
 No geometry or data is changed, and CSS requires no mount timers or cleanup.
 Stylesheets overriding dash paint remain consumer-owned and can change appearance.
 
@@ -204,4 +203,4 @@ Stylesheets overriding dash paint remain consumer-owned and can change appearanc
 and closing edges. For an open animated outline, overlay `LineSeries` in a
 `ComboChart` as above. Match data keys, interpolation and axes yourself; stacked
 or range areas require an explicitly derived outline dataset. See
-`examples/chart/dashed-lines.html` for the interactive standalone and combo example.
+`/contracts.html#dashed-lines` for the interactive line and combo contract examples.

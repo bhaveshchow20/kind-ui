@@ -5,9 +5,10 @@ test("dash motion stays independent of reveal, native paint and lifecycle", asyn
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.goto("/dashed-lines.html");
-  const path = page.locator('[data-example="line"] .recharts-line-curve');
-  const combo = page.locator(".reverse-dashes .recharts-line-curve");
+  await page.goto("/contracts.html#dashed-lines");
+  const example = page.getByRole("region", { name: "Animated dashed strokes" });
+  const path = example.locator('[data-example="line"] .recharts-line-curve');
+  const combo = example.locator(".reverse-dashes .recharts-line-curve");
   const name = () => path.evaluate((node) => getComputedStyle(node).animationName);
   await expect.poll(name).toBe("kind-ui-line-dash");
   const geometry = await path.getAttribute("d");
@@ -17,8 +18,8 @@ test("dash motion stays independent of reveal, native paint and lifecycle", asyn
   await expect
     .poll(() => combo.evaluate((node) => getComputedStyle(node).animationDirection))
     .toBe("reverse");
-  await expect(page.locator('[data-custom="owned"]')).toHaveCount(1);
-  await expect(page.locator('[data-custom="owned"]')).not.toHaveCSS(
+  await expect(example.locator('[data-custom="owned"]')).toHaveCount(1);
+  await expect(example.locator('[data-custom="owned"]')).not.toHaveCSS(
     "animation-name",
     "kind-ui-line-dash",
   );
@@ -28,7 +29,7 @@ test("dash motion stays independent of reveal, native paint and lifecycle", asyn
     .not.toBe(offset);
   if (!geometry) throw new Error("Missing line geometry");
   await expect(path).toHaveAttribute("d", geometry);
-  const styled = page.locator(".style-dashes .recharts-line-curve");
+  const styled = example.locator(".style-dashes .recharts-line-curve");
   await expect(styled).toHaveCSS("stroke-width", "5px");
   await expect(styled).toHaveCSS("animation-duration", "0.6s");
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -36,21 +37,21 @@ test("dash motion stays independent of reveal, native paint and lifecycle", asyn
   await expect.poll(name).toBe("none");
   await expect(path).toHaveCSS("stroke-dashoffset", "3px");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.getByText("Toggle animation", { exact: true }).click();
+  await example.getByText("Toggle animation", { exact: true }).click();
   await expect.poll(name).toBe("none");
-  await page.getByText("Toggle animation", { exact: true }).click();
+  await example.getByText("Toggle animation", { exact: true }).click();
   await expect.poll(name).toBe("kind-ui-line-dash");
-  await page.getByText("Toggle loading", { exact: true }).click();
+  await example.getByText("Toggle loading", { exact: true }).click();
   await expect.poll(name).toBe("none");
-  await page.getByText("Toggle loading", { exact: true }).click();
+  await example.getByText("Toggle loading", { exact: true }).click();
   await expect.poll(name).toBe("kind-ui-line-dash");
-  await page.getByText("Toggle visibility", { exact: true }).click();
-  await expect(page.locator('[data-example="line"] .kind-ui-line-dash')).toHaveCount(0);
-  await page.getByText("Toggle visibility", { exact: true }).click();
+  await example.getByText("Toggle visibility", { exact: true }).click();
+  await expect(example.locator('[data-example="line"] .kind-ui-line-dash')).toHaveCount(0);
+  await example.getByText("Toggle visibility", { exact: true }).click();
   for (let count = 0; count < 3; count++) {
-    await page.getByText("Toggle mount", { exact: true }).click();
+    await example.getByText("Toggle mount", { exact: true }).click();
     await expect(path).toHaveCount(0);
-    await page.getByText("Toggle mount", { exact: true }).click();
+    await example.getByText("Toggle mount", { exact: true }).click();
     await expect.poll(name).toBe("kind-ui-line-dash");
   }
   expect(errors).toEqual([]);
@@ -78,12 +79,13 @@ test("unsupported Area dashes preserve native paint and diagnose only in develop
   page.on("console", (message) => {
     if (message.type() === "warning") warnings.push(message.text());
   });
-  await page.goto("/dashed-lines.html?unsupported-area");
-  const area = page.locator(".recharts-area-area");
+  await page.goto("/contracts.html?unsupported-area#dashed-lines");
+  const example = page.getByRole("region", { name: "Animated dashed strokes" });
+  const area = example.locator(".recharts-area-area");
   await expect(area).toHaveCount(1);
   await expect(area).toHaveAttribute("fill-opacity", "0.2");
   await expect(area).not.toHaveCSS("animation-name", "kind-ui-line-dash");
-  await expect(page.locator("[dashAnimation], [dashanimation]")).toHaveCount(0);
+  await expect(example.locator("[dashAnimation], [dashanimation]")).toHaveCount(0);
   const unsupported = warnings.filter((message) =>
     message.includes("AreaSeries does not support dashAnimation"),
   );
