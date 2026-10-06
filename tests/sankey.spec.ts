@@ -7,6 +7,13 @@ test("Sankey native widths, labels, pointer and keyboard inspection retain zero"
 }) => {
   await page.goto("/sankeys.html");
   const recipe = page.locator("main > section").first();
+  const icons = recipe.locator('[data-kind-ui="sankey-node-icon"]');
+  await expect(icons).toHaveCount(2);
+  await expect(icons.first()).toHaveAttribute("aria-hidden", "true");
+  await expect(icons.first()).toHaveAttribute("focusable", "false");
+  await expect(
+    recipe.locator('[data-node-id="use"] [data-kind-ui="sankey-node-icon"]'),
+  ).toHaveCount(0);
   const paths = recipe.locator("path[data-flow-id]");
   await expect(paths).toHaveCount(3);
   const widths = await paths.evaluateAll((marks) =>

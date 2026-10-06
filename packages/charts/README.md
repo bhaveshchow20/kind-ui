@@ -98,6 +98,22 @@ node={(node) => (
 )}
 ```
 
+Optional `SankeyNodeConfig` entries accept an `icon: ReactNode`. Pass that config
+explicitly as `SankeyNodeLabel`'s `nodeConfig` in your native callback (see the
+energy example in `examples/chart/sankeys.tsx`). Icons use a square `iconSize`
+(default 16 chart units) SVG viewport with `viewBox="0 0 24 24"`; supply SVG
+content, or a nested SVG with its own viewBox. `iconGap` defaults to 4 units.
+Outside icons sit nearest the node and shift the text by size plus gap on either
+side. Inside icons stack above centered text and share its exact rectangle clip;
+small nodes can clip both. Reserve outside margins for the combined content.
+Missing, null, boolean or zero-size icons preserve the existing text layout.
+Sizes and gaps must be finite and nonnegative. Icons are decorative (`aria-hidden`,
+nonfocusable); data names and full name/value titles remain meaningful, and the
+data table remains the accessible alternative. Config labels remain Legend metadata.
+Custom text children compose with the icon; text props/ref still target the text.
+A custom native node renderer owns all rendering: nothing is injected unless it
+chooses this helper, and omitting `nodeConfig` opts out of configured icons.
+
 Identity is resolved by `node.payload.id` against `data`, never callback index or
 name. Supply the same data to the chart, label and `SankeyTable`, and reuse the
 formatter as the table's `formatValue`. A node value is the maximum of incoming
