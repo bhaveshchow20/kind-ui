@@ -320,17 +320,15 @@ void (
 // @ts-expect-error Background decoration is not a series fill encoding.
 void (<Chart.ChartBackgroundPattern pattern={{ kind: "hatch" }} />);
 void (
-  (
+  <Chart.LineChart
+    config={config}
+    data={[]}
+    aria-label="Explicit"
     // @ts-expect-error Explicit children replace generated decoration too.
-    <Chart.LineChart
-      config={config}
-      data={[]}
-      aria-label="Explicit"
-      backgroundPattern={{ pattern: "pinpoints" }}
-    >
-      {null}
-    </Chart.LineChart>
-  )
+    backgroundPattern={{ pattern: "pinpoints" }}
+  >
+    {null}
+  </Chart.LineChart>
 );
 // @ts-expect-error Native composition uses the part, not generated options.
 void (<Chart.LineChart data={[]} backgroundPattern={{ pattern: "waves" }} />);
