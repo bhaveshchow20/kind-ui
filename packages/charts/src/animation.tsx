@@ -92,7 +92,13 @@ export function LineChart({
         interrupt={interrupt}
         {...(reveal ? { clip: `url(#${id}-reveal)` } : {})}
       >
-        {reveal && <RevealClip id={`${id}-reveal`} options={options} finish={interrupt} />}
+        {reveal && (
+          <RevealClip
+            id={`${id}-reveal`}
+            options={options}
+            {...(options.revealDirection === undefined ? {} : { finish: interrupt })}
+          />
+        )}
         {children}
       </LineChartFrame>
     </MotionContext>

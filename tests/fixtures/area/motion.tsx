@@ -18,7 +18,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [defaults, setDefaults] = useState(false);
   const props: Motion.AreaChartProps = {
-    loading,
+    ...(loading ? { loading: true } : {}),
     animate: enabled
       ? defaults
         ? true

@@ -12,6 +12,7 @@ export function directionalEntrances(url: string) {
       await page.goto(`${url}${url.includes("?") ? "&" : "?"}direction=${direction}`);
       const clip = page.locator(`clipPath[data-reveal-direction="${direction}"]`).first();
       await expect(clip).toHaveCount(1);
+      await expect(page.locator('[data-kind-ui="chart-loading-status"]')).toHaveCount(0);
       const rects = clip.locator("rect");
       await expect(rects).toHaveCount(direction === "edges-in" ? 2 : 1);
       const paths = () =>
@@ -56,8 +57,12 @@ export function directionalEntrances(url: string) {
       await expect(page.locator("clipPath[data-reveal-direction]").first()).toHaveCount(1);
       await page.getByRole("button", { name: "Toggle loading", exact: true }).click();
       await expect(page.locator("clipPath[data-reveal-direction]")).toHaveCount(0);
+      await expect(page.locator('[data-kind-ui="chart-loading-status"]').first()).toHaveText(
+        "Loading chart",
+      );
       await page.getByRole("button", { name: "Toggle loading", exact: true }).click();
       await expect(page.locator("clipPath[data-reveal-direction]").first()).toHaveCount(1);
+      await expect(page.locator('[data-kind-ui="chart-loading-status"]')).toHaveCount(0);
       await page.getByLabel("Animate", { exact: true }).uncheck();
       await expect(page.locator("clipPath[data-reveal-direction]")).toHaveCount(0);
     });

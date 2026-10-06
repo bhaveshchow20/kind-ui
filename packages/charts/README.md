@@ -183,8 +183,11 @@ its accessible data table.
 Directions are physical horizontal screen-space reveals for both native layouts;
 they do not reverse data order or follow a vertical category axis. Timing remains
 `revealDurationMs` / `revealEasing`. The temporary family clip leaves native paths,
-axes, margins and transforms intact and is removed on completion or interruption
-(including resize/data changes). Disabled/reduced motion shows complete content.
+axes, margins and transforms intact. Explicit directional entrances remove the clip
+on completion or interruption (including resize/data changes). Line with an omitted
+direction preserves its existing completed full-width clip until interruption;
+Area/Combo retain their existing completion removal. Disabled/reduced motion shows
+complete content.
 Existing loading illustrations keep their independent design. Replay uses the
 existing remount or loading-to-ready lifecycle, not hover or color updates.
 

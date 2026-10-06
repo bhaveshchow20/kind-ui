@@ -21,7 +21,7 @@ export function RevealClip({
   family?: "line" | "area";
   combo?: boolean;
   options: Options;
-  finish: () => void;
+  finish?: () => void;
 }) {
   const direction = options.revealDirection ?? "left-to-right";
   const split = direction === "edges-in";
@@ -44,7 +44,7 @@ export function RevealClip({
           height="100%"
           initial={{ attrX: initialX, width: "0%" }}
           animate={{ attrX: "0%", width: split ? "50%" : "100%" }}
-          onAnimationComplete={finish}
+          {...(finish ? { onAnimationComplete: finish } : {})}
           transition={transition}
         />
         {split && (
