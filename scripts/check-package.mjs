@@ -340,6 +340,42 @@ try {
     `Primitive-only production tree-shaking: public/native bytes ${bundleSizes.join("/")}; no Kind interaction or Motion runtime`,
   );
 
+  // A named LineChart import must not retain illustrations for other chart families,
+  // whether its loading prop is enabled or omitted. Exercise the installed tarball.
+  for (const loading of [false, true]) {
+    const entry = join(consumer, "line-loading-bundle.tsx");
+    await writeFile(
+      entry,
+      `import { createRoot } from "react-dom/client";
+import { LineChart } from "@kind-ui/charts";
+const rows = [{ month: "Jan", sales: 12 }, { month: "Feb", sales: 30 }];
+createRoot(document.createElement("div")).render(
+  <LineChart data={rows} config={{ sales: { label: "Sales", color: "#537f76" } }}
+    xDataKey="month" height={260} aria-label="Monthly sales"${loading ? " loading={true}" : ""} />
+);`,
+    );
+    const result = await build({
+      configFile: false,
+      root: consumer,
+      logLevel: "warn",
+      build: { write: false, rolldownOptions: { input: entry } },
+    });
+    const modules = result.output
+      .filter((item) => item.type === "chunk")
+      .flatMap((chunk) => chunk.moduleIds);
+    assert.ok(
+      !modules.some((id) => /loading-(?:cartesian|polar|standalone)-designs\.js$/.test(id)),
+      `Named LineChart must tree-shake other family designs (loading=${loading})`,
+    );
+    assert.ok(
+      modules.some((id) => /loading-skeleton\.js$/.test(id)),
+      "Named LineChart retains its own supported loading implementation",
+    );
+  }
+  console.log(
+    "Named LineChart production bundles: unrelated family designs tree-shaken with loading enabled and omitted",
+  );
+
   const genericsConsumer = await readFile(join(root, "tests/series-generics-consumer.tsx"), "utf8");
   assertLineConsumerSource(genericsConsumer);
   await writeFile(join(consumer, "series-generics-consumer.tsx"), genericsConsumer);

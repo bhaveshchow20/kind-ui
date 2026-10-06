@@ -19,6 +19,7 @@ import {
   useChartWidth,
 } from "recharts";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
+import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
 import { SankeyColors, type SankeyNodeConfig } from "./sankey-colors.js";
 import { prepareSankeyData, type SankeyFlowData } from "./sankey-data.js";
 import {
@@ -262,6 +263,7 @@ export function SankeyChart({
           {loading && (
             <LoadingSkeletonSurface
               family="sankey"
+              design={(seed) => <StandaloneLoadingDesign family="sankey" seed={seed} />}
               width="100%"
               height="100%"
               seed={loadingSeed}

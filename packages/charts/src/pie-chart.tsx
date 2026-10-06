@@ -13,6 +13,7 @@ import {
 import { PieChart as EnginePieChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
+import { PolarLoadingDesign } from "./loading-polar-designs.js";
 
 export type PieAnimation = LineAnimation;
 export type PieChartProps = ComponentProps<typeof EnginePieChart> & {
@@ -109,6 +110,7 @@ export function PieChart({
           loading={loading}
           loadingLabel={loadingLabel}
           loadingSkeleton="pie"
+          loadingDesign={(seed) => <PolarLoadingDesign family={"pie"} seed={seed} />}
           loadingAnimation={{ ...options, direction: animationDirection }}
           motionEnabled={enabled}
           interrupt={interrupt}

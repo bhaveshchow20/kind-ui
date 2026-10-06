@@ -25,6 +25,7 @@ import {
   type HeatmapScale,
 } from "./heatmap-model.js";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
+import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
 import type { TooltipContentProps } from "./tooltip-content.js";
 import { TooltipNumber } from "./tooltip-number.js";
 
@@ -565,6 +566,7 @@ export function HeatmapGrid({
       {context.loading && (
         <LoadingSkeletonSurface
           family="heatmap"
+          design={(seed) => <StandaloneLoadingDesign family="heatmap" seed={seed} />}
           width="100%"
           height="100%"
           seed={context.loadingSeed}

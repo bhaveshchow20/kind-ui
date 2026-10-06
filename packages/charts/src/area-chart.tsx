@@ -12,6 +12,7 @@ import {
 import { AreaChart as EngineAreaChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
+import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 
 export type AreaAnimation = LineAnimation;
 export type AreaChartProps = ComponentProps<typeof EngineAreaChart> & {
@@ -56,6 +57,7 @@ export function AreaChart({
         loading={loading}
         loadingLabel={loadingLabel}
         loadingSkeleton="area"
+        loadingDesign={(seed) => <CartesianLoadingDesign family={"area"} seed={seed} />}
         loadingAnimation={options}
         chartProps={{
           ...props,
