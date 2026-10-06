@@ -11,6 +11,23 @@ import "./routing-contract.test.mjs";
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const completeBundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
+test("Introduction is the first Get Started page at the preserved docs root", () => {
+  const root = JSON.parse(readFileSync("content/docs/meta.json", "utf8"));
+  const start = JSON.parse(readFileSync("content/docs/start/meta.json", "utf8"));
+  assert.equal(root.pages[0], "start");
+  assert.ok(!root.pages.includes("index"));
+  assert.deepEqual(start, {
+    title: "Get Started",
+    pages: ["../index", "installation", "quickstart"],
+  });
+  assert.match(readFileSync("content/docs/index.mdx", "utf8"), /^title: Introduction$/m);
+  assert.match(readFileSync("public/markdown/index.md", "utf8"), /^# Introduction\n/);
+  assert.ok(
+    readFileSync("public/llms.txt", "utf8").includes(
+      `[Introduction](${publicPath("/markdown/index.md")})`,
+    ),
+  );
+});
 test("each registered family has a complete public consumer", () => {
   assert.deepEqual(
     examples.map((example) => example.id),
