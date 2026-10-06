@@ -146,19 +146,36 @@ within an update and replace the data array when values or flags change.
 Omitting `projected` retains the existing native rendering. With projection,
 one native Line retains series/category identity, dots, custom marker renderers,
 axes, labels and tooltip entries. Its default stroke is painted by two native
-Curves, using the original interpolation type and `connectNulls` option. Native
-spline tangents are recalculated for each partition at the opt-in boundary;
-this is not an exact paint mask of the unsplit spline. The projected partition
-includes the last historical point as an anchor. With `connectNulls=false`, a
-missing boundary point remains a gap; with `true`, the native curve can connect
-to the last available historical point. No missing values are synthesized.
+Curves, each receiving the complete original points, interpolation type and
+`connectNulls` option. Complementary clips change paint at the historical
+category coordinate without recomputing the spline. With `connectNulls=false`,
+a missing boundary point remains a native gap; with `true`, the paint boundary
+uses the last available historical point. No missing values are synthesized.
+
+Mixed historical/projected automatic paint requires distinct monotonic
+category coordinates and an aligned open interpolation mode: `linear`,
+`monotone`, `bump`, `step`, `basis`, `basisOpen`, plus `monotoneX`/`bumpX` for
+horizontal layouts or `monotoneY`/`bumpY` for vertical layouts. Closed, custom,
+`natural`, `stepBefore`, `stepAfter`, opposite-axis interpolation, repeated
+numeric coordinates and reordered numeric coordinates throw an actionable
+error. A half-plane clip cannot assign a backtracking or boundary-aligned stroke
+unambiguously; explicit custom shapes retain their own drawing contract.
+Reordering ordinal category data remains supported because the engine positions
+categories in the new supplied order. Fully projected or fully historical
+series need no seam and keep native interpolation without these restrictions.
 
 Empty data paints nothing. A single point retains its native dot and projected
 tooltip status without inventing a segment. An entirely flagged series is
 projected. Historical stroke/dash options are retained; projected dash defaults
-to `"4 4"`. Both partitions retain stroke, width, opacity, filter, style and
-handlers. Explicit SVG styles remain authoritative. Existing line materials
-apply independently to each partition. Explicit native `shape` owns all stroke
+to `"4 4"`. Both paints retain stroke, width, opacity and handlers. Mixed automatic paint
+requires declared finite numeric stroke width and miter limit. Clip extents
+include cap/join padding and the known material filter region, including chart
+overflow outside zero margins. CSS stroke metrics cannot exceed those declared
+bounds. Guards run on React commits; CSS-only changes between commits must
+stay within the declared bounds. External filters, transforms and non-scaling strokes require a custom
+shape; automatic paint throws explicitly rather than silently cropping them.
+Existing line materials apply independently to each complete-path paint.
+These interpolation and paint restrictions leave issue #139 partially implemented. Explicit native `shape` owns all stroke
 rendering, so it bypasses automatic projection paint while keeping status.
 
 The default tooltip says “Projected” for projected rows. Custom tooltip content
@@ -179,11 +196,9 @@ const start = getProjectedStart(data, isProjected);
 The focused public fixture in `tests/fixtures/configured-line/host.tsx`
 shows configured lines, gaps, filtering/reordering, a Combo and a status table.
 `examples/chart/projected-line.tsx` is a small copyable Combo/table example.
-Projection is intended for Kind's default static strokes and chart-owned Motion
-clips. Its custom native shape does not implement Recharts' opt-in
-`isAnimationActive` stroke-length entrance reveal; use Kind chart animation for
-entrance effects. The existing loading state and reduced-motion policy stay
-chart-owned.
+Plain projection paint forwards native `LineDrawShape` animation props and a
+complete-path ref; materials retain their existing native-shape behavior.
+The existing loading state and reduced-motion policy stay chart-owned.
 
 
 ### Point marker styles

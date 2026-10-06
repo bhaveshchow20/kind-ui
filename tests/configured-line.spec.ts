@@ -1,6 +1,93 @@
 import { expect, test } from "@playwright/test";
 
-test("projected native partitions keep gaps, zeroes, markers, tooltip identity and combo ownership", async ({ page }) => {
+test("projection changes only paint and retains the complete native monotone path", async ({ page }) => {
+  await page.goto("/");
+  const geometry = page.locator('[data-case="projection-geometry"] [data-curve="monotone"]');
+  const native = geometry.locator('[data-geometry="native"]');
+  const projected = geometry.locator('[data-geometry="projected"]');
+  const nativePath = native.locator("path.recharts-line-curve");
+  await expect(nativePath).toHaveCount(1);
+  const completePath = await nativePath.getAttribute("d");
+  if (!completePath) throw new Error("Missing native geometry path");
+  const paintedPaths = projected.locator("path.recharts-line-curve");
+  await expect(paintedPaths).toHaveCount(2);
+  // A paint/clip seam must send the same complete points to native Curve for both paints.
+  // Splitting points violates this regression by recomputing the spline at the seam.
+  for (const paint of await paintedPaths.all()) await expect(paint).toHaveAttribute("d", completePath);
+  const dots = (plot: typeof native) => plot.locator(".recharts-line-dot").evaluateAll((nodes) =>
+    nodes.map((node) => [node.getAttribute("cx"), node.getAttribute("cy")]),
+  );
+  expect(await dots(projected)).toEqual(await dots(native));
+});
+
+test("supported curves retain full geometry and expanded clips preserve wide-stroke overflow", async ({ page }) => {
+  await page.goto("/");
+  const root = page.locator('[data-case="projection-geometry"]');
+  for (const type of ["linear", "monotone", "bump", "step", "basis", "basisOpen"]) {
+    const fixture = root.locator(`[data-curve="${type}"]`);
+    const native = fixture.locator('[data-geometry="native"] path.recharts-line-curve');
+    await expect(native).toHaveCount(1);
+    const d = await native.getAttribute("d");
+    if (!d) throw new Error("Missing native path");
+    const paints = fixture.locator('[data-geometry="projected"] path.recharts-line-curve');
+    await expect(paints).toHaveCount(2);
+    for (const paint of await paints.all()) await expect(paint).toHaveAttribute("d", d);
+    const rectangles = await fixture.locator('[data-geometry="projected"] [data-kind-ui="projected-line"] > defs > clipPath > rect').evaluateAll((nodes) => nodes.map((node) => ({ y: Number(node.getAttribute("y")), height: Number(node.getAttribute("height")) })));
+    expect(rectangles).toHaveLength(2);
+    for (const rect of rectangles) {
+      expect(rect.y).toBeLessThanOrEqual(-80);
+      expect(rect.y + rect.height).toBeGreaterThanOrEqual(360);
+    }
+  }
+  const material = root.locator('[data-kind-ui="line-material"]');
+  await expect(material).toHaveCount(2);
+  const filters = await material.locator("filter").evaluateAll((nodes) => nodes.map((node) => ({ x: Number(node.getAttribute("x")), y: Number(node.getAttribute("y")), width: Number(node.getAttribute("width")), height: Number(node.getAttribute("height")) })));
+  const clipRects = await root.locator('[data-kind-ui="projected-line"]:has([data-kind-ui="line-material"]) > defs > clipPath > rect').evaluateAll((nodes) => nodes.map((node) => ({ x: Number(node.getAttribute("x")), y: Number(node.getAttribute("y")), width: Number(node.getAttribute("width")), height: Number(node.getAttribute("height")) })));
+  expect(clipRects).toHaveLength(2);
+  const minX = Math.min(...clipRects.map((rect) => rect.x));
+  const maxX = Math.max(...clipRects.map((rect) => rect.x + rect.width));
+  for (const filter of filters) {
+    expect(minX).toBeLessThanOrEqual(filter.x);
+    expect(maxX).toBeGreaterThanOrEqual(filter.x + filter.width);
+    for (const rect of clipRects) {
+      expect(rect.y).toBeLessThanOrEqual(filter.y);
+      expect(rect.y + rect.height).toBeGreaterThanOrEqual(filter.y + filter.height);
+    }
+  }
+  await expect(root.locator('[data-vertical="true"] [data-kind-ui="projected-line"] path.recharts-line-curve')).toHaveCount(2);
+});
+
+test("unsupported mixed curve modes and ambiguous numeric coordinates fail explicitly", async ({ page }) => {
+  await page.goto("/?projection-contract");
+  const root = page.locator('[data-case="projection-contract"]');
+  for (const type of ["natural", "basisClosed", "linearClosed", "stepBefore", "stepAfter", "monotoneY"]) {
+    await expect(root.locator(`[data-invalid="${type}"] [role="alert"]`)).toContainText("open curve aligned");
+  }
+  for (const mode of ["reordered", "repeated"]) {
+    await expect(root.locator(`[data-invalid="${mode}"] [role="alert"]`)).toContainText("distinct monotonic");
+  }
+});
+
+test("both paints reject CSS bounds violations and augmented material filters on commit", async ({ page }) => {
+  for (const mode of ["historical-width", "material-blur"]) {
+    await page.goto("/");
+    const root = page.locator('[data-case="projection-geometry"]');
+    await expect(root.locator('[data-curve="monotone"] [data-geometry="projected"] path.recharts-line-curve')).toHaveCount(2);
+    if (mode === "historical-width") {
+      await root.locator('[data-curve="monotone"] [data-projected="false"] path.recharts-line-curve').evaluate((path) => {
+        (path as SVGPathElement).style.strokeWidth = "100px";
+      });
+    } else {
+      await root.locator('[data-kind-ui="line-material"] path.recharts-line-curve').first().evaluate((path) => {
+        (path as SVGPathElement).style.filter = `${getComputedStyle(path).filter} blur(100px)`;
+      });
+    }
+    await page.getByRole("button", { name: "Resize", exact: true }).click();
+    await expect(page.locator('main > [role="alert"]')).toContainText(mode === "historical-width" ? "CSS stroke exceeds" : "external filters");
+  }
+});
+
+test("projected native paints keep gaps, zeroes, markers, tooltip identity and combo ownership", async ({ page }) => {
   await page.goto("/");
   const root = page.locator('[data-case="projection-cases"]');
   const gap = root.locator('[data-projection-connect="false"]');
@@ -14,12 +101,9 @@ test("projected native partitions keep gaps, zeroes, markers, tooltip identity a
   const gapPath = await gap.locator('[data-projected="true"] path').getAttribute("d");
   const connectedPath = await connected.locator('[data-projected="true"] path').getAttribute("d");
   expect(gapPath).not.toEqual(connectedPath);
-  // Without connectNulls the projected path starts at Mar, never at the Jan anchor across Feb's gap.
-  const gapDots = gap.locator('[data-kind-ui="point-marker"]');
-  const firstProjectedX = await gapDots.nth(1).getAttribute("cx");
-  const historicalX = await gapDots.first().getAttribute("cx");
-  expect(Number(gapPath?.match(/^M([^,]+)/)?.[1])).toBeCloseTo(Number(firstProjectedX), 2);
-  expect(Number(connectedPath?.match(/^M([^,]+)/)?.[1])).toBeCloseTo(Number(historicalX), 2);
+  // Full native paths retain the gap as separate subpaths, rather than inventing a connector.
+  expect(gapPath?.match(/M/g)?.length).toBe(2);
+  expect(connectedPath?.match(/M/g)?.length).toBe(1);
   await connected.locator("svg.recharts-surface").focus();
   for (let index = 0; index < 4; index++) await page.keyboard.press("ArrowRight");
   const item = connected.locator('[data-kind-ui="chart-tooltip-item"]');
