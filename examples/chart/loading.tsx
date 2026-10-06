@@ -98,7 +98,7 @@ function Preview() {
                 <Chart.BarChart
                   loading={enabled ? loading : undefined}
                   loadingLabel="Loading sales bars"
-                  style={partialSize ? { width: "50%", height: "50%" } : undefined}
+                  style={partialSize ? { width: "50%", height: "50%" } : {}}
                   aria-label="Monthly sales bars"
                   data={rows}
                   animate={false}
