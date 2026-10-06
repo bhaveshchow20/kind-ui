@@ -29,8 +29,10 @@ const data: { key: keyof typeof config; hours: number; share: string }[] = [
 
 export function AllocationMaterialChart({
   material = "paper",
+  glowCategories,
 }: {
   material?: "plain" | "paper" | "clay" | "glow";
+  glowCategories?: readonly string[];
 }) {
   return (
     <Chart.Root config={config}>
@@ -40,6 +42,8 @@ export function AllocationMaterialChart({
           <Chart.PieSeries
             data={data}
             dataKey="hours"
+            categoryKey="key"
+            glowCategories={glowCategories}
             nameKey="key"
             innerRadius={58}
             material={material}
@@ -61,5 +65,27 @@ export function AllocationMaterialChart({
         </Chart.PieChart>
       </Chart.ResponsiveContainer>
     </Chart.Root>
+  );
+}
+
+// The rounded donut geometry from the Pie guide works with the same identity seam.
+export function SelectiveGlowChart() {
+  return (
+    <section aria-label="Highlighted Design allocation">
+      <AllocationMaterialChart material="plain" glowCategories={["design"]} />
+      <p>Design is highlighted; the allocation values are unchanged.</p>
+      <table>
+        <caption>Team allocation</caption>
+        <tbody>
+          {data.map((row) => (
+            <tr key={row.key}>
+              <th scope="row">{config[row.key].label}</th>
+              <td>{row.hours} hours</td>
+              <td>{row.share}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   );
 }

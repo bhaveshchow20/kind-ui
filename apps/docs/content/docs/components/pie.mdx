@@ -39,6 +39,27 @@ Choose plain, paper, clay or glow. Percentage labels remain inside sectors; cate
 
 <ChartExample id="pie-materials" />
 
+### Selective glow
+
+Use `glowCategories={["design"]}` with `categoryKey="key"` to give only Design a halo. Selection uses original row IDs, so reorder and filtering retain category colors and membership. Unknown or removed IDs are ignored; restoring a row restores its glow. An empty list retains the series `material`. Selected sectors use glow instead of paper or clay; `material="glow"` still glows every default sector.
+
+```tsx title="Selected category on a rounded donut"
+<Chart.PieSeries
+  data={data}
+  dataKey="hours"
+  categoryKey="key"
+  nameKey="key"
+  innerRadius={58}
+  outerRadius={108}
+  cornerRadius={8}
+  paddingAngle={2}
+  material="plain"
+  glowCategories={["design"]}
+/>
+```
+
+Glow is decoration, not selection state. Keep category labels and a data table; preserve readable native fills in each theme. Native Cell/datum paint, custom shapes, active shapes, filters and CSS transform ownership still take precedence. `categoryKey` requires explicit data and configured string IDs even when a native fill is supplied.
+
 ## Rounded and petal sectors
 
 `cornerRadius` and `paddingAngle` are existing native `PieSeries` props. Use a small radius and gap for rounded sectors, or half the ring thickness with a larger gap for a petal-like donut. No separate Donut component or custom shape is needed.
@@ -95,6 +116,7 @@ Value and category identity use separate fields.
 | `paddingAngle` | `number` | `0` | Native gap in degrees; see geometry constraints above. |
 | `cornerRadius` | `number \| string` | `0` | Native rounded sector corners; numeric units are recommended here. |
 | `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Finish on default sectors; consumer rendering can take precedence. |
+| `glowCategories` | `readonly string[]` | Off | Category IDs receiving glow instead of `material`; requires `categoryKey` and explicit data. Unknown IDs are ignored. |
 | `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | Native name | Optional semantic sector identity for paint emphasis; does not configure tooltip identity. |
 | `stroke` | `string` | `"none"` | Native sector outline. |
 

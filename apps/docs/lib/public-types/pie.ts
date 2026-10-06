@@ -12,6 +12,7 @@ export type PieSeriesReference = Pick<
   | "innerRadius"
   | "outerRadius"
   | "material"
+  | "glowCategories"
   | "emphasisKey"
 >;
 export type PieMotionReference = Chart.PieAnimation;

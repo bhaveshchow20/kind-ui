@@ -259,3 +259,19 @@ const anticlockwisePie = {
 // @ts-expect-error Entrance direction has two explicit physical sweep values.
 const invalidPieDirection = { animationDirection: "reverse" } satisfies Chart.PieChartProps;
 void [clockwisePie, anticlockwisePie, invalidPieDirection];
+
+const selectiveGlow = {
+  data: [{ id: "design", value: 10 }],
+  dataKey: "value",
+  categoryKey: "id",
+  glowCategories: ["design", "removed"] as const,
+  material: "paper",
+} satisfies Chart.PieSeriesProps<{ id: string; value: number }>;
+const accessorGlow = {
+  ...selectiveGlow,
+  categoryKey: (row: { id: string; value: number }) => row.id,
+} satisfies Chart.PieSeriesProps<{ id: string; value: number }>;
+void (<Chart.PieSeries {...selectiveGlow} />);
+void (<Chart.PieSeries {...accessorGlow} />);
+// @ts-expect-error Category identity is a string, not a positional index.
+void (<Chart.PieSeries dataKey="value" glowCategories={[0]} />);

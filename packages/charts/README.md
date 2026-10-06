@@ -80,6 +80,17 @@ for composition and customization. The documentation covers chart selection,
 peer requirements, styling, motion and accessibility; applications own their
 data, domains and business state.
 
+## Selective Pie glow
+
+`PieSeries` accepts `glowCategories?: readonly string[]` with `categoryKey` and
+explicit data. For a rounded donut, add `glowCategories={["design"]}` to
+`<PieSeries data={data} dataKey="hours" categoryKey="key" nameKey="key"
+innerRadius={58} outerRadius={108} cornerRadius={8} paddingAngle={2} />`.
+The IDs resolve through the existing category config contract. Unknown or removed
+IDs do nothing; reorder/filter preserve colors and membership. Selected default
+sectors use glow; others retain `material` (default plain). Native custom paint,
+shapes and handlers retain ownership. Keep labels and a data alternative.
+
 ## License
 
 [MIT](LICENSE) © 2026 Bhavesh Chowdhury.
