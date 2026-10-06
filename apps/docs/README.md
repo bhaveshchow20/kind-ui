@@ -1,6 +1,6 @@
 # Kind UI charts documentation
 
-Standalone Fumadocs/Next MDX application with build-time typed API and Markdown generation. This source is maintained in `apps/docs`; the Sites checkout is a generated deployment snapshot, not another editable application. The Components shell uses maintained shadcn/ui and Radix primitives, retaining Fumadocs content/search/API infrastructure. Visual flow follows the Preview/Usage/Code beUI reference; only brand colors/wordmark cues come from the separately owned showcase.
+Standalone Fumadocs/Next MDX application with build-time typed API and Markdown generation. This source is maintained in `apps/docs`; the Sites checkout is a generated deployment snapshot, not another editable application. The Components shell uses maintained shadcn/ui and Radix primitives, retaining Fumadocs content/search/API infrastructure. Component pages follow a Preview/Usage/Code flow; only brand colors/wordmark cues come from the separately owned showcase.
 
 ## Run
 
