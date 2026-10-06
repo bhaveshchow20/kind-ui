@@ -47,7 +47,9 @@ export function LineSeries<
   const { registerSeries, registerProjection, data, invalidate } = useLineInteraction();
   const generatedId = useId();
   const id = props.id || generatedId;
-  const rows = props.data ?? data;
+  // Shared context erases row generics; chart-owned rows follow this series
+  // caller-declared native data contract, just like a function dataKey.
+  const rows = props.data ?? (data as typeof props.data);
   const isProjected = projected?.isProjected;
   const projection = useMemo(() => {
     const start = isProjected && rows ? getProjectedStart(rows, isProjected) : (rows?.length ?? 0);
@@ -57,9 +59,10 @@ export function LineSeries<
   useLayoutEffect(() => {
     if (!isProjected) return;
     return registerProjection(id, (datum, activeIndex) => {
-      const index = typeof activeIndex === "string" || typeof activeIndex === "number"
-        ? Number(activeIndex)
-        : NaN;
+      const index =
+        typeof activeIndex === "string" || typeof activeIndex === "number"
+          ? Number(activeIndex)
+          : NaN;
       // Index disambiguates repeated payloads; separate series data may use another index space.
       if (Number.isInteger(index) && rows?.[index] === datum) return index >= start;
       return projectedRows.has(datum);

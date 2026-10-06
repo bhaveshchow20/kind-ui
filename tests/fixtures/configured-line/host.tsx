@@ -49,8 +49,12 @@ export function ConfiguredHost() {
   return (
     <main>
       <ProjectionCases />
-      <Boundary><ProjectionGeometry /></Boundary>
-      {new URLSearchParams(window.location.search).has("projection-contract") && <ProjectionContract />}
+      <Boundary>
+        <ProjectionGeometry />
+      </Boundary>
+      {new URLSearchParams(window.location.search).has("projection-contract") && (
+        <ProjectionContract />
+      )}
       <button type="button" onClick={() => setWidth(width === 500 ? 360 : 500)}>
         Resize
       </button>
@@ -271,14 +275,25 @@ function ProjectionGeometry() {
           {[false, true].map((projected) => (
             <section data-geometry={projected ? "projected" : "native"} key={String(projected)}>
               <Chart.Root config={config}>
-                <Chart.ComboChart width={500} height={280} data={geometryRows} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                <Chart.ComboChart
+                  width={500}
+                  height={280}
+                  data={geometryRows}
+                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                >
                   <Chart.XAxis dataKey="month" hide />
                   <Chart.YAxis hide domain={[1, 7]} />
                   <Chart.LineSeries<(typeof geometryRows)[number], number>
                     dataKey="total"
                     type={type}
                     strokeWidth={20}
-                    {...(projected ? { projected: { isProjected: (row: (typeof geometryRows)[number]) => row.projected } } : {})}
+                    {...(projected
+                      ? {
+                          projected: {
+                            isProjected: (row: (typeof geometryRows)[number]) => row.projected,
+                          },
+                        }
+                      : {})}
                   />
                 </Chart.ComboChart>
               </Chart.Root>
@@ -287,10 +302,20 @@ function ProjectionGeometry() {
         </section>
       ))}
       <Chart.Root config={config}>
-        <Chart.ComboChart width={500} height={280} data={geometryRows} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+        <Chart.ComboChart
+          width={500}
+          height={280}
+          data={geometryRows}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        >
           <Chart.XAxis dataKey="month" hide reversed />
           <Chart.YAxis hide domain={[1, 7]} />
-          <Chart.LineSeries<(typeof geometryRows)[number], number> dataKey="total" type="monotone" material="glow" projected={{ isProjected: (row) => row.projected }} />
+          <Chart.LineSeries<(typeof geometryRows)[number], number>
+            dataKey="total"
+            type="monotone"
+            material="glow"
+            projected={{ isProjected: (row) => row.projected }}
+          />
         </Chart.ComboChart>
       </Chart.Root>
       <section data-vertical="true">
@@ -298,7 +323,11 @@ function ProjectionGeometry() {
           <Chart.ComboChart width={500} height={280} data={geometryRows} layout="vertical">
             <Chart.XAxis type="number" />
             <Chart.YAxis type="category" dataKey="month" reversed />
-            <Chart.LineSeries<(typeof geometryRows)[number], number> dataKey="total" type="monotoneY" projected={{ isProjected: (row) => row.projected }} />
+            <Chart.LineSeries<(typeof geometryRows)[number], number>
+              dataKey="total"
+              type="monotoneY"
+              projected={{ isProjected: (row) => row.projected }}
+            />
           </Chart.ComboChart>
         </Chart.Root>
       </section>
@@ -307,24 +336,58 @@ function ProjectionGeometry() {
 }
 
 function ProjectionContract() {
-  const unsupported = ["natural", "basisClosed", "linearClosed", "stepBefore", "stepAfter", "monotoneY"] as const;
+  const unsupported = [
+    "natural",
+    "basisClosed",
+    "linearClosed",
+    "stepBefore",
+    "stepAfter",
+    "monotoneY",
+  ] as const;
   return (
     <section data-case="projection-contract">
       {unsupported.map((type) => (
         <section data-invalid={type} key={type}>
           <Boundary>
-            <Chart.LineChart width={500} data={geometryRows} config={config} xDataKey="month" series={[{ seriesKey: "total", dataKey: "total", type, projected: { isProjected: (row) => row.projected } }]} />
+            <Chart.LineChart
+              width={500}
+              data={geometryRows}
+              config={config}
+              xDataKey="month"
+              series={[
+                {
+                  seriesKey: "total",
+                  dataKey: "total",
+                  type,
+                  projected: { isProjected: (row) => row.projected },
+                },
+              ]}
+            />
           </Boundary>
         </section>
       ))}
-      {[[0, 2, 1, 3, 4], [0, 1, 1, 3, 4]].map((xs, index) => (
-        <section data-invalid={index === 0 ? "reordered" : "repeated"} key={index}>
+      {[
+        [0, 2, 1, 3, 4],
+        [0, 1, 1, 3, 4],
+      ].map((xs, index) => (
+        <section data-invalid={index === 0 ? "reordered" : "repeated"} key={xs.join(",")}>
           <Boundary>
             <Chart.Root config={config}>
-              <Chart.ComboChart width={500} height={280} data={geometryRows.map((row, i) => ({ ...row, category: xs[i] }))}>
+              <Chart.ComboChart
+                width={500}
+                height={280}
+                data={geometryRows.map((row, i) => ({ ...row, category: xs[i] }))}
+              >
                 <Chart.XAxis type="number" dataKey="category" />
                 <Chart.YAxis />
-                <Chart.LineSeries<(typeof geometryRows)[number] & { category: number | undefined }, number> dataKey="total" type="linear" projected={{ isProjected: (row) => row.projected }} />
+                <Chart.LineSeries<
+                  (typeof geometryRows)[number] & { category: number | undefined },
+                  number
+                >
+                  dataKey="total"
+                  type="linear"
+                  projected={{ isProjected: (row) => row.projected }}
+                />
               </Chart.ComboChart>
             </Chart.Root>
           </Boundary>
@@ -461,7 +524,11 @@ function ProjectionCases() {
       <table>
         <caption>Caller-supplied monthly totals</caption>
         <thead>
-          <tr><th>Month</th><th>Total</th><th>Status</th></tr>
+          <tr>
+            <th>Month</th>
+            <th>Total</th>
+            <th>Status</th>
+          </tr>
         </thead>
         <tbody>
           {rows.map((row, index) => (

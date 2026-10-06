@@ -1,4 +1,12 @@
-import { ComboChart, getProjectedStart, LineSeries, Root, Tooltip, XAxis, YAxis } from "@kind-ui/charts";
+import {
+  ComboChart,
+  getProjectedStart,
+  LineSeries,
+  Root,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@kind-ui/charts";
 
 type Row = { month: string; total: number | null; estimated: boolean };
 const data: Row[] = [
@@ -30,14 +38,22 @@ export function ProjectedLineExample() {
       </Root>
       <table>
         <caption>Monthly totals and estimates</caption>
-        <thead><tr><th>Month</th><th>Total</th><th>Status</th></tr></thead>
-        <tbody>{data.map((row, index) => (
-          <tr key={row.month}>
-            <th scope="row">{row.month}</th>
-            <td>{row.total ?? "No data"}</td>
-            <td>{index >= start ? "Projected" : "Historical"}</td>
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Total</th>
+            <th>Status</th>
           </tr>
-        ))}</tbody>
+        </thead>
+        <tbody>
+          {data.map((row, index) => (
+            <tr key={row.month}>
+              <th scope="row">{row.month}</th>
+              <td>{row.total ?? "No data"}</td>
+              <td>{index >= start ? "Projected" : "Historical"}</td>
+            </tr>
+          ))}
+        </tbody>
       </table>
     </section>
   );

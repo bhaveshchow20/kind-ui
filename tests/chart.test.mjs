@@ -12,13 +12,25 @@ test("public projection boundary uses only the caller's trailing flagged rows", 
   assert.equal(Chart.getProjectedStart([{ value: 1 }], flag), 1);
   assert.equal(Chart.getProjectedStart([{ value: 1, projected: true }], flag), 0);
   assert.equal(Chart.getProjectedStart([{ projected: true }, {}, { projected: true }], flag), 2);
-  assert.equal(Chart.getProjectedStart([{ value: 2 }, { value: null, projected: true }, { value: 0, projected: true }], flag), 1);
+  assert.equal(
+    Chart.getProjectedStart(
+      [{ value: 2 }, { value: null, projected: true }, { value: 0, projected: true }],
+      flag,
+    ),
+    1,
+  );
   const historical = { value: 2 };
   const projected = { value: 3, projected: true };
   assert.equal(Chart.getProjectedStart([historical, projected], flag), 1);
   assert.equal(Chart.getProjectedStart([projected, historical], flag), 2);
   assert.equal(Chart.getProjectedStart([projected], flag), 0);
-  assert.throws(() => Chart.getProjectedStart([{}], () => { throw new Error("bad accessor"); }), /bad accessor/);
+  assert.throws(
+    () =>
+      Chart.getProjectedStart([{}], () => {
+        throw new Error("bad accessor");
+      }),
+    /bad accessor/,
+  );
 });
 
 // Standalone SVG marks need the same namespace as their chart host. Return the

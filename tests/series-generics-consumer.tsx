@@ -83,6 +83,19 @@ const legacyBarProps: Chart.BarSeriesProps = { dataKey: "chartOwnedKey" };
 void [legacyLineProps, legacyBarProps];
 const projection: Chart.LineProjection<Row> = { isProjected: (row) => row.value > 0 };
 const projectedStart: number = Chart.getProjectedStart(rows, projection.isProjected);
+const readonlyRows: readonly Row[] = rows;
+const readonlyProjectedStart: number = Chart.getProjectedStart(
+  readonlyRows,
+  projection.isProjected,
+);
+void readonlyProjectedStart;
+// Chart context owns these rows; the declared series generic types its projection accessor.
+void (
+  <Chart.LineSeries<Row, number>
+    dataKey="value"
+    projected={{ isProjected: (row) => row.value > 0 }}
+  />
+);
 void projectedStart;
 const invalidProjection: Chart.LineProjection<Row> = {
   // @ts-expect-error Projection accessors receive the row type.

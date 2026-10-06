@@ -7,15 +7,18 @@ export type ProjectionClip = {
 };
 
 function numericPaint(value: unknown, fallback: number, name: string) {
-  const number = value === undefined
-    ? fallback
-    : typeof value === "number"
-      ? value
-      : typeof value === "string" && /^(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?(?:px)?$/i.test(value)
-        ? Number.parseFloat(value)
-        : NaN;
+  const number =
+    value === undefined
+      ? fallback
+      : typeof value === "number"
+        ? value
+        : typeof value === "string" && /^(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?(?:px)?$/i.test(value)
+          ? Number.parseFloat(value)
+          : NaN;
   if (!Number.isFinite(number) || number < 0) {
-    throw new Error(`Projected LineSeries requires a finite numeric ${name}; use a custom shape for other paint bounds`);
+    throw new Error(
+      `Projected LineSeries requires a finite numeric ${name}; use a custom shape for other paint bounds`,
+    );
   }
   return number;
 }
@@ -31,9 +34,12 @@ export function getProjectionBounds(
   const width = numericPaint(strokeWidth, 1, "strokeWidth");
   const miter = numericPaint(miterLimit, 4, "strokeMiterlimit");
   const strokePadding = width * Math.max(2, miter);
-  const filterPadding = hasMaterial ? numericPaint(Number(materialWidth), width, "material strokeWidth") / 2 + 6 : 0;
+  const filterPadding = hasMaterial
+    ? numericPaint(Number(materialWidth), width, "material strokeWidth") / 2 + 6
+    : 0;
   const padding = Math.max(strokePadding, filterPadding, 1);
-  if (!Number.isFinite(padding)) throw new Error("Projected LineSeries requires finite paint bounds; use a custom shape");
+  if (!Number.isFinite(padding))
+    throw new Error("Projected LineSeries requires finite paint bounds; use a custom shape");
   const finite = points.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
   if (!finite.length) throw new Error("Projected LineSeries requires finite drawable points");
   let minX = Infinity;
@@ -75,17 +81,23 @@ export function getProjectionClip(
       "Projected LineSeries requires an open curve aligned with its category axis; use a custom shape for other interpolation modes",
     );
   }
-  const coordinates = points.map((point) => point[axis]).filter((value): value is number =>
-    typeof value === "number" && Number.isFinite(value),
-  );
+  const coordinates = points
+    .map((point) => point[axis])
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
   const first = coordinates[0];
   const last = coordinates.at(-1);
   if (first === undefined || last === undefined || first === last) {
     throw new Error("Projected LineSeries requires distinct monotonic category coordinates");
   }
   const direction = last > first ? 1 : -1;
-  if (coordinates.some((value, index) => index > 0 && direction * (value - (coordinates[index - 1] as number)) <= 0)) {
-    throw new Error("Projected LineSeries requires distinct monotonic category coordinates; reordered numeric coordinates need a custom shape");
+  if (
+    coordinates.some(
+      (value, index) => index > 0 && direction * (value - (coordinates[index - 1] as number)) <= 0,
+    )
+  ) {
+    throw new Error(
+      "Projected LineSeries requires distinct monotonic category coordinates; reordered numeric coordinates need a custom shape",
+    );
   }
   let anchor = start - 1;
   if (connectNulls) {
@@ -97,7 +109,9 @@ export function getProjectionClip(
   }
   const boundary = points[anchor]?.[axis] ?? points[start]?.[axis];
   if (typeof boundary !== "number" || !Number.isFinite(boundary)) {
-    throw new Error("Projected LineSeries requires a finite category coordinate at the projection boundary");
+    throw new Error(
+      "Projected LineSeries requires a finite category coordinate at the projection boundary",
+    );
   }
   return { axis, boundary, direction };
 }
