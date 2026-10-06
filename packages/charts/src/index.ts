@@ -234,3 +234,10 @@ export {
   WaterfallSeries,
   type WaterfallSeriesProps,
 } from "./waterfall-series.js";
+
+export {
+  createPercentStack,
+  formatPercent,
+  type NormalizedValue,
+  type PercentStackOptions,
+} from "./percent-stack.js";

@@ -140,3 +140,40 @@ void (
 // @ts-expect-error Stacked areas need complete values to preserve totals.
 const incompleteArea: StackedAreaPoint = { period: "Jan", desktop: null, mobile: 1 };
 void incompleteArea;
+
+import {
+  createPercentStack,
+  formatPercent,
+  type NormalizedValue,
+  type PercentStackOptions,
+  Tooltip as PercentTooltip,
+  TooltipContent as PercentContent,
+  XAxis as PercentXAxis,
+  YAxis as PercentYAxis,
+} from "@kind-ui/charts";
+const percentOptions: PercentStackOptions = {
+  values: (entry) => (entry.dataKey === "primary" ? [1, 3, null] : undefined),
+};
+const percentStack = createPercentStack(percentOptions);
+const fraction: NormalizedValue = percentStack.normalizedValue;
+void (<PercentXAxis type="number" tickFormatter={percentStack.tickFormatter} />);
+void (<PercentYAxis yAxisId="share" tickFormatter={formatPercent} />);
+void (<PercentTooltip normalizedValue={fraction} formatter={(value) => String(value)} />);
+void (
+  <PercentContent
+    tooltip={{
+      active: true,
+      payload: [],
+      label: "",
+      activeIndex: "0",
+      coordinate: undefined,
+      accessibilityLayer: true,
+    }}
+    normalizedValue={fraction}
+  />
+);
+// @ts-expect-error Normalized fractions must be numeric, not preformatted percent strings.
+const invalidFraction: NormalizedValue = () => "25%";
+void invalidFraction;
+// @ts-expect-error Native expand stack members must be raw scalar numeric values.
+createPercentStack({ values: () => ["2"] });

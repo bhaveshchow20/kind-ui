@@ -252,3 +252,64 @@ The runnable public consumer example is the packed Bar fixture at
 stacking, filtering, reorder and ownership controls. Configured series metadata
 continues to own ordinary patterns; projection is a per-Series composition prop,
 not global config or a generated-data recipe.
+
+### Percentage stack formatting
+
+`createPercentStack({ values })` opts into formatting for scalar native
+`stackOffset="expand"` Bar, Area and Combo stacks. Geometry, domains, axes and
+stack membership remain caller-owned. It returns `tickFormatter` and
+`normalizedValue`; no rows, series, native values or native tooltip payloads are
+rewritten. Native Recharts still normalizes geometry exactly once.
+
+```tsx
+const percent = createPercentStack({
+  values: (entry) => {
+    // Select this stack, excluding the Combo's latency line and other axes.
+    if (entry.dataKey !== "desktop" && entry.dataKey !== "mobile") return undefined;
+    const row = entry.payload as { desktop: number; mobile: number } | undefined;
+    return row ? [row.desktop, row.mobile] : undefined;
+  },
+});
+// Vertical columns / ordinary Areas: the numeric Y axis only.
+<YAxis yAxisId="share" tickFormatter={percent.tickFormatter} />;
+// Horizontal bars (layout="vertical"): the numeric X axis only.
+<XAxis type="number" tickFormatter={percent.tickFormatter} />;
+<Tooltip normalizedValue={percent.normalizedValue} />;
+```
+
+Only attach the formatter to an axis whose units are fractions. Other axes keep
+native ticks. A shared axis containing raw and fraction units needs a caller
+chosen scale/domain; this helper cannot reconcile those units. Custom ticks and
+`tickFormatter` stay native and caller-owned. `formatPercent(fraction)` is also
+exported (one decimal at most, no locale-dependent output).
+
+`values(entry)` must return the **raw members of that entry's own stack**, including
+its value, or `undefined` for unrelated entries. Use native datum identity, stack
+and axis selection where keys overlap. Match current native hidden-series
+membership; do not sum the tooltip payload, which can contain unrelated stacks,
+axes or lines. Update membership alongside controlled legends. Range values,
+numeric strings and nonfinite values are outside the helper's scalar contract.
+
+The helper uses the signed sum, matching native expand: missing members contribute
+zero to the denominator but remain missing in content; all-zero rows display 0%;
+negative fractions remain signed, with no absolute-value conversion or clamping.
+A cancelling zero sum with nonzero members has no defined share and retains raw
+formatting. Invalid/nonfinite totals or entries also retain raw formatting.
+Native negative geometry/domain behavior remains native; this API does not promise
+a 0–100% domain for negative data or fabricate absent values.
+
+`Tooltip` and `TooltipContent` accept `normalizedValue(entry): number | undefined`.
+Default content shows `25% (1)` with the original value in parentheses, using
+configured `formatValue` for that raw text when present. Explicit entry/native
+`formatter` takes precedence, including suppression and tuple results. Custom
+content receives the unchanged native payload and owns its presentation; pass the
+resolver explicitly when composing `TooltipContent`. Missing text, labels,
+projection status, patterns and colors keep their existing contracts. For already
+normalized source data, provide a resolver that returns the existing fraction;
+do not compute another share or apply expand to data already transformed elsewhere.
+Hosts still own raw data tables and accessible alternatives.
+
+The source-only example at `/contracts.html` includes vertical/horizontal Bar,
+Area and Combo with a separate raw latency axis and original data tables. The
+Percent Area recipe also uses this helper. Runtime/browser coverage is intended
+for the normal hosted CI; local installation is not required to read these examples.

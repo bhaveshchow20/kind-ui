@@ -50,25 +50,16 @@ function AreaFrame<T extends { period: string }>({
   threshold,
 }: AreaFrameProps<T>) {
   const id = useId();
-  const tooltipFormatter = percentage
-    ? (
-        value: number | string | readonly (number | string)[] | undefined,
-        _name: string | number | undefined,
-        _entry: unknown,
-        _index: number,
-        payload: readonly { value?: unknown }[],
-      ) => {
-        const total = payload.reduce(
-          (sum, point) => sum + (typeof point.value === "number" ? point.value : 0),
-          0,
-        );
-        const share =
-          typeof value === "number" && total > 0
-            ? `${((value / total) * 100).toFixed(0)}%`
-            : "No share";
-        return share;
-      }
-    : undefined;
+  const percentStack = Chart.createPercentStack({
+    values: (entry) => {
+      if (entry.dataKey !== "desktop" && entry.dataKey !== "mobile") return undefined;
+      const row = entry.payload as StackedAreaPoint | undefined;
+      if (!row) return undefined;
+      return (["desktop", "mobile"] as const)
+        .filter((key) => visibleSeries === undefined || visibleSeries.includes(key))
+        .map((key) => row[key]);
+    },
+  });
   const rootProps = {
     config,
     className: "recipe-chart",
@@ -119,12 +110,14 @@ function AreaFrame<T extends { period: string }>({
             {...(percentage
               ? {
                   ticks: [0, 0.25, 0.5, 0.75, 1],
-                  tickFormatter: (value: number) => `${Math.round(value * 100)}%`,
+                  tickFormatter: percentStack.tickFormatter,
                 }
               : {})}
             width={36}
           />
-          <Chart.Tooltip {...(tooltipFormatter ? { formatter: tooltipFormatter } : {})} />
+          <Chart.Tooltip
+            {...(percentage ? { normalizedValue: percentStack.normalizedValue } : {})}
+          />
         </Chart.AreaChart>
       </ResponsiveContainer>
     </>
