@@ -1652,3 +1652,31 @@ test("dots and lines share public swatch resources with existing patterns", () =
   assert.equal(new Set(ids).size, 2);
   for (const id of ids) assert.ok(html.includes(`fill="url(#${id})"`));
 });
+
+test("tooltip projection status uses caller identity without changing values or labels", () => {
+  const row = Object.freeze({ id: "forecast" });
+  const projected = entry(0, { payload: row });
+  const html = render(h(Root, { config: { value: { label: "Value", color: "red" } } },
+    h(TooltipContent, { tooltip: tooltip([projected]), isProjected: (item) => item.payload.id === "forecast" })));
+  assert.match(html, /data-projected="true"/);
+  assert.match(html, /projection-status">Projected/);
+  assert.match(html, /chart-tooltip-value">0/);
+  assert.equal(projected.payload, row);
+  const observed = render(h(Root, { config: {} }, h(TooltipContent, {
+    tooltip: tooltip([entry(9, { payload: { id: "observed" } })]),
+    isProjected: (item) => item.payload.id === "forecast",
+  })));
+  assert.doesNotMatch(observed, /projection-status|data-projected/);
+});
+
+test("tooltip projection status respects missing, hidden and formatter ownership", () => {
+  const props = { isProjected: () => true, projectedLabel: "Incomplete" };
+  const content = (items, overrides = {}) => render(h(Root, { config: {} }, h(TooltipContent, {
+    ...props, tooltip: { ...tooltip(items), ...overrides },
+  })));
+  assert.equal(content([entry(null, { payload: { id: "p" } })]), "");
+  assert.equal(content([entry(5, { hide: true, payload: { id: "p" } })]), "");
+  assert.equal(content([entry(5, { payload: { id: "p" } })], { formatter: () => null }), "");
+  assert.match(content([entry(5, { payload: { id: "p" } })]), /Incomplete/);
+  assert.doesNotMatch(content([entry(5, { payload: null })]), /projection-status/);
+});

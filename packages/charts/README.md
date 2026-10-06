@@ -198,3 +198,57 @@ Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also 
 
 The existing Next integration fixture additionally checks real server-rendered
 color resource IDs through hydration and a theme change.
+
+### Projected bar rows
+
+`BarSeries<DataPoint, Value>.projection` is opt-in:
+`{ isProjected: (datum: DataPoint) => boolean, pattern: FillPattern }`.
+The caller supplies values and selects identity; Kind UI generates no forecasts.
+For a trailing projection, capture the final row's stable ID before filtering or
+reordering, then compare that ID in `isProjected`. It never implicitly marks the
+new last visible row. Multiple selected identities are allowed.
+
+```tsx
+const projectedId = originalRows.at(-1)?.id;
+const projection: BarProjection<Row> = {
+  isProjected: (row) => projectedId !== undefined && row.id === projectedId,
+  pattern: { kind: "hatch" },
+};
+// Use in grouped bars or share it across series with the same stackId.
+<BarSeries<Row, number> dataKey="value" projection={projection} />;
+<Tooltip content={(tooltip) => (
+  <TooltipContent tooltip={tooltip}
+    isProjected={(entry) => projection.isProjected(entry.payload)} />
+)} />;
+// In the consumer-owned table, alongside the unchanged numeric value:
+<td>{projection.isProjected(row) ? "Projected" : "Observed"}</td>;
+```
+
+Selection applies to chart rows or explicitly supplied `BarSeries.data` in both
+orientations. Empty chart data produces no marks. Native empty `BarSeries.data` overrides
+inherit chart rows; projection follows the actual displayed payload. Null/undefined
+rows are never passed
+to the selector. Missing values retain native missing-bar behavior, and filtering
+out a selected identity does not select a replacement. Zero remains zero. Keep
+predicates pure and IDs unique; row indices do not offer reorder-stable identity.
+
+Projection fills use the existing `FillPattern` seam and native Rectangle shape
+props, so Brush slices cannot shift identity as positional Cells would. Unselected rows retain
+configured/explicit series patterns and full gradient paints. Projection tiles
+use the configured theme's solid first stop (`--color-key`), the same documented
+fallback as ordinary Bar/Area pattern tiles. `pattern="none"` disables automatic
+projection paint. Explicit series `fill`/`style.fill`, native shape options,
+custom shapes/active shapes and any explicit Cell composition retain paint
+ownership. Datum `fill`/`style.fill` also prevents automatic projection paint for
+that row. Compose Cells yourself for custom per-row painting.
+
+`TooltipContent.isProjected(entry)` shares caller selection but receives the
+native tooltip entry, including its original payload. Projected items append
+accessible text (`projectedLabel`, default `"Projected"`) without modifying
+values, labels, formatter behavior or config. Custom tooltip content and data
+alternatives must expose status themselves, even when custom paint overrides it.
+The runnable public consumer example is the packed Bar fixture at
+`/?projection` (add `&horizontal` for horizontal bars); it includes table status,
+stacking, filtering, reorder and ownership controls. Configured series metadata
+continues to own ordinary patterns; projection is a per-Series composition prop,
+not global config or a generated-data recipe.
