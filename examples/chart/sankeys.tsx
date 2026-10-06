@@ -6,6 +6,7 @@ import {
   SankeyLink,
   type SankeyMaterial,
   SankeyNode,
+  SankeyNodeLabel,
   SankeyTable,
 } from "@kind-ui/charts";
 import { useState } from "react";
@@ -73,7 +74,7 @@ function Recipe({
               data={flow}
               animate={active === null}
               nodePadding={45}
-              nodeWidth={14}
+              nodeWidth={material === "solid" ? 14 : 110}
               margin={{ left: 90, right: 100, top: 25, bottom: 25 }}
               title={`${material} energy flows`}
               desc="Link widths are proportional to MWh. Inspect every flow using the table below."
@@ -83,15 +84,14 @@ function Recipe({
               node={(props) => (
                 <g>
                   <SankeyNode finish={finish} {...props} color="#4338ca" />
-                  <text
-                    x={props.x > 300 ? props.x - 8 : props.x + props.width + 8}
-                    y={props.y + props.height / 2}
-                    textAnchor={props.x > 300 ? "end" : "start"}
-                    dominantBaseline="middle"
-                    fontSize={12}
-                  >
-                    {props.payload.name}
-                  </text>
+                  <SankeyNodeLabel
+                    node={props}
+                    data={flow}
+                    position={material === "solid" ? "outside" : "inside"}
+                    showValues
+                    valueFormatter={(value) => `${value} MWh`}
+                    fill={material === "solid" ? "currentColor" : "white"}
+                  />
                 </g>
               )}
               link={(props) => (

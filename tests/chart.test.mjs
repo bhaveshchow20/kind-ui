@@ -2365,3 +2365,81 @@ test("directional entrance options do not leak clip or configuration attributes 
     }
   }
 });
+
+test("Sankey labels use stable identity, totals, explicit contents and bounded inside text", () => {
+  const data = {
+    nodes: [
+      { id: "b", name: "Sink" },
+      { id: "a", name: "Source" },
+    ],
+    links: [{ id: "flow", source: "a", target: "b", value: 7 }],
+  };
+  const node = { x: 10, y: 20, width: 0, height: 1, payload: { id: "a", name: "stale" } };
+  const label = (props = {}) =>
+    renderSvg(
+      h(Chart.SankeyNodeLabel, {
+        node,
+        data,
+        showValues: true,
+        valueFormatter: (v) => `${v} MWh`,
+        ...props,
+      }),
+    );
+  assert.match(label(), /Source: 7 MWh/);
+  assert.match(label(), /x="18"/);
+  assert.doesNotMatch(label(), /stale/);
+  assert.match(label({ position: "inside", children: h("tspan", null, "Custom") }), /clipPath/);
+  assert.match(label({ position: "inside" }), /width="0" height="1"/);
+  assert.match(label({ children: "Custom" }), /<title>Source: 7 MWh<\/title>/);
+  assert.match(label({ node: { ...node, payload: { id: "b" } } }), /Sink: 7 MWh/);
+  assert.match(label({ node: { ...node, payload: { id: "b" } } }), /text-anchor="end"/);
+  assert.throws(() => label({ node: { ...node, payload: { id: "missing" } } }), /requires node id/);
+  assert.throws(() => label({ offset: -1 }), /nonnegative/);
+  assert.match(label({ data: { ...data, links: [] } }), /Source: 0 MWh/);
+  assert.match(
+    render(h(Chart.SankeyTable, { data, caption: "Flows", formatValue: (v) => `${v} MWh` })),
+    /7 MWh/,
+  );
+});
+
+
+test("Sankey intermediate labels count throughput once including rounding tolerance", () => {
+  const data = {
+    nodes: [
+      { id: "a", name: "Source" },
+      { id: "m", name: "Middle" },
+      { id: "b", name: "Sink" },
+      { id: "c", name: "Loss" },
+    ],
+    links: [
+      { id: "in", source: "a", target: "m", value: 10 },
+      { id: "out", source: "m", target: "b", value: 7 },
+      { id: "loss", source: "m", target: "c", value: 3 },
+    ],
+  };
+  const node = { x: 20, y: 0, width: 10, height: 30, payload: { id: "m" } };
+  const label = (flow = data) =>
+    renderSvg(
+      h(Chart.SankeyNodeLabel, {
+        data: flow,
+        node,
+        showValues: true,
+        side: "left",
+        offset: 4,
+        className: "custom",
+        "aria-label": "Throughput",
+      }),
+    );
+  assert.match(label(), /Middle: 10/);
+  assert.match(label(), /x="16"/);
+  assert.match(label(), /class="custom" aria-label="Throughput"/);
+  assert.match(
+    label({
+      ...data,
+      links: data.links.map((link) =>
+        link.id === "loss" ? { ...link, value: 3.000000001 } : link,
+      ),
+    }),
+    /Middle: 10.000000001/,
+  );
+});
