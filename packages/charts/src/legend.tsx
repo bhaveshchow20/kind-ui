@@ -4,6 +4,7 @@ import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { Symbols } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useEmphasis } from "./emphasis.js";
+import { FillPatternSwatch } from "./fill-pattern.js";
 
 export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
   /** Use the existing square color swatch instead of configured icons or symbols. */
@@ -42,6 +43,8 @@ export function Legend({ hideIcon = false, emphasis = "none", children, ...props
             >
               <Symbols type={item.legendShape} cx={0} cy={0} size={64} />
             </svg>
+          ) : item.pattern && !hideIcon ? (
+            <FillPatternSwatch pattern={item.pattern} color={`var(--color-${key})`} />
           ) : (
             <span
               aria-hidden="true"

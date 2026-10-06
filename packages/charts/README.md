@@ -93,3 +93,29 @@ data, domains and business state.
 ## License
 
 [MIT](LICENSE) © 2026 Bhavesh Chowdhury.
+
+### Patterned bar fills
+
+`FillPattern` is static SVG paint independent of `material`: `{ kind: "hatch" | "stripe" | "duotone", color?, size?, width?, angle? }`. `size` is a positive SVG-unit tile size (8 by default); `width` is positive and at most `size` (1 for hatch, 2 for stripe). `angle` defaults to 45 degrees for hatch and 0 otherwise. Duotone divides the tile equally between the series color and second ink; width does not affect its split.
+
+```tsx
+const config = {
+  actual: { color: "#789abc", pattern: { kind: "hatch" as const } },
+  planned: { color: "#ed79ae", pattern: { kind: "stripe" as const } },
+};
+<Root config={config}>
+  <Legend />
+  <BarChart data={rows} width={480} height={260}>
+    <XAxis dataKey="category" />
+    <YAxis />
+    <BarSeries dataKey="actual" material="clay" />
+    <BarSeries dataKey="planned" pattern={{ kind: "duotone", color: "CanvasText" }} />
+  </BarChart>
+</Root>
+```
+
+Config patterns supply implicit bar paint and legend swatches. `BarSeries.pattern` overrides config; `"none"` opts out. For an explicit override, compose `FillPatternSwatch` through `Legend.children` with the same pattern and color. Icons and native legend symbols take precedence; `hideIcon` requests solid swatches. Explicit series `fill` (including gradients), `style.fill`, and `Cell` fills retain native ownership. Custom shapes or custom active bars disable automatic series patterns; compose your own SVG paint for those shapes. Existing material/filter rules apply independently.
+
+Grouped/stacked and horizontal/vertical charts share the same user-space tile; changing orientation does not rotate the encoding automatically. The base ink keeps the configured CSS color. Second ink defaults to `CanvasText`, following the host's `color-scheme`; choose contrasting theme-aware colors deliberately. With the stylesheet, forced colors use `Canvas`/`CanvasText` while retaining the pattern geometry. Patterns are decorative, static and unchanged by reduced motion or print; printer color settings can still affect contrast. Keep text labels and a data alternative, and verify the chosen ink combination in print and each theme.
+
+Resources use React IDs, independently of consumer series IDs, and are stable through matching SSR/hydration trees. Hosts using multiple independent React roots must supply distinct `identifierPrefix` values to server rendering and hydration, as required by React. Recharts retains its native SSR shell; a server-visible legend and data alternative do not imply server-rendered bar geometry.
