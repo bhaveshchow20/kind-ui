@@ -7,3 +7,9 @@ Category identity is `row.id`, not the common numeric `hours` key. `Tooltip.item
 Clicking a slice selects its category; chart arrow keys inspect native tooltip items, Escape dismisses the tooltip, and Tab reaches the legend buttons. The readable table is the full data alternative. Animation is optional and reduced-motion aware; it never changes values or totals. Sector labels/custom geometry remain consumer-owned.
 
 Pie finishes preserve consumer CSS transform ownership by rendering the original native Sector when an inline transform or a stylesheet transform overrides its SVG transform attribute. This fallback preserves antialiased paint, clipping and hit targets; it does not apply the requested finish. Ordinary CSS colors/classes/styles and explicit SVG `transform` attributes continue to support finishes. CSS individual `translate`, `rotate` and `scale` properties also retain native ownership. Ambient stylesheet/media/pseudo-class changes without a relevant React prop update do not refresh material ownership. Stylesheet ownership is sampled when the finish, center, outer radius, SVG transform, style, class or id changes. For transforms that change later through media queries, ancestor state or pseudo-classes, use a consumer `style` prop or change the finish/style/class/id to refresh ownership. Custom shapes and filters also retain native ownership.
+
+The weekly Pie starts with `defaultPinnedCategory="delivery"` and
+`PieSeries.categoryKey="id"`. This one-series Pie-only default follows identity
+through reorder and clears permanently on filtering/removal or chart interaction.
+Focus, pointer inspection and Escape retain native behavior; remount to reset.
+The donut and its native center label remain consumer-owned.

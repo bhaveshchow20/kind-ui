@@ -512,3 +512,82 @@ test("stylesheet transformed native sectors retain paint and handler ownership d
   await page.keyboard.press("ArrowRight");
   await expect(page.locator('[data-kind-ui="chart-tooltip"]')).toContainText("Beta");
 });
+
+test("initial category survives reorder, clears on removal and only remount restores it", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?pinned`);
+  const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+  await expect(tooltip).toContainText("Beta");
+  await expect(tooltip).toContainText("40 seats");
+  await expect(tooltip).toHaveCount(1);
+  await page.getByRole("button", { name: "Reorder pin", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Remove pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Restore pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Remount pin", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Native override", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+});
+
+test("initial Pie pin hands focus and pointer inspection to native dismissal", async ({ page }) => {
+  await page.goto(`${url}/?pinned`);
+  const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+  const chart = page.getByRole("application", { name: "Initial pinned pie" });
+  await expect(tooltip).toContainText("Beta");
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(tooltip).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(tooltip).not.toBeVisible();
+  await page.keyboard.press("Tab");
+  await expect(chart.locator(".recharts-pie")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "After chart", exact: true })).toBeFocused();
+  await page.getByRole("button", { name: "Reorder pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Remount pin", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.locator('[data-kind-ui="pie-sector"][name="alpha"]').hover();
+  await expect(tooltip).toContainText("Alpha");
+  await page.mouse.move(0, 0, { steps: 10 });
+  await expect(tooltip).not.toBeVisible();
+});
+
+test("initial Pie pin respects visibility, ambiguous identity and native defaultIndex", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?pinned`);
+  const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Native index", exact: true }).click();
+  await expect(tooltip).toContainText("Alpha");
+  await page.getByRole("button", { name: "Native index", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Filter pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Show pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Remount pin", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Duplicate pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Restore pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+});
+
+for (const category of ["zero", "unknown"]) {
+  test(`initial accessor Pie pin handles ${category} identity`, async ({ page }) => {
+    await page.goto(`${url}/?pinned&accessor&category=${category}`);
+    const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+    if (category === "zero") {
+      await expect(tooltip).toContainText("Zero");
+      await expect(tooltip.locator('[data-kind-ui="chart-tooltip-value"]')).toHaveText("0");
+    } else {
+      await expect(tooltip).not.toBeVisible();
+    }
+  });
+}
