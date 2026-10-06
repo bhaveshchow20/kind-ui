@@ -2110,3 +2110,185 @@ test("initial Pie pin rejects unsupported composition through public exports", (
     ),
   );
 });
+
+test("chart loading props stay off the native engine and expose a chart-owned status", () => {
+  const html = render(
+    h(
+      Root,
+      { config: { sales: { label: "Sales", color: "#123" } } },
+      h(Chart.BarChart, {
+        width: 320,
+        height: 240,
+        loading: true,
+        loadingLabel: "Loading sales",
+        "aria-label": "Sales",
+      }),
+    ),
+  );
+  assert.match(html, /aria-busy="true" aria-hidden="true" inert=""/);
+  assert.match(html, /role="status" aria-atomic="true">Loading sales/);
+  assert.match(html, /width:320px;height:240px/);
+  assert.doesNotMatch(html, /loadingLabel=| loading="/);
+  const empty = render(
+    h(Chart.LineChart, {
+      config: {},
+      data: [],
+      xDataKey: "month",
+      loading: false,
+      "aria-label": "Empty sales",
+      height: 280,
+    }),
+  );
+  assert.match(empty, /aria-busy="false"/);
+  assert.match(empty, /role="status" aria-atomic="true"><\/span>/);
+});
+
+test("bar-backed charts inherit chart-owned loading without fabricating data", () => {
+  for (const [Component, props] of [
+    [Chart.WaterfallChart, { data: [] }],
+    [Chart.BoxPlotChart, { data: [] }],
+    [Chart.HistogramChart, { bins: [], measure: "count" }],
+  ]) {
+    const html = render(
+      h(Root, { config: {} }, h(Component, { ...props, width: 320, height: 240, loading: true })),
+    );
+    assert.match(html, /kind-ui-loading-chart-pending/);
+    assert.match(html, /Loading chart/);
+    assert.match(html, /aria-busy="true"/);
+  }
+});
+
+test("all fourteen chart families expose deterministic loading SSR without native prop leaks", () => {
+  const scale = Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#112233"] });
+  const families = [
+    ["line", Chart.LineChart, { data: [] }],
+    ["area", Chart.AreaChart, { data: [] }],
+    ["bar", Chart.BarChart, { data: [] }],
+    ["combo", Chart.ComboChart, { data: [] }],
+    ["scatter", Chart.ScatterChart, { data: [] }],
+    ["waterfall", Chart.WaterfallChart, { data: [] }],
+    ["histogram", Chart.HistogramChart, { bins: [], measure: "count" }],
+    ["box-plot", Chart.BoxPlotChart, { data: [] }],
+    ["pie", Chart.PieChart, {}],
+    ["radar", Chart.RadarChart, { data: [] }],
+    ["radial-bar", Chart.RadialBarChart, { data: [] }],
+    ["activity-rings", Chart.ActivityRings, { config: {}, rings: [] }],
+    ["heatmap", Chart.HeatmapChart, { rows: [], columns: [], data: [], scale }],
+    ["sankey", Chart.SankeyChart, { data: { nodes: [], links: [] } }],
+  ];
+  assert.equal(families.length, 14);
+  for (const [family, Component, props] of families) {
+    const view = (loading) => {
+      const element = h(
+        Component,
+        {
+          ...props,
+          ...(family === "heatmap" ? {} : { width: 320, height: 240 }),
+          loading,
+          loadingLabel: `Loading ${family}`,
+          "aria-label": `${family} data`,
+        },
+        ...(family === "heatmap" ? [h(Chart.HeatmapGrid, { caption: "Matrix" })] : []),
+      );
+      return family === "activity-rings" || family === "heatmap" || family === "sankey"
+        ? element
+        : h(Root, { config: {} }, element);
+    };
+    const pending = render(view(true));
+    assert.equal(render(view(true)), pending, `${family}: deterministic server markup`);
+    assert.match(pending, /aria-busy="true"/, `${family}: pending state`);
+    assert.match(pending, /role="status"/, `${family}: status region`);
+    assert.ok(pending.includes(`Loading ${family}`), `${family}: meaningful status text`);
+    assert.doesNotMatch(
+      pending,
+      /\s(?:loading|loadingLabel|loadingSeed|loadingSkeleton)="/,
+      `${family}: loading props consumed before native DOM`,
+    );
+    const ready = render(view(false));
+    assert.match(ready, /aria-busy="false"/, `${family}: completion state`);
+    assert.ok(!ready.includes(`Loading ${family}`), `${family}: status clears on completion`);
+    assert.doesNotMatch(
+      ready,
+      /\sinert=""|kind-ui-loading-chart-pending/,
+      `${family}: loaded empty data stays available`,
+    );
+  }
+});
+
+test("standalone SSR skeletons preserve family identity independently of real data and announce outside busy content", () => {
+  const scale = Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#112233"] });
+  const matrix = (data) =>
+    h(
+      Chart.HeatmapChart,
+      {
+        rows: ["Region"],
+        columns: ["Month"],
+        data,
+        scale,
+        loading: true,
+        loadingLabel: "Loading matrix",
+      },
+      h(Chart.HeatmapGrid, { caption: "Matrix" }),
+    );
+  const flows = (links) =>
+    h(Chart.SankeyChart, {
+      data: {
+        nodes: [
+          { id: "a", name: "Source" },
+          { id: "b", name: "Destination" },
+        ],
+        links,
+      },
+      width: 320,
+      height: 240,
+      loading: true,
+      loadingLabel: "Loading flows",
+    });
+  const skeletons = [];
+  for (const [family, empty, populated] of [
+    ["heatmap", matrix([]), matrix([{ row: "Region", column: "Month", value: 1 }])],
+    ["sankey", flows([]), flows([{ id: "ab", source: "a", target: "b", value: 7 }])],
+  ]) {
+    const html = render(empty);
+    const skeleton = html.match(
+      /<svg\b[^>]*data-kind-ui="chart-loading-skeleton"[\s\S]*?<\/svg>/,
+    )?.[0];
+    assert.ok(skeleton, `${family}: decorative surface is present on the server`);
+    assert.match(skeleton, new RegExp(`data-family="${family}"`));
+    assert.match(skeleton, /aria-hidden="true" focusable="false"/);
+    assert.equal(
+      render(populated).match(
+        /<svg\b[^>]*data-kind-ui="chart-loading-skeleton"[\s\S]*?<\/svg>/,
+      )?.[0],
+      skeleton,
+      `${family}: consumer values do not change the illustration`,
+    );
+    skeletons.push(skeleton);
+    const ancestors = [];
+    let statuses = 0;
+    const voidTags = new Set(["col", "br", "hr", "input", "img", "meta", "link"]);
+    // Walk these controlled fixtures to verify ancestry without depending on attribute order.
+    for (const [tag, name] of html.matchAll(/<\/?([a-z][\w:-]*)\b[^>]*>/gi)) {
+      if (tag.startsWith("</")) {
+        const index = ancestors.findLastIndex((ancestor) => ancestor.name === name);
+        if (index >= 0) ancestors.length = index;
+      } else {
+        if (/\brole="status"/.test(tag)) {
+          statuses++;
+          assert.ok(
+            ancestors.every((ancestor) => !ancestor.unavailable),
+            `${family}: status has no busy, hidden or inert ancestor`,
+          );
+        }
+        if (!voidTags.has(name) && !tag.endsWith("/>"))
+          ancestors.push({
+            name,
+            unavailable: /\baria-(?:busy|hidden)="true"|\binert(?:=|\s|>)/.test(tag),
+          });
+      }
+    }
+    assert.match(html, /aria-busy="true"/);
+    assert.equal(statuses, 1, `${family}: one loading announcement`);
+  }
+  assert.notEqual(skeletons[0], skeletons[1], "matrix and flow illustrations are distinct");
+});

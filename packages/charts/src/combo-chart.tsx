@@ -15,6 +15,7 @@ import { ComposedChart as EngineComposedChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
 import { BarLifecycle, BarMotion } from "./bar-chart.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
+import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 
 type Reveal = Pick<LineAnimation, "revealDurationMs" | "revealEasing">;
 /** Shared hover Motion, with independently configured family entrances. */
@@ -25,6 +26,8 @@ export type ComboAnimation = LineAnimation & {
 };
 export type ComboChartProps = ComponentProps<typeof EngineComposedChart> & {
   animate?: boolean | ComboAnimation | undefined;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
 };
 const query = "(prefers-reduced-motion: reduce)";
 function subscribe(change: () => void) {
@@ -81,15 +84,26 @@ function CompositionLifecycle({ children }: { children: ComboChartProps["childre
 }
 
 /** Native ComposedChart geometry with the maintained Line, Area and Bar series. */
-export function ComboChart({ animate = false, children, ...props }: ComboChartProps) {
+export function ComboChart({
+  animate = false,
+  loading,
+  loadingLabel,
+  children,
+  ...props
+}: ComboChartProps) {
   const id = useId();
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [finished, setFinished] = useState({ line: false, area: false, bar: false });
-  const interrupt = useCallback(() => setFinished({ line: true, area: true, bar: true }), []);
+  const interrupt = useCallback(() => {
+    if (!loading) setFinished({ line: true, area: true, bar: true });
+  }, [loading]);
+  useLayoutEffect(() => {
+    if (loading) setFinished({ line: false, area: false, bar: false });
+  }, [loading]);
   const finishLine = useCallback(() => setFinished((value) => ({ ...value, line: true })), []);
   const finishArea = useCallback(() => setFinished((value) => ({ ...value, area: true })), []);
   const finishBar = useCallback(() => setFinished((value) => ({ ...value, bar: true })), []);
-  const enabled = animate !== false && !reduced;
+  const enabled = animate !== false && !reduced && !loading;
   const options = typeof animate === "object" ? animate : {};
   const line = options.lineReveal === false ? false : { ...options, ...options.lineReveal };
   const area = options.areaReveal === false ? false : { ...options, ...options.areaReveal };
@@ -106,6 +120,11 @@ export function ComboChart({ animate = false, children, ...props }: ComboChartPr
         }}
       >
         <LineChartFrame
+          loading={loading}
+          loadingLabel={loadingLabel}
+          loadingSkeleton="combo"
+          loadingDesign={(seed) => <CartesianLoadingDesign family={"combo"} seed={seed} />}
+          loadingAnimation={{ ...options, ...(props.layout ? { layout: props.layout } : {}) }}
           engine={EngineComposedChart}
           chartProps={{
             ...props,

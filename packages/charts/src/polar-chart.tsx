@@ -16,6 +16,7 @@ import type { CategoryKey } from "./category-cells.js";
 import { filterCategoryRows } from "./category-cells.js";
 import { useChartInteraction } from "./chart-interaction.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
+import { PolarLoadingDesign } from "./loading-polar-designs.js";
 import { type RadarSelectionProps, RadarSelectionProvider } from "./radar-interaction.js";
 import { RadialCategory } from "./radial-category.js";
 
@@ -26,6 +27,8 @@ export type RadarChartProps<DataPoint = unknown> = ComponentProps<
 > &
   RadarSelectionProps & {
     animate?: boolean | RadarAnimation | undefined;
+    loading?: boolean | undefined;
+    loadingLabel?: string | undefined;
   };
 export type RadialBarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadialBarChart<DataPoint>
@@ -34,6 +37,8 @@ export type RadialBarChartProps<DataPoint = unknown> = ComponentProps<
   categoryKey?: CategoryKey<DataPoint> | undefined;
   interactionBinding?: "root";
   animate?: boolean | RadialBarAnimation | undefined;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
   /** Entrance direction only; native chart and axis angles stay consumer-owned. */
   animationDirection?: "clockwise" | "anticlockwise" | undefined;
 };
@@ -57,11 +62,16 @@ const snapshot = () => window.matchMedia(query).matches;
 const serverSnapshot = () => true;
 const defaultHover: Transition = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 };
 
-function usePolarMotion(animate: RadarChartProps["animate"]) {
+function usePolarMotion(animate: RadarChartProps["animate"], loading: boolean | undefined) {
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [finished, setFinished] = useState(false);
-  const interrupt = useCallback(() => setFinished(true), []);
-  const enabled = animate !== false && !reduced;
+  const interrupt = useCallback(() => {
+    if (!loading) setFinished(true);
+  }, [loading]);
+  useLayoutEffect(() => {
+    if (loading) setFinished(false);
+  }, [loading]);
+  const enabled = animate !== false && !reduced && !loading;
   const options = typeof animate === "object" ? animate : {};
   return { enabled, options, reveal: enabled && !finished, interrupt };
 }
@@ -110,17 +120,22 @@ function PolarLifecycle({
 /** Native polar composition with shared metadata, interaction and optional Motion. */
 export function RadarChart<DataPoint = unknown>({
   animate = false,
+  loading,
+  loadingLabel,
   selection,
   selectedSeries,
   onSelectedSeriesChange,
   children,
   ...props
 }: RadarChartProps<DataPoint>) {
-  const { enabled, options, reveal, interrupt } = usePolarMotion(animate);
+  const { enabled, options, reveal, interrupt } = usePolarMotion(animate, loading);
   const [progress, setProgress] = useState(1);
   const duration = options.revealDurationMs ?? 1000;
   const easing = options.revealEasing ?? "easeOut";
   const started = useRef(false);
+  useLayoutEffect(() => {
+    if (loading) started.current = false;
+  }, [loading]);
   const previous = useRef([duration, easing]);
   const previousEnabled = useRef(enabled);
   useLayoutEffect(() => {
@@ -159,6 +174,11 @@ export function RadarChart<DataPoint = unknown>({
           >
             <LineChartFrame
               engine={EngineRadarChart<DataPoint>}
+              loading={loading}
+              loadingLabel={loadingLabel}
+              loadingSkeleton="radar"
+              loadingDesign={(seed) => <PolarLoadingDesign family={"radar"} seed={seed} />}
+              loadingAnimation={options}
               chartProps={props}
               motionEnabled={enabled}
               interrupt={interrupt}
@@ -173,14 +193,22 @@ export function RadarChart<DataPoint = unknown>({
   );
 }
 
-export function RadialBarChart<DataPoint = unknown>({
+export function RadialBarChart<DataPoint = unknown>(props: RadialBarChartProps<DataPoint>) {
+  return <RadialBarChartFrame {...props} />;
+}
+
+/** Private recipe integration; the public chart keeps its native prop contract. */
+export function RadialBarChartFrame<DataPoint = unknown>({
+  skeletonFamily = "radial-bar",
   animate = false,
+  loading,
+  loadingLabel,
   animationDirection = "clockwise",
   categoryKey,
   interactionBinding,
   children,
   ...props
-}: RadialBarChartProps<DataPoint>) {
+}: RadialBarChartProps<DataPoint> & { skeletonFamily?: "radial-bar" | "activity-rings" }) {
   const interaction = useChartInteraction();
   if (
     interactionBinding &&
@@ -209,11 +237,14 @@ export function RadialBarChart<DataPoint = unknown>({
               : "";
           },
         };
-  const { enabled, options, reveal, interrupt } = usePolarMotion(animate);
+  const { enabled, options, reveal, interrupt } = usePolarMotion(animate, loading);
   const [progress, setProgress] = useState(1);
   const duration = options.revealDurationMs ?? 1000;
   const easing = options.revealEasing ?? "easeOut";
   const started = useRef(false);
+  useLayoutEffect(() => {
+    if (loading) started.current = false;
+  }, [loading]);
   const previous = useRef([duration, easing, animationDirection]);
   const previousEnabled = useRef(enabled);
   useLayoutEffect(() => {
@@ -246,6 +277,11 @@ export function RadialBarChart<DataPoint = unknown>({
           <PolarMotion value={{ reveal, options }}>
             <LineChartFrame
               engine={EngineRadialBarChart<DataPoint>}
+              loading={loading}
+              loadingLabel={loadingLabel}
+              loadingSkeleton={skeletonFamily}
+              loadingDesign={(seed) => <PolarLoadingDesign family={skeletonFamily} seed={seed} />}
+              loadingAnimation={{ ...options, direction: animationDirection }}
               chartProps={{ ...props, ...(filtered ? { data: filtered.data } : {}) }}
               motionEnabled={enabled}
               interrupt={interrupt}

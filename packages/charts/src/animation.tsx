@@ -56,19 +56,34 @@ const snapshot = () => window.matchMedia(query).matches;
 const serverSnapshot = () => true;
 
 /** Motion owns the shared entrance clip and default active marks. */
-export function LineChart({ animate = false, children, ...props }: LineChartProps) {
+export function LineChart({
+  animate = false,
+  loading,
+  loadingLabel,
+  children,
+  ...props
+}: LineChartProps) {
   const id = useId();
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
   const options = typeof animate === "object" ? animate : {};
-  const enabled = animate !== false && !reduced;
-  const interrupt = useCallback(() => setInteracted(true), []);
+  const enabled = animate !== false && !reduced && !loading;
+  const interrupt = useCallback(() => {
+    if (!loading) setInteracted(true);
+  }, [loading]);
+  useLayoutEffect(() => {
+    if (loading) setInteracted(false);
+  }, [loading]);
   const reveal = enabled && !interacted;
   const transition = options.hoverTransition ?? defaultHover;
   return (
     <MotionContext value={{ enabled, transition }}>
       <LineChartFrame
         chartProps={props}
+        loading={loading}
+        loadingLabel={loadingLabel}
+        loadingSkeleton="line"
+        loadingAnimation={options}
         engine={EngineLineChart}
         motionEnabled={enabled}
         interrupt={interrupt}
