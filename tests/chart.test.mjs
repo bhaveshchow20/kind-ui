@@ -145,6 +145,8 @@ test("direct and namespace imports expose the same public components", () => {
     "computeWaterfallData",
     "createHeatmapModel",
     "createHeatmapScale",
+    "createPercentStack",
+    "formatPercent",
     "getRelativeCoordinate",
     "prepareSankeyData",
     "useChartHeight",
@@ -1787,4 +1789,60 @@ test("tooltip projection status respects missing, hidden and formatter ownership
   );
   assert.match(content([entry(5, { payload: { id: "p" } })]), /Incomplete/);
   assert.doesNotMatch(content([entry(5, { payload: null })]), /projection-status/);
+});
+
+test("percent formatting is scoped to caller-selected raw stack members and never mutates rows", () => {
+  const row = Object.freeze({ first: 1, second: 3, latency: 8 });
+  const percent = Chart.createPercentStack({
+    values: (item) =>
+      item.dataKey === "first" ? [item.payload.first, item.payload.second] : undefined,
+  });
+  assert.equal(percent.tickFormatter(0.25), "25%");
+  assert.equal(percent.tickFormatter(-0.5), "-50%");
+  assert.equal(percent.normalizedValue(entry(1, { dataKey: "first", payload: row })), 0.25);
+  assert.equal(percent.normalizedValue(entry(8, { dataKey: "latency", payload: row })), undefined);
+  assert.deepEqual(row, { first: 1, second: 3, latency: 8 });
+  for (const [members, value, expected] of [
+    [[0, 0], 0, 0],
+    [[null, undefined, 2], 2, 1],
+    [[-1, 3], -1, -0.5],
+    [[-1, 1], 1, undefined],
+    [[Infinity, 1], 1, undefined],
+    [[NaN, 1], 1, undefined],
+    [[], 0, undefined],
+    [[1, 3], null, undefined],
+    [[1, 3], [0, 1], undefined],
+  ]) {
+    assert.equal(
+      Chart.createPercentStack({ values: () => members }).normalizedValue(entry(value)),
+      expected,
+    );
+  }
+});
+
+test("normalized tooltip preserves raw formatting, explicit formatter precedence and projection", () => {
+  const renderPercent = (extra = {}, ...fractions) =>
+    render(
+      h(
+        Root,
+        { config },
+        h(TooltipContent, {
+          tooltip: tooltip(
+            [entry(1, { payload: { id: "future" } }), entry(null, { graphicalItemId: "missing" })],
+            extra,
+          ),
+          normalizedValue: () => (fractions.length ? fractions[0] : 0.25),
+          isProjected: (item) => item.payload?.id === "future",
+        }),
+      ),
+    );
+  assert.match(renderPercent(), /25% \(1 tasks\)/);
+  assert.match(renderPercent(), /Projected/);
+  assert.match(renderPercent(), /No data/);
+  assert.doesNotMatch(renderPercent({ formatter: () => "Custom" }), /25%/);
+  assert.match(renderPercent({ formatter: () => "Custom" }), /Custom/);
+  assert.doesNotMatch(renderPercent({ formatter: () => null }), /chart-tooltip/);
+  assert.doesNotMatch(renderPercent({}, NaN), /NaN|%/);
+  assert.doesNotMatch(renderPercent({}, undefined), /%/);
+  assert.match(renderPercent({}, -0.5), /-50% \(1 tasks\)/);
 });

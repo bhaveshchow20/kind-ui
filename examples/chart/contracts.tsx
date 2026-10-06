@@ -11,6 +11,7 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import "./style.css";
+import { PercentStacks } from "./percent-stacks.js";
 
 function Fixture({ name, color }: { name: string; color: string }) {
   const [visible, setVisible] = useState<string[]>([]);
@@ -80,5 +81,6 @@ createRoot(root).render(
   <main style={{ width: "90vw", maxWidth: 700, margin: "auto" }}>
     <Fixture name="A" color="#2563eb" />
     <Fixture name="B" color="#15803d" />
+    <PercentStacks />
   </main>,
 );
