@@ -1614,3 +1614,27 @@ test("PointMarker retains native geometry and style while applying variant paint
     native,
   );
 });
+
+test("dashed line and combo SSR retain the chart shell without leaking dash props", () => {
+  const data = Object.freeze([Object.freeze({ value: 4 }), Object.freeze({ value: 8 })]);
+  for (const Engine of [Chart.LineChart, Chart.ComboChart]) {
+    const markup = render(
+      h(
+        Chart.Root,
+        { config: { value: { label: "Value", color: "teal" } } },
+        h(
+          Engine,
+          { width: 480, height: 240, data, animate: true },
+          h(Chart.LineSeries, {
+            dataKey: "value",
+            strokeDasharray: "6 4",
+            dashAnimation: { durationMs: 800 },
+          }),
+        ),
+      ),
+    );
+    assert.match(markup, /recharts-wrapper/);
+    assert.doesNotMatch(markup, /dashAnimation|durationMs/);
+    assert.deepEqual(data, [{ value: 4 }, { value: 8 }]);
+  }
+});

@@ -1,9 +1,10 @@
 "use client";
 
-import { type ComponentProps, useId, useLayoutEffect, useRef } from "react";
+import { type ComponentProps, type CSSProperties, useId, useLayoutEffect, useRef } from "react";
 import { Line } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
+import { dashCycle, dashDuration, type LineDashAnimation } from "./line-dash.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
 
@@ -21,6 +22,8 @@ export type LineSeriesProps<
   activePointStyle?: PointStyle;
   /** Material on the default SVG curve; custom shape/filter retain consumer ownership. */
   material?: LineMaterial;
+  /** Continuous default-curve dashes; requires a numeric native strokeDasharray. */
+  dashAnimation?: false | LineDashAnimation;
 };
 
 /** A registered Recharts Line with Root colors and controlled visibility. */
@@ -35,6 +38,7 @@ export function LineSeries<
   stroke,
   className,
   material = "plain",
+  dashAnimation = false,
   renderWhileHidden = false,
   ...props
 }: LineSeriesProps<DataPoint, Value> & { renderWhileHidden?: boolean }) {
@@ -63,6 +67,17 @@ export function LineSeries<
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("LineSeries requires seriesKey for controlled non-string dataKey");
   const color = stroke ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
+  const cycle = dashCycle(props.style?.strokeDasharray ?? props.strokeDasharray);
+  const duration = dashAnimation && dashDuration(dashAnimation);
+  const dashed =
+    dashAnimation !== false &&
+    duration !== undefined &&
+    cycle !== undefined &&
+    !effectiveHide &&
+    props.shape === undefined &&
+    props.isAnimationActive !== true;
+  const offset = props.style?.strokeDashoffset ?? props.strokeDashoffset ?? 0;
+  const baseline = Number.isFinite(Number(offset)) ? `${Number(offset)}px` : offset;
   return (
     <Line<DataPoint, Value>
       isAnimationActive={false}
@@ -85,10 +100,24 @@ export function LineSeries<
             strokeLinejoin: props.strokeLinejoin ?? "round",
           }
         : {})}
+      style={
+        dashed
+          ? ({
+              ...props.style,
+              "--kind-ui-dash-cycle": `${cycle}px`,
+              "--kind-ui-dash-offset": baseline,
+              "--kind-ui-dash-duration": `${duration}ms`,
+              "--kind-ui-dash-direction":
+                dashAnimation && dashAnimation.direction === "reverse" ? "reverse" : "normal",
+            } as CSSProperties)
+          : props.style
+      }
       id={id}
       hide={renderedHide}
       {...(color !== undefined ? { stroke: color } : {})}
-      className={["kind-ui-line-series", className].filter(Boolean).join(" ")}
+      className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className]
+        .filter(Boolean)
+        .join(" ")}
     />
   );
 }

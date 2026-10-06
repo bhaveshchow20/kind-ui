@@ -170,3 +170,39 @@ series options. Bar, Pie and other shape families are outside this API.
 
 Run `npm run dev:chart` and visit `/point-markers.html` for the marker gallery and
 its accessible data table.
+
+### Animated dashed lines
+
+`LineSeries` accepts `dashAnimation={ { durationMs: 1000, direction: "forward" } }`
+(or `false`, the default). Supply a native numeric `strokeDasharray`, such as
+`"6 4"`; duration is milliseconds per full pattern cycle. `reverse` reverses
+travel. Zero, negative or non-finite duration and nonnumeric/CSS/percentage dash
+patterns stay static. Odd lists repeat twice per cycle, matching SVG.
+
+```tsx
+<LineChart data={rows} animate>
+  <LineSeries dataKey="total" strokeDasharray="6 4" strokeDashoffset={3}
+    dashAnimation={{ durationMs: 800 }} material="glow" />
+</LineChart>
+<ComboChart data={rows} animate>
+  <AreaSeries dataKey="total" stroke="none" fillOpacity={0.2} />
+  <LineSeries dataKey="total" dot={false} strokeDasharray="3 2 1"
+    dashAnimation={{ durationMs: 1200, direction: "reverse" }} />
+</ComboChart>
+```
+
+Load the package stylesheet. Motion stops with chart `animate={false}`, reduced
+motion, loading, or hidden series. Disabling restores the native dash offset;
+reenabling starts a fresh cycle. The static entry point has no chart `animate`
+control; use `dashAnimation={false}` there. Native width, dash array, offset and
+styles remain intact; style dash values take precedence. Custom shapes own their
+animation and are never decorated; explicit native entrance animation on the
+static series also retains ownership. Entrance clip reveal timing is independent.
+No geometry or data is changed, and CSS requires no mount timers or cleanup.
+Stylesheets overriding dash paint remain consumer-owned and can change appearance.
+
+`AreaSeries` does not accept this option: its closed perimeter includes baseline
+and closing edges. For an open animated outline, overlay `LineSeries` in a
+`ComboChart` as above. Match data keys, interpolation and axes yourself; stacked
+or range areas require an explicitly derived outline dataset. See
+`examples/chart/dashed-lines.html` for the interactive standalone and combo example.

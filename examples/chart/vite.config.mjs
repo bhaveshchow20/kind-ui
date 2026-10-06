@@ -10,6 +10,7 @@ export default defineConfig({
     rolldownOptions: {
       onwarn: diagnostics.onwarn,
       input: {
+        dashedLines: fileURLToPath(new URL("./dashed-lines.html", import.meta.url)),
         pointMarkers: fileURLToPath(new URL("./point-markers.html", import.meta.url)),
         loading: fileURLToPath(new URL("./loading.html", import.meta.url)),
         presentation: fileURLToPath(new URL("./presentation.html", import.meta.url)),
