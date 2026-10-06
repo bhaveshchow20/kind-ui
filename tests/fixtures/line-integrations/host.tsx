@@ -70,7 +70,6 @@ export function PatternHydrationHost() {
   );
 }
 
-
 // Root gradient resources are emitted by the real Next server before hydration.
 export function ColorHydrationHost() {
   const [dark, setDark] = useState(false);
