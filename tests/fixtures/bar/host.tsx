@@ -575,7 +575,7 @@ export function ProjectionHost({ horizontal = false }: { horizontal?: boolean })
             type={horizontal ? "category" : "number"}
             dataKey={horizontal ? "category" : undefined}
           />
-          {["value", "other"].map((key) => (
+          {(["value", "other"] as const).map((key) => (
             <Chart.BarSeries<(typeof projectionData)[number], number>
               key={key}
               dataKey={key}
