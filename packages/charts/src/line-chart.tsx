@@ -47,6 +47,8 @@ type Interaction = {
   invalidate: () => void;
   seriesKeys: Map<string, string>;
   registerSeries: (id: string, key: string) => () => void;
+  projections: Map<string, (datum: unknown, activeIndex: unknown) => boolean>;
+  registerProjection: (id: string, status: (datum: unknown, activeIndex: unknown) => boolean) => () => void;
 };
 export const LineInteraction = createContext<Interaction | null>(null);
 export function useLineInteraction() {
@@ -175,6 +177,18 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
     categoryPeers.size > 0 &&
     [...categoryPeers.values()].every((peer) => peer.hidden || peer.safe);
   const [seriesKeys, setSeriesKeys] = useState(() => new Map<string, string>());
+  const [projections, setProjections] = useState(
+    () => new Map<string, (datum: unknown, activeIndex: unknown) => boolean>(),
+  );
+  const registerProjection = useCallback((id: string, status: (datum: unknown, activeIndex: unknown) => boolean) => {
+    setProjections((current) => new Map(current).set(id, status));
+    return () =>
+      setProjections((current) => {
+        const next = new Map(current);
+        next.delete(id);
+        return next;
+      });
+  }, []);
   const registerSeries = useCallback((id: string, key: string) => {
     setSeriesKeys((current) => (current.get(id) === key ? current : new Map(current).set(id, key)));
     return () =>
@@ -245,6 +259,8 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         invalidate,
         seriesKeys,
         registerSeries,
+        projections,
+        registerProjection,
       }}
     >
       <div

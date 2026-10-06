@@ -24,6 +24,7 @@ const props: ConfiguredLineChartProps<Row> = {
       material: "paper",
       pointStyle: "border",
       activePointStyle: "colored-border",
+      projected: { isProjected: (row) => row.month === "Mar", strokeDasharray: "6 3" },
       onClick: (_curve, event) => {
         const path: SVGPathElement = event.currentTarget;
         void path;

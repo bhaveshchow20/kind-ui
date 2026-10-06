@@ -1,5 +1,66 @@
 import { expect, test } from "@playwright/test";
 
+test("projected native partitions keep gaps, zeroes, markers, tooltip identity and combo ownership", async ({ page }) => {
+  await page.goto("/");
+  const root = page.locator('[data-case="projection-cases"]');
+  const gap = root.locator('[data-projection-connect="false"]');
+  const connected = root.locator('[data-projection-connect="true"]');
+  for (const plot of [gap, connected]) {
+    await expect(plot.locator('[data-projected="true"] path')).toHaveAttribute("stroke-dasharray", "6 3");
+    await expect(plot.locator('[data-projected="false"] path')).toHaveAttribute("stroke-dasharray", "2 1");
+    await expect(plot.locator('[data-projected="true"] path')).toHaveAttribute("stroke-width", "3");
+    await expect(plot.locator('[data-kind-ui="point-marker"]')).toHaveCount(3);
+  }
+  const gapPath = await gap.locator('[data-projected="true"] path').getAttribute("d");
+  const connectedPath = await connected.locator('[data-projected="true"] path').getAttribute("d");
+  expect(gapPath).not.toEqual(connectedPath);
+  // Without connectNulls the projected path starts at Mar, never at the Jan anchor across Feb's gap.
+  const gapDots = gap.locator('[data-kind-ui="point-marker"]');
+  const firstProjectedX = await gapDots.nth(1).getAttribute("cx");
+  const historicalX = await gapDots.first().getAttribute("cx");
+  expect(Number(gapPath?.match(/^M([^,]+)/)?.[1])).toBeCloseTo(Number(firstProjectedX), 2);
+  expect(Number(connectedPath?.match(/^M([^,]+)/)?.[1])).toBeCloseTo(Number(historicalX), 2);
+  await connected.locator("svg.recharts-surface").focus();
+  for (let index = 0; index < 4; index++) await page.keyboard.press("ArrowRight");
+  const item = connected.locator('[data-kind-ui="chart-tooltip-item"]');
+  await expect(item).toHaveCount(1);
+  await expect(item).toHaveAttribute("data-series", "total");
+  await expect(item).toContainText("Projected");
+  await expect(item.locator('[data-kind-ui="chart-tooltip-value"]')).toHaveText("0");
+  await expect(connected.locator('[data-kind-ui="active-marker"][data-point-style="colored-border"]')).toHaveCount(1);
+  await expect(root.locator('[data-case="projection-combo"] [data-kind-ui="projected-line"]')).toHaveCount(1);
+  const custom = root.locator('[data-case="projection-native-shape"]');
+  await expect(custom.locator('[data-custom-projection="owned"]')).toHaveCount(1);
+  await expect(custom.locator('[data-kind-ui="projected-line"]')).toHaveCount(0);
+  const perSeries = root.locator('[data-case="projection-per-series"]');
+  await expect(perSeries.locator('[data-kind-ui="projected-line"]')).toHaveCount(1);
+  await perSeries.locator("svg.recharts-surface").focus();
+  for (let index = 0; index < 4; index++) await page.keyboard.press("ArrowRight");
+  await expect(perSeries.locator('[data-series="total"] [data-kind-ui="projection-status"]')).toHaveText("Projected");
+  await expect(perSeries.locator('[data-series="other"] [data-kind-ui="projection-status"]')).toHaveCount(0);
+  await expect(perSeries.locator('[data-series="total"] [data-kind-ui="chart-tooltip-value"]')).toHaveText("0");
+  await root.screenshot({ path: "artifacts/configured-line-tests/projected-line.png" });
+  await root.getByRole("button", { name: "Reorder projection" }).click();
+  await expect(connected.locator('[data-kind-ui="projected-line"]')).toHaveCount(0);
+  await expect(root.getByRole("cell", { name: "Projected", exact: true })).toHaveCount(0);
+  await root.getByRole("button", { name: "Filter projection" }).click();
+  await expect(connected.locator('[data-kind-ui="point-marker"]')).toHaveCount(1);
+  await expect(connected.locator('[data-kind-ui="projected-line"]')).toHaveCount(0);
+  await expect(root.getByRole("cell", { name: "Projected", exact: true })).toHaveCount(1);
+  await connected.locator("svg.recharts-surface").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(connected.locator('[data-kind-ui="projection-status"]')).toHaveText("Projected");
+  await root.getByRole("button", { name: "Reorder projection" }).click();
+  await root.getByRole("button", { name: "Filter projection" }).click();
+  await root.getByRole("button", { name: "Missing projection" }).click();
+  await expect(connected.locator('[data-kind-ui="point-marker"]')).toHaveCount(2);
+  await expect(root.getByRole("row", { name: "Apr No data Projected" })).toHaveCount(1);
+  await root.getByRole("button", { name: "Empty projection" }).click();
+  await expect(connected.locator('[data-kind-ui="point-marker"]')).toHaveCount(0);
+  await expect(connected.locator(".recharts-line-curve")).toHaveCount(0);
+  await expect(root.getByRole("cell", { name: "Projected", exact: true })).toHaveCount(0);
+});
+
 test("configured line is complete, responsive and owns uncontrolled visibility without website CSS", async ({
   page,
 }) => {

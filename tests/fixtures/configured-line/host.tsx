@@ -48,6 +48,7 @@ export function ConfiguredHost() {
   const currentConfig = extra ? { ...config, added: { label: "Added", color: "red" } } : config;
   return (
     <main>
+      <ProjectionCases />
       <button type="button" onClick={() => setWidth(width === 500 ? 360 : 500)}>
         Resize
       </button>
@@ -247,5 +248,148 @@ export function ConfiguredHost() {
         </Chart.Root>
       </section>
     </main>
+  );
+}
+const projectionSource = [
+  { month: "Jan", total: 3, projected: false },
+  { month: "Feb", total: null, projected: false },
+  { month: "Mar", total: 7, projected: true },
+  { month: "Apr", total: 0, projected: true },
+];
+const projectionConfig = { total: { label: "Total", color: "#4055ee" } };
+const projectionOption = {
+  isProjected: (row: (typeof projectionSource)[number]) => row.projected,
+  strokeDasharray: "6 3",
+};
+
+function ProjectionCases() {
+  const [order, setOrder] = useState(false);
+  const [single, setSingle] = useState(false);
+  const [emptyProjection, setEmptyProjection] = useState(false);
+  const [missingProjection, setMissingProjection] = useState(false);
+  const selected = single
+    ? projectionSource.slice(-1)
+    : order
+      ? [...projectionSource].reverse()
+      : projectionSource;
+  const rows = emptyProjection
+    ? []
+    : missingProjection
+      ? selected.map((row) => (row.month === "Apr" ? { ...row, total: null } : row))
+      : selected;
+  const start = Chart.getProjectedStart(rows, projectionOption.isProjected);
+  return (
+    <section data-case="projection-cases">
+      <button type="button" onClick={() => setOrder(!order)}>
+        Reorder projection
+      </button>
+      <button type="button" onClick={() => setSingle(!single)}>
+        Filter projection
+      </button>
+      <button type="button" onClick={() => setEmptyProjection(!emptyProjection)}>
+        Empty projection
+      </button>
+      <button type="button" onClick={() => setMissingProjection(!missingProjection)}>
+        Missing projection
+      </button>
+      {[false, true].map((connectNulls) => (
+        <section data-projection-connect={String(connectNulls)} key={String(connectNulls)}>
+          <Chart.LineChart
+            width={500}
+            data={rows}
+            config={projectionConfig}
+            xDataKey="month"
+            aria-label={`Projected totals ${connectNulls}`}
+            series={[
+              {
+                seriesKey: "total",
+                dataKey: "total",
+                projected: projectionOption,
+                connectNulls,
+                type: "monotone",
+                strokeWidth: 3,
+                strokeDasharray: "2 1",
+                pointStyle: "border",
+                activePointStyle: "colored-border",
+              },
+            ]}
+          />
+        </section>
+      ))}
+      <section data-case="projection-combo">
+        <Chart.Root config={projectionConfig}>
+          <Chart.ComboChart width={500} height={280} data={rows}>
+            <Chart.XAxis dataKey="month" />
+            <Chart.YAxis />
+            <Chart.BarSeries dataKey="total" />
+            <Chart.LineSeries<(typeof projectionSource)[number], number | null>
+              dataKey="total"
+              projected={projectionOption}
+              connectNulls
+            />
+            <Chart.Tooltip />
+          </Chart.ComboChart>
+        </Chart.Root>
+      </section>
+      <section data-case="projection-per-series">
+        <Chart.Root config={config}>
+          <Chart.LineChart
+            width={500}
+            height={280}
+            data={rows.map((row) => ({ ...row, total: 100 }))}
+          >
+            <Chart.XAxis dataKey="month" />
+            <Chart.YAxis />
+            <Chart.LineSeries<(typeof projectionSource)[number], number | null>
+              data={rows}
+              dataKey="total"
+              seriesKey="total"
+              projected={projectionOption}
+              connectNulls
+            />
+            <Chart.LineSeries<(typeof projectionSource)[number], number | null>
+              data={rows}
+              dataKey={(row) => row.total}
+              seriesKey="other"
+              projected={{ isProjected: () => false }}
+              connectNulls
+            />
+            <Chart.Tooltip />
+          </Chart.LineChart>
+        </Chart.Root>
+      </section>
+      <section data-case="projection-native-shape">
+        <Chart.LineChart
+          width={500}
+          data={rows}
+          config={projectionConfig}
+          xDataKey="month"
+          aria-label="Custom projection shape"
+          series={[
+            {
+              seriesKey: "total",
+              dataKey: "total",
+              projected: projectionOption,
+              shape: (props) => <Chart.Curve {...props} data-custom-projection="owned" />,
+            },
+          ]}
+        />
+      </section>
+      <table>
+        <caption>Caller-supplied monthly totals</caption>
+        <thead>
+          <tr><th>Month</th><th>Total</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={row.month}>
+              <th scope="row">{row.month}</th>
+              <td>{row.total ?? "No data"}</td>
+              <td>{index >= start ? "Projected" : "Historical"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   );
 }

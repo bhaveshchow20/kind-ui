@@ -14,6 +14,7 @@ const lineProps: Chart.LineSeriesProps<Row, number> = {
   dataKey: "value",
   seriesKey: "value",
   material: "paper",
+  projected: { isProjected: (row) => row.id === "estimate", strokeDasharray: "6 3" },
   connectNulls: true,
   strokeDasharray: "3 2",
   shape: <Curve pathRef={createRef<SVGPathElement>()} />,
@@ -80,6 +81,14 @@ const legacyLineProps: Chart.LineSeriesProps = {
 };
 const legacyBarProps: Chart.BarSeriesProps = { dataKey: "chartOwnedKey" };
 void [legacyLineProps, legacyBarProps];
+const projection: Chart.LineProjection<Row> = { isProjected: (row) => row.value > 0 };
+const projectedStart: number = Chart.getProjectedStart(rows, projection.isProjected);
+void projectedStart;
+const invalidProjection: Chart.LineProjection<Row> = {
+  // @ts-expect-error Projection accessors receive the row type.
+  isProjected: (row) => row.nonexistent,
+};
+void invalidProjection;
 const dynamicKey: string = rows.map((row) => row.id).join("");
 void (<Line data={rows} dataKey={dynamicKey} />);
 void (<Chart.LineSeries data={rows} dataKey={dynamicKey} />);
