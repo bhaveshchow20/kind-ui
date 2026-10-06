@@ -6,6 +6,7 @@ import { ActiveMarker } from "./animation.js";
 import { type AreaMaterial, MaterialArea } from "./area-material.js";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
+import { PointMarker, type PointStyle } from "./point-marker.js";
 
 export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Area<DataPoint, Value>>,
@@ -13,6 +14,10 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
 > & {
   /** Metadata/visibility key, required only for function or numeric data keys. */
   seriesKey?: string;
+  /** Optional point paint; explicit native dot takes precedence. */
+  pointStyle?: PointStyle;
+  /** Independent active point paint; explicit native activeDot takes precedence. */
+  activePointStyle?: PointStyle;
   /** Finish on the native area; explicit shape/filter retain consumer ownership. */
   material?: AreaMaterial;
 };
@@ -20,6 +25,8 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
 /** A registered Recharts Area with Root colors and controlled visibility. */
 export function AreaSeries<DataPoint = unknown, Value = unknown>({
   seriesKey,
+  pointStyle = "default",
+  activePointStyle = "default",
   material = "plain",
   hide,
   stroke,
@@ -49,8 +56,11 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
   const color = stroke ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
   return (
     <Area
-      activeDot={<ActiveMarker />}
+      activeDot={<ActiveMarker variant={activePointStyle} />}
       {...props}
+      {...(props.dot === undefined && pointStyle !== "default"
+        ? { dot: <PointMarker variant={pointStyle} /> }
+        : {})}
       {...(material !== "plain" && props.shape === undefined && props.filter === undefined
         ? { shape: <MaterialArea material={material} filterId={`${generatedId}-area-material`} /> }
         : {})}
