@@ -8,6 +8,7 @@ import { useChart } from "./chart-context.js";
 import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useLineInteraction } from "./line-chart.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { PointMarker, type PointStyle } from "./point-marker.js";
 
 export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Area<DataPoint, Value>>,
@@ -15,6 +16,10 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
 > & {
   /** Metadata/visibility key, required only for function or numeric data keys. */
   seriesKey?: string;
+  /** Optional point paint; explicit native dot takes precedence. */
+  pointStyle?: PointStyle;
+  /** Independent active point paint; explicit native activeDot takes precedence. */
+  activePointStyle?: PointStyle;
   /** Finish on the native area; explicit shape/filter retain consumer ownership. */
   material?: AreaMaterial;
   /** Static fill encoding; none opts out of configured patterns. Native paint/shape wins. */
@@ -24,6 +29,8 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
 /** A registered Recharts Area with Root colors and controlled visibility. */
 export function AreaSeries<DataPoint = unknown, Value = unknown>({
   seriesKey,
+  pointStyle = "default",
+  activePointStyle = "default",
   material = "plain",
   pattern,
   hide,
@@ -77,8 +84,10 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
       <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.area}>
         <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
           <Area
-            activeDot={<ActiveMarker />}
+            activeDot={<ActiveMarker variant={activePointStyle} />}
             {...props}
+          {...(props.dot === undefined && pointStyle !== "default" ? { dot: <PointMarker variant={pointStyle} /> } : {})}
+            {...(props.dot === undefined && pointStyle !== "default" ? { dot: <PointMarker variant={pointStyle} /> } : {})}
             onClick={interaction.compose(props.onClick)}
             {...(material !== "plain" && props.shape === undefined && props.filter === undefined
               ? {

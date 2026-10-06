@@ -563,3 +563,39 @@ and live announcement; Kind adds no announcement region or hover selection.
 Explicit Tooltip `active` and `defaultIndex` retain native ownership and take
 precedence. Custom content owns its markup and accessibility. Omitted defaults
 preserve existing behavior. See the weekly Pie in `examples/chart/pie-recipes.tsx`.
+
+### Point marker styles
+
+`LineSeries` and `AreaSeries` accept independent `pointStyle` and
+`activePointStyle` values: `"default"`, `"border"`, or `"colored-border"`.
+Omitted/default values keep the existing appearance (including Area's normally
+hidden regular dots). Opting into a regular style enables regular dots. Border
+uses a series-colored center with a surface-colored ring; colored-border uses a
+surface-colored center with a series-colored ring. The surface is
+`--kind-ui-chart-marker-surface`, falling back to `--card` then white; set it on
+Root for your theme. Series paint follows the existing config/theme identity or
+explicit series stroke. Styles introduce no SVG resources or additional motion.
+
+```tsx
+<LineSeries dataKey="total" pointStyle="border" activePointStyle="colored-border" />
+<AreaSeries dataKey="total" pointStyle="colored-border" activePointStyle="border" />
+```
+
+Any explicit native `dot` or `activeDot` value (including false, true, props,
+renderer functions and elements) wins for its respective marker. Configured
+LineChart accepts these options in its existing `series` objects; explicit
+children retain ownership. `PointMarker` is a reusable native Dot renderer with
+`variant` and native Dot props. Its variant paint wins the engine-supplied paint;
+native radius/handlers remain intact, and SVG `style` can override its paint.
+For example, `dot={<PointMarker variant="colored-border" style={{ fill: "white" }} />}`.
+Native active-dot callbacks carry series paint in `fill`, while regular dots carry
+it in `stroke`. When composing PointMarker as an active renderer, forward that
+identity explicitly: `activeDot={(props) => <PointMarker {...props}
+stroke={props.fill} variant="colored-border" />}`. The Series style API handles
+this distinction automatically. Keyboard/pointer inspection remains chart-owned; the active mark retains its
+existing non-intercepting behavior and reduced-motion policy. Radar's selection
+dots and Scatter's symbols have separate contracts and do not accept these
+series options. Bar, Pie and other shape families are outside this API.
+
+Run `npm run dev:chart` and visit `/recipes.html#point-markers` for the marker gallery and
+its accessible data table.

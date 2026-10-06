@@ -29,6 +29,7 @@ import {
   type LineSeriesProps as StaticLineSeriesProps,
 } from "./line-series.js";
 import { registerPiePinComponent } from "./pie-pin-identity.js";
+import { markerPaint, type PointStyle } from "./point-marker.js";
 import { TooltipBase, type TooltipFrameProps, type TooltipProps } from "./tooltip.js";
 
 export type LineAnimation = {
@@ -124,7 +125,13 @@ function useAnimatedCoordinate(target: number, enabled: boolean, transition: Tra
   }, [value, target, enabled, transition]);
   return value;
 }
-export function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
+export function ActiveMarker({
+  cx,
+  cy,
+  fill,
+  stroke,
+  variant = "default",
+}: DotProps & { variant?: PointStyle | undefined }) {
   const { enabled, transition } = use(MotionContext);
   const { motionReady } = useLineInteraction();
   const animate = enabled && motionReady;
@@ -142,6 +149,8 @@ export function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
       stroke="var(--card, white)"
       strokeWidth={2}
       strokeDasharray="none"
+      {...markerPaint(variant, fill ?? stroke)}
+      data-point-style={variant}
       pointerEvents="none"
     />
   );
@@ -194,7 +203,9 @@ export function LineSeries<
       >
         <StaticLineSeries<DataPoint, Value>
           {...props}
-          activeDot={visible ? (props.activeDot ?? <ActiveMarker />) : false}
+          activeDot={
+            visible ? (props.activeDot ?? <ActiveMarker variant={props.activePointStyle} />) : false
+          }
           zIndex={0}
           renderWhileHidden={enabled && drawn}
           isAnimationActive={false}

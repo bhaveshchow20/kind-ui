@@ -6,6 +6,7 @@ import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { PointMarker, type PointStyle } from "./point-marker.js";
 
 // Preserve the legacy native defaults while allowing explicit row/value parameters.
 type DefaultLineDataKey = Extract<ComponentProps<typeof Line>["dataKey"], (row: never) => unknown>;
@@ -15,6 +16,10 @@ export type LineSeriesProps<
 > = ComponentProps<typeof Line<DataPoint, Value>> & {
   /** Metadata/visibility key, required only for function or numeric data keys. */
   seriesKey?: string;
+  /** Optional point paint; explicit native dot takes precedence. */
+  pointStyle?: PointStyle;
+  /** Independent active point paint; explicit native activeDot takes precedence. */
+  activePointStyle?: PointStyle;
   /** Material on the default SVG curve; custom shape/filter retain consumer ownership. */
   material?: LineMaterial;
 };
@@ -25,6 +30,8 @@ export function LineSeries<
   Value = ReturnType<DefaultLineDataKey>,
 >({
   seriesKey,
+  pointStyle = "default",
+  activePointStyle: _activePointStyle,
   hide,
   stroke,
   className,
@@ -64,6 +71,7 @@ export function LineSeries<
         <Line<DataPoint, Value>
           isAnimationActive={false}
           {...props}
+          {...(props.dot === undefined && pointStyle !== "default" ? { dot: <PointMarker variant={pointStyle} /> } : {})}
           onClick={interaction.compose(props.onClick)}
           {...(material !== "plain" && props.shape === undefined && props.filter === undefined
             ? {
