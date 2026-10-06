@@ -382,3 +382,12 @@ void (<Chart.PieSeries {...selectiveGlow} />);
 void (<Chart.PieSeries {...accessorGlow} />);
 // @ts-expect-error Category identity is a string, not a positional index.
 void (<Chart.PieSeries dataKey="value" glowCategories={[0]} />);
+const dashTiming = { durationMs: 700, direction: "reverse" } satisfies Chart.LineDashAnimation;
+const dashedLine = (
+  <Chart.LineSeries dataKey="count" strokeDasharray="6 4" dashAnimation={dashTiming} />
+);
+// @ts-expect-error Dash direction is explicit.
+const invalidDash = <Chart.LineSeries dataKey="count" dashAnimation={{ direction: "left" }} />;
+// @ts-expect-error Area perimeter animation is not the open-line contract.
+const invalidAreaDash = <Chart.AreaSeries dataKey="count" dashAnimation={{}} />;
+void [dashedLine, invalidDash, invalidAreaDash];

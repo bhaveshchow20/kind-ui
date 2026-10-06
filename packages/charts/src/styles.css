@@ -568,3 +568,28 @@
     }
   }
 }
+
+/* Only the default stroke moves; dots and chart entrance clips are independent. */
+@layer kind-ui {
+  :where(.kind-ui-line-dash .recharts-line-curve) {
+    animation: kind-ui-line-dash var(--kind-ui-dash-duration) linear infinite;
+    animation-direction: var(--kind-ui-dash-direction);
+  }
+  :where([data-motion="off"] .kind-ui-line-dash .recharts-line-curve),
+  :where(.kind-ui-loading-chart-pending .kind-ui-line-dash .recharts-line-curve) {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :where(.kind-ui-line-dash .recharts-line-curve) {
+      animation: none;
+    }
+  }
+  @keyframes kind-ui-line-dash {
+    from {
+      stroke-dashoffset: var(--kind-ui-dash-offset);
+    }
+    to {
+      stroke-dashoffset: calc(var(--kind-ui-dash-offset) - var(--kind-ui-dash-cycle));
+    }
+  }
+}

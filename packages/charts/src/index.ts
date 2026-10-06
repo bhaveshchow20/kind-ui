@@ -183,6 +183,7 @@ export {
   type HistogramShapeProps,
 } from "./histogram-series.js";
 export { Legend, type LegendProps } from "./legend.js";
+export type { LineDashAnimation } from "./line-dash.js";
 export type { LineMaterial } from "./line-material.js";
 export {
   createPercentStack,
