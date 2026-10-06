@@ -1,8 +1,8 @@
 "use client";
 
 import { Children, createContext, Fragment, isValidElement, type ReactNode } from "react";
-import { PieSeries, type PieSeriesProps } from "./pie-series.js";
-import { Tooltip } from "./tooltip.js";
+import { piePinComponentKind } from "./pie-pin-identity.js";
+import type { PieSeriesProps } from "./pie-series.js";
 
 export const PieTooltipPin = createContext<number | undefined>(undefined);
 
@@ -18,8 +18,8 @@ export function pinnedPieIndex(children: ReactNode, category: string): number | 
         return;
       }
       if (child.type === Fragment) collect(child.props.children);
-      else if (child.type === PieSeries) series.push(child.props);
-      else if (child.type === Tooltip) tooltips += 1;
+      else if (piePinComponentKind(child.type) === "series") series.push(child.props);
+      else if (piePinComponentKind(child.type) === "tooltip") tooltips += 1;
       else unsupported = true;
     });
   }

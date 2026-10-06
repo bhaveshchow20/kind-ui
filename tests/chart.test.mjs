@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import * as Chart from "@kind-ui/charts";
 import { Legend, Root, TooltipContent } from "@kind-ui/charts";
-import { createElement as h } from "react";
+import { Fragment, createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 import * as Native from "recharts";
 
@@ -1484,6 +1484,14 @@ test("initial Pie pin rejects unsupported composition through public exports", (
     });
   assert.throws(() => chart(series(), series()), /one direct PieSeries/);
   assert.throws(() => chart(series(), h(Chart.Tooltip), h(Chart.Tooltip)), /one direct Tooltip/);
+  assert.throws(() => chart(series()), /one direct Tooltip/);
+  assert.throws(() => chart(series(), h(Native.Tooltip)), /one direct Tooltip/);
+  const WrappedTooltip = (props) => h(Chart.Tooltip, props);
+  WrappedTooltip.displayName = "Tooltip";
+  assert.throws(() => chart(series(), h(WrappedTooltip)), /one direct Tooltip/);
+  const WrappedSeries = (props) => h(Chart.PieSeries, props);
+  WrappedSeries.displayName = "PieSeries";
+  assert.throws(() => chart(h(WrappedSeries), h(Chart.Tooltip)), /one direct PieSeries/);
   assert.throws(
     () => chart(series(), h(Native.Pie, { dataKey: "value" }), h(Chart.Tooltip)),
     /one direct PieSeries/,
@@ -1491,6 +1499,7 @@ test("initial Pie pin rejects unsupported composition through public exports", (
   assert.doesNotThrow(() =>
     chart(series(), h(Chart.Tooltip, { itemKey: (entry) => entry.payload.id })),
   );
+  assert.doesNotThrow(() => chart(h(Fragment, null, series(), h(Chart.Tooltip))));
   assert.doesNotThrow(() =>
     chart(
       h(Chart.PieSeries, {
