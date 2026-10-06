@@ -22,6 +22,8 @@ const props: ConfiguredLineChartProps<Row> = {
       seriesKey: "total",
       dataKey: (row) => row.total,
       material: "paper",
+      pointStyle: "border",
+      activePointStyle: "colored-border",
       onClick: (_curve, event) => {
         const path: SVGPathElement = event.currentTarget;
         void path;
@@ -93,3 +95,11 @@ void missingIdentity;
 // @ts-expect-error No data key is guessed for explicit series overrides.
 const invalid: ConfiguredLineSeries<Row> = { seriesKey: "total" };
 void invalid;
+
+const invalidMarker: ConfiguredLineSeries<Row> = {
+  seriesKey: "total",
+  dataKey: "total",
+  // @ts-expect-error Marker styles are a closed union.
+  pointStyle: "glow",
+};
+void invalidMarker;

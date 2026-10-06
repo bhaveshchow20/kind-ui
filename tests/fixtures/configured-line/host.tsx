@@ -26,6 +26,7 @@ class Boundary extends Component<{ children: ReactNode }, { error: string }> {
   }
 }
 export function ConfiguredHost() {
+  const [markerClicks, setMarkerClicks] = useState(0);
   const [width, setWidth] = useState(500);
   const [updated, setUpdated] = useState(false);
   const [extra, setExtra] = useState(false);
@@ -152,6 +153,98 @@ export function ConfiguredHost() {
             aria-label="No configured series"
           />
         )}
+      </section>
+      <output data-marker-clicks>{markerClicks}</output>
+      <section data-case="markers">
+        <LineChart
+          config={config}
+          data={allRows}
+          xDataKey="month"
+          aria-label="Styled markers"
+          width={500}
+          rootProps={{
+            style: { "--kind-ui-chart-marker-surface": "#172033" } as import("react").CSSProperties,
+          }}
+          series={[
+            {
+              seriesKey: "total",
+              dataKey: "total",
+              pointStyle: "border",
+              activePointStyle: "colored-border",
+            },
+            {
+              seriesKey: "other",
+              dataKey: "other",
+              stroke: "#a855f7",
+              pointStyle: "colored-border",
+              activePointStyle: "border",
+            },
+          ]}
+        />
+      </section>
+      <section data-case="native-markers">
+        <LineChart
+          config={config}
+          data={allRows}
+          xDataKey="month"
+          aria-label="Native markers"
+          width={500}
+          series={[
+            {
+              seriesKey: "total",
+              dataKey: "total",
+              pointStyle: "border",
+              activePointStyle: "colored-border",
+              dot: {
+                r: 9,
+                fill: "gold",
+                stroke: "black",
+                onClick: () => setMarkerClicks((n) => n + 1),
+              },
+              activeDot: false,
+            },
+          ]}
+        />
+      </section>
+      <section data-case="renderer-markers">
+        <LineChart
+          config={config}
+          data={allRows}
+          xDataKey="month"
+          aria-label="Renderer markers"
+          width={500}
+          series={[
+            {
+              seriesKey: "total",
+              dataKey: "total",
+              pointStyle: "border",
+              dot: <Chart.PointMarker variant="colored-border" />,
+              activeDot: (props) => (
+                <Chart.PointMarker
+                  {...props}
+                  stroke={props.fill}
+                  variant="colored-border"
+                  style={{ fill: "gold" }}
+                  data-active-renderer="true"
+                />
+              ),
+            },
+          ]}
+        />
+      </section>
+      <section data-case="area-markers">
+        <Chart.Root config={config}>
+          <Chart.AreaChart width={500} height={280} data={allRows} aria-label="Area markers">
+            <Chart.XAxis dataKey="month" />
+            <Chart.YAxis />
+            <Chart.AreaSeries
+              dataKey="total"
+              pointStyle="colored-border"
+              activePointStyle="border"
+            />
+            <Chart.Tooltip />
+          </Chart.AreaChart>
+        </Chart.Root>
       </section>
     </main>
   );
