@@ -82,6 +82,7 @@ export function LineChart({
         loading={loading}
         loadingLabel={loadingLabel}
         loadingSkeleton="line"
+        loadingAnimation={options}
         engine={EngineLineChart}
         motionEnabled={enabled}
         interrupt={interrupt}

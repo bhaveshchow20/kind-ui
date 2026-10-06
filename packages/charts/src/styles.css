@@ -472,15 +472,7 @@
     pointer-events: none;
   }
   :where([data-kind-ui="chart-loading-skeleton"]) {
-    animation: kind-ui-loading-pulse 1700ms ease-in-out infinite;
-  }
-  :where([data-loading-motion="sweep"] > [data-kind-ui="loading-design"]) {
-    animation: kind-ui-loading-horizontal 1700ms ease-in-out infinite;
-  }
-  :where([data-kind-ui="loading-angular"]) {
-    transform: rotate(-90deg);
-    transform-origin: 320px 120px;
-    animation: kind-ui-loading-angular 1700ms ease-in-out infinite;
+    animation: kind-ui-loading-pulse var(--kind-ui-loading-cycle, 1770ms) linear infinite;
   }
   :where([data-kind-ui="chart-loading-skeleton"] svg) {
     overflow: visible;
@@ -499,175 +491,30 @@
   @keyframes kind-ui-loading-pulse {
     0%,
     12%,
-    88%,
+    94%,
     100% {
       opacity: 0;
     }
-    30%,
-    65% {
+    14%,
+    90% {
       opacity: 1;
     }
   }
-  @keyframes kind-ui-loading-horizontal {
-    0%,
-    12%,
-    100% {
-      clip-path: inset(0 100% 0 0);
-    }
-    65%,
-    88% {
-      clip-path: inset(0 0 0 0);
-    }
-  }
-  @keyframes kind-ui-loading-angular {
-    0%,
-    12%,
-    100% {
-      stroke-dashoffset: 100;
-    }
-    60%,
-    70% {
-      stroke-dashoffset: 0;
-    }
-    88% {
-      stroke-dashoffset: 100;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    :where([data-kind-ui="chart-loading-skeleton"], [data-kind-ui="chart-loading-skeleton"] *) {
-      animation: none;
-      transform: none;
-      clip-path: none;
-    }
-    :where([data-kind-ui="loading-angular"]) {
-      stroke-dashoffset: 0;
-    }
-  }
-}
-
-@layer kind-ui {
   :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion="grow"]) {
-    transform-box: view-box;
-    transform-origin: center bottom;
-    animation: kind-ui-loading-grow 1700ms ease-in-out infinite;
+    mask: var(--kind-ui-loading-vertical);
   }
   :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion="reveal"]) {
-    animation: kind-ui-loading-reveal 1700ms ease-in-out infinite;
+    mask: var(--kind-ui-loading-horizontal);
   }
-  :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion="point"]) {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: kind-ui-loading-point 1700ms ease-in-out infinite;
+  :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion="area-reveal"]) {
+    mask: var(--kind-ui-loading-area);
   }
-  :where([data-loading-motion="point"]:nth-child(3n + 2)) {
-    animation-delay: 60ms;
-  }
-  :where([data-loading-motion="point"]:nth-child(3n)) {
-    animation-delay: 120ms;
-  }
-  @keyframes kind-ui-loading-grow {
-    0%,
-    100% {
-      transform: scaleY(0.72);
-    }
-    35%,
-    55% {
-      transform: scaleY(1);
-    }
-    85% {
-      transform: scaleY(0.86);
-    }
-  }
-  @keyframes kind-ui-loading-reveal {
-    0%,
-    100% {
-      clip-path: inset(0 100% 0 0);
-    }
-    38%,
-    65% {
-      clip-path: inset(0 0 0 0);
-    }
-    90% {
-      clip-path: inset(0 0 0 70%);
-    }
-  }
-  @keyframes kind-ui-loading-point {
-    0%,
-    100% {
-      transform: scale(0.55);
-      opacity: 0.3;
-    }
-    35%,
-    55% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    85% {
-      transform: scale(0.8);
-      opacity: 0.65;
-    }
+  :where([data-family="combo"][data-loading-layout="vertical"] [data-loading-motion="grow"]) {
+    transform: matrix(0, 0.375, -2.6666667, 0, 640, 0);
   }
   @media (prefers-reduced-motion: reduce) {
-    :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion]) {
+    :where([data-kind-ui="chart-loading-skeleton"]) {
       animation: none;
-      transform: none;
-      clip-path: none;
-    }
-  }
-  :where([data-kind-ui="loading-radar-motion"]) {
-    transform-origin: 320px 120px;
-    animation: kind-ui-loading-radar 1700ms ease-in-out infinite;
-  }
-  @keyframes kind-ui-loading-radar {
-    0%,
-    100% {
-      transform: scale(0.78);
-    }
-    42%,
-    58% {
-      transform: scale(1);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    :where([data-kind-ui="loading-radar-motion"]) {
-      animation: none;
-      transform: none;
-    }
-  }
-  :where([data-kind-ui="chart-loading-skeleton"] [data-motion="heatmap-cell"]) {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: kind-ui-loading-cell-wave 1700ms ease-in-out infinite;
-    animation-delay: var(--kind-ui-loading-delay, 0ms);
-  }
-  :where([data-kind-ui="chart-loading-skeleton"] [data-motion="sankey-flow"]) {
-    stroke-dasharray: 18 34;
-    animation: kind-ui-loading-flow 1700ms linear infinite;
-  }
-  @keyframes kind-ui-loading-cell-wave {
-    0%,
-    60%,
-    100% {
-      transform: scale(1);
-    }
-    28% {
-      transform: scale(0.91);
-    }
-  }
-  @keyframes kind-ui-loading-flow {
-    from {
-      stroke-dashoffset: 52;
-    }
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    :where([data-kind-ui="chart-loading-skeleton"] [data-motion]) {
-      animation: none;
-    }
-    :where([data-kind-ui="chart-loading-skeleton"] [data-motion="sankey-flow"]) {
-      display: none;
     }
   }
 }

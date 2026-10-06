@@ -93,6 +93,7 @@ export function BarChartImplementation({
           <LineChartFrame
             chartProps={props}
             loadingSkeleton={family}
+            loadingAnimation={{ ...options, ...(props.layout ? { layout: props.layout } : {}) }}
             loading={loading}
             loadingLabel={loadingLabel}
             categoryEmphasis={emphasis === "category"}

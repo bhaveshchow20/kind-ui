@@ -260,7 +260,13 @@ export function SankeyChart({
             </EngineSankey>
           </div>
           {loading && (
-            <LoadingSkeletonSurface family="sankey" width="100%" height="100%" seed={loadingSeed} />
+            <LoadingSkeletonSurface
+              family="sankey"
+              width="100%"
+              height="100%"
+              seed={loadingSeed}
+              animation={{ revealDurationMs: duration }}
+            />
           )}
           <LoadingStatus loading={loading} label={loadingLabel} />
           {!loading && !links.length ? (

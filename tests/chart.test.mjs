@@ -1507,3 +1507,81 @@ test("all fourteen chart families expose deterministic loading SSR without nativ
     );
   }
 });
+
+test("standalone SSR skeletons preserve family identity independently of real data and announce outside busy content", () => {
+  const scale = Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#112233"] });
+  const matrix = (data) =>
+    h(
+      Chart.HeatmapChart,
+      {
+        rows: ["Region"],
+        columns: ["Month"],
+        data,
+        scale,
+        loading: true,
+        loadingLabel: "Loading matrix",
+      },
+      h(Chart.HeatmapGrid, { caption: "Matrix" }),
+    );
+  const flows = (links) =>
+    h(Chart.SankeyChart, {
+      data: {
+        nodes: [
+          { id: "a", name: "Source" },
+          { id: "b", name: "Destination" },
+        ],
+        links,
+      },
+      width: 320,
+      height: 240,
+      loading: true,
+      loadingLabel: "Loading flows",
+    });
+  const skeletons = [];
+  for (const [family, empty, populated] of [
+    ["heatmap", matrix([]), matrix([{ row: "Region", column: "Month", value: 1 }])],
+    ["sankey", flows([]), flows([{ id: "ab", source: "a", target: "b", value: 7 }])],
+  ]) {
+    const html = render(empty);
+    const skeleton = html.match(
+      /<svg\b[^>]*data-kind-ui="chart-loading-skeleton"[\s\S]*?<\/svg>/,
+    )?.[0];
+    assert.ok(skeleton, `${family}: decorative surface is present on the server`);
+    assert.match(skeleton, new RegExp(`data-family="${family}"`));
+    assert.match(skeleton, /aria-hidden="true" focusable="false"/);
+    assert.equal(
+      render(populated).match(
+        /<svg\b[^>]*data-kind-ui="chart-loading-skeleton"[\s\S]*?<\/svg>/,
+      )?.[0],
+      skeleton,
+      `${family}: consumer values do not change the illustration`,
+    );
+    skeletons.push(skeleton);
+    const ancestors = [];
+    let statuses = 0;
+    const voidTags = new Set(["col", "br", "hr", "input", "img", "meta", "link"]);
+    // Walk these controlled fixtures to verify ancestry without depending on attribute order.
+    for (const [tag, name] of html.matchAll(/<\/?([a-z][\w:-]*)\b[^>]*>/gi)) {
+      if (tag.startsWith("</")) {
+        const index = ancestors.findLastIndex((ancestor) => ancestor.name === name);
+        if (index >= 0) ancestors.length = index;
+      } else {
+        if (/\brole="status"/.test(tag)) {
+          statuses++;
+          assert.ok(
+            ancestors.every((ancestor) => !ancestor.unavailable),
+            `${family}: status has no busy, hidden or inert ancestor`,
+          );
+        }
+        if (!voidTags.has(name) && !tag.endsWith("/>"))
+          ancestors.push({
+            name,
+            unavailable: /\baria-(?:busy|hidden)="true"|\binert(?:=|\s|>)/.test(tag),
+          });
+      }
+    }
+    assert.match(html, /aria-busy="true"/);
+    assert.equal(statuses, 1, `${family}: one loading announcement`);
+  }
+  assert.notEqual(skeletons[0], skeletons[1], "matrix and flow illustrations are distinct");
+});

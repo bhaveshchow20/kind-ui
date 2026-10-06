@@ -91,7 +91,8 @@ All chart families accept `loading?: boolean` alongside `animate`, plus
   data={rows}
   xDataKey="month"
   height={280}
-  animate={{ reveal: { duration: 650 } }}
+  aria-label="Monthly sales"
+  animate={{ revealDurationMs: 650 }}
   loading={pending}
   loadingLabel="Loading monthly sales"
 />
@@ -101,9 +102,13 @@ Pass the same props directly to composed chart roots inside the existing `Root`
 and native sizing/composition. Supported families: Line, Area, Bar, Combo, Pie,
 Radar, RadialBar, Scatter, Heatmap, Waterfall, Histogram, BoxPlot, ActivityRings
 and Sankey. Each uses its own decorative chart silhouette. A new loading cycle
-chooses a bounded design variation independent of your data; each pulse fades away before selecting its next variation, staying stable through
-renders and resize between pulses. The 1.7-second motion follows each family: horizontal
-reveal, mark growth, angular fill, radial expansion, cell wave or path flow.
+chooses a bounded design variation independent of your data; each pulse chooses a clearly different bounded profile while fully hidden. Geometry
+stays stable through renders and resize between pulses. A soft leading reveal and
+trailing fade overlap, following the chart’s native entrance duration, easing and
+direction: horizontal paths, baseline bar windows, angular sectors, radial windows,
+ordered point/cell opacity or directional flow. Combo preserves separate family
+reveal options. Pulse timing includes room for the trail to leave and a hidden
+geometry swap; loading never delays actual completion.
 Reduced motion displays a static silhouette.
 
 Actual chart content remains mounted, sized, hidden and inert while pending.
