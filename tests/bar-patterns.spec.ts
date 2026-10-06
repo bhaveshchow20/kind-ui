@@ -1,7 +1,7 @@
 import { expect, test } from "./browser";
 
 for (const horizontal of [false, true]) {
-  test(`patterns preserve ${horizontal ? "horizontal" : "vertical"} bars and hydrated IDs`, async ({
+  test(`patterns preserve ${horizontal ? "horizontal" : "vertical"} bars and scoped resources`, async ({
     page,
   }) => {
     const errors: string[] = [];
