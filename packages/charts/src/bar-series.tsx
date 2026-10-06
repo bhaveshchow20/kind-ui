@@ -5,6 +5,7 @@ import { type ComponentProps, use, useCallback, useId, useLayoutEffect, useRef }
 import {
   Bar,
   type BarShapeProps,
+  DefaultZIndexes,
   Rectangle,
   useActiveTooltipDataPoints,
   useActiveTooltipLabel,
@@ -15,6 +16,7 @@ import {
   useXAxisScale,
   useYAxisDomain,
   useYAxisScale,
+  ZIndexLayer,
 } from "recharts";
 import { useBarCategoryHover } from "./bar-category.js";
 import { BarMotion } from "./bar-chart.js";
@@ -23,6 +25,7 @@ import { useChart } from "./chart-context.js";
 import { useEmphasis } from "./emphasis.js";
 import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 export type BarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Bar<DataPoint, Value>>,
@@ -35,7 +38,7 @@ export type BarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   /** Finish on native rectangles; custom shapes and filters retain ownership. */
   material?: BarMaterial | undefined;
   /** Static encoding for implicit fills; explicit fills/Cells/custom shapes retain ownership. */
-  pattern?: FillPattern | "none" | undefined;
+  pattern?: FillPattern | false | undefined;
 };
 
 /** A registered native Bar; axes, shape, cells, labels and handlers stay consumer-owned. */
@@ -149,7 +152,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("BarSeries requires seriesKey for controlled non-string dataKey");
   const configuredPattern = key && Object.hasOwn(config, key) ? config[key]?.pattern : undefined;
-  const resolvedPattern = pattern === "none" ? undefined : (pattern ?? configuredPattern);
+  const resolvedPattern = pattern === false ? undefined : (pattern ?? configuredPattern);
   const patternId = patternResourceId(generatedId);
   const patterned =
     resolvedPattern !== undefined &&
@@ -157,6 +160,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
     style?.fill === undefined &&
     props.shape === undefined &&
     (props.activeBar === undefined || typeof props.activeBar === "boolean");
+  const interaction = useSeriesInteraction(key, effectiveHide, hide === true);
   const color = fill ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   const nativeRows =
     (!("data" in props) &&
@@ -245,25 +249,31 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
           <BarMaterialFilter material={material} id={filterId} horizontal={horizontal} />
         </defs>
       )}
-      <Bar<DataPoint, Value>
-        {...props}
-        {...(categoryEmphasis && eligible
-          ? {
-              shape: categoryShape,
-            }
-          : {})}
-        {...(materialized ? { filter: `url(#${filterId})` } : {})}
-        id={id}
-        hide={effectiveHide}
-        {...(patterned
-          ? { fill: `url(#${patternId})` }
-          : color !== undefined
-            ? { fill: color }
-            : {})}
-        className={["kind-ui-bar-series", selector, className].filter(Boolean).join(" ")}
-        style={style}
-        isAnimationActive={false}
-      />
+      <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
+        <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
+          <Bar<DataPoint, Value>
+            {...props}
+            onClick={interaction.compose(props.onClick)}
+            {...(categoryEmphasis && eligible
+              ? {
+                  shape: categoryShape,
+                }
+              : {})}
+            {...(materialized ? { filter: `url(#${filterId})` } : {})}
+            id={id}
+            zIndex={0}
+            hide={effectiveHide}
+            {...(patterned
+              ? { fill: `url(#${patternId})` }
+              : color !== undefined
+                ? { fill: color }
+                : {})}
+            className={["kind-ui-bar-series", selector, className].filter(Boolean).join(" ")}
+            style={style}
+            isAnimationActive={false}
+          />
+        </SeriesInteractionLayer>
+      </ZIndexLayer>
     </>
   );
 }
@@ -302,6 +312,7 @@ function CategoryBar({
       seriesKey,
     },
     eligible,
+    false,
   );
   // Native axis inspection owns the category, including whitespace above and between bars.
   // A painted mark's leave must not clear a category while the cursor remains in its band.
@@ -312,7 +323,10 @@ function CategoryBar({
   }, [active, keyboard, pointer, hover, emphasis.enter, emphasis.leave]);
   return (
     <g data-kind-ui="emphasis-mark" data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
-      <g data-kind-ui="emphasis-paint" style={{ opacity: emphasis.factor }}>
+      <g
+        data-kind-ui="emphasis-paint"
+        style={{ opacity: emphasis.active?.kind === "series" ? 1 : emphasis.factor }}
+      >
         <Rectangle {...props} />
       </g>
     </g>

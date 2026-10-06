@@ -279,7 +279,7 @@ const fillPattern: Chart.FillPattern = {
   angle: 45,
 };
 void (<Chart.BarSeries dataKey="count" pattern={fillPattern} material="clay" />);
-void (<Chart.BarSeries dataKey="count" pattern="none" fill="url(#host)" />);
+void (<Chart.BarSeries dataKey="count" pattern={false} fill="url(#host)" />);
 void (<Chart.FillPatternSwatch pattern={{ kind: "duotone" }} color="var(--color-count)" />);
 const patternConfig: Chart.SeriesConfig = { count: { color: "red", pattern: fillPattern } };
 void patternConfig;
@@ -295,9 +295,42 @@ void (
   />
 );
 void (<Chart.AreaSeries dataKey="count" pattern={{ kind: "lines", angle: 90 }} stackId="total" />);
-void (<Chart.AreaSeries dataKey="count" pattern="none" />);
+void (<Chart.AreaSeries dataKey="count" pattern={false} />);
 // @ts-expect-error Area patterns share the explicit encoding vocabulary.
 void (<Chart.AreaSeries dataKey="count" pattern={{ kind: "unknown" }} />);
 
 void (<Chart.BarSeries dataKey="count" pattern={{ kind: "dots" }} />);
 void (<Chart.BarSeries dataKey="count" pattern={{ kind: "lines" }} />);
+
+const sharedFocus = {
+  kind: "series",
+  mode: "focus",
+  eligibleKeys: ["count"],
+  markActivation: "matching-legend",
+  selected: null,
+  onSelectionChange: (next: string | null) => {
+    void next;
+  },
+  onBeforeInteraction: (request: Chart.ChartInteractionRequest) => {
+    request.event?.preventDefault();
+  },
+} satisfies Chart.ChartInteractionConfig;
+void (<Root config={config} interaction={sharedFocus} />);
+// @ts-expect-error Controlled focus requires a change callback.
+const missingFocusChange: Chart.ChartInteractionConfig = {
+  kind: "series",
+  mode: "focus",
+  eligibleKeys: ["count"],
+  selected: null,
+};
+// @ts-expect-error A selection cannot have controlled and default owners.
+const dualFocus: Chart.ChartInteractionConfig = { ...sharedFocus, defaultSelected: "count" };
+// @ts-expect-error A settled eligibility snapshot is required for a new interaction binding.
+const missingEligibility: Chart.ChartInteractionConfig = { kind: "category", mode: "focus" };
+// @ts-expect-error Sankey visibility is outside this shared contract.
+const nodeVisibility: Chart.ChartInteractionConfig = {
+  kind: "node",
+  mode: "visibility",
+  eligibleKeys: ["source"],
+};
+void [missingFocusChange, dualFocus, missingEligibility, nodeVisibility];

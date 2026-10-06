@@ -1,10 +1,11 @@
 "use client";
 
 import { type ComponentProps, useId, useLayoutEffect, useRef } from "react";
-import { Line } from "recharts";
+import { DefaultZIndexes, Line, ZIndexLayer } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 // Preserve the legacy native defaults while allowing explicit row/value parameters.
 type DefaultLineDataKey = Extract<ComponentProps<typeof Line>["dataKey"], (row: never) => unknown>;
@@ -55,30 +56,38 @@ export function LineSeries<
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("LineSeries requires seriesKey for controlled non-string dataKey");
+  const interaction = useSeriesInteraction(key, effectiveHide, hide === true);
   const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
-    <Line<DataPoint, Value>
-      isAnimationActive={false}
-      {...props}
-      {...(material !== "plain" && props.shape === undefined && props.filter === undefined
-        ? {
-            shape: (
-              <MaterialCurve
-                material={material}
-                filterId={`${generatedId}-material`}
-                materialWidth={
-                  props.strokeWidth ?? (material === "clay" ? 6 : material === "paper" ? 2.5 : 3)
-                }
-              />
-            ),
-            strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
-            strokeLinejoin: props.strokeLinejoin ?? "round",
-          }
-        : {})}
-      id={id}
-      hide={renderedHide}
-      {...(color !== undefined ? { stroke: color } : {})}
-      className={["kind-ui-line-series", className].filter(Boolean).join(" ")}
-    />
+    <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
+      <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
+        <Line<DataPoint, Value>
+          isAnimationActive={false}
+          {...props}
+          onClick={interaction.compose(props.onClick)}
+          {...(material !== "plain" && props.shape === undefined && props.filter === undefined
+            ? {
+                shape: (
+                  <MaterialCurve
+                    material={material}
+                    filterId={`${generatedId}-material`}
+                    materialWidth={
+                      props.strokeWidth ??
+                      (material === "clay" ? 6 : material === "paper" ? 2.5 : 3)
+                    }
+                  />
+                ),
+                strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
+                strokeLinejoin: props.strokeLinejoin ?? "round",
+              }
+            : {})}
+          id={id}
+          zIndex={0}
+          hide={renderedHide}
+          {...(color !== undefined ? { stroke: color } : {})}
+          className={["kind-ui-line-series", className].filter(Boolean).join(" ")}
+        />
+      </SeriesInteractionLayer>
+    </ZIndexLayer>
   );
 }
