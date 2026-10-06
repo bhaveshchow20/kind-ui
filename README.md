@@ -10,7 +10,7 @@ Composable React charts built on Recharts and Motion. Choose a chart, adapt a co
 [Documentation](https://kindui.dev/charts/docs/) · [GitHub](https://github.com/bhaveshchow20/kind-ui)
 
 ```sh
-npm install @kind-ui/charts
+npm install @kind-ui/charts react react-dom recharts motion
 ```
 
 Import `@kind-ui/charts/styles.css` once at your application entry (the root layout in Next.js). Development builds warn once if chart styles are missing. See the [component API and usage](packages/charts/README.md) for composition, accessibility and motion.

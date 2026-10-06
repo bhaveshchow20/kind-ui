@@ -16,6 +16,34 @@ const withoutPublicImports = (body) =>
 const withoutStylesheetImports = (body) =>
   body.replaceAll(/import\s+["']@kind-ui\/charts\/styles\.css["'];?/g, "");
 
+test("installation commands explicitly include every public required peer", async () => {
+  const commands = JSON.parse(
+    await readFile(new URL("../apps/docs/lib/installation-commands.json", import.meta.url)),
+  );
+  const manifest = JSON.parse(
+    await readFile(new URL("../packages/charts/package.json", import.meta.url)),
+  );
+  assert.deepEqual(Object.keys(commands), ["npm", "pnpm", "yarn", "bun"]);
+  for (const [manager, command] of Object.entries(commands)) {
+    const [binary, action, packageName, ...peers] = command.split(" ");
+    assert.equal(binary, manager);
+    assert.equal(action, manager === "npm" ? "install" : "add");
+    assert.equal(packageName, manifest.name);
+    assert.deepEqual(peers, ["react", "react-dom", "recharts", "motion"]);
+    assert.deepEqual([...peers].sort(), Object.keys(manifest.peerDependencies).sort());
+  }
+  for (const file of [
+    "README.md",
+    "packages/charts/README.md",
+    "docs/charts-api.md",
+    "skills/kind-ui-charts/SKILL.md",
+    "apps/docs/lib/consumer-agent-guide.md",
+  ]) {
+    const body = await readFile(new URL(`../${file}`, import.meta.url), "utf8");
+    assert.ok(body.includes(commands.npm), `${file} must document explicit peers`);
+  }
+});
+
 test("quick-start README uses public imports, stylesheet and existing documentation sources", () => {
   check(readme);
 });

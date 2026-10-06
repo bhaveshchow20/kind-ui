@@ -8,7 +8,7 @@ description: Build and adapt React charts using @kind-ui/charts public APIs and 
 ## Install and retrieve the contract
 
 ```sh
-npm install @kind-ui/charts
+npm install @kind-ui/charts react react-dom recharts motion
 ```
 
 Import `@kind-ui/charts/styles.css` once at the application entry. npm resolves
