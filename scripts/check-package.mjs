@@ -439,9 +439,20 @@ try {
   await production("index.html", "packed-polar");
   await production("index.html", "packed-polar-development", true);
   console.log("Radar/radial tarball consumer: strict NodeNext/Bundler and production build passed");
-  for (const file of ["host.tsx", "main.tsx", "index.html"])
+  for (const file of ["host.tsx", "main.tsx", "index.html", "render.mjs"])
     await copyFixture("stylesheet-warning", file);
   await typecheck(["host.tsx", "main.tsx"]);
+  // Hydrate the same public packed host, rather than duplicating Root's server markup.
+  run(
+    process.execPath,
+    [
+      join(root, "node_modules/typescript/bin/tsc"),
+      "--module", "NodeNext", "--moduleResolution", "NodeNext", "--jsx", "react-jsx",
+      "--target", "ES2022", "--outDir", "ssr", "host.tsx",
+    ],
+    consumer,
+  );
+  run(process.execPath, ["render.mjs"], consumer);
   await mkdir(join(consumer, "public"), { recursive: true });
   await writeFile(
     join(consumer, "public/styles.css"),
