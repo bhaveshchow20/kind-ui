@@ -10,6 +10,7 @@ import {
   useCallback,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -32,6 +33,8 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   interactionBinding?: "root";
   /** Finish on default native sectors; custom shapes, filters and CSS transforms keep ownership. */
   material?: PieMaterial | undefined;
+  /** Categories receiving glow instead of material; requires categoryKey and explicit data. Unknown IDs are ignored. */
+  glowCategories?: readonly string[] | undefined;
   /** Stable sector identity; defaults to the native nameKey value. */
   emphasisKey?: ((payload: unknown) => string | number | undefined) | undefined;
 };
@@ -405,6 +408,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
 ) {
   const {
     material = "plain",
+    glowCategories,
     emphasisKey,
     categoryKey,
     interactionBinding,
@@ -444,6 +448,23 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     categoryKey === undefined
       ? originalChildren
       : categoryCells(data, categoryKey, config, paints, originalChildren, props.fill);
+  if (glowCategories !== undefined && categoryKey === undefined)
+    throw new Error("glowCategories requires categoryKey and explicit series data");
+  // Native sector indices align with explicit data, but membership uses the original
+  // row identity, before native Cell props can override payload fields.
+  const glowRows = useMemo(() => {
+    if (categoryKey === undefined || glowCategories === undefined) return undefined;
+    const glowing = new Set(glowCategories);
+    return data?.map((row) => {
+      const key =
+        typeof categoryKey === "function"
+          ? categoryKey(row)
+          : row !== null && typeof row === "object" && Object.hasOwn(row, categoryKey)
+            ? row[categoryKey]
+            : undefined;
+      return typeof key === "string" && glowing.has(key);
+    });
+  }, [data, categoryKey, glowCategories]);
   const seriesId = useId();
   const { invalidate, emphasisScope } = useLineInteraction();
   const scope = `${emphasisScope}/${seriesId}`;
@@ -451,7 +472,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     (sector: SectorPaintProps) => (
       <EntranceSector
         {...sector}
-        material={material}
+        material={glowRows?.[sector.index ?? -1] ? "glow" : material}
         interactionKey={interactionKey}
         scope={scope}
         emphasisKey={emphasisKey}
@@ -462,6 +483,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     ),
     [
       material,
+      glowRows,
       scope,
       emphasisKey,
       interactionKey,
@@ -489,6 +511,8 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     props.activeShape,
     props.inactiveShape,
     material,
+    categoryKey,
+    glowCategories,
   ];
   const cells = cellProps(props.children);
   const previousCells = useRef(cells);

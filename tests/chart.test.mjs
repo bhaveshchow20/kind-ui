@@ -2002,3 +2002,64 @@ test("controlled invalid focus paints null and selection controls reject conflic
     /change callback/,
   );
 });
+
+test("selective Pie glow requires existing explicit category identity", () => {
+  const config = { alpha: { label: "Alpha", color: "#123456" } };
+  const series = (props) =>
+    render(h(Root, { config }, h(Chart.PieSeries, { dataKey: "value", ...props })));
+  assert.throws(() => series({ glowCategories: [] }), /glowCategories requires categoryKey/);
+  assert.throws(() => series({ categoryKey: "id", glowCategories: ["alpha"] }), /explicit data/);
+  assert.throws(
+    () =>
+      series({
+        categoryKey: "id",
+        data: [{ id: "missing", value: 1 }],
+        glowCategories: ["missing"],
+      }),
+    /Root.config/,
+  );
+});
+
+test("selective Pie glow leaves the native SSR shell and host data alternative unchanged", () => {
+  const data = [
+    { id: "alpha", value: 60 },
+    { id: "beta", value: 40 },
+  ];
+  const config = {
+    alpha: { label: "Alpha", color: "#123456" },
+    beta: { label: "Beta", color: "#abcdef" },
+  };
+  const chart = (glowCategories) =>
+    render(
+      h(
+        Root,
+        { config },
+        h(
+          Chart.PieChart,
+          { width: 320, height: 240, "aria-label": "Allocation" },
+          h(Chart.PieSeries, {
+            data,
+            dataKey: "value",
+            categoryKey: "id",
+            nameKey: "id",
+            glowCategories,
+          }),
+        ),
+        h(
+          "table",
+          null,
+          h("caption", null, "Category values"),
+          h(
+            "tbody",
+            null,
+            ...data.map((row) =>
+              h("tr", { key: row.id }, h("th", null, row.id), h("td", null, row.value)),
+            ),
+          ),
+        ),
+      ),
+    );
+  assert.equal(chart(["alpha", "unknown"]), chart(undefined));
+  assert.doesNotMatch(chart(["alpha"]), /pie-halo|<filter/);
+  assert.match(chart(["alpha"]), /Category values/);
+});

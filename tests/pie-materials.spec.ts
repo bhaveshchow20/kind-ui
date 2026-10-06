@@ -764,3 +764,130 @@ test("material filter includes explicit native thick stroke and meaningful visua
     fullPage: true,
   });
 });
+
+for (const accessor of [false, true]) {
+  test(`selective glow follows category identity and native ownership (${accessor ? "accessor" : "field"})`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    await page.goto(`${url}/?selective${accessor ? "&accessor" : ""}`);
+    const response = await page.request.get(new URL("./ssr.json", page.url()).href);
+    expect(response.ok()).toBeTruthy();
+    const shells: { field: string; accessor: string } = await response.json();
+    const markup = shells[accessor ? "accessor" : "field"];
+    expect(typeof markup).toBe("string");
+    expect(markup).not.toContain("pie-halo");
+    const charts = page.getByRole("application", { name: /Selective glow/ });
+    const first = charts.first();
+    const halos = first.locator('[data-kind-ui="pie-halo"]');
+    const allocation = page.getByRole("table", { name: "Glow allocation" });
+    await expect(halos).toHaveCount(2);
+    const native = await geometry(first);
+    const table = await allocation.innerText();
+    const glowing = () =>
+      first
+        .locator('[data-kind-ui="pie-halo"] + g path')
+        .evaluateAll((paths) => paths.map((p) => p.getAttribute("data-category")));
+    expect(await glowing()).toEqual(["beta", "alpha"]);
+    await page.getByRole("button", { name: "Toggle glow" }).click();
+    await expect(halos).toHaveCount(0);
+    expect(await geometry(first)).toEqual(native);
+    expect(await allocation.innerText()).toBe(table);
+    await page.getByRole("button", { name: "Toggle glow" }).click();
+    await expect(halos).toHaveCount(2);
+    for (const finish of ["paper", "clay", "glow", "plain"]) {
+      await page.getByLabel("Base finish").selectOption(finish);
+      await expect(first.locator('[data-kind-ui="pie-material"]')).toHaveCount(
+        finish === "plain" ? 2 : 4,
+      );
+      await expect(halos).toHaveCount(finish === "glow" ? 4 : 2);
+      expect(await geometry(first)).toEqual(native);
+    }
+    await page.getByRole("button", { name: "Reorder glow" }).click();
+    await expect(halos).toHaveCount(2);
+    expect(await glowing()).toEqual(["beta", "alpha"]);
+    await page.getByRole("button", { name: "Filter beta" }).click();
+    await expect(halos).toHaveCount(1);
+    expect(await glowing()).toEqual(["alpha"]);
+    await page.getByRole("button", { name: "Filter beta" }).click();
+    await expect(halos).toHaveCount(2);
+    // Each chart/series/sector owns its resource IDs after filtering/remounting.
+    const ids = await charts
+      .locator('[data-kind-ui="pie-material"] filter')
+      .evaluateAll((nodes) => nodes.map((n) => n.id));
+    expect(ids).toHaveLength(4);
+    expect(new Set(ids).size).toBe(4);
+    expect(
+      await charts
+        .locator('[data-kind-ui="pie-halo"] use')
+        .evaluateAll((nodes) =>
+          nodes.every((n) => document.getElementById((n.getAttribute("href") ?? "").slice(1))),
+        ),
+    ).toBe(true);
+    const paint = await geometry(first);
+    expect(await sectorContrast(first)).toBeGreaterThanOrEqual(3);
+    await page.screenshot({ path: info.outputPath("selective-glow-light.png") });
+    await page.getByRole("button", { name: "Theme", exact: true }).click();
+    expect(await geometry(first)).toEqual(paint);
+    expect(await sectorContrast(first)).toBeGreaterThanOrEqual(3);
+    await page.screenshot({ path: info.outputPath("selective-glow-dark.png") });
+    await page.emulateMedia({ forcedColors: "active" });
+    await expect(allocation).toContainText("beta");
+    await expect(allocation).toContainText("40");
+    await page.emulateMedia({ forcedColors: "none" });
+    for (const owner of ["filter", "shape"]) {
+      await page.getByLabel("Paint owner").selectOption(owner);
+      await expect(halos).toHaveCount(0);
+    }
+    await page.getByLabel("Paint owner").selectOption("none");
+    await expect(halos).toHaveCount(2);
+    // Real pointer/keyboard inspection remains native and does not select glow IDs.
+    await first.locator('[data-category="beta"]').first().click();
+    await expect(page.getByLabel("Glow event")).toHaveText("beta");
+    await first.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(first).toBeFocused();
+    const tooltip = page
+      .locator('[data-kind-ui="chart"]')
+      .first()
+      .locator('[data-kind-ui="chart-tooltip"]');
+    await expect(tooltip).toContainText("Alpha");
+    await expect(tooltip).toContainText("60");
+    await page.getByLabel("Paint owner").selectOption("active");
+    await first.locator('[data-category="beta"]').first().hover();
+    await expect(first.locator('[data-host-shape][data-category="beta"]')).not.toHaveCount(0);
+    await expect(halos).toHaveCount(1);
+    expect(await allocation.innerText()).toContain("60");
+    expect(errors).toEqual([]);
+  });
+}
+
+async function sectorContrast(chart: Locator) {
+  return chart.locator('[data-kind-ui="pie-sector"]').evaluateAll((paths) => {
+    const luminance = (color: string) => {
+      const channels = color
+        .match(/[\d.]+/g)
+        ?.slice(0, 3)
+        .map(Number);
+      if (channels?.length !== 3) throw new Error(`Unresolved color: ${color}`);
+      const linear = channels.map((value) => {
+        const c = value / 255;
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return (linear[0] ?? 0) * 0.2126 + (linear[1] ?? 0) * 0.7152 + (linear[2] ?? 0) * 0.0722;
+    };
+    return Math.min(
+      ...paths.map((path) => {
+        const root = path.closest('[data-kind-ui="chart"]');
+        if (!root) throw new Error("Missing Pie background");
+        const fill = luminance(getComputedStyle(path).fill);
+        const background = luminance(getComputedStyle(root).backgroundColor);
+        return (Math.max(fill, background) + 0.05) / (Math.min(fill, background) + 0.05);
+      }),
+    );
+  });
+}
