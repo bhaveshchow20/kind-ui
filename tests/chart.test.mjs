@@ -84,6 +84,7 @@ test("direct and namespace imports expose the same public components", () => {
     "Brush",
     "CartesianGrid",
     "Cell",
+    "ChartBackgroundPattern",
     "ComboChart",
     "Curve",
     "Dot",
@@ -147,6 +148,7 @@ test("direct and namespace imports expose the same public components", () => {
     "createHeatmapScale",
     "createPercentStack",
     "formatPercent",
+    "defineChartBackgroundPattern",
     "getRelativeCoordinate",
     "prepareSankeyData",
     "useChartHeight",
@@ -1845,4 +1847,35 @@ test("normalized tooltip preserves raw formatting, explicit formatter precedence
   assert.doesNotMatch(renderPercent({}, NaN), /NaN|%/);
   assert.doesNotMatch(renderPercent({}, undefined), /%/);
   assert.match(renderPercent({}, -0.5), /-50% \(1 tasks\)/);
+});
+
+// These run both in workspace tests and the isolated packed public consumer.
+test("custom backgrounds are reusable frozen definitions, with no shared registry", () => {
+  const renderTile = ({ size, color }) => h("circle", { r: size / 4, fill: color });
+  const a = Chart.defineChartBackgroundPattern(renderTile);
+  const b = Chart.defineChartBackgroundPattern(renderTile);
+  assert.notEqual(a, b);
+  assert.ok(Object.isFrozen(a));
+  assert.equal(a.render, renderTile);
+  assert.match(renderSvg(a.render({ size: 16, color: "red", idPrefix: "local" })), /r="4"/);
+  assert.throws(() => Chart.defineChartBackgroundPattern(null), /render function/);
+});
+
+test("background validation runs even before plot geometry is available", () => {
+  for (const props of [
+    { pattern: "unknown" },
+    { pattern: null },
+    { pattern: {} },
+    { pattern: "waves", size: 0 },
+    { pattern: "waves", size: Infinity },
+    { pattern: "waves", opacity: -1 },
+    { pattern: "waves", opacity: 1.1 },
+    { pattern: "waves", opacity: NaN },
+  ]) {
+    assert.throws(
+      () => renderSvg(h(Chart.ChartBackgroundPattern, props)),
+      /ChartBackgroundPattern/,
+    );
+  }
+  assert.equal(renderSvg(h(Chart.ChartBackgroundPattern, { pattern: "pinpoints" })), "");
 });

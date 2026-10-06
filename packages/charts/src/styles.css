@@ -474,3 +474,11 @@
     }
   }
 }
+
+@layer kind-ui {
+  [data-kind-ui="chart-background-pattern"],
+  [data-kind-ui="chart-background-pattern"] * {
+    /* biome-ignore lint/complexity/noImportantStyles: Decorative custom tiles must not intercept chart pointers. */
+    pointer-events: none !important;
+  }
+}

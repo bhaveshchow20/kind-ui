@@ -301,3 +301,34 @@ void (<Chart.AreaSeries dataKey="count" pattern={{ kind: "unknown" }} />);
 
 void (<Chart.BarSeries dataKey="count" pattern={{ kind: "dots" }} />);
 void (<Chart.BarSeries dataKey="count" pattern={{ kind: "lines" }} />);
+
+const customBackground = Chart.defineChartBackgroundPattern(({ size, color, idPrefix }) => (
+  <g id={`${idPrefix}-tile`}>
+    <circle cx={size / 2} cy={size / 2} r={1} fill={color} />
+  </g>
+));
+void (<Chart.ChartBackgroundPattern pattern={customBackground} opacity={0} size={24} />);
+void (
+  <Chart.LineChart
+    config={config}
+    data={[]}
+    xDataKey="count"
+    aria-label="Decorated"
+    backgroundPattern={{ pattern: "waves", opacity: 0.2 }}
+  />
+);
+// @ts-expect-error Background decoration is not a series fill encoding.
+void (<Chart.ChartBackgroundPattern pattern={{ kind: "hatch" }} />);
+void (
+  <Chart.LineChart
+    config={config}
+    data={[]}
+    aria-label="Explicit"
+    // @ts-expect-error Explicit children replace generated decoration too.
+    backgroundPattern={{ pattern: "pinpoints" }}
+  >
+    {null}
+  </Chart.LineChart>
+);
+// @ts-expect-error Native composition uses the part, not generated options.
+void (<Chart.LineChart data={[]} backgroundPattern={{ pattern: "waves" }} />);
