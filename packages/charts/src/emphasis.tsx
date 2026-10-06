@@ -13,6 +13,8 @@ import {
   useState,
 } from "react";
 
+import { useChartInteraction } from "./chart-interaction.js";
+
 /** Identity is data-owned. scope separates independent plots within one Root. */
 export type EmphasisTarget = {
   kind: "category" | "sector" | "series";
@@ -111,6 +113,10 @@ export function EmphasisProvider({
   );
 }
 
+export function useOptionalEmphasisActions() {
+  return use(Actions);
+}
+
 export function useEmphasisActions() {
   const value = use(Actions);
   if (!value) throw new Error("Emphasis marks must be inside Root");
@@ -124,7 +130,8 @@ function useEmphasisState() {
 }
 
 /** Explicit contract for custom and portaled marks; apply factor to an extra paint wrapper. */
-export function useEmphasis(target: EmphasisTarget, enabled = true) {
+export function useEmphasis(target: EmphasisTarget, enabled = true, persistent = true) {
+  const interaction = useChartInteraction();
   const state = useEmphasisState();
   const owner = useId();
   const { kind, key, scope, seriesKey } = target;
@@ -137,7 +144,19 @@ export function useEmphasis(target: EmphasisTarget, enabled = true) {
     active === null ||
     (active.kind === "series" ? active.key === seriesKey : identity(active) === identity(target));
   const applicable = active?.kind === "series" ? seriesKey !== undefined : active?.scope === scope;
-  const dimmed = enabled && state.enabled && applicable && !related;
+  const persistentKey =
+    interaction.kind === "series"
+      ? seriesKey
+      : target.kind === "sector" || target.kind === "category"
+        ? key
+        : undefined;
+  const persistentDimmed =
+    persistent &&
+    persistentKey !== undefined &&
+    interaction.selected !== null &&
+    persistentKey !== interaction.selected;
+  const dimmed =
+    enabled && (active !== null ? state.enabled && applicable && !related : persistentDimmed);
   const enter = useCallback(
     (channel: Channel) => {
       if (enabled && state.enabled) {
@@ -157,6 +176,8 @@ export function useEmphasis(target: EmphasisTarget, enabled = true) {
 export type EmphasisMarkProps = Omit<ComponentPropsWithRef<"g">, "target"> & {
   target: EmphasisTarget;
   enabled?: boolean | undefined;
+  /** Explicitly bind persistent Root focus paint for custom marks. */
+  persistent?: boolean | undefined;
   /** Adapter input from the engine, used only during native keyboard inspection. */
   keyboardActive?: boolean | undefined;
 };
@@ -165,11 +186,12 @@ export type EmphasisMarkProps = Omit<ComponentPropsWithRef<"g">, "target"> & {
 export function EmphasisMark({
   target,
   enabled = true,
+  persistent = true,
   keyboardActive = false,
   children,
   ...props
 }: EmphasisMarkProps) {
-  const emphasis = useEmphasis(target, enabled);
+  const emphasis = useEmphasis(target, enabled, persistent);
   // Only depend on identity and the engine's inspection edge, not the changing paint state.
   useLayoutEffect(() => {
     if (keyboardActive) emphasis.enter("keyboard");

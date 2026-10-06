@@ -81,7 +81,10 @@ export type ConfiguredLineChartProps<DataPoint = DefaultDataPoint> = Omit<
   data: readonly DataPoint[];
   "aria-describedby"?: string;
   legend?: false | LegendProps;
-  rootProps?: Omit<RootProps, "config" | "children" | "visibleSeries" | "onVisibleSeriesChange">;
+  rootProps?: Omit<
+    RootProps,
+    "config" | "children" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange"
+  >;
 } & Name &
   Visibility &
   (GeneratedParts<DataPoint> | ExplicitParts);

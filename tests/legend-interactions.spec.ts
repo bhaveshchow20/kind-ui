@@ -1,0 +1,330 @@
+import { expect, test } from "./browser";
+
+for (const family of ["bar", "line", "area", "scatter", "radar", "pie", "radial"]) {
+  test(`${family}: mark keyboard and legend share one persistent focus owner`, async ({ page }) => {
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
+    const scope = page.getByRole("region", { name: "Shared interactions" });
+    await scope.getByLabel("Interaction family").selectOption(family);
+    const selected = scope.locator("[data-interaction-selected]");
+    await expect(selected).toHaveText("first");
+    const second =
+      family === "pie" || family === "radial"
+        ? scope.getByRole("button", { name: "Highlight second", exact: true })
+        : scope.getByRole("button", { name: "Highlight Second", exact: true });
+    await second.focus();
+    await page.keyboard.press("Enter");
+    await expect(selected).toHaveText("second");
+    await expect(scope.locator("[data-interaction-changes]")).toHaveText("1");
+    await scope.getByRole("button", { name: "Second", exact: true }).click();
+    await expect(selected).toHaveText("none");
+    await expect(scope.locator("[data-interaction-changes]")).toHaveText("2");
+    await second.focus();
+    await page.keyboard.press("Space");
+    await expect(selected).toHaveText("second");
+    await expect(second).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(selected).toHaveText("none");
+    await expect(scope.locator("[data-interaction-changes]")).toHaveText("4");
+    await expect(scope.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
+      "Highlight cleared.",
+    );
+  });
+}
+
+test("last eligible hide is rejected once; stale config does not count", async ({ page }) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared interactions" });
+  await scope.getByRole("button", { name: "Switch mode" }).click();
+  await scope.getByRole("button", { name: "First", exact: true }).click();
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("1");
+  await expect(scope.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
+    "At least one item must remain visible.",
+  );
+  await expect(scope.getByRole("button", { name: "Second", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});
+
+for (const controlled of [false, true]) {
+  test(`${controlled ? "controlled restores" : "uncontrolled clears"} invalid IDs without change events`, async ({
+    page,
+  }) => {
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
+    const scope = page.getByRole("region", { name: "Shared interactions" });
+    if (controlled) await scope.getByRole("button", { name: "Switch owner" }).click();
+    await scope.getByRole("button", { name: "Remove first identity" }).click();
+    await expect(scope.locator("[data-interaction-selected]")).toHaveText("none");
+    await scope.getByRole("button", { name: "Remove first identity" }).click();
+    await expect(scope.locator("[data-interaction-selected]")).toHaveText(
+      controlled ? "first" : "none",
+    );
+    await expect(scope.locator("[data-interaction-changes]")).toHaveText("0");
+  });
+}
+
+test("consumer handler, before-hook and Escape can veto; hover never changes persistent focus", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared interactions" });
+  const selected = scope.locator("[data-interaction-selected]");
+  await scope.getByRole("button", { name: "Second", exact: true }).hover();
+  await expect(selected).toHaveText("first");
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("0");
+  await scope.getByRole("button", { name: "Toggle consumer veto" }).click();
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await scope.getByRole("button", { name: "First", exact: true }).focus();
+  await page.keyboard.press("Escape");
+  await expect(selected).toHaveText("first");
+  await scope.getByRole("button", { name: "Toggle consumer veto" }).click();
+  await scope.getByRole("button", { name: "Toggle before veto" }).click();
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await expect(selected).toHaveText("first");
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("0");
+  await scope.getByRole("button", { name: "Toggle before veto" }).click();
+  await scope.getByRole("button", { name: "Toggle transient emphasis" }).click();
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await expect(selected).toHaveText("second");
+});
+
+for (const family of ["pie", "radial"]) {
+  test(`${family} category hiding removes rows and retains keyed focus after reorder`, async ({
+    page,
+  }) => {
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
+    const scope = page.getByRole("region", { name: "Shared interactions" });
+    await scope.getByLabel("Interaction family").selectOption(family);
+    await scope.getByRole("button", { name: "Reorder identities" }).click();
+    await expect(scope.locator("[data-interaction-selected]")).toHaveText("first");
+    await scope.getByRole("button", { name: "Switch mode" }).click();
+    await scope.getByRole("button", { name: "First", exact: true }).click();
+    await expect(scope.locator(".recharts-pie-sector, .recharts-radial-bar-sector")).toHaveCount(1);
+    await scope.getByRole("button", { name: "First", exact: true }).click();
+    await expect(scope.locator(".recharts-pie-sector, .recharts-radial-bar-sector")).toHaveCount(2);
+  });
+}
+
+async function alpha(locator: import("@playwright/test").Locator) {
+  return locator.evaluate((node) => {
+    let opacity = 1;
+    for (
+      let current: Element | null = node;
+      current instanceof SVGElement;
+      current = current.parentElement
+    )
+      opacity *= Number(getComputedStyle(current).opacity);
+    return opacity;
+  });
+}
+
+test("persistent paint survives keyboard activation with transient emphasis disabled; inspection restores it", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared interactions" });
+  await scope.getByRole("button", { name: "Toggle transient emphasis" }).click();
+  const first = scope.locator(".recharts-bar-rectangle path").first();
+  const secondControl = scope.getByRole("button", { name: "Highlight Second", exact: true });
+  await secondControl.focus();
+  await page.keyboard.press("Enter");
+  expect(await alpha(first)).toBeCloseTo(0.28);
+  await scope.getByRole("button", { name: "Toggle transient emphasis" }).click();
+  const firstLegend = scope.getByRole("button", { name: "First", exact: true });
+  await firstLegend.hover();
+  expect(await alpha(first)).toBe(1);
+  await scope.getByRole("heading").hover();
+  expect(await alpha(first)).toBeCloseTo(0.28);
+  await expect(scope.locator("[data-interaction-selected]")).toHaveText("second");
+});
+
+test("native pointer callback tuple runs first and veto preserves focus", async ({ page }) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared interactions" });
+  await scope.getByRole("button", { name: "Toggle consumer veto" }).click();
+  const mark = scope
+    .locator("[data-kind-ui=series-interaction][data-series=second] .recharts-bar-rectangle path")
+    .first();
+  await mark.click();
+  await expect(scope.locator("[data-interaction-clicks]")).toHaveText("1");
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("0");
+  await scope.getByRole("button", { name: "Toggle consumer veto" }).click();
+  await mark.click();
+  await expect(scope.locator("[data-interaction-clicks]")).toHaveText("2");
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("1");
+  await expect(scope.locator("[data-interaction-selected]")).toHaveText("second");
+});
+
+test("native-hidden peers cannot permit hiding the last painted series", async ({ page }) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared interactions" });
+  await scope.getByRole("button", { name: "Switch mode" }).click();
+  await scope.getByRole("button", { name: "Toggle native hide" }).click();
+  await scope.getByRole("button", { name: "First", exact: true }).click();
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("0");
+  await expect(scope.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
+    "At least one item must remain visible.",
+  );
+});
+
+test("Pie filtering re-normalizes full arc and keeps original blue Cell", async ({ page }) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared interactions" });
+  await scope.getByLabel("Interaction family").selectOption("pie");
+  await scope.getByRole("button", { name: "Switch mode" }).click();
+  await scope.getByRole("button", { name: "First", exact: true }).click();
+  const sector = scope.locator("[data-kind-ui=pie-sector]");
+  await expect(sector).toHaveCount(1);
+  await expect(sector).toHaveAttribute("data-sector-span", "360");
+  await expect(sector).toHaveAttribute("fill", "#0000ff");
+  await expect(scope.getByRole("button", { name: "Toggle second", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});
+
+test("Sankey node/legend share focus, preserve identity payload, and include incident endpoints", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared Sankey focus" });
+  const third = scope.locator("[data-kind-ui=sankey-focus-mark][data-node=third]");
+  const first = scope.locator("[data-kind-ui=sankey-focus-mark][data-node=first]");
+  expect(await alpha(third.locator("rect"))).toBeCloseTo(0.28);
+  await third.locator("rect").click();
+  await expect(scope.locator("[data-interaction-selected]")).toHaveText("third");
+  await expect(scope.locator("[data-sankey-payload]")).toHaveText("node/third/click");
+  await expect(scope.locator("[data-sankey-changes]")).toHaveText("1");
+  await scope.locator("[data-sankey-changes]").hover();
+  expect(await alpha(first.locator("rect"))).toBeCloseTo(0.28);
+  expect(
+    await alpha(scope.locator("[data-kind-ui=sankey-focus-mark][data-node=fourth] rect")),
+  ).toBe(1);
+  await scope.getByRole("button", { name: "Third", exact: true }).click();
+  await expect(scope.locator("[data-interaction-selected]")).toHaveText("none");
+  await expect(scope.locator("[data-sankey-changes]")).toHaveText("2");
+});
+
+test("legacy Scatter series-owned data keeps controlled visibility interactive", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Legacy Scatter visibility" });
+  const first = scope.getByRole("button", { name: "First", exact: true });
+  await first.click();
+  await expect(first).toHaveAttribute("aria-pressed", "false");
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await expect(scope.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
+    "At least one item must remain visible.",
+  );
+});
+
+test("one hidden duplicate cannot invalidate another available mark of the same identity", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Duplicate series availability" });
+  await scope.getByRole("button", { name: "First", exact: true }).click();
+  await expect(scope.locator("[data-duplicate-changes]")).toHaveText("1");
+  await expect(scope.getByRole("button", { name: "First", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await expect(scope.locator("[data-duplicate-changes]")).toHaveText("1");
+  await expect(scope.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
+    "At least one item must remain visible.",
+  );
+});
+
+for (const family of ["pie", "radial"]) {
+  test(`${family}: bound tooltip inspection preserves consumer shape`, async ({ page }) => {
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
+    const scope = page.getByRole("region", { name: "Shared interactions" });
+    await scope.getByLabel("Interaction family").selectOption(family);
+    await scope.getByRole("button", { name: "Toggle custom shape" }).click();
+    const marks = scope.locator("[data-custom-sector=consumer]");
+    await expect(marks).toHaveCount(2);
+    const point = await marks.first().evaluate((node: SVGPathElement) => {
+      const box = node.getBBox();
+      const matrix = node.getScreenCTM();
+      for (let x = box.x + 2; x < box.x + box.width; x += 3) {
+        for (let y = box.y + 2; y < box.y + box.height; y += 3) {
+          if (node.isPointInFill(new DOMPoint(x, y))) {
+            const screen = new DOMPoint(x, y).matrixTransform(matrix ?? undefined);
+            return { x: screen.x, y: screen.y };
+          }
+        }
+      }
+      throw new Error("No painted sector point");
+    });
+    await page.mouse.move(point.x, point.y);
+    await expect(marks).toHaveCount(2);
+    await expect(scope.locator("[data-interaction-selected]")).toHaveText("first");
+    await expect(scope.locator("[data-interaction-changes]")).toHaveText("0");
+  });
+}
+
+test("touch activation uses the same owner and emits one change per tap", async ({ browser }) => {
+  const context = await browser.newContext({
+    hasTouch: true,
+    viewport: { width: 1000, height: 900 },
+  });
+  const page = await context.newPage();
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared interactions" });
+  const legend = scope.getByRole("button", { name: "Second", exact: true });
+  await legend.tap();
+  await expect(scope.locator("[data-interaction-selected]")).toHaveText("second");
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("1");
+  await legend.tap();
+  await expect(scope.locator("[data-interaction-selected]")).toHaveText("none");
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("2");
+  await context.close();
+});
+
+test("configured LineChart owns config and shares focus through existing rootProps", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Configured interactions" });
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await expect(scope.locator("[data-configured-selected]")).toHaveText("second");
+  await expect(scope.locator("[data-configured-changes]")).toHaveText("1");
+  const mark = scope.getByRole("button", { name: "Highlight Second", exact: true });
+  await mark.focus();
+  await page.keyboard.press("Enter");
+  await expect(scope.locator("[data-configured-selected]")).toHaveText("none");
+  await expect(scope.locator("[data-configured-changes]")).toHaveText("2");
+});

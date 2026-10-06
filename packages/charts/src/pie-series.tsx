@@ -14,8 +14,9 @@ import {
   useState,
 } from "react";
 import { Cell, Pie, type PieSectorShapeProps, Sector } from "recharts";
-import { type CategoryKey, categoryCells } from "./category-cells.js";
+import { type CategoryKey, categoryCells, filterCategoryRows } from "./category-cells.js";
 import { useChart } from "./chart-context.js";
+import { useChartInteraction, useInteractionFocus } from "./chart-interaction.js";
 import { EmphasisMark } from "./emphasis.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
@@ -27,11 +28,24 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
 > & {
   /** Opt-in category colors from Root.config; requires explicit series data. */
   categoryKey?: CategoryKey<DataPoint> | undefined;
+  /** Explicitly share this Pie's category identities and actions with Root/Legend. */
+  interactionBinding?: "root";
   /** Finish on default native sectors; custom shapes, filters and CSS transforms keep ownership. */
   material?: PieMaterial | undefined;
   /** Stable sector identity; defaults to the native nameKey value. */
   emphasisKey?: ((payload: unknown) => string | number | undefined) | undefined;
 };
+
+type SectorPaintProps = Omit<
+  PieSectorShapeProps,
+  "isActive" | "index" | "data-recharts-item-index" | "data-recharts-item-id"
+> &
+  Partial<
+    Pick<
+      PieSectorShapeProps,
+      "isActive" | "index" | "data-recharts-item-index" | "data-recharts-item-id"
+    >
+  >;
 
 // Recharts also supports Cell props as data when neither the chart nor Pie supplies rows.
 function cellProps(children: ReactNode): Record<string, unknown>[] {
@@ -63,11 +77,13 @@ function EntranceSector({
   emphasisKey,
   scope,
   enabled,
+  interactionKey,
   seriesStartAngle,
   seriesEndAngle,
   ...props
-}: PieSectorShapeProps & {
+}: SectorPaintProps & {
   material: PieMaterial;
+  interactionKey?: ((payload: unknown) => string) | undefined;
   emphasisKey?: PieSeriesProps["emphasisKey"];
   scope: string;
   enabled: boolean;
@@ -75,8 +91,19 @@ function EntranceSector({
   seriesEndAngle: number;
 }) {
   const keyboard = useChartKeyboard();
+  const interaction = useChartInteraction();
   const { reveal, progress, direction } = use(PieMotion);
-  const semantic = emphasisKey ? emphasisKey(props.payload) : props.name;
+  const semantic = interactionKey
+    ? interactionKey(props.payload)
+    : emphasisKey
+      ? emphasisKey(props.payload)
+      : props.name;
+  const interactive =
+    interactionKey !== undefined &&
+    interaction.interactive &&
+    interaction.markActivation &&
+    interaction.eligible.includes(String(semantic));
+  const focusRef = useInteractionFocus(String(semantic), interactive);
   const generatedId = useId();
   const sourceId = `kind-ui-pie-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "_")}-paint`;
   const maskId = `${sourceId}-alpha`;
@@ -219,12 +246,41 @@ function EntranceSector({
   } = props;
   return (
     <EmphasisMark
+      ref={focusRef}
+      data-interaction-focus-key={interactive ? String(semantic) : undefined}
+      persistent={interactionKey !== undefined}
       enabled={
         enabled &&
         (emphasisKey !== undefined ? semantic !== undefined : typeof semantic === "string")
       }
       target={{ kind: "sector", key: String(semantic), scope, seriesKey: String(semantic) }}
-      keyboardActive={keyboard && props.isActive}
+      keyboardActive={keyboard && props.isActive === true}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={
+        interactive
+          ? `${interaction.mode === "focus" ? "Highlight" : "Toggle"} ${String(semantic)}`
+          : undefined
+      }
+      aria-pressed={
+        interactive
+          ? interaction.mode === "focus"
+            ? interaction.selected === semantic
+            : true
+          : undefined
+      }
+      onKeyDown={(event) => {
+        if (
+          interactive &&
+          event.target === event.currentTarget &&
+          !event.defaultPrevented &&
+          (event.key === "Enter" || event.key === " ")
+        ) {
+          if (!event.repeat)
+            interaction.activate({ kind: "category", key: String(semantic) }, "mark", event);
+          event.preventDefault();
+        }
+      }}
     >
       <g ref={markGroup}>
         {maskEntrance && (
@@ -332,6 +388,7 @@ function EntranceSector({
                 {...(className !== undefined ? { className } : {})}
                 {...(cornerRadius !== undefined ? { cornerRadius } : {})}
                 data-kind-ui="pie-sector"
+                data-sector-span={props.endAngle - props.startAngle}
                 data-reveal={maskEntrance ? "on" : "off"}
               />
             </g>
@@ -346,20 +403,56 @@ function EntranceSector({
 export function PieSeries<DataPoint = unknown, Value = unknown>(
   props: PieSeriesProps<DataPoint, Value>,
 ) {
-  const { material = "plain", emphasisKey, categoryKey, ...nativeProps } = props;
+  const {
+    material = "plain",
+    emphasisKey,
+    categoryKey,
+    interactionBinding,
+    ...nativeProps
+  } = props;
+  const interaction = useChartInteraction();
+  if (
+    interactionBinding &&
+    (interaction.kind !== "category" || categoryKey === undefined || props.data === undefined)
+  )
+    throw new Error(
+      "PieSeries Root interaction binding requires category-kind Root, categoryKey and explicit data",
+    );
+  const filtered =
+    interactionBinding && props.data && categoryKey !== undefined
+      ? filterCategoryRows(props.data, categoryKey, interaction.visible, props.children)
+      : undefined;
+  const data = filtered?.data ?? props.data;
+  const originalChildren = filtered?.children ?? props.children;
+  const resolveInteractionKey = useCallback(
+    (payload: unknown): string => {
+      if (typeof categoryKey === "function") return categoryKey(payload as DataPoint);
+      if (
+        categoryKey !== undefined &&
+        typeof payload === "object" &&
+        payload !== null &&
+        Object.hasOwn(payload, categoryKey)
+      )
+        return String((payload as Record<string, unknown>)[categoryKey]);
+      throw new Error("PieSeries interaction requires a stable category key");
+    },
+    [categoryKey],
+  );
+  const interactionKey = interactionBinding ? resolveInteractionKey : undefined;
   const { config, paints } = useChart();
   const children =
     categoryKey === undefined
-      ? props.children
-      : categoryCells(props.data, categoryKey, config, paints, props.children, props.fill);
+      ? originalChildren
+      : categoryCells(data, categoryKey, config, paints, originalChildren, props.fill);
   const seriesId = useId();
   const { invalidate, emphasisScope } = useLineInteraction();
   const scope = `${emphasisScope}/${seriesId}`;
   const sectorShape = useCallback(
-    (sector: PieSectorShapeProps) => (
+    (sector: SectorPaintProps) => (
       <EntranceSector
         {...sector}
         material={material}
+        interactionKey={interactionKey}
         scope={scope}
         emphasisKey={emphasisKey}
         enabled={props.activeShape === undefined && props.inactiveShape === undefined}
@@ -371,6 +464,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
       material,
       scope,
       emphasisKey,
+      interactionKey,
       props.activeShape,
       props.inactiveShape,
       props.startAngle,
@@ -411,8 +505,24 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   return (
     <Pie<DataPoint, Value>
       {...nativeProps}
+      {...(data !== undefined ? { data } : {})}
+      onClick={(...args) => {
+        props.onClick?.(...args);
+        if (interactionKey)
+          interaction.activate(
+            { kind: "category", key: interactionKey(args[0].payload) },
+            "mark",
+            args[2],
+          );
+      }}
       stroke={props.stroke ?? "none"}
       shape={props.shape ?? sectorShape}
+      {...(interactionBinding && props.shape === undefined && props.activeShape === undefined
+        ? { activeShape: sectorShape }
+        : {})}
+      {...(interactionBinding && props.shape === undefined && props.inactiveShape === undefined
+        ? { inactiveShape: sectorShape }
+        : {})}
       isAnimationActive={false}
     >
       {children}

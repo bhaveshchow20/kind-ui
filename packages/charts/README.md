@@ -126,7 +126,7 @@ const config = {
 </Root>
 ```
 
-Config patterns supply implicit bar paint and legend swatches. `BarSeries.pattern` overrides config; `"none"` opts out. For an explicit override, compose `FillPatternSwatch` through `Legend.children` with the same pattern and color. Icons and native legend symbols take precedence; `hideIcon` requests solid swatches. Explicit series `fill` (including gradients), `style.fill`, and `Cell` fills retain native ownership. Custom shapes or custom active bars disable automatic series patterns; compose your own SVG paint for those shapes. Existing material/filter rules apply independently.
+Config patterns supply implicit bar paint and legend swatches. `BarSeries.pattern` overrides config; `false` opts out. For an explicit override, compose `FillPatternSwatch` through `Legend.children` with the same pattern and color. Icons and native legend symbols take precedence; `hideIcon` requests solid swatches. Explicit series `fill` (including gradients), `style.fill`, and `Cell` fills retain native ownership. Custom shapes or custom active bars disable automatic series patterns; compose your own SVG paint for those shapes. Existing material/filter rules apply independently.
 
 Grouped/stacked and horizontal/vertical charts share the same user-space tile; changing orientation does not rotate the encoding automatically. The base ink keeps the configured CSS color. Second ink defaults to `CanvasText`, following the host's `color-scheme`; choose contrasting theme-aware colors deliberately. With the stylesheet, forced colors use `Canvas`/`CanvasText` while retaining the pattern geometry. Patterns are decorative, static and unchanged by reduced motion or print; printer color settings can still affect contrast. Keep text labels and a data alternative, and verify the chosen ink combination in print and each theme.
 
@@ -231,7 +231,7 @@ const config = {
 </Root>;
 ```
 
-Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also accept these patterns through their `config`. Omit `stackId` for unstacked explicit areas. Explicit composition can instead use `pattern={{ kind: "hatch", angle: 45 }}` on each `AreaSeries`. Series patterns override configuration; `pattern="none"` opts out. Explicit `fill` (including gradients), `style.fill`, and custom `shape` retain ownership and disable automatic pattern resources. With a configured gradient, pattern tiles use the solid first-stop `--color-key` ink; unpatterned areas use the complete chart-local gradient. Explicit stroke still supplies the pattern base when provided. Native `fillOpacity`, filters, geometry and existing material rules remain in effect. Configuration drives default legend swatches; when overriding a series pattern, compose `FillPatternSwatch` through `Legend.children` with the matching pattern/color. Icon/symbol priority and theme/forced-colors behavior follow the shared bar pattern contract above. The mounted packed area fixture at `static.html?patterns` demonstrates overrides, materials, stacking, themes and two independent charts.
+Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also accept these patterns through their `config`. Omit `stackId` for unstacked explicit areas. Explicit composition can instead use `pattern={{ kind: "hatch", angle: 45 }}` on each `AreaSeries`. Series patterns override configuration; `pattern={false}` opts out. Explicit `fill` (including gradients), `style.fill`, and custom `shape` retain ownership and disable automatic pattern resources. With a configured gradient, pattern tiles use the solid first-stop `--color-key` ink; unpatterned areas use the complete chart-local gradient. Explicit stroke still supplies the pattern base when provided. Native `fillOpacity`, filters, geometry and existing material rules remain in effect. Configuration drives default legend swatches; when overriding a series pattern, compose `FillPatternSwatch` through `Legend.children` with the matching pattern/color. Icon/symbol priority and theme/forced-colors behavior follow the shared bar pattern contract above. The mounted packed area fixture at `static.html?patterns` demonstrates overrides, materials, stacking, themes and two independent charts.
 
 The existing Next integration fixture additionally checks real server-rendered
 color resource IDs through hydration and a theme change.
@@ -273,7 +273,7 @@ Projection fills use the existing `FillPattern` seam and native Rectangle shape
 props, so Brush slices cannot shift identity as positional Cells would. Unselected rows retain
 configured/explicit series patterns and full gradient paints. Projection tiles
 use the configured theme's solid first stop (`--color-key`), the same documented
-fallback as ordinary Bar/Area pattern tiles. `pattern="none"` disables automatic
+fallback as ordinary Bar/Area pattern tiles. `pattern={false}` disables automatic
 projection paint. Explicit series `fill`/`style.fill`, native shape options,
 custom shapes/active shapes and any explicit Cell composition retain paint
 ownership. Datum `fill`/`style.fill` also prevents automatic projection paint for
@@ -428,3 +428,57 @@ Scatter, Histogram and BoxPlot charts using the native Cartesian plot area.
 Generated configuration is available only for LineChart. Polar, Pie, Sankey,
 Heatmap and ActivityRings are outside this contract. Fixed-size chart SSR retains
 the existing native empty shell; this part does not create server plot geometry.
+## Legend and mark interactions
+
+Visibility remains the default. Opt into persistent focus with one Root owner:
+
+```tsx
+<Root config={config} interaction={{
+  kind: "series", mode: "focus", eligibleKeys: ["revenue", "costs"],
+  markActivation: "matching-legend", defaultSelected: "revenue",
+  onSelectionChange: (key) => console.log(key),
+}}>
+  <BarChart data={rows} width={400} height={240}>
+    <BarSeries dataKey="revenue" /><BarSeries dataKey="costs" />
+  </BarChart>
+  <Legend emphasis="series" />
+</Root>
+```
+
+`interaction` binds a `kind` (`series`, `category`, or focus-only `node`) to a
+settled `eligibleKeys` snapshot. Include hidden Root items and zero values; exclude
+removed, filtered, unavailable, or native-hidden items. Config-only entries do not
+satisfy the last-visible guard. New bindings require that snapshot; native series
+registration provides compatibility eligibility for existing controlled legends.
+`mode` defaults to `visibility`; `markActivation` defaults to `none`.
+
+Focus accepts either `selected` with required `onSelectionChange`, or
+`defaultSelected` with an optional callback. Persistent focus works with
+`emphasis="none"`. Repeated activation or Escape clears it; transient inspection
+never writes selection. Invalid uncontrolled selection clears without a callback.
+An invalid controlled ID paints no selection and resumes if that ID becomes valid.
+Visibility uses existing `visibleSeries`/`onVisibleSeriesChange`, or opt-in
+`defaultVisibleSeries`. An externally empty visibility value remains valid.
+
+For categories, use `kind: "category"` and explicitly set
+`interactionBinding="root"` on `PieSeries` or `RadialBarChart`, with `categoryKey`
+and explicit data. Stable unique string keys must match Root config. Hiding filters
+original rows and their positional Cells before layout; Pie re-normalizes angles.
+ActivityRings forwards this binding through category `rootProps.interaction`.
+For Sankey node focus, bind both `SankeyChart` and `SankeyLegend` to a Root with
+`kind: "node", mode: "focus"`; incident links/endpoints remain emphasized.
+Sankey visibility, link selection, and persistent Heatmap cell selection are excluded.
+
+`useChartInteraction()` exposes `selected`, `visible`, `mode`, `kind`, `eligible`,
+`activate({kind, key}, "legend" | "mark", event?)`, and `reset(event?)` for custom
+controls. Actions return whether accepted. Consumer native handlers run first;
+`preventDefault()` or `onBeforeInteraction(request)` returning `false` vetoes.
+Reset also runs the before hook. Accepted actions emit one mode-specific callback
+and one scoped polite announcement. Rejected last-hide actions announce the reason
+without changing state or calling the change callback. Custom renderers retain
+ownership and can use the helper to bind their own controls/paint.
+
+Radar's existing local `selection="series"` remains a compatibility path, also
+independent of transient emphasis. Combining it or its selection callbacks with
+Root focus throws: choose one owner. Selection ownership stays fixed while mounted;
+remount when changing controlled/uncontrolled ownership.

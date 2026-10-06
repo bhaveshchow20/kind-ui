@@ -206,6 +206,13 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
           interrupt();
         }}
         onKeyDownCapture={(event) => {
+          if (
+            (event.key === "Enter" || event.key === " " || event.key === "Escape") &&
+            (event.target as Element).closest(
+              '[data-kind-ui="emphasis-mark"][role="button"], [data-kind-ui="series-interaction"][role="button"]',
+            )
+          )
+            return;
           setKeyboard(event.key !== "Escape");
           interrupt();
           setMotionReady(true);

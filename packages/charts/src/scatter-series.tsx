@@ -18,6 +18,7 @@ import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { ScatterMotion } from "./scatter-chart.js";
 import { type ScatterMaterial, ScatterMaterialSymbol } from "./scatter-material.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 export type ScatterSeriesProps = Omit<ComponentProps<typeof Scatter>, "isAnimationActive"> & {
   /** Series identity is separate from numeric axis data keys. Required for controlled visibility. */
@@ -131,21 +132,25 @@ export function ScatterSeries({
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("ScatterSeries requires seriesKey for controlled non-string dataKey");
+  const interaction = useSeriesInteraction(key, hidden, hide === true, props.data);
   const color = fill ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.scatter}>
-      <g data-kind-ui="scatter-fade">
-        <Scatter
-          {...props}
-          {...(shapes.shape !== undefined ? { shape: shapes.shape } : {})}
-          {...(shapes.activeShape !== undefined ? { activeShape: shapes.activeShape } : {})}
-          id={id}
-          hide={hidden}
-          {...(color !== undefined ? { fill: color } : {})}
-          zIndex={0}
-          isAnimationActive={false}
-        />
-      </g>
+      <SeriesInteractionLayer seriesKey={key} hidden={hidden}>
+        <g data-kind-ui="scatter-fade">
+          <Scatter
+            {...props}
+            onClick={interaction.compose(props.onClick)}
+            {...(shapes.shape !== undefined ? { shape: shapes.shape } : {})}
+            {...(shapes.activeShape !== undefined ? { activeShape: shapes.activeShape } : {})}
+            id={id}
+            hide={hidden}
+            {...(color !== undefined ? { fill: color } : {})}
+            zIndex={0}
+            isAnimationActive={false}
+          />
+        </g>
+      </SeriesInteractionLayer>
     </ZIndexLayer>
   );
 }
