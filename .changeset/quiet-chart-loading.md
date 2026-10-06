@@ -2,4 +2,4 @@
 "@kind-ui/charts": patch
 ---
 
-Add controlled loading and loadingLabel props to line and bar charts, preserving mounted chart layout and state, announcing loading, and respecting reduced motion.
+Add loading and loadingLabel props across all chart families, with family-shaped decorative skeleton variations, reduced-motion support, accessible busy state and native entrance on completion. Preserve mounted chart layout and consumer composition.

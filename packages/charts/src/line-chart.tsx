@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useEmphasisActions } from "./emphasis.js";
+import { ChartLoadingSkeleton, type LoadingFamily, useLoadingSeed } from "./loading-skeleton.js";
 
 export type LineChartProps = ComponentProps<typeof EngineLineChart> & {
   loading?: boolean | undefined;
@@ -103,6 +104,7 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
   categoryEmphasis = false,
   loading,
   loadingLabel,
+  loadingSkeleton,
   chartProps: props,
   children = props.children,
 }: {
@@ -115,7 +117,9 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
   categoryEmphasis?: boolean;
   loading?: boolean | undefined;
   loadingLabel?: string | undefined;
+  loadingSkeleton?: LoadingFamily;
 }) {
+  const loadingSeed = useLoadingSeed(loading);
   const { onMouseMove, onMouseLeave } = props;
   const emphasis = useEmphasisActions();
   const frame = useRef<HTMLDivElement>(null);
@@ -171,11 +175,16 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         return next;
       });
   }, []);
+  const previousLoading = useRef(loading);
+  const completing = previousLoading.current === true && loading !== true;
+  useLayoutEffect(() => {
+    previousLoading.current = loading;
+  });
   const invalidate = useCallback(() => {
     setPointer(null);
     setMotionReady(false);
-    interrupt();
-  }, [interrupt]);
+    if (!completing) interrupt();
+  }, [interrupt, completing]);
   const chart = (
     <EngineChart
       {...props}
@@ -203,6 +212,9 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
     >
       <Lifecycle data={props.data} invalidate={invalidate} />
       {children}
+      {loading && loadingSkeleton && (
+        <ChartLoadingSkeleton family={loadingSkeleton} seed={loadingSeed} />
+      )}
     </EngineChart>
   );
   return (
@@ -276,6 +288,7 @@ export function LineChart({ loading, loadingLabel, ...props }: LineChartProps) {
       engine={EngineLineChart}
       loading={loading}
       loadingLabel={loadingLabel}
+      loadingSkeleton="line"
     />
   );
 }

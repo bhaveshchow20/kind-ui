@@ -1450,3 +1450,60 @@ test("bar-backed charts inherit chart-owned loading without fabricating data", (
     assert.match(html, /aria-busy="true"/);
   }
 });
+
+test("all fourteen chart families expose deterministic loading SSR without native prop leaks", () => {
+  const scale = Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#112233"] });
+  const families = [
+    ["line", Chart.LineChart, { data: [] }],
+    ["area", Chart.AreaChart, { data: [] }],
+    ["bar", Chart.BarChart, { data: [] }],
+    ["combo", Chart.ComboChart, { data: [] }],
+    ["scatter", Chart.ScatterChart, { data: [] }],
+    ["waterfall", Chart.WaterfallChart, { data: [] }],
+    ["histogram", Chart.HistogramChart, { bins: [], measure: "count" }],
+    ["box-plot", Chart.BoxPlotChart, { data: [] }],
+    ["pie", Chart.PieChart, {}],
+    ["radar", Chart.RadarChart, { data: [] }],
+    ["radial-bar", Chart.RadialBarChart, { data: [] }],
+    ["activity-rings", Chart.ActivityRings, { config: {}, rings: [] }],
+    ["heatmap", Chart.HeatmapChart, { rows: [], columns: [], data: [], scale }],
+    ["sankey", Chart.SankeyChart, { data: { nodes: [], links: [] } }],
+  ];
+  assert.equal(families.length, 14);
+  for (const [family, Component, props] of families) {
+    const view = (loading) => {
+      const element = h(
+        Component,
+        {
+          ...props,
+          ...(family === "heatmap" ? {} : { width: 320, height: 240 }),
+          loading,
+          loadingLabel: `Loading ${family}`,
+          "aria-label": `${family} data`,
+        },
+        ...(family === "heatmap" ? [h(Chart.HeatmapGrid, { caption: "Matrix" })] : []),
+      );
+      return family === "activity-rings" || family === "heatmap" || family === "sankey"
+        ? element
+        : h(Root, { config: {} }, element);
+    };
+    const pending = render(view(true));
+    assert.equal(render(view(true)), pending, `${family}: deterministic server markup`);
+    assert.match(pending, /aria-busy="true"/, `${family}: pending state`);
+    assert.match(pending, /role="status"/, `${family}: status region`);
+    assert.ok(pending.includes(`Loading ${family}`), `${family}: meaningful status text`);
+    assert.doesNotMatch(
+      pending,
+      /\s(?:loading|loadingLabel|loadingSeed|loadingSkeleton)="/,
+      `${family}: loading props consumed before native DOM`,
+    );
+    const ready = render(view(false));
+    assert.match(ready, /aria-busy="false"/, `${family}: completion state`);
+    assert.ok(!ready.includes(`Loading ${family}`), `${family}: status clears on completion`);
+    assert.doesNotMatch(
+      ready,
+      /\sinert=""|kind-ui-loading-chart-pending/,
+      `${family}: loaded empty data stays available`,
+    );
+  }
+});
