@@ -1,14 +1,19 @@
 "use client";
 
+import { motion, useTransform } from "motion/react";
 import { type CSSProperties, useId, useState } from "react";
 import { usePlotArea } from "recharts";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
+import {
+  LoadingAngularBand,
+  type LoadingAnimation,
+  LoadingProgress,
+  useLoadingProgress,
+} from "./loading-motion.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
 import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
 
-// Designed illustration coordinates, not values or geometry sampled from host data.
-const lineDesign =
-  "M 12 185 C 42 185 46 116 82 116 S 126 154 160 154 S 204 65 242 65 S 286 108 322 108 S 366 30 404 30 S 448 96 486 96 S 522 62 550 62 S 580 142 628 112";
+const cartesianEase = [0.25, 0.1, 0.25, 1] as const;
 
 export type LoadingFamily =
   | "line"
@@ -30,10 +35,10 @@ function Design({ family, seed }: { family: LoadingFamily; seed: number }) {
   if (family === "line")
     return (
       <path
-        d={linePaths[seed % linePaths.length]}
+        d={linePath(seed)}
         fill="none"
         stroke="currentColor"
-        strokeWidth="3"
+        strokeWidth="2.25"
         vectorEffect="non-scaling-stroke"
         strokeLinecap="round"
       />
@@ -50,12 +55,28 @@ function Design({ family, seed }: { family: LoadingFamily; seed: number }) {
   return <CartesianLoadingDesign family={family} seed={seed} />;
 }
 
-const linePaths = [
-  lineDesign,
-  "M12 160 C45 160 52 60 92 60 S145 100 182 100 S224 190 264 190 S306 118 344 118 S390 155 430 155 S480 42 520 42 S585 105 628 80",
-  "M12 110 C48 110 60 170 98 170 S152 55 196 55 S248 100 286 100 S334 40 372 40 S428 150 472 150 S536 78 574 78 S608 115 628 115",
-  "M12 190 C56 190 60 140 102 140 S160 178 202 178 S254 75 296 75 S344 118 386 118 S442 32 484 32 S542 70 584 70 S614 45 628 45",
+const lineProfiles = [
+  [212, 188, 155, 174, 105, 81, 45, 24],
+  [28, 62, 42, 110, 132, 178, 158, 215],
+  [38, 75, 151, 220, 203, 139, 63, 28],
+  [195, 43, 174, 26, 210, 73, 186, 42],
 ];
+function linePath(seed: number) {
+  const profile = lineProfiles[seed % 4] ?? lineProfiles[0] ?? [];
+  const points = profile.map((y, index) => [
+    12 + index * 88,
+    Math.max(12, Math.min(225, y + ((Math.imul(seed + index * 11, 2654435761) >>> 0) % 23) - 11)),
+  ]);
+  let d = `M ${points[0]?.join(" ")}`;
+  for (let i = 1; i < points.length; i++) {
+    const previous = points[i - 1];
+    const point = points[i];
+    if (!previous || !point) continue;
+    const middle = ((previous[0] ?? 0) + (point[0] ?? 0)) / 2;
+    d += ` C ${middle} ${previous[1]} ${middle} ${point[1]} ${point.join(" ")}`;
+  }
+  return d;
+}
 /** Fixed decorative design; native plot bounds supply only its available surface. */
 export function LoadingSkeletonSurface({
   family,
@@ -65,6 +86,7 @@ export function LoadingSkeletonSurface({
   x,
   y,
   style,
+  animation,
 }: {
   family: LoadingFamily;
   seed?: number;
@@ -73,6 +95,7 @@ export function LoadingSkeletonSurface({
   x?: number;
   y?: number;
   style?: CSSProperties;
+  animation?: LoadingAnimation | undefined;
 }) {
   const id = useId().replace(/:/g, "");
   const seed =
@@ -80,11 +103,66 @@ export function LoadingSkeletonSurface({
     Array.from(id).reduce((value, char) => (value * 31 + char.charCodeAt(0)) >>> 0, 7);
   const [pulse, setPulse] = useState(0);
   const designSeed = seed + pulse;
+  const isCartesian = [
+    "line",
+    "area",
+    "bar",
+    "waterfall",
+    "histogram",
+    "box-plot",
+    "combo",
+  ].includes(family);
+  const duration = Math.max(
+    0,
+    animation?.revealDurationMs ??
+      (family === "scatter" ? 700 : family === "heatmap" ? 800 : family === "sankey" ? 450 : 1000),
+  );
+  const easing = animation?.revealEasing ?? (isCartesian ? cartesianEase : "easeOut");
+  const part = (kind: "lineReveal" | "areaReveal" | "barReveal") => {
+    const option = animation?.[kind];
+    return {
+      duration:
+        family !== "combo" || option === false
+          ? 0
+          : Math.max(0, option?.revealDurationMs ?? duration),
+      easing: option === false ? easing : (option?.revealEasing ?? easing),
+    };
+  };
+  const line = part("lineReveal");
+  const area = part("areaReveal");
+  const bar = part("barReveal");
+  const cycleDuration =
+    family === "combo" ? Math.max(line.duration, area.duration, bar.duration) : duration;
+  const cycleMs = cycleDuration * 2 + 200;
+  const startDelay = cycleMs * 0.12;
+  const { progress, reduced } = useLoadingProgress(pulse, duration, easing, startDelay);
+  const lineMotion = useLoadingProgress(pulse, line.duration, line.easing, startDelay);
+  const areaMotion = useLoadingProgress(pulse, area.duration, area.easing, startDelay);
+  const barMotion = useLoadingProgress(pulse, bar.duration, bar.easing, startDelay);
+  const horizontalProgress = family === "combo" ? lineMotion.progress : progress;
+  const verticalProgress = family === "combo" ? barMotion.progress : progress;
+  const horizontalReduced = family === "combo" ? lineMotion.reduced : reduced;
+  const verticalReduced = family === "combo" ? barMotion.reduced : reduced;
+  const horizontal = animation?.layout === "vertical";
+  const position = useTransform(horizontalProgress, (value) => (value - 0.5) * 640);
+  const verticalPosition = useTransform(verticalProgress, (value) => 240 - value * 240);
+  const radius = useTransform(progress, (value) => value * 132);
+  const areaPosition = useTransform(areaMotion.progress, (value) => (value - 0.5) * 640);
+  const barPosition = useTransform(barMotion.progress, (value) => (value - 0.5) * 640);
+  const pulseStyle = {
+    ...style,
+    ...(cycleDuration === 0 ? { animation: "none" } : {}),
+    "--kind-ui-loading-cycle": `${cycleMs}ms`,
+    "--kind-ui-loading-horizontal": `url(#${id}-horizontal)`,
+    "--kind-ui-loading-vertical": `url(#${id}-vertical)`,
+    "--kind-ui-loading-area": `url(#${id}-area)`,
+  } as CSSProperties;
   const polar = ["pie", "radar", "radial-bar", "activity-rings"].includes(family);
   return (
     <svg
       data-kind-ui="chart-loading-skeleton"
       data-family={family}
+      data-loading-layout={animation?.layout}
       data-loading-motion={
         family === "line" || family === "area"
           ? "sweep"
@@ -112,42 +190,184 @@ export function LoadingSkeletonSurface({
       y={y}
       width={width}
       height={height}
-      style={style}
-      viewBox="0 0 640 240"
-      preserveAspectRatio={polar ? "xMidYMid meet" : "none"}
+      style={pulseStyle}
+      data-reveal-duration={duration}
+      viewBox={polar ? "200 0 240 240" : "0 0 640 240"}
+      preserveAspectRatio={polar || family === "scatter" ? "xMidYMid meet" : "none"}
     >
       <defs>
+        <linearGradient id={`${id}-soft-x`}>
+          <stop offset="0" stopColor="white" stopOpacity="0" />
+          <stop offset="0.35" stopColor="white" />
+          <stop offset="0.75" stopColor="white" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id={`${id}-soft-y`} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor="white" stopOpacity="0" />
+          <stop offset="0.35" stopColor="white" />
+          <stop offset="0.75" stopColor="white" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
+        </linearGradient>
+        <mask
+          id={`${id}-horizontal`}
+          maskUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="640"
+          height="240"
+        >
+          {horizontalReduced ? (
+            <rect width="640" height="240" fill="white" />
+          ) : (
+            <motion.rect
+              data-kind-ui="loading-leading-window"
+              x={position}
+              y="0"
+              width="320"
+              height="240"
+              fill={`url(#${id}-soft-x)`}
+            />
+          )}
+        </mask>
+        <mask id={`${id}-vertical`} maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="240">
+          {verticalReduced ? (
+            <rect width="640" height="240" fill="white" />
+          ) : (
+            <motion.rect
+              data-kind-ui="loading-leading-window"
+              x="0"
+              y={verticalPosition}
+              width="640"
+              height="120"
+              fill={`url(#${id}-soft-y)`}
+            />
+          )}
+        </mask>
+        <mask id={`${id}-area`} maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="240">
+          {areaMotion.reduced ? (
+            <rect width="640" height="240" fill="white" />
+          ) : (
+            <motion.rect
+              x={areaPosition}
+              y="0"
+              width="320"
+              height="240"
+              fill={`url(#${id}-soft-x)`}
+            />
+          )}
+        </mask>
+        <mask
+          id={`${id}-bar-horizontal`}
+          maskUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="640"
+          height="240"
+        >
+          {barMotion.reduced ? (
+            <rect width="640" height="240" fill="white" />
+          ) : (
+            <motion.rect
+              x={barPosition}
+              y="0"
+              width="320"
+              height="240"
+              fill={`url(#${id}-soft-x)`}
+            />
+          )}
+        </mask>
+        <mask id={`${id}-radial`} maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="240">
+          <defs>
+            <filter
+              id={`${id}-soft-radius`}
+              filterUnits="userSpaceOnUse"
+              x="-32"
+              y="-32"
+              width="704"
+              height="304"
+            >
+              <feGaussianBlur stdDeviation="6" />
+            </filter>
+          </defs>
+          {reduced ? (
+            <rect width="640" height="240" fill="white" />
+          ) : (
+            <motion.circle
+              data-kind-ui="loading-leading-window"
+              cx="320"
+              cy="120"
+              r={radius}
+              fill="none"
+              stroke="white"
+              strokeWidth="96"
+              filter={`url(#${id}-soft-radius)`}
+            />
+          )}
+        </mask>
         <mask id={`${id}-angular`} maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="240">
-          <circle
-            data-kind-ui="loading-angular"
-            cx="320"
-            cy="120"
-            r="120"
-            fill="none"
-            stroke="white"
-            strokeWidth="240"
-            pathLength="100"
-            strokeDasharray="100"
-          />
+          {reduced ? (
+            <rect width="640" height="240" fill="white" />
+          ) : (
+            [0, 18, 36, 54, 72, 90, 108, 126].map((angle) => (
+              <LoadingAngularBand
+                key={angle}
+                progress={progress}
+                index={angle / 18}
+                direction={animation?.direction ?? "clockwise"}
+              />
+            ))
+          )}
         </mask>
       </defs>
       <g
         data-kind-ui="loading-design"
         opacity="0.48"
-        mask={polar && family !== "radar" ? `url(#${id}-angular)` : undefined}
+        mask={
+          family === "radar"
+            ? `url(#${id}-radial)`
+            : polar
+              ? `url(#${id}-angular)`
+              : family === "line" || family === "area"
+                ? `url(#${id}-horizontal)`
+                : family === "bar" ||
+                    family === "waterfall" ||
+                    family === "histogram" ||
+                    family === "box-plot"
+                  ? `url(#${id}-${horizontal ? "horizontal" : "vertical"})`
+                  : undefined
+        }
       >
-        <Design family={family} seed={designSeed} />
+        <LoadingProgress value={{ progress, reduced }}>
+          <g
+            transform={
+              horizontal && ["bar", "waterfall", "histogram", "box-plot"].includes(family)
+                ? "matrix(0 .375 -2.6666667 0 640 0)"
+                : undefined
+            }
+          >
+            <Design family={family} seed={designSeed} />
+          </g>
+        </LoadingProgress>
       </g>
     </svg>
   );
 }
-export function ChartLoadingSkeleton({ family, seed }: { family: LoadingFamily; seed: number }) {
+export function ChartLoadingSkeleton({
+  family,
+  seed,
+  animation,
+}: {
+  family: LoadingFamily;
+  seed: number;
+  animation?: LoadingAnimation | undefined;
+}) {
   const plot = usePlotArea();
   if (!plot || plot.width <= 0 || plot.height <= 0) return null;
   return (
     <LoadingSkeletonSurface
       family={family}
       seed={seed}
+      animation={animation}
       x={plot.x}
       y={plot.y}
       width={plot.width}

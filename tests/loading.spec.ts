@@ -36,7 +36,15 @@ const motions: Record<string, string> = {
 };
 const skeletonSelector = '[data-kind-ui="chart-loading-skeleton"]';
 const design = (card: Locator) =>
-  card.locator('[data-kind-ui="loading-design"]').evaluate((element) => element.innerHTML);
+  card.locator('[data-kind-ui="loading-design"]').evaluate((element) => {
+    const copy = element.cloneNode(true) as Element;
+    for (const node of copy.querySelectorAll("*")) {
+      node.removeAttribute("style");
+      node.removeAttribute("stroke-dasharray");
+      node.removeAttribute("stroke-dashoffset");
+    }
+    return copy.innerHTML;
+  });
 
 test("all public families show decorative skeletons and suspend chart inspection", async ({
   page,
@@ -72,6 +80,7 @@ test("all public families show decorative skeletons and suspend chart inspection
 test("design stays stable through data and resize, then refreshes between pulses", async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/loading.html");
   await expect(page.locator(skeletonSelector)).toHaveCount(14);
   const pause = await page.addStyleTag({
@@ -225,35 +234,309 @@ test("Sankey and short Heatmap retain native bounds through loading and replay",
   expect(await heatSkeleton.boundingBox()).toEqual(placeholderBounds);
 });
 
-test("pulse geometry swaps at zero opacity and family motion becomes static under reduced motion", async ({
+test("three normal-speed pulses give every family visibly distinct geometry at invisible boundaries", async ({
+  page,
+}) => {
+  test.setTimeout(25000);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/loading.html");
+  await expect(page.locator(skeletonSelector)).toHaveCount(14);
+  await page.locator(skeletonSelector).evaluateAll((elements) => {
+    for (const surface of elements) {
+      const design = surface.querySelector('[data-kind-ui="loading-design"]');
+      if (!design) throw new Error("Missing family design");
+      const geometry = () => {
+        const clone = design.cloneNode(true) as Element;
+        for (const node of clone.querySelectorAll("*")) {
+          node.removeAttribute("style");
+          node.removeAttribute("stroke-dasharray");
+          node.removeAttribute("stroke-dashoffset");
+        }
+        return clone.innerHTML;
+      };
+      const metric = () => {
+        const family = surface.getAttribute("data-family");
+        if (family === "heatmap")
+          return Array.from(design.querySelectorAll("rect"), (node) =>
+            Number(node.getAttribute("opacity")),
+          );
+        if (family === "scatter")
+          return Array.from(design.querySelectorAll("circle"), (node) =>
+            Number(node.getAttribute("cy")),
+          );
+        if (family === "radial-bar" || family === "activity-rings")
+          return Array.from(design.querySelectorAll("path"), (node) => node.getTotalLength());
+        if (family === "radar")
+          return (
+            (design.querySelector("polygon:last-child")?.getAttribute("points") ?? "")
+              .match(/-?\d+(?:\.\d+)?/g)
+              ?.map(Number) ?? []
+          );
+        if (["bar", "combo", "histogram", "box-plot", "waterfall", "sankey"].includes(family ?? ""))
+          return Array.from(design.querySelectorAll("rect"), (node) => [
+            Number(node.getAttribute("y")),
+            Number(node.getAttribute("height")),
+          ]).flat();
+        return Array.from(
+          design.querySelectorAll("path"),
+          (node) => (node.getAttribute("d") ?? "").match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [],
+        ).flat();
+      };
+      let prior = geometry();
+      const samples = [
+        { geometry: prior, metric: metric(), opacity: Number(getComputedStyle(surface).opacity) },
+      ];
+      surface.setAttribute("data-pulse-samples", JSON.stringify(samples));
+      const observer = new MutationObserver(() => {
+        const current = geometry();
+        if (current === prior) return;
+        prior = current;
+        samples.push({
+          geometry: current,
+          metric: metric(),
+          opacity: Number(getComputedStyle(surface).opacity),
+        });
+        surface.setAttribute("data-pulse-samples", JSON.stringify(samples));
+        if (samples.length >= 4) observer.disconnect();
+      });
+      observer.observe(design, { subtree: true, childList: true, attributes: true });
+    }
+  });
+  await expect
+    .poll(
+      async () =>
+        page
+          .locator(skeletonSelector)
+          .evaluateAll((elements) =>
+            elements.every(
+              (element) =>
+                JSON.parse(element.getAttribute("data-pulse-samples") ?? "[]").length >= 4,
+            ),
+          ),
+      { timeout: 15000 },
+    )
+    .toBe(true);
+  const observations = await page.locator(skeletonSelector).evaluateAll((elements) =>
+    elements.map((element) => ({
+      family: element.getAttribute("data-family"),
+      samples: JSON.parse(element.getAttribute("data-pulse-samples") ?? "[]") as {
+        geometry: string;
+        metric: number[];
+        opacity: number;
+      }[],
+    })),
+  );
+  for (const { family, samples } of observations) {
+    expect(new Set(samples.map((sample) => sample.geometry)).size, family ?? "").toBe(4);
+    for (let index = 1; index < samples.length; index++) {
+      const previous = samples[index - 1];
+      const current = samples[index];
+      if (!previous || !current) throw new Error("Incomplete pulse observations");
+      expect(current.opacity, `${family} swaps invisibly`).toBeLessThanOrEqual(0.001);
+      if (current.metric.length !== previous.metric.length) continue;
+      const rms = Math.sqrt(
+        current.metric.reduce(
+          (sum, value, slot) => sum + (value - (previous.metric[slot] ?? value)) ** 2,
+          0,
+        ) / current.metric.length,
+      );
+      expect(rms, `${family} profile is more than small jitter`).toBeGreaterThan(
+        family === "heatmap" ? 0.12 : 10,
+      );
+    }
+  }
+});
+
+test("native motion uses moving soft windows and reduced motion removes recurring movement", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/loading.html");
-  const skeleton = page.locator('[data-family-card="line"]').locator(skeletonSelector);
-  await expect(skeleton).toHaveCount(1);
-  await skeleton.evaluate((element) => {
-    const design = element.querySelector('[data-kind-ui="loading-design"]');
-    if (!design) throw new Error("Missing design");
-    const observer = new MutationObserver(() => {
-      element.setAttribute("data-observed-swap-opacity", getComputedStyle(element).opacity);
-      observer.disconnect();
-    });
-    observer.observe(design, { subtree: true, childList: true, attributes: true });
-  });
-  await expect(skeleton).toHaveAttribute("data-observed-swap-opacity", "0", { timeout: 4000 });
-  const targets = [
-    ['[data-family-card="bar"] [data-loading-motion="grow"]', "kind-ui-loading-grow"],
-    ['[data-family-card="pie"] [data-kind-ui="loading-angular"]', "kind-ui-loading-angular"],
-    ['[data-family-card="radar"] [data-kind-ui="loading-radar-motion"]', "kind-ui-loading-radar"],
-    ['[data-family-card="heatmap"] [data-motion="heatmap-cell"]', "kind-ui-loading-cell-wave"],
-    ['[data-family-card="sankey"] [data-motion="sankey-flow"]', "kind-ui-loading-flow"],
-  ] as const;
-  for (const [selector, animation] of targets)
-    await expect(page.locator(selector).first()).toHaveCSS("animation-name", animation);
+  const line = page.locator('[data-family-card="line"]').locator(skeletonSelector);
+  const window = line.locator('[data-kind-ui="loading-leading-window"]').first();
+  await expect(window).toHaveCount(1);
+  const before = Number(await window.getAttribute("x"));
+  await expect
+    .poll(async () => Number(await window.getAttribute("x")))
+    .toBeGreaterThan(before + 80);
+  const stops = await line.locator('linearGradient[id$="-soft-x"] stop').evaluateAll((elements) =>
+    elements.map((element) => ({
+      offset: element.getAttribute("offset"),
+      opacity: element.getAttribute("stop-opacity"),
+    })),
+  );
+  expect(stops).toEqual([
+    { offset: "0", opacity: "0" },
+    { offset: "0.35", opacity: null },
+    { offset: "0.75", opacity: null },
+    { offset: "1", opacity: "0" },
+  ]);
+  // The bounded gradient moves as a whole: the trailing position becomes transparent
+  // while the leading edge advances, rather than accumulating already revealed marks.
+  const live = await window.evaluate((element) => ({
+    x: Number(element.getAttribute("x")),
+    width: Number(element.getAttribute("width")),
+  }));
+  expect(live.width).toBe(320);
+  expect(live.x).toBeGreaterThan(before);
+  const trail = await window.evaluate(
+    (element) =>
+      new Promise<{ leadAdvance: number; beforeAlpha: number; afterAlpha: number }>(
+        (resolve, reject) => {
+          const started = performance.now();
+          let leading: { x: number; alpha: number } | null = null;
+          const tick = () => {
+            const x = Number(element.getAttribute("x"));
+            const t = (320 - x) / 320;
+            const alpha =
+              t <= 0 || t >= 1 ? 0 : t < 0.35 ? t / 0.35 : t > 0.75 ? (1 - t) / 0.25 : 1;
+            if (x >= 100 && x <= 220 && alpha > 0.9) leading = { x, alpha };
+            if (leading && x >= 300 && x < 500) {
+              resolve({
+                leadAdvance: x - leading.x,
+                beforeAlpha: leading.alpha,
+                afterAlpha: alpha,
+              });
+              return;
+            }
+            if (leading && x < leading.x) leading = null;
+            if (performance.now() - started > 5000) {
+              reject(new Error("No moving trail observed"));
+              return;
+            }
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        },
+      ),
+  );
+  expect(trail.leadAdvance).toBeGreaterThan(80);
+  expect(trail.beforeAlpha).toBeGreaterThan(0.9);
+  expect(trail.afterAlpha).toBeLessThan(0.25);
+  const duration = await line.getAttribute("data-reveal-duration");
+  expect(duration).toBe("1100");
+  const barMask = await page
+    .locator('[data-family-card="bar"] [data-kind-ui="loading-design"]')
+    .getAttribute("mask");
+  expect(barMask).toMatch(/-vertical\)$/);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  for (const [selector] of targets) {
-    await expect(page.locator(selector).first()).toHaveCSS("animation-name", "none");
-    await expect(page.locator(selector).first()).toHaveCSS("transform", "none");
+  await expect(page.locator('[data-kind-ui="loading-leading-window"]')).toHaveCount(0);
+  for (const surface of await page.locator(skeletonSelector).all())
+    await expect(surface).toHaveCSS("animation-name", "none");
+  const marks = page.locator('[data-kind-ui="loading-mark"]');
+  for (const mark of await marks.all()) await expect(mark).toHaveCSS("opacity", "1");
+});
+
+test("Combo resolves all native mask resources and Sankey paths advance then erase", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/loading.html");
+  const combo = page.locator('[data-family-card="combo"]').locator(skeletonSelector);
+  for (const [part, suffix] of [
+    ["grow", "vertical"],
+    ["area-reveal", "area"],
+    ["reveal", "horizontal"],
+  ] as const) {
+    const mask = await combo.locator(`[data-loading-motion="${part}"]`).evaluate((element) => {
+      const css = getComputedStyle(element);
+      const resource = css.maskImage.match(/#([^"')]+)/)?.[1];
+      const target = resource ? document.getElementById(resource) : null;
+      return {
+        image: css.maskImage,
+        clip: css.clipPath,
+        type: target?.tagName,
+        id: target?.id,
+        window: target?.querySelector("rect")?.tagName,
+      };
+    });
+    expect(mask.type, `${part} resolves a mask, not an invalid clipPath`).toBe("mask");
+    expect(mask.id).toMatch(new RegExp(`-${suffix}$`));
+    expect(mask.window).toBe("rect");
+    expect(mask.clip).toBe("none");
   }
+  await page.getByRole("button", { name: "Load data" }).click();
+  await page.getByRole("button", { name: "Replay loading" }).click();
+  const flow = page
+    .locator('[data-family-card="sankey"] [data-kind-ui="loading-flow-window"]')
+    .first();
+  const observed = await flow.evaluate(
+    (element) =>
+      new Promise<{ peak: number; final: number; offset: number }>((resolve, reject) => {
+        const start = performance.now();
+        let peak = 0;
+        const tick = () => {
+          const dash = Number((element.getAttribute("stroke-dasharray") ?? "0").split(/[ ,]/)[0]);
+          const offset = Number(element.getAttribute("stroke-dashoffset"));
+          peak = Math.max(peak, dash);
+          if (peak > 0.7 && dash < 0.15 && offset < -0.8) {
+            resolve({ peak, final: dash, offset });
+            return;
+          }
+          if (performance.now() - start > 4000) {
+            reject(
+              new Error(`No path advance/erase: peak=${peak}, dash=${dash}, offset=${offset}`),
+            );
+            return;
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+  expect(observed.peak).toBeGreaterThan(0.7);
+  expect(observed.final).toBeLessThan(0.15);
+  expect(observed.offset).toBeLessThan(-0.8);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(flow).toHaveAttribute("stroke-dasharray", "1 1");
+  await expect(flow).toHaveAttribute("stroke-dashoffset", "0");
+  await expect(page.locator('[data-kind-ui="loading-leading-window"]')).toHaveCount(0);
+});
+
+test.describe("normal-speed visual recording", () => {
+  test("records all family pulses and the real loading exit", async ({ browser }, testInfo) => {
+    const context = await browser.newContext({
+      viewport: { width: 1600, height: 2200 },
+      reducedMotion: "no-preference",
+      recordVideo: { dir: testInfo.outputPath("video"), size: { width: 1600, height: 2200 } },
+    });
+    const page = await context.newPage();
+    test.setTimeout(30000);
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(`http://127.0.0.1:${4200 + offset}/loading.html`);
+    await expect(page.locator(skeletonSelector)).toHaveCount(14);
+    await page.addStyleTag({
+      content:
+        ".charts { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 1520px !important; } main { max-width: 1520px; margin: 8px auto; } article { padding: 12px; } h1 { font-size: 30px; margin: 6px 0; } nav { margin: 8px 0; } .family-note { margin-bottom: 3px; }",
+    });
+    await page
+      .locator("main")
+      .evaluate((element) => element.setAttribute("data-recording-session", "persistent"));
+    await page.waitForTimeout(620);
+    await page.screenshot({ path: testInfo.outputPath("all-family-pulse-1.png"), fullPage: true });
+    await page.waitForTimeout(2400);
+    await page.screenshot({ path: testInfo.outputPath("all-family-pulse-2.png"), fullPage: true });
+    await page.waitForTimeout(2400);
+    await page.screenshot({ path: testInfo.outputPath("all-family-pulse-3.png"), fullPage: true });
+    await page.waitForTimeout(10580);
+    await expect(page.locator("main")).toHaveAttribute("data-recording-session", "persistent");
+    await expect(page.getByRole("heading", { name: "A chart-shaped pause." })).toBeVisible();
+    expect(
+      await page
+        .locator(".charts")
+        .evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(" ").length),
+    ).toBe(4);
+    await page.screenshot({ path: testInfo.outputPath("all-family-loading.png"), fullPage: true });
+    await page.getByRole("button", { name: "Load data" }).click();
+    await expect(page.locator(skeletonSelector)).toHaveCount(0);
+    await page.waitForTimeout(1300);
+    await page.screenshot({ path: testInfo.outputPath("all-family-loaded.png"), fullPage: true });
+    await context.close();
+    const video = page.video();
+    if (video)
+      await testInfo.attach("normal-speed-all-family-loading", {
+        path: await video.path(),
+        contentType: "video/webm",
+      });
+  });
 });

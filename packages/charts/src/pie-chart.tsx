@@ -109,6 +109,7 @@ export function PieChart({
           loading={loading}
           loadingLabel={loadingLabel}
           loadingSkeleton="pie"
+          loadingAnimation={{ ...options, direction: animationDirection }}
           motionEnabled={enabled}
           interrupt={interrupt}
         >

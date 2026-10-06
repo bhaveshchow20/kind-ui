@@ -122,6 +122,7 @@ export function ComboChart({
           loading={loading}
           loadingLabel={loadingLabel}
           loadingSkeleton="combo"
+          loadingAnimation={{ ...options, ...(props.layout ? { layout: props.layout } : {}) }}
           engine={EngineComposedChart}
           chartProps={{
             ...props,

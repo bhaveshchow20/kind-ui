@@ -20,8 +20,8 @@ function Preview() {
       <p className="eyebrow">Kind UI / Line loading study</p>
       <h1>A chart-shaped pause.</h1>
       <p>
-        A decorative curve reveals horizontally, fades away, and returns with a fresh shape.
-        It never uses chart data. Reduced motion shows a static silhouette.
+        A decorative curve reveals horizontally, fades away, and returns with a fresh shape. It
+        never uses chart data. Reduced motion shows a static silhouette.
       </p>
       <nav aria-label="Preview controls">
         <button type="button" onClick={() => setLoading(true)}>

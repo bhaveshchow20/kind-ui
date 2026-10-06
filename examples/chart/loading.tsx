@@ -92,6 +92,7 @@ function Preview() {
   const [enabled, setEnabled] = useState(true);
   const [events, setEvents] = useState(0);
   const [shortHeatmap, setShortHeatmap] = useState(false);
+  const [visibleBars, setVisibleBars] = useState(Object.keys(config));
   const rows = empty ? emptyRows : data;
   const pending = { loading: enabled ? loading : undefined, loadingLabel: "Loading chart data" };
   const native = {
@@ -112,15 +113,28 @@ function Preview() {
       {children}
     </Card>
   );
-  const rooted = (children: ReactNode) => <Chart.Root config={config}>{children}</Chart.Root>;
+  const rooted = (children: ReactNode, interactive = false) =>
+    interactive ? (
+      <Chart.Root
+        config={config}
+        visibleSeries={visibleBars}
+        onVisibleSeriesChange={setVisibleBars}
+      >
+        {children}
+      </Chart.Root>
+    ) : (
+      <Chart.Root config={config}>{children}</Chart.Root>
+    );
   return (
     <main>
       <p className="eyebrow">Kind UI / all-family loading study</p>
       <h1>A chart-shaped pause.</h1>
       <p>
         All 14 public chart families use prebuilt silhouettes independent of input data. A soft
-        family-specific pulse introduces a fresh silhouette between pulses and gives way immediately
-        to the actual chart. Reduced motion keeps the skeleton static.
+        family-specific moving window fades in at its leading edge and fades away behind it. Each
+        pulse uses a visibly different prebuilt profile, then gives way immediately to the actual
+        chart. Timing follows the chart’s entrance settings. Reduced motion keeps the skeleton
+        static.
       </p>
       <nav aria-label="Preview controls">
         <button type="button" onClick={() => setLoading(true)}>
@@ -224,6 +238,7 @@ function Preview() {
                 Consumer clicks: <output>{events}</output>
               </p>
             </>,
+            true,
           ),
         )}
         {card(

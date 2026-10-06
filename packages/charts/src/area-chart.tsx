@@ -56,6 +56,7 @@ export function AreaChart({
         loading={loading}
         loadingLabel={loadingLabel}
         loadingSkeleton="area"
+        loadingAnimation={options}
         chartProps={{
           ...props,
           className: ["kind-ui-area-chart", props.className].filter(Boolean).join(" "),

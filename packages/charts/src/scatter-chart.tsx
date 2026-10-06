@@ -110,6 +110,7 @@ export function ScatterChart({
             loading={loading}
             loadingLabel={loadingLabel}
             loadingSkeleton="scatter"
+            loadingAnimation={options}
             chartProps={props}
             engine={EngineScatterChart}
             motionEnabled={enabled}
