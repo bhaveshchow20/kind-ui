@@ -168,5 +168,5 @@ existing non-intercepting behavior and reduced-motion policy. Radar's selection
 dots and Scatter's symbols have separate contracts and do not accept these
 series options. Bar, Pie and other shape families are outside this API.
 
-Run `npm run dev:chart` and visit `/point-markers.html` for the marker gallery and
+Run `npm run dev:chart` and visit `/recipes.html#point-markers` for the marker gallery and
 its accessible data table.
