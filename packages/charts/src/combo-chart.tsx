@@ -15,6 +15,7 @@ import { ComposedChart as EngineComposedChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
 import { BarLifecycle, BarMotion } from "./bar-chart.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
+import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 
 type Reveal = Pick<LineAnimation, "revealDurationMs" | "revealEasing">;
 /** Shared hover Motion, with independently configured family entrances. */
@@ -122,6 +123,7 @@ export function ComboChart({
           loading={loading}
           loadingLabel={loadingLabel}
           loadingSkeleton="combo"
+          loadingDesign={(seed) => <CartesianLoadingDesign family={"combo"} seed={seed} />}
           loadingAnimation={{ ...options, ...(props.layout ? { layout: props.layout } : {}) }}
           engine={EngineComposedChart}
           chartProps={{

@@ -14,6 +14,7 @@ import { RadarChart as EngineRadarChart, RadialBarChart as EngineRadialBarChart 
 import { type LineAnimation, MotionContext } from "./animation.js";
 import type { CategoryKey } from "./category-cells.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
+import { PolarLoadingDesign } from "./loading-polar-designs.js";
 import { type RadarSelectionProps, RadarSelectionProvider } from "./radar-interaction.js";
 import { RadialCategory } from "./radial-category.js";
 
@@ -173,6 +174,7 @@ export function RadarChart<DataPoint = unknown>({
               loading={loading}
               loadingLabel={loadingLabel}
               loadingSkeleton="radar"
+              loadingDesign={(seed) => <PolarLoadingDesign family={"radar"} seed={seed} />}
               loadingAnimation={options}
               chartProps={props}
               motionEnabled={enabled}
@@ -262,6 +264,7 @@ export function RadialBarChartFrame<DataPoint = unknown>({
               loading={loading}
               loadingLabel={loadingLabel}
               loadingSkeleton={skeletonFamily}
+              loadingDesign={(seed) => <PolarLoadingDesign family={skeletonFamily} seed={seed} />}
               loadingAnimation={{ ...options, direction: animationDirection }}
               chartProps={props}
               motionEnabled={enabled}

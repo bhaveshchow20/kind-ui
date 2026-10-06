@@ -24,7 +24,12 @@ import {
 import { useChart } from "./chart-context.js";
 import { useEmphasisActions } from "./emphasis.js";
 import type { LoadingAnimation } from "./loading-motion.js";
-import { ChartLoadingSkeleton, type LoadingFamily, useLoadingSeed } from "./loading-skeleton.js";
+import {
+  ChartLoadingSkeleton,
+  type LoadingDesign,
+  type LoadingFamily,
+  useLoadingSeed,
+} from "./loading-skeleton.js";
 
 export type LineChartProps = ComponentProps<typeof EngineLineChart> & {
   loading?: boolean | undefined;
@@ -107,6 +112,7 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
   loadingLabel,
   loadingSkeleton,
   loadingAnimation,
+  loadingDesign,
   chartProps: props,
   children = props.children,
 }: {
@@ -121,6 +127,7 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
   loadingLabel?: string | undefined;
   loadingSkeleton?: LoadingFamily;
   loadingAnimation?: LoadingAnimation | undefined;
+  loadingDesign?: LoadingDesign | undefined;
 }) {
   const loadingSeed = useLoadingSeed(loading);
   const { onMouseMove, onMouseLeave } = props;
@@ -220,6 +227,7 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
           family={loadingSkeleton}
           seed={loadingSeed}
           animation={loadingAnimation}
+          design={loadingDesign}
         />
       )}
     </EngineChart>

@@ -1,17 +1,14 @@
 "use client";
 
 import { motion, useTransform } from "motion/react";
-import { type CSSProperties, useId, useState } from "react";
+import { type CSSProperties, type ReactNode, useId, useState } from "react";
 import { usePlotArea } from "recharts";
-import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 import {
   LoadingAngularBand,
   type LoadingAnimation,
   LoadingProgress,
   useLoadingProgress,
 } from "./loading-motion.js";
-import { PolarLoadingDesign } from "./loading-polar-designs.js";
-import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
 
 const cartesianEase = [0.25, 0.1, 0.25, 1] as const;
 
@@ -31,29 +28,18 @@ export type LoadingFamily =
   | "heatmap"
   | "sankey";
 
-function Design({ family, seed }: { family: LoadingFamily; seed: number }) {
-  if (family === "line")
-    return (
-      <path
-        d={linePath(seed)}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.25"
-        vectorEffect="non-scaling-stroke"
-        strokeLinecap="round"
-      />
-    );
-  if (
-    family === "pie" ||
-    family === "radar" ||
-    family === "radial-bar" ||
-    family === "activity-rings"
-  )
-    return <PolarLoadingDesign family={family} seed={seed} />;
-  if (family === "heatmap" || family === "sankey")
-    return <StandaloneLoadingDesign family={family} seed={seed} />;
-  return <CartesianLoadingDesign family={family} seed={seed} />;
-}
+/** Internal composition keeps unused family illustrations out of single-chart bundles. */
+export type LoadingDesign = (seed: number) => ReactNode;
+const lineDesign: LoadingDesign = (seed) => (
+  <path
+    d={linePath(seed)}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.25"
+    vectorEffect="non-scaling-stroke"
+    strokeLinecap="round"
+  />
+);
 
 const lineProfiles = [
   [212, 188, 155, 174, 105, 81, 45, 24],
@@ -87,6 +73,7 @@ export function LoadingSkeletonSurface({
   y,
   style,
   animation,
+  design = lineDesign,
 }: {
   family: LoadingFamily;
   seed?: number;
@@ -96,6 +83,7 @@ export function LoadingSkeletonSurface({
   y?: number;
   style?: CSSProperties;
   animation?: LoadingAnimation | undefined;
+  design?: LoadingDesign | undefined;
 }) {
   const id = useId().replace(/:/g, "");
   const seed =
@@ -156,6 +144,8 @@ export function LoadingSkeletonSurface({
   const barPosition = useTransform(barMotion.progress, (value) => (value - 0.5) * 640);
   const pulseStyle = {
     ...style,
+    // Radar's two polygon MotionValues continuously morph; disabling the CSS
+    // opacity pulse keeps them visible rather than disabling their animation.
     ...(cycleDuration === 0 || family === "radar" ? { animation: "none" } : {}),
     "--kind-ui-loading-cycle": `${cycleMs}ms`,
     "--kind-ui-loading-horizontal": `url(#${id}-horizontal)`,
@@ -324,7 +314,7 @@ export function LoadingSkeletonSurface({
                 : undefined
             }
           >
-            <Design family={family} seed={family === "radar" ? seed : designSeed} />
+            {design(family === "radar" ? seed : designSeed)}
           </g>
         </LoadingProgress>
       </g>
@@ -335,10 +325,12 @@ export function ChartLoadingSkeleton({
   family,
   seed,
   animation,
+  design,
 }: {
   family: LoadingFamily;
   seed: number;
   animation?: LoadingAnimation | undefined;
+  design?: LoadingDesign | undefined;
 }) {
   const plot = usePlotArea();
   if (!plot || plot.width <= 0 || plot.height <= 0) return null;
@@ -347,6 +339,7 @@ export function ChartLoadingSkeleton({
       family={family}
       seed={seed}
       animation={animation}
+      design={design}
       x={plot.x}
       y={plot.y}
       width={plot.width}

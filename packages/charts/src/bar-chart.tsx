@@ -13,6 +13,7 @@ import { BarChart as EngineBarChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
 import { BarCategoryBoundary } from "./bar-category.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
+import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 
 export type BarAnimation = LineAnimation;
 export type BarChartProps = ComponentProps<typeof EngineBarChart> & {
@@ -93,6 +94,7 @@ export function BarChartImplementation({
           <LineChartFrame
             chartProps={props}
             loadingSkeleton={family}
+            loadingDesign={(seed) => <CartesianLoadingDesign family={family} seed={seed} />}
             loadingAnimation={{ ...options, ...(props.layout ? { layout: props.layout } : {}) }}
             loading={loading}
             loadingLabel={loadingLabel}

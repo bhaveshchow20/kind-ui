@@ -13,6 +13,7 @@ import {
 import { ScatterChart as EngineScatterChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
+import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 
 export type ScatterAnimation = LineAnimation;
 export type ScatterChartProps = ComponentProps<typeof EngineScatterChart> & {
@@ -110,6 +111,7 @@ export function ScatterChart({
             loading={loading}
             loadingLabel={loadingLabel}
             loadingSkeleton="scatter"
+            loadingDesign={(seed) => <CartesianLoadingDesign family={"scatter"} seed={seed} />}
             loadingAnimation={options}
             chartProps={props}
             engine={EngineScatterChart}
