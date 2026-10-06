@@ -160,7 +160,13 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
     style?.fill === undefined &&
     props.shape === undefined &&
     (props.activeBar === undefined || typeof props.activeBar === "boolean");
-  const interaction = useSeriesInteraction(key, effectiveHide, hide === true);
+  const interaction = useSeriesInteraction(
+    key,
+    effectiveHide,
+    hide === true,
+    undefined,
+    props.onClick,
+  );
   const color = fill ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   const nativeRows =
     (!("data" in props) &&
@@ -253,7 +259,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
         <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
           <Bar<DataPoint, Value>
             {...props}
-            onClick={interaction.compose(props.onClick)}
+            {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
             {...(categoryEmphasis && eligible
               ? {
                   shape: categoryShape,

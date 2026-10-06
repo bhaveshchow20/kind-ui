@@ -3,6 +3,7 @@
 import {
   Children,
   type ComponentProps,
+  cloneElement,
   Fragment,
   isValidElement,
   type ReactNode,
@@ -10,6 +11,7 @@ import {
   useCallback,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -71,6 +73,31 @@ function sameCells(previous: Record<string, unknown>[], next: Record<string, unk
   );
 }
 
+// Capture original rendered identity before an inner Cell handler can commit new rows.
+function captureCellIdentity(
+  children: ReactNode,
+  keyAt: (index: number) => string | undefined,
+  identities: WeakMap<Event, string>,
+): ReactNode {
+  let index = 0;
+  function capture(parts: ReactNode): ReactNode {
+    return Children.map(parts, (child) => {
+      if (!isValidElement<ComponentProps<typeof Cell>>(child)) return child;
+      if (child.type === Fragment) return cloneElement(child, {}, capture(child.props.children));
+      if (child.type !== Cell) return child;
+      const key = keyAt(index++);
+      if (key === undefined) return child;
+      return cloneElement(child, {
+        onClick: (event) => {
+          identities.set(event.nativeEvent, key);
+          child.props.onClick?.(event);
+        },
+      });
+    });
+  }
+  return capture(children);
+}
+
 // One chart-level angular window reveals unchanged native sectors.
 function EntranceSector({
   material,
@@ -83,7 +110,7 @@ function EntranceSector({
   ...props
 }: SectorPaintProps & {
   material: PieMaterial;
-  interactionKey?: ((payload: unknown) => string) | undefined;
+  interactionKey?: ((index: number) => string | undefined) | undefined;
   emphasisKey?: PieSeriesProps["emphasisKey"];
   scope: string;
   enabled: boolean;
@@ -94,7 +121,7 @@ function EntranceSector({
   const interaction = useChartInteraction();
   const { reveal, progress, direction } = use(PieMotion);
   const semantic = interactionKey
-    ? interactionKey(props.payload)
+    ? interactionKey(props.index ?? -1)
     : emphasisKey
       ? emphasisKey(props.payload)
       : props.name;
@@ -418,32 +445,68 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     throw new Error(
       "PieSeries Root interaction binding requires category-kind Root, categoryKey and explicit data",
     );
-  const filtered =
-    interactionBinding && props.data && categoryKey !== undefined
-      ? filterCategoryRows(props.data, categoryKey, interaction.visible, props.children)
-      : undefined;
+  const filtered = useMemo(
+    () =>
+      interactionBinding && props.data && categoryKey !== undefined
+        ? filterCategoryRows(props.data, categoryKey, interaction.visible, props.children)
+        : undefined,
+    [interactionBinding, props.data, categoryKey, interaction.visible, props.children],
+  );
   const data = filtered?.data ?? props.data;
   const originalChildren = filtered?.children ?? props.children;
   const resolveInteractionKey = useCallback(
-    (payload: unknown): string => {
-      if (typeof categoryKey === "function") return categoryKey(payload as DataPoint);
+    (index: number): string | undefined => {
+      // Cell props can override native payload fields; native index still addresses our rendered rows.
+      const row = data?.[index];
+      if (row === undefined) return undefined;
+      if (typeof categoryKey === "function") return categoryKey(row);
       if (
         categoryKey !== undefined &&
-        typeof payload === "object" &&
-        payload !== null &&
-        Object.hasOwn(payload, categoryKey)
+        typeof row === "object" &&
+        row !== null &&
+        Object.hasOwn(row, categoryKey)
       )
-        return String((payload as Record<string, unknown>)[categoryKey]);
+        return String((row as Record<string, unknown>)[categoryKey]);
       throw new Error("PieSeries interaction requires a stable category key");
     },
-    [categoryKey],
+    [categoryKey, data],
   );
   const interactionKey = interactionBinding ? resolveInteractionKey : undefined;
   const { config, paints } = useChart();
-  const children =
-    categoryKey === undefined
-      ? originalChildren
-      : categoryCells(data, categoryKey, config, paints, originalChildren, props.fill);
+  const children = useMemo(
+    () =>
+      categoryKey === undefined
+        ? originalChildren
+        : categoryCells(data, categoryKey, config, paints, originalChildren, props.fill),
+    [categoryKey, data, config, paints, originalChildren, props.fill],
+  );
+  const identities = useRef(new WeakMap<Event, string>());
+  const boundChildren = useMemo(
+    () =>
+      interactionKey && interaction.interactive && interaction.markActivation
+        ? captureCellIdentity(children, interactionKey, identities.current)
+        : children,
+    [children, interactionKey, interaction.interactive, interaction.markActivation],
+  );
+  const latestClick = useRef({ handler: props.onClick, interactionKey, interaction });
+  useLayoutEffect(() => {
+    latestClick.current = { handler: props.onClick, interactionKey, interaction };
+  });
+  const activate = useCallback<NonNullable<PieSeriesProps<DataPoint, Value>["onClick"]>>(
+    (...args) => {
+      // Capture the pressed row before a consumer can synchronously reorder/filter the data.
+      const pressed = latestClick.current;
+      const key = identities.current.get(args[2].nativeEvent) ?? pressed.interactionKey?.(args[1]);
+      pressed.handler?.(...args);
+      if (key !== undefined)
+        latestClick.current.interaction.activate({ kind: "category", key }, "mark", args[2]);
+    },
+    [],
+  );
+  const onClick =
+    interactionBinding && interaction.interactive && interaction.markActivation
+      ? activate
+      : props.onClick;
   const seriesId = useId();
   const { invalidate, emphasisScope } = useLineInteraction();
   const scope = `${emphasisScope}/${seriesId}`;
@@ -506,15 +569,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     <Pie<DataPoint, Value>
       {...nativeProps}
       {...(data !== undefined ? { data } : {})}
-      onClick={(...args) => {
-        props.onClick?.(...args);
-        if (interactionKey)
-          interaction.activate(
-            { kind: "category", key: interactionKey(args[0].payload) },
-            "mark",
-            args[2],
-          );
-      }}
+      {...(onClick !== undefined ? { onClick } : {})}
       stroke={props.stroke ?? "none"}
       shape={props.shape ?? sectorShape}
       {...(interactionBinding && props.shape === undefined && props.activeShape === undefined
@@ -525,7 +580,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
         : {})}
       isAnimationActive={false}
     >
-      {children}
+      {boundChildren}
     </Pie>
   );
 }

@@ -132,7 +132,7 @@ export function ScatterSeries({
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("ScatterSeries requires seriesKey for controlled non-string dataKey");
-  const interaction = useSeriesInteraction(key, hidden, hide === true, props.data);
+  const interaction = useSeriesInteraction(key, hidden, hide === true, props.data, props.onClick);
   const color = fill ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.scatter}>
@@ -140,7 +140,7 @@ export function ScatterSeries({
         <g data-kind-ui="scatter-fade">
           <Scatter
             {...props}
-            onClick={interaction.compose(props.onClick)}
+            {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
             {...(shapes.shape !== undefined ? { shape: shapes.shape } : {})}
             {...(shapes.activeShape !== undefined ? { activeShape: shapes.activeShape } : {})}
             id={id}
