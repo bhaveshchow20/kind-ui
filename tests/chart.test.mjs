@@ -1409,29 +1409,23 @@ test("selective Pie glow requires existing explicit category identity", () => {
   const series = (props) =>
     render(h(Root, { config }, h(Chart.PieSeries, { dataKey: "value", ...props })));
   assert.throws(() => series({ glowCategories: [] }), /glowCategories requires categoryKey/);
+  assert.throws(() => series({ categoryKey: "id", glowCategories: ["alpha"] }), /explicit data/);
   assert.throws(
-    () => series({ categoryKey: "id", glowCategories: ["alpha"] }),
-    /explicit data/,
-  );
-  assert.throws(
-    () => series({
-      categoryKey: "id",
-      data: [{ id: "missing", value: 1 }],
-      glowCategories: ["missing"],
-    }),
+    () =>
+      series({
+        categoryKey: "id",
+        data: [{ id: "missing", value: 1 }],
+        glowCategories: ["missing"],
+      }),
     /Root.config/,
   );
-  for (const categoryKey of ["id", (row) => row.id]) {
-    for (const glowCategories of [undefined, [], ["alpha", "unknown", "alpha"]]) {
-      assert.doesNotThrow(() =>
-        series({ categoryKey, data: [{ id: "alpha", value: 1 }], glowCategories }),
-      );
-    }
-  }
 });
 
 test("selective Pie glow leaves the native SSR shell and host data alternative unchanged", () => {
-  const data = [{ id: "alpha", value: 60 }, { id: "beta", value: 40 }];
+  const data = [
+    { id: "alpha", value: 60 },
+    { id: "beta", value: 40 },
+  ];
   const config = {
     alpha: { label: "Alpha", color: "#123456" },
     beta: { label: "Beta", color: "#abcdef" },

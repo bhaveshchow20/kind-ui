@@ -44,7 +44,7 @@ if (process.argv.includes("--keep-artifact")) {
   // A failed rerun must not leave an earlier artifact marked as validated.
   await rm(artifactDestination, { recursive: true, force: true });
 }
-function run(command, args, cwd = root) {
+function run(command, args, cwd = root, output = "pipe") {
   return execFileSync(command, args, {
     cwd,
     encoding: "utf8",
@@ -52,7 +52,7 @@ function run(command, args, cwd = root) {
       ...process.env,
       NODE_PATH: "",
     },
-    stdio: ["ignore", "pipe", "inherit"],
+    stdio: ["ignore", output, "inherit"],
   });
 }
 try {
@@ -130,7 +130,13 @@ try {
   for (const file of ["chart.test.mjs", "configured-line.test.mjs", "consumer.tsx"]) {
     await copyFile(join(root, "tests", file), join(ordinary, file));
   }
-  run(process.execPath, ["--test", "chart.test.mjs", "configured-line.test.mjs"], ordinary);
+  // Stream component failures; captured child output can truncate the failing TAP record.
+  run(
+    process.execPath,
+    ["--test", "chart.test.mjs", "configured-line.test.mjs"],
+    ordinary,
+    "inherit",
+  );
   for (const mode of ["NodeNext", "Bundler"]) {
     await writeFile(
       join(ordinary, "tsconfig.json"),
@@ -357,7 +363,12 @@ try {
     join(consumer, "configured-line.test.mjs"),
     await readFile(join(root, "tests/configured-line.test.mjs"), "utf8"),
   );
-  run(process.execPath, ["--test", "chart.test.mjs", "configured-line.test.mjs"], consumer);
+  run(
+    process.execPath,
+    ["--test", "chart.test.mjs", "configured-line.test.mjs"],
+    consumer,
+    "inherit",
+  );
   for (const file of ["index.html", "main.tsx"]) await copyFixture("number-shuffle", file);
   await typecheck(["main.tsx"]);
   await production("index.html", "packed-number-shuffle");
