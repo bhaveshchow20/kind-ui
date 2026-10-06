@@ -2,7 +2,12 @@
 import * as Chart from "@kind-ui/charts";
 import { Cell, Label, LabelList, type PieSectorShapeProps, Sector } from "@kind-ui/charts";
 import { useCallback, useMemo, useState } from "react";
-import { PieChart as NativePieChart, Tooltip as NativeTooltip, Pie } from "recharts";
+import {
+  PieChart as NativePieChart,
+  Tooltip as NativeTooltip,
+  Pie,
+  type PieSectorDataItem,
+} from "recharts";
 
 const config = {
   alpha: { label: "Alpha", color: "#4f46e5", formatValue: (v: unknown) => `${v} seats` },
@@ -17,7 +22,21 @@ const original = [
   { id: "missing", value: null },
 ];
 const identity: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
-function CustomShape(props: PieSectorShapeProps) {
+// Native activeShape accepts a data item, while shape adds animation/index fields.
+// This renderer needs only the shared data plus optional native path handlers.
+type CustomShapeProps = PieSectorDataItem &
+  Pick<
+    PieSectorShapeProps,
+    | "onClick"
+    | "onMouseDown"
+    | "onMouseUp"
+    | "onMouseMove"
+    | "onMouseOver"
+    | "onMouseOut"
+    | "onMouseEnter"
+    | "onMouseLeave"
+  >;
+function CustomShape(props: CustomShapeProps) {
   const {
     className,
     cornerRadius,
