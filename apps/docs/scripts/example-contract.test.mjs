@@ -16,6 +16,7 @@ test("installation Markdown exposes all package-manager commands to consumers", 
   }
   assert.ok(!markdown.includes("<InstallationCommands"));
 });
+import "./composition-guide.test.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const completeBundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
