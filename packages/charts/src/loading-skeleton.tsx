@@ -135,7 +135,13 @@ export function LoadingSkeletonSurface({
     family === "combo" ? Math.max(line.duration, area.duration, bar.duration) : duration;
   const cycleMs = cycleDuration * 2 + 200;
   const startDelay = cycleMs * 0.12;
-  const { progress, reduced } = useLoadingProgress(pulse, duration, easing, startDelay);
+  const { progress, reduced } = useLoadingProgress(
+    pulse,
+    duration,
+    easing,
+    startDelay,
+    family === "radial-bar",
+  );
   const lineMotion = useLoadingProgress(pulse, line.duration, line.easing, startDelay);
   const areaMotion = useLoadingProgress(pulse, area.duration, area.easing, startDelay);
   const barMotion = useLoadingProgress(pulse, bar.duration, bar.easing, startDelay);
@@ -146,12 +152,11 @@ export function LoadingSkeletonSurface({
   const horizontal = animation?.layout === "vertical";
   const position = useTransform(horizontalProgress, (value) => (value - 0.5) * 640);
   const verticalPosition = useTransform(verticalProgress, (value) => 240 - value * 240);
-  const radius = useTransform(progress, (value) => value * 132);
   const areaPosition = useTransform(areaMotion.progress, (value) => (value - 0.5) * 640);
   const barPosition = useTransform(barMotion.progress, (value) => (value - 0.5) * 640);
   const pulseStyle = {
     ...style,
-    ...(cycleDuration === 0 ? { animation: "none" } : {}),
+    ...(cycleDuration === 0 || family === "radar" ? { animation: "none" } : {}),
     "--kind-ui-loading-cycle": `${cycleMs}ms`,
     "--kind-ui-loading-horizontal": `url(#${id}-horizontal)`,
     "--kind-ui-loading-vertical": `url(#${id}-vertical)`,
@@ -164,10 +169,12 @@ export function LoadingSkeletonSurface({
       data-family={family}
       data-loading-layout={animation?.layout}
       data-loading-motion={
-        family === "line" || family === "area"
+        family === "line" ||
+        family === "area" ||
+        ["bar", "waterfall", "histogram", "box-plot"].includes(family)
           ? "sweep"
           : family === "radar"
-            ? "radial"
+            ? "morph"
             : polar
               ? "angular"
               : family === "heatmap"
@@ -276,34 +283,6 @@ export function LoadingSkeletonSurface({
             />
           )}
         </mask>
-        <mask id={`${id}-radial`} maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="240">
-          <defs>
-            <filter
-              id={`${id}-soft-radius`}
-              filterUnits="userSpaceOnUse"
-              x="-32"
-              y="-32"
-              width="704"
-              height="304"
-            >
-              <feGaussianBlur stdDeviation="6" />
-            </filter>
-          </defs>
-          {reduced ? (
-            <rect width="640" height="240" fill="white" />
-          ) : (
-            <motion.circle
-              data-kind-ui="loading-leading-window"
-              cx="320"
-              cy="120"
-              r={radius}
-              fill="none"
-              stroke="white"
-              strokeWidth="96"
-              filter={`url(#${id}-soft-radius)`}
-            />
-          )}
-        </mask>
         <mask id={`${id}-angular`} maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="240">
           {reduced ? (
             <rect width="640" height="240" fill="white" />
@@ -324,7 +303,7 @@ export function LoadingSkeletonSurface({
         opacity="0.48"
         mask={
           family === "radar"
-            ? `url(#${id}-radial)`
+            ? undefined
             : polar
               ? `url(#${id}-angular)`
               : family === "line" || family === "area"
@@ -333,7 +312,7 @@ export function LoadingSkeletonSurface({
                     family === "waterfall" ||
                     family === "histogram" ||
                     family === "box-plot"
-                  ? `url(#${id}-${horizontal ? "horizontal" : "vertical"})`
+                  ? `url(#${id}-horizontal)`
                   : undefined
         }
       >
@@ -345,7 +324,7 @@ export function LoadingSkeletonSurface({
                 : undefined
             }
           >
-            <Design family={family} seed={designSeed} />
+            <Design family={family} seed={family === "radar" ? seed : designSeed} />
           </g>
         </LoadingProgress>
       </g>

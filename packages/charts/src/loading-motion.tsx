@@ -38,6 +38,7 @@ export function useLoadingProgress(
   duration: number,
   easing: Transition["ease"],
   startDelay = 0,
+  continuousTrail = false,
 ) {
   const reduced = useSyncExternalStore(
     subscribe,
@@ -58,6 +59,16 @@ export function useLoadingProgress(
       return;
     }
     progress.set(0);
+    // RadialBar keeps one angular velocity through the closing seam. Splitting
+    // an eased reveal and a linear trail nearly stops, then abruptly speeds up.
+    if (continuousTrail) {
+      const controls = animate(progress, 1.65, {
+        duration: (duration * 1.65) / 1000,
+        delay: startDelay / 1000,
+        ease: "linear",
+      });
+      return () => controls.stop();
+    }
     let trail: ReturnType<typeof animate> | undefined;
     const controls = animate(progress, 1, {
       duration: duration / 1000,
@@ -71,7 +82,7 @@ export function useLoadingProgress(
       controls.stop();
       trail?.stop();
     };
-  }, [progress, pulse, duration, stableEasing, reduced, startDelay]);
+  }, [progress, pulse, duration, stableEasing, reduced, startDelay, continuousTrail]);
   return { progress, reduced: reduced || duration === 0 };
 }
 export const LoadingProgress = createContext<{
