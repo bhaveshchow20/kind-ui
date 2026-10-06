@@ -34,7 +34,7 @@ Each config entry has the following fields:
 
 <ApiTable name="SeriesMetadata" />
 
-- `label` appears in the built-in legend and tooltip.
+- `label` is optional and appears in the built-in legend, tooltip and built-in accessible series text. An explicit label takes precedence, including an empty string. When omitted, `visitors` infers `Visitors` and `monthlyVisitors` infers `Monthly visitors`. Camel-case and acronym boundaries, underscores and hyphens become spaces; words are lowercased and the first letter is capitalized. Provide a label for custom wording or casing. Configuration keys must match the series data keys (or explicit `seriesKey`); category charts use their category identity. Inference does not change keys or colors.
 - `color` supplies the default series color and marker color. Explicit series paint takes precedence.
 - `icon` supplies a decorative React component for the legend and tooltip.
 - `legendShape` selects a Recharts symbol for the legend. A configured icon takes precedence; use the same shape on `ScatterSeries` when its marks should match.

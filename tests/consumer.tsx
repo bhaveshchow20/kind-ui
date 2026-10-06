@@ -259,3 +259,14 @@ const anticlockwisePie = {
 // @ts-expect-error Entrance direction has two explicit physical sweep values.
 const invalidPieDirection = { animationDirection: "reverse" } satisfies Chart.PieChartProps;
 void [clockwisePie, anticlockwisePie, invalidPieDirection];
+
+const inferredConfig = { monthlyVisitors: { color: "#3659b8" } } satisfies SeriesConfig;
+const inferredRoot = (
+  <Root config={inferredConfig}>
+    <Legend>{({ label }) => label.toUpperCase()}</Legend>
+  </Root>
+);
+void inferredRoot;
+// @ts-expect-error Labels remain strings when supplied.
+const invalidInferredLabel: SeriesConfig = { visitors: { label: 123, color: "red" } };
+void invalidInferredLabel;
