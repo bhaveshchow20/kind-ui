@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Transition } from "motion/react";
+import type { Transition } from "motion/react";
 import {
   type ComponentProps,
   type CSSProperties,
@@ -12,16 +12,18 @@ import {
   useSyncExternalStore,
 } from "react";
 import { ComposedChart as EngineComposedChart } from "recharts";
-import { type LineAnimation, MotionContext } from "./animation.js";
+import { type BaseAnimation, type LineAnimation, MotionContext } from "./animation.js";
 import { BarLifecycle, BarMotion } from "./bar-chart.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
+import { RevealClip } from "./reveal-clip.js";
 
-type Reveal = Pick<LineAnimation, "revealDurationMs" | "revealEasing">;
+type Reveal = Pick<BaseAnimation, "revealDurationMs" | "revealEasing">;
+type DirectionalReveal = Reveal & Pick<LineAnimation, "revealDirection">;
 /** Shared hover Motion, with independently configured family entrances. */
 export type ComboAnimation = LineAnimation & {
-  lineReveal?: false | Reveal;
-  areaReveal?: false | Reveal;
+  lineReveal?: false | DirectionalReveal;
+  areaReveal?: false | DirectionalReveal;
   barReveal?: false | Reveal;
 };
 export type ComboChartProps = ComponentProps<typeof EngineComposedChart> & {
@@ -38,38 +40,6 @@ function subscribe(change: () => void) {
 const snapshot = () => window.matchMedia(query).matches;
 const serverSnapshot = () => true;
 const defaultHover: Transition = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 };
-
-function Entrance({
-  id,
-  family,
-  options,
-  finish,
-}: {
-  id: string;
-  family: string;
-  options: Reveal;
-  finish: () => void;
-}) {
-  return (
-    <defs>
-      <clipPath id={id} clipPathUnits="userSpaceOnUse">
-        <motion.rect
-          data-combo-reveal={family}
-          x={0}
-          y={0}
-          height="100%"
-          initial={{ width: "0%" }}
-          animate={{ width: "100%" }}
-          onAnimationComplete={finish}
-          transition={{
-            duration: Math.max(0, options.revealDurationMs ?? 1000) / 1000,
-            ease: options.revealEasing ?? [0.25, 0.1, 0.25, 1],
-          }}
-        />
-      </clipPath>
-    </defs>
-  );
-}
 
 // A changed native child can change domains, axes, stacks or custom geometry.
 // Conservatively end entrances rather than retain a clip in the old coordinate space.
@@ -141,10 +111,22 @@ export function ComboChart({
           <BarLifecycle {...props} />
           <CompositionLifecycle>{children}</CompositionLifecycle>
           {revealLine && (
-            <Entrance id={`${id}-line`} family="line" options={line || {}} finish={finishLine} />
+            <RevealClip
+              id={`${id}-line`}
+              family="line"
+              combo
+              options={line || {}}
+              finish={finishLine}
+            />
           )}
           {revealArea && (
-            <Entrance id={`${id}-area`} family="area" options={area || {}} finish={finishArea} />
+            <RevealClip
+              id={`${id}-area`}
+              family="area"
+              combo
+              options={area || {}}
+              finish={finishArea}
+            />
           )}
           {children}
         </LineChartFrame>

@@ -2345,3 +2345,23 @@ test("dashed line and combo SSR retain the chart shell without leaking dash prop
     assert.deepEqual(data, [{ value: 4 }, { value: 8 }]);
   }
 });
+
+test("directional entrance options do not leak clip or configuration attributes into the SSR shell", () => {
+  for (const Component of [Chart.LineChart, Chart.AreaChart, Chart.ComboChart]) {
+    for (const revealDirection of ["left-to-right", "right-to-left", "center-out", "edges-in"]) {
+      const html = renderSvg(
+        h(
+          Chart.Root,
+          { config: {} },
+          h(Component, {
+            width: 300,
+            height: 200,
+            animate: { revealDirection },
+          }),
+        ),
+      );
+      assert.doesNotMatch(html, /data-reveal-direction|data-combo-reveal|data-area-reveal/);
+      assert.doesNotMatch(html, /revealDirection=/);
+    }
+  }
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Transition } from "motion/react";
+import type { Transition } from "motion/react";
 import {
   type ComponentProps,
   useCallback,
@@ -13,6 +13,7 @@ import { AreaChart as EngineAreaChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
+import { RevealClip } from "./reveal-clip.js";
 
 export type AreaAnimation = LineAnimation;
 export type AreaChartProps = ComponentProps<typeof EngineAreaChart> & {
@@ -69,23 +70,7 @@ export function AreaChart({
         {...(reveal ? { clip: `url(#${id}-area-reveal)` } : {})}
       >
         {reveal && (
-          <defs>
-            <clipPath id={`${id}-area-reveal`} clipPathUnits="userSpaceOnUse">
-              <motion.rect
-                data-area-reveal=""
-                x={0}
-                y={0}
-                height="100%"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                onAnimationComplete={interrupt}
-                transition={{
-                  duration: Math.max(0, options.revealDurationMs ?? 1000) / 1000,
-                  ease: options.revealEasing ?? [0.25, 0.1, 0.25, 1],
-                }}
-              />
-            </clipPath>
-          </defs>
+          <RevealClip id={`${id}-area-reveal`} family="area" options={options} finish={interrupt} />
         )}
         {children}
       </LineChartFrame>
