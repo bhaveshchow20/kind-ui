@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const port = 4198 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173;
-test("theme stops hydrate and switch in place across chart paints and swatches", async ({
+test("theme stops switch in place across chart paints and swatches", async ({
   page,
   baseURL,
 }, testInfo) => {

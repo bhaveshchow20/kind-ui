@@ -384,8 +384,7 @@ try {
   console.log(
     "Packed area public exports: strict NodeNext/Bundler and static/Motion production builds passed; host fixtures only, no implementation copying",
   );
-  for (const file of ["host.tsx", "main.tsx", "patterns.tsx", "index.html"])
-    await copyFixture("bar", file);
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("bar", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-bar");
   for (const file of ["entrance.tsx", "entrance.html"]) await copyFixture("bar", file);
@@ -421,7 +420,7 @@ try {
   console.log(
     "Heatmap tarball: public composition, strict NodeNext/Bundler and production build passed",
   );
-  for (const file of ["host.tsx", "main.tsx", "theme-host.tsx", "index.html"])
+  for (const file of ["host.tsx", "main.tsx", "index.html"])
     await copyFixture("identity-colors", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-identity-colors");
