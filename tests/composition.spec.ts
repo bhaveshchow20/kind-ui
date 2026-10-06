@@ -49,7 +49,19 @@ test("named and namespace single-package compositions retain native geometry, de
     await expect(scope.locator("[data-clicks]")).toHaveText("1");
     await scope.locator('[data-family="scatter"] .recharts-symbols').first().click();
     await expect(scope.locator("[data-clicks]")).toHaveText("2");
-    await scope.locator('[data-family="pie"] .recharts-sector').first().click();
+    const sector = scope.locator('[data-family="pie"] .recharts-sector').first();
+    await sector.scrollIntoViewIfNeeded();
+    // Donut sectors have holes and labels; click actual paint rather than their box center.
+    const position = await sector.evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      for (const x of [0.5, 0.25, 0.75])
+        for (const y of [0.5, 0.25, 0.75]) {
+          const point = { x: box.width * x, y: box.height * y };
+          if (document.elementFromPoint(box.x + point.x, box.y + point.y) === node) return point;
+        }
+      throw new Error("Pie sector has no unobstructed painted click point");
+    });
+    await sector.click({ position });
     await expect(scope.locator("[data-clicks]")).toHaveText("3");
     const line = scope.locator('[data-family="line"] svg');
     await line.focus();

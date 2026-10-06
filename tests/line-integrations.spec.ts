@@ -89,7 +89,6 @@ test("Next pattern legends keep server IDs through hydration and native bars sta
   expect(errors).toEqual([]);
 });
 
-
 test("Next color resources retain server IDs through hydration and theme changes", async ({
   page,
 }) => {
