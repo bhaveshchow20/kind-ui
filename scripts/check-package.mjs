@@ -358,6 +358,11 @@ try {
     await readFile(join(root, "tests/configured-line.test.mjs"), "utf8"),
   );
   run(process.execPath, ["--test", "chart.test.mjs", "configured-line.test.mjs"], consumer);
+  for (const file of ["loading.html", "loading.tsx", "loading.css"])
+    await copyFile(join(root, "examples/chart", file), join(consumer, file));
+  await typecheck(["loading.tsx"]);
+  await production("loading.html", "packed-loading");
+  console.log("Loading boundary: packed public-only strict types and production preview passed");
   for (const file of ["index.html", "main.tsx"]) await copyFixture("number-shuffle", file);
   await typecheck(["main.tsx"]);
   await production("index.html", "packed-number-shuffle");
