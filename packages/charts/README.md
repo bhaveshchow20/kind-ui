@@ -120,6 +120,59 @@ Grouped/stacked and horizontal/vertical charts share the same user-space tile; c
 
 Resources use React IDs, independently of consumer series IDs, and are stable through matching SSR/hydration trees. Hosts using multiple independent React roots must supply distinct `identifierPrefix` values to server rendering and hydration, as required by React. Recharts retains its native SSR shell; a server-visible legend and data alternative do not imply server-rendered bar geometry.
 
+### Theme-aware series colors
+
+`SeriesColor` accepts a CSS color string, a readonly nonempty array of CSS color
+strings, or `{ light, dark }` containing either shape. Arrays are gradient stops,
+not categorical palettes: supply separate config keys for category identities.
+Stops are evenly distributed from 0 to 100%; a single stop is solid. Each theme's
+spacing is preserved when stop counts differ (intermediate colors use CSS
+`color-mix(in srgb, ...)`). Empty arrays, sparse arrays, empty strings and incomplete
+or unknown theme fields throw; CSS color syntax remains the browser's responsibility.
+
+```tsx
+const config = {
+  revenue: {
+    color: { light: ["var(--brand)", "#2563eb"], dark: ["#fef3c7", "#f59e0b", "#92400e"] },
+  },
+} satisfies SeriesConfig;
+
+// Change colorScheme on this host without changing Root's key or remounting it.
+<div style={{ colorScheme: dark ? "dark" : "light", "--brand": "#f59e0b" }}>
+  <Root config={config}>
+    <Legend />
+    <LineChart data={data} width={480} height={240}>
+      <XAxis dataKey="month" />
+      <YAxis />
+      <LineSeries dataKey="revenue" />
+      <Tooltip content={(tooltip) => <TooltipContent tooltip={tooltip} />} />
+    </LineChart>
+  </Root>
+</div>
+```
+
+Themes follow the inherited CSS `color-scheme`, using native `light-dark()`;
+without a host scheme the browser defaults to light. Set `color-scheme: light dark`
+on a host for system preference, or `light`/`dark` for an explicit application
+choice. This requires browser support for `light-dark()` and `color-mix()`.
+
+Root retains `--color-<key>` as the first stop, emits zero-based
+`--kind-ui-series-<encoded-key>-<index>` stops and a `-gradient` CSS swatch
+token, where encoded keys are hexadecimal Unicode code points joined by hyphens.
+This namespace cannot collide with another series' legacy `--color-<key>`.
+Built-in series/category paints use uniquely scoped resources in each chart SVG; gradients run
+left to right across the SVG viewport (including flat line geometry). Legend and
+solid tooltip markers display the full gradient; dashed tooltip borders use the
+first stop. Explicit native stroke/fill, styles, Cells and shapes retain their
+existing ownership; configured bar patterns take precedence and use the first
+stop as their solid base ink (the legend pattern swatch does the same). Native
+explicit pattern colors remain consumer-owned. Icons keep priority. Strings and one-stop definitions require
+no SVG resource. Consumer Root styles override generated tokens as before; override
+indexed stops to customize a gradient. No theme subscription or remount is needed.
+
+The runnable `tests/fixtures/identity-colors` host exercises explicit light/dark
+changes, unequal stops, CSS variable colors, multiple roots and native paint
+precedence (`npm exec vite tests/fixtures/identity-colors`, open `/?theme`).
 
 ### Area patterns
 
@@ -141,4 +194,4 @@ const config = {
 </Root>;
 ```
 
-Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also accept these patterns through their `config`. Omit `stackId` for unstacked explicit areas. Explicit composition can instead use `pattern={{ kind: "hatch", angle: 45 }}` on each `AreaSeries`. Series patterns override configuration; `pattern="none"` opts out. Explicit `fill` (including gradients), `style.fill`, and custom `shape` retain ownership and disable automatic pattern resources. Native `fillOpacity`, filters, geometry and existing material rules remain in effect. Configuration drives default legend swatches; when overriding a series pattern, compose `FillPatternSwatch` through `Legend.children` with the matching pattern/color. Icon/symbol priority and theme/forced-colors behavior follow the shared bar pattern contract above. The hydrated packed area fixture at `static.html?patterns` demonstrates overrides, materials, stacking, themes and two independent charts.
+Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also accept these patterns through their `config`. Omit `stackId` for unstacked explicit areas. Explicit composition can instead use `pattern={{ kind: "hatch", angle: 45 }}` on each `AreaSeries`. Series patterns override configuration; `pattern="none"` opts out. Explicit `fill` (including gradients), `style.fill`, and custom `shape` retain ownership and disable automatic pattern resources. With a configured gradient, pattern tiles use the solid first-stop `--color-key` ink; unpatterned areas use the complete chart-local gradient. Explicit stroke still supplies the pattern base when provided. Native `fillOpacity`, filters, geometry and existing material rules remain in effect. Configuration drives default legend swatches; when overriding a series pattern, compose `FillPatternSwatch` through `Legend.children` with the matching pattern/color. Icon/symbol priority and theme/forced-colors behavior follow the shared bar pattern contract above. The hydrated packed area fixture at `static.html?patterns` demonstrates overrides, materials, stacking, themes and two independent charts.

@@ -50,7 +50,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   pattern,
   ...props
 }: BarSeriesProps<DataPoint, Value>) {
-  const { config, visibleSeries } = useChart();
+  const { config, paints, visibleSeries } = useChart();
   const { registerSeries, invalidate, data, categoryEmphasis, registerCategoryEligibility } =
     useLineInteraction();
   const { reveal, options, finish } = use(BarMotion);
@@ -157,7 +157,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
     style?.fill === undefined &&
     props.shape === undefined &&
     (props.activeBar === undefined || typeof props.activeBar === "boolean");
-  const color = fill ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
+  const color = fill ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   const nativeRows =
     (!("data" in props) &&
       data?.every((row: unknown) => {
@@ -234,7 +234,9 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
           <FillPatternDefinition
             id={patternId}
             pattern={resolvedPattern}
-            baseColor={color ?? "currentColor"}
+            baseColor={
+              key && Object.hasOwn(config, key) ? `var(--color-${key})` : (color ?? "currentColor")
+            }
           />
         </defs>
       )}

@@ -31,7 +31,7 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
   className,
   ...props
 }: AreaSeriesProps<DataPoint, Value>) {
-  const { config, visibleSeries } = useChart();
+  const { config, paints, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
   const id = props.id || generatedId;
@@ -58,7 +58,7 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
     fill === undefined &&
     props.style?.fill === undefined &&
     props.shape === undefined;
-  const color = stroke ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
+  const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <>
       {patterned && (
@@ -66,7 +66,9 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
           <FillPatternDefinition
             id={patternId}
             pattern={resolvedPattern}
-            baseColor={color ?? "currentColor"}
+            baseColor={
+              stroke ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : "currentColor")
+            }
           />
         </defs>
       )}
@@ -74,7 +76,9 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
         activeDot={<ActiveMarker />}
         {...props}
         {...(material !== "plain" && props.shape === undefined && props.filter === undefined
-          ? { shape: <MaterialArea material={material} filterId={`${generatedId}-area-material`} /> }
+          ? {
+              shape: <MaterialArea material={material} filterId={`${generatedId}-area-material`} />,
+            }
           : {})}
         isAnimationActive={false}
         id={id}

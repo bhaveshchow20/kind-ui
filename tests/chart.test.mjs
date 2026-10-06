@@ -1546,6 +1546,92 @@ test("invalid public pattern geometry fails explicitly", () => {
   }
 });
 
+test("series colors compile theme stops without changing labels or pattern metadata", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          revenueTotal: {
+            color: { light: ["var(--ink)", "blue"], dark: ["white", "gray", "black"] },
+            pattern: { kind: "hatch" },
+          },
+          solid: { color: "tomato" },
+          one: { color: ["purple"] },
+        },
+      },
+      h(Legend),
+    ),
+  );
+  assert.match(html, /--color-solid:tomato/);
+  assert.match(html, /--color-one:purple/);
+  assert.match(html, /--color-revenueTotal:light-dark\(var\(--ink\), white\)/);
+  assert.match(html, /color-mix\(in srgb, var\(--ink\) 50%, blue 50%\), gray/);
+  assert.match(html, /offset="0.5"/);
+  assert.match(html, /Revenue total/);
+  assert.match(html, /data-pattern="hatch"/);
+  assert.equal((html.match(/<linearGradient /g) ?? []).length, 1);
+  assert.match(html, /fill="var\(--color-revenueTotal\)"/);
+});
+
+test("color resources are unique across sibling Roots and stable on SSR", () => {
+  const tree = h(
+    "main",
+    null,
+    ...[0, 1].map((key) =>
+      h(
+        Root,
+        {
+          key,
+          config: { sales: { color: ["red", "blue"] } },
+        },
+        h(Legend),
+      ),
+    ),
+  );
+  const html = render(tree);
+  const ids = [...html.matchAll(/<linearGradient[^>]*id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 2);
+  assert.equal(new Set(ids).size, 2);
+  assert.equal(render(tree), html);
+  assert.match(html, /--kind-ui-series-[\w-]+-gradient:linear-gradient/);
+});
+
+test("malformed new color shapes fail before emitting resources", () => {
+  for (const color of [
+    [],
+    ["red", null],
+    Array(2),
+    { light: "red" },
+    { light: [], dark: "blue" },
+    { light: "red", dark: "blue", extra: true },
+    null,
+    3,
+  ]) {
+    assert.throws(() => render(h(Root, { config: { sales: { color } } })), /[Ss]eries color/);
+  }
+});
+
+test("indexed stops cannot collide with valid legacy series keys", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          sales: { color: ["red", "blue"] },
+          "sales-0": { color: "green" },
+          "sales-gradient": { color: "purple" },
+        },
+      },
+      h(Legend),
+    ),
+  );
+  assert.match(html, /--color-sales-0:green/);
+  assert.match(html, /--color-sales-gradient:purple/);
+  assert.match(html, /--kind-ui-series-73-61-6c-65-73-0:red/);
+  assert.match(html, /--kind-ui-series-73-61-6c-65-73-gradient:linear-gradient/);
+});
+
 test("dots and lines share public swatch resources with existing patterns", () => {
   const html = render(
     h(

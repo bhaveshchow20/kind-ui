@@ -347,11 +347,11 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   props: PieSeriesProps<DataPoint, Value>,
 ) {
   const { material = "plain", emphasisKey, categoryKey, ...nativeProps } = props;
-  const { config } = useChart();
+  const { config, paints } = useChart();
   const children =
     categoryKey === undefined
       ? props.children
-      : categoryCells(props.data, categoryKey, config, props.children, props.fill);
+      : categoryCells(props.data, categoryKey, config, paints, props.children, props.fill);
   const seriesId = useId();
   const { invalidate, emphasisScope } = useLineInteraction();
   const scope = `${emphasisScope}/${seriesId}`;
