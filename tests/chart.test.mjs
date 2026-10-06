@@ -12,6 +12,30 @@ const renderSvg = (element) => render(h("svg", null, element)).slice(5, -6);
 
 import { ScatterChart as NativeScatterChart, Scatter, XAxis, YAxis } from "recharts";
 
+test("development stylesheet diagnostic leaves SSR markup identical and never accesses DOM", () => {
+  const previous = process.env.NODE_ENV;
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const chart = h(Root, { config: { total: { color: "red" } } }, "Chart");
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    get() {
+      throw new Error("Stylesheet diagnostics must not read the SSR document");
+    },
+  });
+  try {
+    process.env.NODE_ENV = "production";
+    const production = render(chart);
+    process.env.NODE_ENV = "development";
+    assert.equal(render(chart), production);
+    assert.doesNotMatch(production, /kind-ui-styles-loaded|<style|<link/);
+  } finally {
+    if (previous === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previous;
+    if (descriptor) Object.defineProperty(globalThis, "document", descriptor);
+    else delete globalThis.document;
+  }
+});
+
 test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a data alternative", () => {
   const axes = [
     h(XAxis, { key: "x", type: "number", dataKey: "x" }),
