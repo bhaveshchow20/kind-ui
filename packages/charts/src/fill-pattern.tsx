@@ -4,12 +4,12 @@ import { type ComponentPropsWithRef, useId } from "react";
 
 /** Static paint encoding, independent of material and chart geometry. */
 export type FillPattern = {
-  kind: "hatch" | "stripe" | "duotone";
+  kind: "hatch" | "stripe" | "duotone" | "dots" | "lines";
   /** Second ink; defaults to CanvasText and follows the host's color scheme. */
   color?: string;
   /** Positive tile size in SVG user units (default 8). */
   size?: number;
-  /** Positive hatch stroke/stripe width, no greater than size (default 1/2). */
+  /** Positive stroke/stripe width or dot diameter, <= size (default 1; stripe 2). */
   width?: number;
   /** Rotation in degrees (default 45 for hatch, 0 otherwise). */
   angle?: number;
@@ -35,7 +35,7 @@ export function FillPatternDefinition({
     angle = kind === "hatch" ? 45 : 0,
   } = pattern;
   if (
-    !["hatch", "stripe", "duotone"].includes(kind) ||
+    !["hatch", "stripe", "duotone", "dots", "lines"].includes(kind) ||
     !Number.isFinite(size) ||
     size <= 0 ||
     !Number.isFinite(width) ||
@@ -57,7 +57,14 @@ export function FillPatternDefinition({
       patternTransform={`rotate(${angle})`}
     >
       <rect width={size} height={size} fill={baseColor} />
-      {kind === "hatch" ? (
+      {kind === "dots" ? (
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={width / 2}
+          fill={pattern.color ?? "CanvasText"}
+        />
+      ) : kind === "hatch" || kind === "lines" ? (
         <path
           d={`M0 0V${size} M${size} 0V${size}`}
           stroke={pattern.color ?? "CanvasText"}

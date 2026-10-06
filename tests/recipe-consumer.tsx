@@ -118,8 +118,8 @@ const areaData: AreaPoint[] = [
 ];
 const completeArea: StackedAreaPoint[] = [{ period: "Jan", desktop: 2, mobile: 1 }];
 const areaSeriesConfig: AreaSeriesConfig = {
-  desktop: { label: "Desktop", color: "var(--chart-1)" },
-  mobile: { label: "Mobile", color: "var(--chart-2)" },
+  desktop: { label: "Desktop", color: "var(--chart-1)", pattern: { kind: "dots" } },
+  mobile: { label: "Mobile", color: "var(--chart-2)", pattern: { kind: "lines" } },
 };
 void (<SmoothArea data={areaData} label="Area" formatValue={formatValue} />);
 void (<LinearArea data={areaData} label="Area" formatValue={formatValue} />);

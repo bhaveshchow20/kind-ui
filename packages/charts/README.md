@@ -119,3 +119,26 @@ Config patterns supply implicit bar paint and legend swatches. `BarSeries.patter
 Grouped/stacked and horizontal/vertical charts share the same user-space tile; changing orientation does not rotate the encoding automatically. The base ink keeps the configured CSS color. Second ink defaults to `CanvasText`, following the host's `color-scheme`; choose contrasting theme-aware colors deliberately. With the stylesheet, forced colors use `Canvas`/`CanvasText` while retaining the pattern geometry. Patterns are decorative, static and unchanged by reduced motion or print; printer color settings can still affect contrast. Keep text labels and a data alternative, and verify the chosen ink combination in print and each theme.
 
 Resources use React IDs, independently of consumer series IDs, and are stable through matching SSR/hydration trees. Hosts using multiple independent React roots must supply distinct `identifierPrefix` values to server rendering and hydration, as required by React. Recharts retains its native SSR shell; a server-visible legend and data alternative do not imply server-rendered bar geometry.
+
+
+### Area patterns
+
+`AreaSeries` accepts the shared `FillPattern` through `pattern` or `Root.config[key].pattern`, independently of `material`. The additive `dots` kind uses `width` as dot diameter (default 1); `lines` uses stroke width (default 1) and defaults to angle 0. Both use size 8 by default. Existing hatch, stripe and duotone encodings retain their defaults. These kinds also work with bars and `FillPatternSwatch`.
+
+```tsx
+const config = {
+  actual: { color: "#789abc", pattern: { kind: "dots" as const, width: 2 } },
+  planned: { color: "var(--area-planned)", pattern: { kind: "lines" as const } },
+};
+<Root config={config}>
+  <Legend />
+  <AreaChart width={480} height={260} data={rows}>
+    <XAxis dataKey="month" />
+    <YAxis />
+    <AreaSeries dataKey="actual" stackId="total" material="clay" fillOpacity={0.4} />
+    <AreaSeries dataKey="planned" stackId="total" fillOpacity={0.4} />
+  </AreaChart>
+</Root>;
+```
+
+Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also accept these patterns through their `config`. Omit `stackId` for unstacked explicit areas. Explicit composition can instead use `pattern={{ kind: "hatch", angle: 45 }}` on each `AreaSeries`. Series patterns override configuration; `pattern="none"` opts out. Explicit `fill` (including gradients), `style.fill`, and custom `shape` retain ownership and disable automatic pattern resources. Native `fillOpacity`, filters, geometry and existing material rules remain in effect. Configuration drives default legend swatches; when overriding a series pattern, compose `FillPatternSwatch` through `Legend.children` with the matching pattern/color. Icon/symbol priority and theme/forced-colors behavior follow the shared bar pattern contract above. The hydrated packed area fixture at `static.html?patterns` demonstrates overrides, materials, stacking, themes and two independent charts.

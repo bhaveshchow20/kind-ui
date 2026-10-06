@@ -376,9 +376,9 @@ try {
   console.log(
     "Motion line consumer: strict NodeNext/Bundler and production build passed using the same packed public imports",
   );
-  for (const file of ["host.tsx", "static.tsx", "static.html", "motion.tsx", "motion.html"])
+  for (const file of ["host.tsx", "patterns.tsx", "static.tsx", "static.html", "motion.tsx", "motion.html"])
     await copyFixture("area", file);
-  await typecheck(["host.tsx", "static.tsx", "motion.tsx"]);
+  await typecheck(["host.tsx", "patterns.tsx", "static.tsx", "motion.tsx"]);
   await production("static.html", "packed-area-static");
   await production("motion.html", "packed-area-motion");
   console.log(
