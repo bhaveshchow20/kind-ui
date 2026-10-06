@@ -6,15 +6,21 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
 const query = new URLSearchParams(location.search);
 if (query.has("selective")) {
-  const chart = <SelectiveGlowHost accessor={query.has("accessor")} />;
-  const markup = (globalThis as typeof globalThis & { pieSsr?: string }).pieSsr;
-  if (markup === undefined) throw new Error("Missing Node-rendered Pie SSR fixture");
-  root.innerHTML = markup;
-  hydrateRoot(root, chart, {
+  void hydrateSelective(root, query.has("accessor"));
+} else {
+  createRoot(root).render(query.has("gallery") ? <MaterialGallery /> : <PieHost />);
+}
+
+async function hydrateSelective(container: HTMLElement, accessor: boolean) {
+  const response = await fetch("./ssr.json");
+  if (!response.ok) throw new Error("Missing packed Node-rendered Pie SSR fixture");
+  const shells: { field: string; accessor: string } = await response.json();
+  const markup = shells[accessor ? "accessor" : "field"];
+  if (typeof markup !== "string") throw new Error("Invalid packed Pie SSR markup");
+  container.innerHTML = markup;
+  hydrateRoot(container, <SelectiveGlowHost accessor={accessor} />, {
     onRecoverableError: (error) => {
       throw error;
     },
   });
-} else {
-  createRoot(root).render(query.has("gallery") ? <MaterialGallery /> : <PieHost />);
 }

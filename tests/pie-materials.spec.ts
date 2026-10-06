@@ -1,8 +1,5 @@
 import { writeFile } from "node:fs/promises";
-import { createElement } from "react";
-import { renderToString } from "react-dom/server";
 import { expect, type Locator, test } from "./browser";
-import { SelectiveGlowHost } from "./fixtures/pie/host";
 import { pieAlphaDifference, pieLivePaint, pieNativeOwnership } from "./pie-native-ownership";
 
 const url = process.env.KIND_UI_PIE_URL ?? "http://127.0.0.1:4180";
@@ -777,12 +774,13 @@ for (const accessor of [false, true]) {
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(message.text());
     });
-    const markup = renderToString(createElement(SelectiveGlowHost, { accessor }));
-    expect(markup).not.toContain("pie-halo");
-    await page.addInitScript((html) => {
-      (globalThis as typeof globalThis & { pieSsr?: string }).pieSsr = html;
-    }, markup);
     await page.goto(`${url}/?selective${accessor ? "&accessor" : ""}`);
+    const response = await page.request.get(new URL("./ssr.json", page.url()).href);
+    expect(response.ok()).toBeTruthy();
+    const shells: { field: string; accessor: string } = await response.json();
+    const markup = shells[accessor ? "accessor" : "field"];
+    expect(typeof markup).toBe("string");
+    expect(markup).not.toContain("pie-halo");
     const charts = page.getByRole("application", { name: /Selective glow/ });
     const first = charts.first();
     const halos = first.locator('[data-kind-ui="pie-halo"]');
