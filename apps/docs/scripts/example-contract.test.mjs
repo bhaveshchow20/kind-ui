@@ -7,6 +7,15 @@ import { filesFor, promptFor } from "../lib/example-files.mjs";
 import { publicPath } from "../lib/routing.mjs";
 import { verificationFiles } from "./consumer-validation-files.mjs";
 import "./routing-contract.test.mjs";
+import commands from "../lib/installation-commands.json" with { type: "json" };
+
+test("installation Markdown exposes all package-manager commands to consumers", () => {
+  const markdown = readFileSync("public/markdown/start/installation.md", "utf8");
+  for (const [manager, command] of Object.entries(commands)) {
+    assert.ok(markdown.includes(`### ${manager}\n\n\`\`\`sh\n${command}\n\`\`\``));
+  }
+  assert.ok(!markdown.includes("<InstallationCommands"));
+});
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const completeBundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));

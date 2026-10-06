@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { newRecipes } from "@/lib/new-chart-recipes";
 import { docsAccessNote, documentationCharts, showcaseAsset, siteLinks } from "@/lib/site-links";
 import { useCopyCode } from "@/lib/use-copy-code";
+import installCommands from "../../docs/lib/installation-commands.json";
 
 type Material = "plain" | "paper" | "clay" | "glow";
 type Family =
@@ -666,12 +667,6 @@ function DocumentationSearch() {
   );
 }
 
-const installCommands = {
-  npm: "npm install @kind-ui/charts",
-  pnpm: "pnpm add @kind-ui/charts",
-  yarn: "yarn add @kind-ui/charts",
-  bun: "bun add @kind-ui/charts",
-};
 type PackageManager = keyof typeof installCommands;
 
 function InstallSection() {

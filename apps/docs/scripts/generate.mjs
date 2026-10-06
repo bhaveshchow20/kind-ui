@@ -10,6 +10,7 @@ import {
   families,
   variantDefinitions,
 } from "../examples/catalog.mjs";
+import installationCommands from "../lib/installation-commands.json" with { type: "json" };
 import { publicPath } from "../lib/routing.mjs";
 
 const read = (file) => readFileSync(file, "utf8");
@@ -262,6 +263,11 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   const description = original.match(/^description:\s*(.+)$/m)?.[1] || "";
   const key = String(entry).replace(/\.mdx$/, "");
   let body = original.replace(/^---\n[\s\S]*?\n---\n/, "");
+  body = body.replace(/<InstallationCommands\s*\/>/g, () =>
+    Object.entries(installationCommands)
+      .map(([manager, command]) => `### ${manager}\n\n\`\`\`sh\n${command}\n\`\`\``)
+      .join("\n\n"),
+  );
   body = body.replace(
     /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample) id="([\w-]+)"\s*\/>/g,
     (_, id) => {

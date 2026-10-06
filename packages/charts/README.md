@@ -24,7 +24,7 @@ Donut and Bubble use `PieChart` and `ScatterChart` composition.
 ## Install
 
 ```sh
-npm install @kind-ui/charts
+npm install @kind-ui/charts react react-dom recharts motion
 ```
 
 Import `@kind-ui/charts/styles.css` once at your application entry. In Next.js,

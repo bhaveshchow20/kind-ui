@@ -1,0 +1,6 @@
+{
+  "npm": "npm install @kind-ui/charts react react-dom recharts motion",
+  "pnpm": "pnpm add @kind-ui/charts react react-dom recharts motion",
+  "yarn": "yarn add @kind-ui/charts react react-dom recharts motion",
+  "bun": "bun add @kind-ui/charts react react-dom recharts motion"
+}

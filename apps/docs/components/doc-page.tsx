@@ -15,6 +15,7 @@ import {
 } from "./component-playground";
 import { CopyMarkdown } from "./copy-markdown";
 import { MobileDocsNavigation } from "./glass-docs-layout";
+import { InstallationCommands } from "./installation-commands";
 
 async function LineExample({ id }: { id: ComponentId }) {
   const bundle = (bundles as unknown as Record<ComponentId, ComponentBundle>)[id];
@@ -93,6 +94,7 @@ export function renderDoc(slug?: string[]) {
               ChartExample: LineExample,
               AreaExample: LineExample,
               ApiTable,
+              InstallationCommands,
             }}
           />
         </DocsBody>

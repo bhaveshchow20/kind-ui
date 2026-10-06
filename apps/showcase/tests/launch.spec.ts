@@ -8,7 +8,9 @@ async function family(page: Page, name: string) {
 test("navigation, code modal and installation are keyboard accessible", async ({ page }) => {
   await page.goto("./");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Bring your data\s*to life/);
-  await expect(page.locator(".install-section")).toContainText("npm install @kind-ui/charts");
+  await expect(page.locator(".install-section")).toContainText(
+    "npm install @kind-ui/charts react react-dom recharts motion",
+  );
   await page.keyboard.press("Control+k");
   await expect(page.getByRole("textbox", { name: "Search components" })).toBeFocused();
   await page.getByRole("textbox", { name: "Search components" }).fill("no-such-chart");
@@ -202,7 +204,7 @@ for (const width of [375, 1280]) {
     await page.goto("./", { waitUntil: "networkidle" });
     const install = page.getByRole("region", { name: "Install Kind UI Charts" });
     for (const manager of ["npm", "pnpm", "yarn", "bun"]) {
-      const command = `${manager} ${manager === "npm" ? "install" : "add"} @kind-ui/charts`;
+      const command = `${manager} ${manager === "npm" ? "install" : "add"} @kind-ui/charts react react-dom recharts motion`;
       await install.getByRole("tab", { name: manager, exact: true }).click();
       await expect(install.getByRole("tabpanel")).toContainText(command);
       await install.getByRole("button", { name: "Copy install command", exact: true }).click();

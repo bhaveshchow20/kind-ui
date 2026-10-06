@@ -5,7 +5,7 @@ React components compose real Recharts lines, areas and bars with shared pointer
 ## Installation
 
 ```sh
-npm install @kind-ui/charts
+npm install @kind-ui/charts react react-dom recharts motion
 ```
 
 Import components and types from `@kind-ui/charts` and import

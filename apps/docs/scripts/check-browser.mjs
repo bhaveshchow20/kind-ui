@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { families } from "../examples/catalog.mjs";
+import { checkInstallation } from "./check-installation-browser.mjs";
 import { checkThemeSwitch } from "./check-theme-switch-browser.mjs";
 
 const origin = "http://127.0.0.1:6373";
@@ -29,6 +30,7 @@ const unpublishedFamilies = [
 mkdirSync("artifacts", { recursive: true });
 const browser = await chromium.launch();
 try {
+  await checkInstallation(browser, origin);
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1080 },
     permissions: ["clipboard-read", "clipboard-write"],
