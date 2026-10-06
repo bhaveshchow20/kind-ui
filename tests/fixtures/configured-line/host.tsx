@@ -354,6 +354,7 @@ function ProjectionContract() {
               data={geometryRows}
               config={config}
               xDataKey="month"
+              aria-label={`Monthly projected totals with ${type} interpolation`}
               series={[
                 {
                   seriesKey: "total",
