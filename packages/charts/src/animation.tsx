@@ -55,7 +55,13 @@ const snapshot = () => window.matchMedia(query).matches;
 const serverSnapshot = () => true;
 
 /** Motion owns the shared entrance clip and default active marks. */
-export function LineChart({ animate = false, children, ...props }: LineChartProps) {
+export function LineChart({
+  animate = false,
+  loading,
+  loadingLabel,
+  children,
+  ...props
+}: LineChartProps) {
   const id = useId();
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
@@ -68,6 +74,8 @@ export function LineChart({ animate = false, children, ...props }: LineChartProp
     <MotionContext value={{ enabled, transition }}>
       <LineChartFrame
         chartProps={props}
+        loading={loading}
+        loadingLabel={loadingLabel}
         engine={EngineLineChart}
         motionEnabled={enabled}
         interrupt={interrupt}

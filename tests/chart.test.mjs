@@ -60,7 +60,6 @@ test("direct and namespace imports expose the same public components", () => {
     "Brush",
     "CartesianGrid",
     "Cell",
-    "ChartLoading",
     "ComboChart",
     "Curve",
     "Dot",
@@ -1405,27 +1404,49 @@ test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/ex
   );
 });
 
-test("ChartLoading keeps content mounted, distinguishes empty data and exposes loading status", () => {
-  const content = h(
-    "button",
-    { type: "button", id: "consumer", onClick: () => {} },
-    "Consumer child",
-  );
-  const loading = render(
+test("chart loading props stay off the native engine and expose a chart-owned status", () => {
+  const html = render(
     h(
-      Chart.ChartLoading,
-      { loading: true, label: "Loading sales", style: { height: 280 }, className: "owned" },
-      content,
+      Root,
+      { config: { sales: { label: "Sales", color: "#123" } } },
+      h(Chart.BarChart, {
+        width: 320,
+        height: 240,
+        loading: true,
+        loadingLabel: "Loading sales",
+        "aria-label": "Sales",
+      }),
     ),
   );
-  assert.match(loading, /class="kind-ui-chart-loading owned"/);
-  assert.match(loading, /height:280px/);
-  assert.match(loading, /aria-busy="true" aria-hidden="true" inert=""/);
-  assert.match(loading, /role="status" aria-atomic="true">Loading sales/);
-  assert.match(loading, /id="consumer"/);
-  const empty = render(h(Chart.ChartLoading, { loading: false }, h("p", null, "No results")));
+  assert.match(html, /aria-busy="true" aria-hidden="true" inert=""/);
+  assert.match(html, /role="status" aria-atomic="true">Loading sales/);
+  assert.match(html, /width:320px;height:240px/);
+  assert.doesNotMatch(html, /loadingLabel=| loading="/);
+  const empty = render(
+    h(Chart.LineChart, {
+      config: {},
+      data: [],
+      xDataKey: "month",
+      loading: false,
+      "aria-label": "Empty sales",
+      height: 280,
+    }),
+  );
   assert.match(empty, /aria-busy="false"/);
-  assert.doesNotMatch(empty, /inert=|aria-hidden="true" inert/);
-  assert.match(empty, /No results/);
   assert.match(empty, /role="status" aria-atomic="true"><\/span>/);
+});
+
+test("bar-backed charts inherit chart-owned loading without fabricating data", () => {
+  for (const [Component, props] of [
+    [Chart.WaterfallChart, { data: [] }],
+    [Chart.BoxPlotChart, { data: [] }],
+    [Chart.HistogramChart, { bins: [], measure: "count" }],
+  ]) {
+    const html = render(
+      h(Root, { config: {} }, h(Component, { ...props, width: 320, height: 240, loading: true })),
+    );
+    assert.match(html, /kind-ui-loading-chart-pending/);
+    assert.match(html, /Loading chart/);
+    assert.match(html, /aria-busy="true"/);
+  }
 });

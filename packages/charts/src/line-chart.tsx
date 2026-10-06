@@ -24,7 +24,10 @@ import {
 import { useChart } from "./chart-context.js";
 import { useEmphasisActions } from "./emphasis.js";
 
-export type LineChartProps = ComponentProps<typeof EngineLineChart>;
+export type LineChartProps = ComponentProps<typeof EngineLineChart> & {
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
+};
 type Point = { x: number; y: number } | null;
 type Interaction = {
   pointer: Point;
@@ -98,6 +101,8 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
   clip,
   motionEnabled,
   categoryEmphasis = false,
+  loading,
+  loadingLabel,
   chartProps: props,
   children = props.children,
 }: {
@@ -108,6 +113,8 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
   clip?: string;
   motionEnabled?: boolean;
   categoryEmphasis?: boolean;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
 }) {
   const { onMouseMove, onMouseLeave } = props;
   const emphasis = useEmphasisActions();
@@ -169,6 +176,35 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
     setMotionReady(false);
     interrupt();
   }, [interrupt]);
+  const chart = (
+    <EngineChart
+      {...props}
+      className={[
+        "kind-ui-line-chart",
+        loading !== undefined && "kind-ui-loading-chart",
+        loading && "kind-ui-loading-chart-pending",
+        props.className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={{ ...props.style, "--kind-ui-line-clip": clip ?? "none" } as CSSProperties}
+      onMouseMove={(state, event) => {
+        const { relativeX, relativeY } = getRelativeCoordinate(event);
+        setKeyboard(false);
+        setMotionReady(true);
+        setPointer({ x: relativeX, y: relativeY });
+        interrupt();
+        onMouseMove?.(state, event);
+      }}
+      onMouseLeave={(state, event) => {
+        setPointer(null);
+        onMouseLeave?.(state, event);
+      }}
+    >
+      <Lifecycle data={props.data} invalidate={invalidate} />
+      {children}
+    </EngineChart>
+  );
   return (
     <LineInteraction
       value={{
@@ -186,6 +222,9 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
     >
       <div
         ref={frame}
+        aria-busy={loading}
+        aria-hidden={loading || undefined}
+        inert={loading || undefined}
         data-kind-ui="line-frame"
         data-motion={motionEnabled === undefined ? undefined : motionEnabled ? "on" : "off"}
         style={{ display: "contents" }}
@@ -218,32 +257,25 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
           }
         }}
       >
-        <EngineChart
-          {...props}
-          className={["kind-ui-line-chart", props.className].filter(Boolean).join(" ")}
-          style={{ ...props.style, "--kind-ui-line-clip": clip ?? "none" } as CSSProperties}
-          onMouseMove={(state, event) => {
-            const { relativeX, relativeY } = getRelativeCoordinate(event);
-            setKeyboard(false);
-            setMotionReady(true);
-            setPointer({ x: relativeX, y: relativeY });
-            interrupt();
-            onMouseMove?.(state, event);
-          }}
-          onMouseLeave={(state, event) => {
-            setPointer(null);
-            onMouseLeave?.(state, event);
-          }}
-        >
-          <Lifecycle data={props.data} invalidate={invalidate} />
-          {children}
-        </EngineChart>
+        {chart}
       </div>
+      {loading !== undefined && (
+        <span data-kind-ui="chart-loading-status" role="status" aria-atomic="true">
+          {loading ? (loadingLabel ?? "Loading chart") : ""}
+        </span>
+      )}
     </LineInteraction>
   );
 }
 
 /** Recharts owns geometry and keyboard selection; Kind shares pointer/keyboard modality. */
-export function LineChart(props: LineChartProps) {
-  return <LineChartFrame chartProps={props} engine={EngineLineChart} />;
+export function LineChart({ loading, loadingLabel, ...props }: LineChartProps) {
+  return (
+    <LineChartFrame
+      chartProps={props}
+      engine={EngineLineChart}
+      loading={loading}
+      loadingLabel={loadingLabel}
+    />
+  );
 }

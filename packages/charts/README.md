@@ -80,48 +80,50 @@ for composition and customization. The documentation covers chart selection,
 peer requirements, styling, motion and accessibility; applications own their
 data, domains and business state.
 
+### Loading chart data
+
+`LineChart` (configured and composed) and `BarChart` accept `loading?: boolean`
+(default false) alongside `animate`, plus `loadingLabel?: string` (default
+“Loading chart”). Import the default stylesheet. The chart owns its loading
+presentation; no wrapper component is required.
+
+```tsx
+<LineChart
+  config={config}
+  data={rows}
+  xDataKey="month"
+  aria-label="Monthly sales"
+  height={280}
+  animate={false}
+  loading={pending}
+  loadingLabel="Loading monthly sales"
+/>
+```
+
+For composed bars, pass `loading={pending}` directly to `BarChart` inside your
+usual `Root` and `ResponsiveContainer`. Chart content stays mounted and sized,
+but becomes hidden and inert during loading. A separate live status announces
+`loadingLabel` outside the busy content region. Consumer axes, series, tooltip,
+styles, handlers, refs and data stay with the native chart. External legends and
+controls remain available. Empty data does not imply loading: render an explicit
+empty-result message when the request completes without rows.
+
+Loading shows a neutral three-dot pulse; completion immediately exposes the
+chart with a short opacity reveal. Reduced motion disables both effects. Rapid
+updates follow the current prop without queued completions or forced delays.
+`animate` still controls native mark animation; native entrances may finish while
+hidden and are not replayed by loading. Omitting the prop retains existing chart
+markup. Supply a chart-specific label and accessible data alternative. Consumer portals outside the chart remain consumer-owned.
+
+This draft supports line and bar loading, including the bar-backed
+`WaterfallChart`, `BoxPlotChart` and `HistogramChart`. Other chart families do not
+yet expose this prop; their layout and interaction contracts need separate implementation
+and tests. Loading does not fabricate data or morph chart geometry. Request,
+cancellation, retries, partial results and errors remain host-owned.
+
+Run `npm run dev:chart` and open `/loading.html` to inspect load/replay/toggle,
+empty-result and resize controls, including transition out of loading.
+
 ## License
 
 [MIT](LICENSE) © 2026 Bhavesh Chowdhury.
-
-### Loading a chart
-
-`ChartLoading` is a whole-content presentation boundary. Import the default
-stylesheet. The host controls `loading`; empty data, requests, cancellation,
-retries, partial results and errors remain host-owned. No loading delay is added.
-
-```tsx
-<ChartLoading loading={pending} label="Loading monthly sales" style={{ height: 280 }}>
-  <ResponsiveContainer width="100%" height="100%">
-    <BarChart data={rows}>
-      <XAxis dataKey="month" />
-      <YAxis />
-      <BarSeries dataKey="sales" seriesKey="sales" />
-      <Tooltip />
-    </BarChart>
-  </ResponsiveContainer>
-</ChartLoading>
-```
-
-Compose the bar example inside `Root` as usual. A configured `LineChart` can be
-wrapped directly. Native div props, styles, handlers and ref belong to the outer
-boundary. Give the boundary an explicit height for percentage-height charts;
-otherwise its mounted children determine its dimensions. Content is hidden and
-inert while loading, with `aria-busy` on its content region. A separate live
-`role="status"` announces `label` (default: “Loading chart”); it clears on
-completion. Supply chart-specific text and an accessible data alternative.
-
-Loading shows a neutral three-dot pulse; completion immediately makes content
-available with a short opacity reveal. Reduced motion disables both animations.
-Rapid updates follow the current prop without queued completions. Children,
-consumer data, axes, tooltip/legend configuration and engine state are retained;
-native entrance animations may finish while hidden and are not replayed. Place
-controls or legends outside the boundary to keep them available during loading.
-Consumer portals outside the boundary must be hidden by the consumer. The
-boundary does not supply chart-family skeletons or animate data/geometry changes.
-It can contain DOM chart families, but line and bar are the browser-tested examples.
-
-Run `npm run dev:chart` and open `/loading.html` for load/replay, empty-result and
-resize controls. Prefer keeping replay controls outside the boundary so focus
-remains available while loading. A loaded empty result should have its own
-message; do not set `loading` merely because `rows` is empty.
