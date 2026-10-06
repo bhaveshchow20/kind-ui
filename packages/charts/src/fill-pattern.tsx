@@ -58,12 +58,7 @@ export function FillPatternDefinition({
     >
       <rect width={size} height={size} fill={baseColor} />
       {kind === "dots" ? (
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={width / 2}
-          fill={pattern.color ?? "CanvasText"}
-        />
+        <circle cx={size / 2} cy={size / 2} r={width / 2} fill={pattern.color ?? "CanvasText"} />
       ) : kind === "hatch" || kind === "lines" ? (
         <path
           d={`M0 0V${size} M${size} 0V${size}`}

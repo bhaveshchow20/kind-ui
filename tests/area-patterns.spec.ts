@@ -81,15 +81,18 @@ for (const horizontal of [false, true]) {
       await expect(page.locator("pattern animate, pattern animateTransform")).toHaveCount(0);
     }
     await page.getByRole("button", { name: "dots", exact: true }).click();
-    await expect(patterns.first().locator("circle")).toHaveCSS("fill", await page.locator("section").evaluate((section) => {
-      const probe = document.createElement("span");
-      probe.style.forcedColorAdjust = "none";
-      probe.style.color = "CanvasText";
-      section.append(probe);
-      const ink = getComputedStyle(probe).color;
-      probe.remove();
-      return ink;
-    }));
+    await expect(patterns.first().locator("circle")).toHaveCSS(
+      "fill",
+      await page.locator("section").evaluate((section) => {
+        const probe = document.createElement("span");
+        probe.style.forcedColorAdjust = "none";
+        probe.style.color = "CanvasText";
+        section.append(probe);
+        const ink = getComputedStyle(probe).color;
+        probe.remove();
+        return ink;
+      }),
+    );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
     await expect(marks).toHaveCount(2);
     await page.getByRole("button", { name: "First", exact: true }).first().click();
@@ -97,3 +100,27 @@ for (const horizontal of [false, true]) {
     expect(errors).toEqual([]);
   });
 }
+
+test("area patterns use the theme gradient first stop while opt-out uses full local paint", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:4181/static.html?patterns");
+  await page.getByRole("button", { name: "Gradient", exact: true }).click();
+  const marks = page.locator(".recharts-area-area");
+  const tile = page.locator('pattern[data-pattern="dots"] > rect').last();
+  await expect(tile).toHaveAttribute("fill", "var(--color-first)");
+  await expect(tile).toHaveCSS("fill", "rgb(255, 0, 0)");
+  await page.getByRole("button", { name: "Theme", exact: true }).click();
+  await expect(tile).toHaveCSS("fill", "rgb(255, 255, 255)");
+  await page.getByRole("combobox", { name: "Override" }).selectOption("stroke");
+  await expect(tile).toHaveAttribute("fill", "#123456");
+  await page.getByRole("combobox", { name: "Override" }).selectOption("off");
+  await expect(marks.first()).toHaveAttribute("fill", /url\(#kind-ui-color-/);
+  expect(
+    await marks.first().evaluate((node) => {
+      const id = node.getAttribute("fill")?.match(/^url\(#(.+)\)$/)?.[1];
+      return Boolean(id && node.closest("svg")?.querySelector(`linearGradient[id="${id}"]`));
+    }),
+  ).toBe(true);
+  await expect(marks.first()).toHaveAttribute("fill-opacity", "0.4");
+});

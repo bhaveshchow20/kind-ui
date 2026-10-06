@@ -1,8 +1,8 @@
 import { createRoot, hydrateRoot } from "react-dom/client";
 import "@kind-ui/charts/styles.css";
 import { renderToString } from "react-dom/server";
-import { AreaPatternHost } from "./patterns.js";
 import { AreaHost, AreaPaintHost } from "./host.js";
+import { AreaPatternHost } from "./patterns.js";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");

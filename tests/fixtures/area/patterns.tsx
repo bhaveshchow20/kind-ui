@@ -11,6 +11,7 @@ export function AreaPatternHost({ horizontal = false }: { horizontal?: boolean }
   const [stacked, setStacked] = useState(false);
   const [override, setOverride] = useState("none");
   const [material, setMaterial] = useState<Chart.AreaMaterial>("plain");
+  const [gradient, setGradient] = useState(false);
   const [dark, setDark] = useState(false);
   const [visible, setVisible] = useState(["first", "second"]);
   return (
@@ -32,6 +33,9 @@ export function AreaPatternHost({ horizontal = false }: { horizontal?: boolean }
       <button type="button" onClick={() => setStacked(!stacked)}>
         Stack
       </button>
+      <button type="button" onClick={() => setGradient(!gradient)}>
+        Gradient
+      </button>
       <button type="button" onClick={() => setDark(!dark)}>
         Theme
       </button>
@@ -41,7 +45,7 @@ export function AreaPatternHost({ horizontal = false }: { horizontal?: boolean }
       <label>
         Override
         <select value={override} onChange={(event) => setOverride(event.target.value)}>
-          {["none", "fill", "style", "shape", "off"].map((value) => (
+          {["none", "fill", "style", "shape", "stroke", "off"].map((value) => (
             <option key={value}>{value}</option>
           ))}
         </select>
@@ -50,7 +54,12 @@ export function AreaPatternHost({ horizontal = false }: { horizontal?: boolean }
         <Chart.Root
           key={chart}
           config={{
-            first: { color: "#789abc", pattern: { kind } },
+            first: {
+              color: gradient
+                ? { light: ["#ff0000", "#0000ff"], dark: ["#ffffff", "#000000"] }
+                : "#789abc",
+              pattern: { kind },
+            },
             second: { color: "var(--area-secondary)", pattern: { kind: "lines" } },
           }}
           visibleSeries={visible}
@@ -98,6 +107,7 @@ export function AreaPatternHost({ horizontal = false }: { horizontal?: boolean }
               stackId={stacked ? "total" : undefined}
               material={material}
               fillOpacity={0.4}
+              stroke={override === "stroke" ? "#123456" : undefined}
               fill={override === "fill" ? `url(#host-gradient-${chart})` : undefined}
               style={override === "style" ? { fill: "#123456" } : undefined}
               shape={
