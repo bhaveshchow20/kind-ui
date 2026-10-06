@@ -608,26 +608,48 @@ export function SelectiveGlowHost({ accessor = false }: { accessor?: boolean }) 
   if (reverse) data.reverse();
   return (
     <main className={dark ? "dark" : undefined}>
-      <button type="button" onClick={() => setReverse(!reverse)}>Reorder glow</button>
-      <button type="button" onClick={() => setIncluded(!included)}>Filter beta</button>
-      <button type="button" onClick={() => setSelected(!selected)}>Toggle glow</button>
-      <button type="button" onClick={() => setDark(!dark)}>Theme</button>
+      <button type="button" onClick={() => setReverse(!reverse)}>
+        Reorder glow
+      </button>
+      <button type="button" onClick={() => setIncluded(!included)}>
+        Filter beta
+      </button>
+      <button type="button" onClick={() => setSelected(!selected)}>
+        Toggle glow
+      </button>
+      <button type="button" onClick={() => setDark(!dark)}>
+        Theme
+      </button>
       <label>
         Base finish
         <select value={material} onChange={(e) => setMaterial(e.target.value as Chart.PieMaterial)}>
-          {["plain", "paper", "clay", "glow"].map((v) => <option key={v}>{v}</option>)}
+          {["plain", "paper", "clay", "glow"].map((v) => (
+            <option key={v}>{v}</option>
+          ))}
         </select>
       </label>
       <label>
         Paint owner
         <select value={owner} onChange={(e) => setOwner(e.target.value)}>
-          {["none", "filter", "shape", "active"].map((v) => <option key={v}>{v}</option>)}
+          {["none", "filter", "shape", "active"].map((v) => (
+            <option key={v}>{v}</option>
+          ))}
         </select>
       </label>
       <output aria-label="Glow event">{clicked}</output>
       {[0, 1].map((chart) => (
-        <Chart.Root key={chart} config={selectiveConfig} style={{ background: dark ? "#111827" : "white" }}>
-          <Chart.PieChart width={320} height={300} animate={false} accessibilityLayer aria-label={`Selective glow ${chart}`}>
+        <Chart.Root
+          key={chart}
+          config={selectiveConfig}
+          style={{ background: dark ? "#111827" : "white" }}
+        >
+          <Chart.PieChart
+            width={320}
+            height={300}
+            animate={false}
+            accessibilityLayer
+            aria-label={`Selective glow ${chart}`}
+          >
             {[0, 1].map((ring) => (
               <Chart.PieSeries
                 key={ring}
@@ -635,7 +657,7 @@ export function SelectiveGlowHost({ accessor = false }: { accessor?: boolean }) 
                 dataKey="value"
                 nameKey="id"
                 categoryKey={accessor ? categoryAccessor : "category"}
-                glowCategories={selected ? ring === 0 ? betaGlow : alphaGlow : noGlow}
+                glowCategories={selected ? (ring === 0 ? betaGlow : alphaGlow) : noGlow}
                 material={material}
                 innerRadius={ring === 0 ? 40 : 105}
                 outerRadius={ring === 0 ? 95 : 125}
@@ -645,7 +667,12 @@ export function SelectiveGlowHost({ accessor = false }: { accessor?: boolean }) 
                 onClick={(row) => setClicked(String(row.name))}
               >
                 {data.map((row) => (
-                  <Cell key={row.id} {...{ category: "alpha" }} data-category={row.id} {...(row.id === "beta" ? { fill: "#0e7490" } : {})} />
+                  <Cell
+                    key={row.id}
+                    {...{ category: "alpha" }}
+                    data-category={row.id}
+                    {...(row.id === "beta" ? { fill: "#0e7490" } : {})}
+                  />
                 ))}
               </Chart.PieSeries>
             ))}
@@ -655,7 +682,14 @@ export function SelectiveGlowHost({ accessor = false }: { accessor?: boolean }) 
       ))}
       <table>
         <caption>Glow allocation</caption>
-        <tbody>{data.map((row) => <tr key={row.id}><th scope="row">{row.id}</th><td>{row.value}</td></tr>)}</tbody>
+        <tbody>
+          {data.map((row) => (
+            <tr key={row.id}>
+              <th scope="row">{row.id}</th>
+              <td>{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
       </table>
     </main>
   );

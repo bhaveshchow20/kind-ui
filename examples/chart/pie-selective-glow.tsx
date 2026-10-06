@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const config = {
   design: { label: "Design", color: "#733bff", formatValue: (value: unknown) => `${value} hours` },
@@ -27,10 +26,12 @@ const data: { key: keyof typeof config; hours: number; share: string }[] = [
   { key: "research", hours: 100, share: "10%" },
 ];
 
-export function AllocationMaterialChart({
+function AllocationMaterialChart({
   material = "paper",
+  glowCategories,
 }: {
   material?: "plain" | "paper" | "clay" | "glow";
+  glowCategories?: readonly string[];
 }) {
   return (
     <Chart.Root config={config}>
@@ -40,11 +41,14 @@ export function AllocationMaterialChart({
           <Chart.PieSeries
             data={data}
             dataKey="hours"
+            categoryKey="key"
+            glowCategories={glowCategories}
             nameKey="key"
             innerRadius={58}
             material={material}
             outerRadius={108}
-            paddingAngle={0}
+            cornerRadius={8}
+            paddingAngle={2}
           >
             {data.map((row) => (
               <Chart.Cell key={row.key} fill={config[row.key].color} />
@@ -61,5 +65,28 @@ export function AllocationMaterialChart({
         </Chart.PieChart>
       </Chart.ResponsiveContainer>
     </Chart.Root>
+  );
+}
+
+// The rounded donut geometry from the Pie guide works with the same identity seam.
+export function SelectiveGlowChart() {
+  return (
+    <article className="pie-card" aria-label="Highlighted Design allocation">
+      <h2>Selective Design glow</h2>
+      <AllocationMaterialChart material="plain" glowCategories={["design"]} />
+      <p>Design is highlighted; the allocation values are unchanged.</p>
+      <table>
+        <caption>Team allocation</caption>
+        <tbody>
+          {data.map((row) => (
+            <tr key={row.key}>
+              <th scope="row">{config[row.key].label}</th>
+              <td>{row.hours} hours</td>
+              <td>{row.share}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </article>
   );
 }
