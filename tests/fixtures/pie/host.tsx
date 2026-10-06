@@ -34,6 +34,8 @@ export function PinnedPieHost({
   const [override, setOverride] = useState(false);
   const [nativeIndex, setNativeIndex] = useState(false);
   const [visible, setVisible] = useState<string[] | undefined>(undefined);
+  const rootProps: Chart.RootProps =
+    visible === undefined ? { config } : { config, visibleSeries: visible };
   return (
     <main>
       <button type="button" onClick={() => setData((rows) => [...rows].reverse())}>
@@ -66,7 +68,7 @@ export function PinnedPieHost({
       <button type="button" onClick={() => setData([...original, { id: "beta", value: 5 }])}>
         Duplicate pin
       </button>
-      <Chart.Root config={config} {...(visible ? { visibleSeries: visible } : {})}>
+      <Chart.Root {...rootProps}>
         <Chart.PieChart
           key={generation}
           width={320}
