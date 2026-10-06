@@ -1,0 +1,119 @@
+import * as Chart from "@kind-ui/charts";
+import { useState } from "react";
+import { createRoot } from "react-dom/client";
+import "@kind-ui/charts/styles.css";
+import "./loading.css";
+
+const config = { sales: { label: "Sales", color: "#568577" } };
+const data = [
+  { month: "Jan", sales: 24 },
+  { month: "Feb", sales: 42 },
+  { month: "Mar", sales: 34 },
+  { month: "Apr", sales: 63 },
+  { month: "May", sales: 52 },
+];
+function Preview() {
+  const [loading, setLoading] = useState(true);
+  const [empty, setEmpty] = useState(false);
+  const [wide, setWide] = useState(true);
+  const [events, setEvents] = useState(0);
+  const rows = empty ? [] : data;
+  return (
+    <main>
+      <p className="eyebrow">Kind UI / loading study</p>
+      <h1>A quiet pause, then your chart.</h1>
+      <p>
+        The boundary keeps real charts mounted. Use Load to finish immediately, or interrupt the
+        reveal with Replay. Your operating system’s reduced motion preference disables the pulse and
+        fade.
+      </p>
+      <nav aria-label="Preview controls">
+        <button type="button" onClick={() => setLoading(true)}>
+          Replay loading
+        </button>
+        <button type="button" onClick={() => setLoading(false)}>
+          Load data
+        </button>
+        <button type="button" onClick={() => setLoading((value) => !value)}>
+          Toggle loading
+        </button>
+        <label>
+          <input
+            type="checkbox"
+            checked={empty}
+            onChange={(event) => setEmpty(event.target.checked)}
+          />{" "}
+          Empty result
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={wide}
+            onChange={(event) => setWide(event.target.checked)}
+          />{" "}
+          Wide layout
+        </label>
+      </nav>
+      <p role="status">
+        {loading ? "Request pending" : empty ? "Loaded: no results" : "Loaded: five months"}
+      </p>
+      <section className="charts" style={{ maxWidth: wide ? 900 : 520 }}>
+        <article>
+          <h2>Configured line</h2>
+          <Chart.ChartLoading
+            loading={loading}
+            label="Loading monthly sales"
+            data-testid="line-loading"
+          >
+            <Chart.LineChart
+              config={config}
+              data={rows}
+              xDataKey="month"
+              aria-label="Monthly sales"
+              height={280}
+              animate={false}
+            />
+            {empty && <p>No sales found.</p>}
+          </Chart.ChartLoading>
+        </article>
+        <article>
+          <h2>Composed bar</h2>
+          <Chart.Root config={config}>
+            <Chart.ChartLoading
+              loading={loading}
+              label="Loading sales bars"
+              style={{ height: 280 }}
+              data-testid="bar-loading"
+            >
+              <Chart.ResponsiveContainer width="100%" height="100%">
+                <Chart.BarChart
+                  data={rows}
+                  animate={false}
+                  onClick={() => setEvents((value) => value + 1)}
+                >
+                  <Chart.CartesianGrid vertical={false} stroke="#e1e6e2" />
+                  <Chart.XAxis dataKey="month" />
+                  <Chart.YAxis domain={[0, 80]} />
+                  <Chart.BarSeries dataKey="sales" seriesKey="sales" />
+                  <Chart.Tooltip />
+                </Chart.BarChart>
+              </Chart.ResponsiveContainer>
+            </Chart.ChartLoading>
+            <Chart.Legend />
+            {empty && !loading && <p>No sales found.</p>}
+          </Chart.Root>
+          <p>
+            Consumer click events: <output>{events}</output>
+          </p>
+        </article>
+      </section>
+      <p>
+        Line legend is inside its boundary; bar legend is outside and remains available. The same
+        neutral loading presentation can wrap other families; it does not animate their marks or
+        reset their entrance animation. Keep an accessible data alternative alongside your chart.
+      </p>
+    </main>
+  );
+}
+const root = document.getElementById("root");
+if (root) createRoot(root).render(<Preview />);

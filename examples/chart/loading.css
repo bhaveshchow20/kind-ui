@@ -1,0 +1,66 @@
+body {
+  margin: 0;
+  background: #f6f5f0;
+  color: #273e36;
+  font:
+    16px / 1.6 system-ui,
+    sans-serif;
+}
+main {
+  max-width: 960px;
+  margin: 48px auto;
+  padding: 0 24px;
+}
+h1 {
+  font-size: clamp(30px, 5vw, 48px);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+h2 {
+  font-size: 18px;
+}
+p {
+  max-width: 760px;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 12px;
+}
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0;
+}
+button {
+  border: 1px solid #b6c3bb;
+  background: white;
+  padding: 9px 16px;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+button:focus-visible {
+  outline: 3px solid #568577;
+  outline-offset: 3px;
+}
+.charts {
+  display: grid;
+  gap: 24px;
+  transition: max-width 180ms ease;
+}
+article {
+  background: white;
+  padding: 24px;
+  border: 1px solid #d9e0d9;
+  border-radius: 12px;
+  min-width: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .charts {
+    transition: none;
+  }
+}

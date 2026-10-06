@@ -60,6 +60,7 @@ test("direct and namespace imports expose the same public components", () => {
     "Brush",
     "CartesianGrid",
     "Cell",
+    "ChartLoading",
     "ComboChart",
     "Curve",
     "Dot",
@@ -1402,4 +1403,29 @@ test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/ex
       ),
     /requires metadata/,
   );
+});
+
+test("ChartLoading keeps content mounted, distinguishes empty data and exposes loading status", () => {
+  const content = h(
+    "button",
+    { type: "button", id: "consumer", onClick: () => {} },
+    "Consumer child",
+  );
+  const loading = render(
+    h(
+      Chart.ChartLoading,
+      { loading: true, label: "Loading sales", style: { height: 280 }, className: "owned" },
+      content,
+    ),
+  );
+  assert.match(loading, /class="kind-ui-chart-loading owned"/);
+  assert.match(loading, /height:280px/);
+  assert.match(loading, /aria-busy="true" aria-hidden="true" inert=""/);
+  assert.match(loading, /role="status" aria-atomic="true">Loading sales/);
+  assert.match(loading, /id="consumer"/);
+  const empty = render(h(Chart.ChartLoading, { loading: false }, h("p", null, "No results")));
+  assert.match(empty, /aria-busy="false"/);
+  assert.doesNotMatch(empty, /inert=|aria-hidden="true" inert/);
+  assert.match(empty, /No results/);
+  assert.match(empty, /role="status" aria-atomic="true"><\/span>/);
 });
