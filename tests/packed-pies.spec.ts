@@ -544,14 +544,16 @@ test("initial Pie pin hands focus and pointer inspection to native dismissal", a
   await page.keyboard.press("Escape");
   await expect(tooltip).not.toBeVisible();
   await page.keyboard.press("Tab");
+  await expect(chart.locator(".recharts-pie")).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "After chart", exact: true })).toBeFocused();
   await page.getByRole("button", { name: "Reorder pin", exact: true }).click();
   await expect(tooltip).not.toBeVisible();
   await page.getByRole("button", { name: "Remount pin", exact: true }).click();
   await expect(tooltip).toContainText("Beta");
-  await page.locator('[data-kind-ui="pie-sector"]').first().hover();
+  await page.locator('[data-kind-ui="pie-sector"][name="alpha"]').hover();
   await expect(tooltip).toContainText("Alpha");
-  await page.mouse.move(0, 0);
+  await page.mouse.move(0, 0, { steps: 10 });
   await expect(tooltip).not.toBeVisible();
 });
 
