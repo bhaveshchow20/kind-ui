@@ -5,6 +5,7 @@ import { Area } from "recharts";
 import { ActiveMarker } from "./animation.js";
 import { type AreaMaterial, MaterialArea } from "./area-material.js";
 import { useChart } from "./chart-context.js";
+import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useLineInteraction } from "./line-chart.js";
 
 export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
@@ -15,12 +16,15 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   seriesKey?: string;
   /** Finish on the native area; explicit shape/filter retain consumer ownership. */
   material?: AreaMaterial;
+  /** Static fill encoding; none opts out of configured patterns. Native paint/shape wins. */
+  pattern?: FillPattern | "none" | undefined;
 };
 
 /** A registered Recharts Area with Root colors and controlled visibility. */
 export function AreaSeries<DataPoint = unknown, Value = unknown>({
   seriesKey,
   material = "plain",
+  pattern,
   hide,
   stroke,
   fill,
@@ -46,20 +50,49 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("AreaSeries requires seriesKey for controlled non-string dataKey");
+  const configuredPattern = key && Object.hasOwn(config, key) ? config[key]?.pattern : undefined;
+  const resolvedPattern = pattern === "none" ? undefined : (pattern ?? configuredPattern);
+  const patternId = patternResourceId(generatedId);
+  const patterned =
+    resolvedPattern !== undefined &&
+    fill === undefined &&
+    props.style?.fill === undefined &&
+    props.shape === undefined;
   const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
-    <Area
-      activeDot={<ActiveMarker />}
-      {...props}
-      {...(material !== "plain" && props.shape === undefined && props.filter === undefined
-        ? { shape: <MaterialArea material={material} filterId={`${generatedId}-area-material`} /> }
-        : {})}
-      isAnimationActive={false}
-      id={id}
-      hide={effectiveHide}
-      {...(color !== undefined ? { stroke: color } : {})}
-      {...(fill !== undefined ? { fill } : color !== undefined ? { fill: color } : {})}
-      className={["kind-ui-area-series", className].filter(Boolean).join(" ")}
-    />
+    <>
+      {patterned && (
+        <defs pointerEvents="none">
+          <FillPatternDefinition
+            id={patternId}
+            pattern={resolvedPattern}
+            baseColor={
+              stroke ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : "currentColor")
+            }
+          />
+        </defs>
+      )}
+      <Area
+        activeDot={<ActiveMarker />}
+        {...props}
+        {...(material !== "plain" && props.shape === undefined && props.filter === undefined
+          ? {
+              shape: <MaterialArea material={material} filterId={`${generatedId}-area-material`} />,
+            }
+          : {})}
+        isAnimationActive={false}
+        id={id}
+        hide={effectiveHide}
+        {...(color !== undefined ? { stroke: color } : {})}
+        {...(fill !== undefined
+          ? { fill }
+          : patterned
+            ? { fill: `url(#${patternId})` }
+            : color !== undefined
+              ? { fill: color }
+              : {})}
+        className={["kind-ui-area-series", className].filter(Boolean).join(" ")}
+      />
+    </>
   );
 }

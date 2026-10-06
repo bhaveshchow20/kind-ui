@@ -283,7 +283,7 @@ function StackedAreas({
           type="monotone"
           stackId="devices"
           stroke={`var(--color-${key})`}
-          fill={`var(--color-${key})`}
+          fill={config[key].pattern ? undefined : `var(--color-${key})`}
           fillOpacity={key === "mobile" ? 0.26 : 0.58}
           connectNulls={false}
         />
