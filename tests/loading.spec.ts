@@ -21,14 +21,14 @@ const families = [
 const motions: Record<string, string> = {
   line: "sweep",
   area: "sweep",
-  bar: "grow",
+  bar: "sweep",
   combo: "combined",
   scatter: "emerge",
-  waterfall: "grow",
-  histogram: "grow",
-  "box-plot": "grow",
+  waterfall: "sweep",
+  histogram: "sweep",
+  "box-plot": "sweep",
   pie: "angular",
-  radar: "radial",
+  radar: "morph",
   "radial-bar": "angular",
   "activity-rings": "angular",
   heatmap: "wave",
@@ -86,7 +86,9 @@ test("design stays stable through data and resize, then refreshes between pulses
   const pause = await page.addStyleTag({
     content: '[data-kind-ui="chart-loading-skeleton"] { animation-play-state: paused !important; }',
   });
-  const cards = families.map((family) => page.locator(`[data-family-card="${family}"]`));
+  const cards = families
+    .filter((family) => family !== "radar")
+    .map((family) => page.locator(`[data-family-card="${family}"]`));
   const initial = await Promise.all(cards.map(design));
   await page.getByRole("checkbox", { name: "Empty input data" }).uncheck();
   expect(await Promise.all(cards.map(design))).toEqual(initial);
@@ -167,7 +169,10 @@ test("live reduced motion makes every skeleton static and skips real entrance", 
   const sweeps = page.locator(skeletonSelector);
   await expect(sweeps).toHaveCount(14);
   for (const sweep of await sweeps.all())
-    await expect(sweep).toHaveCSS("animation-name", "kind-ui-loading-pulse");
+    await expect(sweep).toHaveCSS(
+      "animation-name",
+      (await sweep.getAttribute("data-family")) === "radar" ? "none" : "kind-ui-loading-pulse",
+    );
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const sweep of await sweeps.all()) await expect(sweep).toHaveCSS("animation-name", "none");
   const staticDesigns = await Promise.all(
@@ -234,7 +239,7 @@ test("Sankey and short Heatmap retain native bounds through loading and replay",
   expect(await heatSkeleton.boundingBox()).toEqual(placeholderBounds);
 });
 
-test("three normal-speed pulses give every family visibly distinct geometry at invisible boundaries", async ({
+test("three normal-speed pulses give pulse-based families visibly distinct geometry at invisible boundaries", async ({
   page,
 }) => {
   test.setTimeout(25000);
@@ -243,6 +248,7 @@ test("three normal-speed pulses give every family visibly distinct geometry at i
   await expect(page.locator(skeletonSelector)).toHaveCount(14);
   await page.locator(skeletonSelector).evaluateAll((elements) => {
     for (const surface of elements) {
+      if (surface.getAttribute("data-family") === "radar") continue;
       const design = surface.querySelector('[data-kind-ui="loading-design"]');
       if (!design) throw new Error("Missing family design");
       const geometry = () => {
@@ -308,23 +314,27 @@ test("three normal-speed pulses give every family visibly distinct geometry at i
         page
           .locator(skeletonSelector)
           .evaluateAll((elements) =>
-            elements.every(
-              (element) =>
-                JSON.parse(element.getAttribute("data-pulse-samples") ?? "[]").length >= 4,
-            ),
+            elements
+              .filter((element) => element.getAttribute("data-family") !== "radar")
+              .every(
+                (element) =>
+                  JSON.parse(element.getAttribute("data-pulse-samples") ?? "[]").length >= 4,
+              ),
           ),
       { timeout: 15000 },
     )
     .toBe(true);
   const observations = await page.locator(skeletonSelector).evaluateAll((elements) =>
-    elements.map((element) => ({
-      family: element.getAttribute("data-family"),
-      samples: JSON.parse(element.getAttribute("data-pulse-samples") ?? "[]") as {
-        geometry: string;
-        metric: number[];
-        opacity: number;
-      }[],
-    })),
+    elements
+      .filter((element) => element.getAttribute("data-family") !== "radar")
+      .map((element) => ({
+        family: element.getAttribute("data-family"),
+        samples: JSON.parse(element.getAttribute("data-pulse-samples") ?? "[]") as {
+          geometry: string;
+          metric: number[];
+          opacity: number;
+        }[],
+      })),
   );
   for (const { family, samples } of observations) {
     expect(new Set(samples.map((sample) => sample.geometry)).size, family ?? "").toBe(4);
@@ -418,7 +428,7 @@ test("native motion uses moving soft windows and reduced motion removes recurrin
   const barMask = await page
     .locator('[data-family-card="bar"] [data-kind-ui="loading-design"]')
     .getAttribute("mask");
-  expect(barMask).toMatch(/-vertical\)$/);
+  expect(barMask).toMatch(/-horizontal\)$/);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator('[data-kind-ui="loading-leading-window"]')).toHaveCount(0);
   for (const surface of await page.locator(skeletonSelector).all())
@@ -539,4 +549,219 @@ test.describe("normal-speed visual recording", () => {
         contentType: "video/webm",
       });
   });
+});
+
+test("bar-shaped families reveal left to right and fade behind the advancing front", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/loading.html");
+  for (const family of ["bar", "waterfall", "histogram", "box-plot"]) {
+    const surface = page.locator(`[data-family-card="${family}"]`).locator(skeletonSelector);
+    await expect(surface.locator('[data-kind-ui="loading-design"]')).toHaveAttribute(
+      "mask",
+      /-horizontal\)$/,
+    );
+    for (const group of await surface.locator('[data-loading-motion="grow"]').all())
+      await expect(group).toHaveCSS("mask-image", "none");
+  }
+  const observations = await page.locator(skeletonSelector).evaluateAll((elements) =>
+    Promise.all(
+      elements
+        .filter((el) =>
+          ["bar", "waterfall", "histogram", "box-plot"].includes(
+            el.getAttribute("data-family") ?? "",
+          ),
+        )
+        .map(
+          (surface) =>
+            new Promise<{
+              family: string | null;
+              advance: number;
+              beforeAlpha: number;
+              afterAlpha: number;
+            }>((resolve, reject) => {
+              const id = surface
+                .querySelector('[data-kind-ui="loading-design"]')
+                ?.getAttribute("mask")
+                ?.match(/#([^)]*)/)?.[1];
+              const window = id ? document.getElementById(id)?.querySelector("rect") : null;
+              const started = performance.now();
+              let leading: { x: number; alpha: number } | null = null;
+              const tick = () => {
+                const x = Number(window?.getAttribute("x"));
+                const t = (320 - x) / 320;
+                const alpha =
+                  t <= 0 || t >= 1 ? 0 : t < 0.35 ? t / 0.35 : t > 0.75 ? (1 - t) / 0.25 : 1;
+                if (x >= 100 && x <= 220 && alpha > 0.9) leading = { x, alpha };
+                if (leading && x >= 300 && x < 500) {
+                  resolve({
+                    family: surface.getAttribute("data-family"),
+                    advance: x - leading.x,
+                    beforeAlpha: leading.alpha,
+                    afterAlpha: alpha,
+                  });
+                  return;
+                }
+                if (leading && x < leading.x) leading = null;
+                if (performance.now() - started > 6000) {
+                  reject(new Error("Missing horizontal trail"));
+                  return;
+                }
+                requestAnimationFrame(tick);
+              };
+              requestAnimationFrame(tick);
+            }),
+        ),
+    ),
+  );
+  for (const sample of observations) {
+    expect(sample.advance, sample.family ?? "").toBeGreaterThan(80);
+    expect(sample.beforeAlpha).toBeGreaterThan(0.9);
+    expect(sample.afterAlpha).toBeLessThan(0.25);
+  }
+});
+
+test("both Radar polygons morph continuously through wrap, resize and interruptions, and stop for reduced motion", async ({
+  page,
+}) => {
+  test.setTimeout(25000);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/loading.html");
+  const radar = page.locator('[data-family-card="radar"]').locator(skeletonSelector);
+  const polygons = radar.locator('[data-kind-ui="loading-radar-polygon"]');
+  await expect(polygons).toHaveCount(2);
+  await expect(radar).toHaveCSS("animation-name", "none");
+  expect(await radar.locator('[data-kind-ui="loading-design"]').getAttribute("mask")).toBeNull();
+  const observation = polygons.evaluateAll(
+    (nodes) =>
+      new Promise<{ changes: number[]; maxSpeed: number; minOpacity: number; valid: boolean }>(
+        (resolve) => {
+          const started = performance.now();
+          const initial = nodes.map(
+            (node) =>
+              (node.getAttribute("points") ?? "").match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [],
+          );
+          let last = initial;
+          let lastTime = started;
+          const changes = [0, 0];
+          let maxSpeed = 0;
+          let minOpacity = 1;
+          let valid = true;
+          const tick = () => {
+            const now = performance.now();
+            const current = nodes.map(
+              (node) =>
+                (node.getAttribute("points") ?? "").match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [],
+            );
+            minOpacity = Math.min(
+              minOpacity,
+              Number(getComputedStyle(nodes[0]?.closest("svg") as SVGElement).opacity),
+            );
+            current.forEach((points, index) => {
+              valid &&=
+                points.length === 12 &&
+                points.every((value, slot) =>
+                  slot % 2 === 0 ? value >= 200 && value <= 440 : value >= 0 && value <= 240,
+                );
+              const drift = Math.max(
+                ...points.map((value, slot) => Math.abs(value - (initial[index]?.[slot] ?? value))),
+              );
+              changes[index] = Math.max(changes[index] ?? 0, drift);
+              if (now - lastTime > 0 && now - lastTime < 60)
+                maxSpeed = Math.max(
+                  maxSpeed,
+                  ...points.map(
+                    (value, slot) =>
+                      (Math.abs(value - (last[index]?.[slot] ?? value)) / (now - lastTime)) * 1000,
+                  ),
+                );
+            });
+            last = current;
+            lastTime = now;
+            if (now - started > 8500) {
+              resolve({ changes, maxSpeed, minOpacity, valid });
+              return;
+            }
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        },
+      ),
+  );
+  await page.waitForTimeout(600);
+  await page.getByRole("checkbox", { name: "Empty input data" }).uncheck();
+  await page.waitForTimeout(600);
+  await page.getByRole("checkbox", { name: "Wide layout" }).uncheck();
+  const sample = await observation;
+  expect(sample.valid).toBe(true);
+  expect(sample.changes.every((value) => value > 35)).toBe(true);
+  expect(sample.minOpacity).toBe(1);
+  expect(sample.maxSpeed).toBeLessThan(150);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForTimeout(100);
+  const still = await polygons.evaluateAll((nodes) =>
+    nodes.map((node) => node.getAttribute("points")),
+  );
+  await page.waitForTimeout(1000);
+  expect(
+    await polygons.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("points"))),
+  ).toEqual(still);
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole("button", { name: "Load data" }).click();
+    await expect(polygons).toHaveCount(0);
+    await page.getByRole("button", { name: "Replay loading" }).click();
+    await expect(polygons).toHaveCount(2);
+  }
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect
+    .poll(() => polygons.first().getAttribute("points"))
+    .not.toEqual(await polygons.first().getAttribute("points"));
+});
+
+test("RadialBar keeps angular velocity through closing across multiple real-speed cycles", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/loading.html");
+  const band = page
+    .locator('[data-family-card="radial-bar"] [data-kind-ui="loading-angular"]')
+    .first();
+  await band.scrollIntoViewIfNeeded();
+  const sample = await band.evaluate(
+    (element) =>
+      new Promise<{ seams: number; minSpeed: number; maxSpeed: number }>((resolve) => {
+        const started = performance.now();
+        let previous: { progress: number; time: number } | null = null;
+        let seams = 0;
+        let minSpeed = Infinity;
+        let maxSpeed = 0;
+        const tick = () => {
+          const now = performance.now();
+          const progress = -Number(element.getAttribute("stroke-dashoffset")) / 100;
+          if (
+            previous &&
+            progress >= 0.9 &&
+            progress <= 1.15 &&
+            progress >= previous.progress &&
+            now - previous.time < 60
+          ) {
+            const speed = ((progress - previous.progress) / (now - previous.time)) * 1000;
+            minSpeed = Math.min(minSpeed, speed);
+            maxSpeed = Math.max(maxSpeed, speed);
+            if (previous.progress < 1 && progress >= 1) seams++;
+          }
+          previous = { progress, time: now };
+          if (now - started > 7200) {
+            resolve({ seams, minSpeed, maxSpeed });
+            return;
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+  expect(sample.seams).toBeGreaterThanOrEqual(2);
+  expect(sample.minSpeed).toBeGreaterThan(0.65);
+  expect(sample.maxSpeed).toBeLessThan(1.2);
 });

@@ -503,6 +503,15 @@
   :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion="grow"]) {
     mask: var(--kind-ui-loading-vertical);
   }
+  :where(
+      [data-family="bar"],
+      [data-family="waterfall"],
+      [data-family="histogram"],
+      [data-family="box-plot"]
+    )
+    [data-loading-motion="grow"] {
+    mask: none;
+  }
   :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion="reveal"]) {
     mask: var(--kind-ui-loading-horizontal);
   }

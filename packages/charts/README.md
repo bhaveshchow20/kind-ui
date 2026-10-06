@@ -101,12 +101,14 @@ All chart families accept `loading?: boolean` alongside `animate`, plus
 Pass the same props directly to composed chart roots inside the existing `Root`
 and native sizing/composition. Supported families: Line, Area, Bar, Combo, Pie,
 Radar, RadialBar, Scatter, Heatmap, Waterfall, Histogram, BoxPlot, ActivityRings
-and Sankey. Each uses its own decorative chart silhouette. A new loading cycle
-chooses a bounded design variation independent of your data; each pulse chooses a clearly different bounded profile while fully hidden. Geometry
-stays stable through renders and resize between pulses. A soft leading reveal and
+and Sankey. Each uses its own decorative chart silhouette independent of your data.
+Pulse-based skeletons choose a clearly different bounded profile while fully hidden;
+their geometry stays stable through renders and resize between pulses. A soft leading reveal and
 trailing fade overlap, following the chart’s native entrance duration, easing and
-direction: horizontal paths, baseline bar windows, angular sectors, radial windows,
-ordered point/cell opacity or directional flow. Combo preserves separate family
+direction: horizontal paths and left-to-right bar-family windows, angular sectors,
+ordered point/cell opacity or directional flow. Radar keeps two six-vertex polygons
+visible and smoothly morphs between bounded decorative shapes; reduced motion
+holds both still. RadialBar keeps continuous angular velocity through its closing seam. Combo preserves separate family
 reveal options. Pulse timing includes room for the trail to leave and a hidden
 geometry swap; loading never delays actual completion.
 Reduced motion displays a static silhouette.

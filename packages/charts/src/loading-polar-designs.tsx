@@ -1,3 +1,9 @@
+"use client";
+
+import { animate, motion, useMotionValue } from "motion/react";
+import { memo, use, useLayoutEffect, useMemo } from "react";
+import { LoadingProgress } from "./loading-motion.js";
+
 // Fixed presentation geometry. These silhouettes never inspect chart rows or values.
 export type PolarLoadingFamily = "pie" | "radar" | "radial-bar" | "activity-rings";
 
@@ -54,6 +60,7 @@ export function PolarLoadingDesign({
     );
   }
   if (family === "radar") {
+    const reduced = use(LoadingProgress)?.reduced ?? true;
     return (
       <g
         data-kind-ui="loading-radar-motion"
@@ -69,27 +76,8 @@ export function PolarLoadingDesign({
           const [x, y] = point(100, angle);
           return <line key={angle} x1="320" y1="120" x2={x} y2={y} opacity="0.35" />;
         })}
-        <polygon
-          points={(
-            [
-              [96, 28, 42, 90, 25, 35],
-              [30, 94, 32, 45, 94, 28],
-              [40, 35, 96, 28, 45, 94],
-              [86, 72, 28, 34, 82, 96],
-            ][variant] ?? []
-          )
-            .map((radius, index) =>
-              point(
-                Math.max(22, Math.min(99, radius + deviation(index, 5))),
-                -90 + index * 60,
-              ).join(","),
-            )
-            .join(" ")}
-          fill="currentColor"
-          fillOpacity="0.25"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
+        <RadarLoadingPolygon seed={seed} layer={0} reduced={reduced} />
+        <RadarLoadingPolygon seed={seed} layer={1} reduced={reduced} />
       </g>
     );
   }
@@ -126,3 +114,54 @@ export function PolarLoadingDesign({
     </g>
   );
 }
+
+const radarProfiles = [
+  [96, 28, 42, 90, 25, 35],
+  [30, 94, 32, 45, 94, 28],
+  [40, 35, 96, 28, 45, 94],
+  [86, 72, 28, 34, 82, 96],
+] as const;
+
+/** Identical vertex order makes every interpolated shape valid and continuous. */
+const RadarLoadingPolygon = memo(function RadarLoadingPolygon({
+  seed,
+  layer,
+  reduced,
+}: {
+  seed: number;
+  layer: number;
+  reduced: boolean;
+}) {
+  const frames = useMemo(() => {
+    const first = (Math.abs(Math.trunc(seed)) + layer * 2) % radarProfiles.length;
+    const points = Array.from({ length: radarProfiles.length }, (_, step) =>
+      (radarProfiles[(first + step) % radarProfiles.length] ?? radarProfiles[0])
+        .map((radius, index) =>
+          point(radius * (layer === 0 ? 1 : 0.82), -90 + index * 60).join(","),
+        )
+        .join(" "),
+    );
+    return [...points, points[0] ?? ""];
+  }, [seed, layer]);
+  const points = useMotionValue(frames[0] ?? "");
+  useLayoutEffect(() => {
+    if (reduced) {
+      points.set(frames[0] ?? "");
+      return;
+    }
+    // A persistent MotionValue keeps host rerenders from resetting an in-flight
+    // SVG attribute back to its first keyframe.
+    const controls = animate(points, frames, { duration: 8, ease: "easeInOut", repeat: Infinity });
+    return () => controls.stop();
+  }, [points, frames, reduced]);
+  return (
+    <motion.polygon
+      data-kind-ui="loading-radar-polygon"
+      points={points}
+      fill="currentColor"
+      fillOpacity={layer === 0 ? 0.2 : 0.12}
+      strokeWidth={layer === 0 ? 3 : 2}
+      strokeLinejoin="round"
+    />
+  );
+});
