@@ -310,11 +310,12 @@ do not compute another share or apply expand to data already transformed elsewhe
 Hosts still own raw data tables and accessible alternatives.
 
 The source-only example at `/contracts.html` includes vertical/horizontal Bar,
-Area and Combo with a separate unformatted latency axis and original data tables.
-Recharts 3.10.1 applies the native expand domain `[0, 1]` to every numeric axis,
-even the unstacked latency axis declared with `[0, 10]`; this fixture proves
-formatting isolation and raw tooltip/table values, not independent raw-unit line
-geometry. The helper does not override that native limitation. The Percent Area
-recipe also uses this helper and retains integer tooltip percentages and “No share”
-for a zero total. Runtime/browser coverage is intended
-for the normal hosted CI; local installation is not required to read these examples.
+Area and Combo with a separate raw latency axis and original data tables.
+Recharts 3.10.1 applies native expand to every numeric axis. For mixed-unit Combo
+charts, the example therefore uses caller-selected fraction `dataKey` accessors
+for the stacked bars with `stackOffset="none"`, a `[0, 1]` share axis, and an
+unchanged raw latency line on `[0, 10]`. The raw rows stay intact; an explicit
+native tooltip formatter pairs each fraction with its original row value. Do not
+apply expand or divide again to those fraction accessors. Other families use
+native expand and the formatting helper. The Percent Area recipe retains integer
+tooltip percentages and “No share” for a zero total.
