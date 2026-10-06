@@ -94,3 +94,25 @@ shapes and handlers retain ownership. Keep labels and a data alternative.
 ## License
 
 [MIT](LICENSE) © 2026 Bhavesh Chowdhury.
+
+### Initial Pie tooltip
+
+`PieChart.defaultPinnedCategory="delivery"` opts into an initial tooltip for
+one direct `PieSeries` (Fragments allowed) with explicit `data` and `categoryKey`.
+Pair it with `Tooltip.itemKey={(entry) => entry.payload.id}` when `categoryKey="id"`;
+caller labels, formatters, and the data table remain the source of truth.
+Only Pie/donut compositions whose direct children are one Kind PieSeries and
+one Kind Tooltip (optionally in Fragments) support this default. Native Pie, wrapped series, multiple rings, and other chart families
+are outside this contract; missing category data/identity or multiple direct
+series, duplicate/missing Tooltips, or unsupported direct children throw when resolving a pin.
+
+The category string is captured on mount. Reorder resolves its current index;
+unknown, duplicate, removed, hidden, or filtered categories clear the default
+permanently. Restoring rows or changing the default prop does not re-pin; remount
+explicitly to begin again. Pointer movement/down, focus, and any chart key press
+clear the default and hand inspection/dismissal back to Recharts. Escape never
+re-pins. No focus is moved or trapped. The existing tooltip is the sole readout
+and live announcement; Kind adds no announcement region or hover selection.
+Explicit Tooltip `active` and `defaultIndex` retain native ownership and take
+precedence. Custom content owns its markup and accessibility. Omitted defaults
+preserve existing behavior. See the weekly Pie in `examples/chart/pie-recipes.tsx`.

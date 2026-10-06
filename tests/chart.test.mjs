@@ -1470,3 +1470,39 @@ test("selective Pie glow leaves the native SSR shell and host data alternative u
   assert.doesNotMatch(chart(["alpha"]), /pie-halo|<filter/);
   assert.match(chart(["alpha"]), /Category values/);
 });
+
+test("initial Pie pin rejects unsupported composition through public exports", () => {
+  const config = { beta: { label: "Beta", color: "blue" } };
+  const chart = (...children) =>
+    render(
+      h(
+        Chart.Root,
+        { config },
+        h(Chart.PieChart, { width: 320, height: 240, defaultPinnedCategory: "beta" }, ...children),
+      ),
+    );
+  assert.throws(() => chart(h(Chart.PieSeries, { dataKey: "value" })), /one direct PieSeries/);
+  const series = () =>
+    h(Chart.PieSeries, {
+      data: [{ id: "beta", value: 4 }],
+      categoryKey: "id",
+      dataKey: "value",
+    });
+  assert.throws(() => chart(series(), series()), /one direct PieSeries/);
+  assert.throws(() => chart(series(), h(Chart.Tooltip), h(Chart.Tooltip)), /one direct Tooltip/);
+  assert.throws(
+    () => chart(series(), h(Native.Pie, { dataKey: "value" }), h(Chart.Tooltip)),
+    /one direct PieSeries/,
+  );
+  assert.doesNotThrow(() => chart(series(), h(Chart.Tooltip, { itemKey: (entry) => entry.payload.id })));
+  assert.doesNotThrow(() =>
+    chart(
+      h(Chart.PieSeries, {
+        data: [{ id: "beta", value: 0 }],
+        categoryKey: (row) => row.id,
+        dataKey: "value",
+      }),
+      h(Chart.Tooltip),
+    ),
+  );
+});

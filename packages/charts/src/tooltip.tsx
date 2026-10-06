@@ -7,6 +7,7 @@ import {
   isValidElement,
   type ReactNode,
   type Ref,
+  use,
   useCallback,
   useLayoutEffect,
   useState,
@@ -20,6 +21,7 @@ import {
 } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
+import { PieTooltipPin } from "./pie-tooltip-pin.js";
 import { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 
 export type TooltipProps = Omit<
@@ -169,12 +171,16 @@ export function TooltipBase({
   ...props
 }: TooltipProps & { Frame?: (props: TooltipFrameProps) => ReactNode }) {
   useLineInteraction();
+  const pinIndex = use(PieTooltipPin);
   return (
     <EngineTooltip
       cursor={false}
       offset={12}
       filterNull={false}
       {...props}
+      defaultIndex={
+        props.active === undefined ? (props.defaultIndex ?? pinIndex) : props.defaultIndex
+      }
       position={{ x: 0, y: 0 }}
       isAnimationActive={false}
       content={
