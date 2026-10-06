@@ -10,7 +10,6 @@ export default defineConfig({
     rolldownOptions: {
       onwarn: diagnostics.onwarn,
       input: {
-        pointMarkers: fileURLToPath(new URL("./point-markers.html", import.meta.url)),
         loading: fileURLToPath(new URL("./loading.html", import.meta.url)),
         presentation: fileURLToPath(new URL("./presentation.html", import.meta.url)),
         example: fileURLToPath(new URL("./index.html", import.meta.url)),
