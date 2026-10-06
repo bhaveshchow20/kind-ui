@@ -2,7 +2,9 @@ import { expect, test } from "./browser";
 
 for (const family of ["bar", "line", "area", "scatter", "radar", "pie", "radial"]) {
   test(`${family}: mark keyboard and legend share one persistent focus owner`, async ({ page }) => {
-    await page.goto("http://127.0.0.1:4193");
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
     const scope = page.getByRole("region", { name: "Shared interactions" });
     await scope.getByLabel("Interaction family").selectOption(family);
     const selected = scope.locator("[data-interaction-selected]");
@@ -21,6 +23,7 @@ for (const family of ["bar", "line", "area", "scatter", "radar", "pie", "radial"
     await second.focus();
     await page.keyboard.press("Space");
     await expect(selected).toHaveText("second");
+    await expect(second).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(selected).toHaveText("none");
     await expect(scope.locator("[data-interaction-changes]")).toHaveText("4");
@@ -31,7 +34,9 @@ for (const family of ["bar", "line", "area", "scatter", "radar", "pie", "radial"
 }
 
 test("last eligible hide is rejected once; stale config does not count", async ({ page }) => {
-  await page.goto("http://127.0.0.1:4193");
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
   const scope = page.getByRole("region", { name: "Shared interactions" });
   await scope.getByRole("button", { name: "Switch mode" }).click();
   await scope.getByRole("button", { name: "First", exact: true }).click();
@@ -50,7 +55,9 @@ for (const controlled of [false, true]) {
   test(`${controlled ? "controlled restores" : "uncontrolled clears"} invalid IDs without change events`, async ({
     page,
   }) => {
-    await page.goto("http://127.0.0.1:4193");
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
     const scope = page.getByRole("region", { name: "Shared interactions" });
     if (controlled) await scope.getByRole("button", { name: "Switch owner" }).click();
     await scope.getByRole("button", { name: "Remove first identity" }).click();
@@ -66,7 +73,9 @@ for (const controlled of [false, true]) {
 test("consumer handler, before-hook and Escape can veto; hover never changes persistent focus", async ({
   page,
 }) => {
-  await page.goto("http://127.0.0.1:4193");
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
   const scope = page.getByRole("region", { name: "Shared interactions" });
   const selected = scope.locator("[data-interaction-selected]");
   await scope.getByRole("button", { name: "Second", exact: true }).hover();
@@ -92,7 +101,9 @@ for (const family of ["pie", "radial"]) {
   test(`${family} category hiding removes rows and retains keyed focus after reorder`, async ({
     page,
   }) => {
-    await page.goto("http://127.0.0.1:4193");
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
     const scope = page.getByRole("region", { name: "Shared interactions" });
     await scope.getByLabel("Interaction family").selectOption(family);
     await scope.getByRole("button", { name: "Reorder identities" }).click();
@@ -121,7 +132,9 @@ async function alpha(locator: import("@playwright/test").Locator) {
 test("persistent paint survives keyboard activation with transient emphasis disabled; inspection restores it", async ({
   page,
 }) => {
-  await page.goto("http://127.0.0.1:4193");
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
   const scope = page.getByRole("region", { name: "Shared interactions" });
   await scope.getByRole("button", { name: "Toggle transient emphasis" }).click();
   const first = scope.locator(".recharts-bar-rectangle path").first();
@@ -139,7 +152,9 @@ test("persistent paint survives keyboard activation with transient emphasis disa
 });
 
 test("native pointer callback tuple runs first and veto preserves focus", async ({ page }) => {
-  await page.goto("http://127.0.0.1:4193");
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
   const scope = page.getByRole("region", { name: "Shared interactions" });
   await scope.getByRole("button", { name: "Toggle consumer veto" }).click();
   const mark = scope
@@ -156,7 +171,9 @@ test("native pointer callback tuple runs first and veto preserves focus", async 
 });
 
 test("native-hidden peers cannot permit hiding the last painted series", async ({ page }) => {
-  await page.goto("http://127.0.0.1:4193");
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
   const scope = page.getByRole("region", { name: "Shared interactions" });
   await scope.getByRole("button", { name: "Switch mode" }).click();
   await scope.getByRole("button", { name: "Toggle native hide" }).click();
@@ -168,7 +185,9 @@ test("native-hidden peers cannot permit hiding the last painted series", async (
 });
 
 test("Pie filtering re-normalizes full arc and keeps original blue Cell", async ({ page }) => {
-  await page.goto("http://127.0.0.1:4193");
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
   const scope = page.getByRole("region", { name: "Shared interactions" });
   await scope.getByLabel("Interaction family").selectOption("pie");
   await scope.getByRole("button", { name: "Switch mode" }).click();
@@ -186,7 +205,9 @@ test("Pie filtering re-normalizes full arc and keeps original blue Cell", async 
 test("Sankey node/legend share focus, preserve identity payload, and include incident endpoints", async ({
   page,
 }) => {
-  await page.goto("http://127.0.0.1:4193");
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
   const scope = page.getByRole("region", { name: "Shared Sankey focus" });
   const third = scope.locator("[data-kind-ui=sankey-focus-mark][data-node=third]");
   const first = scope.locator("[data-kind-ui=sankey-focus-mark][data-node=first]");
@@ -203,4 +224,107 @@ test("Sankey node/legend share focus, preserve identity payload, and include inc
   await scope.getByRole("button", { name: "Third", exact: true }).click();
   await expect(scope.locator("[data-interaction-selected]")).toHaveText("none");
   await expect(scope.locator("[data-sankey-changes]")).toHaveText("2");
+});
+
+test("legacy Scatter series-owned data keeps controlled visibility interactive", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Legacy Scatter visibility" });
+  const first = scope.getByRole("button", { name: "First", exact: true });
+  await first.click();
+  await expect(first).toHaveAttribute("aria-pressed", "false");
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await expect(scope.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
+    "At least one item must remain visible.",
+  );
+});
+
+test("one hidden duplicate cannot invalidate another available mark of the same identity", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Duplicate series availability" });
+  await scope.getByRole("button", { name: "First", exact: true }).click();
+  await expect(scope.locator("[data-duplicate-changes]")).toHaveText("1");
+  await expect(scope.getByRole("button", { name: "First", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await expect(scope.locator("[data-duplicate-changes]")).toHaveText("1");
+  await expect(scope.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
+    "At least one item must remain visible.",
+  );
+});
+
+for (const family of ["pie", "radial"]) {
+  test(`${family}: bound tooltip inspection preserves consumer shape`, async ({ page }) => {
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
+    const scope = page.getByRole("region", { name: "Shared interactions" });
+    await scope.getByLabel("Interaction family").selectOption(family);
+    await scope.getByRole("button", { name: "Toggle custom shape" }).click();
+    const marks = scope.locator("[data-custom-sector=consumer]");
+    await expect(marks).toHaveCount(2);
+    const point = await marks.first().evaluate((node: SVGPathElement) => {
+      const box = node.getBBox();
+      const matrix = node.getScreenCTM();
+      for (let x = box.x + 2; x < box.x + box.width; x += 3) {
+        for (let y = box.y + 2; y < box.y + box.height; y += 3) {
+          if (node.isPointInFill(new DOMPoint(x, y))) {
+            const screen = new DOMPoint(x, y).matrixTransform(matrix ?? undefined);
+            return { x: screen.x, y: screen.y };
+          }
+        }
+      }
+      throw new Error("No painted sector point");
+    });
+    await page.mouse.move(point.x, point.y);
+    await expect(marks).toHaveCount(2);
+    await expect(scope.locator("[data-interaction-selected]")).toHaveText("first");
+    await expect(scope.locator("[data-interaction-changes]")).toHaveText("0");
+  });
+}
+
+test("touch activation uses the same owner and emits one change per tap", async ({ browser }) => {
+  const context = await browser.newContext({
+    hasTouch: true,
+    viewport: { width: 1000, height: 900 },
+  });
+  const page = await context.newPage();
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared interactions" });
+  const legend = scope.getByRole("button", { name: "Second", exact: true });
+  await legend.tap();
+  await expect(scope.locator("[data-interaction-selected]")).toHaveText("second");
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("1");
+  await legend.tap();
+  await expect(scope.locator("[data-interaction-selected]")).toHaveText("none");
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("2");
+  await context.close();
+});
+
+test("configured LineChart owns config and shares focus through existing rootProps", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Configured interactions" });
+  await scope.getByRole("button", { name: "Second", exact: true }).click();
+  await expect(scope.locator("[data-configured-selected]")).toHaveText("second");
+  await expect(scope.locator("[data-configured-changes]")).toHaveText("1");
+  const mark = scope.getByRole("button", { name: "Highlight Second", exact: true });
+  await mark.focus();
+  await page.keyboard.press("Enter");
+  await expect(scope.locator("[data-configured-selected]")).toHaveText("none");
+  await expect(scope.locator("[data-configured-changes]")).toHaveText("2");
 });

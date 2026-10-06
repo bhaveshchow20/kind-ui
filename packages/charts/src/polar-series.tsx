@@ -6,7 +6,7 @@ import { DefaultZIndexes, Polygon, Radar, RadialBar, Sector, ZIndexLayer } from 
 import { ActiveMarker } from "./animation.js";
 import { categoryCells, filterCategoryRows } from "./category-cells.js";
 import { useChart } from "./chart-context.js";
-import { useChartInteraction } from "./chart-interaction.js";
+import { useChartInteraction, useInteractionFocus } from "./chart-interaction.js";
 import { EmphasisMark } from "./emphasis.js";
 import { useLineInteraction } from "./line-chart.js";
 import { PolarMotion, RadarMotion, RadialMotion } from "./polar-chart.js";
@@ -263,10 +263,13 @@ function RadialEntranceSector(props: ComponentProps<typeof Sector> & { payload?:
     interaction.interactive &&
     interaction.markActivation &&
     interaction.eligible.includes(key);
+  const focusRef = useInteractionFocus(key, interactive);
   return key === undefined ? (
     content
   ) : (
     <EmphasisMark
+      ref={focusRef}
+      data-interaction-focus-key={interactive ? key : undefined}
       target={{ kind: "category", key, scope: "radial", seriesKey: key }}
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
@@ -429,6 +432,9 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
               else interaction.compose(undefined)(...args);
             }}
             {...(props.shape === undefined ? { shape: RadialEntranceSector } : {})}
+            {...(categories?.bound && props.shape === undefined && props.activeShape === undefined
+              ? { activeShape: RadialEntranceSector }
+              : {})}
             {...(props.background === true
               ? { background: { fill: "var(--kind-ui-radial-track, #f1f1f1)" } }
               : {})}

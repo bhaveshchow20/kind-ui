@@ -59,7 +59,7 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
     fill === undefined &&
     props.style?.fill === undefined &&
     props.shape === undefined;
-  const interaction = useSeriesInteraction(key, effectiveHide, hide === true);
+  const interaction = useSeriesInteraction(key, effectiveHide, hide === true, props.data);
   const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <>

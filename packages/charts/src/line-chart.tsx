@@ -22,7 +22,6 @@ import {
   useChartWidth,
 } from "recharts";
 import { useChart } from "./chart-context.js";
-import { useInteractionRegistration } from "./chart-interaction.js";
 import { useEmphasisActions } from "./emphasis.js";
 import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
 
@@ -166,7 +165,6 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         return next;
       });
   }, []);
-  useInteractionRegistration(props.data?.length ? [...seriesKeys.values()] : []);
   const invalidate = useCallback(() => {
     setPointer(null);
     setMotionReady(false);
@@ -208,6 +206,13 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
           interrupt();
         }}
         onKeyDownCapture={(event) => {
+          if (
+            (event.key === "Enter" || event.key === " " || event.key === "Escape") &&
+            (event.target as Element).closest(
+              '[data-kind-ui="emphasis-mark"][role="button"], [data-kind-ui="series-interaction"][role="button"]',
+            )
+          )
+            return;
           setKeyboard(event.key !== "Escape");
           interrupt();
           setMotionReady(true);

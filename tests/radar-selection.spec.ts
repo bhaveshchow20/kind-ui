@@ -154,9 +154,10 @@ test("uncontrolled visibility, empty data and opt-out clear selection without sy
   await actual.focus();
   await page.keyboard.press("Enter");
   await page.getByRole("button", { name: "Emphasis mode", exact: true }).click();
-  await expect(host.locator(control)).toHaveCount(0);
+  await expect(host.locator(control)).toHaveCount(2);
+  await expect(actual).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Emphasis mode", exact: true }).click();
-  await expect(actual).toHaveAttribute("aria-pressed", "false");
+  await expect(actual).toHaveAttribute("aria-pressed", "true");
   await expect(host.locator("svg[data-ref-count='1']")).toHaveCount(1);
   await expect(page.locator("output")).toContainText('requests ["value","value","value","value"]');
 });

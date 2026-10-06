@@ -56,7 +56,7 @@ export function LineSeries<
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("LineSeries requires seriesKey for controlled non-string dataKey");
-  const interaction = useSeriesInteraction(key, effectiveHide, hide === true);
+  const interaction = useSeriesInteraction(key, effectiveHide, hide === true, props.data);
   const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>

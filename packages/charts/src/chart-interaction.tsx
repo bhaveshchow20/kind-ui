@@ -133,12 +133,14 @@ export function ChartInteractionProvider({
   const initial = options?.defaultSelected;
   const [internal, setInternal] = useState(initial ?? null);
   const [internalVisible, setInternalVisible] = useState(props.defaultVisibleSeries);
-  const [unavailable, setUnavailable] = useState(() => new Map<string, string>());
+  const [unavailable, setUnavailable] = useState(
+    () => new Map<string, { key: string; unavailable: boolean }>(),
+  );
   const registerUnavailable = useCallback(
     (owner: string, key: string | undefined, blocked: boolean) => {
       setUnavailable((old) => {
         const next = new Map(old);
-        if (blocked && key !== undefined) next.set(owner, key);
+        if (key !== undefined) next.set(owner, { key, unavailable: blocked });
         else next.delete(owner);
         return JSON.stringify([...old]) === JSON.stringify([...next]) ? old : next;
       });
@@ -197,7 +199,18 @@ export function ChartInteractionProvider({
           options?.eligibleKeys ??
             (registrations.size ? [...registrations.values()].flat() : Object.keys(config)),
         ),
-      ].filter((key) => Object.hasOwn(config, key) && ![...unavailable.values()].includes(key)),
+      ].filter(
+        (key) =>
+          Object.hasOwn(config, key) &&
+          ![...unavailable.values()].some(
+            (item) =>
+              item.key === key &&
+              item.unavailable &&
+              [...unavailable.values()]
+                .filter((peer) => peer.key === key)
+                .every((peer) => peer.unavailable),
+          ),
+      ),
     [options?.eligibleKeys, registrations, config, unavailable],
   );
   const visible = props.visibleSeries ?? internalVisible;
@@ -328,5 +341,33 @@ export function useInteractionAvailability(key: string | undefined, unavailable:
   useLayoutEffect(
     () => registerUnavailable(owner, key, unavailable),
     [registerUnavailable, owner, key, unavailable],
+  );
+}
+
+/** Retain the focused data identity when native layout replaces a sector node. */
+export function useInteractionFocus(key: string | undefined, enabled: boolean) {
+  const current = useRef<SVGGElement | null>(null);
+  return useCallback(
+    (node: SVGGElement | null) => {
+      const previous = current.current;
+      if (!node && enabled && previous === document.activeElement) {
+        const root = previous?.closest('[data-kind-ui="chart"]');
+        const plot = previous?.closest('[data-kind-ui="line-frame"]') ?? root;
+        queueMicrotask(() => {
+          if (!root?.isConnected || !plot?.isConnected || document.activeElement !== document.body)
+            return;
+          const replacement = Array.from(
+            plot.querySelectorAll<SVGGElement>("[data-interaction-focus-key]"),
+          ).find(
+            (item) =>
+              item.dataset.interactionFocusKey === key &&
+              item.closest('[data-kind-ui="chart"]') === root,
+          );
+          replacement?.focus({ preventScroll: true });
+        });
+      }
+      current.current = node;
+    },
+    [key, enabled],
   );
 }

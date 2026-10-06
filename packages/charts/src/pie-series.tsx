@@ -16,7 +16,7 @@ import {
 import { Cell, Pie, type PieSectorShapeProps, Sector } from "recharts";
 import { type CategoryKey, categoryCells, filterCategoryRows } from "./category-cells.js";
 import { useChart } from "./chart-context.js";
-import { useChartInteraction } from "./chart-interaction.js";
+import { useChartInteraction, useInteractionFocus } from "./chart-interaction.js";
 import { EmphasisMark } from "./emphasis.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
@@ -35,6 +35,17 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   /** Stable sector identity; defaults to the native nameKey value. */
   emphasisKey?: ((payload: unknown) => string | number | undefined) | undefined;
 };
+
+type SectorPaintProps = Omit<
+  PieSectorShapeProps,
+  "isActive" | "index" | "data-recharts-item-index" | "data-recharts-item-id"
+> &
+  Partial<
+    Pick<
+      PieSectorShapeProps,
+      "isActive" | "index" | "data-recharts-item-index" | "data-recharts-item-id"
+    >
+  >;
 
 // Recharts also supports Cell props as data when neither the chart nor Pie supplies rows.
 function cellProps(children: ReactNode): Record<string, unknown>[] {
@@ -70,7 +81,7 @@ function EntranceSector({
   seriesStartAngle,
   seriesEndAngle,
   ...props
-}: PieSectorShapeProps & {
+}: SectorPaintProps & {
   material: PieMaterial;
   interactionKey?: ((payload: unknown) => string) | undefined;
   emphasisKey?: PieSeriesProps["emphasisKey"];
@@ -92,6 +103,7 @@ function EntranceSector({
     interaction.interactive &&
     interaction.markActivation &&
     interaction.eligible.includes(String(semantic));
+  const focusRef = useInteractionFocus(String(semantic), interactive);
   const generatedId = useId();
   const sourceId = `kind-ui-pie-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "_")}-paint`;
   const maskId = `${sourceId}-alpha`;
@@ -234,13 +246,15 @@ function EntranceSector({
   } = props;
   return (
     <EmphasisMark
+      ref={focusRef}
+      data-interaction-focus-key={interactive ? String(semantic) : undefined}
       persistent={interactionKey !== undefined}
       enabled={
         enabled &&
         (emphasisKey !== undefined ? semantic !== undefined : typeof semantic === "string")
       }
       target={{ kind: "sector", key: String(semantic), scope, seriesKey: String(semantic) }}
-      keyboardActive={keyboard && props.isActive}
+      keyboardActive={keyboard && props.isActive === true}
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
       aria-label={
@@ -410,9 +424,21 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
       : undefined;
   const data = filtered?.data ?? props.data;
   const originalChildren = filtered?.children ?? props.children;
-  const interactionKey = filtered
-    ? (payload: unknown) => filtered.keyOf(payload as DataPoint)
-    : undefined;
+  const resolveInteractionKey = useCallback(
+    (payload: unknown): string => {
+      if (typeof categoryKey === "function") return categoryKey(payload as DataPoint);
+      if (
+        categoryKey !== undefined &&
+        typeof payload === "object" &&
+        payload !== null &&
+        Object.hasOwn(payload, categoryKey)
+      )
+        return String((payload as Record<string, unknown>)[categoryKey]);
+      throw new Error("PieSeries interaction requires a stable category key");
+    },
+    [categoryKey],
+  );
+  const interactionKey = interactionBinding ? resolveInteractionKey : undefined;
   const { config, paints } = useChart();
   const children =
     categoryKey === undefined
@@ -422,7 +448,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   const { invalidate, emphasisScope } = useLineInteraction();
   const scope = `${emphasisScope}/${seriesId}`;
   const sectorShape = useCallback(
-    (sector: PieSectorShapeProps) => (
+    (sector: SectorPaintProps) => (
       <EntranceSector
         {...sector}
         material={material}
@@ -491,6 +517,12 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
       }}
       stroke={props.stroke ?? "none"}
       shape={props.shape ?? sectorShape}
+      {...(interactionBinding && props.shape === undefined && props.activeShape === undefined
+        ? { activeShape: sectorShape }
+        : {})}
+      {...(interactionBinding && props.shape === undefined && props.inactiveShape === undefined
+        ? { inactiveShape: sectorShape }
+        : {})}
       isAnimationActive={false}
     >
       {children}

@@ -2,18 +2,27 @@
 
 import type { KeyboardEventHandler, ReactNode, SyntheticEvent } from "react";
 import { useChart } from "./chart-context.js";
-import { useChartInteraction, useInteractionAvailability } from "./chart-interaction.js";
+import {
+  useChartInteraction,
+  useInteractionAvailability,
+  useInteractionRegistration,
+} from "./chart-interaction.js";
 import { useEmphasis } from "./emphasis.js";
-import { useChartKeyboard } from "./line-chart.js";
+import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 
 /** Native handlers retain their original data/index/event tuple and run first. */
 export function useSeriesInteraction(
   key: string | undefined,
   hidden: boolean,
   nativeHidden = false,
+  seriesData?: readonly unknown[] | undefined,
 ) {
   const interaction = useChartInteraction();
-  useInteractionAvailability(key, nativeHidden);
+  const { data } = useLineInteraction();
+  useInteractionAvailability(interaction.kind === "series" ? key : undefined, nativeHidden);
+  useInteractionRegistration(
+    interaction.kind === "series" && key !== undefined && (seriesData ?? data)?.length ? [key] : [],
+  );
   const interactive =
     key !== undefined &&
     !hidden &&

@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 
@@ -52,6 +52,41 @@ const categoryIdentity = (row: unknown) =>
   typeof row === "object" && row !== null && "category" in row ? String(row.category) : undefined;
 const portalShape = (props: BarShapeProps) => <PortalShape {...props} />;
 const nativeShape = (props: BarShapeProps) => <Rectangle {...props} />;
+const customSector = (props: ComponentProps<typeof Chart.Sector>) => (
+  <Chart.Sector {...props} data-custom-sector="consumer" />
+);
+function ConfiguredInteractionCase() {
+  const [selected, setSelected] = useState<string | null>("first");
+  const [changes, setChanges] = useState(0);
+  return (
+    <section aria-label="Configured interactions">
+      <Chart.LineChart
+        aria-label="Configured focus"
+        config={{ first: config.first, second: config.second }}
+        data={rows}
+        xDataKey="category"
+        width={340}
+        height={240}
+        animate={false}
+        rootProps={{
+          interaction: {
+            kind: "series",
+            mode: "focus",
+            eligibleKeys: ["first", "second"],
+            markActivation: "matching-legend",
+            selected,
+            onSelectionChange: (next) => {
+              setSelected(next);
+              setChanges((n) => n + 1);
+            },
+          },
+        }}
+      />
+      <output data-configured-selected>{selected ?? "none"}</output>
+      <output data-configured-changes>{changes}</output>
+    </section>
+  );
+}
 function SharedInteractions() {
   const [family, setFamily] = useState("bar");
   const [mode, setMode] = useState<"focus" | "visibility">("focus");
@@ -66,6 +101,7 @@ function SharedInteractions() {
   const [clicks, setClicks] = useState(0);
   const [transient, setTransient] = useState(true);
   const [nativeHidden, setNativeHidden] = useState(false);
+  const [customShape, setCustomShape] = useState(false);
   const category = family === "pie" || family === "radial";
   const keys = removed ? ["second"] : ["first", "second"];
   const rows = [
@@ -130,6 +166,7 @@ function SharedInteractions() {
           nameKey="key"
           categoryKey="key"
           interactionBinding="root"
+          shape={customShape ? customSector : undefined}
         >
           {categories.map((row) => (
             <Chart.Cell key={row.key} fill={row.key === "first" ? "#ff0000" : "#0000ff"} />
@@ -147,7 +184,7 @@ function SharedInteractions() {
       >
         <Chart.PolarAngleAxis type="number" domain={[0, 30]} tick={false} />
         <Chart.PolarRadiusAxis type="category" dataKey="key" tick={false} />
-        <Chart.RadialBarSeries dataKey="value" />
+        <Chart.RadialBarSeries dataKey="value" shape={customShape ? customSector : undefined} />
       </Chart.RadialBarChart>
     ) : family === "radar" ? (
       <Chart.RadarChart width={340} height={240} animate={false} data={rows}>
@@ -257,6 +294,9 @@ function SharedInteractions() {
       <button type="button" onClick={() => setNativeHidden(!nativeHidden)}>
         Toggle native hide
       </button>
+      <button type="button" onClick={() => setCustomShape(!customShape)}>
+        Toggle custom shape
+      </button>
       <button type="button" onClick={() => setTransient(!transient)}>
         Toggle transient emphasis
       </button>
@@ -344,6 +384,64 @@ function SankeyInteractionCase() {
     </section>
   );
 }
+function LegacyAndDuplicateIdentities() {
+  const [scatterVisible, setScatterVisible] = useState(["first", "second"]);
+  const [duplicateVisible, setDuplicateVisible] = useState(["first", "second"]);
+  const [changes, setChanges] = useState(0);
+  const config = {
+    first: { label: "First", color: "red" },
+    second: { label: "Second", color: "blue" },
+  };
+  return (
+    <>
+      <section aria-label="Legacy Scatter visibility">
+        <Chart.Root
+          config={config}
+          visibleSeries={scatterVisible}
+          onVisibleSeriesChange={setScatterVisible}
+        >
+          <Chart.ScatterChart width={320} height={200} animate={false}>
+            <Chart.XAxis type="number" dataKey="x" />
+            <Chart.YAxis type="number" dataKey="y" />
+            <Chart.ScatterSeries seriesKey="first" data={[{ x: 10, y: 10 }]} />
+            <Chart.ScatterSeries seriesKey="second" data={[{ x: 20, y: 20 }]} />
+          </Chart.ScatterChart>
+          <Chart.Legend />
+        </Chart.Root>
+      </section>
+      <section aria-label="Duplicate series availability">
+        <Chart.Root
+          config={config}
+          interaction={{ kind: "series", eligibleKeys: ["first", "second"] }}
+          visibleSeries={duplicateVisible}
+          onVisibleSeriesChange={(next) => {
+            setDuplicateVisible(next);
+            setChanges((n) => n + 1);
+          }}
+        >
+          <Chart.BarChart
+            data={[{ first: 10, second: 20 }]}
+            width={320}
+            height={200}
+            animate={false}
+          >
+            <Chart.XAxis />
+            <Chart.YAxis />
+            <Chart.BarSeries dataKey="first" />
+            <Chart.BarSeries dataKey="second" hide />
+          </Chart.BarChart>
+          <Chart.BarChart data={[{ second: 20 }]} width={320} height={200} animate={false}>
+            <Chart.XAxis />
+            <Chart.YAxis />
+            <Chart.BarSeries dataKey="second" />
+          </Chart.BarChart>
+          <Chart.Legend />
+          <output data-duplicate-changes>{changes}</output>
+        </Chart.Root>
+      </section>
+    </>
+  );
+}
 function App() {
   const [reversed, setReversed] = useState(false);
   const [removed, setRemoved] = useState(false);
@@ -359,8 +457,14 @@ function App() {
     .map((row) => (sparse && row.category === "B" ? { ...row, second: 0 } : row));
   return (
     <main style={{ fontFamily: "system-ui", width: 950, margin: "24px auto" }}>
-      <SharedInteractions />
-      <SankeyInteractionCase />
+      {new URLSearchParams(window.location.search).has("interactions") && (
+        <>
+          <ConfiguredInteractionCase />
+          <SharedInteractions />
+          <SankeyInteractionCase />
+          <LegacyAndDuplicateIdentities />
+        </>
+      )}
       <h1>Emphasis where comparison benefits</h1>
       <p>
         Inspect a category or sector. Every series in the active bar category stays visible. Line
