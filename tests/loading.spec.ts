@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+const offset = Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173;
+test.use({ baseURL: `http://127.0.0.1:${4200 + offset}` });
+
 test("loading preserves engines, dimensions and consumer controls through interruptions", async ({
   page,
 }) => {
@@ -58,4 +61,32 @@ test("pulse and reveal obey live reduced-motion preference", async ({ page }) =>
   await page.getByRole("button", { name: "Replay loading" }).click();
   await expect(content).toHaveAttribute("inert", "");
   await expect(content).toHaveCSS("visibility", "hidden");
+});
+
+test("an already-focused legend becomes inert without resetting consumer selection", async ({
+  page,
+}) => {
+  await page.goto("/loading.html");
+  await page.getByRole("button", { name: "Load data" }).click();
+  const boundary = page.getByTestId("line-loading");
+  const legend = boundary.locator('[data-kind-ui="chart-legend-button"]');
+  await legend.click();
+  await expect(legend).toHaveAttribute("aria-pressed", "false");
+  await legend.focus();
+  await expect(legend).toBeFocused();
+  // Start loading without a pointer action stealing the internal focus first.
+  await page
+    .getByRole("button", { name: "Replay loading" })
+    .evaluate((element: HTMLButtonElement) => element.click());
+  await expect(boundary.locator('[data-kind-ui="chart-loading-content"]')).toHaveAttribute(
+    "inert",
+    "",
+  );
+  await legend.evaluate((element: HTMLButtonElement) => element.focus());
+  await expect(legend).not.toBeFocused();
+  await expect(legend).toHaveAttribute("aria-pressed", "false");
+  await page.getByRole("button", { name: "Load data" }).click();
+  await expect(legend).toHaveAttribute("aria-pressed", "false");
+  await legend.click();
+  await expect(legend).toHaveAttribute("aria-pressed", "true");
 });

@@ -87,6 +87,7 @@ function Preview() {
             >
               <Chart.ResponsiveContainer width="100%" height="100%">
                 <Chart.BarChart
+                  aria-label="Monthly sales bars"
                   data={rows}
                   animate={false}
                   onClick={() => setEvents((value) => value + 1)}
@@ -107,6 +108,25 @@ function Preview() {
           </p>
         </article>
       </section>
+      {!loading && (
+        <table>
+          <caption>Monthly sales data{empty ? " — no results" : ""}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Month</th>
+              <th scope="col">Sales</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.month}>
+                <th scope="row">{row.month}</th>
+                <td>{row.sales}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
       <p>
         Line legend is inside its boundary; bar legend is outside and remains available. The same
         neutral loading presentation can wrap other families; it does not animate their marks or
