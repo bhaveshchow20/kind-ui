@@ -39,6 +39,22 @@ Choose plain, paper, clay or glow. Percentage labels remain inside sectors; cate
 
 <ChartExample id="pie-materials" />
 
+## Rounded and petal sectors
+
+`cornerRadius` and `paddingAngle` are existing native `PieSeries` props. Use a small radius and gap for rounded sectors, or half the ring thickness with a larger gap for a petal-like donut. No separate Donut component or custom shape is needed.
+
+<ChartExample id="pie-rounded" />
+
+The recipe uses `innerRadius={58}`, `outerRadius={108}`, `cornerRadius={8}` and `paddingAngle={2}` for the rounded donut. Petal mode uses `innerRadius={68}`, `cornerRadius={20}` and `paddingAngle={8}`; rounded pie mode sets `innerRadius={0}`. Category labels stay in the legend and the table retains the original hours and shares. Padding changes painted angles, so measure shares from data rather than visible arc lengths.
+
+### Geometry constraints
+
+Use finite, nonnegative values and radii with `0 <= innerRadius < outerRadius`. Numeric corner radii are SVG units; native sectors clamp rounding to half the ring thickness and may fall back to ordinary corners when a narrow sector cannot fit the requested rounding. Full-circle sectors do not show rounded ends. The petal silhouette depends on the data proportions and available sector angles; it is not a guarantee for every dataset.
+
+Angles and padding are degrees. Native Pie caps the absolute sweep at 360 degrees; equal start/end angles paint no allocation. For `n` positive categories, a full circle reserves `n * paddingAngle`, while a partial sweep reserves `(n - 1) * paddingAngle`. Keep nonnegative padding small enough that this total is strictly below the sweep, and leave `minAngle` at zero for these proportional recipes. Re-evaluate spacing after filtering or changing the data. Native Pie ignores padding for a single supplied row; zero values have no visible share. Keep zero categories in the data alternative, and do not enlarge them to create petals.
+
+These examples render final geometry with `animate={false}`. If entrance animation is enabled, Kind's existing reduced-motion and custom-shape ownership contracts still apply.
+
 ## API reference
 
 Focused props for explicit Pie composition; upstream links cover native options.
@@ -76,7 +92,8 @@ Value and category identity use separate fields.
 | `innerRadius` | `number` or percentage | `0` | A positive radius produces a Donut. |
 | `outerRadius` | `number` or percentage | `"80%"` | Sector size; percentages use Recharts' available radius. |
 | `startAngle` / `endAngle` | `number` | `0` / `360` | Native angular geometry in degrees. |
-| `paddingAngle` | `number` | `0` | Gap between sectors in degrees. |
+| `paddingAngle` | `number` | `0` | Native gap in degrees; see geometry constraints above. |
+| `cornerRadius` | `number \| string` | `0` | Native rounded sector corners; numeric units are recommended here. |
 | `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Finish on default sectors; consumer rendering can take precedence. |
 | `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | Native name | Optional semantic sector identity for paint emphasis; does not configure tooltip identity. |
 | `stroke` | `string` | `"none"` | Native sector outline. |
