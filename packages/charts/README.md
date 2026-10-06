@@ -192,21 +192,45 @@ Existing loading illustrations keep their independent design. Replay uses the
 existing remount or loading-to-ready lifecycle, not hover or color updates.
 
 ```tsx
-<LineChart animate={{ revealDirection: "right-to-left", revealDurationMs: 800 }}>
-  <LineSeries dataKey="total" pointStyle="border" />
-</LineChart>
-<AreaChart animate={{ revealDirection: "center-out" }}>
-  <AreaSeries dataKey="total" />
-</AreaChart>
-<ComboChart animate={{
-  revealDirection: "center-out",
-  lineReveal: { revealDirection: "right-to-left" },
-  areaReveal: { revealDirection: "edges-in", revealDurationMs: 1200 },
-  barReveal: false,
-}}>
-  <LineSeries dataKey="total" />
-  <AreaSeries dataKey="forecast" />
-</ComboChart>
+import {
+  AreaChart, AreaSeries, ComboChart, LineChart, LineSeries, Root,
+  type SeriesConfig,
+} from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [
+  { day: "Mon", total: 12, forecast: 16 },
+  { day: "Tue", total: 20, forecast: 24 },
+];
+const config = {
+  total: { label: "Total", color: "#3659b8" },
+  forecast: { label: "Forecast", color: "#0d9488" },
+} satisfies SeriesConfig;
+
+export function DirectionalCharts() {
+  return (
+    <Root config={config}>
+      <LineChart data={data} width={480} height={240} aria-label="Daily total"
+        animate={{ revealDirection: "right-to-left", revealDurationMs: 800 }}>
+        <LineSeries dataKey="total" pointStyle="border" />
+      </LineChart>
+      <AreaChart data={data} width={480} height={240} aria-label="Daily forecast"
+        animate={{ revealDirection: "center-out" }}>
+        <AreaSeries dataKey="forecast" />
+      </AreaChart>
+      <ComboChart data={data} width={480} height={240} aria-label="Total and forecast"
+        animate={{
+          revealDirection: "center-out",
+          lineReveal: { revealDirection: "right-to-left" },
+          areaReveal: { revealDirection: "edges-in", revealDurationMs: 1200 },
+          barReveal: false,
+        }}>
+        <LineSeries dataKey="total" />
+        <AreaSeries dataKey="forecast" />
+      </ComboChart>
+    </Root>
+  );
+}
 ```
 
 Combo inherits the chart direction for Line/Area unless the corresponding family

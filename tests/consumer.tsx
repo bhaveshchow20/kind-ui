@@ -291,3 +291,70 @@ const invalidBarDirection: Chart.BarAnimation = { revealDirection: "edges-in" };
 // @ts-expect-error Polar sweeps keep their existing direction contract.
 const invalidPieReveal: Chart.PieAnimation = { revealDirection: "center-out" };
 void [invalidBarDirection, invalidPieReveal];
+
+// Complete README directional example, checked through packed public exports.
+import {
+  AreaChart,
+  AreaSeries,
+  ComboChart,
+  LineChart as DirectionalLineChart,
+  Root as DirectionalRoot,
+  LineSeries,
+} from "@kind-ui/charts";
+
+const directionalData = [
+  { day: "Mon", total: 12, forecast: 16 },
+  { day: "Tue", total: 20, forecast: 24 },
+];
+const directionalConfig = {
+  total: { label: "Total", color: "#3659b8" },
+  forecast: { label: "Forecast", color: "#0d9488" },
+} satisfies SeriesConfig;
+
+export function DirectionalCharts() {
+  return (
+    <DirectionalRoot config={directionalConfig}>
+      <DirectionalLineChart
+        data={directionalData}
+        width={480}
+        height={240}
+        aria-label="Daily total"
+        animate={{ revealDirection: "right-to-left", revealDurationMs: 800 }}
+      >
+        <LineSeries dataKey="total" pointStyle="border" />
+      </DirectionalLineChart>
+      <AreaChart
+        data={directionalData}
+        width={480}
+        height={240}
+        aria-label="Daily forecast"
+        animate={{ revealDirection: "center-out" }}
+      >
+        <AreaSeries dataKey="forecast" />
+      </AreaChart>
+      <ComboChart
+        data={directionalData}
+        width={480}
+        height={240}
+        aria-label="Total and forecast"
+        animate={{
+          revealDirection: "center-out",
+          lineReveal: { revealDirection: "right-to-left" },
+          areaReveal: { revealDirection: "edges-in", revealDurationMs: 1200 },
+          barReveal: false,
+        }}
+      >
+        <LineSeries dataKey="total" />
+        <AreaSeries dataKey="forecast" />
+      </ComboChart>
+    </DirectionalRoot>
+  );
+}
+
+// @ts-expect-error Radar keeps its center-out entrance contract.
+const invalidRadarReveal: Chart.RadarAnimation = { revealDirection: "center-out" };
+// @ts-expect-error RadialBar keeps its polar sweep contract.
+const invalidRadialReveal: Chart.RadialBarAnimation = { revealDirection: "edges-in" };
+// @ts-expect-error Scatter has no horizontal reveal direction option.
+const invalidScatterReveal: Chart.ScatterAnimation = { revealDirection: "right-to-left" };
+void [invalidRadarReveal, invalidRadialReveal, invalidScatterReveal];
