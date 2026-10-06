@@ -172,6 +172,12 @@ export {
 } from "./histogram-series.js";
 export { Legend, type LegendProps } from "./legend.js";
 export type { LineMaterial } from "./line-material.js";
+export {
+  createPercentStack,
+  formatPercent,
+  type NormalizedValue,
+  type PercentStackOptions,
+} from "./percent-stack.js";
 export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";
 export type { PieMaterial } from "./pie-material.js";
 export { PieSeries, type PieSeriesProps } from "./pie-series.js";
@@ -234,10 +240,3 @@ export {
   WaterfallSeries,
   type WaterfallSeriesProps,
 } from "./waterfall-series.js";
-
-export {
-  createPercentStack,
-  formatPercent,
-  type NormalizedValue,
-  type PercentStackOptions,
-} from "./percent-stack.js";

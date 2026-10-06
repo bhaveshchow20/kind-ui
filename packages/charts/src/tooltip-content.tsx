@@ -4,8 +4,8 @@ import { type ComponentPropsWithRef, type CSSProperties, type ReactNode, use } f
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
 import { useChart } from "./chart-context.js";
 import { LineInteraction } from "./line-chart.js";
-import { colorStopToken } from "./series-color.js";
 import { formatPercent, type NormalizedValue } from "./percent-stack.js";
+import { colorStopToken } from "./series-color.js";
 import { TooltipNumber } from "./tooltip-number.js";
 
 export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
@@ -83,7 +83,11 @@ export function TooltipContent({
       if (!format) {
         const fraction = normalizedValue?.(entry);
         if (fraction !== undefined && Number.isFinite(fraction * 100))
-          value = <>{formatPercent(fraction)} ({value})</>;
+          value = (
+            <>
+              {formatPercent(fraction)} ({value})
+            </>
+          );
       }
       hasVisibleValue = true;
     }

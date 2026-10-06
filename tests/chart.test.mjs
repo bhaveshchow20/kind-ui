@@ -1751,10 +1751,7 @@ test("normalized tooltip preserves raw formatting, explicit formatter precedence
         { config },
         h(TooltipContent, {
           tooltip: tooltip(
-            [
-              entry(1, { payload: { id: "future" } }),
-              entry(null, { graphicalItemId: "missing" }),
-            ],
+            [entry(1, { payload: { id: "future" } }), entry(null, { graphicalItemId: "missing" })],
             extra,
           ),
           normalizedValue: () => (fractions.length ? fractions[0] : 0.25),

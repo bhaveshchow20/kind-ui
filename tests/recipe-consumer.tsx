@@ -145,12 +145,13 @@ import {
   createPercentStack,
   formatPercent,
   type NormalizedValue,
+  TooltipContent as PercentContent,
   type PercentStackOptions,
   Tooltip as PercentTooltip,
-  TooltipContent as PercentContent,
   XAxis as PercentXAxis,
   YAxis as PercentYAxis,
 } from "@kind-ui/charts";
+
 const percentOptions: PercentStackOptions = {
   values: (entry) => (entry.dataKey === "primary" ? [1, 3, null] : undefined),
 };
