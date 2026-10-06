@@ -11,15 +11,15 @@ import {
   useSyncExternalStore,
 } from "react";
 import { RadarChart as EngineRadarChart, RadialBarChart as EngineRadialBarChart } from "recharts";
-import { type LineAnimation, MotionContext } from "./animation.js";
+import { type BaseAnimation, MotionContext } from "./animation.js";
 import type { CategoryKey } from "./category-cells.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
 import { type RadarSelectionProps, RadarSelectionProvider } from "./radar-interaction.js";
 import { RadialCategory } from "./radial-category.js";
 
-export type RadarAnimation = Omit<LineAnimation, "revealDirection">;
-export type RadialBarAnimation = Omit<LineAnimation, "revealDirection">;
+export type RadarAnimation = BaseAnimation;
+export type RadialBarAnimation = BaseAnimation;
 export type RadarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadarChart<DataPoint>
 > &

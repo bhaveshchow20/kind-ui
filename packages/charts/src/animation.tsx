@@ -32,12 +32,14 @@ import { markerPaint, type PointStyle } from "./point-marker.js";
 import { RevealClip, type RevealDirection } from "./reveal-clip.js";
 import { TooltipBase, type TooltipFrameProps, type TooltipProps } from "./tooltip.js";
 
-export type LineAnimation = {
-  /** Physical horizontal entrance direction, independent of native chart layout. */
-  revealDirection?: RevealDirection;
+export type BaseAnimation = {
   revealDurationMs?: number;
   revealEasing?: Transition["ease"];
   hoverTransition?: Transition;
+};
+export type LineAnimation = BaseAnimation & {
+  /** Physical horizontal entrance direction, independent of native chart layout. */
+  revealDirection?: RevealDirection;
 };
 type DefaultLineDataKey = Extract<StaticLineSeriesProps["dataKey"], (row: never) => unknown>;
 export type LineSeriesProps<

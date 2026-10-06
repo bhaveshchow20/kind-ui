@@ -11,11 +11,11 @@ import {
   useSyncExternalStore,
 } from "react";
 import { PieChart as EnginePieChart } from "recharts";
-import { type LineAnimation, MotionContext } from "./animation.js";
+import { type BaseAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
 
-export type PieAnimation = Omit<LineAnimation, "revealDirection">;
+export type PieAnimation = BaseAnimation;
 export type PieChartProps = ComponentProps<typeof EnginePieChart> & {
   animate?: boolean | PieAnimation | undefined;
   loading?: boolean | undefined;

@@ -12,13 +12,13 @@ import {
   useSyncExternalStore,
 } from "react";
 import { ComposedChart as EngineComposedChart } from "recharts";
-import { type LineAnimation, MotionContext } from "./animation.js";
+import { type BaseAnimation, type LineAnimation, MotionContext } from "./animation.js";
 import { BarLifecycle, BarMotion } from "./bar-chart.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 import { RevealClip } from "./reveal-clip.js";
 
-type Reveal = Pick<LineAnimation, "revealDurationMs" | "revealEasing">;
+type Reveal = Pick<BaseAnimation, "revealDurationMs" | "revealEasing">;
 type DirectionalReveal = Reveal & Pick<LineAnimation, "revealDirection">;
 /** Shared hover Motion, with independently configured family entrances. */
 export type ComboAnimation = LineAnimation & {
