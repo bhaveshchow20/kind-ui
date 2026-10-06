@@ -173,3 +173,6 @@ indexed stops to customize a gradient. No theme subscription or remount is neede
 The runnable `tests/fixtures/identity-colors` host exercises explicit light/dark
 changes, unequal stops, CSS variable colors, multiple roots and native paint
 precedence (`npm exec vite tests/fixtures/identity-colors`, open `/?theme`).
+
+The existing Next integration fixture additionally checks real server-rendered
+color resource IDs through hydration and a theme change.

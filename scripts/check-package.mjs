@@ -420,7 +420,7 @@ try {
   console.log(
     "Heatmap tarball: public composition, strict NodeNext/Bundler and production build passed",
   );
-  for (const file of ["host.tsx", "main.tsx", "theme-host.tsx", "index.html"])
+  for (const file of ["host.tsx", "main.tsx", "index.html"])
     await copyFixture("identity-colors", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-identity-colors");
