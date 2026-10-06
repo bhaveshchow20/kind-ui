@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useEmphasisActions } from "./emphasis.js";
+import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
 
 export type LineChartProps = ComponentProps<typeof EngineLineChart>;
 type Point = { x: number; y: number } | null;
@@ -218,26 +219,29 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
           }
         }}
       >
-        <EngineChart
-          {...props}
-          className={["kind-ui-line-chart", props.className].filter(Boolean).join(" ")}
-          style={{ ...props.style, "--kind-ui-line-clip": clip ?? "none" } as CSSProperties}
-          onMouseMove={(state, event) => {
-            const { relativeX, relativeY } = getRelativeCoordinate(event);
-            setKeyboard(false);
-            setMotionReady(true);
-            setPointer({ x: relativeX, y: relativeY });
-            interrupt();
-            onMouseMove?.(state, event);
-          }}
-          onMouseLeave={(state, event) => {
-            setPointer(null);
-            onMouseLeave?.(state, event);
-          }}
-        >
-          <Lifecycle data={props.data} invalidate={invalidate} />
-          {children}
-        </EngineChart>
+        <SeriesPaintBoundary>
+          <EngineChart
+            {...props}
+            className={["kind-ui-line-chart", props.className].filter(Boolean).join(" ")}
+            style={{ ...props.style, "--kind-ui-line-clip": clip ?? "none" } as CSSProperties}
+            onMouseMove={(state, event) => {
+              const { relativeX, relativeY } = getRelativeCoordinate(event);
+              setKeyboard(false);
+              setMotionReady(true);
+              setPointer({ x: relativeX, y: relativeY });
+              interrupt();
+              onMouseMove?.(state, event);
+            }}
+            onMouseLeave={(state, event) => {
+              setPointer(null);
+              onMouseLeave?.(state, event);
+            }}
+          >
+            <SeriesColorDefinitions viewport />
+            <Lifecycle data={props.data} invalidate={invalidate} />
+            {children}
+          </EngineChart>
+        </SeriesPaintBoundary>
       </div>
     </LineInteraction>
   );

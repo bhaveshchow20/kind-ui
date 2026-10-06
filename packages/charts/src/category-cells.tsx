@@ -12,6 +12,7 @@ export function categoryCells<Row>(
   data: readonly Row[] | undefined,
   categoryKey: CategoryKey<Row>,
   config: SeriesConfig,
+  paints: Readonly<Record<string, string>>,
   children: ReactNode,
   fill: string | undefined,
 ): ReactNode {
@@ -27,7 +28,7 @@ export function categoryCells<Row>(
       throw new Error("categoryKey must resolve to a string key in Root.config for every row");
     const datumFill =
       row !== null && typeof row === "object" && "fill" in row ? row.fill : undefined;
-    return fill === undefined && datumFill === undefined ? `var(--color-${key})` : undefined;
+    return fill === undefined && datumFill === undefined ? paints[key] : undefined;
   });
   if (fill !== undefined) return children;
   let index = 0;

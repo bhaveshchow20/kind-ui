@@ -27,7 +27,7 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
   className,
   ...props
 }: AreaSeriesProps<DataPoint, Value>) {
-  const { config, visibleSeries } = useChart();
+  const { config, paints, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
   const id = props.id || generatedId;
@@ -46,7 +46,7 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("AreaSeries requires seriesKey for controlled non-string dataKey");
-  const color = stroke ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
+  const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <Area
       activeDot={<ActiveMarker />}
