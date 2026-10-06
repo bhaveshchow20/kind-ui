@@ -4,6 +4,14 @@ const url = "http://127.0.0.1:4180";
 const sectors = '[data-kind-ui="pie-sector"]';
 const revealing = '[data-kind-ui="pie-sector"][data-reveal="on"]';
 
+function pieRecipes(page: Page) {
+  return page.getByRole("article").filter({
+    has: page.getByRole("application", {
+      name: /^(Weekly hours pie|Team capacity donut)$/,
+    }),
+  });
+}
+
 test("packed pie preserves category identity, controlled filtering, native refs and keyboard", async ({
   page,
 }, info) => {
@@ -137,15 +145,14 @@ test("pie and donut recipes use public controls and expose the zero category", a
   page,
 }, info) => {
   await page.goto("/pies.html");
-  await expect(page.getByRole("application")).toHaveCount(2);
-  await expect(page.getByRole("table")).toHaveCount(2);
-  await expect(page.getByRole("button", { name: "Unplanned", exact: true })).toHaveCount(2);
-  const first = page.locator("article").first();
+  const recipes = pieRecipes(page);
+  await expect(recipes.getByRole("application")).toHaveCount(2);
+  await expect(recipes.getByRole("table")).toHaveCount(2);
+  await expect(recipes.getByRole("button", { name: "Unplanned", exact: true })).toHaveCount(2);
+  const first = recipes.first();
   await first.getByRole("button", { name: "Delivery", exact: true }).click();
   await expect(first.getByRole("status")).toContainText("40 visible hours");
-  await expect(page.locator("article").last().getByRole("status")).toContainText(
-    "88 visible hours",
-  );
+  await expect(recipes.last().getByRole("status")).toContainText("88 visible hours");
   await page.screenshot({ path: info.outputPath("pie-donut-recipes.png"), fullPage: true });
 });
 
@@ -258,8 +265,9 @@ test("pie and donut recipes fit a phone viewport and retain the data alternative
 }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/pies.html");
-  await expect(page.getByRole("application")).toHaveCount(2);
-  await expect(page.getByRole("table")).toHaveCount(2);
+  const recipes = pieRecipes(page);
+  await expect(recipes.getByRole("application")).toHaveCount(2);
+  await expect(recipes.getByRole("table")).toHaveCount(2);
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
   ).toBeTruthy();
@@ -402,7 +410,8 @@ test("recipes remain continuous before hover, after selection, filter/unhide and
 }, info) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/pies.html");
-  const charts = page.getByRole("application");
+  const recipes = pieRecipes(page);
+  const charts = recipes.getByRole("application");
   await expect(charts).toHaveCount(2);
   for (const chart of await charts.all()) {
     await expect(chart.locator(".recharts-pie-sector path").first()).toHaveAttribute(
@@ -415,7 +424,7 @@ test("recipes remain continuous before hover, after selection, filter/unhide and
     await expect.poll(() => paint(chart)).toEqual(before);
     await page.keyboard.press("Escape");
   }
-  const first = page.locator("article").first();
+  const first = recipes.first();
   await page.goto("/pies.html");
   const finalPaint = await paint(charts.first());
   await first.getByRole("checkbox", { name: "Animate", exact: true }).check();
