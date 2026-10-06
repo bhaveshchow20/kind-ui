@@ -198,3 +198,76 @@ Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also 
 
 The existing Next integration fixture additionally checks real server-rendered
 color resource IDs through hydration and a theme change.
+
+
+## Decorative chart backgrounds
+
+`ChartBackgroundPattern` is optional Cartesian plot chrome, independent of
+`FillPattern` series encoding, legends, visibility and materials. Its transparent
+tiles contain only decorative ink; series are painted above it. It uses Recharts'
+plot area (excluding margins and axes), a scoped clip path and SVG IDs, and the
+[Recharts layer contract](https://recharts.github.io/en-US/guide/zIndex/) just below
+the default grid. Custom negative series/grid z-index overrides remain caller-owned.
+It adds no layout, axes, tooltip payload, animation or accessibility semantics.
+The stylesheet prevents descendant pointer interception.
+
+Generated configured LineChart opts in with:
+
+```tsx
+<Chart.LineChart
+  config={config}
+  data={data}
+  xDataKey="month"
+  aria-label="Monthly totals"
+  backgroundPattern={{ pattern: "pinpoints", opacity: 0.15 }}
+/>
+```
+
+Explicit composition uses the part inside the chart. Configured explicit children
+replace generated parts, so do not also pass `backgroundPattern`:
+
+```tsx
+<Chart.Root config={config}>
+  <Chart.BarChart data={data} responsive style={{ width: "100%", height: 280 }}>
+    <Chart.ChartBackgroundPattern pattern="crossings" size={20} opacity={0.12} />
+    <Chart.XAxis dataKey="month" />
+    <Chart.YAxis />
+    <Chart.BarSeries dataKey="total" />
+    <Chart.Tooltip />
+  </Chart.BarChart>
+</Chart.Root>
+```
+
+Presets are `pinpoints`, `crossings` and `waves`. `size` is a positive finite tile
+size in SVG user units (default 16), and `opacity` is finite in [0, 1] (default
+0.15). Zero opacity is supported. `color` accepts CSS paint, including theme
+variables; the default is `var(--kind-ui-chart-grid, CanvasText)`. Resize changes
+the plot rectangle and clip, preserving tile density and IDs. Missing or empty
+plot geometry renders nothing; invalid options throw even before geometry exists.
+
+Custom registration is consumer-owned and immutable: define reusable patterns in
+a local module or catalog, then pass the definition directly. No global registry,
+provider, series metadata or side-effect registration is required:
+
+```tsx
+const cornerMarks = Chart.defineChartBackgroundPattern(({ size, color, idPrefix }) => (
+  <g id={`${idPrefix}-tile`}>
+    <path d={`M0 ${size / 3}V0H${size / 3}`} fill="none" stroke={color} />
+  </g>
+));
+const backgrounds = { cornerMarks }; // optional local catalog
+
+<Chart.ChartBackgroundPattern pattern={backgrounds.cornerMarks} size={24} opacity={0.1} />;
+```
+
+The render escape hatch returns tile SVG children, not a full chart or pattern
+element. Use the supplied `size`, `color`, and per-instance `idPrefix`; suffix
+custom resource IDs and reference those scoped IDs. Keep custom output decorative:
+no links, focusable elements, event handlers, portals or independent z-index
+layers. The callback is trusted consumer code, not an SVG sanitizer.
+
+Supported composition hosts are Line, Bar (including Waterfall), Area, Combo,
+Scatter, Histogram and BoxPlot charts using the native Cartesian plot area.
+Generated configuration is available only for LineChart. Polar, Pie, Sankey,
+Heatmap and ActivityRings are outside this contract. Fixed-size chart SSR retains
+the existing native empty shell; this part does not create server plot geometry.

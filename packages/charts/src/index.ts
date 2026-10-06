@@ -234,3 +234,11 @@ export {
   WaterfallSeries,
   type WaterfallSeriesProps,
 } from "./waterfall-series.js";
+
+export {
+  ChartBackgroundPattern,
+  type ChartBackgroundPatternProps,
+  type ChartBackgroundPatternDefinition,
+  type ChartBackgroundPatternRenderProps,
+  defineChartBackgroundPattern,
+} from "./chart-background-pattern.js";

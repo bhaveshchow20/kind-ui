@@ -75,3 +75,20 @@ test("legacy explicit line retains caller Root and has no automatic legend/instr
   assert.equal((html.match(/data-kind-ui="chart"/g) ?? []).length, 1);
   assert.doesNotMatch(html, /chart-legend|chart-instructions/);
 });
+
+test("explicit configured children reject generated background options at runtime", () => {
+  assert.throws(
+    () =>
+      render(
+        h(LineChart, {
+          config,
+          data: [],
+          "aria-label": "Explicit",
+          // biome-ignore lint/correctness/noChildrenProp: Explicit null replaces generated parts.
+          children: null,
+          backgroundPattern: { pattern: "waves" },
+        }),
+      ),
+    /Explicit LineChart children replace generated parts/,
+  );
+});

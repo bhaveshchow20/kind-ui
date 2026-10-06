@@ -473,3 +473,10 @@
     }
   }
 }
+
+@layer kind-ui {
+  [data-kind-ui="chart-background-pattern"],
+  [data-kind-ui="chart-background-pattern"] * {
+    pointer-events: none !important;
+  }
+}
