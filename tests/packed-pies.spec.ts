@@ -513,7 +513,9 @@ test("stylesheet transformed native sectors retain paint and handler ownership d
   await expect(page.locator('[data-kind-ui="chart-tooltip"]')).toContainText("Beta");
 });
 
-test("initial category survives reorder, clears on removal and only remount restores it", async ({ page }) => {
+test("initial category survives reorder, clears on removal and only remount restores it", async ({
+  page,
+}) => {
   await page.goto(`${url}/?pinned`);
   const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
   await expect(tooltip).toContainText("Beta");
@@ -553,7 +555,9 @@ test("initial Pie pin hands focus and pointer inspection to native dismissal", a
   await expect(tooltip).not.toBeVisible();
 });
 
-test("initial Pie pin respects visibility, ambiguous identity and native defaultIndex", async ({ page }) => {
+test("initial Pie pin respects visibility, ambiguous identity and native defaultIndex", async ({
+  page,
+}) => {
   await page.goto(`${url}/?pinned`);
   const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
   await expect(tooltip).toContainText("Beta");

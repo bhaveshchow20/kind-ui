@@ -1488,7 +1488,9 @@ test("initial Pie pin rejects unsupported composition through public exports", (
     () => chart(series(), h(Native.Pie, { dataKey: "value" }), h(Chart.Tooltip)),
     /one direct PieSeries/,
   );
-  assert.doesNotThrow(() => chart(series(), h(Chart.Tooltip, { itemKey: (entry) => entry.payload.id })));
+  assert.doesNotThrow(() =>
+    chart(series(), h(Chart.Tooltip, { itemKey: (entry) => entry.payload.id })),
+  );
   assert.doesNotThrow(() =>
     chart(
       h(Chart.PieSeries, {

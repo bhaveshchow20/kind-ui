@@ -20,7 +20,10 @@ const identity: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(e
 export function PinnedPieHost({
   category = "beta",
   accessor = false,
-}: { category?: string; accessor?: boolean }) {
+}: {
+  category?: string;
+  accessor?: boolean;
+}) {
   const [data, setData] = useState(original);
   const [generation, setGeneration] = useState(0);
   const [override, setOverride] = useState(false);
