@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   assertCompositionConsumerSource,
@@ -39,4 +40,36 @@ test("complete compositions reject a second chart import source", () => {
     () => assertCompositionConsumerSource('await import("recharts");'),
     /Complete composition/,
   );
+});
+
+test("bar pattern fixture wiring stays inside the public host import guard", () => {
+  for (const file of ["main.tsx", "host.tsx"]) {
+    assertCompositionConsumerSource(
+      readFileSync(new URL(`../tests/fixtures/bar/${file}`, import.meta.url), "utf8"),
+    );
+  }
+  for (const specifier of ["react-dom/server", "./patterns.js"]) {
+    assert.throws(
+      () => assertLineConsumerSource(`import * as Host from "${specifier}";`),
+      /Disallowed/,
+    );
+  }
+});
+
+
+test("theme color fixture wiring stays inside the public host import guard", () => {
+  for (const file of ["main.tsx", "host.tsx"]) {
+    assertCompositionConsumerSource(
+      readFileSync(new URL(`../tests/fixtures/identity-colors/${file}`, import.meta.url), "utf8"),
+    );
+  }
+});
+
+
+test("area pattern fixture wiring stays inside the public host import guard", () => {
+  for (const file of ["static.tsx", "motion.tsx", "host.tsx"]) {
+    assertCompositionConsumerSource(
+      readFileSync(new URL(`../tests/fixtures/area/${file}`, import.meta.url), "utf8"),
+    );
+  }
 });
