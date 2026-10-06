@@ -670,10 +670,46 @@ test("actual recipes expose independent materials and preserve selection/totals 
     })
     .toBeTruthy();
   if (!interior) throw Error("No hittable native slice interior");
+  await page.evaluate(() => {
+    const press = { downOnSector: false, connectedAtUp: false, sameTargetAtUp: false };
+    let pressed: EventTarget | null = null;
+    document.addEventListener(
+      "pointerdown",
+      (event) => {
+        pressed = event.target;
+        press.downOnSector =
+          pressed instanceof Element && pressed.matches('[data-kind-ui="pie-sector"]');
+      },
+      { capture: true, once: true },
+    );
+    document.addEventListener(
+      "mouseup",
+      (event) => {
+        press.connectedAtUp = pressed instanceof Element && pressed.isConnected;
+        press.sameTargetAtUp = event.target === pressed;
+      },
+      { capture: true, once: true },
+    );
+    (globalThis as typeof globalThis & { piePress?: typeof press }).piePress = press;
+  });
   await slice.click({ position: interior });
   await expect(page.locator("article").first().locator("p[role=status]")).toContainText(
     "Selected:",
   );
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          globalThis as typeof globalThis & {
+            piePress?: {
+              downOnSector: boolean;
+              connectedAtUp: boolean;
+              sameTargetAtUp: boolean;
+            };
+          }
+        ).piePress,
+    ),
+  ).toEqual({ downOnSector: true, connectedAtUp: true, sameTargetAtUp: true });
   await page.screenshot({
     path: info.outputPath("pie-material-recipes-desktop.png"),
     fullPage: true,

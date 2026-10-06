@@ -5,6 +5,7 @@ import {
   type ComponentProps,
   Fragment,
   isValidElement,
+  memo,
   type ReactNode,
   use,
   useCallback,
@@ -22,6 +23,10 @@ import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
 import { type PieMaterial, PieMaterialFilter, type PiePaintBounds } from "./pie-material.js";
 import { registerPiePinComponent } from "./pie-pin-identity.js";
+
+// Native Pie keys its animation subtree by props identity even with animation disabled.
+// Pointer/pin context updates must not replace an unchanged pressed native sector.
+const StablePie = memo(Pie) as typeof Pie;
 
 export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
@@ -354,10 +359,13 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   const { config } = useChart();
   if (glowCategories !== undefined && categoryKey === undefined)
     throw new Error("glowCategories requires categoryKey and explicit series data");
-  const children =
-    categoryKey === undefined
-      ? props.children
-      : categoryCells(props.data, categoryKey, config, props.children, props.fill);
+  const children = useMemo(
+    () =>
+      categoryKey === undefined
+        ? props.children
+        : categoryCells(props.data, categoryKey, config, props.children, props.fill),
+    [props.data, categoryKey, config, props.children, props.fill],
+  );
   // Native sector indices align with explicit data, but membership uses the original
   // row identity, before native Cell props can override payload fields.
   const glowRows = useMemo(() => {
@@ -433,14 +441,14 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     previous.current = inputs;
   });
   return (
-    <Pie<DataPoint, Value>
+    <StablePie<DataPoint, Value>
       {...nativeProps}
       stroke={props.stroke ?? "none"}
       shape={props.shape ?? sectorShape}
       isAnimationActive={false}
     >
       {children}
-    </Pie>
+    </StablePie>
   );
 }
 registerPiePinComponent(PieSeries, "series");
