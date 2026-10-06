@@ -83,3 +83,45 @@ data, domains and business state.
 ## License
 
 [MIT](LICENSE) © 2026 Bhavesh Chowdhury.
+
+### Loading a chart
+
+`ChartLoading` is a whole-content presentation boundary. Import the default
+stylesheet. The host controls `loading`; empty data, requests, cancellation,
+retries, partial results and errors remain host-owned. No loading delay is added.
+
+```tsx
+<ChartLoading loading={pending} label="Loading monthly sales" style={{ height: 280 }}>
+  <ResponsiveContainer width="100%" height="100%">
+    <BarChart data={rows}>
+      <XAxis dataKey="month" />
+      <YAxis />
+      <BarSeries dataKey="sales" seriesKey="sales" />
+      <Tooltip />
+    </BarChart>
+  </ResponsiveContainer>
+</ChartLoading>
+```
+
+Compose the bar example inside `Root` as usual. A configured `LineChart` can be
+wrapped directly. Native div props, styles, handlers and ref belong to the outer
+boundary. Give the boundary an explicit height for percentage-height charts;
+otherwise its mounted children determine its dimensions. Content is hidden and
+inert while loading, with `aria-busy` on its content region. A separate live
+`role="status"` announces `label` (default: “Loading chart”); it clears on
+completion. Supply chart-specific text and an accessible data alternative.
+
+Loading shows a neutral three-dot pulse; completion immediately makes content
+available with a short opacity reveal. Reduced motion disables both animations.
+Rapid updates follow the current prop without queued completions. Children,
+consumer data, axes, tooltip/legend configuration and engine state are retained;
+native entrance animations may finish while hidden and are not replayed. Place
+controls or legends outside the boundary to keep them available during loading.
+Consumer portals outside the boundary must be hidden by the consumer. The
+boundary does not supply chart-family skeletons or animate data/geometry changes.
+It can contain DOM chart families, but line and bar are the browser-tested examples.
+
+Run `npm run dev:chart` and open `/loading.html` for load/replay, empty-result and
+resize controls. Prefer keeping replay controls outside the boundary so focus
+remains available while loading. A loaded empty result should have its own
+message; do not set `loading` merely because `rows` is empty.

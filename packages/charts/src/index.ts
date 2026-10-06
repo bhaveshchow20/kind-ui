@@ -114,6 +114,7 @@ export {
   boxPlotExtent,
   validateBoxPlotSummary,
 } from "./box-plot.js";
+export { ChartLoading, type ChartLoadingProps } from "./chart-loading.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
 export {
   type ConfiguredLineChartProps,
