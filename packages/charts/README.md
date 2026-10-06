@@ -166,7 +166,27 @@ const config = {
 Themes follow the inherited CSS `color-scheme`, using native `light-dark()`;
 without a host scheme the browser defaults to light. Set `color-scheme: light dark`
 on a host for system preference, or `light`/`dark` for an explicit application
-choice. This requires browser support for `light-dark()` and `color-mix()`.
+choice.
+
+Browser syntax requirements (from MDN compatibility data):
+
+| Generated CSS | Chrome / Edge | Firefox | Safari / iOS Safari |
+| --- | --- | --- | --- |
+| [`light-dark()`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/color_value/light-dark) for every `{ light, dark }` definition | 123+ | 120+ | 17.5+ |
+| [`color-mix()`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/color_value/color-mix) for interpolated stops when theme spacing differs | 111+ | 113+ | 16.2+ |
+| [`linear-gradient(... in srgb, ...)`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/gradient/linear-gradient#browser_compatibility) for gradient legend/tooltip swatches | 111+ | 127+ | 16.2+ |
+
+For themed gradients including matching swatches, use Chrome/Edge 123+, Firefox
+127+, or Safari/iOS Safari 17.5+. These are syntax minimums, not a tested-browser
+matrix; supplied color values can have additional requirements.
+
+There is no polyfill, feature detection or automatic light/first-stop fallback.
+Unsupported functions make the consuming paint or swatch declaration invalid;
+SVG paints/stops can use their CSS initial or inherited values, and gradient
+swatches can lose their background image. For older browsers, supply supported
+plain color strings (or CSS variables with host-controlled light/dark values)
+instead of themed objects. Unthemed stop arrays avoid generated `light-dark()`
+and `color-mix()`, but their swatches still require the gradient syntax above.
 
 Root retains `--color-<key>` as the first stop, emits zero-based
 `--kind-ui-series-<encoded-key>-<index>` stops and a `-gradient` CSS swatch
