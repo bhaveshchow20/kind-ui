@@ -22,9 +22,10 @@ test("Introduction is the first Get Started page at the preserved docs root", ()
   });
   assert.match(readFileSync("content/docs/index.mdx", "utf8"), /^title: Introduction$/m);
   assert.match(readFileSync("public/markdown/index.md", "utf8"), /^# Introduction\n/);
+  const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
   assert.ok(
     readFileSync("public/llms.txt", "utf8").includes(
-      `[Introduction](${publicPath("/markdown/index.md")})`,
+      `[Introduction](${origin}${publicPath("/markdown/index.md")})`,
     ),
   );
   const index = readFileSync("public/llms.txt", "utf8");
