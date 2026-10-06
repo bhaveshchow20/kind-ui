@@ -2443,3 +2443,52 @@ test("Sankey intermediate labels count throughput once including rounding tolera
     /Middle: 10.000000001/,
   );
 });
+
+test("Sankey configured icons preserve identity, text ownership and bounded placement", () => {
+  const data = {
+    nodes: [
+      { id: "sink", name: "Sink" },
+      { id: "source", name: "Source" },
+    ],
+    links: [{ id: "flow", source: "source", target: "sink", value: 7 }],
+  };
+  const node = {
+    x: 30,
+    y: 20,
+    width: 10,
+    height: 1,
+    payload: { id: "source", name: "stale" },
+    index: 0,
+  };
+  const nodeConfig = {
+    source: { label: "Legend only", color: "red", icon: h("path", { d: "M0 0h24v24z" }) },
+    sink: { label: "Sink metadata", color: "blue" },
+  };
+  const label = (props = {}) =>
+    renderSvg(h(Chart.SankeyNodeLabel, { node, data, nodeConfig, ...props }));
+  assert.match(label(), /data-kind-ui="sankey-node-icon"/);
+  assert.match(label(), /aria-hidden="true" focusable="false"/);
+  assert.match(label(), /<text x="68" y="20.5"/);
+  assert.match(label(), /<title>Source<\/title>/);
+  assert.doesNotMatch(label(), /Legend only|stale/);
+  assert.match(label({ side: "left", iconSize: 12, iconGap: 2 }), /<text x="8"/);
+  assert.match(
+    label({ showValues: true, children: h("tspan", null, "Custom") }),
+    /<title>Source: 7<\/title>/,
+  );
+  assert.match(label({ children: "Custom" }), />Custom<\/text>/);
+  assert.match(label({ position: "inside" }), /clip-path="url\(#/);
+  assert.match(label({ position: "inside" }), /width="10" height="1"/);
+  assert.doesNotMatch(label({ node: { ...node, payload: { id: "sink" } } }), /sankey-node-icon/);
+  assert.doesNotMatch(label({ nodeConfig: undefined }), /sankey-node-icon/);
+  assert.doesNotMatch(label({ iconSize: 0 }), /sankey-node-icon/);
+  for (const icon of [null, false, undefined]) {
+    assert.match(label({ nodeConfig: { source: { ...nodeConfig.source, icon } } }), /<text x="48"/);
+  }
+  assert.match(
+    label({ data: { ...data, nodes: [...data.nodes].reverse() } }),
+    /data-node-id="source"/,
+  );
+  for (const props of [{ iconSize: -1 }, { iconGap: Infinity }])
+    assert.throws(() => label(props), /nonnegative/);
+});

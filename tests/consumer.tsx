@@ -489,3 +489,38 @@ const invalidRadialReveal: Chart.RadialBarAnimation = { revealDirection: "edges-
 // @ts-expect-error Scatter has no horizontal reveal direction option.
 const invalidScatterReveal: Chart.ScatterAnimation = { revealDirection: "right-to-left" };
 void [invalidRadarReveal, invalidRadialReveal, invalidScatterReveal];
+const sankeyIconConfig = {
+  source: { label: "Legend source", color: "red", icon: <path d="M0 0h24v24z" /> },
+  sink: { label: "Legend sink", color: "blue" },
+} satisfies Chart.SankeyNodeConfig;
+const sankeyIconData: Chart.SankeyFlowData = {
+  nodes: [
+    { id: "source", name: "Source" },
+    { id: "sink", name: "Sink" },
+  ],
+  links: [{ id: "flow", source: "source", target: "sink", value: 7 }],
+};
+const sankeyIconConsumer = (
+  <Chart.SankeyChart
+    data={sankeyIconData}
+    nodeConfig={sankeyIconConfig}
+    node={(node) => (
+      <g>
+        <Chart.SankeyNode {...node} />
+        <Chart.SankeyNodeLabel
+          node={node}
+          data={sankeyIconData}
+          nodeConfig={sankeyIconConfig}
+          iconSize={18}
+          iconGap={3}
+          position="outside"
+          showValues
+          ref={createRef<SVGTextElement>()}
+        >
+          <tspan>Custom name</tspan>
+        </Chart.SankeyNodeLabel>
+      </g>
+    )}
+  />
+);
+void sankeyIconConsumer;

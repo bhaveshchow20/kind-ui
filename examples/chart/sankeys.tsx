@@ -6,6 +6,7 @@ import {
   SankeyLink,
   type SankeyMaterial,
   SankeyNode,
+  type SankeyNodeConfig,
   SankeyNodeLabel,
   SankeyTable,
 } from "@kind-ui/charts";
@@ -29,6 +30,21 @@ const data: SankeyFlowData = {
     { id: "loss", source: "process", target: "loss", value: 25 },
     { id: "reserve", source: "supply", target: "reserve", value: 0 },
   ],
+};
+const nodeConfig: SankeyNodeConfig = {
+  supply: {
+    label: "Supply",
+    color: "#4338ca",
+    icon: <path d="M12 2 4 14h7l-1 8 10-14h-7z" fill="currentColor" />,
+  },
+  process: {
+    label: "Processing",
+    color: "#4338ca",
+    icon: <circle cx="12" cy="12" r="8" fill="currentColor" />,
+  },
+  use: { label: "Useful output", color: "#4338ca" },
+  loss: { label: "Explicit loss", color: "#4338ca" },
+  reserve: { label: "Reserve", color: "#4338ca" },
 };
 function Recipe({
   material,
@@ -87,6 +103,7 @@ function Recipe({
                   <SankeyNodeLabel
                     node={props}
                     data={flow}
+                    nodeConfig={nodeConfig}
                     position={material === "solid" ? "outside" : "inside"}
                     showValues
                     valueFormatter={(value) => `${value} MWh`}
