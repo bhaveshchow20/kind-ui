@@ -66,8 +66,13 @@ export function LineChart({
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
   const options = typeof animate === "object" ? animate : {};
-  const enabled = animate !== false && !reduced;
-  const interrupt = useCallback(() => setInteracted(true), []);
+  const enabled = animate !== false && !reduced && !loading;
+  const interrupt = useCallback(() => {
+    if (!loading) setInteracted(true);
+  }, [loading]);
+  useLayoutEffect(() => {
+    if (loading) setInteracted(false);
+  }, [loading]);
   const reveal = enabled && !interacted;
   const transition = options.hoverTransition ?? defaultHover;
   return (
@@ -76,6 +81,7 @@ export function LineChart({
         chartProps={props}
         loading={loading}
         loadingLabel={loadingLabel}
+        loadingSkeleton="line"
         engine={EngineLineChart}
         motionEnabled={enabled}
         interrupt={interrupt}

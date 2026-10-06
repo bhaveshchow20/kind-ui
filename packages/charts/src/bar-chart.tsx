@@ -61,18 +61,30 @@ export function BarLifecycle({
 }
 
 /** Native Recharts composition with Kind interaction and optional Motion. */
-export function BarChart({
-  animate = false,
-  loading,
-  loadingLabel,
-  emphasis = "none",
-  children,
-  ...props
-}: BarChartProps) {
+export function BarChartImplementation({
+  chartProps,
+  family,
+}: {
+  chartProps: BarChartProps;
+  family: "bar" | "waterfall" | "histogram" | "box-plot";
+}) {
+  const {
+    animate = false,
+    loading,
+    loadingLabel,
+    emphasis = "none",
+    children,
+    ...props
+  } = chartProps;
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
-  const finish = useCallback(() => setInteracted(true), []);
-  const enabled = animate !== false && !reduced;
+  const finish = useCallback(() => {
+    if (!loading) setInteracted(true);
+  }, [loading]);
+  useLayoutEffect(() => {
+    if (loading) setInteracted(false);
+  }, [loading]);
+  const enabled = animate !== false && !reduced && !loading;
   const options = typeof animate === "object" ? animate : {};
   return (
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
@@ -80,6 +92,7 @@ export function BarChart({
         <BarCategoryBoundary>
           <LineChartFrame
             chartProps={props}
+            loadingSkeleton={family}
             loading={loading}
             loadingLabel={loadingLabel}
             categoryEmphasis={emphasis === "category"}
@@ -94,4 +107,9 @@ export function BarChart({
       </BarMotion>
     </MotionContext>
   );
+}
+
+/** Native bar composition with a deterministic loading silhouette. */
+export function BarChart(props: BarChartProps) {
+  return <BarChartImplementation chartProps={props} family="bar" />;
 }

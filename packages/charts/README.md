@@ -82,49 +82,46 @@ data, domains and business state.
 
 ### Loading chart data
 
-`LineChart` (configured and composed) and `BarChart` accept `loading?: boolean`
-(default false) alongside `animate`, plus `loadingLabel?: string` (default
-“Loading chart”). Import the default stylesheet. The chart owns its loading
-presentation; no wrapper component is required.
+All chart families accept `loading?: boolean` alongside `animate`, plus
+`loadingLabel?: string` (default “Loading chart”). Import the default stylesheet.
 
 ```tsx
 <LineChart
   config={config}
   data={rows}
   xDataKey="month"
-  aria-label="Monthly sales"
   height={280}
-  animate={false}
+  animate={{ reveal: { duration: 650 } }}
   loading={pending}
   loadingLabel="Loading monthly sales"
 />
 ```
 
-For composed bars, pass `loading={pending}` directly to `BarChart` inside your
-usual `Root` and `ResponsiveContainer`. Chart content stays mounted and sized,
-but becomes hidden and inert during loading. A separate live status announces
-`loadingLabel` outside the busy content region. Consumer axes, series, tooltip,
-styles, handlers, refs and data stay with the native chart. External legends and
-controls remain available. Empty data does not imply loading: render an explicit
-empty-result message when the request completes without rows.
+Pass the same props directly to composed chart roots inside the existing `Root`
+and native sizing/composition. Supported families: Line, Area, Bar, Combo, Pie,
+Radar, RadialBar, Scatter, Heatmap, Waterfall, Histogram, BoxPlot, ActivityRings
+and Sankey. Each uses its own decorative chart silhouette. A new loading cycle
+chooses a bounded design variation independent of your data; each pulse fades away before selecting its next variation, staying stable through
+renders and resize between pulses. The 1.7-second motion follows each family: horizontal
+reveal, mark growth, angular fill, radial expansion, cell wave or path flow.
+Reduced motion displays a static silhouette.
 
-Loading shows a neutral three-dot pulse; completion immediately exposes the
-chart with a short opacity reveal. Reduced motion disables both effects. Rapid
-updates follow the current prop without queued completions or forced delays.
-`animate` still controls native mark animation; native entrances may finish while
-hidden and are not replayed by loading. Omitting the prop retains existing chart
-markup. Supply a chart-specific label and accessible data alternative. Consumer portals outside the chart remain consumer-owned. Loading
-dots use the native container positioning; custom position overrides can relocate
-them.
+Actual chart content remains mounted, sized, hidden and inert while pending.
+The chart exposes `aria-busy` and a separate live status. Native axes, series,
+refs, style and event ownership stay with the consumer. External legends remain
+available. Heatmap uses its table viewport; Sankey uses its native flow container;
+polar illustrations retain circular proportions. Skeletons have no values,
+labels or tooltip targets.
 
-This draft supports line and bar loading, including the bar-backed
-`WaterfallChart`, `BoxPlotChart` and `HistogramChart`. Other chart families do not
-yet expose this prop; their layout and interaction contracts need separate implementation
-and tests. Loading does not fabricate data or morph chart geometry. Request,
-cancellation, retries, partial results and errors remain host-owned.
+Completion immediately restores actual data and rearms the family’s existing
+entrance when `animate` enables it. There is no forced wait or queued completion.
+Empty data does not imply loading: render an explicit empty-result message after
+completion. Loading does not change validation of supplied chart data. Requests,
+cancellation, retries, partial results, errors and portals outside the native
+chart remain host-owned. Supply an accessible data alternative alongside charts.
 
-Run `npm run dev:chart` and open `/loading.html` to inspect load/replay/toggle,
-empty-result and resize controls, including transition out of loading.
+Run `npm run dev:chart` and open `/loading.html` for all-family replay, load,
+empty-input, resize and interrupted-update controls.
 
 ## License
 

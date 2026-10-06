@@ -17,6 +17,8 @@ import { LineChartFrame } from "./line-chart.js";
 export type ScatterAnimation = LineAnimation;
 export type ScatterChartProps = ComponentProps<typeof EngineScatterChart> & {
   animate?: boolean | ScatterAnimation | undefined;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
 };
 export const ScatterMotion = createContext<{
   reveal: boolean;
@@ -40,11 +42,25 @@ const serverSnapshot = () => true;
 const defaultHover = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } as const;
 
 /** Native numeric geometry and item selection, with optional entrance fade and shared tooltip Motion. */
-export function ScatterChart({ animate = false, children, ...props }: ScatterChartProps) {
+export function ScatterChart({
+  animate = false,
+  loading,
+  loadingLabel,
+  children,
+  ...props
+}: ScatterChartProps) {
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
-  const enabled = animate !== false && !reduced;
-  const interact = useCallback(() => setInteracted(true), []);
+  const enabled = animate !== false && !reduced && !loading;
+  const interact = useCallback(() => {
+    if (!loading) setInteracted(true);
+  }, [loading]);
+  useLayoutEffect(() => {
+    if (loading) {
+      setInteracted(false);
+      started.current = false;
+    }
+  }, [loading]);
   const finish = useCallback(() => {
     if (enabled) setInteracted(true);
   }, [enabled]);
@@ -91,6 +107,9 @@ export function ScatterChart({ animate = false, children, ...props }: ScatterCha
           onKeyDownCapture={interact}
         >
           <LineChartFrame
+            loading={loading}
+            loadingLabel={loadingLabel}
+            loadingSkeleton="scatter"
             chartProps={props}
             engine={EngineScatterChart}
             motionEnabled={enabled}

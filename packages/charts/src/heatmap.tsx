@@ -24,6 +24,7 @@ import {
   type HeatmapModelOptions,
   type HeatmapScale,
 } from "./heatmap-model.js";
+import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
 import type { TooltipContentProps } from "./tooltip-content.js";
 import { TooltipNumber } from "./tooltip-number.js";
 
@@ -34,8 +35,12 @@ export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
     missingLabel?: string;
     /** Diagonal cell entrance; quantitative colors and table geometry are unchanged. */
     animate?: boolean;
+    loading?: boolean | undefined;
+    loadingLabel?: string | undefined;
   };
 type Context = {
+  loadingSeed: number;
+  loading: boolean | undefined;
   model: HeatmapModel;
   entrance: boolean;
   scale: HeatmapScale;
@@ -91,10 +96,13 @@ export function HeatmapChart({
   formatValue = number,
   missingLabel = "Missing",
   animate = false,
+  loading,
+  loadingLabel,
   children,
   onPointerLeave,
   ...props
 }: HeatmapChartProps) {
+  const loadingSeed = useLoadingSeed(loading);
   const model = useMemo(
     () => createHeatmapModel({ rows, columns, data, ...(duplicates ? { duplicates } : {}) }),
     [rows, columns, data, duplicates],
@@ -102,10 +110,14 @@ export function HeatmapChart({
   const [active, updateActive] = useState<readonly [string, string] | null>(null);
   const pointer = useRef<PointerPosition | null>(null);
   const dismissed = useRef(false);
-  const setActive = useCallback((key: readonly [string, string] | null) => {
-    if (key) dismissed.current = false;
-    updateActive(key);
-  }, []);
+  const setActive = useCallback(
+    (key: readonly [string, string] | null) => {
+      if (loading) return;
+      if (key) dismissed.current = false;
+      updateActive(key);
+    },
+    [loading],
+  );
   const dismiss = useCallback(() => {
     dismissed.current = true;
     updateActive(null);
@@ -123,8 +135,19 @@ export function HeatmapChart({
   const [tooltipMounted, setTooltipMounted] = useState(false);
   const reduced = useSyncExternalStore(subscribeReduced, reducedSnapshot, reducedServerSnapshot);
   const [finished, setFinished] = useState(false);
-  const interrupt = useCallback(() => setFinished(true), []);
-  const enabled = animate && !reduced;
+  const previousLoading = useRef(loading);
+  const completing = previousLoading.current === true && loading !== true;
+  const interrupt = useCallback(() => {
+    if (!loading) setFinished(true);
+  }, [loading]);
+  const enabled = animate && !reduced && !loading;
+  useLayoutEffect(() => {
+    if (loading) {
+      setFinished(false);
+      updateActive(null);
+      pointer.current = null;
+    }
+  }, [loading]);
   const entrance = enabled && !finished;
   const root = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -173,12 +196,15 @@ export function HeatmapChart({
   useLayoutEffect(() => {
     const inputs = [model, scale, children];
     if (
-      inputs.some((value, index) => value !== previous.current[index]) ||
-      (previousEnabled.current && !enabled)
+      !loading &&
+      !completing &&
+      (inputs.some((value, index) => value !== previous.current[index]) ||
+        (previousEnabled.current && !enabled))
     )
       interrupt();
     previous.current = inputs;
     previousEnabled.current = enabled;
+    previousLoading.current = loading;
   });
   useLayoutEffect(() => {
     if (!entrance) return;
@@ -196,12 +222,14 @@ export function HeatmapChart({
   return (
     <HeatmapContext
       value={{
+        loading,
+        loadingSeed,
         model,
         entrance,
         scale,
         formatValue,
         missingLabel,
-        active,
+        active: loading ? null : active,
         setActive,
         dismiss,
         inspectPointer,
@@ -214,6 +242,7 @@ export function HeatmapChart({
         {...props}
         ref={ref}
         data-kind-ui="heatmap"
+        aria-busy={props["aria-busy"]}
         onFocusCapture={(event) => {
           props.onFocusCapture?.(event);
           interrupt();
@@ -241,6 +270,7 @@ export function HeatmapChart({
         }}
       >
         <div data-kind-ui="heatmap-entrance">{children}</div>
+        <LoadingStatus loading={loading} label={loadingLabel} />
       </div>
     </HeatmapContext>
   );
@@ -421,7 +451,7 @@ export function HeatmapGrid({
     }
   }
   return (
-    <div data-kind-ui="heatmap-scroll">
+    <div data-kind-ui="heatmap-scroll" data-loading={context.loading || undefined}>
       <table
         {...props}
         ref={(node) => {
@@ -432,6 +462,9 @@ export function HeatmapGrid({
         // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: WAI-ARIA APG data grid uses a native table with roving cell focus.
         role="grid"
         aria-label={caption}
+        aria-busy={context.loading}
+        aria-hidden={context.loading || undefined}
+        inert={context.loading || undefined}
         data-kind-ui="heatmap-grid"
         data-cell-sizing={layout?.cellSize === undefined ? undefined : "fixed"}
         data-row-labels={layout?.rowLabels}
@@ -529,7 +562,15 @@ export function HeatmapGrid({
           ))}
         </tbody>
       </table>
-      {model.rows.length === 0 || model.columns.length === 0 ? (
+      {context.loading && (
+        <LoadingSkeletonSurface
+          family="heatmap"
+          width="100%"
+          height="100%"
+          seed={context.loadingSeed}
+        />
+      )}
+      {!context.loading && (model.rows.length === 0 || model.columns.length === 0) ? (
         <p data-kind-ui="heatmap-empty">No cells in the selected domains.</p>
       ) : null}
     </div>
