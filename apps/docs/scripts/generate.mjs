@@ -25,7 +25,7 @@ if (installed.version !== provenance.version)
     "Installed chart package differs from pinned tarball. Run npm install after prepare:package.",
   );
 const tarballHash = createHash("sha256")
-  .update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz"))
+  .update(readFileSync("vendor/kind-ui-charts-0.1.1.tgz"))
   .digest("hex");
 if (tarballHash !== provenance.sha256) throw new Error("Package tarball does not match provenance");
 const appLock = JSON.parse(read("package-lock.json"));

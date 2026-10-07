@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/pie-examples.json", "utf8"));
@@ -114,15 +114,58 @@ try {
   assert.ok(
     (await visible.getByRole("status").allTextContents()).join().includes("580 hours selected"),
   );
-  for (const name of ["Engineering", "Operations", "Research"])
+  for (const name of ["Engineering", "Operations"])
     await visible.getByRole("button", { name, exact: true }).click();
-  assert.equal(await visible.locator('[data-kind-ui="pie-sector"]').count(), 0);
+  const research = visible.getByRole("button", { name: "Research", exact: true });
+  const root = visible.locator('[data-kind-ui="chart"]').first();
+  const sectors = visible.locator('[data-kind-ui="pie-sector"]');
+  const paint = () =>
+    sectors.evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        path: node.getAttribute("d"),
+        fill: getComputedStyle(node).fill,
+        stroke: getComputedStyle(node).stroke,
+        opacity: getComputedStyle(node).opacity,
+      })),
+    );
+  await expect(sectors).toHaveCount(1);
+  await expect.poll(() => fills(visible)).toEqual([categoryColors[3]]);
+  const before = await paint();
+  const callbacks = await root.getAttribute("data-visibility-changes");
+  const feedback = root.locator('[data-kind-ui="chart-interaction-status"]');
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const previous = await feedback.locator("span").elementHandle();
+    assert.ok(previous, "Missing scoped interaction feedback");
+    await research.focus();
+    await page.keyboard.press("Space");
+    await expect(research).toBeFocused();
+    await expect(research).toHaveAttribute("aria-pressed", "true");
+    await expect(feedback).toHaveText("At least one item must remain visible.");
+    await expect.poll(() => previous.evaluate((node) => node.isConnected)).toBe(false);
+    await previous.dispose();
+    await expect.poll(paint).toEqual(before);
+    await expect(root).toHaveAttribute("data-visibility-changes", callbacks);
+    assert.ok(
+      (await visible.getByRole("status").allTextContents()).join().includes("100 hours selected"),
+    );
+  }
+  await visible.getByRole("button", { name: "Hide all categories", exact: true }).click();
+  await expect(sectors).toHaveCount(0);
+  await expect(root).toHaveAttribute("data-visibility-changes", callbacks);
   assert.ok(
     (await visible.getByRole("status").allTextContents()).join().includes("0 hours selected"),
   );
   await design.click();
   assert.equal(await visible.locator('[data-kind-ui="pie-sector"]').count(), 1);
   assert.deepEqual(await fills(visible), [categoryColors[0]]);
+  await visible.getByRole("button", { name: "Show all categories", exact: true }).click();
+  await expect(sectors).toHaveCount(4);
+  await expect.poll(() => fills(visible)).toEqual(categoryColors);
+  for (const name of ["Design", "Engineering", "Operations", "Research"])
+    await expect(visible.getByRole("button", { name, exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   const rounded = page.locator('[data-component="pie-rounded"]');
   await rounded.scrollIntoViewIfNeeded();
   const geometryPaths = [];
