@@ -1,7 +1,98 @@
 ---
 title: Composition
-description: Keep Line context, plot parts and application data explicit.
+description: Start with configured charts; use explicit Root for full control.
 ---
+
+## Choose a level
+
+Start with a configured chart for standard axes, series, tooltips and legends. Use explicit `Root` when your application needs to own the plot structure and presentation placement.
+
+| Level | Use it when | Ownership |
+| --- | --- | --- |
+| Configured chart (recommended default) | You want a standard chart with generated parts and configurable defaults. | `LineChart` owns context, responsive sizing and generated parts. |
+| Explicit `Root` | You need custom plot structure, external legend placement or native chart composition. | You compose context, sizing, axes, series and presentation parts. |
+
+The examples below use public exports and include their own data and config. Import the package stylesheet once in your application. When embedding either level, provide meaningful axes/units and a [complete data alternative](/docs/guides/accessibility/).
+
+## Level 1: Configured chart (recommended default)
+
+Pass `data`, `config`, an accessible name and `xDataKey`. With no explicit children, `LineChart` generates the grid, axes, series, tooltip and legend. It owns its `Root`; do not wrap it in another one. Customize generated parts with options such as `yAxis` and `curve`.
+
+```tsx title="Configured chart"
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [{ month: "Jan", visitors: 120 }, { month: "Feb", visitors: 180 }];
+const config = { visitors: { label: "Visitors", color: "#2563eb" } } satisfies Chart.SeriesConfig;
+
+export function ConfiguredChart() {
+  return (
+    <Chart.LineChart
+      data={data}
+      config={config}
+      xDataKey="month"
+      aria-label="Monthly visitors"
+      yAxis={{ width: 48 }}
+      curve="linear"
+    />
+  );
+}
+```
+
+## Level 2: Explicit Root for full control
+
+Choose this level to place a legend outside the plot, control the responsive container yourself or compose native plot parts. Pass `config` to `Root` and omit it from `LineChart`. The application owns the child structure; nothing generates axes, series, tooltip or legend for you.
+
+```tsx title="Explicit Root"
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [{ month: "Jan", visitors: 120 }, { month: "Feb", visitors: 180 }];
+const config = { visitors: { label: "Visitors", color: "#2563eb" } } satisfies Chart.SeriesConfig;
+
+export function ExplicitRootChart() {
+  return (
+    <Chart.Root config={config} aria-label="Monthly visitors">
+      <Chart.Legend />
+      <Chart.ResponsiveContainer width="100%" height={280}>
+        <Chart.LineChart data={data} aria-label="Monthly visitors">
+          <Chart.CartesianGrid vertical={false} />
+          <Chart.XAxis dataKey="month" />
+          <Chart.YAxis width={48} />
+          <Chart.LineSeries dataKey="visitors" type="linear" />
+          <Chart.Tooltip />
+        </Chart.LineChart>
+      </Chart.ResponsiveContainer>
+    </Chart.Root>
+  );
+}
+```
+
+### Advanced escape hatch: configured chart with explicit children
+
+Keep configured context, sizing, visibility and motion while replacing the plot parts when you only need custom axes or marks. This hybrid is an advanced customization of level 1. Explicit children replace all generated plot parts. Omit `xDataKey` to enable manual axis composition and put the x key on your `XAxis` instead. Also omit `curve`, `material`, `series` and generated-part options; set those choices on the explicit parts. `legend={{}}` adds the internally positioned legend.
+
+```tsx title="Advanced hybrid"
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [{ month: "Jan", visitors: 120 }, { month: "Feb", visitors: 180 }];
+const config = { visitors: { label: "Visitors", color: "#2563eb" } } satisfies Chart.SeriesConfig;
+
+export function HybridChart() {
+  return (
+    <Chart.LineChart data={data} config={config} legend={{}} aria-label="Monthly visitors">
+      <Chart.CartesianGrid vertical={false} />
+      <Chart.XAxis dataKey="month" />
+      <Chart.YAxis width={48} />
+      <Chart.LineSeries dataKey="visitors" type="linear" dot={false} />
+      <Chart.Tooltip />
+    </Chart.LineChart>
+  );
+}
+```
+
+See the [Line API](/docs/components/line/#api-reference) for exact props and defaults.
 
 ## Ownership
 
@@ -11,14 +102,10 @@ description: Keep Line context, plot parts and application data explicit.
 | Native plot geometry and axis semantics | Recharts |
 | Chart context, configured defaults, responsive sizing, series, legend and tooltip presentation | Kind UI |
 
-Configured `LineChart` owns its `Root`. Pass `data` and `config`, then compose the exported grid, axes, `LineSeries` and `Tooltip` as children. `legend={{}}` enables the internally positioned legend. Do not add another `Root` around configured `LineChart`.
-
-Omit explicit children and pass `xDataKey` to use generated parts. Without `config`, the legacy `Root` + `LineChart` composition remains available. See the [Line API](/docs/components/line/#api-reference) for these two modes and their defaults.
-
 ## Dimensions and tokens
 
 Give the chart measurable space. Configured `LineChart` defaults to full width and 280px height, with dimensions overridable by props and styles. The package stylesheet uses scoped config colors and application tokens such as `--foreground`, `--card`, `--border` and `--muted-foreground`; the complete consumer includes a stylesheet defining them.
 
 ## Motion and access
 
-Configured Line defaults to maintained motion and respects reduced-motion preferences; `animate={false}` disables it. Provide an accessible name, meaningful axes/units and a [complete data alternative](/docs/guides/accessibility/). Custom shapes, filters and renderers retain their own behavior and styling. Materials decorate lines without changing data or geometry.
+Configured Line defaults to maintained motion and respects reduced-motion preferences; `animate={false}` disables it. Explicit `Root` + `LineChart` retains the legacy default of no animation; opt in with `animate` on `LineChart`. Custom shapes, filters and renderers retain their own behavior and styling. Materials decorate lines without changing data or geometry.
