@@ -164,6 +164,7 @@ export {
   type HistogramShapeProps,
 } from "./histogram-series.js";
 export { Legend, type LegendProps } from "./legend.js";
+export type { LineDashAnimation } from "./line-dash.js";
 export type { LineMaterial } from "./line-material.js";
 export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";
 export type { PieMaterial } from "./pie-material.js";
@@ -205,6 +206,7 @@ export {
   SankeyNode,
   type SankeyNodeProps,
 } from "./sankey-marks.js";
+export { SankeyNodeLabel, type SankeyNodeLabelProps } from "./sankey-node-label.js";
 export { SankeyTable, type SankeyTableProps } from "./sankey-table.js";
 export { type ScatterAnimation, ScatterChart, type ScatterChartProps } from "./scatter-chart.js";
 export type { ScatterMaterial } from "./scatter-material.js";

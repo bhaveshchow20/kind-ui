@@ -40,3 +40,5 @@ test("complete compositions reject a second chart import source", () => {
     /Complete composition/,
   );
 });
+
+import "./line-dash-source.test.mjs";

@@ -5,7 +5,7 @@ Install the consumer skill with `npx skills add bhaveshchow20/kind-ui --skill ki
 Install charts with `npm install @kind-ui/charts`.
 Import `@kind-ui/charts/styles.css` once at the application entry.
 
-Start with /llms.txt, /markdown/start/installation.md and /markdown/agents/consumer.md.
+Start with /llms.txt, /markdown/installation.md and /markdown/agents/consumer.md.
 Retrieve the relevant component Markdown; /llms-full.txt includes complete code
 and API tables. Copy prompt follows the selected example. Existing MCP documentation/web-fetch
 tools can retrieve these same HTTP resources; the links are documentation, not

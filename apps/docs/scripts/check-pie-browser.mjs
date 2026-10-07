@@ -123,6 +123,42 @@ try {
   await design.click();
   assert.equal(await visible.locator('[data-kind-ui="pie-sector"]').count(), 1);
   assert.deepEqual(await fills(visible), [categoryColors[0]]);
+  const rounded = page.locator('[data-component="pie-rounded"]');
+  await rounded.scrollIntoViewIfNeeded();
+  const geometryPaths = [];
+  for (const [label, value] of [
+    ["Rounded donut", "rounded-donut"],
+    ["Rounded pie", "rounded-pie"],
+    ["Petal donut", "petal-donut"],
+  ]) {
+    await rounded.getByRole("combobox", { name: "Geometry" }).click();
+    await page.getByRole("option", { name: label, exact: true }).click();
+    const sectors = rounded.locator('[data-kind-ui="pie-sector"]');
+    assert.equal(await sectors.count(), 4);
+    const paths = await sectors.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+    assert.ok(paths.every((path) => path && !/NaN|Infinity/.test(path)));
+    geometryPaths.push(paths);
+    assert.deepEqual(await fills(rounded), categoryColors);
+    assert.equal(await rounded.locator("table").first().locator("tbody tr").count(), 4);
+    await rounded.getByRole("application").focus();
+    await page.keyboard.press("ArrowRight");
+    await rounded.locator('[data-kind-ui="chart-tooltip-item"]').first().waitFor();
+    assert.match(await rounded.locator('[data-kind-ui="chart-tooltip"]').textContent(), /hours/);
+    await page.keyboard.press("Escape");
+    await rounded.getByRole("tab", { name: "Code", exact: true }).click();
+    assert.ok((await rounded.locator("pre").textContent()).includes(`geometry = "${value}"`));
+    await rounded.getByRole("tab", { name: "Preview", exact: true }).click();
+  }
+  assert.notDeepEqual(geometryPaths[0], geometryPaths[1]);
+  assert.notDeepEqual(geometryPaths[0], geometryPaths[2]);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  assert.deepEqual(
+    await rounded
+      .locator('[data-kind-ui="pie-sector"]')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
+    geometryPaths[2],
+  );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   const materials = page.locator('[data-component="pie-materials"]');
   await materials.getByRole("combobox", { name: "Material" }).click();
   await page.getByRole("option", { name: "Glow", exact: true }).click();
