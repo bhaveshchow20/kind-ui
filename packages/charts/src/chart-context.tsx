@@ -1,13 +1,13 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { SeriesConfig } from "./types.js";
+import type { ResolvedSeriesConfig } from "./series-label.js";
 
 type Visibility = {
   visibleSeries?: readonly string[];
   onVisibleSeriesChange?: (next: string[]) => void;
 };
-export type ChartContextValue = Visibility & { config: SeriesConfig };
+export type ChartContextValue = Visibility & { config: ResolvedSeriesConfig };
 export const ChartContext = createContext<ChartContextValue | null>(null);
 export function useChart() {
   const chart = useContext(ChartContext);

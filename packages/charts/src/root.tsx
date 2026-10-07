@@ -4,6 +4,7 @@ import type { ComponentPropsWithRef } from "react";
 import type { ChartContextValue } from "./chart-context.js";
 import { ChartContext } from "./chart-context.js";
 import { EmphasisProvider, useEmphasisActions } from "./emphasis.js";
+import { resolveSeriesConfig } from "./series-label.js";
 import type { SeriesConfig } from "./types.js";
 
 export type RootProps = ComponentPropsWithRef<"div"> & {
@@ -35,7 +36,7 @@ export function Root({
     colors[`--color-${key}`] = item.color;
   }
   const value: ChartContextValue = {
-    config,
+    config: resolveSeriesConfig(config),
     ...(visibleSeries ? { visibleSeries } : {}),
     ...(onVisibleSeriesChange ? { onVisibleSeriesChange } : {}),
   };

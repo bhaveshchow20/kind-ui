@@ -1406,6 +1406,94 @@ test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/ex
   );
 });
 
+test("missing config labels share inference across public legends and tooltip content", () => {
+  const cases = [
+    ["visitors", "Visitors"],
+    ["monthlyVisitors", "Monthly visitors"],
+    ["HTTPRequests", "Http requests"],
+    ["monthly_visitors", "Monthly visitors"],
+    ["monthly-visitors", "Monthly visitors"],
+    ["visitors2026Total", "Visitors2026 total"],
+    ["explicitLabel", "CUSTOM label", "CUSTOM label"],
+    ["emptyLabel", "", ""],
+  ];
+  for (const [key, expected, label] of cases) {
+    const meta = Object.freeze({ color: "#123456", ...(label !== undefined ? { label } : {}) });
+    const inferred = Object.freeze({ [key]: meta });
+    let rendered;
+    const html = render(
+      h(
+        Root,
+        { config: inferred, visibleSeries: [key] },
+        h(Legend, null, (item) => {
+          rendered = item;
+          return item.label;
+        }),
+        h(TooltipContent, { tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]) }),
+        h(Chart.ScatterTooltipContent, {
+          tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]),
+        }),
+      ),
+    );
+    assert.equal(rendered.key, key);
+    assert.equal(rendered.label, expected);
+    assert.equal(rendered.visible, true);
+    assert.ok(html.includes(`--color-${key}:#123456`));
+    assert.ok(html.includes(`data-series="${key}"`));
+    assert.ok(html.includes(`<span>${expected}</span>`));
+    assert.doesNotMatch(html, /Native name/);
+    assert.match(html, /role="status" aria-live="assertive"/);
+    for (const Content of [TooltipContent, Chart.ScatterTooltipContent]) {
+      const tip = render(
+        h(
+          Root,
+          { config: inferred },
+          h(Content, {
+            tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]),
+          }),
+        ),
+      );
+      assert.ok(tip.includes(`<span>${expected}</span>`));
+      assert.doesNotMatch(tip, /Native name/);
+    }
+    assert.equal(inferred[key], meta);
+    assert.equal(meta.label, label);
+  }
+});
+
+test("inferred metadata retains formatter, item identity and unmatched fallback contracts", () => {
+  const inferred = { visitors: { color: "red", formatValue: (value) => `${value} visits` } };
+  const renderTip = (payload, extra = {}) =>
+    render(
+      h(
+        Root,
+        { config: inferred },
+        h(TooltipContent, { tooltip: tooltip(payload, extra), itemKey: () => "visitors" }),
+      ),
+    );
+  assert.match(renderTip([entry(0)]), /Visitors.*0 visits/);
+  const formatted = renderTip([entry(1)], {
+    formatter: () => [h("em", null, "one"), h("b", null, "Override")],
+  });
+  assert.match(formatted, /<b>Override<\/b>/);
+  assert.match(formatted, /<em>one<\/em>/);
+  const unmatched = render(
+    h(
+      Root,
+      { config: inferred },
+      h(TooltipContent, {
+        tooltip: tooltip([entry(2, { name: "Native unmatched", color: "blue" })]),
+      }),
+    ),
+  );
+  assert.match(unmatched, /Native unmatched/);
+  assert.match(unmatched, /indicator-color:blue/);
+  assert.throws(
+    () => render(h(Root, { config: { 2026: { color: "red" } } }, h(Legend))),
+    /must start with a letter/,
+  );
+});
+
 test("chart loading props stay off the native engine and expose a chart-owned status", () => {
   const html = render(
     h(
