@@ -1,25 +1,8 @@
 {
   "package": "@kind-ui/charts",
-  "version": "0.2.0",
-  "previousVersion": "0.1.1",
+  "version": "0.3.0",
+  "previousVersion": "0.2.0",
   "changesets": [
-    "composed-bar-pattern-encoding",
-    "directional-line-area-entrances",
-    "gentle-pie-tooltip-origin",
-    "inferred-series-labels-131",
-    "quiet-chart-loading",
-    "quiet-color-guidance",
-    "quiet-lines-travel",
-    "quiet-percent-stacks",
-    "quiet-plot-patterns",
-    "quiet-projected-bars",
-    "sankey-node-label",
-    "selective-pie-category-glow",
-    "shared-legend-interactions",
-    "theme-aware-series-stops",
-    "tidy-area-patterns",
-    "tidy-chart-styles-warning",
-    "tidy-point-marker-treatments",
-    "tidy-sankey-node-icons"
+    "remove-paper-material"
   ]
 }
