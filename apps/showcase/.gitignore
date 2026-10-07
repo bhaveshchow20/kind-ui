@@ -4,3 +4,7 @@ node_modules/
 playwright-report/
 test-results/
 .snippet-check-*/
+
+# Locally supplied Timeless fonts prohibit public repository distribution.
+/public/fonts/timeless-*.woff2
+/public/fonts/Timeless-*
