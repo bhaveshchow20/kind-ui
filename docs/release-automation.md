@@ -64,8 +64,33 @@ the downloaded archive bytes. It allows up to ten registry reads, 30 seconds
 apart, while the version is absent from metadata; it never republishes during these reads. Once the version appears, stale latest,
 archive availability and integrity failures stop verification. After an
 ambiguous result, inspect the public version and integrity before retrying.
-Rerun all jobs of the original workflow; run-attempt guards reject stale artifacts.
+For a failure before npm publication, rerun all jobs of the original workflow;
+run-attempt guards reject stale artifacts. Once npm contains the version, the
+intent skips publication on an all-jobs rerun.
 A dispatch of a later ordinary main commit is validation only.
+
+## GitHub release and recovery
+
+After the publisher succeeds, including anonymous npm integrity verification,
+the separate `github-release` job creates `@kind-ui/charts@<version>` at the
+exact validated source commit. Its release notes use that version's changelog
+section and record the archive filename, SHA-256 and npm integrity. It uploads
+no archive and uses only the existing GitHub workflow token.
+
+A rerun accepts an existing tag only when it resolves to the exact source
+commit, and an existing release only when its version, commit, notes and
+publication status match. Conflicts fail without replacing a tag or release.
+A matching tag left by a failed release request can be reused.
+
+If npm publication succeeded but `github-release` failed, rerun only the failed
+`github-release` job in the original workflow run. In Actions, use **Re-run failed
+jobs** when it is the only failed job, or retry that job individually. This
+retains the successful plan, verifier and publisher results and their exact
+version/checksum outputs. Do not rerun all jobs for this recovery: the new plan
+sees the already-published npm version, sets publication to false, and skips the
+GitHub release job. A later workflow dispatch cannot backfill a missing release.
+If the original job can no longer be retried, stop for a separately reviewed
+recovery; do not weaken release intent or publish another package version.
 
 ## Approved identity and activation
 
@@ -83,22 +108,23 @@ or introduce a token. Release jobs retain npm 11.9. A setup-only official npm
 11.21 CLI can configure trust without changing the repository toolchain.
 
 The GitHub environment allows the branch `main` only. The publisher alone gets
-`id-token: write`; other release jobs retain `contents: read`. The OIDC subject is
+`id-token: write`; `github-release` alone gets `contents: write` in this release
+workflow, and the remaining jobs retain `contents: read`. The OIDC subject is
 `repo:bhaveshchow20/kind-ui:environment:npm-release`, and the workflow is
 `bhaveshchow20/kind-ui/.github/workflows/release.yml@refs/heads/main`.
 Do not cache release dependencies or outputs.
 
 The approved repository Actions setting permits version PR creation while the
-default workflow permission stays read-only. Only the version job has
-`contents: write` and `pull-requests: write`; it creates/updates PRs and does not
+default workflow permission stays read-only. Only the version job in the version
+workflow has `contents: write` and `pull-requests: write`; it creates/updates PRs and does not
 approve them. With the default GitHub token, bot-created PR checks still need a
 writer to approve workflow execution. Unattended bot CI would require a separately
 approved GitHub App or token and is outside this setup.
 
-GitHub tags and GitHub Release creation are outside this workflow. If added
-later, they should follow successful anonymous npm integrity verification and
-point to the exact source commit. The raw tarball publication command does not
-produce the Changesets publishing action's structured published-package output.
+GitHub tags and release creation follow successful anonymous npm integrity
+verification in the separate job described above. The raw tarball publication
+command does not produce the Changesets publishing action's structured
+published-package output.
 
 ## Verified setup and remaining proof
 
@@ -136,6 +162,8 @@ to prove setup. A normal main merge with no version transition cannot publish.
   supported configuration command and account 2FA requirements.
 - [GitHub token workflow behavior](https://docs.github.com/en/actions/concepts/security/github_token):
   approval-required bot PR checks.
+- [GitHub workflow and job retries](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs):
+  retry the failed release job in its original run.
 - [Pinned Changesets version action](https://github.com/changesets/action/tree/ae32849d5ba541f9ae29e40e22a623bc13562f51/version):
   the existing version-only action remains separate from publication.
 
