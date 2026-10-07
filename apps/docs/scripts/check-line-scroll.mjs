@@ -34,7 +34,8 @@ try {
     "Materials",
     "API reference",
     "Shared components",
-    "Presentation options",
+    "Point markers, dashed lines and reveal direction",
+    "Decorative backgrounds",
   ]);
   assert.equal(
     await toc
