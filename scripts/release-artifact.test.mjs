@@ -85,6 +85,23 @@ test("private candidate is rehearsal evidence and cannot enter publishing", asyn
   assert.equal((await verifyReleaseArtifact(f.root, expected)).publishable, false);
   await assert.rejects(verifyReleaseArtifact(f.root, expected, { requirePublic: true }), /blocked/);
 });
+test("a main push receipt must match the verified push event", async (t) => {
+  const f = await fixture(t);
+  f.receipt.workflow.event = "push";
+  await f.save();
+  assert.equal(
+    (await verifyReleaseArtifact(f.root, { ...expected, event: "push" }, { requirePublic: true }))
+      .publishable,
+    true,
+  );
+  await assert.rejects(verifyReleaseArtifact(f.root, expected), /verified release event/);
+  f.receipt.workflow.event = "pull_request";
+  await f.save();
+  await assert.rejects(
+    verifyReleaseArtifact(f.root, { ...expected, event: "pull_request" }),
+    /Unexpected candidate event/,
+  );
+});
 for (const [name, mutate, reason] of [
   [
     "dirty source",
