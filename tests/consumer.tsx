@@ -274,6 +274,21 @@ void inferredRoot;
 const invalidInferredLabel: SeriesConfig = { visitors: { label: 123, color: "red" } };
 void invalidInferredLabel;
 
+const fillPattern: Chart.FillPattern = {
+  kind: "hatch",
+  color: "CanvasText",
+  size: 10,
+  width: 2,
+  angle: 45,
+};
+void (<Chart.BarSeries dataKey="count" pattern={fillPattern} material="clay" />);
+void (<Chart.BarSeries dataKey="count" pattern="none" fill="url(#host)" />);
+void (<Chart.FillPatternSwatch pattern={{ kind: "duotone" }} color="var(--color-count)" />);
+const patternConfig: Chart.SeriesConfig = { count: { color: "red", pattern: fillPattern } };
+void patternConfig;
+// @ts-expect-error Patterns expose explicit encodings.
+void (<Chart.BarSeries dataKey="count" pattern={{ kind: "dots" }} />);
+
 for (const revealDirection of [
   "left-to-right",
   "right-to-left",

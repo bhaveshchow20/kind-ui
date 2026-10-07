@@ -126,6 +126,11 @@ export {
   useEmphasis,
 } from "./emphasis.js";
 export {
+  type FillPattern,
+  FillPatternSwatch,
+  type FillPatternSwatchProps,
+} from "./fill-pattern.js";
+export {
   HeatmapCellContent,
   type HeatmapCellContentProps,
   HeatmapChart,

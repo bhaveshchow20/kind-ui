@@ -1,5 +1,15 @@
-import { LineChart, type SeriesConfig } from "@kind-ui/charts";
+import {
+  BarChart,
+  BarSeries,
+  Legend,
+  LineChart,
+  Root,
+  type SeriesConfig,
+  XAxis,
+  YAxis,
+} from "@kind-ui/charts";
 import { TrendingUp } from "lucide-react";
+import { useState } from "react";
 export function IntegrationHost() {
   const config = {
     total: { label: "Total", color: "#4055ee", icon: TrendingUp },
@@ -19,5 +29,42 @@ export function IntegrationHost() {
       grid={{ className: "stroke-fuchsia-600" }}
       tooltip={{ formatter: (value) => [`${value} units`, "Total"] }}
     />
+  );
+}
+
+// The existing Next App Router fixture owns server rendering and actual hydration.
+export function PatternHydrationHost() {
+  const [visible, setVisible] = useState(["first", "second", "third"]);
+  return (
+    <section data-pattern-hydration="">
+      {[0, 1].map((chart) => (
+        <Root
+          key={chart}
+          config={{
+            first: { color: "red", pattern: { kind: "hatch" } },
+            second: { color: "blue", pattern: { kind: "stripe" } },
+            third: { color: "green", pattern: { kind: "duotone" } },
+          }}
+          visibleSeries={visible}
+          onVisibleSeriesChange={setVisible}
+        >
+          <Legend />
+          <BarChart
+            width={320}
+            height={180}
+            data={[
+              { category: "A", first: 8, second: 4, third: 2 },
+              { category: "B", first: 5, second: 3, third: 1 },
+            ]}
+          >
+            <XAxis dataKey="category" />
+            <YAxis />
+            <BarSeries dataKey="first" />
+            <BarSeries dataKey="second" />
+            <BarSeries dataKey="third" />
+          </BarChart>
+        </Root>
+      ))}
+    </section>
   );
 }

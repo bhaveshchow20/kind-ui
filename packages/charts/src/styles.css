@@ -443,6 +443,29 @@
 }
 
 @layer kind-ui {
+  :where([data-kind-ui="chart-indicator"][data-fill-pattern]) {
+    width: 16px;
+    height: 16px;
+    background: none;
+  }
+  :where([data-kind-ui="chart-legend-button"][aria-pressed="false"] [data-fill-pattern]) {
+    opacity: 0.5;
+    background: none;
+  }
+  @media (forced-colors: active) {
+    :where([data-kind-ui="fill-pattern"]) {
+      forced-color-adjust: none;
+    }
+    :where([data-kind-ui="fill-pattern"] > rect:first-child) {
+      fill: Canvas;
+    }
+    :where([data-kind-ui="fill-pattern"] > rect:not(:first-child)) {
+      fill: CanvasText;
+    }
+    :where([data-kind-ui="fill-pattern"] > path) {
+      stroke: CanvasText;
+    }
+  }
   [data-kind-ui="heatmap-scroll"][data-loading] {
     position: relative;
   }

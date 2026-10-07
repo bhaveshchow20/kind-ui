@@ -65,6 +65,7 @@ test("direct and namespace imports expose the same public components", () => {
     "Dot",
     "EmphasisMark",
     "ErrorBar",
+    "FillPatternSwatch",
     "HeatmapCellContent",
     "HeatmapChart",
     "HeatmapDataTable",
@@ -1492,6 +1493,59 @@ test("inferred metadata retains formatter, item identity and unmatched fallback 
     () => render(h(Root, { config: { 2026: { color: "red" } } }, h(Legend))),
     /must start with a letter/,
   );
+});
+
+test("pattern swatches use independent SVG resources and all public encodings", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          a: { color: "#123456", pattern: { kind: "hatch" } },
+          b: { color: "#654321", pattern: { kind: "stripe", width: 3 } },
+          c: { color: "pink", pattern: { kind: "duotone", color: "white", angle: 90 } },
+        },
+      },
+      h(Legend),
+      h(Chart.FillPatternSwatch, { pattern: { kind: "hatch" }, color: "red", "data-host": "yes" }),
+    ),
+  );
+  const ids = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 4);
+  assert.equal(new Set(ids).size, 4);
+  for (const id of ids) assert.ok(html.includes(`fill="url(#${id})"`));
+  assert.match(html, /data-host="yes"/);
+  assert.match(html, /fill="var\(--color-a\)"/);
+  assert.match(html, /patternTransform="rotate\(90\)"/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.doesNotMatch(html, /<animate|<filter/);
+});
+
+test("legend glyph/symbol priority and hideIcon remain consumer-owned with patterns", () => {
+  const config = {
+    a: { color: "red", pattern: { kind: "hatch" }, icon: () => h("i", null, "Icon") },
+    b: { color: "blue", pattern: { kind: "stripe" }, legendShape: "diamond" },
+  };
+  assert.doesNotMatch(render(h(Root, { config }, h(Legend))), /<pattern/);
+  assert.doesNotMatch(
+    render(h(Root, { config }, h(Legend, { hideIcon: true }))),
+    /<pattern|Icon|data-legend-shape/,
+  );
+});
+
+test("invalid public pattern geometry fails explicitly", () => {
+  for (const pattern of [
+    { kind: "dots" },
+    { kind: "hatch", size: 0 },
+    { kind: "stripe", width: -1 },
+    { kind: "hatch", size: 4, width: 5 },
+    { kind: "duotone", angle: Infinity },
+  ]) {
+    assert.throws(
+      () => render(h(Chart.FillPatternSwatch, { pattern, color: "red" })),
+      /FillPattern requires/,
+    );
+  }
 });
 
 test("chart loading props stay off the native engine and expose a chart-owned status", () => {
