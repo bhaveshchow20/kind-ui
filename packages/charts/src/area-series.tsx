@@ -22,7 +22,7 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   activePointStyle?: PointStyle;
   /** Finish on the native area; explicit shape/filter retain consumer ownership. */
   material?: AreaMaterial;
-  /** Static fill encoding; none opts out of configured patterns. Native paint/shape wins. */
+  /** Static fill encoding; false opts out of configured patterns. Native paint/shape wins. */
   pattern?: FillPattern | false | undefined;
 };
 

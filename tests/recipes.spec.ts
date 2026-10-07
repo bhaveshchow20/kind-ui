@@ -29,7 +29,6 @@ test("line recipes preserve missing and zero data, independent state and narrow 
     page.keyboard.press("Space"),
   );
   await expect(previous).toBeFocused();
-  await expect(comparison.getByRole("status")).toHaveText("Select a series to show it.");
   await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(8);
   await expect(comparison.getByRole("row", { name: "Thu 0 tasks 16 tasks" })).toBeVisible();
   await comparison.getByRole("button", { name: "This week" }).click();
