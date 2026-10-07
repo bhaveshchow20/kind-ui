@@ -237,7 +237,7 @@ export function advancedCode(
       },
     ]),
   );
-  return `"use client";\n\nimport { useState } from "react";\nimport * as Chart from "@kind-ui/charts";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst data = ${JSON.stringify(advancedData(r.id, options), null, 2)};\nconst config: Chart.SeriesConfig = Object.fromEntries(Object.entries(${JSON.stringify(config, null, 2)} satisfies Chart.SeriesConfig).map(([key, entry]) => [key, {
+  return `"use client";\n\nimport { useState } from "react";\nimport * as Chart from "@kind-ui/charts";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst data = ${JSON.stringify(advancedData(r.id, options), null, 2)};\nconst config: Record<string, Chart.SeriesConfig[string] & { color: string }> = Object.fromEntries(Object.entries(${JSON.stringify(config, null, 2)} satisfies Chart.SeriesConfig).map(([key, entry]) => [key, {
   ...entry,
   formatValue: (value: unknown) => {
     if (typeof value !== "number") return String(value);

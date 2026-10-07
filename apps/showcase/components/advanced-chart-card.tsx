@@ -7,6 +7,8 @@ import type { DemoOptions } from "@/lib/demo-options";
 
 export { advancedRecipes } from "@/lib/advanced-chart-recipes";
 
+type PaletteConfig = Record<string, Chart.SeriesConfig[string] & { color: string }>;
+
 function formatAdvancedValue(id: string, value: unknown) {
   if (typeof value !== "number") return String(value);
   const number = value.toLocaleString("en-US");
@@ -28,7 +30,7 @@ function useChartExample({
 }: {
   recipe: AdvancedRecipe;
   material: Finish;
-  config: Chart.SeriesConfig;
+  config: PaletteConfig;
   visible: string[];
   animate: boolean;
   replay: number;
@@ -328,7 +330,7 @@ export function AdvancedChartCard({
   const entered = useInView(cardRef, { once: true, amount: 0.3 });
   const chartAnimate = animate && entered && !reduced;
   const [visible, setVisible] = useState<string[]>([...recipe.keys]);
-  const config: Chart.SeriesConfig = useMemo(
+  const config: PaletteConfig = useMemo(
     () =>
       Object.fromEntries(
         recipe.keys.map((k, i) => [
