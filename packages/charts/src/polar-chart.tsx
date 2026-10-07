@@ -11,15 +11,17 @@ import {
   useSyncExternalStore,
 } from "react";
 import { RadarChart as EngineRadarChart, RadialBarChart as EngineRadialBarChart } from "recharts";
-import { type LineAnimation, MotionContext } from "./animation.js";
+import { type BaseAnimation, MotionContext } from "./animation.js";
 import type { CategoryKey } from "./category-cells.js";
+import { filterCategoryRows } from "./category-cells.js";
+import { useChartInteraction } from "./chart-interaction.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
 import { type RadarSelectionProps, RadarSelectionProvider } from "./radar-interaction.js";
 import { RadialCategory } from "./radial-category.js";
 
-export type RadarAnimation = LineAnimation;
-export type RadialBarAnimation = LineAnimation;
+export type RadarAnimation = BaseAnimation;
+export type RadialBarAnimation = BaseAnimation;
 export type RadarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadarChart<DataPoint>
 > &
@@ -33,6 +35,7 @@ export type RadialBarChartProps<DataPoint = unknown> = ComponentProps<
 > & {
   /** Opt-in category colors from Root.config, resolved from original chart rows. */
   categoryKey?: CategoryKey<DataPoint> | undefined;
+  interactionBinding?: "root";
   animate?: boolean | RadialBarAnimation | undefined;
   loading?: boolean | undefined;
   loadingLabel?: string | undefined;
@@ -202,18 +205,33 @@ export function RadialBarChartFrame<DataPoint = unknown>({
   loadingLabel,
   animationDirection = "clockwise",
   categoryKey,
+  interactionBinding,
   children,
   ...props
 }: RadialBarChartProps<DataPoint> & {
   skeletonFamily?: "radial-bar" | "activity-rings";
 }) {
+  const interaction = useChartInteraction();
+  if (
+    interactionBinding &&
+    (interaction.kind !== "category" || categoryKey === undefined || props.data === undefined)
+  )
+    throw new Error(
+      "RadialBarChart Root interaction binding requires category-kind Root, categoryKey and explicit data",
+    );
+  const filtered =
+    interactionBinding && categoryKey !== undefined && props.data
+      ? filterCategoryRows(props.data, categoryKey, interaction.visible, null)
+      : undefined;
   if (categoryKey !== undefined && props.data === undefined)
     throw new Error("RadialBarChart categoryKey requires explicit chart data");
   const categories =
     categoryKey === undefined
       ? null
       : {
-          data: props.data ?? [],
+          data: filtered?.data ?? props.data ?? [],
+          originalData: props.data ?? [],
+          bound: interactionBinding === "root",
           key: (row: unknown) => {
             if (typeof categoryKey === "function") return categoryKey(row as DataPoint);
             return row !== null && typeof row === "object" && Object.hasOwn(row, categoryKey)
@@ -266,7 +284,7 @@ export function RadialBarChartFrame<DataPoint = unknown>({
               loadingSkeleton={skeletonFamily}
               loadingDesign={(seed) => <PolarLoadingDesign family={skeletonFamily} seed={seed} />}
               loadingAnimation={{ ...options, direction: animationDirection }}
-              chartProps={props}
+              chartProps={{ ...props, ...(filtered ? { data: filtered.data } : {}) }}
               motionEnabled={enabled}
               interrupt={interrupt}
             >

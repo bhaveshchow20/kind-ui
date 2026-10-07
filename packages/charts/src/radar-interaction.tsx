@@ -16,7 +16,7 @@ import {
 } from "react";
 import { Dot, type DotItemDotProps, type Radar } from "recharts";
 import { useChart } from "./chart-context.js";
-import { useEmphasisActions } from "./emphasis.js";
+import { useChartInteraction } from "./chart-interaction.js";
 import { useLineInteraction } from "./line-chart.js";
 
 export type RadarSelectionProps = {
@@ -55,8 +55,15 @@ export function RadarSelectionProvider({
 }) {
   if (selectedSeries !== undefined && onSelectedSeriesChange === undefined)
     throw new Error("RadarChart requires onSelectedSeriesChange for controlled selectedSeries");
-  const { enabled: emphasisEnabled } = useEmphasisActions();
-  const enabled = selection === "series" && emphasisEnabled;
+  const interaction = useChartInteraction();
+  if (
+    interaction.mode === "focus" &&
+    (selection !== "none" || selectedSeries !== undefined || onSelectedSeriesChange !== undefined)
+  )
+    throw new Error(
+      "RadarChart selection controls conflict with Root focus; choose one selection owner",
+    );
+  const enabled = selection === "series";
   const [internal, setInternal] = useState<string | null>(null);
   const [series, setSeries] = useState(() => new Map<string, { key: string; visible: boolean }>());
   const register = useCallback((owner: string, key: string, visible: boolean) => {
@@ -108,7 +115,9 @@ export function RadarSelectionProvider({
           style={{ display: "contents" }}
           onKeyDown={(event) => {
             if (event.key === "Escape" && !event.defaultPrevented && enabled && requested !== null)
-              change(null);
+              queueMicrotask(() => {
+                if (!event.defaultPrevented) change(null);
+              });
           }}
         >
           {children}

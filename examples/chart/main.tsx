@@ -103,9 +103,9 @@ function App() {
               Focus the chart and use left and right arrow keys to explore values. Escape dismisses
               the tooltip.
             </p>
-            {rows.length === 0 || visible.length === 0 ? (
+            {rows.length === 0 ? (
               <p className="grid h-[180px] place-items-center text-muted-foreground" role="status">
-                {rows.length ? "Select a series to show it." : "No data yet."}
+                No data yet.
               </p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>

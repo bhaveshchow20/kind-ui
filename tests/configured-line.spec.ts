@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectLastVisibleGuard } from "./last-visible";
 
 test("configured line is complete, responsive and owns uncontrolled visibility without website CSS", async ({
   page,
@@ -31,8 +32,10 @@ test("configured line is complete, responsive and owns uncontrolled visibility w
     "false",
   );
   await expect(basic.locator(".recharts-line-curve")).toHaveCount(1);
-  await basic.getByRole("button", { name: "Other" }).click();
-  await expect(basic.locator(".recharts-line-curve")).toHaveCount(0);
+  await expectLastVisibleGuard(
+    basic.getByRole("button", { name: "Other" }),
+    basic.locator(".recharts-line-curve"),
+  );
   await basic.getByRole("button", { name: "Total" }).click();
   await svg.focus();
   await page.keyboard.press("ArrowRight");
@@ -41,6 +44,11 @@ test("configured line is complete, responsive and owns uncontrolled visibility w
   await page.keyboard.press("Escape");
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).not.toBeVisible();
   await basic.getByRole("button", { name: "Other" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(basic.getByRole("button", { name: "Other" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
   await page.keyboard.press("Enter");
   await expect(basic.getByRole("button", { name: "Other" })).toHaveAttribute(
     "aria-pressed",
@@ -57,9 +65,27 @@ test("configured line is complete, responsive and owns uncontrolled visibility w
   if (!bounds) throw new Error("Missing plot");
   await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
   await expect.poll(() => page.locator("[data-moves]").textContent()).not.toBe("0");
+  const visibility = page.locator("[data-basic-visibility]");
+  const priorVisibility = await visibility.getAttribute("data-basic-visibility");
+  const priorCallbacks = await visibility.getAttribute("data-basic-callbacks");
+  if (priorVisibility === null || priorCallbacks === null)
+    throw new Error("Missing visibility observer");
+  expect(priorVisibility).toBe("total,other");
   await page.getByRole("button", { name: "Empty data", exact: true }).click();
   await expect(basic.locator(".recharts-line-curve")).toHaveCount(0);
-  await expect(basic.getByRole("button", { name: "Total" })).toBeVisible();
+  const totalItem = basic.locator('[data-kind-ui="chart-legend-item"][data-series="total"]');
+  await expect(totalItem).toHaveText("Total");
+  await expect(totalItem.getByRole("button")).toHaveCount(0);
+  await expect(visibility).toHaveAttribute("data-basic-visibility", priorVisibility);
+  await expect(visibility).toHaveAttribute("data-basic-callbacks", priorCallbacks);
+  await page.getByRole("button", { name: "Empty data", exact: true }).click();
+  await expect(basic.locator(".recharts-line-curve")).toHaveCount(2);
+  await expect(totalItem.getByRole("button", { name: "Total" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(visibility).toHaveAttribute("data-basic-visibility", priorVisibility);
+  await expect(visibility).toHaveAttribute("data-basic-callbacks", priorCallbacks);
   expect(errors).toEqual([]);
 });
 
@@ -149,6 +175,82 @@ test("single-point and sparse line values remain visible without inventing inter
   await basic.getByRole("application", { name: "Monthly totals" }).focus();
   await page.keyboard.press("ArrowRight");
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).toContainText("0");
+});
+
+test("backgrounds clip, scope paint and preserve data interaction", async ({ page }) => {
+  await page.goto("/");
+  const basic = page.locator('[data-case="basic"]');
+  const decoration = basic.locator('[data-kind-ui="chart-background-pattern"]');
+  await expect(decoration).toHaveCount(1);
+  await expect(decoration).toHaveAttribute("aria-hidden", "true");
+  await expect(decoration).toHaveAttribute("focusable", "false");
+  await expect(decoration).toHaveAttribute("opacity", "0.15");
+  const geometry = () =>
+    decoration.locator(":scope > rect").evaluate((rect) => ({
+      x: rect.getAttribute("x"),
+      y: rect.getAttribute("y"),
+      width: rect.getAttribute("width"),
+      height: rect.getAttribute("height"),
+    }));
+  const before = await geometry();
+  expect(Number(before.x)).toBeGreaterThan(0);
+  expect(Number(before.width)).toBeLessThan(500);
+  expect(Number(before.height)).toBeLessThan(280);
+  expect(
+    await decoration.locator("clipPath rect").evaluate((rect) => ({
+      x: rect.getAttribute("x"),
+      y: rect.getAttribute("y"),
+      width: rect.getAttribute("width"),
+      height: rect.getAttribute("height"),
+    })),
+  ).toEqual(before);
+  const patternId = await decoration.locator("pattern").getAttribute("id");
+  await expect(decoration.locator(":scope > rect")).toHaveAttribute("fill", `url(#${patternId})`);
+  const bars = page.locator('[data-case="bar-background"]');
+  const barDecoration = bars.locator('[data-kind-ui="chart-background-pattern"]');
+  await expect(barDecoration).toHaveCount(1);
+  expect(
+    await barDecoration.evaluate((node) => {
+      const grid = node.ownerDocument.querySelector(
+        '[data-case="bar-background"] .recharts-cartesian-grid',
+      );
+      return !!grid && !!(node.compareDocumentPosition(grid) & Node.DOCUMENT_POSITION_FOLLOWING);
+    }),
+  ).toBe(true);
+  await expect(bars.locator(".recharts-bar-rectangle")).not.toHaveCount(0);
+  const controlled = page.locator('[data-case="controlled"]');
+  await expect(controlled.locator('[data-kind-ui="chart-background-pattern"]')).toHaveCount(0);
+  const ids = await page
+    .locator('[data-kind-ui="chart-background-pattern"] [id]')
+    .evaluateAll((els) => els.map((el) => el.id));
+  expect(new Set(ids).size).toBe(ids.length);
+  const advanced = page.locator('[data-case="advanced"] [data-kind-ui="chart-background-pattern"]');
+  await expect(advanced).toHaveCount(2);
+  await expect(advanced.last()).toHaveAttribute("opacity", "0");
+  expect(await decoration.evaluate((node) => getComputedStyle(node).pointerEvents)).toBe("none");
+  expect(
+    await decoration.evaluate((node) => {
+      const line = node.ownerDocument.querySelector('[data-case="basic"] .recharts-line-curve');
+      return !!line && !!(node.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING);
+    }),
+  ).toBe(true);
+  await basic.evaluate((node) => {
+    (node as HTMLElement).style.setProperty("--background-ink", "rgb(255, 0, 0)");
+  });
+  expect(await decoration.locator("circle").evaluate((node) => getComputedStyle(node).fill)).toBe(
+    "rgb(255, 0, 0)",
+  );
+  await page.getByRole("button", { name: "Resize", exact: true }).click();
+  await expect.poll(async () => (await geometry()).width).not.toBe(before.width);
+  await expect(decoration.locator("pattern")).toHaveAttribute("width", "16");
+  await expect(decoration.locator("pattern")).toHaveAttribute("id", patternId ?? "");
+  await expect(basic.locator(".recharts-line-curve")).toHaveCount(2);
+  await basic.locator("svg.recharts-surface").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).not.toBeVisible();
+  await basic.screenshot({ path: "artifacts/configured-line-tests/decorative-background.png" });
 });
 
 test("point styles preserve keyboard/pointer inspection, native overrides and independent charts", async ({

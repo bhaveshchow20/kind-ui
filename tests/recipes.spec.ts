@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectLastVisibleGuard } from "./last-visible";
 
 test("line recipes preserve missing and zero data, independent state and narrow layouts", async ({
   page,
@@ -24,12 +25,13 @@ test("line recipes preserve missing and zero data, independent state and narrow 
   await comparison.getByRole("button", { name: "This week" }).click();
   const previous = comparison.getByRole("button", { name: "Last week" });
   await previous.focus();
-  await page.keyboard.press("Space");
+  await expectLastVisibleGuard(previous, comparison.locator(".recharts-line-curve"), () =>
+    page.keyboard.press("Space"),
+  );
   await expect(previous).toBeFocused();
-  await expect(comparison.getByRole("status")).toHaveText("Select a series to show it.");
   await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(8);
   await expect(comparison.getByRole("row", { name: "Thu 0 tasks 16 tasks" })).toBeVisible();
-  await previous.click();
+  await comparison.getByRole("button", { name: "This week" }).click();
   await page.getByRole("button", { name: "Color", exact: true }).click();
   await page.setViewportSize({ width: 320, height: 800 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
@@ -98,12 +100,18 @@ test("packed components accept Motion props while retaining refs and native hand
   await expect(root.getByRole("list")).toHaveAttribute("data-ref-tag", "UL");
   await root.focus();
   await expect(root).toHaveAttribute("data-focused", "yes");
-  await root.getByRole("button").click();
+  await expectLastVisibleGuard(
+    root.getByRole("button"),
+    root.locator('[data-kind-ui="chart-indicator"]'),
+  );
   await expect(root.getByRole("list")).toHaveAttribute("data-clicked", "yes");
+  await expect(root).toHaveCSS("opacity", "1");
+  await page.getByRole("button", { name: "External visibility", exact: true }).click();
   await expect(root.getByRole("button")).toHaveAttribute("aria-pressed", "false");
   await expect(root).toHaveCSS("opacity", "0.6");
   await expect(root).not.toHaveAttribute("animate");
-  await root.getByRole("button").click();
+  await page.getByRole("button", { name: "External visibility", exact: true }).click();
+  await expect(root.getByRole("button")).toHaveAttribute("aria-pressed", "true");
   await expect(root).toHaveCSS("opacity", "1");
   expect(errors).toEqual([]);
 });

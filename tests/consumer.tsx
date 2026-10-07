@@ -263,6 +263,219 @@ const anticlockwisePie = {
 const invalidPieDirection = { animationDirection: "reverse" } satisfies Chart.PieChartProps;
 void [clockwisePie, anticlockwisePie, invalidPieDirection];
 
+const inferredConfig = { monthlyVisitors: { color: "#3659b8" } } satisfies SeriesConfig;
+const inferredRoot = (
+  <Root config={inferredConfig}>
+    <Legend>{({ label }) => label.toUpperCase()}</Legend>
+  </Root>
+);
+void inferredRoot;
+// @ts-expect-error Labels remain strings when supplied.
+const invalidInferredLabel: SeriesConfig = { visitors: { label: 123, color: "red" } };
+void invalidInferredLabel;
+
+const fillPattern: Chart.FillPattern = {
+  kind: "hatch",
+  color: "CanvasText",
+  size: 10,
+  width: 2,
+  angle: 45,
+};
+void (<Chart.BarSeries dataKey="count" pattern={fillPattern} material="clay" />);
+void (<Chart.BarSeries dataKey="count" pattern={false} fill="url(#host)" />);
+void (<Chart.FillPatternSwatch pattern={{ kind: "duotone" }} color="var(--color-count)" />);
+const patternConfig: Chart.SeriesConfig = { count: { color: "red", pattern: fillPattern } };
+void patternConfig;
+// @ts-expect-error Patterns expose explicit encodings.
+void (<Chart.BarSeries dataKey="count" pattern={{ kind: "unknown" }} />);
+
+void (
+  <Chart.AreaSeries
+    dataKey="count"
+    pattern={{ kind: "dots", width: 2 }}
+    material="clay"
+    fillOpacity={0.4}
+  />
+);
+void (<Chart.AreaSeries dataKey="count" pattern={{ kind: "lines", angle: 90 }} stackId="total" />);
+void (<Chart.AreaSeries dataKey="count" pattern={false} />);
+// @ts-expect-error Area patterns share the explicit encoding vocabulary.
+void (<Chart.AreaSeries dataKey="count" pattern={{ kind: "unknown" }} />);
+
+void (<Chart.BarSeries dataKey="count" pattern={{ kind: "dots" }} />);
+void (<Chart.BarSeries dataKey="count" pattern={{ kind: "lines" }} />);
+
+const sharedFocus = {
+  kind: "series",
+  mode: "focus",
+  eligibleKeys: ["count"],
+  markActivation: "matching-legend",
+  selected: null,
+  onSelectionChange: (next: string | null) => {
+    void next;
+  },
+  onBeforeInteraction: (request: Chart.ChartInteractionRequest) => {
+    request.event?.preventDefault();
+  },
+} satisfies Chart.ChartInteractionConfig;
+void (<Root config={config} interaction={sharedFocus} />);
+// @ts-expect-error Controlled focus requires a change callback.
+const missingFocusChange: Chart.ChartInteractionConfig = {
+  kind: "series",
+  mode: "focus",
+  eligibleKeys: ["count"],
+  selected: null,
+};
+// @ts-expect-error A selection cannot have controlled and default owners.
+const dualFocus: Chart.ChartInteractionConfig = { ...sharedFocus, defaultSelected: "count" };
+// @ts-expect-error A settled eligibility snapshot is required for a new interaction binding.
+const missingEligibility: Chart.ChartInteractionConfig = { kind: "category", mode: "focus" };
+// @ts-expect-error Sankey visibility is outside this shared contract.
+const nodeVisibility: Chart.ChartInteractionConfig = {
+  kind: "node",
+  mode: "visibility",
+  eligibleKeys: ["source"],
+};
+void [missingFocusChange, dualFocus, missingEligibility, nodeVisibility];
+const customBackground = Chart.defineChartBackgroundPattern(({ size, color, idPrefix }) => (
+  <g id={`${idPrefix}-tile`}>
+    <circle cx={size / 2} cy={size / 2} r={1} fill={color} />
+  </g>
+));
+void (<Chart.ChartBackgroundPattern pattern={customBackground} opacity={0} size={24} />);
+void (
+  <Chart.LineChart
+    config={config}
+    data={[]}
+    xDataKey="count"
+    aria-label="Decorated"
+    backgroundPattern={{ pattern: "waves", opacity: 0.2 }}
+  />
+);
+// @ts-expect-error Background decoration is not a series fill encoding.
+void (<Chart.ChartBackgroundPattern pattern={{ kind: "hatch" }} />);
+void (
+  <Chart.LineChart
+    config={config}
+    data={[]}
+    aria-label="Explicit"
+    // @ts-expect-error Explicit children replace generated decoration too.
+    backgroundPattern={{ pattern: "pinpoints" }}
+  >
+    {null}
+  </Chart.LineChart>
+);
+// @ts-expect-error Native composition uses the part, not generated options.
+void (<Chart.LineChart data={[]} backgroundPattern={{ pattern: "waves" }} />);
+for (const revealDirection of [
+  "left-to-right",
+  "right-to-left",
+  "center-out",
+  "edges-in",
+] satisfies Chart.RevealDirection[]) {
+  const line = { revealDirection } satisfies Chart.LineAnimation;
+  const area = { revealDirection } satisfies Chart.AreaAnimation;
+  const combo = {
+    revealDirection,
+    lineReveal: { revealDirection: "right-to-left" },
+    areaReveal: { revealDirection: "edges-in" },
+    barReveal: false,
+  } satisfies Chart.ComboAnimation;
+  void (<Chart.LineChart animate={line} />);
+  void (<Chart.AreaChart animate={area} />);
+  void (<Chart.ComboChart animate={combo} />);
+}
+// @ts-expect-error Direction names are a closed physical-direction union.
+const invalidReveal: Chart.LineAnimation = { revealDirection: "up" };
+// @ts-expect-error Direction overrides belong to Line and Area families only.
+const invalidBarReveal: Chart.ComboAnimation = { barReveal: { revealDirection: "center-out" } };
+// @ts-expect-error Entrance configuration is chart/family-owned, not a native series prop.
+void (<Chart.LineSeries dataKey="count" revealDirection="center-out" />);
+void [invalidReveal, invalidBarReveal];
+
+// @ts-expect-error Horizontal reveal directions do not belong to Bar entrances.
+const invalidBarDirection: Chart.BarAnimation = { revealDirection: "edges-in" };
+// @ts-expect-error Polar sweeps keep their existing direction contract.
+const invalidPieReveal: Chart.PieAnimation = { revealDirection: "center-out" };
+void [invalidBarDirection, invalidPieReveal];
+
+// Complete README directional example, checked through packed public exports.
+import {
+  AreaChart,
+  AreaSeries,
+  ComboChart,
+  LineChart as DirectionalLineChart,
+  Root as DirectionalRoot,
+  LineSeries,
+} from "@kind-ui/charts";
+
+const directionalData = [
+  { day: "Mon", total: 12, forecast: 16 },
+  { day: "Tue", total: 20, forecast: 24 },
+];
+const directionalConfig = {
+  total: { label: "Total", color: "#3659b8" },
+  forecast: { label: "Forecast", color: "#0d9488" },
+} satisfies SeriesConfig;
+
+export function DirectionalCharts() {
+  return (
+    <DirectionalRoot config={directionalConfig}>
+      <DirectionalLineChart
+        data={directionalData}
+        width={480}
+        height={240}
+        aria-label="Daily total"
+        animate={{ revealDirection: "right-to-left", revealDurationMs: 800 }}
+      >
+        <LineSeries dataKey="total" pointStyle="border" />
+      </DirectionalLineChart>
+      <AreaChart
+        data={directionalData}
+        width={480}
+        height={240}
+        aria-label="Daily forecast"
+        animate={{ revealDirection: "center-out" }}
+      >
+        <AreaSeries dataKey="forecast" />
+      </AreaChart>
+      <ComboChart
+        data={directionalData}
+        width={480}
+        height={240}
+        aria-label="Total and forecast"
+        animate={{
+          revealDirection: "center-out",
+          lineReveal: { revealDirection: "right-to-left" },
+          areaReveal: { revealDirection: "edges-in", revealDurationMs: 1200 },
+          barReveal: false,
+        }}
+      >
+        <LineSeries dataKey="total" />
+        <AreaSeries dataKey="forecast" />
+      </ComboChart>
+    </DirectionalRoot>
+  );
+}
+
+// @ts-expect-error Radar keeps its center-out entrance contract.
+const invalidRadarReveal: Chart.RadarAnimation = { revealDirection: "center-out" };
+// @ts-expect-error RadialBar keeps its polar sweep contract.
+const invalidRadialReveal: Chart.RadialBarAnimation = { revealDirection: "edges-in" };
+// @ts-expect-error Scatter has no horizontal reveal direction option.
+const invalidScatterReveal: Chart.ScatterAnimation = { revealDirection: "right-to-left" };
+void [invalidRadarReveal, invalidRadialReveal, invalidScatterReveal];
+
+const dashTiming = { durationMs: 700, direction: "reverse" } satisfies Chart.LineDashAnimation;
+const dashedLine = (
+  <Chart.LineSeries dataKey="count" strokeDasharray="6 4" dashAnimation={dashTiming} />
+);
+// @ts-expect-error Dash direction is explicit.
+const invalidDash = <Chart.LineSeries dataKey="count" dashAnimation={{ direction: "left" }} />;
+// @ts-expect-error Area perimeter animation is not the open-line contract.
+const invalidAreaDash = <Chart.AreaSeries dataKey="count" dashAnimation={{}} />;
+void [dashedLine, invalidDash, invalidAreaDash];
+
 const selectiveGlow = {
   data: [{ id: "design", value: 10 }],
   dataKey: "value",

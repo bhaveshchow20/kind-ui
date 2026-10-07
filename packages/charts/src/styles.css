@@ -38,6 +38,7 @@
   }
 
   :where([data-kind-ui="chart"]) {
+    --kind-ui-styles-loaded: 1;
     width: 100%;
     min-width: 0;
   }
@@ -86,7 +87,10 @@
     flex-shrink: 0;
     width: 8px;
     height: 8px;
-    background: var(--kind-ui-chart-indicator-color, currentColor);
+    background: var(
+      --kind-ui-chart-indicator-background,
+      var(--kind-ui-chart-indicator-color, currentColor)
+    );
   }
 
   :where(
@@ -443,6 +447,33 @@
 }
 
 @layer kind-ui {
+  :where([data-kind-ui="chart-indicator"][data-fill-pattern]) {
+    width: 16px;
+    height: 16px;
+    background: none;
+  }
+  :where([data-kind-ui="chart-legend-button"][aria-pressed="false"] [data-fill-pattern]) {
+    opacity: 0.5;
+    background: none;
+  }
+  @media (forced-colors: active) {
+    :where([data-kind-ui="fill-pattern"]) {
+      forced-color-adjust: none;
+    }
+    :where([data-kind-ui="fill-pattern"] > rect:first-child) {
+      fill: Canvas;
+    }
+    :where(
+        [data-kind-ui="fill-pattern"] > rect:not(:first-child),
+        [data-kind-ui="fill-pattern"] > circle
+      ) {
+      fill: CanvasText;
+    }
+    :where([data-kind-ui="fill-pattern"] > path) {
+      stroke: CanvasText;
+    }
+  }
+
   [data-kind-ui="heatmap-scroll"][data-loading] {
     position: relative;
   }
@@ -525,5 +556,38 @@
     :where([data-kind-ui="chart-loading-skeleton"]) {
       animation: none;
     }
+  }
+}
+
+/* Only the default stroke moves; dots and chart entrance clips are independent. */
+@layer kind-ui {
+  :where(.kind-ui-line-dash .recharts-line-curve) {
+    animation: kind-ui-line-dash var(--kind-ui-dash-duration) linear infinite;
+    animation-direction: var(--kind-ui-dash-direction);
+  }
+  :where([data-motion="off"] .kind-ui-line-dash .recharts-line-curve),
+  :where(.kind-ui-loading-chart-pending .kind-ui-line-dash .recharts-line-curve) {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :where(.kind-ui-line-dash .recharts-line-curve) {
+      animation: none;
+    }
+  }
+  @keyframes kind-ui-line-dash {
+    from {
+      stroke-dashoffset: var(--kind-ui-dash-offset);
+    }
+    to {
+      stroke-dashoffset: calc(var(--kind-ui-dash-offset) - var(--kind-ui-dash-cycle));
+    }
+  }
+}
+
+@layer kind-ui {
+  [data-kind-ui="chart-background-pattern"],
+  [data-kind-ui="chart-background-pattern"] * {
+    /* biome-ignore lint/complexity/noImportantStyles: Decorative custom tiles must not intercept chart pointers. */
+    pointer-events: none !important;
   }
 }

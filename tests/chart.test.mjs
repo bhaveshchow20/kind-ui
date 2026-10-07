@@ -12,6 +12,30 @@ const renderSvg = (element) => render(h("svg", null, element)).slice(5, -6);
 
 import { ScatterChart as NativeScatterChart, Scatter, XAxis, YAxis } from "recharts";
 
+test("development stylesheet diagnostic leaves SSR markup identical and never accesses DOM", () => {
+  const previous = process.env.NODE_ENV;
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const chart = h(Root, { config: { total: { color: "red" } } }, "Chart");
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    get() {
+      throw new Error("Stylesheet diagnostics must not read the SSR document");
+    },
+  });
+  try {
+    process.env.NODE_ENV = "production";
+    const production = render(chart);
+    process.env.NODE_ENV = "development";
+    assert.equal(render(chart), production);
+    assert.doesNotMatch(production, /kind-ui-styles-loaded|<style|<link/);
+  } finally {
+    if (previous === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previous;
+    if (descriptor) Object.defineProperty(globalThis, "document", descriptor);
+    else delete globalThis.document;
+  }
+});
+
 test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a data alternative", () => {
   const axes = [
     h(XAxis, { key: "x", type: "number", dataKey: "x" }),
@@ -60,11 +84,13 @@ test("direct and namespace imports expose the same public components", () => {
     "Brush",
     "CartesianGrid",
     "Cell",
+    "ChartBackgroundPattern",
     "ComboChart",
     "Curve",
     "Dot",
     "EmphasisMark",
     "ErrorBar",
+    "FillPatternSwatch",
     "HeatmapCellContent",
     "HeatmapChart",
     "HeatmapDataTable",
@@ -122,9 +148,13 @@ test("direct and namespace imports expose the same public components", () => {
     "computeWaterfallData",
     "createHeatmapModel",
     "createHeatmapScale",
+    "createPercentStack",
+    "defineChartBackgroundPattern",
+    "formatPercent",
     "getRelativeCoordinate",
     "prepareSankeyData",
     "useChartHeight",
+    "useChartInteraction",
     "useChartWidth",
     "useEmphasis",
     "useXAxisScale",
@@ -1406,6 +1436,518 @@ test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/ex
   );
 });
 
+test("missing config labels share inference across public legends and tooltip content", () => {
+  const cases = [
+    ["visitors", "Visitors"],
+    ["monthlyVisitors", "Monthly visitors"],
+    ["HTTPRequests", "Http requests"],
+    ["monthly_visitors", "Monthly visitors"],
+    ["monthly-visitors", "Monthly visitors"],
+    ["visitors2026Total", "Visitors2026 total"],
+    ["explicitLabel", "CUSTOM label", "CUSTOM label"],
+    ["emptyLabel", "", ""],
+  ];
+  for (const [key, expected, label] of cases) {
+    const meta = Object.freeze({ color: "#123456", ...(label !== undefined ? { label } : {}) });
+    const inferred = Object.freeze({ [key]: meta });
+    let rendered;
+    const html = render(
+      h(
+        Root,
+        { config: inferred, visibleSeries: [key] },
+        h(Legend, null, (item) => {
+          rendered = item;
+          return item.label;
+        }),
+        h(TooltipContent, { tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]) }),
+        h(Chart.ScatterTooltipContent, {
+          tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]),
+        }),
+      ),
+    );
+    assert.equal(rendered.key, key);
+    assert.equal(rendered.label, expected);
+    assert.equal(rendered.visible, true);
+    assert.ok(html.includes(`--color-${key}:#123456`));
+    assert.ok(html.includes(`data-series="${key}"`));
+    assert.ok(html.includes(`<span>${expected}</span>`));
+    assert.doesNotMatch(html, /Native name/);
+    assert.match(html, /role="status" aria-live="assertive"/);
+    for (const Content of [TooltipContent, Chart.ScatterTooltipContent]) {
+      const tip = render(
+        h(
+          Root,
+          { config: inferred },
+          h(Content, {
+            tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]),
+          }),
+        ),
+      );
+      assert.ok(tip.includes(`<span>${expected}</span>`));
+      assert.doesNotMatch(tip, /Native name/);
+    }
+    assert.equal(inferred[key], meta);
+    assert.equal(meta.label, label);
+  }
+});
+
+test("inferred metadata retains formatter, item identity and unmatched fallback contracts", () => {
+  const inferred = { visitors: { color: "red", formatValue: (value) => `${value} visits` } };
+  const renderTip = (payload, extra = {}) =>
+    render(
+      h(
+        Root,
+        { config: inferred },
+        h(TooltipContent, { tooltip: tooltip(payload, extra), itemKey: () => "visitors" }),
+      ),
+    );
+  assert.match(renderTip([entry(0)]), /Visitors.*0 visits/);
+  const formatted = renderTip([entry(1)], {
+    formatter: () => [h("em", null, "one"), h("b", null, "Override")],
+  });
+  assert.match(formatted, /<b>Override<\/b>/);
+  assert.match(formatted, /<em>one<\/em>/);
+  const unmatched = render(
+    h(
+      Root,
+      { config: inferred },
+      h(TooltipContent, {
+        tooltip: tooltip([entry(2, { name: "Native unmatched", color: "blue" })]),
+      }),
+    ),
+  );
+  assert.match(unmatched, /Native unmatched/);
+  assert.match(unmatched, /indicator-color:blue/);
+  assert.throws(
+    () => render(h(Root, { config: { 2026: { color: "red" } } }, h(Legend))),
+    /must start with a letter/,
+  );
+});
+
+test("pattern swatches use independent SVG resources and all public encodings", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          a: { color: "#123456", pattern: { kind: "hatch" } },
+          b: { color: "#654321", pattern: { kind: "stripe", width: 3 } },
+          c: { color: "pink", pattern: { kind: "duotone", color: "white", angle: 90 } },
+        },
+      },
+      h(Legend),
+      h(Chart.FillPatternSwatch, { pattern: { kind: "hatch" }, color: "red", "data-host": "yes" }),
+    ),
+  );
+  const ids = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 4);
+  assert.equal(new Set(ids).size, 4);
+  for (const id of ids) assert.ok(html.includes(`fill="url(#${id})"`));
+  assert.match(html, /data-host="yes"/);
+  assert.match(html, /fill="var\(--color-a\)"/);
+  assert.match(html, /patternTransform="rotate\(90\)"/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.doesNotMatch(html, /<animate|<filter/);
+});
+
+test("legend glyph/symbol priority and hideIcon remain consumer-owned with patterns", () => {
+  const config = {
+    a: { color: "red", pattern: { kind: "hatch" }, icon: () => h("i", null, "Icon") },
+    b: { color: "blue", pattern: { kind: "stripe" }, legendShape: "diamond" },
+  };
+  assert.doesNotMatch(render(h(Root, { config }, h(Legend))), /<pattern/);
+  assert.doesNotMatch(
+    render(h(Root, { config }, h(Legend, { hideIcon: true }))),
+    /<pattern|Icon|data-legend-shape/,
+  );
+});
+
+test("invalid public pattern geometry fails explicitly", () => {
+  for (const pattern of [
+    { kind: "unknown" },
+    { kind: "hatch", size: 0 },
+    { kind: "stripe", width: -1 },
+    { kind: "hatch", size: 4, width: 5 },
+    { kind: "duotone", angle: Infinity },
+  ]) {
+    assert.throws(
+      () => render(h(Chart.FillPatternSwatch, { pattern, color: "red" })),
+      /FillPattern requires/,
+    );
+  }
+});
+
+test("series colors compile theme stops without changing labels or pattern metadata", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          revenueTotal: {
+            color: { light: ["var(--ink)", "blue"], dark: ["white", "gray", "black"] },
+            pattern: { kind: "hatch" },
+          },
+          solid: { color: "tomato" },
+          one: { color: ["purple"] },
+        },
+      },
+      h(Legend),
+    ),
+  );
+  assert.match(html, /--color-solid:tomato/);
+  assert.match(html, /--color-one:purple/);
+  assert.match(html, /--color-revenueTotal:light-dark\(var\(--ink\), white\)/);
+  assert.match(html, /color-mix\(in srgb, var\(--ink\) 50%, blue 50%\), gray/);
+  assert.match(html, /offset="0.5"/);
+  assert.match(html, /Revenue total/);
+  assert.match(html, /data-pattern="hatch"/);
+  assert.equal((html.match(/<linearGradient /g) ?? []).length, 1);
+  assert.match(html, /fill="var\(--color-revenueTotal\)"/);
+});
+
+test("color resources are unique across sibling Roots and stable on SSR", () => {
+  const tree = h(
+    "main",
+    null,
+    ...[0, 1].map((key) =>
+      h(
+        Root,
+        {
+          key,
+          config: { sales: { color: ["red", "blue"] } },
+        },
+        h(Legend),
+      ),
+    ),
+  );
+  const html = render(tree);
+  const ids = [...html.matchAll(/<linearGradient[^>]*id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 2);
+  assert.equal(new Set(ids).size, 2);
+  assert.equal(render(tree), html);
+  assert.match(html, /--kind-ui-series-[\w-]+-gradient:linear-gradient/);
+});
+
+test("malformed new color shapes fail before emitting resources", () => {
+  for (const color of [
+    [],
+    ["red", null],
+    Array(2),
+    { light: "red" },
+    { light: [], dark: "blue" },
+    { light: "red", dark: "blue", extra: true },
+    null,
+    3,
+  ]) {
+    assert.throws(() => render(h(Root, { config: { sales: { color } } })), /[Ss]eries color/);
+  }
+});
+
+test("color errors identify only the offending series and property", () => {
+  for (const [color, path, guidance] of [
+    [[], 'config["sales"].color', /nonempty string or nonempty array/],
+    [" ", 'config["sales"].color', /nonempty color string/],
+    [["red", null], 'config["sales"].color[1]', /nonempty color string/],
+    [Array(2), 'config["sales"].color[0]', /nonempty color string/],
+    [{ light: [], dark: "blue" }, 'config["sales"].color.light', /nonempty array/],
+    [
+      { light: "red", dark: ["blue", " "] },
+      'config["sales"].color.dark[1]',
+      /nonempty color string/,
+    ],
+    [{ light: "red" }, 'config["sales"].color', /both light and dark/],
+    [
+      { light: "red", dark: "blue", secret: "PRIVATE_VALUE" },
+      'config["sales"].color',
+      /no other fields/,
+    ],
+    [null, 'config["sales"].color', /nonempty string or nonempty array/],
+  ]) {
+    assert.throws(
+      () =>
+        render(
+          h(Root, {
+            config: {
+              unrelated: { color: "purple", label: "PRIVATE_LABEL" },
+              sales: { color, label: "PRIVATE_SERIES_LABEL" },
+            },
+          }),
+        ),
+      (error) => {
+        assert.ok(error.message.includes(path));
+        assert.match(error.message, guidance);
+        assert.doesNotMatch(error.message, /PRIVATE_|unrelated|secret|purple|blue|red/);
+        return true;
+      },
+    );
+  }
+});
+
+test("color shape validation preserves CSS syntax during SSR", () => {
+  for (const color of [
+    "var(--brand, currentColor)",
+    "currentColor",
+    "oklch(60% 0.2 240)",
+    "color(display-p3 1 0.5 0)",
+    "color-mix(in oklch, red 30%, blue)",
+  ]) {
+    const html = render(h(Root, { config: { sales: { color } } }));
+    assert.ok(html.includes(`--color-sales:${color}`));
+  }
+});
+
+test("indexed stops cannot collide with valid legacy series keys", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          sales: { color: ["red", "blue"] },
+          "sales-0": { color: "green" },
+          "sales-gradient": { color: "purple" },
+        },
+      },
+      h(Legend),
+    ),
+  );
+  assert.match(html, /--color-sales-0:green/);
+  assert.match(html, /--color-sales-gradient:purple/);
+  assert.match(html, /--kind-ui-series-73-61-6c-65-73-0:red/);
+  assert.match(html, /--kind-ui-series-73-61-6c-65-73-gradient:linear-gradient/);
+});
+
+test("dots and lines share public swatch resources with existing patterns", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          dots: { color: "red", pattern: { kind: "dots", size: 10, width: 4 } },
+          lines: { color: "var(--theme-blue)", pattern: { kind: "lines" } },
+        },
+      },
+      h(Legend),
+    ),
+  );
+  assert.match(html, /<circle cx="5" cy="5" r="2" fill="CanvasText"/);
+  assert.match(html, /data-pattern="lines"[^>]*patternTransform="rotate\(0\)"/);
+  const ids = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 2);
+  assert.equal(new Set(ids).size, 2);
+  for (const id of ids) assert.ok(html.includes(`fill="url(#${id})"`));
+});
+
+test("Root shared interaction guards last eligible item and emits one callback", () => {
+  let interaction;
+  const changes = [];
+  function Probe() {
+    interaction = Chart.useChartInteraction();
+    return null;
+  }
+  render(
+    h(
+      Root,
+      {
+        config: { first: { color: "red" }, stale: { color: "blue" } },
+        visibleSeries: ["first", "stale"],
+        onVisibleSeriesChange: (next) => changes.push(next),
+        interaction: { kind: "series", eligibleKeys: ["first"], markActivation: "matching-legend" },
+      },
+      h(Probe),
+    ),
+  );
+  assert.equal(interaction.activate({ kind: "series", key: "first" }, "legend"), false);
+  assert.deepEqual(changes, []);
+  assert.equal(interaction.activate({ kind: "series", key: "stale" }, "mark"), false);
+  assert.equal("register" in interaction, false);
+});
+
+test("shared focus is independent of emphasis and consumer before hook vetoes", () => {
+  let interaction;
+  const changes = [];
+  function Probe() {
+    interaction = Chart.useChartInteraction();
+    return h("output", null, interaction.selected);
+  }
+  const config = { first: { color: "red" }, second: { color: "blue" } };
+  const html = render(
+    h(
+      Root,
+      {
+        config,
+        emphasis: "none",
+        interaction: {
+          kind: "series",
+          mode: "focus",
+          eligibleKeys: ["first", "second"],
+          defaultSelected: "first",
+          onSelectionChange: (next) => changes.push(next),
+          onBeforeInteraction: (request) => request.event?.preventDefault(),
+        },
+      },
+      h(Probe),
+      h(Legend),
+    ),
+  );
+  assert.equal(interaction.selected, "first");
+  assert.match(html, /aria-pressed="true"/);
+  const event = {
+    defaultPrevented: false,
+    preventDefault() {
+      this.defaultPrevented = true;
+    },
+  };
+  assert.equal(interaction.activate({ kind: "series", key: "second" }, "legend", event), false);
+  assert.deepEqual(changes, []);
+  assert.equal(interaction.activate({ kind: "series", key: "first" }, "legend"), true);
+  assert.deepEqual(changes, [null]);
+});
+
+test("controlled invalid focus paints null and selection controls reject conflicting owners", () => {
+  let selected;
+  function Probe() {
+    selected = Chart.useChartInteraction().selected;
+    return null;
+  }
+  const config = { first: { color: "red" }, second: { color: "blue" } };
+  const props = {
+    config,
+    interaction: {
+      kind: "series",
+      mode: "focus",
+      eligibleKeys: ["first"],
+      selected: "second",
+      onSelectionChange() {},
+    },
+  };
+  render(h(Root, props, h(Probe)));
+  assert.equal(selected, null);
+  render(
+    h(
+      Root,
+      { ...props, interaction: { ...props.interaction, eligibleKeys: ["first", "second"] } },
+      h(Probe),
+    ),
+  );
+  assert.equal(selected, "second");
+  assert.throws(
+    () =>
+      render(h(Root, props, h(Chart.RadarChart, { width: 300, height: 200, selection: "series" }))),
+    /one selection owner/,
+  );
+  assert.throws(
+    () =>
+      render(
+        h(
+          Root,
+          { config, interaction: { ...props.interaction, defaultSelected: "first" } },
+          h(Probe),
+        ),
+      ),
+    /controlled and defaulted/,
+  );
+  assert.throws(
+    () =>
+      render(
+        h(
+          Root,
+          { config, interaction: { ...props.interaction, onSelectionChange: undefined } },
+          h(Probe),
+        ),
+      ),
+    /change callback/,
+  );
+});
+// These run both in workspace tests and the isolated packed public consumer.
+test("custom backgrounds are reusable frozen definitions, with no shared registry", () => {
+  const renderTile = ({ size, color }) => h("circle", { r: size / 4, fill: color });
+  const a = Chart.defineChartBackgroundPattern(renderTile);
+  const b = Chart.defineChartBackgroundPattern(renderTile);
+  assert.notEqual(a, b);
+  assert.ok(Object.isFrozen(a));
+  assert.equal(a.render, renderTile);
+  assert.match(renderSvg(a.render({ size: 16, color: "red", idPrefix: "local" })), /r="4"/);
+  assert.throws(() => Chart.defineChartBackgroundPattern(null), /render function/);
+});
+
+test("background validation runs even before plot geometry is available", () => {
+  for (const props of [
+    { pattern: "unknown" },
+    { pattern: null },
+    { pattern: {} },
+    { pattern: "waves", size: 0 },
+    { pattern: "waves", size: Infinity },
+    { pattern: "waves", opacity: -1 },
+    { pattern: "waves", opacity: 1.1 },
+    { pattern: "waves", opacity: NaN },
+  ]) {
+    assert.throws(
+      () => renderSvg(h(Chart.ChartBackgroundPattern, props)),
+      /ChartBackgroundPattern/,
+    );
+  }
+  assert.equal(renderSvg(h(Chart.ChartBackgroundPattern, { pattern: "pinpoints" })), "");
+});
+
+test("tooltip projection status uses caller identity without changing values or labels", () => {
+  const row = Object.freeze({ id: "forecast" });
+  const projected = entry(0, { payload: row });
+  const html = render(
+    h(
+      Root,
+      { config: { value: { label: "Value", color: "red" } } },
+      h(TooltipContent, {
+        tooltip: tooltip([projected]),
+        isProjected: (item) => item.payload.id === "forecast",
+      }),
+    ),
+  );
+  assert.match(html, /data-projected="true"/);
+  assert.match(html, /projection-status">Projected/);
+  assert.match(html, /chart-tooltip-value">0/);
+  assert.equal(projected.payload, row);
+  const observed = render(
+    h(
+      Root,
+      { config: {} },
+      h(TooltipContent, {
+        tooltip: tooltip([entry(9, { payload: { id: "observed" } })]),
+        isProjected: (item) => item.payload.id === "forecast",
+      }),
+    ),
+  );
+  assert.doesNotMatch(observed, /projection-status|data-projected/);
+});
+
+test("tooltip projection status respects missing, hidden and formatter ownership", () => {
+  const props = { isProjected: () => true, projectedLabel: "Incomplete" };
+  const content = (items, overrides = {}) =>
+    render(
+      h(
+        Root,
+        { config: {} },
+        h(TooltipContent, {
+          ...props,
+          tooltip: { ...tooltip(items), ...overrides },
+        }),
+      ),
+    );
+  assert.doesNotMatch(
+    content([entry(null, { payload: { id: "p" } })]),
+    /chart-tooltip|projection-status/,
+  );
+  assert.doesNotMatch(
+    content([entry(5, { hide: true, payload: { id: "p" } })]),
+    /chart-tooltip|projection-status/,
+  );
+  assert.doesNotMatch(
+    content([entry(5, { payload: { id: "p" } })], { formatter: () => null }),
+    /chart-tooltip|projection-status/,
+  );
+  assert.match(content([entry(5, { payload: { id: "p" } })]), /Incomplete/);
+  assert.doesNotMatch(content([entry(5, { payload: null })]), /projection-status/);
+});
+
 test("chart loading props stay off the native engine and expose a chart-owned status", () => {
   const html = render(
     h(
@@ -1614,6 +2156,50 @@ test("PointMarker retains native geometry and style while applying variant paint
     plain.replace(/ data-kind-ui="point-marker"| data-point-style="default"/g, ""),
     native,
   );
+});
+
+test("directional entrance options do not leak clip or configuration attributes into the SSR shell", () => {
+  for (const Component of [Chart.LineChart, Chart.AreaChart, Chart.ComboChart]) {
+    for (const revealDirection of ["left-to-right", "right-to-left", "center-out", "edges-in"]) {
+      const html = renderSvg(
+        h(
+          Chart.Root,
+          { config: {} },
+          h(Component, {
+            width: 300,
+            height: 200,
+            animate: { revealDirection },
+          }),
+        ),
+      );
+      assert.doesNotMatch(html, /data-reveal-direction|data-combo-reveal|data-area-reveal/);
+      assert.doesNotMatch(html, /revealDirection=/);
+    }
+  }
+});
+
+test("dashed line and combo SSR retain the chart shell without leaking dash props", () => {
+  const data = Object.freeze([Object.freeze({ value: 4 }), Object.freeze({ value: 8 })]);
+  for (const Engine of [Chart.LineChart, Chart.ComboChart]) {
+    const markup = render(
+      h(
+        Chart.Root,
+        { config: { value: { label: "Value", color: "teal" } } },
+        h(
+          Engine,
+          { width: 480, height: 240, data, animate: true },
+          h(Chart.LineSeries, {
+            dataKey: "value",
+            strokeDasharray: "6 4",
+            dashAnimation: { durationMs: 800 },
+          }),
+        ),
+      ),
+    );
+    assert.match(markup, /recharts-wrapper/);
+    assert.doesNotMatch(markup, /dashAnimation|durationMs/);
+    assert.deepEqual(data, [{ value: 4 }, { value: 8 }]);
+  }
 });
 
 test("selective Pie glow requires existing explicit category identity", () => {
@@ -1848,4 +2434,60 @@ test("Sankey configured icons preserve identity, text ownership and bounded plac
   );
   for (const props of [{ iconSize: -1 }, { iconGap: Infinity }])
     assert.throws(() => label(props), /nonnegative/);
+});
+
+test("percent formatting is scoped to caller-selected raw stack members and never mutates rows", () => {
+  const row = Object.freeze({ first: 1, second: 3, latency: 8 });
+  const percent = Chart.createPercentStack({
+    values: (item) =>
+      item.dataKey === "first" ? [item.payload.first, item.payload.second] : undefined,
+  });
+  assert.equal(percent.tickFormatter(0.25), "25%");
+  assert.equal(percent.tickFormatter(-0.5), "-50%");
+  assert.equal(percent.normalizedValue(entry(1, { dataKey: "first", payload: row })), 0.25);
+  assert.equal(percent.normalizedValue(entry(8, { dataKey: "latency", payload: row })), undefined);
+  assert.deepEqual(row, { first: 1, second: 3, latency: 8 });
+  for (const [members, value, expected] of [
+    [[0, 0], 0, 0],
+    [[null, undefined, 2], 2, 1],
+    [[-1, 3], -1, -0.5],
+    [[-1, 1], 1, undefined],
+    [[Infinity, 1], 1, undefined],
+    [[NaN, 1], 1, undefined],
+    [[], 0, undefined],
+    [[1, 3], null, undefined],
+    [[1, 3], [0, 1], undefined],
+  ]) {
+    assert.equal(
+      Chart.createPercentStack({ values: () => members }).normalizedValue(entry(value)),
+      expected,
+    );
+  }
+});
+
+test("normalized tooltip preserves raw formatting, explicit formatter precedence and projection", () => {
+  const renderPercent = (extra = {}, ...fractions) =>
+    render(
+      h(
+        Root,
+        { config },
+        h(TooltipContent, {
+          tooltip: tooltip(
+            [entry(1, { payload: { id: "future" } }), entry(null, { graphicalItemId: "missing" })],
+            extra,
+          ),
+          normalizedValue: () => (fractions.length ? fractions[0] : 0.25),
+          isProjected: (item) => item.payload?.id === "future",
+        }),
+      ),
+    );
+  assert.match(renderPercent(), /25% \(1 tasks\)/);
+  assert.match(renderPercent(), /Projected/);
+  assert.match(renderPercent(), /No data/);
+  assert.doesNotMatch(renderPercent({ formatter: () => "Custom" }), /25%/);
+  assert.match(renderPercent({ formatter: () => "Custom" }), /Custom/);
+  assert.doesNotMatch(renderPercent({ formatter: () => null }), /chart-tooltip/);
+  assert.doesNotMatch(renderPercent({}, NaN), /NaN|% \(/);
+  assert.doesNotMatch(renderPercent({}, undefined), /% \(/);
+  assert.match(renderPercent({}, -0.5), /-50% \(1 tasks\)/);
 });

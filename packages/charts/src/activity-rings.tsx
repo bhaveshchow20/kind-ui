@@ -9,8 +9,15 @@ import { RadialBarChartFrame, type RadialBarChartProps } from "./polar-chart.js"
 import { RadialBarSeries, type RadialBarSeriesProps } from "./polar-series.js";
 import { RadialBarLabel } from "./radial-bar-label.js";
 import { Root, type RootProps } from "./root.js";
+import { resolveSeriesLabel } from "./series-label.js";
 import { TooltipContent } from "./tooltip-content.js";
 import type { SeriesConfig } from "./types.js";
+
+type ActivityRootProps = RootProps extends infer Props
+  ? Props extends object
+    ? Omit<Props, "config" | "children">
+    : never
+  : never;
 
 export type ActivityRing = {
   /** Stable metadata identity in config. Array order controls ring order. */
@@ -50,7 +57,7 @@ export type ActivityRingsProps = Omit<
     legend?: false | LegendProps;
     /** Custom content receives native payload with original value and normalized progress. */
     tooltip?: false | TooltipProps;
-    rootProps?: Omit<RootProps, "config" | "children" | "visibleSeries" | "onVisibleSeriesChange">;
+    rootProps?: ActivityRootProps;
   };
 
 /** A narrow progress recipe; native RadialBarChart remains the full composition escape hatch. */
@@ -91,7 +98,7 @@ export function ActivityRings({
     return {
       ...ring,
       // biome-ignore lint/style/noNonNullAssertion: Object.hasOwn above rejects ring keys absent from config.
-      label: config[ring.key]!.label,
+      label: resolveSeriesLabel(ring.key, config[ring.key]!.label),
       rawValue: ring.value,
       progress: Math.max(0, Math.min(100, ((ring.value - min) / (max - min)) * 100)),
     };
@@ -125,6 +132,9 @@ export function ActivityRings({
         aria-describedby={describedBy}
         data={data}
         categoryKey="key"
+        {...(rootProps?.interaction?.kind === "category"
+          ? { interactionBinding: "root" as const }
+          : {})}
         layout="radial"
         accessibilityLayer={accessibilityLayer}
         responsive={responsive}

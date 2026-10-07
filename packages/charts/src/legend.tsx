@@ -3,7 +3,10 @@
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { Symbols } from "recharts";
 import { useChart } from "./chart-context.js";
+import { useChartInteraction } from "./chart-interaction.js";
 import { useEmphasis } from "./emphasis.js";
+import { FillPatternSwatch } from "./fill-pattern.js";
+import { colorStopToken } from "./series-color.js";
 
 export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
   /** Use the existing square color swatch instead of configured icons or symbols. */
@@ -15,15 +18,35 @@ export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
     key: string;
     label: string;
     visible: boolean;
+    selected: boolean;
+    mode: "visibility" | "focus";
     marker: ReactNode;
   }) => ReactNode;
 };
 
 /** Displays configured series; becomes interactive only when a controlled change callback exists. */
 export function Legend({ hideIcon = false, emphasis = "none", children, ...props }: LegendProps) {
-  const { config, visibleSeries, onVisibleSeriesChange } = useChart();
+  const { config, paints, visibleSeries } = useChart();
+  const interaction = useChartInteraction();
   return (
-    <ul aria-label="Chart legend" {...props} data-kind-ui="chart-legend">
+    // biome-ignore lint/a11y/useKeyWithClickEvents: Delegates clicks from native buttons, which already implement Enter and Space.
+    <ul
+      aria-label="Chart legend"
+      {...props}
+      data-kind-ui="chart-legend"
+      onClick={(event) => {
+        props.onClick?.(event);
+        const button = (event.target as Element).closest<HTMLButtonElement>(
+          "button[data-legend-key]",
+        );
+        if (button?.dataset.legendKey !== undefined && event.currentTarget.contains(button))
+          interaction.activate(
+            { kind: interaction.kind, key: button.dataset.legendKey },
+            "legend",
+            event,
+          );
+      }}
+    >
       {Object.entries(config).map(([key, item]) => {
         const visible = visibleSeries?.includes(key) ?? true;
         const marker =
@@ -38,19 +61,37 @@ export function Legend({ hideIcon = false, emphasis = "none", children, ...props
               data-kind-ui="chart-indicator"
               data-legend-shape={item.legendShape}
               viewBox="-8 -8 16 16"
-              style={{ "--kind-ui-chart-indicator-color": `var(--color-${key})` } as CSSProperties}
+              style={
+                {
+                  "--kind-ui-chart-indicator-color": paints[key],
+                } as CSSProperties
+              }
             >
               <Symbols type={item.legendShape} cx={0} cy={0} size={64} />
             </svg>
+          ) : item.pattern && !hideIcon ? (
+            <FillPatternSwatch pattern={item.pattern} color={`var(--color-${key})`} />
           ) : (
             <span
               aria-hidden="true"
               data-kind-ui="chart-indicator"
-              style={{ "--kind-ui-chart-indicator-color": `var(--color-${key})` } as CSSProperties}
+              style={
+                {
+                  "--kind-ui-chart-indicator-color": `var(--color-${key})`,
+                  "--kind-ui-chart-indicator-background": `var(${colorStopToken(key, "gradient")})`,
+                } as CSSProperties
+              }
             />
           );
         const content = children ? (
-          children({ key, label: item.label, visible, marker })
+          children({
+            key,
+            label: item.label,
+            visible,
+            marker,
+            selected: interaction.selected === key,
+            mode: interaction.mode,
+          })
         ) : (
           <>
             {marker}
@@ -62,20 +103,14 @@ export function Legend({ hideIcon = false, emphasis = "none", children, ...props
             key={key}
             seriesKey={key}
             enabled={emphasis === "series" && visible}
-            interactive={Boolean(onVisibleSeriesChange && visibleSeries)}
+            interactive={interaction.interactive && interaction.eligible.includes(key)}
           >
-            {onVisibleSeriesChange && visibleSeries ? (
+            {interaction.interactive && interaction.eligible.includes(key) ? (
               <button
                 type="button"
-                aria-pressed={visible}
+                aria-pressed={interaction.mode === "focus" ? interaction.selected === key : visible}
                 data-kind-ui="chart-legend-button"
-                onClick={() =>
-                  onVisibleSeriesChange(
-                    visible
-                      ? visibleSeries.filter((value) => value !== key)
-                      : [...visibleSeries, key],
-                  )
-                }
+                data-legend-key={key}
               >
                 {content}
               </button>

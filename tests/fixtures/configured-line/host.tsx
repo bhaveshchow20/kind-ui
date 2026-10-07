@@ -11,6 +11,11 @@ const allRows = [
 const initial = new URLSearchParams(window.location.search).has("single")
   ? allRows.slice(0, 1)
   : allRows;
+const customBackground = Chart.defineChartBackgroundPattern(({ size, color, idPrefix }) => (
+  <g id={`${idPrefix}-tile`}>
+    <path d={`M0 0L${size} ${size}`} stroke={color} />
+  </g>
+));
 const config = {
   total: { label: "Total", color: "#4055ee" },
   other: { label: "Other", color: "#0d9488" },
@@ -35,6 +40,8 @@ export function ConfiguredHost() {
   const [visible, setVisible] = useState<string[]>(["total"]);
   const [callbacks, setCallbacks] = useState(0);
   const [moves, setMoves] = useState(0);
+  const [basicVisible, setBasicVisible] = useState(Object.keys(config));
+  const [basicCallbacks, setBasicCallbacks] = useState(0);
   const [animate, setAnimate] = useState<boolean | undefined>(undefined);
   const [explicitEmpty, setExplicitEmpty] = useState(false);
   const ref = useCallback((node: SVGSVGElement | null) => {
@@ -72,6 +79,7 @@ export function ConfiguredHost() {
       <button type="button" onClick={() => setExplicitEmpty(!explicitEmpty)}>
         Explicit empty
       </button>
+      <span data-basic-visibility={basicVisible.join(",")} data-basic-callbacks={basicCallbacks} />
       <output data-callbacks>{callbacks}</output>
       <output data-moves>{moves}</output>
       <section data-case="basic" style={{ width }}>
@@ -79,7 +87,12 @@ export function ConfiguredHost() {
           data={data}
           config={currentConfig}
           xDataKey="month"
+          backgroundPattern={{ pattern: "pinpoints", color: "var(--background-ink, CanvasText)" }}
           aria-label="Monthly totals"
+          onVisibleSeriesChange={(next) => {
+            setBasicVisible(next);
+            setBasicCallbacks((n) => n + 1);
+          }}
           animate={animate}
           ref={ref}
           onMouseMove={() => setMoves((n) => n + 1)}
@@ -121,12 +134,31 @@ export function ConfiguredHost() {
           legend={false}
           animate={false}
         >
+          <Chart.ChartBackgroundPattern pattern={customBackground} opacity={0.25} />
+          <Chart.ChartBackgroundPattern pattern="waves" opacity={0} />
           <Chart.XAxis dataKey="month" />
           <Chart.YAxis domain={[-10, 30]} />
           <Chart.ReferenceLine y={10} />
           <Chart.LineSeries dataKey="total" material="paper" />
           <Chart.Tooltip valueAnimation="shuffle" />
         </Chart.LineChart>
+      </section>
+      <section data-case="bar-background" style={{ width }}>
+        <Chart.Root config={config}>
+          <Chart.BarChart
+            data={data}
+            responsive
+            animate={false}
+            style={{ width: "100%", height: 280 }}
+          >
+            <Chart.CartesianGrid />
+            <Chart.BarSeries dataKey="total" />
+            <Chart.ChartBackgroundPattern pattern="crossings" />
+            <Chart.XAxis dataKey="month" />
+            <Chart.YAxis />
+            <Chart.Tooltip />
+          </Chart.BarChart>
+        </Chart.Root>
       </section>
       <section data-case="accessor" style={{ width }}>
         <Chart.LineChart

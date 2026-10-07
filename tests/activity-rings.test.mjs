@@ -59,3 +59,25 @@ test("native composition remains consumer-owned", () => {
   );
   assert.doesNotMatch(html, /chart-instructions|chart-legend|activity-rings/);
 });
+
+test("inferred ring labels agree between the data alternative and legend", () => {
+  const inferred = {
+    monthlyVisitors: { color: "red" },
+    custom: { color: "blue", label: "Custom name" },
+  };
+  const html = render(
+    h(ActivityRings, {
+      ...defaults,
+      config: inferred,
+      rings: [
+        { key: "monthlyVisitors", value: 25 },
+        { key: "custom", value: 10 },
+      ],
+    }),
+  );
+  assert.match(html, /<dt>Monthly visitors<\/dt><dd>25<\/dd>/);
+  assert.match(html, /<dt>Custom name<\/dt><dd>10<\/dd>/);
+  assert.equal(html.split("Monthly visitors").length - 1, 2);
+  assert.equal(html.split("Custom name").length - 1, 2);
+  assert.match(html, /data-series="monthlyVisitors"/);
+});

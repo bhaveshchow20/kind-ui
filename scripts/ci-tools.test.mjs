@@ -187,3 +187,23 @@ test("Docs completion receipt fails on every incomplete prerequisite", async () 
     for (const status of ["failure", "cancelled", "skipped", ""])
       assert.throws(() => run({ [gate]: status }));
 });
+
+test("background chrome preserves series and native export boundaries", async () => {
+  const root = new URL("../", import.meta.url);
+  const source = await readFile(
+    new URL("packages/charts/src/chart-background-pattern.tsx", root),
+    "utf8",
+  );
+  const imports = [...source.matchAll(/from "([^"\n]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(imports, ["react", "recharts"]);
+  const tests = await readFile(new URL("tests/chart.test.mjs", root), "utf8");
+  const nativeList = tests
+    .split('test("composition components and helpers preserve native identity", () => {')[1]
+    .split("});")[0];
+  assert.doesNotMatch(nativeList, /ChartBackgroundPattern|defineChartBackgroundPattern/);
+  const publicList = tests
+    .split('test("direct and namespace imports expose the same public components", () => {')[1]
+    .split("});")[0];
+  assert.match(publicList, /"ChartBackgroundPattern"/);
+  assert.match(publicList, /"defineChartBackgroundPattern"/);
+});

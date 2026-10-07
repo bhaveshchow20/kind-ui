@@ -39,6 +39,8 @@ export type TooltipProps = Omit<
   maxWidth?: number;
   /** Resolves category identity before the existing series-key fallback. */
   itemKey?: TooltipContentProps["itemKey"];
+  /** Default content only; custom content and explicit formatters retain ownership. */
+  normalizedValue?: TooltipContentProps["normalizedValue"];
   /** Opt in on Kind's default content; custom content owns its own animation. */
   valueAnimation?: TooltipContentProps["valueAnimation"];
 };
@@ -68,6 +70,7 @@ function PositionedContent({
   consumerContent,
   itemKey,
   valueAnimation,
+  normalizedValue,
   maxWidth,
   frameProps,
   frameRef,
@@ -77,6 +80,7 @@ function PositionedContent({
   consumerContent: TooltipProps["content"];
   itemKey: TooltipProps["itemKey"];
   valueAnimation: TooltipProps["valueAnimation"];
+  normalizedValue: TooltipProps["normalizedValue"];
   maxWidth: number;
   frameProps: TooltipProps["frameProps"];
   frameRef: TooltipProps["ref"];
@@ -136,6 +140,7 @@ function PositionedContent({
   ) : (
     <TooltipContent
       tooltip={contentProps}
+      {...(normalizedValue ? { normalizedValue } : {})}
       {...(itemKey ? { itemKey } : {})}
       {...(valueAnimation ? { valueAnimation } : {})}
     />
@@ -167,6 +172,7 @@ export function TooltipBase({
   maxWidth = 180,
   itemKey,
   valueAnimation,
+  normalizedValue,
   Frame = StaticTooltipFrame,
   defaultIndex: nativeDefaultIndex,
   ...props
@@ -194,6 +200,7 @@ export function TooltipBase({
           consumerContent={content}
           itemKey={itemKey}
           valueAnimation={valueAnimation}
+          normalizedValue={normalizedValue}
           maxWidth={maxWidth}
           frameProps={frameProps}
           frameRef={ref}

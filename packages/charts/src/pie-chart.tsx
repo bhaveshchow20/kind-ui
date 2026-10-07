@@ -12,14 +12,14 @@ import {
   useSyncExternalStore,
 } from "react";
 import { PieChart as EnginePieChart } from "recharts";
-import { type LineAnimation, MotionContext } from "./animation.js";
+import { type BaseAnimation, MotionContext } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { LineChartFrame } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
 
 import { PieTooltipPin, pinnedPieIndex } from "./pie-tooltip-pin.js";
 
-export type PieAnimation = LineAnimation;
+export type PieAnimation = BaseAnimation;
 export type PieChartProps = ComponentProps<typeof EnginePieChart> & {
   /** Initial tooltip category; one direct categoryKey PieSeries with explicit data only. */
   defaultPinnedCategory?: string | undefined;
@@ -69,7 +69,7 @@ export function PieChart({
       ? undefined
       : visibleSeries !== undefined && !visibleSeries.includes(initialCategory)
         ? undefined
-        : pinnedPieIndex(children, initialCategory);
+        : pinnedPieIndex(children, initialCategory, visibleSeries);
   useLayoutEffect(() => {
     if (initialCategory !== undefined && pinIndex === undefined) clearPin();
   }, [initialCategory, pinIndex, clearPin]);

@@ -30,6 +30,7 @@ import {
   type LoadingFamily,
   useLoadingSeed,
 } from "./loading-skeleton.js";
+import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
 
 export type LineChartProps = ComponentProps<typeof EngineLineChart> & {
   loading?: boolean | undefined;
@@ -196,41 +197,44 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
     if (!completing) interrupt();
   }, [interrupt, completing]);
   const chart = (
-    <EngineChart
-      {...props}
-      className={[
-        "kind-ui-line-chart",
-        loading !== undefined && "kind-ui-loading-chart",
-        loading && "kind-ui-loading-chart-pending",
-        props.className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      style={{ ...props.style, "--kind-ui-line-clip": clip ?? "none" } as CSSProperties}
-      onMouseMove={(state, event) => {
-        const { relativeX, relativeY } = getRelativeCoordinate(event);
-        setKeyboard(false);
-        setMotionReady(true);
-        setPointer({ x: relativeX, y: relativeY });
-        interrupt();
-        onMouseMove?.(state, event);
-      }}
-      onMouseLeave={(state, event) => {
-        setPointer(null);
-        onMouseLeave?.(state, event);
-      }}
-    >
-      <Lifecycle data={props.data} invalidate={invalidate} />
-      {children}
-      {loading && loadingSkeleton && (
-        <ChartLoadingSkeleton
-          family={loadingSkeleton}
-          seed={loadingSeed}
-          animation={loadingAnimation}
-          design={loadingDesign}
-        />
-      )}
-    </EngineChart>
+    <SeriesPaintBoundary>
+      <EngineChart
+        {...props}
+        className={[
+          "kind-ui-line-chart",
+          loading !== undefined && "kind-ui-loading-chart",
+          loading && "kind-ui-loading-chart-pending",
+          props.className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        style={{ ...props.style, "--kind-ui-line-clip": clip ?? "none" } as CSSProperties}
+        onMouseMove={(state, event) => {
+          const { relativeX, relativeY } = getRelativeCoordinate(event);
+          setKeyboard(false);
+          setMotionReady(true);
+          setPointer({ x: relativeX, y: relativeY });
+          interrupt();
+          onMouseMove?.(state, event);
+        }}
+        onMouseLeave={(state, event) => {
+          setPointer(null);
+          onMouseLeave?.(state, event);
+        }}
+      >
+        <SeriesColorDefinitions viewport />
+        <Lifecycle data={props.data} invalidate={invalidate} />
+        {children}
+        {loading && loadingSkeleton && (
+          <ChartLoadingSkeleton
+            family={loadingSkeleton}
+            seed={loadingSeed}
+            animation={loadingAnimation}
+            design={loadingDesign}
+          />
+        )}
+      </EngineChart>
+    </SeriesPaintBoundary>
   );
   return (
     <LineInteraction
@@ -271,6 +275,13 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
           interrupt();
         }}
         onKeyDownCapture={(event) => {
+          if (
+            (event.key === "Enter" || event.key === " " || event.key === "Escape") &&
+            (event.target as Element).closest(
+              '[data-kind-ui="emphasis-mark"][role="button"], [data-kind-ui="series-interaction"][role="button"]',
+            )
+          )
+            return;
           setKeyboard(event.key !== "Escape");
           interrupt();
           setMotionReady(true);

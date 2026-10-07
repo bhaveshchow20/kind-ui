@@ -10,12 +10,12 @@ import {
   useSyncExternalStore,
 } from "react";
 import { BarChart as EngineBarChart } from "recharts";
-import { type LineAnimation, MotionContext } from "./animation.js";
+import { type BaseAnimation, MotionContext } from "./animation.js";
 import { BarCategoryBoundary } from "./bar-category.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 
-export type BarAnimation = LineAnimation;
+export type BarAnimation = BaseAnimation;
 export type BarChartProps = ComponentProps<typeof EngineBarChart> & {
   animate?: boolean | BarAnimation | undefined;
   loading?: boolean | undefined;

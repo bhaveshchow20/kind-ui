@@ -128,7 +128,7 @@ try {
   );
   await writeFile(
     join(scratch, "app/page.tsx"),
-    `import { LineChart } from "@kind-ui/charts"; import { IntegrationHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} xDataKey="month" aria-label="Server boundary totals" /><IntegrationHost /></main>}`,
+    `import { LineChart } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} xDataKey="month" aria-label="Server boundary totals" /><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /></main>}`,
   );
   await writeFile(
     join(scratch, "next.config.mjs"),
@@ -176,6 +176,9 @@ try {
   assert.match(html, /Server boundary totals/);
   assert.match(html, /data-kind-ui="chart"/, "SSR must include the package chart shell");
   assert.match(html, /data-kind-ui="chart-legend"/, "SSR must include package content");
+  const patternIds = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(patternIds.length, 6, "SSR includes both charts' three pattern legend swatches");
+  assert.equal(new Set(patternIds).size, 6, "SSR pattern resources must be unique");
   // Native responsive SSR emits an empty wrapper; the client supplies SVG ARIA.
   assert.match(html, /lucide-trending-up/);
   const nextOutput = join(root, "artifacts/packed-line-next");

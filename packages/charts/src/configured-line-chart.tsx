@@ -18,6 +18,10 @@ import {
   Tooltip,
   type TooltipProps,
 } from "./animation.js";
+import {
+  ChartBackgroundPattern,
+  type ChartBackgroundPatternProps,
+} from "./chart-background-pattern.js";
 import { ChartContext } from "./chart-context.js";
 import { Legend, type LegendProps } from "./legend.js";
 import { Root, type RootProps } from "./root.js";
@@ -51,6 +55,7 @@ type GeneratedParts<DataPoint> = {
   material?: LineSeriesProps["material"];
   xAxis?: false | XAxisProps<DataPoint>;
   yAxis?: false | YAxisProps<DataPoint>;
+  backgroundPattern?: ChartBackgroundPatternProps;
   grid?: false | CartesianGridProps;
   tooltip?: false | TooltipProps;
   series?: readonly ConfiguredLineSeries<DataPoint>[];
@@ -63,6 +68,7 @@ type ExplicitParts = {
   xDataKey?: never;
   xAxis?: never;
   yAxis?: never;
+  backgroundPattern?: never;
   grid?: never;
   tooltip?: never;
   series?: never;
@@ -75,7 +81,10 @@ export type ConfiguredLineChartProps<DataPoint = DefaultDataPoint> = Omit<
   data: readonly DataPoint[];
   "aria-describedby"?: string;
   legend?: false | LegendProps;
-  rootProps?: Omit<RootProps, "config" | "children" | "visibleSeries" | "onVisibleSeriesChange">;
+  rootProps?: Omit<
+    RootProps,
+    "config" | "children" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange"
+  >;
 } & Name &
   Visibility &
   (GeneratedParts<DataPoint> | ExplicitParts);
@@ -87,6 +96,7 @@ type CompositionLineChartProps = LineChartProps & {
   xDataKey?: never;
   xAxis?: never;
   yAxis?: never;
+  backgroundPattern?: never;
   grid?: never;
   tooltip?: never;
   curve?: never;
@@ -119,6 +129,7 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
     xAxis,
     yAxis,
     grid,
+    backgroundPattern,
     tooltip,
     series,
     legend,
@@ -161,7 +172,7 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
   const generated = children === undefined;
   if (
     !generated &&
-    [xDataKey, curve, material, xAxis, yAxis, grid, tooltip, series].some(
+    [xDataKey, curve, material, xAxis, yAxis, grid, tooltip, series, backgroundPattern].some(
       (part) => part !== undefined,
     )
   )
@@ -241,6 +252,7 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
       >
         {generated ? (
           <>
+            {backgroundPattern && <ChartBackgroundPattern {...backgroundPattern} />}
             {grid !== false && (
               <CartesianGrid
                 vertical={false}

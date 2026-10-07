@@ -30,12 +30,17 @@ import {
 } from "./line-series.js";
 import { registerPiePinComponent } from "./pie-pin-identity.js";
 import { markerPaint, type PointStyle } from "./point-marker.js";
+import { RevealClip, type RevealDirection } from "./reveal-clip.js";
 import { TooltipBase, type TooltipFrameProps, type TooltipProps } from "./tooltip.js";
 
-export type LineAnimation = {
+export type BaseAnimation = {
   revealDurationMs?: number;
   revealEasing?: Transition["ease"];
   hoverTransition?: Transition;
+};
+export type LineAnimation = BaseAnimation & {
+  /** Physical horizontal entrance direction, independent of native chart layout. */
+  revealDirection?: RevealDirection;
 };
 type DefaultLineDataKey = Extract<StaticLineSeriesProps["dataKey"], (row: never) => unknown>;
 export type LineSeriesProps<
@@ -91,21 +96,11 @@ export function LineChart({
         {...(reveal ? { clip: `url(#${id}-reveal)` } : {})}
       >
         {reveal && (
-          <defs>
-            <clipPath id={`${id}-reveal`} clipPathUnits="userSpaceOnUse">
-              <motion.rect
-                x={0}
-                y={0}
-                height="100%"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{
-                  duration: Math.max(0, options.revealDurationMs ?? 1000) / 1000,
-                  ease: options.revealEasing ?? [0.25, 0.1, 0.25, 1],
-                }}
-              />
-            </clipPath>
-          </defs>
+          <RevealClip
+            id={`${id}-reveal`}
+            options={options}
+            {...(options.revealDirection === undefined ? {} : { finish: interrupt })}
+          />
         )}
         {children}
       </LineChartFrame>
