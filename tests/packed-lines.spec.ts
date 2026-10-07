@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "./browser";
 import { expectLastVisibleGuard } from "./last-visible";
+import { directionalEntrances } from "./reveal-direction";
 
 async function bounds(tip: Locator, chart: Locator) {
   await expect
@@ -333,3 +334,5 @@ test("packed native visibility changes snap active hover to rescaled geometry", 
     await bounds(page.locator('[data-kind-ui="tooltip-frame"]'), page.getByRole("application"));
   }
 });
+
+directionalEntrances("http://127.0.0.1:4176/motion.html");

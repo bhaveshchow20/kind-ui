@@ -1,11 +1,21 @@
 "use client";
 
 import { motion } from "motion/react";
-import { type ComponentProps, use, useCallback, useId, useLayoutEffect, useRef } from "react";
+import {
+  Children,
+  type ComponentProps,
+  isValidElement,
+  use,
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import {
   Bar,
   type BarShapeProps,
   DefaultZIndexes,
+  Cell,
   Rectangle,
   useActiveTooltipDataPoints,
   useActiveTooltipLabel,
@@ -27,6 +37,12 @@ import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fi
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
+/** Caller-owned identity selection; this component never computes forecast values. */
+export type BarProjection<DataPoint> = {
+  isProjected: (datum: DataPoint) => boolean;
+  pattern: FillPattern;
+};
+
 export type BarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Bar<DataPoint, Value>>,
   "isAnimationActive"
@@ -39,6 +55,8 @@ export type BarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   material?: BarMaterial | undefined;
   /** Static encoding for implicit fills; explicit fills/Cells/custom shapes retain ownership. */
   pattern?: FillPattern | false | undefined;
+  /** Pattern selected rows; selection remains caller-owned. */
+  projection?: BarProjection<DataPoint> | undefined;
 };
 
 /** A registered native Bar; axes, shape, cells, labels and handlers stay consumer-owned. */
@@ -51,6 +69,8 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   style,
   material = "plain",
   pattern,
+  projection,
+  children,
   ...props
 }: BarSeriesProps<DataPoint, Value>) {
   const { config, paints, visibleSeries } = useChart();
@@ -167,6 +187,23 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
     undefined,
     props.onClick,
   );
+  const projectionId = `${patternId}-projection`;
+  // Explicit Cell composition owns per-datum paint, including nested native Cells.
+  // Do not override consumer Cells or flatten their markup.
+  const hasCells = (nodes: typeof children): boolean =>
+    Children.toArray(nodes).some(
+      (node) =>
+        isValidElement<{ children?: typeof children }>(node) &&
+        (node.type === Cell || hasCells(node.props.children)),
+    );
+  const projectionPaint =
+    projection !== undefined &&
+    pattern !== false &&
+    fill === undefined &&
+    style?.fill === undefined &&
+    props.shape === undefined &&
+    (props.activeBar === undefined || typeof props.activeBar === "boolean") &&
+    !hasCells(children);
   const color = fill ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   const nativeRows =
     (!("data" in props) &&
@@ -203,15 +240,44 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
     [id, eligible, effectiveHide, registerCategoryEligibility],
   );
   const categoryShape = useCallback(
-    (shapeProps: BarShapeProps) => (
-      <CategoryBar
-        {...shapeProps}
-        seriesKey={key}
-        emphasisKey={emphasisKey}
-        axisId={horizontal ? props.yAxisId : props.xAxisId}
-      />
-    ),
-    [key, emphasisKey, horizontal, props.xAxisId, props.yAxisId],
+    (shapeProps: BarShapeProps) => {
+      // Select the actual displayed payload, not the Cell index: native Brush
+      // slices and missing-value filtering must not shift projection identity.
+      const datum = shapeProps.payload as DataPoint | null | undefined;
+      const datumPaint =
+        typeof datum === "object" && datum !== null
+          ? (datum as { fill?: unknown; style?: { fill?: unknown } })
+          : undefined;
+      const projected =
+        projectionPaint &&
+        datum != null &&
+        projection.isProjected(datum) &&
+        datumPaint?.fill === undefined &&
+        datumPaint?.style?.fill === undefined;
+      const nativeProps = projected ? { ...shapeProps, fill: `url(#${projectionId})` } : shapeProps;
+      return categoryEmphasis && eligible ? (
+        <CategoryBar
+          {...nativeProps}
+          seriesKey={key}
+          emphasisKey={emphasisKey}
+          axisId={horizontal ? props.yAxisId : props.xAxisId}
+        />
+      ) : (
+        <Rectangle {...nativeProps} />
+      );
+    },
+    [
+      key,
+      emphasisKey,
+      horizontal,
+      props.xAxisId,
+      props.yAxisId,
+      projectionPaint,
+      projection,
+      projectionId,
+      categoryEmphasis,
+      eligible,
+    ],
   );
   const clipped = reveal && !effectiveHide && usablePlot;
   return (
@@ -250,6 +316,17 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
           />
         </defs>
       )}
+      {projectionPaint && (
+        <defs pointerEvents="none">
+          <FillPatternDefinition
+            id={projectionId}
+            pattern={projection.pattern}
+            baseColor={
+              key && Object.hasOwn(config, key) ? `var(--color-${key})` : (color ?? "currentColor")
+            }
+          />
+        </defs>
+      )}
       {materialized && (
         <defs data-kind-ui="bar-material" data-material={material} pointerEvents="none">
           <BarMaterialFilter material={material} id={filterId} horizontal={horizontal} />
@@ -260,7 +337,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
           <Bar<DataPoint, Value>
             {...props}
             {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
-            {...(categoryEmphasis && eligible
+            {...(projectionPaint || (categoryEmphasis && eligible)
               ? {
                   shape: categoryShape,
                 }
@@ -277,7 +354,9 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
             className={["kind-ui-bar-series", selector, className].filter(Boolean).join(" ")}
             style={style}
             isAnimationActive={false}
-          />
+          >
+            {children}
+          </Bar>
         </SeriesInteractionLayer>
       </ZIndexLayer>
     </>

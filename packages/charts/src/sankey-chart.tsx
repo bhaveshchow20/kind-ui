@@ -19,6 +19,8 @@ import {
   useChartWidth,
 } from "recharts";
 import { useOptionalChartInteraction } from "./chart-interaction.js";
+import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
+import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
 import { SankeyColors, type SankeyNodeConfig } from "./sankey-colors.js";
 import { prepareSankeyData, type SankeyFlowData } from "./sankey-data.js";
 import { SankeyFocusMark } from "./sankey-interaction.js";
@@ -82,6 +84,8 @@ export type SankeyChartProps = Omit<
   onMouseLeave?: IdentityEvent;
   /** Kind SankeyLink paint flows along unchanged paths; custom renderers retain ownership. */
   animate?: boolean | SankeyAnimation;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
   empty?: ReactNode;
 };
 
@@ -97,6 +101,8 @@ export function SankeyChart({
   nodeConfig,
   interactionBinding,
   animate = false,
+  loading,
+  loadingLabel,
   empty = "No positive flows",
   ...props
 }: SankeyChartProps) {
@@ -119,6 +125,7 @@ export function SankeyChart({
       adjacent.set(target, to);
     }
   }
+  const loadingSeed = useLoadingSeed(loading);
   const duration = typeof animate === "object" ? (animate.revealDurationMs ?? 450) : 450;
   if (!Number.isFinite(duration) || duration < 0)
     throw new Error("Sankey revealDurationMs must be finite and nonnegative");
@@ -155,13 +162,21 @@ export function SankeyChart({
   const [interrupted, setInterrupted] = useState(false);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const measured = useRef<{ width: number; height: number } | null>(null);
-  const onSize = useCallback((width: number, height: number) => {
-    const prior = measured.current;
-    if (prior?.width === width && prior?.height === height) return;
-    if (prior) setInterrupted(true);
-    measured.current = { width, height };
-    setSize(measured.current);
-  }, []);
+  const previousLoading = useRef(loading);
+  const completing = previousLoading.current === true && loading !== true;
+  const onSize = useCallback(
+    (width: number, height: number) => {
+      const prior = measured.current;
+      if (prior?.width === width && prior?.height === height) return;
+      if (prior && !loading && !completing) setInterrupted(true);
+      measured.current = { width, height };
+      setSize(measured.current);
+    },
+    [loading, completing],
+  );
+  useLayoutEffect(() => {
+    if (loading) setInterrupted(false);
+  }, [loading]);
   const inputs = [
     duration,
     data,
@@ -182,19 +197,22 @@ export function SankeyChart({
   const previous = useRef(inputs);
   useLayoutEffect(() => {
     if (
+      !loading &&
+      !completing &&
       inputs.some(
         (value, index) => (index !== 0 || started.current) && value !== previous.current[index],
       )
     )
       setInterrupted(true);
     previous.current = inputs;
+    previousLoading.current = loading;
   });
-  const enabled = Boolean(animate) && !reduced;
+  const enabled = Boolean(animate) && !reduced && !loading;
   const previousEnabled = useRef(enabled);
   useLayoutEffect(() => {
-    if (previousEnabled.current && !enabled) setInterrupted(true);
+    if (previousEnabled.current && !enabled && !loading) setInterrupted(true);
     previousEnabled.current = enabled;
-  }, [enabled]);
+  }, [enabled, loading]);
   const reveal = enabled && !interrupted && size !== null;
   const progress = useMotionValue(1);
   useLayoutEffect(() => {
@@ -236,64 +254,88 @@ export function SankeyChart({
       <SankeyMotion value={{ reveal, progress, width: size?.width ?? 1 }}>
         <div
           data-kind-ui="sankey"
-          onPointerDownCapture={() => setInterrupted(true)}
-          onFocusCapture={() => setInterrupted(true)}
+          onPointerDownCapture={() => {
+            if (!loading) setInterrupted(true);
+          }}
+          onFocusCapture={() => {
+            if (!loading) setInterrupted(true);
+          }}
           style={{ position: "relative", width: "fit-content", height: "fit-content" }}
         >
-          <EngineSankey
-            {...(props as NativeProps)}
-            {...(nodeConfig
-              ? ({
-                  node: props.node ?? configuredNode,
-                  link: props.link ?? configuredLink,
-                } as NativeProps)
-              : {})}
-            onClick={(item, type, event) => {
-              props.onClick?.(item as SankeyNodeProps | SankeyLinkProps, type, event);
-              if (interactionBinding && type === "node")
-                interaction?.activate(
-                  { kind: "node", key: (item as SankeyNodeProps).payload.id },
-                  "mark",
-                  event,
-                );
-            }}
-            {...(interactionBinding
-              ? {
-                  node:
-                    (props.node as NativeProps["node"]) ??
-                    ((shape: NativeNodeProps) => (
-                      <SankeyFocusMark
-                        nodeKey={(shape as SankeyNodeProps).payload.id}
-                        adjacent={adjacent}
-                      >
-                        <SankeyNode {...(shape as SankeyNodeProps)} />
-                      </SankeyFocusMark>
-                    )),
-                  link:
-                    (props.link as NativeProps["link"]) ??
-                    ((shape: NativeLinkProps) => (
-                      <SankeyFocusMark
-                        endpoints={[
-                          (shape as SankeyLinkProps).payload.source.id,
-                          (shape as SankeyLinkProps).payload.target.id,
-                        ]}
-                        adjacent={adjacent}
-                      >
-                        <SankeyLink {...(shape as SankeyLinkProps)} />
-                      </SankeyFocusMark>
-                    )),
-                }
-              : {})}
-            data={drawable && links.length ? { nodes, links } : { nodes: [], links: [] }}
+          <div
+            data-kind-ui="sankey-content"
+            data-loading={loading || undefined}
+            aria-busy={loading}
+            aria-hidden={loading || undefined}
+            inert={loading || undefined}
+            style={{ display: "contents" }}
           >
-            <NativeSize onSize={onSize} />
-            {props.children}
-          </EngineSankey>
-          {!links.length ? (
+            <EngineSankey
+              {...(props as NativeProps)}
+              {...(nodeConfig
+                ? ({
+                    node: props.node ?? configuredNode,
+                    link: props.link ?? configuredLink,
+                  } as NativeProps)
+                : {})}
+              onClick={(item, type, event) => {
+                props.onClick?.(item as SankeyNodeProps | SankeyLinkProps, type, event);
+                if (interactionBinding && type === "node")
+                  interaction?.activate(
+                    { kind: "node", key: (item as SankeyNodeProps).payload.id },
+                    "mark",
+                    event,
+                  );
+              }}
+              {...(interactionBinding
+                ? {
+                    node:
+                      (props.node as NativeProps["node"]) ??
+                      ((shape: NativeNodeProps) => (
+                        <SankeyFocusMark
+                          nodeKey={(shape as SankeyNodeProps).payload.id}
+                          adjacent={adjacent}
+                        >
+                          <SankeyNode {...(shape as SankeyNodeProps)} />
+                        </SankeyFocusMark>
+                      )),
+                    link:
+                      (props.link as NativeProps["link"]) ??
+                      ((shape: NativeLinkProps) => (
+                        <SankeyFocusMark
+                          endpoints={[
+                            (shape as SankeyLinkProps).payload.source.id,
+                            (shape as SankeyLinkProps).payload.target.id,
+                          ]}
+                          adjacent={adjacent}
+                        >
+                          <SankeyLink {...(shape as SankeyLinkProps)} />
+                        </SankeyFocusMark>
+                      )),
+                  }
+                : {})}
+              data={drawable && links.length ? { nodes, links } : { nodes: [], links: [] }}
+            >
+              <NativeSize onSize={onSize} />
+              {props.children}
+            </EngineSankey>
+          </div>
+          {loading && (
+            <LoadingSkeletonSurface
+              family="sankey"
+              design={(seed) => <StandaloneLoadingDesign family="sankey" seed={seed} />}
+              width="100%"
+              height="100%"
+              seed={loadingSeed}
+              animation={{ revealDurationMs: duration }}
+            />
+          )}
+          <LoadingStatus loading={loading} label={loadingLabel} />
+          {!loading && !links.length ? (
             <div role="status" style={{ position: "absolute", inset: 0 }}>
               {empty}
             </div>
-          ) : !drawable ? (
+          ) : !loading && !drawable ? (
             <div role="status" style={{ position: "absolute", inset: 0 }}>
               Insufficient space for flows; use the data table
             </div>

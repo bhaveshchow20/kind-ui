@@ -6,6 +6,7 @@ import {
   cloneElement,
   Fragment,
   isValidElement,
+  memo,
   type ReactNode,
   use,
   useCallback,
@@ -23,6 +24,11 @@ import { EmphasisMark } from "./emphasis.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
 import { type PieMaterial, PieMaterialFilter, type PiePaintBounds } from "./pie-material.js";
+import { registerPiePinComponent } from "./pie-pin-identity.js";
+
+// Native Pie keys its animation subtree by props identity even with animation disabled.
+// Pointer/pin context updates must not replace an unchanged pressed native sector.
+const StablePie = memo(Pie) as typeof Pie;
 
 export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
@@ -34,6 +40,8 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   interactionBinding?: "root";
   /** Finish on default native sectors; custom shapes, filters and CSS transforms keep ownership. */
   material?: PieMaterial | undefined;
+  /** Categories receiving glow instead of material; requires categoryKey and explicit data. Unknown IDs are ignored. */
+  glowCategories?: readonly string[] | undefined;
   /** Stable sector identity; defaults to the native nameKey value. */
   emphasisKey?: ((payload: unknown) => string | number | undefined) | undefined;
 };
@@ -432,6 +440,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
 ) {
   const {
     material = "plain",
+    glowCategories,
     emphasisKey,
     categoryKey,
     interactionBinding,
@@ -507,6 +516,23 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     interactionBinding && interaction.interactive && interaction.markActivation
       ? activate
       : props.onClick;
+  if (glowCategories !== undefined && categoryKey === undefined)
+    throw new Error("glowCategories requires categoryKey and explicit series data");
+  // Native sector indices align with explicit data, but membership uses the original
+  // row identity, before native Cell props can override payload fields.
+  const glowRows = useMemo(() => {
+    if (categoryKey === undefined || glowCategories === undefined) return undefined;
+    const glowing = new Set(glowCategories);
+    return data?.map((row) => {
+      const key =
+        typeof categoryKey === "function"
+          ? categoryKey(row)
+          : row !== null && typeof row === "object" && Object.hasOwn(row, categoryKey)
+            ? row[categoryKey]
+            : undefined;
+      return typeof key === "string" && glowing.has(key);
+    });
+  }, [data, categoryKey, glowCategories]);
   const seriesId = useId();
   const { invalidate, emphasisScope } = useLineInteraction();
   const scope = `${emphasisScope}/${seriesId}`;
@@ -514,7 +540,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     (sector: SectorPaintProps) => (
       <EntranceSector
         {...sector}
-        material={material}
+        material={sector.index !== undefined && glowRows?.[sector.index] ? "glow" : material}
         interactionKey={interactionKey}
         scope={scope}
         emphasisKey={emphasisKey}
@@ -525,6 +551,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     ),
     [
       material,
+      glowRows,
       scope,
       emphasisKey,
       interactionKey,
@@ -552,6 +579,8 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     props.activeShape,
     props.inactiveShape,
     material,
+    categoryKey,
+    glowCategories,
   ];
   const cells = cellProps(props.children);
   const previousCells = useRef(cells);
@@ -566,7 +595,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     previous.current = inputs;
   });
   return (
-    <Pie<DataPoint, Value>
+    <StablePie<DataPoint, Value>
       {...nativeProps}
       {...(data !== undefined ? { data } : {})}
       {...(onClick !== undefined ? { onClick } : {})}
@@ -581,6 +610,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
       isAnimationActive={false}
     >
       {boundChildren}
-    </Pie>
+    </StablePie>
   );
 }
+registerPiePinComponent(PieSeries, "series");

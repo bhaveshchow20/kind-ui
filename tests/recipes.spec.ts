@@ -7,7 +7,7 @@ test("line recipes preserve missing and zero data, independent state and narrow 
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/recipes.html");
-  await expect(page.getByRole("application")).toHaveCount(8);
+  await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(8);
   await page.screenshot({ path: info.outputPath("recipes-monochrome.png"), fullPage: true });
   const comparison = page.getByRole("region", { name: "Week over week" });
   await comparison.getByText("View data", { exact: true }).click();
@@ -29,7 +29,8 @@ test("line recipes preserve missing and zero data, independent state and narrow 
     page.keyboard.press("Space"),
   );
   await expect(previous).toBeFocused();
-  await expect(page.getByRole("application")).toHaveCount(8);
+  await expect(comparison.getByRole("status")).toHaveText("Select a series to show it.");
+  await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(8);
   await expect(comparison.getByRole("row", { name: "Thu 0 tasks 16 tasks" })).toBeVisible();
   await comparison.getByRole("button", { name: "This week" }).click();
   await page.getByRole("button", { name: "Color", exact: true }).click();
@@ -38,10 +39,10 @@ test("line recipes preserve missing and zero data, independent state and narrow 
   await expect(page.locator("main")).toHaveCSS("--chart-1", "#7c3aed");
   await page.screenshot({ path: info.outputPath("recipes-mobile-color.png"), fullPage: true });
   await page.getByLabel("Empty data").check();
-  await expect(page.getByRole("application")).toHaveCount(0);
-  await expect(page.getByRole("status")).toHaveCount(8);
+  await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(0);
+  await expect(page.locator(".recipe-stack").getByRole("status")).toHaveCount(8);
   await page.getByLabel("Empty data").uncheck();
-  await expect(page.getByRole("application")).toHaveCount(8);
+  await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(8);
   expect(errors).toEqual([]);
 });
 
@@ -53,7 +54,7 @@ test("optional motion respects changing preferences and survives interrupted int
   await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await expect(page.locator("main")).toHaveAttribute("data-motion", "on");
-  const clips = page.locator("clipPath[id$='-reveal'] rect");
+  const clips = page.locator(".recipe-stack clipPath[id$='-reveal'] rect");
   await expect(clips).toHaveCount(8);
   await expect
     .poll(async () => Number.parseFloat((await clips.first().getAttribute("width")) ?? "NaN"))
@@ -61,9 +62,12 @@ test("optional motion respects changing preferences and survives interrupted int
   await expect
     .poll(async () => Number.parseFloat((await clips.first().getAttribute("width")) ?? "NaN"))
     .toBe(100);
-  await expect(page.locator(".recharts-line").first()).not.toHaveCSS("clip-path", "none");
+  await expect(page.locator(".recipe-stack .recharts-line").first()).not.toHaveCSS(
+    "clip-path",
+    "none",
+  );
   await page.getByRole("application", { name: "Smooth daily completions", exact: true }).focus();
-  await expect(page.locator(".recharts-line").first()).toHaveCSS("clip-path", "none");
+  await expect(page.locator(".recipe-stack .recharts-line").first()).toHaveCSS("clip-path", "none");
 
   for (let index = 0; index < 3; index++) {
     await page.getByLabel("Empty data").check();
@@ -72,17 +76,17 @@ test("optional motion respects changing preferences and survives interrupted int
   }
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
-  await expect(page.getByRole("application")).toHaveCount(8);
-  await expect(page.locator(".recharts-line-curve")).toHaveCount(8);
+  await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(8);
+  await expect(page.locator(".recipe-stack .recharts-line-curve")).toHaveCount(8);
   await expect(clips).toHaveCount(0);
-  for (const line of await page.locator(".recharts-line").all())
+  for (const line of await page.locator(".recipe-stack .recharts-line").all())
     await expect(line).toHaveCSS("clip-path", "none");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await expect(clips).toHaveCount(7);
 
   await page.getByLabel("Motion", { exact: true }).uncheck();
   await expect(clips).toHaveCount(0);
-  await expect(page.locator(".recharts-line").first()).toHaveCSS("clip-path", "none");
+  await expect(page.locator(".recipe-stack .recharts-line").first()).toHaveCSS("clip-path", "none");
   await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
 });
 
@@ -121,13 +125,13 @@ test("Motion advances one shared clip per chart and completes without engine int
   await page.goto("/recipes.html");
   await page.getByLabel("Motion", { exact: true }).check();
   await page.clock.runFor(100);
-  const clip = page.locator("clipPath[id$='-reveal'] rect").first();
+  const clip = page.locator(".recipe-stack clipPath[id$='-reveal'] rect").first();
   const progress = Number.parseFloat((await clip.getAttribute("width")) ?? "NaN");
   expect(progress).toBeGreaterThan(0);
   expect(progress).toBeLessThan(100);
   await page.clock.runFor(1000);
   await expect(clip).toHaveAttribute("width", "100%");
-  await expect(page.locator("clipPath[id$='-reveal']")).toHaveCount(8);
+  await expect(page.locator(".recipe-stack clipPath[id$='-reveal']")).toHaveCount(8);
   const comparison = page.getByRole("region", { name: "Week over week" });
   const paths = await comparison
     .locator(".recharts-line")
@@ -301,12 +305,12 @@ test("existing line recipes expose materials alongside palette, motion and visib
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/recipes.html");
   const controls = page.getByRole("group", { name: "Line material", exact: true });
-  const curves = page.locator(".recharts-line-curve");
-  const filters = page.locator("filter");
+  const curves = page.locator(".recipe-stack .recharts-line-curve");
+  const filters = page.locator(".recipe-stack filter");
   await expect(curves).toHaveCount(9);
   const geometry = await curves.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
   const markerWidths = await page
-    .locator(".recharts-line-dot")
+    .locator(".recipe-stack .recharts-line-dot")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("stroke-width")));
   await expect(controls.getByRole("button", { name: "Plain", exact: true })).toHaveAttribute(
     "aria-pressed",
@@ -322,14 +326,14 @@ test("existing line recipes expose materials alongside palette, motion and visib
       .click();
     await expect(page.locator("main")).toHaveAttribute("data-material", material);
     await expect(
-      page.locator(`[data-kind-ui="line-material"][data-material="${material}"]`),
+      page.locator(`.recipe-stack [data-kind-ui="line-material"][data-material="${material}"]`),
     ).toHaveCount(9);
     expect(
       await curves.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
     ).toEqual(geometry);
     expect(
       await page
-        .locator(".recharts-line-dot")
+        .locator(".recipe-stack .recharts-line-dot")
         .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("stroke-width"))),
     ).toEqual(markerWidths);
     await expect(curves.first()).toHaveAttribute(
@@ -387,26 +391,29 @@ test("existing line recipes expose materials alongside palette, motion and visib
   await page.getByLabel("Empty data", { exact: true }).uncheck();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await expect(page.locator("main")).toHaveAttribute("data-motion", "on");
-  await expect(page.locator('clipPath[id$="-reveal"] rect')).toHaveCount(8);
+  await expect(page.locator('.recipe-stack clipPath[id$="-reveal"] rect')).toHaveCount(8);
   await controls.getByRole("button", { name: "Clay", exact: true }).click();
   await expect(filters).toHaveCount(9);
   await expect
     .poll(async () =>
       Number.parseFloat(
-        (await page.locator('clipPath[id$="-reveal"] rect').first().getAttribute("width")) ?? "NaN",
+        (await page
+          .locator('.recipe-stack clipPath[id$="-reveal"] rect')
+          .first()
+          .getAttribute("width")) ?? "NaN",
       ),
     )
     .toBe(100);
   await page.screenshot({ path: info.outputPath("recipes-clay-motion.png"), fullPage: true });
   await page.getByLabel("Motion", { exact: true }).uncheck();
-  await expect(page.locator('clipPath[id$="-reveal"]')).toHaveCount(0);
+  await expect(page.locator('.recipe-stack clipPath[id$="-reveal"]')).toHaveCount(0);
   await controls.getByRole("button", { name: "Plain", exact: true }).click();
   await expect(filters).toHaveCount(0);
   await page.getByLabel("Empty data", { exact: true }).check();
-  await expect(page.getByRole("application")).toHaveCount(0);
+  await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(0);
   await expect(filters).toHaveCount(0);
   await page.getByLabel("Empty data", { exact: true }).uncheck();
-  await expect(page.getByRole("application")).toHaveCount(8);
+  await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(8);
   expect(errors).toEqual([]);
 });
 
@@ -476,4 +483,27 @@ test("content-sized tooltip bounds use chart units inside a scaled host", async 
       );
     })
     .toBe(true);
+});
+
+test("point marker gallery keeps theme, keyboard inspection and data alternative in Line recipes", async ({
+  page,
+}) => {
+  await page.goto("/recipes.html#point-markers");
+  const gallery = page.getByRole("region", { name: "Point markers", exact: true });
+  await expect(gallery.getByRole("application")).toHaveCount(3);
+  await expect(gallery.getByRole("table")).toHaveAccessibleName("Monthly totals");
+  await expect(gallery.getByRole("row", { name: "Feb 9", exact: true })).toBeVisible();
+  const theme = gallery.getByRole("button", { name: "Toggle theme" });
+  await expect(theme).toHaveAttribute("aria-pressed", "false");
+  await theme.click();
+  await expect(theme).toHaveAttribute("aria-pressed", "true");
+  await expect(gallery).toHaveCSS("--kind-ui-chart-marker-surface", "#172033");
+  const chart = gallery.getByRole("application", { name: "border markers", exact: true });
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(gallery.getByRole("status")).toContainText("Total");
+  await page.getByLabel("Empty data", { exact: true }).check();
+  await expect(gallery.getByRole("application")).toHaveCount(3);
+  await page.setViewportSize({ width: 320, height: 800 });
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });

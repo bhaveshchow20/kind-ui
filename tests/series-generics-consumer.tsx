@@ -27,6 +27,10 @@ const barProps: Chart.BarSeriesProps<Row, number> = {
   dataKey: "value",
   seriesKey: "value",
   material: "clay",
+  projection: {
+    isProjected: (row) => row.id === "a",
+    pattern: { kind: "hatch" },
+  },
   radius: [3, 3, 0, 0],
   stackId: "stack",
   xAxisId: "category",
@@ -179,3 +183,10 @@ void (<Chart.RadarChart selectedSeries="value" selection="series" />);
 void (<Chart.RadarChart selectedSeries={1} onSelectedSeriesChange={() => {}} />);
 // @ts-expect-error No implicit spoke selection or universal emphasis mode is exposed.
 void (<Chart.RadarChart selection="category" />);
+
+const invalidProjection: Chart.BarProjection<Row> = {
+  // @ts-expect-error selection returns a boolean, not a forecast value
+  isProjected: (row) => row.value,
+  pattern: { kind: "dots" },
+};
+void invalidProjection;

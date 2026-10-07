@@ -81,12 +81,14 @@ export function Allocation({
         }}
       >
         <Chart.PieChart
+          defaultPinnedCategory={donut ? undefined : "delivery"}
           responsive
           style={{ width: "100%", height: 260 }}
           animate={animate}
           aria-label={donut ? "Team capacity donut" : "Weekly hours pie"}
         >
           <Chart.PieSeries
+            categoryKey="id"
             material={material}
             data={data}
             dataKey="hours"

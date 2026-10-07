@@ -38,6 +38,7 @@
   }
 
   :where([data-kind-ui="chart"]) {
+    --kind-ui-styles-loaded: 1;
     width: 100%;
     min-width: 0;
   }
@@ -471,5 +472,122 @@
     :where([data-kind-ui="fill-pattern"] > path) {
       stroke: CanvasText;
     }
+  }
+
+  [data-kind-ui="heatmap-scroll"][data-loading] {
+    position: relative;
+  }
+  [data-kind-ui="heatmap-scroll"][data-loading] > table {
+    visibility: hidden;
+  }
+  [data-kind-ui="heatmap-scroll"] > [data-kind-ui="chart-loading-skeleton"],
+  [data-kind-ui="sankey"] > [data-kind-ui="chart-loading-skeleton"] {
+    position: absolute;
+    inset: 0;
+  }
+  [data-kind-ui="sankey-content"][data-loading] > * {
+    visibility: hidden;
+  }
+  :where(.kind-ui-loading-chart-pending) .recharts-tooltip-wrapper {
+    display: none;
+  }
+  :where(.kind-ui-loading-chart-pending > *) {
+    visibility: hidden;
+  }
+  :where(.kind-ui-loading-chart-pending .recharts-layer) {
+    visibility: hidden;
+  }
+  :where([data-kind-ui="chart-loading-skeleton"]) {
+    visibility: visible;
+    color: var(--kind-ui-chart-loading-color, #8b969b);
+    pointer-events: none;
+  }
+  :where([data-kind-ui="chart-loading-skeleton"]) {
+    animation: kind-ui-loading-pulse var(--kind-ui-loading-cycle, 1770ms) linear infinite;
+  }
+  :where([data-kind-ui="chart-loading-skeleton"] svg) {
+    overflow: visible;
+  }
+  :where([data-kind-ui="chart-loading-status"]) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  @keyframes kind-ui-loading-pulse {
+    0%,
+    12%,
+    94%,
+    100% {
+      opacity: 0;
+    }
+    14%,
+    90% {
+      opacity: 1;
+    }
+  }
+  :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion="grow"]) {
+    mask: var(--kind-ui-loading-vertical);
+  }
+  :where(
+      [data-family="bar"],
+      [data-family="waterfall"],
+      [data-family="histogram"],
+      [data-family="box-plot"]
+    )
+    [data-loading-motion="grow"] {
+    mask: none;
+  }
+  :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion="reveal"]) {
+    mask: var(--kind-ui-loading-horizontal);
+  }
+  :where([data-kind-ui="chart-loading-skeleton"] [data-loading-motion="area-reveal"]) {
+    mask: var(--kind-ui-loading-area);
+  }
+  :where([data-family="combo"][data-loading-layout="vertical"] [data-loading-motion="grow"]) {
+    transform: matrix(0, 0.375, -2.6666667, 0, 640, 0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-kind-ui="chart-loading-skeleton"]) {
+      animation: none;
+    }
+  }
+}
+
+/* Only the default stroke moves; dots and chart entrance clips are independent. */
+@layer kind-ui {
+  :where(.kind-ui-line-dash .recharts-line-curve) {
+    animation: kind-ui-line-dash var(--kind-ui-dash-duration) linear infinite;
+    animation-direction: var(--kind-ui-dash-direction);
+  }
+  :where([data-motion="off"] .kind-ui-line-dash .recharts-line-curve),
+  :where(.kind-ui-loading-chart-pending .kind-ui-line-dash .recharts-line-curve) {
+    animation: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :where(.kind-ui-line-dash .recharts-line-curve) {
+      animation: none;
+    }
+  }
+  @keyframes kind-ui-line-dash {
+    from {
+      stroke-dashoffset: var(--kind-ui-dash-offset);
+    }
+    to {
+      stroke-dashoffset: calc(var(--kind-ui-dash-offset) - var(--kind-ui-dash-cycle));
+    }
+  }
+}
+
+@layer kind-ui {
+  [data-kind-ui="chart-background-pattern"],
+  [data-kind-ui="chart-background-pattern"] * {
+    /* biome-ignore lint/complexity/noImportantStyles: Decorative custom tiles must not intercept chart pointers. */
+    pointer-events: none !important;
   }
 }
