@@ -356,15 +356,15 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   props: PieSeriesProps<DataPoint, Value>,
 ) {
   const { material = "plain", glowCategories, emphasisKey, categoryKey, ...nativeProps } = props;
-  const { config } = useChart();
+  const { config, paints } = useChart();
   if (glowCategories !== undefined && categoryKey === undefined)
     throw new Error("glowCategories requires categoryKey and explicit series data");
   const children = useMemo(
     () =>
       categoryKey === undefined
         ? props.children
-        : categoryCells(props.data, categoryKey, config, props.children, props.fill),
-    [props.data, categoryKey, config, props.children, props.fill],
+        : categoryCells(props.data, categoryKey, config, paints, props.children, props.fill),
+    [props.data, categoryKey, config, paints, props.children, props.fill],
   );
   // Native sector indices align with explicit data, but membership uses the original
   // row identity, before native Cell props can override payload fields.

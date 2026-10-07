@@ -70,7 +70,7 @@ export function ScatterSeries({
   material = "plain",
   ...props
 }: ScatterSeriesProps) {
-  const { config, visibleSeries } = useChart();
+  const { config, paints, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const shapes = useMemo(() => {
     function finish(option: ScatterSeriesProps["shape"]) {
@@ -131,7 +131,7 @@ export function ScatterSeries({
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("ScatterSeries requires seriesKey for controlled non-string dataKey");
-  const color = fill ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
+  const color = fill ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.scatter}>
       <g data-kind-ui="scatter-fade">

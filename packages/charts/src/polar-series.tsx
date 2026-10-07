@@ -44,7 +44,7 @@ function usePolarSeries(
   },
   geometry: readonly unknown[],
 ) {
-  const { config, visibleSeries } = useChart();
+  const { config, paints, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const { reveal, options } = use(PolarMotion);
   const generatedId = useId();
@@ -82,7 +82,7 @@ function usePolarSeries(
   }, [reveal, hide, opacity, duration, easing]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error(`${kind} requires seriesKey for controlled non-string dataKey`);
-  const color = key !== undefined && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined;
+  const color = key !== undefined && Object.hasOwn(config, key) ? paints[key] : undefined;
   return { id, hide, color, opacity };
 }
 
@@ -309,9 +309,9 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
   ...props
 }: RadialBarSeriesProps<DataPoint, Value>) {
   const categories = use(RadialCategory);
-  const { config } = useChart();
+  const { config, paints } = useChart();
   const children = categories
-    ? categoryCells(categories.data, categories.key, config, props.children, fill)
+    ? categoryCells(categories.data, categories.key, config, paints, props.children, fill)
     : props.children;
   const series = usePolarSeries("RadialBarSeries", { ...props, seriesKey, hide }, [
     props.dataKey,

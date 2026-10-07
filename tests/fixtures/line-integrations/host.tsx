@@ -3,13 +3,14 @@ import {
   BarSeries,
   Legend,
   LineChart,
+  LineSeries,
   Root,
   type SeriesConfig,
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
 import { TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 export function IntegrationHost() {
   const config = {
     total: { label: "Total", color: "#4055ee", icon: TrendingUp },
@@ -63,6 +64,38 @@ export function PatternHydrationHost() {
             <BarSeries dataKey="second" />
             <BarSeries dataKey="third" />
           </BarChart>
+        </Root>
+      ))}
+    </section>
+  );
+}
+
+// Root gradient resources are emitted by the real Next server before hydration.
+export function ColorHydrationHost() {
+  const [dark, setDark] = useState(false);
+  return (
+    <section
+      data-color-hydration=""
+      style={{ colorScheme: dark ? "dark" : "light", "--brand": "red" } as CSSProperties}
+    >
+      <button type="button" onClick={() => setDark(!dark)}>
+        Color theme
+      </button>
+      {[0, 1].map((chart) => (
+        <Root
+          key={chart}
+          config={{
+            value: {
+              color: { light: ["var(--brand)", "blue"], dark: ["white", "gray", "black"] },
+            },
+          }}
+        >
+          <Legend />
+          <LineChart width={320} height={180} data={[{ value: 8 }, { value: 8 }]}>
+            <XAxis />
+            <YAxis />
+            <LineSeries dataKey="value" dot={false} />
+          </LineChart>
         </Root>
       ))}
     </section>

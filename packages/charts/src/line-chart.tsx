@@ -30,6 +30,7 @@ import {
   type LoadingFamily,
   useLoadingSeed,
 } from "./loading-skeleton.js";
+import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
 
 export type LineChartProps = ComponentProps<typeof EngineLineChart> & {
   loading?: boolean | undefined;
@@ -220,6 +221,7 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         onMouseLeave?.(state, event);
       }}
     >
+      <SeriesColorDefinitions viewport />
       <Lifecycle data={props.data} invalidate={invalidate} />
       {children}
       {loading && loadingSkeleton && (
@@ -284,7 +286,7 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
           }
         }}
       >
-        {chart}
+        <SeriesPaintBoundary>{chart}</SeriesPaintBoundary>
       </div>
       {loading !== undefined && (
         <span data-kind-ui="chart-loading-status" role="status" aria-atomic="true">

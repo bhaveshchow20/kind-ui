@@ -56,4 +56,12 @@ test("bar pattern fixture wiring stays inside the public host import guard", () 
   }
 });
 
+test("theme color fixture wiring stays inside the public host import guard", () => {
+  for (const file of ["main.tsx", "host.tsx"]) {
+    assertCompositionConsumerSource(
+      readFileSync(new URL(`../tests/fixtures/identity-colors/${file}`, import.meta.url), "utf8"),
+    );
+  }
+});
+
 import "./line-dash-source.test.mjs";

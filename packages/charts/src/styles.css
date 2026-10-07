@@ -86,7 +86,10 @@
     flex-shrink: 0;
     width: 8px;
     height: 8px;
-    background: var(--kind-ui-chart-indicator-color, currentColor);
+    background: var(
+      --kind-ui-chart-indicator-background,
+      var(--kind-ui-chart-indicator-color, currentColor)
+    );
   }
 
   :where(

@@ -128,7 +128,7 @@ try {
   );
   await writeFile(
     join(scratch, "app/page.tsx"),
-    `import { LineChart } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} xDataKey="month" aria-label="Server boundary totals" /><IntegrationHost /><PatternHydrationHost /></main>}`,
+    `import { LineChart } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} xDataKey="month" aria-label="Server boundary totals" /><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /></main>}`,
   );
   await writeFile(
     join(scratch, "next.config.mjs"),
