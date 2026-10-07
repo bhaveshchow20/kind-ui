@@ -19,10 +19,11 @@ function updateTheme(update: () => void, superseded: () => boolean) {
   const width = innerWidth;
   const height = innerHeight;
   let resizeCancelled = false;
+  let readyRejected = false;
   let transition: ViewTransition | undefined;
   const viewportChanged = () => width !== innerWidth || height !== innerHeight;
   const cancelForResize = () => {
-    if (resizeCancelled || !viewportChanged()) return;
+    if (resizeCancelled || readyRejected || !viewportChanged()) return;
     resizeCancelled = true;
     transition?.skipTransition();
   };
@@ -31,16 +32,14 @@ function updateTheme(update: () => void, superseded: () => boolean) {
   const ownTransition = transition;
   // Some browsers defer resize events until after snapshot rejection. Check dimensions
   // after the callback too; skipping the visual transition still applies the theme.
-  void ownTransition.updateCallbackDone.then(cancelForResize, reportFailure);
-  const cleanup = () => window.removeEventListener("resize", cancelForResize);
-  void ownTransition.finished.then(cleanup, cleanup);
+  // Observe rejection first so a later resize cannot relabel an existing snapshot failure.
   void ownTransition.ready.catch(async (error: unknown) => {
+    readyRejected = true;
     try {
       await ownTransition.updateCallbackDone;
     } catch {
       return; // The callback failure was reported by updateCallbackDone.
     }
-    cancelForResize();
     if (
       error instanceof DOMException &&
       ((error.name === "AbortError" && (resizeCancelled || superseded())) ||
@@ -50,6 +49,9 @@ function updateTheme(update: () => void, superseded: () => boolean) {
     }
     reportFailure(error);
   });
+  void ownTransition.updateCallbackDone.then(cancelForResize, reportFailure);
+  const cleanup = () => window.removeEventListener("resize", cancelForResize);
+  void ownTransition.finished.then(cleanup, cleanup);
 }
 
 /** Own theme transition promises while preserving the native Glass toggle's controls and styling. */
