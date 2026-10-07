@@ -11,11 +11,11 @@ mkdirSync("artifacts/radial", { recursive: true });
 const bundles = JSON.parse(readFileSync("generated/radial-examples.json", "utf8"));
 const url = "http://127.0.0.1:6373/docs/components/radial/";
 try {
-  for (const width of [1440, 375, 320]) {
+  for (const width of [320, 375, 390, 430, 768, 1440]) {
     const context = await browser.newContext({
       viewport: { width, height: 1080 },
       reducedMotion: "reduce",
-      hasTouch: width < 400,
+      hasTouch: width <= 430,
       permissions: ["clipboard-read", "clipboard-write"],
     });
     const page = await context.newPage();
@@ -27,6 +27,14 @@ try {
     assert.equal(await rings.locator(".recharts-radial-bar-sector").count(), 3);
     assert.equal(await rings.locator('[data-kind-ui="radial-entrance-window"]').count(), 0);
     assert.equal(await rings.locator("table tbody tr").count(), 3);
+    assert.equal(await rings.locator('[data-kind-ui="radial-label"]').count(), 0);
+    await expect(rings.locator(".recharts-surface")).toHaveAttribute(
+      "aria-label",
+      "Project completion: Design 92%, Build 76%, Review 58%",
+    );
+    const labels = rings.getByRole("combobox", { name: "Labels", exact: true });
+    await labels.click();
+    await page.getByRole("option", { name: "Visible", exact: true }).click();
     for (const label of ["Design", "Build", "Review"])
       await rings
         .locator('[data-kind-ui="radial-label"]')
@@ -36,6 +44,21 @@ try {
       await rings.locator('[data-kind-ui="radial-label"]').first().getAttribute("fill"),
       "white",
     );
+    await rings.getByRole("tab", { name: "Code", exact: true }).click();
+    assert.equal(
+      (await rings.locator(".line-code-block pre").textContent()).trim(),
+      bundles.radial.variants.visible.source.trim(),
+    );
+    await rings.getByRole("button", { name: "Copy prompt" }).click();
+    assert.ok(
+      (await page.evaluate(() => navigator.clipboard.readText())).includes(
+        "/variants/visible/example.tsx",
+      ),
+    );
+    await rings.getByRole("tab", { name: "Preview", exact: true }).click();
+    await labels.click();
+    await page.getByRole("option", { name: "Hidden", exact: true }).click();
+    assert.equal(await rings.locator('[data-kind-ui="radial-label"]').count(), 0);
     assert.ok(
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       `Overflow at ${width}`,
@@ -43,10 +66,21 @@ try {
     await page.screenshot({ path: `artifacts/radial/${width}-preview.png` });
     const gauge = page.locator('[data-component="radial-gauge"]');
     await gauge.scrollIntoViewIfNeeded();
-    await gauge
-      .locator(".recharts-surface")
-      .getByText("72 GB", { exact: true })
-      .waitFor({ state: "visible" });
+    const summary = gauge.locator(".recharts-surface").getByText("72 GB", { exact: true });
+    const gaugeLabels = gauge.getByRole("checkbox", { name: "Labels", exact: true });
+    await expect(gaugeLabels).not.toBeChecked();
+    await expect(summary).toHaveCount(0);
+    await expect(gauge.locator(".recharts-surface")).toHaveAttribute(
+      "aria-label",
+      "Storage capacity: 72 of 100 GB used, 28 GB available",
+    );
+    await expect(gauge.locator("table tbody")).toContainText("72");
+    await gaugeLabels.focus();
+    await page.keyboard.press("Space");
+    await expect(gaugeLabels).toBeChecked();
+    await expect(summary).toBeVisible();
+    await page.keyboard.press("Space");
+    await expect(summary).toHaveCount(0);
     const before = await gauge.locator(".recharts-radial-bar-sector").getAttribute("d");
     const direction = gauge.getByRole("combobox", { name: "Entrance direction" });
     await direction.focus();
@@ -66,6 +100,13 @@ try {
     assert.ok(prompt.includes("/variants/anticlockwise/example.tsx"));
     await gauge.getByRole("tab", { name: "Preview", exact: true }).click();
     await page.screenshot({ path: `artifacts/radial/${width}-gauge.png` });
+    const activity = page.locator('[data-component="radial-activity"]');
+    await activity.scrollIntoViewIfNeeded();
+    await activity.locator(".recharts-radial-bar-sector").first().waitFor();
+    assert.equal(await activity.locator('[data-kind-ui="radial-label"]').count(), 0);
+    assert.equal(await activity.locator("table tbody tr").count(), 3);
+    for (const value of ["350 kcal", "30 min", "9 hours"])
+      await expect(activity.locator('[data-kind-ui="chart-instructions"]')).toContainText(value);
     const stack = page.locator('[data-component="radial-stacked"]');
     await stack.scrollIntoViewIfNeeded();
     const button = stack.getByRole("button", { name: "Committed", exact: true });
@@ -78,8 +119,11 @@ try {
     evidence.viewports.push({
       width,
       rings: 3,
-      labels: 3,
-      gaugeSummary: true,
+      defaultLabels: 0,
+      optInLabels: 3,
+      gaugeSummaryDefault: false,
+      gaugeSummaryOptIn: true,
+      activityDefaultLabels: 0,
       sourceCopyParity: true,
       reducedMotion: true,
     });
@@ -91,7 +135,7 @@ try {
       await target.scrollIntoViewIfNeeded();
       const box = await target.boundingBox();
       const start = await page.evaluate(() => scrollY);
-      if (width < 400) {
+      if (width <= 430) {
         const cdp = await context.newCDPSession(page);
         await swipeUp(cdp, {
           x: box.x + box.width / 2,

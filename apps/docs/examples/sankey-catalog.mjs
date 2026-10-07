@@ -16,7 +16,7 @@ export const sankeyExamples = [
   {
     id: "sankey-finishes",
     title: "Flow finishes",
-    notes: "Plain, paper, clay and glow on native gradient flow geometry.",
+    notes: "Default, Clay and Glow on native gradient flow geometry.",
     acceptance: "Selected finish matches the preview, complete source and copied prompt.",
   },
 ];
@@ -156,10 +156,9 @@ export const sankeyVariants = {
   "sankey-finishes": {
     control: "Finish",
     prop: "finish",
-    default: "paper",
+    default: "plain",
     options: [
-      { value: "paper", label: "Paper" },
-      { value: "plain", label: "Plain" },
+      { value: "plain", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

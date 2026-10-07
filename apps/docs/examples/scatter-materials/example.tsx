@@ -14,7 +14,7 @@ const config = {
   tasks: { label: "Tasks", color: "#733bff", legendShape: "circle" },
 } satisfies Chart.SeriesConfig;
 
-export function MaterialBubbleChart({ material = "paper" }: { material?: Chart.ScatterMaterial }) {
+export function MaterialBubbleChart({ material = "plain" }: { material?: Chart.ScatterMaterial }) {
   return (
     <Chart.Root config={config}>
       <Chart.Legend />
@@ -50,7 +50,7 @@ export function MaterialBubbleChart({ material = "paper" }: { material?: Chart.S
             axisLine={false}
             tickLine={false}
             tickMargin={10}
-            width={104}
+            width={80}
           />
           <Chart.ZAxis
             dataKey="requests"

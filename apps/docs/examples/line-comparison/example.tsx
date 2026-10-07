@@ -28,9 +28,9 @@ export function RevenueComparisonChart() {
       config={config}
       xDataKey="period"
       xAxis={{ tickMargin: 12, height: 48, interval: "preserveStartEnd" }}
-      margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
+      margin={{ top: 20, right: 12, bottom: 8, left: 0 }}
       aria-label="Revenue and target in thousands of dollars"
-      yAxis={{ tickMargin: 12, width: 104, tickFormatter: (value) => `$${value}k` }}
+      yAxis={{ tickMargin: 12, width: 88, tickFormatter: (value) => `$${value}k` }}
       series={[
         { seriesKey: "actual", dataKey: "actual" },
         { seriesKey: "target", dataKey: "target", type: "linear", strokeDasharray: "5 5" },

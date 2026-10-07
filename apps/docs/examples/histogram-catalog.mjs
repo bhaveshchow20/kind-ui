@@ -8,7 +8,7 @@ export const histogramExamples = [
   {
     id: "histogram-materials",
     title: "Materials",
-    notes: "Plain, paper, clay and glow on quantitative histogram rectangles.",
+    notes: "Default, Clay and Glow on quantitative histogram rectangles.",
     acceptance: "Selected material matches preview, complete source and copy.",
   },
 ];
@@ -48,10 +48,9 @@ export const histogramVariants = {
   "histogram-materials": {
     control: "Material",
     prop: "material",
-    default: "paper",
+    default: "plain",
     options: [
-      { value: "paper", label: "Paper" },
-      { value: "plain", label: "Plain" },
+      { value: "plain", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

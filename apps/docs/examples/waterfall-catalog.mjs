@@ -19,7 +19,7 @@ export const family = {
     {
       id: "waterfall-materials",
       title: "Materials",
-      notes: "Paper, plain, clay and glow on the same floating rectangles.",
+      notes: "Default, Clay and Glow on the same floating rectangles.",
       acceptance:
         "Ordered signed changes, checkpoints, semantic tooltips and accessible rows agree with the complete public consumer.",
     },
@@ -234,15 +234,11 @@ export const family = {
     "waterfall-materials": {
       control: "Material",
       prop: "material",
-      default: "paper",
+      default: "plain",
       options: [
         {
-          value: "paper",
-          label: "Paper",
-        },
-        {
           value: "plain",
-          label: "Plain",
+          label: "Default",
         },
         {
           value: "clay",

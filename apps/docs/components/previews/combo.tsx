@@ -22,7 +22,16 @@ const Motion = dynamic(
   () => import("@/examples/combo-motion/example").then((m) => memo(m.ProductionMotionChart)),
   { loading: Loading, ssr: false },
 );
+const Presentation = dynamic(
+  () => import("@/examples/combo-presentation/example").then((m) => memo(m.PresentationOptions)),
+  { loading: Loading, ssr: false },
+);
+
 export const previews = {
+  "combo-presentation": ({ variant }: PreviewProps) => (
+    <Presentation status={variant as "ready" | "loading"} />
+  ),
+
   combo: Production,
   "combo-stacked": Revenue,
   "combo-motion": ({ variant }: PreviewProps) => (

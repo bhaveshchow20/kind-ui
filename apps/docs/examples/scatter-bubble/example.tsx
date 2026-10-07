@@ -50,7 +50,7 @@ export function TaskBubbleChart() {
             axisLine={false}
             tickLine={false}
             tickMargin={10}
-            width={104}
+            width={80}
           />
           <Chart.ZAxis
             dataKey="requests"

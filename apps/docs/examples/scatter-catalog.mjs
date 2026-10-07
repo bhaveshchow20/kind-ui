@@ -52,10 +52,9 @@ export const scatterVariants = {
   "scatter-materials": {
     control: "Material",
     prop: "material",
-    default: "paper",
+    default: "plain",
     options: [
-      { value: "paper", label: "Paper" },
-      { value: "plain", label: "Plain" },
+      { value: "plain", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

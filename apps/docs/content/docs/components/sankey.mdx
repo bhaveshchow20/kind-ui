@@ -37,7 +37,7 @@ Intermediate inflow must equal outflow. Model losses/gains as explicit boundary 
 
 ## Flow finishes
 
-Choose plain, paper, clay or glow with `finish`; `material="gradient"` resolves source and target colors from the same `nodeConfig`. Explicit `color` and `targetColor` remain overrides. Labels remain consumer-owned outside the filters.
+Choose Default, Clay or Glow with `finish`; `material="gradient"` resolves source and target colors from the same `nodeConfig`. Explicit `color` and `targetColor` remain overrides. Labels remain consumer-owned outside the filters.
 
 <ChartExample id="sankey-finishes" />
 
@@ -84,7 +84,7 @@ Equal-value positive parallel links are rejected; distinct values are supported.
 | --- | --- | --- | --- |
 | Native renderer geometry and `payload` | `SankeyNodeProps` | Required | Spread the complete callback props; computed rectangle dimensions win. |
 | `color` | `string` | Config color; fallback `"#4f46e5"` | Explicit paint overrides metadata. |
-| `finish` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static surface filter; explicit filters take precedence. |
+| `finish` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static surface filter; explicit filters take precedence. |
 | `rectProps` | `SVGProps<SVGRectElement>` | — | Presentation, semantics and handlers on the original rectangle. |
 
 </div>
@@ -101,7 +101,7 @@ Supply node labels as sibling SVG text. Selection and legend state remain consum
 | `material` | `"solid" \| "gradient"` | `"solid"` | Single-color stroke or source-to-target gradient. |
 | `color` | `string` | Source config color; fallback `"#4f46e5"` | Explicit source paint override. |
 | `targetColor` | `string` | Target config color; fallback `"#06b6d4"` | Explicit destination override for gradient paint. |
-| `finish` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static treatment independent of material and flow width. |
+| `finish` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static treatment independent of material and flow width. |
 | `pathProps` | `SVGProps<SVGPathElement>` | — | Presentation, keyboard handlers and semantics on the original path; computed geometry wins. |
 
 </div>

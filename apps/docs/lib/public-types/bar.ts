@@ -12,7 +12,7 @@ export type BarChartComponent = Pick<
   | "accessibilityLayer"
 >;
 export type BarSeriesComponent = Pick<
-  Chart.BarSeriesProps,
+  Omit<Chart.BarSeriesProps, "material"> & { material?: "plain" | "clay" | "glow" },
   | "dataKey"
   | "seriesKey"
   | "stackId"

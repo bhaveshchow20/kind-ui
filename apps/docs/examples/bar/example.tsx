@@ -36,7 +36,7 @@ export function PickupOrdersChart() {
             interval="preserveStartEnd"
             minTickGap={32}
           />
-          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={10} width={80} />
+          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={10} width={72} />
           <Chart.BarSeries dataKey="orders" radius={[5, 5, 0, 0]} maxBarSize={48} />
           <Chart.Tooltip />
         </Chart.BarChart>

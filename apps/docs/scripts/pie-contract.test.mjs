@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import ts from "typescript";
+import { family } from "../examples/pie-catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/pie-examples.json", "utf8"));
@@ -49,7 +50,10 @@ function assertCategoryDefaults(source, rows) {
 }
 
 test("Pie consumers preserve category identity and public source parity", () => {
-  assert.deepEqual(Object.keys(bundles), ["pie", "pie-visibility", "pie-materials", "pie-rounded"]);
+  assert.deepEqual(
+    Object.keys(bundles),
+    family.examples.map(({ id }) => id),
+  );
   for (const bundle of Object.values(bundles)) {
     const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
     assert.equal(source, readFileSync(`examples/${bundle.id}/example.tsx`, "utf8"));
@@ -58,23 +62,33 @@ test("Pie consumers preserve category identity and public source parity", () => 
       readFileSync(`public/examples/${bundle.id}/src/examples/${bundle.id}/example.tsx`, "utf8"),
     );
     assert.match(source, /^"use client";/);
-    if (bundle.id !== "pie-materials") assertCategoryDefaults(source, bundle.dataAlternative.rows);
-    assert.match(source, /nameKey="key"/);
-    assert.match(source, /itemKey=\{\(entry\) => String\(entry.payload\?\.key \?\? entry.name\)\}/);
-    assert.equal(
-      bundle.dataAlternative.rows.reduce((sum, row) => sum + row.hours, 0),
-      1000,
-    );
+    if (bundle.id === "pie-interaction") {
+      assert.match(source, /categoryKey="id"/);
+      assert.match(source, /interactionBinding="root"/);
+      assert.equal(
+        bundle.dataAlternative.rows.reduce((sum, row) => sum + row.value, 0),
+        100,
+      );
+    } else {
+      if (bundle.id !== "pie-materials")
+        assertCategoryDefaults(source, bundle.dataAlternative.rows);
+      assert.match(source, /nameKey="key"/);
+      assert.match(
+        source,
+        /itemKey=\{\(entry\) => String\(entry.payload\?\.key \?\? entry.name\)\}/,
+      );
+      assert.equal(
+        bundle.dataAlternative.rows.reduce((sum, row) => sum + row.hours, 0),
+        1000,
+      );
+    }
     assert.ok(promptFor(bundle, {}, "https://docs.example").includes("/docs/components/pie/"));
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
         variant.source,
       );
-      assert.match(
-        variant.source,
-        new RegExp(`${bundle.variantControl.toLowerCase()} = "${value}"`),
-      );
+      assert.match(variant.source, new RegExp(`${family.variants[bundle.id].prop} = "${value}"`));
       assert.equal(
         variant.source,
         readFileSync(`public/examples/${bundle.id}/variants/${value}/example.tsx`, "utf8"),

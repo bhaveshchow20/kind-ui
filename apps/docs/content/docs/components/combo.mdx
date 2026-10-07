@@ -16,7 +16,7 @@ Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
     <Chart.ComboChart data={data} animate accessibilityLayer aria-label="Monthly production in units">
       <Chart.CartesianGrid vertical={false} />
       <Chart.XAxis dataKey="period" />
-      <Chart.YAxis domain={[0, 1200]} width={96} />
+      <Chart.YAxis domain={[0, 1200]} width={80} />
       <Chart.AreaSeries dataKey="capacity" type="stepAfter" fillOpacity={0.18} />
       <Chart.BarSeries dataKey="shipped" maxBarSize={32} />
       <Chart.LineSeries dataKey="target" type="linear" dot={false} strokeDasharray="6 4" />
@@ -28,7 +28,7 @@ Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
 
 Choose each series’ interpolation and paint explicitly. `ComboChart` uses native composed-chart props, without Line’s configured `series` or `xDataKey` shortcuts.
 
-These examples reserve numeric axis widths so labels remain present through Code/Preview changes and resizing. Choose widths that fit your units and text size; the stacked example reserves space for both revenue and percentage labels.
+Reserve only the width your tick labels need. These examples use compact numeric axes; the stacked example gives each axis its own formatter.
 
 ## Stacks and two axes
 
@@ -45,6 +45,12 @@ Choose independent, shared or line-only timing. Independent mode reveals bars ov
 <ChartExample id="combo-motion" />
 
 Line/Area reveal across the plot; Bar reveals from numeric zero clamped to its domain. Interaction or data/layout/visibility changes finish entrance; reduced motion disables Kind motion.
+
+## Loading and presentation
+
+Focus a series through its legend or marks. June has a projection pattern; the target has an icon, outlined points and moving dashes. Choose Loading to inspect the pending silhouette. See [customization](/docs/guides/customization/) for the 0.2.0 options.
+
+<ChartExample id="combo-presentation" />
 
 ## API reference
 
@@ -97,7 +103,7 @@ Pass to `ComboChart.animate`. Family options affect entrances only; hover transi
 | `maxBarSize` | `number` | — | Bound native bar thickness. |
 | `radius` | `number \| [number, number, number, number]` | `0` | Native corners; stack cap geometry remains consumer-owned. |
 | `fill` | `string` | Config color | Explicit paint override. |
-| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static bar finish; custom shape, filter or active renderer retains ownership. |
+| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static bar finish; custom shape, filter or active renderer retains ownership. |
 
 </div>
 
@@ -134,7 +140,7 @@ Line material choices apply to the line independently of Area and Bar. See [Rech
 | `stackId` | `string \| number` | — | Stack areas on matching axes. |
 | `fill` / `stroke` | `string` | Config color | Override fill and outline independently. |
 | `fillOpacity` | `number` | `0.6` in Recharts | Keep the filled context legible behind other marks. |
-| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static area finish; explicit shape or filter wins. |
+| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static area finish; explicit shape or filter wins. |
 
 </div>
 

@@ -13,7 +13,7 @@ const config = {
   Review: { label: "Review", color: "#b85c13", formatValue: (value: unknown) => `${value}%` },
 } satisfies Chart.SeriesConfig;
 
-export function ProjectProgressChart() {
+export function ProjectProgressChart({ labels = "hidden" }: { labels?: "hidden" | "visible" }) {
   return (
     <Chart.Root config={config}>
       <Chart.ResponsiveContainer width="100%" height={280}>
@@ -36,11 +36,13 @@ export function ProjectProgressChart() {
             background={{ fill: "#e9e5f1" }}
             cornerRadius={5}
           >
-            <Chart.LabelList
-              fill="white"
-              dataKey="label"
-              content={<Chart.RadialBarLabel fontSize={11} />}
-            />
+            {labels === "visible" && (
+              <Chart.LabelList
+                fill="white"
+                dataKey="label"
+                content={<Chart.RadialBarLabel fontSize={11} />}
+              />
+            )}
           </Chart.RadialBarSeries>
           <Chart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
         </Chart.RadialBarChart>

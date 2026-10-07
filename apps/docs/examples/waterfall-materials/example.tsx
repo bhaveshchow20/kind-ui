@@ -19,7 +19,7 @@ const config = {
   range: { label: "Cash balance", color: "#733bff" },
 } satisfies Chart.SeriesConfig;
 
-export function MaterialCashFlowChart({ material = "paper" }: { material?: Chart.BarMaterial }) {
+export function MaterialCashFlowChart({ material = "plain" }: { material?: Chart.BarMaterial }) {
   return (
     <Chart.Root config={config}>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12 }}>
@@ -65,7 +65,7 @@ export function MaterialCashFlowChart({ material = "paper" }: { material?: Chart
           <Chart.YAxis
             type="category"
             dataKey="id"
-            width={76}
+            width={64}
             axisLine={false}
             tickLine={false}
             tickFormatter={(id) => labels.get(String(id)) ?? String(id)}
