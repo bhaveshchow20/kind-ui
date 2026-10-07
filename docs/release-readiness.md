@@ -47,9 +47,10 @@ keyboard, accessibility attributes and reduced-motion tests.
 
 ## Retained artifact and publication evidence
 
-`npm run check` retains `artifacts/package/kind-ui-charts-0.1.1.tgz` and its
-`validated-artifact.json`. The receipt identifies source cleanliness, checksum,
-npm integrity, tool versions and consumer versions. GitHub runs additionally
+`npm run check` retains the validated tarball in `artifacts/package/` and its
+`artifacts/package/validated-artifact.json` receipt. Use the receipt’s `filename`
+field to identify the retained tarball. The receipt identifies source cleanliness,
+checksum, npm integrity, tool versions and consumer versions. GitHub runs additionally
 identify the run and attempt. The package receipt alone proves the package gate;
 record the aggregate result alongside it.
 
