@@ -38,6 +38,6 @@ export const previews = {
   "box-plot-horizontal": Horizontal,
   "box-plot-edge-cases": EdgeCases,
   "box-plot-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+    <Material material={variant as "plain" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

@@ -40,7 +40,7 @@ Use `layout="vertical"` for horizontal bars, with numeric X and categorical Y ax
 
 ## Materials
 
-Choose plain, paper, clay or glow. Set corner rounding with `radius`; stack caps are consumer-owned. Plot clipping can trim decorative halos.
+Choose Default, Clay or Glow. Set corner rounding with `radius`; stack caps are consumer-owned. Plot clipping can trim decorative halos.
 
 <ChartExample id="bar-materials" />
 
@@ -89,7 +89,7 @@ String value keys identify config entries; controlled numeric keys or accessors 
 | `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Value field or accessor. |
 | `seriesKey` | `string` | String `dataKey` | Metadata and visibility identity. |
 | `stackId` | `string \| number` | — | Stack series with matching axis IDs. |
-| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Native-rectangle finish; custom paint takes precedence. |
+| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Native-rectangle finish; custom paint takes precedence. |
 | `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | — | Unique category identity; does not make invalid values or custom shapes eligible. |
 | `radius` | `number \| [number, number, number, number]` | `0` | Native corner rounding: top-left, top-right, bottom-right, bottom-left. |
 | `maxBarSize` | `number` | — | Limit each bar's thickness. |

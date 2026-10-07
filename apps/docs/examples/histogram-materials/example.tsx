@@ -55,9 +55,9 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function MaterialHistogram({
-  material = "paper",
+  material = "plain",
 }: {
-  material?: "plain" | "paper" | "clay" | "glow";
+  material?: "plain" | "clay" | "glow";
 } = {}) {
   return (
     <Chart.Root config={config}>
@@ -81,7 +81,7 @@ export function MaterialHistogram({
             axisLine: false,
             tickLine: false,
             tickMargin: 12,
-            width: 64,
+            width: 72,
 
             tickFormatter: (value) => Number(value).toFixed(3),
           }}

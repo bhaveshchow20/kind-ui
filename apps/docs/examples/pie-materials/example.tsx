@@ -28,9 +28,9 @@ const data: { key: keyof typeof config; hours: number; share: string }[] = [
 ];
 
 export function AllocationMaterialChart({
-  material = "paper",
+  material = "plain",
 }: {
-  material?: "plain" | "paper" | "clay" | "glow";
+  material?: "plain" | "clay" | "glow";
 }) {
   return (
     <Chart.Root config={config}>

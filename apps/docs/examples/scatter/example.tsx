@@ -61,7 +61,7 @@ export function TaskScatterChart() {
             axisLine={false}
             tickLine={false}
             tickMargin={10}
-            width={104}
+            width={80}
           />
           <Chart.ScatterSeries
             seriesKey="weekday"

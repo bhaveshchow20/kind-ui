@@ -26,6 +26,6 @@ export const previews = {
   radar: Radar,
   "radar-selection": Selection,
   "radar-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+    <Material material={variant as "plain" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

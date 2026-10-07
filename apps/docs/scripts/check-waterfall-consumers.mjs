@@ -66,5 +66,9 @@ for (const b of variants) {
     strictBundler: "passed",
   });
 }
-assert.equal(evidence.length, 6);
+assert.equal(evidence.length, 5);
+assert.deepEqual(
+  evidence.filter(({ id }) => id === "waterfall-materials").map(({ variant }) => variant),
+  ["plain", "clay", "glow"],
+);
 writeFileSync("artifacts/waterfall-consumers.json", JSON.stringify(evidence, null, 2));

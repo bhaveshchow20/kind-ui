@@ -52,7 +52,7 @@ export function PresentationOptions({ loading = false }: { loading?: boolean }) 
           >
             <Chart.ChartBackgroundPattern pattern={background} />
             <Chart.XAxis dataKey="month" />
-            <Chart.YAxis width={64} />
+            <Chart.YAxis width={80} />
             <Chart.AreaSeries dataKey="capacity" fillOpacity={0.15} pointStyle="border" />
             <Chart.BarSeries<Row>
               dataKey="shipped"
@@ -118,7 +118,7 @@ export function PercentageOptions() {
         aria-label="Capacity and shipped share; values in the production table"
       >
         <Chart.XAxis dataKey="month" />
-        <Chart.YAxis domain={[0, 1]} tickFormatter={percent.tickFormatter} width={64} />
+        <Chart.YAxis domain={[0, 1]} tickFormatter={percent.tickFormatter} width={80} />
         <Chart.BarSeries dataKey="capacity" stackId="share" />
         <Chart.BarSeries dataKey="shipped" stackId="share" pattern={false} />
         <Chart.Tooltip normalizedValue={percent.normalizedValue} />

@@ -65,7 +65,7 @@ for (const example of family.examples) {
     assert.equal(bundle.files[`src/examples/${example.id}/example.tsx`], source);
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.match(variant.source, new RegExp(`finish = "${value}"`));
-      assert.equal(variant.source.replace(`finish = "${value}"`, 'finish = "paper"'), source);
+      assert.equal(variant.source.replace(`finish = "${value}"`, 'finish = "plain"'), source);
     }
   });
 }

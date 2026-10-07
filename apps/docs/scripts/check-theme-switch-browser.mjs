@@ -25,6 +25,7 @@ export async function checkThemeSwitch(browser, origin) {
     await page.addInitScript(() => {
       const start = document.startViewTransition?.bind(document);
       window.themeStarts = 0;
+      window.themeSkips = 0;
       window.themeTransitions = [];
       if (!start) return;
       document.startViewTransition = (callback) => {
@@ -36,6 +37,11 @@ export async function checkThemeSwitch(browser, origin) {
           if (window.holdThemeUpdate)
             await new Promise((resolve) => (window.releaseThemeUpdate = resolve));
         });
+        const skip = transition.skipTransition.bind(transition);
+        transition.skipTransition = () => {
+          window.themeSkips++;
+          skip();
+        };
         window.themeTransitions.push(transition);
         return transition;
       };
@@ -59,8 +65,9 @@ export async function checkThemeSwitch(browser, origin) {
       true,
     );
     assert.deepEqual(errors, []);
+    assert.equal(await page.evaluate(() => window.themeSkips), 1);
     records.push({
-      check: "native viewport cancellation preserves theme and has no page error",
+      check: "owned viewport cancellation preserves theme and has no page error",
       passed: true,
     });
 
@@ -153,9 +160,20 @@ export async function checkThemeSwitch(browser, origin) {
     await page.addInitScript(() => {
       const start = document.startViewTransition?.bind(document);
       window.themeTransitions = [];
+      window.invalidThemeSkips = 0;
       if (start)
         document.startViewTransition = (callback) => {
-          const transition = start(callback);
+          const transition = start(async () => {
+            await callback();
+            if (window.holdInvalidThemeUpdate)
+              await new Promise((resolve) => (window.releaseInvalidThemeUpdate = resolve));
+          });
+          const skip = transition.skipTransition.bind(transition);
+          transition.skipTransition = () => {
+            window.invalidThemeSkips++;
+            skip();
+          };
+          void transition.ready.catch(() => (window.invalidReadyRejected = true));
           window.themeTransitions.push(transition);
           return transition;
         };
@@ -176,7 +194,32 @@ export async function checkThemeSwitch(browser, origin) {
     records.push({
       check: "unexpected snapshot failure remains visible",
       passed: true,
-      expectedErrors: errors,
+      expectedErrors: [...errors],
+    });
+    await page.reload();
+    await page.getByRole("button", { name: "Toggle Theme", exact: true }).waitFor();
+    await page.evaluate(() => {
+      window.holdInvalidThemeUpdate = true;
+      for (let i = 0; i < 2; i++) {
+        const node = document.createElement("div");
+        node.style.cssText = `position:fixed;top:${i * 15}px;left:0;width:10px;height:10px;view-transition-name:theme-negative-control`;
+        document.body.append(node);
+      }
+    });
+    await page.getByRole("button", { name: "Toggle Theme", exact: true }).click();
+    await page.waitForFunction(
+      () => window.invalidReadyRejected && window.releaseInvalidThemeUpdate,
+    );
+    await page.setViewportSize({ width: 320, height: 812 });
+    await page.evaluate(() => window.releaseInvalidThemeUpdate());
+    await finishTransitions(page);
+    assert.equal(errors.length, 2);
+    assert.equal(errors[1].name, "InvalidStateError");
+    assert.equal(await page.evaluate(() => window.invalidThemeSkips), 0);
+    records.push({
+      check: "a rejected snapshot remains visible when a later resize coincides",
+      passed: true,
+      expectedErrors: [...errors],
     });
   } finally {
     await invalid.close();

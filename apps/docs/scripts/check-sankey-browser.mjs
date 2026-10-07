@@ -88,10 +88,8 @@ try {
   const finishes = page.locator('[data-component="sankey-finishes"]');
   await finishes.getByRole("combobox", { name: "Finish" }).focus();
   await page.keyboard.press("Enter");
-  await page.getByRole("option", { name: "Paper", exact: true }).waitFor();
+  await page.getByRole("option", { name: "Default", exact: true }).waitFor();
   await page.waitForFunction(() => document.activeElement?.getAttribute("role") === "option");
-  await page.keyboard.press("ArrowDown");
-  await page.waitForFunction(() => document.activeElement?.textContent === "Plain");
   await page.keyboard.press("ArrowDown");
   await page.waitForFunction(() => document.activeElement?.textContent === "Clay");
   await page.keyboard.press("Enter");
