@@ -35,3 +35,29 @@ These checks are a deployment-owner handoff; source tests do not prove live host
 Run `node --test scripts/indexing.test.mjs` for environment/URL policy checks.
 Then build each app in production and preview modes and check its emitted HTML and
 metadata routes. No Search Console submission or credentials are required.
+
+## Maintained validation
+
+Docs CI first builds and checks the protected root-mounted preview, then retains
+those exact browser fixtures. Using the same installed dependencies, it builds the
+production `/charts/docs` mount and checks every emitted page canonical/robots tag
+and complete sitemap membership. It retains homepage, Line and legacy-installation
+HTML plus robots/sitemap output in `docs-production-indexing`. Copied consumers
+and browser fleets are not repeated for the second build.
+
+The showcase has no dedicated Next app CI build in the current repository. Its
+maintained `test:browser` routes suite now checks initial homepage HTML and served
+robots/sitemap routes. The deployment owner must run the existing showcase build
+and that suite in both configurations below before publication (source-only work
+does not claim these builds or served checks passed):
+
+```sh
+# In apps/showcase, with existing installed dependencies and browser prerequisites:
+KIND_UI_DEPLOYMENT_ENV=preview npm run build
+KIND_UI_DEPLOYMENT_ENV=preview npm run test:browser -- tests/routes.spec.ts
+KIND_UI_DEPLOYMENT_ENV=production NEXT_PUBLIC_SHOWCASE_BASE_PATH=/charts NEXT_PUBLIC_DOCS_URL=/charts/docs/ npm run build
+KIND_UI_DEPLOYMENT_ENV=production NEXT_PUBLIC_SHOWCASE_BASE_PATH=/charts NEXT_PUBLIC_DOCS_URL=/charts/docs/ npm run test:browser -- tests/routes.spec.ts
+```
+
+Keep the same deployment environment for build and test, since metadata routes are
+static and the test compares their served bytes with that deployment intent.
