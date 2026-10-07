@@ -743,39 +743,38 @@ button:disabled {
 .hero-sentence {
   display: block;
 }
+/* Keep the two desktop sentences in flow; small screens use semantic breaks. */
+@media (min-width: 768px) {
+  .hero-sentence {
+    white-space: nowrap;
+  }
+}
+@media (min-width: 641px) and (max-width: 767px) {
+  .hero-stack-phrase {
+    display: block;
+  }
+}
+@media (min-width: 360px) and (max-width: 640px) {
+  .hero-agent-phrase {
+    display: block;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 359px) {
+  .hero-stack-phrase {
+    display: block;
+  }
+  .hero-agent-phrase .brand-pill-slot {
+    display: flex;
+    width: fit-content;
+    margin-inline: auto;
+  }
+}
 .brand-pill-slot {
-  display: inline-grid;
+  display: inline-flex;
   vertical-align: -0.12em;
-  align-items: center;
-  justify-items: center;
-}
-/* Reserve the longest label in text flow; the visible button remains snug. */
-.brand-pill-reserve {
-  grid-area: 1 / 1;
-  display: grid;
-  visibility: hidden;
-  pointer-events: none;
-  padding-inline: 1px;
-}
-.brand-pill-reserve-option,
-.brand-pill-visible {
-  grid-area: 1 / 1;
-  display: flex;
   align-items: baseline;
   white-space: nowrap;
-}
-.brand-pill-option {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.22em;
-  white-space: nowrap;
-  height: 1.4em;
-  padding: 0 0.42em;
-  border: 1px solid transparent;
-  font-size: 0.88em;
-  font-weight: 500;
-  letter-spacing: -0.05em;
 }
 .kind-hero h1 {
   font-size: clamp(32px, 4.2vw, 58px);
@@ -784,7 +783,6 @@ button:disabled {
   letter-spacing: -0.055em;
 }
 .brand-pill {
-  grid-area: 1 / 1;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -826,12 +824,6 @@ button:disabled {
 .brand-pill-sizer svg,
 .brand-pill-face img,
 .brand-pill-sizer img {
-  width: 0.74em;
-  height: 0.74em;
-  flex-shrink: 0;
-}
-.brand-pill-option svg,
-.brand-pill-option img {
   width: 0.74em;
   height: 0.74em;
   flex-shrink: 0;
