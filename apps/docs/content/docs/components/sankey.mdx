@@ -21,7 +21,9 @@ description: Trace quantities through branching and recombining flows.
 <Chart.SankeyLegend config={nodeConfig} />
 ```
 
-Sankey needs no `Root` or axes. `nodeConfig` maps every node ID, including isolated/zero-only nodes, to a label and color. Default nodes use their own color; solid links use the source color. Import `Tooltip` from **Recharts**.
+Sankey needs no `Root` or axes. Map every node ID in `nodeConfig`, including isolated/zero-only nodes, to a label and color.
+
+Nodes use their own color; solid links use the source color. Import `Tooltip` from **Recharts**.
 
 ## Identities and selection
 
@@ -158,7 +160,9 @@ Zero links remain in the table but leave plotted geometry; isolated nodes also l
 
 [ResponsiveContainer](/docs/chart-components/responsive-container/), [Tooltip](/docs/chart-components/tooltip/).
 
-Sankey uses the native Recharts Tooltip for hover inspection. Path handlers and status text provide keyboard selection. Give the diagram a measurable height; these examples use a 540px minimum width.
+Native Recharts Tooltip handles hover inspection; path handlers and status text provide keyboard selection.
+
+Give the diagram a measurable height. These examples use a 540px minimum width.
 
 ## Node labels and icons
 

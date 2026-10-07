@@ -7,13 +7,19 @@ description: Show completion and capacity with concentric rings, gauges and stac
 
 ## Activity rings
 
-`ActivityRings` supplies context, axes, tracks, tooltip and a static legend for progress data. Give each ring a config key, original value and optional domain. Name the chart with `aria-label` or `aria-labelledby`.
+Give each ring a config key, original value and optional domain. Name the chart with `aria-label` or `aria-labelledby`.
+
+`ActivityRings` supplies context, axes, tracks, tooltip and a static legend.
 
 <ChartExample id="radial-activity" />
 
-Values normalize to 0–100 for geometry; finite out-of-domain values clamp visually. The default tooltip keeps original values and config formatters. Custom native payloads expose `rawValue` and `progress`; native sector `value` is normalized. Ring order follows the array, inner to outer.
+Rings follow array order, inner to outer. Geometry normalizes values to 0–100 and visually clamps finite out-of-domain values.
 
-The default is responsive width, 300px height, a clockwise full sweep, rounded tracks, static legend, labels off and motion off. Do not wrap this helper in another `Root`. Use explicit composition below for custom axes/data, children or inter-chart choreography.
+The tooltip preserves original values and config formatters. Custom payloads expose `rawValue` and `progress`; native sector `value` is normalized.
+
+Defaults: responsive width, 300px height, clockwise full sweep, rounded tracks, static legend, labels off and motion off.
+
+Do not add another `Root`. Use explicit composition below for custom axes, data, children or coordinated charts.
 
 ## Usage
 
@@ -72,7 +78,9 @@ Focused props for explicit polar composition. Data, tracks and custom center lab
 
 </div>
 
-Native chart props override center, radii, angles, gaps and motion. Ring `cellProps` retains paint/handlers and wins over series fill. Custom paint may differ from legend metadata; update config or supply custom/disabled legend content.
+Native props override center, radii, angles, gaps and motion. Ring `cellProps` retains paint/handlers and overrides series fill.
+
+If custom paint differs from legend metadata, update config or customize/disable the legend.
 
 ### RadialBarChart
 

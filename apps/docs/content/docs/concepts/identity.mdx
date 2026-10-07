@@ -12,7 +12,9 @@ description: Separate measured values, stable identities and presentation metada
 
 ## Series
 
-A string series `dataKey` normally identifies its config entry. Function and numeric keys need `seriesKey` for controlled visibility. Configured Line's `series` entries always supply unique keys in config. An accessor can change how a value is read without changing its identity:
+String `dataKey` values normally identify config entries. Function and numeric keys need `seriesKey` for controlled visibility. Configured Line's `series` entries always supply unique keys in config.
+
+Accessors change value retrieval without changing identity:
 
 ```tsx title="AccessorChart.tsx"
 "use client";
@@ -29,7 +31,9 @@ export function AccessorChart() {
 }
 ```
 
-Series metadata supplies default paint; explicit native paint and custom renderers retain control. Configured Line toggles series automatically. `defaultVisibleSeries` sets the initial list; controlled visibility needs `visibleSeries` and `onVisibleSeriesChange`. Without the callback, the list is read-only. Keep the visibility mode stable or remount to change it.
+Series metadata supplies default paint; explicit native paint and custom renderers retain control. Configured Line toggles series automatically. `defaultVisibleSeries` sets the initial list; controlled visibility needs `visibleSeries` and `onVisibleSeriesChange`.
+
+Without the callback, the list is read-only. Keep the visibility mode stable or remount to change it.
 
 ## Category and node colors
 
@@ -39,7 +43,9 @@ Try the short [identity and layout recipes](/docs/guides/identity-layout/) or th
 - [Sankey metadata](/docs/components/sankey/): `SankeyChart.nodeConfig` maps node IDs to labels/colors. Default nodes use their own color; solid links use the source color. Composed gradient links resolve both endpoints. `SankeyLegend` receives the same config explicitly. It is static by default; bind both chart and legend with `interactionBinding="root"` to a node-kind, focus-mode Root for shared node focus.
 - [ActivityRings](/docs/components/radial/#activityrings): ring `key` identifies config; `value` and optional `domain` determine progress. The helper supplies radial composition and preserves original values for its default tooltip. `rootProps` exposes Root visibility and category interaction; explicit Radial composition remains available.
 
-Category defaults fill missing native paint. Explicit series fill disables them; datum/Cell fill takes precedence. Existing Cell props/handlers and custom shapes remain authoritative. Overrides can intentionally differ from legend metadata; update config too when the legend should match. No positional palette or universal identity schema is implied.
+Category defaults fill missing native paint. Explicit series fill disables them; datum/Cell fill takes precedence. Existing Cell props/handlers and custom shapes remain authoritative.
+
+Overrides may differ from legend metadata; update config to match. No positional palette or universal identity schema is implied.
 
 Heatmap uses row/column identity and a quantitative scale, rather than series colors. Its [compact layout](/docs/components/heatmap/#compact-activity-grid) adds `HeatmapGrid.layout` for cell size, gap and visual headers; accessible headers and keyboard navigation remain present.
 

@@ -7,7 +7,9 @@ Use these options independently; your application owns data, domains, request st
 
 ## Materials
 
-Material selectors display “Default” for the public `"plain"` token. Default (`"plain"`), Clay (`"clay"`) and Glow (`"glow"`) are the supported finishes. Examples start with Default; select Clay or Glow to compare decorative treatments. Sankey uses `finish` for this same vocabulary, independently of its solid/gradient `material`.
+Material selectors display “Default” for `"plain"`. Supported finishes are Default (`"plain"`), Clay (`"clay"`) and Glow (`"glow"`). Examples start with Default; select Clay or Glow to compare finishes.
+
+Sankey uses `finish` for this same vocabulary, independently of its solid/gradient `material`.
 
 The next release removes Paper; migrate existing `material="paper"` or `finish="paper"` to `"plain"`, `"clay"` or `"glow"`. The docs consumer remains pinned to 0.2.0 while demonstrating this supported next-release vocabulary. See [Materials](/docs/guides/materials/) for paint ownership and rendering limits.
 
@@ -17,7 +19,9 @@ Focus a series through its legend or marks. June uses a projection pattern; the 
 
 <ChartExample id="combo-presentation" />
 
-Retail starts hidden through Root visibility. Activate a slice or legend item to focus its category; Escape clears focus. The donut starts with Default paint and a tooltip on Service. Choose Selective glow to give Service a halo. The initial tooltip dismisses on interaction; remounting initializes it again.
+Retail starts hidden through Root visibility. Activate a slice or legend item to focus its category; Escape clears focus. The donut starts with Default paint and a Service tooltip.
+
+Choose Selective glow to give Service a halo. Interaction dismisses the initial tooltip; remount to restore it.
 
 <ChartExample id="pie-interaction" />
 
@@ -25,12 +29,16 @@ Retail starts hidden through Root visibility. Activate a slice or legend item to
 
 `SeriesConfig[key].label` is optional. `monthlyVisitors` infers “Monthly visitors”; explicit text, including `""`, wins. Identity keys stay unchanged. [SeriesConfig](/docs/chart-components/series-config/) describes matching, icons, legend symbols and formatter precedence.
 
-`color` accepts a CSS string, an array of gradient stops, or `{ light, dark }` theme values. The host sets CSS `color-scheme`. `--color-key` exposes the first stop; chart-local SVG resources provide the full gradient. Native paint and custom renderers retain precedence.
+`color` accepts a CSS string, an array of gradient stops, or `{ light, dark }` theme values. Set CSS `color-scheme` on the host.
+
+`--color-key` exposes the first stop; chart-local SVG resources provide the full gradient. Native paint and custom renderers retain precedence.
 
 <details>
 <summary>Color validation and resource identity</summary>
 
-Gradient arrays must be nonempty and use evenly spaced stops. Each theme can use a string or array; unequal stop counts retain their spacing. Empty strings, arrays or invalid theme shapes throw with the config key, theme and stop index where applicable. CSS syntax and contrast remain consumer-owned. Independent React roots need distinct SSR/hydration `identifierPrefix` values.
+Gradient arrays require nonempty, evenly spaced stops. Each theme can use a string or array; unequal stop counts retain their spacing.
+
+Empty strings, arrays or invalid theme shapes throw with the config key, theme and stop index where applicable. CSS syntax and contrast remain consumer-owned. Independent React roots require distinct SSR/hydration `identifierPrefix` values.
 
 </details>
 
@@ -38,15 +46,21 @@ Development builds warn once when the stylesheet marker is missing after mount, 
 
 ## Loading
 
-All fourteen families accept `loading` and `loadingLabel`. While loading, the chart keeps its dimensions, shows a decorative silhouette, hides/inerts managed content and announces the label outside busy content. The default label is “Loading chart”. Reduced motion keeps the silhouette static.
+All fourteen families accept `loading` and `loadingLabel`. While loading, the chart keeps its dimensions, shows a decorative silhouette, hides/inerts managed content and announces the label outside busy content.
 
-Omitting loading preserves the chart. Setting it to `false` restores actual data, including empty datasets, and runs enabled entrances. Repeated interruptions retain dimensions. External legends and custom content remain consumer-owned. Derive loading from request state; supply error/empty messages, cancellation and retry. The illustration does not represent partial values or drive completion.
+The label defaults to “Loading chart”. Reduced motion keeps the silhouette static.
+
+Omitted loading preserves the chart. `false` restores data, including empty datasets, and runs enabled entrances. Repeated interruptions retain dimensions. External legends and custom content remain consumer-owned.
+
+Derive loading from request state; supply error/empty messages, cancellation and retry. The illustration represents neither partial values nor completion.
 
 <ApiTable name="LoadingReference" />
 
 ## Series patterns and projected bars
 
-`SeriesConfig[key].pattern` supplies implicit Bar/Area paint and the default legend swatch. `BarSeries.pattern` or `AreaSeries.pattern` overrides it; `false` disables it. The former string opt-out `"none"` is replaced by `false` for this release. `FillPatternSwatch` takes `pattern` and a base `color` for custom legends.
+`SeriesConfig[key].pattern` supplies implicit Bar/Area paint and the default legend swatch. `BarSeries.pattern` or `AreaSeries.pattern` overrides it; `false` disables it. This release replaces `"none"` with `false`.
+
+`FillPatternSwatch` takes `pattern` and a base `color` for custom legends.
 
 | Field | Values / default | Limits |
 | --- | --- | --- |
@@ -56,9 +70,13 @@ Omitting loading preserves the chart. Setting it to `false` restores actual data
 | `width` | `1`; stripe `2` | Finite, positive and at most size; dot diameter; duotone stays 50/50. |
 | `angle` | Hatch `45`; others `0` degrees | Finite; chart orientation does not rotate the pattern automatically. |
 
-Explicit fill/gradient, `style.fill`, Cells and custom shapes keep their native paint ownership. Bar custom active shapes also disable automatic encoding. Gradient-backed pattern tiles use the configured first-stop ink. Forced colors retain geometry with system inks. Print settings and chosen colors can affect contrast; patterns do not replace labels or data alternatives.
+Explicit fill/gradient, `style.fill`, Cells and custom shapes retain paint ownership. Custom Bar active shapes disable automatic encoding. Gradient-backed pattern tiles use the configured first-stop ink. Forced colors retain geometry with system inks.
 
-`BarSeries<Row>.projection={{ isProjected, pattern }}` decorates only caller-selected raw rows. It does not forecast values, filter data or change axes. `TooltipContent.isProjected` receives the native tooltip payload entry; read its original row through `entry.payload` and apply the same row rule. Label the data alternative. Tooltip `projectedLabel` defaults to `"Projected"`; missing/hidden/suppressed rows retain existing behavior. Cells, explicit paint and custom shape ownership take precedence.
+Print settings/colors may affect contrast; retain labels and data alternatives.
+
+`BarSeries<Row>.projection={{ isProjected, pattern }}` decorates only caller-selected raw rows. It neither forecasts, filters data nor changes axes. `TooltipContent.isProjected` receives native payload entries; apply the same rule to their original `entry.payload` rows.
+
+Label the data alternative. Tooltip `projectedLabel` defaults to `"Projected"`; missing/hidden/suppressed rows retain existing behavior. Cells, explicit paint and custom shape ownership take precedence.
 
 <ApiTable name="FillPatternReference" />
 <ApiTable name="BarProjectionReference" />
@@ -69,7 +87,9 @@ Explicit fill/gradient, `style.fill`, Cells and custom shapes keep their native 
 
 Return raw values for the inspected stack, including its current value and native hidden-series membership. Return `undefined` for other series/axes. Keep original rows and native geometry.
 
-`formatPercent(fraction)` multiplies by 100, rounds to one decimal and removes redundant trailing zeroes. The normalized helper ignores null/missing members, returns zero for an all-zero stack, and falls back to ordinary formatting for empty/nonfinite/range inputs or a cancelling signed total. Signed stacks use their signed sum. Already fractional Area recipes must not be normalized twice. The host owns meaningful units and finite direct formatter inputs.
+`formatPercent(fraction)` multiplies by 100, rounds to one decimal and trims redundant trailing zeroes. Normalization ignores null/missing members and returns zero for all-zero stacks. Empty/nonfinite/range inputs or cancelling signed totals use ordinary formatting.
+
+Signed stacks use their signed sum. Do not normalize already fractional Area recipes again. The host owns meaningful units and finite direct formatter inputs.
 
 <ApiTable name="PercentFormattingReference" />
 
@@ -80,24 +100,38 @@ Return raw values for the inspected stack, including its current value and nativ
 <details>
 <summary>Marker surface and custom rendering</summary>
 
-Set `--kind-ui-chart-marker-surface` on Root for your theme; it falls back to `--card`, then white. `PointMarker` is a reusable native Dot renderer. In an active-dot callback, forward the series `fill` as the marker's `stroke`. Radar and Scatter use separate marker APIs.
+Set `--kind-ui-chart-marker-surface` on Root for your theme; fallbacks are `--card`, then white. `PointMarker` is a reusable native Dot renderer. In an active-dot callback, forward the series `fill` as the marker's `stroke`.
+
+Radar and Scatter use separate marker APIs.
 
 </details>
 
 `LineSeries.dashAnimation` defaults to `false`. Use `{ durationMs: 1000, direction: "forward" }` with a numeric native `strokeDasharray`; `"reverse"` reverses travel. Duration measures milliseconds per pattern cycle.
 
-Invalid durations and CSS/percentage/nonnumeric patterns stay static. Motion stops for reduced motion, loading, hidden series or `animate={false}`. Native dash offset/style and custom shapes retain ownership. Area does not accept this prop; overlay a Line in Combo for an open outline.
+Invalid durations and CSS/percentage/nonnumeric patterns stay static. Motion stops for reduced motion, loading, hidden series or `animate={false}`. Native dash offset/style and custom shapes retain ownership.
 
-`LineAnimation` and `AreaAnimation.revealDirection` accept `"left-to-right"` (default), `"right-to-left"`, `"center-out"` and `"edges-in"`. These are physical horizontal reveals for either layout; data order, axes and geometry stay unchanged. Combo inherits the direction for Line/Area unless `lineReveal` or `areaReveal` overrides it; `false` disables that family entrance. Bar keeps its existing entrance. Completion/interruption removes explicit directional clips; loading designs remain independent. See [Motion](/docs/guides/motion/) for duration/easing and family defaults.
+Area does not accept this prop; overlay a Line in Combo for an open outline.
+
+`LineAnimation` and `AreaAnimation.revealDirection` accept `"left-to-right"` (default), `"right-to-left"`, `"center-out"` and `"edges-in"`. Directions are physically horizontal in either layout; data order, axes and geometry stay unchanged.
+
+Combo inherits the direction for Line/Area unless `lineReveal` or `areaReveal` overrides it; `false` disables that family entrance. Bar keeps its existing entrance. Completion/interruption removes directional clips; loading remains independent.
+
+See [Motion](/docs/guides/motion/) for duration/easing and family defaults.
 
 <ApiTable name="LinePresentationReference" />
 <ApiTable name="AreaPresentationReference" />
 
 ## Decorative backgrounds
 
-Compose `ChartBackgroundPattern` inside a Cartesian chart, or use configured `LineChart.backgroundPattern`. Presets are `"pinpoints"`, `"crossings"` and `"waves"`. `size` defaults to `16` positive finite SVG units; `opacity` defaults to `0.15` in `[0, 1]`; color defaults to the chart-grid CSS token/`CanvasText`. Decoration clips to the native plot and cannot intercept pointer input. It is independent of series patterns, legends, visibility and materials.
+Compose `ChartBackgroundPattern` inside a Cartesian chart, or use configured `LineChart.backgroundPattern`. Presets are `"pinpoints"`, `"crossings"` and `"waves"`.
 
-`defineChartBackgroundPattern(render)` returns a reusable frozen definition without a global registry. The callback receives `{ size, color, idPrefix }`; scope custom SVG resources with `idPrefix`. Custom content must remain decorative. Cartesian families include Line, Area, Bar, Combo, Scatter, Histogram, Waterfall and Box Plot. Polar, Pie, Sankey, Heatmap and ActivityRings are outside this contract. Native SSR empty plot shells remain unchanged.
+`size` defaults to `16` positive finite SVG units; `opacity` defaults to `0.15` in `[0, 1]`; color defaults to the chart-grid CSS token/`CanvasText`. Decoration clips to the plot and ignores pointer input.
+
+It remains independent of series patterns, legends, visibility and materials.
+
+`defineChartBackgroundPattern(render)` returns a reusable frozen definition; it uses no global registry. The callback receives `{ size, color, idPrefix }`; scope custom SVG resources with `idPrefix`. Custom content must remain decorative.
+
+Cartesian families include Line, Area, Bar, Combo, Scatter, Histogram, Waterfall and Box Plot. Polar, Pie, Sankey, Heatmap and ActivityRings are outside this contract. Native SSR empty plot shells remain unchanged.
 
 <ApiTable name="BackgroundPatternReference" />
 
@@ -108,30 +142,48 @@ Compose `ChartBackgroundPattern` inside a Cartesian chart, or use configured `Li
 <details>
 <summary>Initial tooltip requirements and dismissal</summary>
 
-Use one direct PieSeries and one Kind Tooltip; Fragments are allowed. Wrapped/native series, multiple rings and ambiguous children are unsupported and throw when resolving the default. Unknown IDs never pin. Hidden, removed or filtered IDs permanently clear the pin; ambiguous duplicates clear unbound pins, while Root binding rejects duplicate IDs.
+Use one direct PieSeries and one Kind Tooltip; Fragments are allowed. Wrapped/native series, multiple rings and ambiguous children are unsupported and throw when resolving the default. Unknown IDs never pin.
+
+Hidden, removed or filtered IDs permanently clear the pin; ambiguous duplicates clear unbound pins, while Root binding rejects duplicate IDs.
 
 Restoring a row or changing the default does not repin. Pointer input, focus or any chart key dismisses it. No focus is moved, and explicit Tooltip `active`/`defaultIndex` retain control.
 
 </details>
 
-`PieSeries.glowCategories` uses original `categoryKey` identities and requires explicit configured data. Unknown IDs are ignored; removal/restoration follows row membership; an empty list keeps `material`. Selected default sectors receive glow while native Cell paint, custom/active shapes, filters and consumer transforms retain ownership. Glow is decorative. [Pie](/docs/components/pie/) covers loading, Root `interactionBinding="root"`, selection and the accessible data alternative.
+`PieSeries.glowCategories` uses original `categoryKey` identities and requires explicit configured data. Unknown IDs are ignored; removal/restoration follows row membership. Empty lists keep `material`.
+
+Selected default sectors receive glow while native Cell paint, custom/active shapes, filters and consumer transforms retain ownership. Glow is decorative. [Pie](/docs/components/pie/) covers loading, Root `interactionBinding="root"`, selection and the accessible data alternative.
 
 ## Sankey labels and icons
 
-Compose `SankeyNodeLabel` with `SankeyNode` in the native node callback. Pass identical `data` to chart, label and `SankeyTable`. Identity uses `node.payload.id`, never callback index/name. `position` defaults to `"outside"`; sinks default left and other nodes right; offset defaults to `8` chart units. `showValues` defaults to false and `valueFormatter` to `String`. Values use the maximum of incoming/outgoing flow, counting balanced throughput once and disconnected/measured-zero nodes as zero.
+Compose `SankeyNodeLabel` with `SankeyNode` in the native node callback. Share identical `data` between chart, label and `SankeyTable`. Identity is `node.payload.id`, never callback index/name.
 
-Inside labels center and clip to the exact node rectangle, including tiny nodes. Reserve outside margins yourself; helpers do not shrink text, avoid collisions or change native geometry. A title preserves full name/value. Custom `children`, native text props, style and ref remain composable.
+`position` defaults to `"outside"`; sinks default left and other nodes right; offset defaults to `8` chart units. `showValues` defaults to false and `valueFormatter` to `String`.
 
-`SankeyNodeConfig[id].icon` accepts decorative ReactNode SVG content. Pass `nodeConfig` explicitly to the label to enable it; no icon is injected into custom native renderers. `iconSize` defaults to `16`, `iconGap` to `4`; both are finite nonnegative chart units. The icon viewport is `0 0 24 24`; inside icons share the exact node clip. Missing/null/boolean/zero-size icons preserve text layout. Names and the data table provide meaning. See [Sankey](/docs/components/sankey/) for data validation and renderer ownership.
+Values use maximum inflow/outflow, count balanced throughput once and report disconnected/measured-zero nodes as zero.
+
+Inside labels center and clip to the exact node rectangle, including tiny nodes. Reserve outside margins; helpers neither shrink text, avoid collisions nor change native geometry. A title preserves full name/value.
+
+Custom `children`, native text props, style and ref remain composable.
+
+`SankeyNodeConfig[id].icon` accepts decorative ReactNode SVG content. Pass `nodeConfig` to the label; custom native renderers receive no automatic icons. `iconSize` defaults to `16`, `iconGap` to `4`; both are finite nonnegative chart units.
+
+The icon viewport is `0 0 24 24`; inside icons share the exact node clip. Missing/null/boolean/zero-size icons preserve text layout. Names and the data table supply meaning.
+
+See [Sankey](/docs/components/sankey/) for data validation and renderer ownership.
 
 <ApiTable name="SankeyLabelReference" />
 
 ## Shared legend and mark interactions
 
-Visibility is the default; legend/mark actions cannot hide the last eligible item. External controlled state may be empty. For persistent focus, set Root `interaction={{ kind: "series" | "category", mode: "focus", eligibleKeys }}`. Category marks require explicit Root binding; `markActivation="matching-legend"` enables shared mark actions.
+Visibility is the default; legend/mark actions cannot hide the last eligible item. External controlled state may be empty. For persistent focus, set Root `interaction={{ kind: "series" | "category", mode: "focus", eligibleKeys }}`.
+
+Category marks require explicit Root binding; `markActivation="matching-legend"` enables shared mark actions.
 
 Native handlers run first and may veto. Selection follows identity across reorder; unavailable data reconciles eligibility. Keep controlled and defaulted ownership exclusive and stable while mounted. See [Root](/docs/chart-components/root/) and [Legend](/docs/chart-components/legend/) for callbacks, announcements, keyboard behavior and family limits.
 
 ## Agent retrieval
 
-Start with [llms.txt](/llms.txt), retrieve this [standalone Markdown guide](/markdown/guides/customization.md), then the relevant family reference and [complete options source](/examples/combo-motion/src/examples/combo-motion/options.tsx). [llms-full.txt](/llms-full.txt) contains complete consumer files and generated API tables. Use public exports; typecheck/build the chosen export, retain its data alternative, and verify mobile layout, keyboard interaction, contrast and reduced motion.
+Start with [llms.txt](/llms.txt), retrieve this [standalone Markdown guide](/markdown/guides/customization.md), then the relevant family reference and [complete options source](/examples/combo-motion/src/examples/combo-motion/options.tsx). [llms-full.txt](/llms-full.txt) contains complete consumer files and generated API tables.
+
+Use public exports; typecheck/build the chosen export, retain its data alternative, and verify mobile layout, keyboard interaction, contrast and reduced motion.

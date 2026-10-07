@@ -59,9 +59,13 @@ Legend requests cannot hide the final visible eligible item. Root preserves visi
 
 ## Interaction and eligibility
 
-Use `interaction` to declare the shared identity kind and a settled `eligibleKeys` snapshot. Include hidden Root items and zero values; exclude identities unavailable in the current data snapshot. Keep IDs stable across reorder. Native adapters also report availability. Without an explicit snapshot, Root uses registered identities, falling back to config keys when none are registered.
+Set the identity kind and settled `eligibleKeys` through `interaction`. Include Root-hidden items and zero values; exclude unavailable identities. Keep IDs stable across reorder. Native adapters also report availability.
 
-Eligible legend items can be controls. Genuinely unavailable items retain their labels without a toggle button; an item hidden through Root remains eligible for restoration. Empty data or native `hide` does not write a new visibility array or call the visibility callback. Availability changes also do not synthesize a controlled selection callback.
+Without a snapshot, Root uses registered identities or, if none exist, config keys.
+
+Eligible legend items can be controls. Unavailable items retain labels without toggle buttons; Root-hidden items remain restorable.
+
+Empty data or native `hide` does not write a new visibility array or call the visibility callback. Availability changes do not invoke controlled selection callbacks.
 
 `mode="visibility"` is the default. `mode="focus"` highlights an identity without filtering data. Use `kind="series"` for native series, `"category"` for bound Pie categories, or `"node"` for node focus; node interaction supports focus only.
 
@@ -81,9 +85,15 @@ Eligible legend items can be controls. Genuinely unavailable items retain their 
 </Chart.Root>
 ```
 
-Focus selection can be controlled with `selected` and the required `onSelectionChange`, or initialized with `defaultSelected` and an optional callback. Do not combine them or switch selection ownership during a mount. Activating the selected identity clears it; Escape requests a focus reset. Root announces accepted focus and visibility changes in a scoped live region. `markActivation="matching-legend"` opts participating native marks into the same actions; its default is no mark activation.
+Control focus with `selected` and required `onSelectionChange`, or initialize it with `defaultSelected` and an optional callback. Do not combine these modes or change ownership while mounted.
 
-Consumer handlers run first. `event.preventDefault()` or `interaction.onBeforeInteraction(request)` returning `false` vetoes the action, including Escape reset. A request supplies its identity (or `null` for reset), source, mode and original event. Shared actions use the current committed state and callbacks, including after a consumer handler updates state synchronously.
+Activating the selected identity clears it; Escape requests a focus reset. Root announces accepted focus and visibility changes in a scoped live region.
+
+`markActivation="matching-legend"` opts participating native marks into the same actions; shared mark actions default off.
+
+Consumer handlers run first. `event.preventDefault()` or `interaction.onBeforeInteraction(request)` returning `false` vetoes the action, including Escape reset. A request supplies its identity (or `null` for reset), source, mode and original event.
+
+Actions use committed state/callbacks, including after synchronous consumer updates.
 
 ## Props
 

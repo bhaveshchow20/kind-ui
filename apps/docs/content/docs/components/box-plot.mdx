@@ -45,7 +45,9 @@ The tooltip reads the original row from `payload` to label statistics; native ra
 
 ## Summary contract
 
-Supply finite ordered statistics: `lowerWhisker <= q1 <= median <= q3 <= upperWhisker`. Outliers must be finite and strictly outside the whiskers; duplicates remain separate, possibly overlapping marks.
+Finite summaries must satisfy `lowerWhisker <= q1 <= median <= q3 <= upperWhisker`.
+
+Outliers must be finite and strictly outside whiskers; duplicates remain separate marks and may overlap.
 
 Numeric domains must include every outlier; native domain inference includes them.
 

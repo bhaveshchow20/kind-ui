@@ -28,7 +28,9 @@ Domain order determines equal-cell layout. Missing records and `null` use patter
 
 <ChartExample id="heatmap-compact" />
 
-Numbers use pixels; valid CSS lengths such as `"1rem"` work too. Omit `cellSize` for fluid sizing. A width-constrained host retains horizontal scrolling; custom content or native cell styles can enlarge cells. Use `min-width: 0` when a flex/grid host must shrink.
+Use pixels or CSS lengths such as `"1rem"`; omit `cellSize` for fluid cells. Constrained hosts scroll horizontally.
+
+Custom content and cell styles can enlarge cells. Set `min-width: 0` so flex/grid hosts can shrink.
 
 ## Signed comparisons
 
@@ -102,7 +104,9 @@ Captioned native table with row/column headers and roving grid focus. Empty doma
 
 </div>
 
-`cellSize` must be positive; `gap` must be nonnegative, including zero. Numeric values must be finite. Native table `style`, custom `Cell` and `cellProps` keep their existing overrides. Hidden labels retain grid names, header IDs and keyboard navigation; `HeatmapDataTable` is independent.
+`cellSize` must be positive and `gap` nonnegative; numbers must be finite. Table `style`, custom `Cell` and `cellProps` retain their overrides.
+
+Hidden labels preserve grid names, header IDs and keyboard navigation. `HeatmapDataTable` remains independent.
 
 Each `HeatmapCell` retains row/column identities, indices, value and every source record. See [native table semantics](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/table).
 
