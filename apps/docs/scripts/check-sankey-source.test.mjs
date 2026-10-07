@@ -66,7 +66,10 @@ for (const example of family.examples) {
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.match(variant.source, new RegExp(`${family.variants[example.id].prop} = "${value}"`));
       assert.equal(
-        variant.source.replace(`${family.variants[example.id].prop} = "${value}"`, `${family.variants[example.id].prop} = "${family.variants[example.id].default}"`),
+        variant.source.replace(
+          `${family.variants[example.id].prop} = "${value}"`,
+          `${family.variants[example.id].prop} = "${family.variants[example.id].default}"`,
+        ),
         source,
       );
     }

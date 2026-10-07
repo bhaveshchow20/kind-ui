@@ -2,9 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { binHistogram } from "@kind-ui/charts";
-import { filesFor, promptFor } from "../lib/example-files.mjs";
-
 import { family } from "../examples/histogram-catalog.mjs";
+import { filesFor, promptFor } from "../lib/example-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/histogram-examples.json", "utf8"));
 test("histogram copies retain native quantitative composition and matching variants", () => {
