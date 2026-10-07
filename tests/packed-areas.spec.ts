@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from "./browser";
+import { directionalEntrances } from "./reveal-direction";
 
 async function bounded(tip: Locator, chart: Locator) {
   await expect
@@ -145,3 +146,7 @@ test("packed native area visibility snaps active marks to rescaled geometry", as
     await bounded(page.locator('[data-kind-ui="tooltip-frame"]'), page.getByRole("application"));
   }
 });
+
+directionalEntrances("http://127.0.0.1:4182/motion.html");
+
+directionalEntrances("http://127.0.0.1:4182/motion.html?vertical");

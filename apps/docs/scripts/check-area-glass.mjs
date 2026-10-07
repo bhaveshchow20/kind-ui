@@ -174,7 +174,7 @@ try {
   }
   await p.setViewportSize({ width: 1440, height: 1080 });
   await p.locator("#nd-sidebar").getByRole("link", { name: "Installation", exact: true }).click();
-  await p.waitForURL("**/docs/start/installation/");
+  await p.waitForURL("**/docs/installation/");
   await p.goBack();
   await p.waitForURL("**/docs/components/area/");
   await p.getByRole("button", { name: "Search", exact: false }).first().click();

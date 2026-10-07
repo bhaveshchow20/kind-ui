@@ -19,7 +19,7 @@ Read the relevant family and shared parts in the [documentation](https://kindui.
 Use [llms.txt](https://kindui.dev/charts/docs/llms.txt) to find canonical Markdown;
 [llms-full.txt](https://kindui.dev/charts/docs/llms-full.txt) contains the same
 pages with complete consumer code and API tables. Start with
-[installation](https://kindui.dev/charts/docs/markdown/start/installation.md),
+[installation](https://kindui.dev/charts/docs/markdown/installation.md),
 then retrieve the relevant family and the shared
 [SeriesConfig](https://kindui.dev/charts/docs/markdown/chart-components/series-config.md)
 contract when defining metadata.
