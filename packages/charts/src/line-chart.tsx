@@ -23,7 +23,6 @@ import {
 } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useEmphasisActions } from "./emphasis.js";
-import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
 import type { LoadingAnimation } from "./loading-motion.js";
 import {
   ChartLoadingSkeleton,
@@ -31,6 +30,7 @@ import {
   type LoadingFamily,
   useLoadingSeed,
 } from "./loading-skeleton.js";
+import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
 
 export type LineChartProps = ComponentProps<typeof EngineLineChart> & {
   loading?: boolean | undefined;

@@ -465,7 +465,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   const originalChildren = filtered?.children ?? props.children;
   const resolveInteractionKey = useCallback(
     (index: number): string | undefined => {
-      // Cell props can override native payload fields; native index still addresses our rendered rows.
+      // Native Cell props may override payload fields; its index still addresses our rendered rows.
       const row = data?.[index];
       if (row === undefined) return undefined;
       if (typeof categoryKey === "function") return categoryKey(row);
@@ -487,8 +487,25 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
       categoryKey === undefined
         ? originalChildren
         : categoryCells(data, categoryKey, config, paints, originalChildren, props.fill),
-    [categoryKey, data, config, paints, originalChildren, props.fill],
+    [data, categoryKey, config, paints, originalChildren, props.fill],
   );
+  if (glowCategories !== undefined && categoryKey === undefined)
+    throw new Error("glowCategories requires categoryKey and explicit series data");
+  // Native sector indices align with explicit data, but membership uses the original
+  // row identity, before native Cell props can override payload fields.
+  const glowRows = useMemo(() => {
+    if (categoryKey === undefined || glowCategories === undefined) return undefined;
+    const glowing = new Set(glowCategories);
+    return data?.map((row) => {
+      const key =
+        typeof categoryKey === "function"
+          ? categoryKey(row)
+          : row !== null && typeof row === "object" && Object.hasOwn(row, categoryKey)
+            ? row[categoryKey]
+            : undefined;
+      return typeof key === "string" && glowing.has(key);
+    });
+  }, [data, categoryKey, glowCategories]);
   const identities = useRef(new WeakMap<Event, string>());
   const boundChildren = useMemo(
     () =>
@@ -516,23 +533,6 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     interactionBinding && interaction.interactive && interaction.markActivation
       ? activate
       : props.onClick;
-  if (glowCategories !== undefined && categoryKey === undefined)
-    throw new Error("glowCategories requires categoryKey and explicit series data");
-  // Native sector indices align with explicit data, but membership uses the original
-  // row identity, before native Cell props can override payload fields.
-  const glowRows = useMemo(() => {
-    if (categoryKey === undefined || glowCategories === undefined) return undefined;
-    const glowing = new Set(glowCategories);
-    return data?.map((row) => {
-      const key =
-        typeof categoryKey === "function"
-          ? categoryKey(row)
-          : row !== null && typeof row === "object" && Object.hasOwn(row, categoryKey)
-            ? row[categoryKey]
-            : undefined;
-      return typeof key === "string" && glowing.has(key);
-    });
-  }, [data, categoryKey, glowCategories]);
   const seriesId = useId();
   const { invalidate, emphasisScope } = useLineInteraction();
   const scope = `${emphasisScope}/${seriesId}`;

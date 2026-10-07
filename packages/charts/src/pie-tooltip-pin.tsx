@@ -7,7 +7,11 @@ import type { PieSeriesProps } from "./pie-series.js";
 export const PieTooltipPin = createContext<number | undefined>(undefined);
 
 /** Resolve against current rows; the returned index is never retained as identity. */
-export function pinnedPieIndex(children: ReactNode, category: string): number | undefined {
+export function pinnedPieIndex(
+  children: ReactNode,
+  category: string,
+  visibleSeries?: readonly string[],
+): number | undefined {
   const series: PieSeriesProps[] = [];
   let tooltips = 0;
   let unsupported = false;
@@ -37,15 +41,20 @@ export function pinnedPieIndex(children: ReactNode, category: string): number | 
     );
   const { data, categoryKey, hide } = candidate;
   if (hide) return undefined;
-  const matches = data.flatMap((row, index) => {
-    const key =
-      typeof categoryKey === "function"
-        ? categoryKey(row)
-        : row !== null && typeof row === "object" && Object.hasOwn(row, categoryKey)
-          ? (row as Record<string, unknown>)[categoryKey]
-          : undefined;
-    return key === category ? [index] : [];
-  });
-  // Ambiguous identities are never silently resolved by position.
-  return matches.length === 1 ? matches[0] : undefined;
+  const keys = data.map((row) =>
+    typeof categoryKey === "function"
+      ? categoryKey(row)
+      : row !== null && typeof row === "object" && Object.hasOwn(row, categoryKey)
+        ? (row as Record<string, unknown>)[categoryKey]
+        : undefined,
+  );
+  // Ambiguous identities are never silently resolved by position, including hidden rows.
+  if (keys.filter((key) => key === category).length !== 1) return undefined;
+  // Only a bound Pie filters its native data. Unbound composition keeps its original indices.
+  const renderedKeys =
+    candidate.interactionBinding === "root" && visibleSeries !== undefined
+      ? keys.filter((key) => typeof key === "string" && visibleSeries.includes(key))
+      : keys;
+  const index = renderedKeys.indexOf(category);
+  return index < 0 ? undefined : index;
 }
