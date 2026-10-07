@@ -6,8 +6,9 @@ export function isIndexable(env = process.env) {
   return deployment === "production" && (!env.VERCEL_ENV || env.VERCEL_ENV === "production");
 }
 export const siteOrigin = "https://kindui.dev";
-export const showcaseURL = `${siteOrigin}/charts/`;
-export const docsURL = `${showcaseURL}docs/`;
+// The showcase uses Next's default no-trailing-slash route; Docs exports directories.
+export const showcaseURL = `${siteOrigin}/charts`;
+export const docsURL = `${showcaseURL}/docs/`;
 export function indexingMetadata(env = process.env) {
   const index = isIndexable(env);
   return { metadataBase: new URL(siteOrigin), robots: { index, follow: index } };
@@ -16,7 +17,7 @@ export function robotsPolicy(env = process.env) {
   return isIndexable(env)
     ? {
         rules: { userAgent: "*", allow: "/" },
-        sitemap: [`${showcaseURL}sitemap.xml`, `${docsURL}sitemap.xml`],
+        sitemap: [`${showcaseURL}/sitemap.xml`, `${docsURL}sitemap.xml`],
       }
     : { rules: { userAgent: "*", disallow: "/" } };
 }
