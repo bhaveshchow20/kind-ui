@@ -5,6 +5,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { changesetStatus, prepareChartsVersion } from "./prepare-release-version.mjs";
+import { previousVersionStatus } from "./release-intent.mjs";
+import { assertReleaseTransition } from "./release-plan.mjs";
+
 const root = fileURLToPath(new URL("../", import.meta.url));
 const originalManifest = await readFile(join(root, "packages/charts/package.json"), "utf8");
 const scratch = await mkdtemp(join(tmpdir(), "kind-release-versioning-"));
@@ -74,8 +78,58 @@ try {
     await readFile(join(root, "packages/charts/package.json"), "utf8"),
     originalManifest,
   );
+  // Exercise the real wrapper on a public patch, entirely in the disposable workspace.
+  const previous = { name: "@kind-ui/charts", version: "0.1.1" };
+  await writeFile(join(scratch, "packages/charts/package.json"), JSON.stringify(previous));
+  await writeFile(
+    join(scratch, ".changeset/release-version.json"),
+    JSON.stringify({ package: previous.name, version: previous.version }),
+  );
+  run(["add", "--patch", "@kind-ui/charts", "--message", "Fixture public patch"]);
+  const patchStatus = await changesetStatus(scratch, cli);
+  execFileSync("git", ["add", "."], { cwd: scratch });
+  execFileSync(
+    "git",
+    [
+      "-c",
+      "user.name=Versioning Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "commit",
+      "-m",
+      "Public patch input",
+    ],
+    { cwd: scratch, stdio: "ignore" },
+  );
+  const parentCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+    cwd: scratch,
+    encoding: "utf8",
+  }).trim();
+  assert.deepEqual(await previousVersionStatus(scratch, parentCommit, cli), patchStatus);
+  const next = await prepareChartsVersion(scratch, { cli, npm: process.env.npm_execpath });
+  const publicManifest = JSON.parse(await readFile(join(scratch, "packages/charts/package.json")));
+  assert.equal(publicManifest.version, "0.1.2");
+  assert.equal(
+    JSON.parse(await readFile(join(scratch, "package-lock.json"))).packages["packages/charts"]
+      .version,
+    "0.1.2",
+  );
+  assertReleaseTransition({
+    policy: next,
+    manifest: publicManifest,
+    previous,
+    status: patchStatus,
+    pending: [],
+    changelog: await readFile(join(scratch, "packages/charts/CHANGELOG.md"), "utf8"),
+  });
+  assert.equal(await prepareChartsVersion(scratch, { cli, npm: process.env.npm_execpath }), null);
+  assert.deepEqual(JSON.parse(await readFile(join(scratch, "package.json"))), workspace);
+  assert.equal(
+    await readFile(join(root, "packages/charts/package.json"), "utf8"),
+    originalManifest,
+  );
   console.log(
-    "Official Changesets prepared private 0.1.0 + changelog in a disposable fixture; real package unchanged",
+    "Official Changesets first-release and public-patch wrapper fixtures passed; real package unchanged",
   );
 } finally {
   await rm(scratch, { recursive: true, force: true });

@@ -24,8 +24,7 @@ function assertVersionPullRequests(w) {
   assert.deepEqual(job.permissions, { contents: "write", "pull-requests": "write" });
   assert.equal(job.environment, undefined);
   const plan = job.steps.find((step) => step.id === "plan");
-  assert.match(plan.run, /npm run release:status/);
-  assert.match(plan.run, /status\.releases\.length > 0/);
+  assert.equal(plan.run, "node scripts/prepare-release-version.mjs --status");
   const action = job.steps.find((step) => step.uses?.startsWith("changesets/"));
   assert.equal(action.uses, "changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51");
   assert.equal(action.if, "steps.plan.outputs.has_changesets == 'true'");
@@ -81,14 +80,32 @@ for (const [name, mutate] of [
 function assertDisabledRelease(w) {
   assert.deepEqual(
     Object.keys(w.on),
-    ["workflow_dispatch"],
-    "Release must be explicitly dispatched",
+    ["push", "workflow_dispatch"],
+    "Only reviewed main pushes and explicit validation enter releases",
   );
   assert.deepEqual(w.permissions, { contents: "read" }, "No publishing identity is granted");
-  assert.equal(w.jobs.validate.if, "github.ref == 'refs/heads/main'", "Candidate uses main only");
+  assert.equal(
+    w.jobs.plan.if,
+    "github.repository == 'bhaveshchow20/kind-ui' && github.ref == 'refs/heads/main'",
+  );
+  assert.deepEqual(w.on.push.branches, ["main"]);
+  assert.deepEqual(w.on.push.paths, [
+    "packages/charts/package.json",
+    ".changeset/release-version.json",
+  ]);
+  assert.equal(w.jobs.validate.needs, "plan");
+  assert.equal(w.jobs.validate.if, "needs.plan.outputs.validate == 'true'");
+  assert.equal(
+    w.jobs.plan.steps.find((s) => s.id === "intent").run,
+    "node scripts/release-intent.mjs",
+  );
   assert.deepEqual(w.jobs.validate.strategy.matrix.node, [22, 24]);
-  assert.equal(w.jobs.verify.needs, "validate", "Both matrix jobs must pass before handoff");
-  assert.equal(w.jobs.publish.needs, "verify");
+  assert.deepEqual(
+    w.jobs.verify.needs,
+    ["plan", "validate"],
+    "Both matrix jobs must pass before handoff",
+  );
+  assert.deepEqual(w.jobs.publish.needs, ["plan", "verify"]);
   // biome-ignore lint/suspicious/noTemplateCurlyInString: Literal GitHub Actions expression.
   assert.equal(w.jobs.publish.if, "${{ false }}", "Publishing remains hard-disabled");
   for (const job of Object.values(w.jobs)) {
@@ -107,13 +124,13 @@ function assertDisabledRelease(w) {
   assert.ok(w.jobs.publish.steps.some((s) => s.run?.includes("--require-public")));
   assert.ok(!JSON.stringify(w).includes("secrets."), "No credential setup in this workflow");
 }
-test("manual pipeline preserves read-only permissions and disabled exact-artifact publishing", () =>
+test("reviewed main pipeline preserves read-only permissions and disabled exact-artifact publishing", () =>
   assertDisabledRelease(workflow));
 for (const [name, mutate] of [
   [
-    "merge trigger",
+    "untrusted merge trigger",
     (w) => {
-      w.on.push = { branches: ["main"] };
+      w.on.push.branches = ["feature"];
     },
   ],
   [
@@ -145,6 +162,10 @@ test("manual validation defaults to the reviewed package candidate version", asy
   const manifest = JSON.parse(
     await readFile(new URL("../packages/charts/package.json", import.meta.url), "utf8"),
   );
-  assert.equal(workflow.on.workflow_dispatch.inputs.version.default, manifest.version);
+  assert.equal(workflow.on.workflow_dispatch.inputs.version.default, "");
+  const policy = JSON.parse(
+    await readFile(new URL("../.changeset/release-version.json", import.meta.url), "utf8"),
+  );
+  assert.equal(policy.version, manifest.version);
   assert.equal(manifest.private, undefined);
 });

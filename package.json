@@ -29,9 +29,9 @@
     "test:line-integrations": "playwright test --config playwright.line-integrations.config.mjs",
     "changeset": "changeset",
     "release:status": "changeset status",
-    "release:version": "changeset version && npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
+    "release:version": "node scripts/prepare-release-version.mjs",
     "check:ci": "node --test scripts/ci-workflow.test.mjs scripts/ci-tools.test.mjs",
-    "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs && node scripts/check-release-versioning.mjs",
+    "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs scripts/release-plan.test.mjs && node scripts/check-release-versioning.mjs",
     "test:chart": "playwright test",
     "check:framework": "npm run check:line-integrations && npm run test:line-integrations"
   },

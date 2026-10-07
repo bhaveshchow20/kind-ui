@@ -19,8 +19,9 @@ compatible with the pinned CLI 3. It opens or updates a draft version/changelog
 PR when package changesets reach main. It does not bump versions on ordinary
 merges, publish packages, create tags or create GitHub Releases.
 
-The action runs the existing `npm run release:version` command, which regenerates
-the npm lockfile. Review package versions, changelog and lockfile together. GitHub
+The action runs `npm run release:version`: the pinned Changesets CLI computes
+and consumes the package changesets, then regenerates the npm lockfile and the
+exact reviewed candidate in `.changeset/release-version.json`. Review package versions, changelog and lockfile together. GitHub
 Actions must be allowed to create pull requests in repository Actions settings.
 This workflow does not change that persistent setting or introduce credentials.
 The default GitHub token creates PR check runs in an approval-required state;
@@ -28,22 +29,25 @@ approve those runs before review/merge. Unattended checks would require a
 separately approved GitHub App or token, not a silent credential addition. See
 [GitHub token workflow behavior](https://docs.github.com/en/actions/concepts/security/github_token).
 
-The package contract deliberately requires exactly the reviewed `0.1.1`
-candidate. Each later version PR must include a reviewed adjustment to this
-exact-version guard and the manual validation default. Preparing and testing a
-version does not authorize its publication.
+The package contract still requires exactly the committed reviewed version; it
+never accepts arbitrary stable versions. The version PR includes that policy,
+its source version and consumed changeset IDs alongside the manifest, changelog
+and lockfile. Review them together. No changesets means no version change.
 
-Merge the reviewed version PR after the required checks pass. Publication then
-uses the release handoff below. Automated publication after that merge requires
-a separately approved publishing identity; the version action never substitutes
-`changeset publish` for the exact tested tarball.
+After the version PR merges, the release workflow reconstructs the previous main
+Changesets plan and requires an exact match. Ordinary main merges do not publish.
+Manual dispatch can rehearse the current reviewed version; recover a failed
+version merge by rerunning its original workflow, rather than dispatching a later
+main commit. [Release automation](../docs/release-automation.md) describes the
+publishing gate, identities, verification and retry behavior.
 
 ## Exact artifact release
 
-`.github/workflows/release.yml` validates main on Node 22 and 24, retains tested
+`.github/workflows/release.yml` validates eligible main on Node 22 and 24, retains tested
 tarballs, downloads the Node 24 candidate from the same run, and verifies source,
 receipt, SHA-256, npm integrity and matching integration evidence. Its publishing
-job is disabled until publishing authentication is approved and configured.
+job remains disabled in the preparation draft until the approved npm trust is
+verified and the reviewed activation commit lands.
 PR validation has no publishing identity. Account, secret and trusted-publisher
 setup are separate security decisions.
 

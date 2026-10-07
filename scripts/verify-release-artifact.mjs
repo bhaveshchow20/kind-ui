@@ -11,6 +11,7 @@ const result = await verifyReleaseArtifact(
     runId: process.env.GITHUB_RUN_ID,
     runAttempt: process.env.GITHUB_RUN_ATTEMPT,
     sha256: process.env.RELEASE_SHA256,
+    event: process.env.GITHUB_EVENT_NAME,
   },
   { requirePublic: process.argv.includes("--require-public") },
 );
@@ -18,7 +19,7 @@ console.log(JSON.stringify(result, null, 2));
 if (process.env.GITHUB_OUTPUT) {
   await appendFile(
     process.env.GITHUB_OUTPUT,
-    `filename=${result.filename}\nsha256=${result.sha256}\npublishable=${result.publishable}\n`,
+    `filename=${result.filename}\nsha256=${result.sha256}\nintegrity=${result.integrity}\npublishable=${result.publishable}\n`,
   );
 }
 if (process.env.GITHUB_STEP_SUMMARY) {
