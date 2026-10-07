@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./browser";
 
 test("dash motion stays independent of reveal, native paint and lifecycle", async ({ page }) => {
   const errors: string[] = [];
@@ -59,12 +58,25 @@ test("dash motion stays independent of reveal, native paint and lifecycle", asyn
 
 test("reduced motion stops stylesheet dashes without a React commit", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  // Use the stylesheet shipped with the existing packed consumer, including on CI shards.
+  await page.goto("http://127.0.0.1:4176/motion.html");
+  const stylesheetUrls = await page
+    .locator('link[rel="stylesheet"]')
+    .evaluateAll((links) => links.map((link) => (link as HTMLLinkElement).href));
+  expect(stylesheetUrls.length).toBeGreaterThan(0);
+  const stylesheets = await Promise.all(
+    stylesheetUrls.map(async (url) => {
+      const response = await page.request.get(url);
+      expect(response.ok()).toBe(true);
+      return response.text();
+    }),
+  );
+  // Discard the fixture's React document before exercising the standalone SVG.
+  await page.goto("about:blank");
   await page.setContent(
     `<svg class="kind-ui-line-dash" style="--kind-ui-dash-duration:800ms;--kind-ui-dash-cycle:10px;--kind-ui-dash-offset:3px;--kind-ui-dash-direction:normal"><path class="recharts-line-curve" d="M0,0L100,100" stroke="teal" stroke-dasharray="6 4" stroke-dashoffset="3" /></svg>`,
   );
-  await page.addStyleTag({
-    content: await readFile(new URL("../packages/charts/dist/styles.css", import.meta.url), "utf8"),
-  });
+  await page.addStyleTag({ content: stylesheets.join("\n") });
   const path = page.locator("path");
   await expect(path).toHaveCSS("animation-name", "kind-ui-line-dash");
   await page.emulateMedia({ reducedMotion: "reduce" });
