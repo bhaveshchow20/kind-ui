@@ -11,7 +11,7 @@ export type RadialBarChart = Pick<
   | "outerRadius"
 >;
 export type RadialBarSeries = Pick<
-  Chart.RadialBarSeriesProps,
+  Omit<Chart.RadialBarSeriesProps, "material"> & { material?: "plain" | "clay" | "glow" },
   "dataKey" | "seriesKey" | "background" | "material" | "stackId" | "cornerRadius"
 >;
 export type RadialBarLabel = Pick<
@@ -21,6 +21,17 @@ export type RadialBarLabel = Pick<
 
 export type ActivityRingsReference = Pick<
   Chart.ActivityRingsProps,
-  "rings" | "config" | "domain" | "animate" | "height" | "series" | "labels" | "legend" | "tooltip"
+  | "rings"
+  | "config"
+  | "domain"
+  | "animate"
+  | "height"
+  | "series"
+  | "labels"
+  | "legend"
+  | "tooltip"
+  | "rootProps"
+  | "loading"
+  | "loadingLabel"
 >;
 export type ActivityRingReference = Chart.ActivityRing;

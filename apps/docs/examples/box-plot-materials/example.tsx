@@ -36,9 +36,9 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function MaterialResponseTimeBoxPlot({
-  material = "paper",
+  material = "plain",
 }: {
-  material?: "plain" | "paper" | "clay" | "glow";
+  material?: "plain" | "clay" | "glow";
 } = {}) {
   return (
     <Chart.Root config={config}>
@@ -56,7 +56,7 @@ export function MaterialResponseTimeBoxPlot({
             dataKey="period"
             axisLine={false}
             tickLine={false}
-            tickMargin={12}
+            tickMargin={8}
             height={48}
             interval={0}
           />

@@ -28,7 +28,9 @@ Domain order determines equal-cell layout. Missing records and `null` use patter
 
 <ChartExample id="heatmap-compact" />
 
-Numbers use pixels; valid CSS lengths such as `"1rem"` work too. Omit `cellSize` for fluid sizing. A width-constrained host retains horizontal scrolling; custom content or native cell styles can enlarge cells. Use `min-width: 0` when a flex/grid host must shrink.
+Use pixels or CSS lengths such as `"1rem"`; omit `cellSize` for fluid cells. Constrained hosts scroll horizontally.
+
+Custom content and cell styles can enlarge cells. Set `min-width: 0` so flex/grid hosts can shrink.
 
 ## Signed comparisons
 
@@ -40,7 +42,7 @@ Use sequential palettes for nonnegative counts. Calendar layouts require consume
 
 ## Cell materials
 
-Choose plain, paper, clay or glow on cell edges. The central 84% retains the exact scale color; missing cells retain their pattern. Consumer paint overrides can change encoding.
+Choose Default, Clay or Glow on cell edges. The central 84% retains the exact scale color; missing cells retain their pattern. Consumer paint overrides can change encoding.
 
 <ChartExample id="heatmap-materials" />
 
@@ -95,14 +97,16 @@ Captioned native table with row/column headers and roving grid focus. Empty doma
 | --- | --- | --- | --- |
 | `caption` | `string` | Required | Visible table caption and accessible grid name. |
 | `layout` | `{ cellSize?: number \| string; gap?: number \| string; rowLabels?: "visible" \| "hidden"; columnLabels?: "visible" \| "hidden" }` | Fluid cells; `gap: 3`; labels visible | Optional fixed cells, spacing and independent visual headers. |
-| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Static cell-edge finish; missing cells do not receive it. |
+| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static cell-edge finish; missing cells do not receive it. |
 | `Cell` | `ComponentType<HeatmapCellContentProps>` | `HeatmapCellContent` | Custom cell content receives `cell`, `fill` and `formattedValue`. Keep content compatible with grid navigation. |
 | `cellProps` | `(cell: HeatmapCell) => ComponentPropsWithRef<"td">` | — | Native styles, refs and handlers. The grid still owns cell semantics, focus and background color. |
 | `rowLabel` / `columnLabel` | `(key: string) => ReactNode` | Domain key | Customize visible headers; coordinate identities and inspection labels remain domain keys. |
 
 </div>
 
-`cellSize` must be positive; `gap` must be nonnegative, including zero. Numeric values must be finite. Native table `style`, custom `Cell` and `cellProps` keep their existing overrides. Hidden labels retain grid names, header IDs and keyboard navigation; `HeatmapDataTable` is independent.
+`cellSize` must be positive and `gap` nonnegative; numbers must be finite. Table `style`, custom `Cell` and `cellProps` retain their overrides.
+
+Hidden labels preserve grid names, header IDs and keyboard navigation. `HeatmapDataTable` remains independent.
 
 Each `HeatmapCell` retains row/column identities, indices, value and every source record. See [native table semantics](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/table).
 

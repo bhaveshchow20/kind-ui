@@ -14,7 +14,7 @@ export const pieExamples = [
   {
     id: "pie-materials",
     title: "Pie materials",
-    notes: "Native donut sectors with plain, paper, clay or glow finishes.",
+    notes: "Native donut sectors with Default, Clay or Glow finishes.",
     acceptance: "Selected finish matches full source and preview.",
   },
   {
@@ -25,17 +25,37 @@ export const pieExamples = [
     acceptance:
       "Geometry selection matches copied source; category identity and the 1,000-hour data alternative remain unchanged.",
   },
+  {
+    id: "pie-interaction",
+    title: "Category focus and initial inspection",
+    notes:
+      "A Root-bound donut starts with Default paint and initially inspects Service. Choose Selective glow for its halo. Activate a slice or legend to focus; Escape clears focus.",
+    acceptance:
+      "Original category IDs drive Root binding, shared focus, the initial tooltip and selective glow. Loading preserves layout.",
+  },
 ];
 export const pieDataLabels = Object.fromEntries(
   pieExamples.map(({ id }) => [
     id,
-    {
-      caption: "Team allocation (1,000 hours)",
-      columns: { key: "Team", hours: "Hours", share: "Share of total" },
-    },
+    id === "pie-interaction"
+      ? { caption: "Allocation", columns: { id: "Category", value: "Allocation" } }
+      : {
+          caption: "Team allocation (1,000 hours)",
+          columns: { key: "Team", hours: "Hours", share: "Share of total" },
+        },
   ]),
 );
 export const pieVariants = {
+  "pie-interaction": {
+    control: "State",
+    prop: "status",
+    default: "ready",
+    options: [
+      { value: "ready", label: "Ready" },
+      { value: "loading", label: "Loading" },
+      { value: "selective-glow", label: "Selective glow" },
+    ],
+  },
   "pie-rounded": {
     control: "Geometry",
     prop: "geometry",
@@ -58,10 +78,9 @@ export const pieVariants = {
   "pie-materials": {
     control: "Material",
     prop: "material",
-    default: "paper",
+    default: "plain",
     options: [
-      { value: "paper", label: "Paper" },
-      { value: "plain", label: "Plain" },
+      { value: "plain", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

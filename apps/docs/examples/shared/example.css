@@ -119,3 +119,12 @@
 .chart-example [data-kind-ui="chart-legend"] button {
   font-size: 0.75rem;
 }
+
+/* Long consumer legends must wrap within the plot rather than widen a phone page. */
+.chart-example [data-kind-ui="chart-legend-item"],
+.chart-example [data-kind-ui="chart-legend-button"] {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

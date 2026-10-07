@@ -45,7 +45,7 @@ SVG series controls expose labels and pressed state, but provide no arrow-key sp
 
 ## Materials
 
-Choose plain, paper, clay or glow. Glow’s exterior halo is decorative, not a score boundary.
+Choose Default, Clay or Glow. Glow’s exterior halo is decorative, not a score boundary.
 
 <ChartExample id="radar-materials" />
 
@@ -89,7 +89,7 @@ String `dataKey` values identify config entries. Use `seriesKey` for numeric key
 | --- | --- | --- | --- |
 | `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Value field or native accessor; supplied for both profiles here. |
 | `seriesKey` | `string` | String `dataKey` | Metadata, visibility and selection identity. |
-| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Finish on default polygons; consumer rendering takes precedence. |
+| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Finish on default polygons; consumer rendering takes precedence. |
 | `stroke` / `fill` | `string` | Config color | Override outline or fill independently. |
 | `fillOpacity` | `number` | SVG default `1` | These overlapping profiles explicitly use `0.18`. |
 | `dot` | `boolean` or native dot props / renderer | `false` | Optional native category marks. |

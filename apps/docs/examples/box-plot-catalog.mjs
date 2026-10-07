@@ -15,7 +15,7 @@ export const boxPlotExamples = [
   {
     id: "box-plot-materials",
     title: "Materials",
-    notes: "Plain, paper, clay and glow finishes preserve summary coordinates.",
+    notes: "Default, Clay and Glow finishes preserve summary coordinates.",
     acceptance: "Selected material, complete source and copied source agree.",
   },
 ];
@@ -60,10 +60,9 @@ export const boxPlotVariants = {
   "box-plot-materials": {
     control: "Material",
     prop: "material",
-    default: "paper",
+    default: "plain",
     options: [
-      { value: "paper", label: "Paper" },
-      { value: "plain", label: "Plain" },
+      { value: "plain", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

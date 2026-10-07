@@ -27,14 +27,14 @@ const components = {
     () => import("@/examples/line-markers/example").then((m) => memo(m.ResponseTimeChart)),
     { loading: Loading, ssr: false },
   ),
-  "line-paper": dynamic(
-    () => import("@/examples/line-paper/example").then((m) => memo(m.MaterialLineChart)),
+  "line-materials": dynamic(
+    () => import("@/examples/line-materials/example").then((m) => memo(m.MaterialLineChart)),
     { loading: Loading, ssr: false },
   ),
 };
 
 const Curve = components["line-smooth"];
-const Material = components["line-paper"];
+const Material = components["line-materials"];
 export const previews = {
   line: components.line,
   "line-smooth": ({ variant }: PreviewProps) => (
@@ -42,7 +42,7 @@ export const previews = {
   ),
   "line-comparison": components["line-comparison"],
   "line-markers": components["line-markers"],
-  "line-paper": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+  "line-materials": ({ variant }: PreviewProps) => (
+    <Material material={variant as "plain" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

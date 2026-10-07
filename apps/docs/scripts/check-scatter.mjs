@@ -132,7 +132,7 @@ try {
   await page.mouse.move(0, 0);
   const material = page.locator('[data-component="scatter-materials"]');
   await material.getByRole("combobox", { name: "Material" }).click();
-  await page.getByRole("option", { name: "Paper", exact: true }).click();
+  await page.getByRole("option", { name: "Clay", exact: true }).click();
   for (const width of [1440, 375, 320]) {
     await page.setViewportSize({ width, height: width === 1440 ? 1080 : 812 });
     for (const enlarged of [false, true]) {

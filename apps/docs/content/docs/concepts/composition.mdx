@@ -16,7 +16,9 @@ The examples below use public exports and include their own data and config. Imp
 
 ## Level 1: Configured chart (recommended default)
 
-Pass `data`, `config`, an accessible name and `xDataKey`. With no explicit children, `LineChart` generates the grid, axes, series, tooltip and legend. It owns its `Root`; do not wrap it in another one. Customize generated parts with options such as `yAxis` and `curve`.
+Pass `data`, `config`, an accessible name and `xDataKey`. With no explicit children, `LineChart` generates the grid, axes, series, tooltip and legend. It owns its `Root`; do not wrap it in another one.
+
+Customize generated parts with options such as `yAxis` and `curve`.
 
 ```tsx title="Configured chart"
 import * as Chart from "@kind-ui/charts";
@@ -41,7 +43,9 @@ export function ConfiguredChart() {
 
 ## Level 2: Explicit Root for full control
 
-Choose this level to place a legend outside the plot, control the responsive container yourself or compose native plot parts. Pass `config` to `Root` and omit it from `LineChart`. The application owns the child structure; nothing generates axes, series, tooltip or legend for you.
+Choose this level to place a legend outside the plot, control the responsive container yourself or compose native plot parts. Pass `config` to `Root` and omit it from `LineChart`.
+
+You compose every axis, series, tooltip and legend.
 
 ```tsx title="Explicit Root"
 import * as Chart from "@kind-ui/charts";
@@ -70,7 +74,9 @@ export function ExplicitRootChart() {
 
 ### Advanced escape hatch: configured chart with explicit children
 
-Keep configured context, sizing, visibility and motion while replacing the plot parts when you only need custom axes or marks. This hybrid is an advanced customization of level 1. Explicit children replace all generated plot parts. Omit `xDataKey` to enable manual axis composition and put the x key on your `XAxis` instead. Also omit `curve`, `material`, `series` and generated-part options; set those choices on the explicit parts. `legend={{}}` adds the internally positioned legend.
+Keep configured context, sizing, visibility and motion while replacing the plot parts when you only need custom axes or marks. This is an advanced level-1 customization. Explicit children replace generated plot parts.
+
+Omit `xDataKey`; put the x key on `XAxis`. Also omit `curve`, `material`, `series` and generated-part options; set those choices on the explicit parts. `legend={{}}` adds the internally positioned legend.
 
 ```tsx title="Advanced hybrid"
 import * as Chart from "@kind-ui/charts";
@@ -104,8 +110,12 @@ See the [Line API](/docs/components/line/#api-reference) for exact props and def
 
 ## Dimensions and tokens
 
-Give the chart measurable space. Configured `LineChart` defaults to full width and 280px height, with dimensions overridable by props and styles. The package stylesheet uses scoped config colors and application tokens such as `--foreground`, `--card`, `--border` and `--muted-foreground`; the complete consumer includes a stylesheet defining them.
+Give the chart measurable space. Configured `LineChart` defaults to full width and 280px height, with dimensions overridable by props and styles.
+
+The stylesheet uses scoped config colors and tokens such as `--foreground`, `--card`, `--border` and `--muted-foreground`; the complete consumer defines them.
 
 ## Motion and access
 
-Configured Line defaults to maintained motion and respects reduced-motion preferences; `animate={false}` disables it. Explicit `Root` + `LineChart` retains the legacy default of no animation; opt in with `animate` on `LineChart`. Custom shapes, filters and renderers retain their own behavior and styling. Materials decorate lines without changing data or geometry.
+Configured Line defaults to maintained motion and respects reduced-motion preferences; `animate={false}` disables it. Explicit `Root` + `LineChart` retains the legacy default of no animation; opt in with `animate` on `LineChart`.
+
+Custom shapes, filters and renderers retain their own behavior and styling. Materials decorate lines without changing data or geometry.
