@@ -100,6 +100,7 @@ test("direct and namespace imports expose the same public components", () => {
     "SankeyLegend",
     "SankeyLink",
     "SankeyNode",
+    "SankeyNodeLabel",
     "SankeyTable",
     "ScatterChart",
     "ScatterSeries",
@@ -1463,4 +1464,130 @@ test("selective Pie glow leaves the native SSR shell and host data alternative u
   assert.equal(chart(["alpha", "unknown"]), chart(undefined));
   assert.doesNotMatch(chart(["alpha"]), /pie-halo|<filter/);
   assert.match(chart(["alpha"]), /Category values/);
+});
+
+test("Sankey labels use stable identity, totals, explicit contents and bounded inside text", () => {
+  const data = {
+    nodes: [
+      { id: "b", name: "Sink" },
+      { id: "a", name: "Source" },
+    ],
+    links: [{ id: "flow", source: "a", target: "b", value: 7 }],
+  };
+  const node = { x: 10, y: 20, width: 0, height: 1, payload: { id: "a", name: "stale" } };
+  const label = (props = {}) =>
+    renderSvg(
+      h(Chart.SankeyNodeLabel, {
+        node,
+        data,
+        showValues: true,
+        valueFormatter: (v) => `${v} MWh`,
+        ...props,
+      }),
+    );
+  assert.match(label(), /Source: 7 MWh/);
+  assert.match(label(), /x="18"/);
+  assert.doesNotMatch(label(), /stale/);
+  assert.match(label({ position: "inside", children: h("tspan", null, "Custom") }), /clipPath/);
+  assert.match(label({ position: "inside" }), /width="0" height="1"/);
+  assert.match(label({ children: "Custom" }), /<title>Source: 7 MWh<\/title>/);
+  assert.match(label({ node: { ...node, payload: { id: "b" } } }), /Sink: 7 MWh/);
+  assert.match(label({ node: { ...node, payload: { id: "b" } } }), /text-anchor="end"/);
+  assert.throws(() => label({ node: { ...node, payload: { id: "missing" } } }), /requires node id/);
+  assert.throws(() => label({ offset: -1 }), /nonnegative/);
+  assert.match(label({ data: { ...data, links: [] } }), /Source: 0 MWh/);
+  assert.match(
+    render(h(Chart.SankeyTable, { data, caption: "Flows", formatValue: (v) => `${v} MWh` })),
+    /7 MWh/,
+  );
+});
+
+test("Sankey intermediate labels count throughput once including rounding tolerance", () => {
+  const data = {
+    nodes: [
+      { id: "a", name: "Source" },
+      { id: "m", name: "Middle" },
+      { id: "b", name: "Sink" },
+      { id: "c", name: "Loss" },
+    ],
+    links: [
+      { id: "in", source: "a", target: "m", value: 10 },
+      { id: "out", source: "m", target: "b", value: 7 },
+      { id: "loss", source: "m", target: "c", value: 3 },
+    ],
+  };
+  const node = { x: 20, y: 0, width: 10, height: 30, payload: { id: "m" } };
+  const label = (flow = data) =>
+    renderSvg(
+      h(Chart.SankeyNodeLabel, {
+        data: flow,
+        node,
+        showValues: true,
+        side: "left",
+        offset: 4,
+        className: "custom",
+        "aria-label": "Throughput",
+      }),
+    );
+  assert.match(label(), /Middle: 10/);
+  assert.match(label(), /x="16"/);
+  assert.match(label(), /class="custom" aria-label="Throughput"/);
+  assert.match(
+    label({
+      ...data,
+      links: data.links.map((link) =>
+        link.id === "loss" ? { ...link, value: 3.000000001 } : link,
+      ),
+    }),
+    /Middle: 10.000000001/,
+  );
+});
+
+test("Sankey configured icons preserve identity, text ownership and bounded placement", () => {
+  const data = {
+    nodes: [
+      { id: "sink", name: "Sink" },
+      { id: "source", name: "Source" },
+    ],
+    links: [{ id: "flow", source: "source", target: "sink", value: 7 }],
+  };
+  const node = {
+    x: 30,
+    y: 20,
+    width: 10,
+    height: 1,
+    payload: { id: "source", name: "stale" },
+    index: 0,
+  };
+  const nodeConfig = {
+    source: { label: "Legend only", color: "red", icon: h("path", { d: "M0 0h24v24z" }) },
+    sink: { label: "Sink metadata", color: "blue" },
+  };
+  const label = (props = {}) =>
+    renderSvg(h(Chart.SankeyNodeLabel, { node, data, nodeConfig, ...props }));
+  assert.match(label(), /data-kind-ui="sankey-node-icon"/);
+  assert.match(label(), /aria-hidden="true" focusable="false"/);
+  assert.match(label(), /<text x="68" y="20.5"/);
+  assert.match(label(), /<title>Source<\/title>/);
+  assert.doesNotMatch(label(), /Legend only|stale/);
+  assert.match(label({ side: "left", iconSize: 12, iconGap: 2 }), /<text x="8"/);
+  assert.match(
+    label({ showValues: true, children: h("tspan", null, "Custom") }),
+    /<title>Source: 7<\/title>/,
+  );
+  assert.match(label({ children: "Custom" }), />Custom<\/text>/);
+  assert.match(label({ position: "inside" }), /clip-path="url\(#/);
+  assert.match(label({ position: "inside" }), /width="10" height="1"/);
+  assert.doesNotMatch(label({ node: { ...node, payload: { id: "sink" } } }), /sankey-node-icon/);
+  assert.doesNotMatch(label({ nodeConfig: undefined }), /sankey-node-icon/);
+  assert.doesNotMatch(label({ iconSize: 0 }), /sankey-node-icon/);
+  for (const icon of [null, false, undefined]) {
+    assert.match(label({ nodeConfig: { source: { ...nodeConfig.source, icon } } }), /<text x="48"/);
+  }
+  assert.match(
+    label({ data: { ...data, nodes: [...data.nodes].reverse() } }),
+    /data-node-id="source"/,
+  );
+  for (const props of [{ iconSize: -1 }, { iconGap: Infinity }])
+    assert.throws(() => label(props), /nonnegative/);
 });
