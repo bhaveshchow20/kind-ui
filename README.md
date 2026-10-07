@@ -21,7 +21,7 @@ The [Line guide](https://kindui.dev/charts/docs/components/line/) includes a com
 
 Compose public components with your data, axes and application state. Optional motion, theme-aware colors, fill and background patterns, projected bars, percentage formatting, loading states and interactions share explicit typed contracts. Read the [package API](packages/charts/README.md) for defaults, ownership and limits.
 
-For agents, retrieve the [documentation index](https://kindui.dev/charts/llms.txt), [complete reference](https://kindui.dev/charts/llms-full.txt) and [consumer guidance](https://kindui.dev/charts/markdown/agents/consumer.md). Install the consumer skill with `npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`. Example setup files and prompts are available from each chart guide.
+For agents, retrieve the [documentation index](https://kindui.dev/charts/docs/llms.txt), [complete reference](https://kindui.dev/charts/docs/llms-full.txt) and [consumer guidance](https://kindui.dev/charts/docs/markdown/agents/consumer.md). Install the consumer skill with `npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`. Example setup files and prompts are available from each chart guide.
 
 ## Development
 
