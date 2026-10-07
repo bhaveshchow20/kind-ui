@@ -144,3 +144,28 @@ test("hover and color updates preserve native DOM and never replay entrances", a
     /--color-area: #e11d48/,
   );
 });
+
+test("direction overrides are isolated to Combo line and area clips and release on resize", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(`${url}?directional`);
+  const managed = page.getByRole("region", { name: "Managed", exact: true });
+  await expect(managed.locator('[data-combo-reveal="line"]').locator("..")).toHaveAttribute(
+    "data-reveal-direction",
+    "right-to-left",
+  );
+  const areaClip = managed.locator('[data-combo-reveal="area"]').locator("..");
+  await expect(areaClip).toHaveAttribute("data-reveal-direction", "edges-in");
+  await expect(areaClip.locator("rect")).toHaveCount(2);
+  await expect(managed.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(2);
+  const paths = (region: typeof managed) =>
+    region
+      .locator(".recharts-line-curve, .recharts-area-area")
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+  const native = page.getByRole("region", { name: "Native", exact: true });
+  await expect.poll(() => paths(managed)).toEqual(await paths(native));
+  await page.getByRole("button", { name: "Resize", exact: true }).click();
+  await expect(managed.locator("clipPath[data-reveal-direction]")).toHaveCount(0);
+  await expect.poll(() => paths(managed)).toEqual(await paths(native));
+});
