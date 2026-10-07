@@ -36,7 +36,7 @@ for (const example of family.examples) {
         filesFor(bundles[example.id], {}, variant)[`src/examples/${example.id}/example.tsx`],
         selection.source,
       );
-      assert.ok(selection.source.includes(`appearance = "${variant}"`));
+      assert.ok(selection.source.includes(`${family.variants[example.id].prop} = "${variant}"`));
     }
   });
 }

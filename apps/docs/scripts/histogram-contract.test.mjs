@@ -4,6 +4,8 @@ import { test } from "node:test";
 import { binHistogram } from "@kind-ui/charts";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
 
+import { family } from "../examples/histogram-catalog.mjs";
+
 const bundles = JSON.parse(readFileSync("generated/histogram-examples.json", "utf8"));
 test("histogram copies retain native quantitative composition and matching variants", () => {
   assert.deepEqual(Object.keys(bundles), ["histogram", "histogram-density", "histogram-materials"]);
@@ -25,7 +27,7 @@ test("histogram copies retain native quantitative composition and matching varia
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
         variant.source,
       );
-      assert.match(variant.source, new RegExp(`appearance = "${value}"`));
+      assert.match(variant.source, new RegExp(`${family.variants[bundle.id].prop} = "${value}"`));
     }
   }
 });
