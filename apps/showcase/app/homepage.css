@@ -112,6 +112,7 @@ button:disabled {
   background: var(--muted);
 }
 .nav-search,
+.mobile-docs,
 .nav-theme-switcher {
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -152,6 +153,7 @@ button:disabled {
   border-radius: inherit;
   background: var(--muted);
 }
+.mobile-docs,
 .mobile-theme {
   display: none;
 }
@@ -885,6 +887,7 @@ button:disabled {
   margin: auto;
 }
 .kind-github,
+.mobile-docs,
 .nav-search,
 .nav-theme-switcher,
 .mobile-theme,
@@ -899,6 +902,7 @@ button:disabled {
   backdrop-filter: blur(16px);
 }
 .dark .kind-github,
+.dark .mobile-docs,
 .dark .nav-search,
 .dark .nav-theme-switcher,
 .dark .install-panel,
@@ -1009,6 +1013,7 @@ button:disabled {
   .nav-theme-switcher {
     display: none;
   }
+  .mobile-docs,
   .mobile-theme {
     display: inline-flex;
     align-items: center;
@@ -1082,6 +1087,7 @@ button:disabled {
   .nav-theme-switcher {
     display: none;
   }
+  .mobile-docs,
   .mobile-theme {
     display: inline-flex;
     align-items: center;
@@ -1260,4 +1266,30 @@ button:disabled {
   color: var(--kind-ui-chart-popover-foreground);
   box-shadow: 0 4px 16px #00000012;
   backdrop-filter: blur(16px);
+}
+
+@media (max-width: 360px) {
+  .kind-nav {
+    gap: 8px;
+  }
+  .wordmark {
+    font-size: 20px;
+    gap: 4px;
+  }
+  .brand-flower {
+    font-size: 18px;
+  }
+  .kind-nav-actions {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .nav-search,
+  .mobile-docs,
+  .mobile-theme,
+  .kind-github {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    justify-content: center;
+  }
 }

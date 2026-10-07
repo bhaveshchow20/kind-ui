@@ -34,6 +34,18 @@ for (const width of [320, 375, 768, 1280]) {
     await page.goto("./");
     await expect(page.getByRole("button", { name: "Search documentation" })).toBeVisible();
     await expect(page.locator(".wordmark")).toBeVisible();
+    const docs = page
+      .locator(".kind-nav-actions")
+      .getByRole("link", { name: "Documentation", exact: true });
+    if (width <= 800) {
+      await expect(docs).toBeVisible();
+      await expect(docs).toHaveAttribute("href", "https://kindui.dev/charts/docs/");
+      const logo = await page.locator(".wordmark").boundingBox();
+      const actions = await page.locator(".kind-nav-actions").boundingBox();
+      expect((logo?.x ?? 0) + (logo?.width ?? 0)).toBeLessThanOrEqual(actions?.x ?? 0);
+    } else {
+      await expect(docs).toBeHidden();
+    }
     if (width <= 800) {
       await page.getByRole("button", { name: "Appearance", exact: true }).click();
       await page.getByRole("menuitemradio", { name: "Dark", exact: true }).click();

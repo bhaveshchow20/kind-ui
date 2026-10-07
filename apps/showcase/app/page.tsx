@@ -1,7 +1,17 @@
 "use client";
 
 import * as Chart from "@kind-ui/charts";
-import { ArrowUpRight, Check, Copy, Maximize2, Monitor, Moon, Search, Sun } from "lucide-react";
+import {
+  ArrowUpRight,
+  BookOpen,
+  Check,
+  Copy,
+  Maximize2,
+  Monitor,
+  Moon,
+  Search,
+  Sun,
+} from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { DropdownMenu } from "radix-ui";
@@ -858,6 +868,16 @@ export default function Page() {
           </nav>
           <div className="kind-nav-actions">
             <DocumentationSearch />
+            <a
+              className="mobile-docs"
+              href={siteLinks.docs}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Documentation"
+              title="Documentation"
+            >
+              <BookOpen size={17} aria-hidden="true" />
+            </a>
             <ThemeSwitcher enabled={mounted} />
             <MobileThemeSwitcher enabled={mounted} />
             <a
