@@ -6,12 +6,14 @@ Standalone Fumadocs/Next MDX application with build-time typed API and Markdown 
 
 Use Node 22.12+ and npm 11.9. From the repository root run `npm ci`. In this directory:
 
-1. `node scripts/verify-pinned-package.mjs` verifies the checked-in guarded artifact against `vendor/provenance.json`. The source commit, version, checksum and npm integrity identify the exact integrated candidate. CI consumes those bytes. Artifact refreshes are owned centrally and require a new package gate, app/consumer locks and consumer verification.
-2. `npm ci` installs the isolated app from its lockfile. If the package artifact changes, use `npm install --save-exact ./vendor/kind-ui-charts-0.1.1.tgz` to update the lockfile and install it.
+1. `node scripts/verify-pinned-package.mjs` verifies the checked-in guarded artifact against `vendor/provenance.json`. The source commit, version, checksum and npm integrity identify the exact released package. CI consumes those bytes. Artifact refreshes are owned centrally and require a new package gate, app/consumer locks and consumer verification.
+2. `npm ci` installs the isolated app from its lockfile. If the package artifact changes, use `npm install --save-exact ./vendor/kind-ui-charts-0.2.0.tgz` to update the lockfile and install it.
 3. `npm run generate`, `npm run check:consumers`, then `npm run generate` establishes the consumer lock when preparing a new artifact.
 4. `npm run build` exports static `out/`; `npm run check` verifies app types, selected-state contracts and exported links. `npm run preview` serves only reserved port 6373. `node scripts/check-browser.mjs` checks the built preview.
 
 When the tarball changes, regenerate the matching app and `examples/shared/consumer-package-lock.json` chart entries with npm and verify that unrelated dependency pins remain unchanged. Consumers install and verify the promoted bytes; a matching version alone does not establish matching artifacts.
+
+To promote an already successful hosted Node 22 package gate, download its retained artifact and run `npm run prepare:package -- --validated-dir /absolute/extracted/package`. This checks the recorded package/version, clean source revision, unchanged package/guard files, SHA-256 and npm integrity before copying the exact tarball. It records the original workflow and tool receipt in private provenance and does not repack. The 0.2.0 pin comes from the existing release workflow; its bytes and npm integrity match the public release. `--reuse-validated` remains limited to the already-pinned unchanged artifact; registry preparation and retained promotion are separate modes.
 
 `KIND_DOCS_ORIGIN` sets absolute canonical agent retrieval links at generation/build time. `KIND_DOCS_RELEASE_VERSION` requests an exact registry artifact in the preparation script; the maintained CI pin remains the guarded artifact recorded in provenance. A release/version change needs a new package gate, both lockfiles, consumers, docs export and review. The workspace remains private at `0.0.0`.
 
