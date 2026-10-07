@@ -91,7 +91,7 @@ test("each registered family has a complete public consumer", () => {
 });
 test("private package bytes match validation without public provenance or archives", () => {
   const digest = createHash("sha256")
-    .update(readFileSync("vendor/kind-ui-charts-0.1.1.tgz"))
+    .update(readFileSync("vendor/kind-ui-charts-0.2.0.tgz"))
     .digest("hex");
   assert.equal(digest, provenance.sha256);
   assert.equal(provenance.guardedArtifact, true);
@@ -190,7 +190,7 @@ test("public copy rejects stale release receipts and registry install claims", a
     "These examples use the validated, integrated release candidate",
     "Registry installation remains unverified",
     "See /package-provenance.json",
-    "Download /examples/package/kind-ui-charts-0.1.1.tgz",
+    "Download /examples/package/kind-ui-charts-0.2.0.tgz",
     "npx shadcn@latest add @kindui/line-chart",
   ])
     assert.throws(() => assertPublicCopy(stale, "fixture"));
@@ -222,7 +222,7 @@ test("shared references are registered and chart pages retain family APIs", () =
 
 test("internal checks preserve the locked fixture across all public variants", () => {
   const before = JSON.stringify(completeBundles);
-  const integrity = `sha512-${createHash("sha512").update(readFileSync("vendor/kind-ui-charts-0.1.1.tgz")).digest("base64")}`;
+  const integrity = `sha512-${createHash("sha512").update(readFileSync("vendor/kind-ui-charts-0.2.0.tgz")).digest("base64")}`;
   for (const bundle of Object.values(completeBundles)) {
     for (const variant of [undefined, ...Object.keys(bundle.variants ?? {})]) {
       const publicFiles = filesFor(bundle, {}, variant);
@@ -232,13 +232,13 @@ test("internal checks preserve the locked fixture across all public variants", (
       const lock = JSON.parse(files["package-lock.json"]);
       assert.equal(
         manifest.dependencies["@kind-ui/charts"],
-        "file:vendor/kind-ui-charts-0.1.1.tgz",
+        "file:vendor/kind-ui-charts-0.2.0.tgz",
       );
       assert.deepEqual(manifest.dependencies, lock.packages[""].dependencies);
       assert.deepEqual(manifest.devDependencies, lock.packages[""].devDependencies);
       assert.equal(
         lock.packages["node_modules/@kind-ui/charts"].resolved,
-        "file:vendor/kind-ui-charts-0.1.1.tgz",
+        "file:vendor/kind-ui-charts-0.2.0.tgz",
       );
       assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, integrity);
       assert.equal(lock.packages["node_modules/@kind-ui/charts"].version, provenance.version);

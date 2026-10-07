@@ -166,11 +166,11 @@ try {
   const provenance = await context.request.get(origin + publicPath("/package-provenance.json"));
   assert.equal(provenance.status(), 404, "Internal provenance must not be public");
   const download = await context.request.get(
-    origin + publicPath("/examples/package/kind-ui-charts-0.1.1.tgz"),
+    origin + publicPath("/examples/package/kind-ui-charts-0.2.0.tgz"),
   );
   assert.equal(download.status(), 404, "Local validation archive must not be public");
   assert.equal(
-    createHash("sha256").update(readFileSync("vendor/kind-ui-charts-0.1.1.tgz")).digest("hex"),
+    createHash("sha256").update(readFileSync("vendor/kind-ui-charts-0.2.0.tgz")).digest("hex"),
     JSON.parse(readFileSync("vendor/provenance.json", "utf8")).sha256,
   );
   assert.deepEqual(errors, []);
