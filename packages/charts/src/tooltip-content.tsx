@@ -4,6 +4,7 @@ import { type ComponentPropsWithRef, type CSSProperties, type ReactNode, use } f
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
 import { useChart } from "./chart-context.js";
 import { LineInteraction } from "./line-chart.js";
+import { formatPercent, type NormalizedValue } from "./percent-stack.js";
 import { colorStopToken } from "./series-color.js";
 import { TooltipNumber } from "./tooltip-number.js";
 
@@ -11,6 +12,8 @@ export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children">
   /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
   tooltip: UpstreamTooltipContentProps;
   missingValue?: ReactNode;
+  /** Formatting-only fraction resolver. Default content retains the raw value alongside it. */
+  normalizedValue?: NormalizedValue;
   /** Caller-owned projection status; use the same datum identity selection as BarSeries. */
   isProjected?: (entry: UpstreamTooltipContentProps["payload"][number]) => boolean;
   /** Accessible status text appended to projected items. */
@@ -31,6 +34,7 @@ export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children">
 export function TooltipContent({
   tooltip,
   missingValue = "No data",
+  normalizedValue,
   isProjected,
   projectedLabel = "Projected",
   valueAnimation,
@@ -76,6 +80,15 @@ export function TooltipContent({
           : Array.isArray(entry.value)
             ? entry.value.join(" – ")
             : entry.value;
+      if (!format) {
+        const fraction = normalizedValue?.(entry);
+        if (fraction !== undefined && Number.isFinite(fraction * 100))
+          value = (
+            <>
+              {formatPercent(fraction)} ({value})
+            </>
+          );
+      }
       hasVisibleValue = true;
     }
     return (
