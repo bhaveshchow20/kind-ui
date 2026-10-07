@@ -2,9 +2,7 @@
 // only after a future domain/path-prefix deployment has been verified.
 export const showcaseBasePath = process.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH ?? "";
 export const showcaseAsset = (path: string) => `${showcaseBasePath}${path}`;
-const docsDestination =
-  process.env.NEXT_PUBLIC_DOCS_URL ??
-  "https://kind-ui-charts.angrypirate20.chatgpt.site/charts/docs/";
+const docsDestination = process.env.NEXT_PUBLIC_DOCS_URL ?? "https://kindui.dev/charts/docs/";
 
 export const siteLinks = {
   home: showcaseBasePath || "/",
