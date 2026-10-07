@@ -693,9 +693,6 @@ test("actual recipes expose independent materials and preserve selection/totals 
     (globalThis as typeof globalThis & { piePress?: typeof press }).piePress = press;
   });
   await slice.click({ position: interior });
-  await expect(page.locator("article").first().locator("p[role=status]")).toContainText(
-    "Selected:",
-  );
   expect(
     await page.evaluate(
       () =>
@@ -710,6 +707,9 @@ test("actual recipes expose independent materials and preserve selection/totals 
         ).piePress,
     ),
   ).toEqual({ downOnSector: true, connectedAtUp: true, sameTargetAtUp: true });
+  await expect(page.locator("article").first().locator("p[role=status]")).toContainText(
+    "Selected:",
+  );
   await page.screenshot({
     path: info.outputPath("pie-material-recipes-desktop.png"),
     fullPage: true,
