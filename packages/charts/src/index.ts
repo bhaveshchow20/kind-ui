@@ -187,6 +187,7 @@ export {
 } from "./polar-series.js";
 export type { RadarSelectionProps } from "./radar-interaction.js";
 export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
+export type { RevealDirection } from "./reveal-clip.js";
 export { Root, type RootProps } from "./root.js";
 export { type SankeyAnimation, SankeyChart, type SankeyChartProps } from "./sankey-chart.js";
 export type { SankeyNodeConfig } from "./sankey-colors.js";

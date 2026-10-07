@@ -183,6 +183,77 @@ series options. Bar, Pie and other shape families are outside this API.
 Run `npm run dev:chart` and visit `/recipes.html#point-markers` for the marker gallery and
 its accessible data table.
 
+### Directional Line and Area entrances
+
+`LineAnimation` and `AreaAnimation` accept `revealDirection`:
+
+- `"left-to-right"` (default): expand from the left edge.
+- `"right-to-left"`: expand from the right edge.
+- `"center-out"`: expand equally from the horizontal center.
+- `"edges-in"`: expand two edge regions toward the horizontal center.
+
+Directions are physical horizontal screen-space reveals for both native layouts;
+they do not reverse data order or follow a vertical category axis. Timing remains
+`revealDurationMs` / `revealEasing`. The temporary family clip leaves native paths,
+axes, margins and transforms intact. Explicit directional entrances remove the clip
+on completion or interruption (including resize/data changes). Line with an omitted
+direction preserves its existing completed full-width clip until interruption;
+Area/Combo retain their existing completion removal. Disabled/reduced motion shows
+complete content.
+Existing loading illustrations keep their independent design. Replay uses the
+existing remount or loading-to-ready lifecycle, not hover or color updates.
+
+```tsx
+import {
+  AreaChart, AreaSeries, ComboChart, LineChart, LineSeries, Root,
+  type SeriesConfig,
+} from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [
+  { day: "Mon", total: 12, forecast: 16 },
+  { day: "Tue", total: 20, forecast: 24 },
+];
+const config = {
+  total: { label: "Total", color: "#3659b8" },
+  forecast: { label: "Forecast", color: "#0d9488" },
+} satisfies SeriesConfig;
+
+export function DirectionalCharts() {
+  return (
+    <Root config={config}>
+      <LineChart data={data} width={480} height={240} aria-label="Daily total"
+        animate={{ revealDirection: "right-to-left", revealDurationMs: 800 }}>
+        <LineSeries dataKey="total" pointStyle="border" />
+      </LineChart>
+      <AreaChart data={data} width={480} height={240} aria-label="Daily forecast"
+        animate={{ revealDirection: "center-out" }}>
+        <AreaSeries dataKey="forecast" />
+      </AreaChart>
+      <ComboChart data={data} width={480} height={240} aria-label="Total and forecast"
+        animate={{
+          revealDirection: "center-out",
+          lineReveal: { revealDirection: "right-to-left" },
+          areaReveal: { revealDirection: "edges-in", revealDurationMs: 1200 },
+          barReveal: false,
+        }}>
+        <LineSeries dataKey="total" />
+        <AreaSeries dataKey="forecast" />
+      </ComboChart>
+    </Root>
+  );
+}
+```
+
+Combo inherits the chart direction for Line/Area unless the corresponding family
+object overrides it; `false` disables that family entrance. Bar keeps its existing
+entrance configuration. All managed series in a family share its entrance clip;
+individual series rendering/visibility props remain available, but there is no
+per-series direction prop. Explicit native children and consumer clip/shape
+ownership retain their existing contracts. `RevealDirection` is exported for
+consumer controls. The packed Line/Area motion fixtures accept `?direction=...`
+and the Combo fixture accepts `?directional` to exercise the family overrides.
+
 ### Animated dashed lines
 
 `LineSeries` accepts `dashAnimation={ { durationMs: 1000, direction: "forward" } }`
