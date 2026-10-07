@@ -8,7 +8,14 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   use: { baseURL: `http://127.0.0.1:7273${basePath}/`, trace: "retain-on-failure" },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "webkit-mobile",
+      testMatch: ["responsive-cards.spec.ts", "activity-colors.spec.ts"],
+      use: { ...devices["iPhone 13"] },
+    },
+  ],
   webServer: {
     command: "npm run start -- --hostname 127.0.0.1 --port 7273",
     url: "http://127.0.0.1:7273",

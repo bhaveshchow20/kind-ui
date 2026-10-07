@@ -30,7 +30,7 @@
     "changeset": "changeset",
     "release:status": "changeset status",
     "release:version": "node scripts/prepare-release-version.mjs",
-    "check:ci": "node --test scripts/ci-workflow.test.mjs scripts/ci-tools.test.mjs apps/docs/scripts/consumer-shards.test.mjs",
+    "check:ci": "node --test scripts/ci-workflow.test.mjs scripts/ci-tools.test.mjs apps/docs/scripts/consumer-shards.test.mjs apps/showcase/scripts/runtime-dependencies.test.mjs",
     "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs scripts/release-plan.test.mjs && node scripts/check-release-versioning.mjs",
     "test:chart": "playwright test",
     "check:framework": "npm run check:line-integrations && npm run test:line-integrations",

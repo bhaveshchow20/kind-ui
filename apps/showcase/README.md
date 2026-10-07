@@ -22,6 +22,7 @@ The checked-in app manifest currently consumes the repository’s local chart pa
 npm run typecheck
 npm run build
 npm run check:snippets
+npm exec playwright install -- chromium webkit
 npm run test:browser
 ```
 
