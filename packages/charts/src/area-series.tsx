@@ -74,7 +74,13 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
     fill === undefined &&
     props.style?.fill === undefined &&
     props.shape === undefined;
-  const interaction = useSeriesInteraction(key, effectiveHide, hide === true, props.data);
+  const interaction = useSeriesInteraction(
+    key,
+    effectiveHide,
+    hide === true,
+    props.data,
+    props.onClick,
+  );
   const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <>
@@ -95,7 +101,7 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
             activeDot={<ActiveMarker variant={activePointStyle} />}
             {...nativeProps}
             {...(props.dot === undefined && pointStyle !== "default" ? { dot: <PointMarker variant={pointStyle} /> } : {})}
-            onClick={interaction.compose(props.onClick)}
+            {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
             {...(material !== "plain" && props.shape === undefined && props.filter === undefined
               ? {
                   shape: (

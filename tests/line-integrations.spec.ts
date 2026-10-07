@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectLastVisibleGuard } from "./last-visible";
 
 test("Tailwind v4 utilities override Kind defaults and named Lucide icons use the existing decorative slot", async ({
   page,
@@ -23,10 +24,9 @@ test("Tailwind v4 utilities override Kind defaults and named Lucide icons use th
     .first()
     .evaluate((line) => getComputedStyle(line).stroke);
   expect(gridStroke).toContain("oklch");
-  await legend.getByRole("button", { name: "Total" }).click();
-  await expect(legend.getByRole("button", { name: "Total" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
+  await expectLastVisibleGuard(
+    legend.getByRole("button", { name: "Total" }),
+    page.locator(".recharts-line-curve"),
   );
   expect(errors).toEqual([]);
 });
@@ -45,10 +45,9 @@ test("Next App Router package client boundary hydrates serializable server props
   await expect(chart).toBeVisible();
   const root = page.locator('[data-kind-ui="chart"]').filter({ has: chart });
   await expect(root.locator("svg.lucide-trending-up")).toHaveCount(1);
-  await root.getByRole("button", { name: "Total" }).click();
-  await expect(root.getByRole("button", { name: "Total" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
+  await expectLastVisibleGuard(
+    root.getByRole("button", { name: "Total" }),
+    root.locator(".recharts-line-curve"),
   );
   expect(errors).toEqual([]);
 });

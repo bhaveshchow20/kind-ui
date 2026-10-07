@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectLastVisibleGuard } from "./last-visible";
 
 const port = 4198 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173;
 test("theme stops switch in place across chart paints and swatches", async ({
@@ -133,10 +134,15 @@ test("theme stops switch in place across chart paints and swatches", async ({
   const symbolLegend = roots.first().getByTestId("symbols");
   const symbol = symbolLegend.locator('[data-legend-shape="square"]');
   expect(await symbol.evaluate((node) => getComputedStyle(node).fill)).toContain(ids[0]);
-  await symbolLegend.getByRole("button", { name: "Value", exact: true }).click();
+  await expectLastVisibleGuard(
+    symbolLegend.getByRole("button", { name: "Value", exact: true }),
+    roots.first().locator(".recharts-line-curve, .recharts-bar-rectangle path"),
+  );
+  expect(await symbol.evaluate((node) => getComputedStyle(node).fill)).toContain(ids[0]);
+  await page.getByRole("button", { name: "External visibility", exact: true }).click();
   const hiddenColor = await symbol.evaluate((node) => getComputedStyle(node).color);
   await expect(symbol).toHaveCSS("fill", hiddenColor);
-  await symbolLegend.getByRole("button", { name: "Value", exact: true }).click();
+  await page.getByRole("button", { name: "External visibility", exact: true }).click();
   await page.getByRole("button", { name: "Solid", exact: true }).click();
   await expect(allGradients).toHaveCount(0);
   await expect(roots.first().locator(".recharts-line-curve")).toHaveAttribute(

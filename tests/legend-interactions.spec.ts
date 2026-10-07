@@ -328,3 +328,142 @@ test("configured LineChart owns config and shares focus through existing rootPro
   await expect(scope.locator("[data-configured-selected]")).toHaveText("none");
   await expect(scope.locator("[data-configured-changes]")).toHaveText("2");
 });
+
+for (const family of ["scatter-named", "scatter-namespace", "radar-element", "radar-function"]) {
+  test(`${family}: inactive shared adapter retains first pointerdown target and custom dot lifetime`, async ({
+    page,
+  }) => {
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
+    const scope = page.getByRole("region", { name: `Native lifetime ${family}`, exact: true });
+    const mark = scope
+      .locator(family.startsWith("scatter") ? ".recharts-symbols" : ".recharts-radar-polygon path")
+      .first();
+    const identities = await scope
+      .locator("[data-lifetime-dot]")
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-lifetime-dot")));
+    const node = await mark.elementHandle();
+    if (!node) throw new Error("Missing native target");
+    await mark.dispatchEvent("pointerdown", { button: 0, pointerType: "mouse" });
+    expect(await node.evaluate((element) => element.isConnected)).toBe(true);
+    expect(
+      await scope
+        .locator("[data-lifetime-dot]")
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-lifetime-dot"))),
+    ).toEqual(identities);
+    await mark.click();
+    await expect(scope.locator("[data-lifetime-clicks]")).toHaveText("1");
+  });
+}
+for (const family of ["scatter-namespace", "radar-function"]) {
+  test(`${family}: active stable delegate uses current state and current consumer veto`, async ({
+    page,
+  }) => {
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
+    const scope = page.getByRole("region", {
+      name: `Native lifetime ${family} active`,
+      exact: true,
+    });
+    const mark = scope
+      .locator(family.startsWith("scatter") ? ".recharts-symbols" : ".recharts-radar-polygon path")
+      .first();
+    await mark.hover();
+    const node = await mark.elementHandle();
+    if (!node) throw new Error("Missing native target");
+    await page.mouse.down();
+    expect(await node.evaluate((element) => element.isConnected)).toBe(true);
+    await page.mouse.up();
+    await expect(scope.locator("[data-lifetime-clicks]")).toHaveText("1");
+    await expect(scope.locator("[data-lifetime-selected]")).toHaveText("first");
+    await mark.click();
+    await expect(scope.locator("[data-lifetime-selected]")).toHaveText("none");
+    await expect(scope.locator("[data-lifetime-changes]")).toHaveText("2");
+    await scope.getByRole("button", { name: "Toggle native veto" }).click();
+    await mark.click();
+    await expect(scope.locator("[data-lifetime-clicks]")).toHaveText("3");
+    await expect(scope.locator("[data-lifetime-selected]")).toHaveText("none");
+    await expect(scope.locator("[data-lifetime-changes]")).toHaveText("2");
+    await scope.getByRole("button", { name: "Toggle native veto" }).click();
+    await scope.getByRole("button", { name: "Toggle native synchronous change" }).click();
+    await mark.click();
+    await expect(scope.locator("[data-lifetime-clicks]")).toHaveText("4");
+    await expect(scope.locator("[data-lifetime-selected]")).toHaveText("none");
+    await expect(scope.locator("[data-lifetime-changes]")).toHaveText("3");
+  });
+}
+for (const accessor of [false, true]) {
+  test(`original Pie category survives Cell override, veto, reorder and filtering (${accessor ? "accessor" : "field"})`, async ({
+    page,
+  }) => {
+    await page.goto(
+      `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+    );
+    const scope = page.getByRole("region", {
+      name: `Cell identity ${accessor ? "accessor" : "field"}`,
+      exact: true,
+    });
+    const second = scope.locator('[data-original-category="second"][data-kind-ui="pie-sector"]');
+    await expect(second).toHaveAttribute("fill", "#e11d48");
+    await second.click();
+    await expect(scope.locator("[data-cell-clicks]")).toHaveText("1");
+    await expect(scope.locator("[data-cell-payload]")).toHaveText("first");
+    await expect(scope.locator("[data-cell-selected]")).toHaveText("second");
+    const control = scope.getByRole("button", { name: "Highlight second", exact: true });
+    await control.focus();
+    await page.keyboard.press("Escape");
+    await expect(scope.locator("[data-cell-selected]")).toHaveText("none");
+    await control.focus();
+    await page.keyboard.press("Enter");
+    await expect(scope.locator("[data-cell-selected]")).toHaveText("second");
+    await scope.getByRole("button", { name: "Veto Cell" }).click();
+    await scope.locator('[data-original-category="first"][data-kind-ui="pie-sector"]').click();
+    await expect(scope.locator("[data-cell-clicks]")).toHaveText("2");
+    await expect(scope.locator("[data-cell-selected]")).toHaveText("second");
+    await scope.getByRole("button", { name: "Reorder Cells" }).click();
+    await expect(control).toHaveAttribute("aria-pressed", "true");
+    await scope.getByRole("button", { name: "Veto Cell" }).click();
+    await scope.getByRole("button", { name: "Sync rows in series handler" }).click();
+    await second.click();
+    await expect(scope.locator("[data-cell-clicks]")).toHaveText("3");
+    await expect(scope.locator("[data-cell-selected]")).toHaveText("none");
+    await control.focus();
+    await page.keyboard.press("Enter");
+    await expect(scope.locator("[data-cell-selected]")).toHaveText("second");
+    await scope.getByRole("button", { name: "Sync rows in series handler" }).click();
+    await scope.getByRole("button", { name: "Sync rows in Cell handler" }).click();
+    await second.click();
+    await expect(scope.locator("[data-cell-clicks]")).toHaveText("4");
+    await expect(scope.locator("[data-cell-selected]")).toHaveText("none");
+    await control.focus();
+    await page.keyboard.press("Enter");
+    await expect(scope.locator("[data-cell-selected]")).toHaveText("second");
+    await scope.getByRole("button", { name: "Filter first" }).click();
+    await expect(scope.locator('[data-kind-ui="pie-sector"]')).toHaveCount(1);
+    await expect(control).toHaveAttribute("aria-pressed", "true");
+    await expect(second).toHaveAttribute("fill", "#e11d48");
+    await expect(second).toHaveAttribute("data-sector-span", "360");
+  });
+}
+test("Root-derived Area hide retains restore control while last-visible protection remains", async ({
+  page,
+}) => {
+  await page.goto(
+    `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
+  );
+  const scope = page.getByRole("region", { name: "Shared interactions" });
+  await scope.getByLabel("Interaction family").selectOption("area");
+  await scope.getByRole("button", { name: "Switch mode" }).click();
+  const first = scope.getByRole("button", { name: "First", exact: true });
+  const second = scope.getByRole("button", { name: "Second", exact: true });
+  await first.click();
+  await expect(first).toHaveAttribute("aria-pressed", "false");
+  await second.click();
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("1");
+  await expect(second).toHaveAttribute("aria-pressed", "true");
+  await first.click();
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  await expect(scope.locator("[data-interaction-changes]")).toHaveText("2");
+});

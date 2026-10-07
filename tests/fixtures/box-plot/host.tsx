@@ -83,6 +83,7 @@ export function BoxHost() {
           ["Orientation", () => setHorizontal(!horizontal)],
           ["Reorder", () => setReordered(!reordered)],
           ["Empty", () => setEmpty(!empty)],
+          ["External visibility", () => setVisible(visible.length ? [] : ["distribution"])],
           ["Custom", () => setCustom(!custom)],
           ["Resize", () => setSmall(!small)],
           ["Animate", () => setAnimate(!animate)],

@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectLastVisibleGuard } from "./last-visible";
 
 const url = `http://127.0.0.1:${4191 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
 const marks = '[data-kind-ui="box-plot-mark"]';
@@ -132,10 +133,14 @@ test("packed box plots: exact native geometry, domains, composition, null and co
   expect(positive.center).toBeLessThan(negative.center);
   await page.getByRole("button", { name: "Custom", exact: true }).click();
   await expect(page.locator('[data-custom="yes"]')).toHaveCount(3);
-  await page.getByRole("button", { name: "Distribution", exact: true }).click();
+  await expectLastVisibleGuard(
+    page.getByRole("button", { name: "Distribution", exact: true }),
+    page.locator(marks),
+  );
+  await page.getByRole("button", { name: "External visibility", exact: true }).click();
   await expect(page.locator(marks)).toHaveCount(0);
   await expect(page.getByRole("table")).toContainText("-20, 16");
-  await page.getByRole("button", { name: "Distribution", exact: true }).click();
+  await page.getByRole("button", { name: "External visibility", exact: true }).click();
   await page.getByRole("button", { name: "Reorder", exact: true }).click();
   await page.getByRole("button", { name: "Resize", exact: true }).click();
   await check(true);

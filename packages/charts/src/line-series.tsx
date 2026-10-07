@@ -67,7 +67,13 @@ export function LineSeries<
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("LineSeries requires seriesKey for controlled non-string dataKey");
-  const interaction = useSeriesInteraction(key, effectiveHide, hide === true, props.data);
+  const interaction = useSeriesInteraction(
+    key,
+    effectiveHide,
+    hide === true,
+    props.data,
+    props.onClick,
+  );
   const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   const cycle = dashCycle(props.style?.strokeDasharray ?? props.strokeDasharray);
   const duration = dashAnimation && dashDuration(dashAnimation);
@@ -87,7 +93,7 @@ export function LineSeries<
           isAnimationActive={false}
           {...props}
           {...(props.dot === undefined && pointStyle !== "default" ? { dot: <PointMarker variant={pointStyle} /> } : {})}
-          onClick={interaction.compose(props.onClick)}
+          {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
           {...(material !== "plain" && props.shape === undefined && props.filter === undefined
             ? {
                 shape: (

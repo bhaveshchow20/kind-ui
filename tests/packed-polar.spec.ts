@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "./browser";
+import { expectLastVisibleGuard } from "./last-visible";
 
 const url = "http://127.0.0.1:4177";
 const radarPath = ".recharts-radar-polygon";
@@ -72,10 +73,13 @@ test("series visibility, native hide and keyboard tooltip retain registered iden
     await expect(
       host.locator('[data-kind-ui="chart-tooltip-item"][data-series="value"]'),
     ).toHaveCount(0);
-    await host.getByRole("button", { name: "Target", exact: true }).click();
+    await expectLastVisibleGuard(
+      host.getByRole("button", { name: "Target", exact: true }),
+      host.locator(kind === "radar" ? ".recharts-radar" : radialPath),
+    );
+    await page.getByRole("button", { name: "External visibility", exact: true }).click();
     await expect(host.locator(kind === "radar" ? ".recharts-radar" : radialPath)).toHaveCount(0);
-    await host.getByRole("button", { name: "Actual", exact: true }).click();
-    await host.getByRole("button", { name: "Target", exact: true }).click();
+    await page.getByRole("button", { name: "External visibility", exact: true }).click();
     await page.getByRole("button", { name: "Native hide", exact: true }).click();
     await expect(
       host.locator(

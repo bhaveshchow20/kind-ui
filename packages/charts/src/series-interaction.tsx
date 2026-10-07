@@ -1,6 +1,13 @@
 "use client";
 
-import type { KeyboardEventHandler, ReactNode, SyntheticEvent } from "react";
+import {
+  type KeyboardEventHandler,
+  type ReactNode,
+  type SyntheticEvent,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import { useChart } from "./chart-context.js";
 import {
   useChartInteraction,
@@ -11,15 +18,23 @@ import { useEmphasis } from "./emphasis.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 
 /** Native handlers retain their original data/index/event tuple and run first. */
-export function useSeriesInteraction(
+export function useSeriesInteraction<Args extends unknown[]>(
   key: string | undefined,
   hidden: boolean,
   nativeHidden = false,
-  seriesData?: readonly unknown[] | undefined,
+  seriesData: readonly unknown[] | undefined,
+  handler: ((...args: Args) => void) | undefined,
 ) {
   const interaction = useChartInteraction();
   const { data } = useLineInteraction();
-  useInteractionAvailability(interaction.kind === "series" ? key : undefined, nativeHidden);
+  const { visibleSeries } = useChart();
+  const rootHidden =
+    key !== undefined && visibleSeries !== undefined && !visibleSeries.includes(key);
+  // Some consumers mirror Root visibility into native hide. Their hidden IDs stay restorable.
+  useInteractionAvailability(
+    interaction.kind === "series" ? key : undefined,
+    nativeHidden && !rootHidden,
+  );
   useInteractionRegistration(
     interaction.kind === "series" && key !== undefined && (seriesData ?? data)?.length ? [key] : [],
   );
@@ -30,16 +45,19 @@ export function useSeriesInteraction(
     interaction.interactive &&
     interaction.markActivation &&
     interaction.eligible.includes(key);
-  return {
-    compose<Args extends unknown[]>(handler: ((...args: Args) => void) | undefined) {
-      return (...args: Args) => {
-        handler?.(...args);
-        const event = args[args.length - 1] as SyntheticEvent<Element> & { button?: number };
-        if (interactive && key !== undefined && event?.button === 0)
-          interaction.activate({ kind: "series", key }, "mark", event);
-      };
-    },
-  };
+  const latest = useRef({ handler, interaction, interactive, key });
+  useLayoutEffect(() => {
+    latest.current = { handler, interaction, interactive, key };
+  });
+  const onClick = useCallback((...args: Args) => {
+    latest.current.handler?.(...args);
+    const current = latest.current;
+    const event = args[args.length - 1] as SyntheticEvent<Element> & { button?: number };
+    if (current.interactive && current.key !== undefined && event?.button === 0)
+      current.interaction.activate({ kind: "series", key: current.key }, "mark", event);
+  }, []);
+  // Native animation IDs include handler identity even when native animation is disabled.
+  return { onClick: interactive ? onClick : handler };
 }
 
 /** One keyboard target per logical series, within its native ZIndex portal. */

@@ -5,14 +5,15 @@ import {
   CartesianGrid,
   Cell,
   LabelList,
+  ScatterSeries as NamedScatterSeries,
   Rectangle,
   ReferenceLine,
   ResponsiveContainer,
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
-import { type ComponentProps, useState } from "react";
-import { createPortal } from "react-dom";
+import { type ComponentProps, useCallback, useState } from "react";
+import { createPortal, flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
 const config = {
@@ -55,6 +56,183 @@ const nativeShape = (props: BarShapeProps) => <Rectangle {...props} />;
 const customSector = (props: ComponentProps<typeof Chart.Sector>) => (
   <Chart.Sector {...props} data-custom-sector="consumer" />
 );
+
+let lifetimeIdentity = 0;
+function LifetimeDot(props: Chart.DotProps) {
+  const [identity] = useState(() => ++lifetimeIdentity);
+  return (
+    <g data-lifetime-dot={identity}>
+      <Chart.Dot {...props} />
+    </g>
+  );
+}
+const lifetimeDot = ({ cx, cy, r, fill, stroke }: Chart.DotItemDotProps) => (
+  <LifetimeDot cx={cx} cy={cy} r={r} fill={fill} stroke={stroke} />
+);
+const lifetimeDotElement = <LifetimeDot />;
+const scatterRows = [
+  { x: 10, y: 20 },
+  { x: 20, y: 10 },
+];
+function NativeLifetimeCase({ family, active = false }: { family: string; active?: boolean }) {
+  const [clicks, setClicks] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [veto, setVeto] = useState(false);
+  const [changes, setChanges] = useState(0);
+  const [synchronous, setSynchronous] = useState(false);
+  const recordNative = useCallback(
+    (event: { preventDefault: () => void }) => {
+      setClicks((count) => count + 1);
+      if (veto) event.preventDefault();
+      if (synchronous) flushSync(() => setSelected("first"));
+    },
+    [veto, synchronous],
+  );
+  const scatterClick = useCallback<NonNullable<Chart.ScatterSeriesProps["onClick"]>>(
+    (_data, _index, event) => recordNative(event),
+    [recordNative],
+  );
+  const radarClick = useCallback<NonNullable<Chart.RadarSeriesProps["onClick"]>>(
+    (event) => recordNative(event),
+    [recordNative],
+  );
+  const scatter = family.startsWith("scatter");
+  const Series = family === "scatter-named" ? NamedScatterSeries : Chart.ScatterSeries;
+  return (
+    <section aria-label={`Native lifetime ${family}${active ? " active" : ""}`}>
+      <button type="button" onClick={() => setVeto(!veto)}>
+        Toggle native veto
+      </button>
+      <button type="button" onClick={() => setSynchronous(!synchronous)}>
+        Toggle native synchronous change
+      </button>
+      <output data-lifetime-clicks>{clicks}</output>
+      <output data-lifetime-selected>{selected ?? "none"}</output>
+      <output data-lifetime-changes>{changes}</output>
+      <Chart.Root
+        config={{ first: config.first }}
+        interaction={
+          active
+            ? {
+                kind: "series",
+                mode: "focus",
+                eligibleKeys: ["first"],
+                markActivation: "matching-legend",
+                selected,
+                onSelectionChange: (next) => {
+                  setSelected(next);
+                  setChanges((n) => n + 1);
+                },
+              }
+            : undefined
+        }
+      >
+        {scatter ? (
+          <Chart.ScatterChart width={340} height={240} animate={false}>
+            <Chart.XAxis type="number" dataKey="x" />
+            <Chart.YAxis type="number" dataKey="y" />
+            <Series seriesKey="first" data={scatterRows} shape="diamond" onClick={scatterClick} />
+          </Chart.ScatterChart>
+        ) : (
+          <Chart.RadarChart
+            data={rows}
+            width={340}
+            height={240}
+            animate={false}
+            selection={active ? "none" : "series"}
+          >
+            <Chart.PolarAngleAxis dataKey="category" />
+            <Chart.PolarRadiusAxis />
+            <Chart.RadarSeries
+              dataKey="first"
+              dot={family === "radar-element" ? lifetimeDotElement : lifetimeDot}
+              onClick={radarClick}
+            />
+          </Chart.RadarChart>
+        )}
+      </Chart.Root>
+    </section>
+  );
+}
+function CellIdentityCase({ accessor }: { accessor: boolean }) {
+  const original = [
+    { id: "first", value: 20 },
+    { id: "second", value: 10 },
+  ];
+  const [reversed, setReversed] = useState(false);
+  const [visible, setVisible] = useState(["first", "second"]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [clicks, setClicks] = useState(0);
+  const [payload, setPayload] = useState("");
+  const [veto, setVeto] = useState(false);
+  const [synchronous, setSynchronous] = useState(false);
+  const [cellSynchronous, setCellSynchronous] = useState(false);
+  const data = reversed ? [...original].reverse() : original;
+  return (
+    <section aria-label={`Cell identity ${accessor ? "accessor" : "field"}`}>
+      <button type="button" onClick={() => setVeto(!veto)}>
+        Veto Cell
+      </button>
+      <button type="button" onClick={() => setReversed(!reversed)}>
+        Reorder Cells
+      </button>
+      <button type="button" onClick={() => setVisible(["second"])}>
+        Filter first
+      </button>
+      <button type="button" onClick={() => setSynchronous(!synchronous)}>
+        Sync rows in series handler
+      </button>
+      <button type="button" onClick={() => setCellSynchronous(!cellSynchronous)}>
+        Sync rows in Cell handler
+      </button>
+      <output data-cell-selected>{selected ?? "none"}</output>
+      <output data-cell-clicks>{clicks}</output>
+      <output data-cell-payload>{payload}</output>
+      <Chart.Root
+        config={{ first: config.first, second: config.second }}
+        visibleSeries={visible}
+        interaction={{
+          kind: "category",
+          mode: "focus",
+          eligibleKeys: ["first", "second"],
+          markActivation: "matching-legend",
+          selected,
+          onSelectionChange: setSelected,
+        }}
+      >
+        <Chart.PieChart width={340} height={240} animate={false}>
+          <Chart.PieSeries
+            data={data}
+            categoryKey={accessor ? (row) => row.id : "id"}
+            dataKey="value"
+            nameKey="id"
+            interactionBinding="root"
+            onClick={(sector) => {
+              setPayload(String(sector.payload.id));
+              if (synchronous) flushSync(() => setReversed((value) => !value));
+            }}
+          >
+            {data.map((row) => (
+              <Chart.Cell
+                key={row.id}
+                id="first"
+                fill="#e11d48"
+                data-original-category={row.id}
+                onClick={(event) => {
+                  setClicks((count) => count + 1);
+                  if (veto) event.preventDefault();
+                  if (cellSynchronous) flushSync(() => setReversed((value) => !value));
+                }}
+              />
+            ))}
+          </Chart.PieSeries>
+        </Chart.PieChart>
+        <Chart.Legend />
+      </Chart.Root>
+    </section>
+  );
+}
+
 function ConfiguredInteractionCase() {
   const [selected, setSelected] = useState<string | null>("first");
   const [changes, setChanges] = useState(0);
@@ -130,7 +308,7 @@ function SharedInteractions() {
         }}
       />
     ) : family === "area" ? (
-      <Chart.AreaSeries key={key} dataKey={key} />
+      <Chart.AreaSeries key={key} dataKey={key} hide={!visible.includes(key)} />
     ) : family === "radar" ? (
       <Chart.RadarSeries key={key} dataKey={key} fillOpacity={0.3} />
     ) : family === "scatter" ? (
@@ -459,6 +637,15 @@ function App() {
     <main style={{ fontFamily: "system-ui", width: 950, margin: "24px auto" }}>
       {new URLSearchParams(window.location.search).has("interactions") && (
         <>
+          {["scatter-named", "scatter-namespace", "radar-element", "radar-function"].map(
+            (family) => (
+              <NativeLifetimeCase key={family} family={family} />
+            ),
+          )}
+          <NativeLifetimeCase family="scatter-namespace" active />
+          <NativeLifetimeCase family="radar-function" active />
+          <CellIdentityCase accessor={false} />
+          <CellIdentityCase accessor />
           <ConfiguredInteractionCase />
           <SharedInteractions />
           <SankeyInteractionCase />

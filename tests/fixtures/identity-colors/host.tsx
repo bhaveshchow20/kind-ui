@@ -237,6 +237,9 @@ export function ThemeHost() {
       <button type="button" onClick={() => setPattern(!pattern)}>
         Pattern
       </button>
+      <button type="button" onClick={() => setVisible(visible.length ? [] : ["value", "other"])}>
+        External visibility
+      </button>
       <button type="button" onClick={() => setSolid(!solid)}>
         Solid
       </button>
@@ -282,7 +285,7 @@ export function ThemeHost() {
             <Chart.BarSeries
               dataKey="value"
               fill={override ? "#00ff00" : undefined}
-              pattern={pattern ? { kind: "hatch" } : "none"}
+              pattern={pattern ? { kind: "hatch" } : false}
             />
           </Chart.BarChart>
           <Chart.PieChart width={360} height={140}>

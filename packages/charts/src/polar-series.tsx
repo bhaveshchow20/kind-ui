@@ -193,6 +193,8 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
     seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
     series.hide,
     hide === true,
+    undefined,
+    props.onClick,
   );
   const selectionDot = useRadarSelectionDot(
     props.dot,
@@ -226,7 +228,7 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
             <StableRadar<DataPoint, Value>
               activeDot={radarActiveDot}
               {...props}
-              onClick={interaction.compose(props.onClick)}
+              {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
               {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
               {...(selectionDot !== undefined ? { dot: selectionDot } : {})}
               id={series.id}
@@ -403,6 +405,8 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
     seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
     series.hide,
     hide === true,
+    undefined,
+    props.onClick,
   );
   const filterId = `kind-ui-polar-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const materialized =
@@ -411,6 +415,12 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
     (props.activeShape === undefined || typeof props.activeShape === "boolean") &&
     props.filter === undefined &&
     props.style?.filter === undefined;
+  const onClick: RadialBarSeriesProps<DataPoint, Value>["onClick"] = categories?.bound
+    ? (...args) => {
+        props.onClick?.(...args);
+        owner.activate({ kind: "category", key: categories.key(args[0].payload) }, "mark", args[2]);
+      }
+    : interaction.onClick;
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
       {materialized && <PolarMaterialFilter material={material} id={filterId} />}
@@ -421,16 +431,7 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
         <motion.g data-kind-ui="radial-bar-reveal" initial={false}>
           <RadialBar<DataPoint, Value>
             {...props}
-            onClick={(...args) => {
-              props.onClick?.(...args);
-              if (categories?.bound)
-                owner.activate(
-                  { kind: "category", key: categories.key(args[0].payload) },
-                  "mark",
-                  args[2],
-                );
-              else interaction.compose(undefined)(...args);
-            }}
+            {...(onClick !== undefined ? { onClick } : {})}
             {...(props.shape === undefined ? { shape: RadialEntranceSector } : {})}
             {...(categories?.bound && props.shape === undefined && props.activeShape === undefined
               ? { activeShape: RadialEntranceSector }
