@@ -2,7 +2,7 @@
 
 ## Current support status
 
-Kind UI is experimental and unpublished. There are no supported production releases or security response-time guarantees. Do not use the placeholder packages as a production dependency.
+Kind UI publishes `@kind-ui/charts` on npm and remains before 1.0. The package is experimental, with no guaranteed production support or security response time.
 
 ## Reporting a suspected vulnerability
 
