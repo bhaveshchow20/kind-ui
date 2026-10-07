@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, use, useId } from "react";
+import { type ReactNode, use, useId, useMemo } from "react";
 import { ChartContext } from "./chart-context.js";
 import { colorResourceId, colorStopToken } from "./series-color.js";
 
@@ -8,14 +8,24 @@ import { colorResourceId, colorStopToken } from "./series-color.js";
 export function SeriesPaintBoundary({ children }: { children: ReactNode }) {
   const chart = use(ChartContext);
   const colorId = useId();
-  if (!chart) return children;
-  const paints = Object.fromEntries(
-    Object.entries(chart.colorStops).map(([key, stops]) => [
-      key,
-      stops.colors.length > 1 ? `url(#${colorResourceId(colorId, key)})` : `var(--color-${key})`,
-    ]),
+  const colorStops = chart?.colorStops;
+  const paints = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(colorStops ?? {}).map(([key, stops]) => [
+          key,
+          stops.colors.length > 1
+            ? `url(#${colorResourceId(colorId, key)})`
+            : `var(--color-${key})`,
+        ]),
+      ),
+    [colorStops, colorId],
   );
-  return <ChartContext value={{ ...chart, colorId, paints }}>{children}</ChartContext>;
+  const value = useMemo(
+    () => (chart ? { ...chart, colorId, paints } : null),
+    [chart, colorId, paints],
+  );
+  return value ? <ChartContext value={value}>{children}</ChartContext> : children;
 }
 
 export function SeriesColorDefinitions({ viewport = false }: { viewport?: boolean }) {
