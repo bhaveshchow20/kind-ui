@@ -85,7 +85,7 @@ try {
     const workbench = page.locator(`[data-component="${id}"]`);
     await workbench.locator(".recharts-surface").waitFor();
     assert.equal(
-      await workbench.locator(".sr-only table tbody tr").count(),
+      await workbench.locator(`table[aria-label="${bundle.title} data"] tbody tr`).count(),
       bundle.dataAlternative.rows.length,
     );
     const previewHeight = await workbench
@@ -192,8 +192,11 @@ try {
   const codeBox = await first.locator(".line-code-viewport").boundingBox();
   await page.mouse.move(codeBox.x + codeBox.width / 2, codeBox.y + codeBox.height / 2);
   const codeEdgeBefore = await page.evaluate(() => scrollY);
+  await page.waitForTimeout(200);
   await page.mouse.wheel(0, 320);
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(350);
+  await page.mouse.wheel(0, 320);
+  await page.waitForTimeout(350);
   assert.ok((await page.evaluate(() => scrollY)) > codeEdgeBefore + 80);
   await first.getByRole("tab", { name: "Preview", exact: true }).click();
   await page.evaluate(() => scrollTo(0, 0));
