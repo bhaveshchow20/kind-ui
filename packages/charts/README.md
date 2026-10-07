@@ -461,7 +461,7 @@ Projection fills use the existing `FillPattern` seam and native Rectangle shape
 props, so Brush slices cannot shift identity as positional Cells would. Unselected rows retain
 configured/explicit series patterns and full gradient paints. Projection tiles
 use the configured theme's solid first stop (`--color-key`), the same documented
-fallback as ordinary Bar/Area pattern tiles. `pattern="none"` disables automatic
+fallback as ordinary Bar/Area pattern tiles. `pattern={false}` disables automatic
 projection paint. Explicit series `fill`/`style.fill`, native shape options,
 custom shapes/active shapes and any explicit Cell composition retain paint
 ownership. Datum `fill`/`style.fill` also prevents automatic projection paint for
