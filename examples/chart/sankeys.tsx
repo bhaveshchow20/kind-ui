@@ -158,7 +158,6 @@ function App() {
       <Recipe material="solid" />
       <Recipe material="gradient" />
       <Recipe material="gradient" finish="clay" />
-      <Recipe material="gradient" finish="clay" />
       <Recipe material="gradient" finish="glow" />
       <section>
         <h2>Zero and empty</h2>
