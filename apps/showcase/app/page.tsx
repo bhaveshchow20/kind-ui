@@ -10,6 +10,7 @@ import {
   Monitor,
   Moon,
   Search,
+  Smartphone,
   Sun,
 } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
@@ -461,10 +462,15 @@ const appearanceOptions = [
   { value: "system", label: "System", Icon: Monitor },
 ] as const;
 
+const mobileAppearanceOptions = appearanceOptions.map((option) => ({
+  ...option,
+  Icon: option.value === "system" ? Smartphone : option.Icon,
+}));
+
 function MobileThemeSwitcher({ enabled }: { enabled: boolean }) {
   const { theme, setTheme } = useTheme();
   const selected = enabled ? (theme ?? "system") : "system";
-  const Icon = appearanceOptions.find((option) => option.value === selected)?.Icon ?? Monitor;
+  const Icon = mobileAppearanceOptions.find((option) => option.value === selected)?.Icon ?? Smartphone;
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
@@ -480,7 +486,7 @@ function MobileThemeSwitcher({ enabled }: { enabled: boolean }) {
           collisionPadding={12}
         >
           <DropdownMenu.RadioGroup value={selected} onValueChange={setTheme}>
-            {appearanceOptions.map(({ value, label, Icon: OptionIcon }) => (
+            {mobileAppearanceOptions.map(({ value, label, Icon: OptionIcon }) => (
               <DropdownMenu.RadioItem
                 className="mobile-appearance-option"
                 key={value}
