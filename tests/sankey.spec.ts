@@ -165,3 +165,13 @@ test("our SankeyLink flows while consumer paint refs and handlers remain owned; 
   await paths.first().dispatchEvent("click");
   await expect(page.getByRole("region", { name: "Mark ownership" })).toContainText("1 /");
 });
+
+test("packed Sankey labels track node identity and current values", async ({ page }) => {
+  await page.goto(packed);
+  const label = page.locator('[data-kind-ui="sankey-node-label"][data-node-id="a"]');
+  await expect(label.locator("text")).toHaveText("Input: 10");
+  await page.getByRole("button", { name: "Change data" }).click();
+  await expect(label.locator("text")).toHaveText("Input: 20");
+  await expect(label.locator("title")).toHaveText("Input: 20");
+  await expect(page.getByRole("table")).toContainText("20");
+});
