@@ -6,8 +6,8 @@ import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { dashCycle, dashDuration, type LineDashAnimation } from "./line-dash.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
-import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 // Preserve the legacy native defaults while allowing explicit row/value parameters.
 type DefaultLineDataKey = Extract<ComponentProps<typeof Line>["dataKey"], (row: never) => unknown>;

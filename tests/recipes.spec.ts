@@ -107,11 +107,11 @@ test("packed components accept Motion props while retaining refs and native hand
   );
   await expect(root.getByRole("list")).toHaveAttribute("data-clicked", "yes");
   await expect(root).toHaveCSS("opacity", "1");
-  await page.getByRole("button", { name: "External visibility" }).click();
+  await page.getByRole("button", { name: "External visibility", exact: true }).click();
   await expect(root.getByRole("button")).toHaveAttribute("aria-pressed", "false");
   await expect(root).toHaveCSS("opacity", "0.6");
   await expect(root).not.toHaveAttribute("animate");
-  await page.getByRole("button", { name: "External visibility" }).click();
+  await page.getByRole("button", { name: "External visibility", exact: true }).click();
   await expect(root.getByRole("button")).toHaveAttribute("aria-pressed", "true");
   await expect(root).toHaveCSS("opacity", "1");
   expect(errors).toEqual([]);

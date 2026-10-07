@@ -7,8 +7,8 @@ import { type AreaMaterial, MaterialArea } from "./area-material.js";
 import { useChart } from "./chart-context.js";
 import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useLineInteraction } from "./line-chart.js";
-import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Area<DataPoint, Value>>,

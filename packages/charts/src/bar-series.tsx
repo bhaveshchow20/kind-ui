@@ -14,8 +14,8 @@ import {
 import {
   Bar,
   type BarShapeProps,
-  DefaultZIndexes,
   Cell,
+  DefaultZIndexes,
   Rectangle,
   useActiveTooltipDataPoints,
   useActiveTooltipLabel,
