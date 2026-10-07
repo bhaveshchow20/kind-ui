@@ -60,7 +60,7 @@ export function RevenueMarginChart() {
             domain={[0, 40]}
             ticks={[0, 10, 20, 30, 40]}
             tickFormatter={(value: number) => `${value}%`}
-            width={64}
+            width={80}
             axisLine={false}
             tickLine={false}
             tickMargin={8}

@@ -1,6 +1,7 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
+import { useState } from "react";
 
 const data = [{ period: "Storage", used: 72 }];
 const config = {
@@ -16,8 +17,17 @@ export function StorageGaugeChart({
 }: {
   direction?: "clockwise" | "anticlockwise";
 }) {
+  const [labels, setLabels] = useState(false);
   return (
     <Chart.Root config={config}>
+      <label>
+        <input
+          type="checkbox"
+          checked={labels}
+          onChange={(event) => setLabels(event.target.checked)}
+        />{" "}
+        Labels
+      </label>
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.RadialBarChart
           key={direction}
@@ -34,22 +44,29 @@ export function StorageGaugeChart({
         >
           <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
           <Chart.PolarRadiusAxis type="category" dataKey="period" tick={false} axisLine={false}>
-            <Chart.Label
-              value={data[0].used}
-              content={({ viewBox }) => {
-                if (!viewBox || !("cx" in viewBox)) return null;
-                return (
-                  <text x={viewBox.cx} y={viewBox.cy - 28} textAnchor="middle" fill="currentColor">
-                    <tspan x={viewBox.cx} fontSize={28} fontWeight={650}>
-                      72 GB
-                    </tspan>
-                    <tspan x={viewBox.cx} dy={24} fontSize={12}>
-                      of 100 GB used
-                    </tspan>
-                  </text>
-                );
-              }}
-            />
+            {labels && (
+              <Chart.Label
+                value={data[0].used}
+                content={({ viewBox }) => {
+                  if (!viewBox || !("cx" in viewBox)) return null;
+                  return (
+                    <text
+                      x={viewBox.cx}
+                      y={viewBox.cy - 28}
+                      textAnchor="middle"
+                      fill="currentColor"
+                    >
+                      <tspan x={viewBox.cx} fontSize={28} fontWeight={650}>
+                        72 GB
+                      </tspan>
+                      <tspan x={viewBox.cx} dy={24} fontSize={12}>
+                        of 100 GB used
+                      </tspan>
+                    </text>
+                  );
+                }}
+              />
+            )}
           </Chart.PolarRadiusAxis>
           <Chart.RadialBarSeries dataKey="used" background={{ fill: "#dfeeea" }} cornerRadius={6} />
           <Chart.Tooltip />

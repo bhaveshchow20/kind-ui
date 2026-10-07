@@ -15,7 +15,7 @@ export const areaExamples = [
   {
     id: "area-materials",
     title: "Materials",
-    notes: "Plain, paper, clay and glow finishes on native area geometry.",
+    notes: "Default, Clay and Glow finishes on native area geometry.",
     acceptance: "The selected material matches the complete source and preview.",
   },
 ];
@@ -42,10 +42,9 @@ export const areaVariants = {
   "area-materials": {
     control: "Material",
     prop: "material",
-    default: "paper",
+    default: "plain",
     options: [
-      { value: "paper", label: "Paper" },
-      { value: "plain", label: "Plain" },
+      { value: "plain", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

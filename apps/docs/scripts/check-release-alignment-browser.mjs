@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { basePath, publicPath } from "../lib/routing.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:7175";
@@ -162,6 +162,88 @@ try {
       await page.screenshot({ path: `${output}/${family}-${width}.png` });
       checks.push({ family, width, sourceCodeCopyMarkdownParity: true, panelHeightParity: true });
     }
+  }
+  for (const width of [1440, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto(origin + publicPath("/docs/guides/customization/"));
+    const pie = page.locator('[data-component="pie-interaction"]');
+    await pie.scrollIntoViewIfNeeded();
+    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(2);
+    await expect(pie.locator('[data-kind-ui="pie-halo"]')).toHaveCount(0);
+    await expect(pie.locator('[data-kind-ui="chart-tooltip"]')).toContainText("Service");
+    const other = pie.getByRole("button", { name: "Other", exact: true });
+    await other.click();
+    await expect(other).toHaveAttribute("aria-pressed", "true");
+    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(2);
+    await pie.getByRole("button", { name: "Highlight service", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    await expect(pie.getByRole("button", { name: "Service", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await pie.getByRole("application").focus();
+    await page.keyboard.press("Escape");
+    await expect(
+      pie.locator('[data-kind-ui="chart-legend-button"][aria-pressed="true"]'),
+    ).toHaveCount(0);
+    const presentation = page.locator('[data-component="combo-presentation"]');
+    await presentation.scrollIntoViewIfNeeded();
+    await presentation.locator("svg.recharts-surface").first().waitFor();
+    await expect(presentation.locator('[data-kind-ui="chart-icon"]')).toHaveCount(1);
+    const target = presentation.getByRole("button", { name: "Target", exact: true });
+    await target.click();
+    await expect(target).toHaveAttribute("aria-pressed", "true");
+    for (const id of ["combo-presentation", "pie-interaction"]) {
+      const card = page.locator(`[data-component="${id}"]`);
+      await card.scrollIntoViewIfNeeded();
+      const height = (await card.locator(".chart-example").boundingBox()).height;
+      const values =
+        id === "pie-interaction" ? ["selective-glow", "loading", "ready"] : ["loading", "ready"];
+      for (const value of values) {
+        const option = bundles[id].variants[value];
+        await card.getByRole("combobox", { name: "State", exact: true }).click();
+        await page.getByRole("option", { name: option.label, exact: true }).click();
+        const skeleton = card.locator('[data-kind-ui="chart-loading-skeleton"]');
+        if (value === "loading") {
+          await expect(skeleton).toBeVisible();
+          await expect(card.locator('[data-kind-ui="chart-loading-status"]')).toContainText(
+            id === "combo-presentation" ? "Loading monthly production" : "Loading allocation",
+          );
+        } else {
+          await expect(skeleton).toHaveCount(0);
+          await expect(card.locator('[data-kind-ui="chart-loading-status"]')).toHaveText("");
+        }
+        if (id === "pie-interaction")
+          await expect(card.locator('[data-kind-ui="pie-halo"]')).toHaveCount(
+            value === "selective-glow" ? 1 : 0,
+          );
+        assert.ok(
+          Math.abs((await card.locator(".chart-example").boundingBox()).height - height) < 2,
+          `${id} retains loading layout`,
+        );
+        await card.getByRole("tab", { name: "Code", exact: true }).click();
+        assert.equal(
+          (await card.locator("pre").textContent()).trim(),
+          option.source.trim(),
+          `${id} ${value} source parity`,
+        );
+        await card.getByRole("tab", { name: "Preview", exact: true }).click();
+      }
+    }
+    assert.ok(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      `customization overflow at ${width}`,
+    );
+    await page.screenshot({ path: `${output}/customization-${width}.png` });
+    checks.push({
+      family: "customization",
+      width,
+      loadingLayout: true,
+      variantSourceParity: true,
+      legendAndMarkFocus: true,
+      initialPiePin: true,
+      selectiveGlow: true,
+    });
   }
   const provenance = await context.request.get(origin + publicPath("/package-provenance.json"));
   assert.equal(provenance.status(), 404, "Internal provenance must not be public");

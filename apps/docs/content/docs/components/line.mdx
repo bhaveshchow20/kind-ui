@@ -48,9 +48,9 @@ Explicit children add diamond markers and labels. `LineChart` still owns sizing,
 
 ## Materials
 
-Choose plain, paper, clay or glow.
+Choose Default, Clay or Glow.
 
-<LineExample id="line-paper" />
+<LineExample id="line-materials" />
 
 ## API reference
 
@@ -70,7 +70,7 @@ Configured `LineChart` owns its `Root`; do not wrap it in another one. Each conf
 | `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. Keyboard inspection instructions are provided. |
 | `height` / `width` | Native chart dimensions | `280px` / `100%` | Responsive plot dimensions; `style` and `className` can also override sizing. |
 | `curve` | Recharts curve type | `"monotone"` | Curve for generated series; use `"linear"` or `"stepAfter"` here. |
-| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Finish for generated series, including `"paper"`. |
+| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Finish for generated series, preserving native geometry. |
 | `series` | `ConfiguredLineSeries<Row>[]` | Config keys | Per-series props; each entry needs `dataKey` and a unique `seriesKey` in config. |
 | `xAxis` / `yAxis` / `grid` | Native props or `false` | Styled axes and horizontal grid | Override generated parts or hide them. |
 | `tooltip` / `legend` | Kind props or `false` | Enabled with generated parts | Override or hide the tooltip and legend. Explicit children need `legend={{}}` to add a legend. |
@@ -85,7 +85,7 @@ With explicit children, omit `xDataKey`, `curve`, `material`, `series` and gener
 
 ### LineSeries
 
-Use `LineSeries` inside explicit children, or pass its props in the configured `series` array. String `dataKey` values identify their config entry; `seriesKey` supplies a separate identity for accessor or numeric keys.
+Compose `LineSeries` as children, or pass its props through configured `series`. String `dataKey` values identify config entries; accessor and numeric keys use `seriesKey`.
 
 <div className="line-props-scroll" role="region" aria-label="LineSeries props" tabIndex={0}>
 
@@ -94,7 +94,7 @@ Use `LineSeries` inside explicit children, or pass its props in the configured `
 | `dataKey` | `DataKey<Row>` | Required | Value field or accessor. |
 | `seriesKey` | `string` | String `dataKey` | Config and visibility identity; required in a `series` array. |
 | `type` | Recharts curve type | `"linear"` explicit; `"monotone"` generated | Curve for this line. |
-| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Line finish; custom `shape` or `filter` takes precedence. |
+| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Line finish; custom `shape` or `filter` takes precedence. |
 | `dot` | Native dot props or renderer | `true` explicit; radius `2.5` generated | Point markers; use `false` to hide them. |
 | `strokeWidth` / `strokeDasharray` | `number` / `string` | Width `1` explicit / `2` generated; no dashes | Stroke weight and dash pattern. |
 

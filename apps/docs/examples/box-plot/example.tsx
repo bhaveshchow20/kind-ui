@@ -52,7 +52,7 @@ export function ResponseTimeBoxPlot() {
             dataKey="period"
             axisLine={false}
             tickLine={false}
-            tickMargin={12}
+            tickMargin={8}
             height={48}
             interval={0}
           />

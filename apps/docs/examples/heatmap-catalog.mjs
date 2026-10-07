@@ -47,7 +47,7 @@ export const family = {
     {
       id: "heatmap-materials",
       title: "Cell materials",
-      notes: "Plain, paper, clay and glow edge treatments preserve quantitative cell centers.",
+      notes: "Default, Clay and Glow edge treatments preserve quantitative cell centers.",
       acceptance:
         "The selected material agrees with full source and preview; missing cells remain patterned without a material.",
     },
@@ -85,10 +85,9 @@ export const family = {
     "heatmap-materials": {
       control: "Material",
       prop: "material",
-      default: "paper",
+      default: "plain",
       options: [
-        { value: "paper", label: "Paper" },
-        { value: "plain", label: "Plain" },
+        { value: "plain", label: "Default" },
         { value: "clay", label: "Clay" },
         { value: "glow", label: "Glow" },
       ],

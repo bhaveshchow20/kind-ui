@@ -16,9 +16,9 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function MaterialRadarChart({
-  material = "paper",
+  material = "plain",
 }: {
-  material?: "plain" | "paper" | "clay" | "glow";
+  material?: "plain" | "clay" | "glow";
 } = {}) {
   return (
     <Chart.Root config={config}>

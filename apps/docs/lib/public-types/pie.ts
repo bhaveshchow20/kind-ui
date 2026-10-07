@@ -9,7 +9,7 @@ export type PieChartReference = Pick<
   | "loadingLabel"
 >;
 export type PieSeriesReference = Pick<
-  Chart.PieSeriesProps,
+  Omit<Chart.PieSeriesProps, "material"> & { material?: "plain" | "clay" | "glow" },
   | "data"
   | "dataKey"
   | "categoryKey"

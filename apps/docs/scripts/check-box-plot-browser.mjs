@@ -127,8 +127,7 @@ try {
   for (const [value, label] of [
     ["glow", "Glow"],
     ["clay", "Clay"],
-    ["plain", "Plain"],
-    ["paper", "Paper"],
+    ["plain", "Default"],
   ]) {
     await materials.getByRole("combobox", { name: "Material" }).click();
     await page.getByRole("option", { name: label, exact: true }).click();
@@ -158,11 +157,11 @@ try {
   await materials.getByRole("button", { name: "Copy prompt", exact: true }).click();
   const prompt = await page.evaluate(() => navigator.clipboard.readText());
   assert.match(prompt, /docs\/components\/box-plot\//);
-  assert.match(prompt, /variants\/paper\/example.tsx/);
+  assert.match(prompt, /variants\/plain\/example.tsx/);
   const linkedSource = await (
-    await page.request.get(`${origin}/examples/box-plot-materials/variants/paper/example.tsx`)
+    await page.request.get(`${origin}/examples/box-plot-materials/variants/plain/example.tsx`)
   ).text();
-  assert.equal(linkedSource, bundles["box-plot-materials"].variants.paper.source);
+  assert.equal(linkedSource, bundles["box-plot-materials"].variants.plain.source);
   for (const region of [page.locator("#nd-toc"), page.locator(".line-props-scroll").first()]) {
     await region.scrollIntoViewIfNeeded();
     await region.hover();

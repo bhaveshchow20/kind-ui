@@ -6,7 +6,7 @@ export const family = {
       title: "Radial Chart",
       notes: "Three project stages share an explicit 0–100 percent scale.",
       acceptance:
-        "Three category-colored rings show 92%, 76% and 58%; labels and hidden data agree.",
+        "Three category-colored rings retain 92%, 76% and 58% in tooltip and hidden data; optional labels agree.",
     },
     {
       id: "radial-activity",
@@ -20,7 +20,7 @@ export const family = {
       id: "radial-gauge",
       title: "Capacity gauge",
       notes:
-        "A semicircular gauge uses the exported RadialBar components with consumer-owned center text.",
+        "A semicircular gauge uses the exported RadialBar components with optional consumer-owned center text.",
       acceptance:
         "72 of 100 GB fills the same arc in both entrance directions; selected source and preview agree.",
     },
@@ -56,6 +56,15 @@ export const family = {
     },
   },
   variants: {
+    radial: {
+      control: "Labels",
+      prop: "labels",
+      default: "hidden",
+      options: [
+        { value: "hidden", label: "Hidden" },
+        { value: "visible", label: "Visible" },
+      ],
+    },
     "radial-gauge": {
       control: "Entrance direction",
       prop: "direction",
