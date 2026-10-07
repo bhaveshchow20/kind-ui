@@ -17,7 +17,12 @@ export default defineConfig({
     },
     {
       name: "webkit-mobile",
-      testMatch: ["responsive-cards.spec.ts", "activity-colors.spec.ts", "headline-layout.spec.ts"],
+      testMatch: [
+        "responsive-cards.spec.ts",
+        "activity-colors.spec.ts",
+        "headline-layout.spec.ts",
+        "mobile-theme.spec.ts",
+      ],
       use: { ...devices["iPhone 13"] },
     },
   ],

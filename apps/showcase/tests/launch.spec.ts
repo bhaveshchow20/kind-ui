@@ -35,7 +35,8 @@ for (const width of [320, 375, 768, 1280]) {
     await expect(page.getByRole("button", { name: "Search documentation" })).toBeVisible();
     await expect(page.locator(".wordmark")).toBeVisible();
     if (width <= 800) {
-      await page.getByRole("button", { name: "Switch to dark theme" }).click();
+      await page.getByRole("button", { name: "Appearance", exact: true }).click();
+      await page.getByRole("menuitemradio", { name: "Dark", exact: true }).click();
       await expect(page.locator("html")).toHaveClass(/dark/);
     } else {
       await page.getByRole("radio", { name: "Dark", exact: true }).check();

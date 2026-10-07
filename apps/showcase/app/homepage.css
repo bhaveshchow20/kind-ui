@@ -155,6 +155,33 @@ button:disabled {
 .mobile-theme {
   display: none;
 }
+.mobile-appearance-menu {
+  z-index: 100;
+  min-width: 168px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--foreground);
+  background: var(--background);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 12%);
+}
+.mobile-appearance-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 15px;
+  cursor: pointer;
+  outline: none;
+}
+.mobile-appearance-option[data-highlighted] {
+  background: var(--muted);
+}
+.mobile-appearance-check {
+  margin-left: auto;
+}
 .kind-hero {
   padding: 70px 0 64px;
   text-align: center;

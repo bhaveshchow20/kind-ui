@@ -4,6 +4,7 @@ import * as Chart from "@kind-ui/charts";
 import { ArrowUpRight, Check, Copy, Maximize2, Monitor, Moon, Search, Sun } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
+import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ActivityDemo } from "@/components/activity-demo";
 import { AdvancedChartCard, advancedRecipes } from "@/components/advanced-chart-card";
@@ -444,6 +445,51 @@ function GitHubMark() {
   );
 }
 
+const appearanceOptions = [
+  { value: "light", label: "Light", Icon: Sun },
+  { value: "dark", label: "Dark", Icon: Moon },
+  { value: "system", label: "System", Icon: Monitor },
+] as const;
+
+function MobileThemeSwitcher({ enabled }: { enabled: boolean }) {
+  const { theme, setTheme } = useTheme();
+  const selected = enabled ? (theme ?? "system") : "system";
+  const Icon = appearanceOptions.find((option) => option.value === selected)?.Icon ?? Monitor;
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button className="mobile-theme" type="button" disabled={!enabled} aria-label="Appearance">
+          <Icon size={17} aria-hidden="true" />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          className="mobile-appearance-menu"
+          align="end"
+          sideOffset={8}
+          collisionPadding={12}
+        >
+          <DropdownMenu.RadioGroup value={selected} onValueChange={setTheme}>
+            {appearanceOptions.map(({ value, label, Icon: OptionIcon }) => (
+              <DropdownMenu.RadioItem
+                className="mobile-appearance-option"
+                key={value}
+                value={value}
+              >
+                <OptionIcon size={17} aria-hidden="true" />
+                {label}
+                <DropdownMenu.ItemIndicator className="mobile-appearance-check">
+                  <Check size={16} aria-hidden="true" />
+                </DropdownMenu.ItemIndicator>
+              </DropdownMenu.RadioItem>
+            ))}
+          </DropdownMenu.RadioGroup>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+}
+
 function ThemeSwitcher({ enabled }: { enabled: boolean }) {
   const { theme, setTheme } = useTheme();
   const id = useId();
@@ -456,13 +502,7 @@ function ThemeSwitcher({ enabled }: { enabled: boolean }) {
       onValueChange={setTheme}
       disabled={!enabled}
     >
-      {(
-        [
-          { value: "light", label: "Light", Icon: Sun },
-          { value: "dark", label: "Dark", Icon: Moon },
-          { value: "system", label: "System", Icon: Monitor },
-        ] as const
-      ).map(({ value, label, Icon }) => (
+      {appearanceOptions.map(({ value, label, Icon }) => (
         <RadioGroupItem asChild key={value} value={value} aria-label={label}>
           <button type="button" className="nav-theme-option" title={label}>
             {(enabled ? (theme ?? "system") : "system") === value && (
@@ -735,11 +775,10 @@ function entryCode(entry: GalleryEntry, options: DemoOptions, animate: boolean) 
   return newCode(findRecipe(newRecipes, entry.id), "plain", colorsFor(entry), animate, options);
 }
 export default function Page() {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const dark = mounted && resolvedTheme === "dark";
   useEffect(() => {
     document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
       meta.setAttribute("content", resolvedTheme === "dark" ? "#000000" : "#ffffff");
@@ -820,15 +859,7 @@ export default function Page() {
           <div className="kind-nav-actions">
             <DocumentationSearch />
             <ThemeSwitcher enabled={mounted} />
-            <button
-              className="mobile-theme"
-              type="button"
-              disabled={!mounted}
-              onClick={() => setTheme(dark ? "light" : "dark")}
-              aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
-            >
-              {dark ? <Sun size={17} /> : <Moon size={17} />}
-            </button>
+            <MobileThemeSwitcher enabled={mounted} />
             <a
               className="kind-github"
               href={repo}
