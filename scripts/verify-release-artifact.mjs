@@ -11,6 +11,7 @@ const result = await verifyReleaseArtifact(
     runId: process.env.GITHUB_RUN_ID,
     runAttempt: process.env.GITHUB_RUN_ATTEMPT,
     sha256: process.env.RELEASE_SHA256,
+    event: process.env.GITHUB_EVENT_NAME,
   },
   { requirePublic: process.argv.includes("--require-public") },
 );
@@ -18,12 +19,12 @@ console.log(JSON.stringify(result, null, 2));
 if (process.env.GITHUB_OUTPUT) {
   await appendFile(
     process.env.GITHUB_OUTPUT,
-    `filename=${result.filename}\nsha256=${result.sha256}\npublishable=${result.publishable}\n`,
+    `filename=${result.filename}\nsha256=${result.sha256}\nintegrity=${result.integrity}\npublishable=${result.publishable}\n`,
   );
 }
 if (process.env.GITHUB_STEP_SUMMARY) {
   await appendFile(
     process.env.GITHUB_STEP_SUMMARY,
-    `Candidate ${result.version} / ${result.tag}\n\nCheckout: ${process.env.RELEASE_COMMIT}\n\nSHA-256: ${result.sha256}\n\nPublishable manifest: ${result.publishable}\n\nReceipt validation proves identity/integrity. Full Node 22/24 checks are required by job dependencies. Publishing remains disabled until the reviewed activation/setup.\n`,
+    `Candidate ${result.version} / ${result.tag}\n\nCheckout: ${process.env.RELEASE_COMMIT}\n\nSHA-256: ${result.sha256}\n\nPublishable manifest: ${result.publishable}\n\nReceipt validation proves identity/integrity. Full Node 22 checks are required by job dependencies. Only the publisher has approved OIDC access; its reviewed release intent and public artifact gates must also pass.\n`,
   );
 }

@@ -28,12 +28,19 @@ import {
   LineSeries as StaticLineSeries,
   type LineSeriesProps as StaticLineSeriesProps,
 } from "./line-series.js";
+import { registerPiePinComponent } from "./pie-pin-identity.js";
+import { markerPaint, type PointStyle } from "./point-marker.js";
+import { RevealClip, type RevealDirection } from "./reveal-clip.js";
 import { TooltipBase, type TooltipFrameProps, type TooltipProps } from "./tooltip.js";
 
-export type LineAnimation = {
+export type BaseAnimation = {
   revealDurationMs?: number;
   revealEasing?: Transition["ease"];
   hoverTransition?: Transition;
+};
+export type LineAnimation = BaseAnimation & {
+  /** Physical horizontal entrance direction, independent of native chart layout. */
+  revealDirection?: RevealDirection;
 };
 type DefaultLineDataKey = Extract<StaticLineSeriesProps["dataKey"], (row: never) => unknown>;
 export type LineSeriesProps<
@@ -55,40 +62,45 @@ const snapshot = () => window.matchMedia(query).matches;
 const serverSnapshot = () => true;
 
 /** Motion owns the shared entrance clip and default active marks. */
-export function LineChart({ animate = false, children, ...props }: LineChartProps) {
+export function LineChart({
+  animate = false,
+  loading,
+  loadingLabel,
+  children,
+  ...props
+}: LineChartProps) {
   const id = useId();
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
   const options = typeof animate === "object" ? animate : {};
-  const enabled = animate !== false && !reduced;
-  const interrupt = useCallback(() => setInteracted(true), []);
+  const enabled = animate !== false && !reduced && !loading;
+  const interrupt = useCallback(() => {
+    if (!loading) setInteracted(true);
+  }, [loading]);
+  useLayoutEffect(() => {
+    if (loading) setInteracted(false);
+  }, [loading]);
   const reveal = enabled && !interacted;
   const transition = options.hoverTransition ?? defaultHover;
   return (
     <MotionContext value={{ enabled, transition }}>
       <LineChartFrame
         chartProps={props}
+        loading={loading}
+        loadingLabel={loadingLabel}
+        loadingSkeleton="line"
+        loadingAnimation={options}
         engine={EngineLineChart}
         motionEnabled={enabled}
         interrupt={interrupt}
         {...(reveal ? { clip: `url(#${id}-reveal)` } : {})}
       >
         {reveal && (
-          <defs>
-            <clipPath id={`${id}-reveal`} clipPathUnits="userSpaceOnUse">
-              <motion.rect
-                x={0}
-                y={0}
-                height="100%"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{
-                  duration: Math.max(0, options.revealDurationMs ?? 1000) / 1000,
-                  ease: options.revealEasing ?? [0.25, 0.1, 0.25, 1],
-                }}
-              />
-            </clipPath>
-          </defs>
+          <RevealClip
+            id={`${id}-reveal`}
+            options={options}
+            {...(options.revealDirection === undefined ? {} : { finish: interrupt })}
+          />
         )}
         {children}
       </LineChartFrame>
@@ -108,7 +120,13 @@ function useAnimatedCoordinate(target: number, enabled: boolean, transition: Tra
   }, [value, target, enabled, transition]);
   return value;
 }
-export function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
+export function ActiveMarker({
+  cx,
+  cy,
+  fill,
+  stroke,
+  variant = "default",
+}: DotProps & { variant?: PointStyle | undefined }) {
   const { enabled, transition } = use(MotionContext);
   const { motionReady } = useLineInteraction();
   const animate = enabled && motionReady;
@@ -126,6 +144,8 @@ export function ActiveMarker({ cx, cy, fill, stroke }: DotProps) {
       stroke="var(--card, white)"
       strokeWidth={2}
       strokeDasharray="none"
+      {...markerPaint(variant, fill ?? stroke)}
+      data-point-style={variant}
       pointerEvents="none"
     />
   );
@@ -178,7 +198,9 @@ export function LineSeries<
       >
         <StaticLineSeries<DataPoint, Value>
           {...props}
-          activeDot={visible ? (props.activeDot ?? <ActiveMarker />) : false}
+          activeDot={
+            visible ? (props.activeDot ?? <ActiveMarker variant={props.activePointStyle} />) : false
+          }
           zIndex={0}
           renderWhileHidden={enabled && drawn}
           isAnimationActive={false}
@@ -216,4 +238,6 @@ function MovingFrame({ x, y, maxX, maxY, ref, style, frameProps, children }: Too
 export function Tooltip(props: TooltipProps) {
   return <TooltipBase {...props} Frame={MovingFrame} />;
 }
+registerPiePinComponent(Tooltip, "tooltip");
+
 export type { TooltipProps };

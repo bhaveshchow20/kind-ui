@@ -17,6 +17,18 @@ export default defineConfig({
   },
   webServer: [
     {
+      command: `npm exec vite preview -- --outDir artifacts/packed-stylesheet-development --host 127.0.0.1 --port ${port(4200)} --strictPort`,
+      url: `http://127.0.0.1:${port(4200)}`,
+    },
+    {
+      command: `npm exec vite preview -- --outDir artifacts/packed-stylesheet-production --host 127.0.0.1 --port ${port(4201)} --strictPort`,
+      url: `http://127.0.0.1:${port(4201)}`,
+    },
+    {
+      command: `npm exec vite preview -- --outDir artifacts/packed-loading --host 127.0.0.1 --port ${port(4202)} --strictPort`,
+      url: `http://127.0.0.1:${port(4202)}/loading.html`,
+    },
+    {
       command: `npm exec vite preview -- --outDir artifacts/packed-identity-colors --host 127.0.0.1 --port ${port(4198)} --strictPort`,
       url: `http://127.0.0.1:${port(4198)}`,
     },

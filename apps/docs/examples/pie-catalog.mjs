@@ -17,6 +17,14 @@ export const pieExamples = [
     notes: "Native donut sectors with plain, paper, clay or glow finishes.",
     acceptance: "Selected finish matches full source and preview.",
   },
+  {
+    id: "pie-rounded",
+    title: "Rounded and petal sectors",
+    notes:
+      "Native cornerRadius and paddingAngle produce rounded pies, rounded donuts and a petal donut without custom shapes.",
+    acceptance:
+      "Geometry selection matches copied source; category identity and the 1,000-hour data alternative remain unchanged.",
+  },
 ];
 export const pieDataLabels = Object.fromEntries(
   pieExamples.map(({ id }) => [
@@ -28,6 +36,16 @@ export const pieDataLabels = Object.fromEntries(
   ]),
 );
 export const pieVariants = {
+  "pie-rounded": {
+    control: "Geometry",
+    prop: "geometry",
+    default: "rounded-donut",
+    options: [
+      { value: "rounded-pie", label: "Rounded pie" },
+      { value: "rounded-donut", label: "Rounded donut" },
+      { value: "petal-donut", label: "Petal donut" },
+    ],
+  },
   pie: {
     control: "Shape",
     prop: "shape",
