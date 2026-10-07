@@ -370,9 +370,9 @@ export function ScatterMaterialHost() {
     <main style={{ fontFamily: "sans-serif" }}>
       <h1>Packed Scatter materials</h1>
       <div>
-        {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+        {(["plain", "clay", "glow"] as const).map((finish) => (
           <button key={finish} type="button" onClick={() => setMaterial(finish)}>
-            {finish}
+            {finish === "plain" ? "Default" : finish}
           </button>
         ))}
       </div>

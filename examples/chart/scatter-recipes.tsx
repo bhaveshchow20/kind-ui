@@ -133,14 +133,14 @@ export function ScatterRecipes() {
       </header>
       <div className="scatter-controls">
         <fieldset aria-label="Finish">
-          {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+          {(["plain", "clay", "glow"] as const).map((finish) => (
             <button
               key={finish}
               type="button"
               aria-pressed={material === finish}
               onClick={() => setMaterial(finish)}
             >
-              {finish.charAt(0).toUpperCase() + finish.slice(1)}
+              {finish === "plain" ? "Default" : finish.charAt(0).toUpperCase() + finish.slice(1)}
             </button>
           ))}
         </fieldset>
@@ -154,8 +154,8 @@ export function ScatterRecipes() {
         </fieldset>
       </div>
       <p className="scatter-note">
-        Paper adds inset pencil grain. Clay adds soft convex relief. Glow adds decorative light
-        outside the exact bubble area. Custom diamond renderers keep their own finish.
+        Clay adds soft convex relief. Glow adds decorative light outside the exact bubble area.
+        Custom diamond renderers keep their own finish.
       </p>
       <div className="scatter-grid">
         <section className="scatter-card scatter-wide" aria-labelledby="relationship-title">

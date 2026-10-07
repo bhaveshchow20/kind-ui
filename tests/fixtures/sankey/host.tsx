@@ -71,9 +71,9 @@ export function Host() {
   const [active, setActive] = useState<string | null>(null);
   return (
     <>
-      {(["plain", "paper", "clay", "glow"] as const).map((item) => (
+      {(["plain", "clay", "glow"] as const).map((item) => (
         <button key={item} type="button" onClick={() => setFinish(item)}>
-          {item}
+          {item === "plain" ? "Default" : item}
         </button>
       ))}
       <section aria-label="Mark ownership">

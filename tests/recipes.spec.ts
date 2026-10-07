@@ -311,15 +311,15 @@ test("existing line recipes expose materials alongside palette, motion and visib
   const markerWidths = await page
     .locator(".recipe-stack .recharts-line-dot")
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("stroke-width")));
-  await expect(controls.getByRole("button", { name: "Plain", exact: true })).toHaveAttribute(
+  await expect(controls.getByRole("button", { name: "Default", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   await expect(filters).toHaveCount(0);
-  for (const material of ["paper", "clay", "glow"] as const) {
+  for (const material of ["clay", "glow"] as const) {
     await controls
       .getByRole("button", {
-        name: material === "paper" ? "Paper" : material === "clay" ? "Clay" : "Glow",
+        name: material === "clay" ? "Clay" : "Glow",
         exact: true,
       })
       .click();
@@ -335,10 +335,7 @@ test("existing line recipes expose materials alongside palette, motion and visib
         .locator(".recipe-stack .recharts-line-dot")
         .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("stroke-width"))),
     ).toEqual(markerWidths);
-    await expect(curves.first()).toHaveAttribute(
-      "stroke-width",
-      material === "clay" ? "6" : material === "paper" ? "2.5" : "3",
-    );
+    await expect(curves.first()).toHaveAttribute("stroke-width", material === "clay" ? "6" : "3");
     await page.screenshot({
       path: info.outputPath(`recipes-${material}-mono-normal.png`),
       fullPage: true,
@@ -372,7 +369,7 @@ test("existing line recipes expose materials alongside palette, motion and visib
   }
   const comparison = page.getByRole("region", { name: "Week over week" });
   await comparison.getByRole("button", { name: "Last week", exact: true }).click();
-  await controls.getByRole("button", { name: "Paper", exact: true }).click();
+  await controls.getByRole("button", { name: "Clay", exact: true }).click();
   await expect(comparison.getByRole("button", { name: "Last week", exact: true })).toHaveAttribute(
     "aria-pressed",
     "false",
@@ -384,7 +381,7 @@ test("existing line recipes expose materials alongside palette, motion and visib
   await expect(comparison.getByRole("row", { name: "Thu 0 tasks 16 tasks" })).toBeVisible();
   await page.getByLabel("Motion", { exact: true }).check();
   await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
-  await page.screenshot({ path: info.outputPath("recipes-paper-reduced.png"), fullPage: true });
+  await page.screenshot({ path: info.outputPath("recipes-clay-reduced.png"), fullPage: true });
   // The screenshots/visibility controls have already interacted with charts. Remount for a fresh entrance.
   await page.getByLabel("Empty data", { exact: true }).check();
   await page.getByLabel("Empty data", { exact: true }).uncheck();
@@ -406,7 +403,7 @@ test("existing line recipes expose materials alongside palette, motion and visib
   await page.screenshot({ path: info.outputPath("recipes-clay-motion.png"), fullPage: true });
   await page.getByLabel("Motion", { exact: true }).uncheck();
   await expect(page.locator('.recipe-stack clipPath[id$="-reveal"]')).toHaveCount(0);
-  await controls.getByRole("button", { name: "Plain", exact: true }).click();
+  await controls.getByRole("button", { name: "Default", exact: true }).click();
   await expect(filters).toHaveCount(0);
   await page.getByLabel("Empty data", { exact: true }).check();
   await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(0);

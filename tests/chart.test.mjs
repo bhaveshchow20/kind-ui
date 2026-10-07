@@ -685,7 +685,7 @@ test("box materials retain native geometry and consumer filter ownership, includ
   const plain = renderSvg(h(Chart.BoxPlotMark, attrs));
   const geometry = (svg) =>
     [...svg.matchAll(/<(?:rect|line|circle)\b[^>]*>/g)].map((match) => match[0]);
-  for (const material of ["paper", "clay", "glow"]) {
+  for (const material of ["clay", "glow"]) {
     const svg = renderSvg(h(Chart.BoxPlotMark, { ...attrs, material, filter: undefined }));
     assert.match(svg, /data-kind-ui="box-plot-mark"[^>]*filter="url\(#kind-ui-box-/);
     assert.deepEqual(geometry(svg), geometry(plain));
@@ -1118,7 +1118,7 @@ test("Sankey finishes keep computed curve and width even with competing presenta
     index: 0,
     payload: {},
   };
-  for (const finish of ["plain", "paper", "clay", "glow"])
+  for (const finish of ["plain", "clay", "glow"])
     for (const material of ["solid", "gradient"]) {
       const markup = renderSvg(
         h(Chart.SankeyLink, {
@@ -1165,7 +1165,7 @@ test("Sankey keeps parallel identities in validation but rejects native equal-va
 
 test("Sankey explicit filters own surfaces and plain nodes retain direct rectangles", () => {
   const node = { x: 10, y: 20, width: 14, height: 50, index: 0, payload: {} };
-  for (const finish of ["paper", "clay", "glow"]) {
+  for (const finish of ["clay", "glow"]) {
     for (const rectProps of [{ filter: "url(#custom)" }, { style: { filter: "none" } }]) {
       const markup = renderSvg(h(Chart.SankeyNode, { ...node, finish, rectProps }));
       assert.doesNotMatch(markup, /<filter/);
@@ -1177,7 +1177,7 @@ test("Sankey explicit filters own surfaces and plain nodes retain direct rectang
 });
 
 test("Sankey undefined filters retain generated finishes and wide node strokes retain bounds", () => {
-  for (const finish of ["paper", "clay", "glow"]) {
+  for (const finish of ["clay", "glow"]) {
     const markup = renderSvg(
       h(Chart.SankeyNode, {
         x: 10,
@@ -1216,7 +1216,7 @@ test("Sankey undefined filters retain generated finishes and wide node strokes r
 });
 
 test("heatmap materials decorate measured cells only and retain custom content/styles", () => {
-  for (const material of ["plain", "paper", "clay", "glow"]) {
+  for (const material of ["plain", "clay", "glow"]) {
     const markup = render(
       h(
         Chart.HeatmapChart,

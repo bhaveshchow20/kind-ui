@@ -9,20 +9,18 @@ for (const mode of ["static", "motion"] as const) {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(`http://127.0.0.1:${mode === "static" ? 4175 : 4176}/${mode}.html?materials`);
     const curves = page.locator(".recharts-line-curve");
-    await expect(curves).toHaveCount(8);
+    await expect(curves).toHaveCount(6);
     // Finish entrance without changing data or material.
     await page.getByRole("application").first().focus();
     await page.getByRole("application").nth(1).focus();
     await page.getByRole("application").nth(2).focus();
-    await page.getByRole("application").nth(3).focus();
     const geometry = await curves.evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute("d")),
     );
     expect(geometry.slice(2, 4)).toEqual(geometry.slice(0, 2));
     expect(geometry.slice(4, 6)).toEqual(geometry.slice(0, 2));
-    expect(geometry.slice(6, 8)).toEqual(geometry.slice(0, 2));
     const filters = page.locator("filter");
-    await expect(filters).toHaveCount(6);
+    await expect(filters).toHaveCount(4);
     const ids = await filters.evaluateAll((nodes) => nodes.map((node) => node.id));
     expect(new Set(ids).size).toBe(ids.length);
     const bounds = await filters.evaluateAll((nodes) =>
@@ -41,9 +39,7 @@ for (const mode of ["static", "motion"] as const) {
     await page.screenshot({ path: info.outputPath(`${mode}-mono-normal.png`), fullPage: true });
     await page.getByRole("button", { name: "Equal width", exact: true }).click();
     const before = await page.getByRole("application", { name: "plain chart" }).screenshot();
-    const paper = await page.getByRole("application", { name: "paper chart" }).screenshot();
     const clay = await page.getByRole("application", { name: "clay chart" }).screenshot();
-    expect(paper.equals(before)).toBe(false);
     expect(clay.equals(before)).toBe(false);
     const glowChart = page.getByRole("application", { name: "glow chart" });
     const glow = await glowChart.screenshot();
@@ -56,16 +52,6 @@ for (const mode of ["static", "motion"] as const) {
     await glowRegion.evaluate((node) =>
       (node as HTMLElement).style.removeProperty("--kind-ui-line-glow-opacity"),
     );
-    await page
-      .getByRole("region", { name: "paper", exact: true })
-      .evaluate((node) =>
-        (node as HTMLElement).style.setProperty("--kind-ui-line-paper-grain", "0"),
-      );
-    const noGrain = await page.getByRole("application", { name: "paper chart" }).screenshot();
-    expect(noGrain.equals(paper)).toBe(false);
-    await page
-      .getByRole("region", { name: "paper", exact: true })
-      .evaluate((node) => (node as HTMLElement).style.removeProperty("--kind-ui-line-paper-grain"));
     await page.screenshot({ path: info.outputPath(`${mode}-equal-width.png`), fullPage: true });
     await page.getByRole("button", { name: "Equal width", exact: true }).click();
     await page.getByRole("button", { name: "Palette", exact: true }).click();
@@ -89,7 +75,7 @@ for (const mode of ["static", "motion"] as const) {
     expect((await glowChart.screenshot()).equals(cssGlow)).toBe(false);
     await glowChart.screenshot({ path: info.outputPath(`${mode}-glow-gradient.png`) });
     await page.getByRole("button", { name: "Gradient", exact: true }).click();
-    for (const index of [0, 2, 4, 6])
+    for (const index of [0, 2, 4])
       expect(await curves.nth(index).evaluate((node) => getComputedStyle(node).stroke)).toBe(
         "rgb(107, 69, 179)",
       );
@@ -112,12 +98,11 @@ for (const mode of ["static", "motion"] as const) {
     await page.screenshot({ path: info.outputPath(`${mode}-color-narrow.png`), fullPage: true });
     await page.getByRole("button", { name: "Palette", exact: true }).click();
     await page.screenshot({ path: info.outputPath(`${mode}-mono-narrow.png`), fullPage: true });
-    await expect(page.locator('[data-kind-ui="line-material"][clip-path^="url"]')).toHaveCount(6);
+    await expect(page.locator('[data-kind-ui="line-material"][clip-path^="url"]')).toHaveCount(4);
     await page.getByRole("button", { name: "Gaps", exact: true }).click();
     const gaps = await curves.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
     expect(gaps.slice(2, 4)).toEqual(gaps.slice(0, 2));
     expect(gaps.slice(4, 6)).toEqual(gaps.slice(0, 2));
-    expect(gaps.slice(6, 8)).toEqual(gaps.slice(0, 2));
     expect(gaps[0]).not.toBe(geometry[0]);
     await page.getByRole("button", { name: "Gaps", exact: true }).click();
     await page.getByRole("button", { name: "Flat", exact: true }).click();
@@ -134,14 +119,14 @@ for (const mode of ["static", "motion"] as const) {
     expect(new Set(dotWidths).size).toBe(1);
     await page.getByRole("button", { name: "Dots", exact: true }).click();
     await page.getByRole("button", { name: "Native filter", exact: true }).click();
-    await expect(filters).toHaveCount(3);
-    for (const index of [0, 2, 4, 6])
+    await expect(filters).toHaveCount(2);
+    for (const index of [0, 2, 4])
       await expect(curves.nth(index)).toHaveAttribute("filter", "none");
     await page.getByRole("button", { name: "Native filter", exact: true }).click();
-    await expect(filters).toHaveCount(6);
+    await expect(filters).toHaveCount(4);
     await page.getByRole("button", { name: "Native shape", exact: true }).click();
-    await expect(filters).toHaveCount(3);
-    await expect(page.locator(".host-shape")).toHaveCount(4);
+    await expect(filters).toHaveCount(2);
+    await expect(page.locator(".host-shape")).toHaveCount(3);
     await page.getByRole("button", { name: "Hide", exact: true }).click();
     await expect(curves).toHaveCount(0);
     await expect(filters).toHaveCount(0);
@@ -154,12 +139,12 @@ test("material paint remains static when Motion is off or reduced", async ({ pag
   await page.goto("http://127.0.0.1:4176/motion.html?materials");
   await page.getByLabel("Animate", { exact: true }).uncheck();
   await expect(page.locator('clipPath[id$="-reveal"]')).toHaveCount(0);
-  await expect(page.locator("filter")).toHaveCount(6);
+  await expect(page.locator("filter")).toHaveCount(4);
   await page.screenshot({ path: info.outputPath("motion-off.png"), fullPage: true });
   await page.getByLabel("Animate", { exact: true }).check();
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(page.locator('[data-kind-ui="line-frame"][data-motion="off"]')).toHaveCount(4);
+  await expect(page.locator('[data-kind-ui="line-frame"][data-motion="off"]')).toHaveCount(3);
   await expect(page.locator('clipPath[id$="-reveal"]')).toHaveCount(0);
-  await expect(page.locator("filter")).toHaveCount(6);
+  await expect(page.locator("filter")).toHaveCount(4);
   await page.screenshot({ path: info.outputPath("motion-reduced.png"), fullPage: true });
 });

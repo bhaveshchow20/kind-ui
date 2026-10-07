@@ -42,6 +42,15 @@ The diagnostic conservatively waits on unresolved stylesheet links. A link which
 failed before mounting after document load can therefore defer the warning; it
 does not guess a timeout and warn while a slow stylesheet is still loading.
 
+## Materials
+
+Charts support Default, Clay and Glow. The Default material keeps the public
+`plain` token and native chart paint; `material="clay"` and `material="glow"`
+opt into decorative finishes. Sankey uses the same tokens through `finish`.
+Omitting either prop selects Default. Paper has been removed in the 0.3.0 API;
+replace `material="paper"` or `finish="paper"` with `"plain"`, `"clay"` or `"glow"`.
+Consumer-supplied shapes, filters and paint retain ownership.
+
 ## Series labels
 
 Configuration keys must match the series `dataKey` (or its explicit `seriesKey`).
@@ -161,7 +170,7 @@ explicit data. For a rounded donut, add `glowCategories={["design"]}` to
 innerRadius={58} outerRadius={108} cornerRadius={8} paddingAngle={2} />`.
 The IDs resolve through the existing category config contract. Unknown or removed
 IDs do nothing; reorder/filter preserve colors and membership. Selected default
-sectors use glow; others retain `material` (default plain). Native custom paint,
+sectors use glow; others retain `material` (Default, token `plain`). Native custom paint,
 shapes and handlers retain ownership. Keep labels and a data alternative.
 
 ## License

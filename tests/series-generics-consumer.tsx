@@ -13,7 +13,7 @@ const lineProps: Chart.LineSeriesProps<Row, number> = {
   data: rows,
   dataKey: "value",
   seriesKey: "value",
-  material: "paper",
+  material: "clay",
   connectNulls: true,
   strokeDasharray: "3 2",
   shape: <Curve pathRef={createRef<SVGPathElement>()} />,

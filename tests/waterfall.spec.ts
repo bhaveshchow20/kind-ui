@@ -162,8 +162,13 @@ test("recipe phone table empty state and materials", async ({ page }) => {
       return [b.x, b.y, b.width, b.height];
     }),
   );
-  for (const material of ["paper", "clay", "glow", "plain"]) {
-    await page.getByRole("button", { name: material, exact: true }).click();
+  for (const material of ["clay", "glow", "plain"]) {
+    await page
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     expect(
       await page.locator(marks).evaluateAll((nodes) =>
         nodes.map((node) => {
@@ -207,8 +212,13 @@ test("recipe phone table empty state and materials", async ({ page }) => {
 test("recipe desktop visual evidence", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/waterfalls.html");
-  for (const material of ["plain", "paper", "clay", "glow"]) {
-    await page.getByRole("button", { name: material, exact: true }).click();
+  for (const material of ["plain", "clay", "glow"]) {
+    await page
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     await page.screenshot({
       path: `artifacts/chart-tests/waterfall-desktop-${material}.png`,
       fullPage: true,

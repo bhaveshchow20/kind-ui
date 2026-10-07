@@ -340,7 +340,7 @@ export function HeatmapCellContent({ fill, formattedValue }: HeatmapCellContentP
     </span>
   );
 }
-export type HeatmapMaterial = "plain" | "paper" | "clay" | "glow";
+export type HeatmapMaterial = "plain" | "clay" | "glow";
 
 export type HeatmapGridProps = Omit<ComponentPropsWithRef<"table">, "children"> & {
   /** Required accessible name, also rendered as a native caption. */

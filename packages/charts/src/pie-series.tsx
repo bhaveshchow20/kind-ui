@@ -149,7 +149,7 @@ function EntranceSector({
   const markGroup = useRef<SVGGElement>(null);
   const [paintFilter, setPaintFilter] = useState("none");
   const [paintClip, setPaintClip] = useState("none");
-  // Measure native ownership before attaching paint, including the first non-Plain render.
+  // Measure native ownership before attaching paint, including the first non-default render.
   const [cssTransformOwned, setCssTransformOwned] = useState<boolean>();
   const [clipTransform, setClipTransform] = useState({ forward: "", inverse: "" });
   const [paintBounds, setPaintBounds] = useState<PiePaintBounds>();

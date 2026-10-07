@@ -32,7 +32,7 @@ for (const query of [
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(`${url}?${query}`);
-    for (const material of ["paper", "clay", "glow", "plain", "clay"]) {
+    for (const material of ["clay", "glow", "plain", "clay"]) {
       await page.getByLabel("Material", { exact: true }).selectOption(material);
       await nativeGeometry(page);
       expect(
@@ -118,7 +118,7 @@ for (const mode of ["static", "motion", "reduced"] as const) {
     const gauge = page
       .locator(".polar-card")
       .filter({ has: page.getByRole("heading", { name: "Gauge", exact: true }) });
-    for (const material of ["plain", "paper", "clay", "glow"]) {
+    for (const material of ["plain", "clay", "glow"]) {
       await page.getByLabel("Material", { exact: true }).selectOption(material);
       await expect
         .poll(() =>
@@ -341,7 +341,7 @@ for (const paint of ["gradient", "solid", "zero"] as const) {
         await raster("plain", "blur"),
         await raster("plain", "relief"),
       ];
-      for (const material of ["paper", "clay", "glow"]) {
+      for (const material of ["clay", "glow"]) {
         const finish = await raster(material);
         // All covered pixels must stay inside the independently measured native
         // raster envelope (plus one byte for quantization). Interior alpha is

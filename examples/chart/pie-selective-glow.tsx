@@ -27,10 +27,10 @@ const data: { key: keyof typeof config; hours: number; share: string }[] = [
 ];
 
 function AllocationMaterialChart({
-  material = "paper",
+  material = "plain",
   glowCategories,
 }: {
-  material?: "plain" | "paper" | "clay" | "glow";
+  material?: "plain" | "clay" | "glow";
   glowCategories?: readonly string[];
 }) {
   return (

@@ -3,7 +3,7 @@ import { expect, type Locator, test } from "./browser";
 import { pieAlphaDifference, pieLivePaint, pieNativeOwnership } from "./pie-native-ownership";
 
 const url = process.env.KIND_UI_PIE_URL ?? "http://127.0.0.1:4180";
-const finishes = ["plain", "paper", "clay", "glow"] as const;
+const finishes = ["plain", "clay", "glow"] as const;
 const mark = '[data-kind-ui="pie-sector"]';
 test("shared showcase pie finish and copied recipe follow independent controls", async ({
   page,
@@ -181,11 +181,11 @@ test("material alpha proof rejects actual source, mask, gradient, clipping and e
   page,
 }) => {
   const controls = [
-    ["source-opacity", "paper", "alpha", "bodyMax"],
+    ["source-opacity", "clay", "alpha", "bodyMax"],
     ["wrapper-opacity", "clay", "opaque", "bodyMax"],
     ["mask-opacity", "clay", "alpha", "bodyMax"],
     ["gradient-opacity", "clay", "alpha&gradient", "bodyMax"],
-    ["source-clip", "paper", "alpha&clip", "clippedExteriorMax"],
+    ["source-clip", "clay", "alpha&clip", "clippedExteriorMax"],
     ["glow-source-opacity", "glow", "alpha", "bodyMax"],
     ["halo-clip", "glow", "alpha&clip", "clippedExteriorMax"],
     ["flood-leak", "glow", "transparent", "actualPainted"],
@@ -552,12 +552,12 @@ test("packed controlled style, class, id, geometry and finish refresh native own
     });
     if (prop === "geometry")
       await proof.getByRole("button", { name: "Ownership geometry", exact: true }).click();
-    else await proof.getByLabel("Oracle finish").selectOption("paper");
+    else await proof.getByLabel("Oracle finish").selectOption("glow");
     await proveNative();
     await ambient.evaluate((node) => node.parentNode?.removeChild(node));
     if (prop === "geometry")
       await proof.getByRole("button", { name: "Ownership geometry", exact: true }).click();
-    else await proof.getByLabel("Oracle finish").selectOption("paper");
+    else await proof.getByLabel("Oracle finish").selectOption("glow");
     await expect(definitions).toHaveCount(2);
   }
 });
@@ -643,7 +643,7 @@ test("actual recipes expose independent materials and preserve selection/totals 
       .toBeTruthy();
   }
   await page.getByLabel("Material", { exact: true }).first().selectOption("clay");
-  await page.getByLabel("Material", { exact: true }).nth(1).selectOption("paper");
+  await page.getByLabel("Material", { exact: true }).nth(1).selectOption("glow");
   const slice = charts.first().locator(mark).first();
   await slice.scrollIntoViewIfNeeded();
   let interior: { x: number; y: number } | undefined;
@@ -835,7 +835,7 @@ for (const accessor of [false, true]) {
     expect(await allocation.innerText()).toBe(table);
     await page.getByRole("button", { name: "Toggle glow" }).click();
     await expect(halos).toHaveCount(2);
-    for (const finish of ["paper", "clay", "glow", "plain"]) {
+    for (const finish of ["clay", "glow", "plain"]) {
       await page.getByLabel("Base finish").selectOption(finish);
       await expect(first.locator('[data-kind-ui="pie-material"]')).toHaveCount(
         finish === "plain" ? 2 : 4,

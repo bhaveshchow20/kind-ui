@@ -212,14 +212,14 @@ function Recipes() {
         </button>
       </div>
       <nav aria-label="Box finish">
-        {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+        {(["plain", "clay", "glow"] as const).map((finish) => (
           <button
             type="button"
             key={finish}
             aria-pressed={material === finish}
             onClick={() => setMaterial(finish)}
           >
-            {finish}
+            {finish === "plain" ? "Default" : finish}
           </button>
         ))}
       </nav>

@@ -60,7 +60,7 @@ test("all families have two or three working examples and relevant controls", as
     expect(await cards.count()).toBeLessThanOrEqual(3);
     await page.locator(".tile-open").first().click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.locator(".demo-controls > *")).toHaveCount(4);
+    await expect(dialog.locator(".demo-controls > *")).toHaveCount(name === "Activity" ? 5 : 4);
     await expect(
       dialog.locator("svg.recharts-surface, [data-kind-ui=heatmap-grid]").first(),
     ).toBeVisible();

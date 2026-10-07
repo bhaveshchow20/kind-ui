@@ -108,9 +108,9 @@ export function WaterfallHost() {
       <button type="button" onClick={() => setAnimate(!animate)}>
         Motion
       </button>
-      {(["plain", "paper", "clay", "glow"] as const).map((value) => (
+      {(["plain", "clay", "glow"] as const).map((value) => (
         <button type="button" key={value} onClick={() => setMaterial(value)}>
-          {value}
+          {value === "plain" ? "Default" : value}
         </button>
       ))}
       <output aria-label="Clicks">{clicks}</output>

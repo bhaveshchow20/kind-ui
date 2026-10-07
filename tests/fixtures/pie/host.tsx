@@ -225,8 +225,10 @@ export function PieHost() {
           value={material}
           onChange={(e) => setMaterial(e.target.value as Chart.PieMaterial)}
         >
-          {["plain", "paper", "clay", "glow"].map((v) => (
-            <option key={v}>{v}</option>
+          {["plain", "clay", "glow"].map((v) => (
+            <option key={v} value={v}>
+              {v === "plain" ? "Default" : v}
+            </option>
           ))}
         </select>
       </label>
@@ -566,8 +568,10 @@ function ContinuityHost() {
           value={material}
           onChange={(e) => setMaterial(e.target.value as Chart.PieMaterial)}
         >
-          {["plain", "paper", "clay", "glow"].map((v) => (
-            <option key={v}>{v}</option>
+          {["plain", "clay", "glow"].map((v) => (
+            <option key={v} value={v}>
+              {v === "plain" ? "Default" : v}
+            </option>
           ))}
         </select>
       </label>
@@ -651,7 +655,7 @@ export function MaterialGallery() {
     <main style={{ fontFamily: "system-ui", padding: 24, background: "#f6f4f6" }}>
       <h1>Pie / donut finishes</h1>
       <p>Native continuous sectors • pink and monochrome • normal and narrow</p>
-      {(["plain", "paper", "clay", "glow"] as const).map((material) => (
+      {(["plain", "clay", "glow"] as const).map((material) => (
         <section key={material}>
           <h2>{material}</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
@@ -740,8 +744,10 @@ export function SelectiveGlowHost({ accessor = false }: { accessor?: boolean }) 
       <label>
         Base finish
         <select value={material} onChange={(e) => setMaterial(e.target.value as Chart.PieMaterial)}>
-          {["plain", "paper", "clay", "glow"].map((v) => (
-            <option key={v}>{v}</option>
+          {["plain", "clay", "glow"].map((v) => (
+            <option key={v} value={v}>
+              {v === "plain" ? "Default" : v}
+            </option>
           ))}
         </select>
       </label>

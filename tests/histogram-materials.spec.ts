@@ -3,7 +3,7 @@ import { expectLastVisibleGuard } from "./last-visible";
 
 const packed = `http://127.0.0.1:${4192 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
 const marks = '[data-kind-ui="histogram-bin"]';
-const finishes = ["plain", "paper", "clay", "glow"] as const;
+const finishes = ["plain", "clay", "glow"] as const;
 
 test("packed histogram finishes retain quantitative geometry, Cells, overrides and repeated interaction", async ({
   page,
@@ -32,7 +32,12 @@ test("packed histogram finishes retain quantitative geometry, Cells, overrides a
     );
   const plain = await snapshot();
   for (const material of finishes) {
-    await page.getByRole("button", { name: material, exact: true }).click();
+    await page
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     expect((await snapshot()).sort()).toEqual([...plain].sort());
     await expect(page.locator('svg[data-host-ref="yes"]')).toHaveCount(1);
     const chart = page.getByRole("application", { name: "Histogram proof" });
@@ -104,7 +109,7 @@ for (const [lower, strokeMode] of [
   [0, "css"],
   [0, "percent"],
 ] as const) {
-  test(`Paper Clay and Glow retain Cell ${lower} stroke ${strokeMode} solid and gradient body alpha`, async ({
+  test(`Clay and Glow retain Cell ${lower} stroke ${strokeMode} solid and gradient body alpha`, async ({
     page,
   }, info) => {
     await page.goto(
@@ -175,7 +180,7 @@ for (const [lower, strokeMode] of [
     }
     for (const gradient of [false, true]) {
       if (gradient) await page.getByRole("button", { name: "Gradient", exact: true }).click();
-      await page.getByRole("button", { name: "plain", exact: true }).click();
+      await page.getByRole("button", { name: "Default", exact: true }).click();
       const bounds = await bin.evaluate((node) => ({
         x: Number(node.getAttribute("x")),
         y: Number(node.getAttribute("y")),
@@ -187,8 +192,13 @@ for (const [lower, strokeMode] of [
       if (!chartBounds) throw new Error("No chart bounds");
       const pixelWidth = Math.ceil(chartBounds.x + chartBounds.width) - Math.floor(chartBounds.x);
       const plain = await chart.screenshot({ omitBackground: true });
-      for (const material of ["paper", "clay", "glow"] as const) {
-        await page.getByRole("button", { name: material, exact: true }).click();
+      for (const material of ["clay", "glow"] as const) {
+        await page
+          .getByRole("button", {
+            name: String(material) === "plain" ? "Default" : material,
+            exact: true,
+          })
+          .click();
         const finished = await chart.screenshot({
           omitBackground: true,
           path: info.outputPath(`${material}-${gradient ? "gradient" : "solid"}.png`),
@@ -213,7 +223,12 @@ test("fully transparent Cells produce no material-created paint", async ({ page 
     content: `html, body, section { background: transparent !important; } svg text, .recharts-cartesian-grid, .recharts-reference-line, .recharts-cartesian-axis, .recharts-tooltip-cursor, ${marks} { visibility: hidden; } ${marks}[data-lower="0"] { visibility: visible; }`,
   });
   for (const material of finishes) {
-    await page.getByRole("button", { name: material, exact: true }).click();
+    await page
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     const bytes = await page
       .locator(`${marks}[data-lower="0"]`)
       .screenshot({ omitBackground: true });
@@ -244,24 +259,39 @@ test("all finishes preserve empty and zero inputs, Motion interruption and reduc
   for (const material of finishes) {
     for (const mode of ["empty", "zero"]) {
       await page.goto(`${packed}/?data=${mode}`);
-      await page.getByRole("button", { name: material, exact: true }).click();
+      await page
+        .getByRole("button", {
+          name: String(material) === "plain" ? "Default" : material,
+          exact: true,
+        })
+        .click();
       await expect(page.locator(marks)).toHaveCount(0);
     }
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(packed);
-    await page.getByRole("button", { name: material, exact: true }).click();
+    await page
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     await expect(page.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(1);
     await page.getByRole("button", { name: "Update", exact: true }).click();
     await expect(page.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.reload();
-    await page.getByRole("button", { name: material, exact: true }).click();
+    await page
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     await expect(page.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
     await expect(page.locator(marks)).toHaveCount(4);
   }
 });
 
-test("four real finishes retain unequal density rectangles on desktop and phone", async ({
+test("three real finishes retain unequal density rectangles on desktop and phone", async ({
   page,
 }, info) => {
   for (const [label, width, height] of [
@@ -270,11 +300,12 @@ test("four real finishes retain unequal density rectangles on desktop and phone"
   ] as const) {
     await page.setViewportSize({ width, height });
     await page.goto("/histograms.html?materials");
-    await expect(page.locator(marks)).toHaveCount(12);
+    // Each of the three finishes paints the three nonzero density intervals.
+    await expect(page.locator(marks)).toHaveCount(finishes.length * 3);
     const filters = page.locator('[data-kind-ui="histogram-material"] filter');
-    await expect(filters).toHaveCount(9);
+    await expect(filters).toHaveCount((finishes.length - 1) * 3);
     const ids = await filters.evaluateAll((nodes) => nodes.map((node) => node.id));
-    expect(new Set(ids).size).toBe(9);
+    expect(new Set(ids).size).toBe(ids.length);
     const geometry = await page
       .locator("article")
       .evaluateAll((nodes) =>

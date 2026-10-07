@@ -53,7 +53,7 @@ for (const packed of [false, true]) {
         .locator('[data-kind-ui="heatmap-ramp"]')
         .first()
         .getAttribute("style");
-      for (const material of ["paper", "clay", "glow", "plain", "glow", "clay", "paper", "plain"]) {
+      for (const material of ["clay", "glow", "plain", "glow", "clay", "plain"]) {
         await select.selectOption(material);
         await page.evaluate(() => window.scrollTo(0, 0));
         expect(await capture()).toEqual(geometry);
@@ -198,23 +198,25 @@ test("packed edge materials preserve native refs, filters, cancelable events and
   await page.goto(`http://127.0.0.1:${4190 + offset}`);
   const grid = page.getByRole("grid", { name: "Constant and missing grid" });
   const cells = grid.getByRole("gridcell");
-  for (const material of ["paper", "clay", "glow", "plain"]) {
+  const materials = ["clay", "glow", "plain"] as const;
+  for (const [index, material] of materials.entries()) {
     await page.getByRole("combobox", { name: "Edge material" }).selectOption(material);
     await expect(cells.first()).toHaveCSS("filter", "brightness(1)");
     await expect(cells.first()).toHaveAttribute("data-ref-ready", "yes");
     await expect(cells.first()).toHaveCSS("background-color", "rgb(128, 128, 128)");
     await cells.nth(1).click();
+    await expect(page.getByLabel("Handled events")).toHaveText(String(index + 1));
     await page.keyboard.press("ArrowLeft");
     await expect(cells.nth(1)).toBeFocused();
   }
-  await expect(page.getByLabel("Handled events")).toHaveText("4");
+  await expect(page.getByLabel("Handled events")).toHaveText(String(materials.length));
   await page
     .getByRole("button", { name: "Patch edge data" })
     .evaluate((node: HTMLButtonElement) => node.click());
   await expect(cells.nth(1)).toHaveAttribute("data-material", "plain");
   await expect(page.getByRole("tooltip").last()).toHaveText("A, Y: 0");
   // Explicit consumer background paint overrides the optional treatment.
-  await page.getByRole("combobox", { name: "Edge material" }).selectOption("paper");
+  await page.getByRole("combobox", { name: "Edge material" }).selectOption("clay");
   await cells.first().evaluate((node: HTMLElement) => {
     node.style.backgroundImage = "none";
   });

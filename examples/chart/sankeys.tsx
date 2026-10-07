@@ -157,7 +157,6 @@ function App() {
       <SankeyNetwork />
       <Recipe material="solid" />
       <Recipe material="gradient" />
-      <Recipe material="gradient" finish="paper" />
       <Recipe material="gradient" finish="clay" />
       <Recipe material="gradient" finish="glow" />
       <section>

@@ -98,8 +98,10 @@ test("five-stage Sankey is balanced, proportional, colored and readable through 
       ),
     );
   expect(new Set(paints.flat()).size).toBeGreaterThan(10);
-  for (const finish of ["plain", "paper", "clay", "glow"]) {
-    await network.getByRole("button", { name: finish, exact: true }).click();
+  for (const finish of ["plain", "clay", "glow"]) {
+    await network
+      .getByRole("button", { name: String(finish) === "plain" ? "Default" : finish, exact: true })
+      .click();
     expect(
       await network.locator("path[data-network-flow]").evaluateAll((paths) =>
         paths.map((p) => ({
@@ -110,12 +112,14 @@ test("five-stage Sankey is balanced, proportional, colored and readable through 
         })),
       ),
     ).toEqual(geometry);
-    await expect(network.getByRole("button", { name: finish, exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(
+      network.getByRole("button", {
+        name: String(finish) === "plain" ? "Default" : finish,
+        exact: true,
+      }),
+    ).toHaveAttribute("aria-pressed", "true");
   }
-  await network.getByRole("button", { name: "plain", exact: true }).click();
+  await network.getByRole("button", { name: "Default", exact: true }).click();
   await network
     .locator(".network-capture")
     .screenshot({ path: info.outputPath("network-desktop.png") });
