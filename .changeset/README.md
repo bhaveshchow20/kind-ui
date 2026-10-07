@@ -57,27 +57,31 @@ and tested artifact in `artifacts/package/`; inspect `validated-artifact.json`
 and the aggregate output together. The receipt alone proves the package gate.
 Version, manifest or package-source changes require a fresh tested candidate.
 
-An explicitly authorized publication with existing npm authentication uses those
-exact bytes:
-
-```sh
-npm whoami --registry=https://registry.npmjs.org
-npm publish ./artifacts/package/kind-ui-charts-0.2.0.tgz --ignore-scripts --access public --tag latest --registry=https://registry.npmjs.org
-```
+An explicitly authorized publication with existing npm authentication uses the
+archive under `artifacts/package/` named by the receipt's `filename` field. Check
+CLI authentication with `npm whoami --registry=https://registry.npmjs.org`, then
+pass that exact archive to `npm publish` with `--ignore-scripts --access public
+--tag latest --registry=https://registry.npmjs.org`.
 
 Check the receipt's SHA-256 before publication. Never repack at publication or
 use `changeset publish`, which does not preserve this artifact handoff. Do not
 send credentials or OTPs in chat, create placeholder versions, or upgrade npm to
 introduce another publishing route.
 
-If a workflow run fails, rerun all jobs. Receipt/run-attempt checks intentionally
-reject artifacts from an earlier attempt. After an ambiguous publication result,
-inspect the registry version and `dist.integrity` before retrying. A matching
-published version needs no retry; published versions are immutable.
+For a workflow failure before npm publication, rerun all jobs of the original
+run. Receipt/run-attempt checks intentionally reject artifacts from an earlier
+attempt. After an ambiguous publication result, inspect the registry version and
+`dist.integrity` before retrying; matching published bytes need no npm retry.
+If npm publication succeeded but `github-release` failed, rerun only that failed
+job in the original workflow run, preserving the successful upstream outputs.
+Rerunning all jobs after publication skips the GitHub release because release
+intent sees an already-published version. See [GitHub release and recovery](../docs/release-automation.md#github-release-and-recovery)
+for the retry procedure and limits. Published versions are immutable.
 
-Verify `@kind-ui/charts@0.2.0` in a fresh registry-installed consumer, including
-strict TypeScript, the stylesheet and a rendered LineChart. Compare registry
-integrity with the retained artifact. Record publication and consumer results in
+Verify the exact `package.name` and `package.version` from the reviewed receipt
+in a fresh registry-installed consumer, including strict TypeScript, the
+stylesheet and a rendered LineChart. Compare registry integrity with the
+retained artifact. Record publication and consumer results in
 the release evidence; an authenticated website session alone does not establish
 CLI authentication or package publish rights.
 
