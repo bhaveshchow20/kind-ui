@@ -133,6 +133,8 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
     responsive,
     accessibilityLayer = true,
     animate = true,
+    loading,
+    loadingLabel,
     ...chartProps
   } = props;
   const controlled = visibleSeries !== undefined;
@@ -224,6 +226,8 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
         data={data}
         accessibilityLayer={accessibilityLayer}
         animate={animate}
+        loading={loading}
+        loadingLabel={loadingLabel}
         {...(describedBy ? { "aria-describedby": describedBy } : {})}
         responsive={responsive ?? true}
         {...(width !== undefined ? { width } : {})}
@@ -268,7 +272,9 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
                     key={item.seriesKey}
                     type={curve ?? "monotone"}
                     material={material ?? "plain"}
-                    dot={{ r: 2.5 }}
+                    {...(item.pointStyle === undefined || item.pointStyle === "default"
+                      ? { dot: { r: 2.5 } }
+                      : {})}
                     strokeWidth={2}
                     {...item}
                   />
