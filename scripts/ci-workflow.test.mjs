@@ -45,6 +45,11 @@ test("all workflows keep untrusted code read-only, pinned, and bounded", () => {
         assert.equal(workflow.on.pull_request, undefined);
         assert.deepEqual(workflow.on.push.branches, ["main"]);
         assert.ok(job.if.includes("github.ref == 'refs/heads/main'"));
+      } else if (workflow === release && name === "github-release") {
+        assert.deepEqual(job.permissions, { contents: "write" });
+        assert.equal(job.environment, undefined);
+        assert.deepEqual(job.needs, ["plan", "verify", "publish"]);
+        assert.equal(job.if, "needs.publish.result == 'success'");
       } else {
         assert.equal(job.permissions, undefined);
       }

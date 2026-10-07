@@ -78,6 +78,7 @@ for (const [name, mutate] of [
   });
 }
 function assertRelease(w) {
+  const expression = (value) => `\${{ ${value} }}`;
   assert.deepEqual(
     Object.keys(w.on),
     ["push", "workflow_dispatch"],
@@ -120,6 +121,22 @@ function assertRelease(w) {
       "needs.verify.outputs.publishable == 'true'",
   );
   assert.deepEqual(w.jobs.publish.permissions, { contents: "read", "id-token": "write" });
+  assert.deepEqual(w.jobs["github-release"].needs, ["plan", "verify", "publish"]);
+  assert.equal(w.jobs["github-release"].if, "needs.publish.result == 'success'");
+  assert.deepEqual(w.jobs["github-release"].permissions, { contents: "write" });
+  const entry = w.jobs["github-release"].steps.find((s) => s.run);
+  assert.equal(entry.run, "node scripts/github-release.mjs");
+  assert.deepEqual(entry.env, {
+    GITHUB_TOKEN: expression("github.token"),
+    RELEASE_VERSION: expression("needs.plan.outputs.version"),
+    RELEASE_FILENAME: expression("needs.verify.outputs.filename"),
+    RELEASE_SHA256: expression("needs.verify.outputs.sha256"),
+    RELEASE_INTEGRITY: expression("needs.verify.outputs.integrity"),
+  });
+  assert.equal(
+    w.jobs["github-release"].steps.find((s) => s.uses?.startsWith("actions/checkout@")).with.ref,
+    expression("github.sha"),
+  );
   assert.equal(w.jobs.publish.environment, "npm-release");
   assert.equal(
     w.jobs.publish.steps.find((s) => s.uses?.startsWith("actions/setup-node@"))?.with[
@@ -129,7 +146,8 @@ function assertRelease(w) {
   );
   for (const [name, job] of Object.entries(w.jobs)) {
     if (name !== "publish") {
-      assert.equal(job.permissions, undefined, "Only publisher gains OIDC");
+      if (name !== "github-release")
+        assert.equal(job.permissions, undefined, "Only publisher gains OIDC");
       assert.equal(job.environment, undefined, "Only publisher uses npm-release");
     }
     for (const step of job.steps) {
@@ -148,6 +166,24 @@ function assertRelease(w) {
 test("reviewed main pipeline grants only the publisher its approved OIDC identity", () =>
   assertRelease(workflow));
 for (const [name, mutate] of [
+  [
+    "unconditional GitHub release",
+    (w) => {
+      w.jobs["github-release"].if = "always()";
+    },
+  ],
+  [
+    "release before successful publication",
+    (w) => {
+      w.jobs["github-release"].needs = ["plan", "verify"];
+    },
+  ],
+  [
+    "release OIDC grant",
+    (w) => {
+      w.jobs["github-release"].permissions["id-token"] = "write";
+    },
+  ],
   [
     "untrusted merge trigger",
     (w) => {
