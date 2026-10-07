@@ -41,6 +41,15 @@ try {
         await card.locator(".line-code-viewport").evaluate((n) => n.scrollHeight > n.clientHeight),
       );
       await card.getByRole("tab", { name: "Preview", exact: true }).click();
+      if (value === "loading") {
+        await card.locator('[data-kind-ui="chart-loading-skeleton"]').waitFor({ state: "visible" });
+        await card.getByRole("combobox", { name: bundle.variantControl }).click();
+        await p
+          .getByRole("option", { name: bundle.variants[bundle.defaultVariant].label, exact: true })
+          .click();
+        evidence.variants.push({ id, value, loading: "passed" });
+        continue;
+      }
       await card.locator(".recharts-line-curve").first().waitFor();
       evidence.variants.push({ id, value, copy: "exact", internalScroll: true });
     }

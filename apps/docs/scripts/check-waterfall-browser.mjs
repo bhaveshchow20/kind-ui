@@ -37,7 +37,7 @@ try {
       b.variants ?? { default: { source: b.files[`src/examples/${id}/example.tsx`] } },
     )) {
       if (b.variants) {
-        await card.getByRole("combobox", { name: "Material" }).click();
+        await card.getByRole("combobox", { name: b.variantControl }).click();
         await p.getByRole("option", { name: v.label, exact: true }).click();
       }
       await card.getByRole("tab", { name: "Code", exact: true }).click();
@@ -48,12 +48,21 @@ try {
         v.source.trimEnd(),
       );
       await card.getByRole("tab", { name: "Preview", exact: true }).click();
-      if (b.variants && value !== "default")
+      if (value === "loading") {
+        await card.locator('[data-kind-ui="chart-loading-skeleton"]').waitFor({ state: "visible" });
+        await card.getByRole("combobox", { name: b.variantControl }).click();
+        await p
+          .getByRole("option", { name: b.variants[b.defaultVariant].label, exact: true })
+          .click();
+        evidence.variants.push({ id, value, loading: "passed" });
+        continue;
+      }
+      if (id === "waterfall-materials" && value !== "default")
         assert.equal(
           await card.locator(`[data-kind-ui="bar-material"][data-material="${value}"]`).count(),
           1,
         );
-      if (b.variants && value === "default")
+      if (id === "waterfall-materials" && value === "default")
         assert.equal(await card.locator('[data-kind-ui="bar-material"]').count(), 0);
       evidence.variants.push({ id, value, parity: "passed" });
     }

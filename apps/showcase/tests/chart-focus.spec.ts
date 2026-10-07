@@ -30,11 +30,17 @@ test("chart pointer focus stays quiet; keyboard focus and modal lifecycle remain
         ? page.locator(".playground-preview .chart-card").first()
         : page.locator(".demo-grid .chart-card").first();
       const target = host
-        .locator('.recharts-surface[tabindex], [role="grid"] [tabindex="0"]')
+        .locator(
+          '.recharts-surface[tabindex], [role="grid"] [tabindex="0"], g[tabindex="0"], button',
+        )
         .first();
       if (await target.count()) {
         await target.click({ force: true });
         await expect(target).toHaveCSS("outline-style", "none");
+        if (!modal && (await page.getByRole("dialog").count())) {
+          await page.keyboard.press("Escape");
+          await expect(page.getByRole("dialog")).toHaveCount(0);
+        }
         await page.keyboard.press("Tab");
         await target.focus();
         await expect(target).toHaveCSS("outline-style", "solid");

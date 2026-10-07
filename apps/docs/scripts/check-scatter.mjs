@@ -59,6 +59,15 @@ try {
           .evaluate((node) => node.scrollHeight > node.clientHeight),
       );
       await card.getByRole("tab", { name: "Preview", exact: true }).click();
+      if (value === "loading") {
+        await card.locator('[data-kind-ui="chart-loading-skeleton"]').waitFor({ state: "visible" });
+        await card.getByRole("combobox", { name: bundle.variantControl }).click();
+        await page
+          .getByRole("option", { name: bundle.variants[bundle.defaultVariant].label, exact: true })
+          .click();
+        evidence.variants.push({ id, value, loading: "passed" });
+        continue;
+      }
       await card.locator(mark).first().waitFor();
       await card.getByRole("button", { name: /Copy prompt|Copied/ }).click();
       const prompt = await page.evaluate(() => navigator.clipboard.readText());

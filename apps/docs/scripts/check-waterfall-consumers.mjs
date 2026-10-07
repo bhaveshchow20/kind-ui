@@ -66,7 +66,7 @@ for (const b of variants) {
     strictBundler: "passed",
   });
 }
-assert.equal(evidence.length, 5);
+assert.equal(evidence.length, variants.length);
 assert.deepEqual(
   evidence.filter(({ id }) => id === "waterfall-materials").map(({ variant }) => variant),
   ["default", "clay", "glow"],

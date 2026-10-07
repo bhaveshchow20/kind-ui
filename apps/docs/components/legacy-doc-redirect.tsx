@@ -13,8 +13,7 @@ const customizationSections: Record<string, string> = {
   "decorative-backgrounds": "/docs/components/line/#decorative-backgrounds",
   "pie-initial-inspection-and-selective-glow": "/docs/components/pie/#initial-tooltip",
   "sankey-labels-and-icons": "/docs/components/sankey/#sankey-labels-and-icons",
-  "shared-legend-and-mark-interactions":
-    "/docs/chart-components/root/#shared-legend-and-mark-interactions",
+  "shared-legend-and-mark-interactions": "/docs/chart-components/root/#interaction-and-eligibility",
   materials: "/docs/guides/materials/",
 };
 export function LegacyDocRedirect({ guide }: { guide: string }) {
