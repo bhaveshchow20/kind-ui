@@ -43,8 +43,8 @@ publishing gate, identities, verification and retry behavior.
 
 ## Exact artifact release
 
-`.github/workflows/release.yml` validates eligible main on Node 22 and 24, retains tested
-tarballs, downloads the Node 24 candidate from the same run, and verifies source,
+`.github/workflows/release.yml` validates eligible main on Node 22, retains tested
+tarballs, downloads the Node 22 candidate from the same run, and verifies source,
 receipt, SHA-256, npm integrity and matching integration evidence. Its publishing
 job remains disabled in the preparation draft until the approved npm trust is
 verified and the reviewed activation commit lands.
