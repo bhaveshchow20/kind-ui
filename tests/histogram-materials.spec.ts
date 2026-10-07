@@ -291,7 +291,7 @@ test("all finishes preserve empty and zero inputs, Motion interruption and reduc
   }
 });
 
-test("four real finishes retain unequal density rectangles on desktop and phone", async ({
+test("three real finishes retain unequal density rectangles on desktop and phone", async ({
   page,
 }, info) => {
   for (const [label, width, height] of [
@@ -300,11 +300,12 @@ test("four real finishes retain unequal density rectangles on desktop and phone"
   ] as const) {
     await page.setViewportSize({ width, height });
     await page.goto("/histograms.html?materials");
-    await expect(page.locator(marks)).toHaveCount(12);
+    // Each of the three finishes paints the three nonzero density intervals.
+    await expect(page.locator(marks)).toHaveCount(finishes.length * 3);
     const filters = page.locator('[data-kind-ui="histogram-material"] filter');
-    await expect(filters).toHaveCount(9);
+    await expect(filters).toHaveCount((finishes.length - 1) * 3);
     const ids = await filters.evaluateAll((nodes) => nodes.map((node) => node.id));
-    expect(new Set(ids).size).toBe(9);
+    expect(new Set(ids).size).toBe(ids.length);
     const geometry = await page
       .locator("article")
       .evaluateAll((nodes) =>

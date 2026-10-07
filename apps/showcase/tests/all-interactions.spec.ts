@@ -55,7 +55,12 @@ for (const width of [375, 1280]) {
         await trigger.click();
         const dialog = page.getByRole("dialog");
         const controls = dialog.locator(".demo-controls > div");
-        await expect(controls).toHaveCount(4);
+        const controlCount = (await dialog
+          .getByRole("heading", { name: "Gauge Chart", exact: true })
+          .count())
+          ? 5
+          : 4;
+        await expect(controls).toHaveCount(controlCount);
         await expect(dialog.getByRole("link", { name: "Go to Documentation" })).toHaveAttribute(
           "href",
           /components\//,
@@ -63,7 +68,7 @@ for (const width of [375, 1280]) {
         await dialog.getByRole("tab", { name: "Code", exact: true }).click();
         const code = dialog.getByRole("region", { name: "Chart example code" });
         let previous = await code.textContent();
-        for (let controlIndex = 0; controlIndex < 4; controlIndex++) {
+        for (let controlIndex = 0; controlIndex < controlCount; controlIndex++) {
           await dialog.getByRole("tab", { name: "Preview", exact: true }).click();
           const control = controls.nth(controlIndex);
           const slider = control.getByRole("slider");
