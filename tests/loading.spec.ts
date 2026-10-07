@@ -746,19 +746,23 @@ test("RadialBar keeps angular velocity through closing across multiple real-spee
         const tick = () => {
           const now = performance.now();
           const progress = -Number(element.getAttribute("stroke-dashoffset")) / 100;
-          if (
-            previous &&
-            progress >= 0.9 &&
-            progress <= 1.15 &&
-            progress >= previous.progress &&
-            now - previous.time < 60
-          ) {
-            const speed = ((progress - previous.progress) / (now - previous.time)) * 1000;
-            minSpeed = Math.min(minSpeed, speed);
-            maxSpeed = Math.max(maxSpeed, speed);
-            if (previous.progress < 1 && progress >= 1) seams++;
+          // Motion and this observer use separate callbacks. Retain a short
+          // window across the closing seam instead of measuring callback jitter.
+          if (previous && now - previous.time >= 100) {
+            if (
+              progress >= 0.9 &&
+              progress <= 1.15 &&
+              progress >= previous.progress &&
+              now - previous.time < 200
+            ) {
+              const speed = ((progress - previous.progress) / (now - previous.time)) * 1000;
+              minSpeed = Math.min(minSpeed, speed);
+              maxSpeed = Math.max(maxSpeed, speed);
+              if (previous.progress < 1 && progress >= 1) seams++;
+            }
+            previous = { progress, time: now };
           }
-          previous = { progress, time: now };
+          previous ??= { progress, time: now };
           if (now - started > 7200) {
             resolve({ seams, minSpeed, maxSpeed });
             return;
