@@ -55,7 +55,6 @@ export function PieChart({
   animate = false,
   loading,
   loadingLabel,
-
   animationDirection = "clockwise",
   children,
   defaultPinnedCategory,
