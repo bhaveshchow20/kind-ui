@@ -39,9 +39,9 @@ export function ConfiguredHost() {
   const [controlled, setControlled] = useState(false);
   const [visible, setVisible] = useState<string[]>(["total"]);
   const [callbacks, setCallbacks] = useState(0);
-  const [moves, setMoves] = useState(0);
   const [basicVisible, setBasicVisible] = useState(Object.keys(config));
   const [basicCallbacks, setBasicCallbacks] = useState(0);
+  const [moves, setMoves] = useState(0);
   const [animate, setAnimate] = useState<boolean | undefined>(undefined);
   const [explicitEmpty, setExplicitEmpty] = useState(false);
   const ref = useCallback((node: SVGSVGElement | null) => {

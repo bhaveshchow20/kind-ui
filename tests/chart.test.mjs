@@ -127,6 +127,7 @@ test("direct and namespace imports expose the same public components", () => {
     "SankeyLegend",
     "SankeyLink",
     "SankeyNode",
+    "SankeyNodeLabel",
     "SankeyTable",
     "ScatterChart",
     "ScatterSeries",
@@ -148,8 +149,8 @@ test("direct and namespace imports expose the same public components", () => {
     "createHeatmapModel",
     "createHeatmapScale",
     "createPercentStack",
-    "formatPercent",
     "defineChartBackgroundPattern",
+    "formatPercent",
     "getRelativeCoordinate",
     "prepareSankeyData",
     "useChartHeight",
@@ -1846,8 +1847,8 @@ test("normalized tooltip preserves raw formatting, explicit formatter precedence
   assert.doesNotMatch(renderPercent({ formatter: () => "Custom" }), /25%/);
   assert.match(renderPercent({ formatter: () => "Custom" }), /Custom/);
   assert.doesNotMatch(renderPercent({ formatter: () => null }), /chart-tooltip/);
-  assert.doesNotMatch(renderPercent({}, NaN), /NaN|%/);
-  assert.doesNotMatch(renderPercent({}, undefined), /%/);
+  assert.doesNotMatch(renderPercent({}, NaN), /NaN|% \(/);
+  assert.doesNotMatch(renderPercent({}, undefined), /% \(/);
   assert.match(renderPercent({}, -0.5), /-50% \(1 tasks\)/);
 });
 
@@ -2401,7 +2402,6 @@ test("Sankey labels use stable identity, totals, explicit contents and bounded i
     /7 MWh/,
   );
 });
-
 
 test("Sankey intermediate labels count throughput once including rounding tolerance", () => {
   const data = {

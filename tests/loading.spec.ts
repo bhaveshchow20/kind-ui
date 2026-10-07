@@ -1,7 +1,8 @@
 import { expect, type Locator, test } from "@playwright/test";
+import { expectLastVisibleGuard } from "./last-visible";
 
 const offset = Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173;
-test.use({ baseURL: `http://127.0.0.1:${4200 + offset}` });
+test.use({ baseURL: `http://127.0.0.1:${4202 + offset}` });
 const families = [
   "line",
   "area",
@@ -122,7 +123,8 @@ test("release, repeated interruptions and empty results preserve layout and cons
   await chart.click({ position: { x: 150, y: 100 } });
   await expect(card.locator("output")).toHaveText("1");
   const legend = card.locator('[data-kind-ui="chart-legend-button"]').first();
-  await legend.click();
+  await expectLastVisibleGuard(legend, card.locator(".recharts-bar-rectangle path"));
+  await page.getByRole("checkbox", { name: "Visible sales bars" }).uncheck();
   await expect(legend).toHaveAttribute("aria-pressed", "false");
   for (let i = 0; i < 3; i++) {
     await page.getByRole("button", { name: "Replay loading" }).click();
@@ -513,7 +515,7 @@ test.describe("normal-speed visual recording", () => {
     const page = await context.newPage();
     test.setTimeout(30000);
     await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.goto(`http://127.0.0.1:${4200 + offset}/loading.html`);
+    await page.goto(`http://127.0.0.1:${4202 + offset}/loading.html`);
     await expect(page.locator(skeletonSelector)).toHaveCount(14);
     await page.addStyleTag({
       content:
