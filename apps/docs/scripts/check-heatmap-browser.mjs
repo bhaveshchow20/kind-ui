@@ -134,7 +134,16 @@ try {
       const label = value === "default" ? "Default" : value[0].toUpperCase() + value.slice(1);
       await material.getByRole("combobox", { name: "Material" }).click();
       await page.getByRole("option", { name: label, exact: true }).click();
-      assert.equal(await material.locator(`td[data-material="${value}"]`).count(), 22);
+      assert.equal(
+        await material
+          .locator(
+            value === "default"
+              ? '[data-kind-ui="heatmap-grid"] td:not([data-material="clay"]):not([data-material="glow"]):not([data-missing="true"])'
+              : `td[data-material="${value}"]`,
+          )
+          .count(),
+        22,
+      );
       assert.equal(await material.locator('td[data-missing="true"][data-material]').count(), 0);
       await material.getByRole("tab", { name: "Code", exact: true }).click();
       const code = material.locator("pre");
