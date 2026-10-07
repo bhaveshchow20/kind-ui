@@ -18,6 +18,7 @@ const basic = await evaluate(
 );
 const advanced = await evaluate(await readFile(join(app, "lib/advanced-chart-recipes.ts"), "utf8"));
 const recent = await evaluate(await readFile(join(app, "lib/new-chart-recipes.ts"), "utf8"));
+const activity = await evaluate(await readFile(join(app, "lib/activity-recipe.ts"), "utf8"));
 const temporary = await mkdtemp(join(app, ".snippet-check-"));
 try {
   const files = [];
@@ -40,6 +41,54 @@ try {
     }
   }
   assert.equal(files.length, 256, "Every recipe, finish and motion setting must be checked");
+  const changedOptions = {
+    strokeWidth: 4,
+    showGrid: false,
+    showLegend: false,
+    showLabels: false,
+    rotation: 240,
+    outerRadius: 80,
+    exercise: 45,
+    stand: 11,
+    linkOpacity: 0.7,
+    curve: "stepAfter",
+    dots: true,
+    fillOpacity: 0.4,
+    radius: 12,
+    width: 40,
+    stacked: true,
+    innerRadius: 60,
+    gridType: "circle",
+    progress: 480,
+    gap: 8,
+    pointShape: "square",
+    showValues: false,
+    connectors: false,
+    nodeWidth: 20,
+    nodePadding: 40,
+    outlierRadius: 6,
+    density: true,
+    binBorders: false,
+  };
+  for (const [recipes, generate] of [
+    [basic.recipes, basic.snippet],
+    [advanced.advancedRecipes, advanced.advancedCode],
+    [recent.newRecipes, recent.newCode],
+  ]) {
+    for (const recipe of recipes) {
+      const file = join(temporary, `${recipe.id}-controls.tsx`);
+      await writeFile(
+        file,
+        generate(recipe, "plain", ["#733bff", "#119548", "#f22e79"], true, changedOptions),
+      );
+      files.push(file);
+    }
+  }
+  for (const animate of [false, true]) {
+    const file = join(temporary, `activity-${animate}.tsx`);
+    await writeFile(file, activity.activityCode({ progress: 480, gap: 8 }, animate));
+    files.push(file);
+  }
   const config = ts.readConfigFile(join(app, "tsconfig.json"), ts.sys.readFile);
   const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, app);
   const program = ts.createProgram(files, { ...parsed.options, incremental: false });
