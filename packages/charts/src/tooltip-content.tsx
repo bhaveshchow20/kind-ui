@@ -11,6 +11,10 @@ export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children">
   /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
   tooltip: UpstreamTooltipContentProps;
   missingValue?: ReactNode;
+  /** Caller-owned projection status; use the same datum identity selection as BarSeries. */
+  isProjected?: (entry: UpstreamTooltipContentProps["payload"][number]) => boolean;
+  /** Accessible status text appended to projected items. */
+  projectedLabel?: ReactNode;
   /** Opt in to decorative rolling digits for finite numeric text values. Default: off. */
   valueAnimation?: "shuffle";
   /** Omit the heading; series labels and values remain accessible. */
@@ -27,6 +31,8 @@ export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children">
 export function TooltipContent({
   tooltip,
   missingValue = "No data",
+  isProjected,
+  projectedLabel = "Projected",
   valueAnimation,
   itemKey,
   hideLabel = false,
@@ -54,6 +60,7 @@ export function TooltipContent({
   const items = entries.map((entry, index) => {
     const key = identity(entry);
     const item = Object.hasOwn(config, key) ? config[key] : undefined;
+    const projected = entry.payload != null && isProjected?.(entry) === true;
     let name: ReactNode = item?.label ?? entry.name ?? key;
     let value: ReactNode = missingValue;
     if (entry.value != null) {
@@ -76,6 +83,7 @@ export function TooltipContent({
         key={entry.graphicalItemId ?? `${key}-${index}`}
         data-kind-ui="chart-tooltip-item"
         data-series={key}
+        data-projected={projected || undefined}
       >
         {!hideIndicator &&
           (item?.icon ? (
@@ -100,6 +108,7 @@ export function TooltipContent({
             />
           ))}
         <span>{name}</span>
+        {projected && <span data-kind-ui="projection-status">{projectedLabel}</span>}
         <strong data-kind-ui="chart-tooltip-value">
           {valueAnimation === "shuffle" &&
           typeof entry.value === "number" &&

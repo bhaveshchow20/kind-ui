@@ -3,6 +3,7 @@ import * as Chart from "@kind-ui/charts";
 import {
   type BarShapeProps,
   BarStack,
+  Brush,
   CartesianGrid,
   Cell,
   LabelList,
@@ -474,5 +475,153 @@ export function PatternHost({ horizontal = false }: { horizontal?: boolean }) {
         </Chart.Root>
       ))}
     </section>
+  );
+}
+
+const projectionData = [
+  { category: "Observed", value: 8, other: 4 },
+  { category: "Missing", value: null, other: null },
+  { category: "Projected", value: 6, other: 3 },
+];
+const projection: Chart.BarProjection<(typeof projectionData)[number]> = {
+  isProjected: (row) => row.category === "Projected",
+  pattern: { kind: "hatch" },
+};
+/** Public consumer example: filtering/reorder never infer a new projected identity. */
+export function ProjectionHost({ horizontal = false }: { horizontal?: boolean }) {
+  const [reverse, setReverse] = useState(false);
+  const [filtered, setFiltered] = useState(false);
+  const [stacked, setStacked] = useState(false);
+  const [cells, setCells] = useState(false);
+  const [explicit, setExplicit] = useState(false);
+  const [none, setNone] = useState(false);
+  const [shape, setShape] = useState(false);
+  const [activeShape, setActiveShape] = useState(false);
+  const [brush, setBrush] = useState(false);
+  const [emptyOverride, setEmptyOverride] = useState(false);
+  const [datumStyle, setDatumStyle] = useState(false);
+  const [datumFill, setDatumFill] = useState(false);
+  const [empty, setEmpty] = useState(false);
+  const [independent, setIndependent] = useState(false);
+  const rows = projectionData
+    .filter((row) => !empty && (!filtered || !projection.isProjected(row)))
+    .map((row) => ({
+      ...row,
+      ...(datumFill && projection.isProjected(row) ? { fill: "cyan" } : {}),
+      ...(datumStyle && projection.isProjected(row) ? { style: { fill: "cyan" } } : {}),
+    }));
+  if (reverse) rows.reverse();
+  return (
+    <>
+      <button type="button" onClick={() => setReverse(!reverse)}>
+        Reverse projection rows
+      </button>
+      <button type="button" onClick={() => setFiltered(!filtered)}>
+        Filter projected row
+      </button>
+      <button type="button" onClick={() => setStacked(!stacked)}>
+        Stack projection bars
+      </button>
+      <button type="button" onClick={() => setCells(!cells)}>
+        Custom projection cells
+      </button>
+      <button type="button" onClick={() => setExplicit(!explicit)}>
+        Explicit projection fill
+      </button>
+      <button type="button" onClick={() => setNone(!none)}>
+        Disable projection pattern
+      </button>
+      <button type="button" onClick={() => setShape(!shape)}>
+        Native projection shape
+      </button>
+      <button type="button" onClick={() => setDatumFill(!datumFill)}>
+        Datum projection fill
+      </button>
+      <button type="button" onClick={() => setEmpty(!empty)}>
+        Empty projection rows
+      </button>
+      <button type="button" onClick={() => setIndependent(!independent)}>
+        Independent projection rows
+      </button>
+      <button type="button" onClick={() => setActiveShape(!activeShape)}>
+        Active projection shape
+      </button>
+      <button type="button" onClick={() => setBrush(!brush)}>
+        Brush projection rows
+      </button>
+      <button type="button" onClick={() => setEmptyOverride(!emptyOverride)}>
+        Empty series override
+      </button>
+      <button type="button" onClick={() => setDatumStyle(!datumStyle)}>
+        Datum projection style
+      </button>
+      <Chart.Root
+        config={{
+          value: { label: "Value", color: ["red", "blue"] },
+          other: { label: "Other", color: "green", pattern: { kind: "lines" } },
+        }}
+      >
+        <Chart.BarChart
+          width={600}
+          height={300}
+          data={rows}
+          layout={horizontal ? "vertical" : "horizontal"}
+        >
+          <XAxis
+            type={horizontal ? "number" : "category"}
+            dataKey={horizontal ? undefined : "category"}
+          />
+          <YAxis
+            type={horizontal ? "category" : "number"}
+            dataKey={horizontal ? "category" : undefined}
+          />
+          {(["value", "other"] as const).map((key) => (
+            <Chart.BarSeries<(typeof projectionData)[number], number>
+              key={key}
+              dataKey={key}
+              projection={projection}
+              {...(emptyOverride ? { data: [] } : independent ? { data: rows } : {})}
+              activeBar={activeShape ? { fill: "pink" } : undefined}
+              shape={shape ? <Rectangle fill="pink" /> : undefined}
+              stackId={stacked ? "stack" : undefined}
+              fill={explicit ? "purple" : undefined}
+              pattern={none ? "none" : undefined}
+            >
+              {cells && rows.map((row) => <Cell key={row.category} fill="orange" />)}
+            </Chart.BarSeries>
+          ))}
+          {brush && <Brush dataKey="category" startIndex={1} endIndex={2} />}
+          <Chart.Tooltip
+            content={(tooltip) => (
+              <Chart.TooltipContent
+                tooltip={tooltip}
+                isProjected={(entry) => projection.isProjected(entry.payload)}
+              />
+            )}
+          />
+        </Chart.BarChart>
+      </Chart.Root>
+      <table>
+        <caption>Observed and projected values</caption>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Value</th>
+            <th>Other</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.category}>
+              <th>{row.category}</th>
+              <td>{row.value ?? "No data"}</td>
+              <td>{row.other ?? "No data"}</td>
+              <td>{projection.isProjected(row) ? "Projected" : "Observed"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 }
