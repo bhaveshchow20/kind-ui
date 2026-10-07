@@ -51,7 +51,9 @@ test("Docs links, search aliases and page anchors have real destinations", async
   });
   await expect(docs).toHaveCount(3);
   const originalViewport = page.viewportSize();
-  await expect(page.locator(".kind-nav-links").getByRole("link", { name: "Documentation" })).toBeVisible();
+  await expect(
+    page.locator(".kind-nav-links").getByRole("link", { name: "Documentation" }),
+  ).toBeVisible();
   await expect(page.locator(".mobile-docs")).toBeHidden();
   for (const width of [320, 375, 390, 430]) {
     await page.setViewportSize({ width, height: 844 });
