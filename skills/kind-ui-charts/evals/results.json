@@ -12,10 +12,10 @@
     },
     {
       "request": "migration-matrix",
-      "both": "TypeScript and public-model checks passed. Preserved custom revenue gradient, forecast tooltip using entry.payload, gradient Sankey links with Glow finish, stable flow IDs, and Heatmap zero/missing values with complete data alternatives.",
-      "revised": "Omits Default material props and explicitly explains custom paint ownership; chooses stable raw row IDs for revenue categories.",
-      "baseline": "Sets explicit Default appearance props and supplies an extra consumer-owned projection overlay. Uses stable row keys and flow endpoints, but month display labels as the bar category axis.",
-      "assessment": "Both preserve the requested encodings. The revised result follows Default omission and separates stable category identity from display labels. Family-panel browser checks remain unrun."
+      "both": "Bundler typechecks and public-model checks passed. Preserved custom revenue gradient, forecast tooltip using entry.payload, gradient Sankey links with Glow finish, stable flow IDs, and Heatmap zero/missing values with complete data alternatives.",
+      "revised": "Omits Default material props and explicitly explains custom paint ownership; chooses stable raw row IDs for revenue categories. Strict NodeNext and Bundler both passed without skipLibCheck.",
+      "baseline": "Sets explicit Default appearance props and supplies an extra consumer-owned projection overlay. Uses stable row keys and flow endpoints, but month display labels as the bar category axis. A later strict NodeNext run failed TS2835: entry.tsx imported ./Consumer without an ESM extension; baseline output was left unchanged.",
+      "assessment": "Both preserve the requested encodings. The revised result follows Default omission and separates stable category identity from display labels; only the revised family output passed NodeNext unchanged. Family-panel browser checks remain unrun."
     }
   ],
   "trigger_probe": {
