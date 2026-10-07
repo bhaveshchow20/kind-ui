@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 import { type BarShapeProps, useChartLayout, useXAxisScale, useYAxisScale } from "recharts";
-import { BarChart, type BarChartProps } from "./bar-chart.js";
+import { BarChartImplementation, type BarChartProps } from "./bar-chart.js";
 import { BarSeries, type BarSeriesProps } from "./bar-series.js";
 import { BoxMaterialFilter, type BoxPlotMaterial } from "./box-material.js";
 
@@ -71,7 +71,7 @@ export function boxPlotExtent(summary: BoxPlotSummary): [number, number] {
 export type BoxPlotChartProps = BarChartProps;
 /** Public Bar composition; Recharts owns axes, layout, domains and keyboard selection. */
 export function BoxPlotChart(props: BoxPlotChartProps) {
-  return <BarChart {...props} />;
+  return <BarChartImplementation chartProps={props} family="box-plot" />;
 }
 
 export type BoxPlotMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> & {

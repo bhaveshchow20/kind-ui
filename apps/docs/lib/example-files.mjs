@@ -11,7 +11,7 @@ export function promptFor(bundle, _settings, origin, variant = bundle.defaultVar
     `Build the Kind UI ${bundle.title} component from ${base}.`,
     `Package: ${bundle.packageStatus}.`,
     `Retrieve the standalone source: ${new URL(publicPath(variant ? `/examples/${bundle.id}/variants/${variant}/example.tsx` : `/examples/${bundle.id}/src/examples/${bundle.id}/example.tsx`), origin).href}.`,
-    `Install @kind-ui/charts and its React, React DOM, Recharts and Motion peers. Import @kind-ui/charts/styles.css once. See ${new URL(publicPath("/docs/start/installation/"), origin).href} for setup.`,
+    `Install @kind-ui/charts and its React, React DOM, Recharts and Motion peers. Import @kind-ui/charts/styles.css once. See ${new URL(publicPath("/docs/installation/"), origin).href} for setup.`,
     `Preserve the complete data, chart composition, ${bundle.family === "line" ? "default legend toggles" : "documented visibility behavior"} and reduced-motion behavior. No demo settings or controls modules are needed. Include an accessible data alternative when embedding the chart.`,
   ].join("\n\n");
 }
