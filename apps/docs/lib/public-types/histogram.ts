@@ -7,7 +7,7 @@ export type HistogramChartReference = Pick<
 >;
 /** Native quantitative rectangles; shape receives corrected bounds and the original bin. */
 export type HistogramSeriesReference = Pick<
-  Omit<Chart.HistogramSeriesProps, "material"> & { material?: "plain" | "clay" | "glow" },
+  Chart.HistogramSeriesProps,
   "seriesKey" | "material" | "shape" | "hide" | "fill" | "stroke"
 >;
 /** Raw observations are assigned using explicit edges with separate discard accounting. */

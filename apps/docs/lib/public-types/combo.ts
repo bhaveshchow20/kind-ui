@@ -13,7 +13,7 @@ export type ComboChartReference = Pick<
 >;
 export type ComboMotionReference = Chart.ComboAnimation;
 export type ComboBarReference = Pick<
-  Omit<Chart.BarSeriesProps, "material"> & { material?: "plain" | "clay" | "glow" },
+  Chart.BarSeriesProps,
   | "dataKey"
   | "seriesKey"
   | "xAxisId"

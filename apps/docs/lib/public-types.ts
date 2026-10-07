@@ -27,11 +27,11 @@ export type TooltipContent = Pick<
 >;
 
 export type LineChart = Pick<
-  Omit<Chart.ConfiguredLineChartProps, "material"> & { material?: "plain" | "clay" | "glow" },
+  Chart.ConfiguredLineChartProps,
   "data" | "config" | "xDataKey" | "curve" | "material" | "legend" | "animate"
 >;
 export type LineSeries = Pick<
-  Omit<Chart.LineSeriesProps, "material"> & { material?: "plain" | "clay" | "glow" },
+  Chart.LineSeriesProps,
   "dataKey" | "seriesKey" | "material" | "type" | "connectNulls" | "hide" | "yAxisId"
 >;
 export type MotionOptions = Chart.LineAnimation;
@@ -41,6 +41,6 @@ export type AreaChart = Pick<
   "data" | "animate" | "stackOffset" | "accessibilityLayer"
 >;
 export type AreaSeries = Pick<
-  Omit<Chart.AreaSeriesProps, "material"> & { material?: "plain" | "clay" | "glow" },
+  Chart.AreaSeriesProps,
   "dataKey" | "seriesKey" | "material" | "type" | "stackId" | "connectNulls" | "fillOpacity"
 >;

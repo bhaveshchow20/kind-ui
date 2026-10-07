@@ -115,7 +115,7 @@ try {
   await mobileLegend.scrollIntoViewIfNeeded();
   await mobileLegend.click();
   await page.getByRole("heading", { name: "Legend", exact: true }).waitFor();
-  for (const route of ["/package-provenance.json", "/examples/package/kind-ui-charts-0.2.0.tgz"])
+  for (const route of ["/package-provenance.json", "/examples/package/kind-ui-charts-0.3.0.tgz"])
     assert.equal((await context.request.get(origin + publicPath(route))).status(), 404);
   assert.deepEqual(errors, []);
   writeFileSync(
