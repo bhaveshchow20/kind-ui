@@ -19,10 +19,17 @@ const config = {
 } satisfies Chart.SeriesConfig;
 const ref = createRef<SVGSVGElement>();
 const timing = location.search.includes("timings");
+const directional = location.search.includes("directional");
 const animation = {
   revealDurationMs: 60000,
-  lineReveal: { revealDurationMs: timing ? 200 : 60000 },
-  areaReveal: { revealDurationMs: timing ? 1200 : 50000 },
+  lineReveal: {
+    revealDurationMs: timing ? 200 : 60000,
+    ...(directional ? { revealDirection: "right-to-left" as const } : {}),
+  },
+  areaReveal: {
+    revealDurationMs: timing ? 1200 : 50000,
+    ...(directional ? { revealDirection: "edges-in" as const } : {}),
+  },
   barReveal: { revealDurationMs: timing ? 2400 : 40000 },
   hoverTransition: { duration: 0.2 },
 } satisfies Chart.ComboAnimation;
