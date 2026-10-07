@@ -5,8 +5,33 @@ import { isIndexable } from "../apps/indexing.mjs";
 
 function attributes(tag) {
   return Object.fromEntries(
-    [...tag.matchAll(/([\w-]+)=["']([^"']*)["']/g)].map(([, key, value]) => [key, value]),
+    [...tag.matchAll(/([\w-]+)=(?:"([^"]*)"|'([^']*)')/g)].map(([, key, double, single]) => [
+      key,
+      double ?? single,
+    ]),
   );
+}
+
+/** Inspect actual emitted metadata, including fields that child routes must override. */
+export function assertPageSEO(html, canonical) {
+  const titles = [...html.matchAll(/<title>([^<]+)<\/title>/g)].map(([, title]) => title);
+  assert.equal(titles.length, 1, "Expected one nonempty title");
+  const tags = [...html.matchAll(/<meta\b[^>]*>/g)].map(([tag]) => attributes(tag));
+  const field = (name) => {
+    const values = tags.filter((tag) => (tag.name ?? tag.property) === name);
+    assert.equal(values.length, 1, `Expected one ${name} tag`);
+    assert.ok(values[0].content?.trim(), `Empty ${name}`);
+    return values[0].content;
+  };
+  const description = field("description");
+  for (const prefix of ["og", "twitter"]) {
+    assert.equal(field(`${prefix}:title`), titles[0]);
+    assert.equal(field(`${prefix}:description`), description);
+    assert.equal(field(`${prefix}:image`), "https://kindui.dev/charts/cherry-blossom.png");
+  }
+  assert.equal(field("og:url"), canonical);
+  assert.equal(field("twitter:card"), "summary");
+  return { title: titles[0], description };
 }
 export function assertIndexingHTML(html, canonical, env = process.env) {
   const tags = [...html.matchAll(/<(?:meta|link)\b[^>]*>/g)].map(([tag]) => attributes(tag));

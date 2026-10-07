@@ -55,7 +55,12 @@ test("canonical docs and sitemap use the public mount exactly once and exclude d
   );
 });
 
-import { assertIndexingHTML, assertIndexingRoutes, textExportFiles } from "./indexing-output.mjs";
+import {
+  assertIndexingHTML,
+  assertIndexingRoutes,
+  assertPageSEO,
+  textExportFiles,
+} from "./indexing-output.mjs";
 
 test("emitted HTML assertions reject missing, duplicate or contradictory directives", () => {
   const html = `<link href="${showcaseURL}" rel="canonical"/><meta content="index, follow" name="robots"/>`;
@@ -76,6 +81,26 @@ test("emitted routes assert public sitemap membership and protected previews", (
   assertIndexingRoutes("User-Agent: *\nDisallow: /\n", "<urlset/>", [showcaseURL], {});
   assert.throws(() => assertIndexingRoutes(robots, sitemap, [docsURL], production));
   assert.throws(() => assertIndexingRoutes(robots, sitemap, [showcaseURL], {}));
+});
+
+test("page metadata checks reject inherited summaries and mismatched social URLs", () => {
+  const title = "Line Chart · Kind UI charts";
+  const description = "Build a chart for your team's trends.";
+  const url = "https://kindui.dev/charts/docs/components/line/";
+  const html = `<title>${title}</title><meta name="description" content="${description}"/>
+    <meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/>
+    <meta property="og:url" content="${url}"/><meta property="og:image" content="https://kindui.dev/charts/cherry-blossom.png"/>
+    <meta name="twitter:title" content="${title}"/><meta name="twitter:description" content="${description}"/>
+    <meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://kindui.dev/charts/cherry-blossom.png"/>`;
+  assert.deepEqual(assertPageSEO(html, url), { title, description });
+  assert.throws(() => assertPageSEO(html, showcaseURL));
+  assert.throws(() => assertPageSEO(html.replace('name="description"', 'name="missing"'), url));
+  assert.throws(() =>
+    assertPageSEO(html.replace('property="og:description"', 'name="description"'), url),
+  );
+  assert.throws(() =>
+    assertPageSEO(html.replace(`content="${title}"`, 'content="Generic title"'), url),
+  );
 });
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";

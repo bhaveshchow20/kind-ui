@@ -9,11 +9,23 @@ with the production flag. These directives are not access control.
 
 Public builds use `NEXT_PUBLIC_SHOWCASE_BASE_PATH=/charts` and
 `NEXT_PUBLIC_KIND_DOCS_BASE_PATH=/charts/docs`. Canonicals always name the public
-URLs: `https://kindui.dev/charts/`, `https://kindui.dev/charts/docs/`, and, for
+URLs: `https://kindui.dev/charts`, `https://kindui.dev/charts/docs/`, and, for
 example, `https://kindui.dev/charts/docs/components/line/`. The Docs sitemap uses
 the maintained page catalog, excluding generated legacy aliases and retrieval
 assets. The homepage sitemap contains its one page. No guessed modification dates
 or ranking priorities are emitted.
+
+The homepage canonical follows the showcase's default no-trailing-slash route;
+Docs uses its exported trailing-slash routes. Legacy `/start/installation/` and
+`/start/quickstart/` aliases retain their routes and point to their canonical
+pages. They are excluded from the sitemap and search catalog.
+
+Docs titles and descriptions come from each page's existing visible frontmatter.
+Open Graph and Twitter repeat those page-specific summaries and absolute canonical
+URLs, using the existing 512×512 cherry blossom image with a square summary card.
+The homepage describes the chart library and emits `SoftwareSourceCode` JSON-LD
+with its name, repository, language and license. No ratings, offers, unverified
+compatibility, publication dates or rich-result eligibility are claimed.
 
 ## Hosting verification before publication
 
@@ -45,11 +57,12 @@ and complete sitemap membership. It retains homepage, Line and legacy-installati
 HTML plus robots/sitemap output in `docs-production-indexing`. Copied consumers
 and browser fleets are not repeated for the second build.
 
-The showcase has no dedicated Next app CI build in the current repository. Its
-maintained `test:browser` routes suite now checks initial homepage HTML and served
-robots/sitemap routes. The deployment owner must run the existing showcase build
-and that suite in both configurations below before publication (source-only work
-does not claim these builds or served checks passed):
+The SEO workflow builds the showcase on Node 22 in both configurations and runs
+the maintained routes suite. It checks initial HTML, social metadata, structured
+project facts, crawlable documentation links, served metadata routes and the
+direct public path's status, plus existing mobile/navigation flows. Docs export
+checks require unique titles and descriptions for every canonical page and matching
+metadata for aliases. To reproduce the showcase checks locally:
 
 ```sh
 # In apps/showcase, with existing installed dependencies and browser prerequisites:
@@ -61,3 +74,28 @@ KIND_UI_DEPLOYMENT_ENV=production NEXT_PUBLIC_SHOWCASE_BASE_PATH=/charts NEXT_PU
 
 Keep the same deployment environment for build and test, since metadata routes are
 static and the test compares their served bytes with that deployment intent.
+
+## Guidance reviewed
+
+Implementation follows the installed Next.js 16.3 metadata and JSON-LD docs and
+the official [Metadata API](https://nextjs.org/docs/app/api-reference/functions/generate-metadata),
+[sitemap](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)
+and [robots](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/robots)
+guidance. Google guidance informed [canonicalization](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls),
+[descriptions](https://developers.google.com/search/docs/appearance/snippet),
+[sitemap discovery](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)
+and [truthful structured data](https://developers.google.com/search/docs/appearance/structured-data/sd-policies).
+
+Two open-source agent references were read before applying their scoped guidance:
+
+- [Web Quality Audit](https://github.com/addyosmani/web-quality-skills/blob/afa8da942115f2961fdbfa80807ea0b232ff6c00/skills/web-quality-audit/SKILL.md):
+  compare runtime evidence and source findings, then repeat equivalent checks.
+  GitHub API read on 2026-10-07: 2,898 stars, 254 forks, latest commit 2026-08-24.
+- [Next.js SEO](https://github.com/laguagu/claude-code-nextjs-skills/blob/c51d9c872cf5a3c0e147ea2ff8e04e8af39395f4/skills/nextjs-seo/SKILL.md):
+  use installed framework guidance, verify emitted URLs/inheritance and protect
+  previews. GitHub API read on 2026-10-07: 67 stars, 18 forks, latest commit 2026-10-05.
+
+The first repository shows wider adoption; the second is a smaller recently
+maintained reference. Star counts are adoption evidence, not correctness evidence.
+No reference bundle or downloaded script was installed in this product repository.
+Search Console state, actual indexing and ranking changes remain unmeasured.

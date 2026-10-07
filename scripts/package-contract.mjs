@@ -21,10 +21,7 @@ export function assertPackageContract(manifest, files, sources = []) {
     "Repository metadata must identify the package source for provenance",
   );
   assert.equal(manifest.bugs?.url, "https://github.com/bhaveshchow20/kind-ui/issues");
-  assert.equal(
-    manifest.homepage,
-    "https://github.com/bhaveshchow20/kind-ui/tree/main/packages/charts#readme",
-  );
+  assert.equal(manifest.homepage, "https://kindui.dev/charts");
   assert.equal(manifest.type, "module", "Package must declare ESM");
   const entry = manifest.exports?.["."];
   assert.ok(entry && typeof entry === "object", "Root export must declare import and types");

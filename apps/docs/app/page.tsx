@@ -1,6 +1,8 @@
 import { renderDoc } from "@/components/doc-page";
-import { docsURL } from "../../indexing.mjs";
-export const metadata = { title: "Introduction", alternates: { canonical: docsURL } };
+import { docMetadata } from "@/lib/metadata";
+export function generateMetadata() {
+  return docMetadata();
+}
 export default function Page() {
   return renderDoc();
 }
