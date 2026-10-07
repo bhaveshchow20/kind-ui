@@ -25,6 +25,7 @@ export async function checkThemeSwitch(browser, origin) {
     await page.addInitScript(() => {
       const start = document.startViewTransition?.bind(document);
       window.themeStarts = 0;
+      window.themeSkips = 0;
       window.themeTransitions = [];
       if (!start) return;
       document.startViewTransition = (callback) => {
@@ -36,6 +37,11 @@ export async function checkThemeSwitch(browser, origin) {
           if (window.holdThemeUpdate)
             await new Promise((resolve) => (window.releaseThemeUpdate = resolve));
         });
+        const skip = transition.skipTransition.bind(transition);
+        transition.skipTransition = () => {
+          window.themeSkips++;
+          skip();
+        };
         window.themeTransitions.push(transition);
         return transition;
       };
@@ -59,8 +65,9 @@ export async function checkThemeSwitch(browser, origin) {
       true,
     );
     assert.deepEqual(errors, []);
+    assert.equal(await page.evaluate(() => window.themeSkips), 1);
     records.push({
-      check: "native viewport cancellation preserves theme and has no page error",
+      check: "owned viewport cancellation preserves theme and has no page error",
       passed: true,
     });
 
