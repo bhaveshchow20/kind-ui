@@ -11,8 +11,13 @@ export default defineConfig({
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     {
+      name: "webkit-desktop",
+      testMatch: ["headline-layout.spec.ts"],
+      use: { ...devices["Desktop Safari"] },
+    },
+    {
       name: "webkit-mobile",
-      testMatch: ["responsive-cards.spec.ts", "activity-colors.spec.ts"],
+      testMatch: ["responsive-cards.spec.ts", "activity-colors.spec.ts", "headline-layout.spec.ts"],
       use: { ...devices["iPhone 13"] },
     },
   ],

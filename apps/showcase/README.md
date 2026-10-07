@@ -28,6 +28,8 @@ npm run test:browser
 
 Run browser checks from this directory after a production build and after installing the repository’s browser prerequisites. The test server binds only to `127.0.0.1:7273`; it does not publish a preview. Chromium checks cover narrow/resized layouts, theme controls, keyboard dialogs and tooltips, local palette drafts, legend-preserving replay, reduced motion, and visible reveal progression for Bar, Histogram, Box Plot and Waterfall. Test enumeration or compilation alone is not a browser pass.
 
+WebKit checks cover mobile card growth and animated headline stability across widths from 320px to 2560px, using both mobile and desktop Safari profiles.
+
 ## Release coordination
 
 The integrated `0.1.0` candidate from source `97aeef132fd3a83bd0cf0e79c9977442dcbaaeae` has now been supplied and tested locally (see `ROUTE_AUDIT.md`). It supersedes the earlier PR #102 candidate for this consumer pass. Registry publication and a final release pin remain unverified. Do not implement replacement APIs in this app or patch library internals here.
