@@ -44,7 +44,7 @@ if (process.argv.includes("--keep-artifact")) {
   // A failed rerun must not leave an earlier artifact marked as validated.
   await rm(artifactDestination, { recursive: true, force: true });
 }
-function run(command, args, cwd = root) {
+function run(command, args, cwd = root, output = "pipe") {
   return execFileSync(command, args, {
     cwd,
     encoding: "utf8",
@@ -52,7 +52,7 @@ function run(command, args, cwd = root) {
       ...process.env,
       NODE_PATH: "",
     },
-    stdio: ["ignore", "pipe", "inherit"],
+    stdio: ["ignore", output, "inherit"],
   });
 }
 try {
@@ -130,7 +130,13 @@ try {
   for (const file of ["chart.test.mjs", "configured-line.test.mjs", "consumer.tsx"]) {
     await copyFile(join(root, "tests", file), join(ordinary, file));
   }
-  run(process.execPath, ["--test", "chart.test.mjs", "configured-line.test.mjs"], ordinary);
+  // Stream component failures; captured child output can truncate the failing TAP record.
+  run(
+    process.execPath,
+    ["--test", "chart.test.mjs", "configured-line.test.mjs"],
+    ordinary,
+    "inherit",
+  );
   for (const mode of ["NodeNext", "Bundler"]) {
     await writeFile(
       join(ordinary, "tsconfig.json"),
@@ -357,7 +363,12 @@ try {
     join(consumer, "configured-line.test.mjs"),
     await readFile(join(root, "tests/configured-line.test.mjs"), "utf8"),
   );
-  run(process.execPath, ["--test", "chart.test.mjs", "configured-line.test.mjs"], consumer);
+  run(
+    process.execPath,
+    ["--test", "chart.test.mjs", "configured-line.test.mjs"],
+    consumer,
+    "inherit",
+  );
   for (const file of ["index.html", "main.tsx"]) await copyFixture("number-shuffle", file);
   await typecheck(["main.tsx"]);
   await production("index.html", "packed-number-shuffle");
@@ -430,8 +441,47 @@ try {
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("pie", file);
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-pie");
+  // Emit only the already strictly checked host fixture beside the installed tarball.
+  // Node SSR and browser hydration both consume that package, never workspace source.
+  run(
+    process.execPath,
+    [
+      join(root, "node_modules/typescript/bin/tsc"),
+      "-p",
+      "tsconfig.NodeNext.json",
+      "--noEmit",
+      "false",
+      "--outDir",
+      "pie-ssr",
+    ],
+    consumer,
+  );
+  const pieSsr = run(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `
+      import { createElement } from 'react';
+      import { renderToString } from 'react-dom/server';
+      import { SelectiveGlowHost } from './pie-ssr/host.js';
+      console.log(JSON.stringify({
+        field: renderToString(createElement(SelectiveGlowHost, { accessor: false })),
+        accessor: renderToString(createElement(SelectiveGlowHost, { accessor: true })),
+      }));
+    `,
+    ],
+    consumer,
+  );
+  const pieShells = JSON.parse(pieSsr);
+  for (const markup of [pieShells.field, pieShells.accessor]) {
+    assert.equal(typeof markup, "string");
+    assert.match(markup, /Glow allocation/);
+    assert.doesNotMatch(markup, /pie-halo/);
+  }
+  await writeFile(join(root, "artifacts/packed-pie/ssr.json"), pieSsr);
   console.log(
-    "Pie tarball consumer: guarded public imports, strict NodeNext/Bundler and production build passed",
+    "Pie tarball consumer: guarded public imports, strict NodeNext/Bundler, production build and Node SSR shells passed",
   );
   for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("polar", file);
   await typecheck(["host.tsx", "main.tsx"]);
