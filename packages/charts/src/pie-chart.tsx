@@ -4,6 +4,7 @@ import { animate as animateValue } from "motion/react";
 import {
   type ComponentProps,
   createContext,
+  memo,
   useCallback,
   useLayoutEffect,
   useRef,
@@ -71,6 +72,38 @@ export function PieChart({
   useLayoutEffect(() => {
     if (initialCategory !== undefined && pinIndex === undefined) clearPin();
   }, [initialCategory, pinIndex, clearPin]);
+  const chart = (
+    <PieChartPlot {...props} animate={animate} animationDirection={animationDirection}>
+      {children}
+    </PieChartPlot>
+  );
+  return (
+    <PieTooltipPin value={pinIndex}>
+      {initialCategory === undefined ? (
+        chart
+      ) : (
+        <div
+          style={{ display: "contents" }}
+          onPointerMoveCapture={clearPin}
+          onPointerDownCapture={clearPin}
+          onFocusCapture={clearPin}
+          onKeyDownCapture={clearPin}
+        >
+          {chart}
+        </div>
+      )}
+    </PieTooltipPin>
+  );
+}
+
+// Pin dismissal changes Tooltip context only. Keep the native plot's providers and
+// geometry inputs intact while a pressed sector is awaiting its native click.
+const PieChartPlot = memo(function PieChartPlot({
+  animate = false,
+  animationDirection = "clockwise",
+  children,
+  ...props
+}: Omit<PieChartProps, "defaultPinnedCategory">) {
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
   const finish = useCallback(() => {
@@ -119,7 +152,7 @@ export function PieChart({
     });
     return () => controls.stop();
   }, [reveal, duration, easing, finish]);
-  const chart = (
+  return (
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
       <PieMotion value={{ reveal, options, progress, direction: animationDirection }}>
         <LineChartFrame
@@ -138,21 +171,4 @@ export function PieChart({
       </PieMotion>
     </MotionContext>
   );
-  return (
-    <PieTooltipPin value={pinIndex}>
-      {initialCategory === undefined ? (
-        chart
-      ) : (
-        <div
-          style={{ display: "contents" }}
-          onPointerMoveCapture={clearPin}
-          onPointerDownCapture={clearPin}
-          onFocusCapture={clearPin}
-          onKeyDownCapture={clearPin}
-        >
-          {chart}
-        </div>
-      )}
-    </PieTooltipPin>
-  );
-}
+});

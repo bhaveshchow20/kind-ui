@@ -5,6 +5,7 @@ import {
   type ComponentProps,
   Fragment,
   isValidElement,
+  memo,
   type ReactNode,
   use,
   useCallback,
@@ -23,6 +24,10 @@ import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
 import { type PieMaterial, PieMaterialFilter, type PiePaintBounds } from "./pie-material.js";
 import { registerPiePinComponent } from "./pie-pin-identity.js";
+
+// Native Pie keys its animation subtree by props identity even with animation disabled.
+// Pointer/pin context updates must not replace an unchanged pressed native sector.
+const StablePie = memo(Pie) as typeof Pie;
 
 export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
@@ -445,10 +450,13 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   );
   const interactionKey = interactionBinding ? resolveInteractionKey : undefined;
   const { config, paints } = useChart();
-  const children =
-    categoryKey === undefined
-      ? originalChildren
-      : categoryCells(data, categoryKey, config, paints, originalChildren, props.fill);
+  const children = useMemo(
+    () =>
+      categoryKey === undefined
+        ? originalChildren
+        : categoryCells(data, categoryKey, config, paints, originalChildren, props.fill),
+    [data, categoryKey, config, paints, originalChildren, props.fill],
+  );
   if (glowCategories !== undefined && categoryKey === undefined)
     throw new Error("glowCategories requires categoryKey and explicit series data");
   // Native sector indices align with explicit data, but membership uses the original
@@ -528,7 +536,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     previous.current = inputs;
   });
   return (
-    <Pie<DataPoint, Value>
+    <StablePie<DataPoint, Value>
       {...nativeProps}
       {...(data !== undefined ? { data } : {})}
       onClick={(...args) => {
@@ -551,7 +559,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
       isAnimationActive={false}
     >
       {children}
-    </Pie>
+    </StablePie>
   );
 }
 registerPiePinComponent(PieSeries, "series");
