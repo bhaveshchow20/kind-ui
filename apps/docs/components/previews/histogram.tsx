@@ -28,6 +28,6 @@ export const previews = {
   histogram: Count,
   "histogram-density": Density,
   "histogram-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+    <Material material={variant as "plain" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

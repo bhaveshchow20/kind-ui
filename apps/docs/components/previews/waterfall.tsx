@@ -24,6 +24,6 @@ export const previews = {
   waterfall: Cash,
   "waterfall-missing": Missing,
   "waterfall-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+    <Material material={variant as "plain" | "clay" | "glow"} />
   ),
 };

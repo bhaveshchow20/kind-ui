@@ -3,7 +3,9 @@ title: Accessibility and motion
 description: Name the Line chart and provide complete data access beyond inspection.
 ---
 
-Give each chart a meaningful accessible name, describe its units and comparison, and expose the records through a table, list or summary. Native SVG inspection and a tooltip do not replace complete data access. Hosts own loading/error/empty states and filtering meaning. These docs include a screen-reader data table for each Line example.
+Name each chart, describe its units/comparison and expose records through a table, list or summary. Native SVG inspection and a tooltip do not replace complete data access.
+
+Hosts own loading/error/empty states and filtering meaning. Each Line example includes a screen-reader data table.
 
 ## Native inspection limits
 
@@ -12,10 +14,14 @@ Give each chart a meaningful accessible name, describe its units and comparison,
 | Configured Line | Provide `aria-label` or `aria-labelledby`; native category keyboard inspection has chart instructions |
 | Explicit Line parts | Keep axis labels and units meaningful; a complete data alternative retains missing, zero and hidden-series records |
 
-Custom tooltip content owns its announcements. Config icons are decorative and do not replace labels or units. Test naming and formatting with the intended audience; Chromium automation does not establish manual screen-reader conformance. Other browsers and assistive technologies remain unverified.
+Custom tooltip content owns its announcements. Config icons are decorative and do not replace labels or units.
+
+Test naming and formatting with the intended audience; Chromium automation does not establish manual screen-reader conformance. Other browsers and assistive technologies remain unverified.
 
 ## Motion is an explicit choice
 
-Configured `LineChart` defaults to maintained animation; use `animate={false}` for a still view. Maintained entrances respect live `prefers-reduced-motion` and settle on final geometry when interaction or relevant data/layout/visibility changes interrupt an entrance. Custom renderers own their animation and reduced-motion behavior. Materials are static.
+Configured Line animates by default; `animate={false}` gives a still view. Maintained entrances respect live `prefers-reduced-motion` and settle on final geometry when interaction or relevant data/layout/visibility changes interrupt an entrance.
+
+Custom renderers own their animation and reduced-motion behavior. Materials are static.
 
 Test narrow containers, independent charts, keyboard focus, Escape, missing and zero values with the copied example. Keep a host summary/table available before client chart geometry mounts; check SSR geometry and hydration in your framework integration.

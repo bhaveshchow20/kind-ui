@@ -13,7 +13,7 @@ const config = {
   orders: { label: "Orders", color: "#733bff" },
 } satisfies Chart.SeriesConfig;
 
-export function MaterialBarChart({ material = "paper" }: { material?: Chart.BarMaterial } = {}) {
+export function MaterialBarChart({ material = "plain" }: { material?: Chart.BarMaterial } = {}) {
   return (
     <Chart.Root config={config}>
       <Chart.Legend />
@@ -36,7 +36,7 @@ export function MaterialBarChart({ material = "paper" }: { material?: Chart.BarM
             interval="preserveStartEnd"
             minTickGap={32}
           />
-          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={10} width={80} />
+          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={10} width={72} />
           <Chart.BarSeries dataKey="orders" material={material} radius={8} maxBarSize={48} />
           <Chart.Tooltip />
         </Chart.BarChart>

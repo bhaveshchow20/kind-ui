@@ -77,7 +77,7 @@ export function CheckoutDensityHistogram() {
             axisLine: false,
             tickLine: false,
             tickMargin: 12,
-            width: 64,
+            width: 72,
 
             tickFormatter: (value) => Number(value).toFixed(3),
           }}

@@ -26,6 +26,6 @@ export const previews = {
   scatter: Scatter,
   "scatter-bubble": Bubble,
   "scatter-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+    <Material material={variant as "plain" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

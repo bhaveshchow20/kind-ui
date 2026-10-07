@@ -21,11 +21,11 @@ export const lineExamples = [
     notes: "Dots and labels line composition.",
   },
   {
-    id: "line-paper",
+    id: "line-materials",
     title: "Materials",
     source: "line-recipes.tsx",
-    acceptance: "Paper renders all 12 observations; code, legend and data table agree.",
-    notes: "Paper line composition.",
+    acceptance: "All materials render all 12 observations; code, legend and data table agree.",
+    notes: "Default, Clay and Glow line composition.",
   },
 ];
 
@@ -40,7 +40,7 @@ export const lineDataLabels = {
     caption: "Response time (milliseconds)",
     columns: { period: "Day", response: "Response time (ms)" },
   },
-  "line-paper": { caption: "Visitors", columns: { period: "Month", visitors: "Visitors" } },
+  "line-materials": { caption: "Visitors", columns: { period: "Month", visitors: "Visitors" } },
 };
 
 export const lineVariants = {
@@ -54,13 +54,12 @@ export const lineVariants = {
       { value: "stepAfter", label: "Step after" },
     ],
   },
-  "line-paper": {
+  "line-materials": {
     control: "Material",
     prop: "material",
-    default: "paper",
+    default: "plain",
     options: [
-      { value: "paper", label: "Paper" },
-      { value: "plain", label: "Plain" },
+      { value: "plain", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

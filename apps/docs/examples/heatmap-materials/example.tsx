@@ -34,7 +34,7 @@ const scale = Chart.createHeatmapScale({
   colors: ["#eff6ff", "#93c5fd", "#2563eb", "#1e3a8a"],
 });
 
-export function MaterialHeatmap({ material = "paper" }: { material?: Chart.HeatmapMaterial }) {
+export function MaterialHeatmap({ material = "plain" }: { material?: Chart.HeatmapMaterial }) {
   return (
     <Chart.HeatmapChart
       rows={rows}

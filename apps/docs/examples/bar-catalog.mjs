@@ -16,7 +16,7 @@ export const barExamples = [
   {
     id: "bar-materials",
     title: "Materials",
-    notes: "Plain, paper, clay and glow on native rounded rectangles.",
+    notes: "Default, Clay and Glow on native rounded rectangles.",
     acceptance: "Selected finish agrees with complete source and preview.",
   },
 ];
@@ -45,10 +45,9 @@ export const barVariants = {
   "bar-materials": {
     control: "Material",
     prop: "material",
-    default: "paper",
+    default: "plain",
     options: [
-      { value: "paper", label: "Paper" },
-      { value: "plain", label: "Plain" },
+      { value: "plain", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

@@ -50,7 +50,7 @@ const nodeConfig = {
 } satisfies Chart.SankeyNodeConfig;
 const names = new Map(data.nodes.map((node) => [node.id, node.name]));
 
-export function EnergyFlowFinishChart({ finish = "paper" }: { finish?: Chart.SankeyFinish }) {
+export function EnergyFlowFinishChart({ finish = "plain" }: { finish?: Chart.SankeyFinish }) {
   const [active, setActive] = useState<string | null>(null);
   const selected = data.links.find((link) => link.id === active);
   return (

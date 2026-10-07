@@ -31,7 +31,9 @@ export function CategoryDonut() {
 }
 ```
 
-`itemKey` aligns tooltip metadata with row identity. For composed Radial categories, `categoryKey` belongs on `RadialBarChart`, whose rows feed the series. Explicit series/datum/Cell paint and custom renderers keep control. See [identity and colors](/docs/concepts/identity/) for precedence and Sankey's distinct node metadata map.
+`itemKey` aligns tooltip metadata with row identity. For composed Radial categories, `categoryKey` belongs on `RadialBarChart`, whose rows feed the series. Explicit series/datum/Cell paint and custom renderers keep control.
+
+See [identity and colors](/docs/concepts/identity/) for precedence and Sankey's distinct node metadata map.
 
 ## Compact activity grid
 
@@ -58,7 +60,9 @@ export function CompactActivity() {
 }
 ```
 
-Numbers use pixels; valid CSS lengths are also supported. Cell size must be positive and gap nonnegative. Omitted layout retains fluid cells, 3px spacing and visible labels. Custom cell content/styles can enlarge cells; native table composition remains available. The packed feature checks cover keyboard, narrow-width scrolling and programmatic accessibility; manual screen-reader listening remains untested.
+Numbers use pixels; CSS lengths are supported. Cell size must be positive and gap nonnegative. Omitted layout retains fluid cells, 3px spacing and visible labels.
+
+Custom cell content/styles can enlarge cells; native table composition remains available. Packed checks cover keyboard, narrow scrolling and programmatic accessibility; manual screen-reader listening remains untested.
 
 ## Activity rings
 
@@ -85,4 +89,8 @@ export function DailyActivity() {
 }
 ```
 
-Defaults are a responsive 300px chart, clockwise full sweep, tracks, rounded ends, static legend and motion off. Array order runs from inner to outer. Native geometry, series paint/shape, labels and per-ring Cell props remain overridable. Custom tooltip payload `value` is normalized progress; `rawValue` is the original value. Use explicit [Radial composition](/docs/components/radial/) for full axes, data and child control. [Inter-chart choreography](/docs/guides/motion/#custom-choreography) stays application-owned.
+Defaults are a responsive 300px chart, clockwise full sweep, tracks, rounded ends, static legend and motion off. Array order runs from inner to outer.
+
+Native geometry, series paint/shape, labels and per-ring Cell props remain overridable. Custom tooltip payload `value` is normalized progress; `rawValue` is the original value.
+
+Use explicit [Radial composition](/docs/components/radial/) for full axes, data and child control. [Inter-chart choreography](/docs/guides/motion/#custom-choreography) stays application-owned.

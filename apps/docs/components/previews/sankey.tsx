@@ -27,6 +27,6 @@ export const previews = {
 
   sankey: Energy,
   "sankey-finishes": ({ variant }: PreviewProps) => (
-    <Finish finish={variant as "plain" | "paper" | "clay" | "glow"} />
+    <Finish finish={variant as "plain" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

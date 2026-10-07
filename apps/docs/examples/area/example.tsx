@@ -37,11 +37,11 @@ export function VisitorAreaChart() {
             dataKey="period"
             axisLine={false}
             tickLine={false}
-            tickMargin={12}
+            tickMargin={8}
             height={48}
             interval="preserveStartEnd"
           />
-          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={12} width={88} />
+          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={8} width={72} />
           <Chart.AreaSeries dataKey="visitors" type="monotone" strokeWidth={2} fillOpacity={0.22} />
           <Chart.Tooltip />
         </Chart.AreaChart>

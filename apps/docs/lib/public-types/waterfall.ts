@@ -4,7 +4,7 @@ export type WaterfallChart = Pick<
   "data" | "layout" | "animate" | "accessibilityLayer" | "barCategoryGap"
 >;
 export type WaterfallSeries = Pick<
-  Chart.WaterfallSeriesProps,
+  Omit<Chart.WaterfallSeriesProps, "material"> & { material?: "plain" | "clay" | "glow" },
   "seriesKey" | "material" | "hide" | "radius" | "shape"
 >;
 export type WaterfallConnectors = Pick<

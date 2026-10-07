@@ -130,8 +130,8 @@ try {
     await signed.screenshot({ path: `artifacts/heatmap/signed-${width}.png` });
     const material = page.locator('[data-component="heatmap-materials"]');
     await material.scrollIntoViewIfNeeded();
-    for (const value of ["paper", "plain", "clay", "glow"]) {
-      const label = value[0].toUpperCase() + value.slice(1);
+    for (const value of ["plain", "clay", "glow"]) {
+      const label = value === "plain" ? "Default" : value[0].toUpperCase() + value.slice(1);
       await material.getByRole("combobox", { name: "Material" }).click();
       await page.getByRole("option", { name: label, exact: true }).click();
       assert.equal(await material.locator(`td[data-material="${value}"]`).count(), 22);
