@@ -8,6 +8,14 @@ export const basePath = normalizeBasePath(
   process.env.NEXT_PUBLIC_KIND_DOCS_BASE_PATH ?? process.env.KIND_DOCS_BASE_PATH ?? "",
 );
 export const docsBaseUrl = basePath ? "/" : "/docs";
+export const legacyDocSlugs = ["installation", "quickstart"].map((page) => ["start", page]);
+export function canonicalDocSlugs(slug) {
+  return slug?.length === 2 &&
+    slug[0] === "start" &&
+    ["installation", "quickstart"].includes(slug[1])
+    ? [slug[1]]
+    : slug;
+}
 /** Internal route for Next/Fumadocs links; Next adds its own basePath. */
 export function docRoute(path = "/docs/") {
   if (
