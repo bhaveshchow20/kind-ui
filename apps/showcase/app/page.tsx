@@ -470,7 +470,8 @@ const mobileAppearanceOptions = appearanceOptions.map((option) => ({
 function MobileThemeSwitcher({ enabled }: { enabled: boolean }) {
   const { theme, setTheme } = useTheme();
   const selected = enabled ? (theme ?? "system") : "system";
-  const Icon = mobileAppearanceOptions.find((option) => option.value === selected)?.Icon ?? Smartphone;
+  const Icon =
+    mobileAppearanceOptions.find((option) => option.value === selected)?.Icon ?? Smartphone;
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
