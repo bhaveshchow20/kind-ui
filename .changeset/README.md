@@ -62,7 +62,7 @@ exact bytes:
 
 ```sh
 npm whoami --registry=https://registry.npmjs.org
-npm publish ./artifacts/package/kind-ui-charts-0.1.1.tgz --ignore-scripts --access public --tag latest --registry=https://registry.npmjs.org
+npm publish ./artifacts/package/kind-ui-charts-0.2.0.tgz --ignore-scripts --access public --tag latest --registry=https://registry.npmjs.org
 ```
 
 Check the receipt's SHA-256 before publication. Never repack at publication or
@@ -75,7 +75,7 @@ reject artifacts from an earlier attempt. After an ambiguous publication result,
 inspect the registry version and `dist.integrity` before retrying. A matching
 published version needs no retry; published versions are immutable.
 
-Verify `@kind-ui/charts@0.1.1` in a fresh registry-installed consumer, including
+Verify `@kind-ui/charts@0.2.0` in a fresh registry-installed consumer, including
 strict TypeScript, the stylesheet and a rendered LineChart. Compare registry
 integrity with the retained artifact. Record publication and consumer results in
 the release evidence; an authenticated website session alone does not establish
