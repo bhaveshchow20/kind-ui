@@ -60,6 +60,7 @@ export function LineHost({
 }) {
   const { LineChart, LineSeries, Tooltip } = Static;
   const [visible, setVisible] = useState(["value", "other", "alias"]);
+  const [visibilityCallbacks, setVisibilityCallbacks] = useState(0);
   const [renamed, setRenamed] = useState(false);
   const [custom, setCustom] = useState(false);
   const [small, setSmall] = useState(false);
@@ -110,6 +111,12 @@ export function LineHost({
       <button type="button" onClick={() => setShow(!show)}>
         Unmount chart
       </button>
+      <button
+        type="button"
+        onClick={() => setVisible(visible.length ? [] : ["value", "other", "alias"])}
+      >
+        External visibility
+      </button>
       <button type="button" onClick={() => setRenamed(!renamed)}>
         Rename series
       </button>
@@ -134,6 +141,10 @@ export function LineHost({
       <div role="note" aria-label="Events">
         {entered}/{left}/{clicked}
       </div>
+      <span
+        data-native-visibility={visible.join(",")}
+        data-visibility-callbacks={visibilityCallbacks}
+      />
       <Static.Root
         config={{
           value: { label: "Value", color: "#345", formatValue: (v) => `${v} units` },
@@ -141,7 +152,10 @@ export function LineHost({
           alias: { label: "Renamed", color: "#678" },
         }}
         visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
+        onVisibleSeriesChange={(next) => {
+          setVisible(next);
+          setVisibilityCallbacks((n) => n + 1);
+        }}
       >
         <Static.Legend />
         {show && (

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectLastVisibleGuard } from "./last-visible";
 
 test("configured line is complete, responsive and owns uncontrolled visibility without website CSS", async ({
   page,
@@ -31,8 +32,10 @@ test("configured line is complete, responsive and owns uncontrolled visibility w
     "false",
   );
   await expect(basic.locator(".recharts-line-curve")).toHaveCount(1);
-  await basic.getByRole("button", { name: "Other" }).click();
-  await expect(basic.locator(".recharts-line-curve")).toHaveCount(0);
+  await expectLastVisibleGuard(
+    basic.getByRole("button", { name: "Other" }),
+    basic.locator(".recharts-line-curve"),
+  );
   await basic.getByRole("button", { name: "Total" }).click();
   await svg.focus();
   await page.keyboard.press("ArrowRight");
@@ -41,6 +44,11 @@ test("configured line is complete, responsive and owns uncontrolled visibility w
   await page.keyboard.press("Escape");
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).not.toBeVisible();
   await basic.getByRole("button", { name: "Other" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(basic.getByRole("button", { name: "Other" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
   await page.keyboard.press("Enter");
   await expect(basic.getByRole("button", { name: "Other" })).toHaveAttribute(
     "aria-pressed",
@@ -57,9 +65,27 @@ test("configured line is complete, responsive and owns uncontrolled visibility w
   if (!bounds) throw new Error("Missing plot");
   await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
   await expect.poll(() => page.locator("[data-moves]").textContent()).not.toBe("0");
+  const visibility = page.locator("[data-basic-visibility]");
+  const priorVisibility = await visibility.getAttribute("data-basic-visibility");
+  const priorCallbacks = await visibility.getAttribute("data-basic-callbacks");
+  if (priorVisibility === null || priorCallbacks === null)
+    throw new Error("Missing visibility observer");
+  expect(priorVisibility).toBe("total,other");
   await page.getByRole("button", { name: "Empty data", exact: true }).click();
   await expect(basic.locator(".recharts-line-curve")).toHaveCount(0);
-  await expect(basic.getByRole("button", { name: "Total" })).toBeVisible();
+  const totalItem = basic.locator('[data-kind-ui="chart-legend-item"][data-series="total"]');
+  await expect(totalItem).toHaveText("Total");
+  await expect(totalItem.getByRole("button")).toHaveCount(0);
+  await expect(visibility).toHaveAttribute("data-basic-visibility", priorVisibility);
+  await expect(visibility).toHaveAttribute("data-basic-callbacks", priorCallbacks);
+  await page.getByRole("button", { name: "Empty data", exact: true }).click();
+  await expect(basic.locator(".recharts-line-curve")).toHaveCount(2);
+  await expect(totalItem.getByRole("button", { name: "Total" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(visibility).toHaveAttribute("data-basic-visibility", priorVisibility);
+  await expect(visibility).toHaveAttribute("data-basic-callbacks", priorCallbacks);
   expect(errors).toEqual([]);
 });
 
