@@ -12,6 +12,31 @@ import "./composition-guide.test.mjs";
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const completeBundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
+test("presentation options remain complete in copied and agent-retrieved consumers", () => {
+  const bundle = completeBundles["combo-motion"];
+  const file = "src/examples/combo-motion/options.tsx";
+  const source = readFileSync("examples/combo-motion/options.tsx", "utf8");
+  assert.equal(bundle.files[file], source);
+  for (const variant of [undefined, ...Object.keys(bundle.variants ?? {})]) {
+    assert.equal(filesFor(bundle, {}, variant)[file], source);
+    assert.equal(verificationFiles(bundle, filesFor(bundle, {}, variant))[file], source);
+  }
+  assert.equal(readFileSync(`public/examples/combo-motion/${file}`, "utf8"), source);
+  assert.ok(bundle.files["README.md"].includes(`/examples/combo-motion/${file}`));
+  const reference = readFileSync("public/markdown/guides/customization.md", "utf8");
+  for (const type of [
+    "FillPattern",
+    "ChartBackgroundPattern",
+    "BarProjection",
+    "createPercentStack",
+    "PointMarker",
+    "LineDashAnimation",
+    "SankeyNodeLabel",
+  ])
+    assert.ok(reference.includes(type), `${type} reference missing`);
+  assert.ok(readFileSync("public/llms.txt", "utf8").includes("guides/customization.md"));
+  assert.ok(readFileSync("public/llms-full.txt", "utf8").includes(source));
+});
 test("Introduction is the first Get Started page at the preserved docs root", () => {
   const root = JSON.parse(readFileSync("content/docs/meta.json", "utf8"));
   const start = JSON.parse(readFileSync("content/docs/start/meta.json", "utf8"));
@@ -66,7 +91,7 @@ test("each registered family has a complete public consumer", () => {
 });
 test("private package bytes match validation without public provenance or archives", () => {
   const digest = createHash("sha256")
-    .update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz"))
+    .update(readFileSync("vendor/kind-ui-charts-0.1.1.tgz"))
     .digest("hex");
   assert.equal(digest, provenance.sha256);
   assert.equal(provenance.guardedArtifact, true);
@@ -165,7 +190,7 @@ test("public copy rejects stale release receipts and registry install claims", a
     "These examples use the validated, integrated release candidate",
     "Registry installation remains unverified",
     "See /package-provenance.json",
-    "Download /examples/package/kind-ui-charts-0.1.0.tgz",
+    "Download /examples/package/kind-ui-charts-0.1.1.tgz",
     "npx shadcn@latest add @kindui/line-chart",
   ])
     assert.throws(() => assertPublicCopy(stale, "fixture"));
@@ -197,7 +222,7 @@ test("shared references are registered and chart pages retain family APIs", () =
 
 test("internal checks preserve the locked fixture across all public variants", () => {
   const before = JSON.stringify(completeBundles);
-  const integrity = `sha512-${createHash("sha512").update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz")).digest("base64")}`;
+  const integrity = `sha512-${createHash("sha512").update(readFileSync("vendor/kind-ui-charts-0.1.1.tgz")).digest("base64")}`;
   for (const bundle of Object.values(completeBundles)) {
     for (const variant of [undefined, ...Object.keys(bundle.variants ?? {})]) {
       const publicFiles = filesFor(bundle, {}, variant);
@@ -207,13 +232,13 @@ test("internal checks preserve the locked fixture across all public variants", (
       const lock = JSON.parse(files["package-lock.json"]);
       assert.equal(
         manifest.dependencies["@kind-ui/charts"],
-        "file:vendor/kind-ui-charts-0.1.0.tgz",
+        "file:vendor/kind-ui-charts-0.1.1.tgz",
       );
       assert.deepEqual(manifest.dependencies, lock.packages[""].dependencies);
       assert.deepEqual(manifest.devDependencies, lock.packages[""].devDependencies);
       assert.equal(
         lock.packages["node_modules/@kind-ui/charts"].resolved,
-        "file:vendor/kind-ui-charts-0.1.0.tgz",
+        "file:vendor/kind-ui-charts-0.1.1.tgz",
       );
       assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, integrity);
       assert.equal(lock.packages["node_modules/@kind-ui/charts"].version, provenance.version);

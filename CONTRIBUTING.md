@@ -1,6 +1,6 @@
 # Contributing
 
-Kind UI is pre-release and unpublished. The repository uses an open-source contribution workflow; it is not a published package or a production-support promise.
+Kind UI publishes `@kind-ui/charts` on npm. It remains before 1.0, with an open-source contribution workflow and no guaranteed production support.
 
 ## Start here
 

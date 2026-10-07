@@ -43,7 +43,7 @@ export function ProductionComboChart() {
           <Chart.YAxis
             domain={[0, 1200]}
             ticks={[0, 400, 800, 1200]}
-            width="auto"
+            width={96}
             axisLine={false}
             tickLine={false}
             tickMargin={8}

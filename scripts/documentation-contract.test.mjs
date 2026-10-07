@@ -53,7 +53,9 @@ test("rejects missing or unsupported repository source links", () => {
   );
   assert.throws(
     () =>
-      check(`${readme}\n[branch](${repositorySourcePrefix}blob/unknown/examples/chart/BARS.md)`),
+      check(
+        `${readme}\n[branch](${repositorySourcePrefix}blob/unknown/examples/chart/line-recipes.tsx)`,
+      ),
     /Unsupported repository source route/,
   );
   assert.throws(

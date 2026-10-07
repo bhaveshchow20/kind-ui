@@ -15,7 +15,15 @@ npm install @kind-ui/charts
 
 Import `@kind-ui/charts/styles.css` once at your application entry (the root layout in Next.js). Development builds warn once if chart styles are missing. See the [component API and usage](packages/charts/README.md) for composition, accessibility and motion.
 
-## Local setup
+## Start with a complete example
+
+The [Line guide](https://kindui.dev/charts/docs/components/line/) includes a complete TypeScript consumer, a visible data table and copied examples checked with NodeNext, Bundler and Vite. Choose from Line, Area, Bar, Combo, Pie/Donut, Radar, Radial/ActivityRings, Scatter/Bubble, Histogram, BoxPlot, Heatmap, Sankey and Waterfall.
+
+Compose public components with your data, axes and application state. Optional motion, theme-aware colors, fill and background patterns, projected bars, percentage formatting, loading states and interactions share explicit typed contracts. Read the [package API](packages/charts/README.md) for defaults, ownership and limits.
+
+For agents, retrieve the [documentation index](https://kindui.dev/charts/docs/llms.txt), [complete reference](https://kindui.dev/charts/docs/llms-full.txt) and [consumer guidance](https://kindui.dev/charts/docs/markdown/agents/consumer.md). Install the consumer skill with `npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`. Example setup files and prompts are available from each chart guide.
+
+## Development
 
 Requires Node 22.12+ (CI uses Node 22) and npm 11.9.
 
@@ -25,28 +33,8 @@ npm exec playwright install -- --with-deps chromium
 npm run check
 ```
 
-`npm run dev:chart` starts the minimal usage example. `check` runs lint, component tests, the actual packed-package gate, strict consumer typechecks, and Chromium interaction checks. Linux browser dependencies may require administrator permission.
+`npm run dev:chart` starts the maintained public API example. See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) for focused development and validation. See the [changelog](packages/charts/CHANGELOG.md) and [release policy](docs/development.md) for versioning; ordinary feature merges accumulate changesets before one reviewed version PR.
 
-`npm run dev:showcase` opens the feature gallery at `/showcase.html` on port 4873. Color presets and a custom color picker are independent of finish; motion is on by default and follows reduced-motion preferences. Chart-family tabs switch between area, bar, line, pie, radar, and radial examples. The showcase offers finishes for Cartesian charts and pie/donut; native geometry remains unchanged.
-
-## Updates
-
-See the [changelog](packages/charts/CHANGELOG.md) for package changes.
-
-## Direction
-
-Build with established UI libraries, not against them. Prefer familiar composition and existing primitives, styling, and motion capabilities. Introduce a new pattern only for a concrete need that existing options do not meet. Future architecture and package boundaries will be reviewed in small steps; compatibility claims require tested consumers.
-
-## Contributing
-
-Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md). See [development direction and release policy](docs/development.md), [security reporting](SECURITY.md), and our [Code of Conduct](CODE_OF_CONDUCT.md).
+[Security reporting](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [MIT license](LICENSE)
 
 MIT © 2026 Bhavesh Chowdhury.
-
-Waterfall technical recipe: open `/waterfalls.html` in the chart example. It uses native numeric floating bars, explicit totals and subtotals, unknown-balance gaps, an accessible data table, and motion enabled by default. See the [Waterfall public contract](packages/charts/README.md#waterfall).
-
-Radar and radial core recipes: open `/polar.html` in the chart example. See [polar recipes](examples/chart/POLAR.md) and the [public component contract](packages/charts/README.md#radar-and-radial-bars).
-
-Box plot primitives accept caller-computed statistics with native quantitative axes. See the [public contract](packages/charts/README.md#box-plot-explicit-statistics) and [recipe studies](examples/chart/BOX-PLOTS.md).
-
-Heatmap matrix and activity recipes: open `/heatmaps.html` in the chart example. See [heatmap recipes and renderer research](examples/chart/HEATMAPS.md) and the [public Heatmap contract](packages/charts/README.md#heatmap).

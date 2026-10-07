@@ -24,7 +24,7 @@ if (installed.version !== provenance.version)
     "Installed chart package differs from pinned tarball. Run npm install after prepare:package.",
   );
 const tarballHash = createHash("sha256")
-  .update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz"))
+  .update(readFileSync("vendor/kind-ui-charts-0.1.1.tgz"))
   .digest("hex");
 if (tarballHash !== provenance.sha256) throw new Error("Package tarball does not match provenance");
 const appLock = JSON.parse(read("package-lock.json"));
@@ -149,6 +149,12 @@ for (const example of allExamples) {
     "README.md": `# ${example.title} — complete consumer\n\nInstall dependencies with npm install, then run npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports. Preserve the documented family composition and visibility ownership. Import @kind-ui/charts/styles.css once at the application entry.\n`,
     LICENSE: read("../../LICENSE"),
   };
+
+  for (const [file, source] of Object.entries(example.extraFiles ?? {})) {
+    if (!file.startsWith(`src/examples/${example.id}/`) || Object.hasOwn(files, file))
+      throw new Error(`Invalid additional example source: ${file}`);
+    files[file] = read(source);
+  }
 
   files["README.md"] +=
     "\n## Complete setup files\n\n" +
