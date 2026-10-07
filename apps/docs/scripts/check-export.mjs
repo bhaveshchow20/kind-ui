@@ -4,6 +4,7 @@ import path from "node:path";
 import {
   assertIndexingHTML,
   assertIndexingRoutes,
+  assertPageSEO,
   textExportFiles,
 } from "../../../scripts/indexing-output.mjs";
 import { canonicalDocURL } from "../../indexing.mjs";
@@ -23,6 +24,7 @@ const html = readdirSync(root, { recursive: true }).filter(
   (file) => String(file).endsWith(".html") && !String(file).startsWith("examples/"),
 );
 const canonicalURLs = [];
+const pageMetadata = new Map();
 for (const file of html) {
   const route = String(file)
     .replace(/(?:^|\/)index\.html$/, "")
@@ -34,10 +36,20 @@ for (const file of html) {
     .split("/")
     .filter(Boolean);
   const canonical = canonicalDocURL(canonicalDocSlugs(slugs));
-  assertIndexingHTML(readFileSync(path.join(root, file), "utf8"), canonical);
+  const body = readFileSync(path.join(root, file), "utf8");
+  assertIndexingHTML(body, canonical);
+  const seo = assertPageSEO(body, canonical);
+  if (pageMetadata.has(canonical)) assert.deepEqual(seo, pageMetadata.get(canonical));
+  else pageMetadata.set(canonical, seo);
   if (!legacyDocSlugs.some((alias) => alias.join("/") === slugs.join("/")))
     canonicalURLs.push(canonical);
 }
+for (const field of ["title", "description"])
+  assert.equal(
+    new Set([...pageMetadata.values()].map((metadata) => metadata[field])).size,
+    pageMetadata.size,
+    `Each canonical Docs page needs a unique ${field}`,
+  );
 assertIndexingRoutes(
   readFileSync(path.join(root, "robots.txt"), "utf8"),
   readFileSync(path.join(root, "sitemap.xml"), "utf8"),

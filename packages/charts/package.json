@@ -7,7 +7,7 @@
     "url": "git+https://github.com/bhaveshchow20/kind-ui.git",
     "directory": "packages/charts"
   },
-  "homepage": "https://kindui.dev/charts/",
+  "homepage": "https://kindui.dev/charts",
   "bugs": {
     "url": "https://github.com/bhaveshchow20/kind-ui/issues"
   },

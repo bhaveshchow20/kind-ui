@@ -28,6 +28,7 @@ import { type DemoOptions, demoDefaults } from "@/lib/demo-options";
 import { newCode, newRecipes } from "@/lib/new-chart-recipes";
 import { docsAccessNote, documentationCharts, showcaseAsset, siteLinks } from "@/lib/site-links";
 import { useCopyCode } from "@/lib/use-copy-code";
+import { chartSourceData } from "../../seo.mjs";
 
 type Material = "plain" | "paper" | "clay" | "glow";
 const families = [
@@ -798,6 +799,9 @@ export default function Page() {
   }, []);
   return (
     <>
+      <script type="application/ld+json">
+        {JSON.stringify(chartSourceData).replace(/</g, "\\u003c")}
+      </script>
       <a className="skip-link" href="#showcase">
         Skip to components
       </a>
