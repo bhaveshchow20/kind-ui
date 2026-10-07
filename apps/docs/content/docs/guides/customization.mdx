@@ -35,7 +35,7 @@ The illustration does not represent partial values. Derive loading from your req
 
 Explicit fill/gradient, `style.fill`, Cells and custom shapes keep their native paint ownership. Bar custom active shapes also disable automatic encoding. Gradient-backed pattern tiles use the configured first-stop ink. Forced colors retain geometry with system inks. Print settings and chosen colors can affect contrast; patterns do not replace labels or data alternatives.
 
-`BarSeries<Row>.projection={{ isProjected, pattern }}` decorates only caller-selected raw rows. It does not forecast values, filter data or change axes. Reuse the identity predicate in `TooltipContent.isProjected` and label the data alternative. Tooltip `projectedLabel` defaults to `"Projected"`; missing/hidden/suppressed rows retain existing behavior. Cells, explicit paint and custom shape ownership take precedence.
+`BarSeries<Row>.projection={{ isProjected, pattern }}` decorates only caller-selected raw rows. It does not forecast values, filter data or change axes. `TooltipContent.isProjected` receives the native tooltip payload entry; read its original row through `entry.payload` and apply the same row rule. Label the data alternative. Tooltip `projectedLabel` defaults to `"Projected"`; missing/hidden/suppressed rows retain existing behavior. Cells, explicit paint and custom shape ownership take precedence.
 
 <ApiTable name="FillPatternReference" />
 <ApiTable name="BarProjectionReference" />
