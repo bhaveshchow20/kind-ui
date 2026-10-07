@@ -22,7 +22,14 @@ pages with complete consumer code and API tables. Start with
 [installation](https://kindui.dev/charts/docs/markdown/installation.md),
 then retrieve the relevant family and the shared
 [SeriesConfig](https://kindui.dev/charts/docs/markdown/chart-components/series-config.md)
-contract when defining metadata.
+contract when defining metadata. For loading, theme colors, patterns, projected
+bars, percentage stacks, point/dash/directional presentation, Pie defaults/glow,
+Sankey labels/icons and Root interactions, retrieve the
+[customization guide](https://kindui.dev/charts/docs/markdown/guides/customization.md)
+and its [complete checked options source](https://kindui.dev/charts/docs/examples/combo-motion/src/examples/combo-motion/options.tsx).
+Read the generated API tables, defaults and ownership limits before choosing an
+option; a Bar projection predicate receives a raw row, while the tooltip predicate
+receives a native entry with the row in `entry.payload`.
 
 Use your agent's existing browser or documentation-fetch tools. An existing MCP
 web/docs tool can retrieve the same HTTP resources; these URLs are documentation,
