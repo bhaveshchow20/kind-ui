@@ -44,9 +44,3 @@ Do not add Tailwind, icon packs, or another stylesheet system just to use charts
    supported theme and finite chart height. Separate visual checks from type checks.
 5. Report commands, versions, and observed results. An example compiling does not
    prove Next hydration, screen-reader behavior, browser interactions, or contrast.
-
-For maintaining this skill, run `node --test skills/kind-ui-charts/evals/contract.test.mjs`.
-Keep realistic request prompts in [requests.json](../evals/requests.json); compare
-fresh agents using this skill and a pre-change snapshot, then inspect their actual
-code against released declarations. Do not put expected answers into agent prompts
-or write to a live application during evaluations.
