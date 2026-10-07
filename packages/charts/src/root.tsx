@@ -12,6 +12,7 @@ import {
 } from "./series-color.js";
 import { resolveSeriesConfig } from "./series-label.js";
 import { SeriesColorDefinitions } from "./series-paint.js";
+import { StylesheetWarning } from "./stylesheet-warning.js";
 import type { SeriesConfig } from "./types.js";
 
 export type RootProps = ComponentPropsWithRef<"div"> & {
@@ -67,6 +68,7 @@ export function Root({
     <ChartContext value={value}>
       <EmphasisProvider enabled={emphasis === "auto"}>
         <RootFrame {...props} style={{ ...colors, ...style }}>
+          {process.env.NODE_ENV === "development" && <StylesheetWarning />}
           {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
             <svg
               aria-hidden="true"

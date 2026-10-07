@@ -1,7 +1,7 @@
 import { expect, type Locator, test } from "@playwright/test";
 
 const offset = Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173;
-test.use({ baseURL: `http://127.0.0.1:${4200 + offset}` });
+test.use({ baseURL: `http://127.0.0.1:${4202 + offset}` });
 const families = [
   "line",
   "area",
@@ -513,7 +513,7 @@ test.describe("normal-speed visual recording", () => {
     const page = await context.newPage();
     test.setTimeout(30000);
     await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.goto(`http://127.0.0.1:${4200 + offset}/loading.html`);
+    await page.goto(`http://127.0.0.1:${4202 + offset}/loading.html`);
     await expect(page.locator(skeletonSelector)).toHaveCount(14);
     await page.addStyleTag({
       content:

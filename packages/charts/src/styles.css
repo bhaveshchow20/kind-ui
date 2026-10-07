@@ -38,6 +38,7 @@
   }
 
   :where([data-kind-ui="chart"]) {
+    --kind-ui-styles-loaded: 1;
     width: 100%;
     min-width: 0;
   }
