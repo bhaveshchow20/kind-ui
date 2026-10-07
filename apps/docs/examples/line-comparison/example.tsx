@@ -1,5 +1,6 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
+import { useEffect, useState } from "react";
 import "@kind-ui/charts/styles.css";
 
 const data = [
@@ -22,15 +23,36 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function RevenueComparisonChart() {
+  const [fontScale, setFontScale] = useState(1);
+  useEffect(() => {
+    const update = () =>
+      setFontScale(
+        Math.max(1, Number.parseFloat(getComputedStyle(document.documentElement).fontSize) / 16),
+      );
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(document.documentElement);
+    window.addEventListener("resize", update);
+    return () => {
+      observer.disconnect();
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
   return (
     <Chart.LineChart
       data={data}
       config={config}
       xDataKey="period"
       xAxis={{ tickMargin: 12, height: 48, interval: "preserveStartEnd" }}
-      margin={{ top: 20, right: 12, bottom: 8, left: 0 }}
+      margin={{ top: 20, right: 16 * fontScale, bottom: 8, left: 0 }}
       aria-label="Revenue and target in thousands of dollars"
-      yAxis={{ tickMargin: 12, width: 88, tickFormatter: (value) => `$${value}k` }}
+      yAxis={{ tickMargin: 12, width: 88 * fontScale, tickFormatter: (value) => `$${value}k` }}
       series={[
         { seriesKey: "actual", dataKey: "actual" },
         { seriesKey: "target", dataKey: "target", type: "linear", strokeDasharray: "5 5" },

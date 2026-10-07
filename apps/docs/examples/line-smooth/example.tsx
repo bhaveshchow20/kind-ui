@@ -1,5 +1,6 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
+import { useEffect, useState } from "react";
 import "@kind-ui/charts/styles.css";
 
 const data = [
@@ -25,12 +26,33 @@ export function VisitorCurveChart({
 }: {
   curve?: "monotone" | "linear" | "stepAfter";
 } = {}) {
+  const [fontScale, setFontScale] = useState(1);
+  useEffect(() => {
+    const update = () =>
+      setFontScale(
+        Math.max(1, Number.parseFloat(getComputedStyle(document.documentElement).fontSize) / 16),
+      );
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(document.documentElement);
+    window.addEventListener("resize", update);
+    return () => {
+      observer.disconnect();
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
   return (
     <Chart.LineChart
       data={data}
       config={config}
       legend={{}}
-      margin={{ top: 20, right: 12, bottom: 8, left: 0 }}
+      margin={{ top: 20, right: 16 * fontScale, bottom: 8, left: 0 }}
       aria-label="Monthly visitors"
     >
       <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -42,7 +64,7 @@ export function VisitorCurveChart({
         height={48}
         interval="preserveStartEnd"
       />
-      <Chart.YAxis axisLine={false} tickLine={false} tickMargin={8} width={72} />
+      <Chart.YAxis axisLine={false} tickLine={false} tickMargin={8} width={72 * fontScale} />
       <Chart.LineSeries dataKey="visitors" type={curve} strokeWidth={2} dot={{ r: 2.5 }} />
       <Chart.Tooltip />
     </Chart.LineChart>
