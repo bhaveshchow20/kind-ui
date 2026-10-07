@@ -3,7 +3,7 @@
 Kind charts ship as one ESM package with explicit named exports and an opt-in
 stylesheet. The monorepo workspace stays private. npm owns reusable chart
 behavior, composition, interaction, accessibility and restrained defaults;
-registry recipes own palettes, typography, framing and dashboard presentation.
+host applications own palettes, typography, framing and dashboard presentation.
 Consumers own data, axes, application state and layout.
 
 ## Package contract

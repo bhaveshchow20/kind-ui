@@ -30,11 +30,28 @@ const data: { key: keyof typeof config; hours: number; share: string }[] = [
 
 export function VisibleAllocationChart() {
   const [visible, setVisible] = useState<string[]>(Object.keys(config));
+  const [changes, setChanges] = useState(0);
   const selected = data.filter((row) => visible.includes(row.key));
   const total = selected.reduce((sum, row) => sum + row.hours, 0);
   return (
-    <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+    <Chart.Root
+      config={config}
+      visibleSeries={visible}
+      onVisibleSeriesChange={(next) => {
+        setVisible(next);
+        setChanges((count) => count + 1);
+      }}
+      data-visibility-changes={changes}
+    >
       <Chart.Legend />
+      <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+        <button type="button" onClick={() => setVisible([])}>
+          Hide all categories
+        </button>
+        <button type="button" onClick={() => setVisible(Object.keys(config))}>
+          Show all categories
+        </button>
+      </div>
       <p role="status" style={{ textAlign: "center", margin: 0 }}>
         {total.toLocaleString("en-US")} hours selected
       </p>

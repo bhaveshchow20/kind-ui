@@ -168,7 +168,6 @@ export function PresentationExample() {
               />
             </Frame>
           </ResponsiveContainer>
-          {visible.length === 0 && <p role="status">Select a series to show values.</p>}
         </Chart.Root>
         <table>
           <caption>All task values, including hidden series</caption>

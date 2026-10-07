@@ -35,15 +35,15 @@ test("public components share configuration and preserve missing, zero and hidde
   expect(errors).toEqual([]);
 });
 
-test("legend keyboard toggles retain focus through all-hidden and empty recovery", async ({
-  page,
-}, info) => {
+test("legend keyboard guard retains focus and genuine no-data recovery", async ({ page }, info) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Completed", exact: true }).click();
   const review = page.getByRole("button", { name: "Needs review", exact: true });
   await review.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("Select a series to show it.");
+  await expect(page.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
+    "At least one item must remain visible.",
+  );
   await expect(review).toBeFocused();
   await expect(page.getByRole("row", { name: "Mon 42 tasks 12 tasks" })).toBeVisible();
   await review.click();

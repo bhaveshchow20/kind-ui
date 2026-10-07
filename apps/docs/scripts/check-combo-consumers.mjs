@@ -14,7 +14,7 @@ for (const [file, body] of Object.entries(verificationFiles(first))) {
   writeFileSync(target, body);
 }
 mkdirSync(path.join(root, "vendor"), { recursive: true });
-cpSync("vendor/kind-ui-charts-0.1.0.tgz", path.join(root, "vendor/kind-ui-charts-0.1.0.tgz"));
+cpSync("vendor/kind-ui-charts-0.2.0.tgz", path.join(root, "vendor/kind-ui-charts-0.2.0.tgz"));
 execFileSync(
   "npm",
   ["ci", "--cache", "/tmp/combo-npm-cache", "--ignore-scripts", "--no-audit", "--no-fund"],

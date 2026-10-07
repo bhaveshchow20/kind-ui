@@ -14,7 +14,7 @@ for (const [name, body] of Object.entries(verificationFiles(first))) {
 }
 if (first.localPackage) {
   mkdirSync(path.join(root, "vendor"), { recursive: true });
-  cpSync("vendor/kind-ui-charts-0.1.0.tgz", path.join(root, "vendor/kind-ui-charts-0.1.0.tgz"));
+  cpSync("vendor/kind-ui-charts-0.2.0.tgz", path.join(root, "vendor/kind-ui-charts-0.2.0.tgz"));
 }
 execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
   cwd: root,

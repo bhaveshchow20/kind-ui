@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = "http://127.0.0.1:6373";
@@ -52,9 +52,9 @@ try {
   await page.keyboard.press("ArrowRight");
   const tooltip = first.locator('[data-kind-ui="chart-tooltip"]');
   await tooltip.waitFor();
-  assert.match(
-    await tooltip.innerText(),
+  await expect(tooltip).toHaveText(
     /Lower whisker[\s\S]*Q1[\s\S]*Median[\s\S]*Q3[\s\S]*Upper whisker[\s\S]*Outlier/,
+    { useInnerText: true },
   );
   await page.keyboard.press("Escape");
   await tooltip.waitFor({ state: "hidden" });

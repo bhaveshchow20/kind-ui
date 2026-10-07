@@ -2,7 +2,7 @@
 
 Read repository AGENTS.md and CONTRIBUTING.md first. This application is independently installed, with its own pinned npm lockfile; do not turn it into a second chart package or change library APIs while writing docs.
 
-Use public @kind-ui/charts exports and pinned peers in examples. Only Line and Area are documented. Maintain the five Line and four Area complete consumers and keep curve/material choices synchronized with Code and Copy prompt. Other component pages belong in separate reviewed PRs. Generated files are outputs; edit source examples, MDX or public type aliases instead. New page workers own their family catalog, preview bindings and checks; use the README ownership contract. Shared registration and the single guarded vendor pin/lockfiles belong to integration.
+Use public @kind-ui/charts exports and pinned peers in examples. The catalogs maintain 13 component families and 47 complete examples; Radial also covers ActivityRings. Keep selected options synchronized with Preview, Code, Copy prompt and agent retrieval. Generated files are outputs; edit source examples, MDX or public type aliases instead. Family changes own their catalog, preview bindings and checks; use the README ownership contract. Shared registration and the single guarded vendor pin/lockfiles belong to integration.
 
 Read actual declarations before writing generated reference aliases. Clearly distinguish built-in, explicit composition and unsupported behavior. Materials are family-specific. Automatic paint emphasis is narrower than tooltip inspection. Glass stays paused.
 
@@ -10,4 +10,4 @@ Keep the clean example-first Preview/Usage/Code flow, accessible navigation and 
 
 Required docs checks: prepare validated artifact, app typecheck/build, copied consumers, contract/export checks and the local browser script. Use only reserved port 6373 (or explicitly assigned 6374–6379). Root aggregate browser fleets require coordination with other sessions. Report exact passed, failed and unrun checks.
 
-The Sites checkout is generated static output from the pushed GitHub docs source, not another editable app. Only the selected docs owner may register/deploy the new private docs project; never edit the existing showcase. Do not publish npm, merge main, change audience, create credentials or enable future releases.
+The Sites checkout is generated static output from the pushed GitHub docs source, not another editable app. Only the selected deployment owner may register or deploy an authorized project and audience. Preserve its hosting identity and coordinate homepage integration with that owner. Publishing npm, merging main, changing audience, creating credentials or enabling releases requires explicit authorization.

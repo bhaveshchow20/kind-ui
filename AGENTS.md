@@ -4,7 +4,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing this repository. Its wor
 
 ## Current state and architecture guidance
 
-`packages/charts` exports React chart presentation and composed line components, prop-controlled Motion animation, and a default stylesheet; its README is the public API reference. Keep component props with their implementation, share only the context/config types that are needed, and keep the public index as explicit reexports. Static presentation belongs in the scoped CSS layer; data-dependent CSS variables and explicit consumer styles can remain inline. `examples/chart` consumes the exports and owns its data alternative. `tests` checks component behavior, consumer types and browser contracts. Keep geometry, axes, data and visibility state consumer-owned; do not add a universal chart schema, generic core or another package without a demonstrated need.
+`packages/charts` exports composable React charts for the documented families, prop-controlled Motion animation, and a default stylesheet; its README is the public API reference. Keep component props with their implementation, share only the context/config types that are needed, and keep the public index as explicit reexports. Static presentation belongs in the scoped CSS layer; data-dependent CSS variables and explicit consumer styles can remain inline. `examples/chart` consumes the exports and owns its data alternative. `tests` checks component behavior, consumer types and browser contracts. Keep geometry, axes, data and visibility state consumer-owned; do not add a universal chart schema, generic core or another package without a demonstrated need.
 
 Build on established UI libraries. Check existing capabilities before adding primitives or infrastructure. Prefer familiar composition or a narrow integration. Preserve consumer control of styling, markup, state, refs, handlers, and animation where the API requires it. A new abstraction needs a concrete unmet need, alternatives considered, and a clear benefit beyond integration cost.
 
@@ -40,7 +40,7 @@ Never edit `node_modules/`, `dist/`, artifacts, or caches as source. Regenerate 
 
 Never add secrets, credentials, telemetry, external uploads, or hidden network behavior. Follow [SECURITY.md](SECURITY.md) for security findings. Do not publish, deploy, merge, create release credentials, or change visibility/access unless explicitly authorized.
 
-The workspace remains private at `0.0.0`; `@kind-ui/charts` is a reviewed public `0.1.0` candidate. Publication still requires separate authorization. Follow the versioning and changeset policy in [docs/development.md](docs/development.md); no automated publishing is configured. Preserve existing user work and report blockers instead of bypassing permissions or verification.
+The workspace remains private at `0.0.0`; `@kind-ui/charts` is published on npm and independently versioned. Follow the versioning and changeset policy in [docs/development.md](docs/development.md). The existing version workflow opens one reviewed version PR for accumulated changesets; the release workflow publishes its exact validated artifact through the configured OIDC identity. Publication and persistent security changes require explicit authorization. Preserve existing user work and report blockers instead of bypassing permissions or verification.
 
 ## Optional React agent skills
 

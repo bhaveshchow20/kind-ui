@@ -4,6 +4,14 @@ const url = "http://127.0.0.1:4180";
 const sectors = '[data-kind-ui="pie-sector"]';
 const revealing = '[data-kind-ui="pie-sector"][data-reveal="on"]';
 
+function pieRecipes(page: Page) {
+  return page.getByRole("article").filter({
+    has: page.getByRole("application", {
+      name: /^(Weekly hours pie|Team capacity donut)$/,
+    }),
+  });
+}
+
 test("packed pie preserves category identity, controlled filtering, native refs and keyboard", async ({
   page,
 }, info) => {
@@ -137,15 +145,14 @@ test("pie and donut recipes use public controls and expose the zero category", a
   page,
 }, info) => {
   await page.goto("/pies.html");
-  await expect(page.getByRole("application")).toHaveCount(2);
-  await expect(page.getByRole("table")).toHaveCount(2);
-  await expect(page.getByRole("button", { name: "Unplanned", exact: true })).toHaveCount(2);
-  const first = page.locator("article").first();
+  const recipes = pieRecipes(page);
+  await expect(recipes.getByRole("application")).toHaveCount(2);
+  await expect(recipes.getByRole("table")).toHaveCount(2);
+  await expect(recipes.getByRole("button", { name: "Unplanned", exact: true })).toHaveCount(2);
+  const first = recipes.first();
   await first.getByRole("button", { name: "Delivery", exact: true }).click();
   await expect(first.getByRole("status")).toContainText("40 visible hours");
-  await expect(page.locator("article").last().getByRole("status")).toContainText(
-    "88 visible hours",
-  );
+  await expect(recipes.last().getByRole("status")).toContainText("88 visible hours");
   await page.screenshot({ path: info.outputPath("pie-donut-recipes.png"), fullPage: true });
 });
 
@@ -258,8 +265,9 @@ test("pie and donut recipes fit a phone viewport and retain the data alternative
 }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/pies.html");
-  await expect(page.getByRole("application")).toHaveCount(2);
-  await expect(page.getByRole("table")).toHaveCount(2);
+  const recipes = pieRecipes(page);
+  await expect(recipes.getByRole("application")).toHaveCount(2);
+  await expect(recipes.getByRole("table")).toHaveCount(2);
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
   ).toBeTruthy();
@@ -402,7 +410,8 @@ test("recipes remain continuous before hover, after selection, filter/unhide and
 }, info) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/pies.html");
-  const charts = page.getByRole("application");
+  const recipes = pieRecipes(page);
+  const charts = recipes.getByRole("application");
   await expect(charts).toHaveCount(2);
   for (const chart of await charts.all()) {
     await expect(chart.locator(".recharts-pie-sector path").first()).toHaveAttribute(
@@ -415,7 +424,7 @@ test("recipes remain continuous before hover, after selection, filter/unhide and
     await expect.poll(() => paint(chart)).toEqual(before);
     await page.keyboard.press("Escape");
   }
-  const first = page.locator("article").first();
+  const first = recipes.first();
   await page.goto("/pies.html");
   const finalPaint = await paint(charts.first());
   await first.getByRole("checkbox", { name: "Animate", exact: true }).check();
@@ -512,3 +521,142 @@ test("stylesheet transformed native sectors retain paint and handler ownership d
   await page.keyboard.press("ArrowRight");
   await expect(page.locator('[data-kind-ui="chart-tooltip"]')).toContainText("Beta");
 });
+
+test("initial category survives reorder, clears on removal and only remount restores it", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?pinned`);
+  const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+  await expect(tooltip).toContainText("Beta");
+  await expect(tooltip).toContainText("40 seats");
+  await expect(tooltip).toHaveCount(1);
+  await page.getByRole("button", { name: "Reorder pin", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Remove pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Restore pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Remount pin", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Native override", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+});
+
+test("initial Pie pin hands focus and pointer inspection to native dismissal", async ({ page }) => {
+  await page.goto(`${url}/?pinned`);
+  const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+  const chart = page.getByRole("application", { name: "Initial pinned pie" });
+  await expect(tooltip).toContainText("Beta");
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(tooltip).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(tooltip).not.toBeVisible();
+  await page.keyboard.press("Tab");
+  await expect(chart.locator(".recharts-pie")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "After chart", exact: true })).toBeFocused();
+  await page.getByRole("button", { name: "Reorder pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Remount pin", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.locator('[data-kind-ui="pie-sector"][name="alpha"]').hover();
+  await expect(tooltip).toContainText("Alpha");
+  await page.mouse.move(0, 0, { steps: 10 });
+  await expect(tooltip).not.toBeVisible();
+});
+
+test("initial Pie pin respects visibility, ambiguous identity and native defaultIndex", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?pinned`);
+  const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Native index", exact: true }).click();
+  await expect(tooltip).toContainText("Alpha");
+  await page.getByRole("button", { name: "Native index", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Filter pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Show pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Remount pin", exact: true }).click();
+  await expect(tooltip).toContainText("Beta");
+  await page.getByRole("button", { name: "Duplicate pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+  await page.getByRole("button", { name: "Restore pin", exact: true }).click();
+  await expect(tooltip).not.toBeVisible();
+});
+
+for (const category of ["zero", "unknown"]) {
+  test(`initial accessor Pie pin handles ${category} identity`, async ({ page }) => {
+    await page.goto(`${url}/?pinned&accessor&category=${category}`);
+    const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+    if (category === "zero") {
+      await expect(tooltip).toContainText("Zero");
+      await expect(tooltip.locator('[data-kind-ui="chart-tooltip-value"]')).toHaveText("0");
+    } else {
+      await expect(tooltip).not.toBeVisible();
+    }
+  });
+}
+
+for (const accessor of [false, true]) {
+  test(`bound initial Pie pin resolves filtered rows (${accessor ? "accessor" : "field"})`, async ({
+    page,
+  }) => {
+    await page.goto(`${url}/?pinned&bound${accessor ? "&accessor" : ""}`);
+    const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+    await expect(tooltip).toContainText("Beta");
+    await expect(tooltip).toContainText("40 seats");
+    await expect(page.locator('[data-kind-ui="pie-sector"][name="alpha"]')).toHaveCount(0);
+    await page.getByRole("button", { name: "Reorder pin", exact: true }).click();
+    await expect(tooltip).toContainText("Beta");
+    await expect(tooltip).toContainText("40 seats");
+    await page.getByRole("button", { name: "Filter pin", exact: true }).click();
+    await expect(tooltip).not.toBeVisible();
+    await page.getByRole("button", { name: "Show pin", exact: true }).click();
+    await expect(tooltip).not.toBeVisible();
+    await page.getByRole("button", { name: "Remount pin", exact: true }).click();
+    await expect(tooltip).toContainText("Beta");
+  });
+}
+
+for (const accessor of [false, true]) {
+  test(`bound Pie identity survives Cell payload overrides (${accessor ? "accessor" : "field"})`, async ({
+    page,
+  }) => {
+    await page.goto(`${url}/?cell-identity${accessor ? "&accessor" : ""}`);
+    const beta = page.locator('[data-original-category="beta"][data-kind-ui="pie-sector"]');
+    await expect(beta).toHaveAttribute("fill", "#e11d48");
+    await beta.click();
+    await expect(page.getByLabel("Native events")).toHaveText("1");
+    await expect(page.getByLabel("Native payload")).toHaveText("alpha");
+    await expect(page.getByLabel("Shared category")).toHaveText("beta");
+    const mark = page.getByRole("button", { name: "Highlight beta", exact: true });
+    await expect(mark.locator('[data-kind-ui="pie-halo"]')).toHaveCount(1);
+    await mark.focus();
+    await page.keyboard.press("Escape");
+    await expect(page.getByLabel("Shared category")).toHaveText("none");
+    await mark.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByLabel("Shared category")).toHaveText("beta");
+    await page.getByRole("button", { name: "Veto native click", exact: true }).click();
+    await page.locator('[data-original-category="alpha"][data-kind-ui="pie-sector"]').click();
+    await expect(page.getByLabel("Native events")).toHaveText("2");
+    await expect(page.getByLabel("Shared category")).toHaveText("beta");
+    await page.getByRole("button", { name: "Reorder identity", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Highlight beta", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page.getByRole("button", { name: "Hide Alpha", exact: true }).click();
+    await expect(page.locator('[data-kind-ui="pie-sector"]')).toHaveCount(1);
+    await expect(
+      page
+        .getByRole("button", { name: "Highlight beta", exact: true })
+        .locator('[data-kind-ui="pie-halo"]'),
+    ).toHaveCount(1);
+    await expect(beta).toHaveAttribute("fill", "#e11d48");
+  });
+}

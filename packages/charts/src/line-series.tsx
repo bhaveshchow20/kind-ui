@@ -1,10 +1,13 @@
 "use client";
 
-import { type ComponentProps, useId, useLayoutEffect, useRef } from "react";
-import { Line } from "recharts";
+import { type ComponentProps, type CSSProperties, useId, useLayoutEffect, useRef } from "react";
+import { DefaultZIndexes, Line, ZIndexLayer } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
+import { dashCycle, dashDuration, type LineDashAnimation } from "./line-dash.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
+import { PointMarker, type PointStyle } from "./point-marker.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 // Preserve the legacy native defaults while allowing explicit row/value parameters.
 type DefaultLineDataKey = Extract<ComponentProps<typeof Line>["dataKey"], (row: never) => unknown>;
@@ -14,8 +17,14 @@ export type LineSeriesProps<
 > = ComponentProps<typeof Line<DataPoint, Value>> & {
   /** Metadata/visibility key, required only for function or numeric data keys. */
   seriesKey?: string;
+  /** Optional point paint; explicit native dot takes precedence. */
+  pointStyle?: PointStyle;
+  /** Independent active point paint; explicit native activeDot takes precedence. */
+  activePointStyle?: PointStyle;
   /** Material on the default SVG curve; custom shape/filter retain consumer ownership. */
   material?: LineMaterial;
+  /** Continuous default-curve dashes; requires a numeric native strokeDasharray. */
+  dashAnimation?: false | LineDashAnimation;
 };
 
 /** A registered Recharts Line with Root colors and controlled visibility. */
@@ -24,14 +33,17 @@ export function LineSeries<
   Value = ReturnType<DefaultLineDataKey>,
 >({
   seriesKey,
+  pointStyle = "default",
+  activePointStyle: _activePointStyle,
   hide,
   stroke,
   className,
   material = "plain",
+  dashAnimation = false,
   renderWhileHidden = false,
   ...props
 }: LineSeriesProps<DataPoint, Value> & { renderWhileHidden?: boolean }) {
-  const { config, visibleSeries } = useChart();
+  const { config, paints, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
   const id = props.id || generatedId;
@@ -55,30 +67,72 @@ export function LineSeries<
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("LineSeries requires seriesKey for controlled non-string dataKey");
-  const color = stroke ?? (key && Object.hasOwn(config, key) ? `var(--color-${key})` : undefined);
+  const interaction = useSeriesInteraction(
+    key,
+    effectiveHide,
+    hide === true,
+    props.data,
+    props.onClick,
+  );
+  const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
+  const cycle = dashCycle(props.style?.strokeDasharray ?? props.strokeDasharray);
+  const duration = dashAnimation && dashDuration(dashAnimation);
+  const dashed =
+    dashAnimation !== false &&
+    duration !== undefined &&
+    cycle !== undefined &&
+    !effectiveHide &&
+    props.shape === undefined &&
+    props.isAnimationActive !== true;
+  const offset = props.style?.strokeDashoffset ?? props.strokeDashoffset ?? 0;
+  const baseline = Number.isFinite(Number(offset)) ? `${Number(offset)}px` : offset;
   return (
-    <Line<DataPoint, Value>
-      isAnimationActive={false}
-      {...props}
-      {...(material !== "plain" && props.shape === undefined && props.filter === undefined
-        ? {
-            shape: (
-              <MaterialCurve
-                material={material}
-                filterId={`${generatedId}-material`}
-                materialWidth={
-                  props.strokeWidth ?? (material === "clay" ? 6 : material === "paper" ? 2.5 : 3)
-                }
-              />
-            ),
-            strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
-            strokeLinejoin: props.strokeLinejoin ?? "round",
+    <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
+      <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
+        <Line<DataPoint, Value>
+          isAnimationActive={false}
+          {...props}
+          {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
+          zIndex={0}
+          {...(props.dot === undefined && pointStyle !== "default"
+            ? { dot: <PointMarker variant={pointStyle} /> }
+            : {})}
+          {...(material !== "plain" && props.shape === undefined && props.filter === undefined
+            ? {
+                shape: (
+                  <MaterialCurve
+                    material={material}
+                    filterId={`${generatedId}-material`}
+                    materialWidth={
+                      props.strokeWidth ??
+                      (material === "clay" ? 6 : material === "paper" ? 2.5 : 3)
+                    }
+                  />
+                ),
+                strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
+                strokeLinejoin: props.strokeLinejoin ?? "round",
+              }
+            : {})}
+          style={
+            dashed
+              ? ({
+                  ...props.style,
+                  "--kind-ui-dash-cycle": `${cycle}px`,
+                  "--kind-ui-dash-offset": baseline,
+                  "--kind-ui-dash-duration": `${duration}ms`,
+                  "--kind-ui-dash-direction":
+                    dashAnimation && dashAnimation.direction === "reverse" ? "reverse" : "normal",
+                } as CSSProperties)
+              : props.style
           }
-        : {})}
-      id={id}
-      hide={renderedHide}
-      {...(color !== undefined ? { stroke: color } : {})}
-      className={["kind-ui-line-series", className].filter(Boolean).join(" ")}
-    />
+          id={id}
+          hide={renderedHide}
+          {...(color !== undefined ? { stroke: color } : {})}
+          className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className]
+            .filter(Boolean)
+            .join(" ")}
+        />
+      </SeriesInteractionLayer>
+    </ZIndexLayer>
   );
 }

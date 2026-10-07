@@ -15,7 +15,7 @@ function writeFiles(files) {
 }
 writeFiles(verificationFiles(bundles.waterfall));
 mkdirSync(path.join(root, "vendor"), { recursive: true });
-cpSync("vendor/kind-ui-charts-0.1.0.tgz", path.join(root, "vendor/kind-ui-charts-0.1.0.tgz"));
+cpSync("vendor/kind-ui-charts-0.2.0.tgz", path.join(root, "vendor/kind-ui-charts-0.2.0.tgz"));
 const run = (args) => execFileSync("npm", args, { cwd: root, stdio: "inherit" });
 run(["ci", "--ignore-scripts", "--no-audit", "--no-fund"]);
 const variants = Object.values(bundles).flatMap((b) => [

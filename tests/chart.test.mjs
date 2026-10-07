@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import * as Chart from "@kind-ui/charts";
 import { Legend, Root, TooltipContent } from "@kind-ui/charts";
-import { createElement as h } from "react";
+import { Fragment, createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 import * as Native from "recharts";
 
@@ -11,6 +11,30 @@ import * as Native from "recharts";
 const renderSvg = (element) => render(h("svg", null, element)).slice(5, -6);
 
 import { ScatterChart as NativeScatterChart, Scatter, XAxis, YAxis } from "recharts";
+
+test("development stylesheet diagnostic leaves SSR markup identical and never accesses DOM", () => {
+  const previous = process.env.NODE_ENV;
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const chart = h(Root, { config: { total: { color: "red" } } }, "Chart");
+  Object.defineProperty(globalThis, "document", {
+    configurable: true,
+    get() {
+      throw new Error("Stylesheet diagnostics must not read the SSR document");
+    },
+  });
+  try {
+    process.env.NODE_ENV = "production";
+    const production = render(chart);
+    process.env.NODE_ENV = "development";
+    assert.equal(render(chart), production);
+    assert.doesNotMatch(production, /kind-ui-styles-loaded|<style|<link/);
+  } finally {
+    if (previous === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previous;
+    if (descriptor) Object.defineProperty(globalThis, "document", descriptor);
+    else delete globalThis.document;
+  }
+});
 
 test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a data alternative", () => {
   const axes = [
@@ -60,11 +84,13 @@ test("direct and namespace imports expose the same public components", () => {
     "Brush",
     "CartesianGrid",
     "Cell",
+    "ChartBackgroundPattern",
     "ComboChart",
     "Curve",
     "Dot",
     "EmphasisMark",
     "ErrorBar",
+    "FillPatternSwatch",
     "HeatmapCellContent",
     "HeatmapChart",
     "HeatmapDataTable",
@@ -81,6 +107,7 @@ test("direct and namespace imports expose the same public components", () => {
     "LineSeries",
     "PieChart",
     "PieSeries",
+    "PointMarker",
     "PolarAngleAxis",
     "PolarGrid",
     "PolarRadiusAxis",
@@ -121,9 +148,13 @@ test("direct and namespace imports expose the same public components", () => {
     "computeWaterfallData",
     "createHeatmapModel",
     "createHeatmapScale",
+    "createPercentStack",
+    "defineChartBackgroundPattern",
+    "formatPercent",
     "getRelativeCoordinate",
     "prepareSankeyData",
     "useChartHeight",
+    "useChartInteraction",
     "useChartWidth",
     "useEmphasis",
     "useXAxisScale",
@@ -1405,6 +1436,880 @@ test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/ex
   );
 });
 
+test("missing config labels share inference across public legends and tooltip content", () => {
+  const cases = [
+    ["visitors", "Visitors"],
+    ["monthlyVisitors", "Monthly visitors"],
+    ["HTTPRequests", "Http requests"],
+    ["monthly_visitors", "Monthly visitors"],
+    ["monthly-visitors", "Monthly visitors"],
+    ["visitors2026Total", "Visitors2026 total"],
+    ["explicitLabel", "CUSTOM label", "CUSTOM label"],
+    ["emptyLabel", "", ""],
+  ];
+  for (const [key, expected, label] of cases) {
+    const meta = Object.freeze({ color: "#123456", ...(label !== undefined ? { label } : {}) });
+    const inferred = Object.freeze({ [key]: meta });
+    let rendered;
+    const html = render(
+      h(
+        Root,
+        { config: inferred, visibleSeries: [key] },
+        h(Legend, null, (item) => {
+          rendered = item;
+          return item.label;
+        }),
+        h(TooltipContent, { tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]) }),
+        h(Chart.ScatterTooltipContent, {
+          tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]),
+        }),
+      ),
+    );
+    assert.equal(rendered.key, key);
+    assert.equal(rendered.label, expected);
+    assert.equal(rendered.visible, true);
+    assert.ok(html.includes(`--color-${key}:#123456`));
+    assert.ok(html.includes(`data-series="${key}"`));
+    assert.ok(html.includes(`<span>${expected}</span>`));
+    assert.doesNotMatch(html, /Native name/);
+    assert.match(html, /role="status" aria-live="assertive"/);
+    for (const Content of [TooltipContent, Chart.ScatterTooltipContent]) {
+      const tip = render(
+        h(
+          Root,
+          { config: inferred },
+          h(Content, {
+            tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]),
+          }),
+        ),
+      );
+      assert.ok(tip.includes(`<span>${expected}</span>`));
+      assert.doesNotMatch(tip, /Native name/);
+    }
+    assert.equal(inferred[key], meta);
+    assert.equal(meta.label, label);
+  }
+});
+
+test("inferred metadata retains formatter, item identity and unmatched fallback contracts", () => {
+  const inferred = { visitors: { color: "red", formatValue: (value) => `${value} visits` } };
+  const renderTip = (payload, extra = {}) =>
+    render(
+      h(
+        Root,
+        { config: inferred },
+        h(TooltipContent, { tooltip: tooltip(payload, extra), itemKey: () => "visitors" }),
+      ),
+    );
+  assert.match(renderTip([entry(0)]), /Visitors.*0 visits/);
+  const formatted = renderTip([entry(1)], {
+    formatter: () => [h("em", null, "one"), h("b", null, "Override")],
+  });
+  assert.match(formatted, /<b>Override<\/b>/);
+  assert.match(formatted, /<em>one<\/em>/);
+  const unmatched = render(
+    h(
+      Root,
+      { config: inferred },
+      h(TooltipContent, {
+        tooltip: tooltip([entry(2, { name: "Native unmatched", color: "blue" })]),
+      }),
+    ),
+  );
+  assert.match(unmatched, /Native unmatched/);
+  assert.match(unmatched, /indicator-color:blue/);
+  assert.throws(
+    () => render(h(Root, { config: { 2026: { color: "red" } } }, h(Legend))),
+    /must start with a letter/,
+  );
+});
+
+test("pattern swatches use independent SVG resources and all public encodings", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          a: { color: "#123456", pattern: { kind: "hatch" } },
+          b: { color: "#654321", pattern: { kind: "stripe", width: 3 } },
+          c: { color: "pink", pattern: { kind: "duotone", color: "white", angle: 90 } },
+        },
+      },
+      h(Legend),
+      h(Chart.FillPatternSwatch, { pattern: { kind: "hatch" }, color: "red", "data-host": "yes" }),
+    ),
+  );
+  const ids = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 4);
+  assert.equal(new Set(ids).size, 4);
+  for (const id of ids) assert.ok(html.includes(`fill="url(#${id})"`));
+  assert.match(html, /data-host="yes"/);
+  assert.match(html, /fill="var\(--color-a\)"/);
+  assert.match(html, /patternTransform="rotate\(90\)"/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.doesNotMatch(html, /<animate|<filter/);
+});
+
+test("legend glyph/symbol priority and hideIcon remain consumer-owned with patterns", () => {
+  const config = {
+    a: { color: "red", pattern: { kind: "hatch" }, icon: () => h("i", null, "Icon") },
+    b: { color: "blue", pattern: { kind: "stripe" }, legendShape: "diamond" },
+  };
+  assert.doesNotMatch(render(h(Root, { config }, h(Legend))), /<pattern/);
+  assert.doesNotMatch(
+    render(h(Root, { config }, h(Legend, { hideIcon: true }))),
+    /<pattern|Icon|data-legend-shape/,
+  );
+});
+
+test("invalid public pattern geometry fails explicitly", () => {
+  for (const pattern of [
+    { kind: "unknown" },
+    { kind: "hatch", size: 0 },
+    { kind: "stripe", width: -1 },
+    { kind: "hatch", size: 4, width: 5 },
+    { kind: "duotone", angle: Infinity },
+  ]) {
+    assert.throws(
+      () => render(h(Chart.FillPatternSwatch, { pattern, color: "red" })),
+      /FillPattern requires/,
+    );
+  }
+});
+
+test("series colors compile theme stops without changing labels or pattern metadata", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          revenueTotal: {
+            color: { light: ["var(--ink)", "blue"], dark: ["white", "gray", "black"] },
+            pattern: { kind: "hatch" },
+          },
+          solid: { color: "tomato" },
+          one: { color: ["purple"] },
+        },
+      },
+      h(Legend),
+    ),
+  );
+  assert.match(html, /--color-solid:tomato/);
+  assert.match(html, /--color-one:purple/);
+  assert.match(html, /--color-revenueTotal:light-dark\(var\(--ink\), white\)/);
+  assert.match(html, /color-mix\(in srgb, var\(--ink\) 50%, blue 50%\), gray/);
+  assert.match(html, /offset="0.5"/);
+  assert.match(html, /Revenue total/);
+  assert.match(html, /data-pattern="hatch"/);
+  assert.equal((html.match(/<linearGradient /g) ?? []).length, 1);
+  assert.match(html, /fill="var\(--color-revenueTotal\)"/);
+});
+
+test("color resources are unique across sibling Roots and stable on SSR", () => {
+  const tree = h(
+    "main",
+    null,
+    ...[0, 1].map((key) =>
+      h(
+        Root,
+        {
+          key,
+          config: { sales: { color: ["red", "blue"] } },
+        },
+        h(Legend),
+      ),
+    ),
+  );
+  const html = render(tree);
+  const ids = [...html.matchAll(/<linearGradient[^>]*id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 2);
+  assert.equal(new Set(ids).size, 2);
+  assert.equal(render(tree), html);
+  assert.match(html, /--kind-ui-series-[\w-]+-gradient:linear-gradient/);
+});
+
+test("malformed new color shapes fail before emitting resources", () => {
+  for (const color of [
+    [],
+    ["red", null],
+    Array(2),
+    { light: "red" },
+    { light: [], dark: "blue" },
+    { light: "red", dark: "blue", extra: true },
+    null,
+    3,
+  ]) {
+    assert.throws(() => render(h(Root, { config: { sales: { color } } })), /[Ss]eries color/);
+  }
+});
+
+test("color errors identify only the offending series and property", () => {
+  for (const [color, path, guidance] of [
+    [[], 'config["sales"].color', /nonempty string or nonempty array/],
+    [" ", 'config["sales"].color', /nonempty color string/],
+    [["red", null], 'config["sales"].color[1]', /nonempty color string/],
+    [Array(2), 'config["sales"].color[0]', /nonempty color string/],
+    [{ light: [], dark: "blue" }, 'config["sales"].color.light', /nonempty array/],
+    [
+      { light: "red", dark: ["blue", " "] },
+      'config["sales"].color.dark[1]',
+      /nonempty color string/,
+    ],
+    [{ light: "red" }, 'config["sales"].color', /both light and dark/],
+    [
+      { light: "red", dark: "blue", secret: "PRIVATE_VALUE" },
+      'config["sales"].color',
+      /no other fields/,
+    ],
+    [null, 'config["sales"].color', /nonempty string or nonempty array/],
+  ]) {
+    assert.throws(
+      () =>
+        render(
+          h(Root, {
+            config: {
+              unrelated: { color: "purple", label: "PRIVATE_LABEL" },
+              sales: { color, label: "PRIVATE_SERIES_LABEL" },
+            },
+          }),
+        ),
+      (error) => {
+        assert.ok(error.message.includes(path));
+        assert.match(error.message, guidance);
+        assert.doesNotMatch(error.message, /PRIVATE_|unrelated|secret|purple|blue|red/);
+        return true;
+      },
+    );
+  }
+});
+
+test("color shape validation preserves CSS syntax during SSR", () => {
+  for (const color of [
+    "var(--brand, currentColor)",
+    "currentColor",
+    "oklch(60% 0.2 240)",
+    "color(display-p3 1 0.5 0)",
+    "color-mix(in oklch, red 30%, blue)",
+  ]) {
+    const html = render(h(Root, { config: { sales: { color } } }));
+    assert.ok(html.includes(`--color-sales:${color}`));
+  }
+});
+
+test("indexed stops cannot collide with valid legacy series keys", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          sales: { color: ["red", "blue"] },
+          "sales-0": { color: "green" },
+          "sales-gradient": { color: "purple" },
+        },
+      },
+      h(Legend),
+    ),
+  );
+  assert.match(html, /--color-sales-0:green/);
+  assert.match(html, /--color-sales-gradient:purple/);
+  assert.match(html, /--kind-ui-series-73-61-6c-65-73-0:red/);
+  assert.match(html, /--kind-ui-series-73-61-6c-65-73-gradient:linear-gradient/);
+});
+
+test("dots and lines share public swatch resources with existing patterns", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          dots: { color: "red", pattern: { kind: "dots", size: 10, width: 4 } },
+          lines: { color: "var(--theme-blue)", pattern: { kind: "lines" } },
+        },
+      },
+      h(Legend),
+    ),
+  );
+  assert.match(html, /<circle cx="5" cy="5" r="2" fill="CanvasText"/);
+  assert.match(html, /data-pattern="lines"[^>]*patternTransform="rotate\(0\)"/);
+  const ids = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 2);
+  assert.equal(new Set(ids).size, 2);
+  for (const id of ids) assert.ok(html.includes(`fill="url(#${id})"`));
+});
+
+test("Root shared interaction guards last eligible item and emits one callback", () => {
+  let interaction;
+  const changes = [];
+  function Probe() {
+    interaction = Chart.useChartInteraction();
+    return null;
+  }
+  render(
+    h(
+      Root,
+      {
+        config: { first: { color: "red" }, stale: { color: "blue" } },
+        visibleSeries: ["first", "stale"],
+        onVisibleSeriesChange: (next) => changes.push(next),
+        interaction: { kind: "series", eligibleKeys: ["first"], markActivation: "matching-legend" },
+      },
+      h(Probe),
+    ),
+  );
+  assert.equal(interaction.activate({ kind: "series", key: "first" }, "legend"), false);
+  assert.deepEqual(changes, []);
+  assert.equal(interaction.activate({ kind: "series", key: "stale" }, "mark"), false);
+  assert.equal("register" in interaction, false);
+});
+
+test("shared focus is independent of emphasis and consumer before hook vetoes", () => {
+  let interaction;
+  const changes = [];
+  function Probe() {
+    interaction = Chart.useChartInteraction();
+    return h("output", null, interaction.selected);
+  }
+  const config = { first: { color: "red" }, second: { color: "blue" } };
+  const html = render(
+    h(
+      Root,
+      {
+        config,
+        emphasis: "none",
+        interaction: {
+          kind: "series",
+          mode: "focus",
+          eligibleKeys: ["first", "second"],
+          defaultSelected: "first",
+          onSelectionChange: (next) => changes.push(next),
+          onBeforeInteraction: (request) => request.event?.preventDefault(),
+        },
+      },
+      h(Probe),
+      h(Legend),
+    ),
+  );
+  assert.equal(interaction.selected, "first");
+  assert.match(html, /aria-pressed="true"/);
+  const event = {
+    defaultPrevented: false,
+    preventDefault() {
+      this.defaultPrevented = true;
+    },
+  };
+  assert.equal(interaction.activate({ kind: "series", key: "second" }, "legend", event), false);
+  assert.deepEqual(changes, []);
+  assert.equal(interaction.activate({ kind: "series", key: "first" }, "legend"), true);
+  assert.deepEqual(changes, [null]);
+});
+
+test("controlled invalid focus paints null and selection controls reject conflicting owners", () => {
+  let selected;
+  function Probe() {
+    selected = Chart.useChartInteraction().selected;
+    return null;
+  }
+  const config = { first: { color: "red" }, second: { color: "blue" } };
+  const props = {
+    config,
+    interaction: {
+      kind: "series",
+      mode: "focus",
+      eligibleKeys: ["first"],
+      selected: "second",
+      onSelectionChange() {},
+    },
+  };
+  render(h(Root, props, h(Probe)));
+  assert.equal(selected, null);
+  render(
+    h(
+      Root,
+      { ...props, interaction: { ...props.interaction, eligibleKeys: ["first", "second"] } },
+      h(Probe),
+    ),
+  );
+  assert.equal(selected, "second");
+  assert.throws(
+    () =>
+      render(h(Root, props, h(Chart.RadarChart, { width: 300, height: 200, selection: "series" }))),
+    /one selection owner/,
+  );
+  assert.throws(
+    () =>
+      render(
+        h(
+          Root,
+          { config, interaction: { ...props.interaction, defaultSelected: "first" } },
+          h(Probe),
+        ),
+      ),
+    /controlled and defaulted/,
+  );
+  assert.throws(
+    () =>
+      render(
+        h(
+          Root,
+          { config, interaction: { ...props.interaction, onSelectionChange: undefined } },
+          h(Probe),
+        ),
+      ),
+    /change callback/,
+  );
+});
+// These run both in workspace tests and the isolated packed public consumer.
+test("custom backgrounds are reusable frozen definitions, with no shared registry", () => {
+  const renderTile = ({ size, color }) => h("circle", { r: size / 4, fill: color });
+  const a = Chart.defineChartBackgroundPattern(renderTile);
+  const b = Chart.defineChartBackgroundPattern(renderTile);
+  assert.notEqual(a, b);
+  assert.ok(Object.isFrozen(a));
+  assert.equal(a.render, renderTile);
+  assert.match(renderSvg(a.render({ size: 16, color: "red", idPrefix: "local" })), /r="4"/);
+  assert.throws(() => Chart.defineChartBackgroundPattern(null), /render function/);
+});
+
+test("background validation runs even before plot geometry is available", () => {
+  for (const props of [
+    { pattern: "unknown" },
+    { pattern: null },
+    { pattern: {} },
+    { pattern: "waves", size: 0 },
+    { pattern: "waves", size: Infinity },
+    { pattern: "waves", opacity: -1 },
+    { pattern: "waves", opacity: 1.1 },
+    { pattern: "waves", opacity: NaN },
+  ]) {
+    assert.throws(
+      () => renderSvg(h(Chart.ChartBackgroundPattern, props)),
+      /ChartBackgroundPattern/,
+    );
+  }
+  assert.equal(renderSvg(h(Chart.ChartBackgroundPattern, { pattern: "pinpoints" })), "");
+});
+
+test("tooltip projection status uses caller identity without changing values or labels", () => {
+  const row = Object.freeze({ id: "forecast" });
+  const projected = entry(0, { payload: row });
+  const html = render(
+    h(
+      Root,
+      { config: { value: { label: "Value", color: "red" } } },
+      h(TooltipContent, {
+        tooltip: tooltip([projected]),
+        isProjected: (item) => item.payload.id === "forecast",
+      }),
+    ),
+  );
+  assert.match(html, /data-projected="true"/);
+  assert.match(html, /projection-status">Projected/);
+  assert.match(html, /chart-tooltip-value">0/);
+  assert.equal(projected.payload, row);
+  const observed = render(
+    h(
+      Root,
+      { config: {} },
+      h(TooltipContent, {
+        tooltip: tooltip([entry(9, { payload: { id: "observed" } })]),
+        isProjected: (item) => item.payload.id === "forecast",
+      }),
+    ),
+  );
+  assert.doesNotMatch(observed, /projection-status|data-projected/);
+});
+
+test("tooltip projection status respects missing, hidden and formatter ownership", () => {
+  const props = { isProjected: () => true, projectedLabel: "Incomplete" };
+  const content = (items, overrides = {}) =>
+    render(
+      h(
+        Root,
+        { config: {} },
+        h(TooltipContent, {
+          ...props,
+          tooltip: { ...tooltip(items), ...overrides },
+        }),
+      ),
+    );
+  assert.doesNotMatch(
+    content([entry(null, { payload: { id: "p" } })]),
+    /chart-tooltip|projection-status/,
+  );
+  assert.doesNotMatch(
+    content([entry(5, { hide: true, payload: { id: "p" } })]),
+    /chart-tooltip|projection-status/,
+  );
+  assert.doesNotMatch(
+    content([entry(5, { payload: { id: "p" } })], { formatter: () => null }),
+    /chart-tooltip|projection-status/,
+  );
+  assert.match(content([entry(5, { payload: { id: "p" } })]), /Incomplete/);
+  assert.doesNotMatch(content([entry(5, { payload: null })]), /projection-status/);
+});
+
+test("chart loading props stay off the native engine and expose a chart-owned status", () => {
+  const html = render(
+    h(
+      Root,
+      { config: { sales: { label: "Sales", color: "#123" } } },
+      h(Chart.BarChart, {
+        width: 320,
+        height: 240,
+        loading: true,
+        loadingLabel: "Loading sales",
+        "aria-label": "Sales",
+      }),
+    ),
+  );
+  assert.match(html, /aria-busy="true" aria-hidden="true" inert=""/);
+  assert.match(html, /role="status" aria-atomic="true">Loading sales/);
+  assert.match(html, /width:320px;height:240px/);
+  assert.doesNotMatch(html, /loadingLabel=| loading="/);
+  const empty = render(
+    h(Chart.LineChart, {
+      config: {},
+      data: [],
+      xDataKey: "month",
+      loading: false,
+      "aria-label": "Empty sales",
+      height: 280,
+    }),
+  );
+  assert.match(empty, /aria-busy="false"/);
+  assert.match(empty, /role="status" aria-atomic="true"><\/span>/);
+});
+
+test("bar-backed charts inherit chart-owned loading without fabricating data", () => {
+  for (const [Component, props] of [
+    [Chart.WaterfallChart, { data: [] }],
+    [Chart.BoxPlotChart, { data: [] }],
+    [Chart.HistogramChart, { bins: [], measure: "count" }],
+  ]) {
+    const html = render(
+      h(Root, { config: {} }, h(Component, { ...props, width: 320, height: 240, loading: true })),
+    );
+    assert.match(html, /kind-ui-loading-chart-pending/);
+    assert.match(html, /Loading chart/);
+    assert.match(html, /aria-busy="true"/);
+  }
+});
+
+test("all fourteen chart families expose deterministic loading SSR without native prop leaks", () => {
+  const scale = Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#112233"] });
+  const families = [
+    ["line", Chart.LineChart, { data: [] }],
+    ["area", Chart.AreaChart, { data: [] }],
+    ["bar", Chart.BarChart, { data: [] }],
+    ["combo", Chart.ComboChart, { data: [] }],
+    ["scatter", Chart.ScatterChart, { data: [] }],
+    ["waterfall", Chart.WaterfallChart, { data: [] }],
+    ["histogram", Chart.HistogramChart, { bins: [], measure: "count" }],
+    ["box-plot", Chart.BoxPlotChart, { data: [] }],
+    ["pie", Chart.PieChart, {}],
+    ["radar", Chart.RadarChart, { data: [] }],
+    ["radial-bar", Chart.RadialBarChart, { data: [] }],
+    ["activity-rings", Chart.ActivityRings, { config: {}, rings: [] }],
+    ["heatmap", Chart.HeatmapChart, { rows: [], columns: [], data: [], scale }],
+    ["sankey", Chart.SankeyChart, { data: { nodes: [], links: [] } }],
+  ];
+  assert.equal(families.length, 14);
+  for (const [family, Component, props] of families) {
+    const view = (loading) => {
+      const element = h(
+        Component,
+        {
+          ...props,
+          ...(family === "heatmap" ? {} : { width: 320, height: 240 }),
+          loading,
+          loadingLabel: `Loading ${family}`,
+          "aria-label": `${family} data`,
+        },
+        ...(family === "heatmap" ? [h(Chart.HeatmapGrid, { caption: "Matrix" })] : []),
+      );
+      return family === "activity-rings" || family === "heatmap" || family === "sankey"
+        ? element
+        : h(Root, { config: {} }, element);
+    };
+    const pending = render(view(true));
+    assert.equal(render(view(true)), pending, `${family}: deterministic server markup`);
+    assert.match(pending, /aria-busy="true"/, `${family}: pending state`);
+    assert.match(pending, /role="status"/, `${family}: status region`);
+    assert.ok(pending.includes(`Loading ${family}`), `${family}: meaningful status text`);
+    assert.doesNotMatch(
+      pending,
+      /\s(?:loading|loadingLabel|loadingSeed|loadingSkeleton)="/,
+      `${family}: loading props consumed before native DOM`,
+    );
+    const ready = render(view(false));
+    assert.match(ready, /aria-busy="false"/, `${family}: completion state`);
+    assert.ok(!ready.includes(`Loading ${family}`), `${family}: status clears on completion`);
+    assert.doesNotMatch(
+      ready,
+      /\sinert=""|kind-ui-loading-chart-pending/,
+      `${family}: loaded empty data stays available`,
+    );
+  }
+});
+
+test("standalone SSR skeletons preserve family identity independently of real data and announce outside busy content", () => {
+  const scale = Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#112233"] });
+  const matrix = (data) =>
+    h(
+      Chart.HeatmapChart,
+      {
+        rows: ["Region"],
+        columns: ["Month"],
+        data,
+        scale,
+        loading: true,
+        loadingLabel: "Loading matrix",
+      },
+      h(Chart.HeatmapGrid, { caption: "Matrix" }),
+    );
+  const flows = (links) =>
+    h(Chart.SankeyChart, {
+      data: {
+        nodes: [
+          { id: "a", name: "Source" },
+          { id: "b", name: "Destination" },
+        ],
+        links,
+      },
+      width: 320,
+      height: 240,
+      loading: true,
+      loadingLabel: "Loading flows",
+    });
+  const skeletons = [];
+  for (const [family, empty, populated] of [
+    ["heatmap", matrix([]), matrix([{ row: "Region", column: "Month", value: 1 }])],
+    ["sankey", flows([]), flows([{ id: "ab", source: "a", target: "b", value: 7 }])],
+  ]) {
+    const html = render(empty);
+    const skeleton = html.match(
+      /<svg\b[^>]*data-kind-ui="chart-loading-skeleton"[\s\S]*?<\/svg>/,
+    )?.[0];
+    assert.ok(skeleton, `${family}: decorative surface is present on the server`);
+    assert.match(skeleton, new RegExp(`data-family="${family}"`));
+    assert.match(skeleton, /aria-hidden="true" focusable="false"/);
+    assert.equal(
+      render(populated).match(
+        /<svg\b[^>]*data-kind-ui="chart-loading-skeleton"[\s\S]*?<\/svg>/,
+      )?.[0],
+      skeleton,
+      `${family}: consumer values do not change the illustration`,
+    );
+    skeletons.push(skeleton);
+    const ancestors = [];
+    let statuses = 0;
+    const voidTags = new Set(["col", "br", "hr", "input", "img", "meta", "link"]);
+    // Walk these controlled fixtures to verify ancestry without depending on attribute order.
+    for (const [tag, name] of html.matchAll(/<\/?([a-z][\w:-]*)\b[^>]*>/gi)) {
+      if (tag.startsWith("</")) {
+        const index = ancestors.findLastIndex((ancestor) => ancestor.name === name);
+        if (index >= 0) ancestors.length = index;
+      } else {
+        if (/\brole="status"/.test(tag)) {
+          statuses++;
+          assert.ok(
+            ancestors.every((ancestor) => !ancestor.unavailable),
+            `${family}: status has no busy, hidden or inert ancestor`,
+          );
+        }
+        if (!voidTags.has(name) && !tag.endsWith("/>"))
+          ancestors.push({
+            name,
+            unavailable: /\baria-(?:busy|hidden)="true"|\binert(?:=|\s|>)/.test(tag),
+          });
+      }
+    }
+    assert.match(html, /aria-busy="true"/);
+    assert.equal(statuses, 1, `${family}: one loading announcement`);
+  }
+  assert.notEqual(skeletons[0], skeletons[1], "matrix and flow illustrations are distinct");
+});
+
+test("PointMarker retains native geometry and style while applying variant paint", () => {
+  const html = renderSvg(
+    h(Chart.PointMarker, {
+      cx: 12,
+      cy: 15,
+      r: 7,
+      variant: "colored-border",
+      stroke: "red",
+      fill: "gold",
+      strokeWidth: 4,
+      style: { fill: "gold" },
+      "aria-label": "Value",
+    }),
+  );
+  assert.match(html, /cx="12"/);
+  assert.match(html, /r="7"/);
+  assert.match(html, /style="fill:gold"/);
+  assert.match(html, /stroke-width="2"/);
+  assert.match(html, /aria-label="Value"/);
+  assert.doesNotMatch(html, /<defs|<filter/);
+  const native = renderSvg(h(Native.Dot, { cx: 2, cy: 3, r: 3 }));
+  const plain = renderSvg(h(Chart.PointMarker, { cx: 2, cy: 3, r: 3 }));
+  assert.equal(
+    plain.replace(/ data-kind-ui="point-marker"| data-point-style="default"/g, ""),
+    native,
+  );
+});
+
+test("directional entrance options do not leak clip or configuration attributes into the SSR shell", () => {
+  for (const Component of [Chart.LineChart, Chart.AreaChart, Chart.ComboChart]) {
+    for (const revealDirection of ["left-to-right", "right-to-left", "center-out", "edges-in"]) {
+      const html = renderSvg(
+        h(
+          Chart.Root,
+          { config: {} },
+          h(Component, {
+            width: 300,
+            height: 200,
+            animate: { revealDirection },
+          }),
+        ),
+      );
+      assert.doesNotMatch(html, /data-reveal-direction|data-combo-reveal|data-area-reveal/);
+      assert.doesNotMatch(html, /revealDirection=/);
+    }
+  }
+});
+
+test("dashed line and combo SSR retain the chart shell without leaking dash props", () => {
+  const data = Object.freeze([Object.freeze({ value: 4 }), Object.freeze({ value: 8 })]);
+  for (const Engine of [Chart.LineChart, Chart.ComboChart]) {
+    const markup = render(
+      h(
+        Chart.Root,
+        { config: { value: { label: "Value", color: "teal" } } },
+        h(
+          Engine,
+          { width: 480, height: 240, data, animate: true },
+          h(Chart.LineSeries, {
+            dataKey: "value",
+            strokeDasharray: "6 4",
+            dashAnimation: { durationMs: 800 },
+          }),
+        ),
+      ),
+    );
+    assert.match(markup, /recharts-wrapper/);
+    assert.doesNotMatch(markup, /dashAnimation|durationMs/);
+    assert.deepEqual(data, [{ value: 4 }, { value: 8 }]);
+  }
+});
+
+test("selective Pie glow requires existing explicit category identity", () => {
+  const config = { alpha: { label: "Alpha", color: "#123456" } };
+  const series = (props) =>
+    render(h(Root, { config }, h(Chart.PieSeries, { dataKey: "value", ...props })));
+  assert.throws(() => series({ glowCategories: [] }), /glowCategories requires categoryKey/);
+  assert.throws(() => series({ categoryKey: "id", glowCategories: ["alpha"] }), /explicit data/);
+  assert.throws(
+    () =>
+      series({
+        categoryKey: "id",
+        data: [{ id: "missing", value: 1 }],
+        glowCategories: ["missing"],
+      }),
+    /Root.config/,
+  );
+});
+
+test("selective Pie glow leaves the native SSR shell and host data alternative unchanged", () => {
+  const data = [
+    { id: "alpha", value: 60 },
+    { id: "beta", value: 40 },
+  ];
+  const config = {
+    alpha: { label: "Alpha", color: "#123456" },
+    beta: { label: "Beta", color: "#abcdef" },
+  };
+  const chart = (glowCategories) =>
+    render(
+      h(
+        Root,
+        { config },
+        h(
+          Chart.PieChart,
+          { width: 320, height: 240, "aria-label": "Allocation" },
+          h(Chart.PieSeries, {
+            data,
+            dataKey: "value",
+            categoryKey: "id",
+            nameKey: "id",
+            glowCategories,
+          }),
+        ),
+        h(
+          "table",
+          null,
+          h("caption", null, "Category values"),
+          h(
+            "tbody",
+            null,
+            ...data.map((row) =>
+              h("tr", { key: row.id }, h("th", null, row.id), h("td", null, row.value)),
+            ),
+          ),
+        ),
+      ),
+    );
+  assert.equal(chart(["alpha", "unknown"]), chart(undefined));
+  assert.doesNotMatch(chart(["alpha"]), /pie-halo|<filter/);
+  assert.match(chart(["alpha"]), /Category values/);
+});
+
+test("initial Pie pin rejects unsupported composition through public exports", () => {
+  const config = { beta: { label: "Beta", color: "blue" } };
+  const chart = (...children) =>
+    render(
+      h(
+        Chart.Root,
+        { config },
+        h(Chart.PieChart, { width: 320, height: 240, defaultPinnedCategory: "beta" }, ...children),
+      ),
+    );
+  assert.throws(() => chart(h(Chart.PieSeries, { dataKey: "value" })), /one direct PieSeries/);
+  const series = () =>
+    h(Chart.PieSeries, {
+      data: [{ id: "beta", value: 4 }],
+      categoryKey: "id",
+      dataKey: "value",
+    });
+  assert.throws(() => chart(series(), series()), /one direct PieSeries/);
+  assert.throws(() => chart(series(), h(Chart.Tooltip), h(Chart.Tooltip)), /one direct Tooltip/);
+  assert.throws(() => chart(series()), /one direct Tooltip/);
+  assert.throws(() => chart(series(), h(Native.Tooltip)), /one direct Tooltip/);
+  const WrappedTooltip = (props) => h(Chart.Tooltip, props);
+  WrappedTooltip.displayName = "Tooltip";
+  assert.throws(() => chart(series(), h(WrappedTooltip)), /one direct Tooltip/);
+  const WrappedSeries = (props) => h(Chart.PieSeries, props);
+  WrappedSeries.displayName = "PieSeries";
+  assert.throws(() => chart(h(WrappedSeries), h(Chart.Tooltip)), /one direct PieSeries/);
+  assert.throws(
+    () => chart(series(), h(Native.Pie, { dataKey: "value" }), h(Chart.Tooltip)),
+    /one direct PieSeries/,
+  );
+  assert.doesNotThrow(() =>
+    chart(series(), h(Chart.Tooltip, { itemKey: (entry) => entry.payload.id })),
+  );
+  assert.doesNotThrow(() => chart(h(Fragment, null, series(), h(Chart.Tooltip))));
+  assert.doesNotThrow(() =>
+    chart(
+      h(Chart.PieSeries, {
+        data: [{ id: "beta", value: 0 }],
+        categoryKey: (row) => row.id,
+        dataKey: "value",
+      }),
+      h(Chart.Tooltip),
+    ),
+  );
+});
+
 test("Sankey labels use stable identity, totals, explicit contents and bounded inside text", () => {
   const data = {
     nodes: [
@@ -1529,4 +2434,60 @@ test("Sankey configured icons preserve identity, text ownership and bounded plac
   );
   for (const props of [{ iconSize: -1 }, { iconGap: Infinity }])
     assert.throws(() => label(props), /nonnegative/);
+});
+
+test("percent formatting is scoped to caller-selected raw stack members and never mutates rows", () => {
+  const row = Object.freeze({ first: 1, second: 3, latency: 8 });
+  const percent = Chart.createPercentStack({
+    values: (item) =>
+      item.dataKey === "first" ? [item.payload.first, item.payload.second] : undefined,
+  });
+  assert.equal(percent.tickFormatter(0.25), "25%");
+  assert.equal(percent.tickFormatter(-0.5), "-50%");
+  assert.equal(percent.normalizedValue(entry(1, { dataKey: "first", payload: row })), 0.25);
+  assert.equal(percent.normalizedValue(entry(8, { dataKey: "latency", payload: row })), undefined);
+  assert.deepEqual(row, { first: 1, second: 3, latency: 8 });
+  for (const [members, value, expected] of [
+    [[0, 0], 0, 0],
+    [[null, undefined, 2], 2, 1],
+    [[-1, 3], -1, -0.5],
+    [[-1, 1], 1, undefined],
+    [[Infinity, 1], 1, undefined],
+    [[NaN, 1], 1, undefined],
+    [[], 0, undefined],
+    [[1, 3], null, undefined],
+    [[1, 3], [0, 1], undefined],
+  ]) {
+    assert.equal(
+      Chart.createPercentStack({ values: () => members }).normalizedValue(entry(value)),
+      expected,
+    );
+  }
+});
+
+test("normalized tooltip preserves raw formatting, explicit formatter precedence and projection", () => {
+  const renderPercent = (extra = {}, ...fractions) =>
+    render(
+      h(
+        Root,
+        { config },
+        h(TooltipContent, {
+          tooltip: tooltip(
+            [entry(1, { payload: { id: "future" } }), entry(null, { graphicalItemId: "missing" })],
+            extra,
+          ),
+          normalizedValue: () => (fractions.length ? fractions[0] : 0.25),
+          isProjected: (item) => item.payload?.id === "future",
+        }),
+      ),
+    );
+  assert.match(renderPercent(), /25% \(1 tasks\)/);
+  assert.match(renderPercent(), /Projected/);
+  assert.match(renderPercent(), /No data/);
+  assert.doesNotMatch(renderPercent({ formatter: () => "Custom" }), /25%/);
+  assert.match(renderPercent({ formatter: () => "Custom" }), /Custom/);
+  assert.doesNotMatch(renderPercent({ formatter: () => null }), /chart-tooltip/);
+  assert.doesNotMatch(renderPercent({}, NaN), /NaN|% \(/);
+  assert.doesNotMatch(renderPercent({}, undefined), /% \(/);
+  assert.match(renderPercent({}, -0.5), /-50% \(1 tasks\)/);
 });

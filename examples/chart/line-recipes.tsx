@@ -252,7 +252,7 @@ export function ComparisonLine({
       <div className="recipe-plot">
         {visibleSeries.length === 0 && (
           <p role="status" className="recipe-empty">
-            Select a series to show it.
+            No visible series.
           </p>
         )}
         <ResponsiveContainer width="100%" height={196}>

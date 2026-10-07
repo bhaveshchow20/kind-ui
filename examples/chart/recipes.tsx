@@ -1,5 +1,5 @@
-import type { LineMaterial, SeriesConfig } from "@kind-ui/charts";
-import { useState } from "react";
+import { LineChart, type LineMaterial, type PointStyle, type SeriesConfig } from "@kind-ui/charts";
+import { type CSSProperties, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   ComparisonLine,
@@ -58,6 +58,74 @@ const config = {
     formatValue: (value) => (typeof value === "number" ? tasks(value) : "No data"),
   },
 } satisfies SeriesConfig;
+
+const markerData = [
+  { month: "Jan", total: 4 },
+  { month: "Feb", total: 9 },
+  { month: "Mar", total: 6 },
+];
+const variants: PointStyle[] = ["default", "border", "colored-border"];
+function MarkerGallery() {
+  const [dark, setDark] = useState(false);
+  return (
+    <section
+      id="point-markers"
+      aria-label="Point markers"
+      className="recipe-card"
+      style={
+        {
+          "--gallery-series": dark ? "#9eaaff" : "#4055ee",
+          "--kind-ui-chart-marker-surface": dark ? "#172033" : "white",
+          background: dark ? "#172033" : "white",
+          color: dark ? "white" : "#172033",
+          padding: 24,
+        } as CSSProperties
+      }
+    >
+      <button type="button" aria-pressed={dark} onClick={() => setDark(!dark)}>
+        Toggle theme
+      </button>
+      <h2>Point markers</h2>
+      <p>Focus a chart and use arrow keys, or move the pointer, to inspect values.</p>
+      {variants.map((variant) => (
+        <section key={variant}>
+          <h3>{variant}</h3>
+          <LineChart
+            config={{ total: { label: "Total", color: "var(--gallery-series)" } }}
+            data={markerData}
+            xDataKey="month"
+            aria-label={`${variant} markers`}
+            series={[
+              {
+                seriesKey: "total",
+                dataKey: "total",
+                pointStyle: variant,
+                activePointStyle: variant,
+              },
+            ]}
+          />
+        </section>
+      ))}
+      <table>
+        <caption>Monthly totals</caption>
+        <thead>
+          <tr>
+            <th scope="col">Month</th>
+            <th scope="col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {markerData.map((row) => (
+            <tr key={row.month}>
+              <th scope="row">{row.month}</th>
+              <td>{row.total}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
 
 function App() {
   const [palette, setPalette] = useState("monochrome");
@@ -295,6 +363,7 @@ function App() {
           </details>
         </section>
       </div>
+      <MarkerGallery />
       <footer>Sample data</footer>
     </main>
   );

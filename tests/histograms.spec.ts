@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectLastVisibleGuard } from "./last-visible";
 
 function at<T>(values: readonly T[], index: number): T {
   const value = values[index];
@@ -79,7 +80,11 @@ test("native shapes, Cells, events, visibility and keyboard/table fallback remai
     .locator('[data-host-shape="yes"]')
     .evaluateAll((nodes) => nodes.map((node) => Number(node.getAttribute("width"))));
   expect(at(widths, 2) / at(widths, 1)).toBeCloseTo(3, 3);
-  await page.getByRole("button", { name: "Density", exact: true }).click();
+  await expectLastVisibleGuard(
+    page.getByRole("button", { name: "Density", exact: true }),
+    page.locator('[data-host-shape="yes"]'),
+  );
+  await page.getByRole("button", { name: "External visibility", exact: true }).click();
   await expect(page.locator('[data-host-shape="yes"]')).toHaveCount(0);
   await expect(page.getByRole("table")).toContainText("0");
 });

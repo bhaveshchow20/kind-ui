@@ -53,6 +53,9 @@ export function HistogramHost() {
       >
         Update
       </button>
+      <button type="button" onClick={() => setVisible(visible.length ? [] : ["count"])}>
+        External visibility
+      </button>
       <button type="button" onClick={() => setCustom(!custom)}>
         Custom shape
       </button>

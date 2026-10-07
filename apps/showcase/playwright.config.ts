@@ -9,7 +9,7 @@ export default defineConfig({
   workers: 1,
   use: { baseURL: `http://127.0.0.1:7273${basePath}/`, trace: "retain-on-failure" },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "chromium", use: { ...devices["Desktop Chrome"], ...(process.env.KIND_UI_CHROMIUM_PATH ? { launchOptions: { executablePath: process.env.KIND_UI_CHROMIUM_PATH } } : {}) } },
     {
       name: "webkit-desktop",
       testMatch: ["headline-layout.spec.ts"],
@@ -26,6 +26,7 @@ export default defineConfig({
       use: { ...devices["iPhone 13"] },
     },
   ],
+
   webServer: {
     command: "npm run start -- --hostname 127.0.0.1 --port 7273",
     url: "http://127.0.0.1:7273",

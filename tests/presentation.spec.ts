@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectLastVisibleGuard } from "./last-visible";
 
 const port = Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) + 14;
 const url = `http://127.0.0.1:${port}/presentation.html`;
@@ -94,9 +95,10 @@ test("packed composed legend: controlled keyboard toggles and icon fallback reta
   await expect(completed).toHaveAttribute("aria-pressed", "false");
   await explore(page);
   await expect(page.locator(`${tipSelector} [data-series="count"]`)).toHaveCount(0);
-  await page.getByRole("button", { name: "Review Shown", exact: true }).click();
-  await expect(page.getByText("Select a series to show values.")).toBeVisible();
-  await expect(page.locator(tipSelector)).toBeHidden();
+  await expectLastVisibleGuard(
+    page.getByRole("button", { name: "Review Shown", exact: true }),
+    page.locator(".recharts-area-area"),
+  );
   await completed.focus();
   await page.keyboard.press("Enter");
   await expect(completed).toHaveAttribute("aria-pressed", "true");
@@ -179,11 +181,14 @@ test("packed category itemKey differs from native dataKey: icons, zero, visibili
   await page.keyboard.press("ArrowRight");
   await expect(custom).toBeVisible();
   await expect(custom).toContainText("support: 10");
-  await page.getByRole("button", { name: "Support", exact: true }).click();
+  await expectLastVisibleGuard(
+    page.getByRole("button", { name: "Support", exact: true }),
+    page.locator(".recharts-bar-rectangle path"),
+  );
   await page.locator(".recharts-surface").focus();
   await page.keyboard.press("ArrowLeft");
   await page.keyboard.press("ArrowRight");
-  await expect(custom).not.toContainText("support:");
+  await expect(custom).toContainText("support: 10");
   await expect(page.getByRole("table")).toContainText("Delivery");
 });
 

@@ -6,6 +6,7 @@ import { parse } from "yaml";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const ci = parse(await read(".github/workflows/ci.yml"));
 const docs = parse(await read(".github/workflows/docs.yml"));
+const seo = parse(await read(".github/workflows/seo.yml"));
 const release = parse(await read(".github/workflows/release.yml"));
 const dependabot = parse(await read(".github/dependabot.yml"));
 
@@ -21,7 +22,7 @@ test("PR checks run without trigger exclusions and preserve required receipts", 
   assert.equal(ci.jobs.fast.needs, undefined);
   assert.equal(ci.jobs.packed.needs, undefined);
   assert.equal(ci.jobs.fast.strategy, undefined);
-  for (const workflow of [ci, docs, release]) {
+  for (const workflow of [ci, docs, seo, release]) {
     for (const job of Object.values(workflow.jobs)) {
       assert.equal(job.strategy?.matrix.node, undefined);
       for (const step of job.steps.filter((s) => s.uses?.startsWith("actions/setup-node@"))) {
@@ -32,7 +33,7 @@ test("PR checks run without trigger exclusions and preserve required receipts", 
 });
 
 test("all workflows keep untrusted code read-only, pinned, and bounded", () => {
-  for (const workflow of [ci, docs, release]) {
+  for (const workflow of [ci, docs, seo, release]) {
     assert.deepEqual(workflow.permissions, { contents: "read" });
     assert.equal(workflow.on.pull_request_target, undefined);
     assert.equal(workflow.on.workflow_run, undefined);
@@ -62,6 +63,7 @@ test("Docs follows shared dependency, build configuration, and package gate chan
   for (const event of ["pull_request", "push"]) {
     for (const path of [
       "apps/docs/**",
+      "apps/seo.mjs",
       "packages/charts/**",
       "package.json",
       "package-lock.json",
@@ -72,6 +74,19 @@ test("Docs follows shared dependency, build configuration, and package gate chan
       assert.ok(docs.on[event].paths.includes(path), `${event} must cover ${path}`);
     }
   }
+});
+
+test("homepage indexing checks build and serve both preview and public mounts", () => {
+  const job = seo.jobs.showcase;
+  assert.deepEqual(job.strategy.matrix.include, [
+    { deployment: "preview", base_path: "" },
+    { deployment: "production", base_path: "/charts" },
+  ]);
+  assert.equal(job.env.KIND_UI_DEPLOYMENT_ENV, "${{ matrix.deployment }}");
+  assert.equal(job.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH, "${{ matrix.base_path }}");
+  const appSteps = job.steps.filter((step) => step["working-directory"] === "apps/showcase");
+  assert.ok(appSteps.some((step) => step.run === "npm run build"));
+  assert.ok(appSteps.some((step) => step.run === "npm run test:browser -- tests/routes.spec.ts"));
 });
 
 test("both test pipelines retain every aggregate browser suite's available failure output", async () => {
@@ -270,4 +285,24 @@ test("Docs separates copied consumers without dropping any browser or build gate
     assert.ok(browsers.includes(`${contract}.test.mjs`));
   for (const family of ["histogram", "waterfall", "box-plot", "combo", "heatmap"])
     assert.ok(browsers.includes(`check-${family}-consumers.mjs`));
+});
+
+test("Docs verifies preview and public indexing without replacing browser fixtures or repeating fleets", () => {
+  const steps = docs.jobs.build.steps;
+  const preview = steps.find((step) => step.run?.includes("npm run check"));
+  assert.equal(preview.env.KIND_UI_DEPLOYMENT_ENV, "preview");
+  assert.equal(preview.env.NEXT_PUBLIC_KIND_DOCS_BASE_PATH, "");
+  const fixtures = steps.findIndex((step) => step.with?.name === "docs-browser-fixtures");
+  const production = steps.findIndex(
+    (step) => step.name === "Check production indexing at the public Docs mount",
+  );
+  assert.ok(production > fixtures);
+  assert.equal(steps[production].env.KIND_UI_DEPLOYMENT_ENV, "production");
+  assert.equal(steps[production].env.NEXT_PUBLIC_KIND_DOCS_BASE_PATH, "/charts/docs");
+  assert.equal(steps[production].env.KIND_DOCS_ORIGIN, "https://kindui.dev");
+  assert.match(steps[production].run, /npm run build/);
+  assert.match(steps[production].run, /node scripts\/check-export\.mjs/);
+  assert.doesNotMatch(steps[production].run, /npm (?:ci|install)|check:consumers|check:browser/);
+  for (const event of ["pull_request", "push"])
+    assert.ok(docs.on[event].paths.includes("apps/indexing.mjs"));
 });

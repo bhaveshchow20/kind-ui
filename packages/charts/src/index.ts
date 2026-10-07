@@ -95,12 +95,10 @@ export { AreaSeries, type AreaSeriesProps } from "./area-series.js";
 export {
   type BarAnimation,
   BarChart,
-  BarChart as WaterfallChart,
   type BarChartProps,
-  type BarChartProps as WaterfallChartProps,
 } from "./bar-chart.js";
 export type { BarMaterial } from "./bar-material.js";
-export { BarSeries, type BarSeriesProps } from "./bar-series.js";
+export { type BarProjection, BarSeries, type BarSeriesProps } from "./bar-series.js";
 export type { BoxPlotMaterial } from "./box-material.js";
 export {
   BoxPlotChart,
@@ -114,6 +112,20 @@ export {
   boxPlotExtent,
   validateBoxPlotSummary,
 } from "./box-plot.js";
+export {
+  ChartBackgroundPattern,
+  type ChartBackgroundPatternDefinition,
+  type ChartBackgroundPatternProps,
+  type ChartBackgroundPatternRenderProps,
+  defineChartBackgroundPattern,
+} from "./chart-background-pattern.js";
+export {
+  type ChartIdentity,
+  type ChartInteractionConfig,
+  type ChartInteractionEvent,
+  type ChartInteractionRequest,
+  useChartInteraction,
+} from "./chart-interaction.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
 export {
   type ConfiguredLineChartProps,
@@ -127,6 +139,11 @@ export {
   type EmphasisTarget,
   useEmphasis,
 } from "./emphasis.js";
+export {
+  type FillPattern,
+  FillPatternSwatch,
+  type FillPatternSwatchProps,
+} from "./fill-pattern.js";
 export {
   HeatmapCellContent,
   type HeatmapCellContentProps,
@@ -166,10 +183,18 @@ export {
   type HistogramShapeProps,
 } from "./histogram-series.js";
 export { Legend, type LegendProps } from "./legend.js";
+export type { LineDashAnimation } from "./line-dash.js";
 export type { LineMaterial } from "./line-material.js";
+export {
+  createPercentStack,
+  formatPercent,
+  type NormalizedValue,
+  type PercentStackOptions,
+} from "./percent-stack.js";
 export { type PieAnimation, PieChart, type PieChartProps } from "./pie-chart.js";
 export type { PieMaterial } from "./pie-material.js";
 export { PieSeries, type PieSeriesProps } from "./pie-series.js";
+export { PointMarker, type PointMarkerProps, type PointStyle } from "./point-marker.js";
 export {
   type RadarAnimation,
   RadarChart,
@@ -187,6 +212,7 @@ export {
 } from "./polar-series.js";
 export type { RadarSelectionProps } from "./radar-interaction.js";
 export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
+export type { RevealDirection } from "./reveal-clip.js";
 export { Root, type RootProps } from "./root.js";
 export { type SankeyAnimation, SankeyChart, type SankeyChartProps } from "./sankey-chart.js";
 export type { SankeyNodeConfig } from "./sankey-colors.js";
@@ -218,7 +244,8 @@ export {
   type ScatterTooltipProps,
 } from "./scatter-tooltip.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
-export type { SeriesConfig } from "./types.js";
+export type { SeriesColor, SeriesConfig } from "./types.js";
+export { WaterfallChart, type WaterfallChartProps } from "./waterfall-chart.js";
 export {
   computeWaterfallData,
   type WaterfallDatum,

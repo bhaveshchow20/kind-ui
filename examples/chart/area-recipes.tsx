@@ -50,25 +50,21 @@ function AreaFrame<T extends { period: string }>({
   threshold,
 }: AreaFrameProps<T>) {
   const id = useId();
-  const tooltipFormatter = percentage
-    ? (
-        value: number | string | readonly (number | string)[] | undefined,
-        _name: string | number | undefined,
-        _entry: unknown,
-        _index: number,
-        payload: readonly { value?: unknown }[],
-      ) => {
-        const total = payload.reduce(
-          (sum, point) => sum + (typeof point.value === "number" ? point.value : 0),
-          0,
-        );
-        const share =
-          typeof value === "number" && total > 0
-            ? `${((value / total) * 100).toFixed(0)}%`
-            : "No share";
-        return share;
-      }
-    : undefined;
+  const rawStackValues: Chart.PercentStackOptions["values"] = (entry) => {
+    if (entry.dataKey !== "desktop" && entry.dataKey !== "mobile") return undefined;
+    const row = entry.payload as StackedAreaPoint | undefined;
+    if (!row) return undefined;
+    return (["desktop", "mobile"] as const)
+      .filter((key) => visibleSeries === undefined || visibleSeries.includes(key))
+      .map((key) => row[key]);
+  };
+  const percentStack = Chart.createPercentStack({ values: rawStackValues });
+  const tooltipFormatter: Chart.TooltipProps["formatter"] = (value, _name, entry) => {
+    const total = rawStackValues(entry)?.reduce<number>((sum, member) => sum + (member ?? 0), 0);
+    if (total === undefined || total <= 0) return "No share";
+    const fraction = percentStack.normalizedValue(entry);
+    return fraction === undefined ? value : `${(fraction * 100).toFixed(0)}%`;
+  };
   const rootProps = {
     config,
     className: "recipe-chart",
@@ -119,12 +115,12 @@ function AreaFrame<T extends { period: string }>({
             {...(percentage
               ? {
                   ticks: [0, 0.25, 0.5, 0.75, 1],
-                  tickFormatter: (value: number) => `${Math.round(value * 100)}%`,
+                  tickFormatter: percentStack.tickFormatter,
                 }
               : {})}
             width={36}
           />
-          <Chart.Tooltip {...(tooltipFormatter ? { formatter: tooltipFormatter } : {})} />
+          <Chart.Tooltip {...(percentage ? { formatter: tooltipFormatter } : {})} />
         </Chart.AreaChart>
       </ResponsiveContainer>
     </>
@@ -283,7 +279,7 @@ function StackedAreas({
           type="monotone"
           stackId="devices"
           stroke={`var(--color-${key})`}
-          fill={`var(--color-${key})`}
+          fill={config[key].pattern ? undefined : `var(--color-${key})`}
           fillOpacity={key === "mobile" ? 0.26 : 0.58}
           connectNulls={false}
         />

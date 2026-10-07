@@ -11,6 +11,10 @@ const readme = await readFile(new URL("../packages/charts/README.md", import.met
 const recipes = await readdir(new URL("../examples/chart/", import.meta.url));
 const files = ["README.md", "CHANGELOG.md", "LICENSE", "package.json"];
 const check = (body, packed = files) => assertDocumentationContract(body, recipes, packed);
+const withoutPublicImports = (body) =>
+  body.replaceAll(/from\s+["']@kind-ui\/charts["']/g, 'from "../src"');
+const withoutStylesheetImports = (body) =>
+  body.replaceAll(/import\s+["']@kind-ui\/charts\/styles\.css["'];?/g, "");
 
 test("quick-start README uses public imports, stylesheet and existing documentation sources", () => {
   check(readme);
@@ -20,14 +24,27 @@ test("rejects missing documentation, public package import and stylesheet setup"
     () => check(readme.replace(documentationSource, "https://example.com")),
     /canonical documentation/,
   );
-  assert.throws(
-    () => check(readme.replace('from "@kind-ui/charts"', 'from "../src"')),
-    /public package import/,
-  );
-  assert.throws(
-    () => check(readme.replace('import "@kind-ui/charts/styles.css";', "")),
-    /stylesheet import/,
-  );
+  assert.throws(() => check(withoutPublicImports(readme)), /public package import/);
+  assert.throws(() => check(withoutStylesheetImports(readme)), /stylesheet import/);
+});
+test("negative fixtures remove setup imports from every example", () => {
+  const multipleExamples = `[Documentation](${documentationSource})
+
+\`\`\`tsx
+import { LineChart } from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+\`\`\`
+
+\`\`\`tsx
+import { AreaChart } from
+  '@kind-ui/charts';
+import
+  '@kind-ui/charts/styles.css';
+\`\`\`
+`;
+  check(multipleExamples);
+  assert.throws(() => check(withoutPublicImports(multipleExamples)), /public package import/);
+  assert.throws(() => check(withoutStylesheetImports(multipleExamples)), /stylesheet import/);
 });
 test("rejects missing or unsupported repository source links", () => {
   assert.throws(
@@ -36,7 +53,9 @@ test("rejects missing or unsupported repository source links", () => {
   );
   assert.throws(
     () =>
-      check(`${readme}\n[branch](${repositorySourcePrefix}blob/unknown/examples/chart/BARS.md)`),
+      check(
+        `${readme}\n[branch](${repositorySourcePrefix}blob/unknown/examples/chart/line-recipes.tsx)`,
+      ),
     /Unsupported repository source route/,
   );
   assert.throws(

@@ -10,6 +10,9 @@ export function MotionContract() {
   const [visible, setVisible] = useState<string[]>(["value"]);
   return (
     <MotionConfig reducedMotion="user">
+      <button type="button" onClick={() => setVisible(visible.length ? [] : ["value"])}>
+        External visibility
+      </button>
       <MotionRoot
         aria-label="Motion contract"
         role="region"

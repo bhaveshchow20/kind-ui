@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectLastVisibleGuard } from "./last-visible";
 
 test("Tailwind v4 utilities override Kind defaults and named Lucide icons use the existing decorative slot", async ({
   page,
@@ -23,10 +24,9 @@ test("Tailwind v4 utilities override Kind defaults and named Lucide icons use th
     .first()
     .evaluate((line) => getComputedStyle(line).stroke);
   expect(gridStroke).toContain("oklch");
-  await legend.getByRole("button", { name: "Total" }).click();
-  await expect(legend.getByRole("button", { name: "Total" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
+  await expectLastVisibleGuard(
+    legend.getByRole("button", { name: "Total" }),
+    page.locator(".recharts-line-curve"),
   );
   expect(errors).toEqual([]);
 });
@@ -45,10 +45,80 @@ test("Next App Router package client boundary hydrates serializable server props
   await expect(chart).toBeVisible();
   const root = page.locator('[data-kind-ui="chart"]').filter({ has: chart });
   await expect(root.locator("svg.lucide-trending-up")).toHaveCount(1);
-  await root.getByRole("button", { name: "Total" }).click();
-  await expect(root.getByRole("button", { name: "Total" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
+  await expectLastVisibleGuard(
+    root.getByRole("button", { name: "Total" }),
+    root.locator(".recharts-line-curve"),
+  );
+  expect(errors).toEqual([]);
+});
+
+test("Next pattern legends keep server IDs through hydration and native bars stay scoped", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  const response = await page.request.get("http://127.0.0.1:6901");
+  const html = await response.text();
+  const serverIds = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
+  expect(serverIds).toHaveLength(6);
+  expect(new Set(serverIds).size).toBe(6);
+  await page.goto("http://127.0.0.1:6901");
+  const proof = page.locator("[data-pattern-hydration]");
+  const swatches = proof.locator("[data-fill-pattern] pattern");
+  await expect(swatches).toHaveCount(6);
+  expect(await swatches.evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(serverIds);
+  const marks = proof.locator(".recharts-bar-rectangle path");
+  await expect(marks).toHaveCount(12);
+  const ids = await proof.locator("pattern").evaluateAll((nodes) => nodes.map((node) => node.id));
+  expect(new Set(ids).size).toBe(12);
+  expect(
+    await marks.evaluateAll((nodes) =>
+      nodes.every((node) => {
+        const id = node.getAttribute("fill")?.match(/^url\(#(.+)\)$/)?.[1];
+        return id && node.closest("svg")?.querySelector(`[id="${id}"]`);
+      }),
+    ),
+  ).toBe(true);
+  await proof.getByRole("button", { name: "First", exact: true }).first().click();
+  await expect(marks).toHaveCount(8);
+  expect(await swatches.evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(serverIds);
+  expect(errors).toEqual([]);
+});
+
+test("Next color resources retain server IDs through hydration and theme changes", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  const response = await page.request.get("http://127.0.0.1:6901");
+  const html = await response.text();
+  const serverIds = [...html.matchAll(/<linearGradient[^>]*id="(kind-ui-color-[^"]+)"/g)].map(
+    (match) => match[1],
+  );
+  expect(serverIds).toHaveLength(2);
+  expect(new Set(serverIds).size).toBe(2);
+  await page.goto("http://127.0.0.1:6901");
+  const proof = page.locator("[data-color-hydration]");
+  const resources = proof.locator('[data-kind-ui="color-resources"] linearGradient');
+  await expect(resources).toHaveCount(2);
+  expect(await resources.evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(serverIds);
+  const marks = proof.locator(".recharts-line-curve");
+  await expect(marks).toHaveCount(2);
+  const before = await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+  await page.getByRole("button", { name: "Color theme", exact: true }).click();
+  await expect(resources.first().locator("stop").first()).toHaveCSS(
+    "stop-color",
+    "rgb(255, 255, 255)",
+  );
+  expect(await resources.evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(serverIds);
+  expect(await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")))).toEqual(
+    before,
   );
   expect(errors).toEqual([]);
 });

@@ -4,12 +4,20 @@ import { type ComponentPropsWithRef, type CSSProperties, type ReactNode, use } f
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
 import { useChart } from "./chart-context.js";
 import { LineInteraction } from "./line-chart.js";
+import { formatPercent, type NormalizedValue } from "./percent-stack.js";
+import { colorStopToken } from "./series-color.js";
 import { TooltipNumber } from "./tooltip-number.js";
 
 export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
   /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
   tooltip: UpstreamTooltipContentProps;
   missingValue?: ReactNode;
+  /** Formatting-only fraction resolver. Default content retains the raw value alongside it. */
+  normalizedValue?: NormalizedValue;
+  /** Caller-owned projection status; use the same datum identity selection as BarSeries. */
+  isProjected?: (entry: UpstreamTooltipContentProps["payload"][number]) => boolean;
+  /** Accessible status text appended to projected items. */
+  projectedLabel?: ReactNode;
   /** Opt in to decorative rolling digits for finite numeric text values. Default: off. */
   valueAnimation?: "shuffle";
   /** Omit the heading; series labels and values remain accessible. */
@@ -26,6 +34,9 @@ export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children">
 export function TooltipContent({
   tooltip,
   missingValue = "No data",
+  normalizedValue,
+  isProjected,
+  projectedLabel = "Projected",
   valueAnimation,
   itemKey,
   hideLabel = false,
@@ -53,6 +64,7 @@ export function TooltipContent({
   const items = entries.map((entry, index) => {
     const key = identity(entry);
     const item = Object.hasOwn(config, key) ? config[key] : undefined;
+    const projected = entry.payload != null && isProjected?.(entry) === true;
     let name: ReactNode = item?.label ?? entry.name ?? key;
     let value: ReactNode = missingValue;
     if (entry.value != null) {
@@ -68,6 +80,15 @@ export function TooltipContent({
           : Array.isArray(entry.value)
             ? entry.value.join(" – ")
             : entry.value;
+      if (!format) {
+        const fraction = normalizedValue?.(entry);
+        if (fraction !== undefined && Number.isFinite(fraction * 100))
+          value = (
+            <>
+              {formatPercent(fraction)} ({value})
+            </>
+          );
+      }
       hasVisibleValue = true;
     }
     return (
@@ -75,6 +96,7 @@ export function TooltipContent({
         key={entry.graphicalItemId ?? `${key}-${index}`}
         data-kind-ui="chart-tooltip-item"
         data-series={key}
+        data-projected={projected || undefined}
       >
         {!hideIndicator &&
           (item?.icon ? (
@@ -88,6 +110,9 @@ export function TooltipContent({
               data-indicator={indicator}
               style={
                 {
+                  "--kind-ui-chart-indicator-background": item
+                    ? `var(${colorStopToken(key, "gradient")})`
+                    : (entry.color ?? "currentColor"),
                   "--kind-ui-chart-indicator-color": item
                     ? `var(--color-${key})`
                     : (entry.color ?? "currentColor"),
@@ -96,6 +121,7 @@ export function TooltipContent({
             />
           ))}
         <span>{name}</span>
+        {projected && <span data-kind-ui="projection-status">{projectedLabel}</span>}
         <strong data-kind-ui="chart-tooltip-value">
           {valueAnimation === "shuffle" &&
           typeof entry.value === "number" &&

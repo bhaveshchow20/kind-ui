@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectLastVisibleGuard } from "./last-visible";
 
 const url = `http://127.0.0.1:${4191 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?materials`;
 const finishes = ["plain", "paper", "clay", "glow"] as const;
@@ -49,9 +50,13 @@ test("packed Box materials: exact geometry, Cell paint, custom ownership and rep
     await expect(host.locator('[data-custom="yes"]')).toHaveCount(3);
     await host.getByRole("button", { name: "Custom", exact: true }).click();
     for (let cycle = 0; cycle < 2; cycle++) {
-      await host.getByRole("button", { name: "Distribution", exact: true }).click();
+      await expectLastVisibleGuard(
+        host.getByRole("button", { name: "Distribution", exact: true }),
+        host.locator(marks),
+      );
+      await host.getByRole("button", { name: "External visibility", exact: true }).click();
       await expect(host.locator(marks)).toHaveCount(0);
-      await host.getByRole("button", { name: "Distribution", exact: true }).click();
+      await host.getByRole("button", { name: "External visibility", exact: true }).click();
       await expect(host.locator(marks)).toHaveCount(3);
     }
     await host.getByRole("button", { name: "Reorder", exact: true }).click();

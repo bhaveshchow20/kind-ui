@@ -1,4 +1,6 @@
 import { expect, type Locator, type Page, test } from "./browser";
+import { expectLastVisibleGuard } from "./last-visible";
+import { directionalEntrances } from "./reveal-direction";
 
 async function bounds(tip: Locator, chart: Locator) {
   await expect
@@ -77,7 +79,11 @@ for (const variant of ["static", "motion"]) {
     await chart.focus();
     await page.keyboard.press("ArrowLeft");
     await expect(page.getByRole("status")).not.toContainText("Value");
-    await page.getByRole("button", { name: "Other", exact: true }).click();
+    await expectLastVisibleGuard(
+      page.getByRole("button", { name: "Other", exact: true }),
+      page.locator(".recharts-line-curve"),
+    );
+    await page.getByRole("button", { name: "External visibility", exact: true }).click();
     await expect(page.locator(".recharts-line-curve")).toHaveCount(0);
     await expect(page.getByRole("status")).not.toBeVisible();
     await expect(page.locator("body")).not.toHaveAttribute("data-chart-ref-cleanup", "yes");
@@ -279,13 +285,28 @@ test("packed native hide cancels entrance without changing Root visibility or da
   const progress = Number.parseFloat((await clip.getAttribute("width")) ?? "NaN");
   expect(progress).toBeGreaterThan(0);
   expect(progress).toBeLessThan(100);
+  const visibility = page.locator("[data-native-visibility]");
+  const priorVisibility = await visibility.getAttribute("data-native-visibility");
+  const priorCallbacks = await visibility.getAttribute("data-visibility-callbacks");
+  if (priorVisibility === null || priorCallbacks === null)
+    throw new Error("Missing visibility observer");
+  expect(priorVisibility).toBe("value,other,alias");
   await page.getByLabel("Native hide other").evaluate((node) => (node as HTMLInputElement).click());
   await expect(page.locator(".recharts-line-curve")).toHaveCount(1);
   await expect(clip).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Other", exact: true })).toHaveAttribute(
+  const otherItem = page.locator('[data-kind-ui="chart-legend-item"][data-series="other"]');
+  await expect(otherItem).toHaveText("Other");
+  await expect(otherItem.getByRole("button")).toHaveCount(0);
+  await expect(visibility).toHaveAttribute("data-native-visibility", priorVisibility);
+  await expect(visibility).toHaveAttribute("data-visibility-callbacks", priorCallbacks);
+  await page.getByLabel("Native hide other").evaluate((node) => (node as HTMLInputElement).click());
+  await expect(page.locator(".recharts-line-curve")).toHaveCount(2);
+  await expect(otherItem.getByRole("button", { name: "Other", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
+  await expect(visibility).toHaveAttribute("data-native-visibility", priorVisibility);
+  await expect(visibility).toHaveAttribute("data-visibility-callbacks", priorCallbacks);
 });
 
 test("packed native visibility changes snap active hover to rescaled geometry", async ({
@@ -313,3 +334,5 @@ test("packed native visibility changes snap active hover to rescaled geometry", 
     await bounds(page.locator('[data-kind-ui="tooltip-frame"]'), page.getByRole("application"));
   }
 });
+
+directionalEntrances("http://127.0.0.1:4176/motion.html");
