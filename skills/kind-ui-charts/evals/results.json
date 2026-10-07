@@ -13,9 +13,9 @@
     {
       "request": "migration-matrix",
       "both": "Bundler typechecks and public-model checks passed. Preserved custom revenue gradient, forecast tooltip using entry.payload, gradient Sankey links with Glow finish, stable flow IDs, and Heatmap zero/missing values with complete data alternatives.",
-      "revised": "Omits Default material props and explicitly explains custom paint ownership; chooses stable raw row IDs for revenue categories. Strict NodeNext and Bundler both passed without skipLibCheck.",
-      "baseline": "Sets explicit Default appearance props and supplies an extra consumer-owned projection overlay. Uses stable row keys and flow endpoints, but month display labels as the bar category axis. A later strict NodeNext run failed TS2835: entry.tsx imported ./Consumer without an ESM extension; baseline output was left unchanged.",
-      "assessment": "Both preserve the requested encodings. The revised result follows Default omission and separates stable category identity from display labels; only the revised family output passed NodeNext unchanged. Family-panel browser checks remain unrun."
+      "revised": "Omits Default material props and explicitly explains custom paint ownership; chooses stable raw row IDs for revenue categories. Strict NodeNext and Bundler both passed without skipLibCheck. At 390px with reduced motion emulated, the original fixture rendered without page errors and exposed three complete tables including zero and missing observations.",
+      "baseline": "Sets explicit Default appearance props and supplies an extra consumer-owned projection overlay. Uses stable row keys and flow endpoints, but month display labels as the bar category axis. A later strict NodeNext run failed TS2835: entry.tsx imported ./Consumer without an ESM extension; baseline output was left unchanged. Browsering the original fixture also failed: its delivery node had incoming 9000 and outgoing 0; Sankey validation rejected the inconsistent intermediate totals.",
+      "assessment": "The revised result follows Default omission and stable category identity, passes NodeNext unchanged, and renders its fixture. Baseline Bundler/model checks passed, but its original fixture failed NodeNext and browser runtime checks. These are single-task observations, not a general success-rate estimate."
     }
   ],
   "trigger_probe": {

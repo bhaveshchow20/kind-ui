@@ -47,7 +47,10 @@ HeatmapChart supplies its own context for HeatmapGrid/Tooltip/Legend/DataTable;
 use its explicit rows, columns, data, and scale instead of Root's series config.
 See the [team matrix example](../examples/team-heatmap.tsx).
 SankeyChart owns flow layout and nodeConfig; custom SankeyNode/SankeyLink renderers
-receive native geometry. ActivityRings owns its Root. These families are not
+receive native geometry. Validate supplied flows with `prepareSankeyData`, including
+zero-valued links: intermediate incoming/outgoing totals must balance. Represent
+losses or gains as explicit flows rather than dropping observations.
+ActivityRings owns its Root. These families are not
 Cartesian series dropped into Combo. Retrieve each family's example before use.
 
 ## Preserve custom projected bars
