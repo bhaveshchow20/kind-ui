@@ -1,6 +1,13 @@
 # Kind UI
 
+[![CI](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bhaveshchow20/kind-ui)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
+
 Composable React charts built on Recharts and Motion. Choose a chart, adapt a complete example and keep control of your data, styling and interactions.
+
+[Documentation](https://kindui.dev/charts/docs/) · [GitHub](https://github.com/bhaveshchow20/kind-ui)
 
 ```sh
 npm install @kind-ui/charts
@@ -10,7 +17,7 @@ Import `@kind-ui/charts/styles.css` once at your application entry. See the [com
 
 ## Local setup
 
-Requires Node 22.12+ (Node 24 recommended) and npm 11.9.
+Requires Node 22.12+ (CI uses Node 22) and npm 11.9.
 
 ```sh
 npm ci

@@ -58,7 +58,10 @@ export async function verifyReleaseArtifact(directory, expected, { requirePublic
     expected.event ?? "workflow_dispatch",
     "Candidate must come from the verified release event",
   );
-  assert.ok(["push", "workflow_dispatch"].includes(receipt.workflow.event), "Unexpected candidate event");
+  assert.ok(
+    ["push", "workflow_dispatch"].includes(receipt.workflow.event),
+    "Unexpected candidate event",
+  );
   assert.equal(receipt.workflow.runId, expected.runId, "Candidate is from a different run");
   assert.equal(
     receipt.workflow.runAttempt,

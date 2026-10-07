@@ -337,13 +337,7 @@ export function PolarGalleryCard({
           </tbody>
         </table>
       </details>
-      <p className="polar-source">
-        Composition audit:{" "}
-        <a href={`https://ui.shadcn.com/charts/${kind === "radar" ? "radar" : "radial"}#charts`}>
-          official {kind} gallery
-        </a>
-        . Styling and data are owned by this example.
-      </p>
+      <p className="polar-source">Styling and data are owned by this example.</p>
     </article>
   );
 }

@@ -25,6 +25,6 @@ if (process.env.GITHUB_OUTPUT) {
 if (process.env.GITHUB_STEP_SUMMARY) {
   await appendFile(
     process.env.GITHUB_STEP_SUMMARY,
-    `Candidate ${result.version} / ${result.tag}\n\nCheckout: ${process.env.RELEASE_COMMIT}\n\nSHA-256: ${result.sha256}\n\nPublishable manifest: ${result.publishable}\n\nReceipt validation proves identity/integrity. Full Node 22/24 checks are required by job dependencies. Publishing remains disabled until the reviewed activation/setup.\n`,
+    `Candidate ${result.version} / ${result.tag}\n\nCheckout: ${process.env.RELEASE_COMMIT}\n\nSHA-256: ${result.sha256}\n\nPublishable manifest: ${result.publishable}\n\nReceipt validation proves identity/integrity. Full Node 22 checks are required by job dependencies. Publishing remains disabled until the reviewed activation/setup.\n`,
   );
 }

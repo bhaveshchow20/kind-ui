@@ -99,11 +99,17 @@ function assertDisabledRelease(w) {
     w.jobs.plan.steps.find((s) => s.id === "intent").run,
     "node scripts/release-intent.mjs",
   );
-  assert.deepEqual(w.jobs.validate.strategy.matrix.node, [22, 24]);
+  assert.equal(w.jobs.validate.strategy, undefined);
+  for (const job of Object.values(w.jobs)) {
+    assert.equal(
+      job.steps.find((s) => s.uses?.startsWith("actions/setup-node@"))?.with["node-version"],
+      22,
+    );
+  }
   assert.deepEqual(
     w.jobs.verify.needs,
     ["plan", "validate"],
-    "Both matrix jobs must pass before handoff",
+    "Full validation must pass before handoff",
   );
   assert.deepEqual(w.jobs.publish.needs, ["plan", "verify"]);
   // biome-ignore lint/suspicious/noTemplateCurlyInString: Literal GitHub Actions expression.

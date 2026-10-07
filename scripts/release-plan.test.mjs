@@ -188,3 +188,32 @@ test("public proof waits only for propagation and rejects changed archive bytes"
     /registry unavailable/,
   );
 });
+
+test("a batch of minor features and fixes selects one 0.2.0 release", () => {
+  const batch = {
+    releases: [
+      {
+        name: previous.name,
+        oldVersion: previous.version,
+        newVersion: "0.2.0",
+        type: "minor",
+        changesets: ["second-feature", "fixture-fix", "first-feature"],
+      },
+    ],
+  };
+  const next = chartsVersionPlan(batch, previous);
+  assert.deepEqual(next, {
+    package: previous.name,
+    version: "0.2.0",
+    previousVersion: "0.1.1",
+    changesets: ["first-feature", "fixture-fix", "second-feature"],
+  });
+  assertReleaseTransition({
+    previous,
+    status: batch,
+    manifest: { ...previous, version: "0.2.0" },
+    policy: next,
+    pending: [],
+    changelog: "# @kind-ui/charts\n\n## 0.2.0\n\nFeatures and fixes\n",
+  });
+});

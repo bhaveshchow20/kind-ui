@@ -1,6 +1,6 @@
 # Skill sources and updates
 
-These repository-local references were selected after inspecting [EvilCharts `.agents/skills`](https://github.com/legions-developer/evilcharts/tree/e78bc53bb4de28cd0e31bf407884b12ffb441227/.agents/skills) at `e78bc53bb4de28cd0e31bf407884b12ffb441227`. Both referenced guide files matched Vercel upstream; the Vercel source was independently checked at the pinned revision below. Do not install EvilCharts-only workflows or shadcn instructions with them.
+These repository-local references are selected from Vercel Agent Skills. The upstream source was independently checked at the pinned revision below; local adaptations are documented for each selected guide.
 
 ## React composition patterns
 
