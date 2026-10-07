@@ -272,7 +272,9 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
                     key={item.seriesKey}
                     type={curve ?? "monotone"}
                     material={material ?? "plain"}
-                    dot={{ r: 2.5 }}
+                    {...(item.pointStyle === undefined || item.pointStyle === "default"
+                      ? { dot: { r: 2.5 } }
+                      : {})}
                     strokeWidth={2}
                     {...item}
                   />

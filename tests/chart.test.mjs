@@ -81,6 +81,7 @@ test("direct and namespace imports expose the same public components", () => {
     "LineSeries",
     "PieChart",
     "PieSeries",
+    "PointMarker",
     "PolarAngleAxis",
     "PolarGrid",
     "PolarRadiusAxis",
@@ -1585,6 +1586,34 @@ test("standalone SSR skeletons preserve family identity independently of real da
     assert.equal(statuses, 1, `${family}: one loading announcement`);
   }
   assert.notEqual(skeletons[0], skeletons[1], "matrix and flow illustrations are distinct");
+});
+
+test("PointMarker retains native geometry and style while applying variant paint", () => {
+  const html = renderSvg(
+    h(Chart.PointMarker, {
+      cx: 12,
+      cy: 15,
+      r: 7,
+      variant: "colored-border",
+      stroke: "red",
+      fill: "gold",
+      strokeWidth: 4,
+      style: { fill: "gold" },
+      "aria-label": "Value",
+    }),
+  );
+  assert.match(html, /cx="12"/);
+  assert.match(html, /r="7"/);
+  assert.match(html, /style="fill:gold"/);
+  assert.match(html, /stroke-width="2"/);
+  assert.match(html, /aria-label="Value"/);
+  assert.doesNotMatch(html, /<defs|<filter/);
+  const native = renderSvg(h(Native.Dot, { cx: 2, cy: 3, r: 3 }));
+  const plain = renderSvg(h(Chart.PointMarker, { cx: 2, cy: 3, r: 3 }));
+  assert.equal(
+    plain.replace(/ data-kind-ui="point-marker"| data-point-style="default"/g, ""),
+    native,
+  );
 });
 
 test("selective Pie glow requires existing explicit category identity", () => {
