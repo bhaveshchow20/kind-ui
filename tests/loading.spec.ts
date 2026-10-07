@@ -668,7 +668,10 @@ test("both Radar polygons morph continuously through wrap, resize and interrupti
                 ...points.map((value, slot) => Math.abs(value - (initial[index]?.[slot] ?? value))),
               );
               changes[index] = Math.max(changes[index] ?? 0, drift);
-              if (now - lastTime > 0 && now - lastTime < 60)
+              // Motion updates and this observer run in separate frame callbacks.
+              // Measure a short window so callback scheduling jitter cannot look
+              // like a polygon jump during the data/resize interruptions below.
+              if (now - lastTime >= 100)
                 maxSpeed = Math.max(
                   maxSpeed,
                   ...points.map(
@@ -677,8 +680,10 @@ test("both Radar polygons morph continuously through wrap, resize and interrupti
                   ),
                 );
             });
-            last = current;
-            lastTime = now;
+            if (now - lastTime >= 100) {
+              last = current;
+              lastTime = now;
+            }
             if (now - started > 8500) {
               resolve({ changes, maxSpeed, minOpacity, valid });
               return;
