@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { showcaseAsset } from "@/lib/site-links";
+import { indexingMetadata, showcaseURL } from "../../indexing.mjs";
 import "./globals.css";
 import "./homepage.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -18,6 +19,8 @@ const geistMono = localFont({
   weight: "100 900",
 });
 export const metadata: Metadata = {
+  ...indexingMetadata(),
+  alternates: { canonical: showcaseURL },
   title: "Kind UI — Composable charts for React and Next.js.",
   description:
     "Thoughtfully crafted React components. Explore composable charts, tune their details, and make them your own.",
