@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { assertIndexingHTML, assertIndexingRoutes } from "../../../scripts/indexing-output.mjs";
+import {
+  assertIndexingHTML,
+  assertIndexingRoutes,
+  textExportFiles,
+} from "../../../scripts/indexing-output.mjs";
 import { canonicalDocURL } from "../../indexing.mjs";
 import { basePath, canonicalDocSlugs, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
 import { assertPublicCopy } from "./public-copy.mjs";
@@ -62,9 +66,7 @@ assert.equal(
   false,
   "Validation archives must not be exported",
 );
-for (const file of readdirSync(root, { recursive: true }).filter((name) =>
-  /\.(?:html|md|txt|json)$/.test(String(name)),
-)) {
+for (const file of textExportFiles(root)) {
   const body = readFileSync(path.join(root, file), "utf8");
   assertPublicCopy(body, file);
   for (const receipt of [provenance.sourceCommit, provenance.sha256])

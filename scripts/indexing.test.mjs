@@ -55,7 +55,7 @@ test("canonical docs and sitemap use the public mount exactly once and exclude d
   );
 });
 
-import { assertIndexingHTML, assertIndexingRoutes } from "./indexing-output.mjs";
+import { assertIndexingHTML, assertIndexingRoutes, textExportFiles } from "./indexing-output.mjs";
 
 test("emitted HTML assertions reject missing, duplicate or contradictory directives", () => {
   const html = `<link href="${showcaseURL}" rel="canonical"/><meta content="index, follow" name="robots"/>`;
@@ -76,4 +76,24 @@ test("emitted routes assert public sitemap membership and protected previews", (
   assertIndexingRoutes("User-Agent: *\nDisallow: /\n", "<urlset/>", [showcaseURL], {});
   assert.throws(() => assertIndexingRoutes(robots, sitemap, [docsURL], production));
   assert.throws(() => assertIndexingRoutes(robots, sitemap, [showcaseURL], {}));
+});
+
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+
+test("text export scans preserve nested files without treating metadata route directories as files", () => {
+  const root = mkdtempSync(path.join(tmpdir(), "kind-indexing-"));
+  try {
+    mkdirSync(path.join(root, "robots.txt"));
+    writeFileSync(path.join(root, "robots.txt", "segment.txt"), "No internal receipts");
+    writeFileSync(path.join(root, "index.html"), "Public HTML");
+    writeFileSync(path.join(root, "sitemap.xml"), "<urlset/>");
+    assert.deepEqual(textExportFiles(root).sort(), [
+      "index.html",
+      path.join("robots.txt", "segment.txt"),
+    ]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

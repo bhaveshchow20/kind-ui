@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readdirSync, statSync } from "node:fs";
+import path from "node:path";
 import { isIndexable } from "../apps/indexing.mjs";
 
 function attributes(tag) {
@@ -34,4 +36,12 @@ export function assertIndexingRoutes(robots, sitemap, expectedURLs, env = proces
   }
   const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, url]) => url);
   assert.deepEqual(urls.sort(), isIndexable(env) ? [...new Set(expectedURLs)].sort() : []);
+}
+
+/** Next metadata routes can create RSC directories with text-looking names. */
+export function textExportFiles(root) {
+  return readdirSync(root, { recursive: true }).filter(
+    (name) =>
+      /\.(?:html|md|txt|json)$/.test(String(name)) && statSync(path.join(root, name)).isFile(),
+  );
 }
