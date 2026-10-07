@@ -49,7 +49,19 @@ test("Docs links, search aliases and page anchors have real destinations", async
     exact: true,
     includeHidden: true,
   });
-  await expect(docs).toHaveCount(2);
+  await expect(docs).toHaveCount(3);
+  const originalViewport = page.viewportSize();
+  await expect(
+    page.locator(".kind-nav-links").getByRole("link", { name: "Documentation" }),
+  ).toBeVisible();
+  await expect(page.locator(".mobile-docs")).toBeHidden();
+  for (const width of [320, 375, 390, 430]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(page.locator(".mobile-docs")).toBeVisible();
+    await expect(page.locator(".mobile-docs")).toHaveAttribute("href", siteLinks.docs);
+    await expect(page.locator(".kind-nav-links")).toBeHidden();
+  }
+  if (originalViewport) await page.setViewportSize(originalViewport);
   for (const link of await docs.all()) await expect(link).toHaveAttribute("href", siteLinks.docs);
   await page.getByRole("button", { name: "Search documentation" }).click();
   const results = page.locator(".documentation-search-results");
