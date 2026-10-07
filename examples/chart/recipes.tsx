@@ -167,20 +167,14 @@ function App() {
         </fieldset>
         <fieldset aria-label="Line material">
           <legend className="sr-only">Line material</legend>
-          {(["plain", "paper", "clay", "glow"] satisfies LineMaterial[]).map((value) => (
+          {(["plain", "clay", "glow"] satisfies LineMaterial[]).map((value) => (
             <button
               type="button"
               key={value}
               aria-pressed={material === value}
               onClick={() => setMaterial(value)}
             >
-              {value === "plain"
-                ? "Plain"
-                : value === "paper"
-                  ? "Paper"
-                  : value === "clay"
-                    ? "Clay"
-                    : "Glow"}
+              {value === "plain" ? "Default" : value === "clay" ? "Clay" : "Glow"}
             </button>
           ))}
         </fieldset>

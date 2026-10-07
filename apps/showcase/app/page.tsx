@@ -30,7 +30,7 @@ import { docsAccessNote, documentationCharts, showcaseAsset, siteLinks } from "@
 import { useCopyCode } from "@/lib/use-copy-code";
 import { chartSourceData } from "../../seo.mjs";
 
-type Material = "plain" | "paper" | "clay" | "glow";
+type Material = "plain" | "clay" | "glow";
 const families = [
   "Bar",
   "Line",

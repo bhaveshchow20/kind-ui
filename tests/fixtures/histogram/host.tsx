@@ -59,9 +59,9 @@ export function HistogramHost() {
       <button type="button" onClick={() => setCustom(!custom)}>
         Custom shape
       </button>
-      {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+      {(["plain", "clay", "glow"] as const).map((finish) => (
         <button type="button" key={finish} onClick={() => setMaterial(finish)}>
-          {finish}
+          {finish === "plain" ? "Default" : finish}
         </button>
       ))}
       {(["none", "series-filter", "series-style", "cell-filter", "cell-style"] as const).map(

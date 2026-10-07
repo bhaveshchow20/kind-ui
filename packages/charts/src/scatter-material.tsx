@@ -134,45 +134,7 @@ export function ScatterMaterialSymbol({
           <feComponentTransfer in="SourceAlpha" result="footprint">
             <feFuncA type="linear" slope={100000} />
           </feComponentTransfer>
-          {material === "paper" ? (
-            <>
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency="0.65 0.3"
-                numOctaves={1}
-                seed={7}
-                result="fiber"
-              />
-              <feFlood
-                floodColor="var(--kind-ui-scatter-paper-fiber, #fff)"
-                floodOpacity="var(--kind-ui-scatter-paper-grain, 0.13)"
-              />
-              <feComposite in2="fiber" operator="in" result="texture" />
-              <feComposite in="texture" in2="SourceGraphic" operator="atop" result="paper" />
-              <feMorphology in="footprint" operator="erode" radius={rim} result="inside" />
-              <feComposite in="footprint" in2="inside" operator="out" result="edge" />
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency="0.13 0.22"
-                numOctaves={1}
-                seed={11}
-                result="pencil"
-              />
-              <feColorMatrix in="pencil" type="luminanceToAlpha" result="pencilMask" />
-              <feComponentTransfer in="pencilMask" result="sketch">
-                <feFuncA type="linear" slope={2} intercept={-0.2} />
-              </feComponentTransfer>
-              <feComposite in="edge" in2="sketch" operator="in" result="sketchEdge" />
-              <feColorMatrix
-                in="SourceGraphic"
-                type="matrix"
-                values="0.25 0 0 0 0 0 0.25 0 0 0 0 0 0.25 0 0 0 0 0 1 0"
-                result="ink"
-              />
-              <feComposite in="ink" in2="sketchEdge" operator="in" result="contour" />
-              <feComposite in="contour" in2="paper" operator="atop" />
-            </>
-          ) : material === "clay" ? (
+          {material === "clay" ? (
             <>
               <feOffset in="footprint" dx={relief} dy={relief} result="lower" />
               <feComposite in="footprint" in2="lower" operator="out" result="top" />

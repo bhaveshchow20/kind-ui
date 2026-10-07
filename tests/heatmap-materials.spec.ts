@@ -53,7 +53,7 @@ for (const packed of [false, true]) {
         .locator('[data-kind-ui="heatmap-ramp"]')
         .first()
         .getAttribute("style");
-      for (const material of ["paper", "clay", "glow", "plain", "glow", "clay", "paper", "plain"]) {
+      for (const material of ["clay", "glow", "plain", "glow", "clay", "plain"]) {
         await select.selectOption(material);
         await page.evaluate(() => window.scrollTo(0, 0));
         expect(await capture()).toEqual(geometry);
@@ -198,7 +198,7 @@ test("packed edge materials preserve native refs, filters, cancelable events and
   await page.goto(`http://127.0.0.1:${4190 + offset}`);
   const grid = page.getByRole("grid", { name: "Constant and missing grid" });
   const cells = grid.getByRole("gridcell");
-  for (const material of ["paper", "clay", "glow", "plain"]) {
+  for (const material of ["clay", "glow", "plain"]) {
     await page.getByRole("combobox", { name: "Edge material" }).selectOption(material);
     await expect(cells.first()).toHaveCSS("filter", "brightness(1)");
     await expect(cells.first()).toHaveAttribute("data-ref-ready", "yes");
@@ -214,7 +214,7 @@ test("packed edge materials preserve native refs, filters, cancelable events and
   await expect(cells.nth(1)).toHaveAttribute("data-material", "plain");
   await expect(page.getByRole("tooltip").last()).toHaveText("A, Y: 0");
   // Explicit consumer background paint overrides the optional treatment.
-  await page.getByRole("combobox", { name: "Edge material" }).selectOption("paper");
+  await page.getByRole("combobox", { name: "Edge material" }).selectOption("clay");
   await cells.first().evaluate((node: HTMLElement) => {
     node.style.backgroundImage = "none";
   });

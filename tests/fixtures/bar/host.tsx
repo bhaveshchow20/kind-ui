@@ -94,9 +94,9 @@ export function BarHost() {
   return (
     <section aria-label="Packed bars" style={{ width: small ? 180 : 480, background: "white" }}>
       <fieldset aria-label="Material">
-        {(["plain", "paper", "clay", "glow"] as const).map((value) => (
+        {(["plain", "clay", "glow"] as const).map((value) => (
           <button type="button" key={value} onClick={() => setMaterial(value)}>
-            {value}
+            {value === "plain" ? "Default" : value}
           </button>
         ))}
       </fieldset>

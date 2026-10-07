@@ -89,8 +89,8 @@ export function HeatmapRecipes() {
             value={material}
             onChange={(event) => setMaterial(event.target.value as HeatmapMaterial)}
           >
-            <option value="plain">Plain</option>
-            <option value="paper">Paper</option>
+            <option value="plain">Default</option>
+
             <option value="clay">Clay</option>
             <option value="glow">Glow</option>
           </select>
@@ -228,8 +228,10 @@ export function Edges() {
           value={material}
           onChange={(event) => setMaterial(event.target.value as HeatmapMaterial)}
         >
-          {["plain", "paper", "clay", "glow"].map((value) => (
-            <option key={value}>{value}</option>
+          {["plain", "clay", "glow"].map((value) => (
+            <option key={value} value={value}>
+              {value === "plain" ? "Default" : value}
+            </option>
           ))}
         </select>
       </label>

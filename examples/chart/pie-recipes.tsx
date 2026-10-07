@@ -64,9 +64,9 @@ export function Allocation({
             value={material}
             onChange={(event) => setMaterial(event.target.value as Chart.PieMaterial)}
           >
-            {["plain", "paper", "clay", "glow"].map((finish) => (
+            {["plain", "clay", "glow"].map((finish) => (
               <option key={finish} value={finish}>
-                {finish}
+                {finish === "plain" ? "Default" : finish}
               </option>
             ))}
           </select>

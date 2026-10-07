@@ -124,7 +124,7 @@ export function AreaHost({
           value={material}
           onChange={(e) => setMaterial(e.target.value as Static.AreaMaterial)}
         >
-          {(["plain", "paper", "clay", "glow"] as const).map((value) => (
+          {(["plain", "clay", "glow"] as const).map((value) => (
             <option key={value}>{value}</option>
           ))}
         </select>

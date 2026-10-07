@@ -8,7 +8,7 @@ import { PolarGalleryCard } from "./polar-gallery";
 import { type PolarRecipe, PolarRecipeCard } from "./polar-recipes";
 import type { Example, Family } from "./showcase-data";
 
-export type Finish = "plain" | "paper" | "clay" | "glow";
+export type Finish = "plain" | "clay" | "glow";
 const entrance = { revealDurationMs: 450 };
 const format = (unit: string) => (value: number) => `${value.toLocaleString()} ${unit}`;
 // This adapter only supplies data and controls to maintained recipe compositions.

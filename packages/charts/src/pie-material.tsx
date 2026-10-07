@@ -68,48 +68,6 @@ export function PieMaterialFilter({
           <feComposite in="light" in2="shaded" operator="atop" result="finished" />
           <NativePaintColor />
         </>
-      ) : material === "paper" ? (
-        <>
-          <feTurbulence
-            type="fractalNoise"
-            x={bounds?.x ?? x}
-            y={bounds?.y ?? y}
-            width={32}
-            height={32}
-            baseFrequency="0.2 0.3"
-            numOctaves={1}
-            seed={7}
-            result="fiberTile"
-          />
-          {/* Repeat a small fiber field rather than evaluating noise over every animated pixel. */}
-          <feTile in="fiberTile" result="fiber" />
-          <feFlood
-            floodColor="var(--kind-ui-pie-paper-fiber, #fff)"
-            floodOpacity="var(--kind-ui-pie-paper-grain, 0.16)"
-          />
-          <feComposite in2="fiber" operator="in" result="texture" />
-          <feComposite in="texture" in2="SourceGraphic" operator="atop" result="paper" />
-          <feComponentTransfer in="SourceAlpha" result="footprint">
-            <feFuncA type="linear" slope={100000} />
-          </feComponentTransfer>
-          <feGaussianBlur in="footprint" stdDeviation={1.2} result="inside" />
-          <feComposite in="footprint" in2="inside" operator="out" result="edge" />
-          <feComponentTransfer in="edge" result="pencilEdge">
-            <feFuncA type="linear" slope={6} />
-          </feComponentTransfer>
-          <feColorMatrix in="fiber" type="luminanceToAlpha" result="sketch" />
-          <feComposite in="pencilEdge" in2="sketch" operator="in" result="contour" />
-          <feFlood floodColor="var(--kind-ui-pie-paper-ink, #17212b)" floodOpacity={0.72} />
-          <feComposite in2="contour" operator="in" result="ink" />
-          <feComposite in="ink" in2="paper" operator="atop" result="outlined" />
-          <feOffset in="pencilEdge" dx={1.2} dy={1.2} result="inset" />
-          <feComposite in="inset" in2="footprint" operator="in" result="pencilLine" />
-          <feComposite in="pencilLine" in2="sketch" operator="in" result="brokenLine" />
-          <feFlood floodColor="var(--kind-ui-pie-paper-ink, #17212b)" floodOpacity={0.45} />
-          <feComposite in2="brokenLine" operator="in" result="pencilPaint" />
-          <feComposite in="pencilPaint" in2="outlined" operator="atop" result="finished" />
-          <NativePaintColor />
-        </>
       ) : (
         <>
           <feComponentTransfer in="SourceAlpha" result="footprint">

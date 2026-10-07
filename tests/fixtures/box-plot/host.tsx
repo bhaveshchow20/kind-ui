@@ -101,9 +101,9 @@ export function BoxHost() {
       <button type="button" onClick={() => setMode("missing")}>
         All missing
       </button>
-      {(["plain", "paper", "clay", "glow"] as const).map((finish) => (
+      {(["plain", "clay", "glow"] as const).map((finish) => (
         <button type="button" key={finish} onClick={() => setMaterial(finish)}>
-          {finish}
+          {finish === "plain" ? "Default" : finish}
         </button>
       ))}
       <button type="button" onClick={() => setPaint(!paint)}>
@@ -249,7 +249,7 @@ export function MaterialGallery() {
       aria-label="Box material gallery"
       style={{ display: "flex", flexWrap: "wrap", background: "#e9e9e7" }}
     >
-      {(["plain", "paper", "clay", "glow"] as const).map((material) => (
+      {(["plain", "clay", "glow"] as const).map((material) => (
         <div key={material}>
           <h2>{material}</h2>
           <svg

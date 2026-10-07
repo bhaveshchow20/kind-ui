@@ -2,7 +2,7 @@ import { expect, type Page, test } from "./browser";
 
 const url = "http://127.0.0.1:4185/?materials";
 const paths = ".recharts-scatter-symbol path.recharts-symbols:not(defs path)";
-const finishes = ["plain", "paper", "clay", "glow"] as const;
+const finishes = ["plain", "clay", "glow"] as const;
 async function pixels(page: Page, bytes: Buffer) {
   return page.evaluate(
     async (src) => {
@@ -41,12 +41,17 @@ test("explicit Cell clip ownership retains native alpha with bounded finish fall
   };
   for (const owner of ["bounds-prop", "bounds-style", "local-prop", "local-style"]) {
     await page.getByRole("button", { name: "Point clip", exact: true }).click();
-    await page.getByRole("button", { name: "plain", exact: true }).click();
+    await page.getByRole("button", { name: "Default", exact: true }).click();
     await mark.evaluate((n) => n.setAttribute("data-alpha-proof", ""));
     const plain = await pixels(page, await page.screenshot({ clip, omitBackground: true }));
     expect(plain.filter((a, i) => i % 4 === 3 && a > 0).length).toBeGreaterThan(0);
-    for (const material of ["paper", "clay", "glow"] as const) {
-      await page.getByRole("button", { name: material, exact: true }).click();
+    for (const material of ["clay", "glow"] as const) {
+      await page
+        .getByRole("button", {
+          name: String(material) === "plain" ? "Default" : material,
+          exact: true,
+        })
+        .click();
       await mark.evaluate((n) => n.setAttribute("data-alpha-proof", ""));
       for (const attribute of ["d", "transform", "clip-path", "style"])
         expect(await mark.getAttribute(attribute)).toBe(
@@ -84,7 +89,12 @@ test("tarball finishes preserve all seven native symbol paths, transforms, paint
   for (const symbol of ["circle", "diamond", "square", "triangle", "star", "cross", "wye"]) {
     await page.getByRole("button", { name: symbol, exact: true }).click();
     for (const material of finishes) {
-      await page.getByRole("button", { name: material, exact: true }).click();
+      await page
+        .getByRole("button", {
+          name: String(material) === "plain" ? "Default" : material,
+          exact: true,
+        })
+        .click();
       await expect(finished.locator(paths)).toHaveCount(7);
       for (const attribute of ["d", "transform", "fill", "fill-opacity", "opacity", "style"]) {
         expect(
@@ -121,8 +131,13 @@ test("tarball custom renderer and Cell filter ownership survives active portals,
   await page.goto(url);
   await page.getByRole("button", { name: "Ownership", exact: true }).click();
   const chart = page.getByRole("application", { name: "Finished symbols" });
-  for (const material of ["paper", "clay", "glow"] as const) {
-    await page.getByRole("button", { name: material, exact: true }).click();
+  for (const material of ["clay", "glow"] as const) {
+    await page
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     await expect(chart.locator('[data-kind-ui="scatter-material"]')).toHaveCount(7);
     await expect(chart.locator('[data-custom="function"]')).not.toHaveAttribute("filter");
     await expect(chart.locator('[data-custom="element"]')).not.toHaveAttribute("filter");
@@ -176,7 +191,12 @@ for (const gradient of [false, true]) {
         height: Math.ceil(box.height + 25),
       };
       async function raster(material: (typeof finishes)[number]) {
-        await page.getByRole("button", { name: material, exact: true }).click();
+        await page
+          .getByRole("button", {
+            name: String(material) === "plain" ? "Default" : material,
+            exact: true,
+          })
+          .click();
         await mark.evaluate((n) => n.setAttribute("data-alpha-proof", ""));
         return pixels(
           page,
@@ -188,7 +208,7 @@ for (const gradient of [false, true]) {
         );
       }
       const plain = await raster("plain");
-      for (const material of ["paper", "clay", "glow"] as const) {
+      for (const material of ["clay", "glow"] as const) {
         const finish = await raster(material);
         let alphaError = 0,
           external = 0,
@@ -232,7 +252,8 @@ for (const material of finishes) {
     await expect(page.getByRole("checkbox", { name: "Motion", exact: true })).toBeChecked();
     await page
       .getByRole("button", {
-        name: material.charAt(0).toUpperCase() + material.slice(1),
+        name:
+          material === "plain" ? "Default" : material.charAt(0).toUpperCase() + material.slice(1),
         exact: true,
       })
       .click();
@@ -272,8 +293,13 @@ test("native boolean/default shapes retain finishes and subpixel areas remain na
   for (let option = 0; option < 4; option++) {
     if (option > 0)
       await page.getByRole("button", { name: "Native defaults", exact: true }).click();
-    for (const material of ["paper", "clay", "glow"] as const) {
-      await page.getByRole("button", { name: material, exact: true }).click();
+    for (const material of ["clay", "glow"] as const) {
+      await page
+        .getByRole("button", {
+          name: String(material) === "plain" ? "Default" : material,
+          exact: true,
+        })
+        .click();
       await expect(finished.locator('[data-kind-ui="scatter-material"]')).toHaveCount(7);
       expect(await finished.locator("path#medium").getAttribute("d")).toBe(
         await native.locator("path#medium").getAttribute("d"),
@@ -285,7 +311,7 @@ test("native boolean/default shapes retain finishes and subpixel areas remain na
     }
   }
   await page.getByRole("button", { name: "Subpixel", exact: true }).click();
-  await page.getByRole("button", { name: "plain", exact: true }).click();
+  await page.getByRole("button", { name: "Default", exact: true }).click();
   const mark = finished.locator("path#zero");
   expect(await mark.getAttribute("d")).toBe(await native.locator("path#zero").getAttribute("d"));
   const box = await mark.boundingBox();
@@ -297,8 +323,13 @@ test("native boolean/default shapes retain finishes and subpixel areas remain na
   });
   const clip = { x: Math.floor(box.x - 5), y: Math.floor(box.y - 5), width: 12, height: 12 };
   const plain = await pixels(page, await page.screenshot({ clip, omitBackground: true }));
-  for (const material of ["paper", "clay", "glow"] as const) {
-    await page.getByRole("button", { name: material, exact: true }).click();
+  for (const material of ["clay", "glow"] as const) {
+    await page
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     expect(await mark.getAttribute("d")).toBe(await native.locator("path#zero").getAttribute("d"));
     expect(await mark.getAttribute("transform")).toBe(
       await native.locator("path#zero").getAttribute("transform"),

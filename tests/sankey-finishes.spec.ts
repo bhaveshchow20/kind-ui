@@ -37,8 +37,10 @@ test("packed Sankey finishes preserve alpha and quantify thin/adjacent halo sepa
     );
   const plain = await pixels(probe, "plain-alpha");
   const plainAdjacent = await pixels(adjacent, "plain-adjacent");
-  for (const finish of ["paper", "clay", "glow"] as const) {
-    await page.getByRole("button", { name: finish, exact: true }).click();
+  for (const finish of ["clay", "glow"] as const) {
+    await page
+      .getByRole("button", { name: String(finish) === "plain" ? "Default" : finish, exact: true })
+      .click();
     expect(
       await probe
         .locator("path")
@@ -111,8 +113,10 @@ test("Sankey repeated finish updates preserve IDs and native layout", async ({ p
     .evaluateAll((paths) =>
       paths.map((p) => [p.getAttribute("d"), p.getAttribute("stroke-width")]),
     );
-  for (const finish of ["clay", "paper", "glow", "plain", "glow", "paper"]) {
-    await page.getByRole("button", { name: finish, exact: true }).click();
+  for (const finish of ["clay", "glow", "plain", "glow"]) {
+    await page
+      .getByRole("button", { name: String(finish) === "plain" ? "Default" : finish, exact: true })
+      .click();
     expect(
       await chart
         .locator("path")
@@ -139,7 +143,7 @@ test("public recipes preserve paths, widths, labels and mobile inspection across
     .evaluateAll((paths) =>
       paths.map((p) => [p.getAttribute("d"), p.getAttribute("stroke-width")]),
     );
-  for (const finish of ["paper", "clay", "glow"]) {
+  for (const finish of ["clay", "glow"]) {
     const section = page.locator(`main > section[data-finish="${finish}"]`);
     expect(
       await section
@@ -174,8 +178,10 @@ test("native custom renderer, ref, event, CSS filters and em node strokes keep o
   const size = await wide.boundingBox();
   expect(size).not.toBeNull();
   let plainAlpha: number[] = [];
-  for (const finish of ["plain", "paper", "clay", "glow"]) {
-    await page.getByRole("button", { name: finish, exact: true }).click();
+  for (const finish of ["plain", "clay", "glow"]) {
+    await page
+      .getByRole("button", { name: String(finish) === "plain" ? "Default" : finish, exact: true })
+      .click();
     await expect(probe.getByLabel("owned-filter", { exact: true })).toHaveAttribute(
       "filter",
       "url(#owned)",

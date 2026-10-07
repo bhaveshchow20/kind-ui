@@ -2,7 +2,7 @@
 
 import { Curve, type LineDrawShapeProps } from "recharts";
 
-export type LineMaterial = "plain" | "paper" | "clay" | "glow";
+export type LineMaterial = "plain" | "clay" | "glow";
 
 /** Uses engine points only for filter bounds; Curve retains the original geometry and pathRef. */
 export function MaterialCurve({
@@ -52,27 +52,7 @@ export function MaterialCurve({
           height={maxY - y + pad}
           colorInterpolationFilters="sRGB"
         >
-          {material === "paper" ? (
-            <>
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency="0.7 0.25"
-                numOctaves={1}
-                seed={7}
-                result="fiber"
-              />
-              <feFlood
-                floodColor="var(--kind-ui-line-paper-fiber, #fff)"
-                floodOpacity="var(--kind-ui-line-paper-grain, 0.38)"
-              />
-              <feComposite in2="fiber" operator="in" result="texture" />
-              <feComposite in="texture" in2="SourceAlpha" operator="in" result="grain" />
-              <feMerge>
-                <feMergeNode in="SourceGraphic" />
-                <feMergeNode in="grain" />
-              </feMerge>
-            </>
-          ) : material === "glow" ? (
+          {material === "glow" ? (
             <>
               <feGaussianBlur in="SourceGraphic" stdDeviation={2} result="halo" />
               <feGaussianBlur in="SourceGraphic" stdDeviation={0.65} result="nearHalo" />

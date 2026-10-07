@@ -25,27 +25,7 @@ export function SurfaceMaterialFilter({
       height={bounds.height}
       colorInterpolationFilters="sRGB"
     >
-      {material === "paper" ? (
-        <>
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.65 0.3"
-            numOctaves={1}
-            seed={7}
-            result="fiber"
-          />
-          <feFlood
-            floodColor={`var(--kind-ui-${family}-paper-fiber, #fff)`}
-            floodOpacity={`var(--kind-ui-${family}-paper-grain, 0.32)`}
-          />
-          <feComposite in2="fiber" operator="in" result="texture" />
-          <feComposite in="texture" in2="SourceAlpha" operator="in" result="grain" />
-          <feMerge>
-            <feMergeNode in="SourceGraphic" />
-            <feMergeNode in="grain" />
-          </feMerge>
-        </>
-      ) : material === "clay" && family === "area" ? (
+      {material === "clay" && family === "area" ? (
         <AreaClayRelief />
       ) : material === "clay" ? (
         <>
