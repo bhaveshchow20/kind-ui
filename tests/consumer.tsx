@@ -263,6 +263,16 @@ const anticlockwisePie = {
 const invalidPieDirection = { animationDirection: "reverse" } satisfies Chart.PieChartProps;
 void [clockwisePie, anticlockwisePie, invalidPieDirection];
 
+const dashTiming = { durationMs: 700, direction: "reverse" } satisfies Chart.LineDashAnimation;
+const dashedLine = (
+  <Chart.LineSeries dataKey="count" strokeDasharray="6 4" dashAnimation={dashTiming} />
+);
+// @ts-expect-error Dash direction is explicit.
+const invalidDash = <Chart.LineSeries dataKey="count" dashAnimation={{ direction: "left" }} />;
+// @ts-expect-error Area perimeter animation is not the open-line contract.
+const invalidAreaDash = <Chart.AreaSeries dataKey="count" dashAnimation={{}} />;
+void [dashedLine, invalidDash, invalidAreaDash];
+
 const selectiveGlow = {
   data: [{ id: "design", value: 10 }],
   dataKey: "value",
