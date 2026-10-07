@@ -2,7 +2,7 @@
 
 import { type ComponentProps, createContext, useMemo } from "react";
 import { XAxis, YAxis } from "recharts";
-import { BarChart, type BarChartProps } from "./bar-chart.js";
+import { BarChartImplementation, type BarChartProps } from "./bar-chart.js";
 import { type HistogramBin, type HistogramMeasure, validateHistogram } from "./histogram-data.js";
 
 export type HistogramChartProps = Omit<
@@ -55,27 +55,39 @@ export function HistogramChart({
     throw new Error("Histogram domain must have a finite span");
   return (
     <HistogramContext value={measure}>
-      <BarChart {...props} data={data} layout="horizontal" barCategoryGap={0} barGap={0}>
-        <XAxis
-          {...xAxisProps}
-          xAxisId={0}
-          dataKey="midpoint"
-          type="number"
-          scale="linear"
-          domain={domain}
-          allowDataOverflow
-          reversed={false}
-        />
-        <YAxis
-          {...yAxisProps}
-          yAxisId={0}
-          type="number"
-          scale="linear"
-          domain={[0, "dataMax"]}
-          reversed={false}
-        />
-        {children}
-      </BarChart>
+      <BarChartImplementation
+        family="histogram"
+        chartProps={{
+          ...props,
+          data,
+          layout: "horizontal",
+          barCategoryGap: 0,
+          barGap: 0,
+          children: (
+            <>
+              <XAxis
+                {...xAxisProps}
+                xAxisId={0}
+                dataKey="midpoint"
+                type="number"
+                scale="linear"
+                domain={domain}
+                allowDataOverflow
+                reversed={false}
+              />
+              <YAxis
+                {...yAxisProps}
+                yAxisId={0}
+                type="number"
+                scale="linear"
+                domain={[0, "dataMax"]}
+                reversed={false}
+              />
+              {children}
+            </>
+          ),
+        }}
+      />
     </HistogramContext>
   );
 }
