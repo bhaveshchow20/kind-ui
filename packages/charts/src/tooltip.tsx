@@ -7,6 +7,7 @@ import {
   isValidElement,
   type ReactNode,
   type Ref,
+  use,
   useCallback,
   useLayoutEffect,
   useState,
@@ -20,6 +21,7 @@ import {
 } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
+import { PieTooltipPin } from "./pie-tooltip-pin.js";
 import { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 
 export type TooltipProps = Omit<
@@ -37,6 +39,8 @@ export type TooltipProps = Omit<
   maxWidth?: number;
   /** Resolves category identity before the existing series-key fallback. */
   itemKey?: TooltipContentProps["itemKey"];
+  /** Default content only; custom content and explicit formatters retain ownership. */
+  normalizedValue?: TooltipContentProps["normalizedValue"];
   /** Opt in on Kind's default content; custom content owns its own animation. */
   valueAnimation?: TooltipContentProps["valueAnimation"];
 };
@@ -66,6 +70,7 @@ function PositionedContent({
   consumerContent,
   itemKey,
   valueAnimation,
+  normalizedValue,
   maxWidth,
   frameProps,
   frameRef,
@@ -75,6 +80,7 @@ function PositionedContent({
   consumerContent: TooltipProps["content"];
   itemKey: TooltipProps["itemKey"];
   valueAnimation: TooltipProps["valueAnimation"];
+  normalizedValue: TooltipProps["normalizedValue"];
   maxWidth: number;
   frameProps: TooltipProps["frameProps"];
   frameRef: TooltipProps["ref"];
@@ -134,6 +140,7 @@ function PositionedContent({
   ) : (
     <TooltipContent
       tooltip={contentProps}
+      {...(normalizedValue ? { normalizedValue } : {})}
       {...(itemKey ? { itemKey } : {})}
       {...(valueAnimation ? { valueAnimation } : {})}
     />
@@ -165,16 +172,22 @@ export function TooltipBase({
   maxWidth = 180,
   itemKey,
   valueAnimation,
+  normalizedValue,
   Frame = StaticTooltipFrame,
+  defaultIndex: nativeDefaultIndex,
   ...props
 }: TooltipProps & { Frame?: (props: TooltipFrameProps) => ReactNode }) {
   useLineInteraction();
+  const pinIndex = use(PieTooltipPin);
+  const defaultIndex =
+    props.active === undefined ? (nativeDefaultIndex ?? pinIndex) : nativeDefaultIndex;
   return (
     <EngineTooltip
       cursor={false}
       offset={12}
       filterNull={false}
       {...props}
+      {...(defaultIndex === undefined ? {} : { defaultIndex })}
       position={{ x: 0, y: 0 }}
       isAnimationActive={false}
       content={
@@ -187,6 +200,7 @@ export function TooltipBase({
           consumerContent={content}
           itemKey={itemKey}
           valueAnimation={valueAnimation}
+          normalizedValue={normalizedValue}
           maxWidth={maxWidth}
           frameProps={frameProps}
           frameRef={ref}

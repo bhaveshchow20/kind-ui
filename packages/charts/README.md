@@ -28,7 +28,19 @@ npm install @kind-ui/charts
 ```
 
 Import `@kind-ui/charts/styles.css` once at your application entry. In Next.js,
-place interactive chart code in a client component.
+import it in the root layout and place interactive chart code in a client component.
+Development builds warn once per document if mounted chart roots lack the stylesheet,
+after the document and pending stylesheets load. The warning does not run during SSR
+or in production. Keep the import in copied examples.
+
+CSS remains explicit: importing it from the ESM entry would break plain Node imports;
+runtime injection would change CSS layer ordering and require inline-style CSP permission.
+No styles are injected or fetched. Core styles and tokens remain in the stylesheet;
+consumer overrides still win. If you intentionally replace all chart styles, set
+`--kind-ui-styles-loaded: 1` on your chart roots to acknowledge that setup.
+The diagnostic conservatively waits on unresolved stylesheet links. A link which
+failed before mounting after document load can therefore defer the warning; it
+does not guess a timeout and warn while a slow stylesheet is still loading.
 
 ## Series labels
 
@@ -90,6 +102,68 @@ for composition and customization. The documentation covers chart selection,
 peer requirements, styling, motion and accessibility; applications own their
 data, domains and business state.
 
+### Loading chart data
+
+All chart families accept `loading?: boolean` alongside `animate`, plus
+`loadingLabel?: string` (default “Loading chart”). Import the default stylesheet.
+
+```tsx
+<LineChart
+  config={config}
+  data={rows}
+  xDataKey="month"
+  height={280}
+  aria-label="Monthly sales"
+  animate={{ revealDurationMs: 650 }}
+  loading={pending}
+  loadingLabel="Loading monthly sales"
+/>
+```
+
+Pass the same props directly to composed chart roots inside the existing `Root`
+and native sizing/composition. Supported families: Line, Area, Bar, Combo, Pie,
+Radar, RadialBar, Scatter, Heatmap, Waterfall, Histogram, BoxPlot, ActivityRings
+and Sankey. Each uses its own decorative chart silhouette independent of your data.
+Pulse-based skeletons choose a clearly different bounded profile while fully hidden;
+their geometry stays stable through renders and resize between pulses. A soft leading reveal and
+trailing fade overlap, following the chart’s native entrance duration, easing and
+direction: horizontal paths and left-to-right bar-family windows, angular sectors,
+ordered point/cell opacity or directional flow. Radar keeps two six-vertex polygons
+visible and smoothly morphs between bounded decorative shapes; reduced motion
+holds both still. RadialBar keeps continuous angular velocity through its closing seam. Combo preserves separate family
+reveal options. Pulse timing includes room for the trail to leave and a hidden
+geometry swap; loading never delays actual completion.
+Reduced motion displays a static silhouette.
+
+Actual chart content remains mounted, sized, hidden and inert while pending.
+The chart exposes `aria-busy` and a separate live status. Native axes, series,
+refs, style and event ownership stay with the consumer. External legends remain
+available. Heatmap uses its table viewport; Sankey uses its native flow container;
+polar illustrations retain circular proportions. Skeletons have no values,
+labels or tooltip targets.
+
+Completion immediately restores actual data and rearms the family’s existing
+entrance when `animate` enables it. There is no forced wait or queued completion.
+Empty data does not imply loading: render an explicit empty-result message after
+completion. Loading does not change validation of supplied chart data. Requests,
+cancellation, retries, partial results, errors and portals outside the native
+chart remain host-owned. Supply an accessible data alternative alongside charts.
+
+Run `npm run dev:chart` and open `/loading.html` for all-family replay, load,
+empty-input, resize and interrupted-update controls.
+
+
+## Selective Pie glow
+
+`PieSeries` accepts `glowCategories?: readonly string[]` with `categoryKey` and
+explicit data. For a rounded donut, add `glowCategories={["design"]}` to
+`<PieSeries data={data} dataKey="hours" categoryKey="key" nameKey="key"
+innerRadius={58} outerRadius={108} cornerRadius={8} paddingAngle={2} />`.
+The IDs resolve through the existing category config contract. Unknown or removed
+IDs do nothing; reorder/filter preserve colors and membership. Selected default
+sectors use glow; others retain `material` (default plain). Native custom paint,
+shapes and handlers retain ownership. Keep labels and a data alternative.
+
 ## License
 
 [MIT](LICENSE) © 2026 Bhavesh Chowdhury.
@@ -128,7 +202,12 @@ not categorical palettes: supply separate config keys for category identities.
 Stops are evenly distributed from 0 to 100%; a single stop is solid. Each theme's
 spacing is preserved when stop counts differ (intermediate colors use CSS
 `color-mix(in srgb, ...)`). Empty arrays, sparse arrays, empty strings and incomplete
-or unknown theme fields throw; CSS color syntax remains the browser's responsibility.
+or unknown theme fields throw. Errors identify the series and color property (including
+the theme and stop index when applicable), without printing color values or unrelated
+config metadata. For example, an empty second dark stop reports
+`config["revenue"].color.dark[1] requires a nonempty color string`.
+CSS color syntax remains the browser's responsibility: CSS variables, `currentColor`
+and modern color functions pass through unchanged, including during server rendering.
 
 ```tsx
 const config = {
@@ -291,3 +370,337 @@ Scatter, Histogram and BoxPlot charts using the native Cartesian plot area.
 Generated configuration is available only for LineChart. Polar, Pie, Sankey,
 Heatmap and ActivityRings are outside this contract. Fixed-size chart SSR retains
 the existing native empty shell; this part does not create server plot geometry.
+
+### Projected bar rows
+
+`BarSeries<DataPoint, Value>.projection` is opt-in:
+`{ isProjected: (datum: DataPoint) => boolean, pattern: FillPattern }`.
+The caller supplies values and selects identity; Kind UI generates no forecasts.
+For a trailing projection, capture the final row's stable ID before filtering or
+reordering, then compare that ID in `isProjected`. It never implicitly marks the
+new last visible row. Multiple selected identities are allowed.
+
+```tsx
+const projectedId = originalRows.at(-1)?.id;
+const projection: BarProjection<Row> = {
+  isProjected: (row) => projectedId !== undefined && row.id === projectedId,
+  pattern: { kind: "hatch" },
+};
+// Use in grouped bars or share it across series with the same stackId.
+<BarSeries<Row, number> dataKey="value" projection={projection} />;
+<Tooltip content={(tooltip) => (
+  <TooltipContent tooltip={tooltip}
+    isProjected={(entry) => projection.isProjected(entry.payload)} />
+)} />;
+// In the consumer-owned table, alongside the unchanged numeric value:
+<td>{projection.isProjected(row) ? "Projected" : "Observed"}</td>;
+```
+
+Selection applies to chart rows or explicitly supplied `BarSeries.data` in both
+orientations. Empty chart data produces no marks. Native empty `BarSeries.data` overrides
+inherit chart rows; projection follows the actual displayed payload. Null/undefined
+rows are never passed
+to the selector. Missing values retain native missing-bar behavior, and filtering
+out a selected identity does not select a replacement. Zero remains zero. Keep
+predicates pure and IDs unique; row indices do not offer reorder-stable identity.
+
+Projection fills use the existing `FillPattern` seam and native Rectangle shape
+props, so Brush slices cannot shift identity as positional Cells would. Unselected rows retain
+configured/explicit series patterns and full gradient paints. Projection tiles
+use the configured theme's solid first stop (`--color-key`), the same documented
+fallback as ordinary Bar/Area pattern tiles. `pattern="none"` disables automatic
+projection paint. Explicit series `fill`/`style.fill`, native shape options,
+custom shapes/active shapes and any explicit Cell composition retain paint
+ownership. Datum `fill`/`style.fill` also prevents automatic projection paint for
+that row. Compose Cells yourself for custom per-row painting.
+
+`TooltipContent.isProjected(entry)` shares caller selection but receives the
+native tooltip entry, including its original payload. Projected items append
+accessible text (`projectedLabel`, default `"Projected"`) without modifying
+values, labels, formatter behavior or config. Custom tooltip content and data
+alternatives must expose status themselves, even when custom paint overrides it.
+The runnable public consumer example is the packed Bar fixture at
+`/?projection` (add `&horizontal` for horizontal bars); it includes table status,
+stacking, filtering, reorder and ownership controls. Configured series metadata
+continues to own ordinary patterns; projection is a per-Series composition prop,
+not global config or a generated-data recipe.
+
+### Percentage stack formatting
+
+`createPercentStack({ values })` opts into formatting for scalar native
+`stackOffset="expand"` Bar, Area and Combo stacks. Geometry, domains, axes and
+stack membership remain caller-owned. It returns `tickFormatter` and
+`normalizedValue`; no rows, series, native values or native tooltip payloads are
+rewritten. Native Recharts still normalizes geometry exactly once.
+
+```tsx
+const percent = createPercentStack({
+  values: (entry) => {
+    // Select this stack, excluding the Combo's latency line and other axes.
+    if (entry.dataKey !== "desktop" && entry.dataKey !== "mobile") return undefined;
+    const row = entry.payload as { desktop: number; mobile: number } | undefined;
+    return row ? [row.desktop, row.mobile] : undefined;
+  },
+});
+// Vertical columns / ordinary Areas: the numeric Y axis only.
+<YAxis yAxisId="share" tickFormatter={percent.tickFormatter} />;
+// Horizontal bars (layout="vertical"): the numeric X axis only.
+<XAxis type="number" tickFormatter={percent.tickFormatter} />;
+<Tooltip normalizedValue={percent.normalizedValue} />;
+```
+
+Only attach the formatter to an axis whose units are fractions. Other axes keep
+native ticks. A shared axis containing raw and fraction units needs a caller
+chosen scale/domain; this helper cannot reconcile those units. Custom ticks and
+`tickFormatter` stay native and caller-owned. `formatPercent(fraction)` is also
+exported (one decimal at most, no locale-dependent output).
+
+`values(entry)` must return the **raw members of that entry's own stack**, including
+its value, or `undefined` for unrelated entries. Use native datum identity, stack
+and axis selection where keys overlap. Match current native hidden-series
+membership; do not sum the tooltip payload, which can contain unrelated stacks,
+axes or lines. Update membership alongside controlled legends. Range values,
+numeric strings and nonfinite values are outside the helper's scalar contract.
+
+The helper uses the signed sum, matching native expand: missing members contribute
+zero to the denominator but remain missing in content; all-zero rows display 0%;
+negative fractions remain signed, with no absolute-value conversion or clamping.
+A cancelling zero sum with nonzero members has no defined share and retains raw
+formatting. Invalid/nonfinite totals or entries also retain raw formatting.
+Native negative geometry/domain behavior remains native; this API does not promise
+a 0–100% domain for negative data or fabricate absent values.
+
+`Tooltip` and `TooltipContent` accept `normalizedValue(entry): number | undefined`.
+Default content shows `25% (1)` with the original value in parentheses, using
+configured `formatValue` for that raw text when present. Explicit entry/native
+`formatter` takes precedence, including suppression and tuple results. Custom
+content receives the unchanged native payload and owns its presentation; pass the
+resolver explicitly when composing `TooltipContent`. Missing text, labels,
+projection status, patterns and colors keep their existing contracts. For already
+normalized source data, provide a resolver that returns the existing fraction;
+do not compute another share or apply expand to data already transformed elsewhere.
+Hosts still own raw data tables and accessible alternatives.
+
+The source-only example at `/contracts.html` includes vertical/horizontal Bar,
+Area and Combo with a separate raw latency axis and original data tables.
+Recharts 3.10.1 applies native expand to every numeric axis. For mixed-unit Combo
+charts, the example therefore uses caller-selected fraction `dataKey` accessors
+for the stacked bars with `stackOffset="none"`, a `[0, 1]` share axis, and an
+unchanged raw latency line on `[0, 10]`. The raw rows stay intact; an explicit
+native tooltip formatter pairs each fraction with its original row value. Do not
+apply expand or divide again to those fraction accessors. Other families use
+native expand and the formatting helper. The Percent Area recipe retains integer
+tooltip percentages and “No share” for a zero total.
+
+
+### Point marker styles
+
+`LineSeries` and `AreaSeries` accept independent `pointStyle` and
+`activePointStyle` values: `"default"`, `"border"`, or `"colored-border"`.
+Omitted/default values keep the existing appearance (including Area's normally
+hidden regular dots). Opting into a regular style enables regular dots. Border
+uses a series-colored center with a surface-colored ring; colored-border uses a
+surface-colored center with a series-colored ring. The surface is
+`--kind-ui-chart-marker-surface`, falling back to `--card` then white; set it on
+Root for your theme. Series paint follows the existing config/theme identity or
+explicit series stroke. Styles introduce no SVG resources or additional motion.
+
+```tsx
+<LineSeries dataKey="total" pointStyle="border" activePointStyle="colored-border" />
+<AreaSeries dataKey="total" pointStyle="colored-border" activePointStyle="border" />
+```
+
+Any explicit native `dot` or `activeDot` value (including false, true, props,
+renderer functions and elements) wins for its respective marker. Configured
+LineChart accepts these options in its existing `series` objects; explicit
+children retain ownership. `PointMarker` is a reusable native Dot renderer with
+`variant` and native Dot props. Its variant paint wins the engine-supplied paint;
+native radius/handlers remain intact, and SVG `style` can override its paint.
+For example, `dot={<PointMarker variant="colored-border" style={{ fill: "white" }} />}`.
+Native active-dot callbacks carry series paint in `fill`, while regular dots carry
+it in `stroke`. When composing PointMarker as an active renderer, forward that
+identity explicitly: `activeDot={(props) => <PointMarker {...props}
+stroke={props.fill} variant="colored-border" />}`. The Series style API handles
+this distinction automatically. Keyboard/pointer inspection remains chart-owned; the active mark retains its
+existing non-intercepting behavior and reduced-motion policy. Radar's selection
+dots and Scatter's symbols have separate contracts and do not accept these
+series options. Bar, Pie and other shape families are outside this API.
+
+Run `npm run dev:chart` and visit `/recipes.html#point-markers` for the marker gallery and
+its accessible data table.
+
+### Directional Line and Area entrances
+
+`LineAnimation` and `AreaAnimation` accept `revealDirection`:
+
+- `"left-to-right"` (default): expand from the left edge.
+- `"right-to-left"`: expand from the right edge.
+- `"center-out"`: expand equally from the horizontal center.
+- `"edges-in"`: expand two edge regions toward the horizontal center.
+
+Directions are physical horizontal screen-space reveals for both native layouts;
+they do not reverse data order or follow a vertical category axis. Timing remains
+`revealDurationMs` / `revealEasing`. The temporary family clip leaves native paths,
+axes, margins and transforms intact. Explicit directional entrances remove the clip
+on completion or interruption (including resize/data changes). Line with an omitted
+direction preserves its existing completed full-width clip until interruption;
+Area/Combo retain their existing completion removal. Disabled/reduced motion shows
+complete content.
+Existing loading illustrations keep their independent design. Replay uses the
+existing remount or loading-to-ready lifecycle, not hover or color updates.
+
+```tsx
+import {
+  AreaChart, AreaSeries, ComboChart, LineChart, LineSeries, Root,
+  type SeriesConfig,
+} from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+
+const data = [
+  { day: "Mon", total: 12, forecast: 16 },
+  { day: "Tue", total: 20, forecast: 24 },
+];
+const config = {
+  total: { label: "Total", color: "#3659b8" },
+  forecast: { label: "Forecast", color: "#0d9488" },
+} satisfies SeriesConfig;
+
+export function DirectionalCharts() {
+  return (
+    <Root config={config}>
+      <LineChart data={data} width={480} height={240} aria-label="Daily total"
+        animate={{ revealDirection: "right-to-left", revealDurationMs: 800 }}>
+        <LineSeries dataKey="total" pointStyle="border" />
+      </LineChart>
+      <AreaChart data={data} width={480} height={240} aria-label="Daily forecast"
+        animate={{ revealDirection: "center-out" }}>
+        <AreaSeries dataKey="forecast" />
+      </AreaChart>
+      <ComboChart data={data} width={480} height={240} aria-label="Total and forecast"
+        animate={{
+          revealDirection: "center-out",
+          lineReveal: { revealDirection: "right-to-left" },
+          areaReveal: { revealDirection: "edges-in", revealDurationMs: 1200 },
+          barReveal: false,
+        }}>
+        <LineSeries dataKey="total" />
+        <AreaSeries dataKey="forecast" />
+      </ComboChart>
+    </Root>
+  );
+}
+```
+
+Combo inherits the chart direction for Line/Area unless the corresponding family
+object overrides it; `false` disables that family entrance. Bar keeps its existing
+entrance configuration. All managed series in a family share its entrance clip;
+individual series rendering/visibility props remain available, but there is no
+per-series direction prop. Explicit native children and consumer clip/shape
+ownership retain their existing contracts. `RevealDirection` is exported for
+consumer controls. The packed Line/Area motion fixtures accept `?direction=...`
+and the Combo fixture accepts `?directional` to exercise the family overrides.
+
+### Animated dashed lines
+
+`LineSeries` accepts `dashAnimation={ { durationMs: 1000, direction: "forward" } }`
+(or `false`, the default). Supply a native numeric `strokeDasharray`, such as
+`"6 4"`; duration is milliseconds per full pattern cycle. `reverse` reverses
+travel. Zero, negative or non-finite duration and nonnumeric/CSS/percentage dash
+patterns stay static. Odd lists repeat twice per cycle, matching SVG.
+
+```tsx
+<LineChart data={rows} animate>
+  <LineSeries dataKey="total" strokeDasharray="6 4" strokeDashoffset={3}
+    dashAnimation={{ durationMs: 800 }} material="glow" />
+</LineChart>
+<ComboChart data={rows} animate>
+  <AreaSeries dataKey="total" stroke="none" fillOpacity={0.2} />
+  <LineSeries dataKey="total" dot={false} strokeDasharray="3 2 1"
+    dashAnimation={{ durationMs: 1200, direction: "reverse" }} />
+</ComboChart>
+```
+
+Load the package stylesheet. Motion stops with chart `animate={false}`, reduced
+motion, loading, or hidden series. Disabling restores the native dash offset;
+reenabling starts a fresh cycle. Use `dashAnimation={false}` to disable an individual series. Native width, dash array, offset and
+styles remain intact; style dash values take precedence. Custom shapes own their
+animation and are never decorated. Entrance clip reveal timing is independent.
+No geometry or data is changed, and CSS requires no mount timers or cleanup.
+Stylesheets overriding dash paint remain consumer-owned and can change appearance.
+
+`AreaSeries` does not accept this option: its closed perimeter includes baseline
+and closing edges. For an open animated outline, overlay `LineSeries` in a
+`ComboChart` as above. Match data keys, interpolation and axes yourself; stacked
+or range areas require an explicitly derived outline dataset. See
+`/contracts.html#dashed-lines` for the interactive line and combo contract examples.
+
+### Initial Pie tooltip
+
+`PieChart.defaultPinnedCategory="delivery"` opts into an initial tooltip for
+one direct `PieSeries` (Fragments allowed) with explicit `data` and `categoryKey`.
+Pair it with `Tooltip.itemKey={(entry) => entry.payload.id}` when `categoryKey="id"`;
+caller labels, formatters, and the data table remain the source of truth.
+Only Pie/donut compositions whose direct children are one Kind PieSeries and
+one Kind Tooltip (optionally in Fragments) support this default. Native Pie, wrapped series, multiple rings, and other chart families
+are outside this contract; missing category data/identity or multiple direct
+series, duplicate/missing Tooltips, or unsupported direct children throw when resolving a pin.
+
+The category string is captured on mount. Reorder resolves its current index;
+unknown, duplicate, removed, hidden, or filtered categories clear the default
+permanently. Restoring rows or changing the default prop does not re-pin; remount
+explicitly to begin again. Pointer movement/down, focus, and any chart key press
+clear the default and hand inspection/dismissal back to Recharts. Escape never
+re-pins. No focus is moved or trapped. The existing tooltip is the sole readout
+and live announcement; Kind adds no announcement region or hover selection.
+Explicit Tooltip `active` and `defaultIndex` retain native ownership and take
+precedence. Custom content owns its markup and accessibility. Omitted defaults
+preserve existing behavior. See the weekly Pie in `examples/chart/pie-recipes.tsx`.
+
+### Sankey node labels
+
+Compose `SankeyNodeLabel` beside `SankeyNode` in the native `node` callback:
+
+```tsx
+node={(node) => (
+  <g>
+    <SankeyNode {...node} />
+    <SankeyNodeLabel node={node} data={data} position="outside" showValues
+      valueFormatter={(value) => `${value} MWh`} />
+  </g>
+)}
+```
+
+Optional `SankeyNodeConfig` entries accept an `icon: ReactNode`. Pass that config
+explicitly as `SankeyNodeLabel`'s `nodeConfig` in your native callback (see the
+energy example in `examples/chart/sankeys.tsx`). Icons use a square `iconSize`
+(default 16 chart units) SVG viewport with `viewBox="0 0 24 24"`; supply SVG
+content, or a nested SVG with its own viewBox. `iconGap` defaults to 4 units.
+Outside icons sit nearest the node and shift the text by size plus gap on either
+side. Inside icons stack above centered text and share its exact rectangle clip;
+small nodes can clip both. Reserve outside margins for the combined content.
+Missing, null, boolean or zero-size icons preserve the existing text layout.
+Sizes and gaps must be finite and nonnegative. Icons are decorative (`aria-hidden`,
+nonfocusable); data names and full name/value titles remain meaningful, and the
+data table remains the accessible alternative. Config labels remain Legend metadata.
+Custom text children compose with the icon; text props/ref still target the text.
+A custom native node renderer owns all rendering: nothing is injected unless it
+chooses this helper, and omitting `nodeConfig` opts out of configured icons.
+
+Identity is resolved by `node.payload.id` against `data`, never callback index or
+name. Supply the same data to the chart, label and `SankeyTable`, and reuse the
+formatter as the table's `formatValue`. A node value is the maximum of incoming
+and outgoing flow sums: sources use outgoing, sinks incoming, balanced intermediate
+nodes count throughput once, and disconnected or measured-zero nodes total zero.
+Existing data validation rejects unbalanced intermediate nodes outside its rounding
+tolerance; the larger sum handles that tolerance consistently with native sizing.
+No extra totals or inferred flows are added to the table.
+
+`position="inside"` centers text and clips it to the exact node rectangle, including
+small or zero-size nodes. It does not shrink text, expand geometry or avoid collisions.
+Use outside labels for narrow nodes; they default right for sources/intermediates and
+left for sinks. `side`, `offset`, native text props, styles and refs remain consumer-owned.
+Reserve margins for outside text; the native SVG viewport still clips overflow.
+The full name/value remains in a SVG title even when inside text clips. Keep the table
+as the complete accessible data alternative. Custom `children` (including `tspan`)
+replace visual text while preserving the default title. No label or animation is
+installed implicitly. `/sankeys.html` demonstrates both positions.
