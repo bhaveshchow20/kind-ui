@@ -1,0 +1,34 @@
+{
+  "base_commit": "b87cf00a39504a2cebf4e198c2aa4dbd4689720b",
+  "package": "@kind-ui/charts@0.3.0",
+  "method": "One fresh agent per request and skill version, with minimal task context, isolated outputs, installed public declarations, and no live writes. Baseline used the pre-change skill snapshot. Reviewed generated code, not just agent summaries. Single runs do not establish statistical improvement.",
+  "comparisons": [
+    {
+      "request": "dashboard",
+      "both": "Strict TypeScript passed. Next 16.3.8 webpack production builds passed. Chromium 151 at 390px with reduced motion emulated passed native legend Enter/Space toggles, complete tables, zero/missing observations, and pending/empty/error transitions; no page errors observed.",
+      "revised": "Uses chart-native loading props while keeping charts mounted; disables legend changes during pending and retains page-controlled visibility.",
+      "baseline": "Uses host loading text and unmounts charts while pending; still satisfies the requested states and data alternatives.",
+      "assessment": "Both produced functional dashboards; native loading guidance was adopted only in the revised run. Do not claim baseline failure."
+    },
+    {
+      "request": "migration-matrix",
+      "both": "TypeScript and public-model checks passed. Preserved custom revenue gradient, forecast tooltip using entry.payload, gradient Sankey links with Glow finish, stable flow IDs, and Heatmap zero/missing values with complete data alternatives.",
+      "revised": "Omits Default material props and explicitly explains custom paint ownership; chooses stable raw row IDs for revenue categories.",
+      "baseline": "Sets explicit Default appearance props and supplies an extra consumer-owned projection overlay. Uses stable row keys and flow endpoints, but month display labels as the bar category axis.",
+      "assessment": "Both preserve the requested encodings. The revised result follows Default omission and separates stable category identity from display labels. Family-panel browser checks remain unrun."
+    }
+  ],
+  "trigger_probe": {
+    "method": "Separate fresh agent received only skill metadata and four requests, with no expected answers.",
+    "outcome": "Invoked for Kind UI matrix and migration requests; declined Recharts-only and release-workflow requests. Four decisions matched intended scope."
+  },
+  "bundled_examples": "All four full examples and scaffolded good rule snippets compile strict NodeNext and Bundler without skipLibCheck against released 0.3.0. Four frontmatter/link/scope contract tests pass.",
+  "discovery": "Official skills CLI 1.7.1 selected only kind-ui-charts from the local repository in an isolated project; copied skill contents matched byte-for-byte. No personal/global installation.",
+  "independent_review": "Independent reviewer found tooltip unit formatting and configured-Line callback ownership issues. Both fixed and rechecked; no remaining skill blockers.",
+  "limits": [
+    "One run per task/version; no timing/token benchmark or statistical claim.",
+    "Reduced motion was emulated and screenshots inspected; no exhaustive animation or assistive-technology audit.",
+    "Official docs retrieval returned HTTP 403 in family runs; installed npm declarations supplied the contracts.",
+    "Repository-wide gate outcome is recorded separately in the PR; these consumer evaluations do not substitute for it."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "skill_name": "kind-ui-charts",
+  "evals": [
+    {
+      "id": "dashboard",
+      "prompt": "Build a Next App Router monthly dashboard using @kind-ui/charts@0.3.0: revenue bars in USD plus conversion as a fraction on a separate axis. Legend toggles must be controlled by the page, while a second simple weekly orders trend has zero and missing observations. Show pending, ready-empty, and error states and a complete readable data alternative. Follow the OS reduced-motion preference.",
+      "should_trigger": true
+    },
+    {
+      "id": "migration-matrix",
+      "prompt": "Adapt an existing @kind-ui/charts consumer to released 0.3. It has forecast revenue bars using a custom SVG gradient fill, raw rows {id,month,revenue,forecast}, and a tooltip that should identify projected observations. Replace removed Paper styling with Default for bars and Glow for a Sankey flow panel while retaining gradient flow links. Also select and implement a suitable chart for a small team-by-week activity matrix with missing cells and zeros. Preserve data, accessible alternatives, and stable identity when rows reorder.",
+      "should_trigger": true
+    },
+    {
+      "id": "recharts-only",
+      "prompt": "Fix the axis labels in my existing plain Recharts BarChart. Keep the current dependencies and add no chart library.",
+      "should_trigger": false
+    },
+    {
+      "id": "release-workflow",
+      "prompt": "Review Kind UI's release workflow and changeset version PR. Do not change consumer application code.",
+      "should_trigger": false
+    }
+  ]
+}
