@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 const port = Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) + 21;
 const url = `http://127.0.0.1:${port}/legend.html`;
 const indicator = '[data-kind-ui="chart-indicator"]';
-const series = (key: string) => `#primary [data-series="${key}"]`;
+const series = (key: string) => `#primary [data-kind-ui="chart-legend"] [data-series="${key}"]`;
 
 test("packed shared config renders all native symbols and default circle in monochrome", async ({
   page,
@@ -117,10 +117,9 @@ test("config updates, reorder, chart unmount and key removal keep scopes determi
       .getAttribute("d"),
   );
   await page.getByRole("button", { name: "Reorder", exact: true }).click();
-  await expect(page.locator("#primary [data-series]").first()).toHaveAttribute(
-    "data-series",
-    "wye",
-  );
+  await expect(
+    page.locator('#primary [data-kind-ui="chart-legend"] [data-series]').first(),
+  ).toHaveAttribute("data-series", "wye");
   expect(await page.locator(`${series("social")} path`).getAttribute("d")).toBe(star);
   await page.getByRole("button", { name: "Mount charts", exact: true }).click();
   await expect(page.getByRole("application")).toHaveCount(0);

@@ -190,7 +190,12 @@ not categorical palettes: supply separate config keys for category identities.
 Stops are evenly distributed from 0 to 100%; a single stop is solid. Each theme's
 spacing is preserved when stop counts differ (intermediate colors use CSS
 `color-mix(in srgb, ...)`). Empty arrays, sparse arrays, empty strings and incomplete
-or unknown theme fields throw; CSS color syntax remains the browser's responsibility.
+or unknown theme fields throw. Errors identify the series and color property (including
+the theme and stop index when applicable), without printing color values or unrelated
+config metadata. For example, an empty second dark stop reports
+`config["revenue"].color.dark[1] requires a nonempty color string`.
+CSS color syntax remains the browser's responsibility: CSS variables, `currentColor`
+and modern color functions pass through unchanged, including during server rendering.
 
 ```tsx
 const config = {

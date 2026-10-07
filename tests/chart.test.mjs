@@ -1614,6 +1614,59 @@ test("malformed new color shapes fail before emitting resources", () => {
   }
 });
 
+test("color errors identify only the offending series and property", () => {
+  for (const [color, path, guidance] of [
+    [[], 'config["sales"].color', /nonempty string or nonempty array/],
+    [" ", 'config["sales"].color', /nonempty color string/],
+    [["red", null], 'config["sales"].color[1]', /nonempty color string/],
+    [Array(2), 'config["sales"].color[0]', /nonempty color string/],
+    [{ light: [], dark: "blue" }, 'config["sales"].color.light', /nonempty array/],
+    [
+      { light: "red", dark: ["blue", " "] },
+      'config["sales"].color.dark[1]',
+      /nonempty color string/,
+    ],
+    [{ light: "red" }, 'config["sales"].color', /both light and dark/],
+    [
+      { light: "red", dark: "blue", secret: "PRIVATE_VALUE" },
+      'config["sales"].color',
+      /no other fields/,
+    ],
+    [null, 'config["sales"].color', /nonempty string or nonempty array/],
+  ]) {
+    assert.throws(
+      () =>
+        render(
+          h(Root, {
+            config: {
+              unrelated: { color: "purple", label: "PRIVATE_LABEL" },
+              sales: { color, label: "PRIVATE_SERIES_LABEL" },
+            },
+          }),
+        ),
+      (error) => {
+        assert.ok(error.message.includes(path));
+        assert.match(error.message, guidance);
+        assert.doesNotMatch(error.message, /PRIVATE_|unrelated|secret|purple|blue|red/);
+        return true;
+      },
+    );
+  }
+});
+
+test("color shape validation preserves CSS syntax during SSR", () => {
+  for (const color of [
+    "var(--brand, currentColor)",
+    "currentColor",
+    "oklch(60% 0.2 240)",
+    "color(display-p3 1 0.5 0)",
+    "color-mix(in oklch, red 30%, blue)",
+  ]) {
+    const html = render(h(Root, { config: { sales: { color } } }));
+    assert.ok(html.includes(`--color-sales:${color}`));
+  }
+});
+
 test("indexed stops cannot collide with valid legacy series keys", () => {
   const html = render(
     h(
