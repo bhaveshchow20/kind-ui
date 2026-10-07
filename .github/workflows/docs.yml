@@ -1,10 +1,10 @@
 name: Docs
 on:
   pull_request:
-    paths: ["apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
+    paths: ["apps/indexing.mjs", "apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
   push:
     branches: [main]
-    paths: ["apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
+    paths: ["apps/indexing.mjs", "apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
 permissions:
   contents: read
 concurrency:
@@ -42,6 +42,8 @@ jobs:
         working-directory: apps/docs
         env:
           KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
+          KIND_UI_DEPLOYMENT_ENV: preview
+          NEXT_PUBLIC_KIND_DOCS_BASE_PATH: ""
       - name: Retain the built docs site and generated browser fixtures
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -50,6 +52,28 @@ jobs:
             apps/docs/out/
             apps/docs/generated/
             apps/docs/public/
+          if-no-files-found: error
+          retention-days: 14
+      # Preserve the root-mounted preview fixtures above before rebuilding the public mount.
+      # Reuse installed dependencies; no copied-consumer or browser fleet is repeated.
+      - name: Check production indexing at the public Docs mount
+        run: |
+          npm run build
+          node scripts/check-export.mjs
+          mkdir -p artifacts/production-indexing
+          cp out/index.html out/robots.txt out/sitemap.xml artifacts/production-indexing/
+          cp out/components/line/index.html artifacts/production-indexing/line.html
+          cp out/start/installation/index.html artifacts/production-indexing/legacy-installation.html
+        working-directory: apps/docs
+        env:
+          KIND_UI_DEPLOYMENT_ENV: production
+          NEXT_PUBLIC_KIND_DOCS_BASE_PATH: /charts/docs
+          KIND_DOCS_ORIGIN: https://kindui.dev
+      - name: Retain production indexing output
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docs-production-indexing
+          path: apps/docs/artifacts/production-indexing/
           if-no-files-found: error
           retention-days: 14
   consumers:

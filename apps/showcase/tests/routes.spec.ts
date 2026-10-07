@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { assertIndexingHTML, assertIndexingRoutes } from "../../../scripts/indexing-output.mjs";
+import { showcaseURL } from "../../indexing.mjs";
 import { documentationCharts, siteLinks } from "../lib/site-links";
 
 const basePath = process.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH ?? "";
@@ -82,4 +84,18 @@ test("rapid family switching and search panel scrolling stay usable on mobile", 
   expect(await results.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Search documentation" })).toBeFocused();
+});
+
+test("initial homepage HTML and metadata routes match deployment indexing intent", async ({
+  request,
+}) => {
+  const origin = `http://127.0.0.1:7273${basePath}`;
+  const page = await request.get(`${origin}/`);
+  expect(page.status()).toBe(200);
+  assertIndexingHTML(await page.text(), showcaseURL);
+  const robots = await request.get(`${origin}/robots.txt`);
+  const sitemap = await request.get(`${origin}/sitemap.xml`);
+  expect(robots.status()).toBe(200);
+  expect(sitemap.status()).toBe(200);
+  assertIndexingRoutes(await robots.text(), await sitemap.text(), [showcaseURL]);
 });

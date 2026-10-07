@@ -271,3 +271,23 @@ test("Docs separates copied consumers without dropping any browser or build gate
   for (const family of ["histogram", "waterfall", "box-plot", "combo", "heatmap"])
     assert.ok(browsers.includes(`check-${family}-consumers.mjs`));
 });
+
+test("Docs verifies preview and public indexing without replacing browser fixtures or repeating fleets", () => {
+  const steps = docs.jobs.build.steps;
+  const preview = steps.find((step) => step.run?.includes("npm run check"));
+  assert.equal(preview.env.KIND_UI_DEPLOYMENT_ENV, "preview");
+  assert.equal(preview.env.NEXT_PUBLIC_KIND_DOCS_BASE_PATH, "");
+  const fixtures = steps.findIndex((step) => step.with?.name === "docs-browser-fixtures");
+  const production = steps.findIndex(
+    (step) => step.name === "Check production indexing at the public Docs mount",
+  );
+  assert.ok(production > fixtures);
+  assert.equal(steps[production].env.KIND_UI_DEPLOYMENT_ENV, "production");
+  assert.equal(steps[production].env.NEXT_PUBLIC_KIND_DOCS_BASE_PATH, "/charts/docs");
+  assert.equal(steps[production].env.KIND_DOCS_ORIGIN, "https://kindui.dev");
+  assert.match(steps[production].run, /npm run build/);
+  assert.match(steps[production].run, /node scripts\/check-export\.mjs/);
+  assert.doesNotMatch(steps[production].run, /npm (?:ci|install)|check:consumers|check:browser/);
+  for (const event of ["pull_request", "push"])
+    assert.ok(docs.on[event].paths.includes("apps/indexing.mjs"));
+});
