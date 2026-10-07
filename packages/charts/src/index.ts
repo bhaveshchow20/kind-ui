@@ -95,9 +95,7 @@ export { AreaSeries, type AreaSeriesProps } from "./area-series.js";
 export {
   type BarAnimation,
   BarChart,
-  BarChart as WaterfallChart,
   type BarChartProps,
-  type BarChartProps as WaterfallChartProps,
 } from "./bar-chart.js";
 export type { BarMaterial } from "./bar-material.js";
 export { BarSeries, type BarSeriesProps } from "./bar-series.js";
@@ -219,6 +217,7 @@ export {
 } from "./scatter-tooltip.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 export type { SeriesConfig } from "./types.js";
+export { WaterfallChart, type WaterfallChartProps } from "./waterfall-chart.js";
 export {
   computeWaterfallData,
   type WaterfallDatum,

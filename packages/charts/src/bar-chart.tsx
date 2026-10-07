@@ -13,10 +13,13 @@ import { BarChart as EngineBarChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
 import { BarCategoryBoundary } from "./bar-category.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
+import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 
 export type BarAnimation = LineAnimation;
 export type BarChartProps = ComponentProps<typeof EngineBarChart> & {
   animate?: boolean | BarAnimation | undefined;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
   /** Opt in only for complete native category comparisons; any unsafe visible peer falls back. */
   emphasis?: "none" | "category" | undefined;
 };
@@ -59,16 +62,30 @@ export function BarLifecycle({
 }
 
 /** Native Recharts composition with Kind interaction and optional Motion. */
-export function BarChart({
-  animate = false,
-  emphasis = "none",
-  children,
-  ...props
-}: BarChartProps) {
+export function BarChartImplementation({
+  chartProps,
+  family,
+}: {
+  chartProps: BarChartProps;
+  family: "bar" | "waterfall" | "histogram" | "box-plot";
+}) {
+  const {
+    animate = false,
+    loading,
+    loadingLabel,
+    emphasis = "none",
+    children,
+    ...props
+  } = chartProps;
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
-  const finish = useCallback(() => setInteracted(true), []);
-  const enabled = animate !== false && !reduced;
+  const finish = useCallback(() => {
+    if (!loading) setInteracted(true);
+  }, [loading]);
+  useLayoutEffect(() => {
+    if (loading) setInteracted(false);
+  }, [loading]);
+  const enabled = animate !== false && !reduced && !loading;
   const options = typeof animate === "object" ? animate : {};
   return (
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
@@ -76,6 +93,11 @@ export function BarChart({
         <BarCategoryBoundary>
           <LineChartFrame
             chartProps={props}
+            loadingSkeleton={family}
+            loadingDesign={(seed) => <CartesianLoadingDesign family={family} seed={seed} />}
+            loadingAnimation={{ ...options, ...(props.layout ? { layout: props.layout } : {}) }}
+            loading={loading}
+            loadingLabel={loadingLabel}
             categoryEmphasis={emphasis === "category"}
             engine={EngineBarChart}
             motionEnabled={enabled}
@@ -88,4 +110,9 @@ export function BarChart({
       </BarMotion>
     </MotionContext>
   );
+}
+
+/** Native bar composition with a deterministic loading silhouette. */
+export function BarChart(props: BarChartProps) {
+  return <BarChartImplementation chartProps={props} family="bar" />;
 }

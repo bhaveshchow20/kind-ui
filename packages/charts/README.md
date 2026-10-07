@@ -80,6 +80,56 @@ for composition and customization. The documentation covers chart selection,
 peer requirements, styling, motion and accessibility; applications own their
 data, domains and business state.
 
+### Loading chart data
+
+All chart families accept `loading?: boolean` alongside `animate`, plus
+`loadingLabel?: string` (default “Loading chart”). Import the default stylesheet.
+
+```tsx
+<LineChart
+  config={config}
+  data={rows}
+  xDataKey="month"
+  height={280}
+  aria-label="Monthly sales"
+  animate={{ revealDurationMs: 650 }}
+  loading={pending}
+  loadingLabel="Loading monthly sales"
+/>
+```
+
+Pass the same props directly to composed chart roots inside the existing `Root`
+and native sizing/composition. Supported families: Line, Area, Bar, Combo, Pie,
+Radar, RadialBar, Scatter, Heatmap, Waterfall, Histogram, BoxPlot, ActivityRings
+and Sankey. Each uses its own decorative chart silhouette independent of your data.
+Pulse-based skeletons choose a clearly different bounded profile while fully hidden;
+their geometry stays stable through renders and resize between pulses. A soft leading reveal and
+trailing fade overlap, following the chart’s native entrance duration, easing and
+direction: horizontal paths and left-to-right bar-family windows, angular sectors,
+ordered point/cell opacity or directional flow. Radar keeps two six-vertex polygons
+visible and smoothly morphs between bounded decorative shapes; reduced motion
+holds both still. RadialBar keeps continuous angular velocity through its closing seam. Combo preserves separate family
+reveal options. Pulse timing includes room for the trail to leave and a hidden
+geometry swap; loading never delays actual completion.
+Reduced motion displays a static silhouette.
+
+Actual chart content remains mounted, sized, hidden and inert while pending.
+The chart exposes `aria-busy` and a separate live status. Native axes, series,
+refs, style and event ownership stay with the consumer. External legends remain
+available. Heatmap uses its table viewport; Sankey uses its native flow container;
+polar illustrations retain circular proportions. Skeletons have no values,
+labels or tooltip targets.
+
+Completion immediately restores actual data and rearms the family’s existing
+entrance when `animate` enables it. There is no forced wait or queued completion.
+Empty data does not imply loading: render an explicit empty-result message after
+completion. Loading does not change validation of supplied chart data. Requests,
+cancellation, retries, partial results, errors and portals outside the native
+chart remain host-owned. Supply an accessible data alternative alongside charts.
+
+Run `npm run dev:chart` and open `/loading.html` for all-family replay, load,
+empty-input, resize and interrupted-update controls.
+
 ## Selective Pie glow
 
 `PieSeries` accepts `glowCategories?: readonly string[]` with `categoryKey` and

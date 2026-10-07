@@ -15,6 +15,8 @@ import { PieChart as EnginePieChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { LineChartFrame } from "./line-chart.js";
+import { PolarLoadingDesign } from "./loading-polar-designs.js";
+
 import { PieTooltipPin, pinnedPieIndex } from "./pie-tooltip-pin.js";
 
 export type PieAnimation = LineAnimation;
@@ -22,6 +24,8 @@ export type PieChartProps = ComponentProps<typeof EnginePieChart> & {
   /** Initial tooltip category; one direct categoryKey PieSeries with explicit data only. */
   defaultPinnedCategory?: string | undefined;
   animate?: boolean | PieAnimation | undefined;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
   /** Entrance sweep only; native start/end angles and data order are unchanged. */
   animationDirection?: "clockwise" | "anticlockwise" | undefined;
 };
@@ -49,6 +53,8 @@ const defaultHover = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } 
 /** Native polar composition, shared interaction, and optional Motion-owned sector entrance. */
 export function PieChart({
   animate = false,
+  loading,
+  loadingLabel,
   animationDirection = "clockwise",
   children,
   defaultPinnedCategory,
@@ -68,7 +74,13 @@ export function PieChart({
     if (initialCategory !== undefined && pinIndex === undefined) clearPin();
   }, [initialCategory, pinIndex, clearPin]);
   const chart = (
-    <PieChartPlot {...props} animate={animate} animationDirection={animationDirection}>
+    <PieChartPlot
+      {...props}
+      animate={animate}
+      loading={loading}
+      loadingLabel={loadingLabel}
+      animationDirection={animationDirection}
+    >
       {children}
     </PieChartPlot>
   );
@@ -95,14 +107,18 @@ export function PieChart({
 // geometry inputs intact while a pressed sector is awaiting its native click.
 const PieChartPlot = memo(function PieChartPlot({
   animate = false,
+  loading,
+  loadingLabel,
   animationDirection = "clockwise",
   children,
   ...props
 }: Omit<PieChartProps, "defaultPinnedCategory">) {
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
-  const finish = useCallback(() => setInteracted(true), []);
-  const enabled = animate !== false && !reduced;
+  const finish = useCallback(() => {
+    if (!loading) setInteracted(true);
+  }, [loading]);
+  const enabled = animate !== false && !reduced && !loading;
   const interrupt = useCallback(() => {
     if (enabled) finish();
   }, [enabled, finish]);
@@ -117,6 +133,12 @@ const PieChartPlot = memo(function PieChartPlot({
   const duration = options.revealDurationMs ?? 1000;
   const easing = options.revealEasing ?? "easeOut";
   const started = useRef(false);
+  useLayoutEffect(() => {
+    if (loading) {
+      setInteracted(false);
+      started.current = false;
+    }
+  }, [loading]);
   const previous = useRef([duration, easing, animationDirection]);
   useLayoutEffect(() => {
     const inputs = [duration, easing, animationDirection];
@@ -145,6 +167,11 @@ const PieChartPlot = memo(function PieChartPlot({
         <LineChartFrame
           chartProps={props}
           engine={EnginePieChart}
+          loading={loading}
+          loadingLabel={loadingLabel}
+          loadingSkeleton="pie"
+          loadingDesign={(seed) => <PolarLoadingDesign family={"pie"} seed={seed} />}
+          loadingAnimation={{ ...options, direction: animationDirection }}
           motionEnabled={enabled}
           interrupt={interrupt}
         >

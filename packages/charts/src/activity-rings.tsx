@@ -5,7 +5,7 @@ import { Cell, LabelList, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { Tooltip, type TooltipProps } from "./animation.js";
 import { ChartContext } from "./chart-context.js";
 import { Legend, type LegendProps } from "./legend.js";
-import { RadialBarChart, type RadialBarChartProps } from "./polar-chart.js";
+import { RadialBarChartFrame, type RadialBarChartProps } from "./polar-chart.js";
 import { RadialBarSeries, type RadialBarSeriesProps } from "./polar-series.js";
 import { RadialBarLabel } from "./radial-bar-label.js";
 import { Root, type RootProps } from "./root.js";
@@ -101,7 +101,11 @@ export function ActivityRings({
   const describedBy = [chartProps["aria-describedby"], descriptionId].filter(Boolean).join(" ");
   return (
     <Root {...rootProps} config={activeConfig}>
-      <dl id={descriptionId} data-kind-ui="chart-instructions">
+      <dl
+        id={descriptionId}
+        data-kind-ui="chart-instructions"
+        aria-hidden={chartProps.loading || undefined}
+      >
         {data.map((ring) => (
           <div key={ring.key}>
             <dt>{ring.label}</dt>
@@ -110,7 +114,8 @@ export function ActivityRings({
           </div>
         ))}
       </dl>
-      <RadialBarChart<ActivityRingDatum>
+      <RadialBarChartFrame<ActivityRingDatum>
+        skeletonFamily="activity-rings"
         innerRadius="30%"
         outerRadius="90%"
         startAngle={90}
@@ -167,7 +172,7 @@ export function ActivityRings({
             {...tooltipOptions}
           />
         )}
-      </RadialBarChart>
+      </RadialBarChartFrame>
       {legend !== false && <Legend {...legend} />}
     </Root>
   );
