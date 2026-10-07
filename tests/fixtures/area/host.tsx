@@ -58,7 +58,7 @@ export function AreaHost({
   const { AreaChart, AreaSeries, Tooltip } = Static;
   const [material, setMaterial] = useState<Static.AreaMaterial>("plain");
   const [overshoot, setOvershoot] = useState(false);
-  const [vertical, setVertical] = useState(false);
+  const [vertical, setVertical] = useState(new URLSearchParams(location.search).has("vertical"));
   const [filtered, setFiltered] = useState(false);
   const [stacked, setStacked] = useState(false);
   const [percent, setPercent] = useState(false);

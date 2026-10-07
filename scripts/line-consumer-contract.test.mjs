@@ -55,3 +55,5 @@ test("bar pattern fixture wiring stays inside the public host import guard", () 
     );
   }
 });
+
+import "./line-dash-source.test.mjs";
