@@ -6,7 +6,7 @@ import { filesFor, promptFor } from "../lib/example-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/pie-examples.json", "utf8"));
 function assertCategoryDefaults(source, rows) {
-  assert.match(source, /<Chart.Root config=\{config\}/);
+  assert.match(source, /<Chart.Root\s+config=\{config\}/);
   assert.match(source, /categoryKey="key"/);
   const parsed = ts.createSourceFile("example.tsx", source, ts.ScriptTarget.Latest, true);
   const declaration = parsed.statements
@@ -87,7 +87,7 @@ test("Pie consumers preserve category identity and public source parity", () => 
   assert.match(visibility, /categoryKey="key"/);
   assert.ok(!visibility.includes("<Chart.Cell"));
   assert.ok(!visibility.includes("LabelList"));
-  assert.match(visibility, /onVisibleSeriesChange=\{setVisible\}/);
+  assert.match(visibility, /onVisibleSeriesChange=\{\(next\) => \{\s*setVisible\(next\);/);
 });
 
 test("Pie category-default contracts reject missing identity and category metadata", () => {

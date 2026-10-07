@@ -16,6 +16,7 @@ export const comboExamples = [
   },
   {
     id: "combo-motion",
+    extraFiles: { "src/examples/combo-motion/options.tsx": "examples/combo-motion/options.tsx" },
     title: "Family entrances",
     notes: "Independent, shared or line-only entrances with chart-owned motion.",
     acceptance:

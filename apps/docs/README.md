@@ -6,12 +6,12 @@ Standalone Fumadocs/Next MDX application with build-time typed API and Markdown 
 
 Use Node 22.12+ and npm 11.9. From the repository root run `npm ci`. In this directory:
 
-1. `node scripts/verify-pinned-package.mjs` verifies the checked-in guarded artifact against `vendor/provenance.json`. The current integrated 0.1.0 candidate pin is built from source `d66ad717eaa0220b83b60de9420c94b65d67118c`, including category/Sankey metadata defaults, compact Heatmap and ActivityRings. CI consumes those exact bytes rather than repacking main. Artifact refreshes are owned centrally and require a new package gate, app/consumer locks and consumer verification.
-2. `npm ci` installs the isolated app from its lockfile. If the package artifact changes, use `npm install --save-exact ./vendor/kind-ui-charts-0.1.0.tgz` to update the lockfile and install it.
+1. `node scripts/verify-pinned-package.mjs` verifies the checked-in guarded artifact against `vendor/provenance.json`. The current integrated 0.1.1 candidate pin is the exact guarded wave artifact identified in `vendor/provenance.json`, including shared interaction, bound Pie categories, initial tooltip pins and selective glow. CI consumes those exact bytes rather than repacking main. Artifact refreshes are owned centrally and require a new package gate, app/consumer locks and consumer verification.
+2. `npm ci` installs the isolated app from its lockfile. If the package artifact changes, use `npm install --save-exact ./vendor/kind-ui-charts-0.1.1.tgz` to update the lockfile and install it.
 3. `npm run generate`, `npm run check:consumers`, then `npm run generate` establishes the consumer lock when preparing a new artifact.
 4. `npm run build` exports static `out/`; `npm run check` verifies app types, selected-state contracts and exported links. `npm run preview` serves only reserved port 6373. `node scripts/check-browser.mjs` checks the built preview.
 
-When the tarball changes, delete only this app's `examples/shared/consumer-package-lock.json` and ignored `artifacts/consumer/` before regenerating the clean consumer lock. Never reuse a lock from a different artifact just because they share a version.
+When the tarball changes, regenerate the matching app and `examples/shared/consumer-package-lock.json` chart entries with npm and verify that unrelated dependency pins remain unchanged. Consumers install and verify the promoted bytes; a matching version alone does not establish matching artifacts.
 
 `KIND_DOCS_ORIGIN` sets absolute canonical agent retrieval links at generation/build time. `KIND_DOCS_RELEASE_VERSION` supports a future exact authorized published version; keep local mode until a release actually exists. A release/version change needs a new package gate, both lockfiles, consumers, docs export and review. This app does not change root private/version policy.
 
@@ -27,7 +27,7 @@ The root guarded tarball gate verifies runtime/declarations/CSS/license and isol
 
 Native Sites hosting owns only the new owner-private docs project. `snapshot:site -- /absolute/generated/site/checkout` copies static output and provenance while preserving its hosting project ID. Use the official Sites workflow to commit/push/package the snapshot and deploy that exact version privately. Never run these scripts against the existing showcase Site.
 
-MIT for original contributions; see `THIRD_PARTY_NOTICES.md` for dependencies and reference provenance. The validated unpublished 0.1.0 candidate tarball is retained solely as the explicitly requested reproducible documentation pin, alongside its source and checksum provenance. Do not commit generated output, screenshots, tokens, caches or node_modules.
+MIT for original contributions; see `THIRD_PARTY_NOTICES.md` for dependencies and reference provenance. The validated unpublished 0.1.1 candidate tarball is retained solely as the explicitly requested reproducible documentation pin, alongside its source and checksum provenance. Do not commit generated output, screenshots, tokens, caches or node_modules.
 
 Area keeps explicit Root + ResponsiveContainer + AreaChart composition and consumer-owned legend selection. Area and Line consume the same guarded artifact recorded in provenance. Area browser checks run through `node scripts/start-area-checks.mjs` and record responsive, selected-source, keyboard, motion and scroll evidence.
 

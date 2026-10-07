@@ -1,0 +1,92 @@
+---
+title: Chart customization
+description: Compose loading, theme colors, patterns, projection, motion, Pie defaults and Sankey labels through public APIs.
+---
+
+Use the options below independently. Data, units, domains, request state and accessible data alternatives remain application-owned. Import `@kind-ui/charts/styles.css` once. The [complete options source](/examples/combo-motion/src/examples/combo-motion/options.tsx) is included in the copied [Combo consumer](/examples/combo-motion/README.md); its exported `PresentationOptions`, `PercentageOptions`, `PieOptions` and `FlowLabelOptions` use public imports and receive the same strict NodeNext/Bundler checks as the complete example.
+
+## Labels, theme colors and diagnostics
+
+`SeriesConfig[key].label` is optional. `monthlyVisitors` infers “Monthly visitors”; explicit text, including `""`, wins. Identity keys stay unchanged. [SeriesConfig](/docs/chart-components/series-config/) describes matching, icons, legend symbols and formatter precedence.
+
+`color` accepts a CSS string, a nonempty readonly array of evenly spaced gradient stops, or `{ light, dark }` with either form in each theme. Arrays describe one series gradient. The host owns CSS `color-scheme`; unequal theme stop counts retain their spacing. `--color-key` exposes the first stop; chart-local SVG resources supply full gradients. Native fills, strokes, Cells and custom renderers retain precedence. Invalid empty strings, arrays or theme shapes throw with the config key, theme and stop index where applicable; CSS color syntax and contrast remain browser/consumer responsibilities. Independent React roots need distinct SSR/hydration `identifierPrefix` values.
+
+Development builds warn once when the stylesheet marker is missing after mount, including hydration and delayed stylesheet loading. Production does not run that diagnostic. Import the stylesheet instead of suppressing the warning; explicitly styled consumers still own their CSS.
+
+## Loading
+
+All fourteen families accept `loading?: boolean` and `loadingLabel?: string`. Omitted loading preserves the existing chart. `true` retains layout and shows a decorative family silhouette, hides/inerts managed content and announces `loadingLabel` (default `"Loading chart"`) outside busy content. `false` clears the status and restores actual data, including an empty dataset; normal entrance follows when enabled. Reduced motion keeps skeletons static. Custom content and legends outside the managed chart remain consumer-owned.
+
+The illustration does not represent partial values. Derive loading from your request state; render application error/empty messages and provide cancellation/retry yourself. No network request, timer-based completion or loading data is fabricated. Repeated interruption and loading-to-ready transitions retain mounted chart dimensions.
+
+<ApiTable name="LoadingReference" />
+
+## Series patterns and projected bars
+
+`SeriesConfig[key].pattern` supplies implicit Bar/Area paint and the default legend swatch. `BarSeries.pattern` or `AreaSeries.pattern` overrides it; `false` disables it. The former string opt-out `"none"` is replaced by `false` for this release. `FillPatternSwatch` takes `pattern` and a base `color` for custom legends.
+
+| Field | Values / default | Limits |
+| --- | --- | --- |
+| `kind` | Required: `hatch`, `stripe`, `duotone`, `dots`, `lines` | Static SVG paint; independent of material, data and geometry. |
+| `color` | `CanvasText` | Second ink; select contrasting theme-aware colors. |
+| `size` | `8` SVG units | Finite and positive. |
+| `width` | `1`; stripe `2` | Finite, positive and at most size; dot diameter; duotone stays 50/50. |
+| `angle` | Hatch `45`; others `0` degrees | Finite; chart orientation does not rotate the pattern automatically. |
+
+Explicit fill/gradient, `style.fill`, Cells and custom shapes keep their native paint ownership. Bar custom active shapes also disable automatic encoding. Gradient-backed pattern tiles use the configured first-stop ink. Forced colors retain geometry with system inks. Print settings and chosen colors can affect contrast; patterns do not replace labels or data alternatives.
+
+`BarSeries<Row>.projection={{ isProjected, pattern }}` decorates only caller-selected raw rows. It does not forecast values, filter data or change axes. Reuse the identity predicate in `TooltipContent.isProjected` and label the data alternative. Tooltip `projectedLabel` defaults to `"Projected"`; missing/hidden/suppressed rows retain existing behavior. Cells, explicit paint and custom shape ownership take precedence.
+
+<ApiTable name="FillPatternReference" />
+<ApiTable name="BarProjectionReference" />
+
+## Percentage stacks
+
+`createPercentStack({ values })` returns `tickFormatter` and `normalizedValue` for scalar native `stackOffset="expand"` Bar, Area or Combo stacks. Pass raw values for the inspected stack, including its current value and matching native hidden-series membership; return `undefined` for other series/axes. Keep rows and native geometry unchanged. Pass `tickFormatter` to the fractional axis and `normalizedValue` to Tooltip/TooltipContent. The tooltip shows the percentage alongside ordinary raw-value formatting; an explicit native formatter wins.
+
+`formatPercent(fraction)` multiplies by 100, rounds to one decimal and removes redundant trailing zeroes. The normalized helper ignores null/missing members, returns zero for an all-zero stack, and falls back to ordinary formatting for empty/nonfinite/range inputs or a cancelling signed total. Signed stacks use their signed sum. Already fractional Area recipes must not be normalized twice. The host owns meaningful units and finite direct formatter inputs.
+
+<ApiTable name="PercentFormattingReference" />
+
+## Point markers, dashed lines and reveal direction
+
+`LineSeries` and `AreaSeries` expose independent `pointStyle` and `activePointStyle`: `"default"` (omitted appearance), `"border"` (series center/surface ring), or `"colored-border"` (surface center/series ring). Opting into regular styles enables their dots. Explicit native `dot` and `activeDot` values always win. Set `--kind-ui-chart-marker-surface` on Root for your theme (fallback `--card`, then white). `PointMarker` is the reusable native Dot renderer; when composing an active-dot callback, forward its series `fill` as the marker's `stroke`. Radar and Scatter keep their separate marker APIs.
+
+`LineSeries.dashAnimation` defaults to `false`. Opt in with `{ durationMs: 1000, direction: "forward" }` and a numeric native `strokeDasharray`. `"reverse"` reverses travel; duration is milliseconds per complete pattern cycle. Invalid durations or CSS/percentage/nonnumeric patterns stay static. Motion stops for reduced motion, loading, hidden series or chart `animate={false}`. Native dash offset/style and custom shape ownership remain intact. Area does not accept this prop: overlay an explicit Line in Combo when an open outline is needed.
+
+`LineAnimation` and `AreaAnimation.revealDirection` accept `"left-to-right"` (default), `"right-to-left"`, `"center-out"` and `"edges-in"`. These are physical horizontal reveals for either layout; data order, axes and geometry stay unchanged. Combo inherits the direction for Line/Area unless `lineReveal` or `areaReveal` overrides it; `false` disables that family entrance. Bar keeps its existing entrance. Completion/interruption removes explicit directional clips; loading designs remain independent. See [Motion](/docs/guides/motion/) for duration/easing and family defaults.
+
+<ApiTable name="LinePresentationReference" />
+<ApiTable name="AreaPresentationReference" />
+
+## Decorative backgrounds
+
+Compose `ChartBackgroundPattern` inside a Cartesian chart, or use configured `LineChart.backgroundPattern`. Presets are `"pinpoints"`, `"crossings"` and `"waves"`. `size` defaults to `16` positive finite SVG units; `opacity` defaults to `0.15` in `[0, 1]`; color defaults to the chart-grid CSS token/`CanvasText`. Decoration clips to the native plot and cannot intercept pointer input. It is independent of series patterns, legends, visibility and materials.
+
+`defineChartBackgroundPattern(render)` returns a reusable frozen definition without a global registry. The callback receives `{ size, color, idPrefix }`; scope custom SVG resources with `idPrefix`. Custom content must remain decorative. Cartesian families include Line, Area, Bar, Combo, Scatter, Histogram, Waterfall and Box Plot. Polar, Pie, Sankey, Heatmap and ActivityRings are outside this contract. Native SSR empty plot shells remain unchanged.
+
+<ApiTable name="BackgroundPatternReference" />
+
+## Pie initial inspection and selective glow
+
+`PieChart.defaultPinnedCategory` captures a category string on mount and initially inspects one direct `PieSeries` plus one Kind Tooltip (Fragments are allowed). Supply explicit data, `categoryKey`, and matching `Tooltip.itemKey`. Reorder resolves identity at its current rendered index, including initial Root-bound filtering. Unknown, duplicate, removed, hidden or filtered categories permanently clear the pin; restoration or changing the default does not re-pin. Pointer input, focus or any chart key clears it. No focus is moved; explicit Tooltip `active`/`defaultIndex` wins. Wrapped/native series, multiple rings or ambiguous children are unsupported and throw when resolving the default.
+
+`PieSeries.glowCategories` uses original `categoryKey` identities and requires explicit configured data. Unknown IDs are ignored; removal/restoration follows row membership; an empty list keeps `material`. Selected default sectors receive glow while native Cell paint, custom/active shapes, filters and consumer transforms retain ownership. Glow is decorative. [Pie](/docs/components/pie/) covers loading, Root `interactionBinding="root"`, selection and the accessible data alternative.
+
+## Sankey labels and icons
+
+Compose `SankeyNodeLabel` with `SankeyNode` in the native node callback. Pass identical `data` to chart, label and `SankeyTable`. Identity uses `node.payload.id`, never callback index/name. `position` defaults to `"outside"`; sinks default left and other nodes right; offset defaults to `8` chart units. `showValues` defaults to false and `valueFormatter` to `String`. Values use the maximum of incoming/outgoing flow, counting balanced throughput once and disconnected/measured-zero nodes as zero.
+
+Inside labels center and clip to the exact node rectangle, including tiny nodes. Reserve outside margins yourself; helpers do not shrink text, avoid collisions or change native geometry. A title preserves full name/value. Custom `children`, native text props, style and ref remain composable.
+
+`SankeyNodeConfig[id].icon` accepts decorative ReactNode SVG content. Pass `nodeConfig` explicitly to the label to enable it; no icon is injected into custom native renderers. `iconSize` defaults to `16`, `iconGap` to `4`; both are finite nonnegative chart units. The icon viewport is `0 0 24 24`; inside icons share the exact node clip. Missing/null/boolean/zero-size icons preserve text layout. Names and the data table provide meaning. See [Sankey](/docs/components/sankey/) for data validation and renderer ownership.
+
+<ApiTable name="SankeyLabelReference" />
+
+## Shared legend and mark interactions
+
+Visibility remains the default, with a guard against a legend/mark hiding the last eligible item. External controlled state may intentionally be empty. Opt into persistent focus through one Root owner with `interaction={{ kind: "series" | "category", mode: "focus", eligibleKeys }}`. Category marks require explicit Root binding; mark activation is opt-in with `"matching-legend"`. Native handlers run first and may veto. Selection survives reorder by identity; unavailable rows/series reconcile eligibility. Controlled and defaulted ownership must stay exclusive and stable while mounted. See [Root](/docs/chart-components/root/) and [Legend](/docs/chart-components/legend/) for callbacks, announced guard feedback, keyboard/focus behavior and family limits.
+
+## Agent retrieval
+
+Start with [llms.txt](/llms.txt), retrieve this [standalone Markdown guide](/markdown/guides/customization.md), then the relevant family reference and [complete options source](/examples/combo-motion/src/examples/combo-motion/options.tsx). [llms-full.txt](/llms-full.txt) contains complete consumer files and generated API tables. Use public exports; typecheck/build the chosen export, retain its data alternative, and verify mobile layout, keyboard interaction, contrast and reduced motion.
