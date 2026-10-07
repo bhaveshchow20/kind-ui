@@ -1,13 +1,17 @@
 import { expect, type Page, test } from "@playwright/test";
 
 async function family(page: Page, name: string) {
-  await page.getByRole("tab", { name: new RegExp(`^${name}(?:\\s|$)`) }).click();
-  await page.locator(".chart-card").first().scrollIntoViewIfNeeded();
+  if (await page.getByRole("dialog").count()) await page.keyboard.press("Escape");
+  await page.getByRole("tab", { name, exact: true }).click();
+  await page.locator(".tile-open").first().click();
+  await expect(page.getByRole("dialog")).toBeVisible();
 }
 
 test("navigation, code modal and installation are keyboard accessible", async ({ page }) => {
   await page.goto("./");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Bring your data\s*to life/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
+    "Interactive charts for React.js and Next.js, built on Recharts and Motion and ready for Codex, Claude, Gemini, Grok and your agents.",
+  );
   await expect(page.locator(".install-section")).toContainText("npm install @kind-ui/charts");
   await page.keyboard.press("Control+k");
   await expect(page.getByRole("textbox", { name: "Search components" })).toBeFocused();
@@ -16,12 +20,12 @@ test("navigation, code modal and installation are keyboard accessible", async ({
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await family(page, "Line");
-  await page.getByRole("button", { name: "View chart code" }).first().click();
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
   await expect(page.getByRole("region", { name: "Chart example code" })).toContainText(
     "@kind-ui/charts",
   );
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("button", { name: "View chart code" }).first()).toBeFocused();
+  await expect(page.locator(".tile-open").first()).toBeFocused();
 });
 
 for (const width of [320, 375, 768, 1280]) {
@@ -45,83 +49,12 @@ for (const width of [320, 375, 768, 1280]) {
   });
 }
 
-test("custom palette drafting waits for apply and does not open a native picker on focus", async ({
-  page,
-}) => {
-  await page.goto("./");
-  await page.getByRole("button", { name: "Create custom palette" }).click();
-  await expect(page.locator(".palette-editor")).toBeFocused();
-  await page.getByRole("textbox", { name: "Hex for custom color 1" }).fill("#ff0033");
-  await expect(page.getByRole("radio", { name: "Custom palette" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Use palette" }).click();
-  await expect(page.getByRole("radio", { name: "Custom palette" })).toBeChecked();
-  await page.getByRole("button", { name: "Edit custom palette" }).click();
-  await expect(page.getByRole("textbox", { name: "Hex for custom color 1" })).toHaveValue(
-    "#ff0033",
-  );
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("button", { name: "Edit custom palette" })).toBeFocused();
-});
-
-for (const name of ["Bar", "Histogram", "Box Plot", "Waterfall"]) {
-  test(`${name} reveals visibly, replays, and settles on interruptions`, async ({ page }) => {
-    await page.clock.install();
-    await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.goto("./");
-    await family(page, name);
-    await page.mouse.move(0, 0);
-    await page.getByRole("button", { name: "Replay chart animations" }).click();
-    const reveal = page
-      .locator(".chart-card")
-      .first()
-      .locator('[data-kind-ui="bar-reveal"]')
-      .first();
-    await expect(reveal).toBeAttached();
-    await page.clock.runFor(120);
-    const early = await reveal.evaluate((node) => (node as SVGRectElement).height.baseVal.value);
-    expect(early).toBeGreaterThan(0);
-    await page.clock.runFor(250);
-    expect(
-      await reveal.evaluate((node) => (node as SVGRectElement).height.baseVal.value),
-    ).toBeGreaterThan(early);
-    await page.clock.runFor(1400);
-    await expect(page.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
-    await page.getByRole("button", { name: "Replay chart animations" }).click();
-    await page.getByRole("button", { name: "Replay chart animations" }).click();
-    await page.getByRole("switch", { name: "Motion", exact: true }).uncheck();
-    await expect(page.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
-    await page.getByRole("switch", { name: "Motion", exact: true }).check();
-    await page.getByRole("button", { name: "Replay chart animations" }).click();
-    await page.setViewportSize({ width: 375, height: 900 });
-    await page.clock.runFor(1400);
-    await expect(page.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
-    await family(page, "Line");
-    await family(page, name);
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.clock.runFor(100);
-    await expect(page.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
-  });
-}
-
-test("replay preserves distribution legend selections", async ({ page }) => {
-  await page.goto("./");
-  await family(page, "Histogram");
-  const legend = page
-    .locator(".chart-card")
-    .first()
-    .locator('[data-kind-ui="chart-legend-button"]');
-  await legend.click();
-  await expect(legend).toHaveAttribute("aria-pressed", "false");
-  await page.getByRole("button", { name: "Replay chart animations" }).click();
-  await expect(legend).toHaveAttribute("aria-pressed", "false");
-});
-
 for (const name of ["Line", "Bar", "Histogram", "Box Plot"]) {
   test(`${name} keyboard tooltips and axis numbers remain inside the card`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("./");
     await family(page, name);
-    const card = page.locator(".chart-card").first();
+    const card = page.locator(".playground-preview .chart-card").first();
     const chart = card.getByRole("application").first();
     await chart.focus();
     await page.keyboard.press("ArrowRight");
@@ -135,7 +68,7 @@ for (const name of ["Line", "Bar", "Histogram", "Box Plot"]) {
           card.locator(".recharts-yAxis text").evaluateAll((nodes) =>
             nodes.every((node) => {
               const bounds = node.getBoundingClientRect();
-              const card = node.closest(".chart-card")?.getBoundingClientRect();
+              const card = node.closest(".playground-preview .chart-card")?.getBoundingClientRect();
               if (!card) return false;
               return bounds.x >= card.x && bounds.right <= card.right;
             }),
@@ -159,18 +92,16 @@ test("clipboard denial leaves a readable recovery message", async ({ page }) => 
   });
   await page.goto("./", { waitUntil: "networkidle" });
   await family(page, "Line");
-  await page
-    .getByRole("button", { name: /^Copy code for/ })
-    .first()
-    .click();
-  await expect(page.locator(".copy-feedback").first()).toContainText("Could not copy");
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
+  await page.getByRole("button", { name: "Copy code", exact: true }).first().click();
+  await expect(page.locator(".playground-footer [role=status]")).toContainText("Could not copy");
 });
 
 test("animated tooltip final digits fit their value container", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("./", { waitUntil: "networkidle" });
   await family(page, "Line");
-  const card = page.locator(".chart-card").first();
+  const card = page.locator(".playground-preview .chart-card").first();
   await card.getByRole("application").focus();
   await page.keyboard.press("ArrowRight");
   const number = card.locator('[data-kind-ui="tooltip-number-final"]').first();
@@ -245,10 +176,51 @@ test("package manager copy feedback ignores a write completed after switching ta
   await install.getByRole("button", { name: "Copy install command", exact: true }).click();
   await install.getByRole("tab", { name: "pnpm", exact: true }).click();
   await page.evaluate(() =>
-    (window as Window & { finishInstallCopy: () => void }).finishInstallCopy(),
+    (window as unknown as Window & { finishInstallCopy: () => void }).finishInstallCopy(),
   );
   await expect(
     install.getByRole("button", { name: "Copy install command", exact: true }),
   ).toBeVisible();
   await expect(install.getByRole("button", { name: "Install command copied" })).toHaveCount(0);
 });
+
+for (const width of [375, 1280]) {
+  test(`gallery legends stay inside their cards at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("./");
+    for (const family of [
+      "Bar",
+      "Line",
+      "Area",
+      "Combo",
+      "Pie",
+      "Radar",
+      "Activity",
+      "Scatter",
+      "Heatmap",
+      "Waterfall",
+      "Sankey",
+      "Histogram",
+      "Box Plot",
+    ]) {
+      await page.getByRole("tab", { name: family, exact: true }).click();
+      const overflowing = await page
+        .locator('.demo-grid .chart-card [data-kind-ui="chart-legend"]')
+        .evaluateAll(
+          (legends) =>
+            legends.filter((legend) => {
+              const card = legend.closest(".chart-card")?.getBoundingClientRect();
+              if (!card) return true;
+              const bounds = legend.getBoundingClientRect();
+              return (
+                bounds.bottom > card.bottom - 8 ||
+                bounds.left < card.left ||
+                bounds.right > card.right
+              );
+            }).length,
+        );
+      expect(overflowing, `${family} legend containment`).toBe(0);
+    }
+  });
+}

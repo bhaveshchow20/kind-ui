@@ -23,6 +23,13 @@ such as `CartesianGrid`, `XAxis`, `YAxis`, `ResponsiveContainer` and `LabelList`
 There is no `@kind-ui/charts/motion` entry. Next applications need a client
 component boundary when supplying callbacks, refs or state.
 
+In Next.js, import CSS in the root layout. Development builds warn once per document
+if mounted chart roots lack the stylesheet, after pending stylesheets load. SSR and
+production do not run this check. CSS stays explicit to preserve plain Node ESM
+imports, stylesheet ordering and CSP control; nothing is injected or fetched.
+Keep the CSS import when copying examples. If you replace every chart style yourself,
+set `--kind-ui-styles-loaded: 1` on your chart roots to acknowledge that setup.
+
 Use the complete consumer files on each component page or adapt their chart
 composition into your app. Supply chart sizing, an accessible name and a complete
 [data alternative](/docs/guides/accessibility/). See [composition](/docs/concepts/composition/)
