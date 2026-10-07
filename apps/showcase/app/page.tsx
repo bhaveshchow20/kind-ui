@@ -1,15 +1,17 @@
 "use client";
 
 import * as Chart from "@kind-ui/charts";
-import { ArrowUpRight, Check, Copy, Monitor, Moon, RotateCcw, Search, Sun } from "lucide-react";
+import { ArrowUpRight, Check, Copy, Maximize2, Monitor, Moon, Search, Sun } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { ActivityDemo } from "@/components/activity-demo";
 import { AdvancedChartCard, advancedRecipes } from "@/components/advanced-chart-card";
 import { CodeBlock } from "@/components/code-block";
+import { DemoControls } from "@/components/demo-controls";
+import { HeroHeadline } from "@/components/framework-pill";
 import { KindLogo } from "@/components/kind-logo";
 import { NewChartCard } from "@/components/new-chart-card";
-import { CustomPaletteEditor } from "@/components/palette-color-input";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,33 +21,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { newRecipes } from "@/lib/new-chart-recipes";
+import { activityCode } from "@/lib/activity-recipe";
+import { advancedCode } from "@/lib/advanced-chart-recipes";
+import { type DemoOptions, demoDefaults } from "@/lib/demo-options";
+import { newCode, newRecipes } from "@/lib/new-chart-recipes";
 import { docsAccessNote, documentationCharts, showcaseAsset, siteLinks } from "@/lib/site-links";
 import { useCopyCode } from "@/lib/use-copy-code";
 
 type Material = "plain" | "paper" | "clay" | "glow";
-type Family =
-  | "All"
-  | "Line"
-  | "Area"
-  | "Bar"
-  | "Combo"
-  | "Pie"
-  | "Radar"
-  | "Radial"
-  | "Scatter"
-  | "Heatmap"
-  | "Waterfall"
-  | "Sankey"
-  | "Histogram"
-  | "Box Plot";
-const families: Family[] = [
-  "All",
+const families = [
+  "Bar",
   "Line",
   "Area",
-  "Bar",
   "Combo",
   "Pie",
   "Radar",
@@ -56,39 +44,24 @@ const families: Family[] = [
   "Sankey",
   "Histogram",
   "Box Plot",
-];
+] as const;
+type Family = (typeof families)[number];
 const repo = siteLinks.repository;
-const paletteColorSlots = ["custom-color-1", "custom-color-2", "custom-color-3"] as const;
-const palettes = {
-  Neon: ["#733bff", "#119548", "#f22e79"],
-  Ink: ["#25252b", "#75757f", "#b0b0bb"],
-  Pastel: ["#91a8e7", "#dda0b9", "#89bfb0"],
-};
-const darkPalettes = {
-  Pastel: ["#a9b9f3", "#f0b5cf", "#9ad8c4"],
-  Ink: ["#efeff2", "#a6a6b3", "#666675"],
-  Neon: ["#b28aff", "#a3ff57", "#ff65b2"],
-};
-type Palette = keyof typeof palettes | "Custom";
 const recipes = [
   {
     id: "line",
     family: "Line",
-    title: "A little upward momentum",
-    subtitle: "Weekly active users",
-    stat: "96",
-    note: "+26% this month",
-    tag: "Weekly active users",
+    title: "Weekly revenue",
+    subtitle: "Weekly revenue",
+    tag: "Weekly revenue",
     keys: ["a"],
-    context: "Weekly active users across eight weeks. Engagement grew from 3,200 to 5,120 users.",
+    context: "Weekly revenue across eight weeks, increasing from $3,200 to $5,120.",
   },
   {
     id: "multi",
     family: "Line",
-    title: "Better together",
+    title: "Traffic by channel",
     subtitle: "Traffic by channel",
-    stat: "201",
-    note: "Three paths. One picture.",
     tag: "Traffic by channel",
     keys: ["a", "b", "c"],
     context:
@@ -97,10 +70,8 @@ const recipes = [
   {
     id: "area",
     family: "Area",
-    title: "Room to grow",
+    title: "Monthly recurring revenue",
     subtitle: "Monthly recurring revenue",
-    stat: "$96",
-    note: "The shape of steady growth",
     tag: "Recurring revenue",
     keys: ["a"],
     context:
@@ -109,10 +80,8 @@ const recipes = [
   {
     id: "bars",
     family: "Bar",
-    title: "Make every month count",
+    title: "Orders fulfilled",
     subtitle: "Orders fulfilled",
-    stat: "495",
-    note: "A strong finish to summer",
     tag: "Orders fulfilled",
     keys: ["a"],
     context: "Store orders, Jan–Aug. Fulfilment reached 980 orders in August after a softer March.",
@@ -120,10 +89,8 @@ const recipes = [
   {
     id: "stacked",
     family: "Area",
-    title: "The whole, in parts",
+    title: "Sessions by device",
     subtitle: "Sessions by device",
-    stat: "201",
-    note: "Desktop, mobile & tablet",
     tag: "Sessions by device",
     keys: ["a", "b", "c"],
     context:
@@ -132,10 +99,8 @@ const recipes = [
   {
     id: "grouped",
     family: "Bar",
-    title: "Side by side",
+    title: "New vs. returning customers",
     subtitle: "New vs. returning customers",
-    stat: "159",
-    note: "August customer activity",
     tag: "New & returning customers",
     keys: ["a", "b"],
     context: "New and returning customers, Jan–Aug. Hover a month to focus both customer groups.",
@@ -143,10 +108,8 @@ const recipes = [
   {
     id: "steps",
     family: "Line",
-    title: "One step at a time",
+    title: "Capacity added",
     subtitle: "Capacity added",
-    stat: "96 units",
-    note: "Growth happens in steps",
     tag: "Team capacity",
     keys: ["a"],
     context:
@@ -155,10 +118,8 @@ const recipes = [
   {
     id: "horizontal",
     family: "Bar",
-    title: "A different perspective",
+    title: "Campaign conversions",
     subtitle: "Campaign conversions",
-    stat: "96",
-    note: "August leads the pack",
     tag: "Campaign leads",
     keys: ["a"],
     context: "June campaign leads. Compare six channels; email generated the most qualified leads.",
@@ -166,10 +127,8 @@ const recipes = [
   {
     id: "signed",
     family: "Bar",
-    title: "The ups and the downs",
+    title: "Net subscriber change",
     subtitle: "Net subscriber change",
-    stat: "+170",
-    note: "Every change deserves context",
     tag: "Subscriber growth",
     keys: ["a"],
     context:
@@ -222,13 +181,19 @@ function recipeLabels(id: string): Record<string, string> {
       : { a: "Desktop", b: "Mobile", c: "Tablet" };
 }
 
-function snippet(r: Recipe, material: Material, colors: string[], animate: boolean) {
+function snippet(
+  r: Recipe,
+  material: Material,
+  colors: string[],
+  animate: boolean,
+  options: DemoOptions = {},
+) {
   const family = r.family;
   const horizontal = r.id === "horizontal";
   const series = r.keys
     .map(
       (k, i) =>
-        `          <Chart.${family}Series dataKey="${k}" material="${material}"${family === "Line" ? ` type="${r.id === "steps" ? "stepAfter" : "monotone"}" dot={false} strokeWidth={${material === "clay" ? 5 : 3}}` : family === "Area" ? ` type="monotone" fill=${r.id === "area" ? '"url(#area-fill)"' : `"${colors[i]}"`} fillOpacity={${r.id === "area" ? 1 : 0.5}} strokeWidth={2.5}${r.id === "stacked" ? ' stackId="devices"' : ""}` : ` radius={5} maxBarSize={${horizontal ? 18 : 35}}`} />`,
+        `          <Chart.${family}Series dataKey="${k}" material="${material}"${family === "Line" ? ` type="${options.curve ?? (r.id === "steps" ? "stepAfter" : "monotone")}" dot={${options.dots ?? false}} strokeWidth={${options.strokeWidth ?? (material === "clay" ? 5 : 3)}}` : family === "Area" ? ` type="${options.curve ?? "monotone"}" fill="${colors[i]}" fillOpacity={${options.fillOpacity ?? (r.id === "area" ? 0.16 : 0.5)}} strokeWidth={${options.strokeWidth ?? 2.5}}${r.id === "stacked" ? ' stackId="devices"' : ""}` : ` radius={${options.radius ?? 5}} maxBarSize={${options.width ?? (horizontal ? 18 : 35)}}${options.stacked ? ' stackId="customers"' : ""}`} />`,
     )
     .join("\n");
   const chartData = recipeData(r.id);
@@ -251,7 +216,7 @@ const data = [
 ${chartData.map((d) => `  ${JSON.stringify(d)},`).join("\n")}
 ];
 
-const config: Chart.SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.stringify(config, null, 2)}).map(([key, value]) => [key, {\n    ...value, formatValue: (v: unknown) => typeof v === "number" ? v.toLocaleString("en-US") : String(v)\n  }])\n);
+const config: Chart.SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.stringify(config, null, 2)}).map(([key, value]) => [key, {\n    ...value, formatValue: (v: unknown) => typeof v === "number" ? ${r.id === "area" || r.id === "line" ? '"$" + ' : ""}v.toLocaleString("en-US") : String(v)\n  }])\n);
 
 export function Example() {
   const animate = ${animate};
@@ -264,27 +229,17 @@ export function Example() {
           <Chart.${family}Chart data={data} animate={${animate}} layout="${horizontal ? "vertical" : "horizontal"}"${r.id === "grouped" ? ' emphasis="category"' : ""}
             accessibilityLayer aria-label="${r.subtitle}"
             margin={{ top: 20, right: 18, left: 0, bottom: 0 }}>
-            <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
+            <Chart.CartesianGrid horizontal={${options.showGrid ?? true}} vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
             <Chart.XAxis ${horizontal ? 'type="number"' : 'dataKey="month" type="category"'} tickLine={false} axisLine={false}
               tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} tickMargin={10} />
             <Chart.YAxis ${horizontal ? 'dataKey="month" type="category"' : 'type="number"'} tickLine={false} axisLine={false}
-              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width="auto" />${r.id === "signed" ? '\n            <Chart.ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}${
-                r.id === "area"
-                  ? `
-            <defs>
-              <linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="${colors[0]}" stopOpacity={0.48} />
-                <stop offset="100%" stopColor="${colors[0]}" stopOpacity={0.03} />
-              </linearGradient>
-            </defs>`
-                  : ""
-              }
+              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width="auto"${r.id === "area" || r.id === "line" ? ' tickFormatter={value => "$" + Number(value) / 1000 + "k"}' : ""} />${r.id === "signed" ? '\n            <Chart.ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}
 ${series}
             <Chart.Tooltip cursor={${family === "Bar" ? '{ fill: "#a4a8be", fillOpacity: .09 }' : '{ stroke: "#8d8e9b", strokeDasharray: "3 4" }'}} valueAnimation={animate ? "shuffle" : undefined} />
           </Chart.${family}Chart>
         </Chart.ResponsiveContainer>
       </div>
-      <Chart.Legend aria-label="Visible series for ${r.tag}" />
+      ${(options.showLegend ?? true) ? `<Chart.Legend aria-label="Visible series for ${r.tag}" />` : ""}
     </Chart.Root>
   );
 }`;
@@ -296,8 +251,10 @@ function ChartCard({
   colors,
   animate,
   replay,
+  options = {},
 }: {
   r: Recipe;
+  options?: DemoOptions;
   material: Material;
   colors: string[];
   animate: boolean;
@@ -318,7 +275,9 @@ function ChartCard({
             label: r.keys.length === 1 ? r.subtitle : recipeLabels(r.id)[k],
             color: colors[i],
             formatValue: (v: unknown) =>
-              typeof v === "number" ? v.toLocaleString("en-US") : String(v),
+              typeof v === "number"
+                ? `${r.id === "area" || r.id === "line" ? "$" : ""}${v.toLocaleString("en-US")}`
+                : String(v),
           },
         ]),
       ),
@@ -327,10 +286,14 @@ function ChartCard({
   const ChartComponent =
     r.family === "Line" ? Chart.LineChart : r.family === "Area" ? Chart.AreaChart : Chart.BarChart;
   const horizontal = r.id === "horizontal";
-  const code = snippet(r, material, colors, animate);
   const chartChildren = (
     <>
-      <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
+      <Chart.CartesianGrid
+        horizontal={options.showGrid ?? true}
+        vertical={false}
+        stroke="var(--chart-grid)"
+        strokeDasharray="3 5"
+      />
       <Chart.XAxis
         dataKey={horizontal ? undefined : "month"}
         type={horizontal ? "number" : "category"}
@@ -346,44 +309,40 @@ function ChartCard({
         axisLine={false}
         tick={{ fontSize: 12, fill: "var(--chart-axis)" }}
         width="auto"
+        tickFormatter={
+          r.id === "area" || r.id === "line" ? (value) => `$${Number(value) / 1000}k` : undefined
+        }
       />
       {r.id === "signed" && <Chart.ReferenceLine y={0} stroke="var(--chart-axis)" />}
-      {r.id === "area" && (
-        <defs>
-          <linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={colors[0]} stopOpacity={0.48} />
-            <stop offset="100%" stopColor={colors[0]} stopOpacity={0.03} />
-          </linearGradient>
-        </defs>
-      )}
       {r.keys.map((k, i) =>
         r.family === "Line" ? (
           <Chart.LineSeries
             key={k}
             dataKey={k}
-            type={r.id === "steps" ? "stepAfter" : "monotone"}
-            dot={false}
-            strokeWidth={material === "clay" ? 5 : 3}
+            type={options.curve ?? (r.id === "steps" ? "stepAfter" : "monotone")}
+            dot={options.dots ?? false}
+            strokeWidth={options.strokeWidth ?? (material === "clay" ? 5 : 3)}
             material={material}
           />
         ) : r.family === "Area" ? (
           <Chart.AreaSeries
             key={k}
             dataKey={k}
-            type="monotone"
+            type={options.curve ?? "monotone"}
             material={material}
             stackId={r.id === "stacked" ? "devices" : undefined}
-            fill={r.id === "area" ? "url(#area-fill)" : colors[i]}
-            fillOpacity={r.id === "area" ? 1 : 0.5}
-            strokeWidth={2.5}
+            fill={colors[i]}
+            fillOpacity={options.fillOpacity ?? (r.id === "area" ? 0.16 : 0.5)}
+            strokeWidth={options.strokeWidth ?? 2.5}
           />
         ) : (
           <Chart.BarSeries
             key={k}
             dataKey={k}
             material={material}
-            radius={5}
-            maxBarSize={horizontal ? 18 : 35}
+            radius={options.radius ?? 5}
+            maxBarSize={options.width ?? (horizontal ? 18 : 35)}
+            stackId={options.stacked ? "customers" : undefined}
           />
         ),
       )}
@@ -397,7 +356,6 @@ function ChartCard({
       />
     </>
   );
-  const { copy: copyCode, copied, message: copyMessage } = useCopyCode(code);
   return (
     <motion.article
       ref={cardRef}
@@ -407,55 +365,21 @@ function ChartCard({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={`chart-card ${r.id === "multi" ? "tinted" : ""}`}
     >
-      <p className="copy-feedback" role="status">
-        {copyMessage}
-      </p>
       <div className="card-top">
         <h3 className="chart-tag">{r.tag}</h3>
-        <div className="card-code-actions">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={copyCode}
-            aria-label={`Copy code for ${r.tag}`}
-            title={copied ? "Copied" : "Copy code"}
-          >
-            {copied ? <Check /> : <Copy />}
-          </Button>
-          <span className="action-divider" />
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" aria-label="View chart code">
-                Code
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="code-dialog">
-              <DialogTitle className="sr-only">{r.tag} code</DialogTitle>
-              <DialogDescription className="sr-only">
-                A complete TSX example using Kind UI with the current finish, palette and motion
-                settings.
-              </DialogDescription>
-              <div className="code-block-header">
-                <span className="code-file">
-                  <span className="typescript-badge">TS</span>chart-{r.id}.tsx
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={copyCode}
-                  aria-label="Copy code"
-                  title={copied ? "Copied" : "Copy code"}
-                >
-                  {copied ? <Check /> : <Copy />}
-                </Button>
-              </div>
-              <CodeBlock code={code} />
-              <div className="code-block-note sr-only">
-                Requires the built @kind-ui/charts workspace package.
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+      </div>
+      <div className="chart-summary">
+        <strong>
+          {(r.id === "area" || r.id === "line" ? "$" : "") +
+            (r.id === "horizontal"
+              ? chartData.reduce((total, row) => total + row.a, 0)
+              : r.keys.reduce(
+                  (total, key) => total + Number(chartData.at(-1)?.[key as "a" | "b" | "c"] ?? 0),
+                  0,
+                )
+            ).toLocaleString("en-US")}
+        </strong>
+        <span>{r.id === "line" ? "This week" : r.id === "horizontal" ? "June" : "August"}</span>
       </div>
       <Chart.Root
         className="chart-root"
@@ -494,7 +418,9 @@ function ChartCard({
             )}
           </Chart.ResponsiveContainer>
         </div>
-        <Chart.Legend aria-label={`Visible series for ${r.tag}`} />
+        {options.showLegend !== false && (
+          <Chart.Legend aria-label={`Visible series for ${r.tag}`} />
+        )}
       </Chart.Root>
       {!visible.length && (
         <p className="all-hidden" role="status">
@@ -515,40 +441,6 @@ function GitHubMark() {
         fill="currentColor"
       />
     </svg>
-  );
-}
-
-function FrameworkNames() {
-  return (
-    <span className="hero-frameworks">
-      <span className="framework-brand">
-        <svg viewBox="-12 -11 24 22" aria-hidden="true" className="react-brand-mark">
-          <circle r="2.05" fill="currentColor" />
-          {[0, 60, 120].map((angle) => (
-            <ellipse
-              key={angle}
-              rx="10.5"
-              ry="4.1"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              transform={`rotate(${angle})`}
-            />
-          ))}
-        </svg>
-        React
-      </span>
-      <span className="hero-framework-divider">&amp;</span>
-      <span className="framework-brand">
-        <svg viewBox="0 0 24 24" aria-hidden="true" className="next-brand-mark">
-          <path
-            d="M18.665 21.978C16.758 23.255 14.465 24 12 24 5.377 24 0 18.623 0 12S5.377 0 12 0s12 5.377 12 12c0 3.583-1.574 6.801-4.067 9.001L9.219 7.2H7.2v9.596h1.615V9.251l9.85 12.727Zm-3.332-8.533 1.6 2.061V7.2h-1.6v6.245Z"
-            fill="currentColor"
-          />
-        </svg>
-        Next.js
-      </span>
-    </span>
   );
 }
 
@@ -702,7 +594,6 @@ function InstallSection() {
   }
   return (
     <section className="install-section" aria-label="Install Kind UI Charts">
-      <p className="install-built-with">Built on Framer Motion and Recharts</p>
       <Tabs
         className="install-panel"
         value={manager}
@@ -756,439 +647,341 @@ function InstallSection() {
   );
 }
 
+type GalleryEntry = {
+  id: string;
+  family: Family;
+  tag: string;
+  context: string;
+  source: "basic" | "advanced" | "new" | "activity";
+};
+const excluded = new Set(["steps", "signed", "radar-range", "radial", "radial-stacked"]);
+const gallery: GalleryEntry[] = [
+  ...recipes.filter((r) => !excluded.has(r.id)).map((r) => ({ ...r, source: "basic" as const })),
+  ...advancedRecipes
+    .filter((r) => !excluded.has(r.id))
+    .map((r) => ({ ...r, source: "advanced" as const })),
+  ...newRecipes.map((r) => ({ ...r, source: "new" as const })),
+  {
+    id: "activity",
+    family: "Radial",
+    tag: "Daily activity",
+    context: "Move: 350 of 500 kcal. Exercise: 30 of 60 minutes. Stand: 9 of 12 hours.",
+    source: "activity",
+  },
+];
+function findRecipe<T extends { id: string }>(entries: readonly T[], id: string): T {
+  const recipe = entries.find((entry) => entry.id === id);
+  if (!recipe) throw new Error(`Unknown chart example: ${id}`);
+  return recipe;
+}
+const exampleColors: Record<string, string[]> = {
+  line: ["#1686ff", "#7ec5ff", "#d0edff"],
+  multi: ["#248cff", "#ff659e", "#ffb829"],
+  area: ["#9a63f6", "#c29aff", "#eee5ff"],
+  stacked: ["#4e9cff", "#ffc145", "#ff82bd"],
+  bars: ["#418fff", "#90baff", "#d1e4ff"],
+  grouped: ["#9161f3", "#e1c4ff", "#f2e5ff"],
+  horizontal: ["#29bba4", "#89e5d5", "#c7f5eb"],
+  combo: ["#4b95ff", "#ffb430", "#cee1ff"],
+  "combo-area": ["#22b99f", "#ffb43d", "#bdf0e6"],
+  pie: ["#f19a51", "#ffd17b", "#ee668b"],
+  donut: ["#a25ff5", "#ff85bd", "#ffd28a"],
+  radar: ["#20b898", "#fdb648", "#b9f0df"],
+  "radar-outline": ["#8d68ef", "#fa799e", "#d2c1fc"],
+  gauge: ["#20bc9d", "#a5ead9", "#dbf8ef"],
+  scatter: ["#2b91ff", "#ff8a57", "#bbe1ff"],
+  bubble: ["#a666f0", "#d5b2ff", "#eee3ff"],
+  "line-configured": ["#498fff", "#20b997", "#c5e9ff"],
+  "heatmap-support": ["#fff5e1", "#ffc768", "#f57e37"],
+  "heatmap-retention": ["#e6fbec", "#88dfa2", "#20a675"],
+  "waterfall-revenue": ["#7388e7", "#28bf99", "#ff6c91"],
+  "waterfall-budget": ["#5f92ed", "#27b99b", "#ff9653"],
+  "sankey-acquisition": ["#4b9df9", "#b083f3", "#40c7ad"],
+  "sankey-energy": ["#558de3", "#ffc147", "#30c79d"],
+  "histogram-orders": ["#f2a248", "#ffd096", "#fff0dc"],
+  "histogram-latency": ["#48a2f9", "#a2d3fc", "#dcf0ff"],
+  "box-latency": ["#a475ed", "#cda9ff", "#eee1ff"],
+  "box-regions": ["#24b493", "#85dfc4", "#cbf4e6"],
+};
+function colorsFor(entry: GalleryEntry) {
+  return exampleColors[entry.id] ?? ["#8d77cb", "#bfaee4", "#e4dcf4"];
+}
+function renderEntry(entry: GalleryEntry, options: DemoOptions, animate: boolean) {
+  const props = {
+    material: "plain" as const,
+    colors: colorsFor(entry),
+    animate,
+    replay: 0,
+    options,
+  };
+  if (entry.source === "activity") return <ActivityDemo options={options} />;
+  if (entry.source === "basic") return <ChartCard r={findRecipe(recipes, entry.id)} {...props} />;
+  if (entry.source === "advanced")
+    return <AdvancedChartCard recipe={findRecipe(advancedRecipes, entry.id)} {...props} />;
+  return <NewChartCard recipe={findRecipe(newRecipes, entry.id)} {...props} />;
+}
+function entryCode(entry: GalleryEntry, options: DemoOptions, animate: boolean) {
+  if (entry.source === "activity") return activityCode(options, animate);
+  if (entry.source === "basic")
+    return snippet(findRecipe(recipes, entry.id), "plain", colorsFor(entry), animate, options);
+  if (entry.source === "advanced")
+    return advancedCode(
+      findRecipe(advancedRecipes, entry.id),
+      "plain",
+      colorsFor(entry),
+      animate,
+      options,
+    );
+  return newCode(findRecipe(newRecipes, entry.id), "plain", colorsFor(entry), animate, options);
+}
 export default function Page() {
   const { resolvedTheme, setTheme } = useTheme();
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
-  const [artReady, setArtReady] = useState(false);
-  const artRef = useRef<HTMLImageElement>(null);
-  useEffect(() => {
-    if (artRef.current?.complete && artRef.current.naturalWidth > 0) setArtReady(true);
-  }, []);
   useEffect(() => setMounted(true), []);
   const dark = mounted && resolvedTheme === "dark";
   useEffect(() => {
-    const color = resolvedTheme === "dark" ? "#265589" : "#438ee8";
     document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
-      meta.setAttribute("content", color);
+      meta.setAttribute("content", resolvedTheme === "dark" ? "#000000" : "#ffffff");
     });
   }, [resolvedTheme]);
-  const controlMotionId = useId();
-  const [family, setFamily] = useState<Family>("All");
-  const [material, setMaterial] = useState<Material>("plain");
-  const [palette, setPalette] = useState<Palette>("Neon");
-  const [customColors, setCustomColors] = useState<string[]>([...palettes.Pastel]);
-  const [hasCustom, setHasCustom] = useState(false);
-  const [animate, setAnimate] = useState(true);
-  const [replay, setReplay] = useState(0);
+  const [family, setFamily] = useState<Family>("Bar");
+  const [selected, setSelected] = useState<GalleryEntry | null>(null);
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState("preview");
+  const [options, setOptions] = useState<DemoOptions>(demoDefaults("area"));
+  const shown = gallery.filter((entry) => entry.family === family);
+  const code = selected ? entryCode(selected, options, !reduceMotion) : "";
+  const { copy, copied, message } = useCopyCode(code);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  function explore(entry: GalleryEntry) {
+    setSelected(entry);
+    setOptions(demoDefaults(entry.id));
+    setView("preview");
+    setOpen(true);
+  }
   useEffect(() => {
-    const ctx = (
+    const context = (
       document as Document & {
-        modelContext?: {
-          registerTool: (tool: unknown, options: unknown) => void | Promise<void>;
-        };
+        modelContext?: { registerTool: (tool: unknown, options: unknown) => void | Promise<void> };
       }
     ).modelContext;
-    if (!ctx?.registerTool) return;
+    if (!context) return;
     const lifecycle = new AbortController();
-    const tool = {
-      name: "configure_chart_showcase",
-      description:
-        "Change the chart family, finish, palette and motion in the visible Kind UI showcase.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          family: {
-            type: "string",
-            enum: [
-              "All",
-              "Line",
-              "Area",
-              "Bar",
-              "Combo",
-              "Pie",
-              "Radar",
-              "Radial",
-              "Scatter",
-              "Heatmap",
-              "Waterfall",
-              "Sankey",
-              "Histogram",
-              "Box Plot",
-            ],
-          },
-          material: {
-            type: "string",
-            enum: ["plain", "paper", "clay", "glow"],
-          },
-          palette: { type: "string", enum: ["Pastel", "Ink", "Neon"] },
-          animate: { type: "boolean" },
+    const registration = context.registerTool(
+      {
+        name: "configure_chart_showcase",
+        description: "Choose a chart family in the Kind UI gallery.",
+        inputSchema: {
+          type: "object",
+          properties: { family: { type: "string", enum: families } },
+          required: ["family"],
         },
-        additionalProperties: false,
+        execute: async (input: unknown) => {
+          const value = (input as { family?: Family }).family;
+          if (!value || !families.includes(value))
+            return {
+              isError: true,
+              content: [{ type: "text", text: "Choose a listed chart family." }],
+            };
+          setFamily(value);
+          setOpen(false);
+          return { content: [{ type: "text", text: `Showing ${value} examples.` }] };
+        },
       },
-      annotations: { readOnlyHint: false, untrustedContentHint: false },
-      execute: async (input: unknown) => {
-        if (!input || typeof input !== "object" || Array.isArray(input))
-          throw new Error("Expected an object");
-        const v = input as Record<string, unknown>;
-        if (
-          Object.keys(v).some((k) => !["family", "material", "palette", "animate"].includes(k)) ||
-          (v.family !== undefined &&
-            ![
-              "All",
-              "Line",
-              "Area",
-              "Bar",
-              "Combo",
-              "Pie",
-              "Radar",
-              "Radial",
-              "Scatter",
-              "Heatmap",
-              "Waterfall",
-              "Sankey",
-              "Histogram",
-              "Box Plot",
-            ].includes(v.family as string)) ||
-          (v.material !== undefined &&
-            !["plain", "paper", "clay", "glow"].includes(v.material as string)) ||
-          (v.palette !== undefined && !["Pastel", "Ink", "Neon"].includes(v.palette as string)) ||
-          (v.animate !== undefined && typeof v.animate !== "boolean")
-        )
-          throw new Error("Invalid showcase settings");
-        if (v.family !== undefined) setFamily(v.family as Family);
-        if (v.material !== undefined) setMaterial(v.material as Material);
-        if (v.palette !== undefined) setPalette(v.palette as Palette);
-        if (v.animate !== undefined) setAnimate(v.animate as boolean);
-        await new Promise<void>((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-        );
-        return { applied: v };
-      },
-    };
-    try {
-      void Promise.resolve(ctx.registerTool(tool, { signal: lifecycle.signal })).catch(() => {});
-    } catch {}
+      { signal: lifecycle.signal },
+    );
+    void Promise.resolve(registration).catch((error: unknown) => {
+      if (!lifecycle.signal.aborted) console.error("Chart gallery tool registration failed", error);
+    });
     return () => lifecycle.abort();
   }, []);
-  const colors = palette === "Custom" ? customColors : (dark ? darkPalettes : palettes)[palette];
-  const shown = recipes.filter((r) => family === "All" || r.family === family);
   return (
     <>
       <a className="skip-link" href="#showcase">
-        Skip to charts
+        Skip to components
       </a>
-      <main id="top">
-        <section className="hero">
-          <motion.img
-            ref={artRef}
-            className="hero-art"
-            src={showcaseAsset("/hero-art.webp")}
-            alt=""
-            width={2048}
-            height={1365}
-            onLoad={() => setArtReady(true)}
-            onError={() => setArtReady(false)}
-            fetchPriority="high"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: artReady ? 1 : 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.9, ease: "easeOut" }}
-          />
-          <div className="hero-bloom" aria-hidden="true" />
-          <motion.header
-            className="site-nav"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.55, delay: 0.15 }}
-          >
-            <a className="wordmark" href={siteLinks.home} aria-label="Kind UI Charts home">
+      <main id="top" className="kind-home">
+        <header className="kind-nav">
+          <a className="wordmark" href={siteLinks.home} aria-label="Kind UI Charts home">
+            <span className="brand-flower" aria-hidden="true">
+              🌸
+            </span>
+            <span className="wordmark-title">
               <KindLogo />
-              <span className="wordmark-package">/charts</span>
-            </a>
-            <nav className="nav-center" aria-label="Main">
-              <a
-                href={siteLinks.docs}
-                title={docsAccessNote}
-                aria-label="Docs (owner-private)"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Docs
-              </a>
-              <button
-                type="button"
-                className="nav-sponsor"
-                disabled
-                title="Sponsorship is not available yet"
-              >
-                Sponsor <ArrowUpRight size={13} aria-hidden="true" />
-              </button>
-            </nav>
-            <div className="nav-actions">
-              <DocumentationSearch />
-              <a
-                className="nav-github"
-                href={repo}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="GitHub"
-              >
-                <GitHubMark />
-                <span className="nav-github-label">GitHub</span>
-              </a>
-              <ThemeSwitcher enabled={mounted} />
-              <Button
-                className="nav-theme-toggle"
-                variant="ghost"
-                size="icon-sm"
-                disabled={!mounted}
-                onClick={() => setTheme(dark ? "light" : "dark")}
-                aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
-                title={dark ? "Switch to light theme" : "Switch to dark theme"}
-              >
-                {dark ? <Sun size={15} /> : <Moon size={15} />}
-              </Button>
-              <a
-                className="nav-mobile-docs"
-                href={siteLinks.docs}
-                title={docsAccessNote}
-                aria-label="Docs (owner-private)"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Docs
-              </a>
-            </div>
-          </motion.header>
-          <div className="hero-content">
-            <motion.h1
-              initial={reduceMotion ? false : { opacity: 0, y: 12, filter: "blur(5px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            >
-              <span>Bring your data</span>
-              <span>to life</span>
-            </motion.h1>
-            <motion.p
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
-            >
-              <span>Composable charts for</span> <FrameworkNames />
-            </motion.p>
-          </div>
-        </section>
-        <InstallSection />
-        <p className="docs-preview-note">
-          {docsAccessNote}{" "}
-          <a href={`${repo}/blob/main/packages/charts/README.md`} target="_blank" rel="noreferrer">
-            Read the API reference
+              <span className="wordmark-charts">/charts</span>
+            </span>
           </a>
-          .
-        </p>
-        <section id="showcase" className="showcase" tabIndex={-1} aria-label="Chart showcase">
-          <Tabs value={family} onValueChange={(v) => setFamily(v as Family)}>
-            <div className="family-row">
-              <TabsList className="family-tabs" aria-label="Chart families">
-                {families.map((f) => (
-                  <TabsTrigger key={f} value={f}>
-                    {f === "All" ? "All charts" : f}
-                    <span className="count" aria-hidden="true">
-                      {f === "All"
-                        ? recipes.length + advancedRecipes.length + newRecipes.length
-                        : recipes.filter((r) => r.family === f).length +
-                          advancedRecipes.filter((r) => r.family === f).length +
-                          newRecipes.filter((r) => r.family === f).length}
-                    </span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+          <nav className="kind-nav-links" aria-label="Main">
+            <a href={siteLinks.docs} target="_blank" rel="noreferrer">
+              Documentation <ArrowUpRight size={12} />
+            </a>
+          </nav>
+          <div className="kind-nav-actions">
+            <DocumentationSearch />
+            <ThemeSwitcher enabled={mounted} />
+            <button
+              className="mobile-theme"
+              type="button"
+              disabled={!mounted}
+              onClick={() => setTheme(dark ? "light" : "dark")}
+              aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+            >
+              {dark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+            <a
+              className="kind-github"
+              href={repo}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub"
+            >
+              <GitHubMark />
+              <span>GitHub</span>
+              <ArrowUpRight size={13} />
+            </a>
+          </div>
+        </header>
+
+        <section className="kind-hero hero" aria-labelledby="hero-title">
+          <motion.div
+            className="kind-hero-copy"
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <HeroHeadline />
+            <div className="hero-install">
+              <InstallSection />
             </div>
-            <div className="toolbar">
-              <div className="control-block">
-                <span className="control-label">Finish</span>
-                <RadioGroup
-                  disabled={["Pie", "Radar", "Radial", "Scatter", "Sankey"].includes(family)}
-                  title="Finishes apply to line, area, bar, combo, heatmap, waterfall, histogram, and box plot"
-                  className="finish-options"
-                  value={material}
-                  onValueChange={(v) => setMaterial(v as Material)}
-                  aria-label="Chart finish"
-                >
-                  {(["plain", "paper", "clay", "glow"] as Material[]).map((m) => (
-                    <RadioGroupItem asChild key={m} value={m} aria-label={`${m} finish`}>
-                      <button
-                        type="button"
-                        className={`finish-label ${material === m ? "selected" : ""}`}
-                      >
-                        {material === m && (
-                          <motion.span
-                            aria-hidden="true"
-                            className="control-selection"
-                            layoutId={reduceMotion ? undefined : `finish-${controlMotionId}`}
-                            transition={
-                              reduceMotion
-                                ? { duration: 0 }
-                                : {
-                                    type: "spring",
-                                    stiffness: 430,
-                                    damping: 36,
-                                  }
-                            }
-                          />
-                        )}
-                        {m[0].toUpperCase() + m.slice(1)}
-                      </button>
-                    </RadioGroupItem>
-                  ))}
-                </RadioGroup>
-              </div>
-              <div className="control-block">
-                <span className="control-label">Palette</span>
-                <RadioGroup
-                  className="palette-options"
-                  value={palette}
-                  onValueChange={(v) => setPalette(v as Palette)}
-                  aria-label="Color palette"
-                >
-                  {(Object.keys(palettes) as (keyof typeof palettes)[]).map((p) => (
-                    <RadioGroupItem asChild key={p} value={p} aria-label={`${p} palette`}>
-                      <button
-                        type="button"
-                        className={`palette-label ${palette === p ? "selected" : ""}`}
-                      >
-                        {palette === p && (
-                          <motion.span
-                            aria-hidden="true"
-                            className="control-selection"
-                            layoutId={reduceMotion ? undefined : `palette-${controlMotionId}`}
-                            transition={
-                              reduceMotion
-                                ? { duration: 0 }
-                                : {
-                                    type: "spring",
-                                    stiffness: 430,
-                                    damping: 36,
-                                  }
-                            }
-                          />
-                        )}
-                        <span className="sr-only">{p}</span>
-                        {palettes[p].map((c) => (
-                          <span
-                            aria-hidden="true"
-                            key={c}
-                            style={{
-                              background: dark ? darkPalettes[p][palettes[p].indexOf(c)] : c,
-                            }}
-                          />
-                        ))}
-                      </button>
-                    </RadioGroupItem>
-                  ))}
-                  {hasCustom && (
-                    <RadioGroupItem asChild value="Custom" aria-label="Custom palette">
-                      <button
-                        type="button"
-                        className={`palette-label ${palette === "Custom" ? "selected" : ""}`}
-                      >
-                        {palette === "Custom" && (
-                          <motion.span
-                            aria-hidden="true"
-                            className="control-selection"
-                            layoutId={reduceMotion ? undefined : `palette-${controlMotionId}`}
-                            transition={
-                              reduceMotion
-                                ? { duration: 0 }
-                                : {
-                                    type: "spring",
-                                    stiffness: 430,
-                                    damping: 36,
-                                  }
-                            }
-                          />
-                        )}
-                        <span className="sr-only">Custom palette</span>
-                        {customColors.map((c, i) => (
-                          <span
-                            aria-hidden="true"
-                            key={paletteColorSlots[i]}
-                            style={{ background: c }}
-                          />
-                        ))}
-                      </button>
-                    </RadioGroupItem>
-                  )}
-                </RadioGroup>
-                <CustomPaletteEditor
-                  colors={customColors}
-                  hasCustom={hasCustom}
-                  onApply={(nextColors) => {
-                    setCustomColors(nextColors);
-                    setHasCustom(true);
-                    setPalette("Custom");
-                  }}
-                />
-              </div>
-              <div className="motion-control">
-                <label htmlFor="motion">Motion</label>
-                <Switch id="motion" checked={animate} onCheckedChange={setAnimate} />
+          </motion.div>
+        </section>
+        <section id="showcase" className="kind-gallery" tabIndex={-1} aria-label="Chart examples">
+          <Tabs
+            value={family}
+            onValueChange={(value) => {
+              setFamily(value as Family);
+              setOpen(false);
+            }}
+          >
+            <TabsList className="collection-tabs" aria-label="Chart families">
+              {families.map((name) => (
+                <TabsTrigger key={name} value={name}>
+                  {name === "Radial" ? "Activity" : name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          <div className={`demo-grid examples-${shown.length}`}>
+            {shown.map((entry) => (
+              // biome-ignore lint/a11y/noStaticElementInteractions: Pointer shortcut; the expand button provides keyboard access.
+              // biome-ignore lint/a11y/useKeyWithClickEvents: The adjacent expand button is the keyboard equivalent.
+              <div
+                className={`example-shell example-${entry.id}`}
+                key={entry.id}
+                onClick={(event) => {
+                  if (!(event.target as Element).closest('button,a,input,[role="gridcell"]')) {
+                    triggerRef.current = event.currentTarget.querySelector(".tile-open");
+                    explore(entry);
+                  }
+                }}
+              >
+                {renderEntry(entry, demoDefaults(entry.id), true)}
                 <button
+                  className="tile-open"
                   type="button"
-                  className="replay"
-                  onClick={() => setReplay((n) => n + 1)}
-                  disabled={!animate || !!reduceMotion}
-                  aria-label="Replay chart animations"
+                  aria-label={`Expand ${entry.tag}`}
+                  onClick={(event) => {
+                    triggerRef.current = event.currentTarget;
+                    explore(entry);
+                  }}
                 >
-                  <RotateCcw size={15} />
-                  <span className="sr-only">Replay</span>
+                  <Maximize2 size={15} />
                 </button>
               </div>
-            </div>
-            {families.map((f) => (
-              <TabsContent key={f} value={f}>
-                <div className="chart-grid" key={family}>
-                  {shown.map((r) => (
-                    <ChartCard
-                      key={r.id}
-                      r={r}
-                      material={material}
-                      colors={colors}
-                      animate={animate}
-                      replay={replay}
-                    />
-                  ))}
-                  {advancedRecipes
-                    .filter((r) => family === "All" || r.family === family)
-                    .map((r) => (
-                      <AdvancedChartCard
-                        key={r.id}
-                        recipe={r}
-                        material={material}
-                        colors={colors}
-                        animate={animate}
-                        replay={replay}
-                      />
-                    ))}
-                  {newRecipes
-                    .filter((r) => family === "All" || r.family === family)
-                    .map((r) => (
-                      <NewChartCard
-                        key={r.id}
-                        recipe={r}
-                        material={material}
-                        colors={colors}
-                        animate={animate}
-                        replay={replay}
-                      />
-                    ))}
-                </div>
-              </TabsContent>
             ))}
-          </Tabs>
+          </div>
+          <Dialog open={open} onOpenChange={setOpen}>
+            {selected && (
+              <DialogContent
+                className="component-playground"
+                onOpenAutoFocus={(event) => {
+                  event.preventDefault();
+                  document
+                    .querySelector<HTMLButtonElement>(
+                      '.component-playground [role="tab"][data-state="active"]',
+                    )
+                    ?.focus();
+                }}
+                onCloseAutoFocus={(event) => {
+                  event.preventDefault();
+                  triggerRef.current?.focus();
+                }}
+              >
+                <div className="playground-main">
+                  <Tabs value={view} onValueChange={setView}>
+                    <div className="playground-tab-row">
+                      <TabsList aria-label="Component view">
+                        <TabsTrigger value="preview">Preview</TabsTrigger>
+                        <TabsTrigger value="code">Code</TabsTrigger>
+                      </TabsList>
+                    </div>
+                    <TabsContent
+                      value="preview"
+                      className={`playground-preview example-${selected.id}`}
+                    >
+                      {renderEntry(selected, options, true)}
+                    </TabsContent>
+                    <TabsContent value="code" className="playground-source">
+                      <button
+                        className="code-copy-icon"
+                        type="button"
+                        onClick={copy}
+                        aria-label={copied ? "Copied code" : "Copy code"}
+                        title={copied ? "Copied" : "Copy code"}
+                      >
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                      </button>
+                      <CodeBlock code={code} />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+                <div className="playground-sidebar">
+                  <DialogTitle>
+                    {selected.id === "activity"
+                      ? "Activity Rings"
+                      : selected.id === "gauge"
+                        ? "Gauge Chart"
+                        : selected.id === "donut"
+                          ? "Donut Chart"
+                          : `${selected.family} Chart`}
+                  </DialogTitle>
+                  <DialogDescription className="sr-only">
+                    {selected.context} Customize the example or copy its React code.
+                  </DialogDescription>
+                  <DemoControls
+                    family={selected.family}
+                    id={selected.id}
+                    options={options}
+                    onChange={setOptions}
+                  />
+                  <div className="playground-footer">
+                    <a
+                      href={`${siteLinks.docs}components/${selected.family === "Box Plot" ? "box-plot" : selected.family.toLowerCase()}/`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Go to Documentation <ArrowUpRight size={13} />
+                    </a>
+                    <span role="status">{message}</span>
+                  </div>
+                </div>
+              </DialogContent>
+            )}
+          </Dialog>
         </section>
       </main>
-      <footer className="cloud-footer">
+      <footer className="cloud-footer kind-cloud-footer">
         <img
           className="footer-art"
           src={showcaseAsset("/footer-clouds.webp")}
@@ -1198,47 +991,27 @@ export default function Page() {
           loading="lazy"
         />
         <div className="footer-bloom" aria-hidden="true" />
-        <motion.div
-          className="footer-inner"
-          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.25 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
+        <div className="footer-inner">
           <p className="footer-wordmark" role="img" aria-label="Kind UI">
             <KindLogo />
           </p>
           <div className="footer-bottom">
             <a className="footer-credit" href={siteLinks.creator} target="_blank" rel="noreferrer">
-              Created by Bhavesh Chowdhury
+              By Bhavesh Chowdhury
             </a>
             <nav aria-label="Footer">
-              <a
-                href={siteLinks.docs}
-                title={docsAccessNote}
-                aria-label="Docs (owner-private)"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href={siteLinks.docs} target="_blank" rel="noreferrer">
                 Docs
               </a>
-              <button
-                type="button"
-                className="footer-sponsor"
-                disabled
-                title="Sponsorship is not available yet"
-              >
-                Sponsor <ArrowUpRight size={13} aria-hidden="true" />
-              </button>
               <a href={`${repo}/blob/main/LICENSE`} target="_blank" rel="noreferrer">
-                MIT
+                MIT license
               </a>
               <a className="footer-top" href="#top">
-                Back to top
+                Back to top ↑
               </a>
             </nav>
           </div>
-        </motion.div>
+        </div>
       </footer>
     </>
   );

@@ -108,6 +108,9 @@ for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.BarMat
 // @ts-expect-error Bar finishes use the established material vocabulary.
 void (<Chart.BarSeries dataKey="count" material="metal" />);
 const categoryKey: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
+void (<Chart.PieChart defaultPinnedCategory="beta" />);
+// @ts-expect-error Initial identity is a category string, never a row index.
+void (<Chart.PieChart defaultPinnedCategory={1} />);
 void (<Chart.Tooltip itemKey={categoryKey} />);
 const categoryContent: Chart.TooltipContentProps = {
   tooltip: {
@@ -332,3 +335,163 @@ void (
 );
 // @ts-expect-error Native composition uses the part, not generated options.
 void (<Chart.LineChart data={[]} backgroundPattern={{ pattern: "waves" }} />);
+for (const revealDirection of [
+  "left-to-right",
+  "right-to-left",
+  "center-out",
+  "edges-in",
+] satisfies Chart.RevealDirection[]) {
+  const line = { revealDirection } satisfies Chart.LineAnimation;
+  const area = { revealDirection } satisfies Chart.AreaAnimation;
+  const combo = {
+    revealDirection,
+    lineReveal: { revealDirection: "right-to-left" },
+    areaReveal: { revealDirection: "edges-in" },
+    barReveal: false,
+  } satisfies Chart.ComboAnimation;
+  void (<Chart.LineChart animate={line} />);
+  void (<Chart.AreaChart animate={area} />);
+  void (<Chart.ComboChart animate={combo} />);
+}
+// @ts-expect-error Direction names are a closed physical-direction union.
+const invalidReveal: Chart.LineAnimation = { revealDirection: "up" };
+// @ts-expect-error Direction overrides belong to Line and Area families only.
+const invalidBarReveal: Chart.ComboAnimation = { barReveal: { revealDirection: "center-out" } };
+// @ts-expect-error Entrance configuration is chart/family-owned, not a native series prop.
+void (<Chart.LineSeries dataKey="count" revealDirection="center-out" />);
+void [invalidReveal, invalidBarReveal];
+
+// @ts-expect-error Horizontal reveal directions do not belong to Bar entrances.
+const invalidBarDirection: Chart.BarAnimation = { revealDirection: "edges-in" };
+// @ts-expect-error Polar sweeps keep their existing direction contract.
+const invalidPieReveal: Chart.PieAnimation = { revealDirection: "center-out" };
+void [invalidBarDirection, invalidPieReveal];
+
+// Complete README directional example, checked through packed public exports.
+import {
+  AreaChart,
+  AreaSeries,
+  ComboChart,
+  LineChart as DirectionalLineChart,
+  Root as DirectionalRoot,
+  LineSeries,
+} from "@kind-ui/charts";
+
+const directionalData = [
+  { day: "Mon", total: 12, forecast: 16 },
+  { day: "Tue", total: 20, forecast: 24 },
+];
+const directionalConfig = {
+  total: { label: "Total", color: "#3659b8" },
+  forecast: { label: "Forecast", color: "#0d9488" },
+} satisfies SeriesConfig;
+
+export function DirectionalCharts() {
+  return (
+    <DirectionalRoot config={directionalConfig}>
+      <DirectionalLineChart
+        data={directionalData}
+        width={480}
+        height={240}
+        aria-label="Daily total"
+        animate={{ revealDirection: "right-to-left", revealDurationMs: 800 }}
+      >
+        <LineSeries dataKey="total" pointStyle="border" />
+      </DirectionalLineChart>
+      <AreaChart
+        data={directionalData}
+        width={480}
+        height={240}
+        aria-label="Daily forecast"
+        animate={{ revealDirection: "center-out" }}
+      >
+        <AreaSeries dataKey="forecast" />
+      </AreaChart>
+      <ComboChart
+        data={directionalData}
+        width={480}
+        height={240}
+        aria-label="Total and forecast"
+        animate={{
+          revealDirection: "center-out",
+          lineReveal: { revealDirection: "right-to-left" },
+          areaReveal: { revealDirection: "edges-in", revealDurationMs: 1200 },
+          barReveal: false,
+        }}
+      >
+        <LineSeries dataKey="total" />
+        <AreaSeries dataKey="forecast" />
+      </ComboChart>
+    </DirectionalRoot>
+  );
+}
+
+// @ts-expect-error Radar keeps its center-out entrance contract.
+const invalidRadarReveal: Chart.RadarAnimation = { revealDirection: "center-out" };
+// @ts-expect-error RadialBar keeps its polar sweep contract.
+const invalidRadialReveal: Chart.RadialBarAnimation = { revealDirection: "edges-in" };
+// @ts-expect-error Scatter has no horizontal reveal direction option.
+const invalidScatterReveal: Chart.ScatterAnimation = { revealDirection: "right-to-left" };
+void [invalidRadarReveal, invalidRadialReveal, invalidScatterReveal];
+
+const dashTiming = { durationMs: 700, direction: "reverse" } satisfies Chart.LineDashAnimation;
+const dashedLine = (
+  <Chart.LineSeries dataKey="count" strokeDasharray="6 4" dashAnimation={dashTiming} />
+);
+// @ts-expect-error Dash direction is explicit.
+const invalidDash = <Chart.LineSeries dataKey="count" dashAnimation={{ direction: "left" }} />;
+// @ts-expect-error Area perimeter animation is not the open-line contract.
+const invalidAreaDash = <Chart.AreaSeries dataKey="count" dashAnimation={{}} />;
+void [dashedLine, invalidDash, invalidAreaDash];
+
+const selectiveGlow = {
+  data: [{ id: "design", value: 10 }],
+  dataKey: "value",
+  categoryKey: "id",
+  glowCategories: ["design", "removed"] as const,
+  material: "paper",
+} satisfies Chart.PieSeriesProps<{ id: string; value: number }>;
+const accessorGlow = {
+  ...selectiveGlow,
+  categoryKey: (row: { id: string; value: number }) => row.id,
+} satisfies Chart.PieSeriesProps<{ id: string; value: number }>;
+void (<Chart.PieSeries {...selectiveGlow} />);
+void (<Chart.PieSeries {...accessorGlow} />);
+// @ts-expect-error Category identity is a string, not a positional index.
+void (<Chart.PieSeries dataKey="value" glowCategories={[0]} />);
+
+const sankeyIconConfig = {
+  source: { label: "Legend source", color: "red", icon: <path d="M0 0h24v24z" /> },
+  sink: { label: "Legend sink", color: "blue" },
+} satisfies Chart.SankeyNodeConfig;
+const sankeyIconData: Chart.SankeyFlowData = {
+  nodes: [
+    { id: "source", name: "Source" },
+    { id: "sink", name: "Sink" },
+  ],
+  links: [{ id: "flow", source: "source", target: "sink", value: 7 }],
+};
+const sankeyIconConsumer = (
+  <Chart.SankeyChart
+    data={sankeyIconData}
+    nodeConfig={sankeyIconConfig}
+    node={(node) => (
+      <g>
+        <Chart.SankeyNode {...node} />
+        <Chart.SankeyNodeLabel
+          node={node}
+          data={sankeyIconData}
+          nodeConfig={sankeyIconConfig}
+          iconSize={18}
+          iconGap={3}
+          position="outside"
+          showValues
+          ref={createRef<SVGTextElement>()}
+        >
+          <tspan>Custom name</tspan>
+        </Chart.SankeyNodeLabel>
+      </g>
+    )}
+  />
+);
+void sankeyIconConsumer;
