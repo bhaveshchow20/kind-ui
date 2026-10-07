@@ -1,8 +1,11 @@
+import { writeFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 
 test.use({ video: "on" });
 
-const widths = [320, 339, 359, 360, 375, 640, 641, 767, 768, 769, 1024, 1280, 1440, 1920, 2560];
+const widths = [
+  320, 339, 359, 360, 374, 375, 640, 641, 767, 768, 769, 1024, 1280, 1440, 1920, 2560,
+];
 
 type Sample = {
   height: number;
@@ -118,8 +121,10 @@ for (const width of widths) {
     }
     await page.waitForTimeout(550);
     const samples = await stop(page);
+    const geometryPath = testInfo.outputPath("continuous-hero-geometry.json");
+    await writeFile(geometryPath, JSON.stringify(samples));
     await testInfo.attach("continuous-hero-geometry", {
-      body: JSON.stringify(samples),
+      path: geometryPath,
       contentType: "application/json",
     });
     expect(samples.length).toBeGreaterThan(100);
@@ -130,7 +135,7 @@ for (const width of widths) {
       Math.max(...samples.map((s) => s.installY)) - Math.min(...samples.map((s) => s.installY)),
     ).toBeLessThanOrEqual(1);
     expect([...new Set(samples.map((s) => s.lines))]).toEqual([
-      width >= 768 ? 2 : width >= 641 ? 3 : width >= 360 ? 4 : 5,
+      width >= 768 ? 2 : width >= 641 ? 3 : width >= 375 ? 4 : 5,
     ]);
     for (const sample of samples) {
       expect(sample.wordRows).toHaveLength(samples[0].wordRows.length);
@@ -155,8 +160,10 @@ test("a resizing pill continuously pushes adjacent inline text in both direction
   await page.locator(".brand-pill-stack").evaluate((button: HTMLButtonElement) => button.click());
   await page.waitForTimeout(700);
   const samples = await stop(page);
+  const geometryPath = testInfo.outputPath("inline-push-geometry.json");
+  await writeFile(geometryPath, JSON.stringify(samples));
   await testInfo.attach("inline-push-geometry", {
-    body: JSON.stringify(samples),
+    path: geometryPath,
     contentType: "application/json",
   });
   const first = samples[0];
