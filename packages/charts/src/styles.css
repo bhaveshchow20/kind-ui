@@ -463,7 +463,10 @@
     :where([data-kind-ui="fill-pattern"] > rect:first-child) {
       fill: Canvas;
     }
-    :where([data-kind-ui="fill-pattern"] > rect:not(:first-child)) {
+    :where(
+        [data-kind-ui="fill-pattern"] > rect:not(:first-child),
+        [data-kind-ui="fill-pattern"] > circle
+      ) {
       fill: CanvasText;
     }
     :where([data-kind-ui="fill-pattern"] > path) {

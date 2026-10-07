@@ -287,7 +287,23 @@ void (<Chart.FillPatternSwatch pattern={{ kind: "duotone" }} color="var(--color-
 const patternConfig: Chart.SeriesConfig = { count: { color: "red", pattern: fillPattern } };
 void patternConfig;
 // @ts-expect-error Patterns expose explicit encodings.
+void (<Chart.BarSeries dataKey="count" pattern={{ kind: "unknown" }} />);
+
+void (
+  <Chart.AreaSeries
+    dataKey="count"
+    pattern={{ kind: "dots", width: 2 }}
+    material="clay"
+    fillOpacity={0.4}
+  />
+);
+void (<Chart.AreaSeries dataKey="count" pattern={{ kind: "lines", angle: 90 }} stackId="total" />);
+void (<Chart.AreaSeries dataKey="count" pattern="none" />);
+// @ts-expect-error Area patterns share the explicit encoding vocabulary.
+void (<Chart.AreaSeries dataKey="count" pattern={{ kind: "unknown" }} />);
+
 void (<Chart.BarSeries dataKey="count" pattern={{ kind: "dots" }} />);
+void (<Chart.BarSeries dataKey="count" pattern={{ kind: "lines" }} />);
 
 for (const revealDirection of [
   "left-to-right",

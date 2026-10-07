@@ -1559,7 +1559,7 @@ test("legend glyph/symbol priority and hideIcon remain consumer-owned with patte
 
 test("invalid public pattern geometry fails explicitly", () => {
   for (const pattern of [
-    { kind: "dots" },
+    { kind: "unknown" },
     { kind: "hatch", size: 0 },
     { kind: "stripe", width: -1 },
     { kind: "hatch", size: 4, width: 5 },
@@ -1709,6 +1709,27 @@ test("indexed stops cannot collide with valid legacy series keys", () => {
   assert.match(html, /--color-sales-gradient:purple/);
   assert.match(html, /--kind-ui-series-73-61-6c-65-73-0:red/);
   assert.match(html, /--kind-ui-series-73-61-6c-65-73-gradient:linear-gradient/);
+});
+
+test("dots and lines share public swatch resources with existing patterns", () => {
+  const html = render(
+    h(
+      Root,
+      {
+        config: {
+          dots: { color: "red", pattern: { kind: "dots", size: 10, width: 4 } },
+          lines: { color: "var(--theme-blue)", pattern: { kind: "lines" } },
+        },
+      },
+      h(Legend),
+    ),
+  );
+  assert.match(html, /<circle cx="5" cy="5" r="2" fill="CanvasText"/);
+  assert.match(html, /data-pattern="lines"[^>]*patternTransform="rotate\(0\)"/);
+  const ids = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 2);
+  assert.equal(new Set(ids).size, 2);
+  for (const id of ids) assert.ok(html.includes(`fill="url(#${id})"`));
 });
 
 test("chart loading props stay off the native engine and expose a chart-owned status", () => {

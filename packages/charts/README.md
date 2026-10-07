@@ -273,6 +273,28 @@ The runnable `tests/fixtures/identity-colors` host exercises explicit light/dark
 changes, unequal stops, CSS variable colors, multiple roots and native paint
 precedence (`npm exec vite tests/fixtures/identity-colors`, open `/?theme`).
 
+### Area patterns
+
+`AreaSeries` accepts the shared `FillPattern` through `pattern` or `Root.config[key].pattern`, independently of `material`. The additive `dots` kind uses `width` as dot diameter (default 1); `lines` uses stroke width (default 1) and defaults to angle 0. Both use size 8 by default. Existing hatch, stripe and duotone encodings retain their defaults. These kinds also work with bars and `FillPatternSwatch`.
+
+```tsx
+const config = {
+  actual: { color: "#789abc", pattern: { kind: "dots" as const, width: 2 } },
+  planned: { color: "var(--area-planned)", pattern: { kind: "lines" as const } },
+};
+<Root config={config}>
+  <Legend />
+  <AreaChart width={480} height={260} data={rows}>
+    <XAxis dataKey="month" />
+    <YAxis />
+    <AreaSeries dataKey="actual" stackId="total" material="clay" fillOpacity={0.4} />
+    <AreaSeries dataKey="planned" stackId="total" fillOpacity={0.4} />
+  </AreaChart>
+</Root>;
+```
+
+Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also accept these patterns through their `config`. Omit `stackId` for unstacked explicit areas. Explicit composition can instead use `pattern={{ kind: "hatch", angle: 45 }}` on each `AreaSeries`. Series patterns override configuration; `pattern="none"` opts out. Explicit `fill` (including gradients), `style.fill`, and custom `shape` retain ownership and disable automatic pattern resources. With a configured gradient, pattern tiles use the solid first-stop `--color-key` ink; unpatterned areas use the complete chart-local gradient. Explicit stroke still supplies the pattern base when provided. Native `fillOpacity`, filters, geometry and existing material rules remain in effect. Configuration drives default legend swatches; when overriding a series pattern, compose `FillPatternSwatch` through `Legend.children` with the matching pattern/color. Icon/symbol priority and theme/forced-colors behavior follow the shared bar pattern contract above. The mounted packed area fixture at `static.html?patterns` demonstrates overrides, materials, stacking, themes and two independent charts.
+
 The existing Next integration fixture additionally checks real server-rendered
 color resource IDs through hydration and a theme change.
 
