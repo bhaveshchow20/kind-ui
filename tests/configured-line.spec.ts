@@ -150,3 +150,82 @@ test("single-point and sparse line values remain visible without inventing inter
   await page.keyboard.press("ArrowRight");
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).toContainText("0");
 });
+
+test("point styles preserve keyboard/pointer inspection, native overrides and independent charts", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const markers = page.locator('[data-case="markers"]');
+  await expect(
+    markers.locator('[data-point-style="border"][data-kind-ui="point-marker"]'),
+  ).toHaveCount(3);
+  await expect(
+    markers.locator('[data-point-style="colored-border"][data-kind-ui="point-marker"]'),
+  ).toHaveCount(2);
+  await markers.scrollIntoViewIfNeeded();
+  const border = markers
+    .locator('[data-kind-ui="point-marker"][data-point-style="border"]')
+    .first();
+  const colored = markers
+    .locator('[data-kind-ui="point-marker"][data-point-style="colored-border"]')
+    .first();
+  await expect(border).toHaveCSS("fill", "rgb(64, 85, 238)");
+  await expect(border).toHaveCSS("stroke", "rgb(23, 32, 51)");
+  await expect(colored).toHaveCSS("fill", "rgb(23, 32, 51)");
+  await expect(colored).toHaveCSS("stroke", "rgb(168, 85, 247)");
+  const svg = markers.locator("svg.recharts-surface");
+  await svg.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(markers.locator('[data-kind-ui="tooltip-frame"]')).toBeVisible();
+  await expect(
+    markers.locator('[data-kind-ui="active-marker"][data-point-style="colored-border"]'),
+  ).toHaveCount(1);
+  await expect(markers.locator('[data-kind-ui="active-marker"]').first()).toHaveAttribute(
+    "pointer-events",
+    "none",
+  );
+  await expect(
+    markers.locator('[data-kind-ui="active-marker"][data-point-style="colored-border"]'),
+  ).toHaveCSS("stroke", "rgb(64, 85, 238)");
+  await expect(
+    markers.locator('[data-kind-ui="active-marker"][data-point-style="colored-border"]'),
+  ).toHaveCSS("fill", "rgb(23, 32, 51)");
+  await page.keyboard.press("Escape");
+  await expect(markers.locator('[data-kind-ui="tooltip-frame"]')).not.toBeVisible();
+  const box = await svg.boundingBox();
+  if (!box) throw new Error("Missing chart");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(markers.locator('[data-kind-ui="tooltip-frame"]')).toBeVisible();
+  const native = page.locator('[data-case="native-markers"]');
+  await expect(native.locator(".recharts-line-dot")).toHaveCount(3);
+  await expect(native.locator(".recharts-line-dot").first()).toHaveAttribute("r", "9");
+  await expect(native.locator(".recharts-line-dot").first()).toHaveAttribute("fill", "gold");
+  await expect(native.locator('[data-kind-ui="point-marker"]')).toHaveCount(0);
+  await native.locator(".recharts-line-dot").first().click();
+  await expect(page.locator("[data-marker-clicks]")).toHaveText("1");
+  await native.locator("svg.recharts-surface").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(native.locator('[data-kind-ui="active-marker"]')).toHaveCount(0);
+  const renderer = page.locator('[data-case="renderer-markers"]');
+  await expect(renderer.locator('[data-kind-ui="point-marker"]').first()).toHaveCSS(
+    "fill",
+    "rgb(255, 255, 255)",
+  );
+  await expect(renderer.locator('[data-kind-ui="point-marker"]').first()).toHaveCSS(
+    "stroke",
+    "rgb(64, 85, 238)",
+  );
+  await renderer.locator("svg.recharts-surface").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(renderer.locator("[data-active-renderer]")).toHaveCSS("fill", "rgb(255, 215, 0)");
+  await expect(renderer.locator("[data-active-renderer]")).toHaveCSS("stroke", "rgb(64, 85, 238)");
+  const area = page.locator('[data-case="area-markers"]');
+  await expect(area.locator('[data-kind-ui="point-marker"]')).toHaveCount(3);
+  await area.locator("svg.recharts-surface").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    area.locator('[data-kind-ui="active-marker"][data-point-style="border"]'),
+  ).toHaveCount(1);
+  const ids = await page.locator("svg [id]").evaluateAll((nodes) => nodes.map((node) => node.id));
+  expect(new Set(ids).size).toBe(ids.length);
+});
