@@ -19,7 +19,11 @@ const config = {
   range: { label: "Cash balance", color: "#733bff" },
 } satisfies Chart.SeriesConfig;
 
-export function MaterialCashFlowChart({ material = "plain" }: { material?: Chart.BarMaterial }) {
+export function MaterialCashFlowChart({
+  appearance = "default",
+}: {
+  appearance?: "default" | "clay" | "glow";
+}) {
   return (
     <Chart.Root config={config}>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12 }}>
@@ -48,7 +52,7 @@ export function MaterialCashFlowChart({ material = "plain" }: { material?: Chart
           layout="vertical"
           animate
           accessibilityLayer
-          aria-label="Cash flow with a selected bar material in USD thousands"
+          aria-label="Cash flow with a selected bar appearance in USD thousands"
           margin={{ top: 12, right: 24, bottom: 4, left: 0 }}
           barCategoryGap="32%"
         >
@@ -78,7 +82,10 @@ export function MaterialCashFlowChart({ material = "plain" }: { material?: Chart
             stroke="currentColor"
             strokeOpacity={0.35}
           />
-          <Chart.WaterfallSeries material={material} radius={3}>
+          <Chart.WaterfallSeries
+            material={appearance === "default" ? undefined : appearance}
+            radius={3}
+          >
             {data.map((row) => (
               <Chart.Cell
                 key={row.id}

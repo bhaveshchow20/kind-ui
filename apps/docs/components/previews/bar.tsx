@@ -31,12 +31,15 @@ const components = {
 const Arrangement = components["bar-comparison"];
 const Material = components["bar-materials"];
 export const previews = {
-  bar: components.bar,
+  bar: ({ variant }: PreviewProps) => {
+    const Primary = components.bar;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "bar-comparison": ({ variant }: PreviewProps) => (
     <Arrangement arrangement={variant as "grouped" | "stacked"} />
   ),
   "bar-horizontal": components["bar-horizontal"],
   "bar-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "clay" | "glow"} />
+    <Material appearance={variant as "default" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

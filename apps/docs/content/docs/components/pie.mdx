@@ -75,7 +75,7 @@ Choose Loading in the example above. `loading` preserves layout, blocks inspecti
 
 ## Materials
 
-Start with Default (`plain`), then switch to Clay or Glow. Percentage labels stay inside; category names stay in the legend.
+Start with Default, then switch to Clay or Glow. Percentage labels stay inside; category names stay in the legend.
 
 <ChartExample id="pie-materials" />
 
@@ -95,8 +95,7 @@ An empty list keeps the series material; `material="glow"` decorates every defau
   outerRadius={108}
   cornerRadius={8}
   paddingAngle={2}
-  material="plain"
-  glowCategories={["design"]}
+    glowCategories={["design"]}
 />
 ```
 
@@ -106,13 +105,11 @@ Cell/datum paint, custom/active shapes, filters and CSS transforms retain owners
 
 ## Rounded and petal sectors
 
-Use native `cornerRadius` and `paddingAngle`: small radii/gaps for rounded sectors, half the ring thickness and larger gaps for petals.
-
-No separate Donut component or custom shape is needed.
+Choose rounded sectors or petals with native `cornerRadius` and `paddingAngle`.
 
 <ChartExample id="pie-rounded" />
 
-Switch Geometry to compare the same data. Rounded donut uses `cornerRadius={8}` and `paddingAngle={2}`; petal donut uses `cornerRadius={20}` and `paddingAngle={8}`. The table keeps original hours and shares.
+Switch Geometry to compare the finishes.
 
 <details>
 <summary>Geometry constraints</summary>
@@ -176,7 +173,7 @@ Value and category identity use separate fields.
 | `startAngle` / `endAngle` | `number` | `0` / `360` | Native angular geometry in degrees. |
 | `paddingAngle` | `number` | `0` | Native gap in degrees; see geometry constraints above. |
 | `cornerRadius` | `number \| string` | `0` | Native rounded sector corners; numeric units are recommended here. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Finish on default sectors; consumer rendering can take precedence. |
+| `material` | `"clay" \| "glow"` | Omitted | Finish on default sectors; consumer rendering can take precedence. |
 | `glowCategories` | `readonly string[]` | Off | Category IDs receiving glow instead of `material`; requires `categoryKey` and explicit data. Unknown IDs are ignored. |
 | `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | Native name | Optional semantic sector identity for paint emphasis; does not configure tooltip identity. |
 | `stroke` | `string` | `"none"` | Native sector outline. |

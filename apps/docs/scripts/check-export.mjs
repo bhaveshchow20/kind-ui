@@ -87,7 +87,10 @@ for (const file of textExportFiles(root)) {
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;
 for (const slug of legacyDocSlugs) {
-  assert.ok(searchIds.includes(publicPath(`/docs/${slug[1]}`)), `Search omits ${slug[1]}`);
+  assert.ok(
+    searchIds.includes(publicPath(`/docs/${canonicalDocSlugs(slug).join("/")}`)),
+    `Search omits ${slug[1]}`,
+  );
   assert.ok(
     !searchIds.some((id) => id.startsWith(publicPath(`/docs/${slug.join("/")}`))),
     "Search indexes a legacy alias",

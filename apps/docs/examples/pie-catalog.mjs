@@ -73,14 +73,15 @@ export const pieVariants = {
     options: [
       { value: "pie", label: "Pie" },
       { value: "donut", label: "Donut" },
+      { value: "loading", label: "Loading" },
     ],
   },
   "pie-materials": {
     control: "Material",
-    prop: "material",
-    default: "plain",
+    prop: "appearance",
+    default: "default",
     options: [
-      { value: "plain", label: "Default" },
+      { value: "default", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

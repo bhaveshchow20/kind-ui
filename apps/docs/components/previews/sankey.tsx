@@ -23,10 +23,15 @@ const Configured = dynamic(
   { loading: Loading, ssr: false },
 );
 export const previews = {
-  "sankey-config": Configured,
+  "sankey-config": ({ variant }: PreviewProps) => (
+    <Configured state={variant as "ready" | "loading"} />
+  ),
 
-  sankey: Energy,
+  sankey: ({ variant }: PreviewProps) => {
+    const Primary = Energy;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "sankey-finishes": ({ variant }: PreviewProps) => (
-    <Finish finish={variant as "plain" | "clay" | "glow"} />
+    <Finish appearance={variant as "default" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

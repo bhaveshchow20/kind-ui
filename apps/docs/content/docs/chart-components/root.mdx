@@ -102,3 +102,15 @@ Actions use committed state/callbacks, including after synchronous consumer upda
 `emphasis` defaults to `"auto"`. Set `"none"` to disable Kind emphasis within this root; individual chart families define which marks support it.
 
 `Root` accepts native `div` props and a ref. Each config key supplies a `--color-{key}` CSS variable on that element.
+
+## Loading
+
+All 13 chart families and ActivityRings accept `loading` and `loadingLabel`. While loading, the chart keeps its dimensions, shows a decorative silhouette, hides/inerts managed content and announces the label outside busy content.
+
+The label defaults to “Loading chart”. Reduced motion keeps the silhouette static.
+
+Omitted loading preserves the chart. `false` restores data, including empty datasets, and runs enabled entrances. Repeated interruptions retain dimensions. External legends and custom content remain consumer-owned.
+
+Derive loading from request state; supply error/empty messages, cancellation and retry. The illustration represents neither partial values nor completion.
+
+<ApiTable name="LoadingReference" />

@@ -5,22 +5,6 @@ description: Show completion and capacity with concentric rings, gauges and stac
 
 <ChartExample id="radial" />
 
-## Activity rings
-
-Give each ring a config key, original value and optional domain. Name the chart with `aria-label` or `aria-labelledby`.
-
-`ActivityRings` supplies context, axes, tracks, tooltip and a static legend.
-
-<ChartExample id="radial-activity" />
-
-Rings follow array order, inner to outer. Geometry normalizes values to 0–100 and visually clamps finite out-of-domain values.
-
-The tooltip preserves original values and config formatters. Custom payloads expose `rawValue` and `progress`; native sector `value` is normalized.
-
-Defaults: responsive width, 300px height, clockwise full sweep, rounded tracks, static legend, labels off and motion off.
-
-Do not add another `Root`. Use explicit composition below for custom axes, data, children or coordinated charts.
-
 ## Usage
 
 Use a fixed numeric domain, hide axis ticks and give each ring a stable category key.
@@ -39,6 +23,22 @@ Use a fixed numeric domain, hide axis ticks and give each ring a stable category
 ```
 
 Labels start hidden. Choose Visible above to add arc labels; values remain in the tooltip and accessible data table. `categoryKey` supplies colors and tooltip identity.
+
+## Activity rings
+
+Give each ring a config key, original value and optional domain. Name the chart with `aria-label` or `aria-labelledby`.
+
+`ActivityRings` supplies context, axes, tracks, tooltip and a static legend.
+
+<ChartExample id="radial-activity" />
+
+Rings follow array order, inner to outer. Geometry normalizes values to 0–100 and visually clamps finite out-of-domain values.
+
+The tooltip preserves original values and config formatters. Custom payloads expose `rawValue` and `progress`; native sector `value` is normalized.
+
+Defaults: responsive width, 300px height, clockwise full sweep, rounded tracks, static legend, labels off and motion off.
+
+Do not add another `Root`. Use explicit composition below for custom axes, data, children or coordinated charts.
 
 ## Capacity gauge
 
@@ -115,13 +115,13 @@ See [Recharts RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChar
 | `background` | `boolean \| object \| ReactElement \| function` | `false` | `true` supplies a pale Kind track using `--kind-ui-radial-track`, fallback `#f1f1f1`; explicit background props/renderers own the track. |
 | `stackId` | `string \| number` | — | Matching IDs stack series in one category band. |
 | `cornerRadius` | `number \| string` | `0` in Recharts | Native rounded sector corners. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Native mark finish; custom shapes, active shapes and filters retain rendering ownership. |
+| `material` | `"clay" \| "glow"` | Omitted | Native mark finish; custom shapes, active shapes and filters retain rendering ownership. |
 | `fill` | `string` | Config color | Series paint; native Cells can override individual rows. |
 | `hide` | `boolean` | `false` | Explicit hiding; Root visibility also applies. |
 
 </div>
 
-Per-series animation is disabled. These examples start with Default (`plain`) paint without automatic radial inspection emphasis. See [Recharts RadialBar](https://recharts.github.io/en-US/api/RadialBar/).
+Per-series animation is disabled. These examples start with Default paint without automatic radial inspection emphasis. See [Recharts RadialBar](https://recharts.github.io/en-US/api/RadialBar/).
 
 ### RadialBarLabel
 

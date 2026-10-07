@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
-import { allExamples, examples, families } from "../examples/catalog.mjs";
+import { allExamples, examples, families, variantDefinitions } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
 import { publicPath } from "../lib/routing.mjs";
 import { verificationFiles } from "./consumer-validation-files.mjs";
@@ -24,7 +24,15 @@ test("presentation options remain complete in copied and agent-retrieved consume
   }
   assert.equal(readFileSync(`public/examples/combo-motion/${file}`, "utf8"), source);
   assert.ok(bundle.files["README.md"].includes(`/examples/combo-motion/${file}`));
-  const reference = readFileSync("public/markdown/guides/customization.md", "utf8");
+  const reference = [
+    "components/line",
+    "components/bar",
+    "components/combo",
+    "components/sankey",
+    "chart-components/root",
+  ]
+    .map((page) => readFileSync(`public/markdown/${page}.md`, "utf8"))
+    .join("\n");
   for (const type of [
     "FillPattern",
     "ChartBackgroundPattern",
@@ -35,7 +43,7 @@ test("presentation options remain complete in copied and agent-retrieved consume
     "SankeyNodeLabel",
   ])
     assert.ok(reference.includes(type), `${type} reference missing`);
-  assert.ok(readFileSync("public/llms.txt", "utf8").includes("guides/customization.md"));
+  assert.ok(!readFileSync("public/llms.txt", "utf8").includes("guides/customization.md"));
   assert.ok(readFileSync("public/llms-full.txt", "utf8").includes(source));
 });
 test("Introduction is the first Get Started page at the preserved docs root", () => {
@@ -125,7 +133,7 @@ test("Line variant sources match selected public defaults without runtime compil
     for (const [value, variant] of Object.entries(bundle.variants)) {
       const files = filesFor(bundle, {}, value);
       assert.equal(files[`src/examples/${bundle.id}/example.tsx`], variant.source);
-      assert.ok(variant.source.includes(`${bundle.variantControl.toLowerCase()} = "${value}"`));
+      assert.ok(variant.source.includes(`${variantDefinitions[bundle.id].prop} = "${value}"`));
       assert.ok(
         promptFor(bundle, {}, "https://docs.example", value).includes(
           `/variants/${value}/example.tsx`,
@@ -156,7 +164,7 @@ test("Area consumers preserve explicit composition and consumer-owned stacked vi
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
         variant.source,
       );
-      assert.ok(variant.source.includes(`${bundle.variantControl.toLowerCase()} = "${value}"`));
+      assert.ok(variant.source.includes(`${variantDefinitions[bundle.id].prop} = "${value}"`));
     }
   }
   assert.match(

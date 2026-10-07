@@ -32,12 +32,15 @@ const components = {
 const Curve = components["area-curves"];
 const Material = components["area-materials"];
 export const previews = {
-  area: components.area,
+  area: ({ variant }: PreviewProps) => {
+    const Primary = components.area;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "area-curves": ({ variant }: PreviewProps) => (
     <Curve curve={variant as "monotone" | "linear" | "stepAfter"} />
   ),
   "area-stacked": components["area-stacked"],
   "area-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "clay" | "glow"} />
+    <Material appearance={variant as "default" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

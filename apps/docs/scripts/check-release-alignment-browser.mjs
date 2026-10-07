@@ -165,16 +165,16 @@ try {
   }
   for (const width of [1440, 320]) {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto(origin + publicPath("/docs/guides/customization/"));
+    await page.goto(origin + publicPath("/docs/components/pie/"));
     const pie = page.locator('[data-component="pie-interaction"]');
     await pie.scrollIntoViewIfNeeded();
-    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(2);
+    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(3);
     await expect(pie.locator('[data-kind-ui="pie-halo"]')).toHaveCount(0);
     await expect(pie.locator('[data-kind-ui="chart-tooltip"]')).toContainText("Service");
     const other = pie.getByRole("button", { name: "Other", exact: true });
     await other.click();
     await expect(other).toHaveAttribute("aria-pressed", "true");
-    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(2);
+    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(3);
     await pie.getByRole("button", { name: "Highlight service", exact: true }).focus();
     await page.keyboard.press("Enter");
     await expect(pie.getByRole("button", { name: "Service", exact: true })).toHaveAttribute(
@@ -186,6 +186,7 @@ try {
     await expect(
       pie.locator('[data-kind-ui="chart-legend-button"][aria-pressed="true"]'),
     ).toHaveCount(0);
+    await page.goto(origin + publicPath("/docs/components/combo/"));
     const presentation = page.locator('[data-component="combo-presentation"]');
     await presentation.scrollIntoViewIfNeeded();
     await presentation.locator("svg.recharts-surface").first().waitFor();
@@ -194,6 +195,9 @@ try {
     await target.click();
     await expect(target).toHaveAttribute("aria-pressed", "true");
     for (const id of ["combo-presentation", "pie-interaction"]) {
+      await page.goto(
+        origin + publicPath(`/docs/components/${id.startsWith("pie") ? "pie" : "combo"}/`),
+      );
       const card = page.locator(`[data-component="${id}"]`);
       await card.scrollIntoViewIfNeeded();
       const height = (await card.locator(".chart-example").boundingBox()).height;

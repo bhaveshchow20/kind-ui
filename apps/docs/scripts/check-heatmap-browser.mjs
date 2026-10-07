@@ -28,7 +28,7 @@ try {
     assert.equal(await grid.locator("td").count(), 24);
     assert.equal(await grid.locator('td[data-missing="true"]').count(), 2);
     assert.equal(await grid.locator('td[tabindex="0"]').count(), 1);
-    assert.equal(await primary.locator("table.sr-only").count(), 1);
+    assert.equal(await primary.locator(".sr-only table").count(), 1);
     assert.equal(await primary.locator('[data-kind-ui="heatmap-data-table"]').count(), 1);
     await page.screenshot({ path: `artifacts/heatmap/initial-${width}.png` });
     const cell = grid.locator("td").first();
@@ -130,8 +130,8 @@ try {
     await signed.screenshot({ path: `artifacts/heatmap/signed-${width}.png` });
     const material = page.locator('[data-component="heatmap-materials"]');
     await material.scrollIntoViewIfNeeded();
-    for (const value of ["plain", "clay", "glow"]) {
-      const label = value === "plain" ? "Default" : value[0].toUpperCase() + value.slice(1);
+    for (const value of ["default", "clay", "glow"]) {
+      const label = value === "default" ? "Default" : value[0].toUpperCase() + value.slice(1);
       await material.getByRole("combobox", { name: "Material" }).click();
       await page.getByRole("option", { name: label, exact: true }).click();
       assert.equal(await material.locator(`td[data-material="${value}"]`).count(), 22);

@@ -37,9 +37,9 @@ export const previews = {
   "pie-rounded": ({ variant }: PreviewProps) => (
     <Rounded geometry={variant as "rounded-pie" | "rounded-donut" | "petal-donut"} />
   ),
-  pie: ({ variant }: PreviewProps) => <Shape shape={variant as "pie" | "donut"} />,
+  pie: ({ variant }: PreviewProps) => <Shape shape={variant as "pie" | "donut" | "loading"} />,
   "pie-visibility": Visibility,
   "pie-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "clay" | "glow"} />
+    <Material appearance={variant as "default" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

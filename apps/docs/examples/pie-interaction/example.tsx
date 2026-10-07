@@ -21,7 +21,6 @@ export function PieOptions({
   return (
     <Chart.Root
       config={categoryConfig}
-      defaultVisibleSeries={["service", "other"]}
       interaction={{
         kind: "category",
         mode: "focus",
@@ -52,17 +51,19 @@ export function PieOptions({
         </Chart.PieChart>
       </Chart.ResponsiveContainer>
       <Chart.Legend />
-      <table>
-        <caption>Allocation</caption>
-        <tbody>
-          {data.map((row) => (
-            <tr key={row.id}>
-              <th scope="row">{row.id}</th>
-              <td>{row.value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="sr-only">
+        <table>
+          <caption>Allocation</caption>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.id}>
+                <th scope="row">{row.id}</th>
+                <td>{row.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Chart.Root>
   );
 }

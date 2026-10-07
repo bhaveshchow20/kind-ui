@@ -34,10 +34,13 @@ const Material = dynamic(
 );
 
 export const previews = {
-  "box-plot": Distribution,
+  "box-plot": ({ variant }: PreviewProps) => {
+    const Primary = Distribution;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "box-plot-horizontal": Horizontal,
   "box-plot-edge-cases": EdgeCases,
   "box-plot-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "clay" | "glow"} />
+    <Material appearance={variant as "default" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

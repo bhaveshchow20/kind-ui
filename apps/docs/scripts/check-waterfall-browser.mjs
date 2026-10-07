@@ -48,12 +48,12 @@ try {
         v.source.trimEnd(),
       );
       await card.getByRole("tab", { name: "Preview", exact: true }).click();
-      if (b.variants && value !== "plain")
+      if (b.variants && value !== "default")
         assert.equal(
           await card.locator(`[data-kind-ui="bar-material"][data-material="${value}"]`).count(),
           1,
         );
-      if (b.variants && value === "plain")
+      if (b.variants && value === "default")
         assert.equal(await card.locator('[data-kind-ui="bar-material"]').count(), 0);
       evidence.variants.push({ id, value, parity: "passed" });
     }

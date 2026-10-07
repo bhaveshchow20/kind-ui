@@ -28,9 +28,9 @@ const data: { key: keyof typeof config; hours: number; share: string }[] = [
 ];
 
 export function AllocationMaterialChart({
-  material = "plain",
+  appearance = "default",
 }: {
-  material?: "plain" | "clay" | "glow";
+  appearance?: "default" | "clay" | "glow";
 }) {
   return (
     <Chart.Root config={config}>
@@ -42,7 +42,7 @@ export function AllocationMaterialChart({
             dataKey="hours"
             nameKey="key"
             innerRadius={58}
-            material={material}
+            material={appearance === "default" ? undefined : appearance}
             outerRadius={108}
             paddingAngle={0}
           >

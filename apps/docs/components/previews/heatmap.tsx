@@ -71,9 +71,9 @@ export const previews = {
     </Frame>
   ),
 
-  heatmap: () => (
+  heatmap: ({ variant }: PreviewProps) => (
     <Frame>
-      <Support />
+      <Support state={variant as "ready" | "loading"} />
     </Frame>
   ),
   "heatmap-diverging": () => (
@@ -83,7 +83,7 @@ export const previews = {
   ),
   "heatmap-materials": ({ variant }: PreviewProps) => (
     <Frame>
-      <Material material={variant as "plain" | "clay" | "glow"} />
+      <Material appearance={variant as "default" | "clay" | "glow"} />
     </Frame>
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

@@ -23,9 +23,12 @@ const Material = dynamic(
   { loading: Loading, ssr: false },
 );
 export const previews = {
-  scatter: Scatter,
+  scatter: ({ variant }: PreviewProps) => {
+    const Primary = Scatter;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "scatter-bubble": Bubble,
   "scatter-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "clay" | "glow"} />
+    <Material appearance={variant as "default" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

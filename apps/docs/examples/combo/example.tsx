@@ -20,12 +20,13 @@ const config = {
   target: { label: "Target · units", color: "#087f78", formatValue: (value) => `${value} units` },
 } satisfies Chart.SeriesConfig;
 
-export function ProductionComboChart() {
+export function ProductionComboChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
     <Chart.Root config={config}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.ComboChart
+          loading={state === "loading"}
           data={data}
           animate
           accessibilityLayer

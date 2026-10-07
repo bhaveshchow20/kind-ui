@@ -58,26 +58,27 @@ export function RoundedAllocationChart({
           <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
         </Chart.PieChart>
       </Chart.ResponsiveContainer>
-      <p>Spacing and rounding change the silhouette. Shares use the original 1,000-hour total.</p>
-      <table>
-        <caption>Team allocation (1,000 hours)</caption>
-        <thead>
-          <tr>
-            <th scope="col">Team</th>
-            <th scope="col">Hours</th>
-            <th scope="col">Share of total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row) => (
-            <tr key={row.key}>
-              <th scope="row">{config[row.key].label}</th>
-              <td>{row.hours}</td>
-              <td>{row.share}</td>
+      <div className="sr-only">
+        <table>
+          <caption>Team allocation (1,000 hours)</caption>
+          <thead>
+            <tr>
+              <th scope="col">Team</th>
+              <th scope="col">Hours</th>
+              <th scope="col">Share of total</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.key}>
+                <th scope="row">{config[row.key].label}</th>
+                <td>{row.hours}</td>
+                <td>{row.share}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Chart.Root>
   );
 }

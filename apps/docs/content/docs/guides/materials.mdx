@@ -1,23 +1,17 @@
 ---
 title: Materials
-description: Choose a chart finish while preserving its quantitative reading.
+description: Add Clay or Glow while preserving native chart geometry.
 ---
 
-The material vocabulary is `plain`, `clay` and `glow`. The finishes are static decoration, independent of curve and chart motion. Glass is paused and unmerged; it is not a supported material value.
+Clay (`"clay"`) adds soft relief. Glow (`"glow"`) adds decorative light. Default omits the prop and retains native paint; it is not a material.
 
-Default preserves native paint, Clay supplies soft matte relief, and Glow supplies decorative light. A material does not transform data or improve keyboard coverage.
-
-| Public prop | Boundary |
+| Chart parts | Prop |
 | --- | --- |
-| Configured `LineChart.material` | Applies to generated series |
-| Explicit `LineSeries.material` | Applies to its maintained curve; native dots and labels retain ownership |
+| Cartesian and polar series | `material` |
+| Configured Line | `material` on `LineChart` |
+| Heatmap cells | `material` on `HeatmapGrid` |
+| Sankey nodes and links | `finish`; independent of solid/gradient `material` |
 
-## Consumer paint takes precedence
+Family pages show supported parts and complete examples. Custom shapes, explicit filters and native paint retain their documented ownership. Materials preserve values and geometry; motion is independent.
 
-Custom shapes and explicit filters retain their own finish. Native gradients, clipping, stroke, opacity and handlers remain under their documented contracts. Read the installed declarations and [Line API](/docs/components/line/#lineseries) before relying on a custom renderer.
-
-## Choose a finish with representative data
-
-Inspect thin lines, dense overlaps, chart edges, missing values, zero and dark mode. Plot clipping can trim exterior effects. Filters add rendering work; plain lines provide a comparison.
-
-Keep labels and numeric boundaries legible. Automated coverage targets Chromium and pinned peers; other engines and print/export renderers are not established by that evidence.
+Compare dense marks, missing/zero values, narrow layouts and dark mode. Keep labels, contrast and a readable data alternative. Plot clipping may trim exterior effects; filters add rendering work.

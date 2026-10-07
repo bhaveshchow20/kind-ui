@@ -44,15 +44,7 @@ export function VisibleAllocationChart() {
       data-visibility-changes={changes}
     >
       <Chart.Legend />
-      <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
-        <button type="button" onClick={() => setVisible([])}>
-          Hide all categories
-        </button>
-        <button type="button" onClick={() => setVisible(Object.keys(config))}>
-          Show all categories
-        </button>
-      </div>
-      <p role="status" style={{ textAlign: "center", margin: 0 }}>
+      <p role="status" className="sr-only">
         {total.toLocaleString("en-US")} hours selected
       </p>
       <Chart.ResponsiveContainer width="100%" height={280}>

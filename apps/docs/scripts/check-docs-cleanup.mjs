@@ -1,0 +1,137 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chromium, expect } from "@playwright/test";
+import { families } from "../examples/catalog.mjs";
+import { publicPath } from "../lib/routing.mjs";
+
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
+const browser = await chromium.launch();
+const evidence = [];
+const errors = [];
+const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
+function pages(directory, prefix = "") {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory()
+      ? pages(`${directory}/${entry.name}`, `${prefix}${entry.name}/`)
+      : entry.name.endsWith(".mdx")
+        ? [`${prefix}${entry.name.slice(0, -4)}`]
+        : [],
+  );
+}
+try {
+  const context = await browser.newContext({ reducedMotion: "reduce", colorScheme: "dark" });
+  const page = await context.newPage();
+  page.on("pageerror", (error) => errors.push(error.message));
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const key of pages("content/docs")) {
+      const url = publicPath(key === "index" ? "/docs/" : `/docs/${key}/`);
+      assert.equal((await page.goto(origin + url)).status(), 200, url);
+      await page.locator("h1").first().waitFor();
+      if (key.startsWith("components/")) {
+        const family = key.split("/")[1];
+        const id = family === "sankey" ? "sankey-config" : family;
+        const card = page.locator(`[data-component="${id}"]`);
+        await card
+          .locator(id === "heatmap" ? "[role=grid]" : "svg.recharts-surface")
+          .first()
+          .waitFor();
+        assert.ok(
+          (await page.locator(".doc-body > h2").first().innerText()).startsWith("Usage"),
+          `${key} order`,
+        );
+        await expect(card.locator(".sr-only table")).toHaveCount(1);
+        const loading = bundles[id].variants.loading;
+        assert.ok(loading, `${id} loading source`);
+        await card.getByRole("combobox").click();
+        await page.getByRole("option", { name: "Loading", exact: true }).click();
+        await expect(card.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
+        await card.getByRole("tab", { name: "Code", exact: true }).click();
+        assert.equal((await card.locator("pre").textContent()).trim(), loading.source.trim());
+        await card.getByRole("tab", { name: "Preview", exact: true }).click();
+      }
+      const measurements = await page.evaluate(() => {
+        const main = document.querySelector("[data-fd-full]").getBoundingClientRect();
+        return {
+          overflow: document.documentElement.scrollWidth - innerWidth,
+          tail: document.documentElement.scrollHeight - (main.bottom + scrollY),
+        };
+      });
+      assert.ok(
+        measurements.overflow <= 2,
+        `${width} ${key} horizontal overflow ${measurements.overflow}`,
+      );
+      assert.ok(measurements.tail <= 2, `${width} ${key} blank tail ${measurements.tail}`);
+      evidence.push({ width, page: key, ...measurements });
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(origin + publicPath("/docs/components/radar/"));
+  const mark = page.locator('[data-kind-ui="radar-selection"]').last();
+  await mark.waitFor();
+  await mark.click({ force: true });
+  assert.equal(await mark.evaluate((node) => node.matches(":focus-visible")), false);
+  assert.equal(await mark.evaluate((node) => getComputedStyle(node).outlineStyle), "none");
+  await page.keyboard.press("Tab");
+  await mark.focus();
+  assert.equal(await mark.evaluate((node) => node.matches(":focus-visible")), true);
+  assert.equal(await mark.evaluate((node) => getComputedStyle(node).outlineStyle), "solid");
+  const pressed = await mark.getAttribute("aria-pressed");
+  await page.keyboard.press("Enter");
+  await expect(mark).toHaveAttribute("aria-pressed", pressed === "true" ? "false" : "true");
+  await page.goto(origin + publicPath("/docs/components/pie/"));
+  const pie = page.locator('[data-component="pie-interaction"]');
+  await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(3);
+  await expect(page.getByRole("button", { name: /all categories/ })).toHaveCount(0);
+  for (const [legacy, title] of [
+    ["customization", "Line Chart"],
+    ["identity-layout", "Identity and colors"],
+  ]) {
+    assert.equal((await page.goto(origin + publicPath(`/docs/guides/${legacy}/`))).status(), 200);
+    await page.waitForURL(
+      origin +
+        publicPath(
+          legacy === "customization" ? "/docs/components/line/" : "/docs/concepts/identity/",
+        ),
+    );
+    assert.equal(await page.locator("h1").first().innerText(), title);
+  }
+  await page.goto(origin + publicPath("/docs/guides/customization/#loading"));
+  await page.waitForURL(origin + publicPath("/docs/chart-components/root/#loading"));
+  const icons = await page
+    .locator('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")));
+  const canonical = readFileSync("../showcase/public/cherry-blossom.png");
+  for (const href of icons) {
+    assert.equal(href, publicPath("/cherry-blossom.png"));
+    assert.equal(
+      createHash("sha256")
+        .update(await (await page.request.get(origin + href)).body())
+        .digest("hex"),
+      createHash("sha256").update(canonical).digest("hex"),
+    );
+  }
+  assert.equal(icons.length, 3);
+  assert.deepEqual(errors, []);
+  mkdirSync("artifacts", { recursive: true });
+  writeFileSync(
+    "artifacts/docs-cleanup-results.json",
+    JSON.stringify(
+      {
+        pages: evidence,
+        families: families.length,
+        pointerAndKeyboardFocus: "passed",
+        favicon: "canonical bytes",
+        errors,
+      },
+      null,
+      2,
+    ),
+  );
+  console.log(
+    `Docs cleanup: ${evidence.length} page/viewport checks, 13 native loading previews, focus and canonical favicon passed.`,
+  );
+} finally {
+  await browser.close();
+}

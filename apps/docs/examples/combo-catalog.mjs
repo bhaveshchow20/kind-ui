@@ -86,9 +86,19 @@ export const comboVariants = {
   },
 };
 
+// Native chart loading uses the same source in Preview, Code and Copy prompt.
+const primaryLoading = {
+  control: "State",
+  prop: "state",
+  default: "ready",
+  options: [
+    { value: "ready", label: "Ready" },
+    { value: "loading", label: "Loading" },
+  ],
+};
 export const family = {
   id: "combo",
   examples: comboExamples,
   dataLabels: comboDataLabels,
-  variants: comboVariants,
+  variants: { ...comboVariants, combo: primaryLoading },
 };

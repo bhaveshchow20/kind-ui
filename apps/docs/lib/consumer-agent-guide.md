@@ -19,4 +19,4 @@ alternatives. Motion is required; there is no /motion entry.
 Typecheck and build the consumer. Inspect mobile layout, keyboard access, contrast,
 legend toggles, missing and zero values and reduced motion.
 
-For loading, theme colors, fill/background patterns, projection/percent stacks, marker/dash/directional motion, Pie defaults, Sankey labels/icons and Root interactions, retrieve /markdown/guides/customization.md. Its complete public options source is /examples/combo-motion/src/examples/combo-motion/options.tsx; selected example files include it and receive strict consumer checks.
+For loading, theme colors, fill/background patterns, projection/percent stacks, marker/dash/directional motion, Pie defaults, Sankey labels/icons and Root interactions, retrieve the relevant family reference and /markdown/chart-components/root.md for loading. Its complete public options source is /examples/combo-motion/src/examples/combo-motion/options.tsx; selected example files include it and receive strict consumer checks.

@@ -44,4 +44,23 @@ The legend follows config insertion order. Config describes presentation; chart 
 
 ## Theme colors and series patterns
 
-Colors also accept gradient stops or complete light/dark definitions. Configured patterns supply implicit Bar/Area fills and default legend swatches. See [Chart customization](/docs/guides/customization/) for shape validation, defaults, native paint precedence and contrast limits.
+Colors also accept gradient stops or complete light/dark definitions. Configured patterns supply implicit Bar/Area fills and default legend swatches. See the validation and defaults below; [Bar patterns](/docs/components/bar/#series-patterns-and-projected-bars) covers native paint precedence.
+
+## Labels, theme colors and diagnostics
+
+`SeriesConfig[key].label` is optional. `monthlyVisitors` infers “Monthly visitors”; explicit text, including `""`, wins. Identity keys stay unchanged. [SeriesConfig](/docs/chart-components/series-config/) describes matching, icons, legend symbols and formatter precedence.
+
+`color` accepts a CSS string, an array of gradient stops, or `{ light, dark }` theme values. Set CSS `color-scheme` on the host.
+
+`--color-key` exposes the first stop; chart-local SVG resources provide the full gradient. Native paint and custom renderers retain precedence.
+
+<details>
+<summary>Color validation and resource identity</summary>
+
+Gradient arrays require nonempty, evenly spaced stops. Each theme can use a string or array; unequal stop counts retain their spacing.
+
+Empty strings, arrays or invalid theme shapes throw with the config key, theme and stop index where applicable. CSS syntax and contrast remain consumer-owned. Independent React roots require distinct SSR/hydration `identifierPrefix` values.
+
+</details>
+
+Development builds warn once when the stylesheet marker is missing after mount, including hydration and delayed stylesheet loading. Production does not run that diagnostic. Import the stylesheet instead of suppressing the warning; explicitly styled consumers still own their CSS.

@@ -35,12 +35,13 @@ const config = {
   latency: { label: "Response time · ms", color: "#733bff" },
 } satisfies Chart.SeriesConfig;
 
-export function ResponseTimeBoxPlot() {
+export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
     <Chart.Root config={config}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.BoxPlotChart
+          loading={state === "loading"}
           data={data}
           animate
           accessibilityLayer

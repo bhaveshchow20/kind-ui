@@ -85,7 +85,7 @@ try {
     const workbench = page.locator(`[data-component="${id}"]`);
     await workbench.locator(".recharts-surface").waitFor();
     assert.equal(
-      await workbench.locator("table.sr-only tbody tr").count(),
+      await workbench.locator(".sr-only table tbody tr").count(),
       bundle.dataAlternative.rows.length,
     );
     const previewHeight = await workbench

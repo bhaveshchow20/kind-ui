@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { renderDoc } from "@/components/doc-page";
+import { LegacyDocRedirect } from "@/components/legacy-doc-redirect";
 import { docMetadata } from "@/lib/metadata";
 import { basePath, canonicalDocSlugs, docSlugs, legacyDocSlugs } from "@/lib/routing.mjs";
 import { source } from "@/lib/source";
@@ -18,5 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function Page({ params }: { params: Promise<{ slug: string[] }> }) {
   const slug = canonicalDocSlugs(docSlugs((await params).slug));
   if (!slug) notFound();
+  const requested = docSlugs((await params).slug);
+  if (requested?.[0] === "guides" && ["customization", "identity-layout"].includes(requested[1]))
+    return (
+      <>
+        <LegacyDocRedirect guide={requested[1]} />
+        {renderDoc(slug)}
+      </>
+    );
   return renderDoc(slug);
 }

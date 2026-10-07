@@ -128,3 +128,19 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* Pointer focus keeps native events; keyboard focus retains the visible ring. */
+.chart-example :is(.recharts-surface, [tabindex]):focus:not(:focus-visible) {
+  outline: none;
+}

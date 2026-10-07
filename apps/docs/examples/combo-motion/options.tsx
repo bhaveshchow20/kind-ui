@@ -76,27 +76,29 @@ export function PresentationOptions({ loading = false }: { loading?: boolean }) 
           </Chart.ComboChart>
         </Chart.ResponsiveContainer>
       </Chart.Root>
-      <table>
-        <caption>Monthly production in units; June is projected</caption>
-        <thead>
-          <tr>
-            <th scope="col">Month</th>
-            <th scope="col">Capacity</th>
-            <th scope="col">Shipped</th>
-            <th scope="col">Target</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row) => (
-            <tr key={row.month}>
-              <th scope="row">{row.month}</th>
-              <td>{row.capacity}</td>
-              <td>{row.shipped}</td>
-              <td>{row.target}</td>
+      <div className="sr-only">
+        <table>
+          <caption>Monthly production in units; June is projected</caption>
+          <thead>
+            <tr>
+              <th scope="col">Month</th>
+              <th scope="col">Capacity</th>
+              <th scope="col">Shipped</th>
+              <th scope="col">Target</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.month}>
+                <th scope="row">{row.month}</th>
+                <td>{row.capacity}</td>
+                <td>{row.shipped}</td>
+                <td>{row.target}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
@@ -162,17 +164,19 @@ export function PieOptions({ loading = false }: { loading?: boolean }) {
         <Chart.Tooltip itemKey={(entry) => entry.payload.id} />
       </Chart.PieChart>
       <Chart.Legend />
-      <table>
-        <caption>Allocation</caption>
-        <tbody>
-          {categories.map((row) => (
-            <tr key={row.id}>
-              <th scope="row">{row.id}</th>
-              <td>{row.value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="sr-only">
+        <table>
+          <caption>Allocation</caption>
+          <tbody>
+            {categories.map((row) => (
+              <tr key={row.id}>
+                <th scope="row">{row.id}</th>
+                <td>{row.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Chart.Root>
   );
 }

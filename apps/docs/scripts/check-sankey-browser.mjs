@@ -99,7 +99,7 @@ try {
       ?.textContent.includes("Clay"),
   );
   await finishes.getByRole("tab", { name: "Code", exact: true }).click();
-  assert.match(await finishes.locator("pre").textContent(), /finish = "clay"/);
+  assert.match(await finishes.locator("pre").textContent(), /appearance = "clay"/);
   await finishes.getByRole("tab", { name: "Preview", exact: true }).click();
   assert.equal(await finishes.locator('path[role="button"][filter]').count(), 18);
   await page.evaluate(() => {

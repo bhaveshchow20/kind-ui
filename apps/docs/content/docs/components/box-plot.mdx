@@ -102,7 +102,7 @@ Custom range shapes retain inspection but cannot use Bar category emphasis. See 
 | --- | --- | --- | --- |
 | `dataKey` | `(keyof Row & string) \| ((row: Row) => BoxPlotSummary \| null \| undefined)` | Required | Direct property name or accessor; nested string paths are not interpreted. |
 | `seriesKey` | `string` | Required | Root metadata, color and visibility identity, independent of the generated range accessor. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static mark finish. Explicit filters and custom shapes retain ownership. |
+| `material` | `"clay" \| "glow"` | Omitted | Static mark finish. Explicit filters and custom shapes retain ownership. |
 | `barSize` | `number \| string` | Native automatic sizing | Category-axis width; numbers are pixels, native percentage strings are also accepted. |
 | `outlierRadius` | `number` | `3` | Radius of each outlier circle in screen pixels. |
 | `shape` | `(props: BoxPlotShapeProps) => ReactNode` | Built-in mark | Receives original summary, native Bar shape props and mapped coordinates. Owns returned markup. |
@@ -127,7 +127,7 @@ Renders caller-owned screen coordinates; it neither computes statistics nor maps
 | `size` | `number` | Required | Category-axis mark width in pixels. |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | Direction of the quantitative geometry. |
 | `outlierRadius` | `number` | `3` | Screen-space circle radius. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static finish; explicit group filters take precedence. |
+| `material` | `"clay" \| "glow"` | Omitted | Static finish; explicit group filters take precedence. |
 | `strokeWidth` | SVG stroke width | `1.5` | Native stroke width; explicit SVG paint stays consumer-owned. |
 
 </div>

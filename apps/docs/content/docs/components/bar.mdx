@@ -89,7 +89,7 @@ String value keys identify config entries; controlled numeric keys or accessors 
 | `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Value field or accessor. |
 | `seriesKey` | `string` | String `dataKey` | Metadata and visibility identity. |
 | `stackId` | `string \| number` | — | Stack series with matching axis IDs. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Native-rectangle finish; custom paint takes precedence. |
+| `material` | `"clay" \| "glow"` | Omitted | Native-rectangle finish; custom paint takes precedence. |
 | `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | — | Unique category identity; does not make invalid values or custom shapes eligible. |
 | `radius` | `number \| [number, number, number, number]` | `0` | Native corner rounding: top-left, top-right, bottom-right, bottom-left. |
 | `maxBarSize` | `number` | — | Limit each bar's thickness. |
@@ -108,3 +108,28 @@ Finishes are static. Native per-series animation is disabled. Custom `shape`, `f
 ## Shared components
 
 [Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+
+## Series patterns and projected bars
+
+`SeriesConfig[key].pattern` supplies implicit Bar/Area paint and the default legend swatch. `BarSeries.pattern` or `AreaSeries.pattern` overrides it; `false` disables it. Use `false` to disable a pattern.
+
+`FillPatternSwatch` takes `pattern` and a base `color` for custom legends.
+
+| Field | Values / default | Limits |
+| --- | --- | --- |
+| `kind` | Required: `hatch`, `stripe`, `duotone`, `dots`, `lines` | Static SVG paint; independent of material, data and geometry. |
+| `color` | `CanvasText` | Second ink; select contrasting theme-aware colors. |
+| `size` | `8` SVG units | Finite and positive. |
+| `width` | `1`; stripe `2` | Finite, positive and at most size; dot diameter; duotone stays 50/50. |
+| `angle` | Hatch `45`; others `0` degrees | Finite; chart orientation does not rotate the pattern automatically. |
+
+Explicit fill/gradient, `style.fill`, Cells and custom shapes retain paint ownership. Custom Bar active shapes disable automatic encoding. Gradient-backed pattern tiles use the configured first-stop ink. Forced colors retain geometry with system inks.
+
+Print settings/colors may affect contrast; retain labels and data alternatives.
+
+`BarSeries<Row>.projection={{ isProjected, pattern }}` decorates only caller-selected raw rows. It neither forecasts, filters data nor changes axes. `TooltipContent.isProjected` receives native payload entries; apply the same rule to their original `entry.payload` rows.
+
+Label the data alternative. Tooltip `projectedLabel` defaults to `"Projected"`; missing/hidden/suppressed rows retain existing behavior. Cells, explicit paint and custom shape ownership take precedence.
+
+<ApiTable name="FillPatternReference" />
+<ApiTable name="BarProjectionReference" />

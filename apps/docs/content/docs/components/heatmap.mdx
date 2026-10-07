@@ -97,7 +97,7 @@ Captioned native table with row/column headers and roving grid focus. Empty doma
 | --- | --- | --- | --- |
 | `caption` | `string` | Required | Visible table caption and accessible grid name. |
 | `layout` | `{ cellSize?: number \| string; gap?: number \| string; rowLabels?: "visible" \| "hidden"; columnLabels?: "visible" \| "hidden" }` | Fluid cells; `gap: 3`; labels visible | Optional fixed cells, spacing and independent visual headers. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static cell-edge finish; missing cells do not receive it. |
+| `material` | `"clay" \| "glow"` | Omitted | Static cell-edge finish; missing cells do not receive it. |
 | `Cell` | `ComponentType<HeatmapCellContentProps>` | `HeatmapCellContent` | Custom cell content receives `cell`, `fill` and `formattedValue`. Keep content compatible with grid navigation. |
 | `cellProps` | `(cell: HeatmapCell) => ComponentPropsWithRef<"td">` | — | Native styles, refs and handlers. The grid still owns cell semantics, focus and background color. |
 | `rowLabel` / `columnLabel` | `(key: string) => ReactNode` | Domain key | Customize visible headers; coordinate identities and inspection labels remain domain keys. |

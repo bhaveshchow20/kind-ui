@@ -29,7 +29,9 @@ const Activity = dynamic(
 export const previews = {
   "radial-activity": Activity,
 
-  radial: ({ variant }: PreviewProps) => <Progress labels={variant as "hidden" | "visible"} />,
+  radial: ({ variant }: PreviewProps) => (
+    <Progress labels={variant as "hidden" | "visible" | "loading"} />
+  ),
   "radial-gauge": ({ variant }: PreviewProps) => (
     <Gauge direction={variant as "clockwise" | "anticlockwise"} />
   ),

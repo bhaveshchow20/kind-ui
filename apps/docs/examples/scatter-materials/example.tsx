@@ -14,7 +14,11 @@ const config = {
   tasks: { label: "Tasks", color: "#733bff", legendShape: "circle" },
 } satisfies Chart.SeriesConfig;
 
-export function MaterialBubbleChart({ material = "plain" }: { material?: Chart.ScatterMaterial }) {
+export function MaterialBubbleChart({
+  appearance = "default",
+}: {
+  appearance?: "default" | "clay" | "glow";
+}) {
   return (
     <Chart.Root config={config}>
       <Chart.Legend />
@@ -63,7 +67,7 @@ export function MaterialBubbleChart({ material = "plain" }: { material?: Chart.S
             seriesKey="tasks"
             data={data}
             shape="circle"
-            material={material}
+            material={appearance === "default" ? undefined : appearance}
             fillOpacity={0.72}
           />
           <Chart.ScatterTooltip<(typeof data)[number]>

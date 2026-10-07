@@ -24,11 +24,11 @@ const nodeConfig = {
   industry: { label: "Industry", color: "#447fd1" },
 } satisfies Chart.SankeyNodeConfig;
 
-export function ConfiguredFlowChart() {
+export function ConfiguredFlowChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
     <section aria-label="Energy allocation">
       <Chart.ResponsiveContainer width="100%" height={250}>
-        <Chart.SankeyChart data={data} nodeConfig={nodeConfig}>
+        <Chart.SankeyChart loading={state === "loading"} data={data} nodeConfig={nodeConfig}>
           <Tooltip isAnimationActive={false} formatter={(value) => `${value} MWh`} />
         </Chart.SankeyChart>
       </Chart.ResponsiveContainer>

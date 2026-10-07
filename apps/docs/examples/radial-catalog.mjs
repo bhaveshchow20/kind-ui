@@ -63,6 +63,7 @@ export const family = {
       options: [
         { value: "hidden", label: "Hidden" },
         { value: "visible", label: "Visible" },
+        { value: "loading", label: "Loading" },
       ],
     },
     "radial-gauge": {

@@ -25,9 +25,12 @@ const Material = dynamic(
 );
 
 export const previews = {
-  histogram: Count,
+  histogram: ({ variant }: PreviewProps) => {
+    const Primary = Count;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "histogram-density": Density,
   "histogram-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "clay" | "glow"} />
+    <Material appearance={variant as "default" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

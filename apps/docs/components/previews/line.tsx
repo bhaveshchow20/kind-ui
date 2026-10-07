@@ -36,13 +36,16 @@ const components = {
 const Curve = components["line-smooth"];
 const Material = components["line-materials"];
 export const previews = {
-  line: components.line,
+  line: ({ variant }: PreviewProps) => {
+    const Primary = components.line;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "line-smooth": ({ variant }: PreviewProps) => (
     <Curve curve={variant as "monotone" | "linear" | "stepAfter"} />
   ),
   "line-comparison": components["line-comparison"],
   "line-markers": components["line-markers"],
   "line-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "clay" | "glow"} />
+    <Material appearance={variant as "default" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

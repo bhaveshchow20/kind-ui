@@ -25,7 +25,7 @@ component boundary when supplying callbacks, refs or state.
 
 In Next.js, import CSS in the root layout. Development builds warn once per document
 if mounted chart roots lack the stylesheet, after pending stylesheets load. SSR and
-production do not run this check. CSS stays explicit to preserve plain Node ESM
+production do not run this check. CSS stays explicit to preserve Node ESM
 imports, stylesheet ordering and CSP control; nothing is injected or fetched.
 Keep the CSS import when copying examples. If you replace every chart style yourself,
 set `--kind-ui-styles-loaded: 1` on your chart roots to acknowledge that setup.

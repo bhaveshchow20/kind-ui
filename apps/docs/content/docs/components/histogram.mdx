@@ -82,7 +82,7 @@ Owns data, vertical layout, scales and spacing. See [XAxis](https://recharts.git
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `seriesKey` | `string` | `"count"` | Root metadata and visibility identity; internal `dataKey` is owned. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Finish on corrected bin rectangles. |
+| `material` | `"clay" \| "glow"` | Omitted | Finish on corrected bin rectangles. |
 | `shape` | `(props: HistogramShapeProps) => ReactElement` | — | Native bar shape props with corrected numeric `x`, `width` and original `bin`; custom geometry becomes consumer-owned. |
 | `fill` / `stroke` | `string` | Config color / unset | Explicit paint overrides. |
 | `hide` | `boolean` | `false` | Hides the series; Root visibility also applies. |

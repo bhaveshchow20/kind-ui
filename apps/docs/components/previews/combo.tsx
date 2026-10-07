@@ -32,7 +32,10 @@ export const previews = {
     <Presentation status={variant as "ready" | "loading"} />
   ),
 
-  combo: Production,
+  combo: ({ variant }: PreviewProps) => {
+    const Primary = Production;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "combo-stacked": Revenue,
   "combo-motion": ({ variant }: PreviewProps) => (
     <Motion entrance={variant as "independent" | "together" | "lineOnly"} />

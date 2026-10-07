@@ -101,7 +101,7 @@ try {
           ),
         );
         await material.getByRole("tab", { name: "Preview", exact: true }).click();
-        if (value !== "plain")
+        if (value !== "default")
           assert.equal(
             await material
               .locator(`[data-kind-ui="histogram-material"][data-material="${value}"]`)

@@ -116,34 +116,36 @@ export function ComponentPlayground({
           <Preview variant={variant} />
         </div>
         {dataAlternative && (
-          <table className="sr-only" aria-label={`${bundle.title} data`}>
-            <caption>{dataAlternative.caption}</caption>
-            <thead>
-              <tr>
-                {Object.values(dataAlternative.columns).map((label) => (
-                  <th scope="col" key={label}>
-                    {label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {dataAlternative.rows.map((row, index) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: Build-time snapshot order is fixed; preserve duplicate observations.
-                <tr key={index}>
-                  {Object.keys(dataAlternative.columns).map((key, index) =>
-                    index === 0 ? (
-                      <th scope="row" key={key}>
-                        {row[key]}
-                      </th>
-                    ) : (
-                      <td key={key}>{row[key]}</td>
-                    ),
-                  )}
+          <div className="sr-only">
+            <table aria-label={`${bundle.title} data`}>
+              <caption>{dataAlternative.caption}</caption>
+              <thead>
+                <tr>
+                  {Object.values(dataAlternative.columns).map((label) => (
+                    <th scope="col" key={label}>
+                      {label}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {dataAlternative.rows.map((row, index) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: Build-time snapshot order is fixed; preserve duplicate observations.
+                  <tr key={index}>
+                    {Object.keys(dataAlternative.columns).map((key, index) =>
+                      index === 0 ? (
+                        <th scope="row" key={key}>
+                          {row[key]}
+                        </th>
+                      ) : (
+                        <td key={key}>{row[key]}</td>
+                      ),
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </TabsContent>
       <TabsContent value="code" forceMount hidden={tab !== "code"} className="code-files">

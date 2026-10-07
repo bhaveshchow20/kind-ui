@@ -23,9 +23,12 @@ const Material = dynamic(
   { loading: Loading, ssr: false },
 );
 export const previews = {
-  radar: Radar,
+  radar: ({ variant }: PreviewProps) => {
+    const Primary = Radar;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "radar-selection": Selection,
   "radar-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "clay" | "glow"} />
+    <Material appearance={variant as "default" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

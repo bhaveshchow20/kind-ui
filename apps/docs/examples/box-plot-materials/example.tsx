@@ -36,9 +36,9 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function MaterialResponseTimeBoxPlot({
-  material = "plain",
+  appearance = "default",
 }: {
-  material?: "plain" | "clay" | "glow";
+  appearance?: "default" | "clay" | "glow";
 } = {}) {
   return (
     <Chart.Root config={config}>
@@ -81,7 +81,7 @@ export function MaterialResponseTimeBoxPlot({
             barSize={32}
             strokeWidth={1.5}
             fillOpacity={0.28}
-            material={material}
+            material={appearance === "default" ? undefined : appearance}
           />
           <Chart.Tooltip
             maxWidth={220}

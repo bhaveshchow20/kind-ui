@@ -13,12 +13,13 @@ const config = {
   orders: { label: "Orders", color: "#733bff" },
 } satisfies Chart.SeriesConfig;
 
-export function PickupOrdersChart() {
+export function PickupOrdersChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
     <Chart.Root config={config}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.BarChart
+          loading={state === "loading"}
           data={data}
           animate
           accessibilityLayer

@@ -21,9 +21,9 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function MaterialAreaChart({
-  material = "plain",
+  appearance = "default",
 }: {
-  material?: "plain" | "clay" | "glow";
+  appearance?: "default" | "clay" | "glow";
 } = {}) {
   return (
     <Chart.Root config={config}>
@@ -51,7 +51,7 @@ export function MaterialAreaChart({
             type="monotone"
             strokeWidth={2}
             fillOpacity={0.32}
-            material={material}
+            material={appearance === "default" ? undefined : appearance}
           />
           <Chart.Tooltip />
         </Chart.AreaChart>

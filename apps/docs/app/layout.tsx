@@ -11,7 +11,11 @@ import { indexingMetadata } from "../../indexing.mjs";
 export const metadata: Metadata = {
   title: { default: "Kind UI charts · Documentation", template: "%s · Kind UI charts" },
   description: "React chart components with native Recharts composition and complete examples.",
-  icons: { icon: publicPath("/favicon.svg") },
+  icons: {
+    icon: { url: publicPath("/cherry-blossom.png"), type: "image/png", sizes: "512x512" },
+    shortcut: publicPath("/cherry-blossom.png"),
+    apple: publicPath("/cherry-blossom.png"),
+  },
   ...indexingMetadata(),
 };
 export default function Layout({ children }: { children: ReactNode }) {

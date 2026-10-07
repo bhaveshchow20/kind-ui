@@ -76,7 +76,7 @@ try {
                 .first()
                 .getAttribute("data-material")
             : null,
-          value === "plain" ? null : value,
+          value === "default" ? null : value,
         );
       }
       evidence.variants.push({ id, value, sourceAndCopy: "exact" });

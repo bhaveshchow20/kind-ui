@@ -50,7 +50,7 @@ const nodeConfig = {
 } satisfies Chart.SankeyNodeConfig;
 const names = new Map(data.nodes.map((node) => [node.id, node.name]));
 
-export function EnergyFlowChart() {
+export function EnergyFlowChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   const [active, setActive] = useState<string | null>(null);
   const selected = data.links.find((link) => link.id === active);
   return (
@@ -76,6 +76,7 @@ export function EnergyFlowChart() {
           </div>
           <Chart.ResponsiveContainer width="100%" height={250}>
             <Chart.SankeyChart
+              loading={state === "loading"}
               data={data}
               nodeConfig={nodeConfig}
               animate={{ revealDurationMs: 900 }}

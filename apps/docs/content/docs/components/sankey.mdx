@@ -86,7 +86,7 @@ Equal-value positive parallel links are rejected; distinct values are supported.
 | --- | --- | --- | --- |
 | Native renderer geometry and `payload` | `SankeyNodeProps` | Required | Spread the complete callback props; computed rectangle dimensions win. |
 | `color` | `string` | Config color; fallback `"#4f46e5"` | Explicit paint overrides metadata. |
-| `finish` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static surface filter; explicit filters take precedence. |
+| `finish` | `"clay" \| "glow"` | Omitted | Static surface filter; explicit filters take precedence. |
 | `rectProps` | `SVGProps<SVGRectElement>` | — | Presentation, semantics and handlers on the original rectangle. |
 
 </div>
@@ -103,7 +103,7 @@ Supply node labels as sibling SVG text. Selection and legend state remain consum
 | `material` | `"solid" \| "gradient"` | `"solid"` | Single-color stroke or source-to-target gradient. |
 | `color` | `string` | Source config color; fallback `"#4f46e5"` | Explicit source paint override. |
 | `targetColor` | `string` | Target config color; fallback `"#06b6d4"` | Explicit destination override for gradient paint. |
-| `finish` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static treatment independent of material and flow width. |
+| `finish` | `"clay" \| "glow"` | Omitted | Static treatment independent of material and flow width. |
 | `pathProps` | `SVGProps<SVGPathElement>` | — | Presentation, keyboard handlers and semantics on the original path; computed geometry wins. |
 
 </div>
@@ -164,6 +164,22 @@ Native Recharts Tooltip handles hover inspection; path handlers and status text 
 
 Give the diagram a measurable height. These examples use a 540px minimum width.
 
-## Node labels and icons
+## Sankey labels and icons
 
-Compose `SankeyNodeLabel` explicitly in the native node callback. See [Sankey labels and icons](/docs/guides/customization/#sankey-labels-and-icons) for complete source, generated public props, defaults, identity, clipping and data-table limits.
+Compose `SankeyNodeLabel` with `SankeyNode` in the native node callback. Share identical `data` between chart, label and `SankeyTable`. Identity is `node.payload.id`, never callback index/name.
+
+`position` defaults to `"outside"`; sinks default left and other nodes right; offset defaults to `8` chart units. `showValues` defaults to false and `valueFormatter` to `String`.
+
+Values use maximum inflow/outflow, count balanced throughput once and report disconnected/measured-zero nodes as zero.
+
+Inside labels center and clip to the exact node rectangle, including tiny nodes. Reserve outside margins; helpers neither shrink text, avoid collisions nor change native geometry. A title preserves full name/value.
+
+Custom `children`, native text props, style and ref remain composable.
+
+`SankeyNodeConfig[id].icon` accepts decorative ReactNode SVG content. Pass `nodeConfig` to the label; custom native renderers receive no automatic icons. `iconSize` defaults to `16`, `iconGap` to `4`; both are finite nonnegative chart units.
+
+The icon viewport is `0 0 24 24`; inside icons share the exact node clip. Missing/null/boolean/zero-size icons preserve text layout. Names and the data table supply meaning.
+
+See [Sankey](/docs/components/sankey/) for data validation and renderer ownership.
+
+<ApiTable name="SankeyLabelReference" />

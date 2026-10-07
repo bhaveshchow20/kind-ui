@@ -238,7 +238,9 @@ const api = Object.fromEntries(
     table.name,
     table.entries.map(({ name, type, description, required }) => ({
       name,
-      type,
+      type: ["material", "finish"].includes(name)
+        ? type.replace(/"plain" \| /g, "").replace(/ \| "plain"/g, "")
+        : type,
       description,
       required,
     })),

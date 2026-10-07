@@ -46,9 +46,9 @@ export function SelectableRadarChart() {
           <Chart.Tooltip />
         </Chart.RadarChart>
       </Chart.ResponsiveContainer>
-      <output aria-live="polite">
+      <output aria-live="polite" className="sr-only">
         {selectedSeries
-          ? `Highlighted: ${config[selectedSeries as keyof typeof config].label}`
+          ? `Selected: ${config[selectedSeries as keyof typeof config].label}`
           : "All series"}
       </output>
     </Chart.Root>

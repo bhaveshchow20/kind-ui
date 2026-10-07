@@ -70,7 +70,7 @@ Configured `LineChart` owns its `Root`; do not wrap it in another one. Each conf
 | `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. Keyboard inspection instructions are provided. |
 | `height` / `width` | Native chart dimensions | `280px` / `100%` | Responsive plot dimensions; `style` and `className` can also override sizing. |
 | `curve` | Recharts curve type | `"monotone"` | Curve for generated series; use `"linear"` or `"stepAfter"` here. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Finish for generated series, preserving native geometry. |
+| `material` | `"clay" \| "glow"` | Omitted | Finish for generated series, preserving native geometry. |
 | `series` | `ConfiguredLineSeries<Row>[]` | Config keys | Per-series props; each entry needs `dataKey` and a unique `seriesKey` in config. |
 | `xAxis` / `yAxis` / `grid` | Native props or `false` | Styled axes and horizontal grid | Override generated parts or hide them. |
 | `tooltip` / `legend` | Kind props or `false` | Enabled with generated parts | Override or hide the tooltip and legend. Explicit children need `legend={{}}` to add a legend. |
@@ -94,7 +94,7 @@ Compose `LineSeries` as children, or pass its props through configured `series`.
 | `dataKey` | `DataKey<Row>` | Required | Value field or accessor. |
 | `seriesKey` | `string` | String `dataKey` | Config and visibility identity; required in a `series` array. |
 | `type` | Recharts curve type | `"linear"` explicit; `"monotone"` generated | Curve for this line. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Line finish; custom `shape` or `filter` takes precedence. |
+| `material` | `"clay" \| "glow"` | Omitted | Line finish; custom `shape` or `filter` takes precedence. |
 | `dot` | Native dot props or renderer | `true` explicit; radius `2.5` generated | Point markers; use `false` to hide them. |
 | `strokeWidth` / `strokeDasharray` | `number` / `string` | Width `1` explicit / `2` generated; no dashes | Stroke weight and dash pattern. |
 
@@ -106,6 +106,45 @@ Missing values remain gaps unless `connectNulls` is enabled. See [Recharts Line]
 
 [Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/), [Labels and cells](/docs/chart-components/labels/).
 
-## Presentation options
+## Point markers, dashed lines and reveal direction
 
-[Chart customization](/docs/guides/customization/) documents loading, theme colors, point markers, dashed-line motion, directional reveals and decorative backgrounds, with complete copied public consumers.
+`LineSeries` and `AreaSeries` expose independent `pointStyle` and `activePointStyle`. Choose `"default"`, `"border"` (series center/surface ring), or `"colored-border"` (surface center/series ring). Regular styles enable dots; native `dot` and `activeDot` always win.
+
+<details>
+<summary>Marker surface and custom rendering</summary>
+
+Set `--kind-ui-chart-marker-surface` on Root for your theme; fallbacks are `--card`, then white. `PointMarker` is a reusable native Dot renderer. In an active-dot callback, forward the series `fill` as the marker's `stroke`.
+
+Radar and Scatter use separate marker APIs.
+
+</details>
+
+`LineSeries.dashAnimation` defaults to `false`. Use `{ durationMs: 1000, direction: "forward" }` with a numeric native `strokeDasharray`; `"reverse"` reverses travel. Duration measures milliseconds per pattern cycle.
+
+Invalid durations and CSS/percentage/nonnumeric patterns stay static. Motion stops for reduced motion, loading, hidden series or `animate={false}`. Native dash offset/style and custom shapes retain ownership.
+
+Area does not accept this prop; overlay a Line in Combo for an open outline.
+
+`LineAnimation` and `AreaAnimation.revealDirection` accept `"left-to-right"` (default), `"right-to-left"`, `"center-out"` and `"edges-in"`. Directions are physically horizontal in either layout; data order, axes and geometry stay unchanged.
+
+Combo inherits the direction for Line/Area unless `lineReveal` or `areaReveal` overrides it; `false` disables that family entrance. Bar keeps its existing entrance. Completion/interruption removes directional clips; loading remains independent.
+
+See [Motion](/docs/guides/motion/) for duration/easing and family defaults.
+
+<ApiTable name="LinePresentationReference" />
+<ApiTable name="AreaPresentationReference" />
+
+
+## Decorative backgrounds
+
+Compose `ChartBackgroundPattern` inside a Cartesian chart, or use configured `LineChart.backgroundPattern`. Presets are `"pinpoints"`, `"crossings"` and `"waves"`.
+
+`size` defaults to `16` positive finite SVG units; `opacity` defaults to `0.15` in `[0, 1]`; color defaults to the chart-grid CSS token/`CanvasText`. Decoration clips to the plot and ignores pointer input.
+
+It remains independent of series patterns, legends, visibility and materials.
+
+`defineChartBackgroundPattern(render)` returns a reusable frozen definition; it uses no global registry. The callback receives `{ size, color, idPrefix }`; scope custom SVG resources with `idPrefix`. Custom content must remain decorative.
+
+Cartesian families include Line, Area, Bar, Combo, Scatter, Histogram, Waterfall and Box Plot. Polar, Pie, Sankey, Heatmap and ActivityRings are outside this contract. Native SSR empty plot shells remain unchanged.
+
+<ApiTable name="BackgroundPatternReference" />

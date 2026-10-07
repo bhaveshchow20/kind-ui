@@ -69,9 +69,9 @@ try {
       if (id === "bar-materials") {
         assert.equal(
           await card.locator('[data-kind-ui="bar-material"]').count(),
-          value === "plain" ? 0 : 1,
+          value === "default" ? 0 : 1,
         );
-        if (value !== "plain")
+        if (value !== "default")
           assert.equal(
             await card.locator('[data-kind-ui="bar-material"]').getAttribute("data-material"),
             value,
@@ -95,7 +95,7 @@ try {
       await card.getByRole("tab", { name: "Preview", exact: true }).getAttribute("aria-selected"),
       "true",
     );
-    const rows = card.locator("table.sr-only tbody tr");
+    const rows = card.locator(".sr-only table tbody tr");
     assert.equal(await rows.count(), bundle.dataAlternative.rows.length);
   }
   assert.notDeepEqual(geometries.grouped, geometries.stacked);

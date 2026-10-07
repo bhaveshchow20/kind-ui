@@ -1,0 +1,8 @@
+/* Chart pointer focus retains native callbacks without a browser focus box. */
+.chart-card :is(.recharts-surface, [tabindex]):focus:not(:focus-visible) {
+  outline: none;
+}
+.chart-card :is(.recharts-surface, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}

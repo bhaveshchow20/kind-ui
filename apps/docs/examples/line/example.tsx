@@ -21,7 +21,7 @@ const config = {
   visitors: { label: "Visitors", color: "#733bff" },
 } satisfies Chart.SeriesConfig;
 
-export function VisitorTrendChart() {
+export function VisitorTrendChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   const [fontScale, setFontScale] = useState(1);
   useEffect(() => {
     const update = () =>
@@ -45,6 +45,7 @@ export function VisitorTrendChart() {
   }, []);
   return (
     <Chart.LineChart
+      loading={state === "loading"}
       data={data}
       config={config}
       legend={{}}

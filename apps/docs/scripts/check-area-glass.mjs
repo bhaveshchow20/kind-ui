@@ -73,7 +73,7 @@ try {
               n.querySelector('[data-kind-ui="area-material"]')?.getAttribute("data-material") ??
               null,
           ),
-          value === "plain" ? null : value,
+          value === "default" ? null : value,
         );
       }
       evidence.variants.push({ id, value, copy: "exact", internalScroll: true, path });

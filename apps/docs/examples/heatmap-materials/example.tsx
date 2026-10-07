@@ -34,7 +34,11 @@ const scale = Chart.createHeatmapScale({
   colors: ["#eff6ff", "#93c5fd", "#2563eb", "#1e3a8a"],
 });
 
-export function MaterialHeatmap({ material = "plain" }: { material?: Chart.HeatmapMaterial }) {
+export function MaterialHeatmap({
+  appearance = "default",
+}: {
+  appearance?: "default" | "clay" | "glow";
+}) {
   return (
     <Chart.HeatmapChart
       rows={rows}
@@ -48,7 +52,7 @@ export function MaterialHeatmap({ material = "plain" }: { material?: Chart.Heatm
         caption="Support requests by day and hour"
         style={{ borderCollapse: "separate", borderSpacing: 3 }}
         cellProps={() => ({ style: { height: "2rem" } })}
-        material={material}
+        material={appearance === "default" ? undefined : appearance}
       />
       <Chart.HeatmapLegend label="Requests per two-hour interval" />
       <Chart.HeatmapTooltip valueAnimation="shuffle" />

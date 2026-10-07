@@ -8,8 +8,14 @@ export const basePath = normalizeBasePath(
   process.env.NEXT_PUBLIC_KIND_DOCS_BASE_PATH ?? process.env.KIND_DOCS_BASE_PATH ?? "",
 );
 export const docsBaseUrl = basePath ? "/" : "/docs";
-export const legacyDocSlugs = ["installation", "quickstart"].map((page) => ["start", page]);
+export const legacyDocSlugs = [
+  ...["installation", "quickstart"].map((page) => ["start", page]),
+  ["guides", "customization"],
+  ["guides", "identity-layout"],
+];
 export function canonicalDocSlugs(slug) {
+  if (slug?.join("/") === "guides/customization") return ["components", "line"];
+  if (slug?.join("/") === "guides/identity-layout") return ["concepts", "identity"];
   return slug?.length === 2 &&
     slug[0] === "start" &&
     ["installation", "quickstart"].includes(slug[1])

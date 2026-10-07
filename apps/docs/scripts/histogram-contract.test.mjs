@@ -25,7 +25,7 @@ test("histogram copies retain native quantitative composition and matching varia
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
         variant.source,
       );
-      assert.match(variant.source, new RegExp(`material = "${value}"`));
+      assert.match(variant.source, new RegExp(`appearance = "${value}"`));
     }
   }
 });

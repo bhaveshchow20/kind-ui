@@ -259,3 +259,5 @@ try {
 } finally {
   await browser.close();
 }
+
+await import("./check-docs-cleanup.mjs");

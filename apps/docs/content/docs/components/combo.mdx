@@ -50,7 +50,7 @@ Line/Area reveal across the plot; Bar reveals from numeric zero clamped to its d
 
 Focus a series through its legend or marks. June is projected; the target has an icon, outlined points and moving dashes.
 
-Choose Loading to inspect the pending silhouette. See [customization](/docs/guides/customization/) for complete public options.
+Choose Loading to inspect the pending silhouette. See [Root loading](/docs/chart-components/root/#loading) for pending-state behavior.
 
 <ChartExample id="combo-presentation" />
 
@@ -105,7 +105,7 @@ Pass to `ComboChart.animate`. Family options affect entrances only; hover transi
 | `maxBarSize` | `number` | — | Bound native bar thickness. |
 | `radius` | `number \| [number, number, number, number]` | `0` | Native corners; stack cap geometry remains consumer-owned. |
 | `fill` | `string` | Config color | Explicit paint override. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static bar finish; custom shape, filter or active renderer retains ownership. |
+| `material` | `"clay" \| "glow"` | Omitted | Static bar finish; custom shape, filter or active renderer retains ownership. |
 
 </div>
 
@@ -142,7 +142,7 @@ Line material choices apply to the line independently of Area and Bar. See [Rech
 | `stackId` | `string \| number` | — | Stack areas on matching axes. |
 | `fill` / `stroke` | `string` | Config color | Override fill and outline independently. |
 | `fillOpacity` | `number` | `0.6` in Recharts | Keep the filled context legible behind other marks. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static area finish; explicit shape or filter wins. |
+| `material` | `"clay" \| "glow"` | Omitted | Static area finish; explicit shape or filter wins. |
 
 </div>
 
@@ -151,3 +151,15 @@ See [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [Area compon
 ## Shared components
 
 [Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Axes and grid](/docs/chart-components/axes-grid/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+
+## Percentage stacks
+
+`createPercentStack({ values })` supplies `tickFormatter` for the fractional axis and `normalizedValue` for Tooltip/TooltipContent in native `stackOffset="expand"` Bar, Area or Combo stacks. It adds percentages alongside raw-value formatting; an explicit native formatter wins.
+
+Return raw values for the inspected stack, including its current value and native hidden-series membership. Return `undefined` for other series/axes. Keep original rows and native geometry.
+
+`formatPercent(fraction)` multiplies by 100, rounds to one decimal and trims redundant trailing zeroes. Normalization ignores null/missing members and returns zero for all-zero stacks. Empty/nonfinite/range inputs or cancelling signed totals use ordinary formatting.
+
+Signed stacks use their signed sum. Do not normalize already fractional Area recipes again. The host owns meaningful units and finite direct formatter inputs.
+
+<ApiTable name="PercentFormattingReference" />

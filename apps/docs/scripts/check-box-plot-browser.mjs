@@ -127,11 +127,11 @@ try {
   for (const [value, label] of [
     ["glow", "Glow"],
     ["clay", "Clay"],
-    ["plain", "Default"],
+    ["default", "Default"],
   ]) {
     await materials.getByRole("combobox", { name: "Material" }).click();
     await page.getByRole("option", { name: label, exact: true }).click();
-    if (value === "plain")
+    if (value === "default")
       assert.equal(await materials.locator('[data-kind-ui="box-material"]').count(), 0);
     else
       assert.equal(
@@ -157,11 +157,11 @@ try {
   await materials.getByRole("button", { name: "Copy prompt", exact: true }).click();
   const prompt = await page.evaluate(() => navigator.clipboard.readText());
   assert.match(prompt, /docs\/components\/box-plot\//);
-  assert.match(prompt, /variants\/plain\/example.tsx/);
+  assert.match(prompt, /variants\/default\/example.tsx/);
   const linkedSource = await (
-    await page.request.get(`${origin}/examples/box-plot-materials/variants/plain/example.tsx`)
+    await page.request.get(`${origin}/examples/box-plot-materials/variants/default/example.tsx`)
   ).text();
-  assert.equal(linkedSource, bundles["box-plot-materials"].variants.plain.source);
+  assert.equal(linkedSource, bundles["box-plot-materials"].variants.default.source);
   for (const region of [page.locator("#nd-toc"), page.locator(".line-props-scroll").first()]) {
     await region.scrollIntoViewIfNeeded();
     await region.hover();

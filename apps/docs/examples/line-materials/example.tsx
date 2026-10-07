@@ -22,9 +22,9 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function MaterialLineChart({
-  material = "plain",
+  appearance = "default",
 }: {
-  material?: "plain" | "clay" | "glow";
+  appearance?: "default" | "clay" | "glow";
 } = {}) {
   const [fontScale, setFontScale] = useState(1);
   useEffect(() => {
@@ -68,7 +68,7 @@ export function MaterialLineChart({
       <Chart.LineSeries
         dataKey="visitors"
         type="monotone"
-        material={material}
+        material={appearance === "default" ? undefined : appearance}
         strokeWidth={2}
         dot={{ r: 2.5 }}
       />

@@ -50,7 +50,11 @@ const nodeConfig = {
 } satisfies Chart.SankeyNodeConfig;
 const names = new Map(data.nodes.map((node) => [node.id, node.name]));
 
-export function EnergyFlowFinishChart({ finish = "plain" }: { finish?: Chart.SankeyFinish }) {
+export function EnergyFlowFinishChart({
+  appearance = "default",
+}: {
+  appearance?: "default" | "clay" | "glow";
+}) {
   const [active, setActive] = useState<string | null>(null);
   const selected = data.links.find((link) => link.id === active);
   return (
@@ -87,7 +91,10 @@ export function EnergyFlowFinishChart({ finish = "plain" }: { finish?: Chart.San
               desc="Nine nodes and eighteen flows. Ribbon widths represent MWh. Select a flow with a click, Enter or Space; Escape clears selection."
               node={(props) => (
                 <g>
-                  <Chart.SankeyNode {...props} finish={finish} />
+                  <Chart.SankeyNode
+                    {...props}
+                    finish={appearance === "default" ? undefined : appearance}
+                  />
                   <text
                     x={props.x + props.width / 2}
                     y={props.y - 7}
@@ -102,7 +109,7 @@ export function EnergyFlowFinishChart({ finish = "plain" }: { finish?: Chart.San
               link={(props) => (
                 <Chart.SankeyLink
                   {...props}
-                  finish={finish}
+                  finish={appearance === "default" ? undefined : appearance}
                   material="gradient"
                   pathProps={{
                     role: "button",
