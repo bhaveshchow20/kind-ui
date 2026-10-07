@@ -259,6 +259,9 @@ export function PolarHost() {
       <button type="button" onClick={() => setReverse(!reverse)}>
         Reorder
       </button>
+      <button type="button" onClick={() => setVisible(visible.length ? [] : ["value", "alias"])}>
+        External visibility
+      </button>
       <button type="button" onClick={() => setEmpty(!empty)}>
         Empty
       </button>

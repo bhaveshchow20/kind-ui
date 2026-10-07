@@ -54,3 +54,37 @@ export function categoryCells<Row>(
     </>
   );
 }
+
+/** Filter original rows and positional Cells together before native geometry is computed. */
+export function filterCategoryRows<Row>(
+  data: readonly Row[],
+  categoryKey: CategoryKey<Row>,
+  visible: readonly string[] | undefined,
+  children: ReactNode,
+) {
+  const keyOf = (row: Row): string => {
+    const key =
+      typeof categoryKey === "function"
+        ? categoryKey(row)
+        : row !== null && typeof row === "object" && Object.hasOwn(row, categoryKey)
+          ? row[categoryKey]
+          : undefined;
+    if (typeof key !== "string" || !key)
+      throw new Error("Root interaction binding requires stable string category keys");
+    return key;
+  };
+  const keys = data.map(keyOf);
+  if (new Set(keys).size !== keys.length)
+    throw new Error("Root interaction binding requires unique category keys");
+  const keep = keys.map((key) => visible === undefined || visible.includes(key));
+  let index = 0;
+  function filter(parts: ReactNode): ReactNode {
+    return Children.map(parts, (child) => {
+      if (!isValidElement<{ children?: ReactNode }>(child)) return child;
+      if (child.type === Fragment) return cloneElement(child, {}, filter(child.props.children));
+      if (child.type !== Cell) return child;
+      return keep[index++] ? child : null;
+    });
+  }
+  return { data: data.filter((_row, index) => keep[index]), children: filter(children), keyOf };
+}

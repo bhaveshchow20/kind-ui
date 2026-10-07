@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectLastVisibleGuard } from "./last-visible";
 
 const packed = `http://127.0.0.1:${4192 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
 const marks = '[data-kind-ui="histogram-bin"]';
@@ -59,9 +60,13 @@ test("packed histogram finishes retain quantitative geometry, Cells, overrides a
       await expect(page.getByRole("status", { name: "Clicked" })).toHaveText(
         String(finishes.indexOf(material) * 3 + i + 1),
       );
-      await page.getByRole("button", { name: "Density", exact: true }).click();
+      await expectLastVisibleGuard(
+        page.getByRole("button", { name: "Density", exact: true }),
+        bins,
+      );
+      await page.getByRole("button", { name: "External visibility", exact: true }).click();
       await expect(bins).toHaveCount(0);
-      await page.getByRole("button", { name: "Density", exact: true }).click();
+      await page.getByRole("button", { name: "External visibility", exact: true }).click();
       await expect(bins).toHaveCount(4);
     }
   }

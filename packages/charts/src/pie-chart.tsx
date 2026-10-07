@@ -69,7 +69,7 @@ export function PieChart({
       ? undefined
       : visibleSeries !== undefined && !visibleSeries.includes(initialCategory)
         ? undefined
-        : pinnedPieIndex(children, initialCategory);
+        : pinnedPieIndex(children, initialCategory, visibleSeries);
   useLayoutEffect(() => {
     if (initialCategory !== undefined && pinIndex === undefined) clearPin();
   }, [initialCategory, pinIndex, clearPin]);

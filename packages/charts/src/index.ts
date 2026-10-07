@@ -119,6 +119,13 @@ export {
   type ChartBackgroundPatternRenderProps,
   defineChartBackgroundPattern,
 } from "./chart-background-pattern.js";
+export {
+  type ChartIdentity,
+  type ChartInteractionConfig,
+  type ChartInteractionEvent,
+  type ChartInteractionRequest,
+  useChartInteraction,
+} from "./chart-interaction.js";
 export { type ComboAnimation, ComboChart, type ComboChartProps } from "./combo-chart.js";
 export {
   type ConfiguredLineChartProps,

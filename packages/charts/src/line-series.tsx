@@ -1,12 +1,13 @@
 "use client";
 
 import { type ComponentProps, type CSSProperties, useId, useLayoutEffect, useRef } from "react";
-import { Line } from "recharts";
+import { DefaultZIndexes, Line, ZIndexLayer } from "recharts";
 import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { dashCycle, dashDuration, type LineDashAnimation } from "./line-dash.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 // Preserve the legacy native defaults while allowing explicit row/value parameters.
 type DefaultLineDataKey = Extract<ComponentProps<typeof Line>["dataKey"], (row: never) => unknown>;
@@ -66,6 +67,13 @@ export function LineSeries<
   }, [id, key, registerSeries]);
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("LineSeries requires seriesKey for controlled non-string dataKey");
+  const interaction = useSeriesInteraction(
+    key,
+    effectiveHide,
+    hide === true,
+    props.data,
+    props.onClick,
+  );
   const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   const cycle = dashCycle(props.style?.strokeDasharray ?? props.strokeDasharray);
   const duration = dashAnimation && dashDuration(dashAnimation);
@@ -79,45 +87,52 @@ export function LineSeries<
   const offset = props.style?.strokeDashoffset ?? props.strokeDashoffset ?? 0;
   const baseline = Number.isFinite(Number(offset)) ? `${Number(offset)}px` : offset;
   return (
-    <Line<DataPoint, Value>
-      isAnimationActive={false}
-      {...props}
-      {...(props.dot === undefined && pointStyle !== "default"
-        ? { dot: <PointMarker variant={pointStyle} /> }
-        : {})}
-      {...(material !== "plain" && props.shape === undefined && props.filter === undefined
-        ? {
-            shape: (
-              <MaterialCurve
-                material={material}
-                filterId={`${generatedId}-material`}
-                materialWidth={
-                  props.strokeWidth ?? (material === "clay" ? 6 : material === "paper" ? 2.5 : 3)
-                }
-              />
-            ),
-            strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
-            strokeLinejoin: props.strokeLinejoin ?? "round",
+    <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
+      <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
+        <Line<DataPoint, Value>
+          isAnimationActive={false}
+          {...props}
+          {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
+          zIndex={0}
+          {...(props.dot === undefined && pointStyle !== "default"
+            ? { dot: <PointMarker variant={pointStyle} /> }
+            : {})}
+          {...(material !== "plain" && props.shape === undefined && props.filter === undefined
+            ? {
+                shape: (
+                  <MaterialCurve
+                    material={material}
+                    filterId={`${generatedId}-material`}
+                    materialWidth={
+                      props.strokeWidth ??
+                      (material === "clay" ? 6 : material === "paper" ? 2.5 : 3)
+                    }
+                  />
+                ),
+                strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),
+                strokeLinejoin: props.strokeLinejoin ?? "round",
+              }
+            : {})}
+          style={
+            dashed
+              ? ({
+                  ...props.style,
+                  "--kind-ui-dash-cycle": `${cycle}px`,
+                  "--kind-ui-dash-offset": baseline,
+                  "--kind-ui-dash-duration": `${duration}ms`,
+                  "--kind-ui-dash-direction":
+                    dashAnimation && dashAnimation.direction === "reverse" ? "reverse" : "normal",
+                } as CSSProperties)
+              : props.style
           }
-        : {})}
-      style={
-        dashed
-          ? ({
-              ...props.style,
-              "--kind-ui-dash-cycle": `${cycle}px`,
-              "--kind-ui-dash-offset": baseline,
-              "--kind-ui-dash-duration": `${duration}ms`,
-              "--kind-ui-dash-direction":
-                dashAnimation && dashAnimation.direction === "reverse" ? "reverse" : "normal",
-            } as CSSProperties)
-          : props.style
-      }
-      id={id}
-      hide={renderedHide}
-      {...(color !== undefined ? { stroke: color } : {})}
-      className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className]
-        .filter(Boolean)
-        .join(" ")}
-    />
+          id={id}
+          hide={renderedHide}
+          {...(color !== undefined ? { stroke: color } : {})}
+          className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className]
+            .filter(Boolean)
+            .join(" ")}
+        />
+      </SeriesInteractionLayer>
+    </ZIndexLayer>
   );
 }

@@ -154,6 +154,7 @@ test("direct and namespace imports expose the same public components", () => {
     "getRelativeCoordinate",
     "prepareSankeyData",
     "useChartHeight",
+    "useChartInteraction",
     "useChartWidth",
     "useEmphasis",
     "useXAxisScale",
@@ -1736,6 +1737,127 @@ test("dots and lines share public swatch resources with existing patterns", () =
   for (const id of ids) assert.ok(html.includes(`fill="url(#${id})"`));
 });
 
+test("Root shared interaction guards last eligible item and emits one callback", () => {
+  let interaction;
+  const changes = [];
+  function Probe() {
+    interaction = Chart.useChartInteraction();
+    return null;
+  }
+  render(
+    h(
+      Root,
+      {
+        config: { first: { color: "red" }, stale: { color: "blue" } },
+        visibleSeries: ["first", "stale"],
+        onVisibleSeriesChange: (next) => changes.push(next),
+        interaction: { kind: "series", eligibleKeys: ["first"], markActivation: "matching-legend" },
+      },
+      h(Probe),
+    ),
+  );
+  assert.equal(interaction.activate({ kind: "series", key: "first" }, "legend"), false);
+  assert.deepEqual(changes, []);
+  assert.equal(interaction.activate({ kind: "series", key: "stale" }, "mark"), false);
+  assert.equal("register" in interaction, false);
+});
+
+test("shared focus is independent of emphasis and consumer before hook vetoes", () => {
+  let interaction;
+  const changes = [];
+  function Probe() {
+    interaction = Chart.useChartInteraction();
+    return h("output", null, interaction.selected);
+  }
+  const config = { first: { color: "red" }, second: { color: "blue" } };
+  const html = render(
+    h(
+      Root,
+      {
+        config,
+        emphasis: "none",
+        interaction: {
+          kind: "series",
+          mode: "focus",
+          eligibleKeys: ["first", "second"],
+          defaultSelected: "first",
+          onSelectionChange: (next) => changes.push(next),
+          onBeforeInteraction: (request) => request.event?.preventDefault(),
+        },
+      },
+      h(Probe),
+      h(Legend),
+    ),
+  );
+  assert.equal(interaction.selected, "first");
+  assert.match(html, /aria-pressed="true"/);
+  const event = {
+    defaultPrevented: false,
+    preventDefault() {
+      this.defaultPrevented = true;
+    },
+  };
+  assert.equal(interaction.activate({ kind: "series", key: "second" }, "legend", event), false);
+  assert.deepEqual(changes, []);
+  assert.equal(interaction.activate({ kind: "series", key: "first" }, "legend"), true);
+  assert.deepEqual(changes, [null]);
+});
+
+test("controlled invalid focus paints null and selection controls reject conflicting owners", () => {
+  let selected;
+  function Probe() {
+    selected = Chart.useChartInteraction().selected;
+    return null;
+  }
+  const config = { first: { color: "red" }, second: { color: "blue" } };
+  const props = {
+    config,
+    interaction: {
+      kind: "series",
+      mode: "focus",
+      eligibleKeys: ["first"],
+      selected: "second",
+      onSelectionChange() {},
+    },
+  };
+  render(h(Root, props, h(Probe)));
+  assert.equal(selected, null);
+  render(
+    h(
+      Root,
+      { ...props, interaction: { ...props.interaction, eligibleKeys: ["first", "second"] } },
+      h(Probe),
+    ),
+  );
+  assert.equal(selected, "second");
+  assert.throws(
+    () =>
+      render(h(Root, props, h(Chart.RadarChart, { width: 300, height: 200, selection: "series" }))),
+    /one selection owner/,
+  );
+  assert.throws(
+    () =>
+      render(
+        h(
+          Root,
+          { config, interaction: { ...props.interaction, defaultSelected: "first" } },
+          h(Probe),
+        ),
+      ),
+    /controlled and defaulted/,
+  );
+  assert.throws(
+    () =>
+      render(
+        h(
+          Root,
+          { config, interaction: { ...props.interaction, onSelectionChange: undefined } },
+          h(Probe),
+        ),
+      ),
+    /change callback/,
+  );
+});
 // These run both in workspace tests and the isolated packed public consumer.
 test("custom backgrounds are reusable frozen definitions, with no shared registry", () => {
   const renderTile = ({ size, color }) => h("circle", { r: size / 4, fill: color });

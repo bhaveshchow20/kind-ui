@@ -473,6 +473,7 @@
       stroke: CanvasText;
     }
   }
+
   [data-kind-ui="heatmap-scroll"][data-loading] {
     position: relative;
   }

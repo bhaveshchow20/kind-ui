@@ -3,6 +3,13 @@
 import { type ComponentPropsWithRef, useId } from "react";
 import type { ChartContextValue } from "./chart-context.js";
 import { ChartContext } from "./chart-context.js";
+import {
+  type ChartInteractionConfig,
+  ChartInteractionProvider,
+  ChartInteractionStatus,
+  type ChartVisibilityProps,
+  useChartInteraction,
+} from "./chart-interaction.js";
 import { EmphasisProvider, useEmphasisActions } from "./emphasis.js";
 import {
   type ColorStops,
@@ -18,23 +25,27 @@ import type { SeriesConfig } from "./types.js";
 export type RootProps = ComponentPropsWithRef<"div"> & {
   config: SeriesConfig;
   emphasis?: "auto" | "none";
-} & (
-    | { visibleSeries?: undefined; onVisibleSeriesChange?: never }
-    | { visibleSeries: readonly string[]; onVisibleSeriesChange?: (next: string[]) => void }
-  );
+  interaction?: ChartInteractionConfig;
+} & ChartVisibilityProps;
 
 /** Scopes presentation metadata and CSS colors; the consumer owns chart geometry and state. */
 export function Root({
   config,
   emphasis = "auto",
+  interaction,
+  defaultVisibleSeries,
   visibleSeries,
   onVisibleSeriesChange,
   style,
   children,
   ...props
 }: RootProps) {
-  if (onVisibleSeriesChange && !visibleSeries)
-    throw new Error("Root requires visibleSeries when onVisibleSeriesChange is provided");
+  if (onVisibleSeriesChange && visibleSeries === undefined && defaultVisibleSeries === undefined)
+    throw new Error(
+      "Root requires visibleSeries or defaultVisibleSeries when onVisibleSeriesChange is provided",
+    );
+  if (visibleSeries !== undefined && defaultVisibleSeries !== undefined)
+    throw new Error("Root visibility cannot be both controlled and defaulted");
   const id = useId();
   const colors: Record<string, string> = {};
   const paints: Record<string, string> = {};
@@ -65,41 +76,62 @@ export function Root({
     ...(onVisibleSeriesChange ? { onVisibleSeriesChange } : {}),
   };
   return (
-    <ChartContext value={value}>
-      <EmphasisProvider enabled={emphasis === "auto"}>
-        <RootFrame {...props} style={{ ...colors, ...style }}>
-          {process.env.NODE_ENV === "development" && <StylesheetWarning />}
-          {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
-            <svg
-              aria-hidden="true"
-              focusable="false"
-              width={0}
-              height={0}
-              style={{ position: "absolute" }}
-              data-kind-ui="color-resources"
-            >
-              <SeriesColorDefinitions />
-            </svg>
-          )}
-          {children}
-        </RootFrame>
-      </EmphasisProvider>
-    </ChartContext>
+    <ChartInteractionProvider
+      config={value.config}
+      {...(interaction ? { interaction } : {})}
+      {...(visibleSeries !== undefined
+        ? { visibleSeries, ...(onVisibleSeriesChange ? { onVisibleSeriesChange } : {}) }
+        : defaultVisibleSeries !== undefined
+          ? { defaultVisibleSeries, ...(onVisibleSeriesChange ? { onVisibleSeriesChange } : {}) }
+          : {})}
+    >
+      {(visible, change) => (
+        <ChartContext
+          value={{
+            ...value,
+            ...(visible !== undefined ? { visibleSeries: visible } : {}),
+            ...(change ? { onVisibleSeriesChange: change } : {}),
+          }}
+        >
+          <EmphasisProvider enabled={emphasis === "auto"}>
+            <RootFrame {...props} style={{ ...colors, ...style }}>
+              {process.env.NODE_ENV === "development" && <StylesheetWarning />}
+              {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  width={0}
+                  height={0}
+                  style={{ position: "absolute" }}
+                  data-kind-ui="color-resources"
+                >
+                  <SeriesColorDefinitions />
+                </svg>
+              )}
+              {children}
+            </RootFrame>
+          </EmphasisProvider>
+        </ChartContext>
+      )}
+    </ChartInteractionProvider>
   );
 }
 
 function RootFrame({ children, ...props }: ComponentPropsWithRef<"div">) {
   const { reset } = useEmphasisActions();
+  const interaction = useChartInteraction();
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Delegates Escape from descendants after consumer handlers; this frame is not a control.
     <div
       {...props}
       data-kind-ui="chart"
-      onKeyDownCapture={(event) => {
-        if (event.key === "Escape") reset();
-        props.onKeyDownCapture?.(event);
+      onKeyDown={(event) => {
+        props.onKeyDown?.(event);
+        if (event.key === "Escape" && interaction.reset(event)) reset();
       }}
     >
       {children}
+      <ChartInteractionStatus />
     </div>
   );
 }

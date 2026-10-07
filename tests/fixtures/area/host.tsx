@@ -413,7 +413,7 @@ export function AreaPatternHost({ horizontal = false }: { horizontal?: boolean }
               shape={
                 override === "shape" ? <Static.AreaRevealShape data-host-shape="" /> : undefined
               }
-              pattern={override === "off" ? "none" : undefined}
+              pattern={override === "off" ? false : undefined}
             />
             <Static.AreaSeries
               dataKey="second"

@@ -40,6 +40,8 @@ export function ConfiguredHost() {
   const [visible, setVisible] = useState<string[]>(["total"]);
   const [callbacks, setCallbacks] = useState(0);
   const [moves, setMoves] = useState(0);
+  const [basicVisible, setBasicVisible] = useState(Object.keys(config));
+  const [basicCallbacks, setBasicCallbacks] = useState(0);
   const [animate, setAnimate] = useState<boolean | undefined>(undefined);
   const [explicitEmpty, setExplicitEmpty] = useState(false);
   const ref = useCallback((node: SVGSVGElement | null) => {
@@ -77,6 +79,7 @@ export function ConfiguredHost() {
       <button type="button" onClick={() => setExplicitEmpty(!explicitEmpty)}>
         Explicit empty
       </button>
+      <span data-basic-visibility={basicVisible.join(",")} data-basic-callbacks={basicCallbacks} />
       <output data-callbacks>{callbacks}</output>
       <output data-moves>{moves}</output>
       <section data-case="basic" style={{ width }}>
@@ -86,6 +89,10 @@ export function ConfiguredHost() {
           xDataKey="month"
           backgroundPattern={{ pattern: "pinpoints", color: "var(--background-ink, CanvasText)" }}
           aria-label="Monthly totals"
+          onVisibleSeriesChange={(next) => {
+            setBasicVisible(next);
+            setBasicCallbacks((n) => n + 1);
+          }}
           animate={animate}
           ref={ref}
           onMouseMove={() => setMoves((n) => n + 1)}

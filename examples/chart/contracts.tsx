@@ -188,7 +188,6 @@ createRoot(root).render(
     <Fixture name="A" color="#2563eb" />
     <Fixture name="B" color="#15803d" />
     <PercentStacks />
-
     <DashedLinesContract />
   </main>,
 );

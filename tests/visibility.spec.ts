@@ -37,7 +37,7 @@ test("packed restored series have a visibility transition in both toggle orders"
   }
 });
 
-test("comparison chart stays mounted through all-hidden recovery", async ({ page }) => {
+test("comparison chart stays mounted through rejected last-hide", async ({ page }) => {
   await page.goto("/recipes.html");
   const comparison = page.getByRole("region", { name: "Week over week" });
   const svg = await comparison.getByRole("application").elementHandle();
@@ -45,11 +45,13 @@ test("comparison chart stays mounted through all-hidden recovery", async ({ page
   await comparison.getByRole("button", { name: "This week", exact: true }).click();
   await comparison.getByRole("button", { name: "Last week", exact: true }).click();
   expect(await svg.evaluate((node) => node.isConnected)).toBe(true);
-  await expect(comparison.getByRole("status")).toHaveText("Select a series to show it.");
+  await expect(comparison.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
+    "At least one item must remain visible.",
+  );
 });
 
 for (const mode of ["animated", "off", "reduced"] as const) {
-  test(`packed visibility reversals and all-hidden recovery stay stable in ${mode} mode`, async ({
+  test(`packed visibility reversals and last-hide guard stay stable in ${mode} mode`, async ({
     page,
   }, info) => {
     await page.emulateMedia({ reducedMotion: mode === "reduced" ? "reduce" : "no-preference" });
@@ -77,9 +79,14 @@ for (const mode of ["animated", "off", "reduced"] as const) {
     await click(value);
     await click(other);
     await page.clock.runFor(400);
-    await expect(page.locator(".recharts-line-curve")).toHaveCount(0);
+    await expect(page.locator(".recharts-line-curve")).toHaveCount(1);
+    await expect(other).toHaveAttribute("aria-pressed", "true");
     expect(await svg.evaluate((node) => node.isConnected)).toBe(true);
-    for (const button of [other, value]) {
+    for (const button of [value, other]) {
+      if (button === other) {
+        await click(other);
+        await page.clock.runFor(400);
+      }
       await click(button);
       await page.clock.runFor(40);
       const restored =

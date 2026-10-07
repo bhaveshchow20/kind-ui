@@ -1,13 +1,14 @@
 "use client";
 
 import { type ComponentProps, useId, useLayoutEffect, useRef } from "react";
-import { Area } from "recharts";
+import { Area, DefaultZIndexes, ZIndexLayer } from "recharts";
 import { ActiveMarker } from "./animation.js";
 import { type AreaMaterial, MaterialArea } from "./area-material.js";
 import { useChart } from "./chart-context.js";
 import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useLineInteraction } from "./line-chart.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Area<DataPoint, Value>>,
@@ -21,8 +22,8 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   activePointStyle?: PointStyle;
   /** Finish on the native area; explicit shape/filter retain consumer ownership. */
   material?: AreaMaterial;
-  /** Static fill encoding; none opts out of configured patterns. Native paint/shape wins. */
-  pattern?: FillPattern | "none" | undefined;
+  /** Static fill encoding; false opts out of configured patterns. Native paint/shape wins. */
+  pattern?: FillPattern | false | undefined;
 };
 
 /** A registered Recharts Area with Root colors and controlled visibility. */
@@ -66,13 +67,20 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("AreaSeries requires seriesKey for controlled non-string dataKey");
   const configuredPattern = key && Object.hasOwn(config, key) ? config[key]?.pattern : undefined;
-  const resolvedPattern = pattern === "none" ? undefined : (pattern ?? configuredPattern);
+  const resolvedPattern = pattern === false ? undefined : (pattern ?? configuredPattern);
   const patternId = patternResourceId(generatedId);
   const patterned =
     resolvedPattern !== undefined &&
     fill === undefined &&
     props.style?.fill === undefined &&
     props.shape === undefined;
+  const interaction = useSeriesInteraction(
+    key,
+    effectiveHide,
+    hide === true,
+    props.data,
+    props.onClick,
+  );
   const color = stroke ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <>
@@ -87,30 +95,38 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
           />
         </defs>
       )}
-      <Area
-        activeDot={<ActiveMarker variant={activePointStyle} />}
-        {...nativeProps}
-        {...(props.dot === undefined && pointStyle !== "default"
-          ? { dot: <PointMarker variant={pointStyle} /> }
-          : {})}
-        {...(material !== "plain" && props.shape === undefined && props.filter === undefined
-          ? {
-              shape: <MaterialArea material={material} filterId={`${generatedId}-area-material`} />,
-            }
-          : {})}
-        isAnimationActive={false}
-        id={id}
-        hide={effectiveHide}
-        {...(color !== undefined ? { stroke: color } : {})}
-        {...(fill !== undefined
-          ? { fill }
-          : patterned
-            ? { fill: `url(#${patternId})` }
-            : color !== undefined
-              ? { fill: color }
+      <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.area}>
+        <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
+          <Area
+            activeDot={<ActiveMarker variant={activePointStyle} />}
+            {...nativeProps}
+            {...(props.dot === undefined && pointStyle !== "default"
+              ? { dot: <PointMarker variant={pointStyle} /> }
               : {})}
-        className={["kind-ui-area-series", className].filter(Boolean).join(" ")}
-      />
+            {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
+            {...(material !== "plain" && props.shape === undefined && props.filter === undefined
+              ? {
+                  shape: (
+                    <MaterialArea material={material} filterId={`${generatedId}-area-material`} />
+                  ),
+                }
+              : {})}
+            isAnimationActive={false}
+            id={id}
+            zIndex={0}
+            hide={effectiveHide}
+            {...(color !== undefined ? { stroke: color } : {})}
+            {...(fill !== undefined
+              ? { fill }
+              : patterned
+                ? { fill: `url(#${patternId})` }
+                : color !== undefined
+                  ? { fill: color }
+                  : {})}
+            className={["kind-ui-area-series", className].filter(Boolean).join(" ")}
+          />
+        </SeriesInteractionLayer>
+      </ZIndexLayer>
     </>
   );
 }
