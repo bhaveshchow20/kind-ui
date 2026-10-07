@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
-import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ActivityDemo } from "@/components/activity-demo";
 import { AdvancedChartCard, advancedRecipes } from "@/components/advanced-chart-card";
@@ -470,40 +469,21 @@ const mobileAppearanceOptions = appearanceOptions.map((option) => ({
 function MobileThemeSwitcher({ enabled }: { enabled: boolean }) {
   const { theme, setTheme } = useTheme();
   const selected = enabled ? (theme ?? "system") : "system";
-  const Icon =
-    mobileAppearanceOptions.find((option) => option.value === selected)?.Icon ?? Smartphone;
+  const index = mobileAppearanceOptions.findIndex((option) => option.value === selected);
+  const current = mobileAppearanceOptions[index < 0 ? 2 : index];
+  const next = mobileAppearanceOptions[(index + 1) % mobileAppearanceOptions.length];
+  const Icon = current.Icon;
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <button className="mobile-theme" type="button" disabled={!enabled} aria-label="Appearance">
-          <Icon size={17} aria-hidden="true" />
-        </button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          className="mobile-appearance-menu"
-          align="end"
-          sideOffset={8}
-          collisionPadding={12}
-        >
-          <DropdownMenu.RadioGroup value={selected} onValueChange={setTheme}>
-            {mobileAppearanceOptions.map(({ value, label, Icon: OptionIcon }) => (
-              <DropdownMenu.RadioItem
-                className="mobile-appearance-option"
-                key={value}
-                value={value}
-              >
-                <OptionIcon size={17} aria-hidden="true" />
-                {label}
-                <DropdownMenu.ItemIndicator className="mobile-appearance-check">
-                  <Check size={16} aria-hidden="true" />
-                </DropdownMenu.ItemIndicator>
-              </DropdownMenu.RadioItem>
-            ))}
-          </DropdownMenu.RadioGroup>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+    <button
+      className="mobile-theme"
+      type="button"
+      disabled={!enabled}
+      onClick={() => setTheme(next.value)}
+      aria-label={`Appearance: ${current.label}. Switch to ${next.label}`}
+      title={`Appearance: ${current.label}. Switch to ${next.label}`}
+    >
+      <Icon size={17} aria-hidden="true" />
+    </button>
   );
 }
 

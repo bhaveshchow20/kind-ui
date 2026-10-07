@@ -47,8 +47,12 @@ for (const width of [320, 375, 768, 1280]) {
       await expect(docs).toBeHidden();
     }
     if (width <= 800) {
-      await page.getByRole("button", { name: "Appearance", exact: true }).click();
-      await page.getByRole("menuitemradio", { name: "Dark", exact: true }).click();
+      await page
+        .getByRole("button", { name: "Appearance: System. Switch to Light", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Appearance: Light. Switch to Dark", exact: true })
+        .click();
       await expect(page.locator("html")).toHaveClass(/dark/);
     } else {
       await page.getByRole("radio", { name: "Dark", exact: true }).check();

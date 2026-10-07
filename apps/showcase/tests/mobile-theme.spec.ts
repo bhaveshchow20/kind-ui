@@ -17,14 +17,20 @@ for (const scheme of ["dark", "light"] as const) {
 test("phone appearance can return to System after a saved manual choice", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("./");
-  await page.getByRole("button", { name: "Appearance", exact: true }).click();
-  await page.getByRole("menuitemradio", { name: "Light", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Appearance: System. Switch to Light", exact: true })
+    .click();
+  await expect(page.getByRole("menu")).toHaveCount(0);
   await expect(page.locator("html")).toHaveClass(/light/);
   await page.reload();
   await expect(page.locator("html")).toHaveClass(/light/);
-  await page.getByRole("button", { name: "Appearance", exact: true }).click();
-  await expect(page.getByRole("menuitemradio", { name: "Light", exact: true })).toBeChecked();
-  await page.getByRole("menuitemradio", { name: "System", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Appearance: Light. Switch to Dark", exact: true })
+    .click();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await page
+    .getByRole("button", { name: "Appearance: Dark. Switch to System", exact: true })
+    .click();
   await expect(page.locator("html")).toHaveClass(/dark/);
   expect(await page.evaluate(() => localStorage.getItem("theme"))).toBe("system");
   await page.emulateMedia({ colorScheme: "light" });
@@ -33,6 +39,7 @@ test("phone appearance can return to System after a saved manual choice", async 
   await expect(page.locator("html")).toHaveClass(/dark/);
   await page.reload();
   await expect(page.locator("html")).toHaveClass(/dark/);
-  await page.getByRole("button", { name: "Appearance", exact: true }).click();
-  await expect(page.getByRole("menuitemradio", { name: "System", exact: true })).toBeChecked();
+  await expect(
+    page.getByRole("button", { name: "Appearance: System. Switch to Light", exact: true }),
+  ).toBeVisible();
 });
