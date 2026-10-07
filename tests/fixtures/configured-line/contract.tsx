@@ -21,7 +21,7 @@ const props: ConfiguredLineChartProps<Row> = {
     {
       seriesKey: "total",
       dataKey: (row) => row.total,
-      material: "paper",
+      material: "clay",
       pointStyle: "border",
       activePointStyle: "colored-border",
       onClick: (_curve, event) => {

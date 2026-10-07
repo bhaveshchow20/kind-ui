@@ -26,13 +26,20 @@ const Rounded = dynamic(
   () => import("@/examples/pie-rounded/example").then((m) => memo(m.RoundedAllocationChart)),
   { loading: Loading, ssr: false },
 );
+const PieOptions = dynamic(
+  () => import("@/examples/pie-interaction/example").then((m) => memo(m.PieOptions)),
+  { loading: Loading, ssr: false },
+);
 export const previews = {
+  "pie-interaction": ({ variant }: PreviewProps) => (
+    <PieOptions status={variant as "ready" | "loading" | "selective-glow"} />
+  ),
   "pie-rounded": ({ variant }: PreviewProps) => (
     <Rounded geometry={variant as "rounded-pie" | "rounded-donut" | "petal-donut"} />
   ),
   pie: ({ variant }: PreviewProps) => <Shape shape={variant as "pie" | "donut"} />,
   "pie-visibility": Visibility,
   "pie-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+    <Material material={variant as "plain" | "clay" | "glow"} />
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

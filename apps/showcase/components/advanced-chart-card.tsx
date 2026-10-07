@@ -195,7 +195,7 @@ function useChartExample({
           axisLine={false}
           tickLine={false}
         >
-          {r.id === "gauge" && (
+          {r.id === "gauge" && options.showLabels && (
             <Chart.Label
               position="center"
               value={`${options.progress ?? 72}%`}
@@ -209,7 +209,7 @@ function useChartExample({
           cornerRadius={options.radius ?? 4}
           stackId={r.id === "radial-stacked" ? "work" : undefined}
         >
-          {r.id !== "gauge" && (
+          {r.id !== "gauge" && options.showLabels && (
             <Chart.LabelList
               dataKey="category"
               fill="white"

@@ -103,10 +103,7 @@ export function LineSeries<
                   <MaterialCurve
                     material={material}
                     filterId={`${generatedId}-material`}
-                    materialWidth={
-                      props.strokeWidth ??
-                      (material === "clay" ? 6 : material === "paper" ? 2.5 : 3)
-                    }
+                    materialWidth={props.strokeWidth ?? (material === "clay" ? 6 : 3)}
                   />
                 ),
                 strokeLinecap: props.strokeLinecap ?? (props.strokeDasharray ? "butt" : "round"),

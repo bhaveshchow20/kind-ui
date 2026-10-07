@@ -43,14 +43,14 @@ function App() {
       <div className="recipes-controls">
         <fieldset aria-label="Material">
           <legend className="sr-only">Material</legend>
-          {(["plain", "paper", "clay", "glow"] as const).map((value) => (
+          {(["plain", "clay", "glow"] as const).map((value) => (
             <button
               type="button"
               key={value}
               aria-pressed={material === value}
               onClick={() => setMaterial(value)}
             >
-              {value}
+              {value === "plain" ? "Default" : value}
             </button>
           ))}
         </fieldset>

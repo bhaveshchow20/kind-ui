@@ -208,21 +208,19 @@ function MaterialGallery() {
     <main>
       <header>
         <span className="eyebrow">KIND UI / HISTOGRAM MATERIALS</span>
-        <h1>Same intervals. Four finishes.</h1>
+        <h1>Same intervals. Three finishes.</h1>
         <p>Count ÷ total ÷ width. Square, exact bin boundaries across every material.</p>
       </header>
       <div className="recipe-grid">
-        {(["plain", "paper", "clay", "glow"] as const).map((material) => (
+        {(["plain", "clay", "glow"] as const).map((material) => (
           <article key={material} data-material={material}>
             <span className="eyebrow">{material}</span>
             <h2>
               {material === "plain"
                 ? "Native paint"
-                : material === "paper"
-                  ? "Pencil and grain"
-                  : material === "clay"
-                    ? "Soft matte volume"
-                    : "Luminous edges"}
+                : material === "clay"
+                  ? "Soft matte volume"
+                  : "Luminous edges"}
             </h2>
             <Distribution
               bins={preBinned}

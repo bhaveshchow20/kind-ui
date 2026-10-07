@@ -183,7 +183,7 @@ test("actual touch inspection opens zero and missing cells", async ({ browser })
   const page = await context.newPage();
   await page.goto(`http://127.0.0.1:${4190 + offset}`);
   const grid = page.getByRole("grid", { name: "Weekly latency" });
-  for (const material of ["plain", "paper", "clay", "glow"]) {
+  for (const material of ["plain", "clay", "glow"]) {
     await page.getByRole("combobox", { name: "Cell material" }).selectOption(material);
     await grid.getByRole("gridcell").nth(2).tap();
     await expect(page.getByRole("tooltip").first()).toHaveText("Platform, Europe: 0");

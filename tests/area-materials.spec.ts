@@ -12,7 +12,7 @@ for (const mode of ["static", "motion"] as const) {
     const geometry = await paths.evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute("d")),
     );
-    for (const material of ["paper", "clay", "glow", "plain", "clay"]) {
+    for (const material of ["clay", "glow", "plain", "clay"]) {
       await page.getByLabel("Material", { exact: true }).selectOption(material);
       await expect(page.locator('[data-kind-ui="area-material"]')).toHaveCount(
         material === "plain" ? 0 : 1,
@@ -44,7 +44,7 @@ for (const mode of ["static", "motion"] as const) {
     await page.getByLabel("Stack", { exact: true }).uncheck();
     for (const vertical of [false, true]) {
       await page.getByLabel("Vertical", { exact: true }).setChecked(vertical);
-      for (const material of ["paper", "clay", "glow"]) {
+      for (const material of ["clay", "glow"]) {
         await page.getByLabel("Material", { exact: true }).selectOption(material);
         await expect
           .poll(() =>
@@ -83,10 +83,15 @@ for (const mode of ["static", "motion", "reduced"] as const) {
     await expect(paths).toHaveCount(11);
     const before = await paths.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
     await page.getByRole("button", { name: "Pink", exact: true }).click();
-    for (const material of ["Paper", "Clay", "Glow", "Plain", "Clay"]) {
-      await page.getByRole("button", { name: material, exact: true }).click();
+    for (const material of ["Clay", "Glow", "Default", "Clay"]) {
+      await page
+        .getByRole("button", {
+          name: String(material) === "plain" ? "Default" : material,
+          exact: true,
+        })
+        .click();
       await expect(page.locator('[data-kind-ui="area-material"]')).toHaveCount(
-        material === "Plain" ? 0 : 11,
+        material === "Default" ? 0 : 11,
       );
       expect(
         await paths.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
@@ -95,7 +100,7 @@ for (const mode of ["static", "motion", "reduced"] as const) {
         .locator('[data-kind-ui="area-material"] filter')
         .evaluateAll((nodes) => nodes.map((node) => node.id));
       expect(new Set(ids).size).toBe(ids.length);
-      if (material !== "Plain")
+      if (material !== "Default")
         await page
           .getByRole("region", { name: "Smooth", exact: true })
           .screenshot({ path: info.outputPath(`${mode}-${material.toLowerCase()}-pink.png`) });

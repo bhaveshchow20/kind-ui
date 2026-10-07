@@ -22,6 +22,14 @@ export const comboExamples = [
     acceptance:
       "Selected entrance, complete code and copied source agree; reduced motion displays final geometry.",
   },
+  {
+    id: "combo-presentation",
+    title: "Loading and presentation",
+    notes:
+      "Focus a series through its legend or marks; June is projected. Switch to Loading to inspect the pending silhouette.",
+    acceptance:
+      "Ready and Loading previews match copied source; series patterns, target icon, projected June, point styles and dashed motion remain public composition.",
+  },
 ];
 const production = {
   caption: "Monthly production in units",
@@ -44,8 +52,28 @@ export const comboDataLabels = {
     },
   },
   "combo-motion": production,
+  "combo-presentation": {
+    ...production,
+    columns: {
+      month: "Month",
+      capacity: "Capacity (units)",
+      shipped: "Shipped (units)",
+      target: "Target (units)",
+    },
+  },
+};
+const loadingVariants = {
+  control: "State",
+  prop: "status",
+  default: "ready",
+  options: [
+    { value: "ready", label: "Ready" },
+    { value: "loading", label: "Loading" },
+  ],
 };
 export const comboVariants = {
+  "combo-presentation": loadingVariants,
+
   "combo-motion": {
     control: "Entrance",
     prop: "entrance",

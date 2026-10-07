@@ -27,7 +27,7 @@ test("Combo complete public sources, data alternatives and variants agree", () =
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
         variant.source,
       );
-      assert.match(variant.source, new RegExp(`entrance = "${value}"`));
+      assert.match(variant.source, new RegExp(`${family.variants[bundle.id].prop} = "${value}"`));
       assert.ok(
         promptFor(bundle, {}, "https://docs.example", value).includes(
           `/variants/${value}/example.tsx`,

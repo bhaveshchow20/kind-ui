@@ -37,8 +37,10 @@ test("packed Sankey finishes preserve alpha and quantify thin/adjacent halo sepa
     );
   const plain = await pixels(probe, "plain-alpha");
   const plainAdjacent = await pixels(adjacent, "plain-adjacent");
-  for (const finish of ["paper", "clay", "glow"] as const) {
-    await page.getByRole("button", { name: finish, exact: true }).click();
+  for (const finish of ["clay", "glow"] as const) {
+    await page
+      .getByRole("button", { name: String(finish) === "plain" ? "Default" : finish, exact: true })
+      .click();
     expect(
       await probe
         .locator("path")
@@ -111,8 +113,10 @@ test("Sankey repeated finish updates preserve IDs and native layout", async ({ p
     .evaluateAll((paths) =>
       paths.map((p) => [p.getAttribute("d"), p.getAttribute("stroke-width")]),
     );
-  for (const finish of ["clay", "paper", "glow", "plain", "glow", "paper"]) {
-    await page.getByRole("button", { name: finish, exact: true }).click();
+  for (const finish of ["clay", "glow", "plain", "glow"]) {
+    await page
+      .getByRole("button", { name: String(finish) === "plain" ? "Default" : finish, exact: true })
+      .click();
     expect(
       await chart
         .locator("path")
@@ -139,8 +143,11 @@ test("public recipes preserve paths, widths, labels and mobile inspection across
     .evaluateAll((paths) =>
       paths.map((p) => [p.getAttribute("d"), p.getAttribute("stroke-width")]),
     );
-  for (const finish of ["paper", "clay", "glow"]) {
+  expect(geometry).toHaveLength(3);
+  for (const finish of ["clay", "glow"]) {
     const section = page.locator(`main > section[data-finish="${finish}"]`);
+    await expect(section).toHaveCount(1);
+    await expect(section.locator("path[data-flow-id]")).toHaveCount(3);
     expect(
       await section
         .locator("path[data-flow-id]")
@@ -174,8 +181,11 @@ test("native custom renderer, ref, event, CSS filters and em node strokes keep o
   const size = await wide.boundingBox();
   expect(size).not.toBeNull();
   let plainAlpha: number[] = [];
-  for (const finish of ["plain", "paper", "clay", "glow"]) {
-    await page.getByRole("button", { name: finish, exact: true }).click();
+  const finishes = ["plain", "clay", "glow"] as const;
+  for (const [index, finish] of finishes.entries()) {
+    await page
+      .getByRole("button", { name: String(finish) === "plain" ? "Default" : finish, exact: true })
+      .click();
     await expect(probe.getByLabel("owned-filter", { exact: true })).toHaveAttribute(
       "filter",
       "url(#owned)",
@@ -194,7 +204,9 @@ test("native custom renderer, ref, event, CSS filters and em node strokes keep o
       return { x: screen.x, y: screen.y };
     });
     await page.mouse.click(point.x, point.y);
-    await expect(page.getByLabel("Mark ownership", { exact: true })).toContainText("path");
+    await expect(page.getByLabel("Mark ownership", { exact: true })).toHaveText(
+      `${index + 1} / path`,
+    );
     await expect(page.locator(".custom-native filter")).toHaveCount(0);
     await expect(page.getByLabel("custom-node", { exact: true })).toHaveCount(2);
     await expect(page.getByLabel("custom-link", { exact: true })).toHaveCount(1);
@@ -227,5 +239,7 @@ test("native custom renderer, ref, event, CSS filters and em node strokes keep o
             expect(Math.abs((alpha[i] ?? 0) - (plainAlpha[i] ?? 0))).toBeLessThanOrEqual(1);
         }
   }
-  await expect(page.getByLabel("Mark ownership", { exact: true })).toContainText("4 / path");
+  await expect(page.getByLabel("Mark ownership", { exact: true })).toHaveText(
+    `${finishes.length} / path`,
+  );
 });

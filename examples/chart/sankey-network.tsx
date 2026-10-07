@@ -106,14 +106,14 @@ export function SankeyNetwork() {
           </p>
         </div>
         <fieldset className="network-controls" aria-label="Network finish">
-          {(["plain", "paper", "clay", "glow"] as const).map((item) => (
+          {(["plain", "clay", "glow"] as const).map((item) => (
             <button
               type="button"
               key={item}
               aria-pressed={finish === item}
               onClick={() => setFinish(item)}
             >
-              {item}
+              {item === "plain" ? "Default" : item}
             </button>
           ))}
         </fieldset>

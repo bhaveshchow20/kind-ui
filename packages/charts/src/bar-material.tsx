@@ -2,7 +2,6 @@
 
 import { cloneElement } from "react";
 import { BarClay } from "./bar-clay.js";
-import { BarPaper } from "./bar-paper.js";
 import type { LineMaterial } from "./line-material.js";
 import { SurfaceMaterialFilter } from "./surface-material.js";
 
@@ -18,7 +17,7 @@ export function BarMaterialFilter({
   id: string;
   horizontal: boolean;
 }) {
-  if (material !== "glow")
+  if (material === "clay")
     return (
       <filter
         id={id}
@@ -30,7 +29,7 @@ export function BarMaterialFilter({
         height={2}
         colorInterpolationFilters="sRGB"
       >
-        {material === "clay" ? <BarClay horizontal={horizontal} /> : <BarPaper />}
+        <BarClay horizontal={horizontal} />
       </filter>
     );
   // The shared pure helper returns a native filter. Only bar coordinate units change;

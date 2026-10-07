@@ -78,6 +78,14 @@ domains, labels and business state. Use `visibleSeries` with
 missing/zero values, sizing, tooltip behavior and reduced motion when adapting a
 recipe; verify the chosen family rather than assuming all families share props.
 
+## Material finishes
+
+Use Default, Clay or Glow. Default keeps native paint and the public `plain`
+token; omit `material` or use `material="plain"`. Decorative finishes use
+`material="clay"` or `material="glow"`. Sankey uses these tokens through `finish`.
+Paper was removed in 0.3.0; migrate it to a supported finish and preserve native
+geometry, custom paint, filters and shapes.
+
 ## Verify the consumer
 
 Typecheck and build the application. Inspect narrow layout, keyboard focus,

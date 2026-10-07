@@ -223,14 +223,14 @@ function App() {
         </fieldset>
         <fieldset aria-label="Material">
           <legend className="sr-only">Material</legend>
-          {(["plain", "paper", "clay", "glow"] as const).map((value) => (
+          {(["plain", "clay", "glow"] as const).map((value) => (
             <button
               type="button"
               key={value}
               aria-pressed={material === value}
               onClick={() => setMaterial(value)}
             >
-              {value.slice(0, 1).toUpperCase() + value.slice(1)}
+              {value === "plain" ? "Default" : value.slice(0, 1).toUpperCase() + value.slice(1)}
             </button>
           ))}
         </fieldset>

@@ -2,7 +2,6 @@
 
 import { BarClay } from "./bar-clay.js";
 import type { BarMaterial } from "./bar-material.js";
-import { BarPaper } from "./bar-paper.js";
 
 /** Reuse bar surface paint, with no cast shade across quantitative interval edges. */
 export function HistogramMaterialFilter({
@@ -27,9 +26,7 @@ export function HistogramMaterialFilter({
       height={bounds.height + padding * 2}
       colorInterpolationFilters="sRGB"
     >
-      {material === "paper" ? (
-        <BarPaper />
-      ) : material === "clay" ? (
+      {material === "clay" ? (
         <>
           <BarClay horizontal={false} />
           {/* BarClay's silhouette is opaque only where native paint exists. Its

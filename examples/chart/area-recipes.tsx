@@ -181,7 +181,7 @@ function SingleArea({
         stroke="var(--color-value)"
         strokeWidth={2}
         fill={gradient ? `url(#${gradient})` : "var(--color-value)"}
-        fillOpacity={gradient ? 1 : material === "clay" ? 0.65 : material === "paper" ? 0.4 : 0.18}
+        fillOpacity={gradient ? 1 : material === "clay" ? 0.65 : 0.18}
         connectNulls={false}
       />
     </AreaFrame>
@@ -226,7 +226,7 @@ export function ThresholdArea(props: SingleAreaProps & { threshold: number }) {
         stroke="var(--color-value)"
         strokeWidth={2}
         fill="var(--color-value)"
-        fillOpacity={area.material === "clay" ? 0.65 : area.material === "paper" ? 0.4 : 0.14}
+        fillOpacity={area.material === "clay" ? 0.65 : 0.14}
         connectNulls={false}
       />
     </AreaFrame>

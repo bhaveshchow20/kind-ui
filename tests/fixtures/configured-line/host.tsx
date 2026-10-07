@@ -139,7 +139,7 @@ export function ConfiguredHost() {
           <Chart.XAxis dataKey="month" />
           <Chart.YAxis domain={[-10, 30]} />
           <Chart.ReferenceLine y={10} />
-          <Chart.LineSeries dataKey="total" material="paper" />
+          <Chart.LineSeries dataKey="total" material="clay" />
           <Chart.Tooltip valueAnimation="shuffle" />
         </Chart.LineChart>
       </section>

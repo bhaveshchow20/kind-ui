@@ -40,8 +40,8 @@ export function ResponseTimeChart() {
       margin={{ top: 36, right: 28, left: 0, bottom: 12 }}
     >
       <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-      <Chart.XAxis height={48} dataKey="period" axisLine={false} tickLine={false} tickMargin={12} />
-      <Chart.YAxis domain={[0, 200]} axisLine={false} tickLine={false} tickMargin={12} width={88} />
+      <Chart.XAxis height={48} dataKey="period" axisLine={false} tickLine={false} tickMargin={8} />
+      <Chart.YAxis domain={[0, 200]} axisLine={false} tickLine={false} tickMargin={8} width={72} />
       <Chart.LineSeries dataKey="response" strokeWidth={2.5} dot={<Diamond />}>
         <Chart.LabelList
           dataKey="response"

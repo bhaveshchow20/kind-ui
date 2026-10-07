@@ -233,8 +233,8 @@ export function PolarHost() {
           value={material}
           onChange={(event) => setMaterial(event.target.value as Chart.PolarMaterial)}
         >
-          <option value="plain">Plain</option>
-          <option value="paper">Paper</option>
+          <option value="plain">Default</option>
+
           <option value="clay">Clay</option>
           <option value="glow">Glow</option>
         </select>

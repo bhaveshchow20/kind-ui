@@ -25,7 +25,9 @@ export function MinimalChart() {
 
 ## 2. Size and color it
 
-Configured Line fills its parent width and defaults to 280px height. Set `height` for your layout; let a shrinking flex/grid host use `minWidth: 0`. A stable config key keeps metadata separate from the measured values. Changing its color changes the series paint; it does not change the data.
+Configured Line fills its parent width and defaults to 280px height. Set `height` for your layout; let a shrinking flex/grid host use `minWidth: 0`.
+
+A stable config key keeps metadata separate from the measured values. Color changes affect paint, not data.
 
 ```tsx title="SizedChart.tsx"
 "use client";
@@ -47,7 +49,9 @@ Explicit families use `Root` and `ResponsiveContainer` inside a measurable host;
 
 ## 3. Add inspection and motion
 
-Generated parts include tooltip and legend unless disabled. The legend toggles configured Line series without application wiring. `animate` is on by default here; the object form tunes its entrance. Hover inspection uses a separate transition. Reduced-motion preferences skip Kind motion.
+Generated parts include tooltip and legend unless disabled. The legend toggles configured Line series automatically. `animate` is on by default here; the object form tunes its entrance.
+
+Hover inspection uses a separate transition. Reduced-motion preferences skip Kind motion.
 
 ```tsx title="InspectedChart.tsx"
 "use client";

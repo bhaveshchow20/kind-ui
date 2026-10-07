@@ -83,7 +83,7 @@ export const previews = {
   ),
   "heatmap-materials": ({ variant }: PreviewProps) => (
     <Frame>
-      <Material material={variant as "plain" | "paper" | "clay" | "glow"} />
+      <Material material={variant as "plain" | "clay" | "glow"} />
     </Frame>
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

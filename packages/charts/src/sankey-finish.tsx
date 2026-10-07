@@ -1,6 +1,6 @@
 "use client";
 
-export type SankeyFinish = "plain" | "paper" | "clay" | "glow";
+export type SankeyFinish = "plain" | "clay" | "glow";
 
 /** Sankey-local surface treatment. Never displace the quantitative silhouette. */
 export function SankeyFinishFilter({
@@ -67,32 +67,10 @@ export function SankeyFinishFilter({
         <>
           <feMorphology in="footprint" operator="erode" radius={edge} result="inside" />
           <feComposite in="footprint" in2="inside" operator="out" result="edge" />
-          {finish === "paper" ? (
-            <>
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency="0.08 0.2"
-                numOctaves={1}
-                seed={11}
-                result="pencil"
-              />
-              <feColorMatrix in="pencil" type="luminanceToAlpha" result="pencilMask" />
-              <feComponentTransfer in="pencilMask" result="sketch">
-                <feFuncA type="linear" slope={1.6} intercept={-0.15} />
-              </feComponentTransfer>
-              <feComposite in="edge" in2="sketch" operator="in" result="sketchEdge" />
-              <feFlood floodColor="#17212b" floodOpacity={0.5} />
-              <feComposite in2="sketchEdge" operator="in" result="contour" />
-              <feComposite in="contour" in2="SourceGraphic" operator="atop" result="body" />
-            </>
-          ) : (
-            <>
-              <feGaussianBlur in="edge" stdDeviation={edge} result="softEdge" />
-              <feFlood floodColor="#fff" floodOpacity={0.8} />
-              <feComposite in2="softEdge" operator="in" result="light" />
-              <feComposite in="light" in2="SourceGraphic" operator="atop" result="body" />
-            </>
-          )}
+          <feGaussianBlur in="edge" stdDeviation={edge} result="softEdge" />
+          <feFlood floodColor="#fff" floodOpacity={0.8} />
+          <feComposite in2="softEdge" operator="in" result="light" />
+          <feComposite in="light" in2="SourceGraphic" operator="atop" result="body" />
         </>
       )}
       {finish !== "glow" ? (
@@ -104,7 +82,7 @@ export function SankeyFinishFilter({
             seed={7}
             result="fiber"
           />
-          <feFlood floodColor="#fff" floodOpacity={finish === "paper" ? 0.14 : 0.025} />
+          <feFlood floodColor="#fff" floodOpacity={0.025} />
           <feComposite in2="fiber" operator="in" result="grain" />
           <feComposite in="grain" in2="body" operator="atop" />
         </>

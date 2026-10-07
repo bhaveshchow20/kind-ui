@@ -1,5 +1,5 @@
 import type { DemoOptions } from "./demo-options";
-export type Finish = "plain" | "paper" | "clay" | "glow";
+export type Finish = "plain" | "clay" | "glow";
 export const advancedRecipes = [
   {
     id: "combo",
@@ -196,8 +196,8 @@ export function advancedBody(r: AdvancedRecipe, material: Finish, options: DemoO
   if (r.family === "Radial")
     return `<Chart.RadialBarChart data={data} animate={animate} accessibilityLayer aria-label="${r.tag}" startAngle={${options.rotation ?? (r.id === "gauge" ? 180 : 90)}} endAngle={${(options.rotation ?? (r.id === "gauge" ? 180 : 90)) - (r.id === "gauge" ? 180 : 360)}} innerRadius="${r.id === "gauge" ? 55 : 20}%" outerRadius="${options.outerRadius ?? 90}%" cy="${r.id === "gauge" ? 65 : 50}%" barGap={3}>
   <Chart.PolarAngleAxis type="number" domain={[0,100]} tick={false} />
-  <Chart.PolarRadiusAxis type="category" dataKey="category" tick={false} axisLine={false} tickLine={false}>${r.id === "gauge" ? `\n    <Chart.Label position="center" value="${options.progress ?? 72}%" fill="currentColor" />\n  ` : ""}</Chart.PolarRadiusAxis>
-  <Chart.RadialBarSeries dataKey="a" background cornerRadius={${options.radius ?? 4}}${r.id === "radial-stacked" ? ' stackId="work"' : ""}>${r.id !== "gauge" ? '\n    <Chart.LabelList dataKey="category" fill="white" content={<Chart.RadialBarLabel fontSize={10} />} />\n  ' : ""}</Chart.RadialBarSeries>
+  <Chart.PolarRadiusAxis type="category" dataKey="category" tick={false} axisLine={false} tickLine={false}>${r.id === "gauge" && options.showLabels ? `\n    <Chart.Label position="center" value="${options.progress ?? 72}%" fill="currentColor" />\n  ` : ""}</Chart.PolarRadiusAxis>
+  <Chart.RadialBarSeries dataKey="a" background cornerRadius={${options.radius ?? 4}}${r.id === "radial-stacked" ? ' stackId="work"' : ""}>${r.id !== "gauge" && options.showLabels ? '\n    <Chart.LabelList dataKey="category" fill="white" content={<Chart.RadialBarLabel fontSize={10} />} />\n  ' : ""}</Chart.RadialBarSeries>
   ${r.id === "gauge" ? "" : `<Chart.RadialBarSeries dataKey="b" fillOpacity={0.5} cornerRadius={${options.radius ?? 4}}${r.id === "radial-stacked" ? ' stackId="work"' : ""} />`}
   <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
 </Chart.RadialBarChart>`;

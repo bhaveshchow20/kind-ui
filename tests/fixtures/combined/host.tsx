@@ -20,8 +20,10 @@ function Family({ family }: { family: "area" | "bar" }) {
         value={material}
         onChange={(event) => setMaterial(event.target.value as Chart.AreaMaterial)}
       >
-        {["plain", "paper", "clay", "glow"].map((value) => (
-          <option key={value}>{value}</option>
+        {["plain", "clay", "glow"].map((value) => (
+          <option key={value} value={value}>
+            {value === "plain" ? "Default" : value}
+          </option>
         ))}
       </select>
       <Chart.Root

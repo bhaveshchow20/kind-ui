@@ -24,8 +24,13 @@ for (const horizontal of [false, true]) {
     const paint = await paths.evaluateAll((nodes) =>
       nodes.map((node) => getComputedStyle(node).fill),
     );
-    for (const material of ["paper", "clay", "glow"]) {
-      await page.getByRole("button", { name: material, exact: true }).click();
+    for (const material of ["clay", "glow"]) {
+      await page
+        .getByRole("button", {
+          name: String(material) === "plain" ? "Default" : material,
+          exact: true,
+        })
+        .click();
       expect(
         await paths.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
       ).toEqual(geometry);
@@ -116,7 +121,7 @@ test("packed material controls remain independent through stacking, animation, n
   await page.screenshot({ path: info.outputPath("clay-pink-narrow-repeated.png") });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
-  await page.getByRole("button", { name: "plain", exact: true }).click();
+  await page.getByRole("button", { name: "Default", exact: true }).click();
   await expect(page.locator('[data-kind-ui="bar-material"]')).toHaveCount(0);
 });
 
@@ -154,7 +159,7 @@ test("existing bar recipes expose independent finish and palette controls", asyn
   await page.screenshot({ path: info.outputPath("recipes-clay-color-narrow.png"), fullPage: true });
 });
 
-test("raised Clay and sketch Paper preserve native translucent alpha and explicit radii", async ({
+test("raised Clay preserves native translucent alpha and explicit radii", async ({
   page,
 }, info) => {
   await page.goto(`${url}&translucent&round&gradient-alpha`);
@@ -186,11 +191,16 @@ test("raised Clay and sketch Paper preserve native translucent alpha and explici
   }
   for (const gradient of [false, true]) {
     if (gradient) await page.getByRole("button", { name: "Gradient", exact: true }).click();
-    await page.getByRole("button", { name: "plain", exact: true }).click();
+    await page.getByRole("button", { name: "Default", exact: true }).click();
     const path = await mark.getAttribute("d");
     const plain = await pixels(await mark.screenshot({ omitBackground: true }));
-    for (const material of ["paper", "clay"]) {
-      await page.getByRole("button", { name: material, exact: true }).click();
+    for (const material of ["clay"]) {
+      await page
+        .getByRole("button", {
+          name: String(material) === "plain" ? "Default" : material,
+          exact: true,
+        })
+        .click();
       await expect(mark).toHaveAttribute("d", path ?? "");
       const finished = await pixels(
         await mark.screenshot({
@@ -230,14 +240,12 @@ test("raised Clay and sketch Paper preserve native translucent alpha and explici
   }
 });
 
-for (const material of ["clay", "paper"] as const) {
+for (const material of ["clay"] as const) {
   test(`${material} recipes retain truthful caps and joins across palettes and widths`, async ({
     page,
   }, info) => {
     await page.goto("/bars.html");
-    await page
-      .getByRole("button", { name: material === "clay" ? "Clay" : "Paper", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Clay", exact: true }).click();
     for (const palette of ["Monochrome", "Color"]) {
       await page.getByRole("button", { name: palette, exact: true }).click();
       for (const width of [1000, 360]) {
@@ -278,14 +286,19 @@ for (const material of ["clay", "paper"] as const) {
   });
 }
 
-for (const material of ["clay", "paper"] as const) {
+for (const material of ["clay"] as const) {
   test(`${material} soft pink standalone bars remain bounded in signed orientations`, async ({
     page,
   }, info) => {
     for (const horizontal of [false, true]) {
       await page.goto(`${url}&round${horizontal ? "&horizontal" : ""}`);
       await page.getByRole("button", { name: "Pink", exact: true }).click();
-      await page.getByRole("button", { name: material, exact: true }).click();
+      await page
+        .getByRole("button", {
+          name: String(material) === "plain" ? "Default" : material,
+          exact: true,
+        })
+        .click();
       const chart = page.getByRole("application");
       for (const narrow of [false, true]) {
         if (narrow) await page.getByRole("button", { name: "Resize", exact: true }).click();
@@ -353,7 +366,12 @@ for (const horizontal of [false, true]) {
         height: Math.ceil(box.height + 25),
       };
       async function raster(material: "plain" | "clay") {
-        await page.getByRole("button", { name: material, exact: true }).click();
+        await page
+          .getByRole("button", {
+            name: String(material) === "plain" ? "Default" : material,
+            exact: true,
+          })
+          .click();
         // Recharts can replace the path when adding a filter; reveal the current node.
         await mark.evaluate((node) => node.setAttribute("data-alpha-proof", ""));
         await expect(mark).toHaveAttribute("d", path ?? "");

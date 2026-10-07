@@ -161,15 +161,14 @@ function App() {
         </fieldset>
         <fieldset aria-label="Area material">
           <legend className="sr-only">Area material</legend>
-          {(["plain", "paper", "clay", "glow"] satisfies AreaMaterial[]).map((value) => (
+          {(["plain", "clay", "glow"] satisfies AreaMaterial[]).map((value) => (
             <button
               type="button"
               key={value}
               aria-pressed={material === value}
               onClick={() => setMaterial(value)}
             >
-              {value[0]?.toUpperCase()}
-              {value.slice(1)}
+              {value === "plain" ? "Default" : value[0]?.toUpperCase() + value.slice(1)}
             </button>
           ))}
         </fieldset>

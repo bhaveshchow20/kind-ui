@@ -84,7 +84,7 @@ void (<Chart.LineSeries dataKey="count" isAnimationActive />);
 // @ts-expect-error Invalid animation configuration.
 void (<Chart.LineChart animate={{ revealDurationMs: "fast" }} />);
 
-for (const material of ["plain", "paper", "clay"] satisfies Chart.LineMaterial[]) {
+for (const material of ["plain", "clay", "glow"] satisfies Chart.LineMaterial[]) {
   void (
     <Chart.LineSeries
       dataKey="count"
@@ -97,12 +97,24 @@ for (const material of ["plain", "paper", "clay"] satisfies Chart.LineMaterial[]
 // @ts-expect-error Material is independent of palette and limited to the supported SVG options.
 void (<Chart.LineSeries dataKey="count" material="neon" />);
 
-for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.AreaMaterial[]) {
+for (const material of ["plain", "clay", "glow"] satisfies Chart.AreaMaterial[]) {
   void (<Chart.AreaSeries dataKey="count" material={material} fill="url(#host-gradient)" />);
 }
+// @ts-expect-error Paper was removed from the public material contract in 0.3.0.
+void (<Chart.LineSeries dataKey="count" material="paper" />);
+// @ts-expect-error Paper was removed from filled surface materials.
+void (<Chart.AreaSeries dataKey="count" material="paper" />);
+// @ts-expect-error Paper was removed from bar materials.
+void (<Chart.BarSeries dataKey="count" material="paper" />);
+// @ts-expect-error Paper was removed from Sankey finishes.
+const removedSankeyFinish: Chart.SankeyFinish = "paper";
+// @ts-expect-error Paper was removed from heatmap materials.
+const removedHeatmapMaterial: Chart.HeatmapMaterial = "paper";
+void removedSankeyFinish;
+void removedHeatmapMaterial;
 // @ts-expect-error Unsupported area finish.
 void (<Chart.AreaSeries dataKey="count" material="neon" />);
-for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.BarMaterial[]) {
+for (const material of ["plain", "clay", "glow"] satisfies Chart.BarMaterial[]) {
   void (<Chart.BarSeries dataKey="count" material={material} radius={[3, 3, 0, 0]} />);
 }
 // @ts-expect-error Bar finishes use the established material vocabulary.
@@ -481,7 +493,7 @@ const selectiveGlow = {
   dataKey: "value",
   categoryKey: "id",
   glowCategories: ["design", "removed"] as const,
-  material: "paper",
+  material: "plain",
 } satisfies Chart.PieSeriesProps<{ id: string; value: number }>;
 const accessorGlow = {
   ...selectiveGlow,

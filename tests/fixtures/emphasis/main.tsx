@@ -694,7 +694,7 @@ function App() {
               <ReferenceLine y={10} label="Reference" />
               <Chart.BarSeries
                 dataKey="first"
-                material="paper"
+                material="clay"
                 opacity={0.5}
                 {...(stacked ? { stackId: "stack" } : {})}
                 onClick={() => setClicks(clicks + 1)}
@@ -844,7 +844,7 @@ function App() {
             measure="count"
             emphasis="category"
           >
-            <Chart.HistogramSeries seriesKey="bins" material="paper" />
+            <Chart.HistogramSeries seriesKey="bins" material="clay" />
           </Chart.HistogramChart>
           <Chart.BoxPlotChart
             width={440}

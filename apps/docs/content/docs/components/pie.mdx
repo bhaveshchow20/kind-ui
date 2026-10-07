@@ -1,6 +1,6 @@
 ---
 title: Pie and Donut
-description: Compare parts of a whole with explicit category identity and native sectors.
+description: Compare parts of a whole with pies, donuts and rounded sectors.
 ---
 
 <ChartExample id="pie" />
@@ -29,33 +29,61 @@ Chart-owned angular entrance respects reduced motion. `animationDirection` chang
 
 ## Controlled categories
 
-This example filters rows in consumer state when legend visibility changes. `Root.visibleSeries` alone does not hide an unbound PieSeries. Remaining sectors use the selected total. Hiding the final visible eligible category through the legend is rejected with a scoped announcement; Hide all categories and Show all categories explicitly update consumer-owned visibility, including an empty selection and restoration.
+Toggle categories in the legend; the selected total updates with the visible slices.
 
 <ChartExample id="pie-visibility" />
 
-Alternatively, set `interactionBinding="root"` on PieSeries and give Root a category-kind `interaction` with a settled `eligibleKeys` snapshot. Supply explicit data and unique, nonempty string category IDs. Include hidden categories and zero values in the snapshot. The binding filters original rows and positional Cells together before native geometry is computed; pass the complete rows rather than duplicating the filter.
+For shared slice and legend actions, use `interactionBinding="root"` and category interaction. This example also shows an initial tooltip, selective glow and a loading state.
 
-With `markActivation="matching-legend"`, native sector and legend activation share Root's visibility or focus action. Focus highlights without filtering; Enter/Space activates and Escape requests reset. Consumer Cell and series handlers run first and can veto with `preventDefault()`; `interaction.onBeforeInteraction` can also veto. Shared actions use the current committed state, while the pressed category is captured from the original rendered row before a consumer can synchronously reorder or filter it. A Cell may override native payload fields or paint without replacing this shared identity. Custom rendering retains its native ownership; keep a legend or explicit controls for accessible interaction.
+<ChartExample id="pie-interaction" />
+
+<details>
+<summary>Category interaction contract</summary>
+
+Supply complete rows, unique nonempty string IDs and settled `eligibleKeys`, including hidden and zero-valued categories. Root binding filters rows and positional Cells together.
+
+Without binding, filter rows yourself; `visibleSeries` alone cannot hide Pie rows. Remaining slices use the selected total.
+
+`markActivation="matching-legend"` shares slice and legend actions. Focus highlights without filtering; Enter/Space activates and Escape resets.
+
+- Consumer handlers run first; `preventDefault()` or `interaction.onBeforeInteraction` may veto.
+- Actions use committed state and the original pressed row identity, even when a handler reorders data.
+- Cell paint/payload overrides and custom rendering remain consumer-owned. Keep a legend or explicit accessible controls.
+- The legend announces and rejects hiding the final eligible category. Explicit controls may set an empty selection.
+
+</details>
 
 ## Initial tooltip
 
-`defaultPinnedCategory` selects an initial tooltip by category identity. It requires one direct PieSeries with explicit rows and `categoryKey`, and one direct Tooltip; Fragments are allowed, other direct children and multiple series are unsupported for this pin. Use `Tooltip.itemKey` to resolve your original category keys.
+Set `defaultPinnedCategory="service"` to open the first tooltip on Service. It follows that ID when rows reorder.
 
-The captured category follows row reorder. A bound Pie resolves its index among visible rows; an unbound Pie keeps its consumer-rendered row indices. Removing or hiding the pinned identity clears the pin permanently for that mount. An unknown initial category has no pin. An unbound Pie also clears an ambiguous duplicate pin; Root-bound rows instead require unique category keys and throw for duplicates. Pointer movement/down, focus or a key press also dismisses it. Changing the default or restoring a row does not repin; remount to initialize it again. Explicit Tooltip `active` and `defaultIndex` retain their ownership. The initial pin is separate from Root focus selection and selective glow.
+<details>
+<summary>Initial tooltip requirements and dismissal</summary>
+
+Use one direct PieSeries with explicit rows and `categoryKey`, plus one direct Tooltip with `itemKey`. Fragments are allowed; multiple series or other direct children are unsupported.
+
+- Bound charts locate pins among visible rows; unbound charts use consumer-rendered indices.
+- Hiding/removing the identity, pointer activity, focus or a key press dismisses the pin until remount. Restoration or changed defaults do not repin.
+- Unknown IDs never pin. Ambiguous duplicates clear unbound pins; Root binding rejects duplicate IDs.
+- Explicit Tooltip `active` and `defaultIndex` retain control. Pins do not change Root focus or selective glow.
+
+</details>
 
 ## Loading
 
-Set `loading` explicitly and use `loadingLabel` for the pending status. The boundary preserves chart layout, blocks chart inspection while pending and renders a Pie loading illustration. Empty data alone does not imply loading; keep an explicit empty-result message. Loading release and interruption preserve consumer geometry and motion ownership.
+Choose Loading in the example above. `loading` preserves layout, blocks inspection and announces `loadingLabel`. Empty data is a separate state; provide an empty-result message.
 
 ## Materials
 
-Choose plain, paper, clay or glow. Percentage labels remain inside sectors; category names stay in the legend.
+Start with Default (`plain`), then switch to Clay or Glow. Percentage labels stay inside; category names stay in the legend.
 
 <ChartExample id="pie-materials" />
 
 ### Selective glow
 
-Use `glowCategories={["design"]}` with `categoryKey="key"` to give only Design a halo. Membership uses original row IDs, so reorder and filtering retain category colors and membership. Unknown or removed IDs are ignored; restoring a row restores its glow. An empty list retains the series `material`. Listed categories use glow instead of paper or clay; `material="glow"` still glows every default sector.
+Use `glowCategories={["design"]}` for a Design halo. IDs follow reorder/filtering; unknown IDs are ignored.
+
+An empty list keeps the series material; `material="glow"` decorates every default sector.
 
 ```tsx title="Selected category on a rounded donut"
 <Chart.PieSeries
@@ -72,23 +100,38 @@ Use `glowCategories={["design"]}` with `categoryKey="key"` to give only Design a
 />
 ```
 
-Glow is decoration, not selection state. Keep category labels and a data table; preserve readable native fills in each theme. Native Cell/datum paint, custom shapes, active shapes, filters and CSS transform ownership still take precedence. `categoryKey` requires explicit data and configured string IDs even when a native fill is supplied.
+Keep category labels, a data table and readable fills in each theme. Glow does not indicate selection.
+
+Cell/datum paint, custom/active shapes, filters and CSS transforms retain ownership. `categoryKey` requires explicit data and configured string IDs, including with native fill.
 
 ## Rounded and petal sectors
 
-`cornerRadius` and `paddingAngle` are existing native `PieSeries` props. Use a small radius and gap for rounded sectors, or half the ring thickness with a larger gap for a petal-like donut. No separate Donut component or custom shape is needed.
+Use native `cornerRadius` and `paddingAngle`: small radii/gaps for rounded sectors, half the ring thickness and larger gaps for petals.
+
+No separate Donut component or custom shape is needed.
 
 <ChartExample id="pie-rounded" />
 
-The recipe uses `innerRadius={58}`, `outerRadius={108}`, `cornerRadius={8}` and `paddingAngle={2}` for the rounded donut. Petal mode uses `innerRadius={68}`, `cornerRadius={20}` and `paddingAngle={8}`; rounded pie mode sets `innerRadius={0}`. Category labels stay in the legend and the table retains the original hours and shares. Padding changes painted angles, so measure shares from data rather than visible arc lengths.
+Switch Geometry to compare the same data. Rounded donut uses `cornerRadius={8}` and `paddingAngle={2}`; petal donut uses `cornerRadius={20}` and `paddingAngle={8}`. The table keeps original hours and shares.
 
-### Geometry constraints
+<details>
+<summary>Geometry constraints</summary>
 
-Use finite, nonnegative values and radii with `0 <= innerRadius < outerRadius`. Numeric corner radii are SVG units; native sectors clamp rounding to half the ring thickness and may fall back to ordinary corners when a narrow sector cannot fit the requested rounding. Full-circle sectors do not show rounded ends. The petal silhouette depends on the data proportions and available sector angles; it is not a guarantee for every dataset.
+- Values and radii must be finite and nonnegative, with `0 <= innerRadius < outerRadius`.
+- Numeric corner radii use SVG units and clamp to half the ring thickness. Narrow sectors may fall back to ordinary corners.
+- Full-circle sectors have no rounded ends. Petal shapes depend on data proportions and available angles; they are not guaranteed for every dataset.
 
-Angles and padding are degrees. Native Pie caps the absolute sweep at 360 degrees; equal start/end angles paint no allocation. For `n` positive categories, a full circle reserves `n * paddingAngle`, while a partial sweep reserves `(n - 1) * paddingAngle`. Keep nonnegative padding small enough that this total is strictly below the sweep, and leave `minAngle` at zero for these proportional recipes. Re-evaluate spacing after filtering or changing the data. Native Pie ignores padding for a single supplied row; zero values have no visible share. Keep zero categories in the data alternative, and do not enlarge them to create petals.
+| Geometry | Constraint |
+| --- | --- |
+| Sweep | Angles are degrees; absolute sweep caps at 360. Equal start/end angles paint nothing. |
+| Padding | For `n` positive categories, full circles reserve `n * paddingAngle`; partial sweeps reserve `(n - 1) * paddingAngle`. |
+| Proportions | Keep padding nonnegative and its total strictly below the sweep; use `minAngle={0}`. Recheck spacing after filtering/data changes. |
+| Single row | Native Pie ignores padding. |
+| Zero values | No visible share. Retain zeros in the data alternative; do not enlarge them into petals. |
 
 These examples render final geometry with `animate={false}`. If entrance animation is enabled, Kind's existing reduced-motion and custom-shape ownership contracts still apply.
+
+</details>
 
 ## API reference
 
@@ -133,14 +176,16 @@ Value and category identity use separate fields.
 | `startAngle` / `endAngle` | `number` | `0` / `360` | Native angular geometry in degrees. |
 | `paddingAngle` | `number` | `0` | Native gap in degrees; see geometry constraints above. |
 | `cornerRadius` | `number \| string` | `0` | Native rounded sector corners; numeric units are recommended here. |
-| `material` | `"plain" \| "paper" \| "clay" \| "glow"` | `"plain"` | Finish on default sectors; consumer rendering can take precedence. |
+| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Finish on default sectors; consumer rendering can take precedence. |
 | `glowCategories` | `readonly string[]` | Off | Category IDs receiving glow instead of `material`; requires `categoryKey` and explicit data. Unknown IDs are ignored. |
 | `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | Native name | Optional semantic sector identity for paint emphasis; does not configure tooltip identity. |
 | `stroke` | `string` | `"none"` | Native sector outline. |
 
 </div>
 
-Explicit series fill disables category defaults; datum or Cell fill wins over them. Custom shapes retain rendering control. Choose consumer row filtering or explicit Root binding; `PieSeries` has no `seriesKey`. Custom shapes, filters or transforms can bypass Kind paint. See [Recharts Pie](https://recharts.github.io/en-US/api/Pie/).
+Explicit series fill disables category defaults; datum/Cell fill wins. Custom shapes, filters and transforms retain rendering control and may bypass Kind paint.
+
+Filter rows yourself or bind to Root; `PieSeries` has no `seriesKey`. See [Recharts Pie](https://recharts.github.io/en-US/api/Pie/).
 
 ## Shared components
 

@@ -2,7 +2,7 @@ import { expect, test } from "./browser";
 import { expectLastVisibleGuard } from "./last-visible";
 
 const url = `http://127.0.0.1:${4191 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?materials`;
-const finishes = ["plain", "paper", "clay", "glow"] as const;
+const finishes = ["plain", "clay", "glow"] as const;
 const marks = '[data-kind-ui="box-plot-mark"]';
 
 test("packed Box materials: exact geometry, Cell paint, custom ownership and repeated updates", async ({
@@ -21,7 +21,12 @@ test("packed Box materials: exact geometry, Cell paint, custom ownership and rep
     );
   const before = await geometry();
   for (const material of finishes) {
-    await host.getByRole("button", { name: material, exact: true }).click();
+    await host
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     expect(await geometry()).toEqual(before);
     await expect(host.locator('[data-kind-ui="box-material"]')).toHaveCount(
       material === "plain" ? 0 : 3,
@@ -75,7 +80,7 @@ test("packed Box materials: exact geometry, Cell paint, custom ownership and rep
   await expect(host.locator(marks)).toHaveCount(0);
 });
 
-test("Box finishes preserve rendered alpha and produce visible grain, relief, and exterior light on tiny marks", async ({
+test("Box finishes preserve rendered alpha and produce visible relief and exterior light on tiny marks", async ({
   page,
 }) => {
   await page.goto(url);
@@ -102,11 +107,10 @@ test("Box finishes preserve rendered alpha and produce visible grain, relief, an
     }
     return results;
   });
-  const [plain, paper, clay, glow] = samples;
-  if (!plain || !paper || !clay || !glow) throw new Error("Missing material samples");
+  const [plain, clay, glow] = samples;
+  if (!plain || !clay || !glow) throw new Error("Missing material samples");
   for (const finish of samples)
     expect(finish.interior[3]).toBeCloseTo(Number(plain.interior[3]), 0);
-  expect(paper.upper).not.toEqual(plain.upper);
   expect(clay.upper[0]).toBeGreaterThan(Number(clay.lower[0]));
   expect(glow.exterior[3]).toBeGreaterThan(Number(plain.exterior[3]));
   for (const material of finishes) {
@@ -266,7 +270,12 @@ test("Box material updates retain horizontal coordinates and reduced Motion inte
     host.locator("[data-box-part]").evaluateAll((nodes) => nodes.map((node) => node.outerHTML));
   const baseline = await geometry();
   for (const material of finishes) {
-    await host.getByRole("button", { name: material, exact: true }).click();
+    await host
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     expect(await geometry()).toEqual(baseline);
     await host.getByRole("button", { name: "Animate", exact: true }).click();
     await expect(host.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
@@ -275,7 +284,12 @@ test("Box material updates retain horizontal coordinates and reduced Motion inte
   await page.emulateMedia({ reducedMotion: "no-preference" });
   for (const material of finishes) {
     await page.goto(`${url}&animate`);
-    await host.getByRole("button", { name: material, exact: true }).click();
+    await host
+      .getByRole("button", {
+        name: String(material) === "plain" ? "Default" : material,
+        exact: true,
+      })
+      .click();
     await expect(host.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(1);
     await host.getByRole("application", { name: "Box distribution" }).focus();
     await expect(host.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);

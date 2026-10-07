@@ -269,7 +269,7 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
       <button type="button" onClick={() => setGradient(!gradient)}>
         Gradient
       </button>
-      {(["plain", "paper", "clay", "glow"] satisfies Static.LineMaterial[]).map((material) => (
+      {(["plain", "clay", "glow"] satisfies Static.LineMaterial[]).map((material) => (
         <section
           key={material}
           aria-label={material}

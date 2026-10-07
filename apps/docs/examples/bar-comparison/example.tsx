@@ -49,7 +49,7 @@ export function LibraryLoansChart({
             interval="preserveStartEnd"
             minTickGap={32}
           />
-          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={10} width={80} />
+          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={10} width={72} />
           <Chart.BarSeries dataKey="print" stackId={stackId} maxBarSize={32} />
           <Chart.BarSeries dataKey="digital" stackId={stackId} maxBarSize={32} />
           <Chart.Tooltip />

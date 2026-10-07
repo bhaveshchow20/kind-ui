@@ -9,7 +9,7 @@ import { type Example, examples, type Family } from "./showcase-data";
 import { useReducedMotionPreference } from "./use-reduced-motion";
 
 const families: Family[] = ["area", "bar", "line", "pie", "radar", "radial"];
-const finishes: Finish[] = ["plain", "paper", "clay", "glow"];
+const finishes: Finish[] = ["plain", "clay", "glow"];
 const palettes = [
   { name: "Blue", color: "#5b7cde", secondary: "#5b9f8a" },
   { name: "Terracotta", color: "#c76d50", secondary: "#6c8bb0" },
@@ -17,7 +17,8 @@ const palettes = [
   { name: "Purple", color: "#9164c2", secondary: "#579f9b" },
   { name: "Amber", color: "#af7e2c", secondary: "#708ac0" },
 ];
-const capitalize = (value: string) => value[0]?.toUpperCase() + value.slice(1);
+const capitalize = (value: string) =>
+  value === "plain" ? "Default" : value[0]?.toUpperCase() + value.slice(1);
 const ExampleCard = memo(function ExampleCard({
   family,
   example,

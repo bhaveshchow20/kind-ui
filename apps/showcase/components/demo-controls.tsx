@@ -146,6 +146,7 @@ export function controlsFor(family: string, id: string): Control[] {
             { kind: "range", key: "gap", label: "Ring spacing", min: 1, max: 12, unit: "px" },
           ]
         : [
+            labels,
             { kind: "range", key: "progress", label: "Completed", min: 0, max: 100, unit: "%" },
             corners,
             {

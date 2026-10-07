@@ -28,7 +28,7 @@ try {
     [recent.newRecipes, recent.newCode],
   ]) {
     for (const recipe of recipes) {
-      for (const finish of ["plain", "paper", "clay", "glow"]) {
+      for (const finish of ["plain", "clay", "glow"]) {
         for (const animate of [false, true]) {
           const file = join(temporary, `${recipe.id}-${finish}-${animate}.tsx`);
           await writeFile(
@@ -40,7 +40,7 @@ try {
       }
     }
   }
-  assert.equal(files.length, 256, "Every recipe, finish and motion setting must be checked");
+  assert.equal(files.length, 192, "Every recipe, finish and motion setting must be checked");
   const changedOptions = {
     strokeWidth: 4,
     showGrid: false,
