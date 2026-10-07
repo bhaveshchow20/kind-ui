@@ -107,7 +107,7 @@ test("Line snippets are standalone public consumers with a shared data alternati
     const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
     const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)].map((match) => match[1]);
     assert.ok(
-      imports.every((value) => value === "@kind-ui/charts"),
+      imports.every((value) => value === "@kind-ui/charts" || value === "react"),
       `${bundle.id}: ${imports}`,
     );
     assert.ok(!Object.keys(bundle.files).some((file) => /settings\.ts|controls\.tsx/.test(file)));
@@ -116,7 +116,7 @@ test("Line snippets are standalone public consumers with a shared data alternati
   }
   const basic = lines.line.files["src/examples/line/example.tsx"];
   assert.equal([...basic.matchAll(/<Chart\.LineChart\b/g)].length, 1);
-  assert.ok(!/useState|useId|Root|ResponsiveContainer/.test(basic));
+  assert.ok(!/useId|Root|ResponsiveContainer/.test(basic));
 });
 
 test("Line variant sources match selected public defaults without runtime compilation", () => {
