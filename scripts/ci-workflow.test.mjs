@@ -37,8 +37,16 @@ test("all workflows keep untrusted code read-only, pinned, and bounded", () => {
     assert.equal(workflow.on.pull_request_target, undefined);
     assert.equal(workflow.on.workflow_run, undefined);
     assert.ok(!JSON.stringify(workflow).includes("secrets."));
-    for (const job of Object.values(workflow.jobs)) {
-      assert.equal(job.permissions, undefined);
+    for (const [name, job] of Object.entries(workflow.jobs)) {
+      if (workflow === release && name === "publish") {
+        assert.deepEqual(job.permissions, { contents: "read", "id-token": "write" });
+        assert.equal(job.environment, "npm-release");
+        assert.equal(workflow.on.pull_request, undefined);
+        assert.deepEqual(workflow.on.push.branches, ["main"]);
+        assert.ok(job.if.includes("github.ref == 'refs/heads/main'"));
+      } else {
+        assert.equal(job.permissions, undefined);
+      }
       assert.ok(Number.isInteger(job["timeout-minutes"]));
       assert.ok(job["timeout-minutes"] > 0 && job["timeout-minutes"] <= 60);
       for (const step of job.steps) {

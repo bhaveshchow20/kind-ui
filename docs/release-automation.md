@@ -69,9 +69,10 @@ A dispatch of a later ordinary main commit is validation only.
 
 ## Approved identity and activation
 
-The preparation draft keeps publication hard-disabled. Activation requires the
-approved trust to be verified, a reviewed publish-job condition requiring the
-validated release intent and public candidate, and the protected environment.
+The approved draft activates only the publisher's OIDC identity. Its condition
+requires canonical main, a validated release intent and a verified public
+candidate. The `npm-release` environment independently restricts the branch to
+main. No package is published by editing or merging this setup alone.
 The existing local 0.1.1 publication does not prove that hosted OIDC works; no
 extra package version is published to test setup.
 
@@ -81,7 +82,7 @@ The approved npm trust is limited to `@kind-ui/charts`, GitHub repository
 or introduce a token. Release jobs retain npm 11.9. A setup-only official npm
 11.21 CLI can configure trust without changing the repository toolchain.
 
-The GitHub environment allows the branch `main` only. After a separately approved activation, the publisher alone gets
+The GitHub environment allows the branch `main` only. The publisher alone gets
 `id-token: write`; other release jobs retain `contents: read`. The OIDC subject is
 `repo:bhaveshchow20/kind-ui:environment:npm-release`, and the workflow is
 `bhaveshchow20/kind-ui/.github/workflows/release.yml@refs/heads/main`.
@@ -99,44 +100,32 @@ later, they should follow successful anonymous npm integrity verification and
 point to the exact source commit. The raw tarball publication command does not
 produce the Changesets publishing action's structured published-package output.
 
-## Setup checkpoint and remaining gate
+## Verified setup and remaining proof
 
-Read-only checks on this computer confirmed the existing GitHub environment has
-exactly one branch policy (`main`) and Actions PR creation is enabled while the
-default token permission remains `read`. Public npm metadata confirms `0.1.1`
-but does not expose a trusted-publisher configuration. The installed npm 11.9
-supports OIDC publishing but not the newer `npm trust` management command; the
-previous setup-only CLI and browser authentication session are not resumed.
-The earlier trust-creation attempt ended with an authentication `E404`; no
-successful trust creation is recorded. Existing trust must be read back before
-assuming it is absent or creating a duplicate.
+The official npm CLI created the approved trust and a separate authenticated
+read verified its configuration:
 
-The remaining setup action needs fresh approval for an official authenticated
-trust read (and browser 2FA if npm requires it). Only if that proves the entry
-missing, separately approve creation for `@kind-ui/charts`, GitHub repository
-`bhaveshchow20/kind-ui`, workflow `release.yml`, environment `npm-release`, with
-direct publication allowed and no additional dist-tag permission.
+- Package: `@kind-ui/charts`
+- Provider: GitHub
+- Trust ID: `1a7824a6-aa41-4b89-9e1a-6ec4a36c8402`
+- Repository: `bhaveshchow20/kind-ui`
+- Workflow: `release.yml`
+- Environment: `npm-release`
+- Registry permissions: `createPackage`, `createStagedPackage`
 
-After that identity is verified, a separate reviewed activation would replace
-the false gate with the following condition and publisher-only configuration:
+Creation requested `--allow-publish` only. npm adds its default stage-publish
+capability; no staged-publish flag or dist-tag management permission was requested.
+The existing GitHub environment still has exactly one branch policy (`main`),
+and Actions PR creation is enabled while default token permissions remain `read`.
+The account login was refreshed through npm's official browser handoff; no
+credential value or token is stored in this repository.
 
-```yaml
-if: >-
-  github.repository == 'bhaveshchow20/kind-ui' &&
-  github.ref == 'refs/heads/main' &&
-  needs.plan.outputs.publish == 'true' &&
-  needs.verify.outputs.publishable == 'true'
-permissions:
-  contents: read
-  id-token: write
-environment: npm-release
-```
-
-The publisher's existing `needs: [plan, verify]` must remain, and setup-node must
-use the public npm registry URL. The version and validation jobs must retain
-read-only OIDC access. Required full checks and hosted OIDC execution remain
-unverified for this preparation draft; no test version should be published to
-prove setup. A normal main merge with no version transition cannot publish.
+The publisher's `needs: [plan, verify]` remains. Only that job gains
+`id-token: write`, uses `npm-release` and configures the public npm registry URL.
+Version and validation jobs have no OIDC permission. Required full checks remain
+pending coordinated verification of the final draft. Hosted OIDC execution can
+only be proven by the next authorized real release; do not publish a test version
+to prove setup. A normal main merge with no version transition cannot publish.
 
 ## Sources and choices
 

@@ -46,8 +46,8 @@ publishing gate, identities, verification and retry behavior.
 `.github/workflows/release.yml` validates eligible main on Node 22, retains tested
 tarballs, downloads the Node 22 candidate from the same run, and verifies source,
 receipt, SHA-256, npm integrity and matching integration evidence. Its publishing
-job remains disabled in the preparation draft until the approved npm trust is
-verified and the reviewed activation commit lands.
+job requires a reviewed version transition, verified public artifact and the
+approved job-scoped OIDC identity in the main-only `npm-release` environment.
 PR validation has no publishing identity. Account, secret and trusted-publisher
 setup are separate security decisions.
 

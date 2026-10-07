@@ -77,7 +77,7 @@ for (const [name, mutate] of [
     assert.throws(() => assertVersionPullRequests(w));
   });
 }
-function assertDisabledRelease(w) {
+function assertRelease(w) {
   assert.deepEqual(
     Object.keys(w.on),
     ["push", "workflow_dispatch"],
@@ -112,11 +112,26 @@ function assertDisabledRelease(w) {
     "Full validation must pass before handoff",
   );
   assert.deepEqual(w.jobs.publish.needs, ["plan", "verify"]);
-  // biome-ignore lint/suspicious/noTemplateCurlyInString: Literal GitHub Actions expression.
-  assert.equal(w.jobs.publish.if, "${{ false }}", "Publishing remains hard-disabled");
-  for (const job of Object.values(w.jobs)) {
-    assert.equal(job.permissions, undefined, "No job adds unapproved permissions");
-    assert.equal(job.environment, undefined, "No protected environment is created here");
+  assert.equal(
+    w.jobs.publish.if,
+    "github.repository == 'bhaveshchow20/kind-ui' && " +
+      "github.ref == 'refs/heads/main' && " +
+      "needs.plan.outputs.publish == 'true' && " +
+      "needs.verify.outputs.publishable == 'true'",
+  );
+  assert.deepEqual(w.jobs.publish.permissions, { contents: "read", "id-token": "write" });
+  assert.equal(w.jobs.publish.environment, "npm-release");
+  assert.equal(
+    w.jobs.publish.steps.find((s) => s.uses?.startsWith("actions/setup-node@"))?.with[
+      "registry-url"
+    ],
+    "https://registry.npmjs.org",
+  );
+  for (const [name, job] of Object.entries(w.jobs)) {
+    if (name !== "publish") {
+      assert.equal(job.permissions, undefined, "Only publisher gains OIDC");
+      assert.equal(job.environment, undefined, "Only publisher uses npm-release");
+    }
     for (const step of job.steps) {
       if (step.uses) assert.match(step.uses, /@[a-f0-9]{40}$/, "Pin official actions");
     }
@@ -130,8 +145,8 @@ function assertDisabledRelease(w) {
   assert.ok(w.jobs.publish.steps.some((s) => s.run?.includes("--require-public")));
   assert.ok(!JSON.stringify(w).includes("secrets."), "No credential setup in this workflow");
 }
-test("reviewed main pipeline preserves read-only permissions and disabled exact-artifact publishing", () =>
-  assertDisabledRelease(workflow));
+test("reviewed main pipeline grants only the publisher its approved OIDC identity", () =>
+  assertRelease(workflow));
 for (const [name, mutate] of [
   [
     "untrusted merge trigger",
@@ -140,7 +155,7 @@ for (const [name, mutate] of [
     },
   ],
   [
-    "publish activation",
+    "unguarded publication",
     (w) => {
       w.jobs.publish.if = "github.ref == 'refs/heads/main'";
     },
@@ -148,7 +163,34 @@ for (const [name, mutate] of [
   [
     "OIDC grant",
     (w) => {
-      w.jobs.publish.permissions = { "id-token": "write" };
+      w.jobs.validate.permissions = { "id-token": "write" };
+    },
+  ],
+  [
+    "wrong environment",
+    (w) => {
+      w.jobs.publish.environment = "preview";
+    },
+  ],
+  [
+    "write access beyond publisher identity",
+    (w) => {
+      w.jobs.publish.permissions.contents = "write";
+    },
+  ],
+  [
+    "unreviewed release intent",
+    (w) => {
+      w.jobs.publish.if = w.jobs.publish.if.replace("needs.plan.outputs.publish == 'true'", "true");
+    },
+  ],
+  [
+    "non-public candidate",
+    (w) => {
+      w.jobs.publish.if = w.jobs.publish.if.replace(
+        "needs.verify.outputs.publishable == 'true'",
+        "true",
+      );
     },
   ],
   [
@@ -158,10 +200,10 @@ for (const [name, mutate] of [
     },
   ],
 ])
-  test(`requires a separately reviewed change for ${name}`, () => {
+  test(`release workflow rejects ${name}`, () => {
     const w = structuredClone(workflow);
     mutate(w);
-    assert.throws(() => assertDisabledRelease(w));
+    assert.throws(() => assertRelease(w));
   });
 
 test("manual validation defaults to the reviewed package candidate version", async () => {
