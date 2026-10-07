@@ -34,6 +34,7 @@ try {
     "Materials",
     "API reference",
     "Shared components",
+    "Presentation options",
   ]);
   assert.equal(
     await toc
