@@ -198,16 +198,18 @@ test("packed edge materials preserve native refs, filters, cancelable events and
   await page.goto(`http://127.0.0.1:${4190 + offset}`);
   const grid = page.getByRole("grid", { name: "Constant and missing grid" });
   const cells = grid.getByRole("gridcell");
-  for (const material of ["clay", "glow", "plain"]) {
+  const materials = ["clay", "glow", "plain"] as const;
+  for (const [index, material] of materials.entries()) {
     await page.getByRole("combobox", { name: "Edge material" }).selectOption(material);
     await expect(cells.first()).toHaveCSS("filter", "brightness(1)");
     await expect(cells.first()).toHaveAttribute("data-ref-ready", "yes");
     await expect(cells.first()).toHaveCSS("background-color", "rgb(128, 128, 128)");
     await cells.nth(1).click();
+    await expect(page.getByLabel("Handled events")).toHaveText(String(index + 1));
     await page.keyboard.press("ArrowLeft");
     await expect(cells.nth(1)).toBeFocused();
   }
-  await expect(page.getByLabel("Handled events")).toHaveText("4");
+  await expect(page.getByLabel("Handled events")).toHaveText(String(materials.length));
   await page
     .getByRole("button", { name: "Patch edge data" })
     .evaluate((node: HTMLButtonElement) => node.click());
