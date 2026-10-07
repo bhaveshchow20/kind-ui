@@ -108,6 +108,9 @@ for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.BarMat
 // @ts-expect-error Bar finishes use the established material vocabulary.
 void (<Chart.BarSeries dataKey="count" material="metal" />);
 const categoryKey: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
+void (<Chart.PieChart defaultPinnedCategory="beta" />);
+// @ts-expect-error Initial identity is a category string, never a row index.
+void (<Chart.PieChart defaultPinnedCategory={1} />);
 void (<Chart.Tooltip itemKey={categoryKey} />);
 const categoryContent: Chart.TooltipContentProps = {
   tooltip: {
@@ -275,6 +278,7 @@ void (<Chart.PieSeries {...selectiveGlow} />);
 void (<Chart.PieSeries {...accessorGlow} />);
 // @ts-expect-error Category identity is a string, not a positional index.
 void (<Chart.PieSeries dataKey="value" glowCategories={[0]} />);
+
 const sankeyIconConfig = {
   source: { label: "Legend source", color: "red", icon: <path d="M0 0h24v24z" /> },
   sink: { label: "Legend sink", color: "blue" },

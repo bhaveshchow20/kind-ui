@@ -22,6 +22,89 @@ const original = [
   { id: "missing", value: null },
 ];
 const identity: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
+export function PinnedPieHost({
+  category = "beta",
+  accessor = false,
+}: {
+  category?: string;
+  accessor?: boolean;
+}) {
+  const [data, setData] = useState(original);
+  const [generation, setGeneration] = useState(0);
+  const [override, setOverride] = useState(false);
+  const [nativeIndex, setNativeIndex] = useState(false);
+  const [visible, setVisible] = useState<string[] | undefined>(undefined);
+  const rootProps: Chart.RootProps =
+    visible === undefined ? { config } : { config, visibleSeries: visible };
+  return (
+    <main>
+      <button type="button" onClick={() => setData((rows) => [...rows].reverse())}>
+        Reorder pin
+      </button>
+      <button
+        type="button"
+        onClick={() => setData((rows) => rows.filter((row) => row.id !== "beta"))}
+      >
+        Remove pin
+      </button>
+      <button type="button" onClick={() => setData(original)}>
+        Restore pin
+      </button>
+      <button type="button" onClick={() => setGeneration((value) => value + 1)}>
+        Remount pin
+      </button>
+      <button type="button" onClick={() => setOverride((value) => !value)}>
+        Native override
+      </button>
+      <button type="button" onClick={() => setNativeIndex((value) => !value)}>
+        Native index
+      </button>
+      <button type="button" onClick={() => setVisible(["alpha"])}>
+        Filter pin
+      </button>
+      <button type="button" onClick={() => setVisible(undefined)}>
+        Show pin
+      </button>
+      <button type="button" onClick={() => setData([...original, { id: "beta", value: 5 }])}>
+        Duplicate pin
+      </button>
+      <Chart.Root {...rootProps}>
+        <Chart.PieChart
+          key={generation}
+          width={320}
+          height={300}
+          defaultPinnedCategory={category}
+          aria-label="Initial pinned pie"
+          accessibilityLayer
+        >
+          <Chart.PieSeries
+            data={data}
+            categoryKey={accessor ? (row) => row.id : "id"}
+            dataKey="value"
+            nameKey="id"
+          />
+          <Chart.Tooltip
+            itemKey={identity}
+            {...(override ? { active: false } : {})}
+            {...(nativeIndex ? { defaultIndex: 0 } : {})}
+          />
+        </Chart.PieChart>
+      </Chart.Root>
+      <table>
+        <caption>Pinned allocation</caption>
+        <tbody>
+          {data.map((row) => (
+            <tr key={`${row.id}-${row.value}`}>
+              <th scope="row">{row.id}</th>
+              <td>{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button type="button">After chart</button>
+    </main>
+  );
+}
 // Native activeShape accepts a data item, while shape adds animation/index fields.
 // This renderer needs only the shared data plus optional native path handlers.
 type CustomShapeProps = PieSectorDataItem &

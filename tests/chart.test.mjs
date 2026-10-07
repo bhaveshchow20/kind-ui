@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import * as Chart from "@kind-ui/charts";
 import { Legend, Root, TooltipContent } from "@kind-ui/charts";
-import { createElement as h } from "react";
+import { Fragment, createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 import * as Native from "recharts";
 
@@ -1464,6 +1464,53 @@ test("selective Pie glow leaves the native SSR shell and host data alternative u
   assert.equal(chart(["alpha", "unknown"]), chart(undefined));
   assert.doesNotMatch(chart(["alpha"]), /pie-halo|<filter/);
   assert.match(chart(["alpha"]), /Category values/);
+});
+
+test("initial Pie pin rejects unsupported composition through public exports", () => {
+  const config = { beta: { label: "Beta", color: "blue" } };
+  const chart = (...children) =>
+    render(
+      h(
+        Chart.Root,
+        { config },
+        h(Chart.PieChart, { width: 320, height: 240, defaultPinnedCategory: "beta" }, ...children),
+      ),
+    );
+  assert.throws(() => chart(h(Chart.PieSeries, { dataKey: "value" })), /one direct PieSeries/);
+  const series = () =>
+    h(Chart.PieSeries, {
+      data: [{ id: "beta", value: 4 }],
+      categoryKey: "id",
+      dataKey: "value",
+    });
+  assert.throws(() => chart(series(), series()), /one direct PieSeries/);
+  assert.throws(() => chart(series(), h(Chart.Tooltip), h(Chart.Tooltip)), /one direct Tooltip/);
+  assert.throws(() => chart(series()), /one direct Tooltip/);
+  assert.throws(() => chart(series(), h(Native.Tooltip)), /one direct Tooltip/);
+  const WrappedTooltip = (props) => h(Chart.Tooltip, props);
+  WrappedTooltip.displayName = "Tooltip";
+  assert.throws(() => chart(series(), h(WrappedTooltip)), /one direct Tooltip/);
+  const WrappedSeries = (props) => h(Chart.PieSeries, props);
+  WrappedSeries.displayName = "PieSeries";
+  assert.throws(() => chart(h(WrappedSeries), h(Chart.Tooltip)), /one direct PieSeries/);
+  assert.throws(
+    () => chart(series(), h(Native.Pie, { dataKey: "value" }), h(Chart.Tooltip)),
+    /one direct PieSeries/,
+  );
+  assert.doesNotThrow(() =>
+    chart(series(), h(Chart.Tooltip, { itemKey: (entry) => entry.payload.id })),
+  );
+  assert.doesNotThrow(() => chart(h(Fragment, null, series(), h(Chart.Tooltip))));
+  assert.doesNotThrow(() =>
+    chart(
+      h(Chart.PieSeries, {
+        data: [{ id: "beta", value: 0 }],
+        categoryKey: (row) => row.id,
+        dataKey: "value",
+      }),
+      h(Chart.Tooltip),
+    ),
+  );
 });
 
 test("Sankey labels use stable identity, totals, explicit contents and bounded inside text", () => {
