@@ -82,6 +82,10 @@ try {
       await code.evaluate((n) => {
         n.scrollTop = n.scrollHeight;
       });
+      // Let the programmatic boundary settle before testing native scroll chaining.
+      await page.waitForTimeout(200);
+      await page.mouse.wheel(0, 400);
+      await page.waitForTimeout(350);
       await page.mouse.wheel(0, 400);
       await page.waitForTimeout(350);
       assert.ok(await page.evaluate((prior) => scrollY > prior + 100, before));
