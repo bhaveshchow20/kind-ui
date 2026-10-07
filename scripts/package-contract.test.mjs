@@ -87,6 +87,9 @@ test("rejects missing or incorrect source metadata", () => {
     /provenance/,
   );
   assert.throws(() => assertPackageContract({ ...manifest, description: "" }, files), /purpose/);
+  assert.throws(() =>
+    assertPackageContract({ ...manifest, homepage: "https://example.com/preview" }, files),
+  );
 });
 test("rejects CSS that bundlers may drop or consumers cannot resolve", () => {
   assert.throws(

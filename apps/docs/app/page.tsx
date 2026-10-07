@@ -1,5 +1,8 @@
 import { renderDoc } from "@/components/doc-page";
-export const metadata = { title: "Introduction" };
+import { docMetadata } from "@/lib/metadata";
+export function generateMetadata() {
+  return docMetadata();
+}
 export default function Page() {
   return renderDoc();
 }

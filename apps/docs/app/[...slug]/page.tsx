@@ -1,12 +1,7 @@
 import { notFound } from "next/navigation";
 import { renderDoc } from "@/components/doc-page";
-import {
-  basePath,
-  canonicalDocSlugs,
-  docSlugs,
-  legacyDocSlugs,
-  publicPath,
-} from "@/lib/routing.mjs";
+import { docMetadata } from "@/lib/metadata";
+import { basePath, canonicalDocSlugs, docSlugs, legacyDocSlugs } from "@/lib/routing.mjs";
 import { source } from "@/lib/source";
 export function generateStaticParams() {
   return [...source.generateParams(), ...legacyDocSlugs.map((slug) => ({ slug }))]
@@ -18,11 +13,7 @@ export function generateStaticParams() {
 export const dynamicParams = false;
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }) {
   const slug = canonicalDocSlugs(docSlugs((await params).slug));
-  const page = slug ? source.getPage(slug) : undefined;
-  return {
-    title: page?.data.title,
-    alternates: page ? { canonical: publicPath(page.url) } : undefined,
-  };
+  return slug ? docMetadata(slug) : {};
 }
 export default async function Page({ params }: { params: Promise<{ slug: string[] }> }) {
   const slug = canonicalDocSlugs(docSlugs((await params).slug));
