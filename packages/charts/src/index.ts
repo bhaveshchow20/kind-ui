@@ -205,6 +205,7 @@ export {
   SankeyNode,
   type SankeyNodeProps,
 } from "./sankey-marks.js";
+export { SankeyNodeLabel, type SankeyNodeLabelProps } from "./sankey-node-label.js";
 export { SankeyTable, type SankeyTableProps } from "./sankey-table.js";
 export { type ScatterAnimation, ScatterChart, type ScatterChartProps } from "./scatter-chart.js";
 export type { ScatterMaterial } from "./scatter-material.js";

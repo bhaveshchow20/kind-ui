@@ -108,6 +108,9 @@ for (const material of ["plain", "paper", "clay", "glow"] satisfies Chart.BarMat
 // @ts-expect-error Bar finishes use the established material vocabulary.
 void (<Chart.BarSeries dataKey="count" material="metal" />);
 const categoryKey: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
+void (<Chart.PieChart defaultPinnedCategory="beta" />);
+// @ts-expect-error Initial identity is a category string, never a row index.
+void (<Chart.PieChart defaultPinnedCategory={1} />);
 void (<Chart.Tooltip itemKey={categoryKey} />);
 const categoryContent: Chart.TooltipContentProps = {
   tooltip: {
@@ -269,3 +272,55 @@ const invalidDash = <Chart.LineSeries dataKey="count" dashAnimation={{ direction
 // @ts-expect-error Area perimeter animation is not the open-line contract.
 const invalidAreaDash = <Chart.AreaSeries dataKey="count" dashAnimation={{}} />;
 void [dashedLine, invalidDash, invalidAreaDash];
+
+const selectiveGlow = {
+  data: [{ id: "design", value: 10 }],
+  dataKey: "value",
+  categoryKey: "id",
+  glowCategories: ["design", "removed"] as const,
+  material: "paper",
+} satisfies Chart.PieSeriesProps<{ id: string; value: number }>;
+const accessorGlow = {
+  ...selectiveGlow,
+  categoryKey: (row: { id: string; value: number }) => row.id,
+} satisfies Chart.PieSeriesProps<{ id: string; value: number }>;
+void (<Chart.PieSeries {...selectiveGlow} />);
+void (<Chart.PieSeries {...accessorGlow} />);
+// @ts-expect-error Category identity is a string, not a positional index.
+void (<Chart.PieSeries dataKey="value" glowCategories={[0]} />);
+
+const sankeyIconConfig = {
+  source: { label: "Legend source", color: "red", icon: <path d="M0 0h24v24z" /> },
+  sink: { label: "Legend sink", color: "blue" },
+} satisfies Chart.SankeyNodeConfig;
+const sankeyIconData: Chart.SankeyFlowData = {
+  nodes: [
+    { id: "source", name: "Source" },
+    { id: "sink", name: "Sink" },
+  ],
+  links: [{ id: "flow", source: "source", target: "sink", value: 7 }],
+};
+const sankeyIconConsumer = (
+  <Chart.SankeyChart
+    data={sankeyIconData}
+    nodeConfig={sankeyIconConfig}
+    node={(node) => (
+      <g>
+        <Chart.SankeyNode {...node} />
+        <Chart.SankeyNodeLabel
+          node={node}
+          data={sankeyIconData}
+          nodeConfig={sankeyIconConfig}
+          iconSize={18}
+          iconGap={3}
+          position="outside"
+          showValues
+          ref={createRef<SVGTextElement>()}
+        >
+          <tspan>Custom name</tspan>
+        </Chart.SankeyNodeLabel>
+      </g>
+    )}
+  />
+);
+void sankeyIconConsumer;
