@@ -147,6 +147,8 @@ test("direct and namespace imports expose the same public components", () => {
     "computeWaterfallData",
     "createHeatmapModel",
     "createHeatmapScale",
+    "createPercentStack",
+    "formatPercent",
     "getRelativeCoordinate",
     "prepareSankeyData",
     "useChartHeight",
