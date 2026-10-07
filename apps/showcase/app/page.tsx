@@ -1,7 +1,18 @@
 "use client";
 
 import * as Chart from "@kind-ui/charts";
-import { ArrowUpRight, Check, Copy, Maximize2, Monitor, Moon, Search, Sun } from "lucide-react";
+import {
+  ArrowUpRight,
+  BookOpen,
+  Check,
+  Copy,
+  Maximize2,
+  Monitor,
+  Moon,
+  Search,
+  Smartphone,
+  Sun,
+} from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -445,6 +456,38 @@ function GitHubMark() {
   );
 }
 
+const appearanceOptions = [
+  { value: "light", label: "Light", Icon: Sun },
+  { value: "dark", label: "Dark", Icon: Moon },
+  { value: "system", label: "System", Icon: Monitor },
+] as const;
+
+const mobileAppearanceOptions = appearanceOptions.map((option) => ({
+  ...option,
+  Icon: option.value === "system" ? Smartphone : option.Icon,
+}));
+
+function MobileThemeSwitcher({ enabled }: { enabled: boolean }) {
+  const { theme, setTheme } = useTheme();
+  const selected = enabled ? (theme ?? "system") : "system";
+  const index = mobileAppearanceOptions.findIndex((option) => option.value === selected);
+  const current = mobileAppearanceOptions[index < 0 ? 2 : index];
+  const next = mobileAppearanceOptions[(index + 1) % mobileAppearanceOptions.length];
+  const Icon = current.Icon;
+  return (
+    <button
+      className="mobile-theme"
+      type="button"
+      disabled={!enabled}
+      onClick={() => setTheme(next.value)}
+      aria-label={`Appearance: ${current.label}. Switch to ${next.label}`}
+      title={`Appearance: ${current.label}. Switch to ${next.label}`}
+    >
+      <Icon size={17} aria-hidden="true" />
+    </button>
+  );
+}
+
 function ThemeSwitcher({ enabled }: { enabled: boolean }) {
   const { theme, setTheme } = useTheme();
   const id = useId();
@@ -457,13 +500,7 @@ function ThemeSwitcher({ enabled }: { enabled: boolean }) {
       onValueChange={setTheme}
       disabled={!enabled}
     >
-      {(
-        [
-          { value: "light", label: "Light", Icon: Sun },
-          { value: "dark", label: "Dark", Icon: Moon },
-          { value: "system", label: "System", Icon: Monitor },
-        ] as const
-      ).map(({ value, label, Icon }) => (
+      {appearanceOptions.map(({ value, label, Icon }) => (
         <RadioGroupItem asChild key={value} value={value} aria-label={label}>
           <button type="button" className="nav-theme-option" title={label}>
             {(enabled ? (theme ?? "system") : "system") === value && (
@@ -736,11 +773,10 @@ function entryCode(entry: GalleryEntry, options: DemoOptions, animate: boolean) 
   return newCode(findRecipe(newRecipes, entry.id), "plain", colorsFor(entry), animate, options);
 }
 export default function Page() {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const dark = mounted && resolvedTheme === "dark";
   useEffect(() => {
     document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
       meta.setAttribute("content", resolvedTheme === "dark" ? "#000000" : "#ffffff");
@@ -823,16 +859,18 @@ export default function Page() {
           </nav>
           <div className="kind-nav-actions">
             <DocumentationSearch />
-            <ThemeSwitcher enabled={mounted} />
-            <button
-              className="mobile-theme"
-              type="button"
-              disabled={!mounted}
-              onClick={() => setTheme(dark ? "light" : "dark")}
-              aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+            <a
+              className="mobile-docs"
+              href={siteLinks.docs}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Documentation"
+              title="Documentation"
             >
-              {dark ? <Sun size={17} /> : <Moon size={17} />}
-            </button>
+              <BookOpen size={17} aria-hidden="true" />
+            </a>
+            <ThemeSwitcher enabled={mounted} />
+            <MobileThemeSwitcher enabled={mounted} />
             <a
               className="kind-github"
               href={repo}

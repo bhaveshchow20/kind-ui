@@ -112,6 +112,7 @@ button:disabled {
   background: var(--muted);
 }
 .nav-search,
+.mobile-docs,
 .nav-theme-switcher {
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -152,6 +153,7 @@ button:disabled {
   border-radius: inherit;
   background: var(--muted);
 }
+.mobile-docs,
 .mobile-theme {
   display: none;
 }
@@ -165,7 +167,7 @@ button:disabled {
   line-height: 1.02;
   font-weight: 500;
   letter-spacing: -0.065em;
-  text-wrap: balance;
+  text-wrap: wrap;
 }
 .hero-install {
   width: min(380px, 100%);
@@ -298,7 +300,8 @@ button:disabled {
 }
 .chart-card {
   width: 100%;
-  height: 380px;
+  height: auto;
+  min-height: 380px;
   padding: 24px;
   border: 1px solid var(--border);
   border-radius: 22px;
@@ -500,7 +503,8 @@ button:disabled {
 }
 .playground-preview .chart-card {
   max-width: 650px;
-  height: 400px;
+  height: auto;
+  min-height: 400px;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -739,6 +743,40 @@ button:disabled {
 .hero-sentence {
   display: block;
 }
+.brand-pill-slot {
+  display: inline-grid;
+  vertical-align: -0.12em;
+  align-items: center;
+  justify-items: center;
+}
+/* Reserve the longest label in text flow; the visible button remains snug. */
+.brand-pill-reserve {
+  grid-area: 1 / 1;
+  display: grid;
+  visibility: hidden;
+  pointer-events: none;
+  padding-inline: 1px;
+}
+.brand-pill-reserve-option,
+.brand-pill-visible {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+.brand-pill-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22em;
+  white-space: nowrap;
+  height: 1.4em;
+  padding: 0 0.42em;
+  border: 1px solid transparent;
+  font-size: 0.88em;
+  font-weight: 500;
+  letter-spacing: -0.05em;
+}
 .kind-hero h1 {
   font-size: clamp(32px, 4.2vw, 58px);
   line-height: 1.5;
@@ -746,9 +784,9 @@ button:disabled {
   letter-spacing: -0.055em;
 }
 .brand-pill {
+  grid-area: 1 / 1;
   position: relative;
   display: inline-flex;
-  vertical-align: -0.12em;
   align-items: center;
   justify-content: center;
   height: 1.4em;
@@ -792,6 +830,12 @@ button:disabled {
   height: 0.74em;
   flex-shrink: 0;
 }
+.brand-pill-option svg,
+.brand-pill-option img {
+  width: 0.74em;
+  height: 0.74em;
+  flex-shrink: 0;
+}
 .brand-react {
   color: #00a7d8;
 }
@@ -811,11 +855,12 @@ button:disabled {
 }
 
 .kind-hero-copy {
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   margin: auto;
 }
 .kind-github,
+.mobile-docs,
 .nav-search,
 .nav-theme-switcher,
 .mobile-theme,
@@ -830,6 +875,7 @@ button:disabled {
   backdrop-filter: blur(16px);
 }
 .dark .kind-github,
+.dark .mobile-docs,
 .dark .nav-search,
 .dark .nav-theme-switcher,
 .dark .install-panel,
@@ -940,6 +986,7 @@ button:disabled {
   .nav-theme-switcher {
     display: none;
   }
+  .mobile-docs,
   .mobile-theme {
     display: inline-flex;
     align-items: center;
@@ -960,8 +1007,16 @@ button:disabled {
     overscroll-behavior: contain;
   }
   .playground-main {
-    height: 440px;
+    height: auto;
+    min-height: 440px;
     padding: 16px;
+  }
+  .playground-main > [data-slot="tabs"] {
+    height: auto;
+  }
+  .playground-source {
+    height: 360px;
+    flex: 0 0 auto;
   }
   .playground-sidebar {
     padding: 24px;
@@ -970,7 +1025,7 @@ button:disabled {
   }
   .playground-preview .chart-card {
     padding: 12px;
-    height: 350px;
+    min-height: 350px;
   }
   .playground-preview .chart-canvas {
     height: 270px;
@@ -1005,6 +1060,7 @@ button:disabled {
   .nav-theme-switcher {
     display: none;
   }
+  .mobile-docs,
   .mobile-theme {
     display: inline-flex;
     align-items: center;
@@ -1032,7 +1088,7 @@ button:disabled {
     grid-column: auto;
   }
   .chart-card {
-    height: 360px;
+    min-height: 360px;
     padding: 20px;
   }
   .playground-main {
@@ -1128,17 +1184,22 @@ button:disabled {
 .chart-card > .chart-root {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
 }
 .chart-card > .chart-root > .chart-canvas {
-  flex: 1;
-  min-height: 0;
-  height: auto;
+  flex: 0 0 auto;
 }
 .chart-root [data-kind-ui="chart-legend"] {
   flex-shrink: 0;
   max-width: 100%;
+}
+.chart-root [data-kind-ui="chart-legend-item"],
+.chart-root [data-kind-ui="chart-legend-button"] {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 @media (max-width: 640px) {
   .wordmark {
@@ -1178,4 +1239,30 @@ button:disabled {
   color: var(--kind-ui-chart-popover-foreground);
   box-shadow: 0 4px 16px #00000012;
   backdrop-filter: blur(16px);
+}
+
+@media (max-width: 360px) {
+  .kind-nav {
+    gap: 8px;
+  }
+  .wordmark {
+    font-size: 20px;
+    gap: 4px;
+  }
+  .brand-flower {
+    font-size: 18px;
+  }
+  .kind-nav-actions {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .nav-search,
+  .mobile-docs,
+  .mobile-theme,
+  .kind-github {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    justify-content: center;
+  }
 }

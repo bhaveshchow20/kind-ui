@@ -24,10 +24,13 @@ From this directory:
 npm run typecheck
 npm run build
 npm run check:snippets
+npm exec playwright install -- chromium webkit
 npm run test:browser
 ```
 
 Run browser checks after the production build, using the same environment. The test server binds to `127.0.0.1:7273`. The maintained tests cover routes, generated public consumers, narrow layouts, themes, keyboard interactions, legends, motion and reduced-motion behavior. Report the actual run results and exact installed artifact.
+
+WebKit checks cover mobile card growth and animated headline stability across widths from 320px to 2560px, using mobile and desktop Safari profiles. Install WebKit alongside Chromium for the full suite.
 
 ## Preview and public mounts
 
