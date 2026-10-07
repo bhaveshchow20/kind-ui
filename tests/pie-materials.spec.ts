@@ -848,6 +848,7 @@ for (const accessor of [false, true]) {
     // Real pointer/keyboard inspection remains native and does not select glow IDs.
     await first.locator('[data-category="beta"]').first().click();
     await expect(page.getByLabel("Glow event")).toHaveText("beta");
+    // End native pointer inspection before checking keyboard navigation.
     await page.mouse.move(0, 0, { steps: 10 });
     await first.focus();
     await page.keyboard.press("ArrowRight");
