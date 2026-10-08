@@ -32,3 +32,33 @@ export const documentationCharts = [
   ["Histogram", "histogram"],
   ["Box Plot", "box-plot"],
 ].map(([name, slug]) => ({ name, href: `${siteLinks.docs}components/${slug}/` }));
+
+const chartGuides = documentationCharts
+  .filter((chart, index, charts) => charts.findIndex(({ href }) => href === chart.href) === index)
+  .map(({ name, href }) => ({ name: `${name} charts`, href }));
+
+export const footerLinkGroups = [
+  { title: "Charts", links: chartGuides.slice(0, 7) },
+  { title: "More charts", links: chartGuides.slice(7) },
+  {
+    title: "Guides",
+    links: [
+      { name: "Docs", href: siteLinks.docs },
+      { name: "Installation", href: `${siteLinks.docs}installation/` },
+      { name: "Identity and colors", href: `${siteLinks.docs}concepts/identity/` },
+      { name: "Materials", href: `${siteLinks.docs}guides/materials/` },
+      { name: "Motion", href: `${siteLinks.docs}guides/motion/` },
+      { name: "Accessibility", href: `${siteLinks.docs}guides/accessibility/` },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { name: "GitHub", href: siteLinks.repository },
+      { name: "npm package", href: "https://www.npmjs.com/package/@kind-ui/charts" },
+      { name: "AI agents", href: `${siteLinks.docs}agents/consumer/` },
+      { name: "llms.txt", href: `${siteLinks.docs}llms.txt` },
+      { name: "MIT license", href: `${siteLinks.repository}/blob/main/LICENSE` },
+    ],
+  },
+];

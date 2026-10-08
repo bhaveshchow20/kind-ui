@@ -37,7 +37,13 @@ import { activityCode } from "@/lib/activity-recipe";
 import { advancedCode } from "@/lib/advanced-chart-recipes";
 import { type DemoOptions, demoDefaults } from "@/lib/demo-options";
 import { newCode, newRecipes } from "@/lib/new-chart-recipes";
-import { docsAccessNote, documentationCharts, showcaseAsset, siteLinks } from "@/lib/site-links";
+import {
+  docsAccessNote,
+  documentationCharts,
+  footerLinkGroups,
+  showcaseAsset,
+  siteLinks,
+} from "@/lib/site-links";
 import { useCopyCode } from "@/lib/use-copy-code";
 import { chartSourceData } from "../../seo.mjs";
 
@@ -1012,7 +1018,7 @@ export default function Page() {
           </Dialog>
         </section>
       </main>
-      <footer className="cloud-footer kind-cloud-footer">
+      <footer id="footer" className="cloud-footer kind-cloud-footer">
         <img
           className="footer-art"
           src={showcaseAsset("/footer-clouds.webp")}
@@ -1023,36 +1029,50 @@ export default function Page() {
         />
         <div className="footer-bloom" aria-hidden="true" />
         <div className="footer-inner">
-          <p className="footer-wordmark" role="img" aria-label="Kind UI">
-            <KindLogo />
-          </p>
-          <nav className="chart-guide-links" aria-label="Chart documentation">
-            {documentationCharts
-              .filter(
-                (chart, index, charts) =>
-                  charts.findIndex(({ href }) => href === chart.href) === index,
-              )
-              .map(({ name, href }) => (
-                <a key={href} href={href}>
-                  {name} charts
+          <div className="footer-directory">
+            <div className="footer-brand">
+              <a className="footer-wordmark" href={siteLinks.home} aria-label="Kind UI home">
+                <KindLogo />
+              </a>
+              <p className="footer-description">
+                Composable React charts built on Recharts and Motion. Your data, your styling, your
+                interactions.
+              </p>
+              <p className="footer-created">
+                Created by{" "}
+                <a href={siteLinks.creator} target="_blank" rel="noreferrer">
+                  Bhavesh Chowdhury
                 </a>
+              </p>
+              <a
+                className="footer-social"
+                href={siteLinks.creator}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Follow on X <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            <nav className="footer-links" aria-label="Footer directory">
+              {footerLinkGroups.map(({ title, links }) => (
+                <section className="footer-link-group" key={title} aria-label={title}>
+                  <h2>{title}</h2>
+                  <ul>
+                    {links.map(({ name, href }) => (
+                      <li key={href}>
+                        <a href={href}>{name}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               ))}
-          </nav>
-          <div className="footer-bottom">
-            <a className="footer-credit" href={siteLinks.creator} target="_blank" rel="noreferrer">
-              By Bhavesh Chowdhury
-            </a>
-            <nav aria-label="Footer">
-              <a href={siteLinks.docs} target="_blank" rel="noreferrer">
-                Docs
-              </a>
-              <a href={`${repo}/blob/main/LICENSE`} target="_blank" rel="noreferrer">
-                MIT license
-              </a>
-              <a className="footer-top" href="#top">
-                Back to top ↑
-              </a>
             </nav>
+          </div>
+          <div className="footer-bottom">
+            <span>MIT © 2026 Bhavesh Chowdhury</span>
+            <a className="footer-top" href="#top">
+              Back to top ↑
+            </a>
           </div>
         </div>
       </footer>
