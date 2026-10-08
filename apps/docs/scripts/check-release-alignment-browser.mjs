@@ -8,7 +8,9 @@ const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:7175";
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const output = `artifacts/release-alignment${basePath ? "-prefix" : "-default"}`;
 mkdirSync(output, { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const errors = [];
 const failedRequests = [];
 const checks = [];
@@ -254,11 +256,11 @@ try {
   const provenance = await context.request.get(origin + publicPath("/package-provenance.json"));
   assert.equal(provenance.status(), 404, "Internal provenance must not be public");
   const download = await context.request.get(
-    origin + publicPath("/examples/package/kind-ui-charts-0.3.0.tgz"),
+    origin + publicPath("/examples/package/kind-ui-charts-0.4.0.tgz"),
   );
   assert.equal(download.status(), 404, "Local validation archive must not be public");
   assert.equal(
-    createHash("sha256").update(readFileSync("vendor/kind-ui-charts-0.3.0.tgz")).digest("hex"),
+    createHash("sha256").update(readFileSync("vendor/kind-ui-charts-0.4.0.tgz")).digest("hex"),
     JSON.parse(readFileSync("vendor/provenance.json", "utf8")).sha256,
   );
   assert.deepEqual(errors, []);

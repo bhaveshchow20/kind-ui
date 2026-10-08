@@ -388,6 +388,19 @@ for (const family of ["histogram", "waterfall", "box-plot"]) {
         );
     const baseline = await geometry();
     expect(baseline.length).toBeGreaterThan(0);
+    const mark = first
+      .locator(
+        '[data-kind-ui="histogram-bin"], .recharts-bar-rectangle, [data-kind-ui="box-plot-mark"]',
+      )
+      .first();
+    await mark.click({ force: true });
+    const originalPayload = await plot.locator("output").textContent();
+    expect(originalPayload).toBeTruthy();
+    const raw = JSON.parse(originalPayload ?? "{}");
+    if (family === "histogram") expect(raw).toMatchObject({ lower: 0, upper: 10, count: 8 });
+    if (family === "waterfall") expect(raw).toMatchObject({ id: "start", value: 100 });
+    if (family === "box-plot")
+      expect(raw).toMatchObject({ category: "A", first: { median: 20 }, second: { median: 70 } });
     if (family === "box-plot") await plot.locator('[data-legend-key="first"]').click();
     const remaining = plot.locator(
       `[data-legend-key="${family === "box-plot" ? "second" : "first"}"]`,
@@ -415,6 +428,8 @@ for (const family of ["histogram", "waterfall", "box-plot"]) {
       await plot.getByRole("button", { name: "External hide", exact: true }).click();
       await expect(paint).toHaveCSS("opacity", "1");
       expect(await geometry()).toEqual(baseline);
+      await mark.click({ force: true });
+      expect(await plot.locator("output").textContent()).toEqual(originalPayload);
     }
     await plot.getByRole("button", { name: "Change mode" }).click();
     await remaining.focus();

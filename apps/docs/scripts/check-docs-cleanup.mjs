@@ -7,7 +7,9 @@ import { families } from "../examples/catalog.mjs";
 import { publicPath } from "../lib/routing.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const evidence = [];
 const errors = [];
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));

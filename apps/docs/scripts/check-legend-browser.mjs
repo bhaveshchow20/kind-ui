@@ -25,7 +25,9 @@ const marks = {
   waterfall: ".recharts-bar-rectangle",
 };
 const evidence = { variants: [], loading: [], staticKeys: [], errors: [] };
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 let fixture;
 try {
   const context = await browser.newContext({
@@ -329,7 +331,7 @@ async function startConsumer() {
   for (const [name, body] of Object.entries(verificationFiles(first))) write(name, body);
   if (first.localPackage) {
     mkdirSync(path.join(root, "vendor"), { recursive: true });
-    cpSync("vendor/kind-ui-charts-0.3.0.tgz", path.join(root, "vendor/kind-ui-charts-0.3.0.tgz"));
+    cpSync("vendor/kind-ui-charts-0.4.0.tgz", path.join(root, "vendor/kind-ui-charts-0.4.0.tgz"));
   }
   const imports = [];
   const examples = [];

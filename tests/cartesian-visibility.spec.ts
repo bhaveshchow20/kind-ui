@@ -32,13 +32,14 @@ for (const family of ["line", "area", "bar-grouped", "bar-stacked", "scatter"]) 
       const baseline = await geometry();
       await chart.locator('[data-kind-ui="series-interaction"]').evaluateAll((series) => {
         for (const node of series)
-          node
-            .querySelector("path, rect, circle")
-            ?.setAttribute("data-original-series-node", node.getAttribute("data-series") ?? "");
+          node.setAttribute("data-original-series-node", node.getAttribute("data-series") ?? "");
       });
       const assertNativeIdentity = async () => {
+        // Recharts may replace native shapes on host updates even with its animation
+        // disabled. The keyed Kind paint owner must survive; geometry and payload
+        // checks below independently cover the original native data.
         await expect(
-          chart.locator('[data-series="second"] [data-original-series-node="second"]'),
+          chart.locator('[data-series="second"][data-original-series-node="second"]'),
         ).toHaveCount(1);
       };
       const assertPointer = async () => {

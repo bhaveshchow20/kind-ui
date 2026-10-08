@@ -28,7 +28,9 @@ const unpublishedFamilies = [
   "heatmap",
 ].filter((id) => !familyIds.includes(id));
 mkdirSync("artifacts", { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 try {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1080 },
