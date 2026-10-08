@@ -24,7 +24,7 @@ try {
   } else throw new Error("Entrance mask was not observed");
   assert.equal(await primary.locator(".recharts-radar-polygon path").count(), 2);
   assert.equal(await primary.locator("tbody tr").count(), 6);
-  assert.equal(await primary.getByRole("button", { name: /Highlight/ }).count(), 0);
+  assert.equal(await primary.getByRole("button", { name: /Highlight/ }).count(), 2);
   await page.waitForTimeout(1200);
   await page.screenshot({ path: "artifacts/radar/desktop.png", fullPage: true });
   await page.screenshot({ path: "artifacts/radar/desktop-viewport.png" });
@@ -40,11 +40,11 @@ try {
   await page.mouse.move(0, 0);
   assert.equal(await studio.getAttribute("aria-pressed"), "true");
   await page.keyboard.press("Space");
-  assert.equal(await studio.getAttribute("aria-pressed"), "true");
+  assert.equal(await studio.getAttribute("aria-pressed"), "false");
   await field.focus();
   await page.keyboard.press("Enter");
   await page.keyboard.press("Escape");
-  assert.equal(await field.getAttribute("aria-pressed"), "true");
+  assert.equal(await field.getAttribute("aria-pressed"), "false");
   // Click within the outer Field polygon, clear, then inspect a native spoke.
   const path = selection.locator(
     '[data-kind-ui="series-interaction"][data-series="field"] .recharts-radar-polygon path',

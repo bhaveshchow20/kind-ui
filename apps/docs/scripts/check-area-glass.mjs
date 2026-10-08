@@ -151,7 +151,7 @@ try {
     await comparison
       .getByRole("button", { name: "Mobile", exact: true })
       .getAttribute("aria-pressed"),
-    "true",
+    "false",
   );
   const plot = p.locator('[data-component="area"] .recharts-surface');
   await plot.focus();

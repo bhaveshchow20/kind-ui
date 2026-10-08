@@ -61,6 +61,7 @@ test("series visibility, native hide and keyboard tooltip retain registered iden
   for (const kind of ["radar", "radial"]) {
     const host = page.locator(`[data-host="${kind}"]`);
     const chart = host.locator('svg[role="application"]');
+    const originalPaths = await paths(host, kind === "radar" ? radarPath : radialPath);
     await chart.focus();
     await page.keyboard.press("ArrowRight");
     await expect(host.locator('[data-kind-ui="chart-tooltip"]')).toBeVisible();
@@ -79,9 +80,9 @@ test("series visibility, native hide and keyboard tooltip retain registered iden
       host.locator(kind === "radar" ? ".recharts-radar" : radialPath),
     );
     await page.getByRole("button", { name: "External visibility", exact: true }).click();
-    await expect(host.locator(kind === "radar" ? ".recharts-radar" : radialPath)).toHaveCount(
-      kind === "radar" ? 2 : 6,
-    );
+    await expect
+      .poll(() => paths(host, kind === "radar" ? radarPath : radialPath))
+      .toEqual(originalPaths);
     await expectHiddenPaint(host.locator(kind === "radar" ? radarPath : radialPath));
     await page.getByRole("button", { name: "External visibility", exact: true }).click();
     await page.getByRole("button", { name: "Native hide", exact: true }).click();

@@ -113,6 +113,13 @@ export function visibilityLabelChildren(
   seriesKey?: string,
   categoryKeys?: readonly string[],
 ): ReactNode {
+  const hasLabels = (nodes: ReactNode): boolean =>
+    Children.toArray(nodes).some(
+      (child) =>
+        isValidElement<{ children?: ReactNode }>(child) &&
+        (child.type === LabelList || (child.type === Fragment && hasLabels(child.props.children))),
+    );
+  if (!hasLabels(children)) return children;
   return Children.map(children, (child, childIndex) => {
     if (!isValidElement<ComponentProps<typeof LabelList> & { children?: ReactNode }>(child))
       return child;
