@@ -17,6 +17,11 @@ on:
         required: true
         default: latest
         type: string
+      release_commit:
+        description: Original reviewed version merge SHA for recovery after a release-tooling fix
+        required: false
+        default: ""
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -49,6 +54,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.version }}
           RELEASE_TAG: ${{ inputs.dist_tag }}
+          RELEASE_COMMIT: ${{ inputs.release_commit }}
   validate:
     needs: plan
     if: needs.plan.outputs.validate == 'true'
