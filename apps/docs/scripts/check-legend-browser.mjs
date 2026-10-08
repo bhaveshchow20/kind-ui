@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { stripVTControlCharacters } from "node:util";
 import { chromium, expect } from "@playwright/test";
 import { families, variantDefinitions } from "../examples/catalog.mjs";
 import { verificationFiles } from "./consumer-validation-files.mjs";
@@ -330,8 +331,10 @@ createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictM
       const timer = setTimeout(() => reject(new Error("Legend consumer did not start")), 15000);
       preview.once("error", reject);
       preview.once("exit", (code) => reject(new Error(`Legend consumer exited ${code}`)));
+      let startupOutput = "";
       preview.stdout.on("data", (chunk) => {
-        if (chunk.toString().includes(`:${port}`)) {
+        startupOutput += chunk.toString();
+        if (stripVTControlCharacters(startupOutput).includes(`:${port}`)) {
           clearTimeout(timer);
           resolve();
         }
