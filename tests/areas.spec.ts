@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectDimmedPaint } from "./interaction-paint";
 
 const variants = [
   ["Smooth", "Monthly visitors"],
@@ -144,10 +145,11 @@ test("area defaults stay complete and missing gaps, zero, percentages, and contr
   await expect(areas).toHaveCount(2);
   const mobile = interactive.getByRole("button", { name: "Mobile", exact: true });
   await mobile.click();
-  await expect(mobile).toHaveAttribute("aria-pressed", "false");
-  await expect(areas).toHaveCount(1);
+  await expect(mobile).toHaveAttribute("aria-pressed", "true");
+  await expect(areas).toHaveCount(2);
+  await expectDimmedPaint(areas.first());
   await interactive.getByRole("application").focus();
-  await expect(page.getByRole("status")).not.toContainText("Mobile");
+  await expect(page.getByRole("status")).toContainText("Mobile");
   await interactive.getByText("View data", { exact: true }).click();
   await expect(interactive.getByRole("row", { name: "Feb 305 visits" })).toBeVisible();
   await page.getByLabel("Empty data").check();

@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 
 const url = "http://127.0.0.1:4186/combo.html";
 test("packed Combo matches native mixed geometry, axes and signed stacks including zero/missing", async ({
@@ -43,7 +44,8 @@ test("shared tooltip, keyboard selection, ref, handlers and controlled legend", 
   await page.keyboard.press("ArrowRight");
   await expect(managed.locator('[data-kind-ui="chart-tooltip"]')).toHaveCount(0);
   await managed.getByRole("button", { name: "Area", exact: true }).click();
-  await expect(managed.locator(".recharts-area-area")).toHaveCount(0);
+  await expect(managed.locator(".recharts-area-area")).toHaveCount(1);
+  await expectHiddenPaint(managed.locator(".recharts-area-area"));
   await expect(managed.getByRole("button", { name: "Area", exact: true })).toHaveAttribute(
     "aria-pressed",
     "false",
@@ -51,7 +53,7 @@ test("shared tooltip, keyboard selection, ref, handlers and controlled legend", 
   await chart.hover({ position: { x: 120, y: 80 } });
   await expect.poll(() => page.getByLabel("Events").textContent()).not.toBe("0");
   await expect(page.getByLabel("Ref")).toHaveText("svg");
-  await expect(managed.locator('[data-kind-ui="chart-tooltip-item"]')).toHaveCount(3);
+  await expect(managed.locator('[data-kind-ui="chart-tooltip-item"]')).toHaveCount(4);
 });
 
 for (const trigger of [

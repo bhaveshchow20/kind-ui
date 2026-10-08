@@ -151,7 +151,10 @@ export function HistogramSeries({
       yAxisId={0}
       minPointSize={0}
       shape={renderShape}
-      activeBar={renderShape}
+      // Keep the corrected quantitative bin in its series paint owner during
+      // inspection. Native activeBar portals escape that owner and replace the
+      // hovered hit target before its click callback can run.
+      activeBar={false}
     />
   );
 }

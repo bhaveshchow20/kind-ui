@@ -94,7 +94,7 @@ test("packed composed legend: controlled keyboard toggles and icon fallback reta
   await expect(completed).toBeFocused();
   await expect(completed).toHaveAttribute("aria-pressed", "false");
   await explore(page);
-  await expect(page.locator(`${tipSelector} [data-series="count"]`)).toHaveCount(0);
+  await expect(page.locator(`${tipSelector} [data-series="count"]`)).toHaveCount(1);
   await expectLastVisibleGuard(
     page.getByRole("button", { name: "Review Shown", exact: true }),
     page.locator(".recharts-area-area"),
@@ -125,7 +125,7 @@ test("packed custom content and responsive bounds survive options, hiding and mo
   await expect(page.locator(tipSelector)).toHaveCount(0);
   await page.getByRole("button", { name: "Completed", exact: true }).click();
   await firstRow(page);
-  await expect(custom).not.toContainText("count:");
+  await expect(custom).toContainText("count:");
   await page.getByLabel("Custom native content").uncheck();
   await page.getByLabel("Hide indicator", { exact: true }).uncheck();
   await page.getByLabel("Indicator", { exact: true }).selectOption("dashed");
@@ -173,11 +173,11 @@ test("packed category itemKey differs from native dataKey: icons, zero, visibili
   await expect(tip).toContainText("0 category units");
   await page.getByRole("button", { name: "Delivery", exact: true }).click();
   await firstRow(page);
-  await expect(tip).toBeHidden();
+  await expect(tip).toContainText("Delivery");
   await page.getByLabel("Custom category content").check();
   await firstRow(page);
   const custom = page.locator('[data-owner="category-content"]');
-  await expect(custom).not.toContainText("delivery:");
+  await expect(custom).toContainText("delivery:");
   await page.keyboard.press("ArrowRight");
   await expect(custom).toBeVisible();
   await expect(custom).toContainText("support: 10");

@@ -2,7 +2,5 @@
   "package": "@kind-ui/charts",
   "version": "0.4.0",
   "previousVersion": "0.3.0",
-  "changesets": [
-    "focus-preserves-chart-data"
-  ]
+  "changesets": ["focus-preserves-chart-data"]
 }

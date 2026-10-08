@@ -22,16 +22,16 @@ test("line recipes preserve missing and zero data, independent state and narrow 
   await expect(comparison.getByRole("status")).toContainText("0 tasks");
   await page.keyboard.press("Escape");
   await expect(comparison.getByRole("status")).not.toBeVisible();
-  await comparison.getByRole("button", { name: "This week" }).click();
-  const previous = comparison.getByRole("button", { name: "Last week" });
+  await comparison.getByRole("button", { name: "This week", exact: true }).click();
+  const previous = comparison.getByRole("button", { name: "Last week", exact: true });
   await previous.focus();
-  await expectLastVisibleGuard(previous, comparison.locator(".recharts-line-curve"), () =>
-    page.keyboard.press("Space"),
-  );
+  await page.keyboard.press("Space");
+  await expect(previous).toHaveAttribute("aria-pressed", "true");
+  await expect(comparison.locator(".recharts-line-curve")).toHaveCount(2);
   await expect(previous).toBeFocused();
   await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(8);
   await expect(comparison.getByRole("row", { name: "Thu 0 tasks 16 tasks" })).toBeVisible();
-  await comparison.getByRole("button", { name: "This week" }).click();
+  await comparison.getByRole("button", { name: "This week", exact: true }).click();
   await page.getByRole("button", { name: "Color", exact: true }).click();
   await page.setViewportSize({ width: 320, height: 800 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
@@ -76,7 +76,7 @@ test("optional motion respects changing preferences and survives interrupted int
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("main")).toHaveAttribute("data-motion", "off");
   await expect(page.locator(".recipe-stack").getByRole("application")).toHaveCount(8);
-  await expect(page.locator(".recipe-stack .recharts-line-curve")).toHaveCount(8);
+  await expect(page.locator(".recipe-stack .recharts-line-curve")).toHaveCount(9);
   await expect(clips).toHaveCount(0);
   for (const line of await page.locator(".recipe-stack .recharts-line").all())
     await expect(line).toHaveCSS("clip-path", "none");
@@ -372,9 +372,9 @@ test("existing line recipes expose materials alongside palette, motion and visib
   await controls.getByRole("button", { name: "Clay", exact: true }).click();
   await expect(comparison.getByRole("button", { name: "Last week", exact: true })).toHaveAttribute(
     "aria-pressed",
-    "false",
+    "true",
   );
-  await expect(filters).toHaveCount(8);
+  await expect(filters).toHaveCount(9);
   await comparison.getByRole("button", { name: "Last week", exact: true }).click();
   await expect(filters).toHaveCount(9);
   await comparison.getByText("View data", { exact: true }).click();

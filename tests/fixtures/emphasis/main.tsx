@@ -124,7 +124,7 @@ function NativeLifetimeCase({ family, active = false }: { family: string; active
                   setChanges((n) => n + 1);
                 },
               }
-            : undefined
+            : { kind: "series", mode: "visibility", eligibleKeys: ["first"] }
         }
       >
         {scatter ? (

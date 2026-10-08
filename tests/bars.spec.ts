@@ -44,7 +44,7 @@ test("first mouse activation stays bounded during motion at the bottom edge", as
   for (const elapsed of [16, 80, 300]) {
     await page.clock.runFor(elapsed);
     const tip = await comparisonTip.boundingBox();
-    expect(tip?.height).toBeGreaterThan(initialHeight);
+    expect(tip?.height).toBe(initialHeight);
     expect((tip?.y ?? 0) + (tip?.height ?? 0)).toBeLessThanOrEqual(
       comparisonBox.y + comparisonBox.height + 1,
     );

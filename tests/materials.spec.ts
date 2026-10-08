@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 
 for (const mode of ["static", "motion"] as const) {
   test(`packed ${mode} materials retain geometry, colors, bounded filters and consumer shapes`, async ({
@@ -128,8 +129,9 @@ for (const mode of ["static", "motion"] as const) {
     await expect(filters).toHaveCount(2);
     await expect(page.locator(".host-shape")).toHaveCount(3);
     await page.getByRole("button", { name: "Hide", exact: true }).click();
-    await expect(curves).toHaveCount(0);
-    await expect(filters).toHaveCount(0);
+    await expect(curves).toHaveCount(6);
+    await expect(filters).toHaveCount(2);
+    for (const index of [0, 2, 4]) await expectHiddenPaint(curves.nth(index));
     expect(errors).toEqual([]);
   });
 }

@@ -151,8 +151,12 @@ test("pie and donut recipes use public controls and expose the zero category", a
   await expect(recipes.getByRole("button", { name: "Unplanned", exact: true })).toHaveCount(2);
   const first = recipes.first();
   await first.getByRole("button", { name: "Delivery", exact: true }).click();
-  await expect(first.getByRole("status")).toContainText("40 visible hours");
-  await expect(recipes.last().getByRole("status")).toContainText("88 visible hours");
+  await expect(first.getByRole("status").filter({ hasText: "allocated hours" })).toContainText(
+    "88 allocated hours",
+  );
+  await expect(
+    recipes.last().getByRole("status").filter({ hasText: "allocated hours" }),
+  ).toContainText("88 allocated hours");
   await page.screenshot({ path: info.outputPath("pie-donut-recipes.png"), fullPage: true });
 });
 
@@ -435,9 +439,13 @@ test("recipes remain continuous before hover, after selection, filter/unhide and
   await expect.poll(() => paint(charts.first())).toEqual(finalPaint);
   await page.getByRole("heading", { name: "Pie & donut", exact: true }).click();
   await first.getByRole("button", { name: "Delivery", exact: true }).click();
-  await expect(first.getByRole("status")).toContainText("40 visible hours");
+  await expect(first.getByRole("status").filter({ hasText: "allocated hours" })).toContainText(
+    "88 allocated hours",
+  );
   await first.getByRole("button", { name: "Delivery", exact: true }).click();
-  await expect(first.getByRole("status")).toContainText("88 visible hours");
+  await expect(first.getByRole("status").filter({ hasText: "allocated hours" })).toContainText(
+    "88 allocated hours",
+  );
   await page.mouse.move(0, 0);
   await charts.first().screenshot({ path: info.outputPath("continuous-pie-closeup.png") });
   await charts.last().screenshot({ path: info.outputPath("continuous-donut-closeup.png") });
@@ -577,9 +585,9 @@ test("initial Pie pin respects visibility, ambiguous identity and native default
   await page.getByRole("button", { name: "Native index", exact: true }).click();
   await expect(tooltip).toContainText("Beta");
   await page.getByRole("button", { name: "Filter pin", exact: true }).click();
-  await expect(tooltip).not.toBeVisible();
+  await expect(tooltip).toContainText("Beta");
   await page.getByRole("button", { name: "Show pin", exact: true }).click();
-  await expect(tooltip).not.toBeVisible();
+  await expect(tooltip).toContainText("Beta");
   await page.getByRole("button", { name: "Remount pin", exact: true }).click();
   await expect(tooltip).toContainText("Beta");
   await page.getByRole("button", { name: "Duplicate pin", exact: true }).click();
@@ -609,7 +617,12 @@ for (const accessor of [false, true]) {
     const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
     await expect(tooltip).toContainText("Beta");
     await expect(tooltip).toContainText("40 seats");
-    await expect(page.locator('[data-kind-ui="pie-sector"][name="alpha"]')).toHaveCount(0);
+    await expect(page.locator('[data-kind-ui="pie-sector"][name="alpha"]')).toHaveCount(1);
+    await expect(
+      page
+        .locator('[data-kind-ui="pie-sector"][name="alpha"]')
+        .locator('xpath=ancestor::*[@aria-hidden="true"][1]'),
+    ).toHaveAttribute("pointer-events", "none");
     await page.getByRole("button", { name: "Reorder pin", exact: true }).click();
     await expect(tooltip).toContainText("Beta");
     await expect(tooltip).toContainText("40 seats");
@@ -651,7 +664,7 @@ for (const accessor of [false, true]) {
       "true",
     );
     await page.getByRole("button", { name: "Hide Alpha", exact: true }).click();
-    await expect(page.locator('[data-kind-ui="pie-sector"]')).toHaveCount(1);
+    await expect(page.locator('[data-kind-ui="pie-sector"]')).toHaveCount(2);
     await expect(
       page
         .getByRole("button", { name: "Highlight beta", exact: true })

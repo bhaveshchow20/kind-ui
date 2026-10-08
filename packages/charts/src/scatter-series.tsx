@@ -88,7 +88,7 @@ export function ScatterSeries({
     }
     return {
       shape: finish(props.shape),
-      // Undefined activeShape must stay undefined: native activation/portal semantics.
+      // Preserve consumer active renderers; the native default is normalized below.
       activeShape:
         props.activeShape === undefined || props.activeShape === false
           ? props.activeShape
@@ -143,14 +143,13 @@ export function ScatterSeries({
             {...props}
             {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
             {...(shapes.shape !== undefined ? { shape: shapes.shape } : {})}
-            {...(shapes.activeShape !== undefined ? { activeShape: shapes.activeShape } : {})}
             id={id}
             // Keep full-data native layout; the interaction layer suppresses hidden paint.
             hide={false}
             {...(props.label !== undefined
               ? { label: visibilityLabel(props.label, hidden, undefined, key) }
               : {})}
-            {...(hidden ? { activeShape: false as const } : {})}
+            activeShape={interaction.inactive ? false : (shapes.activeShape ?? false)}
             {...(color !== undefined ? { fill: color } : {})}
             zIndex={0}
             isAnimationActive={false}

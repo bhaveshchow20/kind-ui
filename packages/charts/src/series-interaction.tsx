@@ -59,7 +59,14 @@ export function useSeriesInteraction<Args extends unknown[]>(
   }, []);
   // Keep the native handler reference stable across visibility/eligibility changes.
   // The latest ref gates activation without replacing the renderer's event adapter.
-  return { onClick: interaction.markActivation ? onClick : handler };
+  return {
+    onClick: interaction.markActivation ? onClick : handler,
+    inactive:
+      hidden ||
+      (interaction.kind === "series" &&
+        interaction.selected !== null &&
+        interaction.selected !== key),
+  };
 }
 
 /** One keyboard target per logical series, within its native ZIndex portal. */
@@ -123,10 +130,18 @@ export function SeriesInteractionLayer({
           : undefined
       }
       onPointerEnter={(event) => {
-        if (event.pointerType !== "touch") emphasis.enter("pointer");
+        if (
+          event.pointerType !== "touch" &&
+          !(event.target as Element).closest('[data-kind-ui="emphasis-mark"]')
+        )
+          emphasis.enter("pointer");
       }}
       onPointerMove={(event) => {
-        if (event.pointerType !== "touch") emphasis.enter("pointer");
+        if (
+          event.pointerType !== "touch" &&
+          !(event.target as Element).closest('[data-kind-ui="emphasis-mark"]')
+        )
+          emphasis.enter("pointer");
       }}
       onPointerLeave={() => emphasis.leave("pointer")}
       onPointerCancel={() => emphasis.leave("pointer")}

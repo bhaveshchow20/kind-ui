@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectDimmedPaint } from "./interaction-paint";
 
 for (const horizontal of [false, true]) {
   test(`patterns preserve ${horizontal ? "horizontal" : "vertical"} areas and mounted IDs`, async ({
@@ -94,7 +95,11 @@ for (const horizontal of [false, true]) {
       }),
     );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
-    await expect(marks).toHaveCount(2);
+    await expect(marks).toHaveCount(4);
+    await expectDimmedPaint(marks.nth(1));
+    expect(await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")))).toEqual(
+      geometry,
+    );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
     await expect(marks).toHaveCount(4);
     expect(errors).toEqual([]);

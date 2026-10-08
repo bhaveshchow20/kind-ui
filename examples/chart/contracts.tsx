@@ -31,6 +31,7 @@ function Fixture({ name, color }: { name: string; color: string }) {
       <output aria-label={`${name} request`}>{request}</output>
       <Root
         config={{ count: { label: `${name} tasks`, color } }}
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["count"] }}
         visibleSeries={visible}
         onVisibleSeriesChange={(next) => {
           setRequest(next.join(","));

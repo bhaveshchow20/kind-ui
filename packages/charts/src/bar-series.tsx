@@ -370,11 +370,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
                   },
                 }
               : {})}
-            {...(effectiveHide
-              ? {
-                  activeBar: false as const,
-                }
-              : {})}
+            activeBar={interaction.inactive ? false : (props.activeBar ?? false)}
             {...(patterned
               ? { fill: `url(#${patternId})` }
               : color !== undefined

@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectDimmedPaint } from "./interaction-paint";
 
 for (const phone of [false, true]) {
   test(`scatter recipes ${phone ? "phone" : "desktop"} show numeric relationships, bubbles and truthful raw size values`, async ({
@@ -39,7 +40,10 @@ for (const phone of [false, true]) {
     await expect(tip).toContainText("84%");
     await page.getByRole("button", { name: "Weekend", exact: true }).click();
     await expect(relationship.locator(".recharts-scatter-symbol path:not(defs path)")).toHaveCount(
-      6,
+      11,
+    );
+    await expectDimmedPaint(
+      relationship.locator(".recharts-scatter-symbol path:not(defs path)").first(),
     );
     await page.getByRole("button", { name: "Weekend", exact: true }).click();
     await page.getByRole("button", { name: "Next week", exact: true }).click();

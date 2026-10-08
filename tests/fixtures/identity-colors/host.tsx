@@ -248,10 +248,7 @@ export function ThemeHost() {
           interaction={{
             kind: "series",
             mode: "visibility",
-            eligibleKeys: Object.keys({
-              ...config,
-              value: { ...config.value, color: solid ? "tomato" : color },
-            }),
+            eligibleKeys: ["value"],
           }}
           key={index}
           config={{ ...config, value: { ...config.value, color: solid ? "tomato" : color } }}

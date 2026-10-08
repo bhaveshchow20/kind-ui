@@ -1,4 +1,5 @@
 import { expect, test } from "./browser.js";
+import { expectHiddenPaint } from "./interaction-paint";
 
 test.beforeEach(async ({ page }) => {
   await page.goto(
@@ -60,7 +61,8 @@ test("pointer to legend and leave restores baseline; clicks retain controlled vi
   await expect(plot.locator(dimmed)).toHaveCount(0);
   await second.click();
   await expect(second).toHaveAttribute("aria-pressed", "false");
-  await expect(plot.locator(marks)).toHaveCount(3);
+  await expect(plot.locator(marks)).toHaveCount(6);
+  await expectHiddenPaint(plot.locator('[data-series="second"] .recharts-rectangle'));
   await expect(plot.locator(dimmed)).toHaveCount(0);
 });
 
@@ -355,7 +357,8 @@ test("incoming Histogram and Box materials retain native paint and controlled vi
   await region.getByRole("button", { name: "Distribution", exact: true }).focus();
   expect(await paint()).toEqual(baseline);
   await region.getByRole("button", { name: "Distribution", exact: true }).click();
-  await expect(region.locator("[data-kind-ui=box-plot-mark]")).toHaveCount(0);
+  await expect(region.locator("[data-kind-ui=box-plot-mark]")).toHaveCount(1);
+  await expectHiddenPaint(region.locator("[data-kind-ui=box-plot-mark]"));
 });
 
 test("native category cursor drives emphasis through plot whitespace and grouped gaps", async ({

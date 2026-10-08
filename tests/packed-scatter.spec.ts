@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 
 const url = "http://127.0.0.1:4185";
 const mark = (id: string) => `[data-point="${id}"]`;
@@ -82,8 +83,9 @@ test("packed scatter equals native geometry, Cells, labels and independent dupli
   await expect(frame).toHaveAttribute("data-ref", "DIV");
   await within(frame, chart);
   await page.getByRole("button", { name: "Beta", exact: true }).click();
-  await expect(chart.locator(mark("other-point"))).toHaveCount(0);
-  await expect(tip).not.toBeVisible();
+  await expect(chart.locator(mark("other-point"))).toHaveCount(1);
+  await expectHiddenPaint(chart.locator(mark("other-point")));
+  await expect(tip).toContainText("other-point");
   await page.getByRole("button", { name: "Beta", exact: true }).click();
   await page.getByRole("button", { name: "Domain", exact: true }).click();
   for (const id of ["signed", "duplicate-a", "other-point"])

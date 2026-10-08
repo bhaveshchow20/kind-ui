@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectDimmedPaint } from "./interaction-paint";
 
 for (const mode of ["static", "motion"] as const) {
   test(`packed area ${mode} materials preserve paths, shape/filter ownership and interactions`, async ({
@@ -36,7 +37,8 @@ for (const mode of ["static", "motion"] as const) {
     await page.getByLabel("Stack", { exact: true }).check();
     await expect(page.locator('[data-kind-ui="area-material"]')).toHaveCount(1);
     await page.getByRole("button", { name: "Other", exact: true }).click();
-    await expect(page.locator('[data-kind-ui="area-material"]')).toHaveCount(0);
+    await expect(page.locator('[data-kind-ui="area-material"]')).toHaveCount(1);
+    await expectDimmedPaint(paths.first());
     await page.getByRole("button", { name: "Other", exact: true }).click();
     await page.getByRole("button", { name: "Resize", exact: true }).click();
     await expect(page.locator('[data-kind-ui="area-material"] filter')).toHaveCount(1);
@@ -133,7 +135,8 @@ for (const mode of ["static", "motion", "reduced"] as const) {
     ).toHaveAttribute("d", /M.*M/);
     const interactive = page.getByRole("region", { name: "Interactive", exact: true });
     await interactive.getByRole("button", { name: "Desktop", exact: true }).click();
-    await expect(interactive.locator('[data-kind-ui="area-material"]')).toHaveCount(1);
+    await expect(interactive.locator('[data-kind-ui="area-material"]')).toHaveCount(2);
+    await expectDimmedPaint(interactive.locator(".recharts-area-area").last());
     await interactive.getByRole("button", { name: "Desktop", exact: true }).click();
     await expect(interactive.locator('[data-kind-ui="area-material"]')).toHaveCount(2);
     if (mode === "reduced") await expect(page.locator("[data-area-reveal]")).toHaveCount(0);

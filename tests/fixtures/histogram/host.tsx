@@ -86,7 +86,8 @@ export function HistogramHost() {
             count: {
               label: measure === "count" ? "Samples" : "Density",
               color: "#187c79",
-              formatValue: (value: number) => `${value} ${measure === "count" ? "samples" : "per ms"}`,
+              formatValue: (value: number) =>
+                `${value} ${measure === "count" ? "samples" : "per ms"}`,
             },
           }),
         }}
