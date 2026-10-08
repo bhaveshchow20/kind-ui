@@ -208,7 +208,8 @@
   :where([data-kind-ui="tooltip-digit"]) {
     position: relative;
     display: inline-block;
-    width: 1ch;
+    /* A font's tabular digits can be narrower than its proportional zero (1ch). */
+    width: max-content;
     height: 1lh;
     overflow: clip;
     flex-shrink: 0;
