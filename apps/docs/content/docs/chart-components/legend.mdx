@@ -5,25 +5,25 @@ description: Display series labels and share visibility or focus controls.
 
 `Legend` reads labels and markers from [Root](/docs/chart-components/root/). Place it outside the plot's [ResponsiveContainer](/docs/chart-components/responsive-container/).
 
-Toggle Print or Digital to compare library loans with the same legend controls in grouped or stacked views.
+Focus Print or Digital to compare library loans with the same legend controls in grouped or stacked views.
 
 <ChartExample id="bar-comparison" />
 
 ## Usage
 
 ```tsx
-<Chart.Root config={config} visibleSeries={visibleSeries} onVisibleSeriesChange={setVisibleSeries}>
+<Chart.Root config={config} interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}>
   <Chart.Legend />
   {/* ResponsiveContainer and plot */}
 </Chart.Root>
 ```
 
-Enable toggling with `defaultVisibleSeries={Object.keys(config)}`, or controlled visibility and its callback as above. Click an item to toggle its series.
+Click an item to focus it and dim peers. Focus preserves geometry, visibility and tooltip values.
 
-In focus mode, clicking highlights the series instead. Keyboard users can activate items with Enter or Space and reset focus with Escape.
+Explicit Root `interaction.mode="visibility"` enables hide/show using controlled visibility or `defaultVisibleSeries`. Keyboard users can activate items with Enter or Space and reset focus with Escape.
 
 <Callout type="info">
-The legend keeps at least one available item visible. Hidden items remain selectable; unavailable items appear as labels. Configure visibility and focus on [Root](/docs/chart-components/root/).
+In explicit visibility mode, the legend keeps at least one available item visible. Hidden items remain selectable; unavailable items appear as labels. Configure visibility and focus on [Root](/docs/chart-components/root/).
 </Callout>
 
 ## Markers and content

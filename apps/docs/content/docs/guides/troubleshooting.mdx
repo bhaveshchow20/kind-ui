@@ -29,7 +29,7 @@ parts explicitly.
 | Configured Line reports a nested Root | Remove the outer Root when passing `config` to `LineChart` |
 | Explicit Root composition has no legend | Place `<Chart.Legend />` inside Root, outside ResponsiveContainer |
 | Configured Line with explicit children has no legend | Pass `legend={{}}` to `LineChart` |
-| Legend clicks do not change visibility | Pair controlled `visibleSeries` with `onVisibleSeriesChange`, or use `defaultVisibleSeries` on Root |
+| Legend clicks do not change visibility | Focus dims by default. For hide/show, set Root `interaction.mode="visibility"` and pair controlled visibility with its callback, or use `defaultVisibleSeries` |
 | Accessor series ignores visibility or metadata | Give it a matching `seriesKey`; see [Identity and colors](/docs/concepts/identity/) |
 | Category colors move when rows reorder | Use stable category IDs rather than row positions; see the family example |
 | Arrow keys do not inspect every mark | Check the family's [keyboard access](/docs/guides/accessibility/#keyboard-access); retain a complete data alternative |

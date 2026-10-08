@@ -83,6 +83,7 @@ function App() {
         ))}
       </div>
       <Chart.Root
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
@@ -124,6 +125,13 @@ function App() {
         <Chart.Legend />
       </Chart.Root>
       <Chart.Root
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: Object.keys({
+            search: { label: "Read-only Search", color: "#333", legendShape: "circle" },
+          }),
+        }}
         config={{ search: { label: "Read-only Search", color: "#333", legendShape: "circle" } }}
         visibleSeries={[]}
         id="readonly"

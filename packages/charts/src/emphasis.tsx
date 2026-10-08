@@ -13,6 +13,7 @@ import {
   useState,
 } from "react";
 
+import { InteractionPaint } from "./animation.js";
 import { useChartInteraction } from "./chart-interaction.js";
 
 /** Identity is data-owned. scope separates independent plots within one Root. */
@@ -227,9 +228,9 @@ export function EmphasisMark({
         props.onBlurCapture?.(event);
       }}
     >
-      <g data-kind-ui="emphasis-paint" style={{ opacity: emphasis.factor }}>
+      <InteractionPaint data-kind-ui="emphasis-paint" opacity={emphasis.factor}>
         {children}
-      </g>
+      </InteractionPaint>
     </g>
   );
 }

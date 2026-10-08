@@ -220,7 +220,6 @@ function snippet(
   );
   return `"use client";
 
-import { useState } from "react";
 import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
 
@@ -232,9 +231,8 @@ const config: Chart.SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.
 
 export function Example() {
   const animate = ${animate};
-  const [visible, setVisible] = useState<string[]>(${JSON.stringify(r.keys)});
   return (
-    <Chart.Root emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}
+    <Chart.Root emphasis="auto" config={config} interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
       style={{ border: 0, padding: 0, background: "transparent" }}>
       <div style={{ height: 240, width: "100%" }}>
         <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -251,7 +249,7 @@ ${series}
           </Chart.${family}Chart>
         </Chart.ResponsiveContainer>
       </div>
-      ${(options.showLegend ?? true) ? `<Chart.Legend aria-label="Visible series for ${r.tag}" />` : ""}
+      ${(options.showLegend ?? true) ? `<Chart.Legend aria-label="Focus series for ${r.tag}" />` : ""}
     </Chart.Root>
   );
 }`;
@@ -276,7 +274,6 @@ function ChartCard({
   const cardRef = useRef<HTMLElement>(null);
   const entered = useInView(cardRef, { once: true, amount: 0.3 });
   const chartAnimate = animate && entered && !reduceMotion;
-  const [visible, setVisible] = useState<string[]>([...r.keys]);
   const chartData = useMemo(() => recipeData(r.id), [r.id]);
   const config = useMemo(
     () =>
@@ -397,8 +394,7 @@ function ChartCard({
         className="chart-root"
         emphasis="auto"
         config={config}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
+        interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
       >
         <div className="chart-canvas">
           <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -430,15 +426,8 @@ function ChartCard({
             )}
           </Chart.ResponsiveContainer>
         </div>
-        {options.showLegend !== false && (
-          <Chart.Legend aria-label={`Visible series for ${r.tag}`} />
-        )}
+        {options.showLegend !== false && <Chart.Legend aria-label={`Focus series for ${r.tag}`} />}
       </Chart.Root>
-      {!visible.length && (
-        <p className="all-hidden" role="status">
-          All series hidden. Select a legend item to show it.
-        </p>
-      )}
 
       <p className="chart-context">{r.context}</p>
     </motion.article>

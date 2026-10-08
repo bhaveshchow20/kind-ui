@@ -124,7 +124,7 @@ export const examples: Record<Family, Example[]> = {
     {
       id: "comparison",
       title: "Comparison",
-      detail: "Controlled series visibility",
+      detail: "Series focus without reflow",
       label: "Current",
       second: "Previous",
       unit: "orders",

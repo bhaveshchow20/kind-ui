@@ -1,6 +1,13 @@
 // Display metadata augments types generated from the pinned public declarations.
-// Defaults below are verified against released 0.3.0 implementations.
+// Defaults below describe the candidate public implementations.
 const presentation = {
+  Root: {
+    defaults: { emphasis: '"auto"', interaction: "Series focus; matching-legend marks" },
+    descriptions: {
+      interaction:
+        'Focus dims peers by default and supported marks share legend actions. Set mode to "visibility" for visual hide/show with preserved full-data layout, or markActivation to "none" for passive marks.',
+    },
+  },
   LoadingReference: {
     title: "Loading",
     defaults: { loading: "false", loadingLabel: '"Loading chart"' },
@@ -66,6 +73,6 @@ export function referenceRows(name, entries) {
       .replace(/\bChart\./g, "")
       .replace(/ \| undefined/g, ""),
     default: entry.required ? "Required" : (display?.defaults?.[entry.name] ?? "—"),
-    description: entry.description || "—",
+    description: display?.descriptions?.[entry.name] ?? (entry.description || "—"),
   }));
 }

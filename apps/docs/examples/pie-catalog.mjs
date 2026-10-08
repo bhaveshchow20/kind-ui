@@ -8,8 +8,9 @@ export const pieExamples = [
   {
     id: "pie-visibility",
     title: "Controlled categories",
-    notes: "Consumer-owned category filtering and selected total.",
-    acceptance: "Legend buttons filter rows; category colors and tooltip identity match config.",
+    notes: "Explicit controlled visual visibility with fixed full-data slice allocation.",
+    acceptance:
+      "Hide/show preserves all slice angles, category colors and original tooltip identity.",
   },
   {
     id: "pie-materials",

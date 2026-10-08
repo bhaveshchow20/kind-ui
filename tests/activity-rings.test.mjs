@@ -23,7 +23,7 @@ test("rings own context and preserve accessible names, original values and consu
   assert.match(html, /<dt>Move<\/dt><dd>75 kcal<\/dd>/);
   assert.match(html, /<dt>Exercise<\/dt><dd>30<\/dd>/);
   assert.match(html, /chart-legend/);
-  assert.doesNotMatch(html, /<button/);
+  assert.match(html, /<button/);
 });
 test("config subset and order follow the ring data; empty rings remain valid", () => {
   const html = render(h(ActivityRings, { ...defaults, rings: [...defaults.rings].reverse() }));

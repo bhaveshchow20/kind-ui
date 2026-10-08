@@ -109,10 +109,10 @@ try {
   await design.focus();
   await page.keyboard.press("Space");
   assert.equal(await design.getAttribute("aria-pressed"), "false");
-  assert.equal(await visible.locator('[data-kind-ui="pie-sector"]').count(), 3);
-  assert.deepEqual(await fills(visible), categoryColors.slice(1));
+  assert.equal(await visible.locator('[data-kind-ui="pie-sector"]').count(), 4);
+  assert.deepEqual(await fills(visible), categoryColors);
   assert.ok(
-    (await visible.getByRole("status").allTextContents()).join().includes("580 hours selected"),
+    (await visible.getByRole("status").allTextContents()).join().includes("580 hours visible"),
   );
   for (const name of ["Engineering", "Operations"])
     await visible.getByRole("button", { name, exact: true }).click();
@@ -128,8 +128,12 @@ try {
         opacity: getComputedStyle(node).opacity,
       })),
     );
-  await expect(sectors).toHaveCount(1);
-  await expect.poll(() => fills(visible)).toEqual([categoryColors[3]]);
+  await expect(sectors).toHaveCount(4);
+  await expect.poll(() => fills(visible)).toEqual(categoryColors);
+  await expect(sectors.nth(0)).toBeHidden();
+  await expect(sectors.nth(1)).toBeHidden();
+  await expect(sectors.nth(2)).toBeHidden();
+  await expect(sectors.nth(3)).toBeVisible();
   const before = await paint();
   const callbacks = await root.getAttribute("data-visibility-changes");
   const feedback = root.locator('[data-kind-ui="chart-interaction-status"]');
@@ -146,7 +150,7 @@ try {
     await expect.poll(paint).toEqual(before);
     await expect(root).toHaveAttribute("data-visibility-changes", callbacks);
     assert.ok(
-      (await visible.getByRole("status").allTextContents()).join().includes("100 hours selected"),
+      (await visible.getByRole("status").allTextContents()).join().includes("100 hours visible"),
     );
   }
   await expect(visible.getByRole("button", { name: /all categories/ })).toHaveCount(0);

@@ -31,11 +31,14 @@ const data: { key: keyof typeof config; hours: number; share: string }[] = [
 export function VisibleAllocationChart() {
   const [visible, setVisible] = useState<string[]>(Object.keys(config));
   const [changes, setChanges] = useState(0);
-  const selected = data.filter((row) => visible.includes(row.key));
-  const total = selected.reduce((sum, row) => sum + row.hours, 0);
+  const visibleTotal = data.reduce(
+    (sum, row) => sum + (visible.includes(row.key) ? row.hours : 0),
+    0,
+  );
   return (
     <Chart.Root
       config={config}
+      interaction={{ kind: "category", mode: "visibility", eligibleKeys: Object.keys(config) }}
       visibleSeries={visible}
       onVisibleSeriesChange={(next) => {
         setVisible(next);
@@ -45,12 +48,18 @@ export function VisibleAllocationChart() {
     >
       <Chart.Legend />
       <p role="status" className="sr-only">
-        {total.toLocaleString("en-US")} hours selected
+        {visibleTotal.toLocaleString("en-US")} hours visible; slice positions retain the full
+        allocation
       </p>
       <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.PieChart animate accessibilityLayer aria-label="Selected team allocation">
+        <Chart.PieChart
+          animate
+          accessibilityLayer
+          aria-label="Team allocation with controlled visual visibility"
+        >
           <Chart.PieSeries
-            data={selected}
+            interactionBinding="root"
+            data={data}
             dataKey="hours"
             nameKey="key"
             categoryKey="key"

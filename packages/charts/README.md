@@ -309,7 +309,7 @@ color resource IDs through hydration and a theme change.
 
 ## Legend and mark interactions
 
-Visibility remains the default. Opt into persistent focus with one Root owner:
+Legend and mark activation focus by default: the selected item stays at full paint and peers dim without changing geometry or tooltip data. Customize persistent focus with one Root owner:
 
 ```tsx
 <Root config={config} interaction={{
@@ -329,20 +329,22 @@ settled `eligibleKeys` snapshot. Include hidden Root items and zero values; excl
 removed, filtered, unavailable, or native-hidden items. Config-only entries do not
 satisfy the last-visible guard. New bindings require that snapshot; native series
 registration provides compatibility eligibility for existing controlled legends.
-`mode` defaults to `visibility`; `markActivation` defaults to `none`.
+`mode` defaults to `focus`; focus enables matching mark activation by default. Set `markActivation: "none"` to keep marks passive.
 
 Focus accepts either `selected` with required `onSelectionChange`, or
 `defaultSelected` with an optional callback. Persistent focus works with
 `emphasis="none"`. Repeated activation or Escape clears it; transient inspection
 never writes selection. Invalid uncontrolled selection clears without a callback.
 An invalid controlled ID paints no selection and resumes if that ID becomes valid.
-Visibility uses existing `visibleSeries`/`onVisibleSeriesChange`, or opt-in
+Explicit `interaction={{ kind: "series", mode: "visibility", eligibleKeys }}` enables legend hide/show using `visibleSeries`/`onVisibleSeriesChange`, or opt-in
 `defaultVisibleSeries`. An externally empty visibility value remains valid.
 
 For categories, use `kind: "category"` and explicitly set
 `interactionBinding="root"` on `PieSeries` or `RadialBarChart`, with `categoryKey`
-and explicit data. Stable unique string keys must match Root config. Hiding filters
-original rows and their positional Cells before layout; Pie re-normalizes angles.
+and explicit data. Stable unique string keys must match Root config. Focus dims unselected marks without filtering. Hiding suppresses paint and pointer
+inspection while retaining full-data domains, stack baselines, grouped slots and
+category angles. Keep all original rows, series and positional Cells mounted;
+visibility must not change another mark's geometry, raw value or tooltip identity.
 ActivityRings forwards this binding through category `rootProps.interaction`.
 For Sankey node focus, bind both `SankeyChart` and `SankeyLegend` to a Root with
 `kind: "node", mode: "focus"`; incident links/endpoints remain emphasized.

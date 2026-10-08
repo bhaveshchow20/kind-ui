@@ -33,12 +33,12 @@ export type ChartInteractionConfig = {
 } & (
   | {
       kind: "series" | "category";
-      mode?: "visibility";
+      mode: "visibility";
       selected?: never;
       defaultSelected?: never;
       onSelectionChange?: never;
     }
-  | ({ kind: "series" | "category" | "node"; mode: "focus" } & (
+  | ({ kind: "series" | "category" | "node"; mode?: "focus" } & (
       | {
           selected?: undefined;
           defaultSelected?: string | null;
@@ -126,7 +126,7 @@ export function ChartInteractionProvider({
     ) => ReactNode;
   }) {
   const options = props.interaction;
-  const mode = options?.mode ?? "visibility";
+  const mode = options?.mode ?? "focus";
   const kind = options?.kind ?? "series";
   const controlled = options?.selected;
   const onChange = options?.onSelectionChange;
@@ -251,7 +251,11 @@ export function ChartInteractionProvider({
       !interactive ||
       identity.kind !== kind ||
       !eligible.includes(identity.key) ||
-      (source === "mark" && options?.markActivation !== "matching-legend")
+      (source === "mark" &&
+        !(
+          options?.markActivation === "matching-legend" ||
+          (mode === "focus" && options?.markActivation === undefined)
+        ))
     )
       return false;
     if (!permitted({ identity, source, mode, event })) return false;
@@ -280,14 +284,16 @@ export function ChartInteractionProvider({
   return (
     <Context
       value={{
-        configured: options !== undefined,
+        configured: options !== undefined || mode === "focus",
         mode,
         kind,
         selected,
         eligible,
         visible,
         interactive,
-        markActivation: options?.markActivation === "matching-legend",
+        markActivation:
+          options?.markActivation === "matching-legend" ||
+          (mode === "focus" && options?.markActivation === undefined),
         activate,
         reset,
         register,

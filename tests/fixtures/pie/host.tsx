@@ -280,7 +280,12 @@ export function PieHost() {
       <output aria-label="Events">
         {clicked}/{moved}
       </output>
-      <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+      <Chart.Root
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+        config={config}
+        visibleSeries={visible}
+        onVisibleSeriesChange={setVisible}
+      >
         <Chart.Legend />
         <button
           type="button"

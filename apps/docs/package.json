@@ -13,7 +13,7 @@
     "dev": "next dev --webpack --hostname 127.0.0.1 --port 6373",
     "build": "npm run generate && next build --webpack",
     "typecheck": "fumadocs-mdx && tsc --noEmit",
-    "check": "npm run typecheck && node --test scripts/example-contract.test.mjs scripts/validated-artifact.test.mjs && node scripts/check-export.mjs",
+    "check": "npm run typecheck && node --test scripts/example-contract.test.mjs scripts/validated-artifact.test.mjs scripts/focus-contract.test.mjs && node scripts/check-export.mjs",
     "check:consumers": "node scripts/check-consumers.mjs",
     "preview": "node scripts/serve.mjs",
     "snapshot:site": "node scripts/snapshot-site.mjs",

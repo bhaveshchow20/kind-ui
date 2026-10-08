@@ -258,13 +258,13 @@ test("content preserves live-region semantics and forwards DOM props", () => {
   assert.match(html, /data-owner="consumer"/);
   assert.doesNotMatch(html, /accessibilityLayer=|graphicalItemId=|activeIndex=/);
 });
-test("legend is static by default, controlled when requested, and container colors are scoped", () => {
+test("legend focuses by default and container colors are scoped", () => {
   const html = render(
     h(Root, { config, id: "scope", className: "custom" }, h(Legend, { id: "legend" })),
   );
   assert.match(html, /--color-count:#2563eb/);
   assert.match(html, /id="legend"/);
-  assert.doesNotMatch(html, /<button/);
+  assert.match(html, /<button[^>]+aria-pressed="false"/);
   const hidden = render(
     h(Root, { config, visibleSeries: [], onVisibleSeriesChange() {} }, h(Legend)),
   );
@@ -1323,17 +1323,40 @@ test("Radar selection is SSR-safe without state glue and rejects ownerless contr
     data: [{ category: "A", value: 10 }],
     selection: "series",
   };
-  assert.doesNotThrow(() => render(h(Chart.Root, { config }, h(Chart.RadarChart, props))));
+  assert.doesNotThrow(() =>
+    render(
+      h(
+        Chart.Root,
+        {
+          config,
+          interaction: { kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) },
+        },
+        h(Chart.RadarChart, props),
+      ),
+    ),
+  );
   assert.throws(
     () =>
-      render(h(Chart.Root, { config }, h(Chart.RadarChart, { ...props, selectedSeries: "value" }))),
+      render(
+        h(
+          Chart.Root,
+          {
+            config,
+            interaction: { kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) },
+          },
+          h(Chart.RadarChart, { ...props, selectedSeries: "value" }),
+        ),
+      ),
     /requires onSelectedSeriesChange for controlled selectedSeries/,
   );
   assert.doesNotThrow(() =>
     render(
       h(
         Chart.Root,
-        { config },
+        {
+          config,
+          interaction: { kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) },
+        },
         h(Chart.RadarChart, {
           ...props,
           selectedSeries: null,
@@ -1751,7 +1774,12 @@ test("Root shared interaction guards last eligible item and emits one callback",
         config: { first: { color: "red" }, stale: { color: "blue" } },
         visibleSeries: ["first", "stale"],
         onVisibleSeriesChange: (next) => changes.push(next),
-        interaction: { kind: "series", eligibleKeys: ["first"], markActivation: "matching-legend" },
+        interaction: {
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: ["first"],
+          markActivation: "matching-legend",
+        },
       },
       h(Probe),
     ),

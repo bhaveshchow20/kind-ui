@@ -9,6 +9,7 @@ import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fi
 import { useLineInteraction } from "./line-chart.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Area<DataPoint, Value>>,
@@ -98,7 +99,6 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
       <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.area}>
         <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
           <Area
-            activeDot={<ActiveMarker variant={activePointStyle} />}
             {...nativeProps}
             {...(props.dot === undefined && pointStyle !== "default"
               ? { dot: <PointMarker variant={pointStyle} /> }
@@ -114,7 +114,17 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
             isAnimationActive={false}
             id={id}
             zIndex={0}
-            hide={effectiveHide}
+            // Keep full-data native layout; the interaction layer suppresses hidden paint.
+            hide={false}
+            {...(props.label !== undefined
+              ? { label: visibilityLabel(props.label, effectiveHide, undefined, key) }
+              : {})}
+            {...(effectiveHide ? { tooltipType: "none" as const } : {})}
+            activeDot={
+              effectiveHide
+                ? false
+                : (props.activeDot ?? <ActiveMarker variant={activePointStyle} />)
+            }
             {...(color !== undefined ? { stroke: color } : {})}
             {...(fill !== undefined
               ? { fill }
@@ -124,7 +134,9 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
                   ? { fill: color }
                   : {})}
             className={["kind-ui-area-series", className].filter(Boolean).join(" ")}
-          />
+          >
+            {visibilityLabelChildren(props.children, effectiveHide, undefined, key)}
+          </Area>
         </SeriesInteractionLayer>
       </ZIndexLayer>
     </>

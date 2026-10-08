@@ -96,8 +96,9 @@ test("Pie consumers preserve category identity and public source parity", () => 
     }
   }
   const visibility = bundles["pie-visibility"].files["src/examples/pie-visibility/example.tsx"];
-  assert.match(visibility, /data.filter\(\(row\) => visible.includes\(row.key\)\)/);
-  assert.match(visibility, /data=\{selected\}/);
+  assert.doesNotMatch(visibility, /data\.filter\(/);
+  assert.match(visibility, /data=\{data\}/);
+  assert.match(visibility, /interactionBinding="root"/);
   assert.match(visibility, /categoryKey="key"/);
   assert.ok(!visibility.includes("<Chart.Cell"));
   assert.ok(!visibility.includes("LabelList"));

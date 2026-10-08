@@ -71,7 +71,7 @@ Choose `ActivityRings` for a complete chart or compose custom plots with the rad
 | `responsive` / `height` | `boolean` / `number \| percentage` | `true` / `300` | Native responsive chart sizing; width defaults to 100%. |
 | `animate` | `boolean \| RadialBarAnimation` | `false` | Same entrance options as RadialBarChart; respects reduced motion. |
 | `loading` / `loadingLabel` | `boolean` / `string` | `false` / `"Loading chart"` | Explicit pending state; preserves layout and blocks inspection. |
-| `rootProps` | Root options | — | Root styling and category interaction. Set `defaultVisibleSeries` and category `eligibleKeys` here for ring visibility buttons. |
+| `rootProps` | Root options | — | Root styling and category interaction. Set category `eligibleKeys` for ring focus. Add explicit `mode: "visibility"` and `defaultVisibleSeries` for hide/show buttons. |
 | `series` | Native RadialBarSeries options | Tracks and rounded ends | Override series paint, background or geometry; explicit fill wins over config. |
 | `labels` | `false \| LabelList options` | `false` | Optional arc labels; custom content retains control. |
 | `legend` / `tooltip` | `false` or component options | Static legend / original-value tooltip | Disable either independently or supply custom rendering options. |
@@ -115,7 +115,7 @@ See [Recharts RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChar
 | `cornerRadius` | `number \| string` | `0` in Recharts | Native rounded sector corners. |
 | `material` | `"clay" \| "glow"` | Omitted | Native mark finish; custom shapes, active shapes and filters retain rendering ownership. |
 | `fill` | `string` | Config color | Series paint; native Cells can override individual rows. |
-| `hide` | `boolean` | `false` | Explicit hiding; Root visibility also applies. |
+| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; Root visibility also applies. |
 
 </div>
 
@@ -148,6 +148,6 @@ Use these components for custom radial plots; ActivityRings already supplies its
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
-| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

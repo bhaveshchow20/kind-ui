@@ -31,12 +31,12 @@ try {
 
   const selection = page.locator('[data-component="radar-selection"]');
   await selection.scrollIntoViewIfNeeded();
-  const studio = selection.getByRole("button", { name: "Highlight Studio", exact: true });
-  const field = selection.getByRole("button", { name: "Highlight Field", exact: true });
+  const studio = selection.getByRole("button", { name: "Studio", exact: true });
+  const field = selection.getByRole("button", { name: "Field", exact: true });
   await studio.focus();
   await page.keyboard.press("Enter");
   assert.equal(await studio.getAttribute("aria-pressed"), "true");
-  assert.equal(await field.getAttribute("data-selection"), "dimmed");
+  assert.equal(await field.getAttribute("aria-pressed"), "false");
   await page.mouse.move(0, 0);
   assert.equal(await studio.getAttribute("aria-pressed"), "true");
   await page.keyboard.press("Space");
@@ -46,7 +46,9 @@ try {
   await page.keyboard.press("Escape");
   assert.equal(await field.getAttribute("aria-pressed"), "false");
   // Click within the outer Field polygon, clear, then inspect a native spoke.
-  const path = field.locator(".recharts-radar-polygon path");
+  const path = selection.locator(
+    '[data-kind-ui="series-interaction"][data-series="field"] .recharts-radar-polygon path',
+  );
   await path.click({ position: { x: 50, y: 30 }, force: true });
   assert.equal(await field.getAttribute("aria-pressed"), "true");
   const surface = selection.locator(".recharts-surface");

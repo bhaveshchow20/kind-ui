@@ -134,8 +134,9 @@ try {
         assert.equal(before.length, 4);
         const toggle = selected.getByRole("button", { name: "Engineering", exact: true });
         await toggle.click();
-        assert.equal(await selected.locator('[data-kind-ui="pie-sector"]').count(), 3);
-        assert.deepEqual(await fills(), [before[0], before[2], before[3]]);
+        assert.equal(await selected.locator('[data-kind-ui="pie-sector"]').count(), 4);
+        await expect(selected.locator('[data-kind-ui="pie-sector"]').nth(1)).toBeHidden();
+        assert.deepEqual(await fills(), before);
         await toggle.click();
         assert.deepEqual(await fills(), before);
       }

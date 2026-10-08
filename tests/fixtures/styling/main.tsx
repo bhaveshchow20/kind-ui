@@ -18,6 +18,11 @@ function Panel({ custom }: { custom: boolean }) {
         Reverse series
       </button>
       <Root
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: Object.keys(reverse ? { beta: series.beta, alpha: series.alpha } : series),
+        }}
         config={reverse ? { beta: series.beta, alpha: series.alpha } : series}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}

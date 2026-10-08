@@ -173,6 +173,15 @@ export function BarHost() {
         {clicked}/{moved}/{left}
       </div>
       <Chart.Root
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: Object.keys({
+            value: { label: "Value", color: "#246", formatValue: (v) => `${v} units` },
+            other: { label: "Other", color: "#682" },
+            alias: { label: "Alias", color: "#682" },
+          }),
+        }}
         config={{
           value: { label: "Value", color: "#246", formatValue: (v) => `${v} units` },
           other: { label: "Other", color: "#682" },
@@ -407,6 +416,14 @@ export function PatternHost({ horizontal = false }: { horizontal?: boolean }) {
       </label>
       {[0, 1].map((chart) => (
         <Chart.Root
+          interaction={{
+            kind: "series",
+            mode: "visibility",
+            eligibleKeys: Object.keys({
+              first: { color: "#789abc", pattern: { kind } },
+              second: { color: "#ed79ae", pattern: { kind: "stripe" } },
+            }),
+          }}
           key={chart}
           config={{
             first: { color: "#789abc", pattern: { kind } },

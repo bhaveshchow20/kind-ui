@@ -1,10 +1,16 @@
 "use client";
 
-import { animate as animateValue, type MotionValue, useMotionValue } from "motion/react";
+import {
+  animate as animateValue,
+  type MotionValue,
+  type Transition,
+  useMotionValue,
+} from "motion/react";
 import {
   type ComponentProps,
   createContext,
   type ReactNode,
+  use,
   useCallback,
   useLayoutEffect,
   useRef,
@@ -18,6 +24,7 @@ import {
   useChartHeight,
   useChartWidth,
 } from "recharts";
+import { MotionContext } from "./animation.js";
 import { useOptionalChartInteraction } from "./chart-interaction.js";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
 import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
@@ -59,6 +66,7 @@ type IdentityEvent = (
 ) => void;
 export interface SankeyAnimation {
   revealDurationMs?: number;
+  hoverTransition?: Transition;
 }
 export type SankeyChartProps = Omit<
   NativeProps,
@@ -106,6 +114,7 @@ export function SankeyChart({
   empty = "No positive flows",
   ...props
 }: SankeyChartProps) {
+  const motion = use(MotionContext);
   const interaction = useOptionalChartInteraction();
   if (
     interactionBinding &&
@@ -250,98 +259,108 @@ export function SankeyChart({
       );
   }
   return (
-    <SankeyColors value={nodeConfig}>
-      <SankeyMotion value={{ reveal, progress, width: size?.width ?? 1 }}>
-        <div
-          data-kind-ui="sankey"
-          onPointerDownCapture={() => {
-            if (!loading) setInterrupted(true);
-          }}
-          onFocusCapture={() => {
-            if (!loading) setInterrupted(true);
-          }}
-          style={{ position: "relative", width: "fit-content", height: "fit-content" }}
-        >
+    <MotionContext
+      value={{
+        enabled,
+        transition:
+          typeof animate === "object"
+            ? (animate.hoverTransition ?? motion.transition)
+            : motion.transition,
+      }}
+    >
+      <SankeyColors value={nodeConfig}>
+        <SankeyMotion value={{ reveal, progress, width: size?.width ?? 1 }}>
           <div
-            data-kind-ui="sankey-content"
-            data-loading={loading || undefined}
-            aria-busy={loading}
-            aria-hidden={loading || undefined}
-            inert={loading || undefined}
-            style={{ display: "contents" }}
+            data-kind-ui="sankey"
+            onPointerDownCapture={() => {
+              if (!loading) setInterrupted(true);
+            }}
+            onFocusCapture={() => {
+              if (!loading) setInterrupted(true);
+            }}
+            style={{ position: "relative", width: "fit-content", height: "fit-content" }}
           >
-            <EngineSankey
-              {...(props as NativeProps)}
-              {...(nodeConfig
-                ? ({
-                    node: props.node ?? configuredNode,
-                    link: props.link ?? configuredLink,
-                  } as NativeProps)
-                : {})}
-              onClick={(item, type, event) => {
-                props.onClick?.(item as SankeyNodeProps | SankeyLinkProps, type, event);
-                if (interactionBinding && type === "node")
-                  interaction?.activate(
-                    { kind: "node", key: (item as SankeyNodeProps).payload.id },
-                    "mark",
-                    event,
-                  );
-              }}
-              {...(interactionBinding
-                ? {
-                    node:
-                      (props.node as NativeProps["node"]) ??
-                      ((shape: NativeNodeProps) => (
-                        <SankeyFocusMark
-                          nodeKey={(shape as SankeyNodeProps).payload.id}
-                          adjacent={adjacent}
-                        >
-                          <SankeyNode {...(shape as SankeyNodeProps)} />
-                        </SankeyFocusMark>
-                      )),
-                    link:
-                      (props.link as NativeProps["link"]) ??
-                      ((shape: NativeLinkProps) => (
-                        <SankeyFocusMark
-                          endpoints={[
-                            (shape as SankeyLinkProps).payload.source.id,
-                            (shape as SankeyLinkProps).payload.target.id,
-                          ]}
-                          adjacent={adjacent}
-                        >
-                          <SankeyLink {...(shape as SankeyLinkProps)} />
-                        </SankeyFocusMark>
-                      )),
-                  }
-                : {})}
-              data={drawable && links.length ? { nodes, links } : { nodes: [], links: [] }}
+            <div
+              data-kind-ui="sankey-content"
+              data-loading={loading || undefined}
+              aria-busy={loading}
+              aria-hidden={loading || undefined}
+              inert={loading || undefined}
+              style={{ display: "contents" }}
             >
-              <NativeSize onSize={onSize} />
-              {props.children}
-            </EngineSankey>
+              <EngineSankey
+                {...(props as NativeProps)}
+                {...(nodeConfig
+                  ? ({
+                      node: props.node ?? configuredNode,
+                      link: props.link ?? configuredLink,
+                    } as NativeProps)
+                  : {})}
+                onClick={(item, type, event) => {
+                  props.onClick?.(item as SankeyNodeProps | SankeyLinkProps, type, event);
+                  if (interactionBinding && type === "node")
+                    interaction?.activate(
+                      { kind: "node", key: (item as SankeyNodeProps).payload.id },
+                      "mark",
+                      event,
+                    );
+                }}
+                {...(interactionBinding
+                  ? {
+                      node:
+                        (props.node as NativeProps["node"]) ??
+                        ((shape: NativeNodeProps) => (
+                          <SankeyFocusMark
+                            nodeKey={(shape as SankeyNodeProps).payload.id}
+                            adjacent={adjacent}
+                          >
+                            <SankeyNode {...(shape as SankeyNodeProps)} />
+                          </SankeyFocusMark>
+                        )),
+                      link:
+                        (props.link as NativeProps["link"]) ??
+                        ((shape: NativeLinkProps) => (
+                          <SankeyFocusMark
+                            endpoints={[
+                              (shape as SankeyLinkProps).payload.source.id,
+                              (shape as SankeyLinkProps).payload.target.id,
+                            ]}
+                            adjacent={adjacent}
+                          >
+                            <SankeyLink {...(shape as SankeyLinkProps)} />
+                          </SankeyFocusMark>
+                        )),
+                    }
+                  : {})}
+                data={drawable && links.length ? { nodes, links } : { nodes: [], links: [] }}
+              >
+                <NativeSize onSize={onSize} />
+                {props.children}
+              </EngineSankey>
+            </div>
+            {loading && (
+              <LoadingSkeletonSurface
+                family="sankey"
+                design={(seed) => <StandaloneLoadingDesign family="sankey" seed={seed} />}
+                width="100%"
+                height="100%"
+                seed={loadingSeed}
+                animation={{ revealDurationMs: duration }}
+              />
+            )}
+            <LoadingStatus loading={loading} label={loadingLabel} />
+            {!loading && !links.length ? (
+              <div role="status" style={{ position: "absolute", inset: 0 }}>
+                {empty}
+              </div>
+            ) : !loading && !drawable ? (
+              <div role="status" style={{ position: "absolute", inset: 0 }}>
+                Insufficient space for flows; use the data table
+              </div>
+            ) : null}
           </div>
-          {loading && (
-            <LoadingSkeletonSurface
-              family="sankey"
-              design={(seed) => <StandaloneLoadingDesign family="sankey" seed={seed} />}
-              width="100%"
-              height="100%"
-              seed={loadingSeed}
-              animation={{ revealDurationMs: duration }}
-            />
-          )}
-          <LoadingStatus loading={loading} label={loadingLabel} />
-          {!loading && !links.length ? (
-            <div role="status" style={{ position: "absolute", inset: 0 }}>
-              {empty}
-            </div>
-          ) : !loading && !drawable ? (
-            <div role="status" style={{ position: "absolute", inset: 0 }}>
-              Insufficient space for flows; use the data table
-            </div>
-          ) : null}
-        </div>
-      </SankeyMotion>
-    </SankeyColors>
+        </SankeyMotion>
+      </SankeyColors>
+    </MotionContext>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
 import { motion, useInView, useReducedMotion } from "motion/react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { type AdvancedRecipe, advancedData, type Finish } from "@/lib/advanced-chart-recipes";
 import type { DemoOptions } from "@/lib/demo-options";
 
@@ -23,7 +23,6 @@ function useChartExample({
   recipe: r,
   material,
   config,
-  visible,
   animate,
   replay,
   options = {},
@@ -31,7 +30,6 @@ function useChartExample({
   recipe: AdvancedRecipe;
   material: Finish;
   config: PaletteConfig;
-  visible: string[];
   animate: boolean;
   replay: number;
   options?: DemoOptions;
@@ -39,14 +37,12 @@ function useChartExample({
   const data = useMemo(() => advancedData(r.id, options), [r.id, options]);
   const pieData = useMemo(
     () =>
-      data
-        .filter((row) => visible.includes(String(row.id)))
-        .map((row) => ({
-          id: String(row.id),
-          value: Number(row.value),
-          fill: config[String(row.id)]?.color,
-        })),
-    [data, visible, config],
+      data.map((row) => ({
+        id: String(row.id),
+        value: Number(row.value),
+        fill: config[String(row.id)]?.color,
+      })),
+    [data, config],
   );
   if (r.family === "Combo")
     return (
@@ -101,6 +97,8 @@ function useChartExample({
     return (
       <Chart.PieChart key={replay} animate={animate} accessibilityLayer aria-label={r.tag}>
         <Chart.PieSeries
+          interactionBinding="root"
+          categoryKey="id"
           data={pieData}
           dataKey="value"
           nameKey="id"
@@ -125,7 +123,6 @@ function useChartExample({
         accessibilityLayer
         aria-label={r.tag}
         outerRadius={`${options.outerRadius ?? 70}%`}
-        selection={r.id === "radar" ? "series" : "none"}
       >
         <Chart.PolarGrid
           gridType={options.gridType ?? (r.id === "radar-outline" ? "circle" : "polygon")}
@@ -329,7 +326,6 @@ export function AdvancedChartCard({
   const cardRef = useRef<HTMLElement>(null);
   const entered = useInView(cardRef, { once: true, amount: 0.3 });
   const chartAnimate = animate && entered && !reduced;
-  const [visible, setVisible] = useState<string[]>([...recipe.keys]);
   const config: PaletteConfig = useMemo(
     () =>
       Object.fromEntries(
@@ -371,8 +367,11 @@ export function AdvancedChartCard({
         className="chart-root"
         emphasis="auto"
         config={config}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
+        interaction={{
+          kind: recipe.family === "Pie" ? "category" : "series",
+          mode: "focus",
+          eligibleKeys: Object.keys(config),
+        }}
       >
         <div className="chart-canvas">
           <ChartExample
@@ -380,21 +379,15 @@ export function AdvancedChartCard({
             recipe={recipe}
             material={material}
             config={config}
-            visible={visible}
             animate={chartAnimate}
             replay={replay}
             options={options}
           />
         </div>
         {options.showLegend !== false && (
-          <Chart.Legend aria-label={`Visible series for ${recipe.tag}`} />
+          <Chart.Legend aria-label={`Focus series for ${recipe.tag}`} />
         )}
       </Chart.Root>
-      {visible.length === 0 && (
-        <p className="all-hidden" role="status">
-          All series hidden. Select a legend item to show it.
-        </p>
-      )}
       <p className="chart-context">{recipe.context}</p>
     </motion.article>
   );

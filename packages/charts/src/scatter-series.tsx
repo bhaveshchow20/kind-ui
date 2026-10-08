@@ -19,6 +19,7 @@ import { useLineInteraction } from "./line-chart.js";
 import { ScatterMotion } from "./scatter-chart.js";
 import { type ScatterMaterial, ScatterMaterialSymbol } from "./scatter-material.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 export type ScatterSeriesProps = Omit<ComponentProps<typeof Scatter>, "isAnimationActive"> & {
   /** Series identity is separate from numeric axis data keys. Required for controlled visibility. */
@@ -144,11 +145,18 @@ export function ScatterSeries({
             {...(shapes.shape !== undefined ? { shape: shapes.shape } : {})}
             {...(shapes.activeShape !== undefined ? { activeShape: shapes.activeShape } : {})}
             id={id}
-            hide={hidden}
+            // Keep full-data native layout; the interaction layer suppresses hidden paint.
+            hide={false}
+            {...(props.label !== undefined
+              ? { label: visibilityLabel(props.label, hidden, undefined, key) }
+              : {})}
+            {...(hidden ? { tooltipType: "none" as const, activeShape: false as const } : {})}
             {...(color !== undefined ? { fill: color } : {})}
             zIndex={0}
             isAnimationActive={false}
-          />
+          >
+            {visibilityLabelChildren(props.children, hidden, undefined, key)}
+          </Scatter>
         </g>
       </SeriesInteractionLayer>
     </ZIndexLayer>

@@ -50,11 +50,13 @@ export function pinnedPieIndex(
   );
   // Ambiguous identities are never silently resolved by position, including hidden rows.
   if (keys.filter((key) => key === category).length !== 1) return undefined;
-  // Only a bound Pie filters its native data. Unbound composition keeps its original indices.
-  const renderedKeys =
-    candidate.interactionBinding === "root" && visibleSeries !== undefined
-      ? keys.filter((key) => typeof key === "string" && visibleSeries.includes(key))
-      : keys;
-  const index = renderedKeys.indexOf(category);
+  if (
+    candidate.interactionBinding === "root" &&
+    visibleSeries !== undefined &&
+    !visibleSeries.includes(category)
+  )
+    return undefined;
+  // Hidden categories still occupy their original angular and native pointer slots.
+  const index = keys.indexOf(category);
   return index < 0 ? undefined : index;
 }

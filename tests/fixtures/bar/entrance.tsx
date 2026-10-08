@@ -120,7 +120,12 @@ function Host() {
       ))}
       <div style={{ width: collapsed ? 0 : "100%" }}>
         {active && (
-          <Chart.Root key={replay} config={config} visibleSeries={shown ? visible : hidden}>
+          <Chart.Root
+            interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+            key={replay}
+            config={config}
+            visibleSeries={shown ? visible : hidden}
+          >
             <Chart.ResponsiveContainer width="100%" height={240}>
               {family === "histogram" ? (
                 <Chart.HistogramChart

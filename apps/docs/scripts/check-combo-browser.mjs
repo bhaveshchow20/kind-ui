@@ -112,10 +112,10 @@ try {
   const retail = stacked.getByRole("button", { name: "Retail · USD", exact: true });
   await retail.focus();
   await page.keyboard.press("Space");
-  assert.equal(await retail.getAttribute("aria-pressed"), "false");
-  assert.equal(await stacked.locator("g.recharts-bar.kind-ui-bar-series").count(), 1);
-  await page.keyboard.press("Space");
   assert.equal(await retail.getAttribute("aria-pressed"), "true");
+  assert.equal(await stacked.locator("g.recharts-bar.kind-ui-bar-series").count(), 2);
+  await page.keyboard.press("Space");
+  assert.equal(await retail.getAttribute("aria-pressed"), "false");
   assert.equal(await stacked.locator("g.recharts-bar.kind-ui-bar-series").count(), 2);
   const svg = stacked.locator(".recharts-surface");
   await svg.focus();

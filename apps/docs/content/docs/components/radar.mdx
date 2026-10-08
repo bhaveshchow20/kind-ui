@@ -39,7 +39,7 @@ Click a polygon or press Enter/Space to select it. Repeat or press Escape to cle
 
 <ChartExample id="radar-selection" />
 
-Enable `selection="series"`. Omit `selectedSeries` for local state, or pair it with `onSelectedSeriesChange` for controlled selection.
+Use Root `interaction={{ kind: "series", mode: "focus", eligibleKeys }}`. Pair `selected` with `onSelectionChange` for controlled focus. The local `RadarChart selection="series"` API remains available for compatibility.
 
 Selection highlights a profile without hiding other values.
 
@@ -100,7 +100,7 @@ String `dataKey` values identify config entries. Use `seriesKey` for numeric key
 | `fillOpacity` | `number` | SVG default `1` | These overlapping profiles explicitly use `0.18`. |
 | `dot` | `boolean` or native dot props / renderer | `false` | Optional native category marks. |
 | `activeDot` | `boolean` or native dot props / renderer | Kind active marker | Native inspected-category marker; independent of selection. |
-| `hide` | `boolean` | `false` | Hides the series; Root visibility also applies. |
+| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; Root visibility also applies. |
 | `shape` | Native element or renderer | Kind default polygon | Consumer-owned shape bypasses material and center-out masking. |
 
 </div>
@@ -116,6 +116,6 @@ Configure profile colors, radial scales and selection controls with these compon
 | [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

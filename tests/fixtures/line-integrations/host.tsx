@@ -40,6 +40,15 @@ export function PatternHydrationHost() {
     <section data-pattern-hydration="">
       {[0, 1].map((chart) => (
         <Root
+          interaction={{
+            kind: "series",
+            mode: "visibility",
+            eligibleKeys: Object.keys({
+              first: { color: "red", pattern: { kind: "hatch" } },
+              second: { color: "blue", pattern: { kind: "stripe" } },
+              third: { color: "green", pattern: { kind: "duotone" } },
+            }),
+          }}
           key={chart}
           config={{
             first: { color: "red", pattern: { kind: "hatch" } },

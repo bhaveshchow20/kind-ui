@@ -111,6 +111,11 @@ export function BoxHost() {
       </button>
       <output aria-label="Events">{events}</output>
       <Chart.Root
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: Object.keys({ distribution: { label: "Distribution", color: "#176b69" } }),
+        }}
         config={{ distribution: { label: "Distribution", color: "#176b69" } }}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}

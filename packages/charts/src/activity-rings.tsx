@@ -107,7 +107,11 @@ export function ActivityRings({
   const activeConfig = Object.fromEntries(keys.map((key) => [key, config[key]!]));
   const describedBy = [chartProps["aria-describedby"], descriptionId].filter(Boolean).join(" ");
   return (
-    <Root {...rootProps} config={activeConfig}>
+    <Root
+      {...rootProps}
+      config={activeConfig}
+      interaction={rootProps?.interaction ?? { kind: "category", eligibleKeys: keys }}
+    >
       <dl
         id={descriptionId}
         data-kind-ui="chart-instructions"
@@ -132,7 +136,7 @@ export function ActivityRings({
         aria-describedby={describedBy}
         data={data}
         categoryKey="key"
-        {...(rootProps?.interaction?.kind === "category"
+        {...(!rootProps?.interaction || rootProps.interaction.kind === "category"
           ? { interactionBinding: "root" as const }
           : {})}
         layout="radial"
@@ -154,7 +158,7 @@ export function ActivityRings({
           {data.some((ring) => ring.cellProps !== undefined) &&
             data.map((ring) => <Cell key={ring.key} {...ring.cellProps} />)}
           {labels !== false && (
-            <LabelList content={<RadialBarLabel />} {...labels} dataKey="label" />
+            <LabelList {...labels} content={labels.content ?? <RadialBarLabel />} dataKey="label" />
           )}
         </RadialBarSeries>
         {tooltip !== false && (

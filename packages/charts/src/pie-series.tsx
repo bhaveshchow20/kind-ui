@@ -4,6 +4,7 @@ import {
   Children,
   type ComponentProps,
   cloneElement,
+  createContext,
   Fragment,
   isValidElement,
   memo,
@@ -16,11 +17,22 @@ import {
   useRef,
   useState,
 } from "react";
-import { Cell, Pie, type PieSectorShapeProps, Sector } from "recharts";
-import { type CategoryKey, categoryCells, filterCategoryRows } from "./category-cells.js";
+import {
+  Cell,
+  Curve,
+  Label,
+  LabelList,
+  Pie,
+  type PieLabelRenderProps,
+  type PieSectorShapeProps,
+  Sector,
+  Text,
+} from "recharts";
+import { InteractionPaint } from "./animation.js";
+import { type CategoryKey, categoryCells, preserveCategoryRows } from "./category-cells.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction, useInteractionFocus } from "./chart-interaction.js";
-import { EmphasisMark } from "./emphasis.js";
+import { EmphasisMark, useEmphasis } from "./emphasis.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
 import { type PieMaterial, PieMaterialFilter, type PiePaintBounds } from "./pie-material.js";
@@ -56,6 +68,42 @@ type SectorPaintProps = Omit<
       "isActive" | "index" | "data-recharts-item-index" | "data-recharts-item-id"
     >
   >;
+
+const PieHidden = createContext(false);
+
+// Read visibility inside native shapes so changing it never replaces the native
+// animation input or the Motion node that owns the current fade position.
+function PieCategoryPaint({
+  category,
+  children,
+  emphasis = false,
+}: {
+  category: string | undefined;
+  children: ReactNode;
+  emphasis?: boolean;
+}) {
+  const interaction = useChartInteraction();
+  const wholeHidden = use(PieHidden);
+  const hidden =
+    wholeHidden ||
+    (category !== undefined &&
+      interaction.visible !== undefined &&
+      !interaction.visible.includes(category));
+  const focus = useEmphasis(
+    { kind: "sector", key: category ?? "", scope: "pie", seriesKey: category },
+    emphasis && category !== undefined && interaction.eligible.includes(category) && !hidden,
+  );
+  return (
+    <g
+      data-kind-ui="pie-category-paint"
+      data-category={category}
+      pointerEvents={hidden ? "none" : undefined}
+      aria-hidden={hidden || undefined}
+    >
+      <InteractionPaint opacity={hidden ? 0 : focus.factor}>{children}</InteractionPaint>
+    </g>
+  );
+}
 
 // Recharts also supports Cell props as data when neither the chart nor Pie supplies rows.
 function cellProps(children: ReactNode): Record<string, unknown>[] {
@@ -133,11 +181,14 @@ function EntranceSector({
     : emphasisKey
       ? emphasisKey(props.payload)
       : props.name;
+  const wholeHidden = use(PieHidden);
   const interactive =
+    !wholeHidden &&
     interactionKey !== undefined &&
     interaction.interactive &&
     interaction.markActivation &&
-    interaction.eligible.includes(String(semantic));
+    interaction.eligible.includes(String(semantic)) &&
+    (interaction.visible === undefined || interaction.visible.includes(String(semantic)));
   const focusRef = useInteractionFocus(String(semantic), interactive);
   const generatedId = useId();
   const sourceId = `kind-ui-pie-${generatedId.replace(/[^a-zA-Z0-9_-]/g, "_")}-paint`;
@@ -286,6 +337,7 @@ function EntranceSector({
       persistent={interactionKey !== undefined}
       enabled={
         enabled &&
+        (interactionKey === undefined || interaction.eligible.includes(String(semantic))) &&
         (emphasisKey !== undefined ? semantic !== undefined : typeof semantic === "string")
       }
       target={{ kind: "sector", key: String(semantic), scope, seriesKey: String(semantic) }}
@@ -444,6 +496,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     emphasisKey,
     categoryKey,
     interactionBinding,
+    hide,
     ...nativeProps
   } = props;
   const interaction = useChartInteraction();
@@ -457,16 +510,16 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   const filtered = useMemo(
     () =>
       interactionBinding && props.data && categoryKey !== undefined
-        ? filterCategoryRows(props.data, categoryKey, interaction.visible, props.children)
+        ? preserveCategoryRows(props.data, categoryKey, undefined, props.children)
         : undefined,
-    [interactionBinding, props.data, categoryKey, interaction.visible, props.children],
+    [interactionBinding, props.data, categoryKey, props.children],
   );
   const data = filtered?.data ?? props.data;
   const originalChildren = filtered?.children ?? props.children;
   const resolveInteractionKey = useCallback(
     (index: number): string | undefined => {
       // Cell props can override native payload fields; native index still addresses our rendered rows.
-      const row = data?.[index];
+      const row = props.data?.[index];
       if (row === undefined) return undefined;
       if (typeof categoryKey === "function") return categoryKey(row);
       if (
@@ -478,7 +531,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
         return String((row as Record<string, unknown>)[categoryKey]);
       throw new Error("PieSeries interaction requires a stable category key");
     },
-    [categoryKey, data],
+    [categoryKey, props.data],
   );
   const interactionKey = interactionBinding ? resolveInteractionKey : undefined;
   const { config, paints } = useChart();
@@ -489,6 +542,25 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
         : categoryCells(data, categoryKey, config, paints, originalChildren, props.fill),
     [categoryKey, data, config, paints, originalChildren, props.fill],
   );
+  const latestPointerProps = useRef(props);
+  useLayoutEffect(() => {
+    latestPointerProps.current = props;
+  });
+  const pointerHandlers = useMemo(() => {
+    const handler =
+      (
+        key: "onMouseEnter" | "onMouseLeave" | "onMouseMove" | "onMouseDown" | "onMouseUp",
+      ): NonNullable<PieSeriesProps<DataPoint, Value>["onMouseEnter"]> =>
+      (...args) =>
+        latestPointerProps.current[key]?.(...args);
+    return {
+      onMouseEnter: handler("onMouseEnter"),
+      onMouseLeave: handler("onMouseLeave"),
+      onMouseMove: handler("onMouseMove"),
+      onMouseDown: handler("onMouseDown"),
+      onMouseUp: handler("onMouseUp"),
+    };
+  }, []);
   const identities = useRef(new WeakMap<Event, string>());
   const boundChildren = useMemo(
     () =>
@@ -534,21 +606,34 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     });
   }, [data, categoryKey, glowCategories]);
   const seriesId = useId();
-  const { invalidate, emphasisScope } = useLineInteraction();
+  const { invalidate, emphasisScope, registerCategoryKeys, registerHiddenItem } =
+    useLineInteraction();
+  const nativeId = props.id ?? seriesId;
+  useLayoutEffect(() => {
+    if (interactionBinding === "root") return registerCategoryKeys(nativeId, resolveInteractionKey);
+  }, [interactionBinding, nativeId, registerCategoryKeys, resolveInteractionKey]);
+  useLayoutEffect(
+    () => registerHiddenItem(nativeId, hide === true),
+    [nativeId, hide, registerHiddenItem],
+  );
   const scope = `${emphasisScope}/${seriesId}`;
   const sectorShape = useCallback(
-    (sector: SectorPaintProps) => (
-      <EntranceSector
-        {...sector}
-        material={sector.index !== undefined && glowRows?.[sector.index] ? "glow" : material}
-        interactionKey={interactionKey}
-        scope={scope}
-        emphasisKey={emphasisKey}
-        enabled={props.activeShape === undefined && props.inactiveShape === undefined}
-        seriesStartAngle={props.startAngle ?? 0}
-        seriesEndAngle={props.endAngle ?? 360}
-      />
-    ),
+    (sector: SectorPaintProps) => {
+      const { key, ...paint } = sector;
+      return (
+        <EntranceSector
+          key={key}
+          {...paint}
+          material={sector.index !== undefined && glowRows?.[sector.index] ? "glow" : material}
+          interactionKey={interactionKey}
+          scope={scope}
+          emphasisKey={emphasisKey}
+          enabled={props.activeShape === undefined && props.inactiveShape === undefined}
+          seriesStartAngle={props.startAngle ?? 0}
+          seriesEndAngle={props.endAngle ?? 360}
+        />
+      );
+    },
     [
       material,
       glowRows,
@@ -561,6 +646,193 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
       props.endAngle,
     ],
   );
+  const boundShape = useCallback(
+    (
+      option:
+        | PieSeriesProps<DataPoint, Value>["shape"]
+        | PieSeriesProps<DataPoint, Value>["activeShape"],
+    ) =>
+      (sector: SectorPaintProps) => {
+        const index = sector.index ?? -1;
+        const key = interactionKey?.(index);
+        const shape =
+          option === undefined ? (
+            sectorShape(sector)
+          ) : isValidElement(option) ? (
+            cloneElement(option, Object.assign({}, sector, option.props))
+          ) : typeof option === "function" ? (
+            option({
+              ...sector,
+              index,
+              isActive: sector.isActive ?? false,
+              "data-recharts-item-index": sector["data-recharts-item-index"] ?? index,
+              "data-recharts-item-id": sector["data-recharts-item-id"] ?? "",
+            })
+          ) : (
+            <Sector
+              {...Object.fromEntries(
+                Object.entries({
+                  ...sector,
+                  ...(typeof option === "object" && option !== null ? option : {}),
+                }).filter(([key, value]) => key !== "key" && value !== undefined),
+              )}
+            />
+          );
+        return (
+          <PieCategoryPaint category={key} emphasis={option !== undefined}>
+            {shape}
+          </PieCategoryPaint>
+        );
+      },
+    [interactionKey, sectorShape],
+  );
+  const boundShapes = useMemo(
+    () => ({
+      shape: boundShape(props.shape),
+      activeShape: boundShape(props.activeShape ?? props.shape),
+      inactiveShape: boundShape(props.inactiveShape ?? props.shape),
+    }),
+    [boundShape, props.shape, props.activeShape, props.inactiveShape],
+  );
+  const boundLabels = useMemo<Pick<PieSeriesProps<DataPoint, Value>, "label" | "labelLine">>(() => {
+    const option = props.label;
+    if (!option) return {};
+    const labelLine = props.labelLine ?? true;
+    const paint = (index: number | undefined, content: ReactNode) => (
+      <PieCategoryPaint
+        category={index === undefined ? undefined : interactionKey?.(index)}
+        emphasis
+      >
+        {content}
+      </PieCategoryPaint>
+    );
+    if (
+      typeof option === "object" &&
+      !isValidElement(option) &&
+      "position" in option &&
+      option.position !== undefined
+    ) {
+      const content = option.content;
+      return {
+        label: {
+          ...option,
+          position: option.position,
+          content: (native: ComponentProps<typeof Label>) =>
+            paint(
+              native.index,
+              <Label {...native} {...(content !== undefined ? { content } : {})} zIndex={0} />,
+            ),
+        },
+      };
+    }
+    const options = typeof option === "object" && !isValidElement(option) ? option : {};
+    const offset =
+      "offsetRadius" in options && typeof options.offsetRadius === "number"
+        ? options.offsetRadius
+        : 20;
+    const endPoint = (native: PieLabelRenderProps) => {
+      const angle = (((native.startAngle + native.endAngle) / 2) * Math.PI) / 180;
+      return {
+        x: native.cx + (native.outerRadius + offset) * Math.cos(angle),
+        y: native.cy - (native.outerRadius + offset) * Math.sin(angle),
+      };
+    };
+    return {
+      label: (native: PieLabelRenderProps) => {
+        const labelProps = { ...native, ...options, ...endPoint(native) };
+        const result = isValidElement(option)
+          ? cloneElement(
+              option,
+              Object.fromEntries(
+                Object.entries(labelProps).filter(
+                  ([key, value]) => key !== "key" && value !== undefined,
+                ),
+              ),
+            )
+          : typeof option === "function"
+            ? option(native)
+            : native.value;
+        return paint(
+          native.index,
+          isValidElement(result) ? (
+            result
+          ) : (
+            <Text
+              {...Object.fromEntries(
+                Object.entries(labelProps).filter(
+                  ([key, value]) => key !== "key" && value !== undefined,
+                ),
+              )}
+              alignmentBaseline="middle"
+              className={`recharts-pie-label-text ${"className" in options ? (options.className ?? "") : ""}`}
+            >
+              {typeof result === "string" || typeof result === "number" ? result : undefined}
+            </Text>
+          ),
+        );
+      },
+      ...(labelLine
+        ? {
+            labelLine: (
+              native: PieLabelRenderProps & { points: ComponentProps<typeof Curve>["points"] },
+            ) => {
+              const lineOptions =
+                typeof labelLine === "object" && !isValidElement(labelLine) ? labelLine : {};
+              const lineProps = {
+                ...native,
+                ...lineOptions,
+                points: native.points?.map((point, index) =>
+                  index === 1 ? endPoint(native) : point,
+                ),
+              };
+              const content = isValidElement(labelLine) ? (
+                cloneElement(
+                  labelLine,
+                  Object.fromEntries(
+                    Object.entries(lineProps).filter(([, value]) => value !== undefined),
+                  ),
+                )
+              ) : typeof labelLine === "function" ? (
+                labelLine(lineProps)
+              ) : (
+                <Curve
+                  {...Object.fromEntries(
+                    Object.entries(lineProps).filter(
+                      ([key, value]) => key !== "key" && value !== undefined,
+                    ),
+                  )}
+                  type="linear"
+                  className={`recharts-pie-label-line ${lineOptions.className ?? ""}`}
+                />
+              );
+              return paint(native.index, content);
+            },
+          }
+        : { labelLine: false }),
+    };
+  }, [props.label, props.labelLine, interactionKey]);
+  const paintedChildren = useMemo(() => {
+    function paint(parts: ReactNode): ReactNode {
+      return Children.map(parts, (child) => {
+        if (!isValidElement<ComponentProps<typeof LabelList> & { children?: ReactNode }>(child))
+          return child;
+        if (child.type === Fragment) return cloneElement(child, {}, paint(child.props.children));
+        if (child.type !== LabelList) return child;
+        const content = child.props.content;
+        return cloneElement(child, {
+          content: (native: ComponentProps<typeof Label>) => (
+            <PieCategoryPaint
+              category={native.index === undefined ? undefined : interactionKey?.(native.index)}
+              emphasis
+            >
+              <Label {...native} {...(content !== undefined ? { content } : {})} zIndex={0} />
+            </PieCategoryPaint>
+          ),
+        });
+      });
+    }
+    return paint(boundChildren);
+  }, [boundChildren, interactionKey]);
   const inputs = [
     props.data,
     props.dataKey,
@@ -574,7 +846,6 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     props.paddingAngle,
     props.minAngle,
     props.cornerRadius,
-    props.hide,
     props.shape,
     props.activeShape,
     props.inactiveShape,
@@ -595,22 +866,24 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     previous.current = inputs;
   });
   return (
-    <StablePie<DataPoint, Value>
-      {...nativeProps}
-      {...(data !== undefined ? { data } : {})}
-      {...(onClick !== undefined ? { onClick } : {})}
-      stroke={props.stroke ?? "none"}
-      shape={props.shape ?? sectorShape}
-      {...(interactionBinding && props.shape === undefined && props.activeShape === undefined
-        ? { activeShape: sectorShape }
-        : {})}
-      {...(interactionBinding && props.shape === undefined && props.inactiveShape === undefined
-        ? { inactiveShape: sectorShape }
-        : {})}
-      isAnimationActive={false}
-    >
-      {boundChildren}
-    </StablePie>
+    <PieHidden value={hide === true}>
+      <StablePie<DataPoint, Value>
+        {...nativeProps}
+        {...pointerHandlers}
+        id={nativeId}
+        hide={false}
+        {...boundLabels}
+        {...(data !== undefined ? { data } : {})}
+        {...(onClick !== undefined ? { onClick } : {})}
+        stroke={props.stroke ?? "none"}
+        shape={boundShapes.shape}
+        activeShape={boundShapes.activeShape}
+        inactiveShape={boundShapes.inactiveShape}
+        isAnimationActive={false}
+      >
+        {paintedChildren}
+      </StablePie>
+    </PieHidden>
   );
 }
 registerPiePinComponent(PieSeries, "series");

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { InteractionPaint } from "./animation.js";
 import { useChartInteraction } from "./chart-interaction.js";
 import { useEmphasis } from "./emphasis.js";
 
@@ -33,6 +34,8 @@ export function SankeyFocusMark({
     <g
       data-kind-ui="sankey-focus-mark"
       data-node={nodeKey}
+      data-source={endpoints?.[0]}
+      data-target={endpoints?.[1]}
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
       aria-label={interactive ? `Highlight ${nodeKey}` : undefined}
@@ -56,7 +59,7 @@ export function SankeyFocusMark({
         }
       }}
     >
-      <g style={{ opacity: related ? 1 : 0.28 }}>{children}</g>
+      <InteractionPaint opacity={related ? 1 : 0.28}>{children}</InteractionPaint>
     </g>
   );
 }

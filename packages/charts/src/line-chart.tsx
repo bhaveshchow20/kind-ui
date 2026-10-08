@@ -47,6 +47,10 @@ type Interaction = {
   registerCategoryEligibility: (id: string, safe: boolean, hidden: boolean) => () => void;
   invalidate: () => void;
   seriesKeys: Map<string, string>;
+  hiddenItems: Map<string, boolean>;
+  registerHiddenItem: (id: string, hidden: boolean) => () => void;
+  categoryKeys: Map<string, (index: number) => string | undefined>;
+  registerCategoryKeys: (id: string, resolve: (index: number) => string | undefined) => () => void;
   registerSeries: (id: string, key: string) => () => void;
 };
 export const LineInteraction = createContext<Interaction | null>(null);
@@ -186,6 +190,37 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         return next;
       });
   }, []);
+  const [hiddenItems, setHiddenItems] = useState(() => new Map<string, boolean>());
+  const registerHiddenItem = useCallback((id: string, hidden: boolean) => {
+    setHiddenItems((current) =>
+      current.get(id) === hidden ? current : new Map(current).set(id, hidden),
+    );
+    return () =>
+      setHiddenItems((current) => {
+        if (!current.has(id)) return current;
+        const next = new Map(current);
+        next.delete(id);
+        return next;
+      });
+  }, []);
+  const [categoryKeys, setCategoryKeys] = useState(
+    () => new Map<string, (index: number) => string | undefined>(),
+  );
+  const registerCategoryKeys = useCallback(
+    (id: string, resolve: (index: number) => string | undefined) => {
+      setCategoryKeys((current) =>
+        current.get(id) === resolve ? current : new Map(current).set(id, resolve),
+      );
+      return () =>
+        setCategoryKeys((current) => {
+          if (!current.has(id)) return current;
+          const next = new Map(current);
+          next.delete(id);
+          return next;
+        });
+    },
+    [],
+  );
   const previousLoading = useRef(loading);
   const completing = previousLoading.current === true && loading !== true;
   useLayoutEffect(() => {
@@ -249,6 +284,10 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         invalidate,
         seriesKeys,
         registerSeries,
+        hiddenItems,
+        registerHiddenItem,
+        categoryKeys,
+        registerCategoryKeys,
       }}
     >
       <div

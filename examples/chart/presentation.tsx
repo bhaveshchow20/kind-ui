@@ -116,7 +116,7 @@ export function PresentationExample() {
       <section aria-label="Task outcomes" className="presentation-card">
         <h2>Task outcomes</h2>
         <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
-          <Chart.Legend aria-label="Visible task series" hideIcon={hideIcon}>
+          <Chart.Legend aria-label="Task series focus" hideIcon={hideIcon}>
             {({ label, visible, marker }) => (
               <>
                 {marker}

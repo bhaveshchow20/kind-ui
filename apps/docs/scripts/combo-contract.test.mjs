@@ -45,8 +45,8 @@ test("Composition keeps unit-aware native geometry and independent family entran
   assert.equal([...stacked.matchAll(/yAxisId="revenue"/g)].length, 3);
   assert.equal([...stacked.matchAll(/yAxisId="margin"/g)].length, 2);
   assert.match(stacked, /orientation="right"/);
-  assert.match(stacked, /visibleSeries={visibleSeries}/);
-  assert.match(stacked, /onVisibleSeriesChange={setVisibleSeries}/);
+  assert.match(stacked, /mode: "focus"/);
+  assert.match(stacked, /eligibleKeys: Object.keys\(config\)/);
   assert.match(stacked, /formatValue: dollars/);
   assert.match(stacked, /`\$\{value\}%`/);
   const motion = bundles["combo-motion"].files["src/examples/combo-motion/example.tsx"];

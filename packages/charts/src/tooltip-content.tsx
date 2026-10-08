@@ -48,6 +48,9 @@ export function TooltipContent({
   const line = use(LineInteraction);
   const identity = (entry: UpstreamTooltipContentProps["payload"][number]) =>
     itemKey?.(entry) ??
+    (entry.graphicalItemId
+      ? line?.categoryKeys.get(entry.graphicalItemId)?.(Number(tooltip.activeIndex))
+      : undefined) ??
     (entry.graphicalItemId ? line?.seriesKeys.get(entry.graphicalItemId) : undefined) ??
     String(entry.dataKey ?? entry.name);
   const { active, payload, label, formatter, labelFormatter, accessibilityLayer } = tooltip;
@@ -56,6 +59,7 @@ export function TooltipContent({
         (item) =>
           item.type !== "none" &&
           !item.hide &&
+          !(item.graphicalItemId && line?.hiddenItems.get(item.graphicalItemId)) &&
           (visibleSeries === undefined || visibleSeries.includes(identity(item))),
       )
     : [];

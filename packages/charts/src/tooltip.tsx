@@ -86,19 +86,26 @@ function PositionedContent({
   frameRef: TooltipProps["ref"];
   Frame: (props: TooltipFrameProps) => ReactNode;
 }) {
-  const { pointer, seriesKeys } = useLineInteraction();
+  const { pointer, seriesKeys, categoryKeys, hiddenItems } = useLineInteraction();
   const { visibleSeries } = useChart();
   // Exiting strokes can remain painted briefly; hidden series leave all tooltip content immediately.
-  const payload =
-    visibleSeries === undefined
-      ? tooltip.payload
-      : tooltip.payload.filter((entry) => {
-          const key =
-            itemKey?.(entry) ??
-            (entry.graphicalItemId ? seriesKeys.get(entry.graphicalItemId) : undefined) ??
-            String(entry.dataKey ?? entry.name);
-          return visibleSeries.includes(key);
-        });
+  const payload = tooltip.payload.filter((entry) => {
+    if (
+      entry.type === "none" ||
+      entry.hide ||
+      (entry.graphicalItemId && hiddenItems.get(entry.graphicalItemId))
+    )
+      return false;
+    if (visibleSeries === undefined) return true;
+    const key =
+      itemKey?.(entry) ??
+      (entry.graphicalItemId
+        ? categoryKeys.get(entry.graphicalItemId)?.(Number(tooltip.activeIndex))
+        : undefined) ??
+      (entry.graphicalItemId ? seriesKeys.get(entry.graphicalItemId) : undefined) ??
+      String(entry.dataKey ?? entry.name);
+    return visibleSeries.includes(key);
+  });
   const contentProps = { ...tooltip, payload };
   const width = useChartWidth() ?? 0;
   const height = useChartHeight() ?? 0;

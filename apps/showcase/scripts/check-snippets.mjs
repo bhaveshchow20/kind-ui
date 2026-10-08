@@ -31,10 +31,18 @@ try {
       for (const finish of ["plain", "clay", "glow"]) {
         for (const animate of [false, true]) {
           const file = join(temporary, `${recipe.id}-${finish}-${animate}.tsx`);
-          await writeFile(
-            file,
-            generate(recipe, finish, ["#733bff", "#119548", "#f22e79"], animate),
+          const source = generate(recipe, finish, ["#733bff", "#119548", "#f22e79"], animate);
+          assert.doesNotMatch(
+            source,
+            /visibleSeries=|onVisibleSeriesChange=|data\.filter\(/,
+            `${recipe.id} copied focus must preserve the complete data`,
           );
+          if (recipe.family === "Pie") {
+            assert.match(source, /interactionBinding="root"/);
+            assert.match(source, /categoryKey="id"/);
+            assert.match(source, /kind:\s*"category"/);
+          }
+          await writeFile(file, source);
           files.push(file);
         }
       }

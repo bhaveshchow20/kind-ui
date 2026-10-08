@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import {
   Children,
   type ComponentProps,
+  cloneElement,
   isValidElement,
   use,
   useCallback,
@@ -28,6 +29,7 @@ import {
   useYAxisScale,
   ZIndexLayer,
 } from "recharts";
+import { InteractionPaint } from "./animation.js";
 import { useBarCategoryHover } from "./bar-category.js";
 import { BarMotion } from "./bar-chart.js";
 import { type BarMaterial, BarMaterialFilter } from "./bar-material.js";
@@ -35,7 +37,9 @@ import { useChart } from "./chart-context.js";
 import { useEmphasis } from "./emphasis.js";
 import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
+import { SeriesEscapePaint } from "./series-escape-paint.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 /** Caller-owned identity selection; this component never computes forecast values. */
 export type BarProjection<DataPoint> = {
@@ -345,7 +349,33 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
             {...(materialized ? { filter: `url(#${filterId})` } : {})}
             id={id}
             zIndex={0}
-            hide={effectiveHide}
+            // Keep full-data native layout; the interaction layer suppresses hidden paint.
+            hide={false}
+            {...(props.label !== undefined
+              ? { label: visibilityLabel(props.label, effectiveHide, undefined, key) }
+              : {})}
+            {...(props.background
+              ? {
+                  background: {
+                    ...(
+                      <BackgroundPaint
+                        option={props.background}
+                        hidden={effectiveHide}
+                        seriesKey={key}
+                      />
+                    ),
+                    ...(typeof props.background === "object" && "zIndex" in props.background
+                      ? { zIndex: props.background.zIndex }
+                      : {}),
+                  },
+                }
+              : {})}
+            {...(effectiveHide
+              ? {
+                  tooltipType: "none" as const,
+                  activeBar: false as const,
+                }
+              : {})}
             {...(patterned
               ? { fill: `url(#${patternId})` }
               : color !== undefined
@@ -355,7 +385,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
             style={style}
             isAnimationActive={false}
           >
-            {children}
+            {visibilityLabelChildren(children, effectiveHide, undefined, key)}
           </Bar>
         </SeriesInteractionLayer>
       </ZIndexLayer>
@@ -408,12 +438,39 @@ function CategoryBar({
   }, [active, keyboard, pointer, hover, emphasis.enter, emphasis.leave]);
   return (
     <g data-kind-ui="emphasis-mark" data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
-      <g
+      <InteractionPaint
         data-kind-ui="emphasis-paint"
-        style={{ opacity: emphasis.active?.kind === "series" ? 1 : emphasis.factor }}
+        opacity={emphasis.active?.kind === "series" ? 1 : emphasis.factor}
       >
         <Rectangle {...props} />
-      </g>
+      </InteractionPaint>
     </g>
+  );
+}
+
+function BackgroundPaint({
+  option,
+  hidden,
+  seriesKey,
+  ...props
+}: Partial<BarShapeProps> & {
+  option: BarSeriesProps["background"];
+  hidden: boolean;
+  seriesKey: string | undefined;
+}) {
+  const paint = isValidElement<BarShapeProps>(option) ? (
+    cloneElement(option, { ...props, ...option.props })
+  ) : typeof option === "function" ? (
+    option(props as BarShapeProps)
+  ) : (
+    <Rectangle
+      {...props}
+      {...(typeof option === "object" && !isValidElement(option) ? option : {})}
+    />
+  );
+  return (
+    <SeriesEscapePaint seriesKey={seriesKey} hidden={hidden}>
+      {paint}
+    </SeriesEscapePaint>
   );
 }

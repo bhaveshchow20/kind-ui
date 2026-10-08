@@ -26,11 +26,11 @@ Add one `BarSeries` per measure. Use `stackId` for stacks and `layout="vertical"
 </Chart.Root>
 ```
 
-Place the legend outside the plot. `defaultVisibleSeries` enables its visibility buttons.
+Place the legend outside the plot. Legend focuses and dims by default; explicit `interaction.mode="visibility"` enables hide/show.
 
 ## Grouped and stacked series
 
-Compare grouped loans or stack them with matching `stackId` and axes. Legend toggles recalculate the visible groups or stacks.
+Compare grouped loans or stack them with matching `stackId` and axes. Legend focus dims other series. Explicit hiding preserves the original grouped slots and stack baselines.
 
 <ChartExample id="bar-comparison" />
 
@@ -167,6 +167,6 @@ Add visibility controls, value formatting and category labels with these compone
 | [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

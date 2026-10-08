@@ -8,9 +8,8 @@ export const areaExamples = [
   {
     id: "area-stacked",
     title: "Stacked series",
-    notes: "Monthly desktop and mobile visitors with consumer-owned legend toggles.",
-    acceptance:
-      "Both series stack across twelve months; keyboard legend toggles update visibility.",
+    notes: "Monthly desktop and mobile visitors with legend focus.",
+    acceptance: "Both series stack across twelve months; keyboard legend actions dim other series.",
   },
   {
     id: "area-materials",

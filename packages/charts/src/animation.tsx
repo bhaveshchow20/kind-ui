@@ -4,11 +4,11 @@ import { animate as animateValue, motion, type Transition, useMotionValue } from
 import {
   createContext,
   type ReactElement,
+  type ReactNode,
   use,
   useCallback,
   useId,
   useLayoutEffect,
-  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -120,6 +120,24 @@ function useAnimatedCoordinate(target: number, enabled: boolean, transition: Tra
   }, [value, target, enabled, transition]);
   return value;
 }
+/** Retarget paint from its current opacity; geometry and native identities stay mounted. */
+export function InteractionPaint({
+  opacity,
+  children,
+  "data-kind-ui": kind = "interaction-paint",
+}: {
+  opacity: number;
+  children: ReactNode;
+  "data-kind-ui"?: string | undefined;
+}) {
+  const { enabled, transition } = use(MotionContext);
+  const value = useAnimatedCoordinate(opacity, enabled, transition);
+  return (
+    <motion.g data-kind-ui={kind} initial={false} style={{ opacity: value }}>
+      {children}
+    </motion.g>
+  );
+}
 export function ActiveMarker({
   cx,
   cy,
@@ -160,52 +178,21 @@ export function LineSeries<
   DataPoint = Parameters<DefaultLineDataKey>[0],
   Value = ReturnType<DefaultLineDataKey>,
 >(props: LineSeriesProps<DataPoint, Value>) {
-  const { enabled } = use(MotionContext);
   const { visibleSeries } = useChart();
   const key = props.seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
   const visible = visibleSeries === undefined || (key !== undefined && visibleSeries.includes(key));
-  const opacity = useMotionValue(visible ? 1 : 0);
-  const [drawn, setDrawn] = useState(visible);
-  const previous = useRef(visible);
-  const run = useRef(0);
-  useLayoutEffect(() => {
-    const changed = previous.current !== visible;
-    previous.current = visible;
-    const token = ++run.current;
-    if (!enabled) {
-      opacity.set(visible ? 1 : 0);
-      setDrawn(visible);
-      return;
-    }
-    if (!changed) return;
-    if (visible) setDrawn(true);
-    const controls = animateValue(opacity, visible ? 1 : 0, {
-      duration: 0.18,
-      ease: "easeOut",
-      onComplete: () => {
-        if (!visible && run.current === token) setDrawn(false);
-      },
-    });
-    return () => controls.stop();
-  }, [visible, enabled, opacity]);
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
-      <motion.g
-        initial={false}
-        style={{ opacity }}
-        pointerEvents={visible ? undefined : "none"}
-        aria-hidden={visible ? undefined : true}
-      >
+      <g pointerEvents={visible ? undefined : "none"} aria-hidden={visible ? undefined : true}>
         <StaticLineSeries<DataPoint, Value>
           {...props}
           activeDot={
             visible ? (props.activeDot ?? <ActiveMarker variant={props.activePointStyle} />) : false
           }
           zIndex={0}
-          renderWhileHidden={enabled && drawn}
           isAnimationActive={false}
         />
-      </motion.g>
+      </g>
     </ZIndexLayer>
   );
 }

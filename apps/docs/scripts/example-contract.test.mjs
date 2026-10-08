@@ -147,7 +147,7 @@ test("Line variant sources match selected public defaults without runtime compil
   }
 });
 
-test("Area consumers preserve explicit composition and consumer-owned stacked visibility", () => {
+test("Area consumers preserve explicit composition and stacked series focus", () => {
   const areas = JSON.parse(readFileSync("generated/area-examples.json", "utf8"));
   assert.deepEqual(Object.keys(areas), ["area", "area-curves", "area-stacked", "area-materials"]);
   for (const bundle of Object.values(areas)) {
@@ -173,7 +173,7 @@ test("Area consumers preserve explicit composition and consumer-owned stacked vi
   }
   assert.match(
     areas["area-stacked"].files["src/examples/area-stacked/example.tsx"],
-    /onVisibleSeriesChange={setVisibleSeries}/,
+    /mode: "focus"/,
   );
 });
 
