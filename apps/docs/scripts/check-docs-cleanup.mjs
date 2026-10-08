@@ -201,7 +201,7 @@ try {
     ),
   );
   console.log(
-    `Docs cleanup: ${evidence.length} page/viewport checks, ${loadingCoverage.length} exported chart components with loading previews, focus and canonical favicon passed.`,
+    `Docs cleanup: ${evidence.length} page/viewport checks, 13 family loading previews and ${loadingCoverage.length} native loading exports, focus and canonical favicon passed.`,
   );
 } finally {
   await browser.close();

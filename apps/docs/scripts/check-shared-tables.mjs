@@ -31,7 +31,7 @@ try {
       await page.evaluate(() => document.fonts.ready);
       const tables = page.locator(".line-props-scroll");
       assert.deepEqual(
-        await tables.locator("caption").allTextContents(),
+        await tables.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label"))),
         names.map((name) => `${referenceTitle(name)} props`),
       );
       assert.ok((await page.locator("pre").count()) > 0, `${slug} usage source`);
@@ -44,7 +44,7 @@ try {
           "Description",
         ]);
         assert.deepEqual(
-          await table.locator("tbody th").allTextContents(),
+          await table.locator("tbody td:first-child").allTextContents(),
           api[name].map((entry) => entry.name),
         );
         await table.scrollIntoViewIfNeeded();
