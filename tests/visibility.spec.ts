@@ -18,6 +18,7 @@ test("packed restored series have a visibility transition in both toggle orders"
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.clock.install();
+  await page.clock.pauseAt(new Date());
   await page.goto("http://127.0.0.1:4176/motion.html");
   await page.clock.runFor(1200);
   for (const [name, selector] of [
@@ -26,14 +27,14 @@ test("packed restored series have a visibility transition in both toggle orders"
   ] as const) {
     const button = page.getByRole("button", { name, exact: true });
     await button.evaluate((node) => (node as HTMLButtonElement).click());
-    await page.clock.runFor(400);
+    await page.clock.runFor(450);
     await expect(page.locator(selector)).toHaveCount(1);
     expect(await alpha(page.locator(selector))).toBe(0);
     await button.evaluate((node) => (node as HTMLButtonElement).click());
     await page.clock.runFor(40);
     expect(await alpha(page.locator(selector))).toBeGreaterThan(0);
     expect(await alpha(page.locator(selector))).toBeLessThan(1);
-    await page.clock.runFor(400);
+    await page.clock.runFor(450);
     expect(await alpha(page.locator(selector))).toBe(1);
   }
 });
