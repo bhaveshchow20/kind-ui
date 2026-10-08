@@ -627,9 +627,9 @@ for (const accessor of [false, true]) {
     await expect(tooltip).toContainText("Beta");
     await expect(tooltip).toContainText("40 seats");
     await page.getByRole("button", { name: "Filter pin", exact: true }).click();
-    await expect(tooltip).not.toBeVisible();
+    await expect(tooltip).toContainText("Beta");
     await page.getByRole("button", { name: "Show pin", exact: true }).click();
-    await expect(tooltip).not.toBeVisible();
+    await expect(tooltip).toContainText("Beta");
     await page.getByRole("button", { name: "Remount pin", exact: true }).click();
     await expect(tooltip).toContainText("Beta");
   });

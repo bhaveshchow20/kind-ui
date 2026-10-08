@@ -328,7 +328,7 @@ test("packed native visibility changes preserve active hover and full-data geome
   const marker = page.locator('[data-kind-ui="active-marker"]').first();
   const before = Number(await point.getAttribute("cy"));
   expect(Number(await marker.getAttribute("cy"))).toBeCloseTo(before, 1);
-  for (const hidden of [false, true]) {
+  for (let cycle = 0; cycle < 2; cycle++) {
     await toggle.evaluate((node) => (node as HTMLInputElement).click());
     await page.clock.runFor(32);
     const target = Number(await point.getAttribute("cy"));

@@ -98,7 +98,7 @@ test("consumer handler, before-hook and Escape can veto; hover never changes per
 });
 
 for (const family of ["pie", "radial"]) {
-  test(`${family} category hiding removes rows and retains keyed focus after reorder`, async ({
+  test(`${family} category hiding retains slots and keyed focus after reorder`, async ({
     page,
   }) => {
     await page.goto(
@@ -110,7 +110,8 @@ for (const family of ["pie", "radial"]) {
     await expect(scope.locator("[data-interaction-selected]")).toHaveText("first");
     await scope.getByRole("button", { name: "Switch mode" }).click();
     await scope.getByRole("button", { name: "First", exact: true }).click();
-    await expect(scope.locator(".recharts-pie-sector, .recharts-radial-bar-sector")).toHaveCount(1);
+    await expect(scope.locator(".recharts-pie-sector, .recharts-radial-bar-sector")).toHaveCount(2);
+    await expect(scope.locator('[aria-hidden="true"][pointer-events="none"]')).not.toHaveCount(0);
     await scope.getByRole("button", { name: "First", exact: true }).click();
     await expect(scope.locator(".recharts-pie-sector, .recharts-radial-bar-sector")).toHaveCount(2);
   });
@@ -129,9 +130,7 @@ async function alpha(locator: import("@playwright/test").Locator) {
   });
 }
 
-test("persistent paint survives keyboard activation with transient emphasis disabled; inspection restores it", async ({
-  page,
-}) => {
+test("persistent paint survives keyboard activation and inactive inspection", async ({ page }) => {
   await page.goto(
     `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
   );
@@ -145,7 +144,7 @@ test("persistent paint survives keyboard activation with transient emphasis disa
   await scope.getByRole("button", { name: "Toggle transient emphasis" }).click();
   const firstLegend = scope.getByRole("button", { name: "First", exact: true });
   await firstLegend.hover();
-  expect(await alpha(first)).toBe(1);
+  expect(await alpha(first)).toBeCloseTo(0.28);
   await scope.getByRole("heading").hover();
   expect(await alpha(first)).toBeCloseTo(0.28);
   await expect(scope.locator("[data-interaction-selected]")).toHaveText("second");
@@ -184,7 +183,7 @@ test("native-hidden peers cannot permit hiding the last painted series", async (
   );
 });
 
-test("Pie filtering re-normalizes full arc and keeps original blue Cell", async ({ page }) => {
+test("Pie hiding preserves angles and keeps original blue Cell", async ({ page }) => {
   await page.goto(
     `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
   );
@@ -192,9 +191,9 @@ test("Pie filtering re-normalizes full arc and keeps original blue Cell", async 
   await scope.getByLabel("Interaction family").selectOption("pie");
   await scope.getByRole("button", { name: "Switch mode" }).click();
   await scope.getByRole("button", { name: "First", exact: true }).click();
-  const sector = scope.locator("[data-kind-ui=pie-sector]");
-  await expect(sector).toHaveCount(1);
-  await expect(sector).toHaveAttribute("data-sector-span", "360");
+  const sector = scope.locator("[data-kind-ui=pie-sector]").nth(1);
+  await expect(scope.locator("[data-kind-ui=pie-sector]")).toHaveCount(2);
+  await expect(sector).toHaveAttribute("data-sector-span", "240");
   await expect(sector).toHaveAttribute("fill", "#0000ff");
   await expect(scope.getByRole("button", { name: "Toggle second", exact: true })).toHaveAttribute(
     "aria-pressed",
@@ -405,7 +404,9 @@ for (const accessor of [false, true]) {
       name: `Cell identity ${accessor ? "accessor" : "field"}`,
       exact: true,
     });
-    const second = scope.locator('[data-original-category="second"][data-kind-ui="pie-sector"]');
+    const second = scope.locator(
+      '[data-interaction-focus-key="second"] [data-kind-ui="pie-sector"]',
+    );
     await expect(second).toHaveAttribute("fill", "#e11d48");
     await second.click();
     await expect(scope.locator("[data-cell-clicks]")).toHaveText("1");
@@ -419,7 +420,7 @@ for (const accessor of [false, true]) {
     await page.keyboard.press("Enter");
     await expect(scope.locator("[data-cell-selected]")).toHaveText("second");
     await scope.getByRole("button", { name: "Veto Cell" }).click();
-    await scope.locator('[data-original-category="first"][data-kind-ui="pie-sector"]').click();
+    await scope.locator('[data-interaction-focus-key="first"] [data-kind-ui="pie-sector"]').click();
     await expect(scope.locator("[data-cell-clicks]")).toHaveText("2");
     await expect(scope.locator("[data-cell-selected]")).toHaveText("second");
     await scope.getByRole("button", { name: "Reorder Cells" }).click();
@@ -441,10 +442,10 @@ for (const accessor of [false, true]) {
     await page.keyboard.press("Enter");
     await expect(scope.locator("[data-cell-selected]")).toHaveText("second");
     await scope.getByRole("button", { name: "Filter first" }).click();
-    await expect(scope.locator('[data-kind-ui="pie-sector"]')).toHaveCount(1);
+    await expect(scope.locator('[data-kind-ui="pie-sector"]')).toHaveCount(2);
     await expect(control).toHaveAttribute("aria-pressed", "true");
     await expect(second).toHaveAttribute("fill", "#e11d48");
-    await expect(second).toHaveAttribute("data-sector-span", "360");
+    await expect(second).toHaveAttribute("data-sector-span", "120");
   });
 }
 test("Root-derived Area hide retains restore control while last-visible protection remains", async ({
