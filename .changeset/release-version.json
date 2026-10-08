@@ -1,6 +1,6 @@
 {
   "package": "@kind-ui/charts",
-  "version": "0.3.0",
-  "previousVersion": "0.2.0",
-  "changesets": ["remove-paper-material"]
+  "version": "0.4.0",
+  "previousVersion": "0.3.0",
+  "changesets": ["focus-preserves-chart-data", "quiet-digits-fit", "search-discovery"]
 }
