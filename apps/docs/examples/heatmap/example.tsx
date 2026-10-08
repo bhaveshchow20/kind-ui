@@ -34,9 +34,10 @@ const scale = Chart.createHeatmapScale({
   colors: ["#eff6ff", "#93c5fd", "#2563eb", "#1e3a8a"],
 });
 
-export function SupportHeatmap() {
+export function SupportHeatmap({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
     <Chart.HeatmapChart
+      loading={state === "loading"}
       rows={rows}
       columns={columns}
       data={data}

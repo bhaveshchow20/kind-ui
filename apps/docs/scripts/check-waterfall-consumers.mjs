@@ -15,7 +15,7 @@ function writeFiles(files) {
 }
 writeFiles(verificationFiles(bundles.waterfall));
 mkdirSync(path.join(root, "vendor"), { recursive: true });
-cpSync("vendor/kind-ui-charts-0.2.0.tgz", path.join(root, "vendor/kind-ui-charts-0.2.0.tgz"));
+cpSync("vendor/kind-ui-charts-0.3.0.tgz", path.join(root, "vendor/kind-ui-charts-0.3.0.tgz"));
 const run = (args) => execFileSync("npm", args, { cwd: root, stdio: "inherit" });
 run(["ci", "--ignore-scripts", "--no-audit", "--no-fund"]);
 const variants = Object.values(bundles).flatMap((b) => [
@@ -66,9 +66,9 @@ for (const b of variants) {
     strictBundler: "passed",
   });
 }
-assert.equal(evidence.length, 5);
+assert.equal(evidence.length, variants.length);
 assert.deepEqual(
   evidence.filter(({ id }) => id === "waterfall-materials").map(({ variant }) => variant),
-  ["plain", "clay", "glow"],
+  ["default", "clay", "glow"],
 );
 writeFileSync("artifacts/waterfall-consumers.json", JSON.stringify(evidence, null, 2));

@@ -15,12 +15,13 @@ const config = {
   field: { label: "Field", color: "#008b82" },
 } satisfies Chart.SeriesConfig;
 
-export function ProductRadarChart() {
+export function ProductRadarChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root config={config}>
+    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.RadarChart
+          loading={state === "loading"}
           data={data}
           animate
           outerRadius="68%"

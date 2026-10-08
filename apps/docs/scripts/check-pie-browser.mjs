@@ -149,23 +149,7 @@ try {
       (await visible.getByRole("status").allTextContents()).join().includes("100 hours selected"),
     );
   }
-  await visible.getByRole("button", { name: "Hide all categories", exact: true }).click();
-  await expect(sectors).toHaveCount(0);
-  await expect(root).toHaveAttribute("data-visibility-changes", callbacks);
-  assert.ok(
-    (await visible.getByRole("status").allTextContents()).join().includes("0 hours selected"),
-  );
-  await design.click();
-  assert.equal(await visible.locator('[data-kind-ui="pie-sector"]').count(), 1);
-  assert.deepEqual(await fills(visible), [categoryColors[0]]);
-  await visible.getByRole("button", { name: "Show all categories", exact: true }).click();
-  await expect(sectors).toHaveCount(4);
-  await expect.poll(() => fills(visible)).toEqual(categoryColors);
-  for (const name of ["Design", "Engineering", "Operations", "Research"])
-    await expect(visible.getByRole("button", { name, exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+  await expect(visible.getByRole("button", { name: /all categories/ })).toHaveCount(0);
   const rounded = page.locator('[data-component="pie-rounded"]');
   await rounded.scrollIntoViewIfNeeded();
   const geometryPaths = [];
@@ -207,7 +191,7 @@ try {
   await page.getByRole("option", { name: "Glow", exact: true }).click();
   await materials.locator('[data-kind-ui="pie-halo"]').first().waitFor();
   await materials.getByRole("tab", { name: "Code", exact: true }).click();
-  assert.ok((await materials.locator("pre").textContent()).includes('material = "glow"'));
+  assert.ok((await materials.locator("pre").textContent()).includes('appearance = "glow"'));
   await materials.getByRole("tab", { name: "Preview", exact: true }).click();
   for (const width of [320, 375]) {
     await page.setViewportSize({ width, height: 812 });

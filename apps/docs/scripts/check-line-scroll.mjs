@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { assertToc } from "./docs-browser-contracts.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
@@ -28,13 +28,16 @@ try {
   assert.equal(await toc.locator("h3").textContent(), "On this page");
   await assertToc(p, [
     "Usage",
+    "Compose plot parts",
     "Curve types",
     "Multiple series",
     "Dots and labels",
     "Materials",
+    "Point markers, dashed lines and reveal direction",
+    "Decorative backgrounds",
+    "Loading State",
     "API reference",
     "Shared components",
-    "Presentation options",
   ]);
   assert.equal(
     await toc
@@ -82,6 +85,10 @@ try {
   assert.ok((await code.evaluate((n) => n.scrollTop)) > 100);
   assert.equal(await p.evaluate(() => scrollY), pageBefore);
   await code.evaluate((n) => (n.scrollTop = n.scrollHeight));
+  assert.equal(
+    await code.evaluate((n) => n.scrollTop),
+    await code.evaluate((n) => n.scrollHeight - n.clientHeight),
+  );
   await p.mouse.move(1160, 400);
   await p.waitForTimeout(700);
   await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -89,7 +96,19 @@ try {
   await p.waitForTimeout(300);
   await p.mouse.wheel(0, 300);
   await p.waitForTimeout(300);
-  assert.ok((await p.evaluate(() => scrollY)) > pageBefore + 100);
+  assert.equal(await code.evaluate((n) => getComputedStyle(n).overscrollBehaviorY), "auto");
+  // Chromium may keep a wheel transaction latched to the code viewport after
+  // its programmatic scroll. A new gesture must still chain at the boundary.
+  await expect
+    .poll(async () => {
+      const current = await p.evaluate(() => scrollY);
+      if (current > pageBefore + 100) return current;
+      const currentBox = await code.boundingBox();
+      await p.mouse.move(currentBox.x + currentBox.width / 2, currentBox.y + currentBox.height / 2);
+      await p.mouse.wheel(0, 300);
+      return p.evaluate(() => scrollY);
+    })
+    .toBeGreaterThan(pageBefore + 100);
   evidence.wheel.push({ label: "code-internal-and-boundary", passed: true });
   await p.evaluate(() => scrollTo(0, 0));
   await card.getByRole("tab", { name: "Preview", exact: true }).click();
@@ -147,11 +166,7 @@ try {
   evidence.touch.push({ graphSwipe: touchScroll });
   await m.evaluate(() => scrollTo(0, 0));
   await m.getByRole("button", { name: "Open Sidebar", exact: true }).click();
-  await m.waitForTimeout(300);
-  assert.equal(
-    await m.evaluate(() => document.activeElement?.getAttribute("aria-label")),
-    "Close Sidebar",
-  );
+  await expect(m.getByRole("button", { name: "Close Sidebar", exact: true })).toBeFocused();
   await m.keyboard.press("Escape");
   await m.waitForTimeout(300);
   assert.equal(

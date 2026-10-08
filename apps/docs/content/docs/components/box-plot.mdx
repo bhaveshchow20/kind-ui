@@ -3,14 +3,18 @@ title: BoxPlot
 description: Compare distributions with explicit quartiles, whiskers and outliers.
 ---
 
+Supply your own quartiles, whiskers and outliers to compare distributions.
+
 <ChartExample id="box-plot" />
 
 ## Usage
 
-Supply caller-computed quartiles, whiskers and outliers to `BoxPlotSeries`.
+Open **Code** for the complete component and its data. `BoxPlotSeries` draws each supplied summary; Root provides the series label and color.
 
-```tsx title="Composition"
-<Chart.Root config={config}>
+Use this composition when adapting the example:
+
+```tsx title="Composition sketch"
+<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
   <Chart.Legend />
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.BoxPlotChart data={data} animate accessibilityLayer aria-label="Response time distributions">
@@ -41,19 +45,23 @@ Supply caller-computed quartiles, whiskers and outliers to `BoxPlotSeries`.
 </Chart.Root>
 ```
 
-The tooltip reads the original row from `payload` to label statistics; native range values alone describe only the enclosing extent.
+Read the original row from `payload` to show named statistics such as the median.
 
-## Summary contract
+## Summary data
 
-Finite summaries must satisfy `lowerWhisker <= q1 <= median <= q3 <= upperWhisker`.
+Calculate quartiles, median, whiskers and outliers before rendering. Kind draws your summaries without choosing a statistical method.
 
-Outliers must be finite and strictly outside whiskers; duplicates remain separate marks and may overlap.
+```tsx
+const data = [{
+  period: "Checkout",
+  lowerWhisker: 26, q1: 46, median: 68, q3: 88, upperWhisker: 126,
+  outlier: 154,
+}];
+```
 
-Numeric domains must include every outlier; native domain inference includes them.
+In the chart above, the box spans Q1–Q3, its middle line marks the median, and the separate circle is an outlier. Hover a box to inspect all six statistics.
 
-Compute quartiles, whiskers and outliers before rendering; Kind chooses no statistical convention. Boxes span Q1–Q3, lines mark medians and whiskers, and circles show outliers.
-
-Equal quartiles collapse to a line. Equal whiskers, zero and negative values are valid. Missing summaries or empty data draw no marks; malformed present summaries throw.
+<Callout title="Note">Use finite values satisfying `lowerWhisker <= q1 <= median <= q3 <= upperWhisker`. Outliers must fall outside the whiskers and within your axis domain. Equal quartiles are valid; missing summaries draw no mark.</Callout>
 
 ## Collapsed and missing summaries
 
@@ -73,9 +81,15 @@ Choose Default, Clay or Glow. Explicit `filter` or `style.filter` overrides the 
 
 <ChartExample id="box-plot-materials" />
 
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while summaries are pending. Use `loadingLabel` to name the pending data.
+
+<ChartExample id="box-plot" variant="loading" />
+
 ## API reference
 
-Focused props for explicit range-Bar composition. BoxPlot uses public axis-scale hooks; it has no configured wrapper.
+Use these props when composing a Box Plot.
 
 ### BoxPlotChart
 
@@ -102,7 +116,7 @@ Custom range shapes retain inspection but cannot use Bar category emphasis. See 
 | --- | --- | --- | --- |
 | `dataKey` | `(keyof Row & string) \| ((row: Row) => BoxPlotSummary \| null \| undefined)` | Required | Direct property name or accessor; nested string paths are not interpreted. |
 | `seriesKey` | `string` | Required | Root metadata, color and visibility identity, independent of the generated range accessor. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static mark finish. Explicit filters and custom shapes retain ownership. |
+| `material` | `"clay" \| "glow"` | Omitted | Static mark finish. Explicit filters and custom shapes retain ownership. |
 | `barSize` | `number \| string` | Native automatic sizing | Category-axis width; numbers are pixels, native percentage strings are also accepted. |
 | `outlierRadius` | `number` | `3` | Radius of each outlier circle in screen pixels. |
 | `shape` | `(props: BoxPlotShapeProps) => ReactNode` | Built-in mark | Receives original summary, native Bar shape props and mapped coordinates. Owns returned markup. |
@@ -127,7 +141,7 @@ Renders caller-owned screen coordinates; it neither computes statistics nor maps
 | `size` | `number` | Required | Category-axis mark width in pixels. |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | Direction of the quantitative geometry. |
 | `outlierRadius` | `number` | `3` | Screen-space circle radius. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Static finish; explicit group filters take precedence. |
+| `material` | `"clay" \| "glow"` | Omitted | Static finish; explicit group filters take precedence. |
 | `strokeWidth` | SVG stroke width | `1.5` | Native stroke width; explicit SVG paint stays consumer-owned. |
 
 </div>
@@ -149,4 +163,13 @@ Renders caller-owned screen coordinates; it neither computes statistics nor maps
 
 ## Shared components
 
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+Use these building blocks to customize this chart. Each reference includes its full API.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

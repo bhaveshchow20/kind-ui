@@ -20,7 +20,7 @@ const config = {
   weekend: { label: "Weekend", color: "#07948b", legendShape: weekendShape },
 } satisfies Chart.SeriesConfig;
 
-export function TaskScatterChart() {
+export function TaskScatterChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   const [visibleSeries, setVisibleSeries] = useState<string[]>(["weekday", "weekend"]);
   return (
     <Chart.Root
@@ -31,6 +31,7 @@ export function TaskScatterChart() {
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.ScatterChart
+          loading={state === "loading"}
           animate
           accessibilityLayer
           margin={{ top: 20, right: 24, bottom: 8, left: 0 }}

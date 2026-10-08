@@ -21,9 +21,12 @@ const Material = dynamic(
   { loading, ssr: false },
 );
 export const previews = {
-  waterfall: Cash,
+  waterfall: ({ variant }: PreviewProps) => {
+    const Primary = Cash;
+    return <Primary state={variant as "ready" | "loading"} />;
+  },
   "waterfall-missing": Missing,
   "waterfall-materials": ({ variant }: PreviewProps) => (
-    <Material material={variant as "plain" | "clay" | "glow"} />
+    <Material appearance={variant as "default" | "clay" | "glow"} />
   ),
 };

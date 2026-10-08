@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { referenceTitle } from "../lib/api-reference.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const api = JSON.parse(readFileSync("generated/api.json", "utf8"));
 const pages = {
-  root: ["Root"],
+  root: ["Root", "LoadingReference"],
   legend: ["Legend"],
   tooltip: ["Tooltip", "TooltipContent"],
   "series-config": ["SeriesMetadata"],
@@ -28,16 +29,22 @@ try {
     for (const [slug, names] of Object.entries(pages)) {
       assert.equal((await page.goto(`${origin}/docs/chart-components/${slug}/`)).status(), 200);
       await page.evaluate(() => document.fonts.ready);
-      const tables = page.locator(".table-scroll");
+      const tables = page.locator(".line-props-scroll");
       assert.deepEqual(
-        await tables.locator("caption").allTextContents(),
-        names.map((name) => `${name} props`),
+        await tables.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label"))),
+        names.map((name) => `${referenceTitle(name)} props`),
       );
       assert.ok((await page.locator("pre").count()) > 0, `${slug} usage source`);
       for (const [i, name] of names.entries()) {
         const table = tables.nth(i);
+        assert.deepEqual(await table.locator("thead th").allTextContents(), [
+          "Prop",
+          "Type",
+          "Default",
+          "Description",
+        ]);
         assert.deepEqual(
-          await table.locator("tbody th").allTextContents(),
+          await table.locator("tbody td:first-child").allTextContents(),
           api[name].map((entry) => entry.name),
         );
         await table.scrollIntoViewIfNeeded();
@@ -77,7 +84,7 @@ try {
     JSON.stringify({ evidence, errors }, null, 2),
   );
   console.log(
-    "All five shared API tables retain public props and chain desktop wheel/mobile touch without page overflow.",
+    "All six shared API tables retain public props and chain desktop wheel/mobile touch without page overflow.",
   );
 } finally {
   await browser.close();

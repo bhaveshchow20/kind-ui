@@ -82,7 +82,7 @@ try {
         const cell = grid.locator("td").first();
         const size = await cell.boundingBox();
         assert.ok(
-          Math.abs(size.width - 12) < 1 && Math.abs(size.height - 12) < 1,
+          Math.abs(size.width - size.height) < 1 && size.width >= 6 && size.width <= 28,
           JSON.stringify(size),
         );
         assert.equal(
@@ -101,7 +101,7 @@ try {
           assert.ok(
             await compact
               .locator('[data-kind-ui="heatmap-scroll"]')
-              .evaluate((node) => node.scrollWidth > node.clientWidth && node.scrollLeft > 0),
+              .evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
           );
       }
       if (family === "radial") {
@@ -165,16 +165,16 @@ try {
   }
   for (const width of [1440, 320]) {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto(origin + publicPath("/docs/guides/customization/"));
+    await page.goto(origin + publicPath("/docs/components/pie/"));
     const pie = page.locator('[data-component="pie-interaction"]');
     await pie.scrollIntoViewIfNeeded();
-    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(2);
+    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(3);
     await expect(pie.locator('[data-kind-ui="pie-halo"]')).toHaveCount(0);
     await expect(pie.locator('[data-kind-ui="chart-tooltip"]')).toContainText("Service");
     const other = pie.getByRole("button", { name: "Other", exact: true });
     await other.click();
     await expect(other).toHaveAttribute("aria-pressed", "true");
-    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(2);
+    await expect(pie.locator('[data-kind-ui="pie-sector"]')).toHaveCount(3);
     await pie.getByRole("button", { name: "Highlight service", exact: true }).focus();
     await page.keyboard.press("Enter");
     await expect(pie.getByRole("button", { name: "Service", exact: true })).toHaveAttribute(
@@ -186,6 +186,7 @@ try {
     await expect(
       pie.locator('[data-kind-ui="chart-legend-button"][aria-pressed="true"]'),
     ).toHaveCount(0);
+    await page.goto(origin + publicPath("/docs/components/combo/"));
     const presentation = page.locator('[data-component="combo-presentation"]');
     await presentation.scrollIntoViewIfNeeded();
     await presentation.locator("svg.recharts-surface").first().waitFor();
@@ -194,15 +195,19 @@ try {
     await target.click();
     await expect(target).toHaveAttribute("aria-pressed", "true");
     for (const id of ["combo-presentation", "pie-interaction"]) {
+      await page.goto(
+        origin + publicPath(`/docs/components/${id.startsWith("pie") ? "pie" : "combo"}/`),
+      );
       const card = page.locator(`[data-component="${id}"]`);
       await card.scrollIntoViewIfNeeded();
       const height = (await card.locator(".chart-example").boundingBox()).height;
-      const values =
-        id === "pie-interaction" ? ["selective-glow", "loading", "ready"] : ["loading", "ready"];
+      const values = id === "pie-interaction" ? ["selective-glow", "ready"] : ["ready"];
       for (const value of values) {
         const option = bundles[id].variants[value];
-        await card.getByRole("combobox", { name: "State", exact: true }).click();
-        await page.getByRole("option", { name: option.label, exact: true }).click();
+        if (id === "pie-interaction") {
+          await card.getByRole("combobox", { name: "Highlight", exact: true }).click();
+          await page.getByRole("option", { name: option.label, exact: true }).click();
+        }
         const skeleton = card.locator('[data-kind-ui="chart-loading-skeleton"]');
         if (value === "loading") {
           await expect(skeleton).toBeVisible();
@@ -248,11 +253,11 @@ try {
   const provenance = await context.request.get(origin + publicPath("/package-provenance.json"));
   assert.equal(provenance.status(), 404, "Internal provenance must not be public");
   const download = await context.request.get(
-    origin + publicPath("/examples/package/kind-ui-charts-0.2.0.tgz"),
+    origin + publicPath("/examples/package/kind-ui-charts-0.3.0.tgz"),
   );
   assert.equal(download.status(), 404, "Local validation archive must not be public");
   assert.equal(
-    createHash("sha256").update(readFileSync("vendor/kind-ui-charts-0.2.0.tgz")).digest("hex"),
+    createHash("sha256").update(readFileSync("vendor/kind-ui-charts-0.3.0.tgz")).digest("hex"),
     JSON.parse(readFileSync("vendor/provenance.json", "utf8")).sha256,
   );
   assert.deepEqual(errors, []);

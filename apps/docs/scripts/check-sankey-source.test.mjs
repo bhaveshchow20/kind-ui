@@ -43,7 +43,8 @@ for (const example of family.examples) {
       );
       assert.match(source, /nodeConfig=\{nodeConfig\}/);
       assert.match(source, /<Chart\.SankeyLegend config=\{nodeConfig\}/);
-      assert.doesNotMatch(source, /<Chart\.SankeyLink|animate=/);
+      assert.doesNotMatch(source, /<Chart\.SankeyLink/);
+      assert.match(source, /animate=\{\{ revealDurationMs: 900 \}\}/);
     } else {
       assert.equal(data.nodes.length, 9);
       assert.equal(data.links.length, 18);
@@ -64,8 +65,14 @@ for (const example of family.examples) {
     )[example.id];
     assert.equal(bundle.files[`src/examples/${example.id}/example.tsx`], source);
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
-      assert.match(variant.source, new RegExp(`finish = "${value}"`));
-      assert.equal(variant.source.replace(`finish = "${value}"`, 'finish = "plain"'), source);
+      assert.match(variant.source, new RegExp(`${family.variants[example.id].prop} = "${value}"`));
+      assert.equal(
+        variant.source.replace(
+          `${family.variants[example.id].prop} = "${value}"`,
+          `${family.variants[example.id].prop} = "${family.variants[example.id].default}"`,
+        ),
+        source,
+      );
     }
   });
 }

@@ -9,7 +9,7 @@ const browser = await chromium.launch(
 const evidence = { viewports: [], directions: [], interactions: [], scroll: [], errors: [] };
 mkdirSync("artifacts/radial", { recursive: true });
 const bundles = JSON.parse(readFileSync("generated/radial-examples.json", "utf8"));
-const url = "http://127.0.0.1:6373/docs/components/radial/";
+const url = `${process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373"}/docs/components/radial/`;
 try {
   for (const width of [320, 375, 390, 430, 768, 1440]) {
     const context = await browser.newContext({
@@ -21,20 +21,21 @@ try {
     const page = await context.newPage();
     page.on("pageerror", (error) => evidence.errors.push(error.message));
     await page.goto(url);
-    const rings = page.locator('[data-component="radial"]');
+    const primary = page.locator('[data-component="radial"]');
+    await expect(primary.getByRole("combobox")).toHaveCount(1);
+    const rings = primary;
     await rings.locator(".recharts-radial-bar-sector").first().waitFor();
     await page.waitForTimeout(250);
     assert.equal(await rings.locator(".recharts-radial-bar-sector").count(), 3);
     assert.equal(await rings.locator('[data-kind-ui="radial-entrance-window"]').count(), 0);
     assert.equal(await rings.locator("table tbody tr").count(), 3);
-    assert.equal(await rings.locator('[data-kind-ui="radial-label"]').count(), 0);
+    assert.equal(await rings.locator('[data-kind-ui="radial-label"]').count(), 3);
     await expect(rings.locator(".recharts-surface")).toHaveAttribute(
       "aria-label",
       "Project completion: Design 92%, Build 76%, Review 58%",
     );
     const labels = rings.getByRole("combobox", { name: "Labels", exact: true });
-    await labels.click();
-    await page.getByRole("option", { name: "Visible", exact: true }).click();
+    await expect(labels).toContainText("Visible");
     for (const label of ["Design", "Build", "Review"])
       await rings
         .locator('[data-kind-ui="radial-label"]')
@@ -68,8 +69,8 @@ try {
     await gauge.scrollIntoViewIfNeeded();
     const summary = gauge.locator(".recharts-surface").getByText("72 GB", { exact: true });
     const gaugeLabels = gauge.getByRole("checkbox", { name: "Labels", exact: true });
-    await expect(gaugeLabels).not.toBeChecked();
-    await expect(summary).toHaveCount(0);
+    await expect(gaugeLabels).toBeChecked();
+    await expect(summary).toBeVisible();
     await expect(gauge.locator(".recharts-surface")).toHaveAttribute(
       "aria-label",
       "Storage capacity: 72 of 100 GB used, 28 GB available",
@@ -77,10 +78,10 @@ try {
     await expect(gauge.locator("table tbody")).toContainText("72");
     await gaugeLabels.focus();
     await page.keyboard.press("Space");
-    await expect(gaugeLabels).toBeChecked();
-    await expect(summary).toBeVisible();
-    await page.keyboard.press("Space");
+    await expect(gaugeLabels).not.toBeChecked();
     await expect(summary).toHaveCount(0);
+    await page.keyboard.press("Space");
+    await expect(summary).toBeVisible();
     const before = await gauge.locator(".recharts-radial-bar-sector").getAttribute("d");
     const direction = gauge.getByRole("combobox", { name: "Entrance direction" });
     await direction.focus();
@@ -107,6 +108,17 @@ try {
     assert.equal(await activity.locator("table tbody tr").count(), 3);
     for (const value of ["350 kcal", "30 min", "9 hours"])
       await expect(activity.locator('[data-kind-ui="chart-instructions"]')).toContainText(value);
+    const activityPaths = await activity
+      .locator(".recharts-radial-bar-sector")
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+    await expect(page.locator('[data-state="loading"]')).toHaveCount(1);
+    await expect(activity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
+    assert.deepEqual(
+      await activity
+        .locator(".recharts-radial-bar-sector")
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
+      activityPaths,
+    );
     const stack = page.locator('[data-component="radial-stacked"]');
     await stack.scrollIntoViewIfNeeded();
     const button = stack.getByRole("button", { name: "Committed", exact: true });
@@ -124,6 +136,7 @@ try {
       gaugeSummaryDefault: false,
       gaugeSummaryOptIn: true,
       activityDefaultLabels: 0,
+      activityLoading: "native activity-rings skeleton and original data restored",
       sourceCopyParity: true,
       reducedMotion: true,
     });

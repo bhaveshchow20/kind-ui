@@ -3,13 +3,15 @@ title: Scatter and Bubble Chart
 description: Compare numeric relationships across series and encode a third measure with bubble area.
 ---
 
+Compare task latency and acceptance across weekday and weekend cohorts.
+
 <ChartExample id="scatter" />
 
 ## Usage
 
 Supply records to each `ScatterSeries` and numeric keys to the X and Y axes.
 
-```tsx title="Composition"
+```tsx title="Composition sketch"
 <Chart.Root config={config} visibleSeries={visibleSeries} onVisibleSeriesChange={setVisibleSeries}>
   <Chart.Legend />
   <Chart.ResponsiveContainer width="100%" height={280}>
@@ -25,17 +27,15 @@ Supply records to each `ScatterSeries` and numeric keys to the X and Y axes.
 </Chart.Root>
 ```
 
-Series keys identify legend entries; X/Y keys identify dimensions. Reuse each symbol in `legendShape` and series `shape`; legend toggles use consumer-owned visibility.
+Match `legendShape` to each series’ `shape` so legend symbols identify the points.
 
 ## Bubble size
 
-Add `ZAxis` to compose bubbles; there is no `BubbleChart` export. Its domain and range map request volume to symbol area.
+Add `ZAxis` to map a third measure to bubble area.
 
 <ChartExample id="scatter-bubble" />
 
-Native Z scaling uses the minimum area for zero and missing values. `zDimension` restores their raw tooltip values without changing geometry.
-
-Use top-level keys or a shared accessor for nested Z values. Validate negative count inputs before scaling; Kind retains native size behavior.
+<Callout title="Zero and missing sizes">Native scaling uses the minimum bubble area for both. Set `zDimension` to preserve their original tooltip values.</Callout>
 
 ## Materials
 
@@ -43,17 +43,21 @@ Choose Default, Clay or Glow.
 
 <ChartExample id="scatter-materials" />
 
-Finishes preserve symbol paths and Z area; glow is decorative. Custom shapes, point filters or clip paths bypass the finish. Small marks may make finishes indistinguishable.
+Custom shapes and filters may bypass materials.
 
 ## Interaction and accessibility
 
-Pointer inspection selects visible point records. Left/Right visits the first registered series in data order, not spatial order or every series. Escape dismisses inspection.
+Left/Right inspects the first series in data order; Escape dismisses inspection. Include accessible data for all series. Entrance motion respects reduced motion.
 
-Motion fades marks in place. Interaction or data/visibility/geometry changes finish entrance; reduced motion disables it. Remount to replay.
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+
+<ChartExample id="scatter" variant="loading" />
 
 ## API reference
 
-Focused props for explicit numeric composition; Recharts owns scales, symbols and point selection.
+Configure numeric dimensions, point symbols and tooltip values.
 
 ### ScatterChart
 
@@ -69,9 +73,9 @@ Focused props for explicit numeric composition; Recharts owns scales, symbols an
 
 </div>
 
-No configured Line shortcuts. See [Recharts ScatterChart](https://recharts.github.io/en-US/api/ScatterChart/).
+See [Recharts ScatterChart](https://recharts.github.io/en-US/api/ScatterChart/).
 
-At the pinned peer version, fixed-size server rendering produces no Scatter SVG marks. Supply server-rendered data or a summary.
+<Callout title="Server rendering">At the pinned Recharts version, fixed-size server rendering omits Scatter marks. Include a server-rendered data alternative or summary.</Callout>
 
 ### ScatterSeries
 
@@ -82,14 +86,14 @@ At the pinned peer version, fixed-size server rendering produces no Scatter SVG 
 | `data` | `Row[]` | — | Native point records; axis keys read these records. |
 | `seriesKey` | `string` | String `dataKey` | Config and visibility identity; use explicitly for cohorts. |
 | `shape` | `"circle" \| "cross" \| "diamond" \| "square" \| "star" \| "triangle" \| "wye"` or native custom shape | `"circle"` | Built-in symbol or consumer-owned renderer. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Finish for built-in symbols, preserving native geometry. |
+| `material` | `"clay" \| "glow"` | Omitted | Finish for built-in symbols, preserving native geometry. |
 | `fill` | `string` | Config color when identified | Explicit color overrides metadata. |
 | `hide` | `boolean` | `false` | Native hiding; Root selection also applies. |
 | `xAxisId` / `yAxisId` / `zAxisId` | `string \| number` | `0` | Native axis association. |
 
 </div>
 
-Native per-series animation is disabled. Kind does not coerce or deduplicate coordinates; Cells, labels, events and custom shapes remain available. See [Recharts Scatter](https://recharts.github.io/en-US/api/Scatter/).
+See [Recharts Scatter](https://recharts.github.io/en-US/api/Scatter/).
 
 ### ScatterTooltip
 
@@ -108,8 +112,6 @@ Native per-series animation is disabled. Kind does not coerce or deduplicate coo
 
 `zDimension` accepts a string key or numeric/missing-value accessor, plus optional `name` and `unit`. Native formatters take precedence. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
 
-Preserve accessible data for every series, including overlapping observations and missing measurements.
-
 ### ScatterTooltip<wbr />Content
 
 <div className="line-props-scroll" role="region" aria-label="ScatterTooltipContent props" tabIndex={0}>
@@ -124,4 +126,12 @@ Preserve accessible data for every series, including overlapping observations an
 
 ## Shared components
 
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Axes and grid](/docs/chart-components/axes-grid/), [Legend](/docs/chart-components/legend/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+Configure cohort metadata and numeric scales with these components. Use ScatterTooltip above for point values.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

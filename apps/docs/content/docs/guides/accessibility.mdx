@@ -1,27 +1,67 @@
 ---
-title: Accessibility and motion
-description: Name the Line chart and provide complete data access beyond inspection.
+title: Accessibility
+description: Name charts and provide readable values and keyboard access.
 ---
 
-Name each chart, describe its units/comparison and expose records through a table, list or summary. Native SVG inspection and a tooltip do not replace complete data access.
+Give every chart a meaningful name and a readable data alternative. Include
+units, zero values, and missing observations so people can understand the data
+without inspecting marks.
 
-Hosts own loading/error/empty states and filtering meaning. Each Line example includes a screen-reader data table.
+## Name and describe the chart
 
-## Native inspection limits
+Use `aria-label` or `aria-labelledby` for the chart name. Add a visible summary,
+list, or table containing the data you need readers to access.
 
-| Composition | Access and limitation |
+```tsx
+<figure>
+  <Chart.LineChart
+    data={[{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }]}
+    config={{ visitors: { label: "Visitors", color: "#733bff" } }}
+    xDataKey="month"
+    aria-label="Monthly visitors"
+  />
+  <figcaption>January: 42 visitors. February: 58 visitors.</figcaption>
+</figure>
+```
+
+Keep the alternative available before client rendering and while loading.
+Update it when data changes. Explain whether filters affect the values shown.
+[HeatmapDataTable](/docs/components/heatmap/#heatmapdatatable) and
+[SankeyTable](/docs/components/sankey/#sankeytable) provide family-specific data
+views.
+
+## Keyboard access
+
+Inspection differs by chart family. Use the family's complete example to keep
+its keyboard controls and descriptions together.
+
+| Chart or control | Access |
 | --- | --- |
-| Configured Line | Provide `aria-label` or `aria-labelledby`; native category keyboard inspection has chart instructions |
-| Explicit Line parts | Keep axis labels and units meaningful; a complete data alternative retains missing, zero and hidden-series records |
+| [Legend](/docs/chart-components/legend/) | Enter or Space toggles eligible series or selects focus; Escape resets focus |
+| Cartesian charts and [Pie](/docs/components/pie/) | Native Recharts inspection with `accessibilityLayer`; retain a complete data alternative |
+| [Scatter](/docs/components/scatter/) | Native keyboard inspection covers the first series; expose all series in the alternative |
+| [Radar](/docs/components/radar/) | Series controls support selection; no arrow-key inspection between spokes |
+| [Heatmap](/docs/components/heatmap/) | Arrow keys move between cells; Home/End navigate the grid; Escape dismisses inspection |
+| [Sankey](/docs/components/sankey/) | Use link controls or a visible `SankeyTable` inspector for keyboard selection |
+| [ActivityRings](/docs/components/radial/) | Built-in descriptions retain original ring values; give the chart a name |
 
-Custom tooltip content owns its announcements. Config icons are decorative and do not replace labels or units.
+<Callout type="info">
+A tooltip does not replace complete data access. Keep keyboard focus visible,
+and use labels or patterns alongside colors when color conveys a distinction.
+</Callout>
 
-Test naming and formatting with the intended audience; Chromium automation does not establish manual screen-reader conformance. Other browsers and assistive technologies remain unverified.
+## Motion and loading
 
-## Motion is an explicit choice
+Kind respects reduced-motion preferences. Custom renderers must handle their own
+motion. See [Motion](/docs/guides/motion/) for still-chart options.
 
-Configured Line animates by default; `animate={false}` gives a still view. Maintained entrances respect live `prefers-reduced-motion` and settle on final geometry when interaction or relevant data/layout/visibility changes interrupt an entrance.
+Set `loading` while a request is pending. Use `loadingLabel` to name that state;
+show a separate message for empty results or errors. See
+[Root loading](/docs/chart-components/root/#loading).
 
-Custom renderers own their animation and reduced-motion behavior. Materials are static.
+## Check the result
 
-Test narrow containers, independent charts, keyboard focus, Escape, missing and zero values with the copied example. Keep a host summary/table available before client chart geometry mounts; check SSR geometry and hydration in your framework integration.
+Test the copied example with keyboard navigation and at narrow widths. Check
+chart names, focus visibility, units, contrast, missing values, and reduced
+motion. Test with your audience's browsers and screen readers; automated browser
+checks alone do not establish screen-reader conformance.

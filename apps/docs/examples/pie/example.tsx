@@ -27,13 +27,23 @@ const data: { key: keyof typeof config; hours: number; share: string }[] = [
   { key: "research", hours: 100, share: "10%" },
 ];
 
-export function TeamAllocationChart({ shape = "pie" }: { shape?: "pie" | "donut" }) {
+export function TeamAllocationChart({ shape = "pie" }: { shape?: "pie" | "donut" | "loading" }) {
   return (
-    <Chart.Root config={config}>
+    <Chart.Root
+      config={config}
+      defaultVisibleSeries={Object.keys(config)}
+      interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
+    >
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.PieChart animate accessibilityLayer aria-label="Team allocation: 1,000 hours">
+        <Chart.PieChart
+          loading={shape === "loading"}
+          animate
+          accessibilityLayer
+          aria-label="Team allocation: 1,000 hours"
+        >
           <Chart.PieSeries
+            interactionBinding="root"
             data={data}
             dataKey="hours"
             nameKey="key"

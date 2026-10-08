@@ -1,12 +1,4 @@
 {
   "title": "Guides",
-  "pages": [
-    "materials",
-    "motion",
-    "customization",
-    "identity-layout",
-    "accessibility",
-    "troubleshooting",
-    "release"
-  ]
+  "pages": ["materials", "motion", "accessibility", "troubleshooting"]
 }

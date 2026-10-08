@@ -87,7 +87,10 @@ for (const file of textExportFiles(root)) {
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;
 for (const slug of legacyDocSlugs) {
-  assert.ok(searchIds.includes(publicPath(`/docs/${slug[1]}`)), `Search omits ${slug[1]}`);
+  assert.ok(
+    searchIds.includes(publicPath(`/docs/${canonicalDocSlugs(slug).join("/")}`)),
+    `Search omits ${slug[1]}`,
+  );
   assert.ok(
     !searchIds.some((id) => id.startsWith(publicPath(`/docs/${slug.join("/")}`))),
     "Search indexes a legacy alias",
@@ -164,7 +167,10 @@ for (const file of markdownFiles("public/markdown")) {
   );
   const alias = legacyDocSlugs.find((slug) => file === `${slug.join("/")}.md`);
   if (alias) {
-    assert.equal(body, readFileSync(path.join(root, "markdown", `${alias[1]}.md`), "utf8"));
+    assert.equal(
+      body,
+      readFileSync(path.join(root, "markdown", `${canonicalDocSlugs(alias).join("/")}.md`), "utf8"),
+    );
     assert.ok(
       !index.includes(publicPath(`/markdown/${file}`)),
       `Agent index duplicates alias ${file}`,

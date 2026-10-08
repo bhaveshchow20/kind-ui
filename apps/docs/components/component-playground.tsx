@@ -20,6 +20,7 @@ export interface ComponentBundle {
   variants?: Record<string, { label: string; source: string }>;
   variantControl?: string;
   defaultVariant?: string;
+  dataAlternativeInSource?: boolean;
   dataAlternative?: {
     caption: string;
     columns: Record<string, string>;
@@ -30,18 +31,23 @@ export function ComponentPlayground({
   bundle,
   sourceCode,
   variantCode,
+  fixedVariant,
+  instance,
 }: {
   bundle: ComponentBundle;
   sourceCode?: ReactNode;
   variantCode?: Record<string, ReactNode>;
+  fixedVariant?: string;
+  instance?: string;
 }) {
   const { id } = bundle;
-  const [variant, setVariant] = useState(bundle.defaultVariant);
+  const [variant, setVariant] = useState(fixedVariant ?? bundle.defaultVariant);
+  const options = Object.entries(bundle.variants ?? {}).filter(([value]) => value !== "loading");
   const controlId = useId();
   const [status, setStatus] = useState("");
   const [tab, setTab] = useState("preview");
   const Preview = previews[id];
-  const dataAlternative = bundle.dataAlternative;
+  const dataAlternative = bundle.dataAlternativeInSource ? undefined : bundle.dataAlternative;
   async function copy(text: string, label: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -55,15 +61,26 @@ export function ComponentPlayground({
       value={tab}
       onValueChange={setTab}
       className="component-workbench line-workbench"
-      data-component={id}
-      id={id !== bundle.family ? `example-${id}` : "component-preview"}
+      data-component={
+        instance ? `${id}-${instance}` : fixedVariant === "loading" ? `${id}-loading` : id
+      }
+      data-state={fixedVariant === "loading" ? "loading" : "ready"}
+      id={
+        instance
+          ? `example-${id}-${instance}`
+          : fixedVariant
+            ? `example-${id}-${fixedVariant}`
+            : id !== bundle.family
+              ? `example-${id}`
+              : "component-preview"
+      }
     >
       <div className="playground-header">
         <TabsList aria-label={`${bundle.title} component`} className="preview-tabs">
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="code">Code</TabsTrigger>
         </TabsList>
-        {bundle.variants && (
+        {!fixedVariant && options.length > 1 && (
           <Select.Root value={variant} onValueChange={setVariant}>
             <Select.Trigger
               id={controlId}
@@ -78,7 +95,7 @@ export function ComponentPlayground({
             <Select.Portal>
               <Select.Content position="popper" sideOffset={6} className="select-content">
                 <Select.Viewport>
-                  {Object.entries(bundle.variants).map(([value, option]) => (
+                  {options.map(([value, option]) => (
                     <Select.Item key={value} value={value} className="select-item">
                       <Select.ItemText>{option.label}</Select.ItemText>
                       <Select.ItemIndicator>
@@ -116,34 +133,36 @@ export function ComponentPlayground({
           <Preview variant={variant} />
         </div>
         {dataAlternative && (
-          <table className="sr-only" aria-label={`${bundle.title} data`}>
-            <caption>{dataAlternative.caption}</caption>
-            <thead>
-              <tr>
-                {Object.values(dataAlternative.columns).map((label) => (
-                  <th scope="col" key={label}>
-                    {label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {dataAlternative.rows.map((row, index) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: Build-time snapshot order is fixed; preserve duplicate observations.
-                <tr key={index}>
-                  {Object.keys(dataAlternative.columns).map((key, index) =>
-                    index === 0 ? (
-                      <th scope="row" key={key}>
-                        {row[key]}
-                      </th>
-                    ) : (
-                      <td key={key}>{row[key]}</td>
-                    ),
-                  )}
+          <div className="sr-only">
+            <table aria-label={`${bundle.title} data`}>
+              <caption>{dataAlternative.caption}</caption>
+              <thead>
+                <tr>
+                  {Object.values(dataAlternative.columns).map((label) => (
+                    <th scope="col" key={label}>
+                      {label}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {dataAlternative.rows.map((row, index) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: Build-time snapshot order is fixed; preserve duplicate observations.
+                  <tr key={index}>
+                    {Object.keys(dataAlternative.columns).map((key, index) =>
+                      index === 0 ? (
+                        <th scope="row" key={key}>
+                          {row[key]}
+                        </th>
+                      ) : (
+                        <td key={key}>{row[key]}</td>
+                      ),
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </TabsContent>
       <TabsContent value="code" forceMount hidden={tab !== "code"} className="code-files">

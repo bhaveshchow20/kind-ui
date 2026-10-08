@@ -50,11 +50,12 @@ const config = {
   count: { label: "Requests", color: "#733bff" },
 } satisfies Chart.SeriesConfig;
 
-export function CheckoutLatencyHistogram() {
+export function CheckoutLatencyHistogram({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
     <Chart.Root config={config}>
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.HistogramChart
+          loading={state === "loading"}
           bins={result.bins}
           measure="count"
           animate

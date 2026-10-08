@@ -11,7 +11,7 @@ import {
 } from "fumadocs-ui/layouts/glass/slots/sidebar";
 import { PanelLeft } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { DocsThemeSwitch } from "@/components/theme-switch";
 import { docRoute, legacyDocSlugs } from "@/lib/routing.mjs";
@@ -53,18 +53,33 @@ function SidebarWithTools() {
 }
 function AccessibleDrawer() {
   const { open, setOpen } = useDrawer();
-  useEffect(() => {
-    if (!open) return;
-    const timer = window.setTimeout(() => {
-      document
-        .querySelector<HTMLButtonElement>('#nd-sidebar-mobile button[aria-label="Close Sidebar"]')
-        ?.focus();
-    }, 100);
-    return () => window.clearTimeout(timer);
-  }, [open]);
+  const focusDrawer = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!open || !node) return;
+      let frame = 0;
+      function focusWhenVisible() {
+        if (!node?.isConnected) return;
+        const close = node.querySelector<HTMLButtonElement>('button[aria-label="Close Sidebar"]');
+        // Presence visibility can settle after its DOM class changes.
+        if (
+          !close ||
+          getComputedStyle(close).visibility !== "visible" ||
+          !close.getClientRects().length
+        ) {
+          frame = window.requestAnimationFrame(focusWhenVisible);
+          return;
+        }
+        close.focus({ preventScroll: true });
+      }
+      frame = window.requestAnimationFrame(focusWhenVisible);
+      return () => window.cancelAnimationFrame(frame);
+    },
+    [open],
+  );
   return (
     <SidebarDrawer
       contentProps={{
+        ref: focusDrawer,
         onKeyDown: (event) => {
           if (event.key === "Escape") {
             event.preventDefault();

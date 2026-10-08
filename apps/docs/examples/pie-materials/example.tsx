@@ -28,38 +28,79 @@ const data: { key: keyof typeof config; hours: number; share: string }[] = [
 ];
 
 export function AllocationMaterialChart({
-  material = "plain",
+  appearance = "default",
 }: {
-  material?: "plain" | "clay" | "glow";
+  appearance?: "default" | "clay" | "glow";
 }) {
   return (
-    <Chart.Root config={config}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.PieChart animate accessibilityLayer aria-label="Team allocation: 1,000 hours">
-          <Chart.PieSeries
-            data={data}
-            dataKey="hours"
-            nameKey="key"
-            innerRadius={58}
-            material={material}
-            outerRadius={108}
-            paddingAngle={0}
-          >
+    <figure style={{ margin: 0 }}>
+      <Chart.Root
+        config={config}
+        defaultVisibleSeries={Object.keys(config)}
+        interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
+      >
+        <Chart.Legend />
+        <Chart.ResponsiveContainer width="100%" height={280}>
+          <Chart.PieChart animate accessibilityLayer aria-label="Team allocation: 1,000 hours">
+            <Chart.PieSeries
+              interactionBinding="root"
+              data={data}
+              dataKey="hours"
+              nameKey="key"
+              categoryKey="key"
+              innerRadius={58}
+              material={appearance === "default" ? undefined : appearance}
+              outerRadius={108}
+              paddingAngle={0}
+            >
+              {data.map((row) => (
+                <Chart.Cell key={row.key} fill={config[row.key].color} />
+              ))}
+              <Chart.LabelList
+                dataKey="share"
+                position="inside"
+                fill="white"
+                stroke="none"
+                style={{ fill: "white", fontWeight: 600 }}
+              />
+            </Chart.PieSeries>
+            <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
+          </Chart.PieChart>
+        </Chart.ResponsiveContainer>
+      </Chart.Root>
+      <div
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: "hidden",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
+          border: 0,
+        }}
+      >
+        <table data-chart-alternative aria-label="Team allocation (1,000 hours) data">
+          <caption>Team allocation (1,000 hours)</caption>
+          <thead>
+            <tr>
+              <th scope="col">Team</th>
+              <th scope="col">Hours</th>
+              <th scope="col">Share of original total</th>
+            </tr>
+          </thead>
+          <tbody>
             {data.map((row) => (
-              <Chart.Cell key={row.key} fill={config[row.key].color} />
+              <tr key={row.key}>
+                <th scope="row">{config[row.key].label}</th>
+                <td>{row.hours}</td>
+                <td>{row.share}</td>
+              </tr>
             ))}
-            <Chart.LabelList
-              dataKey="share"
-              position="inside"
-              fill="white"
-              stroke="none"
-              style={{ fill: "white", fontWeight: 600 }}
-            />
-          </Chart.PieSeries>
-          <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
-        </Chart.PieChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          </tbody>
+        </table>
+      </div>
+    </figure>
   );
 }

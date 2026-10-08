@@ -17,7 +17,7 @@ export function StorageGaugeChart({
 }: {
   direction?: "clockwise" | "anticlockwise";
 }) {
-  const [labels, setLabels] = useState(false);
+  const [labels, setLabels] = useState(true);
   return (
     <Chart.Root config={config}>
       <label>

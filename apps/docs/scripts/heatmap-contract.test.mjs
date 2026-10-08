@@ -21,10 +21,10 @@ for (const example of family.examples) {
     );
     assert.equal(bundles[example.id].files[`src/examples/${example.id}/example.tsx`], source);
     if (example.id === "heatmap-compact") {
-      assert.match(
-        source,
-        /layout=\{\{ cellSize: 12, gap: 3, rowLabels: "hidden", columnLabels: "hidden" \}\}/,
-      );
+      assert.match(source, /cellSize: "clamp\(6px, calc\(\(100cqw - 84px\) \/ 26\), 28px\)"/);
+      assert.match(source, /containerType: "inline-size"/);
+      assert.match(source, /rowLabels: "hidden"/);
+      assert.match(source, /columnLabels: "hidden"/);
       assert.match(source, /<Chart.HeatmapTooltip/);
     } else {
       assert.match(source, /<Chart.HeatmapDataTable/);
@@ -36,7 +36,7 @@ for (const example of family.examples) {
         filesFor(bundles[example.id], {}, variant)[`src/examples/${example.id}/example.tsx`],
         selection.source,
       );
-      assert.ok(selection.source.includes(`material = "${variant}"`));
+      assert.ok(selection.source.includes(`${family.variants[example.id].prop} = "${variant}"`));
     }
   });
 }

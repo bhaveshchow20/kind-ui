@@ -155,19 +155,29 @@ export const sankeyDataLabels = {
 export const sankeyVariants = {
   "sankey-finishes": {
     control: "Finish",
-    prop: "finish",
-    default: "plain",
+    prop: "appearance",
+    default: "default",
     options: [
-      { value: "plain", label: "Default" },
+      { value: "default", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],
   },
 };
 
+// Native chart loading uses the same source in Preview, Code and Copy prompt.
+const primaryLoading = {
+  control: "State",
+  prop: "state",
+  default: "ready",
+  options: [
+    { value: "ready", label: "Ready" },
+    { value: "loading", label: "Loading" },
+  ],
+};
 export const family = {
   id: "sankey",
   examples: sankeyExamples,
   dataLabels: sankeyDataLabels,
-  variants: sankeyVariants,
+  variants: { ...sankeyVariants, sankey: primaryLoading, "sankey-config": primaryLoading },
 };

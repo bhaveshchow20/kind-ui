@@ -1,38 +1,45 @@
+import mdx from "fumadocs-ui/mdx";
 import tables from "@/generated/api.json";
+import { referenceRows, referenceTitle } from "@/lib/api-reference.mjs";
 export function ApiTable({
   name,
-  compact = false,
+  compact: _compact = false,
 }: {
   name: keyof typeof tables;
   compact?: boolean;
 }) {
-  const table = tables[name];
+  const table = referenceRows(name, tables[name]);
   return (
-    <div className="table-scroll">
-      <table className="api-table">
-        <caption>{name} props</caption>
+    <section
+      className="line-props-scroll"
+      aria-label={`${referenceTitle(name)} props`}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users need to scroll wide API references.
+      tabIndex={0}
+    >
+      <mdx.table>
         <thead>
           <tr>
             <th scope="col">Prop</th>
             <th scope="col">Type</th>
-            <th scope="col">Required</th>
+            <th scope="col">Default</th>
+            <th scope="col">Description</th>
           </tr>
         </thead>
         <tbody>
           {table.map((entry) => (
             <tr key={entry.name}>
-              <th scope="row">
+              <td>
                 <code>{entry.name}</code>
-              </th>
+              </td>
               <td>
                 <code>{entry.type}</code>
-                {!compact && entry.description && <p>{entry.description}</p>}
               </td>
-              <td>{entry.required ? "Yes" : "No"}</td>
+              <td>{entry.default}</td>
+              <td>{entry.description}</td>
             </tr>
           ))}
         </tbody>
-      </table>
-    </div>
+      </mdx.table>
+    </section>
   );
 }

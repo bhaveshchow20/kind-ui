@@ -16,12 +16,12 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function MaterialRadarChart({
-  material = "plain",
+  appearance = "default",
 }: {
-  material?: "plain" | "clay" | "glow";
+  appearance?: "default" | "clay" | "glow";
 } = {}) {
   return (
-    <Chart.Root config={config}>
+    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.RadarChart
@@ -44,13 +44,13 @@ export function MaterialRadarChart({
             dataKey="studio"
             strokeWidth={2}
             fillOpacity={0.18}
-            material={material}
+            material={appearance === "default" ? undefined : appearance}
           />
           <Chart.RadarSeries
             dataKey="field"
             strokeWidth={2}
             fillOpacity={0.18}
-            material={material}
+            material={appearance === "default" ? undefined : appearance}
           />
           <Chart.Tooltip />
         </Chart.RadarChart>

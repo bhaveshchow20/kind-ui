@@ -1,107 +1,89 @@
 ---
 title: Motion
-description: Choose family entrances, inspection motion or application-owned timing.
+description: Enable chart entrances and adjust their timing.
 ---
 
-`animate={false}` disables chart entrances and inspection movement. Opted-in tooltip digit shuffle is independent; omit `valueAnimation="shuffle"` too when the application owns all timing. `true` enables family defaults; supported object forms tune them.
+Set `animate` on the chart to reveal its marks when it appears. Configured Line
+animates by default; other compositions opt in.
 
-Reduced-motion preferences show final geometry and disable Kind inspection motion. Motion remains a required peer; package contents stay unchanged. Custom renderers and application animations retain their own responsibilities.
+## Enable an entrance
+
+Use `true` for the family defaults or `false` for a still chart.
+
+```tsx
+<Chart.LineChart data={data} config={config} xDataKey="month" animate aria-label="Monthly visitors" />
+```
+
+Use the same prop on explicit chart compositions. Keep their
+[Root](/docs/chart-components/root/) and
+[ResponsiveContainer](/docs/chart-components/responsive-container/) in place.
 
 ## Family defaults
 
-The matrix describes the public components. “Update” means data/geometry changes, separately from tooltip movement or visibility fades. Automatic interpolation between datasets or chart types is unsupported.
+Entrances reveal the final chart geometry. Data changes finish the current
+entrance; they do not interpolate between datasets. Remount a chart to replay
+its entrance intentionally.
 
-Changed inputs or interaction finish an entrance; remount when an intentional replay is needed.
-
-<div className="line-props-scroll" role="region" aria-label="Family motion defaults" tabIndex={0}>
-
-| Family / mode | Default | `animate` shape and entrance defaults | Entrance / update / hover |
-| --- | --- | --- | --- |
-| [Configured Line](/docs/components/line/) with generated or explicit children | `true` | Boolean or `LineAnimation`; 1000ms, cubic easing | Plot-width reveal; data updates settle geometry, visibility changes fade lines; default active dot and Kind tooltip move. |
-| [Explicit Line](/docs/components/line/) under `Root` | `false` | Boolean or `LineAnimation`; same options | Same motion when enabled; application owns visibility. |
-| [Area](/docs/components/area/) | `false` | Boolean or `AreaAnimation`; 1000ms, cubic easing | Plot-width reveal; updates finish entrance; Kind tooltip moves. |
-| [Bar](/docs/components/bar/) | `false` | Boolean or `BarAnimation`; 1000ms, cubic easing | Reveal from zero clamped to numeric domain; updates finish entrance; Kind tooltip moves. Category emphasis is separately opt-in. |
-| [Histogram](/docs/components/histogram/) | `false` | Boolean or `BarAnimation`; same options | Bar entrance; bin updates finish it; Kind tooltip moves. |
-| [Waterfall](/docs/components/waterfall/) | `false` | Boolean or `BarAnimation`; same options | Bar range entrance, not sequential arithmetic; updates finish it; Kind tooltip moves. |
-| [Box Plot](/docs/components/box-plot/) | `false` | Boolean or `BarAnimation`; same options | Clipped entrance of composed marks; updates finish it; Kind tooltip moves. |
-| [Combo](/docs/components/combo/) | `false` | Boolean or `ComboAnimation`; shared 1000ms/cubic defaults, per-family reveal overrides | Line/Area width and Bar zero-based reveals; updates finish entrances, Line visibility fades; shared Kind tooltip/default Line active-dot motion. |
-| [Pie / Donut](/docs/components/pie/) | `false` | Boolean or `PieAnimation`; 1000ms, `"easeOut"` | Angular sector reveal; updates finish it; Kind tooltip moves and eligible categories receive emphasis. |
-| [Radar](/docs/components/radar/) | `false` | Boolean or `RadarAnimation`; 1000ms, `"easeOut"` | Default polygon reveals from center; updates finish it; Kind tooltip moves, spoke inspection is separate. |
-| [Radial Bar](/docs/components/radial/) | `false` | Boolean or `RadialBarAnimation`; 1000ms, `"easeOut"` | Directional sector reveal; updates finish it; Kind tooltip moves. |
-| [Scatter](/docs/components/scatter/) | `false` | Boolean or `ScatterAnimation`; 700ms, `"easeOut"` | In-place mark fade; updates finish it; Kind tooltip moves, custom active shapes remain native. |
-| [Sankey](/docs/components/sankey/) | `false` | Boolean or `SankeyAnimation` (`revealDurationMs` only); 450ms | Supported Kind link paint flows along fixed paths; updates/resize finish it; custom renderers own hover motion. |
-| [Heatmap](/docs/components/heatmap/) | `false` | Boolean only; built-in diagonal fade | Cells fade without moving; inputs/resize finish it; focus and tooltip inspection do not imply chart hover tweening. |
-
-</div>
-
-[ActivityRings](/docs/components/radial/#activityrings) is available from the public package, inherits Radial entrance options and defaults to `false`.
+| Family | Enabled by default | Entrance |
+| --- | --- | --- |
+| [Configured Line](/docs/components/line/) | Yes | Line reveal across the plot |
+| [Explicit Line](/docs/components/line/) | No | Line reveal across the plot |
+| [Area](/docs/components/area/) | No | Area reveal across the plot |
+| [Bar](/docs/components/bar/) | No | Bars reveal from zero, clamped to the numeric domain |
+| [Histogram](/docs/components/histogram/) | No | Bar reveal |
+| [Waterfall](/docs/components/waterfall/) | No | Range-bar reveal |
+| [Box Plot](/docs/components/box-plot/) | No | Reveal of the composed statistical marks |
+| [Combo](/docs/components/combo/) | No | Line, Area, and Bar reveals |
+| [Pie](/docs/components/pie/) | No | Angular sector reveal |
+| [Radar](/docs/components/radar/) | No | Polygon reveal from the center |
+| [Radial and ActivityRings](/docs/components/radial/) | No | Directional sector reveal |
+| [Scatter](/docs/components/scatter/) | No | Marks fade in place |
+| [Sankey](/docs/components/sankey/) | No | Kind link paint flows along fixed paths |
+| [Heatmap](/docs/components/heatmap/) | No | Diagonal cell fade |
 
 ## Option objects
 
-Line, Area, Bar, Pie, Radar, Radial and Scatter export family aliases with `revealDurationMs`, `revealEasing` and `hoverTransition`. Entrance duration is milliseconds; Motion transition duration is seconds.
+Tune entrance duration in milliseconds and inspection transitions in seconds.
 
-Hover defaults to a spring: stiffness 210, damping 28, mass 0.8. Cartesian reveal easing defaults to `[0.25, 0.1, 0.25, 1]`; polar and Scatter default to `"easeOut"`.
+```tsx
+const animation = {
+  revealDurationMs: 600,
+  revealEasing: "easeOut",
+  hoverTransition: { type: "tween", duration: 0.12 },
+} satisfies Chart.LineAnimation;
 
-```tsx title="MotionOptions.tsx"
-import * as Chart from "@kind-ui/charts";
-
-export const line = { revealDurationMs: 600, revealEasing: "easeOut",
-  hoverTransition: { type: "tween", duration: 0.12 } } satisfies Chart.LineAnimation;
-export const area = line satisfies Chart.AreaAnimation;
-export const bar = line satisfies Chart.BarAnimation;
-export const pie = line satisfies Chart.PieAnimation;
-export const radar = line satisfies Chart.RadarAnimation;
-export const radial = line satisfies Chart.RadialBarAnimation;
-export const scatter = line satisfies Chart.ScatterAnimation;
-export const combo = { ...line, lineReveal: false,
-  areaReveal: { revealDurationMs: 500 }, barReveal: { revealDurationMs: 700 }
-} satisfies Chart.ComboAnimation;
-export const sankey = { revealDurationMs: 900 } satisfies Chart.SankeyAnimation;
-export const heatmap: NonNullable<Chart.HeatmapChartProps["animate"]> = true;
+<Chart.LineChart data={data} config={config} xDataKey="month" animate={animation}
+  aria-label="Monthly visitors" />
 ```
 
-Pass matching options to the chart’s `animate` prop. Histogram, Waterfall and Box Plot use `BarAnimation`. Combo family overrides tune entrances only; `false` skips that family's reveal while shared inspection motion remains available.
+Line, Area, Bar, Pie, Radar, Radial, and Scatter accept these fields through
+their family animation types. Histogram, Waterfall, and Box Plot use
+`BarAnimation`.
 
-Pie and Radial additionally expose `animationDirection="clockwise"` or `"anticlockwise"`; this changes entrance direction, preserving final native geometry.
+| Option | Default |
+| --- | --- |
+| `revealDurationMs` | 1000; Scatter uses 700; Sankey uses 450 |
+| `revealEasing` | Cartesian: `[0.25, 0.1, 0.25, 1]`; polar and Scatter: `"easeOut"` |
+| `hoverTransition` | Spring with stiffness 210, damping 28, and mass 0.8 |
 
-Kind disables native per-series animation; charts own timing. Shape/filter/transform escape hatches can bypass a built-in reveal; refer to each Components page for its exact boundary.
+Combo accepts `lineReveal`, `areaReveal`, and `barReveal` overrides. Set an override
+to `false` to skip that family's entrance. Sankey accepts only
+`revealDurationMs`; Heatmap accepts only a boolean.
 
-Tooltip digit shuffle is separately opt-in through `valueAnimation="shuffle"`, respects reduced motion and is not a data/geometry transition. Custom tooltip content owns its own animation.
+Pie and Radial support `animationDirection="clockwise"` or `"anticlockwise"`.
+This changes the entrance direction without changing the final angles.
+
+## Reduced motion
+
+Kind respects live `prefers-reduced-motion` changes. Entrances show final
+geometry and inspection movement stops when reduced motion is requested.
+
+`animate={false}` also disables Kind inspection movement. Tooltip digit shuffle
+is separate: omit `valueAnimation="shuffle"` when you want still values.
 
 ## Custom choreography
 
-A Line-to-Bar transformation, scene sequence or video timeline is application-authored. The example crossfades two charts using consumer-supplied progress. It does not morph their geometry.
-
-Both charts disable built-in timing; the caller owns the timeline and should supply final progress for reduced motion.
-
-```tsx title="ChartTransition.tsx"
-"use client";
-import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
-
-const data = [{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }];
-const config = { visitors: { label: "Visitors", color: "#733bff" } };
-
-export function ChartTransition({ progress }: { progress: number }) {
-  const t = Math.max(0, Math.min(1, progress));
-  return <div style={{ display: "grid", height: 240 }}>
-    <div aria-hidden={t >= 0.5} inert={t >= 0.5}
-      style={{ gridArea: "1 / 1", opacity: 1 - t }}>
-      <Chart.LineChart data={data} config={config} xDataKey="month" height={240}
-        animate={false} tooltip={false} legend={false} aria-label="Monthly visitors as a line" />
-    </div>
-    <Chart.Root config={config} style={{ gridArea: "1 / 1", opacity: t }}
-      aria-hidden={t < 0.5} inert={t < 0.5}>
-      <Chart.BarChart data={data} width={320} height={240} animate={false}
-        aria-label="Monthly visitors as bars">
-        <Chart.XAxis dataKey="month" /><Chart.YAxis />
-        <Chart.BarSeries dataKey="visitors" />
-      </Chart.BarChart>
-    </Chart.Root>
-  </div>;
-}
-```
-
-Keep an accessible [data alternative](/docs/guides/accessibility/) outside a decorative video scene. External timing and custom renderers remain consumer-owned even when chart motion is disabled.
-
-`ActivityRings` uses RadialBar entrance options with motion off by default. Coordinate motion across charts and custom renderers in your application.
+For a scene sequence or chart crossfade, disable built-in animation and control
+the timing in your application. Custom shapes and tooltip content also own
+their motion. Provide a still result for reduced-motion users and retain an
+accessible [data alternative](/docs/guides/accessibility/).

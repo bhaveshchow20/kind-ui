@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { swipeUp } from "./touch-swipe.mjs";
 
-const origin = "http://127.0.0.1:6373";
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/heatmap-examples.json", "utf8"));
 mkdirSync("artifacts/heatmap", { recursive: true });
 const browser = await chromium.launch({
@@ -28,7 +28,7 @@ try {
     assert.equal(await grid.locator("td").count(), 24);
     assert.equal(await grid.locator('td[data-missing="true"]').count(), 2);
     assert.equal(await grid.locator('td[tabindex="0"]').count(), 1);
-    assert.equal(await primary.locator("table.sr-only").count(), 1);
+    assert.equal(await primary.locator(".sr-only table").count(), 1);
     assert.equal(await primary.locator('[data-kind-ui="heatmap-data-table"]').count(), 1);
     await page.screenshot({ path: `artifacts/heatmap/initial-${width}.png` });
     const cell = grid.locator("td").first();
@@ -130,11 +130,20 @@ try {
     await signed.screenshot({ path: `artifacts/heatmap/signed-${width}.png` });
     const material = page.locator('[data-component="heatmap-materials"]');
     await material.scrollIntoViewIfNeeded();
-    for (const value of ["plain", "clay", "glow"]) {
-      const label = value === "plain" ? "Default" : value[0].toUpperCase() + value.slice(1);
+    for (const value of ["default", "clay", "glow"]) {
+      const label = value === "default" ? "Default" : value[0].toUpperCase() + value.slice(1);
       await material.getByRole("combobox", { name: "Material" }).click();
       await page.getByRole("option", { name: label, exact: true }).click();
-      assert.equal(await material.locator(`td[data-material="${value}"]`).count(), 22);
+      assert.equal(
+        await material
+          .locator(
+            value === "default"
+              ? '[data-kind-ui="heatmap-grid"] td:not([data-material="clay"]):not([data-material="glow"]):not([data-missing="true"])'
+              : `td[data-material="${value}"]`,
+          )
+          .count(),
+        22,
+      );
       assert.equal(await material.locator('td[data-missing="true"][data-material]').count(), 0);
       await material.getByRole("tab", { name: "Code", exact: true }).click();
       const code = material.locator("pre");
@@ -170,6 +179,26 @@ try {
       await material.getByRole("tab", { name: "Preview", exact: true }).click();
     }
     await material.screenshot({ path: `artifacts/heatmap/materials-${width}.png` });
+    const compact = page.locator('[data-component="heatmap-compact"]');
+    await compact.scrollIntoViewIfNeeded();
+    const compactCells = compact.locator('[data-kind-ui="heatmap-grid"] td');
+    assert.equal(await compactCells.count(), 182);
+    const compactGeometry = await compactCells.first().evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      return { width: box.width, height: box.height };
+    });
+    assert.ok(
+      Math.abs(compactGeometry.width - compactGeometry.height) < 1,
+      "Activity cells remain square",
+    );
+    assert.ok(compactGeometry.width >= 6, "Activity cells remain measurable");
+    if (width === 1440)
+      assert.ok(compactGeometry.width >= 24, "Desktop activity cells fill available space");
+    assert.ok(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      "Compact activity contains overflow",
+    );
+    await compact.screenshot({ path: `artifacts/heatmap/compact-${width}.png` });
     assert.deepEqual(errors, []);
     evidence.push({
       width,

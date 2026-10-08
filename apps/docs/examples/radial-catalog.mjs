@@ -56,13 +56,23 @@ export const family = {
     },
   },
   variants: {
+    "radial-activity": {
+      control: "State",
+      prop: "state",
+      default: "ready",
+      options: [
+        { value: "ready", label: "Ready" },
+        { value: "loading", label: "Loading" },
+      ],
+    },
     radial: {
       control: "Labels",
       prop: "labels",
-      default: "hidden",
+      default: "visible",
       options: [
         { value: "hidden", label: "Hidden" },
         { value: "visible", label: "Visible" },
+        { value: "loading", label: "Loading" },
       ],
     },
     "radial-gauge": {

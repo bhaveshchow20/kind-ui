@@ -26,7 +26,7 @@ export function VisitorAreaCurveChart({
   curve?: "monotone" | "linear" | "stepAfter";
 } = {}) {
   return (
-    <Chart.Root config={config}>
+    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.AreaChart

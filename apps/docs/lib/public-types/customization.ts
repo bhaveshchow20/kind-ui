@@ -26,5 +26,4 @@ export type SankeyLabelReference = Pick<
   | "showValues"
   | "valueFormatter"
   | "children"
-  | "ref"
 >;

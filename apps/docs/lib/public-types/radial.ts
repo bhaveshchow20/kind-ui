@@ -11,7 +11,7 @@ export type RadialBarChart = Pick<
   | "outerRadius"
 >;
 export type RadialBarSeries = Pick<
-  Omit<Chart.RadialBarSeriesProps, "material"> & { material?: "plain" | "clay" | "glow" },
+  Chart.RadialBarSeriesProps,
   "dataKey" | "seriesKey" | "background" | "material" | "stackId" | "cornerRadius"
 >;
 export type RadialBarLabel = Pick<

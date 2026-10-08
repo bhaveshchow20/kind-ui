@@ -51,19 +51,29 @@ export const scatterDataLabels = {
 export const scatterVariants = {
   "scatter-materials": {
     control: "Material",
-    prop: "material",
-    default: "plain",
+    prop: "appearance",
+    default: "default",
     options: [
-      { value: "plain", label: "Default" },
+      { value: "default", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],
   },
 };
 
+// Native chart loading uses the same source in Preview, Code and Copy prompt.
+const primaryLoading = {
+  control: "State",
+  prop: "state",
+  default: "ready",
+  options: [
+    { value: "ready", label: "Ready" },
+    { value: "loading", label: "Loading" },
+  ],
+};
 export const family = {
   id: "scatter",
   examples: scatterExamples,
   dataLabels: scatterDataLabels,
-  variants: scatterVariants,
+  variants: { ...scatterVariants, scatter: primaryLoading },
 };

@@ -2,7 +2,7 @@
 
 Read repository AGENTS.md and CONTRIBUTING.md first. This application is independently installed, with its own pinned npm lockfile; do not turn it into a second chart package or change library APIs while writing docs.
 
-Use public @kind-ui/charts exports and pinned peers in examples. The catalogs maintain 13 component families and 49 complete examples; Radial also covers ActivityRings. Keep selected options synchronized with Preview, Code, Copy prompt and agent retrieval. Generated files are outputs; edit source examples, MDX or public type aliases instead. Family changes own their catalog, preview bindings and checks; use the README ownership contract. Shared registration and the single guarded vendor pin/lockfiles belong to integration.
+Use public @kind-ui/charts exports and pinned peers in examples. The catalogs maintain 13 component families and 51 complete examples; Radial also covers ActivityRings. Keep selected options synchronized with Preview, Code, Copy prompt and agent retrieval. Generated files are outputs; edit source examples, MDX or public type aliases instead. Family changes own their catalog, preview bindings and checks; use the README ownership contract. Shared registration and the single guarded vendor pin/lockfiles belong to integration.
 
 Read actual declarations before writing generated reference aliases. Clearly distinguish built-in, explicit composition and unsupported behavior. Materials are family-specific. Automatic paint emphasis is narrower than tooltip inspection. Glass stays paused.
 

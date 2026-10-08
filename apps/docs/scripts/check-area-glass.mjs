@@ -19,7 +19,7 @@ try {
   p.on("pageerror", (e) => evidence.errors.push(e.message));
   await p.goto(`${origin}/docs/components/area/`);
   await p.locator(".recharts-area-area").first().waitFor();
-  assert.equal(await p.locator(".line-workbench").count(), 4);
+  assert.equal(await p.locator(".line-workbench").count(), Object.keys(bundles).length + 1);
   assert.equal(await p.getByText("View data", { exact: true }).count(), 0);
   assert.equal(await p.getByRole("combobox", { name: "Choose component" }).count(), 0);
   assert.equal(await p.locator("#fd-glass-layout").count(), 1);
@@ -31,6 +31,7 @@ try {
     "Curve types",
     "Stacked series",
     "Materials",
+    "Loading State",
     "API reference",
     "Shared components",
   ]);
@@ -39,7 +40,35 @@ try {
     for (const [value, variant] of Object.entries(
       bundle.variants ?? { default: { source: bundle.files[`src/examples/${id}/example.tsx`] } },
     )) {
-      if (bundle.variants) {
+      if (value === "loading") {
+        const pending = p.locator(`[data-component="${id}-loading"]`);
+        assert.equal(await pending.getByRole("combobox").count(), 0);
+        await pending
+          .locator('[data-kind-ui="chart-loading-skeleton"]')
+          .waitFor({ state: "visible" });
+        await pending.getByRole("tab", { name: "Code", exact: true }).click();
+        assert.equal(
+          (await pending.locator("pre").textContent()).trimEnd(),
+          variant.source.trimEnd(),
+        );
+        await pending.getByRole("button", { name: "Copy Text", exact: true }).click();
+        assert.equal(
+          (await p.evaluate(() => navigator.clipboard.readText())).trimEnd(),
+          variant.source.trimEnd(),
+        );
+        await pending.locator("button.copy-prompt").click();
+        const prompt = await p.evaluate(() => navigator.clipboard.readText());
+        const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
+        assert.equal(
+          (await (await context.request.get(url)).text()).trimEnd(),
+          variant.source.trimEnd(),
+        );
+        await pending.getByRole("tab", { name: "Preview", exact: true }).click();
+        assert.equal(await card.locator('[data-kind-ui="chart-loading-skeleton"]').count(), 0);
+        evidence.variants.push({ id, value, loading: "fixed preview, code and copy parity" });
+        continue;
+      }
+      if (Object.keys(bundle.variants ?? {}).filter((value) => value !== "loading").length > 1) {
         await card.getByRole("combobox", { name: bundle.variantControl }).click();
         await p.getByRole("option", { name: variant.label, exact: true }).click();
       }
@@ -55,8 +84,9 @@ try {
         await card.locator(".line-code-viewport").evaluate((n) => n.scrollHeight > n.clientHeight),
       );
       await card.getByRole("tab", { name: "Preview", exact: true }).click();
+
       await card.locator(".recharts-area-area").first().waitFor();
-      await card.getByRole("button", { name: /Copy prompt|Copied/ }).click();
+      await card.locator("button.copy-prompt").click();
       const prompt = await p.evaluate(() => navigator.clipboard.readText());
       assert.ok(prompt.includes("/docs/components/area/"));
       const selectedUrl = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
@@ -73,7 +103,7 @@ try {
               n.querySelector('[data-kind-ui="area-material"]')?.getAttribute("data-material") ??
               null,
           ),
-          value === "plain" ? null : value,
+          value === "default" ? null : value,
         );
       }
       evidence.variants.push({ id, value, copy: "exact", internalScroll: true, path });

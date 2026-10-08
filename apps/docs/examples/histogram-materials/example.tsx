@@ -55,9 +55,9 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function MaterialHistogram({
-  material = "plain",
+  appearance = "default",
 }: {
-  material?: "plain" | "clay" | "glow";
+  appearance?: "default" | "clay" | "glow";
 } = {}) {
   return (
     <Chart.Root config={config}>
@@ -87,7 +87,7 @@ export function MaterialHistogram({
           }}
         >
           <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.HistogramSeries material={material} />
+          <Chart.HistogramSeries material={appearance === "default" ? undefined : appearance} />
           <Chart.Tooltip
             labelFormatter={(_label, payload) => {
               const bin = payload[0]?.payload as Chart.HistogramBin | undefined;

@@ -3,14 +3,16 @@ title: Area Chart
 description: Show change over time with filled areas and stacked series.
 ---
 
+Show visitor volume over time, then compare stacked contributions.
+
 <AreaExample id="area" />
 
 ## Usage
 
 Add one `AreaSeries` per measure. Use `stackId` to stack related series.
 
-```tsx title="Composition"
-<Chart.Root config={config}>
+```tsx title="Composition sketch"
+<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
   <Chart.Legend />
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.AreaChart data={data} animate accessibilityLayer aria-label="Monthly visitors">
@@ -24,7 +26,7 @@ Add one `AreaSeries` per measure. Use `stackId` to stack related series.
 </Chart.Root>
 ```
 
-Area uses explicit composition, without Line’s configured shortcuts. Place `Legend` outside the plot; pair Root visibility with its callback for toggles.
+Place the legend outside the plot. `defaultVisibleSeries` enables its visibility buttons.
 
 ## Curve types
 
@@ -44,9 +46,15 @@ Choose Default, Clay or Glow.
 
 <AreaExample id="area-materials" />
 
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+
+<ChartExample id="area" variant="loading" />
+
 ## API reference
 
-Focused props for the composition above; upstream links cover additional native options.
+Use these props to configure the area plot and its series.
 
 ### AreaChart
 
@@ -80,7 +88,7 @@ String `dataKey` values identify config entries. Use `seriesKey` for numeric key
 | `seriesKey` | `string` | String `dataKey` | Metadata and visibility identity. |
 | `type` | `"basis" \| "basisClosed" \| "basisOpen" \| "bumpX" \| "bumpY" \| "bump" \| "linear" \| "linearClosed" \| "natural" \| "monotoneX" \| "monotoneY" \| "monotone" \| "step" \| "stepBefore" \| "stepAfter"` or custom curve function | `"linear"` | Native curve interpolation. |
 | `stackId` | `string \| number` | — | Shared identity for stacked series. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Area finish; explicit `shape` or `filter` takes precedence. |
+| `material` | `"clay" \| "glow"` | Omitted | Area finish; explicit `shape` or `filter` takes precedence. |
 | `stroke` / `fill` | `string` | Config color | Override outline or fill separately. |
 | `fillOpacity` | `number` | `0.6` in Recharts | Fill transparency; shown components set it explicitly. |
 | `connectNulls` | `boolean` | `false` | Connect missing values instead of leaving gaps. |
@@ -88,8 +96,17 @@ String `dataKey` values identify config entries. Use `seriesKey` for numeric key
 
 </div>
 
-Numbers and two-value ranges retain native geometry. `AreaChart` owns motion; per-series animation is disabled. See [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [material support](/docs/guides/materials/).
+`AreaChart` controls animation. See [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [material support](/docs/guides/materials/).
 
 ## Shared components
 
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+Customize series colors, stack visibility and plot labels with these components.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

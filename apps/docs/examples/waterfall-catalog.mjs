@@ -1,3 +1,13 @@
+// Native chart loading uses the same source in Preview, Code and Copy prompt.
+const primaryLoading = {
+  control: "State",
+  prop: "state",
+  default: "ready",
+  options: [
+    { value: "ready", label: "Ready" },
+    { value: "loading", label: "Loading" },
+  ],
+};
 export const family = {
   id: "waterfall",
   examples: [
@@ -231,13 +241,14 @@ export const family = {
     },
   },
   variants: {
+    waterfall: primaryLoading,
     "waterfall-materials": {
       control: "Material",
-      prop: "material",
-      default: "plain",
+      prop: "appearance",
+      default: "default",
       options: [
         {
-          value: "plain",
+          value: "default",
           label: "Default",
         },
         {

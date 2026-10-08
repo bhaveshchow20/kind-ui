@@ -5,7 +5,7 @@ import { consumerShard, expandConsumers } from "./consumer-shards.mjs";
 import { verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
-const root = path.resolve("artifacts/consumer");
+const root = path.resolve(process.env.KIND_DOCS_CONSUMER_ROOT || "artifacts/consumer");
 mkdirSync(root, { recursive: true });
 const first = Object.values(bundles)[0];
 for (const [name, body] of Object.entries(verificationFiles(first))) {
@@ -15,7 +15,7 @@ for (const [name, body] of Object.entries(verificationFiles(first))) {
 }
 if (first.localPackage) {
   mkdirSync(path.join(root, "vendor"), { recursive: true });
-  cpSync("vendor/kind-ui-charts-0.2.0.tgz", path.join(root, "vendor/kind-ui-charts-0.2.0.tgz"));
+  cpSync("vendor/kind-ui-charts-0.3.0.tgz", path.join(root, "vendor/kind-ui-charts-0.3.0.tgz"));
 }
 execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
   cwd: root,

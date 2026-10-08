@@ -241,7 +241,14 @@ test("Docs separates copied consumers without dropping any browser or build gate
       s.run !== "npm ci" &&
       s.run !== "npm audit --audit-level=high --include=dev",
   );
-  assert.equal(browserChecks.length, 14);
+  assert.equal(browserChecks.length, 15);
+  assert.ok(
+    browserChecks.some(
+      (step) =>
+        step.run === "node scripts/start-legend-checks.mjs" &&
+        step.if === "matrix.group == 'general'",
+    ),
+  );
   for (const step of browserChecks) {
     assert.ok(
       docs.jobs.browsers.strategy.matrix.group.some(

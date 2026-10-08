@@ -2,6 +2,7 @@
 @import "tailwindcss";
 @import "@kind-ui/charts/styles.css";
 @import "tw-animate-css";
+@import "./chart-focus.css";
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

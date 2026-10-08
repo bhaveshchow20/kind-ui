@@ -47,11 +47,11 @@ export const pieDataLabels = Object.fromEntries(
 );
 export const pieVariants = {
   "pie-interaction": {
-    control: "State",
+    control: "Highlight",
     prop: "status",
     default: "ready",
     options: [
-      { value: "ready", label: "Ready" },
+      { value: "ready", label: "Default" },
       { value: "loading", label: "Loading" },
       { value: "selective-glow", label: "Selective glow" },
     ],
@@ -73,14 +73,15 @@ export const pieVariants = {
     options: [
       { value: "pie", label: "Pie" },
       { value: "donut", label: "Donut" },
+      { value: "loading", label: "Loading" },
     ],
   },
   "pie-materials": {
     control: "Material",
-    prop: "material",
-    default: "plain",
+    prop: "appearance",
+    default: "default",
     options: [
-      { value: "plain", label: "Default" },
+      { value: "default", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],

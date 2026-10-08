@@ -13,11 +13,16 @@ const config = {
   Review: { label: "Review", color: "#b85c13", formatValue: (value: unknown) => `${value}%` },
 } satisfies Chart.SeriesConfig;
 
-export function ProjectProgressChart({ labels = "hidden" }: { labels?: "hidden" | "visible" }) {
+export function ProjectProgressChart({
+  labels = "visible",
+}: {
+  labels?: "hidden" | "visible" | "loading";
+}) {
   return (
     <Chart.Root config={config}>
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.RadialBarChart
+          loading={labels === "loading"}
           data={data}
           categoryKey="period"
           animate

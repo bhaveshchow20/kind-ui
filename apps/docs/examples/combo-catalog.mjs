@@ -24,9 +24,8 @@ export const comboExamples = [
   },
   {
     id: "combo-presentation",
-    title: "Loading and presentation",
-    notes:
-      "Focus a series through its legend or marks; June is projected. Switch to Loading to inspect the pending silhouette.",
+    title: "Presentation options",
+    notes: "Focus a series through its legend or marks; June is projected.",
     acceptance:
       "Ready and Loading previews match copied source; series patterns, target icon, projected June, point styles and dashed motion remain public composition.",
   },
@@ -86,9 +85,19 @@ export const comboVariants = {
   },
 };
 
+// Native chart loading uses the same source in Preview, Code and Copy prompt.
+const primaryLoading = {
+  control: "State",
+  prop: "state",
+  default: "ready",
+  options: [
+    { value: "ready", label: "Ready" },
+    { value: "loading", label: "Loading" },
+  ],
+};
 export const family = {
   id: "combo",
   examples: comboExamples,
   dataLabels: comboDataLabels,
-  variants: comboVariants,
+  variants: { ...comboVariants, combo: primaryLoading },
 };

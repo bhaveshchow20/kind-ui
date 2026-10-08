@@ -11,13 +11,20 @@ const scale = Chart.createHeatmapScale({ domain: [0, 4], colors: ["#eef4eb", "#3
 
 export function CompactActivityHeatmap() {
   return (
-    <Chart.HeatmapChart rows={rows} columns={columns} data={data} scale={scale}>
-      <Chart.HeatmapGrid
-        caption="Contributions by day and week"
-        layout={{ cellSize: 12, gap: 3, rowLabels: "hidden", columnLabels: "hidden" }}
-        Cell={() => <span aria-hidden="true" />}
-      />
-      <Chart.HeatmapTooltip />
-    </Chart.HeatmapChart>
+    <div style={{ containerType: "inline-size", minWidth: 0, width: "100%" }}>
+      <Chart.HeatmapChart rows={rows} columns={columns} data={data} scale={scale}>
+        <Chart.HeatmapGrid
+          caption="Contributions by day and week"
+          layout={{
+            cellSize: "clamp(6px, calc((100cqw - 84px) / 26), 28px)",
+            gap: 3,
+            rowLabels: "hidden",
+            columnLabels: "hidden",
+          }}
+          Cell={() => <span aria-hidden="true" />}
+        />
+        <Chart.HeatmapTooltip />
+      </Chart.HeatmapChart>
+    </div>
   );
 }

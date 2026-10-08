@@ -5,6 +5,10 @@ description: Share series labels, colors, visibility and focus across a chart.
 
 `Root` connects your plot, legend and tooltip to a [series config](/docs/chart-components/series-config/).
 
+Toggle Print or Digital to see Root share visibility between the legend and bars.
+
+<ChartExample id="bar-comparison" />
+
 ## Usage
 
 ```tsx
@@ -14,7 +18,7 @@ const config = {
   orders: { label: "Orders", color: "#4477aa" },
 } satisfies Chart.SeriesConfig;
 
-<Chart.Root config={config}>
+<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
   <Chart.Legend />
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.BarChart data={[{ day: "Mon", orders: 24 }]} aria-label="Daily orders">
@@ -28,7 +32,7 @@ const config = {
 
 ## Visibility
 
-Pass `visibleSeries` to control visibility in your own state. Add `onVisibleSeriesChange` to receive [Legend](/docs/chart-components/legend/) requests; without it, controlled visibility is read-only unless you configure focus interaction.
+Pass `visibleSeries` to control visibility in your own state. Add `onVisibleSeriesChange` to receive [Legend](/docs/chart-components/legend/) requests. Without the callback, legend actions cannot change controlled visibility.
 
 ```tsx
 import { useState } from "react";
@@ -44,30 +48,13 @@ const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config)
 </Chart.Root>
 ```
 
-For Root-owned visibility, pass `defaultVisibleSeries`. Root updates this initial selection internally; an optional `onVisibleSeriesChange` observes accepted changes. Choose `visibleSeries` or `defaultVisibleSeries`, never both. A visibility callback requires one of these arrays.
+For uncontrolled visibility, set `defaultVisibleSeries={Object.keys(config)}`. Without visibility or interaction settings, the legend displays labels without toggling.
 
-```tsx
-<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-  <Chart.Legend />
-  {/* Legend and plot share Root-owned visibility */}
-</Chart.Root>
-```
-
-Series adapters consume this visibility. An unbound [PieSeries](/docs/components/pie/) keeps consumer-owned row filtering; opt into its category binding to let Root filter rows and Cells together.
-
-Legend requests cannot hide the final visible eligible item. Root preserves visibility and announces “At least one item must remain visible.” An external controlled update may still set `visibleSeries={[]}`; your data alternative and empty-result message remain consumer-owned.
+<Callout title="Note">Legend toggles keep at least one eligible item visible. Controlled updates can still set an empty selection; provide an empty-result message.</Callout>
 
 ## Interaction and eligibility
 
-Set the identity kind and settled `eligibleKeys` through `interaction`. Include Root-hidden items and zero values; exclude unavailable identities. Keep IDs stable across reorder. Native adapters also report availability.
-
-Without a snapshot, Root uses registered identities or, if none exist, config keys.
-
-Eligible legend items can be controls. Unavailable items retain labels without toggle buttons; Root-hidden items remain restorable.
-
-Empty data or native `hide` does not write a new visibility array or call the visibility callback. Availability changes do not invoke controlled selection callbacks.
-
-`mode="visibility"` is the default. `mode="focus"` highlights an identity without filtering data. Use `kind="series"` for native series, `"category"` for bound Pie categories, or `"node"` for node focus; node interaction supports focus only.
+Choose `mode="focus"` to highlight a series without hiding data. Use stable `eligibleKeys` for available identities, including temporarily hidden series.
 
 ```tsx
 <Chart.Root
@@ -85,15 +72,11 @@ Empty data or native `hide` does not write a new visibility array or call the vi
 </Chart.Root>
 ```
 
-Control focus with `selected` and required `onSelectionChange`, or initialize it with `defaultSelected` and an optional callback. Do not combine these modes or change ownership while mounted.
+Use `selected` with `onSelectionChange` for controlled focus, or `defaultSelected` for uncontrolled focus. Activating the same item or pressing Escape clears focus.
 
-Activating the selected identity clears it; Escape requests a focus reset. Root announces accepted focus and visibility changes in a scoped live region.
+`markActivation="matching-legend"` lets supported marks use the legend's actions.
 
-`markActivation="matching-legend"` opts participating native marks into the same actions; shared mark actions default off.
-
-Consumer handlers run first. `event.preventDefault()` or `interaction.onBeforeInteraction(request)` returning `false` vetoes the action, including Escape reset. A request supplies its identity (or `null` for reset), source, mode and original event.
-
-Actions use committed state/callbacks, including after synchronous consumer updates.
+<Callout title="Note">Your event handlers run first. Call `event.preventDefault()` or return `false` from `onBeforeInteraction` to cancel the shared action.</Callout>
 
 ## Props
 
@@ -101,4 +84,18 @@ Actions use committed state/callbacks, including after synchronous consumer upda
 
 `emphasis` defaults to `"auto"`. Set `"none"` to disable Kind emphasis within this root; individual chart families define which marks support it.
 
-`Root` accepts native `div` props and a ref. Each config key supplies a `--color-{key}` CSS variable on that element.
+Each config key supplies a `--color-{key}` CSS variable for custom marks.
+
+## Loading
+
+Set `loading` on any chart or `ActivityRings` while its data is pending. The chart keeps its size, and `loadingLabel` is announced to screen readers.
+
+```tsx
+<Chart.LineChart data={data} config={config} xDataKey="month"
+  loading={isPending} loadingLabel="Loading monthly sales"
+  aria-label="Monthly sales" />
+```
+
+<Callout title="Note">Reduced motion keeps the loading preview still. Show your own message for errors or empty results.</Callout>
+
+<ApiTable name="LoadingReference" />

@@ -3,13 +3,15 @@ title: Waterfall Chart
 description: Trace signed contributions from an opening balance to a closing total.
 ---
 
+Trace how sales, refunds and costs change a cash balance.
+
 <ChartExample id="waterfall" />
 
 ## Usage
 
 Use `computeWaterfallData` to prepare rows for the bars and connectors.
 
-```tsx title="Composition"
+```tsx title="Composition sketch"
 <Chart.Root config={config}>
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.WaterfallChart data={data} layout="vertical" animate accessibilityLayer>
@@ -28,11 +30,11 @@ Use `computeWaterfallData` to prepare rows for the bars and connectors.
 </Chart.Root>
 ```
 
-Use one unstacked series. `layout="vertical"` produces horizontal bars. Label the category axis from `id`; the color key describes step roles rather than toggling contributions.
+Use one unstacked series. `layout="vertical"` produces horizontal bars.
 
 ## Inputs and checkpoints
 
-`computeWaterfallData(entries, initialBalance = 0)` returns new ordered rows. These values are USD thousands.
+Each row describes a change or an absolute checkpoint.
 
 <div className="line-props-scroll" role="region" aria-label="Waterfall input kinds" tabIndex={0}>
 
@@ -46,35 +48,35 @@ Use one unstacked series. `layout="vertical"` produces horizontal bars. Label th
 
 </div>
 
-Opening $120k, sales and refunds produce a $180k subtotal; costs and tax leave $95k. Checkpoints supply explicit balances and may intentionally differ from the preceding result.
-
-Place connectors before bars and subset both together. Adjacent known, matching balances connect; missing geometry or disagreeing checkpoints break the connection.
+Place connectors before bars and pass both the same rows. Checkpoints set an explicit balance.
 
 ## Missing and zero values
 
-A null change/checkpoint makes the balance unknown until a known checkpoint restores it. To start unknown, call `computeWaterfallData(entries, null)`.
+A null change makes the balance unknown until a known checkpoint restores it.
 
 <ChartExample id="waterfall-missing" />
 
-Pending leaves Fees’ −$10k value known but its geometry unknown; Audited restores $105k. Zero changes retain zero-width geometry, with no fabricated minimum bar.
-
-Values must be finite or null; subtotals must omit `value`. Invalid kinds/IDs, duplicate IDs, omitted change/checkpoint values, nonfinite values and arithmetic overflow throw.
+<Callout title="Valid inputs">Use unique IDs and finite values or null. Subtotals omit `value`. Invalid inputs and arithmetic overflow throw.</Callout>
 
 ## Materials
 
-Choose Default, Clay or Glow. Custom `shape` or `filter` owns the finish; arithmetic and connectors stay unchanged.
+Choose Default, Clay or Glow.
 
 <ChartExample id="waterfall-materials" />
 
 ## Motion and inspection
 
-`WaterfallChart` aliases `BarChart`. Entrance reveals ranges from numeric zero, not sequential arithmetic. Interaction finishes it; reduced motion skips it. Native per-series animation stays disabled.
+Tooltips use `value`, `start` and `balance`; set `filterNull={false}` to inspect unknown steps. Entrance motion reveals bars from zero and respects reduced motion.
 
-Use `value`, `start` and `balance` in tooltip content; native range payloads contain endpoints. `filterNull={false}` permits unknown-step inspection. Range bars cannot use scalar category emphasis.
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+
+<ChartExample id="waterfall" variant="loading" />
 
 ## API reference
 
-Focused props for ordered data and explicit Recharts composition; native axes, Cells and reference lines retain their geometry.
+Prepare ordered balances, then configure bars and connectors.
 
 ### computeWaterfallData
 
@@ -87,7 +89,7 @@ Focused props for ordered data and explicit Recharts composition; native axes, C
 
 </div>
 
-Returns `WaterfallDatum[]` with IDs, labels, kinds, original/computed values, endpoints and balances. `range` sorts endpoints or becomes null; use `value` for direction because sorting loses sign.
+Returns `WaterfallDatum[]` with `value`, `start`, `balance` and sorted `range` endpoints. Use `value` to distinguish positive and negative changes.
 
 ### WaterfallChart
 
@@ -113,7 +115,7 @@ Returns `WaterfallDatum[]` with IDs, labels, kinds, original/computed values, en
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `seriesKey` | `string` | `"range"` | Metadata and controlled visibility identity. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Finish on native rectangles; custom shapes/filters retain ownership. |
+| `material` | `"clay" \| "glow"` | Omitted | Finish on native rectangles; custom shapes/filters retain ownership. |
 | `hide` | `boolean` | `false` | Hide all bars; pass the same value to connectors. |
 | `radius` | `number \| [number, number, number, number]` | `0` | Native rectangle corner radius. |
 | `children` | `ReactNode` | — | Native `Cell` and `LabelList` composition. |
@@ -138,8 +140,15 @@ Binds `range` with zero minimum size; rejects `data`, `dataKey`, `stackId` and `
 
 </div>
 
-Native `ReferenceLine` segments without pointer capture; `x`, `y`, `segment` and `children` are excluded. See [Recharts ReferenceLine](https://recharts.github.io/en-US/api/ReferenceLine/).
+See [Recharts ReferenceLine](https://recharts.github.io/en-US/api/ReferenceLine/).
 
 ## Shared components
 
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/).
+Use Root for color metadata, axes for balances and Tooltip for each step.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |

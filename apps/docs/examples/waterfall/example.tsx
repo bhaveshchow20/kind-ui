@@ -19,7 +19,7 @@ const config = {
   range: { label: "Cash balance", color: "#733bff" },
 } satisfies Chart.SeriesConfig;
 
-export function CashFlowChart() {
+export function CashFlowChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
     <Chart.Root config={config}>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12 }}>
@@ -44,6 +44,7 @@ export function CashFlowChart() {
       </div>
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.WaterfallChart
+          loading={state === "loading"}
           data={data}
           layout="vertical"
           animate

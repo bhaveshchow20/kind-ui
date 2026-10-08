@@ -67,7 +67,7 @@ try {
   await material.getByRole("combobox", { name: "Material" }).click();
   await page.getByRole("option", { name: "Clay", exact: true }).click();
   await material.getByRole("tab", { name: "Code", exact: true }).click();
-  assert.match(await material.locator("pre").textContent(), /material = "clay"/);
+  assert.match(await material.locator("pre").textContent(), /appearance = "clay"/);
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await material.getByRole("button", { name: "Copy Text", exact: true }).click();
   const copied = await page.evaluate(() => navigator.clipboard.readText());

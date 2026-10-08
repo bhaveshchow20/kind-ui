@@ -3,14 +3,16 @@ title: Radar Chart
 description: Compare two product profiles across six dimensions on a shared numeric scale.
 ---
 
+Compare Studio and Field scores on a common 0–100 scale.
+
 <ChartExample id="radar" />
 
 ## Usage
 
 Compare measures on a shared radial scale with one `RadarSeries` per profile.
 
-```tsx title="Composition"
-<Chart.Root config={config}>
+```tsx title="Composition sketch"
+<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
   <Chart.Legend />
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.RadarChart data={data} animate outerRadius="68%" aria-label="Product research scores out of 100">
@@ -29,19 +31,19 @@ Use comparable units and a fixed domain across spokes. These research scores sha
 
 ## Center-out motion
 
-`animate` reveals the polygon from its center. Interaction or data/layout changes finish it; reduced motion skips it. Custom shapes, masks, filters or transforms can bypass the reveal.
+Set `animate` for a center-out entrance that respects reduced motion.
 
 ## Series selection
 
-Click a polygon or press Enter/Space on its series control to select it. Repeat to clear; Escape clears selection. Values and visibility stay unchanged.
+Click a polygon or press Enter/Space to select it. Repeat or press Escape to clear.
 
 <ChartExample id="radar-selection" />
 
 Enable `selection="series"`. Omit `selectedSeries` for local state, or pair it with `onSelectedSeriesChange` for controlled selection.
 
-Selection dims paint, not spoke tooltip values. Keep Root emphasis at `"auto"`; visibility and persistent selection remain separate.
+Selection highlights a profile without hiding other values.
 
-SVG series controls expose labels and pressed state, but provide no arrow-key spoke navigation. Keep the accessible data alternative and verify support in your target assistive technologies.
+<Callout title="Keyboard access">Series controls support selection, but not arrow-key navigation between spokes. Include an accessible data alternative.</Callout>
 
 ## Materials
 
@@ -49,11 +51,17 @@ Choose Default, Clay or Glow. Glow’s exterior halo is decorative, not a score 
 
 <ChartExample id="radar-materials" />
 
-Custom `shape`, `filter` or `style.filter` overrides the finish. Dots and labels retain native rendering. See [material support](/docs/guides/materials/).
+See [material support](/docs/guides/materials/) for custom-shape limitations.
+
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+
+<ChartExample id="radar" variant="loading" />
 
 ## API reference
 
-Focused props for explicit Radar composition; upstream links cover native geometry.
+Configure the shared scale, profile selection and series styling.
 
 ### RadarChart
 
@@ -75,8 +83,6 @@ Use inside `Root` and a sized `ResponsiveContainer`.
 
 </div>
 
-Entrance runs once per mount. Unavailable uncontrolled selections clear without a callback; controlled values remain consumer-owned and show no selected paint while unavailable.
-
 `RadarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` (default `"easeOut"`) and `hoverTransition` (shared spring). See [Recharts RadarChart](https://recharts.github.io/en-US/api/RadarChart/).
 
 ### RadarSeries
@@ -89,7 +95,7 @@ String `dataKey` values identify config entries. Use `seriesKey` for numeric key
 | --- | --- | --- | --- |
 | `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Value field or native accessor; supplied for both profiles here. |
 | `seriesKey` | `string` | String `dataKey` | Metadata, visibility and selection identity. |
-| `material` | `"plain" \| "clay" \| "glow"` | `"plain"` | Finish on default polygons; consumer rendering takes precedence. |
+| `material` | `"clay" \| "glow"` | Omitted | Finish on default polygons; consumer rendering takes precedence. |
 | `stroke` / `fill` | `string` | Config color | Override outline or fill independently. |
 | `fillOpacity` | `number` | SVG default `1` | These overlapping profiles explicitly use `0.18`. |
 | `dot` | `boolean` or native dot props / renderer | `false` | Optional native category marks. |
@@ -99,8 +105,17 @@ String `dataKey` values identify config entries. Use `seriesKey` for numeric key
 
 </div>
 
-Per-series animation is disabled. Recharts exposes no Radar series component ref; attach refs to custom marks. See [Recharts Radar](https://recharts.github.io/en-US/api/Radar/).
+See [Recharts Radar](https://recharts.github.io/en-US/api/Radar/).
 
 ## Shared components
 
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Axes and grid](/docs/chart-components/axes-grid/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+Configure profile colors, radial scales and selection controls with these components.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

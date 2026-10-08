@@ -882,6 +882,11 @@ input:focus-visible {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Whole rem-based rows avoid fractional scroll ends that block native wheel handoff. */
+.line-code-viewport pre {
+  line-height: 1.25rem;
+}
+
 .line-workbench .playground-header {
   justify-content: flex-start;
   gap: 12px;

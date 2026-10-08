@@ -18,7 +18,7 @@ const config = {
 
 export function EdgeCaseBoxPlot() {
   return (
-    <Chart.Root config={config}>
+    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.BoxPlotChart
@@ -58,32 +58,99 @@ export function EdgeCaseBoxPlot() {
               if (!active || !row?.summary) return null;
               const summary = row.summary;
               return (
-                <div data-kind-ui="chart-tooltip">
+                <div
+                  data-kind-ui="chart-tooltip"
+                  style={{
+                    fontSize: 12,
+                    lineHeight: "18px",
+                    minWidth: 180,
+                    maxWidth: "min(220px, calc(100vw - 32px))",
+                  }}
+                >
                   <strong>{label}</strong>
-                  <dl>
-                    <div>
-                      <dt>Lower whisker</dt>
-                      <dd>{summary.lowerWhisker} pp</dd>
+                  <dl
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0, 1fr) auto",
+                      gap: "4px 16px",
+                      margin: "8px 0 0",
+                    }}
+                  >
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>
+                        Lower whisker
+                      </dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {summary.lowerWhisker} pp
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Q1</dt>
-                      <dd>{summary.q1} pp</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Q1</dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {summary.q1} pp
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Median</dt>
-                      <dd>{summary.median} pp</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Median</dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {summary.median} pp
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Q3</dt>
-                      <dd>{summary.q3} pp</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Q3</dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {summary.q3} pp
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Upper whisker</dt>
-                      <dd>{summary.upperWhisker} pp</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>
+                        Upper whisker
+                      </dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {summary.upperWhisker} pp
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Outliers</dt>
-                      <dd>{summary.outliers?.join(", ") || "None"}</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Outliers</dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {summary.outliers?.join(", ") || "None"}
+                      </dd>
                     </div>
                   </dl>
                 </div>

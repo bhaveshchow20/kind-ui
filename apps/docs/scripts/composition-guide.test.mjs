@@ -5,20 +5,27 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 
 const root = resolve(import.meta.dirname, "../../..");
-const guide = await readFile(join(root, "apps/docs/content/docs/concepts/composition.mdx"), "utf8");
-const examples = [...guide.matchAll(/```tsx title="([^"]+)"\n([\s\S]*?)```/g)];
+const guide = await readFile(join(root, "apps/docs/content/docs/installation.mdx"), "utf8");
+const examples = [...guide.matchAll(/```tsx title="(Dashboard.tsx)"\n([\s\S]*?)```/g)];
 
-test("composition guide examples compile against public package exports", async () => {
+test("Installation renders its exact first-chart example in an application", async () => {
   assert.deepEqual(
     examples.map((example) => example[1]),
-    ["Configured chart", "Explicit Root", "Advanced hybrid"],
+    ["Dashboard.tsx"],
   );
   const fixture = await mkdtemp(join(root, "apps/docs/.composition-guide-"));
   try {
     for (const [index, example] of examples.entries()) {
-      assert.match(example[2], /from "@kind-ui\/charts"/);
-      await writeFile(join(fixture, `example-${index}.tsx`), example[2]);
+      assert.match(example[2], /MonthlyVisitorsChart/);
+      await writeFile(
+        join(fixture, `example-${index}.tsx`),
+        example[2].replace("./MonthlyVisitorsChart", "./MonthlyVisitorsChart.js"),
+      );
     }
+    await writeFile(
+      join(fixture, "MonthlyVisitorsChart.tsx"),
+      await readFile(join(root, "apps/docs/examples/line-start/example.tsx"), "utf8"),
+    );
     for (const module of ["NodeNext", "ESNext"]) {
       await writeFile(
         join(fixture, "tsconfig.json"),
@@ -30,7 +37,8 @@ test("composition guide examples compile against public package exports", async 
             target: "ES2022",
             module,
             moduleResolution: module === "NodeNext" ? "NodeNext" : "Bundler",
-            skipLibCheck: true,
+            skipLibCheck: false,
+            types: ["react", "react-dom"],
           },
           include: ["*.tsx"],
         }),

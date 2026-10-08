@@ -31,19 +31,29 @@ export const radarDataLabels = Object.fromEntries(
 export const radarVariants = {
   "radar-materials": {
     control: "Material",
-    prop: "material",
-    default: "plain",
+    prop: "appearance",
+    default: "default",
     options: [
-      { value: "plain", label: "Default" },
+      { value: "default", label: "Default" },
       { value: "clay", label: "Clay" },
       { value: "glow", label: "Glow" },
     ],
   },
 };
 
+// Native chart loading uses the same source in Preview, Code and Copy prompt.
+const primaryLoading = {
+  control: "State",
+  prop: "state",
+  default: "ready",
+  options: [
+    { value: "ready", label: "Ready" },
+    { value: "loading", label: "Loading" },
+  ],
+};
 export const family = {
   id: "radar",
   examples: radarExamples,
   dataLabels: radarDataLabels,
-  variants: radarVariants,
+  variants: { ...radarVariants, radar: primaryLoading },
 };

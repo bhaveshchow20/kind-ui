@@ -1,4 +1,4 @@
 {
   "title": "Get Started",
-  "pages": ["../index", "../installation", "../quickstart"]
+  "pages": ["../index", "../installation", "../agents/consumer"]
 }

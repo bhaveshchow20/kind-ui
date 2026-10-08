@@ -5,6 +5,10 @@ description: Display series labels and share visibility or focus controls.
 
 `Legend` reads labels and markers from [Root](/docs/chart-components/root/). Place it outside the plot's [ResponsiveContainer](/docs/chart-components/responsive-container/).
 
+Toggle Print or Digital to compare library loans with the same legend controls in grouped or stacked views.
+
+<ChartExample id="bar-comparison" />
+
 ## Usage
 
 ```tsx
@@ -14,23 +18,19 @@ description: Display series labels and share visibility or focus controls.
 </Chart.Root>
 ```
 
-With controlled visibility and a change callback, defaulted Root visibility, or focus interaction, eligible items are buttons with `aria-pressed` and Enter/Space support. In visibility mode, pressed means visible; in focus mode, it means selected. Other items display labels.
+Enable toggling with `defaultVisibleSeries={Object.keys(config)}`, or controlled visibility and its callback as above. Click an item to toggle its series.
 
-Root-hidden items remain eligible for restoration. Unavailable native data or independently hidden native series retain labels without buttons. Availability changes do not change visibility or invoke its callback.
+In focus mode, clicking highlights the series instead. Keyboard users can activate items with Enter or Space and reset focus with Escape.
 
-See [Root](/docs/chart-components/root/) for eligible snapshots and controlled/defaulted ownership.
-
-Visibility actions cannot hide the last visible eligible item. The button stays pressed; Root announces each rejection in its scoped live region. Explicit controls may set an empty controlled selection.
-
-Focus mode changes highlight instead of visibility, and Escape requests a reset. Consumer handlers run first; `preventDefault()` or `interaction.onBeforeInteraction` can veto these actions.
+<Callout type="info">
+The legend keeps at least one available item visible. Hidden items remain selectable; unavailable items appear as labels. Configure visibility and focus on [Root](/docs/chart-components/root/).
+</Callout>
 
 ## Markers and content
 
-Configured icons take priority over `legendShape`; otherwise items use color swatches. `hideIcon` forces swatches. For Scatter, set the same symbol on `legendShape` and `ScatterSeries.shape`.
+Use `icon` or `legendShape` in [SeriesConfig](/docs/chart-components/series-config/) to customize markers. Icons take priority; `Legend.hideIcon` uses color swatches. For Scatter, match `legendShape` to `ScatterSeries.shape`.
 
-Use the render callback to customize items. Return noninteractive content; Kind owns the list, control and state. The callback receives `key`, `label`, `marker`, `visible`, `selected` and `mode`.
-
-`visible` describes Root visibility; `selected` describes focus selection, and `mode` is `"visibility"` or `"focus"`.
+Customize item content with the render callback. Keep it noninteractive so the legend button remains the single control.
 
 ```tsx
 <Chart.Legend>
@@ -45,8 +45,6 @@ Use the render callback to customize items. Return noninteractive content; Kind 
 
 ## Props
 
-<ApiTable name="Legend" />
+<ApiTable name="Legend" compact />
 
-`hideIcon` defaults to `false`; `emphasis` defaults to `"none"`. Use `emphasis="series"` to request highlighting on hover or focus in supported chart families. Legacy Scatter inspection does not automatically dim marks; explicit Root focus supports series emphasis.
-
-`Legend` accepts native `ul` props and a ref. This is Kind's legend; [Recharts Legend](https://recharts.github.io/en-US/api/Legend/) has a separate API.
+Use `emphasis="series"` for hover or keyboard-focus highlighting in supported families. Scatter supports emphasis through explicit Root focus.

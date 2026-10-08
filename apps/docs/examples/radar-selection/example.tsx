@@ -19,7 +19,7 @@ const config = {
 export function SelectableRadarChart() {
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
   return (
-    <Chart.Root config={config}>
+    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.RadarChart
@@ -46,9 +46,9 @@ export function SelectableRadarChart() {
           <Chart.Tooltip />
         </Chart.RadarChart>
       </Chart.ResponsiveContainer>
-      <output aria-live="polite">
+      <output aria-live="polite" className="sr-only">
         {selectedSeries
-          ? `Highlighted: ${config[selectedSeries as keyof typeof config].label}`
+          ? `Selected: ${config[selectedSeries as keyof typeof config].label}`
           : "All series"}
       </output>
     </Chart.Root>

@@ -5,9 +5,13 @@ description: Set scales, tick labels and guides for Cartesian and polar charts.
 
 Kind exports these Recharts components directly. Compose them inside the chart; their props and defaults remain native.
 
+Workshop hours use a numeric X axis, topic labels on Y, and vertical grid guides.
+
+<ChartExample id="bar-horizontal" />
+
 ## XAxis and YAxis
 
-For category columns and time-series plots, use a category X axis and numeric Y axis.
+Use a category X axis and numeric Y axis for most Cartesian charts.
 
 ```tsx
 <Chart.XAxis dataKey="day" axisLine={false} tickLine={false} tickMargin={12} />
@@ -17,7 +21,7 @@ For category columns and time-series plots, use a category X axis and numeric Y 
 
 Use `type="number"` on both axes for [Scatter](/docs/components/scatter/). For horizontal [Bar](/docs/components/bar/) charts, use numeric X and category Y with `layout="vertical"`.
 
-`dataKey` selects a field or accessor. `domain` sets numeric bounds, `tickFormatter` formats labels, and `height` (X) or `width` (Y) reserves label space. Match each series' axis IDs when composing multiple scales.
+Use `domain` for numeric bounds and `tickFormatter` for labels. With multiple scales, match each series' axis IDs.
 
 See [Recharts XAxis](https://recharts.github.io/en-US/api/XAxis/) and [YAxis](https://recharts.github.io/en-US/api/YAxis/).
 
@@ -39,7 +43,7 @@ Set `domain` for consistent size comparisons. See [Recharts ZAxis](https://recha
 
 ## Polar axes and grid
 
-`PolarAngleAxis` labels radar dimensions or maps numeric values onto angles. `PolarRadiusAxis` defines the radial scale or category ring bands. Set explicit bounds for comparable scores and progress values.
+Use polar axes for radar dimensions and radial scales. Set explicit bounds to compare scores or progress.
 
 ```tsx
 <Chart.PolarAngleAxis dataKey="dimension" />

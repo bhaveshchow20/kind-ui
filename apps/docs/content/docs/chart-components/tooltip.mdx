@@ -5,13 +5,17 @@ description: Show labels and formatted values for the inspected chart item.
 
 `Tooltip` uses [series metadata](/docs/chart-components/series-config/) and stays within the plot bounds. Add it inside the chart, within [Root](/docs/chart-components/root/).
 
+Inspect a daily response time to see Tooltip display the configured label and milliseconds.
+
+<ChartExample id="line-markers" />
+
 ## Usage
 
 ```tsx
 <Chart.Tooltip />
 ```
 
-Kind hides entries for deselected series. The default content uses configured labels, colors and value formatters; native tooltip formatters take precedence. Keyboard inspection depends on the chart family. Escape dismisses inspection.
+The tooltip uses configured labels, colors and value formatters, and excludes hidden series. Press Escape to dismiss inspection. Keyboard inspection support varies by chart family.
 
 ## Custom content
 
@@ -25,7 +29,7 @@ Use `TooltipContent` to keep Kind's labels and formatting in a custom content ca
 />
 ```
 
-`TooltipContent` accepts native `div` props and a ref. Its defaults are `missingValue="No data"`, `indicator="line"`, `hideLabel={false}` and `hideIndicator={false}`. It renders nothing when no visible entry has a value.
+Use `missingValue` for absent values. No content appears when every visible entry is missing.
 
 ## Props
 
@@ -33,9 +37,9 @@ Use `TooltipContent` to keep Kind's labels and formatting in a custom content ca
 
 <ApiTable name="Tooltip" compact />
 
-Kind defaults to `cursor={false}`, `filterNull={false}`, `offset={12}` and `maxWidth={180}`. `frameProps` and `ref` address its measured positioning element. `itemKey` resolves metadata and visibility identity for categories or custom data keys.
+Set `itemKey` when category identities differ from data keys. Native tooltip formatters override config formatting.
 
-Native selection and formatting props are available; Kind controls positioning, the portal and tooltip transitions. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/) for the native props.
+See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/) for additional native formatting and selection props.
 
 ### TooltipContent
 
@@ -45,4 +49,4 @@ Native selection and formatting props are available; Kind controls positioning, 
 
 Use [ScatterTooltip](/docs/components/scatter/#scattertooltip) for X/Y/Z dimensions and [HeatmapTooltip](/docs/components/heatmap/#heatmaptooltip) for heatmap cells.
 
-[Sankey](/docs/components/sankey/) uses `Tooltip` imported directly from `recharts`. Its hover tooltip is native; the Sankey example supplies separate keyboard selection and status text.
+[Sankey](/docs/components/sankey/) uses the native Recharts tooltip. Its examples include custom content and separate keyboard selection.
