@@ -82,7 +82,9 @@ test("packed scatter equals native geometry, Cells, labels and independent dupli
   const frame = page.locator('[data-kind-ui="tooltip-frame"]');
   await expect(frame).toHaveAttribute("data-ref", "DIV");
   await within(frame, chart);
-  await page.getByRole("button", { name: "Beta", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Beta", exact: true })
+    .evaluate((node) => (node as HTMLButtonElement).click());
   await expect(chart.locator(mark("other-point"))).toHaveCount(1);
   await expectHiddenPaint(chart.locator(mark("other-point")));
   await expect(tip).toContainText("other-point");

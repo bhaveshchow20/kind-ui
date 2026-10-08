@@ -1,5 +1,5 @@
 import { expect, test } from "./browser";
-import { expectDimmedPaint } from "./interaction-paint";
+import { expectHiddenPaint } from "./interaction-paint";
 
 for (const horizontal of [false, true]) {
   test(`patterns preserve ${horizontal ? "horizontal" : "vertical"} bars and scoped resources`, async ({
@@ -89,12 +89,12 @@ for (const horizontal of [false, true]) {
     );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
     await expect(marks).toHaveCount(8);
-    await expectDimmedPaint(
+    await expectHiddenPaint(
       page
         .locator('[data-kind-ui="chart"]')
         .first()
         .locator(
-          '[data-kind-ui="series-interaction"][data-series="second"] .recharts-bar-rectangle path',
+          '[data-kind-ui="series-interaction"][data-series="first"] .recharts-bar-rectangle path',
         )
         .first(),
     );

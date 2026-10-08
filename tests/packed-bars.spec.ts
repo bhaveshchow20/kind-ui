@@ -86,6 +86,7 @@ test("packed bars preserve registration, semantics, native composition, refs and
   await page
     .getByRole("button", { name: "Resize", exact: true })
     .evaluate((node) => (node as HTMLButtonElement).click());
+  await marks.first().hover();
   await bounds(frame, chart);
   await expect(page.getByRole("button", { name: "Content count 1" })).toBeVisible();
   await page.screenshot({ path: info.outputPath("packed-bars-native-content.png") });

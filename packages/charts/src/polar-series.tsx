@@ -306,8 +306,9 @@ type RadialPaintProps = ComponentProps<typeof Sector> & { payload?: unknown; ind
 function RadialOwnedPaint({
   option,
   backgroundPaint = false,
+  activePaint = false,
   ...props
-}: RadialPaintProps & { option?: unknown; backgroundPaint?: boolean }) {
+}: RadialPaintProps & { option?: unknown; backgroundPaint?: boolean; activePaint?: boolean }) {
   const series = use(RadialSeriesPaint);
   const categories = use(RadialCategory);
   const interaction = useChartInteraction();
@@ -331,6 +332,8 @@ function RadialOwnedPaint({
       interaction.kind === (category === undefined ? "series" : "category") &&
       interaction.eligible.includes(key),
   );
+  if (activePaint && (hidden || (interaction.selected !== null && interaction.selected !== key)))
+    return null;
   let content: ReactNode;
   if (isValidElement(option)) content = cloneElement(option, props);
   else if (typeof option === "function")
@@ -619,7 +622,7 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
   );
   const nativeActiveShape = useMemo(
     () => (paint: RadialPaintProps) => (
-      <RadialOwnedPaint {...paint} option={props.activeShape ?? props.shape} />
+      <RadialOwnedPaint {...paint} activePaint option={props.activeShape ?? props.shape} />
     ),
     [props.activeShape, props.shape],
   );
@@ -689,13 +692,7 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
                 {...props}
                 {...(onClick !== undefined ? { onClick } : {})}
                 shape={nativeShape}
-                {...(interaction.inactive
-                  ? { activeShape: false }
-                  : props.activeShape === undefined && !categories?.bound
-                    ? {}
-                    : props.activeShape === false
-                      ? { activeShape: false }
-                      : { activeShape: nativeActiveShape })}
+                activeShape={props.activeShape === false ? () => null : nativeActiveShape}
                 {...(nativeBackground !== undefined ? { background: nativeBackground } : {})}
                 {...(materialized ? { filter: `url(#${filterId})` } : {})}
                 {...(props.label !== undefined
