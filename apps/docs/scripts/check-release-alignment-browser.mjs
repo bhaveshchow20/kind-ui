@@ -137,7 +137,20 @@ try {
         const toggle = selected.getByRole("button", { name: "Engineering", exact: true });
         await toggle.click();
         assert.equal(await selected.locator('[data-kind-ui="pie-sector"]').count(), 4);
-        await expect(selected.locator('[data-kind-ui="pie-sector"]').nth(1)).toBeHidden();
+        const hidden = selected.locator('[data-kind-ui="pie-sector"]').nth(1);
+        await expect
+          .poll(() =>
+            hidden.evaluate((node) => {
+              let opacity = 1;
+              for (let element = node; element; element = element.parentElement)
+                opacity *= Number(getComputedStyle(element).opacity);
+              return opacity;
+            }),
+          )
+          .toBe(0);
+        await expect
+          .poll(() => hidden.evaluate((node) => getComputedStyle(node).pointerEvents))
+          .toBe("none");
         assert.deepEqual(await fills(), before);
         await toggle.click();
         assert.deepEqual(await fills(), before);

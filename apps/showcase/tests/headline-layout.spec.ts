@@ -23,6 +23,7 @@ async function prepare(page: import("@playwright/test").Page) {
   await page.goto("./");
   await page.evaluate(() => document.fonts.ready);
   // Finish the hero's entrance before checking label-driven movement.
+  await expect(page.locator(".kind-hero-copy")).toHaveCSS("opacity", "1");
   await expect(page.locator(".kind-hero-copy")).toHaveCSS("transform", "none");
   // Exercise every combination through the real buttons without random advances.
   await page.locator(".brand-pill").evaluateAll((buttons) => {
