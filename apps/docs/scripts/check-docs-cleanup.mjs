@@ -140,7 +140,11 @@ try {
   await expect(readyActivity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
   await expect(readyActivity.locator(".recharts-radial-bar-sector")).toHaveCount(3);
   await page.goto(origin + publicPath("/docs/components/radar/"));
-  const mark = page.locator('[data-kind-ui="radar-selection"]').last();
+  const mark = page
+    .locator(
+      '[data-component="radar-selection"] [data-kind-ui="series-interaction"][role="button"]',
+    )
+    .last();
   await mark.waitFor();
   await mark.click({ force: true });
   assert.equal(await mark.evaluate((node) => node.matches(":focus-visible")), false);

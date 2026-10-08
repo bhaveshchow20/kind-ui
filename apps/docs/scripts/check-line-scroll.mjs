@@ -4,7 +4,9 @@ import { chromium, expect } from "@playwright/test";
 import { assertToc } from "./docs-browser-contracts.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
-const b = await chromium.launch();
+const b = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const evidence = { wheel: [], touch: [], navigation: [], errors: [] };
 const context = await b.newContext({
   viewport: { width: 1440, height: 1080 },

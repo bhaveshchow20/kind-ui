@@ -4,6 +4,7 @@ import { chromium } from "@playwright/test";
 import { families } from "../examples/catalog.mjs";
 import { checkMobileLayout } from "./check-mobile-layout.mjs";
 import { checkThemeSwitch } from "./check-theme-switch-browser.mjs";
+import { expectDimmedSeries } from "./interaction-paint.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
@@ -101,8 +102,9 @@ try {
     await comparison
       .getByRole("button", { name: "Target", exact: true })
       .getAttribute("aria-pressed"),
-    "false",
+    "true",
   );
+  await expectDimmedSeries(comparison, "actual");
   const mobilePage = await context.newPage();
   mobilePage.on("pageerror", (error) => errors.push(error.message));
   const searchPage = await context.newPage();
