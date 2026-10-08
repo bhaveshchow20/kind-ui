@@ -30,13 +30,18 @@ export function ComponentPlayground({
   bundle,
   sourceCode,
   variantCode,
+  fixedVariant,
+  instance,
 }: {
   bundle: ComponentBundle;
   sourceCode?: ReactNode;
   variantCode?: Record<string, ReactNode>;
+  fixedVariant?: string;
+  instance?: string;
 }) {
   const { id } = bundle;
-  const [variant, setVariant] = useState(bundle.defaultVariant);
+  const [variant, setVariant] = useState(fixedVariant ?? bundle.defaultVariant);
+  const options = Object.entries(bundle.variants ?? {}).filter(([value]) => value !== "loading");
   const controlId = useId();
   const [status, setStatus] = useState("");
   const [tab, setTab] = useState("preview");
@@ -55,15 +60,26 @@ export function ComponentPlayground({
       value={tab}
       onValueChange={setTab}
       className="component-workbench line-workbench"
-      data-component={id}
-      id={id !== bundle.family ? `example-${id}` : "component-preview"}
+      data-component={
+        instance ? `${id}-${instance}` : fixedVariant === "loading" ? `${id}-loading` : id
+      }
+      data-state={fixedVariant === "loading" ? "loading" : "ready"}
+      id={
+        instance
+          ? `example-${id}-${instance}`
+          : fixedVariant
+            ? `example-${id}-${fixedVariant}`
+            : id !== bundle.family
+              ? `example-${id}`
+              : "component-preview"
+      }
     >
       <div className="playground-header">
         <TabsList aria-label={`${bundle.title} component`} className="preview-tabs">
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="code">Code</TabsTrigger>
         </TabsList>
-        {bundle.variants && (
+        {!fixedVariant && options.length > 1 && (
           <Select.Root value={variant} onValueChange={setVariant}>
             <Select.Trigger
               id={controlId}
@@ -78,7 +94,7 @@ export function ComponentPlayground({
             <Select.Portal>
               <Select.Content position="popper" sideOffset={6} className="select-content">
                 <Select.Viewport>
-                  {Object.entries(bundle.variants).map(([value, option]) => (
+                  {options.map(([value, option]) => (
                     <Select.Item key={value} value={value} className="select-item">
                       <Select.ItemText>{option.label}</Select.ItemText>
                       <Select.ItemIndicator>

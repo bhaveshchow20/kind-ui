@@ -3,20 +3,24 @@ title: Line Chart
 description: Compose a line chart with axes, lines and tooltips.
 ---
 
-<LineExample id="line" />
+Follow monthly visitors and compare trends across series.
+
+<LineExample id="line-start" />
 
 ## Usage
 
+Open **Code** above for the complete example, including data and imports.
+
 Pass `data` and `config` to `LineChart`. Customize its defaults or compose plot parts as children.
 
-`legend={{}}` enables the internally positioned `Chart.Legend`; `LineChart` owns its context and placement.
+Use `legend={{}}` to show the legend.
 
 ```tsx title="Imports"
 import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
 ```
 
-```tsx title="Composition"
+```tsx title="Composition sketch"
 <Chart.LineChart data={data} config={config} legend={{}} aria-label="Monthly visitors">
   <Chart.CartesianGrid vertical={false} />
   <Chart.XAxis dataKey="period" />
@@ -26,7 +30,13 @@ import "@kind-ui/charts/styles.css";
 </Chart.LineChart>
 ```
 
-The grid guides comparison, axes label the scale, `LineSeries` draws the values, and `Tooltip` shows the inspected point. Omit explicit children and pass `xDataKey="period"` to use generated parts.
+Omit explicit children and pass `xDataKey="period"` to use the default grid, axes, series and tooltip.
+
+## Compose plot parts
+
+Use explicit children for your own axes, grid and series. You do not need an additional `Root` or `ResponsiveContainer`.
+
+<LineExample id="line" />
 
 ## Curve types
 
@@ -42,7 +52,7 @@ Compare revenue with a dashed target. Use the legend to hide either series.
 
 ## Dots and labels
 
-Explicit children add diamond markers and labels. `LineChart` still owns sizing, visibility and motion.
+Explicit children add diamond markers and labels. Keep sizing, visibility and animation options on `LineChart`.
 
 <LineExample id="line-markers" />
 
@@ -52,13 +62,45 @@ Choose Default, Clay or Glow.
 
 <LineExample id="line-materials" />
 
+## Point markers, dashed lines and reveal direction
+
+Choose a presentation to see the effect and copy its complete example.
+
+<ChartExample id="line-presentation" />
+
+- **Markers:** `pointStyle="colored-border"` adds outlined points.
+- **Animated dashes:** `strokeDasharray="6 4"` with `dashAnimation={{ durationMs: 1000 }}` moves the pattern.
+- **Reveal direction:** `animate={{ revealDirection: "center-out" }}` draws from the center.
+
+<Callout title="Note">Motion respects reduced motion. Explicit `dot`, `activeDot` and custom marker renderers override the built-in point styles.</Callout>
+
+For custom point styling, pass `dot={<Chart.PointMarker variant="colored-border" />}` to `LineSeries`; see the [PointMarker reference](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/README.md#point-marker-styles).
+
+## Decorative backgrounds
+
+Select **Background** in the [Line presentation example](/docs/components/line/#point-markers-dashed-lines-and-reveal-direction), or add a preset to your chart:
+
+```tsx
+<Chart.LineChart data={data} config={config} xDataKey="period"
+  backgroundPattern={{ pattern: "crossings", opacity: 0.15 }}
+  aria-label="Monthly visitors" />
+```
+
+Presets: `"pinpoints"`, `"crossings"`, `"waves"`. Decoration stays behind the data.
+
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+
+<ChartExample id="line" variant="loading" />
+
 ## API reference
 
 Passing `config` enables the defaults below. Omit `config` for the existing `Root` + `LineChart` composition.
 
 ### LineChart
 
-Configured `LineChart` owns its `Root`; do not wrap it in another one. Each config key generates a series unless you provide `series` or explicit children.
+Each config key generates a series unless you provide `series` or explicit children.
 
 <div className="line-props-scroll" role="region" aria-label="LineChart props" tabIndex={0}>
 
@@ -81,7 +123,9 @@ Configured `LineChart` owns its `Root`; do not wrap it in another one. Each conf
 
 </div>
 
-With explicit children, omit `xDataKey`, `curve`, `material`, `series` and generated-part options. Keep visibility mode stable or remount to change it. See [Recharts LineChart](https://recharts.github.io/en-US/api/LineChart/) for native plot props.
+<Callout title="Composition">A configured chart already supplies `Root`. With explicit children, set series and plot options on those children.</Callout>
+
+See [Recharts LineChart](https://recharts.github.io/en-US/api/LineChart/) for native plot props.
 
 ### LineSeries
 
@@ -102,49 +146,28 @@ Compose `LineSeries` as children, or pass its props through configured `series`.
 
 Missing values remain gaps unless `connectNulls` is enabled. See [Recharts Line](https://recharts.github.io/en-US/api/Line/) for native marks and [material support](/docs/guides/materials/) for finishes.
 
-## Shared components
-
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/), [Labels and cells](/docs/chart-components/labels/).
-
-## Point markers, dashed lines and reveal direction
-
-`LineSeries` and `AreaSeries` expose independent `pointStyle` and `activePointStyle`. Choose `"default"`, `"border"` (series center/surface ring), or `"colored-border"` (surface center/series ring). Regular styles enable dots; native `dot` and `activeDot` always win.
-
-<details>
-<summary>Marker surface and custom rendering</summary>
-
-Set `--kind-ui-chart-marker-surface` on Root for your theme; fallbacks are `--card`, then white. `PointMarker` is a reusable native Dot renderer. In an active-dot callback, forward the series `fill` as the marker's `stroke`.
-
-Radar and Scatter use separate marker APIs.
-
-</details>
-
-`LineSeries.dashAnimation` defaults to `false`. Use `{ durationMs: 1000, direction: "forward" }` with a numeric native `strokeDasharray`; `"reverse"` reverses travel. Duration measures milliseconds per pattern cycle.
-
-Invalid durations and CSS/percentage/nonnumeric patterns stay static. Motion stops for reduced motion, loading, hidden series or `animate={false}`. Native dash offset/style and custom shapes retain ownership.
-
-Area does not accept this prop; overlay a Line in Combo for an open outline.
-
-`LineAnimation` and `AreaAnimation.revealDirection` accept `"left-to-right"` (default), `"right-to-left"`, `"center-out"` and `"edges-in"`. Directions are physically horizontal in either layout; data order, axes and geometry stay unchanged.
-
-Combo inherits the direction for Line/Area unless `lineReveal` or `areaReveal` overrides it; `false` disables that family entrance. Bar keeps its existing entrance. Completion/interruption removes directional clips; loading remains independent.
-
-See [Motion](/docs/guides/motion/) for duration/easing and family defaults.
+### Presentation API
 
 <ApiTable name="LinePresentationReference" />
+
+### Area presentation
+
 <ApiTable name="AreaPresentationReference" />
 
-
-## Decorative backgrounds
-
-Compose `ChartBackgroundPattern` inside a Cartesian chart, or use configured `LineChart.backgroundPattern`. Presets are `"pinpoints"`, `"crossings"` and `"waves"`.
-
-`size` defaults to `16` positive finite SVG units; `opacity` defaults to `0.15` in `[0, 1]`; color defaults to the chart-grid CSS token/`CanvasText`. Decoration clips to the plot and ignores pointer input.
-
-It remains independent of series patterns, legends, visibility and materials.
-
-`defineChartBackgroundPattern(render)` returns a reusable frozen definition; it uses no global registry. The callback receives `{ size, color, idPrefix }`; scope custom SVG resources with `idPrefix`. Custom content must remain decorative.
-
-Cartesian families include Line, Area, Bar, Combo, Scatter, Histogram, Waterfall and Box Plot. Polar, Pie, Sankey, Heatmap and ActivityRings are outside this contract. Native SSR empty plot shells remain unchanged.
+### Background patterns
 
 <ApiTable name="BackgroundPatternReference" />
+
+## Shared components
+
+Customize the default legend, tooltip and plot parts with these components.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
+| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

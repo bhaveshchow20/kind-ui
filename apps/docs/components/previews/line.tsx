@@ -11,6 +11,14 @@ function Loading() {
   );
 }
 const components = {
+  "line-start": dynamic(
+    () => import("@/examples/line-start/example").then((m) => memo(m.MonthlyVisitorsChart)),
+    { loading: Loading, ssr: false },
+  ),
+  "line-presentation": dynamic(
+    () => import("@/examples/line-presentation/example").then((m) => memo(m.LinePresentationChart)),
+    { loading: Loading, ssr: false },
+  ),
   line: dynamic(() => import("@/examples/line/example").then((m) => memo(m.VisitorTrendChart)), {
     loading: Loading,
     ssr: false,
@@ -36,6 +44,13 @@ const components = {
 const Curve = components["line-smooth"];
 const Material = components["line-materials"];
 export const previews = {
+  "line-start": components["line-start"],
+  "line-presentation": ({ variant }: PreviewProps) => {
+    const Presentation = components["line-presentation"];
+    return (
+      <Presentation presentation={variant as "markers" | "dashes" | "reveal" | "background"} />
+    );
+  },
   line: ({ variant }: PreviewProps) => {
     const Primary = components.line;
     return <Primary state={variant as "ready" | "loading"} />;

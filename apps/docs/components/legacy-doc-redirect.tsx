@@ -6,7 +6,7 @@ const customizationSections: Record<string, string> = {
   loading: "/docs/chart-components/root/#loading",
   "labels-theme-colors-and-diagnostics":
     "/docs/chart-components/series-config/#labels-theme-colors-and-diagnostics",
-  "series-patterns-and-projected-bars": "/docs/components/bar/#series-patterns-and-projected-bars",
+  "series-patterns-and-projected-bars": "/docs/components/bar/#series-patterns",
   "percentage-stacks": "/docs/components/combo/#percentage-stacks",
   "point-markers-dashed-lines-and-reveal-direction":
     "/docs/components/line/#point-markers-dashed-lines-and-reveal-direction",
@@ -22,7 +22,11 @@ export function LegacyDocRedirect({ guide }: { guide: string }) {
     const target =
       guide === "customization"
         ? (customizationSections[section] ?? "/docs/components/line/")
-        : "/docs/concepts/identity/";
+        : guide === "composition"
+          ? "/docs/quickstart/#composition"
+          : guide === "release"
+            ? "/docs/installation/#upgrading"
+            : "/docs/concepts/identity/";
     window.location.replace(publicPath(target));
   }, [guide]);
   return null;

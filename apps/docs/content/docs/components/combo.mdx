@@ -3,14 +3,18 @@ title: Combo Chart
 description: Combine bars, lines and areas to compare related measures.
 ---
 
+Compare shipped units with production capacity and a target in one plot.
+
 <ChartExample id="combo" />
 
 ## Usage
 
+Open **Code** above for the complete example, including data and imports.
+
 Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
 
-```tsx title="Composition"
-<Chart.Root config={config}>
+```tsx title="Composition sketch"
+<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
   <Chart.Legend />
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.ComboChart data={data} animate accessibilityLayer aria-label="Monthly production in units">
@@ -26,37 +30,71 @@ Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
 </Chart.Root>
 ```
 
-Choose each series’ interpolation and paint explicitly. `ComboChart` uses native composed-chart props, without Line’s configured `series` or `xDataKey` shortcuts.
-
-Reserve only the width your tick labels need. These examples use compact numeric axes; the stacked example gives each axis its own formatter.
+Set interpolation and paint on each series; format each axis for its measure.
 
 ## Stacks and two axes
 
-Revenue bars share stack and axis IDs; margin uses a separate percentage axis. Compare each measure on its own scale; matching vertical positions do not mean equal values.
+Stack revenue bars on one axis and show margin on a separate percentage axis.
 
 <ChartExample id="combo-stacked" />
 
-Legend toggles recalculate visible stacks. Matching `stackId` values stack compatible series on matching axes; they do not merge families. Normalized stacks require explicit axis and tooltip formatting.
+<Callout title="Two scales">Read each series against its own axis; equal heights do not mean equal values.</Callout>
 
 ## Family motion
 
-Choose independent, shared or line-only timing. Independent mode reveals bars over 1000ms and the line over 600ms, showing Area immediately. The example remounts to replay.
+Compare independent, shared or line-only entrances. Change the option to replay.
 
 <ChartExample id="combo-motion" />
 
-Line/Area reveal across the plot; Bar reveals from numeric zero clamped to its domain. Interaction or data/layout/visibility changes finish entrance; reduced motion disables Kind motion.
-
-## Loading and presentation
+## Presentation options
 
 Focus a series through its legend or marks. June is projected; the target has an icon, outlined points and moving dashes.
 
-Choose Loading to inspect the pending silhouette. See [Root loading](/docs/chart-components/root/#loading) for pending-state behavior.
-
 <ChartExample id="combo-presentation" />
+
+## Percentage stacks
+
+Use an expanded stack for proportions. Keep raw data; format the axis and tooltip as percentages.
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+
+const data = [{ month: "Jan", online: 60, store: 40 }];
+const config = {
+  online: { label: "Online", color: "#733bff" },
+  store: { label: "Store", color: "#0f766e" },
+} satisfies Chart.SeriesConfig;
+const percent = Chart.createPercentStack({
+  values: (entry) => [entry.payload.online, entry.payload.store],
+});
+
+export function PercentageChart() {
+  return <Chart.Root config={config}>
+    <Chart.ResponsiveContainer width="100%" height={280}>
+      <Chart.ComboChart data={data} stackOffset="expand" aria-label="Sales channel share">
+        <Chart.XAxis dataKey="month" />
+        <Chart.YAxis domain={[0, 1]} tickFormatter={percent.tickFormatter} />
+        <Chart.BarSeries dataKey="online" stackId="share" />
+        <Chart.BarSeries dataKey="store" stackId="share" />
+        <Chart.Tooltip normalizedValue={percent.normalizedValue} />
+      </Chart.ComboChart>
+    </Chart.ResponsiveContainer>
+    <div className="sr-only">January: Online 60, Store 40.</div>
+  </Chart.Root>;
+}
+```
+
+<Callout title="Note">If series can be hidden, make the `values` callback return only the visible members of the inspected stack. Already fractional values use `formatPercent` directly.</Callout>
+
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+
+<ChartExample id="combo" variant="loading" />
 
 ## API reference
 
-Focused props for explicit composition; upstream references cover additional native geometry.
+Configure the shared plot, then set options on each series.
 
 ### ComboChart
 
@@ -79,7 +117,7 @@ See [Recharts ComposedChart](https://recharts.github.io/en-US/api/ComposedChart/
 
 ### ComboAnimation
 
-Pass to `ComboChart.animate`. Family options affect entrances only; hover transitions remain shared. Live reduced-motion changes also settle motion.
+Pass to `ComboChart.animate` to set timing by family.
 
 <div className="line-props-scroll" role="region" aria-label="ComboAnimation options" tabIndex={0}>
 
@@ -109,7 +147,7 @@ Pass to `ComboChart.animate`. Family options affect entrances only; hover transi
 
 </div>
 
-Kind disables native per-series animation so `ComboChart` owns entrances. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
+See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
 
 ### LineSeries
 
@@ -148,18 +186,19 @@ Line material choices apply to the line independently of Area and Bar. See [Rech
 
 See [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [Area components](/docs/components/area/).
 
-## Shared components
-
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Axes and grid](/docs/chart-components/axes-grid/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
-
-## Percentage stacks
-
-`createPercentStack({ values })` supplies `tickFormatter` for the fractional axis and `normalizedValue` for Tooltip/TooltipContent in native `stackOffset="expand"` Bar, Area or Combo stacks. It adds percentages alongside raw-value formatting; an explicit native formatter wins.
-
-Return raw values for the inspected stack, including its current value and native hidden-series membership. Return `undefined` for other series/axes. Keep original rows and native geometry.
-
-`formatPercent(fraction)` multiplies by 100, rounds to one decimal and trims redundant trailing zeroes. Normalization ignores null/missing members and returns zero for all-zero stacks. Empty/nonfinite/range inputs or cancelling signed totals use ordinary formatting.
-
-Signed stacks use their signed sum. Do not normalize already fractional Area recipes again. The host owns meaningful units and finite direct formatter inputs.
+### Percentage formatting
 
 <ApiTable name="PercentFormattingReference" />
+
+## Shared components
+
+Share series metadata and inspection across the bars, lines and areas.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

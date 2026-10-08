@@ -1,67 +1,65 @@
 ---
 title: Quickstart
-description: Choose a chart family and compose its public components.
+description: Build a monthly visitors chart, then adapt it to your data.
 ---
 
-[Install charts](/docs/installation/), choose a family in the [Introduction](/docs/), then copy its complete example. Preview, Code and Copy prompt follow the selected options.
+Build this chart in your React app. You need an existing React project and npm.
 
-## Trends with Line
+<Steps>
+<Step>
 
-Configured `LineChart` supplies context, responsive sizing, axes and series. This convenience API belongs to Line; other families use their documented composition.
+### Install charts
 
-```tsx title="VisitorTrend.tsx"
-"use client";
-import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
+```sh
+npm install @kind-ui/charts
+```
 
-const data = [{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }];
-const config = { visitors: { label: "Visitors", color: "#733bff" } };
+For Next.js and peer requirements, see [Installation](/docs/installation/).
 
-export function VisitorTrend() {
-  return <figure>
-    <Chart.LineChart data={data} config={config} xDataKey="month" height={240}
-      aria-label="Monthly visitors" />
-    <figcaption>January: 42 visitors. February: 58 visitors.</figcaption>
-  </figure>;
+</Step>
+<Step>
+
+### Copy the complete component
+
+Open **Code**, copy the component into `MonthlyVisitorsChart.tsx`, and keep its stylesheet import. The example includes the data and chart name.
+
+<ChartExample id="line-start" />
+
+</Step>
+<Step>
+
+### Render the chart
+
+```tsx title="Dashboard.tsx"
+import { MonthlyVisitorsChart } from "./MonthlyVisitorsChart";
+
+export function Dashboard() {
+  return <MonthlyVisitorsChart />;
 }
 ```
 
-## Comparisons with Bar
+Run your app. You will see four months of visitors; inspect a point to read its value.
 
-Explicit composition puts metadata on `Root`, sizing on `ResponsiveContainer`, and geometry on the chart and series.
+</Step>
+</Steps>
 
-```tsx title="WeeklyOrders.tsx"
-"use client";
-import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
+## Use your own data
 
-const data = [{ day: "Mon", orders: 24 }, { day: "Tue", orders: 36 }];
-const config = { orders: { label: "Orders", color: "#147c68" } };
+In the copied component, replace `data` with your observations. Keep `period` as the x-axis field and `visitors` as a number, or change `xDataKey` and the config key together.
 
-export function WeeklyOrders() {
-  return <figure>
-    <Chart.Root config={config}>
-      <Chart.ResponsiveContainer width="100%" height={240}>
-        <Chart.BarChart data={data} aria-label="Daily orders">
-          <Chart.XAxis dataKey="day" />
-          <Chart.YAxis />
-          <Chart.BarSeries dataKey="orders" />
-          <Chart.Tooltip />
-        </Chart.BarChart>
-      </Chart.ResponsiveContainer>
-      <Chart.Legend />
-    </Chart.Root>
-    <figcaption>Monday: 24 orders. Tuesday: 36 orders.</figcaption>
-  </figure>;
-}
-```
+Change the config label and color to match your measure. Update the chart name and text alternative too.
 
-## Pick the family composition
+## Composition
 
-- [Pie](/docs/components/pie/) uses category IDs for slices; [Radial](/docs/components/radial/) also offers `ActivityRings` for completion.
-- [Heatmap](/docs/components/heatmap/) composes a native matrix; [Sankey](/docs/components/sankey/) uses nodes and links.
-- [Histogram](/docs/components/histogram/) and [Box Plot](/docs/components/box-plot/) show distributions.
+Configured `LineChart` supplies context, sizing and plot parts. Do not wrap it in `Root`.
 
-Import CSS once. Keep data, domains, units and a readable data alternative in your app. Use a measurable host with `min-width: 0`; `loading` represents pending requests, separately from empty or failed results.
+Other families use their own composition. Start with their complete examples:
 
-See [composition](/docs/concepts/composition/), [identity and colors](/docs/concepts/identity/), [motion](/docs/guides/motion/) and [accessibility](/docs/guides/accessibility/) for shared contracts. Family pages document their own defaults and limits.
+| Your task | Next example |
+| --- | --- |
+| Compare categories | [Bar](/docs/components/bar/) |
+| Show bounded progress | [Radial and Activity Rings](/docs/components/radial/) |
+| Show relationships | [Scatter](/docs/components/scatter/) |
+| Trace flows | [Sankey](/docs/components/sankey/) |
+
+Use [Line composition](/docs/components/line/#compose-plot-parts) when you need custom axes or series. See [Accessibility](/docs/guides/accessibility/) before embedding a chart in your product.

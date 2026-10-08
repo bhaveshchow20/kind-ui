@@ -1,22 +1,45 @@
 ---
 title: Troubleshooting
-description: Resolve Line setup and composition issues through public package APIs.
+description: Resolve chart installation, sizing, and composition problems.
 ---
 
-| Symptom | Check |
+Find the visible symptom below, then check it against the complete example for
+your [chart family](/docs/).
+
+## Installation and sizing
+
+Check public imports, CSS, and the chart's container first.
+
+| Symptom | Action |
 | --- | --- |
-| Registry cannot find the package | Check the package name, registry configuration and network access; follow [installation](/docs/installation/) |
-| Composition import unavailable | Use documented public exports and check the installed package types for configured Line props |
-| Motion entry cannot resolve | Motion is a required peer; `@kind-ui/charts/motion` is not exported |
-| Chart has no size | Give its responsive parent measurable space; check configured width/height and styles |
-| Configured chart reports a nested Root | Remove the outer Root; configured `LineChart` owns it |
-| Explicit composition has no legend | Set `legend={{}}` on configured `LineChart` |
-| Visibility does not update | Pair controlled `visibleSeries` with `onVisibleSeriesChange` |
-| Function-key series ignores visibility | Supply its config identity through `seriesKey` |
-| Arrows stay on a hovered category | Native inspection prioritizes the pointer; move it out and enter with the keyboard |
-| Material does not affect a custom mark | Explicit shapes and filters retain ownership |
-| Copied source has an earlier curve or material | Copy again after selecting the desired variant |
+| Package or import cannot resolve | Follow [Installation](/docs/installation/); import from `@kind-ui/charts`, not its source files |
+| Motion import fails | Install the required Motion peer; there is no `@kind-ui/charts/motion` entry |
+| Chart appears unstyled | Import `@kind-ui/charts/styles.css` once at the application entry |
+| Chart is blank or has no height | Give [ResponsiveContainer](/docs/chart-components/responsive-container/) a measurable parent or numeric height |
+| Chart overflows a flex/grid layout | Give its parent `min-width: 0`; check axis-label space and long values |
+| Colors overlap between independent hydrated React roots | Assign a distinct React `identifierPrefix` to each root |
 
-Report failures with the installed package and peer versions, complete copied example, commands and expected/observed behavior. For website friction, include the page, viewport and steps.
+## Composition and interaction
 
-Classify installation/export failures as packaging, unclear instructions as docs, and incorrect behavior of documented composition as a runtime defect.
+Configured Line owns its Root and generated parts. Other compositions place
+parts explicitly.
+
+| Symptom | Action |
+| --- | --- |
+| Configured Line reports a nested Root | Remove the outer Root when passing `config` to `LineChart` |
+| Explicit Root composition has no legend | Place `<Chart.Legend />` inside Root, outside ResponsiveContainer |
+| Configured Line with explicit children has no legend | Pass `legend={{}}` to `LineChart` |
+| Legend clicks do not change visibility | Pair controlled `visibleSeries` with `onVisibleSeriesChange`, or use `defaultVisibleSeries` on Root |
+| Accessor series ignores visibility or metadata | Give it a matching `seriesKey`; see [Identity and colors](/docs/concepts/identity/) |
+| Category colors move when rows reorder | Use stable category IDs rather than row positions; see the family example |
+| Arrow keys do not inspect every mark | Check the family's [keyboard access](/docs/guides/accessibility/#keyboard-access); retain a complete data alternative |
+| Arrow keys stay on the hovered category | Move the pointer out of the plot before entering keyboard inspection |
+| Material does not affect a custom mark | Custom shapes, paint, and filters can replace the built-in appearance |
+| Entrance stops after an update | Data/layout changes finish the entrance; remount to replay intentionally |
+| Copied source shows a different option | Select the desired preview option, then copy again |
+
+## Report a problem
+
+Include the package and peer versions, complete example, and expected and
+observed results. Add reproduction commands. For a docs layout issue, include
+the page, viewport width, and interaction steps.

@@ -5,6 +5,10 @@ description: Define labels, colors and value formatting for chart series.
 
 `SeriesConfig` maps stable series or category keys to labels, colors and optional formatting. Pass it to [Root](/docs/chart-components/root/) or directly to a configured [LineChart](/docs/components/line/).
 
+Revenue and Target share labels, colors, and dollar formatting through their config entries.
+
+<ChartExample id="line-comparison" />
+
 ## Usage
 
 ```tsx title="config.ts"
@@ -26,41 +30,35 @@ export const config = {
 
 Use the same keys in `dataKey` or `seriesKey`. For category charts, match the category identity instead of the measured value. See [Identity and colors](/docs/concepts/identity/) for accessor and category examples.
 
-Keys must start with a letter and contain only letters, numbers, underscores or hyphens. `Root` exposes each color as `--color-<key>`; for example, `var(--color-visitors)`.
+Keys must start with a letter and contain only letters, numbers, underscores or hyphens.
 
 ## Metadata
 
-Each config entry has the following fields:
+<ApiTable name="SeriesMetadata" compact />
 
-<ApiTable name="SeriesMetadata" />
-
-- `label` is optional and appears in the built-in legend, tooltip and built-in accessible series text. An explicit label takes precedence, including an empty string. When omitted, `visitors` infers `Visitors` and `monthlyVisitors` infers `Monthly visitors`. Camel-case and acronym boundaries, underscores and hyphens become spaces; words are lowercased and the first letter is capitalized. Provide a label for custom wording or casing. Configuration keys must match the series data keys (or explicit `seriesKey`); category charts use their category identity. Inference does not change keys or colors.
-- `color` supplies the default series color and marker color. Explicit series paint takes precedence.
-- `icon` supplies a decorative React component for the legend and tooltip.
-- `legendShape` selects a Recharts symbol for the legend. A configured icon takes precedence; use the same shape on `ScatterSeries` when its marks should match.
-- `formatValue` formats non-null tooltip values and returns a React node. A tooltip or payload formatter takes precedence.
-
-The legend follows config insertion order. Config describes presentation; chart data and visibility remain separate.
+Each entry requires `color`. When `label` is omitted, keys such as `monthlyVisitors` become “Monthly visitors”. Set an explicit label for your preferred wording. The legend follows config order; explicit series paint and tooltip formatters override config defaults.
 
 ## Theme colors and series patterns
 
-Colors also accept gradient stops or complete light/dark definitions. Configured patterns supply implicit Bar/Area fills and default legend swatches. See the validation and defaults below; [Bar patterns](/docs/components/bar/#series-patterns-and-projected-bars) covers native paint precedence.
+Use gradient stops or light/dark colors in the same config. Set `color-scheme` on the chart's host to select the theme.
 
-## Labels, theme colors and diagnostics
+```tsx
+import type { SeriesConfig } from "@kind-ui/charts";
 
-`SeriesConfig[key].label` is optional. `monthlyVisitors` infers “Monthly visitors”; explicit text, including `""`, wins. Identity keys stay unchanged. [SeriesConfig](/docs/chart-components/series-config/) describes matching, icons, legend symbols and formatter precedence.
+const config = {
+  visitors: {
+    label: "Visitors",
+    color: { light: ["#733bff", "#a78bfa"], dark: ["#a78bfa", "#ddd6fe"] },
+  },
+} satisfies SeriesConfig;
+```
 
-`color` accepts a CSS string, an array of gradient stops, or `{ light, dark }` theme values. Set CSS `color-scheme` on the host.
+Configured patterns supply Bar/Area fills and legend swatches. See [Bar patterns](/docs/components/bar/#series-patterns) for a working example.
 
-`--color-key` exposes the first stop; chart-local SVG resources provide the full gradient. Native paint and custom renderers retain precedence.
+## CSS colors and contrast
 
-<details>
-<summary>Color validation and resource identity</summary>
+`Root` exposes colors as `--color-<key>`; gradient colors use the first stop for this variable. Import `@kind-ui/charts/styles.css` to include the default styling.
 
-Gradient arrays require nonempty, evenly spaced stops. Each theme can use a string or array; unequal stop counts retain their spacing.
-
-Empty strings, arrays or invalid theme shapes throw with the config key, theme and stop index where applicable. CSS syntax and contrast remain consumer-owned. Independent React roots require distinct SSR/hydration `identifierPrefix` values.
-
-</details>
-
-Development builds warn once when the stylesheet marker is missing after mount, including hydration and delayed stylesheet loading. Production does not run that diagnostic. Import the stylesheet instead of suppressing the warning; explicitly styled consumers still own their CSS.
+<Callout type="info">
+Use nonempty color strings and gradient arrays. Choose colors with sufficient contrast in both themes.
+</Callout>

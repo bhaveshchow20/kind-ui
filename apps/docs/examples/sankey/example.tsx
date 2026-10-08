@@ -1,7 +1,7 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Tooltip } from "recharts";
 
 const data = {
@@ -50,104 +50,152 @@ const nodeConfig = {
 } satisfies Chart.SankeyNodeConfig;
 const names = new Map(data.nodes.map((node) => [node.id, node.name]));
 
+function FocusedFlow({ nodeIds, children }: { nodeIds: string[]; children: ReactNode }) {
+  const { selected } = Chart.useChartInteraction();
+  const dimmed = selected !== null && !nodeIds.includes(selected);
+  return (
+    <g data-focus={dimmed ? "dimmed" : "baseline"} style={{ opacity: dimmed ? 0.28 : 1 }}>
+      {children}
+    </g>
+  );
+}
+
 export function EnergyFlowChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   const [active, setActive] = useState<string | null>(null);
   const selected = data.links.find((link) => link.id === active);
   return (
-    <section aria-label="Illustrative energy allocation">
-      <section
-        aria-label="Energy flow diagram; scroll horizontally on small screens"
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: Horizontal chart scrolling is keyboard accessible.
-        tabIndex={0}
-        style={{ overflowX: "auto", overscrollBehaviorY: "auto" }}
-      >
-        <div style={{ minWidth: 540 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 12,
-              padding: "0 28px",
-            }}
-          >
-            <span>Generation</span>
-            <span>Balancing zones</span>
-            <span>End use</span>
-          </div>
-          <Chart.ResponsiveContainer width="100%" height={250}>
-            <Chart.SankeyChart
-              loading={state === "loading"}
-              data={data}
-              nodeConfig={nodeConfig}
-              animate={{ revealDurationMs: 900 }}
-              nodeWidth={10}
-              nodePadding={16}
-              sort={false}
-              margin={{ top: 28, right: 32, bottom: 8, left: 32 }}
-              title="Energy allocation: 180 MWh across three stages"
-              desc="Nine nodes and eighteen flows. Ribbon widths represent MWh. Select a flow with a click, Enter or Space; Escape clears selection."
-              node={(props) => (
-                <g>
-                  <Chart.SankeyNode {...props} />
-                  <text
-                    x={props.x + props.width / 2}
-                    y={props.y - 7}
-                    textAnchor="middle"
-                    fill="currentColor"
-                    fontSize={11}
-                  >
-                    {props.payload.name}
-                  </text>
-                </g>
-              )}
-              link={(props) => (
-                <Chart.SankeyLink
-                  {...props}
-                  material="gradient"
-                  pathProps={{
-                    role: "button",
-                    tabIndex: 0,
-                    "aria-label": `${props.payload.source.name} to ${props.payload.target.name}: ${props.payload.value} MWh`,
-                    "aria-pressed": active === props.payload.id,
-                    opacity: active && active !== props.payload.id ? 0.12 : 0.55,
-                    onClick: () => setActive(active === props.payload.id ? null : props.payload.id),
-                    onKeyDown: (event) => {
-                      if (event.key === "Escape") setActive(null);
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setActive(active === props.payload.id ? null : props.payload.id);
-                      }
-                    },
-                  }}
-                />
-              )}
+    <Chart.Root
+      config={nodeConfig}
+      interaction={{
+        kind: "node",
+        mode: "focus",
+        eligibleKeys: data.nodes.map((node) => node.id),
+        markActivation: "matching-legend",
+      }}
+    >
+      <section aria-label="Illustrative energy allocation">
+        <section
+          aria-label="Energy flow diagram; scroll horizontally on small screens"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: Horizontal chart scrolling is keyboard accessible.
+          tabIndex={0}
+          style={{ overflowX: "auto", overscrollBehaviorY: "auto" }}
+        >
+          <div style={{ minWidth: 540 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 12,
+                padding: "0 28px",
+              }}
             >
-              <Tooltip isAnimationActive={false} formatter={(value) => `${value} MWh`} />
-            </Chart.SankeyChart>
-          </Chart.ResponsiveContainer>
-        </div>
+              <span>Generation</span>
+              <span>Balancing zones</span>
+              <span>End use</span>
+            </div>
+            <Chart.ResponsiveContainer width="100%" height={250}>
+              <Chart.SankeyChart
+                interactionBinding="root"
+                loading={state === "loading"}
+                data={data}
+                nodeConfig={nodeConfig}
+                animate={{ revealDurationMs: 900 }}
+                nodeWidth={10}
+                nodePadding={16}
+                sort={false}
+                margin={{ top: 28, right: 32, bottom: 8, left: 32 }}
+                title="Energy allocation: 180 MWh across three stages"
+                desc="Nine nodes and eighteen flows. Ribbon widths represent MWh. Select a flow with a click, Enter or Space; Escape clears selection."
+                node={(props) => (
+                  <FocusedFlow
+                    nodeIds={[
+                      props.payload.id,
+                      ...data.links
+                        .filter(
+                          (link) =>
+                            link.source === props.payload.id || link.target === props.payload.id,
+                        )
+                        .flatMap((link) => [link.source, link.target]),
+                    ]}
+                  >
+                    <Chart.SankeyNode {...props} />
+                    <text
+                      x={props.x + props.width / 2}
+                      y={props.y - 7}
+                      textAnchor="middle"
+                      fill="currentColor"
+                      fontSize={11}
+                    >
+                      {props.payload.name}
+                    </text>
+                  </FocusedFlow>
+                )}
+                link={(props) => (
+                  <FocusedFlow nodeIds={[props.payload.source.id, props.payload.target.id]}>
+                    <Chart.SankeyLink
+                      {...props}
+                      material="gradient"
+                      pathProps={{
+                        role: "button",
+                        tabIndex: 0,
+                        "aria-label": `${props.payload.source.name} to ${props.payload.target.name}: ${props.payload.value} MWh`,
+                        "aria-pressed": active === props.payload.id,
+                        opacity: active && active !== props.payload.id ? 0.12 : 0.55,
+                        onClick: () =>
+                          setActive(active === props.payload.id ? null : props.payload.id),
+                        onKeyDown: (event) => {
+                          if (event.key === "Escape") setActive(null);
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setActive(active === props.payload.id ? null : props.payload.id);
+                          }
+                        },
+                      }}
+                    />
+                  </FocusedFlow>
+                )}
+              >
+                <Tooltip
+                  isAnimationActive={false}
+                  formatter={(value) => `${value} MWh`}
+                  contentStyle={{
+                    padding: "6px 8px",
+                    fontSize: 12,
+                    lineHeight: "16px",
+                    background: "var(--kind-ui-chart-popover, var(--popover, Canvas))",
+                    color:
+                      "var(--kind-ui-chart-popover-foreground, var(--popover-foreground, CanvasText))",
+                    border: "1px solid var(--kind-ui-chart-border, var(--border, GrayText))",
+                    borderRadius: "var(--kind-ui-chart-radius, var(--radius, 8px))",
+                  }}
+                  itemStyle={{ padding: 0, color: "inherit" }}
+                />
+              </Chart.SankeyChart>
+            </Chart.ResponsiveContainer>
+          </div>
+        </section>
+        <Chart.SankeyLegend config={nodeConfig} interactionBinding="root" />
+        <p role="status" style={{ fontSize: 12, margin: "8px 0 0" }}>
+          {selected
+            ? `${names.get(selected.source)} → ${names.get(selected.target)}: ${selected.value} MWh`
+            : "180 MWh · Select a ribbon to inspect its route."}
+        </p>
+        <Chart.SankeyTable
+          data={data}
+          caption="Illustrative allocation in MWh"
+          style={{
+            position: "absolute",
+            width: 1,
+            height: 1,
+            padding: 0,
+            margin: -1,
+            overflow: "hidden",
+            clipPath: "inset(50%)",
+            whiteSpace: "nowrap",
+            border: 0,
+          }}
+        />
       </section>
-      <Chart.SankeyLegend config={nodeConfig} />
-      <p role="status" style={{ fontSize: 12, margin: "8px 0 0" }}>
-        {selected
-          ? `${names.get(selected.source)} → ${names.get(selected.target)}: ${selected.value} MWh`
-          : "180 MWh · Select a ribbon to inspect its route."}
-      </p>
-      <Chart.SankeyTable
-        data={data}
-        caption="Illustrative allocation in MWh"
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-          border: 0,
-        }}
-      />
-    </section>
+    </Chart.Root>
   );
 }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { referenceTitle } from "../lib/api-reference.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
@@ -28,14 +29,20 @@ try {
     for (const [slug, names] of Object.entries(pages)) {
       assert.equal((await page.goto(`${origin}/docs/chart-components/${slug}/`)).status(), 200);
       await page.evaluate(() => document.fonts.ready);
-      const tables = page.locator(".table-scroll");
+      const tables = page.locator(".line-props-scroll");
       assert.deepEqual(
         await tables.locator("caption").allTextContents(),
-        names.map((name) => `${name} props`),
+        names.map((name) => `${referenceTitle(name)} props`),
       );
       assert.ok((await page.locator("pre").count()) > 0, `${slug} usage source`);
       for (const [i, name] of names.entries()) {
         const table = tables.nth(i);
+        assert.deepEqual(await table.locator("thead th").allTextContents(), [
+          "Prop",
+          "Type",
+          "Default",
+          "Description",
+        ]);
         assert.deepEqual(
           await table.locator("tbody th").allTextContents(),
           api[name].map((entry) => entry.name),

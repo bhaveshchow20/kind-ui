@@ -1,5 +1,18 @@
 export const lineExamples = [
   {
+    id: "line-start",
+    title: "Monthly visitors",
+    notes: "A configured LineChart with four months of data.",
+    acceptance:
+      "Complete source renders all four months with a named chart and complete data alternative.",
+  },
+  {
+    id: "line-presentation",
+    title: "Line presentation",
+    notes: "Point markers, moving dashes, reveal direction and decorative backgrounds.",
+    acceptance: "Four monthly values remain unchanged across presentation options.",
+  },
+  {
     id: "line-smooth",
     title: "Curve types",
     source: "line-recipes.tsx",
@@ -30,6 +43,8 @@ export const lineExamples = [
 ];
 
 export const lineDataLabels = {
+  "line-start": { caption: "Monthly visitors", columns: { period: "Month", visitors: "Visitors" } },
+  "line-presentation": { caption: "Visitors", columns: { period: "Month", visitors: "Visitors" } },
   line: { caption: "Visitors", columns: { period: "Month", visitors: "Visitors" } },
   "line-smooth": { caption: "Visitors", columns: { period: "Month", visitors: "Visitors" } },
   "line-comparison": {
@@ -44,6 +59,17 @@ export const lineDataLabels = {
 };
 
 export const lineVariants = {
+  "line-presentation": {
+    control: "Presentation",
+    prop: "presentation",
+    default: "markers",
+    options: [
+      { value: "markers", label: "Markers" },
+      { value: "dashes", label: "Animated dashes" },
+      { value: "reveal", label: "Reveal direction" },
+      { value: "background", label: "Background" },
+    ],
+  },
   "line-smooth": {
     control: "Curve",
     prop: "curve",

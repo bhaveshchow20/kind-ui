@@ -47,11 +47,11 @@ export const pieDataLabels = Object.fromEntries(
 );
 export const pieVariants = {
   "pie-interaction": {
-    control: "State",
+    control: "Highlight",
     prop: "status",
     default: "ready",
     options: [
-      { value: "ready", label: "Ready" },
+      { value: "ready", label: "Default" },
       { value: "loading", label: "Loading" },
       { value: "selective-glow", label: "Selective glow" },
     ],

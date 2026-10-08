@@ -10,7 +10,8 @@ import {
   families,
   variantDefinitions,
 } from "../examples/catalog.mjs";
-import { publicPath } from "../lib/routing.mjs";
+import { referenceRows, referenceTitle } from "../lib/api-reference.mjs";
+import { canonicalDocSlugs, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
 
 const read = (file) => readFileSync(file, "utf8");
 const write = (file, text) => {
@@ -251,12 +252,13 @@ if (!api.Root?.length || !api.LineSeries?.length || !api.LineChart?.length)
 write("generated/api.json", `${JSON.stringify(api, null, 2)}\n`);
 const tableMarkdown = (name) => {
   if (!api[name]) throw new Error(`Unknown API table ${name}`);
+  const escapeCell = (value) => String(value).replaceAll("|", "\\|").replaceAll("\n", " ");
   return (
-    `### ${name}\n\n| Prop | Type | Required |\n| --- | --- | --- |\n` +
-    api[name]
+    `### ${referenceTitle(name)}\n\n| Prop | Type | Default | Description |\n| --- | --- | --- | --- |\n` +
+    referenceRows(name, api[name])
       .map(
         (entry) =>
-          `| ${entry.name} | \`${entry.type.replaceAll("|", "\\|").replaceAll("`", "'")}\` | ${entry.required ? "Yes" : "No"} |`,
+          `| \`${entry.name}\` | \`${escapeCell(entry.type).replaceAll("`", "'")}\` | ${escapeCell(entry.default)} | ${escapeCell(entry.description)} |`,
       )
       .join("\n")
   );
@@ -271,26 +273,35 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   const key = String(entry).replace(/\.mdx$/, "");
   let body = original.replace(/^---\n[\s\S]*?\n---\n/, "");
   body = body.replace(
-    /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample) id="([\w-]+)"\s*\/>/g,
-    (_, id) => {
-      const bundle = bundles[id];
+    /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample) id="([\w-]+)"(?: variant="([\w-]+)")?(?: instance="[\w-]+")?\s*\/>/g,
+    (_, id, variant) => {
+      const originalBundle = bundles[id];
+      const bundle =
+        originalBundle && variant
+          ? {
+              ...originalBundle,
+              files: {
+                ...originalBundle.files,
+                [`src/examples/${id}/example.tsx`]: originalBundle.variants[variant].source,
+              },
+            }
+          : originalBundle;
       if (!bundle) throw new Error(`Unknown example ${id}`);
-      const inline = Object.entries(bundle.files).filter(
-        ([file]) => !["package-lock.json", "LICENSE", "README.md"].includes(file),
-      );
-      const linked = Object.keys(bundle.files).filter(
-        (file) => !inline.some(([name]) => name === file),
+      const sourceFile = `src/examples/${id}/example.tsx`;
+      const selected = variant ?? bundle.defaultVariant;
+      const sourceURL = selected
+        ? `/examples/${id}/variants/${selected}/example.tsx`
+        : `/examples/${id}/${sourceFile}`;
+      const support = Object.keys(bundle.files).filter(
+        (file) => file !== sourceFile && /\.(tsx|ts)$/.test(file),
       );
       return (
-        `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\nInstall dependencies with npm install.\n\n` +
-        inline
-          .map(
-            ([file, source]) =>
-              `### ${file}\n\n\`\`\`${file.endsWith("tsx") ? "tsx" : file.endsWith("ts") ? "ts" : file.endsWith("css") ? "css" : file.endsWith("json") ? "json" : "text"}\n${source.trimEnd()}\n\`\`\``,
-          )
-          .join("\n\n") +
-        "\n\nComplete setup files:\n" +
-        linked.map((file) => `- [${file}](${link(`/examples/${id}/${file}`)})`).join("\n")
+        `### ${bundle.title}${variant ? ` — ${variant}` : ""}\n\n` +
+        `[Complete example source](${link(sourceURL)}) · [Setup manifest](${link(`/examples/${id}/package.json`)})\n\n` +
+        `\`\`\`tsx\n${bundle.files[sourceFile].trimEnd()}\n\`\`\`\n` +
+        (support.length
+          ? `\nSupporting source:\n${support.map((file) => `- [${file}](${link(`/examples/${id}/${file}`)})`).join("\n")}\n`
+          : "")
       );
     },
   );
@@ -299,6 +310,16 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   );
   if (/<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|ApiTable)\b/.test(body))
     throw new Error(`Unresolved MDX in ${key}`);
+  body = body
+    .replace(/<Callout(?:\s+(?:title|type)="[^"]*")*>/g, "\n> **Note:** ")
+    .replace(/<\/Callout>/g, "\n")
+    .replace(/<\/?(?:Steps|Step)>/g, "")
+    .replace(/<Tabs items=\{\[[^\]]+\]\}>/g, "")
+    .replace(/<\/Tabs>/g, "")
+    .replace(/<Tab value="([^"]+)">/g, (_, label) => `\n#### ${label}\n`)
+    .replace(/<\/Tab>/g, "");
+  if (/<(?:Steps|Step|Tabs|Tab|Callout)\b/.test(body))
+    throw new Error(`Unresolved presentation MDX in ${key}`);
   // Rewrite retrieval links outside fences; copied consumer source stays byte-for-byte unchanged.
   body = body
     .split(/(```[^\n]*\n[\s\S]*?\n```)/g)
@@ -311,6 +332,12 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   if (["installation", "quickstart"].includes(key))
     write(`public/markdown/start/${key}.md`, markdown);
   index.push({ key, title, markdown });
+}
+for (const slug of legacyDocSlugs) {
+  const key = slug.join("/");
+  if (!["concepts/composition", "guides/release"].includes(key)) continue;
+  const canonical = canonicalDocSlugs(slug).join("/");
+  write(`public/markdown/${key}.md`, index.find((page) => page.key === canonical).markdown);
 }
 write(
   "public/llms.txt",
@@ -325,7 +352,23 @@ write(
     (path) => link(path),
   ),
 );
-write("public/llms-full.txt", index.map(({ markdown }) => markdown).join("\n\n---\n\n"));
+const supportSources = new Map();
+for (const bundle of Object.values(bundles)) {
+  for (const [file, contents] of Object.entries(bundle.files)) {
+    if (file !== `src/examples/${bundle.id}/example.tsx` && /\.(tsx|ts)$/.test(file))
+      supportSources.set(`/examples/${bundle.id}/${file}`, contents);
+  }
+}
+write(
+  "public/llms-full.txt",
+  index.map(({ markdown }) => markdown).join("\n\n---\n\n") +
+    [...supportSources]
+      .map(
+        ([url, source]) =>
+          `\n\n## Supporting source: ${link(url)}\n\n\`\`\`tsx\n${source.trimEnd()}\n\`\`\`\n`,
+      )
+      .join(""),
+);
 console.log(
   `Generated ${Object.keys(bundles).length} complete chart components, ${Object.keys(api).length} public API tables and ${index.length} Markdown pages.`,
 );

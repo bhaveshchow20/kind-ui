@@ -3,13 +3,17 @@ title: Radial Chart
 description: Show completion and capacity with concentric rings, gauges and stacked arcs.
 ---
 
-<ChartExample id="radial" />
+Track project completion on a fixed percentage scale.
+
+<ChartExample id="radial" variant="hidden" />
 
 ## Usage
 
+Open **Code** above for the complete example, including data and imports.
+
 Use a fixed numeric domain, hide axis ticks and give each ring a stable category key.
 
-```tsx title="Composition"
+```tsx title="Composition sketch"
 <Chart.Root config={config}>
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.RadialBarChart data={data} categoryKey="period" animate startAngle={90} endAngle={-270} innerRadius="18%" outerRadius="94%">
@@ -22,41 +26,51 @@ Use a fixed numeric domain, hide axis ticks and give each ring a stable category
 </Chart.Root>
 ```
 
-Labels start hidden. Choose Visible above to add arc labels; values remain in the tooltip and accessible data table. `categoryKey` supplies colors and tooltip identity.
+<Callout title="Note">Values remain available in the tooltip and accessible data table when labels are hidden.</Callout>
+
+## Labels
+
+Show or hide labels on the rings. Code and Copy prompt follow your selection.
+
+<ChartExample id="radial" instance="labels" />
 
 ## Activity rings
 
-Give each ring a config key, original value and optional domain. Name the chart with `aria-label` or `aria-labelledby`.
-
-`ActivityRings` supplies context, axes, tracks, tooltip and a static legend.
+Give each ring a config key, value and optional domain. `ActivityRings` includes tracks, tooltip and a legend.
 
 <ChartExample id="radial-activity" />
 
-Rings follow array order, inner to outer. Geometry normalizes values to 0–100 and visually clamps finite out-of-domain values.
-
-The tooltip preserves original values and config formatters. Custom payloads expose `rawValue` and `progress`; native sector `value` is normalized.
-
-Defaults: responsive width, 300px height, clockwise full sweep, rounded tracks, static legend, labels off and motion off.
-
-Do not add another `Root`. Use explicit composition below for custom axes, data, children or coordinated charts.
+Rings run inner to outer in array order. Tooltips show original values; progress is clamped to each ring’s domain. This example uses category interaction in `rootProps` to toggle rings from the legend.
 
 ## Capacity gauge
 
-Compose a gauge with `RadialBarChart`; there is no `Gauge` export. `[0, 100]` and angles `180` to `0` produce a semicircle; native `Label` supplies the center summary.
+Use `RadialBarChart` with a `[0, 100]` domain and angles `180` to `0` for a semicircular gauge.
 
 <ChartExample id="radial-gauge" />
 
-Enable Labels for the center summary. Choose an entrance direction to replay the same final geometry.
+The center summary starts visible. Toggle Labels to hide it, or choose an entrance direction to replay the arc.
 
 ## Stacked capacity
 
-Matching `stackId` values share one ring. Committed and reserved total 86 of 100 hours. Legend toggles recalculate the stack while preserving the fixed domain.
+Matching `stackId` values share one ring. Toggle the legend to compare committed and reserved capacity.
 
 <ChartExample id="radial-stacked" />
 
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+
+<ChartExample id="radial" variant="loading" />
+
+### Activity Rings loading
+
+Set `loading` on `ActivityRings` while its data is pending.
+
+<ChartExample id="radial-activity" variant="loading" />
+
 ## API reference
 
-Focused props for explicit polar composition. Data, tracks and custom center labels remain consumer-owned.
+Choose `ActivityRings` for a complete chart or compose custom plots with the radial components.
 
 ### ActivityRings
 
@@ -71,16 +85,14 @@ Focused props for explicit polar composition. Data, tracks and custom center lab
 | `responsive` / `height` | `boolean` / `number \| percentage` | `true` / `300` | Native responsive chart sizing; width defaults to 100%. |
 | `animate` | `boolean \| RadialBarAnimation` | `false` | Same entrance options as RadialBarChart; respects reduced motion. |
 | `loading` / `loadingLabel` | `boolean` / `string` | `false` / `"Loading chart"` | Explicit pending state; preserves layout and blocks inspection. |
-| `rootProps` | Root options | — | Root styling and category interaction; config comes from the helper. |
+| `rootProps` | Root options | — | Root styling and category interaction. Set `defaultVisibleSeries` and category `eligibleKeys` here for ring visibility buttons. |
 | `series` | Native RadialBarSeries options | Tracks and rounded ends | Override series paint, background or geometry; explicit fill wins over config. |
 | `labels` | `false \| LabelList options` | `false` | Optional arc labels; custom content retains control. |
 | `legend` / `tooltip` | `false` or component options | Static legend / original-value tooltip | Disable either independently or supply custom rendering options. |
 
 </div>
 
-Native props override center, radii, angles, gaps and motion. Ring `cellProps` retains paint/handlers and overrides series fill.
-
-If custom paint differs from legend metadata, update config or customize/disable the legend.
+<Callout title="Composition">`ActivityRings` supplies its own context; do not add another `Root`. Keep config colors aligned with custom ring paint.</Callout>
 
 ### RadialBarChart
 
@@ -100,7 +112,7 @@ If custom paint differs from legend metadata, update config or customize/disable
 
 </div>
 
-Changing direction after reveal does not replay it. Custom sectors or transformed marks bypass directional reveal. Reduced motion shows final geometry.
+Changing direction does not replay a completed entrance; remount to replay.
 
 See [Recharts RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChart/).
 
@@ -121,7 +133,7 @@ See [Recharts RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChar
 
 </div>
 
-Per-series animation is disabled. These examples start with Default paint without automatic radial inspection emphasis. See [Recharts RadialBar](https://recharts.github.io/en-US/api/RadialBar/).
+See [Recharts RadialBar](https://recharts.github.io/en-US/api/RadialBar/).
 
 ### RadialBarLabel
 
@@ -142,4 +154,14 @@ Use as `LabelList` content for sector-aware arc text. Center summaries use nativ
 
 ## Shared components
 
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Axes and grid](/docs/chart-components/axes-grid/), [Labels and cells](/docs/chart-components/labels/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+Use these components for custom radial plots; ActivityRings already supplies its context and plot parts.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
+| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

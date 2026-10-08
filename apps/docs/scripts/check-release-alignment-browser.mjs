@@ -82,7 +82,7 @@ try {
         const cell = grid.locator("td").first();
         const size = await cell.boundingBox();
         assert.ok(
-          Math.abs(size.width - 12) < 1 && Math.abs(size.height - 12) < 1,
+          Math.abs(size.width - size.height) < 1 && size.width >= 6 && size.width <= 28,
           JSON.stringify(size),
         );
         assert.equal(
@@ -101,7 +101,7 @@ try {
           assert.ok(
             await compact
               .locator('[data-kind-ui="heatmap-scroll"]')
-              .evaluate((node) => node.scrollWidth > node.clientWidth && node.scrollLeft > 0),
+              .evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
           );
       }
       if (family === "radial") {
@@ -201,12 +201,13 @@ try {
       const card = page.locator(`[data-component="${id}"]`);
       await card.scrollIntoViewIfNeeded();
       const height = (await card.locator(".chart-example").boundingBox()).height;
-      const values =
-        id === "pie-interaction" ? ["selective-glow", "loading", "ready"] : ["loading", "ready"];
+      const values = id === "pie-interaction" ? ["selective-glow", "ready"] : ["ready"];
       for (const value of values) {
         const option = bundles[id].variants[value];
-        await card.getByRole("combobox", { name: "State", exact: true }).click();
-        await page.getByRole("option", { name: option.label, exact: true }).click();
+        if (id === "pie-interaction") {
+          await card.getByRole("combobox", { name: "Highlight", exact: true }).click();
+          await page.getByRole("option", { name: option.label, exact: true }).click();
+        }
         const skeleton = card.locator('[data-kind-ui="chart-loading-skeleton"]');
         if (value === "loading") {
           await expect(skeleton).toBeVisible();

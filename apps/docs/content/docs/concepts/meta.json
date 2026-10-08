@@ -1,1 +1,4 @@
-{ "title": "Concepts", "pages": ["composition", "identity"] }
+{
+  "title": "Concepts",
+  "pages": ["identity"]
+}

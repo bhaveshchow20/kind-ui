@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { swipeUp } from "./touch-swipe.mjs";
 
-const origin = "http://127.0.0.1:6373";
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/scatter-examples.json", "utf8"));
 const browser = await chromium.launch(
   process.env.KIND_DOCS_BROWSER_EXECUTABLE
@@ -26,7 +26,7 @@ try {
   const scatter = page.locator('[data-component="scatter"]');
   const bubble = page.locator('[data-component="scatter-bubble"]');
   await scatter.locator(mark).first().waitFor();
-  assert.equal(await page.locator(".line-workbench").count(), 3);
+  assert.equal(await page.locator(".line-workbench").count(), Object.keys(bundles).length + 1);
   assert.equal(await page.locator("#fd-glass-layout").count(), 1);
   assert.equal(await page.getByText("View data", { exact: true }).count(), 0);
   assert.equal(await page.getByRole("button", { name: "Download", exact: true }).count(), 0);
@@ -41,7 +41,35 @@ try {
     for (const [value, option] of Object.entries(
       bundle.variants ?? { default: { source: bundle.files[`src/examples/${id}/example.tsx`] } },
     )) {
-      if (bundle.variants) {
+      if (value === "loading") {
+        const pending = page.locator(`[data-component="${id}-loading"]`);
+        assert.equal(await pending.getByRole("combobox").count(), 0);
+        await pending
+          .locator('[data-kind-ui="chart-loading-skeleton"]')
+          .waitFor({ state: "visible" });
+        await pending.getByRole("tab", { name: "Code", exact: true }).click();
+        assert.equal(
+          (await pending.locator("pre").textContent()).trimEnd(),
+          option.source.trimEnd(),
+        );
+        await pending.getByRole("button", { name: "Copy Text", exact: true }).click();
+        assert.equal(
+          (await page.evaluate(() => navigator.clipboard.readText())).trimEnd(),
+          option.source.trimEnd(),
+        );
+        await pending.locator("button.copy-prompt").click();
+        const prompt = await page.evaluate(() => navigator.clipboard.readText());
+        const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
+        assert.equal(
+          (await (await context.request.get(url)).text()).trimEnd(),
+          option.source.trimEnd(),
+        );
+        await pending.getByRole("tab", { name: "Preview", exact: true }).click();
+        assert.equal(await card.locator('[data-kind-ui="chart-loading-skeleton"]').count(), 0);
+        evidence.variants.push({ id, value, loading: "fixed preview, code and copy parity" });
+        continue;
+      }
+      if (Object.keys(bundle.variants ?? {}).filter((value) => value !== "loading").length > 1) {
         await card.getByRole("combobox", { name: bundle.variantControl }).click();
         await page.getByRole("option", { name: option.label, exact: true }).click();
       }
@@ -59,17 +87,9 @@ try {
           .evaluate((node) => node.scrollHeight > node.clientHeight),
       );
       await card.getByRole("tab", { name: "Preview", exact: true }).click();
-      if (value === "loading") {
-        await card.locator('[data-kind-ui="chart-loading-skeleton"]').waitFor({ state: "visible" });
-        await card.getByRole("combobox", { name: bundle.variantControl }).click();
-        await page
-          .getByRole("option", { name: bundle.variants[bundle.defaultVariant].label, exact: true })
-          .click();
-        evidence.variants.push({ id, value, loading: "passed" });
-        continue;
-      }
+
       await card.locator(mark).first().waitFor();
-      await card.getByRole("button", { name: /Copy prompt|Copied/ }).click();
+      await card.locator("button.copy-prompt").click();
       const prompt = await page.evaluate(() => navigator.clipboard.readText());
       assert.ok(prompt.includes("/docs/components/scatter/"));
       const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
@@ -247,13 +267,26 @@ try {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.reload();
   await scatter.locator(mark).first().waitFor();
-  assert.equal(await page.locator('[data-kind-ui="line-frame"][data-motion="on"]').count(), 3);
+  assert.equal(
+    await page
+      .locator('[data-state="ready"] [data-kind-ui="line-frame"][data-motion="on"]')
+      .count(),
+    Object.keys(bundles).length,
+  );
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.waitForTimeout(100);
-  assert.equal(await page.locator('[data-kind-ui="line-frame"][data-motion="off"]').count(), 3);
+  assert.equal(
+    await page
+      .locator('[data-state="ready"] [data-kind-ui="line-frame"][data-motion="off"]')
+      .count(),
+    Object.keys(bundles).length,
+  );
   await page.goto(`${origin}/docs/components/line/`);
   await page.locator(".recharts-line-curve").first().waitFor();
-  assert.equal(await page.locator(".line-workbench").count(), 5);
+  assert.equal(
+    await page.locator(".line-workbench").count(),
+    Object.keys(JSON.parse(readFileSync("generated/line-examples.json", "utf8"))).length + 1,
+  );
   assert.equal(await page.locator("#fd-glass-layout").count(), 1);
   await context.close();
   const mobile = await browser.newContext({

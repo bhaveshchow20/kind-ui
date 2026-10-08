@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { assertToc } from "./docs-browser-contracts.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
@@ -31,6 +31,7 @@ try {
     "Curve types",
     "Stacked series",
     "Materials",
+    "Loading State",
     "API reference",
     "Shared components",
   ]);
@@ -145,11 +146,7 @@ try {
   evidence.touch.push({ graphSwipe: touchScroll });
   await m.evaluate(() => scrollTo(0, 0));
   await m.getByRole("button", { name: "Open Sidebar", exact: true }).click();
-  await m.waitForTimeout(300);
-  assert.equal(
-    await m.evaluate(() => document.activeElement?.getAttribute("aria-label")),
-    "Close Sidebar",
-  );
+  await expect(m.getByRole("button", { name: "Close Sidebar", exact: true })).toBeFocused();
   await m.keyboard.press("Escape");
   await m.waitForTimeout(300);
   assert.equal(

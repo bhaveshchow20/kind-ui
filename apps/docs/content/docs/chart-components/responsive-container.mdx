@@ -5,6 +5,10 @@ description: Size a composed chart to fit its container.
 
 Kind exports Recharts' `ResponsiveContainer` directly. Give the plot a measurable width and height.
 
+This plot fills its available width while ResponsiveContainer keeps its height at 280 pixels.
+
+<ChartExample id="bar-comparison" />
+
 ## Usage
 
 ```tsx
@@ -24,8 +28,8 @@ Keep [Legend](/docs/chart-components/legend/) outside this container. Configured
 
 `width` and `height` accept pixel numbers or percentage strings and default to `"100%"`. A percentage height needs a parent with a defined height. Use `aspect` to derive height from width, or `minHeight` and `minWidth` to set lower bounds.
 
-Reserve only the space your tick labels need: these numeric examples use `YAxis width={72}`. Check both formatted labels and available plot width on phones; larger values or fonts may need more space.
-
-In flex and grid layouts, allow the chart's parent to shrink with `min-width: 0`. Check narrow layouts with long axis labels as well as the plot itself.
+<Callout type="info">
+In flex and grid layouts, use `min-width: 0` on the chart's parent. Leave enough room for axis labels at narrow widths.
+</Callout>
 
 For resize callbacks and the full prop reference, see [Recharts ResponsiveContainer](https://recharts.github.io/en-US/api/ResponsiveContainer/).

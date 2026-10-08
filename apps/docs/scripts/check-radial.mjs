@@ -21,7 +21,9 @@ try {
     const page = await context.newPage();
     page.on("pageerror", (error) => evidence.errors.push(error.message));
     await page.goto(url);
-    const rings = page.locator('[data-component="radial"]');
+    const primary = page.locator('[data-component="radial"]');
+    await expect(primary.getByRole("combobox")).toHaveCount(0);
+    const rings = page.locator('[data-component="radial-labels"]');
     await rings.locator(".recharts-radial-bar-sector").first().waitFor();
     await page.waitForTimeout(250);
     assert.equal(await rings.locator(".recharts-radial-bar-sector").count(), 3);
@@ -68,8 +70,8 @@ try {
     await gauge.scrollIntoViewIfNeeded();
     const summary = gauge.locator(".recharts-surface").getByText("72 GB", { exact: true });
     const gaugeLabels = gauge.getByRole("checkbox", { name: "Labels", exact: true });
-    await expect(gaugeLabels).not.toBeChecked();
-    await expect(summary).toHaveCount(0);
+    await expect(gaugeLabels).toBeChecked();
+    await expect(summary).toBeVisible();
     await expect(gauge.locator(".recharts-surface")).toHaveAttribute(
       "aria-label",
       "Storage capacity: 72 of 100 GB used, 28 GB available",
@@ -77,10 +79,10 @@ try {
     await expect(gauge.locator("table tbody")).toContainText("72");
     await gaugeLabels.focus();
     await page.keyboard.press("Space");
-    await expect(gaugeLabels).toBeChecked();
-    await expect(summary).toBeVisible();
-    await page.keyboard.press("Space");
+    await expect(gaugeLabels).not.toBeChecked();
     await expect(summary).toHaveCount(0);
+    await page.keyboard.press("Space");
+    await expect(summary).toBeVisible();
     const before = await gauge.locator(".recharts-radial-bar-sector").getAttribute("d");
     const direction = gauge.getByRole("combobox", { name: "Entrance direction" });
     await direction.focus();
@@ -110,28 +112,27 @@ try {
     const activityPaths = await activity
       .locator(".recharts-radial-bar-sector")
       .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
-    const activityState = activity.getByRole("combobox", { name: "State", exact: true });
-    await activityState.click();
-    await page.getByRole("option", { name: "Loading", exact: true }).click();
+    const pendingActivity = page.locator('[data-component="radial-activity-loading"]');
+    await pendingActivity.scrollIntoViewIfNeeded();
+    await expect(pendingActivity.getByRole("combobox")).toHaveCount(0);
     await expect(
-      activity.locator('[data-kind-ui="chart-loading-skeleton"][data-family="activity-rings"]'),
+      pendingActivity.locator(
+        '[data-kind-ui="chart-loading-skeleton"][data-family="activity-rings"]',
+      ),
     ).toBeVisible();
-    await activity.getByRole("tab", { name: "Code", exact: true }).click();
+    await pendingActivity.getByRole("tab", { name: "Code", exact: true }).click();
     assert.equal(
-      (await activity.locator("pre").textContent()).trim(),
+      (await pendingActivity.locator("pre").textContent()).trim(),
       bundles["radial-activity"].variants.loading.source.trim(),
     );
-    await activity.getByRole("button", { name: "Copy prompt" }).click();
+    await pendingActivity.getByRole("button", { name: "Copy prompt" }).click();
     assert.ok(
       (await page.evaluate(() => navigator.clipboard.readText())).includes(
         "/radial-activity/variants/loading/example.tsx",
       ),
     );
-    await activity.getByRole("tab", { name: "Preview", exact: true }).click();
-    await activityState.click();
-    await page.getByRole("option", { name: "Ready", exact: true }).click();
+    await pendingActivity.getByRole("tab", { name: "Preview", exact: true }).click();
     await expect(activity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
-    await expect(activity.locator(".recharts-radial-bar-sector")).toHaveCount(3);
     assert.deepEqual(
       await activity
         .locator(".recharts-radial-bar-sector")

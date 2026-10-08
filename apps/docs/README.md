@@ -19,7 +19,7 @@ To promote an already successful hosted Node 22 package gate, download its retai
 
 ## Canonical examples
 
-Thirteen component families have 49 complete examples, including ActivityRings within Radial. `examples/<id>/example.tsx` sources drive actual previews and complete consumer files; selectable options use the same source in Code and Copy prompt. The generator extracts literal defaults without executing source and produces packages with public imports only. Usage shows integration with the included example; Code shows complete consumer source. The family references and copied `combo-motion/options.tsx` cover the released presentation and interaction options, with generated API tables, defaults and limits.
+Thirteen component families have 51 complete examples, including ActivityRings within Radial. `examples/<id>/example.tsx` sources drive actual previews and complete consumer files; selectable options use the same source in Code and Copy prompt. The generator extracts literal defaults without executing source and produces packages with public imports only. Usage shows integration with the included example; Code shows complete consumer source. The family references and copied `combo-motion/options.tsx` cover the released presentation and interaction options, with generated API tables, defaults and limits.
 
 `lib/public-types.ts` and family-owned `lib/public-types/<family>.ts` select uniquely named public declaration contracts for generated tables; engine-native props remain documented through Recharts. Content is grouped into Start, Concepts, shared Chart Components, family Components, Guides and Agents. `public/AGENTS.md`, generated Markdown, llms.txt and llms-full.txt are synchronized with complete consumer setup and code.
 

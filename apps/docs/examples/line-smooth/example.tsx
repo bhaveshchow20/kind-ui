@@ -52,7 +52,7 @@ export function VisitorCurveChart({
       data={data}
       config={config}
       legend={{}}
-      margin={{ top: 20, right: 16 * fontScale, bottom: 8, left: 0 }}
+      margin={{ top: 20, right: 32 * fontScale, bottom: 8, left: 0 }}
       aria-label="Monthly visitors"
     >
       <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />

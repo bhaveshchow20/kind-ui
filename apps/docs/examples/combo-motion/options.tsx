@@ -111,7 +111,7 @@ const percent = Chart.createPercentStack({
 });
 export function PercentageOptions() {
   return (
-    <Chart.Root config={config}>
+    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
       <Chart.BarChart
         data={data}
         width={480}

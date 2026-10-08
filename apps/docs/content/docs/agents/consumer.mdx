@@ -1,50 +1,52 @@
 ---
 title: AI agents
-description: Build charts from complete examples and documented public APIs.
+description: Retrieve a selected example, adapt it and verify the result.
 ---
 
-Start with [installation](/docs/installation/) and [llms.txt](/llms.txt), then retrieve the relevant component Markdown. [llms-full.txt](/llms-full.txt) includes complete examples and API tables.
+Use the same source that drives the chart preview. Start with the relevant family instead of loading the entire documentation set.
 
-Copy prompt follows the selected example, curve and material. Copy Markdown provides the page and its default examples.
+<Steps>
+<Step>
 
-## Consumer skill
+### Add the consumer skill
 
 ```sh
 npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts
 ```
 
-The skill covers chart choice, npm installation, public API composition and
-consumer verification. It is separate from repository maintainer guidance in
-`.agents/skills`.
+The existing skill guides chart choice, public API composition and consumer checks. It is separate from repository-maintainer instructions.
 
-## MCP documentation retrieval
+</Step>
+<Step>
 
-Use your agent's existing documentation or web-fetch tools to retrieve the
-canonical HTTP resources. An already-configured MCP web/docs tool can use the
-same links:
+### Retrieve the example and its contract
 
-- [Documentation index](/llms.txt)
-- [Complete documentation](/llms-full.txt)
-- [Installation Markdown](/markdown/installation.md)
-- [Line Markdown](/markdown/components/line.md)
-- [SeriesConfig Markdown](/markdown/chart-components/series-config.md)
+Use [llms.txt](/llms.txt) to find the family Markdown. On a chart page, **Copy prompt** links the exact selected source, package version, setup and family reference.
 
-These links are documentation resources, not MCP server configuration. Retrieve
-the relevant chart family and shared component guidance before writing code.
+| Action | What it provides |
+| --- | --- |
+| Code → Copy Text | The complete component for the selected preview |
+| Copy page | Page guidance, default examples and API tables |
+| Copy prompt | A task brief with the selected example and verification steps |
 
-## Build a chart
+Retrieve [Installation](/markdown/installation.md) for setup and [SeriesConfig](/markdown/chart-components/series-config.md) when defining metadata. [llms-full.txt](/llms-full.txt) is available when you need the complete set.
 
-- Import components from `@kind-ui/charts` and its stylesheet once at the application entry.
-- Use configured `LineChart` for Root and sizing defaults. Area and Bar use explicit composition.
-- Keep data, units, domains and visibility state in your application.
-- Include a chart name and complete data alternative.
+</Step>
+<Step>
 
-## Try these prompts
+### Adapt and verify
 
-- “Build a weekly tasks line chart with @kind-ui/charts. Include zero observations and a complete accessible data table.”
-- “Compare signed revenue by category using BarChart. Keep visibility controlled by application state and check keyboard access.”
-- “Adapt the documented Area composition to our app's colors. Preserve missing-value gaps and reduced-motion behavior.”
+Replace example data with the requested observations. Keep units, domains, missing-value rules and stable identities explicit. Use the installed package's public APIs; don't invent family props from another chart.
 
-## Verify
+Typecheck and build the app. Check mobile layout, keyboard access, a complete data alternative and reduced motion.
 
-Typecheck and build the consumer. Inspect mobile layout, keyboard access, legend toggles, missing and zero values, contrast and reduced motion.
+</Step>
+</Steps>
+
+## A useful task
+
+After copying a Line prompt, add your actual goal:
+
+> Adapt this chart to weekly completed tasks. Include zero observations, preserve missing weeks as gaps, and provide a readable data table. Use our installed package version and report typecheck/build results.
+
+The example is a starting point. Ask for missing units or data rules before making assumptions.

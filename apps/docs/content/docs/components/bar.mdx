@@ -3,14 +3,18 @@ title: Bar Chart
 description: Compare categories with columns, grouped or stacked series, and horizontal bars.
 ---
 
+Compare pickup orders across locations with rounded columns.
+
 <ChartExample id="bar" />
 
 ## Usage
 
+Open **Code** above for the complete example, including data and imports.
+
 Add one `BarSeries` per measure. Use `stackId` for stacks and `layout="vertical"` for horizontal bars.
 
-```tsx title="Composition"
-<Chart.Root config={config}>
+```tsx title="Composition sketch"
+<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
   <Chart.Legend />
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.BarChart data={data} animate accessibilityLayer aria-label="Pickup orders by location">
@@ -24,7 +28,7 @@ Add one `BarSeries` per measure. Use `stackId` for stacks and `layout="vertical"
 </Chart.Root>
 ```
 
-Bar uses explicit composition. Place `Legend` outside the plot; pair Root visibility with its callback for toggles.
+Place the legend outside the plot. `defaultVisibleSeries` enables its visibility buttons.
 
 ## Grouped and stacked series
 
@@ -40,19 +44,64 @@ Use `layout="vertical"` for horizontal bars, with numeric X and categorical Y ax
 
 ## Materials
 
-Choose Default, Clay or Glow. Set corner rounding with `radius`; stack caps are consumer-owned. Plot clipping can trim decorative halos.
+Choose Default, Clay or Glow. Use `radius` to round corners.
 
 <ChartExample id="bar-materials" />
 
 ## Category emphasis
 
-`BarChart emphasis="category"` dims other categories during hover or keyboard inspection. `Root emphasis="none"` disables it. Touch inspection does not activate hover emphasis.
+Set `emphasis="category"` to dim other categories during hover or keyboard inspection.
 
-Eligibility requires compatible values and marks in every visible series; see `BarSeries` below.
+See `BarSeries` below for supported values and shapes.
+
+## Series patterns
+
+Add a pattern to distinguish a series. Its legend swatch follows the same config.
+
+```tsx
+const config = {
+  orders: { label: "Orders", color: "#733bff", pattern: { kind: "hatch" } },
+} satisfies Chart.SeriesConfig;
+
+// Inside the chart:
+<Chart.BarSeries dataKey="orders" />
+```
+
+Override the config with `BarSeries.pattern`; use `pattern={false}` to turn it off.
+
+<Callout title="Note">Explicit `fill`, Cells and custom shapes override the pattern. Keep labels and an accessible data table alongside patterns.</Callout>
+
+## Projected bars
+
+In the copied Bar example, mark projected rows in `data`. Then use the same rule for the series and tooltip:
+
+```tsx
+const data = [
+  { period: "North", orders: 124 },
+  { period: "East", orders: 186, projected: true },
+];
+type ProjectionRow = (typeof data)[number];
+const isProjected = (row: ProjectionRow) => row.projected === true;
+
+<Chart.BarSeries dataKey="orders"
+  projection={{ isProjected, pattern: { kind: "stripe" } }} />
+<Chart.Tooltip content={(tooltip) => (
+  <Chart.TooltipContent tooltip={tooltip}
+    isProjected={(entry) => isProjected(entry.payload)} />
+)} />
+```
+
+<Callout title="Note">This styles supplied values; it does not calculate a forecast. Label projected rows in your accessible data table.</Callout>
+
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+
+<ChartExample id="bar" variant="loading" />
 
 ## API reference
 
-Focused props for explicit composition. Recharts owns grouping, stacking and axis geometry.
+Use these props to configure bars, stacks and presentation.
 
 ### BarChart
 
@@ -76,7 +125,7 @@ Use inside `Root` and a sized `ResponsiveContainer`.
 
 </div>
 
-Entrance stops on interaction or data/geometry changes. Remount to replay. `BarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
+`BarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
 
 ### BarSeries
 
@@ -99,37 +148,27 @@ String value keys identify config entries; controlled numeric keys or accessors 
 
 </div>
 
-Category emphasis requires native rectangles, chart-level rows, string value keys and finite non-baseline values. Use unique string categories or unique, defined `emphasisKey` results for every row.
+<Callout title="Category emphasis">Use chart-level rows, string value keys, unique category IDs and native rectangles. Missing, zero/baseline or range values, per-series data, custom shapes and non-boolean `activeBar` disable this effect.</Callout>
 
-Missing, null, zero/baseline or range values, per-series data, custom shapes and non-boolean `activeBar` disable category emphasis for the chart. Hidden peers do not block eligibility.
+Custom shapes and filters can override materials. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/) and [material support](/docs/guides/materials/).
 
-Finishes are static. Native per-series animation is disabled. Custom `shape`, `filter` or non-boolean `activeBar` owns paint. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/) and [material support](/docs/guides/materials/).
+### Fill patterns
+
+<ApiTable name="FillPatternReference" />
+
+### Projected values
+
+<ApiTable name="BarProjectionReference" />
 
 ## Shared components
 
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+Add visibility controls, value formatting and category labels with these components.
 
-## Series patterns and projected bars
-
-`SeriesConfig[key].pattern` supplies implicit Bar/Area paint and the default legend swatch. `BarSeries.pattern` or `AreaSeries.pattern` overrides it; `false` disables it. Use `false` to disable a pattern.
-
-`FillPatternSwatch` takes `pattern` and a base `color` for custom legends.
-
-| Field | Values / default | Limits |
-| --- | --- | --- |
-| `kind` | Required: `hatch`, `stripe`, `duotone`, `dots`, `lines` | Static SVG paint; independent of material, data and geometry. |
-| `color` | `CanvasText` | Second ink; select contrasting theme-aware colors. |
-| `size` | `8` SVG units | Finite and positive. |
-| `width` | `1`; stripe `2` | Finite, positive and at most size; dot diameter; duotone stays 50/50. |
-| `angle` | Hatch `45`; others `0` degrees | Finite; chart orientation does not rotate the pattern automatically. |
-
-Explicit fill/gradient, `style.fill`, Cells and custom shapes retain paint ownership. Custom Bar active shapes disable automatic encoding. Gradient-backed pattern tiles use the configured first-stop ink. Forced colors retain geometry with system inks.
-
-Print settings/colors may affect contrast; retain labels and data alternatives.
-
-`BarSeries<Row>.projection={{ isProjected, pattern }}` decorates only caller-selected raw rows. It neither forecasts, filters data nor changes axes. `TooltipContent.isProjected` receives native payload entries; apply the same rule to their original `entry.payload` rows.
-
-Label the data alternative. Tooltip `projectedLabel` defaults to `"Projected"`; missing/hidden/suppressed rows retain existing behavior. Cells, explicit paint and custom shape ownership take precedence.
-
-<ApiTable name="FillPatternReference" />
-<ApiTable name="BarProjectionReference" />
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

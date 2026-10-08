@@ -12,8 +12,12 @@ export const legacyDocSlugs = [
   ...["installation", "quickstart"].map((page) => ["start", page]),
   ["guides", "customization"],
   ["guides", "identity-layout"],
+  ["concepts", "composition"],
+  ["guides", "release"],
 ];
 export function canonicalDocSlugs(slug) {
+  if (slug?.join("/") === "concepts/composition") return ["quickstart"];
+  if (slug?.join("/") === "guides/release") return ["installation"];
   if (slug?.join("/") === "guides/customization") return ["components", "line"];
   if (slug?.join("/") === "guides/identity-layout") return ["concepts", "identity"];
   return slug?.length === 2 &&

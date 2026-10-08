@@ -1,54 +1,71 @@
 ---
 title: Identity and colors
-description: Separate measured values, stable identities and presentation metadata.
+description: Match measured values to stable labels, colors, and visibility keys.
 ---
 
-| Name | Job | Example |
+A value tells you how much; an identity tells you which series or category it
+belongs to. Keep identities stable when you reorder, filter, or update data.
+
+| Field | Purpose | Example |
 | --- | --- | --- |
-| `dataKey` | Read a measured field or accessor | `"visitors"` reads each row's value |
-| `seriesKey` | Identify series metadata and visibility separately | `"visitors"` identifies an accessor series |
-| Category identity | Identify one row/category independently of its value | `"search"` identifies a slice whose `value` is 35 |
-| `config` | Label, color, formatter and optional icon | `visitors: { label: "Visitors", color: "#733bff" }` |
+| `dataKey` | Read the measured value | `"visitors"` or `(row) => row.count` |
+| `seriesKey` | Match a series to its config | `"visitors"` for an accessor series |
+| Category ID | Match one category to its config | `"search"` for a slice worth 35 |
+| `config` | Assign labels, colors, and formatting | `visitors: { label: "Visitors", color: "#733bff" }` |
 
 ## Series
 
-String `dataKey` values normally identify config entries. Function and numeric keys need `seriesKey` for controlled visibility. Configured Line's `series` entries always supply unique keys in config.
+A string `dataKey` usually matches the config key. For a function or numeric
+`dataKey`, supply `seriesKey` so formatting and visibility use the same identity.
 
-Accessors change value retrieval without changing identity:
-
-```tsx title="AccessorChart.tsx"
-"use client";
-import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
-
+```tsx
 const data = [{ month: "Jan", count: 42 }, { month: "Feb", count: 58 }];
 const config = { visitors: { label: "Visitors", color: "#733bff" } };
 
-export function AccessorChart() {
-  return <Chart.LineChart data={data} config={config} xDataKey="month"
-    series={[{ dataKey: (row) => row.count, seriesKey: "visitors" }]}
-    animate={false} aria-label="Monthly visitors" />;
-}
+<Chart.LineChart
+  data={data}
+  config={config}
+  xDataKey="month"
+  series={[{ dataKey: (row) => row.count, seriesKey: "visitors" }]}
+  aria-label="Monthly visitors"
+/>
 ```
 
-Series metadata supplies default paint; explicit native paint and custom renderers retain control. Configured Line toggles series automatically. `defaultVisibleSeries` sets the initial list; controlled visibility needs `visibleSeries` and `onVisibleSeriesChange`.
-
-Without the callback, the list is read-only. Keep the visibility mode stable or remount to change it.
+The example reads `count` but uses `visitors` for its label, color, and legend.
+See [Root](/docs/chart-components/root/) to control visibility and
+[SeriesConfig](/docs/chart-components/series-config/) to format values.
 
 ## Category and node colors
 
-Explore the complete [Pie](/docs/components/pie/), [Radial](/docs/components/radial/) and [Heatmap](/docs/components/heatmap/) examples.
+Match category IDs to metadata independently of the measured value.
 
-- [Pie/Donut and Radial category defaults](/docs/components/pie/): `PieSeries.categoryKey` reads explicit series rows; `RadialBarChart.categoryKey` reads chart rows. A row such as `{ id: "search", value: 35 }` uses `dataKey="value"` for geometry and `categoryKey="id"` for config color. IDs must resolve to string keys in `Root.config`; use an accessor for nested fields. Reorder/filter keeps color tied to identity. Legend order follows config order. Filtering stays application-owned unless `interactionBinding="root"` connects categories to a category-kind Root with settled `eligibleKeys`.
-- [Sankey metadata](/docs/components/sankey/): `SankeyChart.nodeConfig` maps node IDs to labels/colors. Default nodes use their own color; solid links use the source color. Composed gradient links resolve both endpoints. `SankeyLegend` receives the same config explicitly. It is static by default; bind both chart and legend with `interactionBinding="root"` to a node-kind, focus-mode Root for shared node focus.
-- [ActivityRings](/docs/components/radial/#activityrings): ring `key` identifies config; `value` and optional `domain` determine progress. The helper supplies radial composition and preserves original values for its default tooltip. `rootProps` exposes Root visibility and category interaction; explicit Radial composition remains available.
+```tsx
+const data = [{ id: "search", value: 35 }, { id: "direct", value: 65 }];
+const config = {
+  search: { label: "Search", color: "#733bff" },
+  direct: { label: "Direct", color: "#1c9d8f" },
+};
 
-Category defaults fill missing native paint. Explicit series fill disables them; datum/Cell fill takes precedence. Existing Cell props/handlers and custom shapes remain authoritative.
+<Chart.PieSeries data={data} dataKey="value" categoryKey="id" />
+```
 
-Overrides may differ from legend metadata; update config to match. No positional palette or universal identity schema is implied.
+Place the Pie series inside a PieChart and `Root config={config}`. Reordering
+these rows keeps Search purple and Direct green.
 
-Heatmap uses row/column identity and a quantitative scale, rather than series colors. Its [compact layout](/docs/components/heatmap/#compact-activity-grid) adds `HeatmapGrid.layout` for cell size, gap and visual headers; accessible headers and keyboard navigation remain present.
+| Family | Identity and metadata |
+| --- | --- |
+| [Pie](/docs/components/pie/) | `PieSeries.categoryKey` matches rows to Root config |
+| [Radial](/docs/components/radial/) | `RadialBarChart.categoryKey` matches chart rows to Root config |
+| [ActivityRings](/docs/components/radial/#activityrings) | Each ring's `key` matches its config; `value` and `domain` describe progress |
+| [Sankey](/docs/components/sankey/) | Node IDs match `nodeConfig`; pass the same config to `SankeyLegend` |
+| [Heatmap](/docs/components/heatmap/) | Row/column IDs locate cells; a quantitative scale colors their values |
+
+Explicit series paint and per-item Cells can override config colors. Keep legend
+metadata consistent with those choices. For category visibility or node focus,
+use the family's documented Root interaction binding.
 
 ## Inspection and emphasis
 
-Tooltip inspection and paint emphasis are separate contracts. Hiding series does not rewrite the dataset. Automatic emphasis is family-specific; custom renderers keep their own behavior. See the relevant Components page for supported inspection, legend and emphasis options.
+Inspecting a value shows its tooltip. Emphasis highlights a mark or series;
+visibility hides it. These are separate choices. Family pages show which
+interactions their marks support.

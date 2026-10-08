@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
 
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
   args: ["--no-sandbox"],
@@ -13,7 +14,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 1000 } });
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto("http://127.0.0.1:6373/docs/components/sankey/");
+    await page.goto(`${origin}/docs/components/sankey/`);
     const first = page.locator('[data-component="sankey"]');
     const flows = first.locator('path[role="button"]');
     await flows.first().waitFor({ state: "attached" });
@@ -82,7 +83,7 @@ try {
     viewport: { width: 1440, height: 1000 },
     reducedMotion: "reduce",
   });
-  await page.goto("http://127.0.0.1:6373/docs/components/sankey/");
+  await page.goto(`${origin}/docs/components/sankey/`);
   await page.locator('path[role="button"]').first().waitFor({ state: "attached" });
   assert.equal(await page.locator('[data-kind-ui="sankey-link-entrance"]').count(), 0);
   const finishes = page.locator('[data-component="sankey-finishes"]');
@@ -108,7 +109,7 @@ try {
   });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   await page.screenshot({ path: "artifacts/sankey/text-200.png", fullPage: true });
-  await page.goto("http://127.0.0.1:6373/docs/components/line/");
+  await page.goto(`${origin}/docs/components/line/`);
   await page
     .locator('[data-component="line"] .recharts-line')
     .first()

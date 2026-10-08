@@ -20,7 +20,15 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   const slug = canonicalDocSlugs(docSlugs((await params).slug));
   if (!slug) notFound();
   const requested = docSlugs((await params).slug);
-  if (requested?.[0] === "guides" && ["customization", "identity-layout"].includes(requested[1]))
+  if (
+    requested &&
+    [
+      "guides/customization",
+      "guides/identity-layout",
+      "concepts/composition",
+      "guides/release",
+    ].includes(requested.join("/"))
+  )
     return (
       <>
         <LegacyDocRedirect guide={requested[1]} />

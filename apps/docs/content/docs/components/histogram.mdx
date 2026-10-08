@@ -3,13 +3,17 @@ title: Histogram
 description: Show response-time distributions with explicit numeric bins.
 ---
 
+See how checkout response times are distributed across numeric intervals.
+
 <ChartExample id="histogram" />
 
 ## Usage
 
+Open **Code** above for the complete example, including data and imports.
+
 Use `binHistogram` to prepare numeric bins for `HistogramSeries`.
 
-```tsx title="Composition"
+```tsx title="Composition sketch"
 <Chart.Root config={config}>
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.HistogramChart bins={result.bins} measure="count" animate accessibilityLayer>
@@ -21,25 +25,29 @@ Use `binHistogram` to prepare numeric bins for `HistogramSeries`.
 </Chart.Root>
 ```
 
-Bins include their lower edge; only the last bin includes its upper edge. Interior-edge samples go right. Accepted, missing, nonfinite and out-of-range samples are counted separately.
-
-Count height shows observations; rectangle width is the numeric interval span.
+Bar height shows count; width shows the interval. Bins include the lower edge, and the final bin includes the upper edge.
 
 ## Unequal-width density
 
-Density is `count / (accepted × bin width)`. Nonempty rectangle areas sum to one; heights need not. Empty totals yield zero density, and discarded samples do not enter normalization.
+Use density when bin widths differ: bar areas, rather than heights, represent proportions.
 
 <ChartExample id="histogram-density" />
 
 ## Materials
 
-Choose Default, Clay or Glow. Numeric bounds stay fixed; custom `shape`, `filter` or `style.filter` owns paint.
+Choose Default, Clay or Glow.
 
 <ChartExample id="histogram-materials" />
 
+## Loading State
+
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+
+<ChartExample id="histogram" variant="loading" />
+
 ## API reference
 
-Use `xAxisProps` and `yAxisProps` for tick presentation; Histogram owns quantitative axes and geometry.
+Use `xAxisProps` and `yAxisProps` to format ticks on the numeric scales.
 
 ### binHistogram
 
@@ -52,7 +60,7 @@ Use `xAxisProps` and `yAxisProps` for tick presentation; Histogram owns quantita
 
 </div>
 
-Returns `HistogramBinningResult`: `bins`, `accepted`, `missing`, `nonfinite` and `outOfRange`. Each bin has `lower`, `upper` and `count`. No coercion or edge inference occurs.
+Returns `bins` plus accepted, missing, nonfinite and out-of-range sample counts.
 
 Pre-aggregated bins may have gaps. Bounds must be ordered, nonoverlapping and finite with positive finite widths; counts and their total must be nonnegative safe integers.
 
@@ -89,8 +97,16 @@ Owns data, vertical layout, scales and spacing. See [XAxis](https://recharts.git
 
 </div>
 
-Requires `HistogramChart`. Plain bins have square corners and no minimum height. Cells/events remain available; stacking, labels, background, activeBar, bar sizing and axis identity are excluded. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
+Use inside `HistogramChart`; stacking and custom bar sizing are unsupported. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
 
 ## Shared components
 
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Tooltip](/docs/chart-components/tooltip/), [Axes and grid](/docs/chart-components/axes-grid/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+Use Root for the measure’s color and Tooltip for bin values.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

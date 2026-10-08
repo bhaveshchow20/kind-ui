@@ -16,7 +16,7 @@ try {
   p.on("pageerror", (e) => evidence.errors.push(e.message));
   await p.goto(`${origin}/docs/components/line/`);
   await p.locator(".recharts-line-curve").first().waitFor();
-  assert.equal(await p.locator(".line-workbench").count(), 5);
+  assert.equal(await p.locator(".line-workbench").count(), Object.keys(bundles).length + 1);
   assert.equal(await p.getByText("View data", { exact: true }).count(), 0);
   assert.equal(await p.getByRole("combobox", { name: "Choose component" }).count(), 0);
   assert.equal(await p.locator("#fd-glass-layout").count(), 1);
@@ -25,31 +25,65 @@ try {
     for (const [value, variant] of Object.entries(
       bundle.variants ?? { default: { source: bundle.files[`src/examples/${id}/example.tsx`] } },
     )) {
-      if (bundle.variants) {
+      if (value === "loading") {
+        const pending = p.locator(`[data-component="${id}-loading"]`);
+        assert.equal(await pending.getByRole("combobox").count(), 0);
+        await pending
+          .locator('[data-kind-ui="chart-loading-skeleton"]')
+          .waitFor({ state: "visible" });
+        await pending.getByRole("tab", { name: "Code", exact: true }).click();
+        assert.equal(
+          (await pending.locator("pre").textContent()).trimEnd(),
+          variant.source.trimEnd(),
+        );
+        await pending.getByRole("button", { name: "Copy Text", exact: true }).click();
+        assert.equal(
+          (await p.evaluate(() => navigator.clipboard.readText())).trimEnd(),
+          variant.source.trimEnd(),
+        );
+        await pending.locator("button.copy-prompt").click();
+        const prompt = await p.evaluate(() => navigator.clipboard.readText());
+        const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
+        assert.equal(
+          (await (await context.request.get(url)).text()).trimEnd(),
+          variant.source.trimEnd(),
+        );
+        await pending.getByRole("tab", { name: "Preview", exact: true }).click();
+        assert.equal(await card.locator('[data-kind-ui="chart-loading-skeleton"]').count(), 0);
+        evidence.variants.push({ id, value, loading: "fixed preview, code and copy parity" });
+        continue;
+      }
+      if (Object.keys(bundle.variants ?? {}).filter((value) => value !== "loading").length > 1) {
         await card.getByRole("combobox", { name: bundle.variantControl }).click();
         await p.getByRole("option", { name: variant.label, exact: true }).click();
       }
       await card.getByRole("tab", { name: "Code", exact: true }).click();
-      assert.equal(await card.locator("figcaption").textContent(), "example.tsx");
+      assert.equal(
+        await card
+          .getByRole("tabpanel", { name: "Code", exact: true })
+          .locator("figcaption")
+          .textContent(),
+        "example.tsx",
+      );
       assert.equal((await card.locator("pre").textContent()).trimEnd(), variant.source.trimEnd());
       await card.getByRole("button", { name: "Copy Text", exact: true }).click();
       assert.equal(
         (await p.evaluate(() => navigator.clipboard.readText())).trimEnd(),
         variant.source.trimEnd(),
       );
+      await card.locator("button.copy-prompt").click();
+      const prompt = await p.evaluate(() => navigator.clipboard.readText());
+      assert.ok(prompt.includes("/docs/components/line/"));
+      const selectedUrl = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
+      assert.equal(
+        (await (await context.request.get(selectedUrl)).text()).trimEnd(),
+        variant.source.trimEnd(),
+      );
       assert.ok(
         await card.locator(".line-code-viewport").evaluate((n) => n.scrollHeight > n.clientHeight),
       );
       await card.getByRole("tab", { name: "Preview", exact: true }).click();
-      if (value === "loading") {
-        await card.locator('[data-kind-ui="chart-loading-skeleton"]').waitFor({ state: "visible" });
-        await card.getByRole("combobox", { name: bundle.variantControl }).click();
-        await p
-          .getByRole("option", { name: bundle.variants[bundle.defaultVariant].label, exact: true })
-          .click();
-        evidence.variants.push({ id, value, loading: "passed" });
-        continue;
-      }
+
       await card.locator(".recharts-line-curve").first().waitFor();
       evidence.variants.push({ id, value, copy: "exact", internalScroll: true });
     }

@@ -41,7 +41,7 @@ export function MaterialResponseTimeBoxPlot({
   appearance?: "default" | "clay" | "glow";
 } = {}) {
   return (
-    <Chart.Root config={config}>
+    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.BoxPlotChart
@@ -89,32 +89,99 @@ export function MaterialResponseTimeBoxPlot({
               const row = payload?.[0]?.payload as (typeof data)[number] | undefined;
               if (!active || !row) return null;
               return (
-                <div data-kind-ui="chart-tooltip">
+                <div
+                  data-kind-ui="chart-tooltip"
+                  style={{
+                    fontSize: 12,
+                    lineHeight: "18px",
+                    minWidth: 180,
+                    maxWidth: "min(220px, calc(100vw - 32px))",
+                  }}
+                >
                   <strong>{label}</strong>
-                  <dl>
-                    <div>
-                      <dt>Lower whisker</dt>
-                      <dd>{row.lowerWhisker} ms</dd>
+                  <dl
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0, 1fr) auto",
+                      gap: "4px 16px",
+                      margin: "8px 0 0",
+                    }}
+                  >
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>
+                        Lower whisker
+                      </dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {row.lowerWhisker} ms
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Q1</dt>
-                      <dd>{row.q1} ms</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Q1</dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {row.q1} ms
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Median</dt>
-                      <dd>{row.median} ms</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Median</dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {row.median} ms
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Q3</dt>
-                      <dd>{row.q3} ms</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Q3</dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {row.q3} ms
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Upper whisker</dt>
-                      <dd>{row.upperWhisker} ms</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>
+                        Upper whisker
+                      </dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {row.upperWhisker} ms
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Outlier</dt>
-                      <dd>{row.outlier} ms</dd>
+                    <div style={{ display: "contents" }}>
+                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Outlier</dt>
+                      <dd
+                        style={{
+                          margin: 0,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {row.outlier} ms
+                      </dd>
                     </div>
                   </dl>
                 </div>

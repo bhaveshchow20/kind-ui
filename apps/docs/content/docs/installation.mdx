@@ -1,36 +1,74 @@
 ---
 title: Installation
-description: Install charts and import the public components and stylesheet.
+description: Install the chart package and stylesheet in your React app.
 ---
+
+Install the ESM package in an existing React project. npm resolves its required peers.
+
+<Steps>
+<Step>
+
+### Install the package
 
 ```sh
 npm install @kind-ui/charts
 ```
 
-npm installs the required peers automatically. The package is ESM. Supported peers
-are React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Motion is
-required even when animation is disabled.
+Published 0.3.0 supports React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Motion is required even with animation off.
 
-## Imports and CSS
+</Step>
+<Step>
+
+### Import the stylesheet
+
+<Tabs items={["React", "Next.js"]}>
+<Tab value="React">
+
+Import CSS once at your application entry:
 
 ```tsx
-import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
 ```
 
-Import the stylesheet once at the application entry. Use public composition parts
-such as `CartesianGrid`, `XAxis`, `YAxis`, `ResponsiveContainer` and `LabelList`.
-There is no `@kind-ui/charts/motion` entry. Next applications need a client
-component boundary when supplying callbacks, refs or state.
+</Tab>
+<Tab value="Next.js">
 
-In Next.js, import CSS in the root layout. Development builds warn once per document
-if mounted chart roots lack the stylesheet, after pending stylesheets load. SSR and
-production do not run this check. CSS stays explicit to preserve Node ESM
-imports, stylesheet ordering and CSP control; nothing is injected or fetched.
-Keep the CSS import when copying examples. If you replace every chart style yourself,
-set `--kind-ui-styles-loaded: 1` on your chart roots to acknowledge that setup.
+Import CSS in your root layout:
 
-Use the complete consumer files on each component page or adapt their chart
-composition into your app. Supply chart sizing, an accessible name and a complete
-[data alternative](/docs/guides/accessibility/). See [composition](/docs/concepts/composition/)
-for styling and [AI agents](/docs/agents/consumer/) for example retrieval and verification.
+```tsx title="app/layout.tsx"
+import "@kind-ui/charts/styles.css";
+```
+
+Put interactive chart components behind a client boundary:
+
+```tsx title="Chart.tsx"
+"use client";
+import * as Chart from "@kind-ui/charts";
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### Build your first chart
+
+Follow [Quickstart](/docs/quickstart/) for a complete component, or [choose a chart](/docs/).
+
+</Step>
+</Steps>
+
+## Public imports
+
+```tsx
+import * as Chart from "@kind-ui/charts";
+```
+
+Use the documented exports. There is no `@kind-ui/charts/motion` entry.
+
+## Upgrading
+
+Review the [changelog](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/CHANGELOG.md), then typecheck and build your app. Check sizing, keyboard access, controlled visibility, missing/zero values and reduced motion. Keep your data alternative current.
+
+See [Troubleshooting](/docs/guides/troubleshooting/) if the chart is blank or an import fails.

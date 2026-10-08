@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { swipeUp } from "./touch-swipe.mjs";
 
-const origin = "http://127.0.0.1:6373";
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/heatmap-examples.json", "utf8"));
 mkdirSync("artifacts/heatmap", { recursive: true });
 const browser = await chromium.launch({
@@ -179,6 +179,26 @@ try {
       await material.getByRole("tab", { name: "Preview", exact: true }).click();
     }
     await material.screenshot({ path: `artifacts/heatmap/materials-${width}.png` });
+    const compact = page.locator('[data-component="heatmap-compact"]');
+    await compact.scrollIntoViewIfNeeded();
+    const compactCells = compact.locator('[data-kind-ui="heatmap-grid"] td');
+    assert.equal(await compactCells.count(), 182);
+    const compactGeometry = await compactCells.first().evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      return { width: box.width, height: box.height };
+    });
+    assert.ok(
+      Math.abs(compactGeometry.width - compactGeometry.height) < 1,
+      "Activity cells remain square",
+    );
+    assert.ok(compactGeometry.width >= 6, "Activity cells remain measurable");
+    if (width === 1440)
+      assert.ok(compactGeometry.width >= 24, "Desktop activity cells fill available space");
+    assert.ok(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      "Compact activity contains overflow",
+    );
+    await compact.screenshot({ path: `artifacts/heatmap/compact-${width}.png` });
     assert.deepEqual(errors, []);
     evidence.push({
       width,

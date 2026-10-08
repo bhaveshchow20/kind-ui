@@ -68,15 +68,23 @@ try {
   const context = await browser.newContext({ reducedMotion: "reduce", colorScheme: "dark" });
   const page = await context.newPage();
   page.on("pageerror", (error) => errors.push(error.message));
-  for (const width of [320, 390, 768, 1440]) {
+  for (const { width, zoom } of [
+    ...[320, 390, 768, 1440].map((width) => ({ width, zoom: 1 })),
+    { width: 390, zoom: 2 },
+    { width: 1440, zoom: 2 },
+  ]) {
     await page.setViewportSize({ width, height: 900 });
     for (const key of pages("content/docs")) {
       const url = publicPath(key === "index" ? "/docs/" : `/docs/${key}/`);
       assert.equal((await page.goto(origin + url)).status(), 200, url);
       await page.locator("h1").first().waitFor();
+      await expect(page.getByRole("combobox", { name: "State", exact: true })).toHaveCount(0);
+      await page.evaluate((zoom) => {
+        document.documentElement.style.zoom = String(zoom);
+      }, zoom);
       if (key.startsWith("components/")) {
         const family = key.split("/")[1];
-        const id = family === "sankey" ? "sankey-config" : family;
+        const id = family;
         const card = page.locator(`[data-component="${id}"]`);
         await card
           .locator(id === "heatmap" ? "[role=grid]" : "svg.recharts-surface")
@@ -89,12 +97,21 @@ try {
         await expect(card.locator(".sr-only table")).toHaveCount(1);
         const loading = bundles[id].variants.loading;
         assert.ok(loading, `${id} loading source`);
-        await card.getByRole("combobox").click();
-        await page.getByRole("option", { name: "Loading", exact: true }).click();
-        await expect(card.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
-        await card.getByRole("tab", { name: "Code", exact: true }).click();
-        assert.equal((await card.locator("pre").textContent()).trim(), loading.source.trim());
-        await card.getByRole("tab", { name: "Preview", exact: true }).click();
+        const pending = page.locator(`[data-component="${id}-loading"]`);
+        await expect(page.locator("h2#loading-state")).toBeVisible();
+        await expect(pending.getByRole("combobox")).toHaveCount(0);
+
+        const referenceTables = page.locator(".line-props-scroll table");
+        for (const table of await referenceTables.all()) {
+          assert.ok(
+            await table.evaluate((node) => node.getBoundingClientRect().width >= 649),
+            `${key} readable reference width`,
+          );
+        }
+        await expect(pending.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
+        await pending.getByRole("tab", { name: "Code", exact: true }).click();
+        assert.equal((await pending.locator("pre").textContent()).trim(), loading.source.trim());
+        await pending.getByRole("tab", { name: "Preview", exact: true }).click();
       }
       const measurements = await page.evaluate(() => {
         const main = document.querySelector("[data-fd-full]").getBoundingClientRect();
@@ -108,14 +125,12 @@ try {
         `${width} ${key} horizontal overflow ${measurements.overflow}`,
       );
       assert.ok(measurements.tail <= 2, `${width} ${key} blank tail ${measurements.tail}`);
-      evidence.push({ width, page: key, ...measurements });
+      evidence.push({ width, zoom, page: key, ...measurements });
     }
   }
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(origin + publicPath("/docs/components/radial/"));
-  const activity = page.locator('[data-component="radial-activity"]');
-  await activity.getByRole("combobox", { name: "State", exact: true }).click();
-  await page.getByRole("option", { name: "Loading", exact: true }).click();
+  const activity = page.locator('[data-component="radial-activity-loading"]');
   await expect(activity.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
   await activity.getByRole("tab", { name: "Code", exact: true }).click();
   assert.equal(
@@ -123,10 +138,9 @@ try {
     bundles["radial-activity"].variants.loading.source.trim(),
   );
   await activity.getByRole("tab", { name: "Preview", exact: true }).click();
-  await activity.getByRole("combobox", { name: "State", exact: true }).click();
-  await page.getByRole("option", { name: "Ready", exact: true }).click();
-  await expect(activity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
-  await expect(activity.locator(".recharts-radial-bar-sector")).toHaveCount(3);
+  const readyActivity = page.locator('[data-component="radial-activity"]');
+  await expect(readyActivity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
+  await expect(readyActivity.locator(".recharts-radial-bar-sector")).toHaveCount(3);
   await page.goto(origin + publicPath("/docs/components/radar/"));
   const mark = page.locator('[data-kind-ui="radar-selection"]').last();
   await mark.waitFor();

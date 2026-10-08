@@ -167,7 +167,10 @@ for (const file of markdownFiles("public/markdown")) {
   );
   const alias = legacyDocSlugs.find((slug) => file === `${slug.join("/")}.md`);
   if (alias) {
-    assert.equal(body, readFileSync(path.join(root, "markdown", `${alias[1]}.md`), "utf8"));
+    assert.equal(
+      body,
+      readFileSync(path.join(root, "markdown", `${canonicalDocSlugs(alias).join("/")}.md`), "utf8"),
+    );
     assert.ok(
       !index.includes(publicPath(`/markdown/${file}`)),
       `Agent index duplicates alias ${file}`,

@@ -1,17 +1,47 @@
 ---
 title: Materials
-description: Add Clay or Glow while preserving native chart geometry.
+description: Choose Default, Clay, or Glow for supported chart parts.
 ---
 
-Clay (`"clay"`) adds soft relief. Glow (`"glow"`) adds decorative light. Default omits the prop and retains native paint; it is not a material.
+Use Clay for soft relief or Glow for light around marks. Leave the prop unset
+for Default appearance. Choose the finish on the chart part you want to style.
 
-| Chart parts | Prop |
-| --- | --- |
-| Cartesian and polar series | `material` |
-| Configured Line | `material` on `LineChart` |
-| Heatmap cells | `material` on `HeatmapGrid` |
-| Sankey nodes and links | `finish`; independent of solid/gradient `material` |
+## Choose the prop
 
-Family pages show supported parts and complete examples. Custom shapes, explicit filters and native paint retain their documented ownership. Materials preserve values and geometry; motion is independent.
+Most series use `material`. Sankey uses `finish` for Clay and Glow.
 
-Compare dense marks, missing/zero values, narrow layouts and dark mode. Keep labels, contrast and a readable data alternative. Plot clipping may trim exterior effects; filters add rendering work.
+| Chart part | Default | Clay | Glow |
+| --- | --- | --- | --- |
+| [Configured Line](/docs/components/line/) | Omit `material` | `material="clay"` | `material="glow"` |
+| [Line](/docs/components/line/), [Area](/docs/components/area/), [Bar](/docs/components/bar/) series | Omit `material` | `material="clay"` | `material="glow"` |
+| [Pie](/docs/components/pie/), [Radar](/docs/components/radar/), [Radial](/docs/components/radial/), [Scatter](/docs/components/scatter/) series | Omit `material` | `material="clay"` | `material="glow"` |
+| [HeatmapGrid](/docs/components/heatmap/) | Omit `material` | `material="clay"` | `material="glow"` |
+| [Sankey nodes and links](/docs/components/sankey/) | Omit `finish` | `finish="clay"` | `finish="glow"` |
+
+Histogram, Waterfall, Box Plot, and Combo examples use their documented series
+parts. Open a family page to compare its live material previews.
+
+Set the finish on the series in your existing Bar composition:
+
+```tsx
+<Chart.BarSeries dataKey="orders" material="clay" />
+```
+
+For Sankey, set it in the node and link renderers:
+
+```tsx
+<Chart.SankeyChart
+  data={flowData}
+  node={(props) => <Chart.SankeyNode {...props} finish="glow" />}
+  link={(props) => <Chart.SankeyLink {...props} finish="glow" />}
+/>
+```
+
+<Callout type="info">
+Sankey's `material="solid"` or `"gradient"` chooses link paint separately from
+`finish`. Custom shapes and filters can replace the built-in appearance.
+</Callout>
+
+Materials keep values and geometry unchanged. Check contrast in both themes and
+leave room for effects near plot edges. See [Motion](/docs/guides/motion/) to
+animate the chart independently.

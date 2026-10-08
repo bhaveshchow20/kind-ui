@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
 import { swipeUp } from "./touch-swipe.mjs";
 
-const origin = "http://127.0.0.1:6373";
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const browser = await chromium.launch({
   executablePath:
     process.env.CHROMIUM_PATH ||

@@ -22,7 +22,7 @@ try {
   page.on("pageerror", (error) => evidence.errors.push(error.message));
   await page.goto(`${origin}/docs/components/bar/`);
   await page.locator('[data-component="bar"] .recharts-bar-rectangle').first().waitFor();
-  assert.equal(await page.locator(".line-workbench").count(), 4);
+  assert.equal(await page.locator(".line-workbench").count(), Object.keys(bundles).length + 1);
   assert.equal(await page.locator("#fd-glass-layout").count(), 1);
   assert.equal(await page.locator(".doc-footer").count(), 0);
   assert.equal(await page.getByText("View data", { exact: true }).count(), 0);
@@ -34,7 +34,35 @@ try {
     for (const [value, variant] of Object.entries(
       bundle.variants ?? { default: { source: bundle.files[`src/examples/${id}/example.tsx`] } },
     )) {
-      if (bundle.variants) {
+      if (value === "loading") {
+        const pending = page.locator(`[data-component="${id}-loading"]`);
+        assert.equal(await pending.getByRole("combobox").count(), 0);
+        await pending
+          .locator('[data-kind-ui="chart-loading-skeleton"]')
+          .waitFor({ state: "visible" });
+        await pending.getByRole("tab", { name: "Code", exact: true }).click();
+        assert.equal(
+          (await pending.locator("pre").textContent()).trimEnd(),
+          variant.source.trimEnd(),
+        );
+        await pending.getByRole("button", { name: "Copy Text", exact: true }).click();
+        assert.equal(
+          (await page.evaluate(() => navigator.clipboard.readText())).trimEnd(),
+          variant.source.trimEnd(),
+        );
+        await pending.locator("button.copy-prompt").click();
+        const prompt = await page.evaluate(() => navigator.clipboard.readText());
+        const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
+        assert.equal(
+          (await (await context.request.get(url)).text()).trimEnd(),
+          variant.source.trimEnd(),
+        );
+        await pending.getByRole("tab", { name: "Preview", exact: true }).click();
+        assert.equal(await card.locator('[data-kind-ui="chart-loading-skeleton"]').count(), 0);
+        evidence.variants.push({ id, value, loading: "fixed preview, code and copy parity" });
+        continue;
+      }
+      if (Object.keys(bundle.variants ?? {}).filter((value) => value !== "loading").length > 1) {
         // Select with keyboard to exercise the shared Radix control.
         await card.getByRole("combobox", { name: bundle.variantControl }).focus();
         await page.keyboard.press("Space");
@@ -52,17 +80,9 @@ try {
         await card.locator(".line-code-viewport").evaluate((n) => n.scrollHeight > n.clientHeight),
       );
       await card.getByRole("tab", { name: "Preview", exact: true }).click();
-      if (value === "loading") {
-        await card.locator('[data-kind-ui="chart-loading-skeleton"]').waitFor({ state: "visible" });
-        await card.getByRole("combobox", { name: bundle.variantControl }).click();
-        await page
-          .getByRole("option", { name: bundle.variants[bundle.defaultVariant].label, exact: true })
-          .click();
-        evidence.variants.push({ id, value, loading: "passed" });
-        continue;
-      }
+
       await card.locator(".recharts-bar-rectangle").first().waitFor();
-      await card.getByRole("button", { name: /Copy prompt|Copied/ }).click();
+      await card.locator("button.copy-prompt").click();
       const prompt = await page.evaluate(() => navigator.clipboard.readText());
       assert.ok(prompt.includes("/docs/components/bar/"));
       const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];

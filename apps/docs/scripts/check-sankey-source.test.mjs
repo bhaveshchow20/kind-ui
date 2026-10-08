@@ -43,7 +43,8 @@ for (const example of family.examples) {
       );
       assert.match(source, /nodeConfig=\{nodeConfig\}/);
       assert.match(source, /<Chart\.SankeyLegend config=\{nodeConfig\}/);
-      assert.doesNotMatch(source, /<Chart\.SankeyLink|animate=/);
+      assert.doesNotMatch(source, /<Chart\.SankeyLink/);
+      assert.match(source, /animate=\{\{ revealDurationMs: 900 \}\}/);
     } else {
       assert.equal(data.nodes.length, 9);
       assert.equal(data.links.length, 18);

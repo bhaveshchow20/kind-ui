@@ -1,5 +1,8 @@
 import { highlight } from "fumadocs-core/highlight";
+import { Callout } from "fumadocs-ui/components/callout";
 import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/glass/page";
 import defaultComponents from "fumadocs-ui/mdx";
 import Link from "next/link";
@@ -16,7 +19,15 @@ import {
 import { CopyMarkdown } from "./copy-markdown";
 import { MobileDocsNavigation } from "./glass-docs-layout";
 
-async function LineExample({ id }: { id: ComponentId }) {
+async function LineExample({
+  id,
+  variant,
+  instance,
+}: {
+  id: ComponentId;
+  variant?: string;
+  instance?: string;
+}) {
   const bundle = (bundles as unknown as Record<ComponentId, ComponentBundle>)[id];
   async function codeBlock(code: string) {
     return highlight(code, {
@@ -52,7 +63,9 @@ async function LineExample({ id }: { id: ComponentId }) {
     : undefined;
   return (
     <ComponentPlayground
-      key={id}
+      key={`${id}-${variant ?? "ready"}`}
+      fixedVariant={variant}
+      instance={instance}
       bundle={bundle}
       sourceCode={sourceCode}
       variantCode={variantCode}
@@ -93,13 +106,18 @@ export function renderDoc(slug?: string[]) {
               ChartExample: LineExample,
               AreaExample: LineExample,
               ApiTable,
+              Callout,
+              Steps,
+              Step,
+              Tabs,
+              Tab,
             }}
           />
         </DocsBody>
         {!key.startsWith("components/") && (
           <footer className="doc-footer">
             <span>Kind UI charts</span>
-            <Link href={docRoute("/docs/guides/release/")}>Package integration</Link>
+            <Link href={docRoute("/docs/installation/#upgrading")}>Installation and upgrades</Link>
           </footer>
         )}
       </article>

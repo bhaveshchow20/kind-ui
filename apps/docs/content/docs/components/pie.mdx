@@ -3,18 +3,26 @@ title: Pie and Donut
 description: Compare parts of a whole with pies, donuts and rounded sectors.
 ---
 
+Compare team allocation as slices of a shared total.
+
 <ChartExample id="pie" />
 
 ## Usage
 
+Open **Code** above for the complete example, including data and imports.
+
 Set `categoryKey` for stable slice colors and `innerRadius` for a donut.
 
-```tsx title="Composition"
-<Chart.Root config={config}>
+```tsx title="Composition sketch"
+<Chart.Root
+  config={config}
+  defaultVisibleSeries={Object.keys(config)}
+  interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
+>
   <Chart.Legend />
   <Chart.ResponsiveContainer width="100%" height={280}>
     <Chart.PieChart animate accessibilityLayer aria-label="Team allocation">
-      <Chart.PieSeries data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
+      <Chart.PieSeries interactionBinding="root" data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
         <Chart.LabelList dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
       </Chart.PieSeries>
       <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
@@ -23,9 +31,7 @@ Set `categoryKey` for stable slice colors and `innerRadius` for a donut.
 </Chart.Root>
 ```
 
-Use stable keys for config, `categoryKey`, `nameKey` and `Tooltip.itemKey`. Reordering rows preserves their configured colors. Pie has no configured wrapper or separate Donut export.
-
-Chart-owned angular entrance respects reduced motion. `animationDirection` changes the sweep, preserving final angles and data order.
+Use the same stable category IDs for config, slices and tooltips. Set `animationDirection` to choose the entrance sweep.
 
 ## Controlled categories
 
@@ -33,57 +39,29 @@ Toggle categories in the legend; the selected total updates with the visible sli
 
 <ChartExample id="pie-visibility" />
 
-For shared slice and legend actions, use `interactionBinding="root"` and category interaction. This example also shows an initial tooltip, selective glow and a loading state.
+Use `interactionBinding="root"` to share category actions between slices and legend.
 
 <ChartExample id="pie-interaction" />
 
-<details>
-<summary>Category interaction contract</summary>
+<Callout title="Category identities">Supply unique string IDs and complete `eligibleKeys`, including hidden and zero-valued categories. Without Root binding, filter rows yourself; `visibleSeries` alone does not hide slices.</Callout>
 
-Supply complete rows, unique nonempty string IDs and settled `eligibleKeys`, including hidden and zero-valued categories. Root binding filters rows and positional Cells together.
-
-Without binding, filter rows yourself; `visibleSeries` alone cannot hide Pie rows. Remaining slices use the selected total.
-
-`markActivation="matching-legend"` shares slice and legend actions. Focus highlights without filtering; Enter/Space activates and Escape resets.
-
-- Consumer handlers run first; `preventDefault()` or `interaction.onBeforeInteraction` may veto.
-- Actions use committed state and the original pressed row identity, even when a handler reorders data.
-- Cell paint/payload overrides and custom rendering remain consumer-owned. Keep a legend or explicit accessible controls.
-- The legend announces and rejects hiding the final eligible category. Explicit controls may set an empty selection.
-
-</details>
+Focus highlights a slice; Enter/Space activates it and Escape resets. The legend keeps at least one category visible; explicit controls can clear the selection. See [Root interaction](/docs/chart-components/root/) for controlled actions.
 
 ## Initial tooltip
 
 Set `defaultPinnedCategory="service"` to open the first tooltip on Service. It follows that ID when rows reorder.
 
-<details>
-<summary>Initial tooltip requirements and dismissal</summary>
-
-Use one direct PieSeries with explicit rows and `categoryKey`, plus one direct Tooltip with `itemKey`. Fragments are allowed; multiple series or other direct children are unsupported.
-
-- Bound charts locate pins among visible rows; unbound charts use consumer-rendered indices.
-- Hiding/removing the identity, pointer activity, focus or a key press dismisses the pin until remount. Restoration or changed defaults do not repin.
-- Unknown IDs never pin. Ambiguous duplicates clear unbound pins; Root binding rejects duplicate IDs.
-- Explicit Tooltip `active` and `defaultIndex` retain control. Pins do not change Root focus or selective glow.
-
-</details>
-
-## Loading
-
-Choose Loading in the example above. `loading` preserves layout, blocks inspection and announces `loadingLabel`. Empty data is a separate state; provide an empty-result message.
+<Callout title="Initial tooltip">Use one direct category-keyed `PieSeries` and one `Tooltip` with `itemKey`. Inspection or hiding the category dismisses the initial pin until remount; explicit tooltip state takes precedence.</Callout>
 
 ## Materials
 
-Start with Default, then switch to Clay or Glow. Percentage labels stay inside; category names stay in the legend.
+Labels show each category’s share of the original 1,000 hours, even when categories are hidden.
 
 <ChartExample id="pie-materials" />
 
 ### Selective glow
 
-Use `glowCategories={["design"]}` for a Design halo. IDs follow reorder/filtering; unknown IDs are ignored.
-
-An empty list keeps the series material; `material="glow"` decorates every default sector.
+Use `glowCategories={["design"]}` to decorate a specific category.
 
 ```tsx title="Selected category on a rounded donut"
 <Chart.PieSeries
@@ -95,13 +73,11 @@ An empty list keeps the series material; `material="glow"` decorates every defau
   outerRadius={108}
   cornerRadius={8}
   paddingAngle={2}
-    glowCategories={["design"]}
+  glowCategories={["design"]}
 />
 ```
 
-Keep category labels, a data table and readable fills in each theme. Glow does not indicate selection.
-
-Cell/datum paint, custom/active shapes, filters and CSS transforms retain ownership. `categoryKey` requires explicit data and configured string IDs, including with native fill.
+Glow is decorative; keep category labels and readable fills.
 
 ## Rounded and petal sectors
 
@@ -111,28 +87,17 @@ Choose rounded sectors or petals with native `cornerRadius` and `paddingAngle`.
 
 Switch Geometry to compare the finishes.
 
-<details>
-<summary>Geometry constraints</summary>
+<Callout title="Sector spacing">Use finite, nonnegative values and `0 <= innerRadius < outerRadius`. Keep total padding below the sweep. Narrow sectors may lose rounding; full circles have no rounded ends.</Callout>
 
-- Values and radii must be finite and nonnegative, with `0 <= innerRadius < outerRadius`.
-- Numeric corner radii use SVG units and clamp to half the ring thickness. Narrow sectors may fall back to ordinary corners.
-- Full-circle sectors have no rounded ends. Petal shapes depend on data proportions and available angles; they are not guaranteed for every dataset.
+## Loading State
 
-| Geometry | Constraint |
-| --- | --- |
-| Sweep | Angles are degrees; absolute sweep caps at 360. Equal start/end angles paint nothing. |
-| Padding | For `n` positive categories, full circles reserve `n * paddingAngle`; partial sweeps reserve `(n - 1) * paddingAngle`. |
-| Proportions | Keep padding nonnegative and its total strictly below the sweep; use `minAngle={0}`. Recheck spacing after filtering/data changes. |
-| Single row | Native Pie ignores padding. |
-| Zero values | No visible share. Retain zeros in the data alternative; do not enlarge them into petals. |
+Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
-These examples render final geometry with `animate={false}`. If entrance animation is enabled, Kind's existing reduced-motion and custom-shape ownership contracts still apply.
-
-</details>
+<ChartExample id="pie" variant="loading" />
 
 ## API reference
 
-Focused props for explicit Pie composition; upstream links cover native options.
+Configure the angular plot and its category-valued series.
 
 ### PieChart
 
@@ -153,7 +118,7 @@ Use inside a sized `ResponsiveContainer`.
 
 </div>
 
-`PieAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. Changing these or direction during entrance finishes it. Per-series animation is disabled. See [Recharts PieChart](https://recharts.github.io/en-US/api/PieChart/).
+`PieAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. See [Recharts PieChart](https://recharts.github.io/en-US/api/PieChart/).
 
 ### PieSeries
 
@@ -171,7 +136,7 @@ Value and category identity use separate fields.
 | `innerRadius` | `number` or percentage | `0` | A positive radius produces a Donut. |
 | `outerRadius` | `number` or percentage | `"80%"` | Sector size; percentages use Recharts' available radius. |
 | `startAngle` / `endAngle` | `number` | `0` / `360` | Native angular geometry in degrees. |
-| `paddingAngle` | `number` | `0` | Native gap in degrees; see geometry constraints above. |
+| `paddingAngle` | `number` | `0` | Native gap in degrees; keep total padding below the angular sweep. |
 | `cornerRadius` | `number \| string` | `0` | Native rounded sector corners; numeric units are recommended here. |
 | `material` | `"clay" \| "glow"` | Omitted | Finish on default sectors; consumer rendering can take precedence. |
 | `glowCategories` | `readonly string[]` | Off | Category IDs receiving glow instead of `material`; requires `categoryKey` and explicit data. Unknown IDs are ignored. |
@@ -180,10 +145,17 @@ Value and category identity use separate fields.
 
 </div>
 
-Explicit series fill disables category defaults; datum/Cell fill wins. Custom shapes, filters and transforms retain rendering control and may bypass Kind paint.
-
-Filter rows yourself or bind to Root; `PieSeries` has no `seriesKey`. See [Recharts Pie](https://recharts.github.io/en-US/api/Pie/).
+Explicit series fill overrides config colors; datum/Cell fill wins. Custom rendering may bypass materials. See [Recharts Pie](https://recharts.github.io/en-US/api/Pie/).
 
 ## Shared components
 
-[Root](/docs/chart-components/root/), [SeriesConfig](/docs/chart-components/series-config/), [Labels and cells](/docs/chart-components/labels/), [Legend](/docs/chart-components/legend/), [Tooltip](/docs/chart-components/tooltip/), [ResponsiveContainer](/docs/chart-components/responsive-container/).
+Keep slice identities, legend actions and tooltip formatting aligned with these components.
+
+| Component | Purpose |
+| --- | --- |
+| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
+| [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
+| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

@@ -21,7 +21,7 @@ export function MaterialRadarChart({
   appearance?: "default" | "clay" | "glow";
 } = {}) {
   return (
-    <Chart.Root config={config}>
+    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.RadarChart

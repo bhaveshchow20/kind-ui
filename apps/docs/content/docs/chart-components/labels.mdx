@@ -5,9 +5,13 @@ description: Add value labels, custom chart text and per-item color.
 
 Kind exports Recharts' `LabelList`, `Label` and `Cell` directly. Use them within the chart or series supported by Recharts.
 
+This doughnut chart uses LabelList for shares of the original total and Cell for slice colors.
+
+<ChartExample id="pie-materials" variant="default" />
+
 ## LabelList
 
-Nest `LabelList` inside a series to label its marks. `dataKey` selects the label value; `position`, `offset` and `content` control placement and rendering.
+Nest `LabelList` inside a series. Choose the value with `dataKey` and its placement with `position` and `offset`.
 
 ```tsx
 <Chart.LineSeries dataKey="orders">
@@ -21,13 +25,13 @@ See [Recharts LabelList](https://recharts.github.io/en-US/api/LabelList/).
 
 ## Label
 
-Use `Label` for axis titles or custom center content. Its `content` callback lets you draw SVG text using the supplied geometry. Check that custom text fits at narrow widths.
+Use `Label` for axis titles or center text; `content` supports custom SVG rendering.
 
 See [Recharts Label](https://recharts.github.io/en-US/api/Label/).
 
 ## Cell
 
-Nest `Cell` inside a supported series to override paint per item. Keep Cells in the same order as the rows passed to that series, including after filtering.
+Nest `Cell` inside a supported series to set each item's color. Keep Cells in the same order as the series data, including after filtering.
 
 ```tsx
 <Chart.PieSeries data={data} dataKey="value" nameKey="category">
@@ -35,4 +39,4 @@ Nest `Cell` inside a supported series to override paint per item. Keep Cells in 
 </Chart.PieSeries>
 ```
 
-Custom paint can override a Kind material's finish; see the chart family's material guidance. See [Recharts Cell](https://recharts.github.io/en-US/api/Cell/) for supported props.
+See [Recharts Cell](https://recharts.github.io/en-US/api/Cell/) for supported props and the chart family's material guidance for custom paint.

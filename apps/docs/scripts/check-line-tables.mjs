@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { chromium } from "@playwright/test";
+import { referenceTitle } from "../lib/api-reference.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const browser = await chromium.launch();
@@ -12,9 +13,23 @@ try {
   const tables = desktop.locator(".line-props-scroll");
   assert.deepEqual(
     await tables.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label"))),
-    ["LineChart props", "LineSeries props"],
+    [
+      "LineChart props",
+      "LineSeries props",
+      ...[
+        "LinePresentationReference",
+        "AreaPresentationReference",
+        "BackgroundPatternReference",
+      ].map((name) => `${referenceTitle(name)} props`),
+    ],
   );
   for (let i = 0; i < (await tables.count()); i++) {
+    assert.deepEqual(await tables.nth(i).locator("thead th").allTextContents(), [
+      "Prop",
+      "Type",
+      "Default",
+      "Description",
+    ]);
     await tables.nth(i).scrollIntoViewIfNeeded();
     const box = await tables.nth(i).boundingBox();
     await desktop.mouse.move(box.x + 80, Math.max(150, Math.min(800, box.y + 100)));
@@ -59,7 +74,7 @@ try {
     assert.ok(await table.evaluate((node) => node.scrollWidth > node.clientWidth));
   }
   console.log(
-    "Both Line API tables chain wheel/touch; mobile horizontal scrolling retained; neutral heading/footer checks passed.",
+    "All Line API tables chain wheel/touch; mobile horizontal scrolling retained; neutral heading/footer checks passed.",
   );
 } finally {
   await browser.close();

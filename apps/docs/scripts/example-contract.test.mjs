@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { allExamples, examples, families, variantDefinitions } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
@@ -51,9 +51,10 @@ test("Introduction is the first Get Started page at the preserved docs root", ()
   const start = JSON.parse(readFileSync("content/docs/start/meta.json", "utf8"));
   assert.equal(root.pages[0], "start");
   assert.ok(!root.pages.includes("index"));
+  assert.ok(!root.pages.includes("agents"));
   assert.deepEqual(start, {
     title: "Get Started",
-    pages: ["../index", "../installation", "../quickstart"],
+    pages: ["../index", "../installation", "../quickstart", "../agents/consumer"],
   });
   assert.match(readFileSync("content/docs/index.mdx", "utf8"), /^title: Introduction$/m);
   assert.match(readFileSync("public/markdown/index.md", "utf8"), /^# Introduction\n/);
@@ -110,7 +111,7 @@ test("private package bytes match validation without public provenance or archiv
 
 test("Line snippets are standalone public consumers with a shared data alternative", () => {
   const lines = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
-  assert.equal(Object.keys(lines).length, 5);
+  assert.equal(Object.keys(lines).length, 7);
   for (const bundle of Object.values(lines)) {
     const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
     const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)].map((match) => match[1]);
@@ -119,7 +120,10 @@ test("Line snippets are standalone public consumers with a shared data alternati
       `${bundle.id}: ${imports}`,
     );
     assert.ok(!Object.keys(bundle.files).some((file) => /settings\.ts|controls\.tsx/.test(file)));
-    assert.ok(bundle.dataAlternative.rows.length >= 7);
+    assert.ok(
+      bundle.dataAlternative.rows.length >=
+        (["line-presentation", "line-start"].includes(bundle.id) ? 4 : 7),
+    );
     assert.deepEqual(filesFor(bundle, {}), bundle.files);
   }
   const basic = lines.line.files["src/examples/line/example.tsx"];
@@ -258,4 +262,40 @@ test("internal checks preserve the locked fixture across all public variants", (
     }
   }
   assert.equal(JSON.stringify(completeBundles), before);
+});
+
+test("page Markdown keeps selected examples and readable presentation fallbacks", () => {
+  const pages = readdirSync("content/docs", { recursive: true }).filter((file) =>
+    file.endsWith(".mdx"),
+  );
+  const index = readFileSync("public/llms.txt", "utf8");
+  for (const file of pages) {
+    const key = file.replace(/\.mdx$/, "");
+    const mdx = readFileSync(`content/docs/${file}`, "utf8");
+    const markdown = readFileSync(`public/markdown/${key}.md`, "utf8");
+    assert.doesNotMatch(markdown, /<(?:Steps|Step|Tabs|Tab|Callout|ChartExample|ApiTable)\b/, key);
+    for (const [, id, variant] of mdx.matchAll(
+      /<ChartExample id="([\w-]+)"(?: variant="([\w-]+)")?/g,
+    )) {
+      const bundle = completeBundles[id];
+      const source = variant
+        ? bundle.variants[variant].source
+        : bundle.files[`src/examples/${id}/example.tsx`];
+      assert.ok(markdown.includes(source.trimEnd()), `${key}: ${id}:${variant ?? "default"}`);
+    }
+    if (mdx.includes("<ApiTable"))
+      assert.ok(markdown.includes("| Prop | Type | Default | Description |"), key);
+  }
+  assert.equal((index.match(/^- /gm) ?? []).length, pages.length);
+  for (const [alias, canonical] of [
+    ["concepts/composition", "quickstart"],
+    ["guides/release", "installation"],
+  ]) {
+    assert.equal(
+      readFileSync(`public/markdown/${alias}.md`, "utf8"),
+      readFileSync(`public/markdown/${canonical}.md`, "utf8"),
+    );
+    assert.ok(!index.includes(`/markdown/${alias}.md`));
+  }
+  assert.match(readFileSync("public/markdown/installation.md", "utf8"), /#### Next\.js/);
 });

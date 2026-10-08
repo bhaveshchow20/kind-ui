@@ -35,7 +35,11 @@ export function RoundedAllocationChart({
   const petal = geometry === "petal-donut";
   const pie = geometry === "rounded-pie";
   return (
-    <Chart.Root config={config}>
+    <Chart.Root
+      config={config}
+      defaultVisibleSeries={Object.keys(config)}
+      interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
+    >
       <Chart.Legend aria-label="Allocation categories" />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.PieChart
@@ -44,6 +48,7 @@ export function RoundedAllocationChart({
           aria-label={`${pie ? "Rounded pie" : petal ? "Petal donut" : "Rounded donut"}: team allocation, 1,000 hours`}
         >
           <Chart.PieSeries
+            interactionBinding="root"
             data={data}
             dataKey="hours"
             nameKey="key"
