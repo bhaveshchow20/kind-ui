@@ -346,6 +346,10 @@ function EntranceSector({
       persistent={interactionKey !== undefined}
       enabled={
         enabled &&
+        !wholeHidden &&
+        (interactionKey === undefined ||
+          interaction.visible === undefined ||
+          interaction.visible.includes(String(semantic))) &&
         (interactionKey === undefined || interaction.eligible.includes(String(semantic))) &&
         (emphasisKey !== undefined ? semantic !== undefined : typeof semantic === "string")
       }

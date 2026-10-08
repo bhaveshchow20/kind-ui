@@ -372,7 +372,6 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
               : {})}
             {...(effectiveHide
               ? {
-                  tooltipType: "none" as const,
                   activeBar: false as const,
                 }
               : {})}

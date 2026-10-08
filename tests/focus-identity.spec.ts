@@ -111,7 +111,6 @@ for (const family of ["line", "area", "combo"]) {
       { series: "first", row: "A", value: 15 },
       { series: "second", row: "A", value: 80 },
     ]);
-    const survivor = payload.find((entry: { series: string }) => entry.series === "second");
     await hide.click();
     await page.waitForTimeout(250);
     await page.mouse.move(box.x + 65, box.y + 100);
@@ -119,7 +118,10 @@ for (const family of ["line", "area", "combo"]) {
       plot.locator(
         '[data-kind-ui="chart-tooltip-item"][data-series="first"] [data-kind-ui="tooltip-number-final"]',
       ),
-    ).toHaveCount(0);
+    ).toContainText("15");
+    await expect(
+      plot.locator('[data-kind-ui="chart-tooltip-item"][data-series="first"]'),
+    ).toHaveCSS("opacity", "0.28");
     await expect(
       plot.locator(
         '[data-kind-ui="chart-tooltip-item"][data-series="second"] [data-kind-ui="tooltip-number-final"]',
@@ -129,7 +131,7 @@ for (const family of ["line", "area", "combo"]) {
       JSON.parse(
         (await plot.locator("[data-native-payload]").getAttribute("data-native-payload")) ?? "[]",
       ),
-    ).toEqual([survivor]);
+    ).toEqual(payload);
   });
 }
 const marks = {
@@ -306,3 +308,121 @@ test("hide and dim retain an active legend/data identity through keyboard and el
     await expect(plot.locator("output")).toHaveAttribute("data-visible", "[]");
   }
 });
+
+for (const family of ["line", "area", "bar", "combo", "radar"]) {
+  test(`${family}: inactive legend hover preserves focus and all original tooltip entries`, async ({
+    page,
+  }) => {
+    await page.goto(`/?only=series&family=${family}&static`);
+    const plot = page.locator(`#${family}`);
+    const first = plot.locator('[data-legend-key="first"]');
+    const second = plot.locator('[data-legend-key="second"]');
+    const paints = plot.locator(
+      '[data-series="first"] > [data-kind-ui="series-interaction-paint"]',
+    );
+    await second.click();
+    await page.mouse.move(0, 0);
+    await expect(paints).toHaveCSS("opacity", "0.28");
+    await first.hover();
+    await expect(paints).toHaveCSS("opacity", "0.28");
+    await expect(second).toHaveAttribute("aria-pressed", "true");
+    await expect(first.locator("..")).toHaveCSS("opacity", "0.28");
+    const inactiveMark = plot
+      .locator('[data-kind-ui="series-interaction"][data-series="first"] path')
+      .first();
+    await inactiveMark.dispatchEvent("pointerenter", { pointerType: "mouse" });
+    await inactiveMark.dispatchEvent("pointermove", { pointerType: "mouse" });
+    await expect(paints).toHaveCSS("opacity", "0.28");
+    await expect(
+      plot.locator('[data-series="second"] > [data-kind-ui="series-interaction-paint"]'),
+    ).toHaveCSS("opacity", "1");
+    // Inactive entries are still keyboard-operable.
+    await first.focus();
+    await page.keyboard.press("Enter");
+    await page.mouse.move(0, 0);
+    await expect(paints).toHaveCSS("opacity", "1");
+    await plot.getByRole("button", { name: "External hide", exact: true }).click();
+    await first.hover();
+    await expect(paints).toHaveCSS("opacity", "0");
+    await expect(first).toHaveAttribute("data-inactive", "true");
+    await expect(plot.locator('[data-kind-ui="chart-legend-button"]')).toHaveCount(2);
+    if (family !== "radar") {
+      const box = await plot.locator(".recharts-surface").boundingBox();
+      if (!box) throw new Error("Missing chart bounds");
+      await page.mouse.move(box.x + 65, box.y + 100);
+      await expect(plot.locator('[data-kind-ui="chart-tooltip-item"]')).toHaveCount(2);
+      await expect(
+        plot.locator('[data-kind-ui="chart-tooltip-item"][data-series="first"]'),
+      ).toHaveCSS("opacity", "0.28");
+      await expect(
+        plot.locator('[data-kind-ui="chart-tooltip-item"][data-series="first"]'),
+      ).toContainText("15");
+      await expect(
+        plot.locator('[data-kind-ui="chart-tooltip-item"][data-series="second"]'),
+      ).toContainText("80");
+    }
+  });
+}
+
+for (const family of ["histogram", "waterfall", "box-plot"]) {
+  test(`${family}: explicit hide fades original geometry and legend guards an active item`, async ({
+    page,
+  }) => {
+    await page.goto(`/?only=derived&family=${family}`);
+    const plot = page.locator(`#derived-${family}`);
+    const first = plot.locator('[data-kind-ui="series-interaction"][data-series="first"]');
+    const paint = first.locator(':scope > [data-kind-ui="series-interaction-paint"]');
+    await expect(paint).toHaveCSS("opacity", "1");
+    await page.waitForTimeout(700);
+    const geometry = () =>
+      plot
+        .locator(
+          '[data-kind-ui="series-interaction"] path, [data-kind-ui="series-interaction"] rect, [data-kind-ui="series-interaction"] line, [data-kind-ui="series-interaction"] circle',
+        )
+        .evaluateAll((nodes) =>
+          nodes.map((node) =>
+            ["d", "x", "y", "width", "height", "x1", "x2", "y1", "y2", "cx", "cy", "r"].map(
+              (attribute) => node.getAttribute(attribute),
+            ),
+          ),
+        );
+    const baseline = await geometry();
+    expect(baseline.length).toBeGreaterThan(0);
+    if (family === "box-plot") await plot.locator('[data-legend-key="first"]').click();
+    const remaining = plot.locator(
+      `[data-legend-key="${family === "box-plot" ? "second" : "first"}"]`,
+    );
+    await remaining.focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Space");
+    await expect(plot.locator("output")).toHaveAttribute(
+      "data-visible",
+      family === "box-plot" ? '["second"]' : '["first"]',
+    );
+    await expect(
+      plot.locator('[data-kind-ui="chart-legend-button"]:not([data-inactive="true"])'),
+    ).toHaveCount(1);
+    if (family === "box-plot") await plot.locator('[data-legend-key="first"]').click();
+    // An intentional consumer empty array remains allowed for single-dataset plots.
+    for (let repeat = 0; repeat < 2; repeat++) {
+      await plot.getByRole("button", { name: "External hide", exact: true }).click();
+      await expect(first).toHaveAttribute("pointer-events", "none");
+      await expect(paint).toHaveCSS("opacity", "0");
+      expect(await geometry()).toEqual(baseline);
+      await expect(plot.locator('[data-kind-ui="chart-legend-button"]')).toHaveCount(
+        family === "box-plot" ? 2 : 1,
+      );
+      await plot.getByRole("button", { name: "External hide", exact: true }).click();
+      await expect(paint).toHaveCSS("opacity", "1");
+      expect(await geometry()).toEqual(baseline);
+    }
+    await plot.getByRole("button", { name: "Change mode" }).click();
+    await remaining.focus();
+    await page.keyboard.press("Space");
+    await page.mouse.move(0, 0);
+    await expect(
+      plot.locator('[data-kind-ui="chart-legend-button"]:not([data-inactive="true"])'),
+    ).not.toHaveCount(0);
+    expect(await geometry()).toEqual(baseline);
+  });
+}

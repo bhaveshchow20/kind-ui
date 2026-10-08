@@ -4,8 +4,9 @@ import { type ComponentPropsWithRef, type ReactNode, use } from "react";
 import type { TooltipContentProps as NativeContentProps } from "recharts";
 import { Tooltip, type TooltipProps } from "./animation.js";
 import { useChart } from "./chart-context.js";
+import { useChartInteraction } from "./chart-interaction.js";
 import { LineInteraction } from "./line-chart.js";
-import type { TooltipContentProps } from "./tooltip-content.js";
+import { type TooltipContentProps, TooltipItem } from "./tooltip-content.js";
 import { TooltipNumber } from "./tooltip-number.js";
 
 export type ScatterSizeDimension<Row = unknown> = {
@@ -39,18 +40,10 @@ export function ScatterTooltipContent<Row = unknown>({
 }: ScatterTooltipContentProps<Row>) {
   const { config, visibleSeries } = useChart();
   const interaction = use(LineInteraction);
+  const focus = useChartInteraction();
   const seriesIdentity = (id: string | undefined) =>
     id ? (interaction?.seriesKeys.get(id) ?? id) : undefined;
-  let entries = tooltip.active
-    ? tooltip.payload.filter((entry) => {
-        const series = seriesIdentity(entry.graphicalItemId);
-        return (
-          !entry.hide &&
-          entry.type !== "none" &&
-          (visibleSeries === undefined || (series !== undefined && visibleSeries.includes(series)))
-        );
-      })
-    : [];
+  let entries = tooltip.active ? tooltip.payload.filter((entry) => entry.type !== "none") : [];
   const first = entries[0];
   if (
     zDimension &&
@@ -110,7 +103,14 @@ export function ScatterTooltipContent<Row = unknown>({
       hasValue = true;
     }
     return (
-      <li
+      <TooltipItem
+        inactive={Boolean(
+          entry.hide ||
+            (entry.graphicalItemId && interaction?.hiddenItems.get(entry.graphicalItemId)) ||
+            (visibleSeries !== undefined &&
+              (series === undefined || !visibleSeries.includes(series))) ||
+            (focus.selected !== null && series !== undefined && focus.selected !== series),
+        )}
         key={`${entry.graphicalItemId ?? "point"}-${dimension}`}
         data-kind-ui="chart-tooltip-item"
         data-dimension={key}
@@ -126,7 +126,7 @@ export function ScatterTooltipContent<Row = unknown>({
             value
           )}
         </strong>
-      </li>
+      </TooltipItem>
     );
   });
   if (!hasValue) return null;

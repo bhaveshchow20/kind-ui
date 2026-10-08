@@ -1,7 +1,9 @@
 "use client";
 
+import { motion } from "motion/react";
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { Symbols } from "recharts";
+import { useInteractionOpacity } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction } from "./chart-interaction.js";
 import { useEmphasis } from "./emphasis.js";
@@ -102,7 +104,13 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
           <LegendItem
             key={key}
             seriesKey={key}
-            enabled={emphasis === "series" && visible && interaction.eligible.includes(key)}
+            enabled={
+              emphasis === "series" &&
+              visible &&
+              interaction.eligible.includes(key) &&
+              (interaction.selected === null || interaction.selected === key)
+            }
+            inactive={!visible || (interaction.selected !== null && interaction.selected !== key)}
             interactive={interaction.interactive && interaction.eligible.includes(key)}
           >
             {interaction.interactive && interaction.eligible.includes(key) ? (
@@ -132,23 +140,28 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
   );
 }
 
-function LegendItem({
+export function LegendItem({
   seriesKey,
   enabled,
   interactive,
+  inactive,
   children,
 }: {
   seriesKey: string;
   enabled: boolean;
   interactive: boolean;
+  inactive: boolean;
   children: ReactNode;
 }) {
   const emphasis = useEmphasis(
     { kind: "series", key: seriesKey, scope: "legend", seriesKey },
     enabled,
   );
+  const opacity = useInteractionOpacity(inactive ? 0.28 : 1);
   return (
-    <li
+    <motion.li
+      initial={false}
+      style={{ opacity }}
       data-kind-ui="chart-legend-item"
       data-series={seriesKey}
       tabIndex={enabled && !interactive ? 0 : undefined}
@@ -166,6 +179,6 @@ function LegendItem({
       }}
     >
       {children}
-    </li>
+    </motion.li>
   );
 }

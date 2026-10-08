@@ -123,7 +123,7 @@ export function LineSeries<
           {...(props.label !== undefined
             ? { label: visibilityLabel(props.label, effectiveHide, undefined, key) }
             : {})}
-          {...(effectiveHide ? { tooltipType: "none" as const, activeDot: false as const } : {})}
+          {...(effectiveHide ? { activeDot: false as const } : {})}
           {...(color !== undefined ? { stroke: color } : {})}
           className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className]
             .filter(Boolean)

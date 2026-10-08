@@ -23,7 +23,7 @@ Click an item to focus it and dim peers. Focus preserves geometry, visibility an
 Explicit Root `interaction.mode="visibility"` enables hide/show using controlled visibility or `defaultVisibleSeries`. Keyboard users can activate items with Enter or Space and reset focus with Escape.
 
 <Callout type="info">
-In explicit visibility mode, the legend keeps at least one available item visible. Hidden items remain selectable; unavailable items appear as labels. Configure visibility and focus on [Root](/docs/chart-components/root/).
+Both modes retain an active legend item and its data: focus keeps the selected item active, clearing focus restores all, and visibility refuses to hide the last available item. Dimmed and hidden entries stay in place and remain selectable; unavailable items appear as labels. Configure visibility and focus on [Root](/docs/chart-components/root/).
 </Callout>
 
 ## Markers and content
@@ -47,4 +47,4 @@ Customize item content with the render callback. Keep it noninteractive so the l
 
 <ApiTable name="Legend" compact />
 
-Use `emphasis="series"` for hover or keyboard-focus highlighting in supported families. Scatter supports emphasis through explicit Root focus.
+Use `emphasis="series"` for hover or keyboard-focus highlighting of active entries in supported families. Hovering a dimmed or hidden legend entry or chart mark does not highlight its data; tooltip inspection and synchronized pointer movement continue. Click or use Enter/Space to restore it. Scatter supports emphasis through explicit Root focus.

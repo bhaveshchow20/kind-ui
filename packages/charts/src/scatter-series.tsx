@@ -150,7 +150,7 @@ export function ScatterSeries({
             {...(props.label !== undefined
               ? { label: visibilityLabel(props.label, hidden, undefined, key) }
               : {})}
-            {...(hidden ? { tooltipType: "none" as const, activeShape: false as const } : {})}
+            {...(hidden ? { activeShape: false as const } : {})}
             {...(color !== undefined ? { fill: color } : {})}
             zIndex={0}
             isAnimationActive={false}

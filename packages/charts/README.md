@@ -337,7 +337,9 @@ Focus accepts either `selected` with required `onSelectionChange`, or
 never writes selection. Invalid uncontrolled selection clears without a callback.
 An invalid controlled ID paints no selection and resumes if that ID becomes valid.
 Explicit `interaction={{ kind: "series", mode: "visibility", eligibleKeys }}` enables legend hide/show using `visibleSeries`/`onVisibleSeriesChange`, or opt-in
-`defaultVisibleSeries`. An externally empty visibility value remains valid.
+`defaultVisibleSeries`. Legend actions always retain at least one active eligible item: focus leaves the selected item active, clearing focus restores all, and visibility refuses to hide the last item. An externally empty visibility value remains valid.
+
+Legend and tooltip entries retain their original labels, values and order when their data is dimmed or hidden; inactive entries dim rather than disappear. Chart-mark and legend hover emphasize only active entries; inactive data retains its disabled paint while tooltip and synchronized pointer movement continue. Dimmed and hidden legend entries remain clickable and keyboard operable to restore. Interaction fades honor chart `animate` and reduced motion.
 
 For categories, use `kind: "category"` and explicitly set
 `interactionBinding="root"` on `PieSeries` or `RadialBarChart`, with `categoryKey`
@@ -709,7 +711,7 @@ are outside this contract; missing category data/identity or multiple direct
 series, duplicate/missing Tooltips, or unsupported direct children throw when resolving a pin.
 
 The category string is captured on mount. Reorder resolves its current index;
-unknown, duplicate, removed, hidden, or filtered categories clear the default
+unknown, duplicate, removed, or filtered categories clear the default
 permanently. Restoring rows or changing the default prop does not re-pin; remount
 explicitly to begin again. Pointer movement/down, focus, and any chart key press
 clear the default and hand inspection/dismissal back to Recharts. Escape never

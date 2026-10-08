@@ -6,4 +6,4 @@ Make legend and mark activation focus and dim peers by default without changing 
 
 Hide now suppresses paint and interaction while retaining full-data layout contributions, so surviving domains, stack baselines, grouped slots, radial allocations and pie angles remain unchanged. Category visibility retains original rows and native pointer indices.
 
-Fade dim/restore and hide/show paint in both directions using chart motion controls, retarget interrupted fades from current opacity, and suppress hidden hits, accessibility and tooltip entries immediately. Clearing focus keeps legend items visually active.
+Fade dim/restore and hide/show paint in both directions using chart motion controls, retarget interrupted fades from current opacity, and suppress hidden mark hits and accessibility immediately. Legend and tooltip entries retain original values and order, dim inactive entries, and restore smoothly. Disabled data stays disabled during chart or legend hover while pointer inspection continues. Clearing focus keeps legend items visually active. Both hiding and dimming retain an active legend item and its data.

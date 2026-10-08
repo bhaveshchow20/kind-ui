@@ -19,7 +19,6 @@ import {
   useChartHeight,
   useChartWidth,
 } from "recharts";
-import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { PieTooltipPin } from "./pie-tooltip-pin.js";
 import { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
@@ -86,27 +85,9 @@ function PositionedContent({
   frameRef: TooltipProps["ref"];
   Frame: (props: TooltipFrameProps) => ReactNode;
 }) {
-  const { pointer, seriesKeys, categoryKeys, hiddenItems } = useLineInteraction();
-  const { visibleSeries } = useChart();
-  // Exiting strokes can remain painted briefly; hidden series leave all tooltip content immediately.
-  const payload = tooltip.payload.filter((entry) => {
-    if (
-      entry.type === "none" ||
-      entry.hide ||
-      (entry.graphicalItemId && hiddenItems.get(entry.graphicalItemId))
-    )
-      return false;
-    if (visibleSeries === undefined) return true;
-    const key =
-      itemKey?.(entry) ??
-      (entry.graphicalItemId
-        ? categoryKeys.get(entry.graphicalItemId)?.(Number(tooltip.activeIndex))
-        : undefined) ??
-      (entry.graphicalItemId ? seriesKeys.get(entry.graphicalItemId) : undefined) ??
-      String(entry.dataKey ?? entry.name);
-    return visibleSeries.includes(key);
-  });
-  const contentProps = { ...tooltip, payload };
+  const { pointer } = useLineInteraction();
+  // Native inspection retains all original rows; default content dims inactive entries.
+  const contentProps = tooltip;
   const width = useChartWidth() ?? 0;
   const height = useChartHeight() ?? 0;
   const [node, setNode] = useState<HTMLDivElement | null>(null);

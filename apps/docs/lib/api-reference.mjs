@@ -2,10 +2,19 @@
 // Defaults below describe the candidate public implementations.
 const presentation = {
   Root: {
-    defaults: { emphasis: '"auto"', interaction: "Series focus; matching-legend marks" },
+    defaults: {
+      emphasis: '"auto"',
+      interaction: "Series focus; matching-legend marks",
+      visibleSeries: "All registered items",
+      defaultVisibleSeries: "All registered items",
+    },
     descriptions: {
       interaction:
-        'Focus dims peers by default and supported marks share legend actions. Set mode to "visibility" for visual hide/show with preserved full-data layout, or markActivation to "none" for passive marks.',
+        'Focus dims peers by default and supported marks share legend actions. Set mode to "visibility" for visual hide/show with preserved full-data layout, or markActivation to "none" for passive marks. Explicit bindings require kind and eligibleKeys; selected requires onSelectionChange. Legend actions retain an active item.',
+      visibleSeries:
+        "Controlled visibility; provide onVisibleSeriesChange for legend hide/show. Hidden data retains its geometry and dimmed legend/tooltip entries.",
+      defaultVisibleSeries:
+        "Initial uncontrolled visibility; mutually exclusive with visibleSeries. Use explicit visibility interaction for legend hide/show.",
     },
   },
   LoadingReference: {

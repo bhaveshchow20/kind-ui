@@ -241,14 +241,19 @@ test("upstream formatter, tuple label and label formatter remain usable", () => 
   assert.match(html, /Custom day/);
   assert.match(html, /Custom/);
 });
-test("hidden, type-none, inactive and consumer-hidden entries are omitted", () => {
-  assert.doesNotMatch(content([entry(9, { hide: true })]), /9 tasks/);
+test("hidden entries retain dimmed values; type-none and inactive tooltips are omitted", () => {
+  assert.match(
+    content([entry(9, { hide: true })]),
+    /data-inactive="true"[^>]*style="opacity:0.28"/,
+  );
+  assert.match(content([entry(9, { hide: true })]), /9 tasks/);
   assert.doesNotMatch(content([entry(9, { type: "none" })]), /9 tasks/);
   assert.doesNotMatch(content([entry(9)], { active: false }), /9 tasks/);
   const html = render(
     h(Root, { config, visibleSeries: [] }, h(TooltipContent, { tooltip: tooltip([entry(9)]) })),
   );
-  assert.doesNotMatch(html, /9 tasks/);
+  assert.match(html, /9 tasks/);
+  assert.match(html, /data-inactive="true"[^>]*style="opacity:0.28"/);
 });
 test("content preserves live-region semantics and forwards DOM props", () => {
   const html = content([entry(4)]);
@@ -360,7 +365,10 @@ test("scatter dimensions keep point identity, signed and zero values, native uni
     /0 units/,
   );
   assert.match(scatterContent(payload), /role="status"/);
-  assert.doesNotMatch(scatterContent(payload, {}, { visibleSeries: [] }), /chart-tooltip/);
+  assert.match(
+    scatterContent(payload, {}, { visibleSeries: [] }),
+    /data-inactive="true"[^>]*style="opacity:0.28"/,
+  );
   assert.match(scatterContent(payload, {}, { visibleSeries: ["alpha"] }), /0 ms/);
 });
 test("scatter default content does not fabricate omitted dimensions or coerce missing into zero", () => {
@@ -458,7 +466,7 @@ test("category itemKey resolves metadata, zero, formatting and visibility indepe
   assert.match(renderCategory(["category"]), /Category label/);
   assert.match(renderCategory(["category"]), /0 members/);
   assert.match(renderCategory(["category"]), /data-series="category"/);
-  assert.doesNotMatch(renderCategory(["count"]), /chart-tooltip/);
+  assert.match(renderCategory(["count"]), /data-inactive="true"[^>]*style="opacity:0.28"/);
   assert.doesNotMatch(renderCategory(["category"]), /itemKey=/);
 });
 
@@ -901,9 +909,9 @@ test("category itemKey resolves icon, formatting, zero and hidden state together
   assert.match(html, /data-series="count"/);
   assert.match(html, /data-icon="task"/);
   assert.match(html, /0 tasks/);
-  assert.doesNotMatch(
+  assert.match(
     render(h(Root, { config: iconConfig, visibleSeries: [] }, h(TooltipContent, props))),
-    /chart-tooltip/,
+    /data-inactive="true"[^>]*style="opacity:0.28"/,
   );
 });
 
@@ -1964,9 +1972,9 @@ test("tooltip projection status respects missing, hidden and formatter ownership
     content([entry(null, { payload: { id: "p" } })]),
     /chart-tooltip|projection-status/,
   );
-  assert.doesNotMatch(
+  assert.match(
     content([entry(5, { hide: true, payload: { id: "p" } })]),
-    /chart-tooltip|projection-status/,
+    /data-inactive="true"[^>]*style="opacity:0.28"/,
   );
   assert.doesNotMatch(
     content([entry(5, { payload: { id: "p" } })], { formatter: () => null }),

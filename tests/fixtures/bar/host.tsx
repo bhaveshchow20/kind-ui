@@ -177,13 +177,13 @@ export function BarHost() {
           kind: "series",
           mode: "visibility",
           eligibleKeys: Object.keys({
-            value: { label: "Value", color: "#246", formatValue: (v) => `${v} units` },
+            value: { label: "Value", color: "#246", formatValue: (v: unknown) => `${v} units` },
             other: { label: "Other", color: "#682" },
             alias: { label: "Alias", color: "#682" },
           }),
         }}
         config={{
-          value: { label: "Value", color: "#246", formatValue: (v) => `${v} units` },
+          value: { label: "Value", color: "#246", formatValue: (v: unknown) => `${v} units` },
           other: { label: "Other", color: "#682" },
           alias: { label: "Alias", color: "#682" },
         }}

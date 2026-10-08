@@ -21,6 +21,7 @@ import {
   useChartHeight,
   useChartWidth,
 } from "recharts";
+import { RegisterInteractionMotion } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useEmphasisActions } from "./emphasis.js";
 import type { LoadingAnimation } from "./loading-motion.js";
@@ -290,6 +291,7 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         registerCategoryKeys,
       }}
     >
+      <RegisterInteractionMotion enabled={motionEnabled === true} />
       <div
         ref={frame}
         aria-busy={loading}

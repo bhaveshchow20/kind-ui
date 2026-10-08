@@ -35,6 +35,13 @@ test("Sankey focus fades both directions and reverses without replaying geometry
   // Reverse again before restoration completes.
   await toggle();
   await expect(wind).toHaveCSS("opacity", "0.28");
+  await plot.locator('[data-node-key="wind"]').hover();
+  await expect(wind).toHaveCSS("opacity", "0.28");
+  await plot
+    .locator('[data-kind-ui="sankey-focus-mark"][data-node="wind"]')
+    .dispatchEvent("pointerenter", { pointerType: "mouse" });
+  await expect(wind).toHaveCSS("opacity", "0.28");
+  await page.mouse.move(0, 0);
   await toggle();
   await expect.poll(opacity, { intervals: [10], timeout: 1000 }).toBeGreaterThan(0.28);
   expect(await opacity()).toBeLessThan(1);

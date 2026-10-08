@@ -21,7 +21,7 @@ export function SankeyFocusMark({
   const key = nodeKey ?? endpoints?.[0] ?? "";
   const emphasis = useEmphasis({ kind: "series", key, scope: "sankey", seriesKey: key });
   const inspected = emphasis.active?.kind === "series" ? emphasis.active.key : null;
-  const focus = inspected ?? interaction.selected;
+  const focus = interaction.selected ?? inspected;
   const related =
     focus === null ||
     (nodeKey !== undefined

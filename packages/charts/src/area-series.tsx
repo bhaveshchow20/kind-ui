@@ -119,7 +119,6 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
             {...(props.label !== undefined
               ? { label: visibilityLabel(props.label, effectiveHide, undefined, key) }
               : {})}
-            {...(effectiveHide ? { tooltipType: "none" as const } : {})}
             activeDot={
               effectiveHide
                 ? false

@@ -15,6 +15,7 @@ import {
   useCallback,
   useId,
   useLayoutEffect,
+  useMemo,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -58,6 +59,44 @@ export type LineChartProps = StaticLineChartProps & {
 };
 const defaultHover: Transition = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 };
 export const MotionContext = createContext({ enabled: false, transition: defaultHover });
+type InteractionMotion = { enabled: boolean; transition: Transition };
+const staticMotion: InteractionMotion = { enabled: false, transition: defaultHover };
+const MotionRegistration = createContext<{
+  register: (owner: string, motion: InteractionMotion) => () => void;
+} | null>(null);
+
+/** Share the participating chart's motion controls with its sibling legend. */
+export function InteractionMotionRoot({ children }: { children: ReactNode }) {
+  const [charts, setCharts] = useState(() => new Map<string, InteractionMotion>());
+  const register = useCallback((owner: string, settings: InteractionMotion) => {
+    setCharts((current) =>
+      current.get(owner) === settings ? current : new Map(current).set(owner, settings),
+    );
+    return () =>
+      setCharts((current) => {
+        if (!current.has(owner)) return current;
+        const next = new Map(current);
+        next.delete(owner);
+        return next;
+      });
+  }, []);
+  const actions = useMemo(() => ({ register }), [register]);
+  const settings = [...charts.values()].find((chart) => chart.enabled) ?? staticMotion;
+  return (
+    <MotionRegistration value={actions}>
+      <MotionContext value={settings}>{children}</MotionContext>
+    </MotionRegistration>
+  );
+}
+export function RegisterInteractionMotion({ enabled }: { enabled: boolean }) {
+  const registration = use(MotionRegistration);
+  const { transition } = use(MotionContext);
+  const owner = useId();
+  const settings = useMemo(() => ({ enabled, transition }), [enabled, transition]);
+  useLayoutEffect(() => registration?.register(owner, settings), [registration, owner, settings]);
+  return null;
+}
+
 const query = "(prefers-reduced-motion: reduce)";
 function subscribe(change: () => void) {
   const media = window.matchMedia(query);
@@ -141,6 +180,18 @@ export function InteractionPaintScope({ children }: { children: ReactNode }) {
 }
 
 /** Retarget paint from its current opacity without changing native data or geometry. */
+export function useInteractionOpacity(opacity: number, identity?: string) {
+  const { enabled, transition } = use(MotionContext);
+  const values = use(PaintOpacity);
+  const value = useAnimatedCoordinate(
+    opacity,
+    enabled,
+    transition,
+    identity === undefined ? undefined : values?.get(identity),
+  );
+  if (identity !== undefined && values && !values.has(identity)) values.set(identity, value);
+  return value;
+}
 export function InteractionPaint({
   opacity,
   identity,
@@ -152,15 +203,7 @@ export function InteractionPaint({
   children: ReactNode;
   "data-kind-ui"?: string | undefined;
 }) {
-  const { enabled, transition } = use(MotionContext);
-  const values = use(PaintOpacity);
-  const value = useAnimatedCoordinate(
-    opacity,
-    enabled,
-    transition,
-    identity === undefined ? undefined : values?.get(identity),
-  );
-  if (identity !== undefined && values && !values.has(identity)) values.set(identity, value);
+  const value = useInteractionOpacity(opacity, identity);
   return (
     <motion.g data-kind-ui={kind} initial={false} style={{ opacity: value }}>
       {children}

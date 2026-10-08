@@ -13,7 +13,6 @@ import {
 } from "react";
 import { PieChart as EnginePieChart } from "recharts";
 import { type BaseAnimation, MotionContext } from "./animation.js";
-import { useChart } from "./chart-context.js";
 import { LineChartFrame } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
 
@@ -60,16 +59,13 @@ export function PieChart({
   defaultPinnedCategory,
   ...props
 }: PieChartProps) {
-  const { visibleSeries } = useChart();
   const [initialCategory] = useState(defaultPinnedCategory);
   const [pinCleared, setPinCleared] = useState(false);
   const clearPin = useCallback(() => setPinCleared(true), []);
   const pinIndex =
     initialCategory === undefined || pinCleared
       ? undefined
-      : visibleSeries !== undefined && !visibleSeries.includes(initialCategory)
-        ? undefined
-        : pinnedPieIndex(children, initialCategory, visibleSeries);
+      : pinnedPieIndex(children, initialCategory);
   useLayoutEffect(() => {
     if (initialCategory !== undefined && pinIndex === undefined) clearPin();
   }, [initialCategory, pinIndex, clearPin]);

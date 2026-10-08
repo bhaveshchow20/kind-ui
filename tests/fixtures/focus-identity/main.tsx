@@ -2,6 +2,7 @@ import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
+import { DerivedHide } from "./derived-hide";
 import { PieHideFixture } from "./pie-hide";
 import { PolarHideCases } from "./polar-hide";
 import { StandaloneFocus } from "./standalone-focus";
@@ -126,9 +127,13 @@ function Case({ family, explicit = false }: { family: string; explicit?: boolean
               <Chart.YAxis domain={[0, 100]} />
             </>
           )}
-          {order.map((key) => (
-            <Series key={key} dataKey={key} dot={true} />
-          ))}
+          {order.map((key) =>
+            family === "combo" && key === "first" ? (
+              <Chart.BarSeries key={key} dataKey={key} />
+            ) : (
+              <Series key={key} dataKey={key} dot={true} />
+            ),
+          )}
           <Chart.Tooltip
             content={(props) => (
               <>
@@ -203,6 +208,7 @@ createRoot(root).render(
     {(!only || only === "docs") && <DocsCases />}
     {(!only || only === "polar") && <PolarHideCases />}
     {(!only || only === "pie") && <PieHideFixture />}
+    {only === "derived" && testFamily && <DerivedHide family={testFamily} />}
     {(!only || only === "standalone") && <StandaloneFocus />}
     {(!only || only === "configured") && (
       <Chart.LineChart

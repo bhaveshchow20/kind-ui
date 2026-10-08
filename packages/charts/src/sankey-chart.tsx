@@ -24,7 +24,7 @@ import {
   useChartHeight,
   useChartWidth,
 } from "recharts";
-import { MotionContext } from "./animation.js";
+import { MotionContext, RegisterInteractionMotion } from "./animation.js";
 import { useOptionalChartInteraction } from "./chart-interaction.js";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
 import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
@@ -268,6 +268,7 @@ export function SankeyChart({
             : motion.transition,
       }}
     >
+      <RegisterInteractionMotion enabled={enabled} />
       <SankeyColors value={nodeConfig}>
         <SankeyMotion value={{ reveal, progress, width: size?.width ?? 1 }}>
           <div

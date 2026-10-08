@@ -49,7 +49,7 @@ const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config)
 </Chart.Root>
 ```
 
-For uncontrolled visibility, set `defaultVisibleSeries={Object.keys(config)}`. The default legend focuses and dims; only explicit visibility mode toggles hidden items.
+For uncontrolled visibility, set `defaultVisibleSeries={Object.keys(config)}`. The default legend focuses and dims; only explicit visibility mode toggles hidden items. Both modes keep at least one eligible legend item and its data active. Consumer-controlled empty visibility remains valid.
 
 <Callout title="Note">Explicit visibility-mode legend actions keep at least one eligible item visible. Consumer-controlled visibility can still hide every item; provide an empty-result message.</Callout>
 
