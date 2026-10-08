@@ -59,69 +59,56 @@ function BrandPill({
 
   return (
     <span className="brand-pill-slot">
-      <span className="brand-pill-reserve" aria-hidden="true">
-        {names.map((name) => (
-          <span className="brand-pill-reserve-option" key={name}>
-            <span className="brand-pill-option">
-              <BrandIcon name={name} />
-              {name}
-            </span>
-            {punctuation}
-          </span>
-        ))}
-      </span>
-      <span className="brand-pill-visible">
-        <motion.button
-          ref={buttonRef}
-          animate={{ width: width ?? "auto" }}
-          transition={
-            reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }
-          }
-          className={`brand-pill brand-pill-${group}`}
-          type="button"
-          aria-label={
-            group === "agent"
-              ? "Switch agent: Codex, Claude, Gemini, Grok, or your agents"
-              : `Switch between ${names.join(" and ")}`
-          }
-          onClick={() => onAdvance(group)}
-          onMouseEnter={() => {
-            hovered.current = true;
-            onPause(group, true);
-          }}
-          onMouseLeave={() => {
-            hovered.current = false;
-            onPause(group, focused.current);
-          }}
-          onFocus={() => {
-            focused.current = true;
-            onPause(group, true);
-          }}
-          onBlur={() => {
-            focused.current = false;
-            onPause(group, hovered.current);
-          }}
-        >
-          <span ref={measureRef} className="brand-pill-sizer" aria-hidden="true">
+      <motion.button
+        ref={buttonRef}
+        animate={{ width: width ?? "auto" }}
+        transition={
+          reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }
+        }
+        className={`brand-pill brand-pill-${group}`}
+        type="button"
+        aria-label={
+          group === "agent"
+            ? "Switch agent: Codex, Claude, Gemini, Grok, or your agents"
+            : `Switch between ${names.join(" and ")}`
+        }
+        onClick={() => onAdvance(group)}
+        onMouseEnter={() => {
+          hovered.current = true;
+          onPause(group, true);
+        }}
+        onMouseLeave={() => {
+          hovered.current = false;
+          onPause(group, focused.current);
+        }}
+        onFocus={() => {
+          focused.current = true;
+          onPause(group, true);
+        }}
+        onBlur={() => {
+          focused.current = false;
+          onPause(group, hovered.current);
+        }}
+      >
+        <span ref={measureRef} className="brand-pill-sizer" aria-hidden="true">
+          <BrandIcon name={names[index]} />
+          {names[index]}
+        </span>
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.span
+            key={names[index]}
+            className="brand-pill-face"
+            initial={reduceMotion ? false : { y: "55%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={reduceMotion ? { opacity: 0 } : { y: "-55%", opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
             <BrandIcon name={names[index]} />
             {names[index]}
-          </span>
-          <AnimatePresence initial={false} mode="popLayout">
-            <motion.span
-              key={names[index]}
-              className="brand-pill-face"
-              initial={reduceMotion ? false : { y: "55%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={reduceMotion ? { opacity: 0 } : { y: "-55%", opacity: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <BrandIcon name={names[index]} />
-              {names[index]}
-            </motion.span>
-          </AnimatePresence>
-        </motion.button>
-        {punctuation}
-      </span>
+          </motion.span>
+        </AnimatePresence>
+      </motion.button>
+      {punctuation}
     </span>
   );
 }
@@ -189,7 +176,10 @@ export function HeroHeadline() {
     >
       <span className="hero-sentence">Interactive charts for {pill("framework", ",")}</span>
       <span className="hero-sentence">
-        built on {pill("stack")} and ready for {pill("agent", ".")}
+        <span className="hero-stack-phrase">built on {pill("stack")}</span> and{" "}
+        <span className="hero-agent-phrase">
+          <span className="hero-ready-words">ready for</span> {pill("agent", ".")}
+        </span>
       </span>
     </h1>
   );

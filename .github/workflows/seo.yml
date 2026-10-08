@@ -48,3 +48,14 @@ jobs:
       - run: npm exec playwright install -- --with-deps chromium
       - run: npm run test:browser -- tests/routes.spec.ts
         working-directory: apps/showcase
+      - name: Check hero flow, fonts, and reduced motion
+        run: npm run test:browser -- tests/headline-layout.spec.ts tests/headline-font.spec.ts --project=chromium
+        working-directory: apps/showcase
+      - name: Retain continuous hero motion evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: homepage-motion-${{ matrix.deployment }}
+          path: apps/showcase/test-results/
+          if-no-files-found: warn
+          retention-days: 14
