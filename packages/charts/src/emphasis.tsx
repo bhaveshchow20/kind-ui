@@ -228,7 +228,11 @@ export function EmphasisMark({
         props.onBlurCapture?.(event);
       }}
     >
-      <InteractionPaint data-kind-ui="emphasis-paint" opacity={emphasis.factor}>
+      <InteractionPaint
+        data-kind-ui="emphasis-paint"
+        opacity={emphasis.factor}
+        identity={JSON.stringify(["emphasis", target.kind, target.scope, target.key])}
+      >
         {children}
       </InteractionPaint>
     </g>

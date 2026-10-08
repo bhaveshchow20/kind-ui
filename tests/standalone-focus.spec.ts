@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("Sankey focus fades both directions and reverses without replaying geometry", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=standalone");
   const plot = page.locator("#standalone-sankey");
   const wind = plot.locator(
     '[data-kind-ui="sankey-focus-mark"][data-node="wind"] > [data-kind-ui="interaction-paint"]',
@@ -58,7 +58,7 @@ test("Sankey focus fades both directions and reverses without replaying geometry
 test("Sankey interrupted hover, node activation and legend focus preserve keyed layout and raw flows", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=standalone");
   const plot = page.locator("#standalone-sankey");
   const nodes = plot.locator('[data-kind-ui="sankey-focus-mark"][data-node]');
   const links = plot.locator('[data-kind-ui="sankey-focus-mark"][data-source]');
@@ -133,7 +133,7 @@ test("Sankey interrupted hover, node activation and legend focus preserve keyed 
 test("Heatmap repeated and interrupted pointer/focus preserve tuple identity, geometry and raw values", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=standalone");
   const plot = page.locator("#standalone-heatmap");
   const cells = plot.getByRole("gridcell");
   await expect(cells).toHaveCount(4);

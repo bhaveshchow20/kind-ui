@@ -28,7 +28,7 @@ import {
   Sector,
   Text,
 } from "recharts";
-import { InteractionPaint } from "./animation.js";
+import { InteractionPaint, InteractionPaintScope } from "./animation.js";
 import { type CategoryKey, categoryCells, preserveCategoryRows } from "./category-cells.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction, useInteractionFocus } from "./chart-interaction.js";
@@ -71,14 +71,18 @@ type SectorPaintProps = Omit<
 
 const PieHidden = createContext(false);
 
-// Read visibility inside native shapes so changing it never replaces the native
-// animation input or the Motion node that owns the current fade position.
+// Visibility follows original category identity even when native reconciliation
+// replaces a paint node; its fade value lives in the enclosing series scope.
 function PieCategoryPaint({
   category,
+  index,
+  paintRole = "sector",
   children,
   emphasis = false,
 }: {
   category: string | undefined;
+  index?: number | undefined;
+  paintRole?: string;
   children: ReactNode;
   emphasis?: boolean;
 }) {
@@ -100,7 +104,12 @@ function PieCategoryPaint({
       pointerEvents={hidden ? "none" : undefined}
       aria-hidden={hidden || undefined}
     >
-      <InteractionPaint opacity={hidden ? 0 : focus.factor}>{children}</InteractionPaint>
+      <InteractionPaint
+        opacity={hidden ? 0 : focus.factor}
+        identity={JSON.stringify([paintRole, category ?? index])}
+      >
+        {children}
+      </InteractionPaint>
     </g>
   );
 }
@@ -679,7 +688,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
             />
           );
         return (
-          <PieCategoryPaint category={key} emphasis={option !== undefined}>
+          <PieCategoryPaint category={key} index={index} emphasis={option !== undefined}>
             {shape}
           </PieCategoryPaint>
         );
@@ -698,8 +707,10 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     const option = props.label;
     if (!option) return {};
     const labelLine = props.labelLine ?? true;
-    const paint = (index: number | undefined, content: ReactNode) => (
+    const paint = (index: number | undefined, content: ReactNode, paintRole = "label") => (
       <PieCategoryPaint
+        index={index}
+        paintRole={paintRole}
         category={index === undefined ? undefined : interactionKey?.(index)}
         emphasis
       >
@@ -805,7 +816,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
                   className={`recharts-pie-label-line ${lineOptions.className ?? ""}`}
                 />
               );
-              return paint(native.index, content);
+              return paint(native.index, content, "label-line");
             },
           }
         : { labelLine: false }),
@@ -813,7 +824,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
   }, [props.label, props.labelLine, interactionKey]);
   const paintedChildren = useMemo(() => {
     function paint(parts: ReactNode): ReactNode {
-      return Children.map(parts, (child) => {
+      return Children.map(parts, (child, childIndex) => {
         if (!isValidElement<ComponentProps<typeof LabelList> & { children?: ReactNode }>(child))
           return child;
         if (child.type === Fragment) return cloneElement(child, {}, paint(child.props.children));
@@ -822,6 +833,8 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
         return cloneElement(child, {
           content: (native: ComponentProps<typeof Label>) => (
             <PieCategoryPaint
+              index={native.index}
+              paintRole={`label-list:${child.key ?? childIndex}`}
               category={native.index === undefined ? undefined : interactionKey?.(native.index)}
               emphasis
             >
@@ -866,24 +879,26 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     previous.current = inputs;
   });
   return (
-    <PieHidden value={hide === true}>
-      <StablePie<DataPoint, Value>
-        {...nativeProps}
-        {...pointerHandlers}
-        id={nativeId}
-        hide={false}
-        {...boundLabels}
-        {...(data !== undefined ? { data } : {})}
-        {...(onClick !== undefined ? { onClick } : {})}
-        stroke={props.stroke ?? "none"}
-        shape={boundShapes.shape}
-        activeShape={boundShapes.activeShape}
-        inactiveShape={boundShapes.inactiveShape}
-        isAnimationActive={false}
-      >
-        {paintedChildren}
-      </StablePie>
-    </PieHidden>
+    <InteractionPaintScope>
+      <PieHidden value={hide === true}>
+        <StablePie<DataPoint, Value>
+          {...nativeProps}
+          {...pointerHandlers}
+          id={nativeId}
+          hide={false}
+          {...boundLabels}
+          {...(data !== undefined ? { data } : {})}
+          {...(onClick !== undefined ? { onClick } : {})}
+          stroke={props.stroke ?? "none"}
+          shape={boundShapes.shape}
+          activeShape={boundShapes.activeShape}
+          inactiveShape={boundShapes.inactiveShape}
+          isAnimationActive={false}
+        >
+          {paintedChildren}
+        </StablePie>
+      </PieHidden>
+    </InteractionPaintScope>
   );
 }
 registerPiePinComponent(PieSeries, "series");

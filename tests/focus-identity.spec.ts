@@ -5,7 +5,7 @@ for (const family of ["line", "area", "bar", "combo", "radar"]) {
   test(`${family}: repeated and interrupted focus retains series geometry and identity`, async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto(`/?only=series&family=${family}`);
     const plot = page.locator(`#${family}`);
     await expect(plot.locator(geometry)).not.toHaveCount(0);
     await page.waitForTimeout(900);
@@ -65,7 +65,7 @@ for (const family of ["line", "area", "combo"]) {
   test(`${family}: explicit hide/show and interrupted show preserve surviving data and pointer payload`, async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto(`/?only=series&family=${family}`);
     const plot = page.locator(`#${family}`);
     await expect(plot.locator(geometry)).not.toHaveCount(0);
     await page.waitForTimeout(900);
@@ -148,7 +148,7 @@ const marks = {
 };
 for (const [family, selector] of Object.entries(marks)) {
   test(`${family} docs: legend focus preserves all plotted geometry`, async ({ page }) => {
-    await page.goto("/");
+    await page.goto(`/?only=docs&doc=${family}`);
     const card = page.locator(`#docs-${family}`);
     await expect(card.locator(selector)).not.toHaveCount(0);
     await card.scrollIntoViewIfNeeded();
@@ -190,7 +190,7 @@ for (const [family, selector] of Object.entries(marks)) {
 test("configured line default focuses; quantitative Heatmap legend stays static", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=configured");
   const card = page.locator(".kind-ui-configured-line-root").last();
   await expect(card.locator(".recharts-line-curve")).toHaveCount(2);
   const baseline = await card
@@ -202,12 +202,13 @@ test("configured line default focuses; quantitative Heatmap legend stays static"
       .locator(".recharts-line-curve")
       .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("d"))),
   ).toEqual(baseline);
+  await page.goto("/?only=docs&doc=heatmap");
   await expect(page.locator('#docs-heatmap [data-kind-ui="heatmap-legend"] button')).toHaveCount(0);
 });
 
 for (const family of ["line", "area", "bar", "combo", "radar"]) {
   test(`${family}: dim and hide fade bidirectionally without geometry replay`, async ({ page }) => {
-    await page.goto("/");
+    await page.goto(`/?only=series&family=${family}`);
     const plot = page.locator(`#${family}`);
     const paint = plot.locator('[data-series="first"] > [data-kind-ui="series-interaction-paint"]');
     await expect(paint).toHaveCSS("opacity", "1");
@@ -253,7 +254,7 @@ for (const family of ["line", "area", "bar", "combo", "radar"]) {
   for (const control of ["reduce", "static"]) {
     test(`${family}: ${control} skips interaction fades`, async ({ page }) => {
       if (control === "reduce") await page.emulateMedia({ reducedMotion: "reduce" });
-      await page.goto(control === "static" ? "/?static" : "/");
+      await page.goto(`/?only=series&family=${family}${control === "static" ? "&static" : ""}`);
       const plot = page.locator(`#${family}`);
       const paint = plot.locator(
         '[data-series="first"] > [data-kind-ui="series-interaction-paint"]',
@@ -271,7 +272,7 @@ for (const family of ["line", "area", "bar", "combo", "radar"]) {
 test("hide and dim retain an active legend/data identity through keyboard and eligibility changes", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=guard");
   for (const mode of ["focus", "visibility"]) {
     const plot = page.locator(`#guard-${mode}`);
     const first = plot.locator('[data-legend-key="first"]');

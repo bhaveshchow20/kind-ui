@@ -4,6 +4,9 @@ import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { LabelList } from "recharts";
 
+const query = new URLSearchParams(location.search);
+const testFamily = query.get("family");
+const visibility = query.get("visibility");
 const config = {
   first: { label: "First", color: "red" },
   second: { label: "Second", color: "blue" },
@@ -109,9 +112,11 @@ function Case({ family, native }: { family: string; native: boolean }) {
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
 createRoot(root).render(
-  ["line", "area", "bar-grouped", "bar-stacked", "scatter"].flatMap((family) =>
-    [false, true].map((native) => (
-      <Case key={`${family}/${native}`} family={family} native={native} />
-    )),
-  ),
+  ["line", "area", "bar-grouped", "bar-stacked", "scatter"]
+    .filter((family) => !testFamily || family === testFamily)
+    .flatMap((family) =>
+      [false, true]
+        .filter((native) => !visibility || visibility === (native ? "native" : "root"))
+        .map((native) => <Case key={`${family}/${native}`} family={family} native={native} />),
+    ),
 );

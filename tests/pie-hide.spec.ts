@@ -16,7 +16,7 @@ async function paintOpacity(mark: Locator) {
 test("Pie hide preserves original angles, sector identity and pointer rows during entrance", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=pie");
   const chart = page.locator("#pie-hide");
   const sectors = chart.locator('[data-kind-ui="pie-sector"]');
   await expect(sectors).toHaveCount(3);
@@ -44,7 +44,7 @@ test("Pie hide preserves original angles, sector identity and pointer rows durin
 test("Pinned second category retains native index 1 with first category hidden", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=pie");
   const chart = page.locator("#pie-pin-hidden");
   const payload = chart.locator("output");
   await expect(payload).toHaveText("second:30");
@@ -58,7 +58,7 @@ test("Pinned second category retains native index 1 with first category hidden",
 test("Bound Pie default Tooltip resolves original category metadata without itemKey", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=pie");
   const item = page.locator('#pie-pin-default [data-kind-ui="chart-tooltip-item"]');
   await expect(item).toHaveAttribute("data-series", "second");
   await expect(item).toContainText("Second");
@@ -68,12 +68,13 @@ test("Bound Pie default Tooltip resolves original category metadata without item
 test("Pie hide/restore reverses the current fade without replacing geometry or restoring hidden hits", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=pie");
   const chart = page.locator("#pie-hide");
   const first = chart.locator('[data-kind-ui="pie-sector"]').first();
   await expect(first).toBeVisible();
   const path = await first.getAttribute("d");
-  await first.evaluate((node) => node.setAttribute("data-retained-pie", "true"));
+  const identity = await first.getAttribute("data-recharts-item-id");
+  const originalIndex = await first.getAttribute("data-recharts-item-index");
   await chart.getByRole("button", { name: "Hide first pie category" }).click();
   const gate = chart.locator('[data-kind-ui="pie-category-paint"][data-category="first"]').first();
   await expect(gate).toHaveAttribute("pointer-events", "none");
@@ -88,13 +89,14 @@ test("Pie hide/restore reverses the current fade without replacing geometry or r
   await page.waitForTimeout(200);
   expect(await paintOpacity(first)).toBeGreaterThan(reversed);
   await expect.poll(() => paintOpacity(first)).toBe(1);
-  await expect(first).toHaveAttribute("data-retained-pie", "true");
+  await expect(first).toHaveAttribute("data-recharts-item-id", identity ?? "");
+  await expect(first).toHaveAttribute("data-recharts-item-index", originalIndex ?? "");
   await expect(first).toHaveAttribute("d", path ?? "");
 });
 
 test("Pie visibility changes immediately with reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/?only=pie");
   const chart = page.locator("#pie-hide");
   const first = chart.locator('[data-kind-ui="pie-sector"]').first();
   await chart.getByRole("button", { name: "Hide first pie category" }).click();
@@ -106,7 +108,7 @@ test("Pie visibility changes immediately with reduced motion", async ({ page }) 
 test("Whole Pie hide fades sectors and ordinary labels while retaining angular slots", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=pie");
   const chart = page.locator("#pie-hide");
   const first = chart.locator('[data-kind-ui="pie-sector"]').first();
   const label = chart.locator(".recharts-pie-label-text").first();

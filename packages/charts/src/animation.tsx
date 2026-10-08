@@ -1,6 +1,12 @@
 "use client";
 
-import { animate as animateValue, motion, type Transition, useMotionValue } from "motion/react";
+import {
+  animate as animateValue,
+  type MotionValue,
+  motion,
+  type Transition,
+  useMotionValue,
+} from "motion/react";
 import {
   createContext,
   type ReactElement,
@@ -108,8 +114,14 @@ export function LineChart({
   );
 }
 // Stop the previous target before retargeting or snapping, without remounting consumer DOM.
-function useAnimatedCoordinate(target: number, enabled: boolean, transition: Transition) {
-  const value = useMotionValue(target);
+function useAnimatedCoordinate(
+  target: number,
+  enabled: boolean,
+  transition: Transition,
+  retained?: MotionValue<number>,
+) {
+  const local = useMotionValue(target);
+  const value = retained ?? local;
   useLayoutEffect(() => {
     if (!enabled) {
       value.set(target);
@@ -120,18 +132,35 @@ function useAnimatedCoordinate(target: number, enabled: boolean, transition: Tra
   }, [value, target, enabled, transition]);
   return value;
 }
-/** Retarget paint from its current opacity; geometry and native identities stay mounted. */
+const PaintOpacity = createContext<Map<string, MotionValue<number>> | null>(null);
+
+/** Own fade state outside native animation-key reconciliation. */
+export function InteractionPaintScope({ children }: { children: ReactNode }) {
+  const [values] = useState(() => new Map<string, MotionValue<number>>());
+  return <PaintOpacity value={values}>{children}</PaintOpacity>;
+}
+
+/** Retarget paint from its current opacity without changing native data or geometry. */
 export function InteractionPaint({
   opacity,
+  identity,
   children,
   "data-kind-ui": kind = "interaction-paint",
 }: {
   opacity: number;
+  identity?: string | undefined;
   children: ReactNode;
   "data-kind-ui"?: string | undefined;
 }) {
   const { enabled, transition } = use(MotionContext);
-  const value = useAnimatedCoordinate(opacity, enabled, transition);
+  const values = use(PaintOpacity);
+  const value = useAnimatedCoordinate(
+    opacity,
+    enabled,
+    transition,
+    identity === undefined ? undefined : values?.get(identity),
+  );
+  if (identity !== undefined && values && !values.has(identity)) values.set(identity, value);
   return (
     <motion.g data-kind-ui={kind} initial={false} style={{ opacity: value }}>
       {children}

@@ -17,7 +17,7 @@ import {
   useState,
 } from "react";
 import { DefaultZIndexes, Polygon, Radar, RadialBar, Sector, ZIndexLayer } from "recharts";
-import { ActiveMarker, InteractionPaint } from "./animation.js";
+import { ActiveMarker, InteractionPaint, InteractionPaintScope } from "./animation.js";
 import { categoryCells, preserveCategoryRows } from "./category-cells.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction, useInteractionFocus } from "./chart-interaction.js";
@@ -353,6 +353,11 @@ function RadialOwnedPaint({
       data-native-index={props.index}
     >
       <InteractionPaint
+        identity={JSON.stringify([
+          backgroundPaint ? "background" : "sector",
+          category ?? series.key,
+          props.index,
+        ])}
         opacity={
           hidden
             ? 0
@@ -579,67 +584,70 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
       }
     : interaction.onClick;
   return (
-    <RadialSeriesPaint
-      value={{
-        hidden: series.hide,
-        key: seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
-      }}
-    >
-      <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
-        {materialized && <PolarMaterialFilter material={material} id={filterId} />}
-        <SeriesInteractionLayer
-          seriesKey={seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)}
-          hidden={series.hide}
-        >
-          <motion.g
-            data-kind-ui="radial-bar-reveal"
-            initial={false}
-            pointerEvents={series.hide ? "none" : undefined}
+    <InteractionPaintScope>
+      <RadialSeriesPaint
+        value={{
+          hidden: series.hide,
+          key: seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
+        }}
+      >
+        <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
+          {materialized && <PolarMaterialFilter material={material} id={filterId} />}
+          <SeriesInteractionLayer
+            seriesKey={seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)}
+            hidden={series.hide}
           >
-            <RadialBar<DataPoint, Value>
-              {...props}
-              {...(onClick !== undefined ? { onClick } : {})}
-              shape={nativeShape}
-              {...(props.activeShape === undefined && !categories?.bound
-                ? {}
-                : props.activeShape === false
-                  ? { activeShape: false }
-                  : { activeShape: nativeActiveShape })}
-              {...(nativeBackground !== undefined ? { background: nativeBackground } : {})}
-              {...(materialized ? { filter: `url(#${filterId})` } : {})}
-              {...(props.label !== undefined
-                ? {
-                    label: visibilityLabel(
-                      props.label,
-                      series.hide,
-                      hiddenRows,
-                      seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
-                      labelCategoryKeys,
-                    ),
-                  }
-                : {})}
-              id={series.id}
-              hide={false}
-              isAnimationActive={false}
-              zIndex={0}
-              {...(fill !== undefined
-                ? { fill }
-                : series.color !== undefined
-                  ? { fill: series.color }
-                  : {})}
-              className={["kind-ui-radial-bar-series", className].filter(Boolean).join(" ")}
+            <motion.g
+              data-kind-ui="radial-bar-reveal"
+              initial={false}
+              pointerEvents={series.hide ? "none" : undefined}
             >
-              {visibilityLabelChildren(
-                children,
-                series.hide,
-                hiddenRows,
-                seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
-                labelCategoryKeys,
-              )}
-            </RadialBar>
-          </motion.g>
-        </SeriesInteractionLayer>
-      </ZIndexLayer>
-    </RadialSeriesPaint>
+              <RadialBar<DataPoint, Value>
+                {...props}
+                {...(onClick !== undefined ? { onClick } : {})}
+                shape={nativeShape}
+                {...(props.activeShape === undefined && !categories?.bound
+                  ? {}
+                  : props.activeShape === false
+                    ? { activeShape: false }
+                    : { activeShape: nativeActiveShape })}
+                {...(nativeBackground !== undefined ? { background: nativeBackground } : {})}
+                {...(materialized ? { filter: `url(#${filterId})` } : {})}
+                {...(props.label !== undefined
+                  ? {
+                      label: visibilityLabel(
+                        props.label,
+                        series.hide,
+                        hiddenRows,
+                        seriesKey ??
+                          (typeof props.dataKey === "string" ? props.dataKey : undefined),
+                        labelCategoryKeys,
+                      ),
+                    }
+                  : {})}
+                id={series.id}
+                hide={false}
+                isAnimationActive={false}
+                zIndex={0}
+                {...(fill !== undefined
+                  ? { fill }
+                  : series.color !== undefined
+                    ? { fill: series.color }
+                    : {})}
+                className={["kind-ui-radial-bar-series", className].filter(Boolean).join(" ")}
+              >
+                {visibilityLabelChildren(
+                  children,
+                  series.hide,
+                  hiddenRows,
+                  seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
+                  labelCategoryKeys,
+                )}
+              </RadialBar>
+            </motion.g>
+          </SeriesInteractionLayer>
+        </ZIndexLayer>
+      </RadialSeriesPaint>
+    </InteractionPaintScope>
   );
 }

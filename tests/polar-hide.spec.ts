@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 for (const family of ["radar", "radial", "activity"]) {
   test(`${family}: hide retains original layout and native mark identity`, async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/?only=polar");
     const plot = page.locator(`#polar-hide-${family}`);
     const marks = plot.locator(
       family === "radar" ? ".recharts-radar-polygon path" : ".recharts-radial-bar-sector",
@@ -86,7 +86,7 @@ for (const family of ["radar", "radial", "activity"]) {
 test("radial categories: keyboard visibility keeps the last visible mark and original slots", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?only=polar");
   const plot = page.locator("#polar-hide-activity-visibility");
   const marks = plot.locator(".recharts-radial-bar-sector");
   await expect(marks).toHaveCount(2);
@@ -114,7 +114,7 @@ for (const family of ["radar", "radial", "activity"]) {
   test(`${family}: hide/show reverses paint from current opacity without geometry replay`, async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/?only=polar");
     const plot = page.locator(`#polar-hide-${family}`);
     const marks = plot.locator(
       family === "radar" ? ".recharts-radar-polygon path" : ".recharts-radial-bar-sector",

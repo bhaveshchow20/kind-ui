@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "tests",
-  workers: 2,
+  workers: 1,
   testMatch: [
     "focus-identity.spec.ts",
     "polar-hide.spec.ts",

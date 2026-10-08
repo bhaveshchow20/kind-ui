@@ -30,6 +30,7 @@ function VisibilityLabel({
   hiddenRows,
   seriesKey,
   categoryKeys,
+  paintKey = "label",
   content: _nativeContent,
   ...props
 }: ComponentProps<typeof Label> & {
@@ -38,6 +39,7 @@ function VisibilityLabel({
   hiddenRows?: readonly boolean[] | undefined;
   seriesKey?: string | undefined;
   categoryKeys?: readonly string[] | undefined;
+  paintKey?: string;
 }) {
   const suppressed = hidden || (props.index !== undefined && hiddenRows?.[props.index] === true);
   const category = props.index === undefined ? undefined : categoryKeys?.[props.index];
@@ -62,7 +64,10 @@ function VisibilityLabel({
       pointerEvents={suppressed ? "none" : undefined}
       aria-hidden={suppressed || undefined}
     >
-      <InteractionPaint opacity={suppressed ? 0 : emphasis.factor}>
+      <InteractionPaint
+        opacity={suppressed ? 0 : emphasis.factor}
+        identity={JSON.stringify([paintKey, key, props.index])}
+      >
         <Label {...props} {...(option !== undefined ? { content: option } : {})} zIndex={0} />
       </InteractionPaint>
     </g>
@@ -108,7 +113,7 @@ export function visibilityLabelChildren(
   seriesKey?: string,
   categoryKeys?: readonly string[],
 ): ReactNode {
-  return Children.map(children, (child) => {
+  return Children.map(children, (child, childIndex) => {
     if (!isValidElement<ComponentProps<typeof LabelList> & { children?: ReactNode }>(child))
       return child;
     if (child.type === Fragment)
@@ -121,6 +126,7 @@ export function visibilityLabelChildren(
     return cloneElement(child, {
       content: (
         <VisibilityLabel
+          paintKey={`label-list:${child.key ?? childIndex}`}
           option={child.props.content}
           hidden={hidden}
           hiddenRows={hiddenRows}

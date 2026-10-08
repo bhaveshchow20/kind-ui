@@ -5,7 +5,7 @@ for (const family of ["line", "area", "bar-grouped", "bar-stacked", "scatter"]) 
     test(`${family} ${visibility} hiding retains independent geometry through interruptions`, async ({
       page,
     }) => {
-      await page.goto("/");
+      await page.goto(`/?family=${family}&visibility=${visibility}`);
       const chart = page.locator(`#${family}-${visibility}`);
       await chart.scrollIntoViewIfNeeded();
       const geometry = () =>
@@ -121,7 +121,9 @@ for (const family of ["line", "area", "bar-grouped", "bar-stacked", "scatter"]) 
   for (const mode of ["motion", "reduced", "disabled"]) {
     test(`${family} ${mode} paint fades reverse without geometry reset`, async ({ page }) => {
       if (mode === "reduced") await page.emulateMedia({ reducedMotion: "reduce" });
-      await page.goto(mode === "disabled" ? "/?animate=false" : "/");
+      await page.goto(
+        `/?family=${family}&visibility=root${mode === "disabled" ? "&animate=false" : ""}`,
+      );
       const chart = page.locator(`#${family}-root`);
       await chart.scrollIntoViewIfNeeded();
       await page.waitForTimeout(1200);

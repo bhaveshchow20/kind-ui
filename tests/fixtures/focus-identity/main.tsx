@@ -6,6 +6,10 @@ import { PieHideFixture } from "./pie-hide";
 import { PolarHideCases } from "./polar-hide";
 import { StandaloneFocus } from "./standalone-focus";
 
+const query = new URLSearchParams(location.search);
+const only = query.get("only");
+const testFamily = query.get("family");
+const docsFamily = query.get("doc");
 const config = {
   first: { label: "First", color: "#f00" },
   second: { label: "Second", color: "#00f" },
@@ -34,19 +38,21 @@ const families = [
 function DocsCases() {
   return (
     <>
-      {families.map((family) => {
-        const module = examples[`../../../apps/docs/examples/${family}/example.tsx`] as Record<
-          string,
-          React.ComponentType
-        >;
-        const Demo = Object.values(module)[0];
-        return (
-          <section id={`docs-${family}`} key={family} style={{ width: 600, minHeight: 320 }}>
-            <h2>{family} docs</h2>
-            <Demo />
-          </section>
-        );
-      })}
+      {families
+        .filter((family) => !docsFamily || family === docsFamily)
+        .map((family) => {
+          const module = examples[`../../../apps/docs/examples/${family}/example.tsx`] as Record<
+            string,
+            React.ComponentType
+          >;
+          const Demo = Object.values(module)[0];
+          return (
+            <section id={`docs-${family}`} key={family} style={{ width: 600, minHeight: 320 }}>
+              <h2>{family} docs</h2>
+              <Demo />
+            </section>
+          );
+        })}
     </>
   );
 }
@@ -187,24 +193,27 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
 createRoot(root).render(
   <>
-    {["line", "area", "bar", "combo", "radar"].map((family) => (
-      <Case key={family} family={family} />
-    ))}
-    <Case family="line" explicit />
-    <GuardCase mode="focus" />
-    <GuardCase mode="visibility" />
-    <DocsCases />
-    <PolarHideCases />
-    <PieHideFixture />
-    <StandaloneFocus />
-    <Chart.LineChart
-      data={rows}
-      config={config}
-      xDataKey="category"
-      aria-label="Configured focus"
-      width={500}
-      height={240}
-      animate={true}
-    />
+    {(!only || only === "series") &&
+      ["line", "area", "bar", "combo", "radar"]
+        .filter((family) => !testFamily || family === testFamily)
+        .map((family) => <Case key={family} family={family} />)}
+    {!only && <Case family="line" explicit />}
+    {(!only || only === "guard") && <GuardCase mode="focus" />}
+    {(!only || only === "guard") && <GuardCase mode="visibility" />}
+    {(!only || only === "docs") && <DocsCases />}
+    {(!only || only === "polar") && <PolarHideCases />}
+    {(!only || only === "pie") && <PieHideFixture />}
+    {(!only || only === "standalone") && <StandaloneFocus />}
+    {(!only || only === "configured") && (
+      <Chart.LineChart
+        data={rows}
+        config={config}
+        xDataKey="category"
+        aria-label="Configured focus"
+        width={500}
+        height={240}
+        animate={true}
+      />
+    )}
   </>,
 );
