@@ -100,6 +100,12 @@ function assertRelease(w) {
     w.jobs.plan.steps.find((s) => s.id === "intent").run,
     "node scripts/release-intent.mjs",
   );
+  assert.equal(w.on.workflow_dispatch.inputs.release_commit.default, "");
+  assert.equal(w.on.workflow_dispatch.inputs.release_commit.required, false);
+  assert.equal(
+    w.jobs.plan.steps.find((s) => s.id === "intent").env.RELEASE_COMMIT,
+    expression("inputs.release_commit"),
+  );
   assert.equal(w.jobs.validate.strategy, undefined);
   for (const job of Object.values(w.jobs)) {
     assert.equal(

@@ -67,7 +67,13 @@ ambiguous result, inspect the public version and integrity before retrying.
 For a failure before npm publication, rerun all jobs of the original workflow;
 run-attempt guards reject stale artifacts. Once npm contains the version, the
 intent skips publication on an all-jobs rerun.
-A dispatch of a later ordinary main commit is validation only.
+A dispatch of a later ordinary main commit is validation only unless an authorized
+release-tooling recovery supplies both the exact `version` and original version
+merge's full `release_commit` SHA. Recovery requires that commit to be an ancestor
+of current main, with unchanged package files, manifest and reviewed policy. It
+reconstructs the exact consumed Changesets plan from the reachable version commit,
+including coordinated stacks, and reruns full validation before publication.
+No credentials, publishing permissions or artifact guards change for recovery.
 
 ## GitHub release and recovery
 

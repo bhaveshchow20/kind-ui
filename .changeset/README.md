@@ -34,11 +34,13 @@ never accepts arbitrary stable versions. The version PR includes that policy,
 its source version and consumed changeset IDs alongside the manifest, changelog
 and lockfile. Review them together. No changesets means no version change.
 
-After the version PR merges, the release workflow reconstructs the previous main
-Changesets plan and requires an exact match. Ordinary main merges do not publish.
-Manual dispatch can rehearse the current reviewed version; recover a failed
-version merge by rerunning its original workflow, rather than dispatching a later
-main commit. [Release automation](../docs/release-automation.md) describes the
+After the version PR or coordinated stack merges, the release workflow reconstructs
+the reachable version commit's Changesets plan and requires an exact match.
+Ordinary main merges do not publish. Manual dispatch without `release_commit`
+rehearses the current reviewed version. If release tooling itself needed correction,
+an authorized recovery dispatch supplies the original version merge's full
+`release_commit` SHA and exact `version`; package files and policy must remain
+unchanged from that ancestor. [Release automation](../docs/release-automation.md) describes the
 publishing gate, identities, verification and retry behavior.
 
 ## Exact artifact release

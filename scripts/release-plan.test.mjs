@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
-import { publicPackageMetadata } from "./release-intent.mjs";
+import { fileURLToPath } from "node:url";
+import {
+  assertRecoverySource,
+  publicPackageMetadata,
+  reviewedTransitionParent,
+} from "./release-intent.mjs";
 import {
   assertReleaseContext,
   assertReleaseTransition,
@@ -216,4 +225,129 @@ test("a batch of minor features and fixes selects one 0.2.0 release", () => {
     pending: [],
     changelog: "# @kind-ui/charts\n\n## 0.2.0\n\nFeatures and fixes\n",
   });
+});
+
+test("stack merges recover the exact reviewed plan from reachable version ancestry", async () => {
+  const root = await mkdtemp(join(tmpdir(), "kind-stack-release-"));
+  const git = (...args) =>
+    execFileSync("git", args, {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  const save = async (path, value) => writeFile(join(root, path), `${JSON.stringify(value)}\n`);
+  const commit = (message) => {
+    git("add", ".");
+    git("commit", "-m", message);
+    return git("rev-parse", "HEAD");
+  };
+  const base = { name: "@kind-ui/charts", version: "0.3.0" };
+  const next = { ...base, version: "0.4.0" };
+  const reviewed = {
+    package: base.name,
+    version: next.version,
+    previousVersion: base.version,
+    changesets: ["stack-feature"],
+  };
+  const resolve = (revision, policy = reviewed) =>
+    reviewedTransitionParent(
+      root,
+      revision,
+      policy,
+      fileURLToPath(new URL("../node_modules/@changesets/cli/bin.js", import.meta.url)),
+    );
+  try {
+    await mkdir(join(root, "packages/charts"), { recursive: true });
+    await mkdir(join(root, ".changeset"));
+    await save("package.json", {
+      name: "stack-fixture",
+      private: true,
+      version: "0.0.0",
+      workspaces: ["packages/*"],
+    });
+    await save("packages/charts/package.json", base);
+    await save("package-lock.json", {
+      name: "stack-fixture",
+      version: "0.0.0",
+      lockfileVersion: 3,
+      packages: {
+        "": { name: "stack-fixture", version: "0.0.0", workspaces: ["packages/*"] },
+        "packages/charts": base,
+      },
+    });
+    await save(".changeset/release-version.json", {
+      ...reviewed,
+      version: "0.3.0",
+      previousVersion: "0.2.0",
+      changesets: ["old-feature"],
+    });
+    await writeFile(
+      join(root, ".changeset/config.json"),
+      await readFile(new URL("../.changeset/config.json", import.meta.url)),
+    );
+    git("init", "-b", "main");
+    git("config", "user.name", "Release fixture");
+    git("config", "user.email", "fixture@example.invalid");
+    const initial = commit("Main without pending changesets");
+    git("switch", "-c", "stack");
+    await writeFile(
+      join(root, ".changeset/stack-feature.md"),
+      '---\n"@kind-ui/charts": minor\n---\nStack feature\n',
+    );
+    const feature = commit("Reviewed stack feature");
+    await save("packages/charts/package.json", next);
+    await save(".changeset/release-version.json", reviewed);
+    await rm(join(root, ".changeset/stack-feature.md"));
+    const version = commit("Consume exact Changesets plan");
+    git("switch", "main");
+    git("merge", "--no-ff", "stack", "-m", "Coordinated stack merge");
+    const merged = git("rev-parse", "HEAD");
+    assert.equal(git("rev-parse", `${merged}^1`), initial);
+    const transition = await resolve(merged);
+    assert.equal(transition.previousCommit, feature);
+    assert.equal(transition.versionCommit, version);
+    assertReleaseTransition({
+      policy: reviewed,
+      manifest: next,
+      previous: transition.previous,
+      status: transition.status,
+      pending: [],
+      changelog: "# @kind-ui/charts\n\n## 0.4.0\n\nFeature\n",
+    });
+    await assert.rejects(resolve(initial), /one reachable exact/);
+    await assert.rejects(
+      resolve(merged, { ...reviewed, changesets: ["fabricated"] }),
+      /one reachable exact/,
+    );
+    // Recovery permits tooling-only descendants, but never unpublished package edits.
+    await writeFile(join(root, "release-tooling.txt"), "Correction\n");
+    const repair = commit("Release tooling correction");
+    assertRecoverySource(root, repair, merged, reviewed, next);
+    assert.throws(() => assertRecoverySource(root, repair, feature, reviewed, next));
+    assert.throws(() =>
+      assertRecoverySource(root, repair, merged, { ...reviewed, changesets: ["fabricated"] }, next),
+    );
+    await writeFile(join(root, "packages/charts/runtime.js"), "export const changed = true;\n");
+    const changed = commit("Unreviewed package edit");
+    assert.throws(
+      () => assertRecoverySource(root, changed, merged, reviewed, next),
+      /new reviewed version/,
+    );
+    git("switch", "--detach", initial);
+    await writeFile(join(root, "unrelated.txt"), "Not merged\n");
+    const unrelated = commit("Unrelated history");
+    assert.throws(() => assertRecoverySource(root, repair, unrelated, reviewed, next));
+    git("switch", "--detach", feature);
+    git("merge", "--no-ff", version, "-m", "Ordinary version merge");
+    assert.equal((await resolve(git("rev-parse", "HEAD"))).versionCommit, version);
+    git("switch", "--detach", feature);
+    const fabricated = { ...reviewed, changesets: ["fabricated"] };
+    await save("packages/charts/package.json", next);
+    await save(".changeset/release-version.json", fabricated);
+    await rm(join(root, ".changeset/stack-feature.md"));
+    const invalid = commit("Fabricated version receipt");
+    await assert.rejects(resolve(invalid, fabricated), /consume the reviewed plan/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
