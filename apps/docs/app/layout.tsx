@@ -1,5 +1,5 @@
 import Script from "next/script";
-import { analyticsScript } from "../../analytics.mjs";
+import { webAnalytics } from "../../analytics.mjs";
 import "@fontsource-variable/geist";
 import "./globals.css";
 import type { Metadata } from "next";
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   ...indexingMetadata(),
 };
 export default function Layout({ children }: { children: ReactNode }) {
-  const analytics = analyticsScript();
+  const analytics = webAnalytics();
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -46,9 +46,13 @@ export default function Layout({ children }: { children: ReactNode }) {
           </GlassDocsLayout>
         </Provider>
         {analytics && (
-          <Script id="kind-ui-analytics" strategy="afterInteractive">
-            {analytics}
-          </Script>
+          <Script
+            id="kind-ui-web-analytics"
+            type="module"
+            src={analytics.src}
+            data-cf-beacon={analytics.beacon}
+            strategy="afterInteractive"
+          />
         )}
       </body>
     </html>

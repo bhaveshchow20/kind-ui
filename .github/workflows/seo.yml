@@ -46,7 +46,7 @@ jobs:
       - run: npm run build
         working-directory: apps/showcase
       - run: npm exec playwright install -- --with-deps chromium
-      - name: Check analytics consent and event contracts
+      - name: Check invisible analytics and production-only contracts
         run: node --test scripts/analytics.test.mjs
       - run: npm run test:browser -- tests/routes.spec.ts
         working-directory: apps/showcase
