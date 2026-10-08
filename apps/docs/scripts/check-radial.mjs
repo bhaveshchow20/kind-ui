@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
+import { expectDimmedSeries } from "./interaction-paint.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const browser = await chromium.launch(
@@ -124,7 +125,8 @@ try {
     const button = stack.getByRole("button", { name: "Committed", exact: true });
     await button.focus();
     await page.keyboard.press("Space");
-    assert.equal(await stack.locator(".recharts-radial-bar-sector").count(), 1);
+    assert.equal(await stack.locator(".recharts-radial-bar-sector").count(), 2);
+    await expectDimmedSeries(stack, "reserved");
     await page.keyboard.press("Space");
     assert.equal(await stack.locator(".recharts-radial-bar-sector").count(), 2);
     await page.screenshot({ path: `artifacts/radial/${width}-stacked.png` });

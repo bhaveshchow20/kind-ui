@@ -2,12 +2,13 @@
 
 import {
   type ComponentPropsWithRef,
+  createContext,
   type ReactNode,
+  use,
   useCallback,
   useId,
   useImperativeHandle,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -362,6 +363,23 @@ function ScaledMark({
 }
 
 /** Registered range Bar with truthful summary geometry through public scale hooks. */
+const BoxShapeOptions = createContext<{
+  read: (row: unknown) => BoxPlotSummary | null;
+  shape: BoxPlotSeriesProps["shape"];
+  material: BoxPlotMaterial;
+  markProps: BoxPlotSeriesProps["markProps"];
+  outlierRadius: number | undefined;
+  xAxisId: BarSeriesProps["xAxisId"];
+  yAxisId: BarSeriesProps["yAxisId"];
+} | null>(null);
+function BoxShape(native: BarShapeProps) {
+  const options = use(BoxShapeOptions);
+  if (!options) throw new Error("BoxShape requires BoxPlotSeries");
+  const { read, ...paint } = options;
+  return <ScaledMark {...paint} summary={read(native.payload)} native={native} />;
+}
+const renderBoxShape = (native: BarShapeProps) => <BoxShape {...native} />;
+
 export function BoxPlotSeries<Row extends object = Record<string, unknown>>({
   dataKey,
   seriesKey,
@@ -385,22 +403,26 @@ export function BoxPlotSeries<Row extends object = Record<string, unknown>>({
     },
     [read],
   );
-  const render = useMemo(
-    () => (native: BarShapeProps) => (
-      <ScaledMark
-        summary={read(native.payload)}
-        native={native}
-        shape={shape}
-        material={material}
-        markProps={markProps}
-        outlierRadius={outlierRadius}
-        xAxisId={props.xAxisId}
-        yAxisId={props.yAxisId}
-      />
-    ),
-    [read, shape, material, markProps, outlierRadius, props.xAxisId, props.yAxisId],
-  );
+
   return (
-    <BarSeries {...props} seriesKey={seriesKey} dataKey={extent} shape={render} activeBar={false} />
+    <BoxShapeOptions
+      value={{
+        read: (row) => read(row as Row),
+        shape,
+        material,
+        markProps,
+        outlierRadius,
+        xAxisId: props.xAxisId,
+        yAxisId: props.yAxisId,
+      }}
+    >
+      <BarSeries
+        {...props}
+        seriesKey={seriesKey}
+        dataKey={extent}
+        shape={renderBoxShape}
+        activeBar={false}
+      />
+    </BoxShapeOptions>
   );
 }

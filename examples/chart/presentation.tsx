@@ -115,8 +115,13 @@ export function PresentationExample() {
       </fieldset>
       <section aria-label="Task outcomes" className="presentation-card">
         <h2>Task outcomes</h2>
-        <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
-          <Chart.Legend aria-label="Visible task series" hideIcon={hideIcon}>
+        <Chart.Root
+          config={config}
+          interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+          visibleSeries={visible}
+          onVisibleSeriesChange={setVisible}
+        >
+          <Chart.Legend aria-label="Task series focus" hideIcon={hideIcon}>
             {({ label, visible, marker }) => (
               <>
                 {marker}
@@ -228,7 +233,12 @@ export function CategoryIdentityExample() {
         />
         Custom category content
       </label>
-      <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+      <Chart.Root
+        config={config}
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+        visibleSeries={visible}
+        onVisibleSeriesChange={setVisible}
+      >
         <Chart.Legend />
         <ResponsiveContainer width="100%" height={240}>
           <Chart.BarChart data={categoryRows} aria-label="Category amounts" accessibilityLayer>

@@ -4,6 +4,7 @@ import { chromium } from "@playwright/test";
 import { families } from "../examples/catalog.mjs";
 import { checkMobileLayout } from "./check-mobile-layout.mjs";
 import { checkThemeSwitch } from "./check-theme-switch-browser.mjs";
+import { expectDimmedSeries } from "./interaction-paint.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
@@ -28,7 +29,9 @@ const unpublishedFamilies = [
   "heatmap",
 ].filter((id) => !familyIds.includes(id));
 mkdirSync("artifacts", { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 try {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1080 },
@@ -99,8 +102,9 @@ try {
     await comparison
       .getByRole("button", { name: "Target", exact: true })
       .getAttribute("aria-pressed"),
-    "false",
+    "true",
   );
+  await expectDimmedSeries(comparison, "actual");
   const mobilePage = await context.newPage();
   mobilePage.on("pageerror", (error) => errors.push(error.message));
   const searchPage = await context.newPage();

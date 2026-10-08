@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from "./browser";
+import { expectDimmedPaint } from "./interaction-paint";
 import { directionalEntrances } from "./reveal-direction";
 
 async function bounded(tip: Locator, chart: Locator) {
@@ -57,7 +58,8 @@ for (const mode of ["static", "motion"] as const) {
     await page.locator(".recharts-area-area").first().dispatchEvent("click");
     await expect(page.getByRole("note", { name: "Events" })).toHaveText(/\d+\/\d+\/1/);
     await page.getByRole("button", { name: "Other", exact: true }).click();
-    await expect(page.locator(".recharts-area-area")).toHaveCount(1);
+    await expect(page.locator(".recharts-area-area")).toHaveCount(2);
+    await expectDimmedPaint(page.locator(".recharts-area-area").first());
     await page.getByRole("button", { name: "Rename series" }).click();
     await expect(page.locator(".recharts-area-area")).toHaveCount(2);
     await chart.focus();
@@ -123,7 +125,9 @@ test("packed area keeps stateful custom content and refs while changing animatio
   expect(await page.locator("body").getAttribute("data-tooltip-attachments")).toBe(before);
 });
 
-test("packed native area visibility snaps active marks to rescaled geometry", async ({ page }) => {
+test("packed native area visibility preserves active marks and full-data geometry", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.clock.install();
   await page.goto("http://127.0.0.1:4182/motion.html?native-visibility");
@@ -137,11 +141,11 @@ test("packed native area visibility snaps active marks to rescaled geometry", as
   const marker = page.locator('[data-kind-ui="active-marker"]').first();
   const before = Number(await point.getAttribute("cy"));
   expect(Number(await marker.getAttribute("cy"))).toBeCloseTo(before, 1);
-  for (const hidden of [false, true]) {
+  for (let cycle = 0; cycle < 2; cycle++) {
     await toggle.evaluate((node) => (node as HTMLInputElement).click());
     await page.clock.runFor(32);
     const target = Number(await point.getAttribute("cy"));
-    if (!hidden) expect(Math.abs(target - before)).toBeGreaterThan(20);
+    expect(target).toBeCloseTo(before, 1);
     expect(Number(await marker.getAttribute("cy"))).toBeCloseTo(target, 1);
     await bounded(page.locator('[data-kind-ui="tooltip-frame"]'), page.getByRole("application"));
   }

@@ -106,7 +106,7 @@ function Distribution({
       visibleSeries={visible}
       onVisibleSeriesChange={setVisible}
     >
-      <Chart.Legend aria-label={`${title} visibility`} />
+      <Chart.Legend aria-label={`${title} focus`} />
       <ResponsiveContainer width="100%" height={270}>
         <Chart.BoxPlotChart
           data={rows}

@@ -122,7 +122,7 @@ Custom range shapes retain inspection but cannot use Bar category emphasis. See 
 | `shape` | `(props: BoxPlotShapeProps) => ReactNode` | Built-in mark | Receives original summary, native Bar shape props and mapped coordinates. Owns returned markup. |
 | `markProps` | SVG group props, excluding `children` | — | Attributes, styles, handlers and refs forwarded to each present mark group. |
 | `xAxisId` / `yAxisId` | `string \| number` | `0` | Native axes used to map statistical values. |
-| `hide` | `boolean` | `false` | Native hiding; Root controlled visibility also applies. |
+| `hide` | `boolean` | `false` | Suppresses paint and inspection while preserving full-data layout; Root visibility also applies. |
 
 </div>
 
@@ -170,6 +170,6 @@ Use these building blocks to customize this chart. Each reference includes its f
 | [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

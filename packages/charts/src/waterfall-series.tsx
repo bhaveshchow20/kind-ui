@@ -1,9 +1,11 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import { type ComponentProps, cloneElement, isValidElement } from "react";
 import { ReferenceLine, useChartLayout } from "recharts";
 import { BarSeries, type BarSeriesProps } from "./bar-series.js";
 import { useChart } from "./chart-context.js";
+import { SeriesEscapePaint } from "./series-escape-paint.js";
+import { visibilityLabel } from "./visibility-labels.js";
 import type { WaterfallDatum } from "./waterfall-data.js";
 
 export type WaterfallSeriesProps = Omit<
@@ -37,7 +39,7 @@ export function WaterfallConnectors({
 }: WaterfallConnectorsProps) {
   const { visibleSeries } = useChart();
   const horizontal = useChartLayout() === "vertical";
-  if (hide || (visibleSeries !== undefined && !visibleSeries.includes(seriesKey))) return null;
+  const hidden = hide || (visibleSeries !== undefined && !visibleSeries.includes(seriesKey));
   return (
     <>
       {data.slice(1).map((next, index) => {
@@ -59,6 +61,13 @@ export function WaterfallConnectors({
             ifOverflow="discard"
             zIndex={100}
             {...props}
+            // Keep ReferenceLine registrations stable, including consumer extendDomain.
+            shape={
+              <ConnectorPaint option={props.shape} hidden={Boolean(hidden)} seriesKey={seriesKey} />
+            }
+            {...(props.label !== undefined
+              ? { label: visibilityLabel(props.label, Boolean(hidden), undefined, seriesKey) }
+              : {})}
             pointerEvents="none"
             segment={[
               horizontal
@@ -70,5 +79,29 @@ export function WaterfallConnectors({
         );
       })}
     </>
+  );
+}
+
+function ConnectorPaint({
+  option,
+  hidden,
+  seriesKey,
+  ...props
+}: ComponentProps<"line"> & {
+  option: WaterfallConnectorsProps["shape"];
+  hidden: boolean;
+  seriesKey: string;
+}) {
+  const paint = isValidElement<ComponentProps<"line">>(option) ? (
+    cloneElement(option, props)
+  ) : typeof option === "function" ? (
+    option(props)
+  ) : (
+    <line {...props} />
+  );
+  return (
+    <SeriesEscapePaint seriesKey={seriesKey} hidden={hidden}>
+      {paint}
+    </SeriesEscapePaint>
   );
 }

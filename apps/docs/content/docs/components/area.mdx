@@ -26,7 +26,7 @@ Add one `AreaSeries` per measure. Use `stackId` to stack related series.
 </Chart.Root>
 ```
 
-Place the legend outside the plot. `defaultVisibleSeries` enables its visibility buttons.
+Place the legend outside the plot. Legend focuses and dims by default; explicit `interaction.mode="visibility"` enables hide/show.
 
 ## Curve types
 
@@ -36,7 +36,7 @@ Choose smooth, linear or step-after interpolation.
 
 ## Stacked series
 
-Matching `stackId` values stack desktop and mobile visitors. Legend toggles recalculate the visible stack.
+Matching `stackId` values stack desktop and mobile visitors. Legend focus dims other series. Explicit hiding preserves the original stack baselines.
 
 <AreaExample id="area-stacked" />
 
@@ -107,6 +107,6 @@ Customize series colors, stack visibility and plot labels with these components.
 | [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

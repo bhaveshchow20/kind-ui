@@ -39,7 +39,7 @@ function Showcase() {
         </p>
         <p>
           Focus a chart and use Left/Right to inspect values; Enter toggles the current tooltip. Use
-          the legend to toggle series, or open the value table.
+          the legend to focus a series and dim the others, or open the value table.
         </p>
       </header>
       <div className="polar-controls">

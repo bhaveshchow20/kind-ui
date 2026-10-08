@@ -60,9 +60,9 @@ test("keyboard tabs, controlled legend, code dialog and reduced motion work", as
   await page.keyboard.press("ArrowRight");
   const comparison = page.locator('[data-example="comparison"]');
   const previous = comparison.getByRole("button", { name: "Previous", exact: true });
-  await expect(previous).toHaveAttribute("aria-pressed", "true");
-  await previous.click();
   await expect(previous).toHaveAttribute("aria-pressed", "false");
+  await previous.click();
+  await expect(previous).toHaveAttribute("aria-pressed", "true");
   await comparison.getByRole("button", { name: "View code", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("ComparisonLine");

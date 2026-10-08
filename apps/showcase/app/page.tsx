@@ -37,7 +37,13 @@ import { activityCode } from "@/lib/activity-recipe";
 import { advancedCode } from "@/lib/advanced-chart-recipes";
 import { type DemoOptions, demoDefaults } from "@/lib/demo-options";
 import { newCode, newRecipes } from "@/lib/new-chart-recipes";
-import { docsAccessNote, documentationCharts, showcaseAsset, siteLinks } from "@/lib/site-links";
+import {
+  docsAccessNote,
+  documentationCharts,
+  footerLinkGroups,
+  showcaseAsset,
+  siteLinks,
+} from "@/lib/site-links";
 import { useCopyCode } from "@/lib/use-copy-code";
 import { chartSourceData } from "../../seo.mjs";
 
@@ -220,7 +226,6 @@ function snippet(
   );
   return `"use client";
 
-import { useState } from "react";
 import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
 
@@ -232,9 +237,8 @@ const config: Chart.SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.
 
 export function Example() {
   const animate = ${animate};
-  const [visible, setVisible] = useState<string[]>(${JSON.stringify(r.keys)});
   return (
-    <Chart.Root emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}
+    <Chart.Root emphasis="auto" config={config} interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
       style={{ border: 0, padding: 0, background: "transparent" }}>
       <div style={{ height: 240, width: "100%" }}>
         <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -251,7 +255,7 @@ ${series}
           </Chart.${family}Chart>
         </Chart.ResponsiveContainer>
       </div>
-      ${(options.showLegend ?? true) ? `<Chart.Legend aria-label="Visible series for ${r.tag}" />` : ""}
+      ${(options.showLegend ?? true) ? `<Chart.Legend aria-label="Focus series for ${r.tag}" />` : ""}
     </Chart.Root>
   );
 }`;
@@ -276,7 +280,6 @@ function ChartCard({
   const cardRef = useRef<HTMLElement>(null);
   const entered = useInView(cardRef, { once: true, amount: 0.3 });
   const chartAnimate = animate && entered && !reduceMotion;
-  const [visible, setVisible] = useState<string[]>([...r.keys]);
   const chartData = useMemo(() => recipeData(r.id), [r.id]);
   const config = useMemo(
     () =>
@@ -397,8 +400,7 @@ function ChartCard({
         className="chart-root"
         emphasis="auto"
         config={config}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
+        interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
       >
         <div className="chart-canvas">
           <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -430,15 +432,8 @@ function ChartCard({
             )}
           </Chart.ResponsiveContainer>
         </div>
-        {options.showLegend !== false && (
-          <Chart.Legend aria-label={`Visible series for ${r.tag}`} />
-        )}
+        {options.showLegend !== false && <Chart.Legend aria-label={`Focus series for ${r.tag}`} />}
       </Chart.Root>
-      {!visible.length && (
-        <p className="all-hidden" role="status">
-          All series hidden. Select a legend item to show it.
-        </p>
-      )}
 
       <p className="chart-context">{r.context}</p>
     </motion.article>
@@ -1023,7 +1018,7 @@ export default function Page() {
           </Dialog>
         </section>
       </main>
-      <footer className="cloud-footer kind-cloud-footer">
+      <footer id="footer" className="cloud-footer kind-cloud-footer">
         <img
           className="footer-art"
           src={showcaseAsset("/footer-clouds.webp")}
@@ -1034,23 +1029,52 @@ export default function Page() {
         />
         <div className="footer-bloom" aria-hidden="true" />
         <div className="footer-inner">
-          <p className="footer-wordmark" role="img" aria-label="Kind UI">
-            <KindLogo />
-          </p>
-          <div className="footer-bottom">
-            <a className="footer-credit" href={siteLinks.creator} target="_blank" rel="noreferrer">
-              By Bhavesh Chowdhury
-            </a>
-            <nav aria-label="Footer">
-              <a href={siteLinks.docs} target="_blank" rel="noreferrer">
-                Docs
+          <div className="footer-directory">
+            <div className="footer-brand">
+              <a className="footer-wordmark" href={siteLinks.home} aria-label="Kind UI home">
+                <KindLogo />
               </a>
-              <a href={`${repo}/blob/main/LICENSE`} target="_blank" rel="noreferrer">
-                MIT license
+              <p className="footer-description">
+                Composable, interactive charts for React and Next.js. Built with Recharts and
+                Motion. Designed for builders and AI agents.
+              </p>
+              <p className="footer-created">
+                Created by{" "}
+                <a href={siteLinks.creator} target="_blank" rel="noreferrer">
+                  Bhavesh Chowdhury
+                </a>
+              </p>
+              <a
+                className="footer-social"
+                href={siteLinks.creator}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Follow on X <span aria-hidden="true">↗</span>
               </a>
-              <a className="footer-top" href="#top">
-                Back to top ↑
-              </a>
+            </div>
+            <nav className="footer-links" aria-label="Footer directory">
+              {footerLinkGroups.map(({ title, links }) => (
+                <section className="footer-link-group" key={title} aria-label={title}>
+                  <h2>{title}</h2>
+                  <ul>
+                    {links.map(({ name, href }) => (
+                      <li key={href}>
+                        <a
+                          href={href}
+                          className={
+                            name.startsWith("View all") || href === "#top"
+                              ? "footer-featured-link"
+                              : undefined
+                          }
+                        >
+                          {name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
             </nav>
           </div>
         </div>

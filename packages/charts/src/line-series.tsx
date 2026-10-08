@@ -8,6 +8,7 @@ import { dashCycle, dashDuration, type LineDashAnimation } from "./line-dash.js"
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 // Preserve the legacy native defaults while allowing explicit row/value parameters.
 type DefaultLineDataKey = Extract<ComponentProps<typeof Line>["dataKey"], (row: never) => unknown>;
@@ -40,9 +41,8 @@ export function LineSeries<
   className,
   material = "plain",
   dashAnimation = false,
-  renderWhileHidden = false,
   ...props
-}: LineSeriesProps<DataPoint, Value> & { renderWhileHidden?: boolean }) {
+}: LineSeriesProps<DataPoint, Value>) {
   const { config, paints, visibleSeries } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
@@ -50,17 +50,11 @@ export function LineSeries<
   const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
   const effectiveHide =
     hide === true || (visibleSeries !== undefined && !visibleSeries.includes(key ?? ""));
-  const renderedHide = hide === true || (!renderWhileHidden && effectiveHide);
-  const previous = useRef({ data: props.data, hide: effectiveHide, renderedHide });
+  const previous = useRef({ data: props.data });
   useLayoutEffect(() => {
-    if (
-      props.data !== previous.current.data ||
-      effectiveHide !== previous.current.hide ||
-      renderedHide !== previous.current.renderedHide
-    )
-      invalidate();
-    previous.current = { data: props.data, hide: effectiveHide, renderedHide };
-  }, [props.data, effectiveHide, renderedHide, invalidate]);
+    if (props.data !== previous.current.data) invalidate();
+    previous.current = { data: props.data };
+  }, [props.data, invalidate]);
   useLayoutEffect(() => {
     if (key === undefined) return;
     return registerSeries(id, key);
@@ -123,12 +117,19 @@ export function LineSeries<
               : props.style
           }
           id={id}
-          hide={renderedHide}
+          // Keep full-data native layout; the interaction layer suppresses hidden paint.
+          hide={false}
+          {...(props.label !== undefined
+            ? { label: visibilityLabel(props.label, effectiveHide, undefined, key) }
+            : {})}
+          {...(effectiveHide ? { activeDot: false as const } : {})}
           {...(color !== undefined ? { stroke: color } : {})}
           className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className]
             .filter(Boolean)
             .join(" ")}
-        />
+        >
+          {visibilityLabelChildren(props.children, effectiveHide, undefined, key)}
+        </Line>
       </SeriesInteractionLayer>
     </ZIndexLayer>
   );

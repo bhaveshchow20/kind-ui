@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 
 const url = "http://127.0.0.1:4183";
 const clips = '[data-kind-ui="bar-reveal"]';
@@ -55,7 +56,8 @@ test("packed bars preserve registration, semantics, native composition, refs and
   await expect(page.getByRole("status")).toContainText("Alias");
   await expect(page.getByRole("status")).not.toContainText("Other");
   await page.getByRole("button", { name: "Value", exact: true }).click();
-  await expect(page.locator("[data-host-shape]")).toHaveCount(0);
+  await expect(page.locator("[data-host-shape]")).toHaveCount(2);
+  await expectHiddenPaint(page.locator("[data-host-shape]"));
   await page.getByRole("button", { name: "Value", exact: true }).click();
   await page.getByRole("button", { name: "Stack", exact: true }).click();
   await expect(page.locator(".recharts-bar")).toHaveCount(2);
@@ -84,6 +86,8 @@ test("packed bars preserve registration, semantics, native composition, refs and
   await page
     .getByRole("button", { name: "Resize", exact: true })
     .evaluate((node) => (node as HTMLButtonElement).click());
+  await chart.focus();
+  await page.keyboard.press("ArrowRight");
   await bounds(frame, chart);
   await expect(page.getByRole("button", { name: "Content count 1" })).toBeVisible();
   await page.screenshot({ path: info.outputPath("packed-bars-native-content.png") });
@@ -123,7 +127,7 @@ for (const horizontal of [false, true]) {
       .getByRole("button", { name: "Native hide", exact: true })
       .evaluate((node) => (node as HTMLButtonElement).click());
     await expect(page.locator(clips)).toHaveCount(0);
-    await expect(page.locator(".recharts-bar")).toHaveCount(1);
+    await expect(page.locator(".recharts-bar")).toHaveCount(2);
     await page
       .getByRole("button", { name: "Native hide", exact: true })
       .evaluate((node) => (node as HTMLButtonElement).click());

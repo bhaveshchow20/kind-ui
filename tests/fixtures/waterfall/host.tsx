@@ -115,6 +115,11 @@ export function WaterfallHost() {
       ))}
       <output aria-label="Clicks">{clicks}</output>
       <Chart.Root
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: Object.keys({ bridge: { label: "Bridge", color: "#3478ae" } }),
+        }}
         config={{ bridge: { label: "Bridge", color: "#3478ae" } }}
         visibleSeries={visible ? ["bridge"] : []}
       >

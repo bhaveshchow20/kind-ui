@@ -260,7 +260,7 @@ export function newCode(
   animate: boolean,
   options: DemoOptions = {},
 ) {
-  const intro = `"use client";\n\nimport * as Chart from "@kind-ui/charts";\nimport { useState } from "react";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)};\nconst animate = ${animate};\n`;
+  const intro = `"use client";\n\nimport * as Chart from "@kind-ui/charts";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)};\nconst animate = ${animate};\n`;
   if (r.family === "Line") {
     return (
       intro +
@@ -280,8 +280,7 @@ export function Example(){
       `const bins: Chart.HistogramBin[] = ${JSON.stringify(histogramBins(r.id), null, 2)};
 const config = {count:{label:"${density ? "Density" : latency ? "Requests" : "Orders"}",color:colors[0]}};
 export function Example(){
- const [visible, setVisible] = useState(["count"]);
- return <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+ return <Chart.Root config={config} interaction={{kind:"series",mode:"focus",eligibleKeys:Object.keys(config)}}>
   <Chart.ResponsiveContainer width="100%" height={240}>
    <Chart.HistogramChart bins={bins} measure="${density ? "density" : "count"}" animate={${animate}} aria-label="${r.tag}" margin={{top:16,right:12,left:0,bottom:8}}
     xAxisProps={{tickLine:false,axisLine:false,tickFormatter:value => ${latency ? "`${value} ms`" : "`$${value}`"}}}
@@ -305,8 +304,7 @@ export function Example(){
 const data: Row[] = ${JSON.stringify(boxRows(r.id), null, 2)};
 const config = {spread:{label:"${horizontal ? "Weekly growth" : "Request time"}",color:colors[0]}};
 export function Example(){
- const [visible, setVisible] = useState(["spread"]);
- return <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+ return <Chart.Root config={config} interaction={{kind:"series",mode:"focus",eligibleKeys:Object.keys(config)}}>
   <Chart.ResponsiveContainer width="100%" height={240}>
    <Chart.BoxPlotChart data={data} layout="${horizontal ? "vertical" : "horizontal"}" animate={${animate}} aria-label="${r.tag}" margin={{top:16,right:12,left:0,bottom:8}}>
     <Chart.CartesianGrid vertical={${horizontal && (options.showGrid ?? true)}} horizontal={${!horizontal && (options.showGrid ?? true)}} strokeDasharray="3 5" />

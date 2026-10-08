@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import { useState } from "react";
 import "@kind-ui/charts/styles.css";
 
 const data = [
@@ -23,12 +22,10 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function DeviceAreaChart() {
-  const [visibleSeries, setVisibleSeries] = useState<string[]>(["desktop", "mobile"]);
   return (
     <Chart.Root
       config={config}
-      visibleSeries={visibleSeries}
-      onVisibleSeriesChange={setVisibleSeries}
+      interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
     >
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>

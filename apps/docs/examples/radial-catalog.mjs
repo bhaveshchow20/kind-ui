@@ -28,8 +28,7 @@ export const family = {
       id: "radial-stacked",
       title: "Stacked capacity",
       notes: "64 committed and 22 reserved hours stack on a fixed 100-hour scale.",
-      acceptance:
-        "Keyboard legend toggles change consumer-owned visibility and native stack allocation.",
+      acceptance: "Keyboard legend focus dims other series while retaining stack allocation.",
     },
   ],
   dataLabels: {

@@ -1,24 +1,83 @@
 "use client";
 
 import { animate, motion, useMotionValue } from "motion/react";
-import { type ComponentProps, memo, use, useId, useLayoutEffect, useRef, useState } from "react";
-import { DefaultZIndexes, Polygon, Radar, RadialBar, Sector, ZIndexLayer } from "recharts";
-import { ActiveMarker } from "./animation.js";
-import { categoryCells, filterCategoryRows } from "./category-cells.js";
+import {
+  type ComponentProps,
+  cloneElement,
+  createContext,
+  isValidElement,
+  memo,
+  type ReactElement,
+  type ReactNode,
+  use,
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  type ActiveDotProps,
+  DefaultZIndexes,
+  Dot,
+  Polygon,
+  Radar,
+  RadialBar,
+  Sector,
+  ZIndexLayer,
+} from "recharts";
+import {
+  ActiveMarker,
+  InteractionPaint,
+  InteractionPaintScope,
+  useInteractionOpacity,
+} from "./animation.js";
+import { categoryCells, preserveCategoryRows } from "./category-cells.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction, useInteractionFocus } from "./chart-interaction.js";
-import { EmphasisMark } from "./emphasis.js";
+import { EmphasisMark, useEmphasis } from "./emphasis.js";
 import { useLineInteraction } from "./line-chart.js";
 import { PolarMotion, RadarMotion, RadialMotion } from "./polar-chart.js";
 import { type PolarMaterial, PolarMaterialFilter } from "./polar-material.js";
 import { RadarSelectionLayer, useRadarSelectionDot } from "./radar-interaction.js";
 import { RadialCategory } from "./radial-category.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 // Native Radar uses a props-identity animation key even with animation disabled.
 // Avoid replacing its polygon for unrelated frame state during a pointer press.
 const StableRadar = memo(Radar) as typeof Radar;
-const radarActiveDot = <ActiveMarker />;
+const RadarActivePaint = createContext<{
+  inactive: boolean;
+  option: ComponentProps<typeof Radar>["activeDot"];
+}>({ inactive: false, option: undefined });
+function RadarActiveDot(props: Partial<ActiveDotProps>) {
+  const { inactive, option } = use(RadarActivePaint);
+  if (inactive || option === false) return null;
+  if (typeof option === "function") return option(props as ActiveDotProps);
+  if (option === undefined) return <ActiveMarker {...props} />;
+  const options: Partial<ActiveDotProps> = isValidElement(option)
+    ? (option.props as Partial<ActiveDotProps>)
+    : typeof option === "object"
+      ? (option as Partial<ActiveDotProps>)
+      : {};
+  // Native ActivePoints passes the option and event to option-owned handlers.
+  const events = Object.fromEntries(
+    Object.entries(options).flatMap(([name, handler]) =>
+      /^on[A-Z]/.test(name) && typeof handler === "function"
+        ? [[name, (event: unknown) => handler(options, event)]]
+        : [],
+    ),
+  );
+  const paint = { ...props, ...options, ...events };
+  return isValidElement(option) ? (
+    cloneElement(option as ReactElement<Partial<ActiveDotProps>>, paint)
+  ) : (
+    <Dot {...paint} />
+  );
+}
+const radarActiveDot = <RadarActiveDot />;
 
 export type RadarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Radar<DataPoint, Value>>,
@@ -49,7 +108,7 @@ function usePolarSeries(
 ) {
   const { config, paints, visibleSeries } = useChart();
   const interactionOwner = useChartInteraction();
-  const { registerSeries, invalidate } = useLineInteraction();
+  const { registerSeries, registerHiddenItem, invalidate } = useLineInteraction();
   const { reveal, options } = use(PolarMotion);
   const generatedId = useId();
   const id = props.id || generatedId;
@@ -59,6 +118,7 @@ function usePolarSeries(
     (interactionOwner.kind === "series" &&
       visibleSeries !== undefined &&
       !visibleSeries.includes(key ?? ""));
+  useLayoutEffect(() => registerHiddenItem(id, hide), [registerHiddenItem, id, hide]);
   const previous = useRef([...geometry, hide]);
   useLayoutEffect(() => {
     const inputs = [...geometry, hide];
@@ -196,6 +256,18 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
     undefined,
     props.onClick,
   );
+  const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
+  const nativeLabel = useMemo(
+    () =>
+      props.label === undefined
+        ? undefined
+        : visibilityLabel(props.label, series.hide, undefined, key),
+    [props.label, series.hide, key],
+  );
+  const nativeChildren = useMemo(
+    () => visibilityLabelChildren(props.children, series.hide, undefined, key),
+    [props.children, series.hide, key],
+  );
   const selectionDot = useRadarSelectionDot(
     props.dot,
     seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
@@ -224,34 +296,180 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
           seriesKey={seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)}
           hidden={series.hide}
         >
-          <motion.g data-kind-ui="radar-reveal" initial={false}>
-            <StableRadar<DataPoint, Value>
-              activeDot={radarActiveDot}
-              {...props}
-              {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
-              {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
-              {...(selectionDot !== undefined ? { dot: selectionDot } : {})}
-              id={series.id}
-              hide={series.hide}
-              isAnimationActive={false}
-              zIndex={0}
-              {...(stroke !== undefined
-                ? { stroke }
-                : series.color !== undefined
-                  ? { stroke: series.color }
-                  : {})}
-              {...(fill !== undefined
-                ? { fill }
-                : series.color !== undefined
-                  ? { fill: series.color }
-                  : {})}
-              className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
-            />
+          <motion.g
+            data-kind-ui="radar-reveal"
+            initial={false}
+            pointerEvents={series.hide ? "none" : undefined}
+          >
+            <RadarActivePaint
+              value={{
+                inactive: interaction.inactive,
+                option: props.activeDot ?? (Object.hasOwn(props, "activeDot") ? true : undefined),
+              }}
+            >
+              <StableRadar<DataPoint, Value>
+                {...props}
+                activeDot={radarActiveDot}
+                {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
+                {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
+                {...(selectionDot !== undefined ? { dot: selectionDot } : {})}
+                {...(nativeLabel !== undefined ? { label: nativeLabel } : {})}
+                id={series.id}
+                hide={false}
+                isAnimationActive={false}
+                zIndex={0}
+                {...(stroke !== undefined
+                  ? { stroke }
+                  : series.color !== undefined
+                    ? { stroke: series.color }
+                    : {})}
+                {...(fill !== undefined
+                  ? { fill }
+                  : series.color !== undefined
+                    ? { fill: series.color }
+                    : {})}
+                className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
+              >
+                {nativeChildren}
+              </StableRadar>
+            </RadarActivePaint>
           </motion.g>
         </RadarSelectionLayer>
       </SeriesInteractionLayer>
     </ZIndexLayer>
   );
+}
+
+const RadialSeriesPaint = createContext<{ hidden: boolean; key: string | undefined }>({
+  hidden: false,
+  key: undefined,
+});
+type RadialPaintProps = ComponentProps<typeof Sector> & { payload?: unknown; index?: number };
+function RadialOwnedPaint({
+  option,
+  backgroundPaint = false,
+  activePaint = false,
+  ...props
+}: RadialPaintProps & { option?: unknown; backgroundPaint?: boolean; activePaint?: boolean }) {
+  const series = use(RadialSeriesPaint);
+  const categories = use(RadialCategory);
+  const interaction = useChartInteraction();
+  const category = categories?.bound ? categories.key(props.payload) : undefined;
+  const hidden =
+    series.hidden ||
+    (category !== undefined &&
+      interaction.visible !== undefined &&
+      !interaction.visible.includes(category));
+  const key = category ?? series.key;
+  const emphasis = useEmphasis(
+    {
+      kind: category === undefined ? "series" : "category",
+      key: key ?? "",
+      scope: category === undefined ? "series" : "radial",
+      seriesKey: key,
+    },
+    key !== undefined &&
+      !hidden &&
+      interaction.configured &&
+      interaction.kind === (category === undefined ? "series" : "category") &&
+      interaction.eligible.includes(key),
+  );
+  if (activePaint && (hidden || (interaction.selected !== null && interaction.selected !== key)))
+    return null;
+  let content: ReactNode;
+  if (isValidElement(option)) content = cloneElement(option, props);
+  else if (typeof option === "function")
+    content = (option as (props: RadialPaintProps) => ReactNode)(props);
+  else if (!backgroundPaint && (option === undefined || typeof option === "boolean"))
+    content = <RadialEntranceSector {...props} />;
+  else
+    content = (
+      <Sector
+        {...({
+          ...props,
+          ...(typeof option === "object" && option !== null ? option : {}),
+        } as ComponentProps<typeof Sector>)}
+      />
+    );
+  return (
+    <g
+      pointerEvents={hidden ? "none" : undefined}
+      aria-hidden={hidden || undefined}
+      data-kind-ui={backgroundPaint ? "radial-background-visibility" : "radial-sector-visibility"}
+      data-series={series.key}
+      data-category={category}
+      data-native-index={props.index}
+    >
+      <InteractionPaint
+        identity={JSON.stringify([
+          backgroundPaint ? "background" : "sector",
+          category ?? series.key,
+          props.index,
+        ])}
+        opacity={
+          hidden
+            ? 0
+            : backgroundPaint ||
+                (category !== undefined && option !== undefined && typeof option !== "boolean")
+              ? emphasis.factor
+              : 1
+        }
+      >
+        {content}
+      </InteractionPaint>
+    </g>
+  );
+}
+
+/** Backgrounds live in a native ZIndex portal and retain native arc registrations. */
+function RadialBackgroundPaint({
+  paintClass,
+  index,
+  paintKey,
+  hidden,
+  opacity,
+}: {
+  paintClass: string;
+  index?: number;
+  paintKey: string | undefined;
+  hidden: boolean;
+  opacity?: number | string | undefined;
+}) {
+  const ref = useRef<SVGGElement>(null);
+  const owner = useChartInteraction();
+  const inactive = paintKey !== undefined && owner.selected !== null && owner.selected !== paintKey;
+  const value = useInteractionOpacity(
+    hidden ? 0 : inactive ? 0.28 : 1,
+    `background/${paintClass}/${index ?? "series"}`,
+  );
+  useLayoutEffect(() => {
+    const svg = ref.current?.ownerSVGElement;
+    if (!svg) return;
+    const apply = () => {
+      const marks = Array.from(svg.getElementsByClassName(paintClass));
+      for (const [position, mark] of marks.entries()) {
+        if (index !== undefined && position !== index) continue;
+        if (!(mark instanceof SVGElement)) continue;
+        mark.style.opacity = String(value.get() * Number(opacity ?? 1));
+        if (hidden) {
+          mark.setAttribute("aria-hidden", "true");
+          mark.style.pointerEvents = "none";
+        } else {
+          mark.removeAttribute("aria-hidden");
+          mark.style.removeProperty("pointer-events");
+        }
+      }
+    };
+    apply();
+    const unsubscribe = value.on("change", apply);
+    const observer = new MutationObserver(apply);
+    observer.observe(svg, { childList: true, subtree: true });
+    return () => {
+      unsubscribe();
+      observer.disconnect();
+    };
+  }, [paintClass, index, hidden, opacity, value]);
+  return <g ref={ref} data-kind-ui="radial-background-controller" />;
 }
 
 // Recharts computes every arc; the entrance masks its paint without changing its path.
@@ -264,12 +482,17 @@ function RadialEntranceSector(props: ComponentProps<typeof Sector> & { payload?:
     key !== undefined &&
     interaction.interactive &&
     interaction.markActivation &&
-    interaction.eligible.includes(key);
+    interaction.eligible.includes(key) &&
+    (interaction.visible === undefined || interaction.visible.includes(key));
   const focusRef = useInteractionFocus(key, interactive);
   return key === undefined ? (
     content
   ) : (
     <EmphasisMark
+      enabled={
+        interaction.eligible.includes(key) &&
+        (interaction.visible === undefined || interaction.visible.includes(key))
+      }
       ref={focusRef}
       data-interaction-focus-key={interactive ? key : undefined}
       target={{ kind: "category", key, scope: "radial", seriesKey: key }}
@@ -379,7 +602,7 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
   const { config, paints } = useChart();
   const owner = useChartInteraction();
   const filtered = categories?.bound
-    ? filterCategoryRows(categories.originalData, categories.key, owner.visible, props.children)
+    ? preserveCategoryRows(categories.originalData, categories.key, undefined, props.children)
     : undefined;
   const children = categories
     ? categoryCells(
@@ -401,6 +624,18 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
     props.maxBarSize,
     props.minPointSize,
   ]);
+  const { registerCategoryKeys } = useLineInteraction();
+  const categoryAt = useCallback(
+    (index: number) => {
+      const row = categories?.originalData[index];
+      return row === undefined ? undefined : categories?.key(row);
+    },
+    [categories?.originalData, categories?.key],
+  );
+  useLayoutEffect(() => {
+    if (!categories?.bound) return;
+    return registerCategoryKeys(series.id, categoryAt);
+  }, [categories?.bound, registerCategoryKeys, series.id, categoryAt]);
   const interaction = useSeriesInteraction(
     seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
     series.hide,
@@ -415,6 +650,39 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
     (props.activeShape === undefined || typeof props.activeShape === "boolean") &&
     props.filter === undefined &&
     props.style?.filter === undefined;
+  const hiddenRows = categories?.bound
+    ? categories.originalData.map(
+        (row) => owner.visible !== undefined && !owner.visible.includes(categories.key(row)),
+      )
+    : undefined;
+  const labelCategoryKeys = categories?.bound
+    ? categories.originalData.map(categories.key)
+    : undefined;
+  const nativeShape = useMemo(
+    () => (paint: RadialPaintProps) => <RadialOwnedPaint {...paint} option={props.shape} />,
+    [props.shape],
+  );
+  const nativeActiveShape = useMemo(
+    () => (paint: RadialPaintProps) => (
+      <RadialOwnedPaint {...paint} activePaint option={props.activeShape ?? props.shape} />
+    ),
+    [props.activeShape, props.shape],
+  );
+  const backgroundClass = `${filterId}-background`;
+  const backgroundOptions = isValidElement<ComponentProps<typeof Sector>>(props.background)
+    ? props.background.props
+    : typeof props.background === "object"
+      ? props.background
+      : undefined;
+  const nativeBackground = useMemo(() => {
+    if (!props.background) return props.background;
+    const option =
+      props.background === true
+        ? { fill: "var(--kind-ui-radial-track, #f1f1f1)" }
+        : backgroundOptions;
+    // Native RadialBar accepts background SVG props, not a shape renderer.
+    return { ...option, className: [option?.className, backgroundClass].filter(Boolean).join(" ") };
+  }, [props.background, backgroundClass, backgroundOptions]);
   const onClick: RadialBarSeriesProps<DataPoint, Value>["onClick"] = categories?.bound
     ? (...args) => {
         props.onClick?.(...args);
@@ -422,39 +690,92 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
       }
     : interaction.onClick;
   return (
-    <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
-      {materialized && <PolarMaterialFilter material={material} id={filterId} />}
-      <SeriesInteractionLayer
-        seriesKey={seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)}
-        hidden={series.hide}
+    <InteractionPaintScope>
+      <RadialSeriesPaint
+        value={{
+          hidden: series.hide,
+          key: seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
+        }}
       >
-        <motion.g data-kind-ui="radial-bar-reveal" initial={false}>
-          <RadialBar<DataPoint, Value>
-            {...props}
-            {...(onClick !== undefined ? { onClick } : {})}
-            {...(props.shape === undefined ? { shape: RadialEntranceSector } : {})}
-            {...(categories?.bound && props.shape === undefined && props.activeShape === undefined
-              ? { activeShape: RadialEntranceSector }
-              : {})}
-            {...(props.background === true
-              ? { background: { fill: "var(--kind-ui-radial-track, #f1f1f1)" } }
-              : {})}
-            {...(materialized ? { filter: `url(#${filterId})` } : {})}
-            id={series.id}
-            hide={series.hide}
-            isAnimationActive={false}
-            zIndex={0}
-            {...(fill !== undefined
-              ? { fill }
-              : series.color !== undefined
-                ? { fill: series.color }
-                : {})}
-            className={["kind-ui-radial-bar-series", className].filter(Boolean).join(" ")}
+        <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
+          {props.background &&
+            (categories?.bound ? (
+              categories.originalData.map((row, index) => (
+                <RadialBackgroundPaint
+                  key={categories.key(row)}
+                  paintClass={backgroundClass}
+                  index={index}
+                  paintKey={categories.key(row)}
+                  hidden={series.hide || Boolean(hiddenRows?.[index])}
+                  opacity={backgroundOptions?.opacity}
+                />
+              ))
+            ) : (
+              <RadialBackgroundPaint
+                paintClass={backgroundClass}
+                paintKey={
+                  seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)
+                }
+                hidden={series.hide}
+                opacity={backgroundOptions?.opacity}
+              />
+            ))}
+          {materialized && <PolarMaterialFilter material={material} id={filterId} />}
+          <SeriesInteractionLayer
+            seriesKey={seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)}
+            hidden={series.hide}
           >
-            {children}
-          </RadialBar>
-        </motion.g>
-      </SeriesInteractionLayer>
-    </ZIndexLayer>
+            <motion.g
+              data-kind-ui="radial-bar-reveal"
+              initial={false}
+              pointerEvents={series.hide ? "none" : undefined}
+            >
+              <RadialBar<DataPoint, Value>
+                {...props}
+                {...(onClick !== undefined ? { onClick } : {})}
+                shape={nativeShape}
+                activeShape={
+                  props.activeShape === undefined || props.activeShape === false
+                    ? false
+                    : nativeActiveShape
+                }
+                {...(nativeBackground !== undefined ? { background: nativeBackground } : {})}
+                {...(materialized ? { filter: `url(#${filterId})` } : {})}
+                {...(props.label !== undefined
+                  ? {
+                      label: visibilityLabel(
+                        props.label,
+                        series.hide,
+                        hiddenRows,
+                        seriesKey ??
+                          (typeof props.dataKey === "string" ? props.dataKey : undefined),
+                        labelCategoryKeys,
+                      ),
+                    }
+                  : {})}
+                id={series.id}
+                hide={false}
+                isAnimationActive={false}
+                zIndex={0}
+                {...(fill !== undefined
+                  ? { fill }
+                  : series.color !== undefined
+                    ? { fill: series.color }
+                    : {})}
+                className={["kind-ui-radial-bar-series", className].filter(Boolean).join(" ")}
+              >
+                {visibilityLabelChildren(
+                  children,
+                  series.hide,
+                  hiddenRows,
+                  seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
+                  labelCategoryKeys,
+                )}
+              </RadialBar>
+            </motion.g>
+          </SeriesInteractionLayer>
+        </ZIndexLayer>
+      </RadialSeriesPaint>
+    </InteractionPaintScope>
   );
 }

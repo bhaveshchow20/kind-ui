@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import { Dot, type DotItemDotProps, type Radar } from "recharts";
+import { InteractionPaint } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction } from "./chart-interaction.js";
 import { useLineInteraction } from "./line-chart.js";
@@ -187,9 +188,9 @@ export function RadarSelectionLayer({
         }
       }}
     >
-      <g data-kind-ui="radar-selection-paint" style={{ opacity: dimmed ? 0.28 : 1 }}>
+      <InteractionPaint data-kind-ui="radar-selection-paint" opacity={dimmed ? 0.28 : 1}>
         {children}
-      </g>
+      </InteractionPaint>
     </g>
   );
 }
@@ -244,7 +245,6 @@ function RadarSelectionDot({
     // biome-ignore lint/a11y/noStaticElementInteractions: Pointer target for the corresponding keyboard-operable series control, not an additional tab stop.
     <g
       data-kind-ui="radar-selection-dot"
-      style={{ opacity: dimmed ? 0.28 : 1 }}
       onClick={(event) => {
         if (
           !event.defaultPrevented &&
@@ -255,7 +255,7 @@ function RadarSelectionDot({
           selection?.toggle(seriesKey);
       }}
     >
-      {paint}
+      <InteractionPaint opacity={dimmed ? 0.28 : 1}>{paint}</InteractionPaint>
     </g>
   );
 }

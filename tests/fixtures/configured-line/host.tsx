@@ -88,6 +88,13 @@ export function ConfiguredHost() {
           config={currentConfig}
           xDataKey="month"
           backgroundPattern={{ pattern: "pinpoints", color: "var(--background-ink, CanvasText)" }}
+          rootProps={{
+            interaction: {
+              kind: "series",
+              mode: "visibility",
+              eligibleKeys: data.length ? Object.keys(currentConfig) : [],
+            },
+          }}
           aria-label="Monthly totals"
           onVisibleSeriesChange={(next) => {
             setBasicVisible(next);
@@ -105,6 +112,13 @@ export function ConfiguredHost() {
               data={data}
               config={config}
               xDataKey="month"
+              rootProps={{
+                interaction: {
+                  kind: "series",
+                  mode: "visibility",
+                  eligibleKeys: data.length ? Object.keys(config) : [],
+                },
+              }}
               aria-label="Controlled totals"
               onVisibleSeriesChange={(next) => {
                 setVisible(next);
@@ -116,6 +130,13 @@ export function ConfiguredHost() {
               data={data}
               config={config}
               xDataKey="month"
+              rootProps={{
+                interaction: {
+                  kind: "series",
+                  mode: "visibility",
+                  eligibleKeys: data.length ? Object.keys(config) : [],
+                },
+              }}
               aria-label="Controlled totals"
               visibleSeries={visible}
               onVisibleSeriesChange={(next) => {

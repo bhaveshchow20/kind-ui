@@ -19,7 +19,7 @@ Nest `LabelList` inside a series. Choose the value with `dataKey` and its placem
 </Chart.LineSeries>
 ```
 
-In radial bars, use `content={<Chart.RadialBarLabel />}` for measured arc text. Recalculate percentage labels after filtering if they describe the visible total.
+In radial bars, use `content={<Chart.RadialBarLabel />}` for measured arc text. Keep percentage labels based on the full data when focusing or hiding; visibility does not reallocate the chart.
 
 See [Recharts LabelList](https://recharts.github.io/en-US/api/LabelList/).
 

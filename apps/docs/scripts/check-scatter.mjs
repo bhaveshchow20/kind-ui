@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { expectDimmedSeries } from "./interaction-paint.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
@@ -133,8 +134,9 @@ try {
   const weekend = scatter.getByRole("button", { name: "Weekend", exact: true });
   await weekend.focus();
   await page.keyboard.press("Space");
-  assert.equal(await weekend.getAttribute("aria-pressed"), "false");
-  assert.equal(await scatter.locator(mark).count(), 4);
+  assert.equal(await weekend.getAttribute("aria-pressed"), "true");
+  assert.equal(await scatter.locator(mark).count(), 8);
+  await expectDimmedSeries(scatter, "weekday");
   await page.keyboard.press("Enter");
   assert.equal(await scatter.locator(mark).count(), 8);
   await scatter.getByRole("application").focus();

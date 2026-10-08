@@ -182,11 +182,11 @@ export function advancedBody(r: AdvancedRecipe, material: Finish, options: DemoO
 </Chart.ComboChart>`;
   if (r.family === "Pie")
     return `<Chart.PieChart animate={animate} accessibilityLayer aria-label="${r.tag}">
-  <Chart.PieSeries data={data.filter(row => visible.includes(row.id)).map(row => ({...row,fill:config[row.id].color}))} dataKey="value" nameKey="id" innerRadius="${options.innerRadius ?? (r.id === "donut" ? 54 : 0)}%" outerRadius="85%" cornerRadius={${options.radius ?? 5}} startAngle={${options.rotation ?? 90}} endAngle={${(options.rotation ?? 90) + 360}} />
+  <Chart.PieSeries interactionBinding="root" categoryKey="id" data={data.map(row => ({...row,fill:config[row.id].color}))} dataKey="value" nameKey="id" innerRadius="${options.innerRadius ?? (r.id === "donut" ? 54 : 0)}%" outerRadius="85%" cornerRadius={${options.radius ?? 5}} startAngle={${options.rotation ?? 90}} endAngle={${(options.rotation ?? 90) + 360}} />
   <Chart.Tooltip itemKey={entry => String(entry.payload.id)} valueAnimation={animate ? "shuffle" : undefined} />
 </Chart.PieChart>`;
   if (r.family === "Radar")
-    return `<Chart.RadarChart data={data} animate={animate} accessibilityLayer aria-label="${r.tag}" outerRadius="${options.outerRadius ?? 70}%" selection="${r.id === "radar" ? "series" : "none"}">
+    return `<Chart.RadarChart data={data} animate={animate} accessibilityLayer aria-label="${r.tag}" outerRadius="${options.outerRadius ?? 70}%">
   <Chart.PolarGrid gridType="${options.gridType ?? (r.id === "radar-outline" ? "circle" : "polygon")}" stroke="var(--chart-grid, #e4e5eb)" />
   <Chart.PolarAngleAxis dataKey="category" tick={{fontSize:11}} tickLine={false} />
   <Chart.PolarRadiusAxis domain={[0,100]} tickCount={3} tick={{fontSize:10}} axisLine={false} />
@@ -237,12 +237,12 @@ export function advancedCode(
       },
     ]),
   );
-  return `"use client";\n\nimport { useState } from "react";\nimport * as Chart from "@kind-ui/charts";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst data = ${JSON.stringify(advancedData(r.id, options), null, 2)};\nconst config: Record<string, Chart.SeriesConfig[string] & { color: string }> = Object.fromEntries(Object.entries(${JSON.stringify(config, null, 2)} satisfies Chart.SeriesConfig).map(([key, entry]) => [key, {
+  return `"use client";\n\nimport * as Chart from "@kind-ui/charts";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst data = ${JSON.stringify(advancedData(r.id, options), null, 2)};\nconst config: Record<string, Chart.SeriesConfig[string] & { color: string }> = Object.fromEntries(Object.entries(${JSON.stringify(config, null, 2)} satisfies Chart.SeriesConfig).map(([key, entry]) => [key, {
   ...entry,
   formatValue: (value: unknown) => {
     if (typeof value !== "number") return String(value);
     const number = value.toLocaleString("en-US");
     return ${r.id === "combo" || r.id === "pie" ? '"$" + number' : r.id === "combo-area" ? 'number + " TB"' : r.id === "radial-stacked" ? 'number + " h"' : r.id === "gauge" ? 'number + "%"' : "number"};
   }
-}]));\n\nexport function Example(){\n const [visible,setVisible] = useState<string[]>(${JSON.stringify(r.keys)});\n const animate = ${animate};\n return <Chart.Root emphasis="auto" config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>\n  <div style={{height:240,width:"100%"}}><Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>\n${advancedBody(r, material, options)}\n  </Chart.ResponsiveContainer></div>\n  ${(options.showLegend ?? true) ? "<Chart.Legend />" : ""}\n </Chart.Root>;\n}\n`;
+}]));\n\nexport function Example(){\n const animate = ${animate};\n return <Chart.Root emphasis="auto" config={config} interaction={{kind:"${r.family === "Pie" ? "category" : "series"}",mode:"focus",eligibleKeys:Object.keys(config)}}>\n  <div style={{height:240,width:"100%"}}><Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>\n${advancedBody(r, material, options)}\n  </Chart.ResponsiveContainer></div>\n  ${(options.showLegend ?? true) ? "<Chart.Legend />" : ""}\n </Chart.Root>;\n}\n`;
 }

@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 import { expectLastVisibleGuard } from "./last-visible";
 
 const url = "http://127.0.0.1:4177";
@@ -60,6 +61,7 @@ test("series visibility, native hide and keyboard tooltip retain registered iden
   for (const kind of ["radar", "radial"]) {
     const host = page.locator(`[data-host="${kind}"]`);
     const chart = host.locator('svg[role="application"]');
+    const originalPaths = await paths(host, kind === "radar" ? radarPath : radialPath);
     await chart.focus();
     await page.keyboard.press("ArrowRight");
     await expect(host.locator('[data-kind-ui="chart-tooltip"]')).toBeVisible();
@@ -72,13 +74,16 @@ test("series visibility, native hide and keyboard tooltip retain registered iden
     await page.keyboard.press("ArrowRight");
     await expect(
       host.locator('[data-kind-ui="chart-tooltip-item"][data-series="value"]'),
-    ).toHaveCount(0);
+    ).toHaveCount(1);
     await expectLastVisibleGuard(
       host.getByRole("button", { name: "Target", exact: true }),
       host.locator(kind === "radar" ? ".recharts-radar" : radialPath),
     );
     await page.getByRole("button", { name: "External visibility", exact: true }).click();
-    await expect(host.locator(kind === "radar" ? ".recharts-radar" : radialPath)).toHaveCount(0);
+    await expect
+      .poll(() => paths(host, kind === "radar" ? radarPath : radialPath))
+      .toEqual(originalPaths);
+    await expectHiddenPaint(host.locator(kind === "radar" ? radarPath : radialPath));
     await page.getByRole("button", { name: "External visibility", exact: true }).click();
     await page.getByRole("button", { name: "Native hide", exact: true }).click();
     await expect(
@@ -87,7 +92,7 @@ test("series visibility, native hide and keyboard tooltip retain registered iden
           ? ".recharts-radar.kind-ui-radar-series"
           : ".recharts-area.kind-ui-radial-bar-series",
       ),
-    ).toHaveCount(1);
+    ).toHaveCount(2);
     await page.getByRole("button", { name: "Native hide", exact: true }).click();
   }
 });

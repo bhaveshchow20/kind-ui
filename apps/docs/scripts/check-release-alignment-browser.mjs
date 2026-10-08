@@ -8,7 +8,9 @@ const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:7175";
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const output = `artifacts/release-alignment${basePath ? "-prefix" : "-default"}`;
 mkdirSync(output, { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const errors = [];
 const failedRequests = [];
 const checks = [];
@@ -134,8 +136,22 @@ try {
         assert.equal(before.length, 4);
         const toggle = selected.getByRole("button", { name: "Engineering", exact: true });
         await toggle.click();
-        assert.equal(await selected.locator('[data-kind-ui="pie-sector"]').count(), 3);
-        assert.deepEqual(await fills(), [before[0], before[2], before[3]]);
+        assert.equal(await selected.locator('[data-kind-ui="pie-sector"]').count(), 4);
+        const hidden = selected.locator('[data-kind-ui="pie-sector"]').nth(1);
+        await expect
+          .poll(() =>
+            hidden.evaluate((node) => {
+              let opacity = 1;
+              for (let element = node; element; element = element.parentElement)
+                opacity *= Number(getComputedStyle(element).opacity);
+              return opacity;
+            }),
+          )
+          .toBe(0);
+        await expect
+          .poll(() => hidden.evaluate((node) => getComputedStyle(node).pointerEvents))
+          .toBe("none");
+        assert.deepEqual(await fills(), before);
         await toggle.click();
         assert.deepEqual(await fills(), before);
       }
@@ -253,11 +269,11 @@ try {
   const provenance = await context.request.get(origin + publicPath("/package-provenance.json"));
   assert.equal(provenance.status(), 404, "Internal provenance must not be public");
   const download = await context.request.get(
-    origin + publicPath("/examples/package/kind-ui-charts-0.3.0.tgz"),
+    origin + publicPath("/examples/package/kind-ui-charts-0.4.0.tgz"),
   );
   assert.equal(download.status(), 404, "Local validation archive must not be public");
   assert.equal(
-    createHash("sha256").update(readFileSync("vendor/kind-ui-charts-0.3.0.tgz")).digest("hex"),
+    createHash("sha256").update(readFileSync("vendor/kind-ui-charts-0.4.0.tgz")).digest("hex"),
     JSON.parse(readFileSync("vendor/provenance.json", "utf8")).sha256,
   );
   assert.deepEqual(errors, []);

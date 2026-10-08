@@ -1,7 +1,6 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
 import "@kind-ui/charts/styles.css";
-import { useState } from "react";
 
 const data = [{ period: "October", committed: 64, reserved: 22 }];
 const config = {
@@ -18,9 +17,11 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function TeamCapacityChart() {
-  const [visible, setVisible] = useState<string[]>(["committed", "reserved"]);
   return (
-    <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
+    <Chart.Root
+      config={config}
+      interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
+    >
       <Chart.Legend aria-label="Capacity allocation" />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.RadialBarChart

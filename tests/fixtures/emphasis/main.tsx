@@ -124,7 +124,7 @@ function NativeLifetimeCase({ family, active = false }: { family: string; active
                   setChanges((n) => n + 1);
                 },
               }
-            : undefined
+            : { kind: "series", mode: "visibility", eligibleKeys: ["first"] }
         }
       >
         {scatter ? (
@@ -574,6 +574,7 @@ function LegacyAndDuplicateIdentities() {
     <>
       <section aria-label="Legacy Scatter visibility">
         <Chart.Root
+          interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
           config={config}
           visibleSeries={scatterVisible}
           onVisibleSeriesChange={setScatterVisible}
@@ -590,7 +591,7 @@ function LegacyAndDuplicateIdentities() {
       <section aria-label="Duplicate series availability">
         <Chart.Root
           config={config}
-          interaction={{ kind: "series", eligibleKeys: ["first", "second"] }}
+          interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["first", "second"] }}
           visibleSeries={duplicateVisible}
           onVisibleSeriesChange={(next) => {
             setDuplicateVisible(next);
@@ -679,6 +680,7 @@ function App() {
         Consumer clicks: <output>{clicks}</output>
       </p>
       <Chart.Root
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         config={config}
         emphasis={enabled ? "auto" : "none"}
         visibleSeries={visible}
@@ -824,6 +826,14 @@ function App() {
         </section>
       </Chart.Root>
       <Chart.Root
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: Object.keys({
+            bins: { label: "Bins", color: "#635bff" },
+            distribution: { label: "Distribution", color: "#00a6a0" },
+          }),
+        }}
         visibleSeries={incomingVisible}
         onVisibleSeriesChange={setIncomingVisible}
         config={{

@@ -27,6 +27,14 @@ function Family({ family }: { family: "area" | "bar" }) {
         ))}
       </select>
       <Chart.Root
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: Object.keys({
+            value: { label: "Value", color: "#db7093" },
+            other: { label: "Other", color: "#7c6ff0" },
+          }),
+        }}
         config={{
           value: { label: "Value", color: "#db7093" },
           other: { label: "Other", color: "#7c6ff0" },

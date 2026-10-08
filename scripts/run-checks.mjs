@@ -42,7 +42,14 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   } else if (process.argv[2] === "consumers") {
     // Prepared once before this phase; suites own separate ports/output paths.
     await runChecks(
-      ["test:chart", "test:composition", "test:configured-line", "test:line-integrations"],
+      [
+        "test:chart",
+        "test:composition",
+        "test:configured-line",
+        "test:line-integrations",
+        "test:focus-identity",
+        "test:cartesian-visibility",
+      ],
       process.argv.slice(3),
     );
   } else {

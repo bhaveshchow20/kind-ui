@@ -3,7 +3,9 @@ import { writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { swipeUp } from "./touch-swipe.mjs";
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const url = `${process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373"}/docs/components/area/`;
 try {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1080 } });

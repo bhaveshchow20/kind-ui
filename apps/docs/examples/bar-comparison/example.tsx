@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import { useState } from "react";
 import "@kind-ui/charts/styles.css";
 
 const data = [
@@ -20,14 +19,12 @@ export function LibraryLoansChart({
 }: {
   arrangement?: "grouped" | "stacked";
 } = {}) {
-  const [visibleSeries, setVisibleSeries] = useState<string[]>(["print", "digital"]);
   const stackId = arrangement === "stacked" ? "loans" : undefined;
   return (
     <figure style={{ margin: 0 }}>
       <Chart.Root
         config={config}
-        visibleSeries={visibleSeries}
-        onVisibleSeriesChange={setVisibleSeries}
+        interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
       >
         <Chart.Legend />
         <Chart.ResponsiveContainer width="100%" height={280}>

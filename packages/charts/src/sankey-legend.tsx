@@ -2,6 +2,7 @@
 
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { useOptionalChartInteraction } from "./chart-interaction.js";
+import { LegendItem } from "./legend.js";
 import type { SankeyNodeConfig } from "./sankey-colors.js";
 
 export type SankeyLegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
@@ -46,6 +47,7 @@ export function SankeyLegend({
       {Object.entries(config).map(([key, item]) => {
         const marker = (
           <span
+            key={key}
             aria-hidden="true"
             data-kind-ui="chart-indicator"
             style={{ "--kind-ui-chart-indicator-color": item.color } as CSSProperties}
@@ -59,15 +61,35 @@ export function SankeyLegend({
             {item.label}
           </>
         );
-        return (
-          <li key={key} data-kind-ui="chart-legend-item" data-node={key}>
-            {interactionBinding && interaction?.eligible.includes(key) ? (
-              <button type="button" aria-pressed={interaction.selected === key} data-node-key={key}>
+        return interactionBinding && interaction ? (
+          <LegendItem
+            key={key}
+            seriesKey={key}
+            interactive={interaction.eligible.includes(key)}
+            enabled={
+              interaction.eligible.includes(key) &&
+              (interaction.selected === null || interaction.selected === key)
+            }
+            inactive={interaction.selected !== null && interaction.selected !== key}
+          >
+            {interaction.eligible.includes(key) ? (
+              <button
+                type="button"
+                aria-pressed={interaction.selected === key}
+                data-node-key={key}
+                data-inactive={
+                  interaction.selected !== null && interaction.selected !== key ? "true" : undefined
+                }
+              >
                 {content}
               </button>
             ) : (
               <span>{content}</span>
             )}
+          </LegendItem>
+        ) : (
+          <li key={key} data-kind-ui="chart-legend-item" data-node={key}>
+            <span>{content}</span>
           </li>
         );
       })}

@@ -8,6 +8,7 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
+import { InteractionPaint } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import {
   useChartInteraction,
@@ -56,8 +57,16 @@ export function useSeriesInteraction<Args extends unknown[]>(
     if (current.interactive && current.key !== undefined && event?.button === 0)
       current.interaction.activate({ kind: "series", key: current.key }, "mark", event);
   }, []);
-  // Native animation IDs include handler identity even when native animation is disabled.
-  return { onClick: interactive ? onClick : handler };
+  // Keep the native handler reference stable across visibility/eligibility changes.
+  // The latest ref gates activation without replacing the renderer's event adapter.
+  return {
+    onClick: interaction.markActivation ? onClick : handler,
+    inactive:
+      hidden ||
+      (interaction.kind === "series" &&
+        interaction.selected !== null &&
+        interaction.selected !== key),
+  };
 }
 
 /** One keyboard target per logical series, within its native ZIndex portal. */
@@ -75,7 +84,11 @@ export function SeriesInteractionLayer({
   const interaction = useChartInteraction();
   const { config } = useChart();
   const enabled =
-    seriesKey !== undefined && !hidden && interaction.kind === "series" && interaction.configured;
+    seriesKey !== undefined &&
+    !hidden &&
+    interaction.kind === "series" &&
+    interaction.configured &&
+    interaction.eligible.includes(seriesKey);
   const emphasis = useEmphasis(
     { kind: "series", key: seriesKey ?? "", scope: "series", seriesKey },
     enabled,
@@ -91,12 +104,17 @@ export function SeriesInteractionLayer({
     keyboard &&
     typeof document !== "undefined" &&
     document.activeElement?.getAttribute("role") === "application";
-  const factor = nativeInspection && emphasis.active === null ? 1 : emphasis.factor;
+  const factor =
+    nativeInspection && emphasis.active === null && interaction.selected === null
+      ? 1
+      : emphasis.factor;
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useAriaPropsSupportedByRole: Role, pressed state and handlers are enabled together for opted-in SVG controls.
     <g
       data-kind-ui="series-interaction"
       data-series={seriesKey}
+      aria-hidden={hidden || undefined}
+      pointerEvents={hidden ? "none" : undefined}
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
       aria-label={
@@ -112,10 +130,18 @@ export function SeriesInteractionLayer({
           : undefined
       }
       onPointerEnter={(event) => {
-        if (event.pointerType !== "touch") emphasis.enter("pointer");
+        if (
+          event.pointerType !== "touch" &&
+          !(event.target as Element).closest('[data-kind-ui="emphasis-mark"]')
+        )
+          emphasis.enter("pointer");
       }}
       onPointerMove={(event) => {
-        if (event.pointerType !== "touch") emphasis.enter("pointer");
+        if (
+          event.pointerType !== "touch" &&
+          !(event.target as Element).closest('[data-kind-ui="emphasis-mark"]')
+        )
+          emphasis.enter("pointer");
       }}
       onPointerLeave={() => emphasis.leave("pointer")}
       onPointerCancel={() => emphasis.leave("pointer")}
@@ -137,9 +163,9 @@ export function SeriesInteractionLayer({
         }
       }}
     >
-      <g data-kind-ui="series-interaction-paint" style={{ opacity: factor }}>
+      <InteractionPaint data-kind-ui="series-interaction-paint" opacity={hidden ? 0 : factor}>
         {children}
-      </g>
+      </InteractionPaint>
     </g>
   );
 }

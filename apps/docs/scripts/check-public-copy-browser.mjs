@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { publicPath } from "../lib/routing.mjs";
 import { assertPublicCopy } from "./public-copy.mjs";
 
@@ -8,7 +8,9 @@ const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:7673";
 const homepage = process.env.KIND_HOMEPAGE_BROWSER_ORIGIN || "http://127.0.0.1:7674";
 const output = "artifacts/public-copy";
 mkdirSync(output, { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const checks = [];
 const errors = [];
 try {
@@ -81,7 +83,7 @@ try {
     }
     const response = await page.goto(homepage);
     assert.equal(response.status(), 200);
-    await page.getByRole("heading", { name: /Bring your data/ }).waitFor();
+    await page.getByRole("heading", { name: /Interactive charts for/ }).waitFor();
     assertPublicCopy(await page.locator("body").innerText(), "homepage");
     assert.match(
       await page.locator(".install-section").innerText(),
@@ -91,9 +93,17 @@ try {
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
       `homepage overflow at ${width}`,
     );
-    await page.locator(".hero img").evaluate((image) => {
-      if (!image.complete || image.naturalWidth === 0) throw new Error("Hero artwork did not load");
-    });
+    await expect
+      .poll(() =>
+        page
+          .locator(".hero img")
+          .evaluateAll(
+            (images) =>
+              images.length > 0 &&
+              images.every((image) => image.complete && image.naturalWidth > 0),
+          ),
+      )
+      .toBe(true);
     await page.waitForTimeout(1800);
     await page.screenshot({ path: `${output}/homepage-${width}.png` });
     checks.push({ route: homepage, width, status: "passed" });
@@ -115,7 +125,7 @@ try {
   await mobileLegend.scrollIntoViewIfNeeded();
   await mobileLegend.click();
   await page.getByRole("heading", { name: "Legend", exact: true }).waitFor();
-  for (const route of ["/package-provenance.json", "/examples/package/kind-ui-charts-0.3.0.tgz"])
+  for (const route of ["/package-provenance.json", "/examples/package/kind-ui-charts-0.4.0.tgz"])
     assert.equal((await context.request.get(origin + publicPath(route))).status(), 404);
   assert.deepEqual(errors, []);
   writeFileSync(

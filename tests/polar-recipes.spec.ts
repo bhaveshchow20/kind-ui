@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectDimmedPaint } from "./interaction-paint";
 
 test("polar recipes use public components, accessible tables and controlled legends", async ({
   page,
@@ -20,7 +21,8 @@ test("polar recipes use public components, accessible tables and controlled lege
   });
   const comparison = page.locator(".polar-card").first();
   await comparison.getByRole("button", { name: "Actual", exact: true }).click();
-  await expect(comparison.locator(".recharts-radar")).toHaveCount(1);
+  await expect(comparison.locator(".recharts-radar")).toHaveCount(2);
+  await expectDimmedPaint(comparison.locator(".recharts-radar-polygon").last());
   await comparison.getByText("View values", { exact: true }).click();
   await expect(comparison.getByRole("table")).toBeVisible();
   await page.getByRole("combobox", { name: "Data", exact: true }).selectOption("zero");

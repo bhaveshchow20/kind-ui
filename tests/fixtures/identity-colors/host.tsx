@@ -245,6 +245,11 @@ export function ThemeHost() {
       </button>
       {[0, 1].map((index) => (
         <Chart.Root
+          interaction={{
+            kind: "series",
+            mode: "visibility",
+            eligibleKeys: ["value"],
+          }}
           key={index}
           config={{ ...config, value: { ...config.value, color: solid ? "tomato" : color } }}
           visibleSeries={visible}

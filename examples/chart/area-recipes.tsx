@@ -54,9 +54,7 @@ function AreaFrame<T extends { period: string }>({
     if (entry.dataKey !== "desktop" && entry.dataKey !== "mobile") return undefined;
     const row = entry.payload as StackedAreaPoint | undefined;
     if (!row) return undefined;
-    return (["desktop", "mobile"] as const)
-      .filter((key) => visibleSeries === undefined || visibleSeries.includes(key))
-      .map((key) => row[key]);
+    return (["desktop", "mobile"] as const).map((key) => row[key]);
   };
   const percentStack = Chart.createPercentStack({ values: rawStackValues });
   const tooltipFormatter: Chart.TooltipProps["formatter"] = (value, _name, entry) => {

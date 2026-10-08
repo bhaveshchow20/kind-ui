@@ -13,6 +13,7 @@ import {
   useState,
 } from "react";
 
+import { InteractionPaint } from "./animation.js";
 import { useChartInteraction } from "./chart-interaction.js";
 
 /** Identity is data-owned. scope separates independent plots within one Root. */
@@ -135,17 +136,8 @@ export function useEmphasis(target: EmphasisTarget, enabled = true, persistent =
   const state = useEmphasisState();
   const owner = useId();
   const { kind, key, scope, seriesKey } = target;
-  useLayoutEffect(() => {
-    if (!enabled || !state.enabled) return;
-    return state.register(owner, { kind, key, scope, seriesKey });
-  }, [enabled, state.enabled, state.register, owner, kind, key, scope, seriesKey]);
-  const active = state.active;
-  const related =
-    active === null ||
-    (active.kind === "series" ? active.key === seriesKey : identity(active) === identity(target));
-  const applicable = active?.kind === "series" ? seriesKey !== undefined : active?.scope === scope;
   const persistentKey =
-    interaction.kind === "series"
+    interaction.kind === "series" || interaction.kind === "node"
       ? seriesKey
       : target.kind === "sector" || target.kind === "category"
         ? key
@@ -155,16 +147,40 @@ export function useEmphasis(target: EmphasisTarget, enabled = true, persistent =
     persistentKey !== undefined &&
     interaction.selected !== null &&
     persistentKey !== interaction.selected;
+  const persistentHidden =
+    persistentKey !== undefined &&
+    interaction.visible !== undefined &&
+    !interaction.visible.includes(persistentKey);
+  const inspectable = enabled && !persistentDimmed && !persistentHidden;
+  useLayoutEffect(() => {
+    if (!inspectable || !state.enabled) return;
+    return state.register(owner, { kind, key, scope, seriesKey });
+  }, [inspectable, state.enabled, state.register, owner, kind, key, scope, seriesKey]);
+  const candidate = state.active;
+  // Persistent state always wins; inspection may continue without restoring disabled paint.
+  const candidateKey = candidate?.seriesKey ?? candidate?.key;
+  const active =
+    candidate !== null &&
+    (interaction.selected === null || candidateKey === interaction.selected) &&
+    (interaction.visible === undefined ||
+      candidateKey === undefined ||
+      interaction.visible.includes(candidateKey))
+      ? candidate
+      : null;
+  const related =
+    active === null ||
+    (active.kind === "series" ? active.key === seriesKey : identity(active) === identity(target));
+  const applicable = active?.kind === "series" ? seriesKey !== undefined : active?.scope === scope;
   const dimmed =
-    enabled && (active !== null ? state.enabled && applicable && !related : persistentDimmed);
+    enabled && (persistentDimmed || (active !== null && state.enabled && applicable && !related));
   const enter = useCallback(
     (channel: Channel) => {
-      if (enabled && state.enabled) {
+      if (inspectable && state.enabled) {
         if (channel === "keyboard") state.clear("pointer");
         state.set(channel, { owner, target: { kind, key, scope, seriesKey } });
       }
     },
-    [enabled, state.enabled, state.clear, state.set, owner, kind, key, scope, seriesKey],
+    [inspectable, state.enabled, state.clear, state.set, owner, kind, key, scope, seriesKey],
   );
   const leave = useCallback(
     (channel: Channel) => state.clear(channel, owner, { kind, key, scope, seriesKey }),
@@ -227,9 +243,13 @@ export function EmphasisMark({
         props.onBlurCapture?.(event);
       }}
     >
-      <g data-kind-ui="emphasis-paint" style={{ opacity: emphasis.factor }}>
+      <InteractionPaint
+        data-kind-ui="emphasis-paint"
+        opacity={emphasis.factor}
+        identity={JSON.stringify(["emphasis", target.kind, target.scope, target.key])}
+      >
         {children}
-      </g>
+      </InteractionPaint>
     </g>
   );
 }

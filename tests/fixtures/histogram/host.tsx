@@ -79,6 +79,18 @@ export function HistogramHost() {
       )}
       <output aria-label="Clicked">{clicked}</output>
       <Chart.Root
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: Object.keys({
+            count: {
+              label: measure === "count" ? "Samples" : "Density",
+              color: "#187c79",
+              formatValue: (value: number) =>
+                `${value} ${measure === "count" ? "samples" : "per ms"}`,
+            },
+          }),
+        }}
         config={{
           count: {
             label: measure === "count" ? "Samples" : "Density",

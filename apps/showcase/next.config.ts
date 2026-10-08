@@ -17,9 +17,31 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   basePath,
   async redirects() {
-    return basePath
-      ? [{ source: "/", destination: basePath, permanent: false, basePath: false }]
+    const home = basePath
+      ? [{ source: "/", destination: basePath, permanent: false, basePath: false as const }]
       : [];
+    return [
+      ...home,
+      // Keep one generated reference in Docs, discoverable from the domain root.
+      ...["llms.txt", "llms-full.txt"].flatMap((file) => [
+        {
+          source: `/${file}`,
+          destination: `https://kindui.dev/charts/docs/${file}`,
+          permanent: true,
+          basePath: false as const,
+        },
+        ...(basePath
+          ? [
+              {
+                source: `${basePath}/${file}`,
+                destination: `https://kindui.dev/charts/docs/${file}`,
+                permanent: true,
+                basePath: false as const,
+              },
+            ]
+          : []),
+      ]),
+    ];
   },
 };
 export default nextConfig;

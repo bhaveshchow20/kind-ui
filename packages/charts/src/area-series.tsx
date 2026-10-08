@@ -9,6 +9,7 @@ import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fi
 import { useLineInteraction } from "./line-chart.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Area<DataPoint, Value>>,
@@ -54,12 +55,11 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
   const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
   const effectiveHide =
     hide === true || (visibleSeries !== undefined && !visibleSeries.includes(key ?? ""));
-  const previous = useRef({ data: props.data, hide: effectiveHide });
+  const previous = useRef({ data: props.data });
   useLayoutEffect(() => {
-    if (props.data !== previous.current.data || effectiveHide !== previous.current.hide)
-      invalidate();
-    previous.current = { data: props.data, hide: effectiveHide };
-  }, [props.data, effectiveHide, invalidate]);
+    if (props.data !== previous.current.data) invalidate();
+    previous.current = { data: props.data };
+  }, [props.data, invalidate]);
   useLayoutEffect(() => {
     if (key === undefined) return;
     return registerSeries(id, key);
@@ -98,7 +98,6 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
       <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.area}>
         <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
           <Area
-            activeDot={<ActiveMarker variant={activePointStyle} />}
             {...nativeProps}
             {...(props.dot === undefined && pointStyle !== "default"
               ? { dot: <PointMarker variant={pointStyle} /> }
@@ -114,7 +113,16 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
             isAnimationActive={false}
             id={id}
             zIndex={0}
-            hide={effectiveHide}
+            // Keep full-data native layout; the interaction layer suppresses hidden paint.
+            hide={false}
+            {...(props.label !== undefined
+              ? { label: visibilityLabel(props.label, effectiveHide, undefined, key) }
+              : {})}
+            activeDot={
+              effectiveHide
+                ? false
+                : (props.activeDot ?? <ActiveMarker variant={activePointStyle} />)
+            }
             {...(color !== undefined ? { stroke: color } : {})}
             {...(fill !== undefined
               ? { fill }
@@ -124,7 +132,9 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
                   ? { fill: color }
                   : {})}
             className={["kind-ui-area-series", className].filter(Boolean).join(" ")}
-          />
+          >
+            {visibilityLabelChildren(props.children, effectiveHide, undefined, key)}
+          </Area>
         </SeriesInteractionLayer>
       </ZIndexLayer>
     </>

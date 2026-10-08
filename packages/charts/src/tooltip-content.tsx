@@ -1,8 +1,11 @@
 "use client";
 
+import { motion } from "motion/react";
 import { type ComponentPropsWithRef, type CSSProperties, type ReactNode, use } from "react";
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
+import { useInteractionOpacity } from "./animation.js";
 import { useChart } from "./chart-context.js";
+import { useChartInteraction } from "./chart-interaction.js";
 import { LineInteraction } from "./line-chart.js";
 import { formatPercent, type NormalizedValue } from "./percent-stack.js";
 import { colorStopToken } from "./series-color.js";
@@ -45,20 +48,17 @@ export function TooltipContent({
   ...props
 }: TooltipContentProps) {
   const { config, visibleSeries } = useChart();
+  const interaction = useChartInteraction();
   const line = use(LineInteraction);
   const identity = (entry: UpstreamTooltipContentProps["payload"][number]) =>
     itemKey?.(entry) ??
+    (entry.graphicalItemId
+      ? line?.categoryKeys.get(entry.graphicalItemId)?.(Number(tooltip.activeIndex))
+      : undefined) ??
     (entry.graphicalItemId ? line?.seriesKeys.get(entry.graphicalItemId) : undefined) ??
     String(entry.dataKey ?? entry.name);
   const { active, payload, label, formatter, labelFormatter, accessibilityLayer } = tooltip;
-  const entries = active
-    ? payload.filter(
-        (item) =>
-          item.type !== "none" &&
-          !item.hide &&
-          (visibleSeries === undefined || visibleSeries.includes(identity(item))),
-      )
-    : [];
+  const entries = active ? payload.filter((item) => item.type !== "none") : [];
   if (!entries.some((entry) => entry.value != null)) return null;
   let hasVisibleValue = false;
   const items = entries.map((entry, index) => {
@@ -92,7 +92,15 @@ export function TooltipContent({
       hasVisibleValue = true;
     }
     return (
-      <li
+      <TooltipItem
+        inactive={Boolean(
+          entry.hide ||
+            (entry.graphicalItemId && line?.hiddenItems.get(entry.graphicalItemId)) ||
+            (visibleSeries !== undefined && !visibleSeries.includes(key)) ||
+            (interaction.selected !== null &&
+              Object.hasOwn(config, key) &&
+              interaction.selected !== key),
+        )}
         key={entry.graphicalItemId ?? `${key}-${index}`}
         data-kind-ui="chart-tooltip-item"
         data-series={key}
@@ -132,7 +140,7 @@ export function TooltipContent({
             value
           )}
         </strong>
-      </li>
+      </TooltipItem>
     );
   });
   if (!hasVisibleValue) return null;
@@ -155,5 +163,25 @@ export function TooltipContent({
         </>
       )}
     </div>
+  );
+}
+
+export function TooltipItem({
+  inactive,
+  children,
+  ...props
+}: {
+  inactive: boolean;
+  children: ReactNode;
+  "data-kind-ui"?: string;
+  "data-series"?: string;
+  "data-dimension"?: string;
+  "data-projected"?: boolean | undefined;
+}) {
+  const opacity = useInteractionOpacity(inactive ? 0.28 : 1);
+  return (
+    <motion.li {...props} data-inactive={inactive || undefined} initial={false} style={{ opacity }}>
+      {children}
+    </motion.li>
   );
 }

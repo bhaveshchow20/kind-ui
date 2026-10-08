@@ -4,7 +4,7 @@ export const scatterExamples = [
     title: "Scatter Chart",
     notes: "Eight task observations on numeric latency and acceptance axes.",
     acceptance:
-      "Both cohorts retain quantitative coordinates; legend visibility and complete source agree.",
+      "Both cohorts retain quantitative coordinates; legend focus and complete source agree.",
   },
   {
     id: "scatter-bubble",

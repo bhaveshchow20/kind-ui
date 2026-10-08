@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 
 for (const material of ["clay", "glow"]) {
   test(`packed area/bar ${material} filters and visibility remain independent`, async ({
@@ -34,11 +35,14 @@ for (const material of ["clay", "glow"]) {
       ),
     ).toBe(true);
     await area.getByRole("button", { name: "Value", exact: true }).click();
-    await expect(area.locator(".recharts-area-area")).toHaveCount(1);
+    await expect(area.locator(".recharts-area-area")).toHaveCount(2);
     await expect(bar.locator(".recharts-bar")).toHaveCount(2);
     await bar.getByRole("button", { name: "Other", exact: true }).click();
-    await expect(bar.locator(".recharts-bar")).toHaveCount(1);
-    await expect(area.locator(".recharts-area-area")).toHaveCount(1);
+    await expect(bar.locator(".recharts-bar")).toHaveCount(2);
+    await expectHiddenPaint(bar.locator(".recharts-bar-rectangle path").nth(3));
+    await expectHiddenPaint(area.locator(".recharts-area-area").first());
+    expect(await geometry()).toEqual(before);
+    await expect(area.locator(".recharts-area-area")).toHaveCount(2);
     expect(errors).toEqual([]);
   });
 }

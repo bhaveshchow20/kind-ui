@@ -133,14 +133,14 @@ try {
   const digital = comparison.getByRole("button", { name: "Digital", exact: true });
   await digital.focus();
   await page.keyboard.press("Enter");
-  assert.equal(await digital.getAttribute("aria-pressed"), "false");
-  assert.equal(await comparison.locator(".recharts-bar-rectangle").count(), 5);
+  assert.equal(await digital.getAttribute("aria-pressed"), "true");
+  assert.equal(await comparison.locator(".recharts-bar-rectangle").count(), 10);
   for (const name of ["Code", "Preview"])
     await comparison.getByRole("tab", { name, exact: true }).click();
-  assert.equal(await digital.getAttribute("aria-pressed"), "false");
+  assert.equal(await digital.getAttribute("aria-pressed"), "true");
   await digital.focus();
   await page.keyboard.press("Space");
-  assert.equal(await digital.getAttribute("aria-pressed"), "true");
+  assert.equal(await digital.getAttribute("aria-pressed"), "false");
   const first = page.locator('[data-component="bar"]');
   await first.locator(".recharts-surface").focus();
   await page.keyboard.press("ArrowRight");

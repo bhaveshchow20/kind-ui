@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { expectDimmedSeries } from "./interaction-paint.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const evidence = { variants: [], viewports: [], errors: [] };
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 try {
@@ -105,8 +108,9 @@ try {
     await comparison
       .getByRole("button", { name: "Target", exact: true })
       .getAttribute("aria-pressed"),
-    "false",
+    "true",
   );
+  await expectDimmedSeries(comparison, "actual");
   await comparison.getByRole("button", { name: "Target", exact: true }).click();
   for (const width of [1440, 375, 320]) {
     await p.setViewportSize({ width, height: width === 1440 ? 1080 : 812 });

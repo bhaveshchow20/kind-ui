@@ -1,7 +1,9 @@
 "use client";
 
+import { motion } from "motion/react";
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { Symbols } from "recharts";
+import { useInteractionOpacity } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction } from "./chart-interaction.js";
 import { useEmphasis } from "./emphasis.js";
@@ -24,8 +26,8 @@ export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
   }) => ReactNode;
 };
 
-/** Displays configured series; becomes interactive only when a controlled change callback exists. */
-export function Legend({ hideIcon = false, emphasis = "none", children, ...props }: LegendProps) {
+/** Configured items focus independently; explicit visibility mode opts into hide/show. */
+export function Legend({ hideIcon = false, emphasis = "series", children, ...props }: LegendProps) {
   const { config, paints, visibleSeries } = useChart();
   const interaction = useChartInteraction();
   return (
@@ -102,13 +104,24 @@ export function Legend({ hideIcon = false, emphasis = "none", children, ...props
           <LegendItem
             key={key}
             seriesKey={key}
-            enabled={emphasis === "series" && visible}
+            enabled={
+              emphasis === "series" &&
+              visible &&
+              interaction.eligible.includes(key) &&
+              (interaction.selected === null || interaction.selected === key)
+            }
+            inactive={!visible || (interaction.selected !== null && interaction.selected !== key)}
             interactive={interaction.interactive && interaction.eligible.includes(key)}
           >
             {interaction.interactive && interaction.eligible.includes(key) ? (
               <button
                 type="button"
                 aria-pressed={interaction.mode === "focus" ? interaction.selected === key : visible}
+                data-inactive={
+                  !visible || (interaction.selected !== null && interaction.selected !== key)
+                    ? "true"
+                    : undefined
+                }
                 data-kind-ui="chart-legend-button"
                 data-legend-key={key}
               >
@@ -127,23 +140,28 @@ export function Legend({ hideIcon = false, emphasis = "none", children, ...props
   );
 }
 
-function LegendItem({
+export function LegendItem({
   seriesKey,
   enabled,
   interactive,
+  inactive,
   children,
 }: {
   seriesKey: string;
   enabled: boolean;
   interactive: boolean;
+  inactive: boolean;
   children: ReactNode;
 }) {
   const emphasis = useEmphasis(
     { kind: "series", key: seriesKey, scope: "legend", seriesKey },
     enabled,
   );
+  const opacity = useInteractionOpacity(inactive ? 0.28 : 1);
   return (
-    <li
+    <motion.li
+      initial={false}
+      style={{ opacity }}
       data-kind-ui="chart-legend-item"
       data-series={seriesKey}
       tabIndex={enabled && !interactive ? 0 : undefined}
@@ -161,6 +179,6 @@ function LegendItem({
       }}
     >
       {children}
-    </li>
+    </motion.li>
   );
 }

@@ -3,7 +3,9 @@ import { chromium } from "@playwright/test";
 import { canonicalDocURL } from "../../indexing.mjs";
 import { publicPath } from "../lib/routing.mjs";
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 try {
   const page = await browser.newPage();
   const errors = [];

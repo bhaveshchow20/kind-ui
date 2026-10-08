@@ -111,8 +111,8 @@ Each config key generates a series unless you provide `series` or explicit child
 | `xAxis` / `yAxis` / `grid` | Native props or `false` | Styled axes and horizontal grid | Override generated parts or hide them. |
 | `tooltip` / `legend` | Kind props or `false` | Enabled with generated parts | Override or hide the tooltip and legend. Explicit children need `legend={{}}` to add a legend. |
 | `animate` | `boolean` or `LineAnimation` | `true` configured; `false` legacy | Entrance and emphasis motion; respects reduced motion. |
-| `defaultVisibleSeries` | `readonly string[]` | All series | Initial uncontrolled selection. Legend toggles update it automatically. |
-| `visibleSeries` / `onVisibleSeriesChange` | `readonly string[]` / callback | Uncontrolled | Provide both for controlled toggles. Without a callback, controlled visibility is read-only. |
+| `defaultVisibleSeries` | `readonly string[]` | All series | Initial uncontrolled visibility. Only explicit Root `interaction.mode="visibility"` legend actions update it. |
+| `visibleSeries` / `onVisibleSeriesChange` | `readonly string[]` / callback | Uncontrolled | Consumer-controlled visual visibility; explicit visibility mode enables legend hide/show. Without a callback, visibility is read-only. |
 | `children` | `ReactNode` | Generated parts | Explicit children replace the plot parts, including `null` or an empty fragment. |
 
 </div>
@@ -162,6 +162,6 @@ Customize the default legend, tooltip and plot parts with these components.
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
-| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

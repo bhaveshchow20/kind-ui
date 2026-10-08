@@ -5,7 +5,7 @@ description: Share series labels, colors, visibility and focus across a chart.
 
 `Root` connects your plot, legend and tooltip to a [series config](/docs/chart-components/series-config/).
 
-Toggle Print or Digital to see Root share visibility between the legend and bars.
+Focus Print or Digital to dim its peers while preserving the bars and tooltip values.
 
 <ChartExample id="bar-comparison" />
 
@@ -32,7 +32,7 @@ const config = {
 
 ## Visibility
 
-Pass `visibleSeries` to control visibility in your own state. Add `onVisibleSeriesChange` to receive [Legend](/docs/chart-components/legend/) requests. Without the callback, legend actions cannot change controlled visibility.
+Pass `visibleSeries` to control visibility in your own state. Focus never changes this value. To request hide/show from Legend, explicitly use `interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}` and `onVisibleSeriesChange`.
 
 ```tsx
 import { useState } from "react";
@@ -41,6 +41,7 @@ const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config)
 
 <Chart.Root
   config={config}
+  interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
   visibleSeries={visibleSeries}
   onVisibleSeriesChange={setVisibleSeries}
 >
@@ -48,13 +49,14 @@ const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config)
 </Chart.Root>
 ```
 
-For uncontrolled visibility, set `defaultVisibleSeries={Object.keys(config)}`. Without visibility or interaction settings, the legend displays labels without toggling.
+For uncontrolled visibility, set `defaultVisibleSeries={Object.keys(config)}`. The default legend focuses and dims; only explicit visibility mode toggles hidden items. Both modes keep at least one eligible legend item and its data active. Consumer-controlled empty visibility remains valid.
 
-<Callout title="Note">Legend toggles keep at least one eligible item visible. Controlled updates can still set an empty selection; provide an empty-result message.</Callout>
+<Callout title="Note">Explicit visibility-mode legend actions keep at least one eligible item visible. Consumer-controlled visibility can still hide every item; provide an empty-result message.</Callout>
+
 
 ## Interaction and eligibility
 
-Choose `mode="focus"` to highlight a series without hiding data. Use stable `eligibleKeys` for available identities, including temporarily hidden series.
+Focus is the default; it highlights a series without hiding data. Use stable `eligibleKeys` for available identities, including temporarily hidden series.
 
 ```tsx
 <Chart.Root
@@ -74,7 +76,7 @@ Choose `mode="focus"` to highlight a series without hiding data. Use stable `eli
 
 Use `selected` with `onSelectionChange` for controlled focus, or `defaultSelected` for uncontrolled focus. Activating the same item or pressing Escape clears focus.
 
-`markActivation="matching-legend"` lets supported marks use the legend's actions.
+`markActivation` defaults to `"matching-legend"` in focus mode, so supported marks share the legend's actions. Set `"none"` to keep marks passive.
 
 <Callout title="Note">Your event handlers run first. Call `event.preventDefault()` or return `false` from `onBeforeInteraction` to cancel the shared action.</Callout>
 

@@ -33,7 +33,7 @@ Use the same stable category IDs for config, slices and tooltips. Set `animation
 
 ## Controlled categories
 
-Toggle categories in the legend; the selected total updates with the visible slices.
+This example explicitly opts into visibility. Hide a category without moving or resizing the remaining slices; the status reports visible hours.
 
 <ChartExample id="pie-visibility" />
 
@@ -41,9 +41,9 @@ Use `interactionBinding="root"` to share category actions between slices and leg
 
 <ChartExample id="pie-interaction" />
 
-<Callout title="Category identities">Supply unique string IDs and complete `eligibleKeys`, including hidden and zero-valued categories. Without Root binding, filter rows yourself; `visibleSeries` alone does not hide slices.</Callout>
+<Callout title="Category identities">Supply unique string IDs and complete `eligibleKeys`, including hidden and zero-valued categories. Bind `PieSeries` to Root with `interactionBinding="root"` and retain the complete data and Cells. Hiding suppresses a slice without reallocating its angle; `visibleSeries` alone does not bind slices.</Callout>
 
-Focus highlights a slice; Enter/Space activates it and Escape resets. The legend keeps at least one category visible; explicit controls can clear the selection. See [Root interaction](/docs/chart-components/root/) for controlled actions.
+Focus highlights a slice; Enter/Space activates it and Escape resets. In explicit visibility mode, the legend keeps at least one category visible. Focus never changes visibility; explicit controls can clear focus. See [Root interaction](/docs/chart-components/root/) for controlled actions.
 
 ## Initial tooltip
 
@@ -154,6 +154,6 @@ Keep slice identities, legend actions and tooltip formatting aligned with these 
 | [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
-| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

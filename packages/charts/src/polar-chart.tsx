@@ -13,7 +13,7 @@ import {
 import { RadarChart as EngineRadarChart, RadialBarChart as EngineRadialBarChart } from "recharts";
 import { type BaseAnimation, MotionContext } from "./animation.js";
 import type { CategoryKey } from "./category-cells.js";
-import { filterCategoryRows } from "./category-cells.js";
+import { preserveCategoryRows } from "./category-cells.js";
 import { useChartInteraction } from "./chart-interaction.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
@@ -221,7 +221,7 @@ export function RadialBarChartFrame<DataPoint = unknown>({
     );
   const filtered =
     interactionBinding && categoryKey !== undefined && props.data
-      ? filterCategoryRows(props.data, categoryKey, interaction.visible, null)
+      ? preserveCategoryRows(props.data, categoryKey, interaction.visible, null)
       : undefined;
   if (categoryKey !== undefined && props.data === undefined)
     throw new Error("RadialBarChart categoryKey requires explicit chart data");

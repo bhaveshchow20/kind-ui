@@ -1,14 +1,21 @@
 "use client";
 
-import { animate as animateValue, motion, type Transition, useMotionValue } from "motion/react";
+import {
+  animate as animateValue,
+  type MotionValue,
+  motion,
+  type Transition,
+  useMotionValue,
+} from "motion/react";
 import {
   createContext,
   type ReactElement,
+  type ReactNode,
   use,
   useCallback,
   useId,
   useLayoutEffect,
-  useRef,
+  useMemo,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -52,6 +59,44 @@ export type LineChartProps = StaticLineChartProps & {
 };
 const defaultHover: Transition = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 };
 export const MotionContext = createContext({ enabled: false, transition: defaultHover });
+type InteractionMotion = { enabled: boolean; transition: Transition };
+const staticMotion: InteractionMotion = { enabled: false, transition: defaultHover };
+const MotionRegistration = createContext<{
+  register: (owner: string, motion: InteractionMotion) => () => void;
+} | null>(null);
+
+/** Share the participating chart's motion controls with its sibling legend. */
+export function InteractionMotionRoot({ children }: { children: ReactNode }) {
+  const [charts, setCharts] = useState(() => new Map<string, InteractionMotion>());
+  const register = useCallback((owner: string, settings: InteractionMotion) => {
+    setCharts((current) =>
+      current.get(owner) === settings ? current : new Map(current).set(owner, settings),
+    );
+    return () =>
+      setCharts((current) => {
+        if (!current.has(owner)) return current;
+        const next = new Map(current);
+        next.delete(owner);
+        return next;
+      });
+  }, []);
+  const actions = useMemo(() => ({ register }), [register]);
+  const settings = [...charts.values()].find((chart) => chart.enabled) ?? staticMotion;
+  return (
+    <MotionRegistration value={actions}>
+      <MotionContext value={settings}>{children}</MotionContext>
+    </MotionRegistration>
+  );
+}
+export function RegisterInteractionMotion({ enabled }: { enabled: boolean }) {
+  const registration = use(MotionRegistration);
+  const { transition } = use(MotionContext);
+  const owner = useId();
+  const settings = useMemo(() => ({ enabled, transition }), [enabled, transition]);
+  useLayoutEffect(() => registration?.register(owner, settings), [registration, owner, settings]);
+  return null;
+}
+
 const query = "(prefers-reduced-motion: reduce)";
 function subscribe(change: () => void) {
   const media = window.matchMedia(query);
@@ -108,8 +153,14 @@ export function LineChart({
   );
 }
 // Stop the previous target before retargeting or snapping, without remounting consumer DOM.
-function useAnimatedCoordinate(target: number, enabled: boolean, transition: Transition) {
-  const value = useMotionValue(target);
+function useAnimatedCoordinate(
+  target: number,
+  enabled: boolean,
+  transition: Transition,
+  retained?: MotionValue<number>,
+) {
+  const local = useMotionValue(target);
+  const value = retained ?? local;
   useLayoutEffect(() => {
     if (!enabled) {
       value.set(target);
@@ -119,6 +170,45 @@ function useAnimatedCoordinate(target: number, enabled: boolean, transition: Tra
     return () => controls.stop();
   }, [value, target, enabled, transition]);
   return value;
+}
+const PaintOpacity = createContext<Map<string, MotionValue<number>> | null>(null);
+
+/** Own fade state outside native animation-key reconciliation. */
+export function InteractionPaintScope({ children }: { children: ReactNode }) {
+  const [values] = useState(() => new Map<string, MotionValue<number>>());
+  return <PaintOpacity value={values}>{children}</PaintOpacity>;
+}
+
+/** Retarget paint from its current opacity without changing native data or geometry. */
+export function useInteractionOpacity(opacity: number, identity?: string) {
+  const { enabled, transition } = use(MotionContext);
+  const values = use(PaintOpacity);
+  const value = useAnimatedCoordinate(
+    opacity,
+    enabled,
+    transition,
+    identity === undefined ? undefined : values?.get(identity),
+  );
+  if (identity !== undefined && values && !values.has(identity)) values.set(identity, value);
+  return value;
+}
+export function InteractionPaint({
+  opacity,
+  identity,
+  children,
+  "data-kind-ui": kind = "interaction-paint",
+}: {
+  opacity: number;
+  identity?: string | undefined;
+  children: ReactNode;
+  "data-kind-ui"?: string | undefined;
+}) {
+  const value = useInteractionOpacity(opacity, identity);
+  return (
+    <motion.g data-kind-ui={kind} initial={false} style={{ opacity: value }}>
+      {children}
+    </motion.g>
+  );
 }
 export function ActiveMarker({
   cx,
@@ -160,52 +250,21 @@ export function LineSeries<
   DataPoint = Parameters<DefaultLineDataKey>[0],
   Value = ReturnType<DefaultLineDataKey>,
 >(props: LineSeriesProps<DataPoint, Value>) {
-  const { enabled } = use(MotionContext);
   const { visibleSeries } = useChart();
   const key = props.seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
   const visible = visibleSeries === undefined || (key !== undefined && visibleSeries.includes(key));
-  const opacity = useMotionValue(visible ? 1 : 0);
-  const [drawn, setDrawn] = useState(visible);
-  const previous = useRef(visible);
-  const run = useRef(0);
-  useLayoutEffect(() => {
-    const changed = previous.current !== visible;
-    previous.current = visible;
-    const token = ++run.current;
-    if (!enabled) {
-      opacity.set(visible ? 1 : 0);
-      setDrawn(visible);
-      return;
-    }
-    if (!changed) return;
-    if (visible) setDrawn(true);
-    const controls = animateValue(opacity, visible ? 1 : 0, {
-      duration: 0.18,
-      ease: "easeOut",
-      onComplete: () => {
-        if (!visible && run.current === token) setDrawn(false);
-      },
-    });
-    return () => controls.stop();
-  }, [visible, enabled, opacity]);
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
-      <motion.g
-        initial={false}
-        style={{ opacity }}
-        pointerEvents={visible ? undefined : "none"}
-        aria-hidden={visible ? undefined : true}
-      >
+      <g pointerEvents={visible ? undefined : "none"} aria-hidden={visible ? undefined : true}>
         <StaticLineSeries<DataPoint, Value>
           {...props}
           activeDot={
             visible ? (props.activeDot ?? <ActiveMarker variant={props.activePointStyle} />) : false
           }
           zIndex={0}
-          renderWhileHidden={enabled && drawn}
           isAnimationActive={false}
         />
-      </motion.g>
+      </g>
     </ZIndexLayer>
   );
 }

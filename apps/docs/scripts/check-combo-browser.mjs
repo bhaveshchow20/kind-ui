@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
+import { expectDimmedSeries } from "./interaction-paint.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = "http://127.0.0.1:6373";
@@ -112,10 +113,11 @@ try {
   const retail = stacked.getByRole("button", { name: "Retail · USD", exact: true });
   await retail.focus();
   await page.keyboard.press("Space");
-  assert.equal(await retail.getAttribute("aria-pressed"), "false");
-  assert.equal(await stacked.locator("g.recharts-bar.kind-ui-bar-series").count(), 1);
-  await page.keyboard.press("Space");
   assert.equal(await retail.getAttribute("aria-pressed"), "true");
+  await expectDimmedSeries(stacked, "wholesale");
+  assert.equal(await stacked.locator("g.recharts-bar.kind-ui-bar-series").count(), 2);
+  await page.keyboard.press("Space");
+  assert.equal(await retail.getAttribute("aria-pressed"), "false");
   assert.equal(await stacked.locator("g.recharts-bar.kind-ui-bar-series").count(), 2);
   const svg = stacked.locator(".recharts-surface");
   await svg.focus();

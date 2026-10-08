@@ -33,12 +33,12 @@ export type ChartInteractionConfig = {
 } & (
   | {
       kind: "series" | "category";
-      mode?: "visibility";
+      mode: "visibility";
       selected?: never;
       defaultSelected?: never;
       onSelectionChange?: never;
     }
-  | ({ kind: "series" | "category" | "node"; mode: "focus" } & (
+  | ({ kind: "series" | "category" | "node"; mode?: "focus" } & (
       | {
           selected?: undefined;
           defaultSelected?: string | null;
@@ -93,25 +93,33 @@ function useInteractionOwner() {
 }
 
 export function useOptionalChartInteraction() {
-  return use(Context);
+  const value = use(Context);
+  const emphasis = useOptionalEmphasisActions();
+  if (!value) return null;
+  const activate: Interaction["activate"] = (identity, source, event = null) => {
+    const clearing = value.mode === "focus" && value.selected === identity.key;
+    if (!value.activate(identity, source, event)) return false;
+    if (clearing) emphasis?.reset();
+    return true;
+  };
+  const reset: Interaction["reset"] = (event = null) => {
+    if (!value.reset(event)) return false;
+    emphasis?.reset();
+    return true;
+  };
+  return { ...value, activate, reset };
 }
 
 export function useChartInteraction() {
+  const value = useOptionalChartInteraction();
+  if (!value) throw new Error("useChartInteraction requires Root");
   const {
     register: _register,
     registerUnavailable: _registerUnavailable,
     announcement: _announcement,
     ...publicValue
-  } = useInteractionOwner();
-  const emphasis = useOptionalEmphasisActions();
-  return {
-    ...publicValue,
-    reset: (event: ChartInteractionEvent = null) => {
-      if (!publicValue.reset(event)) return false;
-      emphasis?.reset();
-      return true;
-    },
-  };
+  } = value;
+  return publicValue;
 }
 
 export function ChartInteractionProvider({
@@ -126,7 +134,7 @@ export function ChartInteractionProvider({
     ) => ReactNode;
   }) {
   const options = props.interaction;
-  const mode = options?.mode ?? "visibility";
+  const mode = options?.mode ?? "focus";
   const kind = options?.kind ?? "series";
   const controlled = options?.selected;
   const onChange = options?.onSelectionChange;
@@ -251,7 +259,11 @@ export function ChartInteractionProvider({
       !interactive ||
       identity.kind !== kind ||
       !eligible.includes(identity.key) ||
-      (source === "mark" && options?.markActivation !== "matching-legend")
+      (source === "mark" &&
+        !(
+          options?.markActivation === "matching-legend" ||
+          (mode === "focus" && options?.markActivation === undefined)
+        ))
     )
       return false;
     if (!permitted({ identity, source, mode, event })) return false;
@@ -280,14 +292,16 @@ export function ChartInteractionProvider({
   return (
     <Context
       value={{
-        configured: options !== undefined,
+        configured: options !== undefined || mode === "focus",
         mode,
         kind,
         selected,
         eligible,
         visible,
         interactive,
-        markActivation: options?.markActivation === "matching-legend",
+        markActivation:
+          options?.markActivation === "matching-legend" ||
+          (mode === "focus" && options?.markActivation === undefined),
         activate,
         reset,
         register,

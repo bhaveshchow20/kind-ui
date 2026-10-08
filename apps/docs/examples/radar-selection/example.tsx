@@ -19,7 +19,16 @@ const config = {
 export function SelectableRadarChart() {
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
+    <Chart.Root
+      config={config}
+      interaction={{
+        kind: "series",
+        mode: "focus",
+        eligibleKeys: Object.keys(config),
+        selected: selectedSeries,
+        onSelectionChange: setSelectedSeries,
+      }}
+    >
       <Chart.Legend />
       <Chart.ResponsiveContainer width="100%" height={280}>
         <Chart.RadarChart
@@ -28,9 +37,6 @@ export function SelectableRadarChart() {
           outerRadius="68%"
           margin={{ top: 24, right: 36, bottom: 24, left: 36 }}
           aria-label="Product research scores out of 100: Studio and Field"
-          selection="series"
-          selectedSeries={selectedSeries}
-          onSelectedSeriesChange={setSelectedSeries}
         >
           <Chart.PolarGrid radialLines={false} />
           <Chart.PolarAngleAxis dataKey="period" tick={{ fontSize: 12 }} />

@@ -186,7 +186,7 @@ export function PolarGalleryCard({
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
       >
-        <Chart.Legend aria-label={`${kind} gallery visible series`} />
+        <Chart.Legend aria-label={`${kind} gallery series focus`} />
         <ResponsiveContainer width="100%" height={300}>
           {radar ? (
             <Chart.RadarChart

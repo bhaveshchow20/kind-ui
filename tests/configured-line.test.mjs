@@ -14,13 +14,13 @@ test("configured line owns Root, native responsive sizing, instructions and unco
   assert.match(html, /data-kind-ui="chart"/);
   assert.match(html, /kind-ui-configured-line-chart/);
   assert.match(html, /data-kind-ui="chart-instructions"/);
-  assert.match(html, /aria-pressed="true"/);
+  assert.match(html, /aria-pressed="false"/);
   assert.ok(html.indexOf("Total") < html.indexOf("Extra"));
 });
 test("controlled read-only and default selections retain correct legend semantics", () => {
   const readOnly = render(h(LineChart, { ...defaults, visibleSeries: ["total"] }));
-  assert.doesNotMatch(readOnly, /<button/);
-  assert.match(readOnly, /Extra \(hidden\)/);
+  assert.match(readOnly, /<button/);
+  assert.match(readOnly, /Extra/);
   const selected = render(h(LineChart, { ...defaults, defaultVisibleSeries: [] }));
   assert.equal((selected.match(/aria-pressed="false"/g) ?? []).length, 2);
 });

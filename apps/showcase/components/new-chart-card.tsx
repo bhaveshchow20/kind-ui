@@ -1,7 +1,7 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
 import { motion, useInView, useReducedMotion } from "motion/react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import type { Finish } from "@/lib/advanced-chart-recipes";
 import type { DemoOptions } from "@/lib/demo-options";
 import {
@@ -30,9 +30,6 @@ function NewChart({
   entranceKey: string;
   options?: DemoOptions;
 }) {
-  const [distributionVisible, setDistributionVisible] = useState([
-    r.family === "Histogram" ? "count" : "spread",
-  ]);
   const bins = useMemo(() => histogramBins(r.id), [r.id]);
   const rows = useMemo(() => boxRows(r.id), [r.id]);
   const heat = useMemo(() => heatmapData(r.id), [r.id]);
@@ -92,8 +89,7 @@ function NewChart({
       <Chart.Root
         key={entranceKey}
         className="chart-root"
-        visibleSeries={distributionVisible}
-        onVisibleSeriesChange={setDistributionVisible}
+        interaction={{ kind: "series", mode: "focus", eligibleKeys: ["count"] }}
         config={{
           count: { label: density ? "Density" : latency ? "Requests" : "Orders", color: colors[0] },
         }}
@@ -161,8 +157,7 @@ function NewChart({
       <Chart.Root
         key={entranceKey}
         className="chart-root"
-        visibleSeries={distributionVisible}
-        onVisibleSeriesChange={setDistributionVisible}
+        interaction={{ kind: "series", mode: "focus", eligibleKeys: ["spread"] }}
         config={{
           spread: {
             label: horizontal ? "Weekly growth" : "Request time",

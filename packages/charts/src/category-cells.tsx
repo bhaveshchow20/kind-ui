@@ -1,6 +1,13 @@
 "use client";
 
-import { Children, cloneElement, Fragment, isValidElement, type ReactNode } from "react";
+import {
+  Children,
+  type ComponentProps,
+  cloneElement,
+  Fragment,
+  isValidElement,
+  type ReactNode,
+} from "react";
 import { Cell } from "recharts";
 import type { SeriesConfig } from "./types.js";
 
@@ -87,4 +94,47 @@ export function filterCategoryRows<Row>(
     });
   }
   return { data: data.filter((_row, index) => keep[index]), children: filter(children), keyOf };
+}
+
+/** Visibility suppresses paint/hits while original rows retain their native layout slots. */
+export function preserveCategoryRows<Row>(
+  data: readonly Row[],
+  categoryKey: CategoryKey<Row>,
+  visible: readonly string[] | undefined,
+  children: ReactNode,
+) {
+  // Reuse identity validation without filtering the data or changing its reference.
+  const { keyOf } = filterCategoryRows(data, categoryKey, undefined, null);
+  const keys = data.map(keyOf);
+  const hidden = keys.map((key) => visible !== undefined && !visible.includes(key));
+  let index = 0;
+  function suppress(parts: ReactNode): ReactNode {
+    return Children.map(parts, (child) => {
+      if (!isValidElement<ComponentProps<typeof Cell> & { children?: ReactNode }>(child))
+        return child;
+      if (child.type === Fragment) return cloneElement(child, {}, suppress(child.props.children));
+      if (child.type !== Cell) return child;
+      return hidden[index++]
+        ? cloneElement(child, {
+            style: { ...child.props.style, pointerEvents: "none" },
+          })
+        : child;
+    });
+  }
+  const resolved = suppress(children);
+  return {
+    data,
+    keyOf,
+    children: (
+      <>
+        {resolved}
+        {hidden.slice(index).map((hide, offset) => (
+          <Cell
+            key={`kind-visibility-${keys[index + offset]}`}
+            {...(hide ? { style: { pointerEvents: "none" } } : {})}
+          />
+        ))}
+      </>
+    ),
+  };
 }

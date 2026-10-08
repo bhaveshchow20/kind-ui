@@ -103,6 +103,14 @@ export function ComboHost() {
       <output aria-label="Ref">{ref.current?.tagName ?? "pending"}</output>
       <section aria-label="Managed">
         <Chart.Root
+          interaction={{
+            kind: "series",
+            mode: "visibility",
+            eligibleKeys: Object.keys({
+              ...config,
+              area: { ...config.area, color: color ? "#e11d48" : "#0d9488" },
+            }),
+          }}
           config={{ ...config, area: { ...config.area, color: color ? "#e11d48" : "#0d9488" } }}
           visibleSeries={visible}
           onVisibleSeriesChange={setVisible}

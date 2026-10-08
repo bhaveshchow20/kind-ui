@@ -38,7 +38,9 @@
     "check:fast": "node scripts/run-checks.mjs preflight && npm run typecheck && npm run test:unit",
     "check:packed": "npm run pack:artifact && tsc -p examples/chart && node scripts/check-showcase-code.mjs && vite build examples/chart && npm run check:line-integrations",
     "check:preflight": "node scripts/run-checks.mjs preflight",
-    "check:browsers": "node scripts/run-checks.mjs consumers"
+    "check:browsers": "node scripts/run-checks.mjs consumers",
+    "test:focus-identity": "playwright test --config playwright.focus-identity.config.mjs",
+    "test:cartesian-visibility": "playwright test --config playwright.cartesian-visibility.config.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

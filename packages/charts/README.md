@@ -1,7 +1,9 @@
 # Kind UI charts
 
-Composable React charts built on Recharts and Motion, with shared interaction,
-controlled visibility and optional animation. Start with a complete chart, then
+Kind UI Charts (`@kind-ui/charts`) is an MIT-licensed React chart library built on
+Recharts and Motion, with TypeScript APIs and examples for React and Next.js.
+It provides composable chart components, shared interaction, controlled visibility
+and optional animation. Start with a complete chart, then
 customize its parts through public components and typed props.
 
 [Website](https://kindui.dev/charts) ·
@@ -309,7 +311,7 @@ color resource IDs through hydration and a theme change.
 
 ## Legend and mark interactions
 
-Visibility remains the default. Opt into persistent focus with one Root owner:
+Legend and mark activation focus by default: the selected item stays at full paint and peers dim without changing geometry or tooltip data. Customize persistent focus with one Root owner:
 
 ```tsx
 <Root config={config} interaction={{
@@ -329,20 +331,24 @@ settled `eligibleKeys` snapshot. Include hidden Root items and zero values; excl
 removed, filtered, unavailable, or native-hidden items. Config-only entries do not
 satisfy the last-visible guard. New bindings require that snapshot; native series
 registration provides compatibility eligibility for existing controlled legends.
-`mode` defaults to `visibility`; `markActivation` defaults to `none`.
+`mode` defaults to `focus`; focus enables matching mark activation by default. Set `markActivation: "none"` to keep marks passive.
 
 Focus accepts either `selected` with required `onSelectionChange`, or
 `defaultSelected` with an optional callback. Persistent focus works with
 `emphasis="none"`. Repeated activation or Escape clears it; transient inspection
 never writes selection. Invalid uncontrolled selection clears without a callback.
 An invalid controlled ID paints no selection and resumes if that ID becomes valid.
-Visibility uses existing `visibleSeries`/`onVisibleSeriesChange`, or opt-in
-`defaultVisibleSeries`. An externally empty visibility value remains valid.
+Explicit `interaction={{ kind: "series", mode: "visibility", eligibleKeys }}` enables legend hide/show using `visibleSeries`/`onVisibleSeriesChange`, or opt-in
+`defaultVisibleSeries`. Legend actions always retain at least one active eligible item: focus leaves the selected item active, clearing focus restores all, and visibility refuses to hide the last item. An externally empty visibility value remains valid.
+
+Legend and tooltip entries retain their original labels, values and order when their data is dimmed or hidden; inactive entries dim rather than disappear. Chart-mark and legend hover emphasize only active entries; inactive data retains its disabled paint while tooltip and synchronized pointer movement continue. Dimmed and hidden legend entries remain clickable and keyboard operable to restore. Interaction fades honor chart `animate` and reduced motion.
 
 For categories, use `kind: "category"` and explicitly set
 `interactionBinding="root"` on `PieSeries` or `RadialBarChart`, with `categoryKey`
-and explicit data. Stable unique string keys must match Root config. Hiding filters
-original rows and their positional Cells before layout; Pie re-normalizes angles.
+and explicit data. Stable unique string keys must match Root config. Focus dims unselected marks without filtering. Hiding suppresses paint and pointer
+inspection while retaining full-data domains, stack baselines, grouped slots and
+category angles. Keep all original rows, series and positional Cells mounted;
+visibility must not change another mark's geometry, raw value or tooltip identity.
 ActivityRings forwards this binding through category `rootProps.interaction`.
 For Sankey node focus, bind both `SankeyChart` and `SankeyLegend` to a Root with
 `kind: "node", mode: "focus"`; incident links/endpoints remain emphasized.
@@ -707,7 +713,7 @@ are outside this contract; missing category data/identity or multiple direct
 series, duplicate/missing Tooltips, or unsupported direct children throw when resolving a pin.
 
 The category string is captured on mount. Reorder resolves its current index;
-unknown, duplicate, removed, hidden, or filtered categories clear the default
+unknown, duplicate, removed, or filtered categories clear the default
 permanently. Restoring rows or changing the default prop does not re-pin; remount
 explicitly to begin again. Pointer movement/down, focus, and any chart key press
 clear the default and hand inspection/dismissal back to Recharts. Escape never

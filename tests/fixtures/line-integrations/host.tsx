@@ -25,7 +25,10 @@ export function IntegrationHost() {
       xDataKey="month"
       aria-label="Monthly icon totals"
       className="h-80 text-blue-700"
-      rootProps={{ className: "max-w-xl" }}
+      rootProps={{
+        className: "max-w-xl",
+        interaction: { kind: "series", mode: "visibility", eligibleKeys: ["total"] },
+      }}
       legend={{ className: "gap-6 p-4 text-blue-700" }}
       grid={{ className: "stroke-fuchsia-600" }}
       tooltip={{ formatter: (value) => [`${value} units`, "Total"] }}
@@ -40,6 +43,15 @@ export function PatternHydrationHost() {
     <section data-pattern-hydration="">
       {[0, 1].map((chart) => (
         <Root
+          interaction={{
+            kind: "series",
+            mode: "visibility",
+            eligibleKeys: Object.keys({
+              first: { color: "red", pattern: { kind: "hatch" } },
+              second: { color: "blue", pattern: { kind: "stripe" } },
+              third: { color: "green", pattern: { kind: "duotone" } },
+            }),
+          }}
           key={chart}
           config={{
             first: { color: "red", pattern: { kind: "hatch" } },

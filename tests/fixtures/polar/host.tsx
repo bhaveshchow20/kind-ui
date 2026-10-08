@@ -304,6 +304,7 @@ export function PolarHost() {
         <DotEvents ref={dotEvents} />
       </output>
       <Chart.Root
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
@@ -387,6 +388,7 @@ export function PolarHost() {
         />
       )}
       <Chart.Root
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}

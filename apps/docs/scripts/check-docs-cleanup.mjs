@@ -7,7 +7,9 @@ import { families } from "../examples/catalog.mjs";
 import { publicPath } from "../lib/routing.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const evidence = [];
 const errors = [];
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
@@ -138,7 +140,11 @@ try {
   await expect(readyActivity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
   await expect(readyActivity.locator(".recharts-radial-bar-sector")).toHaveCount(3);
   await page.goto(origin + publicPath("/docs/components/radar/"));
-  const mark = page.locator('[data-kind-ui="radar-selection"]').last();
+  const mark = page
+    .locator(
+      '[data-component="radar-selection"] [data-kind-ui="series-interaction"][role="button"]',
+    )
+    .last();
   await mark.waitFor();
   await mark.click({ force: true });
   assert.equal(await mark.evaluate((node) => node.matches(":focus-visible")), false);

@@ -2,9 +2,9 @@ export const barExamples = [
   {
     id: "bar-comparison",
     title: "Grouped and stacked series",
-    notes: "Print and digital library loans, with consumer-owned legend visibility.",
+    notes: "Print and digital library loans, with legend focus.",
     acceptance:
-      "Both series and selected arrangement agree with the complete source; legend buttons update visibility.",
+      "Both series and selected arrangement agree with the complete source; legend buttons focus without changing geometry.",
   },
   {
     id: "bar-horizontal",

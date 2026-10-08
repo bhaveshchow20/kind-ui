@@ -179,6 +179,7 @@ export function ScatterHost() {
         {events.click}/{events.enter}/{events.move}/{events.leave}
       </output>
       <Chart.Root
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}

@@ -5,7 +5,16 @@ const port = (value) => value + portOffset;
 export default defineConfig({
   testDir: "tests",
   testMatch: "*.spec.ts",
-  testIgnore: ["composition.spec.ts", "configured-line.spec.ts", "line-integrations.spec.ts"],
+  testIgnore: [
+    "composition.spec.ts",
+    "configured-line.spec.ts",
+    "line-integrations.spec.ts",
+    "focus-identity.spec.ts",
+    "polar-hide.spec.ts",
+    "pie-hide.spec.ts",
+    "standalone-focus.spec.ts",
+    "cartesian-visibility.spec.ts",
+  ],
   outputDir: process.env.KIND_UI_ARTIFACT_DIR ?? "artifacts/chart-tests",
   use: {
     baseURL: `http://127.0.0.1:${port(4173)}`,

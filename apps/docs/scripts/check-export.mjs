@@ -7,7 +7,7 @@ import {
   assertPageSEO,
   textExportFiles,
 } from "../../../scripts/indexing-output.mjs";
-import { canonicalDocURL } from "../../indexing.mjs";
+import { canonicalDocURL, docsURL } from "../../indexing.mjs";
 import { basePath, canonicalDocSlugs, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
 import { assertPublicCopy } from "./public-copy.mjs";
 
@@ -38,6 +38,13 @@ for (const file of html) {
   const canonical = canonicalDocURL(canonicalDocSlugs(slugs));
   const body = readFileSync(path.join(root, file), "utf8");
   assertIndexingHTML(body, canonical);
+  const markdownSlug = canonicalDocSlugs(slugs);
+  const markdownURL = `${docsURL}markdown/${markdownSlug.length ? markdownSlug.map(encodeURIComponent).join("/") : "index"}.md`;
+  const alternates = [...body.matchAll(/<link\b[^>]*>/g)]
+    .map(([tag]) => tag)
+    .filter((tag) => tag.includes('rel="alternate"') && tag.includes('type="text/markdown"'));
+  assert.equal(alternates.length, 1, `Expected one Markdown alternate in ${file}`);
+  assert.ok(alternates[0].includes(`href="${markdownURL}"`), `Wrong Markdown alternate in ${file}`);
   const seo = assertPageSEO(body, canonical);
   if (pageMetadata.has(canonical)) assert.deepEqual(seo, pageMetadata.get(canonical));
   else pageMetadata.set(canonical, seo);

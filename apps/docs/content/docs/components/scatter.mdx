@@ -88,7 +88,7 @@ See [Recharts ScatterChart](https://recharts.github.io/en-US/api/ScatterChart/).
 | `shape` | `"circle" \| "cross" \| "diamond" \| "square" \| "star" \| "triangle" \| "wye"` or native custom shape | `"circle"` | Built-in symbol or consumer-owned renderer. |
 | `material` | `"clay" \| "glow"` | Omitted | Finish for built-in symbols, preserving native geometry. |
 | `fill` | `string` | Config color when identified | Explicit color overrides metadata. |
-| `hide` | `boolean` | `false` | Native hiding; Root selection also applies. |
+| `hide` | `boolean` | `false` | Suppresses paint and inspection while preserving coordinates; Root visibility also applies. |
 | `xAxisId` / `yAxisId` / `zAxisId` | `string \| number` | `0` | Native axis association. |
 
 </div>
@@ -133,5 +133,5 @@ Configure cohort metadata and numeric scales with these components. Use ScatterT
 | [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and control visibility. |
+| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |

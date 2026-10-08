@@ -1,6 +1,7 @@
 "use client";
 
 import { type ComponentPropsWithRef, useId } from "react";
+import { InteractionMotionRoot } from "./animation.js";
 import type { ChartContextValue } from "./chart-context.js";
 import { ChartContext } from "./chart-context.js";
 import {
@@ -93,24 +94,26 @@ export function Root({
             ...(change ? { onVisibleSeriesChange: change } : {}),
           }}
         >
-          <EmphasisProvider enabled={emphasis === "auto"}>
-            <RootFrame {...props} style={{ ...colors, ...style }}>
-              {process.env.NODE_ENV === "development" && <StylesheetWarning />}
-              {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
-                <svg
-                  aria-hidden="true"
-                  focusable="false"
-                  width={0}
-                  height={0}
-                  style={{ position: "absolute" }}
-                  data-kind-ui="color-resources"
-                >
-                  <SeriesColorDefinitions />
-                </svg>
-              )}
-              {children}
-            </RootFrame>
-          </EmphasisProvider>
+          <InteractionMotionRoot>
+            <EmphasisProvider enabled={emphasis === "auto"}>
+              <RootFrame {...props} style={{ ...colors, ...style }}>
+                {process.env.NODE_ENV === "development" && <StylesheetWarning />}
+                {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
+                  <svg
+                    aria-hidden="true"
+                    focusable="false"
+                    width={0}
+                    height={0}
+                    style={{ position: "absolute" }}
+                    data-kind-ui="color-resources"
+                  >
+                    <SeriesColorDefinitions />
+                  </svg>
+                )}
+                {children}
+              </RootFrame>
+            </EmphasisProvider>
+          </InteractionMotionRoot>
         </ChartContext>
       )}
     </ChartInteractionProvider>

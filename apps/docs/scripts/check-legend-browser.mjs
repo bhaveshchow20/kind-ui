@@ -25,7 +25,9 @@ const marks = {
   waterfall: ".recharts-bar-rectangle",
 };
 const evidence = { variants: [], loading: [], staticKeys: [], errors: [] };
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 let fixture;
 try {
   const context = await browser.newContext({
@@ -109,7 +111,7 @@ try {
     const buttons = card.locator('[data-kind-ui="chart-legend"] button');
     await expect.poll(() => card.locator(marks[family]).count()).toBeGreaterThan(0);
     const count = await buttons.count();
-    const focus = /mode:\s*["']focus/.test(sourceFor(bundles[id]));
+    const focus = !/mode:\s*["']visibility/.test(sourceFor(bundles[id]));
     if (count > 1) {
       await buttons.first().click();
       await expect(buttons.first()).toHaveAttribute("aria-pressed", focus ? "true" : "false");
@@ -163,9 +165,25 @@ async function exerciseLegend(page, card, family, source, id) {
   await expect(buttons).toHaveCount(await items.count());
   const count = await buttons.count();
   assert.ok(count > 0, `${id} has interactive public legend`);
-  const focus = /mode:\s*["']focus/.test(source);
+  const focus = !/mode:\s*["']visibility/.test(source);
   if (focus) {
     await expect.poll(() => card.locator(marks[family]).count()).toBeGreaterThan(0);
+    const geometry = () =>
+      card
+        .locator(marks[family])
+        .evaluateAll((nodes) =>
+          nodes.map((node) =>
+            [
+              node,
+              ...node.querySelectorAll("path, rect, circle, polygon, polyline, line, ellipse"),
+            ].map((shape) =>
+              ["d", "points", "x", "y", "width", "height", "cx", "cy", "transform"].map((key) =>
+                shape.getAttribute(key),
+              ),
+            ),
+          ),
+        );
+    const originalGeometry = await geometry();
     const plotCount = await card.locator(marks[family]).count();
     assert.ok(plotCount > 0, `${id} focus preserves plotted marks`);
     const dimmedPaint = () =>
@@ -173,27 +191,36 @@ async function exerciseLegend(page, card, family, source, id) {
         .locator(
           '[data-emphasis="dimmed"] [data-kind-ui="emphasis-paint"], [data-kind-ui="sankey-focus-mark"] > g, [data-kind-ui="series-interaction-paint"], [data-focus="dimmed"]',
         )
-        .evaluateAll((nodes) => nodes.filter((node) => Number(node.style.opacity) < 1).length);
+        .evaluateAll(
+          (nodes) => nodes.filter((node) => Number(getComputedStyle(node).opacity) < 1).length,
+        );
     await buttons.first().focus();
     await page.keyboard.press("Escape");
     await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(0);
     await buttons.first().click();
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
-    await expect
-      .poll(dimmedPaint, { message: `${id} changes plotted focus paint` })
-      .toBeGreaterThan(0);
+    if (count > 1) {
+      await expect
+        .poll(dimmedPaint, { message: `${id} changes plotted focus paint` })
+        .toBeGreaterThan(0);
+    } else {
+      await expect.poll(dimmedPaint).toBe(0);
+    }
     await expect(card.locator(marks[family])).toHaveCount(plotCount);
+    assert.deepEqual(await geometry(), originalGeometry, `${id} focus preserves geometry`);
     await buttons.first().focus();
     await page.keyboard.press("Enter");
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "false");
     await expect.poll(dimmedPaint).toBe(0);
     await page.keyboard.press("Space");
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
-    await expect.poll(dimmedPaint).toBeGreaterThan(0);
+    if (count > 1) await expect.poll(dimmedPaint).toBeGreaterThan(0);
+    else await expect.poll(dimmedPaint).toBe(0);
     await page.keyboard.press("Escape");
     await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(0);
     await expect.poll(dimmedPaint).toBe(0);
     await expect(card.locator(marks[family])).toHaveCount(plotCount);
+    assert.deepEqual(await geometry(), originalGeometry, `${id} focus preserves geometry`);
     evidence.variants.push({
       id,
       mode: "focus",
@@ -208,6 +235,57 @@ async function exerciseLegend(page, card, family, source, id) {
   const selector = marks[family];
   assert.ok(selector, `${id} needs a geometry selector`);
   await expect.poll(() => card.locator(selector).count()).toBeGreaterThan(0);
+  const geometry = () =>
+    card
+      .locator(selector)
+      .evaluateAll((nodes) =>
+        nodes.map((node) =>
+          [
+            node,
+            ...node.querySelectorAll("path, rect, circle, polygon, polyline, line, ellipse"),
+          ].map((shape) =>
+            ["d", "points", "x", "y", "width", "height", "cx", "cy", "transform"].map((key) =>
+              shape.getAttribute(key),
+            ),
+          ),
+        ),
+      );
+  const originalGeometry = await geometry();
+  const hiddenMarks = () =>
+    card.locator(selector).evaluateAll(
+      (nodes) =>
+        nodes.filter((node) => {
+          const ancestors = (element) => {
+            const parents = [];
+            for (
+              let parent = element.parentElement;
+              parent instanceof SVGElement;
+              parent = parent.parentElement
+            )
+              parents.push(parent);
+            return parents;
+          };
+          const shapes = node.matches("path, rect, circle, polygon, polyline, line, ellipse")
+            ? [node]
+            : [...node.querySelectorAll("path, rect, circle, polygon, polyline, line, ellipse")];
+          return (
+            shapes.length > 0 &&
+            shapes.every((shape) => {
+              const paint = getComputedStyle(shape);
+              return (
+                [shape, ...ancestors(shape)].reduce(
+                  (opacity, node) => opacity * Number(getComputedStyle(node).opacity),
+                  1,
+                ) === 0 ||
+                paint.visibility === "hidden" ||
+                paint.display === "none" ||
+                shape.getClientRects().length === 0
+              );
+            })
+          );
+        }).length,
+    );
+  const originallyHidden = await hiddenMarks();
   const before = await card.locator(selector).count();
   assert.ok(before > 0, `${id} has plotted marks`);
   const shareLabels = card.locator(".recharts-label-list text");
@@ -217,15 +295,19 @@ async function exerciseLegend(page, card, family, source, id) {
   if (count > 1) {
     await buttons.first().click();
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "false");
-    await expect.poll(() => card.locator(selector).count()).toBeLessThan(before);
-    if (originalShares) await expect(shareLabels).toHaveText(originalShares.slice(1));
+    await expect(card.locator(selector)).toHaveCount(before);
+    await expect.poll(hiddenMarks).toBeGreaterThan(originallyHidden);
+    assert.deepEqual(await geometry(), originalGeometry, `${id} hiding preserves geometry`);
+    if (originalShares) await expect(shareLabels).toHaveText(originalShares);
     await buttons.first().focus();
     await page.keyboard.press("Enter");
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
     await expect(card.locator(selector)).toHaveCount(before);
     await page.keyboard.press("Space");
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "false");
-    await expect.poll(() => card.locator(selector).count()).toBeLessThan(before);
+    await expect(card.locator(selector)).toHaveCount(before);
+    await expect.poll(hiddenMarks).toBeGreaterThan(originallyHidden);
+    assert.deepEqual(await geometry(), originalGeometry, `${id} hiding preserves geometry`);
     await page.keyboard.press("Space");
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
   }
@@ -242,10 +324,12 @@ async function exerciseLegend(page, card, family, source, id) {
   await expect(last).toHaveAttribute("aria-pressed", "true");
   await expect(card.locator(selector)).toHaveCount(remaining);
   assert.ok(remaining > 0, `${id} protected last item keeps geometry`);
+  assert.deepEqual(await geometry(), originalGeometry, `${id} hiding preserves full allocation`);
   for (let i = 0; i < count - 1; i++) await buttons.nth(i).click();
   await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(count);
   await expect(card.locator(selector)).toHaveCount(before);
   if (originalShares) await expect(shareLabels).toHaveText(originalShares);
+  assert.deepEqual(await geometry(), originalGeometry, `${id} restoring preserves geometry`);
   evidence.variants.push({
     id,
     mode: "visibility",
@@ -263,7 +347,7 @@ async function startConsumer() {
   for (const [name, body] of Object.entries(verificationFiles(first))) write(name, body);
   if (first.localPackage) {
     mkdirSync(path.join(root, "vendor"), { recursive: true });
-    cpSync("vendor/kind-ui-charts-0.3.0.tgz", path.join(root, "vendor/kind-ui-charts-0.3.0.tgz"));
+    cpSync("vendor/kind-ui-charts-0.4.0.tgz", path.join(root, "vendor/kind-ui-charts-0.4.0.tgz"));
   }
   const imports = [];
   const examples = [];

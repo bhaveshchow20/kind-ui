@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 
 for (const horizontal of [false, true]) {
   test(`patterns preserve ${horizontal ? "horizontal" : "vertical"} bars and scoped resources`, async ({
@@ -83,8 +84,23 @@ for (const horizontal of [false, true]) {
       }
       await expect(page.locator("pattern animate, pattern animateTransform")).toHaveCount(0);
     }
+    const beforeFocus = await marks.evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("d")),
+    );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
-    await expect(marks).toHaveCount(4);
+    await expect(marks).toHaveCount(8);
+    await expectHiddenPaint(
+      page
+        .locator('[data-kind-ui="chart"]')
+        .first()
+        .locator(
+          '[data-kind-ui="series-interaction"][data-series="first"] .recharts-bar-rectangle path',
+        )
+        .first(),
+    );
+    expect(await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")))).toEqual(
+      beforeFocus,
+    );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
     await expect(marks).toHaveCount(8);
     expect(errors).toEqual([]);

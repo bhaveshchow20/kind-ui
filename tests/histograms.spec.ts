@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectHiddenPaint } from "./interaction-paint";
 import { expectLastVisibleGuard } from "./last-visible";
 
 function at<T>(values: readonly T[], index: number): T {
@@ -51,7 +52,9 @@ test("native shapes, Cells, events, visibility and keyboard/table fallback remai
   page,
 }) => {
   await page.goto(packed);
-  await page.locator('[data-kind-ui="histogram-bin"][data-lower="0"]').click();
+  await page
+    .locator('[data-kind-ui="histogram-bin"][data-lower="0"]')
+    .click({ position: { x: 5, y: 5 }, force: true });
   await expect(page.getByRole("status", { name: "Clicked" })).toHaveText("1");
   await expect(page.locator('[data-kind-ui="histogram-bin"][data-lower="0"]')).toHaveAttribute(
     "fill",
@@ -85,7 +88,8 @@ test("native shapes, Cells, events, visibility and keyboard/table fallback remai
     page.locator('[data-host-shape="yes"]'),
   );
   await page.getByRole("button", { name: "External visibility", exact: true }).click();
-  await expect(page.locator('[data-host-shape="yes"]')).toHaveCount(0);
+  await expect(page.locator('[data-host-shape="yes"]')).toHaveCount(4);
+  await expectHiddenPaint(page.locator('[data-host-shape="yes"]'));
   await expect(page.getByRole("table")).toContainText("0");
 });
 test("Motion entrance is interrupted by data/resize/focus; reduced motion finishes", async ({

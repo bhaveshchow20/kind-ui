@@ -1,6 +1,6 @@
 {
   "name": "@kind-ui/charts",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Composable React chart components built on Recharts and Motion.",
   "repository": {
     "type": "git",
@@ -16,7 +16,20 @@
     "charts",
     "recharts",
     "motion",
-    "typescript"
+    "typescript",
+    "react-charts",
+    "charting-library",
+    "data-visualization",
+    "react-components",
+    "nextjs",
+    "svg",
+    "animation",
+    "line-chart",
+    "bar-chart",
+    "area-chart",
+    "pie-chart",
+    "heatmap",
+    "sankey"
   ],
   "type": "module",
   "sideEffects": [

@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
-
 import { assertToc } from "./docs-browser-contracts.mjs";
+import { expectDimmedSeries } from "./interaction-paint.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/area-examples.json", "utf8"));
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const evidence = { variants: [], viewports: [], keyboard: [], errors: [] };
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 try {
@@ -125,14 +127,15 @@ try {
   const comparison = p.locator('[data-component="area-stacked"]');
   assert.equal(await comparison.locator(".recharts-area-area").count(), 2);
   await comparison.getByRole("button", { name: "Mobile", exact: true }).click();
-  assert.equal(await comparison.locator(".recharts-area-area").count(), 1);
+  assert.equal(await comparison.locator(".recharts-area-area").count(), 2);
+  await expectDimmedSeries(comparison, "desktop");
   for (const name of ["Code", "Preview", "Code", "Preview"])
     await comparison.getByRole("tab", { name, exact: true }).click();
   assert.equal(
     await comparison
       .getByRole("button", { name: "Mobile", exact: true })
       .getAttribute("aria-pressed"),
-    "false",
+    "true",
   );
   await comparison.getByRole("button", { name: "Mobile", exact: true }).click();
   await comparison.getByRole("button", { name: "Mobile", exact: true }).focus();
@@ -141,14 +144,14 @@ try {
     await comparison
       .getByRole("button", { name: "Mobile", exact: true })
       .getAttribute("aria-pressed"),
-    "false",
+    "true",
   );
   await p.keyboard.press("Space");
   assert.equal(
     await comparison
       .getByRole("button", { name: "Mobile", exact: true })
       .getAttribute("aria-pressed"),
-    "true",
+    "false",
   );
   const plot = p.locator('[data-component="area"] .recharts-surface');
   await plot.focus();
