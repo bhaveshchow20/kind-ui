@@ -126,6 +126,15 @@ export function ScatterSeries({
   if (key === undefined && visibleSeries !== undefined)
     throw new Error("ScatterSeries requires seriesKey for controlled non-string dataKey");
   const interaction = useSeriesInteraction(key, hidden, hide === true, props.data, props.onClick);
+  const nativeChildren = useMemo(
+    () => visibilityLabelChildren(props.children, hidden, undefined, key),
+    [props.children, hidden, key],
+  );
+  const nativeLabel = useMemo(
+    () =>
+      props.label === undefined ? undefined : visibilityLabel(props.label, hidden, undefined, key),
+    [props.label, hidden, key],
+  );
   const color = fill ?? (key && Object.hasOwn(config, key) ? paints[key] : undefined);
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.scatter}>
@@ -138,15 +147,13 @@ export function ScatterSeries({
             id={id}
             // Keep full-data native layout; the interaction layer suppresses hidden paint.
             hide={false}
-            {...(props.label !== undefined
-              ? { label: visibilityLabel(props.label, hidden, undefined, key) }
-              : {})}
+            {...(nativeLabel !== undefined ? { label: nativeLabel } : {})}
             activeShape={interaction.inactive ? false : (shapes.activeShape ?? false)}
             {...(color !== undefined ? { fill: color } : {})}
             zIndex={0}
             isAnimationActive={false}
           >
-            {visibilityLabelChildren(props.children, hidden, undefined, key)}
+            {nativeChildren}
           </Scatter>
         </g>
       </SeriesInteractionLayer>
