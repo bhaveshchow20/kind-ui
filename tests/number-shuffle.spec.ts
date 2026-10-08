@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, type Locator, test } from "./browser";
 
 test.use({ hasTouch: true });
@@ -8,6 +9,54 @@ const final = '[data-kind-ui="tooltip-number-final"]';
 const visual = '[data-kind-ui="tooltip-number-visual"]';
 const reels = '[data-kind-ui="tooltip-digit-reel"]';
 const valueRow = (root: Locator, key: string) => root.locator(`[data-series="${key}"]`);
+
+test("Geist tabular digit slots fit the visible number throughout value updates", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(route);
+  const font = readFileSync(
+    new URL(
+      "../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2",
+      import.meta.url,
+    ),
+  ).toString("base64");
+  await page.addStyleTag({
+    content: `@font-face { font-family: "Tooltip Geist"; src: url(data:font/woff2;base64,${font}); font-weight: 100 900; }
+      [data-direct="true"] { font-family: "Tooltip Geist"; }`,
+  });
+  await page.evaluate(() => document.fonts.load('500 14px "Tooltip Geist"'));
+  await page.getByLabel("Shuffle values").check();
+  const samples = await page.evaluate(async () => {
+    const root = document.querySelector('[data-direct="true"]');
+    if (!root) throw new Error("Missing direct tooltip");
+    const outside: number[] = [];
+    for (const value of [13, 4, 123456.75, -12.5, 0]) {
+      const button = [...document.querySelectorAll("button")].find(
+        (node) => node.textContent === `Value ${value}`,
+      );
+      if (!button) throw new Error("Missing value control");
+      button.click();
+      for (let frame = 0; frame < 12; frame++) {
+        await new Promise(requestAnimationFrame);
+        for (const number of root.querySelectorAll('[data-kind-ui="tooltip-number"]')) {
+          const bounds = number.getBoundingClientRect();
+          const visual = number.querySelector('[data-kind-ui="tooltip-number-visual"]');
+          if (!visual) throw new Error("Missing visible number");
+          outside.push(
+            ...[...visual.children].map((part) => {
+              const box = part.getBoundingClientRect();
+              return Math.max(bounds.left - box.left, box.right - bounds.right);
+            }),
+          );
+        }
+      }
+    }
+    return outside;
+  });
+  expect(samples.length).toBeGreaterThan(0);
+  expect(Math.max(...samples)).toBeLessThanOrEqual(0.5);
+});
 
 test("rolling digits reserve the full text line height", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
