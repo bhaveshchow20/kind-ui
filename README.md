@@ -5,9 +5,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![npm version](https://img.shields.io/npm/v/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
 
-Composable React charts built on Recharts and Motion. Choose a chart, adapt a complete example and keep control of your data, styling and interactions.
+Kind UI Charts (`@kind-ui/charts`) is an MIT-licensed React chart library built on Recharts and Motion, with TypeScript APIs and examples for React and Next.js. Choose a chart, adapt a complete example and keep control of your data, styling and interactions.
 
-[Documentation](https://kindui.dev/charts/docs/) · [GitHub](https://github.com/bhaveshchow20/kind-ui)
+[Chart gallery](https://kindui.dev/charts) · [Documentation](https://kindui.dev/charts/docs/) · [npm package](https://www.npmjs.com/package/@kind-ui/charts) · [GitHub](https://github.com/bhaveshchow20/kind-ui)
 
 ```sh
 npm install @kind-ui/charts

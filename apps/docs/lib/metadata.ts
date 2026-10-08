@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { canonicalDocURL } from "../../indexing.mjs";
+import { canonicalDocURL, docsURL } from "../../indexing.mjs";
 import { socialMetadata } from "../../seo.mjs";
 import { source } from "./source";
 
@@ -12,7 +12,12 @@ export function docMetadata(slugs: string[] = []): Metadata {
   return {
     title: { absolute: fullTitle },
     description,
-    alternates: { canonical },
+    alternates: {
+      canonical,
+      types: {
+        "text/markdown": `${docsURL}markdown/${slugs.length ? slugs.map(encodeURIComponent).join("/") : "index"}.md`,
+      },
+    },
     ...socialMetadata(fullTitle, description, canonical),
   };
 }

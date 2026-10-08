@@ -16,7 +16,20 @@
     "charts",
     "recharts",
     "motion",
-    "typescript"
+    "typescript",
+    "react-charts",
+    "charting-library",
+    "data-visualization",
+    "react-components",
+    "nextjs",
+    "svg",
+    "animation",
+    "line-chart",
+    "bar-chart",
+    "area-chart",
+    "pie-chart",
+    "heatmap",
+    "sankey"
   ],
   "type": "module",
   "sideEffects": [
