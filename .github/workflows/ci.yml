@@ -111,6 +111,8 @@ jobs:
         with:
           name: charts-browser-fixtures
           path: .
+      # Source-backed focus fixtures also import the compiled package.
+      - run: npm run build
       - id: playwright-version
         run: echo "version=$(node -p 'require("./node_modules/@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
       - id: browsers

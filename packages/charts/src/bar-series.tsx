@@ -10,6 +10,7 @@ import {
   useCallback,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
 } from "react";
 import {
@@ -282,6 +283,17 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
     ],
   );
   const clipped = reveal && !effectiveHide && usablePlot;
+  const nativeChildren = useMemo(
+    () => visibilityLabelChildren(children, effectiveHide, undefined, key),
+    [children, effectiveHide, key],
+  );
+  const nativeLabel = useMemo(
+    () =>
+      props.label === undefined
+        ? undefined
+        : visibilityLabel(props.label, effectiveHide, undefined, key),
+    [props.label, effectiveHide, key],
+  );
   return (
     <>
       {/* Bar marks render through Recharts portals; put the variable on their generated class. */}
@@ -349,9 +361,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
             zIndex={0}
             // Keep full-data native layout; the interaction layer suppresses hidden paint.
             hide={false}
-            {...(props.label !== undefined
-              ? { label: visibilityLabel(props.label, effectiveHide, undefined, key) }
-              : {})}
+            {...(nativeLabel !== undefined ? { label: nativeLabel } : {})}
             {...(props.background
               ? {
                   background: {
@@ -378,7 +388,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
             style={style}
             isAnimationActive={false}
           >
-            {visibilityLabelChildren(children, effectiveHide, undefined, key)}
+            {nativeChildren}
           </Bar>
         </SeriesInteractionLayer>
       </ZIndexLayer>

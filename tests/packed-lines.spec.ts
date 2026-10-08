@@ -277,11 +277,12 @@ test("stateful packed tooltip content and refs survive mode, preference and geom
   expect(after).toEqual(before);
 });
 
-test("packed native hide cancels entrance without changing Root visibility or data", async ({
+test("packed native hide preserves entrance progress, Root visibility and data", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.clock.install();
+  await page.clock.pauseAt(new Date());
   await page.goto("http://127.0.0.1:4176/motion.html?native-visibility");
   await page.clock.runFor(120);
   const clip = page.locator("clipPath[id$='-reveal'] rect");
@@ -296,7 +297,8 @@ test("packed native hide cancels entrance without changing Root visibility or da
   expect(priorVisibility).toBe("value,other,alias");
   await page.getByLabel("Native hide other").evaluate((node) => (node as HTMLInputElement).click());
   await expect(page.locator(".recharts-line-curve")).toHaveCount(2);
-  await expect(clip).toHaveCount(0);
+  await expect(clip).toHaveCount(1);
+  expect(Number.parseFloat((await clip.getAttribute("width")) ?? "NaN")).toBe(progress);
   const otherItem = page.locator('[data-kind-ui="chart-legend-item"][data-series="other"]');
   await expect(otherItem).toHaveText("Other");
   await expect(otherItem.getByRole("button")).toHaveCount(0);
@@ -310,6 +312,8 @@ test("packed native hide cancels entrance without changing Root visibility or da
   );
   await expect(visibility).toHaveAttribute("data-native-visibility", priorVisibility);
   await expect(visibility).toHaveAttribute("data-visibility-callbacks", priorCallbacks);
+  await expect(clip).toHaveCount(1);
+  expect(Number.parseFloat((await clip.getAttribute("width")) ?? "NaN")).toBe(progress);
 });
 
 test("packed native visibility changes preserve active hover and full-data geometry", async ({
