@@ -116,6 +116,32 @@ test("rapid family switching and search panel scrolling stay usable on mobile", 
   await expect(page.getByRole("button", { name: "Search documentation" })).toBeFocused();
 });
 
+test("footer directory keeps chart and resource links visible on desktop and narrow screens", async ({
+  page,
+}) => {
+  await page.goto("./#footer");
+  const footer = page.locator("#footer");
+  const directory = footer.getByRole("navigation", { name: "Footer directory" });
+  for (const name of ["Charts", "More charts", "Guides", "Resources"]) {
+    await expect(directory.getByRole("heading", { name, exact: true })).toBeVisible();
+  }
+  for (const href of new Set(documentationCharts.map((chart) => chart.href))) {
+    await expect(directory.locator(`a[href="${href}"]`)).toHaveCount(1);
+  }
+  await expect(directory.getByRole("link", { name: "llms.txt", exact: true })).toHaveAttribute(
+    "href",
+    `${siteLinks.docs}llms.txt`,
+  );
+  for (const width of [1440, 768, 375, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await footer.evaluate((node) => node.scrollWidth)).toBeLessThanOrEqual(width);
+    for (const link of await directory.getByRole("link").all()) await expect(link).toBeVisible();
+  }
+  const firstGuide = directory.getByRole("link", { name: "Line charts", exact: true });
+  await firstGuide.focus();
+  await expect(firstGuide).toBeFocused();
+});
+
 test("initial homepage HTML and metadata routes match deployment indexing intent", async ({
   request,
 }) => {
