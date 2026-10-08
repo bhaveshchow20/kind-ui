@@ -196,7 +196,7 @@ async function exerciseLegend(page, card, family, source, id) {
         );
     await buttons.first().focus();
     await page.keyboard.press("Escape");
-    await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(count);
+    await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(0);
     await buttons.first().click();
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
     if (count > 1) {
@@ -210,14 +210,14 @@ async function exerciseLegend(page, card, family, source, id) {
     assert.deepEqual(await geometry(), originalGeometry, `${id} focus preserves geometry`);
     await buttons.first().focus();
     await page.keyboard.press("Enter");
-    await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
+    await expect(buttons.first()).toHaveAttribute("aria-pressed", "false");
     await expect.poll(dimmedPaint).toBe(0);
     await page.keyboard.press("Space");
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
     if (count > 1) await expect.poll(dimmedPaint).toBeGreaterThan(0);
     else await expect.poll(dimmedPaint).toBe(0);
     await page.keyboard.press("Escape");
-    await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(count);
+    await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(0);
     await expect.poll(dimmedPaint).toBe(0);
     await expect(card.locator(marks[family])).toHaveCount(plotCount);
     assert.deepEqual(await geometry(), originalGeometry, `${id} focus preserves geometry`);

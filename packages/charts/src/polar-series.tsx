@@ -692,7 +692,11 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
                 {...props}
                 {...(onClick !== undefined ? { onClick } : {})}
                 shape={nativeShape}
-                activeShape={props.activeShape === false ? () => null : nativeActiveShape}
+                activeShape={
+                  props.activeShape === undefined || props.activeShape === false
+                    ? false
+                    : nativeActiveShape
+                }
                 {...(nativeBackground !== undefined ? { background: nativeBackground } : {})}
                 {...(materialized ? { filter: `url(#${filterId})` } : {})}
                 {...(props.label !== undefined
