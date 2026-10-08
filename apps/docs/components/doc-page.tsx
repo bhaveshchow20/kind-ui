@@ -1,6 +1,6 @@
 import { highlight } from "fumadocs-core/highlight";
 import { Callout } from "fumadocs-ui/components/callout";
-import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock";
+import { Pre } from "fumadocs-ui/components/codeblock";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/glass/page";
@@ -18,6 +18,7 @@ import {
 } from "./component-playground";
 import { CopyMarkdown } from "./copy-markdown";
 import { MobileDocsNavigation } from "./glass-docs-layout";
+import { TrackedCodeBlock } from "./tracked-code-block";
 
 async function LineExample({
   id,
@@ -36,7 +37,7 @@ async function LineExample({
       defaultColor: false,
       components: {
         pre: ({ node: _node, ...props }) => (
-          <CodeBlock
+          <TrackedCodeBlock
             title="example.tsx"
             className="line-code-block"
             viewportProps={{
@@ -45,7 +46,7 @@ async function LineExample({
             }}
           >
             <Pre {...props} />
-          </CodeBlock>
+          </TrackedCodeBlock>
         ),
       },
     });

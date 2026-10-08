@@ -23,6 +23,7 @@ export function useCopyCode(code: string) {
     clearTimeout(timer.current);
     try {
       await navigator.clipboard.writeText(code);
+      window.dispatchEvent(new CustomEvent("kind-ui-copy", { detail: "code" }));
       if (current !== request.current) return;
       setResult({ code, status: "copied" });
       timer.current = setTimeout(() => setResult({ code, status: "idle" }), 1800);

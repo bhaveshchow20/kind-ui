@@ -616,6 +616,7 @@ function InstallSection() {
     const request = ++copyRequest.current;
     try {
       await navigator.clipboard.writeText(installCommands[manager]);
+      window.dispatchEvent(new CustomEvent("kind-ui-copy", { detail: "install" }));
       if (request !== copyRequest.current) return;
       setCopied(true);
       setCopyFailed(false);
