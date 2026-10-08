@@ -8,7 +8,9 @@ const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:7673";
 const homepage = process.env.KIND_HOMEPAGE_BROWSER_ORIGIN || "http://127.0.0.1:7674";
 const output = "artifacts/public-copy";
 mkdirSync(output, { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const checks = [];
 const errors = [];
 try {

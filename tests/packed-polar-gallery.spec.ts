@@ -103,7 +103,7 @@ test("all twelve official radar composition paths run through packed public expo
     await expect(tooltip).toBeVisible();
   }
   await host.getByRole("button", { name: "Actual", exact: true }).click();
-  await expect(host.locator(".recharts-radar")).toHaveCount(1);
+  await expect(host.locator(".recharts-radar")).toHaveCount(2);
   expect(errors).toEqual([]);
 });
 

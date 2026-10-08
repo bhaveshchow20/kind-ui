@@ -132,7 +132,6 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
     ? `${area.x}/${area.y}/${area.width}/${area.height}/${zero}/${xScale?.(1)}/${yScale?.(1)}/${JSON.stringify([xDomain, yDomain, axisCoordinates])}/${layout}`
     : undefined;
   const inputs = {
-    hide: effectiveHide,
     dataKey: props.dataKey,
     stackId: props.stackId,
     xAxisId: props.xAxisId,
@@ -156,7 +155,6 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   useLayoutEffect(() => {
     const old = previous.current;
     if (
-      effectiveHide !== old.hide ||
       props.dataKey !== old.dataKey ||
       props.stackId !== old.stackId ||
       props.xAxisId !== old.xAxisId ||
@@ -370,11 +368,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
                   },
                 }
               : {})}
-            {...(effectiveHide
-              ? {
-                  activeBar: false as const,
-                }
-              : {})}
+            activeBar={interaction.inactive ? false : (props.activeBar ?? false)}
             {...(patterned
               ? { fill: `url(#${patternId})` }
               : color !== undefined

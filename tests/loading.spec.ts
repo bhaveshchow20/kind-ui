@@ -1,5 +1,4 @@
 import { expect, type Locator, test } from "@playwright/test";
-import { expectLastVisibleGuard } from "./last-visible";
 
 const offset = Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173;
 test.use({ baseURL: `http://127.0.0.1:${4202 + offset}` });
@@ -123,7 +122,9 @@ test("release, repeated interruptions and empty results preserve layout and cons
   await chart.click({ position: { x: 150, y: 100 } });
   await expect(card.locator("output")).toHaveText("1");
   const legend = card.locator('[data-kind-ui="chart-legend-button"]').first();
-  await expectLastVisibleGuard(legend, card.locator(".recharts-bar-rectangle path"));
+  await legend.click();
+  await expect(legend).toHaveAttribute("aria-pressed", "true");
+  await expect(card.locator(".recharts-bar-rectangle path")).not.toHaveCount(0);
   await page.getByRole("checkbox", { name: "Visible sales bars" }).uncheck();
   await expect(legend).toHaveAttribute("aria-pressed", "false");
   for (let i = 0; i < 3; i++) {

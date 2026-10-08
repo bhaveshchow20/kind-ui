@@ -146,6 +146,11 @@ export function LineHost({
         data-visibility-callbacks={visibilityCallbacks}
       />
       <Static.Root
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: ["value", renamed ? "alias" : "other"],
+        }}
         config={{
           value: { label: "Value", color: "#345", formatValue: (v) => `${v} units` },
           other: { label: "Other", color: "#678" },

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectHiddenPaint } from "./interaction-paint";
 import { expectLastVisibleGuard } from "./last-visible";
 
 const packed = `http://127.0.0.1:${4192 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
@@ -68,9 +69,14 @@ test("packed histogram finishes retain quantitative geometry, Cells, overrides a
       await expectLastVisibleGuard(
         page.getByRole("button", { name: "Density", exact: true }),
         bins,
+        () =>
+          page
+            .getByRole("button", { name: "Density", exact: true })
+            .evaluate((node) => (node as HTMLButtonElement).click()),
       );
       await page.getByRole("button", { name: "External visibility", exact: true }).click();
-      await expect(bins).toHaveCount(0);
+      await expect(bins).toHaveCount(4);
+      await expectHiddenPaint(bins);
       await page.getByRole("button", { name: "External visibility", exact: true }).click();
       await expect(bins).toHaveCount(4);
     }

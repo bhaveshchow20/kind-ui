@@ -8,6 +8,9 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:6379",
     reducedMotion: "no-preference",
     channel: process.env.KIND_UI_TEST_CHROME ? "chrome" : undefined,
+    ...(process.env.KIND_UI_CHROMIUM_PATH
+      ? { launchOptions: { executablePath: process.env.KIND_UI_CHROMIUM_PATH } }
+      : {}),
   },
   webServer: {
     command:

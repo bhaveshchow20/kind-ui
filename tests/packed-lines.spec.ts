@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 import { expectLastVisibleGuard } from "./last-visible";
 import { directionalEntrances } from "./reveal-direction";
 
@@ -73,19 +74,21 @@ for (const variant of ["static", "motion"]) {
     await page.keyboard.press("ArrowRight");
     await bounds(tip, chart);
     await page.getByRole("button", { name: "Value", exact: true }).click();
-    await expect(page.locator(".recharts-line-curve")).toHaveCount(1);
-    await expect(page.locator("[data-host-mark]")).toHaveCount(0);
+    await expect(page.locator(".recharts-line-curve")).toHaveCount(2);
+    await expect(page.locator("[data-host-mark]")).toHaveCount(3);
+    await expectHiddenPaint(page.locator(".recharts-line-curve").first());
     await page.getByRole("button", { name: "Custom content" }).click();
     await chart.focus();
     await page.keyboard.press("ArrowLeft");
-    await expect(page.getByRole("status")).not.toContainText("Value");
+    await expect(page.getByRole("status")).toContainText("Value");
     await expectLastVisibleGuard(
       page.getByRole("button", { name: "Other", exact: true }),
       page.locator(".recharts-line-curve"),
     );
     await page.getByRole("button", { name: "External visibility", exact: true }).click();
-    await expect(page.locator(".recharts-line-curve")).toHaveCount(0);
-    await expect(page.getByRole("status")).not.toBeVisible();
+    await expect(page.locator(".recharts-line-curve")).toHaveCount(2);
+    await expectHiddenPaint(page.locator(".recharts-line-curve").first());
+    await expectHiddenPaint(page.locator(".recharts-line-curve").last());
     await expect(page.locator("body")).not.toHaveAttribute("data-chart-ref-cleanup", "yes");
     await page.getByRole("button", { name: "Unmount chart" }).click();
     await expect(page.locator("body")).toHaveAttribute("data-chart-ref-cleanup", "yes");
@@ -292,7 +295,7 @@ test("packed native hide cancels entrance without changing Root visibility or da
     throw new Error("Missing visibility observer");
   expect(priorVisibility).toBe("value,other,alias");
   await page.getByLabel("Native hide other").evaluate((node) => (node as HTMLInputElement).click());
-  await expect(page.locator(".recharts-line-curve")).toHaveCount(1);
+  await expect(page.locator(".recharts-line-curve")).toHaveCount(2);
   await expect(clip).toHaveCount(0);
   const otherItem = page.locator('[data-kind-ui="chart-legend-item"][data-series="other"]');
   await expect(otherItem).toHaveText("Other");
@@ -309,7 +312,7 @@ test("packed native hide cancels entrance without changing Root visibility or da
   await expect(visibility).toHaveAttribute("data-visibility-callbacks", priorCallbacks);
 });
 
-test("packed native visibility changes snap active hover to rescaled geometry", async ({
+test("packed native visibility changes preserve active hover and full-data geometry", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -325,11 +328,11 @@ test("packed native visibility changes snap active hover to rescaled geometry", 
   const marker = page.locator('[data-kind-ui="active-marker"]').first();
   const before = Number(await point.getAttribute("cy"));
   expect(Number(await marker.getAttribute("cy"))).toBeCloseTo(before, 1);
-  for (const hidden of [false, true]) {
+  for (let cycle = 0; cycle < 2; cycle++) {
     await toggle.evaluate((node) => (node as HTMLInputElement).click());
     await page.clock.runFor(32);
     const target = Number(await point.getAttribute("cy"));
-    if (!hidden) expect(Math.abs(target - before)).toBeGreaterThan(20);
+    expect(target).toBeCloseTo(before, 1);
     expect(Number(await marker.getAttribute("cy"))).toBeCloseTo(target, 1);
     await bounds(page.locator('[data-kind-ui="tooltip-frame"]'), page.getByRole("application"));
   }

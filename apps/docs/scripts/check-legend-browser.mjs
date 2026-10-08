@@ -25,7 +25,9 @@ const marks = {
   waterfall: ".recharts-bar-rectangle",
 };
 const evidence = { variants: [], loading: [], staticKeys: [], errors: [] };
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 let fixture;
 try {
   const context = await browser.newContext({
@@ -109,7 +111,7 @@ try {
     const buttons = card.locator('[data-kind-ui="chart-legend"] button');
     await expect.poll(() => card.locator(marks[family]).count()).toBeGreaterThan(0);
     const count = await buttons.count();
-    const focus = /mode:\s*["']focus/.test(sourceFor(bundles[id]));
+    const focus = !/mode:\s*["']visibility/.test(sourceFor(bundles[id]));
     if (count > 1) {
       await buttons.first().click();
       await expect(buttons.first()).toHaveAttribute("aria-pressed", focus ? "true" : "false");
@@ -189,10 +191,12 @@ async function exerciseLegend(page, card, family, source, id) {
         .locator(
           '[data-emphasis="dimmed"] [data-kind-ui="emphasis-paint"], [data-kind-ui="sankey-focus-mark"] > g, [data-kind-ui="series-interaction-paint"], [data-focus="dimmed"]',
         )
-        .evaluateAll((nodes) => nodes.filter((node) => Number(node.style.opacity) < 1).length);
+        .evaluateAll(
+          (nodes) => nodes.filter((node) => Number(getComputedStyle(node).opacity) < 1).length,
+        );
     await buttons.first().focus();
     await page.keyboard.press("Escape");
-    await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(0);
+    await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(count);
     await buttons.first().click();
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
     if (count > 1) {
@@ -206,14 +210,14 @@ async function exerciseLegend(page, card, family, source, id) {
     assert.deepEqual(await geometry(), originalGeometry, `${id} focus preserves geometry`);
     await buttons.first().focus();
     await page.keyboard.press("Enter");
-    await expect(buttons.first()).toHaveAttribute("aria-pressed", "false");
+    await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
     await expect.poll(dimmedPaint).toBe(0);
     await page.keyboard.press("Space");
     await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
     if (count > 1) await expect.poll(dimmedPaint).toBeGreaterThan(0);
     else await expect.poll(dimmedPaint).toBe(0);
     await page.keyboard.press("Escape");
-    await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(0);
+    await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(count);
     await expect.poll(dimmedPaint).toBe(0);
     await expect(card.locator(marks[family])).toHaveCount(plotCount);
     assert.deepEqual(await geometry(), originalGeometry, `${id} focus preserves geometry`);
@@ -251,6 +255,16 @@ async function exerciseLegend(page, card, family, source, id) {
     card.locator(selector).evaluateAll(
       (nodes) =>
         nodes.filter((node) => {
+          const ancestors = (element) => {
+            const parents = [];
+            for (
+              let parent = element.parentElement;
+              parent instanceof SVGElement;
+              parent = parent.parentElement
+            )
+              parents.push(parent);
+            return parents;
+          };
           const shapes = node.matches("path, rect, circle, polygon, polyline, line, ellipse")
             ? [node]
             : [...node.querySelectorAll("path, rect, circle, polygon, polyline, line, ellipse")];
@@ -259,6 +273,10 @@ async function exerciseLegend(page, card, family, source, id) {
             shapes.every((shape) => {
               const paint = getComputedStyle(shape);
               return (
+                [shape, ...ancestors(shape)].reduce(
+                  (opacity, node) => opacity * Number(getComputedStyle(node).opacity),
+                  1,
+                ) === 0 ||
                 paint.visibility === "hidden" ||
                 paint.display === "none" ||
                 shape.getClientRects().length === 0

@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 import { expectLastVisibleGuard } from "./last-visible";
 
 const url = `http://127.0.0.1:${4191 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?materials`;
@@ -58,9 +59,15 @@ test("packed Box materials: exact geometry, Cell paint, custom ownership and rep
       await expectLastVisibleGuard(
         host.getByRole("button", { name: "Distribution", exact: true }),
         host.locator(marks),
+        () =>
+          host
+            .getByRole("button", { name: "Distribution", exact: true })
+            .evaluate((node: HTMLButtonElement) => node.click()),
       );
       await host.getByRole("button", { name: "External visibility", exact: true }).click();
-      await expect(host.locator(marks)).toHaveCount(0);
+      await expect(host.locator(marks)).toHaveCount(3);
+      await expectHiddenPaint(host.locator(marks));
+      expect(await geometry()).toEqual(before);
       await host.getByRole("button", { name: "External visibility", exact: true }).click();
       await expect(host.locator(marks)).toHaveCount(3);
     }

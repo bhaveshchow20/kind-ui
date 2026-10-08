@@ -16,6 +16,7 @@ export function MotionContract() {
       <MotionRoot
         aria-label="Motion contract"
         role="region"
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["value"] }}
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}

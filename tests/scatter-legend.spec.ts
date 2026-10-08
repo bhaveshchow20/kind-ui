@@ -87,7 +87,7 @@ test("controlled keyboard toggles retain shape, focus and label while hidden", a
     page
       .getByRole("application", { name: "First scatter" })
       .locator(".recharts-scatter-symbol path"),
-  ).toHaveCount(7);
+  ).toHaveCount(8);
   await page.keyboard.press("Enter");
   await expect(button).toBeFocused();
   await expect(button).toHaveAttribute("aria-pressed", "true");

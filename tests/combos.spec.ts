@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectDimmedPaint } from "./interaction-paint";
 
 test("Combo recipes render three useful compositions with independently controlled legends", async ({
   page,
@@ -13,7 +14,8 @@ test("Combo recipes render three useful compositions with independently controll
   await expect(cash.locator(".recharts-bar")).toHaveCount(2);
   await expect(forecast.locator(".recharts-line-dots path")).toHaveCount(6);
   await load.getByRole("button", { name: "Completed", exact: true }).click();
-  await expect(load.locator(".recharts-bar")).toHaveCount(0);
+  await expect(load.locator(".recharts-bar")).toHaveCount(1);
+  await expectDimmedPaint(load.locator(".recharts-line-curve"));
   await expect(forecast.locator(".recharts-bar")).toHaveCount(1);
   await cash.getByText("View data", { exact: true }).click();
   await expect(cash.getByRole("table")).toContainText("No data");
@@ -43,9 +45,10 @@ test("recipe Motion replay runs entrances and preserves hidden legends", async (
   await expect(load.locator('[data-combo-reveal="area"]')).toHaveCount(1);
   await expect(load.getByRole("button", { name: "Completed", exact: true })).toHaveAttribute(
     "aria-pressed",
-    "false",
+    "true",
   );
-  await expect(load.locator(".recharts-bar")).toHaveCount(0);
+  await expect(load.locator(".recharts-bar")).toHaveCount(1);
   await page.clock.runFor(1500);
+  await expectDimmedPaint(load.locator(".recharts-line-curve"));
   await expect(page.locator('[data-combo-reveal], [data-kind-ui="bar-reveal"]')).toHaveCount(0);
 });

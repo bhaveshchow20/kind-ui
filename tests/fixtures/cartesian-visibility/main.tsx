@@ -82,9 +82,12 @@ function Case({ family, native }: { family: string; native: boolean }) {
               dataKey={key}
               label={{ pointerEvents: "none" }}
               {...(family === "scatter"
-                ? { activeShape: false }
+                ? { activeShape: query.get("active") === "true" }
                 : family.startsWith("bar")
-                  ? { activeBar: false, background: { zIndex: 54, fill: "#ddd" } }
+                  ? {
+                      activeBar: query.get("active") === "true",
+                      background: { zIndex: 54, fill: "#ddd" },
+                    }
                   : { activeDot: false })}
               onClick={(entry, index) =>
                 setPointer(

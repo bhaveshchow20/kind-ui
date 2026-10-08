@@ -22,7 +22,6 @@ import {
   useChartWidth,
 } from "recharts";
 import { RegisterInteractionMotion } from "./animation.js";
-import { useChart } from "./chart-context.js";
 import { useEmphasisActions } from "./emphasis.js";
 import type { LoadingAnimation } from "./loading-motion.js";
 import {
@@ -90,18 +89,16 @@ export function useChartKeyboard() {
 function Lifecycle({ data, invalidate }: { data: LineChartProps["data"]; invalidate: () => void }) {
   const width = useChartWidth();
   const height = useChartHeight();
-  const { visibleSeries } = useChart();
-  const previous = useRef({ width, height, data, visibleSeries });
+  const previous = useRef({ width, height, data });
   useLayoutEffect(() => {
     const old = previous.current;
     if (
       (old.width && old.height && (width !== old.width || height !== old.height)) ||
-      data !== old.data ||
-      visibleSeries !== old.visibleSeries
+      data !== old.data
     )
       invalidate();
-    previous.current = { width, height, data, visibleSeries };
-  }, [width, height, data, visibleSeries, invalidate]);
+    previous.current = { width, height, data };
+  }, [width, height, data, invalidate]);
   return null;
 }
 

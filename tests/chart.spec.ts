@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectDimmedPaint } from "./interaction-paint";
 
 test("public components share configuration and preserve missing, zero and hidden values", async ({
   page,
@@ -14,12 +15,13 @@ test("public components share configuration and preserve missing, zero and hidde
   await completed.focus();
   await page.keyboard.press("Space");
   await expect(completed).toBeFocused();
-  await expect(completed).toHaveAttribute("aria-pressed", "false");
+  await expect(completed).toHaveAttribute("aria-pressed", "true");
   await chart.focus();
   await page.keyboard.press("ArrowRight");
   const status = page.getByRole("status");
   await expect(status).toContainText("Needs review");
-  await expect(status).not.toContainText("Completed");
+  await expect(status).toContainText("Completed");
+  await expectDimmedPaint(chart.locator('[data-series="review"] path').first());
   await expect(status).toHaveAttribute("aria-live", "assertive");
   await completed.click();
   await chart.focus();
@@ -42,7 +44,7 @@ test("legend keyboard guard retains focus and genuine no-data recovery", async (
   await review.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
-    "At least one item must remain visible.",
+    "Highlighted Needs review.",
   );
   await expect(review).toBeFocused();
   await expect(page.getByRole("row", { name: "Mon 42 tasks 12 tasks" })).toBeVisible();
@@ -54,7 +56,7 @@ test("legend keyboard guard retains focus and genuine no-data recovery", async (
   await page.getByLabel("Empty data").uncheck();
   await expect(page.getByRole("application")).toBeVisible();
   for (let i = 0; i < 10; i++) await review.click();
-  await expect(review).toHaveAttribute("aria-pressed", "true");
+  await expect(review).toHaveAttribute("aria-pressed", "false");
 });
 
 test("controlled state stays authoritative and native props/refs reach the DOM", async ({
@@ -113,9 +115,9 @@ test("two independent containers isolate metadata, keyboard tooltips and resizin
 test("compact example fits mobile and retains the data alternative", async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/");
-  await page.getByRole("button", { name: "Needs review" }).click();
+  await page.getByRole("button", { name: "Needs review", exact: true }).click();
   await expect(page.getByRole("table")).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "Needs review Hidden" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Needs review" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({ path: info.outputPath("chart-mobile.png"), fullPage: true });
 });
@@ -139,7 +141,7 @@ test("host theme tokens reach marks, legend and tooltip without changing selecti
     "background-color",
     "rgb(0, 128, 128)",
   );
-  await expect(completed).toHaveAttribute("aria-pressed", "true");
+  await expect(completed).toHaveAttribute("aria-pressed", "false");
   await chart.focus();
   await page.keyboard.press("ArrowRight");
   const tooltip = page.getByRole("status");
@@ -225,8 +227,8 @@ for (const palette of ["Monochrome", "Color"] as const) {
     await expect(other).toHaveCSS("outline-style", "solid");
     await page.keyboard.press("Space");
     await expect(other).toHaveAttribute("aria-pressed", "true");
-    await expect(completed).toHaveAttribute("aria-pressed", "false");
-    await expect(page.getByRole("columnheader", { name: "Completed Hidden" })).toBeVisible();
+    await expect(completed).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("columnheader", { name: "Completed" })).toBeVisible();
     await page.getByLabel("Empty data").check();
     await paletteButton.click();
     await expect(page.getByRole("status")).toHaveText("No data yet.");

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectHiddenPaint } from "./interaction-paint";
 
 const offset = Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173;
 const packed = `http://127.0.0.1:${4188 + offset}`;
@@ -95,8 +96,12 @@ test("packed updates visibility native extensions and pointer", async ({ page })
   await expect(page.locator(links)).toHaveCount(6);
   for (const control of ["Visibility", "Native hide"]) {
     await page.getByRole("button", { name: control, exact: true }).click();
-    await expect(page.locator(marks)).toHaveCount(0);
-    await expect(page.locator(links)).toHaveCount(0);
+    await expect(page.locator(marks)).toHaveCount(6);
+    await expectHiddenPaint(page.locator(marks));
+    await expect(page.locator(links)).toHaveCount(6);
+    await expect(
+      page.locator(links).first().locator('xpath=ancestor::*[@data-kind-ui="series-escape"][1]'),
+    ).toHaveAttribute("aria-hidden", "true");
     await page.getByRole("button", { name: control, exact: true }).click();
     await expect(page.locator(marks)).toHaveCount(6);
   }

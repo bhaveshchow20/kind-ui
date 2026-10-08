@@ -2,21 +2,9 @@
   "mode": "local",
   "version": "0.3.0",
   "package": "@kind-ui/charts",
-  "integrity": "sha512-xBetdpNyKr/nE3ucrUe3k8Jh8R7h43idSBu1T03uOeweWqxH8wbCTNFHukgkvpukdu9E+xv8wtbMvRZSgqbQyQ==",
-  "sha256": "f9bb0fb2b6c1d1620b5c4b3f9ce9c86876fc9f682f5c536a84e39b18baa61eb6",
-  "sourceCommit": "d99ce11c3b496fa1bcf7bf094b8fc564a82001a0",
+  "integrity": "sha512-Z9pRX26D2ebg7WD+LUq8XWe9+UyLFifWSmeqtHpfRdUmOivy71i5wrbHdIxU+N5LAy4XyHqJtS8Ar90XVNGmYg==",
+  "sha256": "fb597b0b0f29d6c3df3c01bb404d876180b6a9f13090b0dbfbd6886ff8e676db",
+  "sourceCommit": "295cd8492acbbf73301d39324f90506a4cee340b",
   "publicExportsOnly": true,
-  "guardedArtifact": true,
-  "validation": {
-    "runId": "37686499872",
-    "runAttempt": "1",
-    "event": "pull_request",
-    "runUrl": "https://github.com/bhaveshchow20/kind-ui/actions/runs/37686499872",
-    "tools": {
-      "node": "v22.23.3",
-      "npm": "11.9.0",
-      "typescript": "5.9.3",
-      "vite": "8.3.1"
-    }
-  }
+  "guardedArtifact": true
 }

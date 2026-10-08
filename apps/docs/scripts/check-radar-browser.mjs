@@ -40,11 +40,11 @@ try {
   await page.mouse.move(0, 0);
   assert.equal(await studio.getAttribute("aria-pressed"), "true");
   await page.keyboard.press("Space");
-  assert.equal(await studio.getAttribute("aria-pressed"), "false");
+  assert.equal(await studio.getAttribute("aria-pressed"), "true");
   await field.focus();
   await page.keyboard.press("Enter");
   await page.keyboard.press("Escape");
-  assert.equal(await field.getAttribute("aria-pressed"), "false");
+  assert.equal(await field.getAttribute("aria-pressed"), "true");
   // Click within the outer Field polygon, clear, then inspect a native spoke.
   const path = selection.locator(
     '[data-kind-ui="series-interaction"][data-series="field"] .recharts-radar-polygon path',

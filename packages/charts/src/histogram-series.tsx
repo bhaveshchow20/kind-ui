@@ -2,6 +2,7 @@
 
 import {
   cloneElement,
+  createContext,
   type ReactElement,
   use,
   useId,
@@ -82,11 +83,10 @@ function HistogramPaint({
   );
 }
 
-function HistogramShape({
-  shape,
-  material,
-  ...props
-}: BarShapeProps & Pick<HistogramSeriesProps, "shape" | "material">) {
+const HistogramShapeOptions = createContext<Pick<HistogramSeriesProps, "shape" | "material">>({});
+const renderHistogramShape = (native: BarShapeProps) => <HistogramShape {...native} />;
+function HistogramShape(props: BarShapeProps) {
+  const { shape, material } = use(HistogramShapeOptions);
   const scale = useXAxisScale(0);
   const bin: HistogramBin = props.payload;
   const start = scale?.(bin.lower);
@@ -139,19 +139,21 @@ export function HistogramSeries({
     shape === undefined &&
     props.filter === undefined &&
     props.style?.filter === undefined;
-  const renderShape = (native: BarShapeProps) => (
-    <HistogramShape {...native} shape={shape} material={materialized ? material : undefined} />
-  );
   return (
-    <BarSeries
-      {...props}
-      seriesKey={seriesKey}
-      dataKey="value"
-      xAxisId={0}
-      yAxisId={0}
-      minPointSize={0}
-      shape={renderShape}
-      activeBar={renderShape}
-    />
+    <HistogramShapeOptions value={{ shape, material: materialized ? material : undefined }}>
+      <BarSeries
+        {...props}
+        seriesKey={seriesKey}
+        dataKey="value"
+        xAxisId={0}
+        yAxisId={0}
+        minPointSize={0}
+        shape={renderHistogramShape}
+        // Keep the corrected quantitative bin in its series paint owner during
+        // inspection. Native activeBar portals escape that owner and replace the
+        // hovered hit target before its click callback can run.
+        activeBar={false}
+      />
+    </HistogramShapeOptions>
   );
 }

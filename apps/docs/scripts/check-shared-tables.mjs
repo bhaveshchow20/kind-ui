@@ -14,7 +14,9 @@ const pages = {
 };
 const evidence = [];
 const errors = [];
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 try {
   for (const mobile of [false, true]) {
     const context = await browser.newContext({

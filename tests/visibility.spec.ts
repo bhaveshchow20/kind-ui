@@ -27,7 +27,8 @@ test("packed restored series have a visibility transition in both toggle orders"
     const button = page.getByRole("button", { name, exact: true });
     await button.evaluate((node) => (node as HTMLButtonElement).click());
     await page.clock.runFor(400);
-    await expect(page.locator(selector)).toHaveCount(0);
+    await expect(page.locator(selector)).toHaveCount(1);
+    expect(await alpha(page.locator(selector))).toBe(0);
     await button.evaluate((node) => (node as HTMLButtonElement).click());
     await page.clock.runFor(40);
     expect(await alpha(page.locator(selector))).toBeGreaterThan(0);
@@ -37,7 +38,7 @@ test("packed restored series have a visibility transition in both toggle orders"
   }
 });
 
-test("comparison chart stays mounted through rejected last-hide", async ({ page }) => {
+test("comparison chart stays mounted through focus changes", async ({ page }) => {
   await page.goto("/recipes.html");
   const comparison = page.getByRole("region", { name: "Week over week" });
   const svg = await comparison.getByRole("application").elementHandle();
@@ -46,7 +47,7 @@ test("comparison chart stays mounted through rejected last-hide", async ({ page 
   await comparison.getByRole("button", { name: "Last week", exact: true }).click();
   expect(await svg.evaluate((node) => node.isConnected)).toBe(true);
   await expect(comparison.locator("[data-kind-ui=chart-interaction-status]")).toHaveText(
-    "At least one item must remain visible.",
+    "Highlighted Last week.",
   );
 });
 
@@ -73,13 +74,13 @@ for (const mode of ["animated", "off", "reduced"] as const) {
     if (mode === "animated") {
       expect(await alpha(curve)).toBeGreaterThan(0);
       expect(await alpha(curve)).toBeLessThan(1);
-    } else await expect(curve).toHaveCount(0);
+    } else expect(await alpha(curve)).toBe(0);
     await click(value);
     await page.clock.runFor(40);
     await click(value);
     await click(other);
     await page.clock.runFor(400);
-    await expect(page.locator(".recharts-line-curve")).toHaveCount(1);
+    await expect(page.locator(".recharts-line-curve")).toHaveCount(2);
     await expect(other).toHaveAttribute("aria-pressed", "true");
     expect(await svg.evaluate((node) => node.isConnected)).toBe(true);
     for (const button of [value, other]) {
@@ -105,7 +106,7 @@ for (const mode of ["animated", "off", "reduced"] as const) {
     await chart.focus();
     await page.keyboard.press("ArrowRight");
     await expect(page.getByRole("status")).toContainText("Other");
-    await expect(page.getByRole("status")).not.toContainText("Value");
+    await expect(page.getByRole("status")).toContainText("Value");
     await expect(value).toHaveAttribute("aria-pressed", "false");
     await expect(value).toHaveCSS("text-decoration-line", "none");
     await page.screenshot({ path: info.outputPath(`visibility-${mode}-normal.png`) });
@@ -117,7 +118,7 @@ for (const mode of ["animated", "off", "reduced"] as const) {
   });
 }
 
-test("exit completion snaps remaining marks after auto-domain rescaling", async ({ page }) => {
+test("exit completion preserves full-data geometry and inspection", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.clock.install();
   await page.goto("http://127.0.0.1:4176/motion.html?native-visibility");
@@ -134,8 +135,8 @@ test("exit completion snaps remaining marks after auto-domain rescaling", async 
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.clock.runFor(160);
   const target = Number(await point.getAttribute("cy"));
-  expect(Math.abs(target - before)).toBeGreaterThan(20);
+  expect(target).toBeCloseTo(before, 1);
   const marker = page.locator('[data-kind-ui="active-marker"]').first();
   expect(Number(await marker.getAttribute("cy"))).toBeCloseTo(target, 1);
-  await expect(page.getByRole("status")).not.toContainText("Other");
+  await expect(page.getByRole("status")).toContainText("Other");
 });

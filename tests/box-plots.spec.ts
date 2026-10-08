@@ -1,4 +1,5 @@
 import { expect, test } from "./browser";
+import { expectHiddenPaint } from "./interaction-paint";
 import { expectLastVisibleGuard } from "./last-visible";
 
 const url = `http://127.0.0.1:${4191 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
@@ -138,7 +139,8 @@ test("packed box plots: exact native geometry, domains, composition, null and co
     page.locator(marks),
   );
   await page.getByRole("button", { name: "External visibility", exact: true }).click();
-  await expect(page.locator(marks)).toHaveCount(0);
+  await expect(page.locator(marks)).toHaveCount(3);
+  await expectHiddenPaint(page.locator(marks));
   await expect(page.getByRole("table")).toContainText("-20, 16");
   await page.getByRole("button", { name: "External visibility", exact: true }).click();
   await page.getByRole("button", { name: "Reorder", exact: true }).click();

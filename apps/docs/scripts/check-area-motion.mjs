@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 try {
   const page = await browser.newPage({
     viewport: { width: 1440, height: 1080 },

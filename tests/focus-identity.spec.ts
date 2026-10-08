@@ -154,13 +154,18 @@ for (const [family, selector] of Object.entries(marks)) {
     const card = page.locator(`#docs-${family}`);
     await expect(card.locator(selector)).not.toHaveCount(0);
     await card.scrollIntoViewIfNeeded();
+    await expect(card.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
     await page.waitForTimeout(900);
     const shape = () =>
       card
         .locator(`${selector}`)
         .evaluateAll((nodes) =>
-          nodes.map((node) =>
-            ["d", "x", "y", "width", "height", "cx", "cy"].map((key) => node.getAttribute(key)),
+          nodes.flatMap((node) =>
+            (node.matches("path") ? [node] : [...node.querySelectorAll("path")]).map((path) =>
+              ["d", "x", "y", "width", "height", "cx", "cy", "transform"].map((key) =>
+                path.getAttribute(key),
+              ),
+            ),
           ),
         );
     const baseline = await shape();
@@ -388,6 +393,25 @@ for (const family of ["histogram", "waterfall", "box-plot"]) {
         );
     const baseline = await geometry();
     expect(baseline.length).toBeGreaterThan(0);
+    const mark = first
+      .locator(
+        family === "histogram"
+          ? '[data-kind-ui="histogram-bin"][data-lower="0"]'
+          : '.recharts-bar-rectangle, [data-kind-ui="box-plot-mark"]',
+      )
+      .first();
+    const clickMark = () =>
+      mark.click(
+        family === "histogram" ? { force: true, position: { x: 5, y: 5 } } : { force: true },
+      );
+    await clickMark();
+    const originalPayload = await plot.locator("output").textContent();
+    expect(originalPayload).toBeTruthy();
+    const raw = JSON.parse(originalPayload ?? "{}");
+    if (family === "histogram") expect(raw).toMatchObject({ lower: 0, upper: 10, count: 8 });
+    if (family === "waterfall") expect(raw).toMatchObject({ id: "start", value: 100 });
+    if (family === "box-plot")
+      expect(raw).toMatchObject({ category: "A", first: { median: 20 }, second: { median: 70 } });
     if (family === "box-plot") await plot.locator('[data-legend-key="first"]').click();
     const remaining = plot.locator(
       `[data-legend-key="${family === "box-plot" ? "second" : "first"}"]`,
@@ -415,6 +439,8 @@ for (const family of ["histogram", "waterfall", "box-plot"]) {
       await plot.getByRole("button", { name: "External hide", exact: true }).click();
       await expect(paint).toHaveCSS("opacity", "1");
       expect(await geometry()).toEqual(baseline);
+      await clickMark();
+      expect(await plot.locator("output").textContent()).toEqual(originalPayload);
     }
     await plot.getByRole("button", { name: "Change mode" }).click();
     await remaining.focus();

@@ -32,13 +32,14 @@ for (const family of ["line", "area", "bar-grouped", "bar-stacked", "scatter"]) 
       const baseline = await geometry();
       await chart.locator('[data-kind-ui="series-interaction"]').evaluateAll((series) => {
         for (const node of series)
-          node
-            .querySelector("path, rect, circle")
-            ?.setAttribute("data-original-series-node", node.getAttribute("data-series") ?? "");
+          node.setAttribute("data-original-series-node", node.getAttribute("data-series") ?? "");
       });
       const assertNativeIdentity = async () => {
+        // Recharts may replace native shapes on host updates even with its animation
+        // disabled. The keyed Kind paint owner must survive; geometry and payload
+        // checks below independently cover the original native data.
         await expect(
-          chart.locator('[data-series="second"] [data-original-series-node="second"]'),
+          chart.locator('[data-series="second"][data-original-series-node="second"]'),
         ).toHaveCount(1);
       };
       const assertPointer = async () => {
@@ -51,6 +52,9 @@ for (const family of ["line", "area", "bar-grouped", "bar-stacked", "scatter"]) 
         await expect(chart.locator("[data-pointer]")).toHaveText(
           JSON.stringify({ series: "second", row: "A", value: 12, originalDataIndex: 0 }),
         );
+        // Mark clicks focus the inspected series; clear before testing an independent hide.
+        await chart.getByRole("application").focus();
+        await page.keyboard.press("Escape");
       };
       await assertPointer();
       if (family.startsWith("bar"))
@@ -121,12 +125,14 @@ for (const family of ["line", "area", "bar-grouped", "bar-stacked", "scatter"]) 
   for (const mode of ["motion", "reduced", "disabled"]) {
     test(`${family} ${mode} paint fades reverse without geometry reset`, async ({ page }) => {
       if (mode === "reduced") await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.clock.install();
+      await page.clock.pauseAt(new Date());
       await page.goto(
         `/?family=${family}&visibility=root${mode === "disabled" ? "&animate=false" : ""}`,
       );
       const chart = page.locator(`#${family}-root`);
       await chart.scrollIntoViewIfNeeded();
-      await page.waitForTimeout(1200);
+      await page.clock.runFor(1200);
       const first = chart.locator('[data-kind-ui="series-interaction"][data-series="first"]');
       const paint = first.locator('[data-kind-ui="series-interaction-paint"]');
       const opacity = () => paint.evaluate((node) => Number(getComputedStyle(node).opacity));
@@ -148,7 +154,7 @@ for (const family of ["line", "area", "bar-grouped", "bar-stacked", "scatter"]) 
       await expect(first).toHaveAttribute("aria-hidden", "true");
       await expect(first).toHaveAttribute("pointer-events", "none");
       if (mode === "motion") {
-        await page.waitForTimeout(60);
+        await page.clock.runFor(60);
         const descending = await opacity();
         expect(descending).toBeGreaterThan(0);
         expect(descending).toBeLessThan(1);
@@ -157,6 +163,7 @@ for (const family of ["line", "area", "bar-grouped", "bar-stacked", "scatter"]) 
         await toggle();
         const reversal = await opacity();
         expect(Math.abs(reversal - descending)).toBeLessThan(0.25);
+        await page.clock.runFor(600);
         await expect.poll(opacity).toBeCloseTo(1, 2);
       } else {
         await expect.poll(opacity).toBe(0);
@@ -174,17 +181,55 @@ for (const family of ["line", "area", "bar-grouped", "bar-stacked", "scatter"]) 
         .getByRole("button", { name: "Focus second", exact: true })
         .evaluate((node) => (node as HTMLButtonElement).click());
       if (mode === "motion") {
-        await page.waitForTimeout(60);
+        await page.clock.runFor(60);
         expect(await opacity()).toBeGreaterThan(0.28);
         expect(await opacity()).toBeLessThan(1);
       }
+      await page.clock.runFor(600);
       await expect.poll(opacity).toBeCloseTo(0.28, 2);
       await expect.poll(portalOpacity).toBeCloseTo(0.28, 2);
       await chart
         .getByRole("button", { name: "Focus second", exact: true })
         .evaluate((node) => (node as HTMLButtonElement).click());
+      await page.clock.runFor(600);
       await expect.poll(opacity).toBeCloseTo(1, 2);
       await expect.poll(portalOpacity).toBeCloseTo(1, 2);
     });
   }
+}
+
+for (const family of ["bar-grouped", "scatter"]) {
+  test(`${family}: inactive native active-shape portals stay suppressed during inspection`, async ({
+    page,
+  }) => {
+    await page.goto(`/?family=${family}&visibility=root&active=true`);
+    const chart = page.locator(`#${family}-root`);
+    const first = chart.locator('[data-kind-ui="series-interaction"][data-series="first"]');
+    await expect(first.locator("path").first()).toBeVisible();
+    await page.waitForTimeout(1200);
+    const geometry = () =>
+      first.locator("path").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+    const baseline = await geometry();
+    await chart.getByRole("button", { name: "Focus second", exact: true }).click();
+    await expect(first.locator(':scope > [data-kind-ui="series-interaction-paint"]')).toHaveCSS(
+      "opacity",
+      "0.28",
+    );
+    await first.locator("path").first().hover({ force: true });
+    await page.waitForTimeout(100);
+    await expect(first.locator(':scope > [data-kind-ui="series-interaction-paint"]')).toHaveCSS(
+      "opacity",
+      "0.28",
+    );
+    await expect(
+      chart.locator(
+        '.recharts-active-bar path[fill="var(--color-first)"], .recharts-active-shape path[fill="var(--color-first)"]',
+      ),
+    ).toHaveCount(0);
+    expect(await geometry()).toEqual(baseline);
+    await chart.getByRole("button", { name: "Toggle first", exact: true }).click();
+    await expect(first).toHaveAttribute("pointer-events", "none");
+    expect(await geometry()).toEqual(baseline);
+    await expect(chart.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
+  });
 }

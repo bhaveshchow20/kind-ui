@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
+import { expectHiddenPaint } from "./interaction-paint.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/pie-examples.json", "utf8"));
@@ -130,9 +131,9 @@ try {
     );
   await expect(sectors).toHaveCount(4);
   await expect.poll(() => fills(visible)).toEqual(categoryColors);
-  await expect(sectors.nth(0)).toBeHidden();
-  await expect(sectors.nth(1)).toBeHidden();
-  await expect(sectors.nth(2)).toBeHidden();
+  await expectHiddenPaint(sectors.nth(0));
+  await expectHiddenPaint(sectors.nth(1));
+  await expectHiddenPaint(sectors.nth(2));
   await expect(sectors.nth(3)).toBeVisible();
   const before = await paint();
   const callbacks = await root.getAttribute("data-visibility-changes");

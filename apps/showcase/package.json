@@ -11,7 +11,7 @@
     "test:browser": "playwright test"
   },
   "dependencies": {
-    "@kind-ui/charts": "file:../../packages/charts",
+    "@kind-ui/charts": "file:../docs/vendor/kind-ui-charts-0.3.0.tgz",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "^1.31.0",

@@ -8,7 +8,9 @@ const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:7175";
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const output = `artifacts/release-alignment${basePath ? "-prefix" : "-default"}`;
 mkdirSync(output, { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch(
+  process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
+);
 const errors = [];
 const failedRequests = [];
 const checks = [];
