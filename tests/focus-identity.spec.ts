@@ -452,3 +452,24 @@ for (const family of ["histogram", "waterfall", "box-plot"]) {
     expect(await geometry()).toEqual(baseline);
   });
 }
+
+test("clearing a focused legend restores all paint without blurring its control", async ({
+  page,
+}) => {
+  await page.goto("/?only=series&family=line");
+  const plot = page.locator("#line");
+  const first = plot.locator('[data-legend-key="first"]');
+  await first.focus();
+  await page.keyboard.press("Enter");
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    plot.locator('[data-series="second"] > [data-kind-ui="series-interaction-paint"]'),
+  ).toHaveCSS("opacity", "0.28");
+  await page.keyboard.press("Enter");
+  await expect(first).toHaveAttribute("aria-pressed", "false");
+  await expect(first).toBeFocused();
+  for (const key of ["first", "second"])
+    await expect(
+      plot.locator(`[data-series="${key}"] > [data-kind-ui="series-interaction-paint"]`),
+    ).toHaveCSS("opacity", "1");
+});

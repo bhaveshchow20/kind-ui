@@ -25,7 +25,10 @@ export function IntegrationHost() {
       xDataKey="month"
       aria-label="Monthly icon totals"
       className="h-80 text-blue-700"
-      rootProps={{ className: "max-w-xl" }}
+      rootProps={{
+        className: "max-w-xl",
+        interaction: { kind: "series", mode: "visibility", eligibleKeys: ["total"] },
+      }}
       legend={{ className: "gap-6 p-4 text-blue-700" }}
       grid={{ className: "stroke-fuchsia-600" }}
       tooltip={{ formatter: (value) => [`${value} units`, "Total"] }}

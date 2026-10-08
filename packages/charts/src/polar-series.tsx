@@ -7,6 +7,7 @@ import {
   createContext,
   isValidElement,
   memo,
+  type ReactElement,
   type ReactNode,
   use,
   useCallback,
@@ -16,7 +17,16 @@ import {
   useRef,
   useState,
 } from "react";
-import { DefaultZIndexes, Polygon, Radar, RadialBar, Sector, ZIndexLayer } from "recharts";
+import {
+  type ActiveDotProps,
+  DefaultZIndexes,
+  Dot,
+  Polygon,
+  Radar,
+  RadialBar,
+  Sector,
+  ZIndexLayer,
+} from "recharts";
 import {
   ActiveMarker,
   InteractionPaint,
@@ -38,7 +48,36 @@ import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js
 // Native Radar uses a props-identity animation key even with animation disabled.
 // Avoid replacing its polygon for unrelated frame state during a pointer press.
 const StableRadar = memo(Radar) as typeof Radar;
-const radarActiveDot = <ActiveMarker />;
+const RadarActivePaint = createContext<{
+  inactive: boolean;
+  option: ComponentProps<typeof Radar>["activeDot"];
+}>({ inactive: false, option: undefined });
+function RadarActiveDot(props: Partial<ActiveDotProps>) {
+  const { inactive, option } = use(RadarActivePaint);
+  if (inactive || option === false) return null;
+  if (typeof option === "function") return option(props as ActiveDotProps);
+  if (option === undefined) return <ActiveMarker {...props} />;
+  const options: Partial<ActiveDotProps> = isValidElement(option)
+    ? (option.props as Partial<ActiveDotProps>)
+    : typeof option === "object"
+      ? (option as Partial<ActiveDotProps>)
+      : {};
+  // Native ActivePoints passes the option and event to option-owned handlers.
+  const events = Object.fromEntries(
+    Object.entries(options).flatMap(([name, handler]) =>
+      /^on[A-Z]/.test(name) && typeof handler === "function"
+        ? [[name, (event: unknown) => handler(options, event)]]
+        : [],
+    ),
+  );
+  const paint = { ...props, ...options, ...events };
+  return isValidElement(option) ? (
+    cloneElement(option as ReactElement<Partial<ActiveDotProps>>, paint)
+  ) : (
+    <Dot {...paint} />
+  );
+}
+const radarActiveDot = <RadarActiveDot />;
 
 export type RadarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Radar<DataPoint, Value>>,
@@ -262,35 +301,38 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
             initial={false}
             pointerEvents={series.hide ? "none" : undefined}
           >
-            <StableRadar<DataPoint, Value>
-              {...props}
-              activeDot={
-                interaction.inactive
-                  ? false
-                  : (props.activeDot ?? (Object.hasOwn(props, "activeDot") ? true : radarActiveDot))
-              }
-              {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
-              {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
-              {...(selectionDot !== undefined ? { dot: selectionDot } : {})}
-              {...(nativeLabel !== undefined ? { label: nativeLabel } : {})}
-              id={series.id}
-              hide={false}
-              isAnimationActive={false}
-              zIndex={0}
-              {...(stroke !== undefined
-                ? { stroke }
-                : series.color !== undefined
-                  ? { stroke: series.color }
-                  : {})}
-              {...(fill !== undefined
-                ? { fill }
-                : series.color !== undefined
-                  ? { fill: series.color }
-                  : {})}
-              className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
+            <RadarActivePaint
+              value={{
+                inactive: interaction.inactive,
+                option: props.activeDot ?? (Object.hasOwn(props, "activeDot") ? true : undefined),
+              }}
             >
-              {nativeChildren}
-            </StableRadar>
+              <StableRadar<DataPoint, Value>
+                {...props}
+                activeDot={radarActiveDot}
+                {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
+                {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
+                {...(selectionDot !== undefined ? { dot: selectionDot } : {})}
+                {...(nativeLabel !== undefined ? { label: nativeLabel } : {})}
+                id={series.id}
+                hide={false}
+                isAnimationActive={false}
+                zIndex={0}
+                {...(stroke !== undefined
+                  ? { stroke }
+                  : series.color !== undefined
+                    ? { stroke: series.color }
+                    : {})}
+                {...(fill !== undefined
+                  ? { fill }
+                  : series.color !== undefined
+                    ? { fill: series.color }
+                    : {})}
+                className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
+              >
+                {nativeChildren}
+              </StableRadar>
+            </RadarActivePaint>
           </motion.g>
         </RadarSelectionLayer>
       </SeriesInteractionLayer>
@@ -692,7 +734,11 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
                 {...props}
                 {...(onClick !== undefined ? { onClick } : {})}
                 shape={nativeShape}
-                activeShape={props.activeShape === false ? () => null : nativeActiveShape}
+                activeShape={
+                  props.activeShape === undefined || props.activeShape === false
+                    ? false
+                    : nativeActiveShape
+                }
                 {...(nativeBackground !== undefined ? { background: nativeBackground } : {})}
                 {...(materialized ? { filter: `url(#${filterId})` } : {})}
                 {...(props.label !== undefined
