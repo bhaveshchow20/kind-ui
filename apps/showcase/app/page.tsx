@@ -1035,8 +1035,7 @@ export default function Page() {
                 <KindLogo />
               </a>
               <p className="footer-description">
-                Composable React charts built on Recharts and Motion. Your data, your styling, your
-                interactions.
+                Composable interactive charts for React and Next.js built on Recharts and Motion.
               </p>
               <p className="footer-created">
                 Created by{" "}
@@ -1060,19 +1059,22 @@ export default function Page() {
                   <ul>
                     {links.map(({ name, href }) => (
                       <li key={href}>
-                        <a href={href}>{name}</a>
+                        <a
+                          href={href}
+                          className={
+                            name.startsWith("View all") || href === "#top"
+                              ? "footer-featured-link"
+                              : undefined
+                          }
+                        >
+                          {name}
+                        </a>
                       </li>
                     ))}
                   </ul>
                 </section>
               ))}
             </nav>
-          </div>
-          <div className="footer-bottom">
-            <span>MIT © 2026 Bhavesh Chowdhury</span>
-            <a className="footer-top" href="#top">
-              Back to top ↑
-            </a>
           </div>
         </div>
       </footer>

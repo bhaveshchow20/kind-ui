@@ -38,8 +38,10 @@ const chartGuides = documentationCharts
   .map(({ name, href }) => ({ name: `${name} charts`, href }));
 
 export const footerLinkGroups = [
-  { title: "Charts", links: chartGuides.slice(0, 7) },
-  { title: "More charts", links: chartGuides.slice(7) },
+  {
+    title: "Charts",
+    links: [...chartGuides.slice(0, 6), { name: "View all →", href: siteLinks.docs }],
+  },
   {
     title: "Guides",
     links: [
@@ -59,6 +61,7 @@ export const footerLinkGroups = [
       { name: "AI agents", href: `${siteLinks.docs}agents/consumer/` },
       { name: "llms.txt", href: `${siteLinks.docs}llms.txt` },
       { name: "MIT license", href: `${siteLinks.repository}/blob/main/LICENSE` },
+      { name: "Back to top ↑", href: "#top" },
     ],
   },
 ];

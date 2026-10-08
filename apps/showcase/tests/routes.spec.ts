@@ -5,7 +5,7 @@ import {
   assertPageSEO,
 } from "../../../scripts/indexing-output.mjs";
 import { showcaseURL } from "../../indexing.mjs";
-import { documentationCharts, siteLinks } from "../lib/site-links";
+import { documentationCharts, footerLinkGroups, siteLinks } from "../lib/site-links";
 
 const basePath = process.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH ?? "";
 
@@ -122,12 +122,20 @@ test("footer directory keeps chart and resource links visible on desktop and nar
   await page.goto("./#footer");
   const footer = page.locator("#footer");
   const directory = footer.getByRole("navigation", { name: "Footer directory" });
-  for (const name of ["Charts", "More charts", "Guides", "Resources"]) {
+  for (const name of ["Charts", "Guides", "Resources"]) {
     await expect(directory.getByRole("heading", { name, exact: true })).toBeVisible();
   }
-  for (const href of new Set(documentationCharts.map((chart) => chart.href))) {
+  for (const href of footerLinkGroups[0].links.slice(0, 6).map((chart) => chart.href)) {
     await expect(directory.locator(`a[href="${href}"]`)).toHaveCount(1);
   }
+  await expect(directory.getByRole("link", { name: /^View all/ })).toHaveAttribute(
+    "href",
+    siteLinks.docs,
+  );
+  await expect(directory.getByRole("link", { name: "Back to top ↑", exact: true })).toHaveAttribute(
+    "href",
+    "#top",
+  );
   await expect(directory.getByRole("link", { name: "llms.txt", exact: true })).toHaveAttribute(
     "href",
     `${siteLinks.docs}llms.txt`,
@@ -157,7 +165,7 @@ test("initial homepage HTML and metadata routes match deployment indexing intent
   expect(html).toContain(`href="${siteLinks.docs}"`);
   // Links must exist before JS, rather than appearing only inside the search dialog.
   const initialHTML = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
-  for (const href of new Set(documentationCharts.map((chart) => chart.href))) {
+  for (const href of footerLinkGroups[0].links.map((chart) => chart.href)) {
     expect(initialHTML).toContain(`href="${href}"`);
   }
   const structuredData = [
