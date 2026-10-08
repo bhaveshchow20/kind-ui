@@ -1,94 +1,43 @@
 ---
 name: kind-ui-charts
-description: Build and adapt React charts using @kind-ui/charts public APIs and complete documented consumer examples.
+description: Build, adapt, or review React and Next.js charts consuming @kind-ui/charts from npm. Use for chart selection, configured or composed charts, styling, controlled legends, loading, accessibility, and consumer verification with the public 0.3 API.
 ---
 
 # Kind UI charts
 
-## Install and retrieve the contract
+Deliver working consumer code using public `@kind-ui/charts` exports. Keep data,
+units, domains, aggregation, request state, and accessible alternatives host-owned.
+This skill targets released 0.3; inspect the consumer's installed version before
+adapting a recipe. Do not substitute repository source imports for npm imports.
 
-```sh
-npm install @kind-ui/charts
-```
+## Decide, then read only what applies
 
-Import `@kind-ui/charts/styles.css` once at the application entry. npm resolves
-the package's required peers; inspect the installed package manifest for supported ranges. Motion remains required with `animate={false}`.
-For Next applications put interactive chart components behind `"use client"`.
+1. Choose the family from the question, units, and data using the selection table
+   in [composition](rules/composition.md). Then decide its composition owner.
+2. Inspect the framework, installed version, and application entry. For a new
+   consumer or Next boundary, read [setup and verification](rules/setup-testing.md).
+3. For paint, Default/Clay/Glow, or changing identities, read
+   [theme and identity](rules/theme-identity.md).
+4. For async data, controlled legends, mark selection, or data alternatives, read
+   [interaction and accessibility](rules/interaction-accessibility.md).
+5. Build the chosen consumer and report checks actually run using the verification
+   steps in [setup and verification](rules/setup-testing.md).
 
-Read the relevant family and shared parts in the [documentation](https://kindui.dev/charts/docs/).
-Use [llms.txt](https://kindui.dev/charts/docs/llms.txt) to find canonical Markdown;
-[llms-full.txt](https://kindui.dev/charts/docs/llms-full.txt) contains the same
-pages with complete consumer code and API tables. Start with
-[installation](https://kindui.dev/charts/docs/markdown/installation.md),
-then retrieve the relevant family and the shared
-[SeriesConfig](https://kindui.dev/charts/docs/markdown/chart-components/series-config.md)
-contract when defining metadata. For loading, theme colors, patterns, projected
-bars, percentage stacks, point/dash/directional presentation, Pie defaults/glow,
-Sankey labels/icons and Root interactions, retrieve the
-[customization guide](https://kindui.dev/charts/docs/markdown/guides/customization.md)
-and its [complete checked options source](https://kindui.dev/charts/docs/examples/combo-motion/src/examples/combo-motion/options.tsx).
-Read the generated API tables, defaults and ownership limits before choosing an
-option; a Bar projection predicate receives a raw row, while the tooltip predicate
-receives a native entry with the row in `entry.payload`.
+Adapt examples only when their family and ownership fit: [mixed-unit Combo](examples/controlled-combo.tsx),
+[directed Sankey flows](examples/sankey-flows.tsx), [team matrix](examples/team-heatmap.tsx),
+and [configured Line](examples/configured-line.tsx).
+Each preserves a complete data alternative. They are starting points, not a universal
+chart model; use the family table to route other chart requests.
 
-Use your agent's existing browser or documentation-fetch tools. An existing MCP
-web/docs tool can retrieve the same HTTP resources; these URLs are documentation,
-not MCP server configuration. Use public package imports rather than repository
-implementation paths or an invented `Chart` object export.
+## Retrieve a family contract when needed
 
-## Choose a chart
+For families or options beyond these examples, retrieve the relevant Markdown
+from the official [documentation index](https://kindui.dev/charts/docs/llms.txt).
+The [complete reference](https://kindui.dev/charts/docs/llms-full.txt) includes
+consumer code and API tables. Check the installed declarations for exact props;
+family roots and series do not all share one contract. Fetch only the needed
+family/shared-part pages. These are HTTP documentation resources, not an MCP server.
 
-- Line: trends over ordered observations. Preserve missing values with `connectNulls={false}` when gaps matter.
-- Area: magnitude over time; matching `stackId` values stack series.
-- Bar: category comparison, signed values or horizontal ranking.
-- Combo: mixed bar/line/area series with explicit axes and units.
-- Pie or radial: part-to-whole or bounded progress; `ActivityRings` supplies a complete ring composition.
-- Scatter: relationships between numeric measures. Histogram: distribution from explicit bins or `binHistogram`.
-- Heatmap: matrix intensity with native table semantics. Box plot: caller-computed statistics. Waterfall: explicit numeric balances. Sankey: directed flows.
-
-Choose the family from the question and data, then check its actual prop types.
-Do not infer aggregation, domains, units or missing-value policy silently.
-
-## Compose through public exports
-
-Configured `LineChart` accepts `data`, `config`, `xDataKey` and an accessible name;
-it owns Root, responsive sizing and default parts. Do not wrap it in another Root.
-For explicit composition, use `Root` with `SeriesConfig`, a sized
-`ResponsiveContainer`, the family chart/series, and public axes/grid/Tooltip.
-Area and Bar use explicit composition; do not give them Line's configured props.
-`ActivityRings` also owns Root. Keep stable series/category keys as data changes.
-
-```tsx
-import { LineChart, type SeriesConfig } from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
-
-const config = { tasks: { label: "Tasks", color: "#3659b8" } } satisfies SeriesConfig;
-
-<LineChart
-  data={[{ day: "Mon", tasks: 0 }, { day: "Tue", tasks: 12 }]}
-  config={config}
-  xDataKey="day"
-  aria-label="Tasks by day"
-/>;
-```
-
-The application owns data, chart names, complete accessible data alternatives,
-domains, labels and business state. Use `visibleSeries` with
-`onVisibleSeriesChange` when controlling visibility. Preserve keyboard access,
-missing/zero values, sizing, tooltip behavior and reduced motion when adapting a
-recipe; verify the chosen family rather than assuming all families share props.
-
-## Material finishes
-
-Use Default, Clay or Glow. Default keeps native paint and the public `plain`
-token; omit `material` or use `material="plain"`. Decorative finishes use
-`material="clay"` or `material="glow"`. Sankey uses these tokens through `finish`.
-Paper was removed in 0.3.0; migrate it to a supported finish and preserve native
-geometry, custom paint, filters and shapes.
-
-## Verify the consumer
-
-Typecheck and build the application. Inspect narrow layout, keyboard focus,
-legend toggles, zero/missing values and reduced-motion behavior. Keep a complete
-data alternative for the displayed observations. Report the commands and observed
-failures without claiming untested framework or assistive-technology support.
+Do not invent a `Chart` namespace, schema, registry, or `material="default"`.
+Default is the appearance label; omit `material` for it. Clay and Glow are
+the opt-in materials. See the theme rule for Sankey's separate `finish` API.
