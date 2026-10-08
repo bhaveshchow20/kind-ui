@@ -26,6 +26,8 @@ for (const width of [320, 768, 1280]) {
           family === "Heatmap"
             ? card.locator('[data-kind-ui="heatmap-grid"] td').first()
             : card.getByRole("application").first();
+        await target.scrollIntoViewIfNeeded();
+        await page.mouse.move(0, 0);
         await target.focus();
         if (family !== "Heatmap") await page.keyboard.press("ArrowRight");
         const tooltip = card.locator(
@@ -37,29 +39,34 @@ for (const width of [320, 768, 1280]) {
             () =>
               tooltip.evaluate((root) => {
                 const bounds = root.getBoundingClientRect();
-                return [...root.querySelectorAll('[data-kind-ui="tooltip-number"]')].every(
-                  (number) => {
-                    const box = number.getBoundingClientRect();
-                    const visual = number.querySelector('[data-kind-ui="tooltip-number-visual"]');
-                    return (
-                      box.left >= bounds.left - 0.5 &&
-                      box.right <= bounds.right + 0.5 &&
-                      !!visual &&
-                      [...visual.children].every((part) => {
-                        const rect = part.getBoundingClientRect();
-                        return rect.left >= box.left - 0.5 && rect.right <= box.right + 0.5;
-                      })
-                    );
-                  },
-                );
+                const overflow = [];
+                if (bounds.width <= 0 || bounds.left < 0 || bounds.right > window.innerWidth)
+                  overflow.push({
+                    kind: "tooltip",
+                    left: bounds.left,
+                    right: bounds.right,
+                    viewport: window.innerWidth,
+                  });
+                for (const number of root.querySelectorAll('[data-kind-ui="tooltip-number"]')) {
+                  const box = number.getBoundingClientRect();
+                  const visual = number.querySelector('[data-kind-ui="tooltip-number-visual"]');
+                  if (box.left < bounds.left - 0.5 || box.right > bounds.right + 0.5 || !visual)
+                    overflow.push({ kind: "number", left: box.left, right: box.right });
+                  for (const part of visual?.children ?? []) {
+                    const rect = part.getBoundingClientRect();
+                    if (rect.left < box.left - 0.5 || rect.right > box.right + 0.5)
+                      overflow.push({
+                        kind: "digit",
+                        left: rect.left - box.left,
+                        right: box.right - rect.right,
+                      });
+                  }
+                }
+                return overflow;
               }),
             { message: `${family} visible digits fit their clipping boxes` },
           )
-          .toBe(true);
-        const box = await tooltip.boundingBox();
-        if (!box) throw new Error("Missing visible tooltip bounds");
-        expect(box.x, `${family} tooltip left edge`).toBeGreaterThanOrEqual(0);
-        expect(box.x + box.width, `${family} tooltip right edge`).toBeLessThanOrEqual(width);
+          .toEqual([]);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
