@@ -7,7 +7,6 @@ Composable, interactive charts for React and Next.js. Designed for builders and 
 [![Kind UI chart gallery: line, area, bar, heatmap, radar and Sankey charts](apps/showcase/public/social/homepage-v1.png)](https://kindui.dev/charts)
 
 [![npm version](https://img.shields.io/npm/v/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
-[![npm downloads](https://img.shields.io/npm/dm/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
 [![CI](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml)
 [![Docs](https://github.com/bhaveshchow20/kind-ui/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/docs.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
