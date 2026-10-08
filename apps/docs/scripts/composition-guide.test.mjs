@@ -5,10 +5,10 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 
 const root = resolve(import.meta.dirname, "../../..");
-const guide = await readFile(join(root, "apps/docs/content/docs/quickstart.mdx"), "utf8");
-const examples = [...guide.matchAll(/```tsx title="([^"]+)"\n([\s\S]*?)```/g)];
+const guide = await readFile(join(root, "apps/docs/content/docs/installation.mdx"), "utf8");
+const examples = [...guide.matchAll(/```tsx title="(Dashboard.tsx)"\n([\s\S]*?)```/g)];
 
-test("Quickstart renders its exact public example in an application", async () => {
+test("Installation renders its exact first-chart example in an application", async () => {
   assert.deepEqual(
     examples.map((example) => example[1]),
     ["Dashboard.tsx"],

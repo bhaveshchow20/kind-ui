@@ -166,7 +166,9 @@ for (const example of allExamples) {
     "\n";
   bundles[example.id] = {
     ...example,
+    // Examples with their own complete table retain it in every copied consumer.
     ...(dataAlternative ? { dataAlternative } : {}),
+    ...(exampleSource.includes("data-chart-alternative") ? { dataAlternativeInSource: true } : {}),
     ...(variants
       ? {
           variants,
@@ -329,13 +331,10 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
     .join("");
   const markdown = `# ${title}\n\n${description}\n\n${body.trim()}\n`;
   write(`public/markdown/${key}.md`, markdown);
-  if (["installation", "quickstart"].includes(key))
-    write(`public/markdown/start/${key}.md`, markdown);
   index.push({ key, title, markdown });
 }
 for (const slug of legacyDocSlugs) {
   const key = slug.join("/");
-  if (!["concepts/composition", "guides/release"].includes(key)) continue;
   const canonical = canonicalDocSlugs(slug).join("/");
   write(`public/markdown/${key}.md`, index.find((page) => page.key === canonical).markdown);
 }

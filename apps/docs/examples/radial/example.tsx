@@ -14,7 +14,7 @@ const config = {
 } satisfies Chart.SeriesConfig;
 
 export function ProjectProgressChart({
-  labels = "hidden",
+  labels = "visible",
 }: {
   labels?: "hidden" | "visible" | "loading";
 }) {

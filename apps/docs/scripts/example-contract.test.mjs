@@ -54,7 +54,7 @@ test("Introduction is the first Get Started page at the preserved docs root", ()
   assert.ok(!root.pages.includes("agents"));
   assert.deepEqual(start, {
     title: "Get Started",
-    pages: ["../index", "../installation", "../quickstart", "../agents/consumer"],
+    pages: ["../index", "../installation", "../agents/consumer"],
   });
   assert.match(readFileSync("content/docs/index.mdx", "utf8"), /^title: Introduction$/m);
   assert.match(readFileSync("public/markdown/index.md", "utf8"), /^# Introduction\n/);
@@ -69,7 +69,7 @@ test("Introduction is the first Get Started page at the preserved docs root", ()
   for (const page of ["installation", "quickstart"]) {
     assert.equal(
       readFileSync(`public/markdown/start/${page}.md`, "utf8"),
-      readFileSync(`public/markdown/${page}.md`, "utf8"),
+      readFileSync("public/markdown/installation.md", "utf8"),
     );
   }
 });
@@ -288,7 +288,9 @@ test("page Markdown keeps selected examples and readable presentation fallbacks"
   }
   assert.equal((index.match(/^- /gm) ?? []).length, pages.length);
   for (const [alias, canonical] of [
-    ["concepts/composition", "quickstart"],
+    ["concepts/composition", "installation"],
+    ["quickstart", "installation"],
+    ["start/quickstart", "installation"],
     ["guides/release", "installation"],
   ]) {
     assert.equal(
@@ -298,4 +300,22 @@ test("page Markdown keeps selected examples and readable presentation fallbacks"
     assert.ok(!index.includes(`/markdown/${alias}.md`));
   }
   assert.match(readFileSync("public/markdown/installation.md", "utf8"), /#### Next\.js/);
+});
+
+test("shared copied examples own complete data alternatives without preview duplication", () => {
+  for (const id of [
+    "bar-comparison",
+    "line-markers",
+    "line-comparison",
+    "bar-horizontal",
+    "pie-materials",
+  ]) {
+    const source = readFileSync(`examples/${id}/example.tsx`, "utf8");
+    assert.ok(source.includes("data-chart-alternative"));
+    assert.ok(source.includes("data.map((row)"));
+    assert.ok(source.includes('scope="row"'));
+    assert.equal(completeBundles[id].dataAlternativeInSource, true);
+    assert.ok(completeBundles[id].dataAlternative.rows.length > 0);
+    assert.equal(completeBundles[id].files[`src/examples/${id}/example.tsx`], source);
+  }
 });

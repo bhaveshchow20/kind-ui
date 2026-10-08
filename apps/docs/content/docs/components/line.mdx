@@ -9,11 +9,7 @@ Follow monthly visitors and compare trends across series.
 
 ## Usage
 
-Open **Code** above for the complete example, including data and imports.
-
-Pass `data` and `config` to `LineChart`. Customize its defaults or compose plot parts as children.
-
-Use `legend={{}}` to show the legend.
+Add one `LineSeries` per measure. Use `type="monotone"` for smooth curves and `legend={{}}` to show the legend.
 
 ```tsx title="Imports"
 import * as Chart from "@kind-ui/charts";
@@ -29,8 +25,6 @@ import "@kind-ui/charts/styles.css";
   <Chart.Tooltip />
 </Chart.LineChart>
 ```
-
-Omit explicit children and pass `xDataKey="period"` to use the default grid, axes, series and tooltip.
 
 ## Compose plot parts
 

@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install the chart package and stylesheet in your React app.
+description: Install charts, render your first example, and adapt it to your data.
 ---
 
 Install the ESM package in an existing React project. npm resolves its required peers.
@@ -54,10 +54,45 @@ import * as Chart from "@kind-ui/charts";
 
 ### Build your first chart
 
-Follow [Quickstart](/docs/quickstart/) for a complete component, or [choose a chart](/docs/).
+Open **Code**, copy the component into `MonthlyVisitorsChart.tsx`, and keep its stylesheet import. The example includes the data and chart name.
+
+<ChartExample id="line-start" />
+
+#### Render the chart
+
+```tsx title="Dashboard.tsx"
+import { MonthlyVisitorsChart } from "./MonthlyVisitorsChart";
+
+export function Dashboard() {
+  return <MonthlyVisitorsChart />;
+}
+```
+
+Run your app. You will see four months of visitors; inspect a point to read its value.
 
 </Step>
 </Steps>
+
+## Use your own data
+
+In the copied component, replace `data` with your observations. Keep `period` as the x-axis field and `visitors` as a number, or change `xDataKey` and the config key together.
+
+Change the config label and color to match your measure. Update the chart name and text alternative too.
+
+## Composition
+
+Configured `LineChart` supplies context, sizing and plot parts. Do not wrap it in `Root`.
+
+Other families use their own composition. Start with their complete examples:
+
+| Your task | Next example |
+| --- | --- |
+| Compare categories | [Bar](/docs/components/bar/) |
+| Show bounded progress | [Radial and Activity Rings](/docs/components/radial/) |
+| Show relationships | [Scatter](/docs/components/scatter/) |
+| Trace flows | [Sankey](/docs/components/sankey/) |
+
+Use [Line composition](/docs/components/line/#compose-plot-parts) when you need custom axes or series. See [Accessibility](/docs/guides/accessibility/) before embedding a chart in your product.
 
 ## Public imports
 

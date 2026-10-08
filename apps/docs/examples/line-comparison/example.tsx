@@ -45,18 +45,57 @@ export function RevenueComparisonChart() {
     };
   }, []);
   return (
-    <Chart.LineChart
-      data={data}
-      config={config}
-      xDataKey="period"
-      xAxis={{ tickMargin: 12, height: 48, interval: "preserveStartEnd" }}
-      margin={{ top: 20, right: 32 * fontScale, bottom: 8, left: 0 }}
-      aria-label="Revenue and target in thousands of dollars"
-      yAxis={{ tickMargin: 12, width: 88 * fontScale, tickFormatter: (value) => `$${value}k` }}
-      series={[
-        { seriesKey: "actual", dataKey: "actual" },
-        { seriesKey: "target", dataKey: "target", type: "linear", strokeDasharray: "5 5" },
-      ]}
-    />
+    <figure style={{ margin: 0 }}>
+      <Chart.LineChart
+        data={data}
+        config={config}
+        xDataKey="period"
+        xAxis={{ tickMargin: 12, height: 48, interval: "preserveStartEnd" }}
+        margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
+        aria-label="Revenue and target in thousands of dollars"
+        yAxis={{
+          tickMargin: 12,
+          width: 72 + 16 * fontScale,
+          tickFormatter: (value) => `$${value}k`,
+        }}
+        series={[
+          { seriesKey: "actual", dataKey: "actual" },
+          { seriesKey: "target", dataKey: "target", type: "linear", strokeDasharray: "5 5" },
+        ]}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: "hidden",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
+          border: 0,
+        }}
+      >
+        <table data-chart-alternative aria-label="Revenue and target in thousands of dollars data">
+          <caption>Revenue and target in thousands of dollars</caption>
+          <thead>
+            <tr>
+              <th scope="col">Month</th>
+              <th scope="col">Revenue ($k)</th>
+              <th scope="col">Target ($k)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.period}>
+                <th scope="row">{row.period}</th>
+                <td>{row.actual}</td>
+                <td>{row.target}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </figure>
   );
 }

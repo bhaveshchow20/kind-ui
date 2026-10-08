@@ -32,26 +32,71 @@ function Diamond({ cx, cy }: Pick<Chart.DotProps, "cx" | "cy">) {
 }
 export function ResponseTimeChart() {
   return (
-    <Chart.LineChart
-      data={data}
-      config={config}
-      aria-label="Response time in milliseconds"
-      legend={{}}
-      margin={{ top: 36, right: 28, left: 0, bottom: 12 }}
-    >
-      <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-      <Chart.XAxis height={48} dataKey="period" axisLine={false} tickLine={false} tickMargin={8} />
-      <Chart.YAxis domain={[0, 200]} axisLine={false} tickLine={false} tickMargin={8} width={72} />
-      <Chart.LineSeries dataKey="response" strokeWidth={2.5} dot={<Diamond />}>
-        <Chart.LabelList
-          dataKey="response"
-          position="top"
-          offset={14}
-          fill="var(--kind-ui-chart-foreground, #111827)"
-          fontSize={12}
+    <figure style={{ margin: 0 }}>
+      <Chart.LineChart
+        data={data}
+        config={config}
+        aria-label="Response time in milliseconds"
+        legend={{}}
+        margin={{ top: 36, right: 28, left: 0, bottom: 12 }}
+      >
+        <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
+        <Chart.XAxis
+          height={48}
+          dataKey="period"
+          axisLine={false}
+          tickLine={false}
+          tickMargin={8}
         />
-      </Chart.LineSeries>
-      <Chart.Tooltip />
-    </Chart.LineChart>
+        <Chart.YAxis
+          domain={[0, 200]}
+          axisLine={false}
+          tickLine={false}
+          tickMargin={8}
+          width={72}
+        />
+        <Chart.LineSeries dataKey="response" strokeWidth={2.5} dot={<Diamond />}>
+          <Chart.LabelList
+            dataKey="response"
+            position="top"
+            offset={14}
+            fill="var(--kind-ui-chart-foreground, #111827)"
+            fontSize={12}
+          />
+        </Chart.LineSeries>
+        <Chart.Tooltip />
+      </Chart.LineChart>
+      <div
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: "hidden",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
+          border: 0,
+        }}
+      >
+        <table data-chart-alternative aria-label="Response time in milliseconds data">
+          <caption>Response time in milliseconds</caption>
+          <thead>
+            <tr>
+              <th scope="col">Day</th>
+              <th scope="col">Response time (ms)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.period}>
+                <th scope="row">{row.period}</th>
+                <td>{row.response}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </figure>
   );
 }

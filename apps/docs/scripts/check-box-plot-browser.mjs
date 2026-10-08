@@ -59,7 +59,7 @@ try {
   await page.keyboard.press("Escape");
   await tooltip.waitFor({ state: "hidden" });
   assert.equal(await first.locator("table tbody tr").count(), 3);
-  assert.equal(await first.locator('[data-kind-ui="chart-legend"] button').count(), 0);
+  assert.equal(await first.locator('[data-kind-ui="chart-legend"] button').count(), 1);
   await first.screenshot({ path: "artifacts/box-plot/desktop.png" });
   await page.screenshot({ path: "artifacts/box-plot/desktop-page.png" });
   await first.getByRole("tab", { name: "Preview", exact: true }).focus();

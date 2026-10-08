@@ -10,13 +10,15 @@ export const basePath = normalizeBasePath(
 export const docsBaseUrl = basePath ? "/" : "/docs";
 export const legacyDocSlugs = [
   ...["installation", "quickstart"].map((page) => ["start", page]),
+  ["quickstart"],
   ["guides", "customization"],
   ["guides", "identity-layout"],
   ["concepts", "composition"],
   ["guides", "release"],
 ];
 export function canonicalDocSlugs(slug) {
-  if (slug?.join("/") === "concepts/composition") return ["quickstart"];
+  if (["quickstart", "start/quickstart", "concepts/composition"].includes(slug?.join("/")))
+    return ["installation"];
   if (slug?.join("/") === "guides/release") return ["installation"];
   if (slug?.join("/") === "guides/customization") return ["components", "line"];
   if (slug?.join("/") === "guides/identity-layout") return ["concepts", "identity"];

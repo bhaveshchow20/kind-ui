@@ -68,7 +68,7 @@ export const family = {
     radial: {
       control: "Labels",
       prop: "labels",
-      default: "hidden",
+      default: "visible",
       options: [
         { value: "hidden", label: "Hidden" },
         { value: "visible", label: "Visible" },

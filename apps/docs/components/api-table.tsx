@@ -17,7 +17,6 @@ export function ApiTable({
       tabIndex={0}
     >
       <mdx.table>
-        <caption style={{ textAlign: "left" }}>{referenceTitle(name)} props</caption>
         <thead>
           <tr>
             <th scope="col">Prop</th>
@@ -29,9 +28,9 @@ export function ApiTable({
         <tbody>
           {table.map((entry) => (
             <tr key={entry.name}>
-              <th scope="row">
+              <td>
                 <code>{entry.name}</code>
-              </th>
+              </td>
               <td>
                 <code>{entry.type}</code>
               </td>

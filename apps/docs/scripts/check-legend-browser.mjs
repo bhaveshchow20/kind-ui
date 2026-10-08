@@ -38,9 +38,7 @@ try {
     await page.waitForFunction(() => document.querySelectorAll(".component-loading").length === 0);
     for (const example of family.examples) {
       const bundle = bundles[example.id];
-      const card = page.locator(
-        `[data-component="${example.id === "radial" ? "radial-labels" : example.id}"]`,
-      );
+      const card = page.locator(`[data-component="${example.id}"]`);
       const variants = bundle.variants ?? { default: { source: sourceFor(bundle) } };
       for (const [value, variant] of Object.entries(variants)) {
         if (value === "loading") continue;

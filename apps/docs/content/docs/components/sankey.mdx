@@ -50,7 +50,7 @@ Set `animate={{ revealDurationMs: 900 }}` for a ribbon entrance. Reduced motion 
 
 ## Labels and icons
 
-Add a name beside each node. Pass the same `data` and `nodeConfig` as the diagram.
+Place `SankeyNodeLabel` beside `SankeyNode` in the chart’s node-renderer callback, which supplies `node`. Pass the same `data` and `nodeConfig` as the diagram.
 
 ```tsx
 <Chart.SankeyNodeLabel node={node} data={data} nodeConfig={nodeConfig}

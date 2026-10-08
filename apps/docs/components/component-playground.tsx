@@ -20,6 +20,7 @@ export interface ComponentBundle {
   variants?: Record<string, { label: string; source: string }>;
   variantControl?: string;
   defaultVariant?: string;
+  dataAlternativeInSource?: boolean;
   dataAlternative?: {
     caption: string;
     columns: Record<string, string>;
@@ -46,7 +47,7 @@ export function ComponentPlayground({
   const [status, setStatus] = useState("");
   const [tab, setTab] = useState("preview");
   const Preview = previews[id];
-  const dataAlternative = bundle.dataAlternative;
+  const dataAlternative = bundle.dataAlternativeInSource ? undefined : bundle.dataAlternative;
   async function copy(text: string, label: string) {
     try {
       await navigator.clipboard.writeText(text);

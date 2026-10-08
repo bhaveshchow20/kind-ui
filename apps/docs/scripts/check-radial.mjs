@@ -22,21 +22,20 @@ try {
     page.on("pageerror", (error) => evidence.errors.push(error.message));
     await page.goto(url);
     const primary = page.locator('[data-component="radial"]');
-    await expect(primary.getByRole("combobox")).toHaveCount(0);
-    const rings = page.locator('[data-component="radial-labels"]');
+    await expect(primary.getByRole("combobox")).toHaveCount(1);
+    const rings = primary;
     await rings.locator(".recharts-radial-bar-sector").first().waitFor();
     await page.waitForTimeout(250);
     assert.equal(await rings.locator(".recharts-radial-bar-sector").count(), 3);
     assert.equal(await rings.locator('[data-kind-ui="radial-entrance-window"]').count(), 0);
     assert.equal(await rings.locator("table tbody tr").count(), 3);
-    assert.equal(await rings.locator('[data-kind-ui="radial-label"]').count(), 0);
+    assert.equal(await rings.locator('[data-kind-ui="radial-label"]').count(), 3);
     await expect(rings.locator(".recharts-surface")).toHaveAttribute(
       "aria-label",
       "Project completion: Design 92%, Build 76%, Review 58%",
     );
     const labels = rings.getByRole("combobox", { name: "Labels", exact: true });
-    await labels.click();
-    await page.getByRole("option", { name: "Visible", exact: true }).click();
+    await expect(labels).toContainText("Visible");
     for (const label of ["Design", "Build", "Review"])
       await rings
         .locator('[data-kind-ui="radial-label"]')
@@ -112,26 +111,7 @@ try {
     const activityPaths = await activity
       .locator(".recharts-radial-bar-sector")
       .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
-    const pendingActivity = page.locator('[data-component="radial-activity-loading"]');
-    await pendingActivity.scrollIntoViewIfNeeded();
-    await expect(pendingActivity.getByRole("combobox")).toHaveCount(0);
-    await expect(
-      pendingActivity.locator(
-        '[data-kind-ui="chart-loading-skeleton"][data-family="activity-rings"]',
-      ),
-    ).toBeVisible();
-    await pendingActivity.getByRole("tab", { name: "Code", exact: true }).click();
-    assert.equal(
-      (await pendingActivity.locator("pre").textContent()).trim(),
-      bundles["radial-activity"].variants.loading.source.trim(),
-    );
-    await pendingActivity.getByRole("button", { name: "Copy prompt" }).click();
-    assert.ok(
-      (await page.evaluate(() => navigator.clipboard.readText())).includes(
-        "/radial-activity/variants/loading/example.tsx",
-      ),
-    );
-    await pendingActivity.getByRole("tab", { name: "Preview", exact: true }).click();
+    await expect(page.locator('[data-state="loading"]')).toHaveCount(1);
     await expect(activity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
     assert.deepEqual(
       await activity

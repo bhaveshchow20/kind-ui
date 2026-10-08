@@ -7,18 +7,20 @@ test("old start links resolve to canonical pages without affecting other routes"
   assert.deepEqual(legacyDocSlugs, [
     ["start", "installation"],
     ["start", "quickstart"],
+    ["quickstart"],
     ["guides", "customization"],
     ["guides", "identity-layout"],
     ["concepts", "composition"],
     ["guides", "release"],
   ]);
   for (const page of ["installation", "quickstart"])
-    assert.deepEqual(canonicalDocSlugs(["start", page]), [page]);
+    assert.deepEqual(canonicalDocSlugs(["start", page]), ["installation"]);
   assert.deepEqual(canonicalDocSlugs(["components", "line"]), ["components", "line"]);
   assert.deepEqual(canonicalDocSlugs(["guides", "customization"]), ["components", "line"]);
   assert.deepEqual(canonicalDocSlugs(["guides", "identity-layout"]), ["concepts", "identity"]);
-  assert.deepEqual(canonicalDocSlugs(["concepts", "composition"]), ["quickstart"]);
+  assert.deepEqual(canonicalDocSlugs(["concepts", "composition"]), ["installation"]);
   assert.deepEqual(canonicalDocSlugs(["guides", "release"]), ["installation"]);
+  assert.deepEqual(canonicalDocSlugs(["quickstart"]), ["installation"]);
   assert.equal(canonicalDocSlugs(null), null);
 });
 

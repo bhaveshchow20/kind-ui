@@ -130,14 +130,10 @@ try {
   }
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(origin + publicPath("/docs/components/radial/"));
-  const activity = page.locator('[data-component="radial-activity-loading"]');
-  await expect(activity.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
-  await activity.getByRole("tab", { name: "Code", exact: true }).click();
-  assert.equal(
-    (await activity.locator("pre").textContent()).trim(),
-    bundles["radial-activity"].variants.loading.source.trim(),
+  await expect(page.locator('[data-state="loading"]')).toHaveCount(1);
+  await expect(page.locator('[data-component="radial"] [data-kind-ui="radial-label"]')).toHaveCount(
+    3,
   );
-  await activity.getByRole("tab", { name: "Preview", exact: true }).click();
   const readyActivity = page.locator('[data-component="radial-activity"]');
   await expect(readyActivity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
   await expect(readyActivity.locator(".recharts-radial-bar-sector")).toHaveCount(3);

@@ -22,7 +22,7 @@ export function MonthlyVisitorsChart() {
         height={280}
         margin={{ top: 24, right: 32, bottom: 16, left: 0 }}
         xAxis={{ height: 56, minTickGap: 32 }}
-        yAxis={{ width: 72 }}
+        yAxis={{ width: 60 }}
         aria-label="Monthly visitors"
       />
       <figcaption

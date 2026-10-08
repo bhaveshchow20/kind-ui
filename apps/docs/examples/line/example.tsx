@@ -49,7 +49,7 @@ export function VisitorTrendChart({ state = "ready" }: { state?: "ready" | "load
       data={data}
       config={config}
       legend={{}}
-      margin={{ top: 20, right: 32 * fontScale, bottom: 8, left: 0 }}
+      margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
       aria-label="Monthly visitors"
     >
       <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -61,7 +61,7 @@ export function VisitorTrendChart({ state = "ready" }: { state?: "ready" | "load
         height={48}
         interval="preserveStartEnd"
       />
-      <Chart.YAxis axisLine={false} tickLine={false} tickMargin={8} width={72 * fontScale} />
+      <Chart.YAxis axisLine={false} tickLine={false} tickMargin={8} width={44 + 16 * fontScale} />
       <Chart.LineSeries dataKey="visitors" type="monotone" strokeWidth={2} dot={{ r: 2.5 }} />
       <Chart.Tooltip />
     </Chart.LineChart>

@@ -5,13 +5,11 @@ description: Show completion and capacity with concentric rings, gauges and stac
 
 Track project completion on a fixed percentage scale.
 
-<ChartExample id="radial" variant="hidden" />
+<ChartExample id="radial" />
 
 ## Usage
 
-Open **Code** above for the complete example, including data and imports.
-
-Use a fixed numeric domain, hide axis ticks and give each ring a stable category key.
+Use a fixed numeric domain, hide axis ticks and give each ring a stable category key. Labels start visible; use the chart’s Labels control to hide them.
 
 ```tsx title="Composition sketch"
 <Chart.Root config={config}>
@@ -27,12 +25,6 @@ Use a fixed numeric domain, hide axis ticks and give each ring a stable category
 ```
 
 <Callout title="Note">Values remain available in the tooltip and accessible data table when labels are hidden.</Callout>
-
-## Labels
-
-Show or hide labels on the rings. Code and Copy prompt follow your selection.
-
-<ChartExample id="radial" instance="labels" />
 
 ## Activity rings
 
@@ -61,12 +53,6 @@ Matching `stackId` values share one ring. Toggle the legend to compare committed
 Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="radial" variant="loading" />
-
-### Activity Rings loading
-
-Set `loading` on `ActivityRings` while its data is pending.
-
-<ChartExample id="radial-activity" variant="loading" />
 
 ## API reference
 

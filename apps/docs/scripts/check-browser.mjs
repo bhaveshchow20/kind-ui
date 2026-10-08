@@ -5,7 +5,7 @@ import { families } from "../examples/catalog.mjs";
 import { checkMobileLayout } from "./check-mobile-layout.mjs";
 import { checkThemeSwitch } from "./check-theme-switch-browser.mjs";
 
-const origin = "http://127.0.0.1:6373";
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
 const familyIds = families.map(({ id }) => id);
 const navigation = JSON.parse(readFileSync("content/docs/components/meta.json", "utf8")).pages;
@@ -85,7 +85,9 @@ try {
   await curve.getByRole("button", { name: "Copy prompt", exact: true }).click();
   const prompt = await page.evaluate(() => navigator.clipboard.readText());
   assert.ok(prompt.includes("/examples/line-smooth/variants/stepAfter/example.tsx"));
-  assert.ok(prompt.includes("/docs/components/line/") && prompt.includes("/docs/installation/"));
+  assert.ok(
+    prompt.includes("/docs/components/line/") && prompt.includes("/markdown/installation.md"),
+  );
   assert.ok(prompt.length < 7000);
   const selected = await context.request.get(
     `${origin}/examples/line-smooth/variants/stepAfter/example.tsx`,
@@ -214,8 +216,11 @@ try {
   await page.getByRole("button", { name: "Toggle Theme", exact: false }).click();
   await page.waitForFunction(() => document.documentElement.classList.contains("dark"));
   await page.setViewportSize({ width: 320, height: 812 });
-  // The narrow layout hides visible labels; all five controls must stay named.
-  assert.equal(await page.getByRole("button", { name: "Copy prompt", exact: true }).count(), 4);
+  // Narrow previews keep one named prompt action per example.
+  assert.equal(
+    await page.getByRole("button", { name: /^(?:Copy prompt|Copied)$/ }).count(),
+    await page.locator(".chart-example").count(),
+  );
   assert.equal(await curve.getByRole("button", { name: "Copied", exact: true }).count(), 1);
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "200%";

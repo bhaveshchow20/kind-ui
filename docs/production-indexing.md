@@ -16,9 +16,10 @@ assets. The homepage sitemap contains its one page. No guessed modification date
 or ranking priorities are emitted.
 
 The homepage canonical follows the showcase's default no-trailing-slash route;
-Docs uses its exported trailing-slash routes. Legacy `/start/installation/` and
-`/start/quickstart/` aliases retain their routes and point to their canonical
-pages. They are excluded from the sitemap and search catalog.
+Docs uses its exported trailing-slash routes. Legacy `/start/installation/`,
+`/quickstart/`, and `/start/quickstart/` routes point to Installation. The old
+composition route points to its Composition section. Legacy routes are excluded
+from the sitemap and search catalog.
 
 Docs titles and descriptions come from each page's existing visible frontmatter.
 Open Graph and Twitter repeat those page-specific summaries and absolute canonical

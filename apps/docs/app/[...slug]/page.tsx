@@ -23,6 +23,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   if (
     requested &&
     [
+      "quickstart",
+      "start/quickstart",
       "guides/customization",
       "guides/identity-layout",
       "concepts/composition",
@@ -31,7 +33,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   )
     return (
       <>
-        <LegacyDocRedirect guide={requested[1]} />
+        <LegacyDocRedirect guide={requested[requested.length - 1]} />
         {renderDoc(slug)}
       </>
     );
