@@ -282,6 +282,7 @@ test("packed native hide preserves entrance progress, Root visibility and data",
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.clock.install();
+  await page.clock.pauseAt(new Date());
   await page.goto("http://127.0.0.1:4176/motion.html?native-visibility");
   await page.clock.runFor(120);
   const clip = page.locator("clipPath[id$='-reveal'] rect");
