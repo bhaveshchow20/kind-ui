@@ -88,7 +88,7 @@ test("page metadata checks reject inherited summaries and mismatched social URLs
   const description = "Build a chart for your team's trends.";
   const url = "https://kindui.dev/charts/docs/components/line/";
   const alt =
-    "Kind UI Charts documentation: A line chart and composable React code example over dark clouds";
+    "Kind UI documentation: Line, area, bar, heatmap, radar and Sankey charts in frosted cards over dark clouds";
   const html = `<title>${title}</title><meta name="description" content="${description}"/>
     <meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/>
     <meta property="og:url" content="${url}"/><meta property="og:image" content="https://kindui.dev/charts/docs/social/documentation-v1.png"/>

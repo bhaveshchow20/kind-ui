@@ -9,13 +9,13 @@ export const socialImages = {
     url: `${showcaseURL}/social/homepage-v1.png`,
     width: 1200,
     height: 630,
-    alt: "Kind UI Charts: Interactive React charts, with bar, area and donut chart illustrations over light clouds",
+    alt: "Kind UI Charts: Line, area, bar, heatmap, radar and Sankey charts in frosted cards over light clouds",
   },
   documentation: {
     url: `${docsURL}social/documentation-v1.png`,
     width: 1200,
     height: 630,
-    alt: "Kind UI Charts documentation: A line chart and composable React code example over dark clouds",
+    alt: "Kind UI documentation: Line, area, bar, heatmap, radar and Sankey charts in frosted cards over dark clouds",
   },
 };
 
