@@ -1,40 +1,72 @@
 # Kind UI
 
-[![CI](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bhaveshchow20/kind-ui)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+Composable, interactive charts for React and Next.js. Designed for builders and AI agents.
+
+[Chart gallery](https://kindui.dev/charts) · [Documentation](https://kindui.dev/charts/docs/) · [npm package](https://www.npmjs.com/package/@kind-ui/charts)
+
+[![Kind UI chart gallery: line, area, bar, heatmap, radar and Sankey charts](apps/showcase/public/social/homepage-v1.png)](https://kindui.dev/charts)
+
 [![npm version](https://img.shields.io/npm/v/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
+[![npm downloads](https://img.shields.io/npm/dm/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
+[![CI](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml)
+[![Docs](https://github.com/bhaveshchow20/kind-ui/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/docs.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bhaveshchow20/kind-ui)
 
-Kind UI Charts (`@kind-ui/charts`) is an MIT-licensed React chart library built on Recharts and Motion, with TypeScript APIs and examples for React and Next.js. Choose a chart, adapt a complete example and keep control of your data, styling and interactions.
+[Get started](#get-started) · [Explore charts](#explore-charts) · [AI agents](#ai-agents) · [Contribute](#contribute)
 
-[Chart gallery](https://kindui.dev/charts) · [Documentation](https://kindui.dev/charts/docs/) · [npm package](https://www.npmjs.com/package/@kind-ui/charts) · [GitHub](https://github.com/bhaveshchow20/kind-ui)
+Kind UI Charts (`@kind-ui/charts`) is an open-source data visualization library with typed, composable components. Start with a complete example, then adapt your data, styling and interactions.
+
+- **Compose your chart:** control axes, series, tooltips and legends through public TypeScript APIs
+- **Shape the experience:** customize colors, materials, animation, loading states and visibility
+- **Build accessibly:** use named charts, keyboard interactions and complete data alternatives
+
+## Get started
+
+Install the package:
 
 ```sh
 npm install @kind-ui/charts
 ```
 
-Import `@kind-ui/charts/styles.css` once at your application entry (the root layout in Next.js). Development builds warn once if chart styles are missing. See the [component API and usage](packages/charts/README.md) for composition, accessibility and motion.
+Import the components you need and load the stylesheet once at your application entry:
 
-## Start with a complete example
-
-The [Line guide](https://kindui.dev/charts/docs/components/line/) includes a complete TypeScript consumer, a visible data table and copied examples checked with NodeNext, Bundler and Vite. Choose from Line, Area, Bar, Combo, Pie/Donut, Radar, Radial/ActivityRings, Scatter/Bubble, Histogram, BoxPlot, Heatmap, Sankey and Waterfall.
-
-Compose public components with your data, axes and application state. Optional motion, theme-aware colors, fill and background patterns, projected bars, percentage formatting, loading states and interactions share explicit typed contracts. Read the [package API](packages/charts/README.md) for defaults, ownership and limits.
-
-For agents, retrieve the [documentation index](https://kindui.dev/charts/docs/llms.txt), [complete reference](https://kindui.dev/charts/docs/llms-full.txt) and [consumer guidance](https://kindui.dev/charts/docs/markdown/agents/consumer.md). Install the consumer skill with `npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`. Example setup files and prompts are available from each chart guide.
-
-## Development
-
-Requires Node 22.12+ (CI uses Node 22) and npm 11.9.
-
-```sh
-npm ci
-npm exec playwright install -- --with-deps chromium
-npm run check
+```tsx
+import { LineChart } from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
 ```
 
-`npm run dev:chart` starts the maintained public API example. See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) for focused development and validation. See the [changelog](packages/charts/CHANGELOG.md) and [release policy](docs/development.md) for versioning; ordinary feature merges accumulate changesets before one reviewed version PR.
+In Next.js, load the stylesheet in your root layout and render interactive charts in a client component. Check the [installation guide](https://kindui.dev/charts/docs/installation/) for required peer dependencies.
 
-[Security reporting](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [MIT license](LICENSE)
+Copy a [complete line chart example](https://kindui.dev/charts/docs/components/line/), including its data and accessible table. The [package reference](packages/charts/README.md) covers API defaults and limits.
 
-MIT © 2026 Bhavesh Chowdhury.
+## Explore charts
+
+Browse 13 chart families, with complete examples and code in the documentation:
+
+| Use case | Chart guides |
+| --- | --- |
+| Trends and comparisons | [Line](https://kindui.dev/charts/docs/components/line/) · [Area](https://kindui.dev/charts/docs/components/area/) · [Bar](https://kindui.dev/charts/docs/components/bar/) · [Combo](https://kindui.dev/charts/docs/components/combo/) |
+| Parts and progress | [Pie / Donut](https://kindui.dev/charts/docs/components/pie/) · [Radar](https://kindui.dev/charts/docs/components/radar/) · [Radial / Activity rings](https://kindui.dev/charts/docs/components/radial/) |
+| Relationships and distributions | [Scatter / Bubble](https://kindui.dev/charts/docs/components/scatter/) · [Heatmap](https://kindui.dev/charts/docs/components/heatmap/) · [Histogram](https://kindui.dev/charts/docs/components/histogram/) · [Box plot](https://kindui.dev/charts/docs/components/box-plot/) |
+| Flow and change | [Sankey](https://kindui.dev/charts/docs/components/sankey/) · [Waterfall](https://kindui.dev/charts/docs/components/waterfall/) |
+
+Explore [materials](https://kindui.dev/charts/docs/guides/materials/), [motion](https://kindui.dev/charts/docs/guides/motion/) and [accessibility](https://kindui.dev/charts/docs/guides/accessibility/) when adapting an example.
+
+## AI agents
+
+Install the Kind UI consumer skill:
+
+```sh
+npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts
+```
+
+Start with the [documentation index](https://kindui.dev/charts/docs/llms.txt) and [agent consumer guide](https://kindui.dev/charts/docs/markdown/agents/consumer.md). Use the [complete reference](https://kindui.dev/charts/docs/llms-full.txt) when you need all documentation in one file. Each chart guide includes example setup files and prompts.
+
+## Contribute
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks. Local development requires Node 22.12+ and npm 11.9.
+
+[Changelog](packages/charts/CHANGELOG.md) · [Release policy](docs/development.md) · [Security reporting](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+
+Created by [Bhavesh Chowdhury](https://github.com/bhaveshchow20). Free to use under the [MIT license](LICENSE).
