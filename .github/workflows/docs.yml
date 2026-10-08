@@ -1,10 +1,10 @@
 name: Docs
 on:
   pull_request:
-    paths: ["apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
+    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
   push:
     branches: [main]
-    paths: ["apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
+    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
 permissions:
   contents: read
 concurrency:
