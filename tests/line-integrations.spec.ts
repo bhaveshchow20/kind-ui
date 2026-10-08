@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectHiddenPaint } from "./interaction-paint";
 import { expectLastVisibleGuard } from "./last-visible";
 
 test("Tailwind v4 utilities override Kind defaults and named Lucide icons use the existing decorative slot", async ({
@@ -15,7 +16,7 @@ test("Tailwind v4 utilities override Kind defaults and named Lucide icons use th
   const icon = legend.locator('[data-kind-ui="chart-icon"]');
   await expect(icon).toHaveAttribute("aria-hidden", "true");
   await expect(icon.locator("svg.lucide-trending-up")).toHaveCount(1);
-  await expect(legend.getByRole("button", { name: "Total" })).toBeVisible();
+  await expect(legend.getByRole("button", { name: "Total", exact: true })).toBeVisible();
   await expect(
     page.locator(".recharts-cartesian-grid-horizontal line").first(),
   ).not.toHaveAttribute("stroke", "#d1d5db");
@@ -25,7 +26,7 @@ test("Tailwind v4 utilities override Kind defaults and named Lucide icons use th
     .evaluate((line) => getComputedStyle(line).stroke);
   expect(gridStroke).toContain("oklch");
   await expectLastVisibleGuard(
-    legend.getByRole("button", { name: "Total" }),
+    legend.getByRole("button", { name: "Total", exact: true }),
     page.locator(".recharts-line-curve"),
   );
   expect(errors).toEqual([]);
@@ -46,7 +47,7 @@ test("Next App Router package client boundary hydrates serializable server props
   const root = page.locator('[data-kind-ui="chart"]').filter({ has: chart });
   await expect(root.locator("svg.lucide-trending-up")).toHaveCount(1);
   await expectLastVisibleGuard(
-    root.getByRole("button", { name: "Total" }),
+    root.getByRole("button", { name: "Total", exact: true }),
     root.locator(".recharts-line-curve"),
   );
   expect(errors).toEqual([]);
@@ -83,7 +84,8 @@ test("Next pattern legends keep server IDs through hydration and native bars sta
     ),
   ).toBe(true);
   await proof.getByRole("button", { name: "First", exact: true }).first().click();
-  await expect(marks).toHaveCount(8);
+  await expect(marks).toHaveCount(12);
+  await expectHiddenPaint(proof.locator('[data-series="first"] .recharts-bar-rectangle path'));
   expect(await swatches.evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(serverIds);
   expect(errors).toEqual([]);
 });

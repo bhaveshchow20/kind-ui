@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { expectHiddenPaint } from "./interaction-paint";
 import { expectLastVisibleGuard } from "./last-visible";
 
-test("configured line is complete, responsive and owns uncontrolled visibility without website CSS", async ({
+test("configured line is complete, responsive and owns explicit uncontrolled visibility without website CSS", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -13,7 +14,7 @@ test("configured line is complete, responsive and owns uncontrolled visibility w
   await expect(svg).toHaveAttribute("data-host-ref", "attached");
   await expect(svg).toHaveAttribute("height", "280");
   await expect(basic.locator(".recharts-line-curve")).toHaveCount(2);
-  await expect(basic.getByRole("button", { name: "Total" })).toHaveAttribute(
+  await expect(basic.getByRole("button", { name: "Total", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -26,31 +27,32 @@ test("configured line is complete, responsive and owns uncontrolled visibility w
   await expect(basic.locator(".recharts-line-dot")).toHaveCount(5);
   await expect(svg).toHaveAttribute("aria-describedby", /.+/);
   await basic.screenshot({ path: "artifacts/configured-line-tests/basic-line.png" });
-  await basic.getByRole("button", { name: "Total" }).click();
-  await expect(basic.getByRole("button", { name: "Total" })).toHaveAttribute(
+  await basic.getByRole("button", { name: "Total", exact: true }).click();
+  await expect(basic.getByRole("button", { name: "Total", exact: true })).toHaveAttribute(
     "aria-pressed",
     "false",
   );
-  await expect(basic.locator(".recharts-line-curve")).toHaveCount(1);
+  await expect(basic.locator(".recharts-line-curve")).toHaveCount(2);
+  await expectHiddenPaint(basic.locator(".recharts-line-curve").first());
   await expectLastVisibleGuard(
-    basic.getByRole("button", { name: "Other" }),
+    basic.getByRole("button", { name: "Other", exact: true }),
     basic.locator(".recharts-line-curve"),
   );
-  await basic.getByRole("button", { name: "Total" }).click();
+  await basic.getByRole("button", { name: "Total", exact: true }).click();
   await svg.focus();
   await page.keyboard.press("ArrowRight");
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).toBeVisible();
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).toContainText("Total");
   await page.keyboard.press("Escape");
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).not.toBeVisible();
-  await basic.getByRole("button", { name: "Other" }).focus();
+  await basic.getByRole("button", { name: "Other", exact: true }).focus();
   await page.keyboard.press("Enter");
-  await expect(basic.getByRole("button", { name: "Other" })).toHaveAttribute(
+  await expect(basic.getByRole("button", { name: "Other", exact: true })).toHaveAttribute(
     "aria-pressed",
     "false",
   );
   await page.keyboard.press("Enter");
-  await expect(basic.getByRole("button", { name: "Other" })).toHaveAttribute(
+  await expect(basic.getByRole("button", { name: "Other", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -80,7 +82,7 @@ test("configured line is complete, responsive and owns uncontrolled visibility w
   await expect(visibility).toHaveAttribute("data-basic-callbacks", priorCallbacks);
   await page.getByRole("button", { name: "Empty data", exact: true }).click();
   await expect(basic.locator(".recharts-line-curve")).toHaveCount(2);
-  await expect(totalItem.getByRole("button", { name: "Total" })).toHaveAttribute(
+  await expect(totalItem.getByRole("button", { name: "Total", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -95,30 +97,31 @@ test("controlled visibility, config reconciliation, accessors and explicit empty
   await page.goto("/");
   const basic = page.locator('[data-case="basic"]');
   await page.getByRole("button", { name: "Update config", exact: true }).click();
-  await expect(basic.getByRole("button", { name: "Added" })).toHaveAttribute(
+  await expect(basic.getByRole("button", { name: "Added", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
-  await basic.getByRole("button", { name: "Total" }).click();
+  await basic.getByRole("button", { name: "Total", exact: true }).click();
   await page.getByRole("button", { name: "Update config", exact: true }).click();
   await page.getByRole("button", { name: "Update config", exact: true }).click();
-  await expect(basic.getByRole("button", { name: "Added" })).toHaveAttribute(
+  await expect(basic.getByRole("button", { name: "Added", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   const controlled = page.locator('[data-case="controlled"]');
-  await expect(controlled.getByRole("button", { name: "Other" })).toHaveAttribute(
+  await expect(controlled.getByRole("button", { name: "Other", exact: true })).toHaveAttribute(
     "aria-pressed",
     "false",
   );
-  await controlled.getByRole("button", { name: "Other" }).click();
-  await expect(controlled.getByRole("button", { name: "Other" })).toHaveAttribute(
+  await controlled.getByRole("button", { name: "Other", exact: true }).click();
+  await expect(controlled.getByRole("button", { name: "Other", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   await expect(page.locator("[data-callbacks]")).toHaveText("1");
   await page.getByRole("button", { name: "Hide controlled", exact: true }).click();
-  await expect(controlled.locator(".recharts-line-curve")).toHaveCount(0);
+  await expect(controlled.locator(".recharts-line-curve")).toHaveCount(2);
+  await expectHiddenPaint(controlled.locator(".recharts-line-curve").first());
   await page.getByRole("button", { name: "Switch control mode", exact: true }).click();
   await expect(controlled.getByRole("alert")).toContainText(
     "cannot switch controlled visibility mode",
@@ -128,8 +131,8 @@ test("controlled visibility, config reconciliation, accessors and explicit empty
   await expect(advanced.locator('[data-kind-ui="chart-legend"]')).toHaveCount(0);
   await expect(advanced.locator(".recharts-line-curve")).toHaveCount(1);
   const accessor = page.locator('[data-case="accessor"]');
-  await expect(accessor.getByRole("button", { name: "Other" })).toBeVisible();
-  await expect(accessor.getByRole("button", { name: "Total" })).toHaveCount(0);
+  await expect(accessor.getByRole("button", { name: "Other", exact: true })).toBeVisible();
+  await expect(accessor.getByRole("button", { name: "Total", exact: true })).toHaveCount(0);
   await expect(accessor.locator(".recharts-cartesian-grid")).toHaveCount(0);
   await expect(accessor.locator(".recharts-line-curve")).toHaveCount(1);
   const empty = page.locator('[data-case="empty-parts"]');
