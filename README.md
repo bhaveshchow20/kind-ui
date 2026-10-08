@@ -11,7 +11,7 @@ Composable, interactive charts for React and Next.js. Designed for builders and 
 [![CI](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml)
 [![Docs](https://github.com/bhaveshchow20/kind-ui/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/docs.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bhaveshchow20/kind-ui)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-5865F2)](https://deepwiki.com/bhaveshchow20/kind-ui)
 
 [Get started](#get-started) · [Explore charts](#explore-charts) · [AI agents](#ai-agents) · [Contribute](#contribute)
 
