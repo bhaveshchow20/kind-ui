@@ -1035,7 +1035,8 @@ export default function Page() {
                 <KindLogo />
               </a>
               <p className="footer-description">
-                Composable interactive charts for React and Next.js built on Recharts and Motion.
+                Composable, interactive charts for React and Next.js. Built with Recharts and
+                Motion. Designed for builders and AI agents.
               </p>
               <p className="footer-created">
                 Created by{" "}
