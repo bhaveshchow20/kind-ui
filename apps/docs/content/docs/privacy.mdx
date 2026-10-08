@@ -1,21 +1,15 @@
 ---
 title: Privacy
-description: How Kind UI uses optional website analytics and how to change your choice.
+description: How Kind UI measures website traffic without analytics cookies.
 ---
 
-## Optional website analytics
+## Website analytics
 
-Kind UI offers Google Analytics on kindui.dev to understand visits and use of the gallery and documentation. Analytics loads only after you choose **Allow**. Choose **Decline** to browse without it. Your choice is stored in your browser and shared between the gallery and docs on this domain.
+Kind UI uses Cloudflare Web Analytics to understand page views, visits, referrals and website performance. It runs on the production gallery and documentation, with no analytics popup or preference control.
 
-When enabled, Google receives page views and events for documentation navigation, GitHub/npm links, and successful code, prompt, installation-command or Markdown copies. Copy events identify the kind of action; they do not send clipboard contents, chart data or prompts. Page URLs exclude query strings and fragments. Referrers are reduced to their origin.
+Cloudflare Web Analytics does not use cookies or localStorage to collect usage metrics, and does not fingerprint individual visitors. See [Cloudflare Web Analytics privacy information](https://www.cloudflare.com/web-analytics/).
 
-Google processes these events and technical connection information to provide reports. Analytics may store first-party cookies to distinguish visits. Advertising personalization and Google signals are disabled in the website integration. See [how Google uses information from sites that use its services](https://policies.google.com/technologies/partner-sites).
-
-## Change your choice
-
-Use **Analytics preferences** at the bottom of the page to allow or decline analytics. Declining after previously allowing reloads the page and stops further analytics collection. It does not remove information Google has already received. You can clear existing analytics cookies through your browser settings.
-
-The site also disables analytics when your browser sends Global Privacy Control or Do Not Track. Local development and preview deployments do not collect analytics.
+The site does not load Google Analytics or advertising trackers. Local development and preview deployments omit the analytics beacon.
 
 ## Chart package
 

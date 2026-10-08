@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
 import { showcaseAsset } from "@/lib/site-links";
-import { analyticsScript } from "../../analytics.mjs";
+import { webAnalytics } from "../../analytics.mjs";
 import { indexingMetadata, showcaseURL } from "../../indexing.mjs";
 import { homepageDescription, homepageTitle, socialMetadata } from "../../seo.mjs";
 import "./globals.css";
@@ -46,15 +46,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const analytics = analyticsScript();
+  const analytics = webAnalytics();
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
         {analytics && (
-          <Script id="kind-ui-analytics" strategy="afterInteractive">
-            {analytics}
-          </Script>
+          <Script
+            id="kind-ui-web-analytics"
+            type="module"
+            src={analytics.src}
+            data-cf-beacon={analytics.beacon}
+            strategy="afterInteractive"
+          />
         )}
       </body>
     </html>
