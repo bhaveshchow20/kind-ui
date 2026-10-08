@@ -14,6 +14,9 @@ export default defineConfig({
     viewport: { width: 1200, height: 900 },
     reducedMotion: "no-preference",
     channel: process.env.KIND_UI_TEST_CHROME ? "chrome" : undefined,
+    ...(process.env.KIND_UI_CHROMIUM_PATH
+      ? { launchOptions: { executablePath: process.env.KIND_UI_CHROMIUM_PATH } }
+      : {}),
   },
   webServer: {
     command:
