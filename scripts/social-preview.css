@@ -1,0 +1,236 @@
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  width: 1200px;
+  height: 630px;
+  overflow: hidden;
+}
+body {
+  font-family: Geist, sans-serif;
+  background: #fff;
+  color: #242426;
+}
+.canvas {
+  position: relative;
+  width: 1200px;
+  height: 630px;
+  overflow: hidden;
+}
+.clouds {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 1200px;
+  height: 400px;
+  object-fit: cover;
+  opacity: 0.72;
+  mask-image: linear-gradient(transparent, rgba(0, 0, 0, 0.12) 15%, #000 100%);
+}
+.wash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.28), transparent 55%);
+}
+.brand {
+  position: absolute;
+  top: 54px;
+  left: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand img {
+  width: 39px;
+  height: 39px;
+}
+.wordmark {
+  font-size: 34px;
+  letter-spacing: -1.8px;
+  font-weight: 550;
+}
+.wordmark span {
+  color: #838382;
+  font-weight: 400;
+}
+.slash {
+  color: #acacaa;
+  font-weight: 350;
+  margin: 0 3px;
+}
+.headline {
+  position: absolute;
+  left: 60px;
+  top: 231px;
+  margin: 0;
+  font-size: 70px;
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -3.8px;
+  z-index: 4;
+}
+.url {
+  position: absolute;
+  left: 64px;
+  bottom: 50px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #474746;
+  font-size: 17px;
+  letter-spacing: -0.3px;
+  z-index: 5;
+}
+.url svg {
+  width: 17px;
+  height: 17px;
+}
+.tile {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.91);
+  border: 1px solid rgba(225, 225, 229, 0.8);
+  border-radius: 20px;
+  box-shadow:
+    0 15px 38px -20px rgba(44, 40, 91, 0.22),
+    0 2px 6px -4px rgba(40, 35, 73, 0.13);
+  overflow: hidden;
+}
+.bars {
+  left: 675px;
+  top: 104px;
+  width: 310px;
+  height: 230px;
+  transform: rotate(-5deg);
+  z-index: 2;
+}
+.area {
+  left: 608px;
+  top: 328px;
+  width: 333px;
+  height: 226px;
+  transform: rotate(3deg);
+  z-index: 4;
+}
+.donut {
+  left: 940px;
+  top: 267px;
+  width: 208px;
+  height: 229px;
+  transform: rotate(6deg);
+  z-index: 3;
+}
+.chart {
+  display: block;
+  margin: 19px 24px 0;
+  width: calc(100% - 48px);
+}
+.donut .chart {
+  width: 141px;
+  height: 141px;
+  margin: 20px auto 0;
+}
+.documentation .headline {
+  top: 249px;
+  font-size: 70px;
+}
+.documentation .tile {
+  left: 639px;
+  top: 140px;
+  width: 500px;
+  height: 354px;
+  z-index: 3;
+}
+.documentation .chart {
+  margin-top: 13px;
+  height: 160px;
+}
+.code {
+  border-top: 1px solid #ededee;
+  background: #fcfcfe;
+  margin-top: 15px;
+  padding: 16px 22px;
+  white-space: pre;
+  font-family: Mono, monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: -0.4px;
+  color: #70706e;
+}
+.token {
+  color: #733bff;
+}
+.attr {
+  color: #276b92;
+}
+.value {
+  color: #a55728;
+}
+.chart-label {
+  font-family: Geist, sans-serif;
+  fill: #999;
+  font-size: 10px;
+}
+.grid {
+  stroke: #ececf1;
+  stroke-dasharray: 3 4;
+}
+
+.documentation {
+  background: #121316;
+  color: #f2f2f4;
+}
+.documentation .clouds {
+  filter: grayscale(1) invert(1) sepia(1) saturate(4) hue-rotate(175deg) brightness(0.62);
+  opacity: 0.78;
+}
+.documentation .wash {
+  background: linear-gradient(90deg, rgba(18, 19, 22, 0.2), transparent 55%);
+}
+.documentation .wordmark {
+  color: #f1f1f4;
+}
+.documentation .wordmark span {
+  color: #a9abb2;
+}
+.documentation .slash {
+  color: #737680;
+}
+.documentation .tile {
+  top: 140px;
+  height: 354px;
+  background: #1a1b20;
+  border-color: #33343b;
+  box-shadow: 0 18px 45px -16px rgba(0, 0, 0, 0.55);
+}
+.documentation .grid {
+  stroke: #34363e;
+}
+.documentation .chart-label {
+  fill: #969ba8;
+}
+.documentation .chart path:not(.grid) {
+  stroke: #b296ff;
+}
+.documentation .chart circle {
+  stroke: #b296ff;
+  fill: #1a1b20;
+}
+.documentation .code {
+  background: #18191e;
+  border-color: #33343b;
+  color: #a1a5b0;
+}
+.documentation .token {
+  color: #bfa5ff;
+}
+.documentation .attr {
+  color: #92c4ff;
+}
+.documentation .value {
+  color: #eac08f;
+}
+.documentation .url {
+  color: #e0e2e8;
+}

@@ -87,13 +87,19 @@ test("page metadata checks reject inherited summaries and mismatched social URLs
   const title = "Line Chart · Kind UI charts";
   const description = "Build a chart for your team's trends.";
   const url = "https://kindui.dev/charts/docs/components/line/";
+  const alt =
+    "Kind UI Charts documentation: A line chart and composable React code example over dark clouds";
   const html = `<title>${title}</title><meta name="description" content="${description}"/>
     <meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/>
-    <meta property="og:url" content="${url}"/><meta property="og:image" content="https://kindui.dev/charts/cherry-blossom.png"/>
-    <meta name="twitter:title" content="${title}"/><meta name="twitter:description" content="${description}"/>
-    <meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://kindui.dev/charts/cherry-blossom.png"/>`;
+    <meta property="og:url" content="${url}"/><meta property="og:image" content="https://kindui.dev/charts/docs/social/documentation-v1.png"/>
+    <meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/><meta property="og:image:alt" content="${alt}"/>
+    <meta name="twitter:image:alt" content="${alt}"/><meta name="twitter:title" content="${title}"/><meta name="twitter:description" content="${description}"/>
+    <meta name="twitter:card" content="summary_large_image"/><meta name="twitter:image" content="https://kindui.dev/charts/docs/social/documentation-v1.png"/>`;
   assert.deepEqual(assertPageSEO(html, url), { title, description });
   assert.throws(() => assertPageSEO(html, showcaseURL));
+  assert.throws(() => assertPageSEO(html.replace("summary_large_image", "summary"), url));
+  assert.throws(() => assertPageSEO(html.replace("1200", "512"), url));
+  assert.throws(() => assertPageSEO(html.replace("documentation-v1.png", "homepage-v1.png"), url));
   assert.throws(() => assertPageSEO(html.replace('name="description"', 'name="missing"'), url));
   assert.throws(() =>
     assertPageSEO(html.replace('property="og:description"', 'name="description"'), url),
@@ -103,7 +109,7 @@ test("page metadata checks reject inherited summaries and mismatched social URLs
   );
 });
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -121,4 +127,19 @@ test("text export scans preserve nested files without treating metadata route di
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("both social images are distinct, deployable 1200 by 630 PNGs", () => {
+  const paths = [
+    "../apps/showcase/public/social/homepage-v1.png",
+    "../apps/docs/public/social/documentation-v1.png",
+  ];
+  const files = paths.map((file) => readFileSync(new URL(file, import.meta.url)));
+  for (const file of files) {
+    assert.equal(file.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+    assert.equal(file.readUInt32BE(16), 1200);
+    assert.equal(file.readUInt32BE(20), 630);
+    assert.ok(file.length < 1_000_000, "Keep share cards under 1 MB");
+  }
+  assert.notDeepEqual(files[0], files[1]);
 });

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { isIndexable } from "../apps/indexing.mjs";
+import { socialImages } from "../apps/seo.mjs";
 
 function attributes(tag) {
   return Object.fromEntries(
@@ -24,13 +25,19 @@ export function assertPageSEO(html, canonical) {
     return values[0].content;
   };
   const description = field("description");
+  const image = canonical.startsWith("https://kindui.dev/charts/docs/")
+    ? socialImages.documentation
+    : socialImages.homepage;
   for (const prefix of ["og", "twitter"]) {
     assert.equal(field(`${prefix}:title`), titles[0]);
     assert.equal(field(`${prefix}:description`), description);
-    assert.equal(field(`${prefix}:image`), "https://kindui.dev/charts/cherry-blossom.png");
+    assert.equal(field(`${prefix}:image`), image.url);
+    assert.equal(field(`${prefix}:image:alt`), image.alt);
   }
+  assert.equal(field("og:image:width"), String(image.width));
+  assert.equal(field("og:image:height"), String(image.height));
   assert.equal(field("og:url"), canonical);
-  assert.equal(field("twitter:card"), "summary");
+  assert.equal(field("twitter:card"), "summary_large_image");
   return { title: titles[0], description };
 }
 export function assertIndexingHTML(html, canonical, env = process.env) {
