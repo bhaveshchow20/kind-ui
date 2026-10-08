@@ -265,7 +265,7 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
             <StableRadar<DataPoint, Value>
               {...props}
               activeDot={
-                series.hide
+                interaction.inactive
                   ? false
                   : (props.activeDot ?? (Object.hasOwn(props, "activeDot") ? true : radarActiveDot))
               }
@@ -689,11 +689,13 @@ export function RadialBarSeries<DataPoint = unknown, Value = unknown>({
                 {...props}
                 {...(onClick !== undefined ? { onClick } : {})}
                 shape={nativeShape}
-                {...(props.activeShape === undefined && !categories?.bound
-                  ? {}
-                  : props.activeShape === false
-                    ? { activeShape: false }
-                    : { activeShape: nativeActiveShape })}
+                {...(interaction.inactive
+                  ? { activeShape: false }
+                  : props.activeShape === undefined && !categories?.bound
+                    ? {}
+                    : props.activeShape === false
+                      ? { activeShape: false }
+                      : { activeShape: nativeActiveShape })}
                 {...(nativeBackground !== undefined ? { background: nativeBackground } : {})}
                 {...(materialized ? { filter: `url(#${filterId})` } : {})}
                 {...(props.label !== undefined

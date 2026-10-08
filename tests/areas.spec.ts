@@ -147,7 +147,11 @@ test("area defaults stay complete and missing gaps, zero, percentages, and contr
   await mobile.click();
   await expect(mobile).toHaveAttribute("aria-pressed", "true");
   await expect(areas).toHaveCount(2);
-  await expectDimmedPaint(areas.first());
+  await expectDimmedPaint(
+    interactive.locator(
+      '[data-kind-ui="series-interaction"][data-series="desktop"] .recharts-area-area',
+    ),
+  );
   await interactive.getByRole("application").focus();
   await expect(page.getByRole("status")).toContainText("Mobile");
   await interactive.getByText("View data", { exact: true }).click();

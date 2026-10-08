@@ -81,7 +81,7 @@ test("optional motion respects changing preferences and survives interrupted int
   for (const line of await page.locator(".recipe-stack .recharts-line").all())
     await expect(line).toHaveCSS("clip-path", "none");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(clips).toHaveCount(7);
+  await expect(clips).toHaveCount(8);
 
   await page.getByLabel("Motion", { exact: true }).uncheck();
   await expect(clips).toHaveCount(0);

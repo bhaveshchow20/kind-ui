@@ -136,7 +136,11 @@ for (const mode of ["static", "motion", "reduced"] as const) {
     const interactive = page.getByRole("region", { name: "Interactive", exact: true });
     await interactive.getByRole("button", { name: "Desktop", exact: true }).click();
     await expect(interactive.locator('[data-kind-ui="area-material"]')).toHaveCount(2);
-    await expectDimmedPaint(interactive.locator(".recharts-area-area").last());
+    await expectDimmedPaint(
+      interactive.locator(
+        '[data-series="mobile"][data-kind-ui="series-interaction"] .recharts-area-area',
+      ),
+    );
     await interactive.getByRole("button", { name: "Desktop", exact: true }).click();
     await expect(interactive.locator('[data-kind-ui="area-material"]')).toHaveCount(2);
     if (mode === "reduced") await expect(page.locator("[data-area-reveal]")).toHaveCount(0);

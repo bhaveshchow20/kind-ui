@@ -21,6 +21,14 @@ for (const family of ["radar", "radial", "activity"]) {
           .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
       );
     const baseline = await snapshot();
+    const tracks = plot.locator(".recharts-radial-bar-background-sector");
+    const trackGeometry = () =>
+      tracks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+    const initialTracks = await trackGeometry();
+    if (family === "radial") {
+      await expect(tracks).toHaveCount(6);
+      await expect(tracks.first()).toHaveCSS("fill", "rgb(241, 241, 241)");
+    }
     for (let repeat = 0; repeat < 3; repeat++) {
       await plot.getByRole("button", { name: "Hide", exact: true }).click();
       await page.waitForTimeout(35);
@@ -37,6 +45,15 @@ for (const family of ["radar", "radial", "activity"]) {
       const duringHide = await effectiveOpacity();
       expect(duringHide.some((value) => value > 0 && value < 1)).toBe(true);
       await expect.poll(effectiveOpacity).toContain(0);
+      if (family === "radial") {
+        expect(await trackGeometry()).toEqual(initialTracks);
+        const suppressedTracks = tracks.locator("xpath=self::*[@aria-hidden='true']");
+        await expect(suppressedTracks).toHaveCount(3);
+        for (const track of await suppressedTracks.all()) {
+          await expect(track).toHaveCSS("opacity", "0");
+          await expect(track).toHaveCSS("pointer-events", "none");
+        }
+      }
       expect((await effectiveOpacity()).some((value) => value > 0.9)).toBe(true);
       const survivor =
         family === "radar"
@@ -72,6 +89,11 @@ for (const family of ["radar", "radial", "activity"]) {
       await page.waitForTimeout(35);
       expect(await snapshot()).toEqual(baseline);
       await expect.poll(effectiveOpacity).toEqual(baseline.map(() => 1));
+      if (family === "radial") {
+        expect(await trackGeometry()).toEqual(initialTracks);
+        await expect(tracks.first()).toHaveCSS("opacity", "1");
+        await expect(tracks.locator("xpath=self::*[@aria-hidden='true']")).toHaveCount(0);
+      }
     }
     for (const key of ["first", "second", "first"]) {
       const legend = plot.locator(`[data-legend-key="${key}"]`);

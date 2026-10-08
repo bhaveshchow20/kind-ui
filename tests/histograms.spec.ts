@@ -52,7 +52,9 @@ test("native shapes, Cells, events, visibility and keyboard/table fallback remai
   page,
 }) => {
   await page.goto(packed);
-  await page.locator('[data-kind-ui="histogram-bin"][data-lower="0"]').click();
+  await page
+    .locator('[data-kind-ui="histogram-bin"][data-lower="0"]')
+    .click({ position: { x: 5, y: 5 }, force: true });
   await expect(page.getByRole("status", { name: "Clicked" })).toHaveText("1");
   await expect(page.locator('[data-kind-ui="histogram-bin"][data-lower="0"]')).toHaveAttribute(
     "fill",

@@ -591,7 +591,7 @@ function LegacyAndDuplicateIdentities() {
       <section aria-label="Duplicate series availability">
         <Chart.Root
           config={config}
-          interaction={{ kind: "series", eligibleKeys: ["first", "second"] }}
+          interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["first", "second"] }}
           visibleSeries={duplicateVisible}
           onVisibleSeriesChange={(next) => {
             setDuplicateVisible(next);

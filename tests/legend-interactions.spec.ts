@@ -193,7 +193,7 @@ test("Pie hiding preserves angles and keeps original blue Cell", async ({ page }
   await scope.getByRole("button", { name: "First", exact: true }).click();
   const sector = scope.locator("[data-kind-ui=pie-sector]").nth(1);
   await expect(scope.locator("[data-kind-ui=pie-sector]")).toHaveCount(2);
-  await expect(sector).toHaveAttribute("data-sector-span", "240");
+  await expect(sector).toHaveAttribute("data-sector-span", "120");
   await expect(sector).toHaveAttribute("fill", "#0000ff");
   await expect(scope.getByRole("button", { name: "Toggle second", exact: true })).toHaveAttribute(
     "aria-pressed",

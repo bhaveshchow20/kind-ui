@@ -69,6 +69,10 @@ test("packed histogram finishes retain quantitative geometry, Cells, overrides a
       await expectLastVisibleGuard(
         page.getByRole("button", { name: "Density", exact: true }),
         bins,
+        () =>
+          page
+            .getByRole("button", { name: "Density", exact: true })
+            .evaluate((node) => (node as HTMLButtonElement).click()),
       );
       await page.getByRole("button", { name: "External visibility", exact: true }).click();
       await expect(bins).toHaveCount(4);

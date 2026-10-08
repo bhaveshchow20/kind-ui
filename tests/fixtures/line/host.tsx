@@ -149,7 +149,7 @@ export function LineHost({
         interaction={{
           kind: "series",
           mode: "visibility",
-          eligibleKeys: ["value", "other", "alias"],
+          eligibleKeys: ["value", renamed ? "alias" : "other"],
         }}
         config={{
           value: { label: "Value", color: "#345", formatValue: (v) => `${v} units` },

@@ -109,20 +109,12 @@ export function ScatterSeries({
     area && area.width > 0 && area.height > 0 && xDomain && yDomain && xScale && yScale
       ? JSON.stringify([area, xDomain.map((v) => xScale?.(v)), yDomain.map((v) => yScale?.(v))])
       : undefined;
-  const inputs = [
-    props.data,
-    props.dataKey,
-    props.xAxisId,
-    props.yAxisId,
-    props.zAxisId,
-    hidden,
-    geometry,
-  ];
+  const inputs = [props.data, props.dataKey, props.xAxisId, props.yAxisId, props.zAxisId, geometry];
   const previous = useRef(inputs);
   useLayoutEffect(() => {
     if (
       inputs.some(
-        (v, i) => v !== previous.current[i] && (i !== 6 || previous.current[i] !== undefined),
+        (v, i) => v !== previous.current[i] && (i !== 5 || previous.current[i] !== undefined),
       )
     )
       invalidate();

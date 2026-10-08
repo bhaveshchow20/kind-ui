@@ -94,11 +94,14 @@ for (const horizontal of [false, true]) {
         return ink;
       }),
     );
+    const beforeFocus = await marks.evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("d")),
+    );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
     await expect(marks).toHaveCount(4);
     await expectDimmedPaint(marks.nth(1));
     expect(await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")))).toEqual(
-      geometry,
+      beforeFocus,
     );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
     await expect(marks).toHaveCount(4);

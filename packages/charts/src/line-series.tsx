@@ -50,12 +50,11 @@ export function LineSeries<
   const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
   const effectiveHide =
     hide === true || (visibleSeries !== undefined && !visibleSeries.includes(key ?? ""));
-  const previous = useRef({ data: props.data, hide: effectiveHide });
+  const previous = useRef({ data: props.data });
   useLayoutEffect(() => {
-    if (props.data !== previous.current.data || effectiveHide !== previous.current.hide)
-      invalidate();
-    previous.current = { data: props.data, hide: effectiveHide };
-  }, [props.data, effectiveHide, invalidate]);
+    if (props.data !== previous.current.data) invalidate();
+    previous.current = { data: props.data };
+  }, [props.data, invalidate]);
   useLayoutEffect(() => {
     if (key === undefined) return;
     return registerSeries(id, key);

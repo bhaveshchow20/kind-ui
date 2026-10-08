@@ -84,11 +84,22 @@ for (const horizontal of [false, true]) {
       }
       await expect(page.locator("pattern animate, pattern animateTransform")).toHaveCount(0);
     }
+    const beforeFocus = await marks.evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("d")),
+    );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
     await expect(marks).toHaveCount(8);
-    await expectDimmedPaint(marks.nth(2));
+    await expectDimmedPaint(
+      page
+        .locator('[data-kind-ui="chart"]')
+        .first()
+        .locator(
+          '[data-kind-ui="series-interaction"][data-series="second"] .recharts-bar-rectangle path',
+        )
+        .first(),
+    );
     expect(await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")))).toEqual(
-      geometry,
+      beforeFocus,
     );
     await page.getByRole("button", { name: "First", exact: true }).first().click();
     await expect(marks).toHaveCount(8);

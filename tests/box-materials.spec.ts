@@ -59,6 +59,10 @@ test("packed Box materials: exact geometry, Cell paint, custom ownership and rep
       await expectLastVisibleGuard(
         host.getByRole("button", { name: "Distribution", exact: true }),
         host.locator(marks),
+        () =>
+          host
+            .getByRole("button", { name: "Distribution", exact: true })
+            .evaluate((node: HTMLButtonElement) => node.click()),
       );
       await host.getByRole("button", { name: "External visibility", exact: true }).click();
       await expect(host.locator(marks)).toHaveCount(3);

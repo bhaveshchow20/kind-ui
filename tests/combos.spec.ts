@@ -48,7 +48,7 @@ test("recipe Motion replay runs entrances and preserves hidden legends", async (
     "true",
   );
   await expect(load.locator(".recharts-bar")).toHaveCount(1);
-  await expectDimmedPaint(load.locator(".recharts-line-curve"));
   await page.clock.runFor(1500);
+  await expectDimmedPaint(load.locator(".recharts-line-curve"));
   await expect(page.locator('[data-combo-reveal], [data-kind-ui="bar-reveal"]')).toHaveCount(0);
 });
