@@ -10,6 +10,7 @@ export function CopyMarkdown({ path }: { path: string }) {
       const response = await fetch(path);
       if (!response.ok) throw new Error();
       await navigator.clipboard.writeText(await response.text());
+      window.dispatchEvent(new CustomEvent("kind-ui-copy", { detail: "markdown" }));
       setStatus("Copied");
     } catch {
       setStatus("Use Markdown link");

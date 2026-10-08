@@ -51,6 +51,9 @@ export function ComponentPlayground({
   async function copy(text: string, label: string) {
     try {
       await navigator.clipboard.writeText(text);
+      window.dispatchEvent(
+        new CustomEvent("kind-ui-copy", { detail: label === "Prompt" ? "prompt" : "code" }),
+      );
       setStatus(`${label} copied`);
     } catch {
       setStatus("Clipboard unavailable. Select the code to copy.");

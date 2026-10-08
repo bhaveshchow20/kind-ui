@@ -1,10 +1,10 @@
 name: SEO
 on:
   pull_request:
-    paths: ["apps/indexing.mjs", "apps/seo.mjs", "apps/showcase/**", "packages/charts/**", "scripts/indexing*", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/seo.yml"]
+    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/showcase/**", "packages/charts/**", "scripts/indexing*", "scripts/analytics.test.mjs", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/seo.yml"]
   push:
     branches: [main]
-    paths: ["apps/indexing.mjs", "apps/seo.mjs", "apps/showcase/**", "packages/charts/**", "scripts/indexing*", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/seo.yml"]
+    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/showcase/**", "packages/charts/**", "scripts/indexing*", "scripts/analytics.test.mjs", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/seo.yml"]
 permissions:
   contents: read
 concurrency:
@@ -46,6 +46,8 @@ jobs:
       - run: npm run build
         working-directory: apps/showcase
       - run: npm exec playwright install -- --with-deps chromium
+      - name: Check analytics consent and event contracts
+        run: node --test scripts/analytics.test.mjs
       - run: npm run test:browser -- tests/routes.spec.ts
         working-directory: apps/showcase
       - name: Check hero flow, fonts, and reduced motion
