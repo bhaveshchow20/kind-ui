@@ -9,6 +9,20 @@ import { documentationCharts, siteLinks } from "../lib/site-links";
 
 const basePath = process.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH ?? "";
 
+test("agent reference aliases resolve directly to the generated Docs reference", async ({
+  request,
+}) => {
+  for (const prefix of new Set(["", basePath])) {
+    for (const file of ["llms.txt", "llms-full.txt"]) {
+      const response = await request.get(`http://127.0.0.1:7273${prefix}/${file}`, {
+        maxRedirects: 0,
+      });
+      expect(response.status()).toBe(308);
+      expect(response.headers().location).toBe(`https://kindui.dev/charts/docs/${file}`);
+    }
+  }
+});
+
 test("home redirects only in prefixed mode and direct refresh loads assets", async ({
   page,
   request,
@@ -115,6 +129,11 @@ test("initial homepage HTML and metadata routes match deployment indexing intent
   expect(html.replace(/<[^>]*>/g, "")).toContain("npm install");
   expect(html).toContain("@kind-ui/charts");
   expect(html).toContain(`href="${siteLinks.docs}"`);
+  // Links must exist before JS, rather than appearing only inside the search dialog.
+  const initialHTML = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
+  for (const href of new Set(documentationCharts.map((chart) => chart.href))) {
+    expect(initialHTML).toContain(`href="${href}"`);
+  }
   const structuredData = [
     ...html.matchAll(/<script type="application\/ld\+json">([^<]+)<\/script>/g),
   ];

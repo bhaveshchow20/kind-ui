@@ -667,6 +667,23 @@ button:disabled {
 .footer-wordmark .kind-logo-name {
   font-weight: 500;
 }
+.chart-guide-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 24px 0;
+  font-size: 14px;
+}
+.chart-guide-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--muted-foreground);
+}
+.chart-guide-links a:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}
 .footer-bottom {
   display: flex;
   align-items: center;

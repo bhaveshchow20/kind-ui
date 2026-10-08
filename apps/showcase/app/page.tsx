@@ -1026,6 +1026,18 @@ export default function Page() {
           <p className="footer-wordmark" role="img" aria-label="Kind UI">
             <KindLogo />
           </p>
+          <nav className="chart-guide-links" aria-label="Chart documentation">
+            {documentationCharts
+              .filter(
+                (chart, index, charts) =>
+                  charts.findIndex(({ href }) => href === chart.href) === index,
+              )
+              .map(({ name, href }) => (
+                <a key={href} href={href}>
+                  {name} charts
+                </a>
+              ))}
+          </nav>
           <div className="footer-bottom">
             <a className="footer-credit" href={siteLinks.creator} target="_blank" rel="noreferrer">
               By Bhavesh Chowdhury

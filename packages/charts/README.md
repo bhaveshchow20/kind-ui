@@ -1,7 +1,9 @@
 # Kind UI charts
 
-Composable React charts built on Recharts and Motion, with shared interaction,
-controlled visibility and optional animation. Start with a complete chart, then
+Kind UI Charts (`@kind-ui/charts`) is an MIT-licensed React chart library built on
+Recharts and Motion, with TypeScript APIs and examples for React and Next.js.
+It provides composable chart components, shared interaction, controlled visibility
+and optional animation. Start with a complete chart, then
 customize its parts through public components and typed props.
 
 [Website](https://kindui.dev/charts) ·
