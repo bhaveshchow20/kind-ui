@@ -56,6 +56,15 @@ export const family = {
     },
   },
   variants: {
+    "radial-activity": {
+      control: "State",
+      prop: "state",
+      default: "ready",
+      options: [
+        { value: "ready", label: "Ready" },
+        { value: "loading", label: "Loading" },
+      ],
+    },
     radial: {
       control: "Labels",
       prop: "labels",

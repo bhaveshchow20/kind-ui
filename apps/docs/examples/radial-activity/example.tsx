@@ -17,6 +17,13 @@ const config = {
   stand: { label: "Stand", color: "#2469d4", formatValue: (value: unknown) => `${value} hours` },
 } satisfies Chart.SeriesConfig;
 
-export function DailyActivityChart() {
-  return <Chart.ActivityRings rings={data} config={config} aria-label="Daily activity" />;
+export function DailyActivityChart({ state = "ready" }: { state?: "ready" | "loading" }) {
+  return (
+    <Chart.ActivityRings
+      loading={state === "loading"}
+      rings={data}
+      config={config}
+      aria-label="Daily activity"
+    />
+  );
 }

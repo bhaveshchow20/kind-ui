@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
+import ts from "typescript";
 import { families } from "../examples/catalog.mjs";
 import { publicPath } from "../lib/routing.mjs";
 
@@ -10,6 +11,50 @@ const browser = await chromium.launch();
 const evidence = [];
 const errors = [];
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
+const publicIndex = ts.createSourceFile(
+  "index.ts",
+  readFileSync("../../packages/charts/src/index.ts", "utf8"),
+  ts.ScriptTarget.Latest,
+  true,
+);
+const chartExports = publicIndex.statements.flatMap((statement) =>
+  ts.isExportDeclaration(statement) &&
+  statement.exportClause &&
+  ts.isNamedExports(statement.exportClause)
+    ? statement.exportClause.elements
+        .filter((entry) => !entry.isTypeOnly && /(?:Chart$|^ActivityRings$)/.test(entry.name.text))
+        .map((entry) => entry.name.text)
+    : [],
+);
+const loadingCoverage = chartExports.map((component) => {
+  const bundle = Object.values(bundles).find((example) => {
+    if (!example.variants?.loading) return false;
+    const source = ts.createSourceFile(
+      "example.tsx",
+      example.variants.loading.source,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    );
+    let found = false;
+    function visit(node) {
+      if (
+        (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
+        node.tagName.getText(source) === `Chart.${component}` &&
+        node.attributes.properties.some(
+          (attribute) =>
+            ts.isJsxAttribute(attribute) && attribute.name.getText(source) === "loading",
+        )
+      )
+        found = true;
+      ts.forEachChild(node, visit);
+    }
+    visit(source);
+    return found;
+  });
+  assert.ok(bundle, `${component} needs a native loading example`);
+  return { component, example: bundle.id };
+});
 function pages(directory, prefix = "") {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) =>
     entry.isDirectory()
@@ -67,6 +112,21 @@ try {
     }
   }
   await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(origin + publicPath("/docs/components/radial/"));
+  const activity = page.locator('[data-component="radial-activity"]');
+  await activity.getByRole("combobox", { name: "State", exact: true }).click();
+  await page.getByRole("option", { name: "Loading", exact: true }).click();
+  await expect(activity.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
+  await activity.getByRole("tab", { name: "Code", exact: true }).click();
+  assert.equal(
+    (await activity.locator("pre").textContent()).trim(),
+    bundles["radial-activity"].variants.loading.source.trim(),
+  );
+  await activity.getByRole("tab", { name: "Preview", exact: true }).click();
+  await activity.getByRole("combobox", { name: "State", exact: true }).click();
+  await page.getByRole("option", { name: "Ready", exact: true }).click();
+  await expect(activity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
+  await expect(activity.locator(".recharts-radial-bar-sector")).toHaveCount(3);
   await page.goto(origin + publicPath("/docs/components/radar/"));
   const mark = page.locator('[data-kind-ui="radar-selection"]').last();
   await mark.waitFor();
@@ -121,6 +181,7 @@ try {
       {
         pages: evidence,
         families: families.length,
+        loadingCoverage,
         pointerAndKeyboardFocus: "passed",
         favicon: "canonical bytes",
         errors,
@@ -130,7 +191,7 @@ try {
     ),
   );
   console.log(
-    `Docs cleanup: ${evidence.length} page/viewport checks, 13 native loading previews, focus and canonical favicon passed.`,
+    `Docs cleanup: ${evidence.length} page/viewport checks, ${loadingCoverage.length} exported chart components with loading previews, focus and canonical favicon passed.`,
   );
 } finally {
   await browser.close();

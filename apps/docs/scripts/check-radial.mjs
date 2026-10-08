@@ -9,7 +9,7 @@ const browser = await chromium.launch(
 const evidence = { viewports: [], directions: [], interactions: [], scroll: [], errors: [] };
 mkdirSync("artifacts/radial", { recursive: true });
 const bundles = JSON.parse(readFileSync("generated/radial-examples.json", "utf8"));
-const url = "http://127.0.0.1:6373/docs/components/radial/";
+const url = `${process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373"}/docs/components/radial/`;
 try {
   for (const width of [320, 375, 390, 430, 768, 1440]) {
     const context = await browser.newContext({
@@ -107,6 +107,37 @@ try {
     assert.equal(await activity.locator("table tbody tr").count(), 3);
     for (const value of ["350 kcal", "30 min", "9 hours"])
       await expect(activity.locator('[data-kind-ui="chart-instructions"]')).toContainText(value);
+    const activityPaths = await activity
+      .locator(".recharts-radial-bar-sector")
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+    const activityState = activity.getByRole("combobox", { name: "State", exact: true });
+    await activityState.click();
+    await page.getByRole("option", { name: "Loading", exact: true }).click();
+    await expect(
+      activity.locator('[data-kind-ui="chart-loading-skeleton"][data-family="activity-rings"]'),
+    ).toBeVisible();
+    await activity.getByRole("tab", { name: "Code", exact: true }).click();
+    assert.equal(
+      (await activity.locator("pre").textContent()).trim(),
+      bundles["radial-activity"].variants.loading.source.trim(),
+    );
+    await activity.getByRole("button", { name: "Copy prompt" }).click();
+    assert.ok(
+      (await page.evaluate(() => navigator.clipboard.readText())).includes(
+        "/radial-activity/variants/loading/example.tsx",
+      ),
+    );
+    await activity.getByRole("tab", { name: "Preview", exact: true }).click();
+    await activityState.click();
+    await page.getByRole("option", { name: "Ready", exact: true }).click();
+    await expect(activity.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
+    await expect(activity.locator(".recharts-radial-bar-sector")).toHaveCount(3);
+    assert.deepEqual(
+      await activity
+        .locator(".recharts-radial-bar-sector")
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d"))),
+      activityPaths,
+    );
     const stack = page.locator('[data-component="radial-stacked"]');
     await stack.scrollIntoViewIfNeeded();
     const button = stack.getByRole("button", { name: "Committed", exact: true });
@@ -124,6 +155,7 @@ try {
       gaugeSummaryDefault: false,
       gaugeSummaryOptIn: true,
       activityDefaultLabels: 0,
+      activityLoading: "native activity-rings skeleton and original data restored",
       sourceCopyParity: true,
       reducedMotion: true,
     });
