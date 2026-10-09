@@ -19,6 +19,18 @@ The current build, style-copy, prepack, package gate, and release scripts target
 
 The executor has Node `24.19.0` and npm `11.9.0`. Setup checks here do not replace the repository's Node 22 CI evidence.
 
+## Keep builds and agent context scoped
+
+Keeping AI and Charts in this repository does not require coupling their shipped packages. Before adding the AI package, define these gates in its foundation session:
+
+- **Package commands:** provide package-scoped build, typecheck, test, and packed-consumer commands. Contributors can check one product without building every product. Keep root aggregate commands for repository-wide verification.
+- **CI selection:** check each changed package and its dependent examples or applications. Shared tooling, dependency, and lockfile changes must expand the affected checks where needed. Review change detection against the dependency graph; preserve existing required checks until a replacement is verified. This setup adds no CI automation.
+- **Dependency and export isolation:** keep Charts and AI manifests and public exports independent. Charts must not depend on AI, its SDK adapter, or AI-only primitives. Prove that installing and importing the packed Charts package does not pull in AI dependencies, and that each package resolves its declarations independently. A shared workspace lockfile or contributor install is not evidence of consumer isolation.
+- **Shared documentation:** a combined docs site may still build pages and examples for both products, so its build time can grow. Measure that cost separately from package builds; propose scoped docs checks or caching only when justified. Package isolation alone does not make the shared site build independent.
+- **Agent context:** add a package-local `AGENTS.md` when the AI package exists, with its commands, ownership contracts, and links to the relevant skills. Keep root instructions as a routing map. Read the touched package and its dependents; load skill rules on demand. Reference shared guides instead of duplicating them, and avoid loading the full repository or component catalog for one package task.
+
+These are future verification gates. This follow-up changes documentation only; it creates no package scaffolding, agent files, build commands, or workflow changes.
+
 ## Installed skills and their use
 
 The inventory, source pins, licenses, adaptations, and installation review are in [skill sources](../.agents/skills/UPSTREAM.md). [The Kind guide](../.agents/skills/kind-ai-components/SKILL.md) routes future sessions to the relevant skill. These are reviewed Markdown files, not executable installers or a new runtime dependency.
