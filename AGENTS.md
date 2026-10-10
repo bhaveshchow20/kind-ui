@@ -45,3 +45,9 @@ The workspace remains private at `0.0.0`; `@kind-ui/charts` is published on npm 
 ## Optional React agent skills
 
 For component API or composition work, read `.agents/skills/composition-patterns/SKILL.md`, then only the specific rule files needed. For React render-performance work, read `.agents/skills/react-best-practices/SKILL.md`, then only its relevant selected rule. These references are on-demand; do not load the full set by default or treat guidance as a substitute for the current library API and consumer contract. Source and update notes are in `.agents/skills/UPSTREAM.md`.
+
+## Kind AI setup and focused sessions
+
+For Kind AI setup, component contracts, or SDK integration, start with `.agents/skills/kind-ai-components/SKILL.md` and [AI foundations](docs/ai-foundations.md). The guide routes to the existing composition/performance skills and the reviewed project-local AI SDK, accessibility, and writing guides. Read only the guidance needed for the session; source revisions, licenses, and local adaptations are in `.agents/skills/UPSTREAM.md`.
+
+The AI foundations document records proposed boundaries and acceptance checks, not shipped APIs. Preserve Charts and production applications. Implement only the focused slice authorized for the current session; do not turn a setup task into a component catalog or agent runtime.

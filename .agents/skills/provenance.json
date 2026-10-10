@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "reviewedOn": "2026-10-09",
+  "installation": "Project-local declarative files only; no executable installer or MCP configuration",
+  "skills": [
+    {
+      "skill": "ai-sdk",
+      "license": "Apache-2.0",
+      "adaptation": "SDK boundary only; no auto-install, gateway, providers, agent runtime, or upgrades",
+      "sources": [
+        {
+          "repository": "vercel/ai",
+          "revision": "e00b1b14e99b9f0fcb5e49848b26ff84613ea067",
+          "path": "skills/use-ai-sdk/SKILL.md",
+          "sha256": "6bc642319c4ecbf9fbd59cef783b02174d4bd663c010703a6a6b80bda855b32d"
+        },
+        {
+          "repository": "vercel/ai",
+          "revision": "e00b1b14e99b9f0fcb5e49848b26ff84613ea067",
+          "path": "LICENSE",
+          "sha256": "b4f9adb7c568904834d0dd6cc98d16c390d21ca32fc17ae7a267715269bd5529"
+        }
+      ],
+      "installedFiles": [
+        {
+          "path": "ai-sdk/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "ai-sdk/NOTICE",
+          "sha256": "b4f9adb7c568904834d0dd6cc98d16c390d21ca32fc17ae7a267715269bd5529"
+        },
+        {
+          "path": "ai-sdk/SKILL.md",
+          "sha256": "4d277d36e97a35bb9a4b7b42e7927cacb8ecd339dde0cdde94f20e8da64eecb4"
+        }
+      ]
+    },
+    {
+      "skill": "web-design-guidelines",
+      "license": "MIT",
+      "adaptation": "Selected component accessibility checks; native keyboard semantics; no floating fetch or global installer",
+      "sources": [
+        {
+          "repository": "vercel-labs/agent-skills",
+          "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+          "path": "skills/web-design-guidelines/SKILL.md",
+          "sha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f"
+        },
+        {
+          "repository": "vercel-labs/web-interface-guidelines",
+          "revision": "434b7f91364665f2f733b310ec54809bf8f37937",
+          "path": "command.md",
+          "sha256": "d246b026f4f29b5823a9cc857f9edf3d2507002e055e32040cadeaf3b38e0234"
+        },
+        {
+          "repository": "vercel-labs/web-interface-guidelines",
+          "revision": "434b7f91364665f2f733b310ec54809bf8f37937",
+          "path": "LICENSE",
+          "sha256": "6cd1609c9c12233507cdd2ce0d32e9a721e3c27494951be06b90090deeeb7af2"
+        }
+      ],
+      "installedFiles": [
+        {
+          "path": "web-design-guidelines/LICENSE",
+          "sha256": "6cd1609c9c12233507cdd2ce0d32e9a721e3c27494951be06b90090deeeb7af2"
+        },
+        {
+          "path": "web-design-guidelines/SKILL.md",
+          "sha256": "698a2a2c9871fef3db56cd811efdc7ff9a495fcfcd12f4239caf1d5ac6e56eae"
+        }
+      ]
+    },
+    {
+      "skill": "writing-guidelines",
+      "license": "MIT",
+      "adaptation": "Selected accuracy, ownership, and clarity review; no Vercel site or model/provider policy",
+      "sources": [
+        {
+          "repository": "vercel-labs/agent-skills",
+          "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+          "path": "skills/writing-guidelines/SKILL.md",
+          "sha256": "89a5f581193289b80af58b980090aeed535047c8df2b55ccbaae0de40283a99d"
+        },
+        {
+          "repository": "vercel-labs/writing-guidelines",
+          "revision": "83e2316b034cf572400513538e4e4da01c4cc742",
+          "path": "command.md",
+          "sha256": "fb638d7821bb4472e4492aedcfb51f2636c7d31d34ff9f01cca5bcdce9b1841f"
+        },
+        {
+          "repository": "vercel-labs/writing-guidelines",
+          "revision": "83e2316b034cf572400513538e4e4da01c4cc742",
+          "path": "LICENSE",
+          "sha256": "7ecf613390251c6a08d66982519db39f2ae7fc2e474c65630adea78e84dc4445"
+        }
+      ],
+      "installedFiles": [
+        {
+          "path": "writing-guidelines/LICENSE",
+          "sha256": "7ecf613390251c6a08d66982519db39f2ae7fc2e474c65630adea78e84dc4445"
+        },
+        {
+          "path": "writing-guidelines/SKILL.md",
+          "sha256": "78dff6dc4ab652652e76677338a5dc1b7f11af96145ebcbec2f649da718645e3"
+        }
+      ]
+    },
+    {
+      "skill": "kind-ai-components",
+      "license": "MIT",
+      "adaptation": "Original Kind routing guide; links to official documentation, no copied vendor implementation",
+      "sources": [],
+      "installedFiles": [
+        {
+          "path": "kind-ai-components/SKILL.md",
+          "sha256": "0e6200aa84f18f4877c0487d62359fd57f71c5faaa8936b98d38b12d55b36eba"
+        }
+      ]
+    }
+  ]
+}
