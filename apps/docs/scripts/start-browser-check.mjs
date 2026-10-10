@@ -1,4 +1,14 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+
+if (
+  !existsSync("artifacts/registry-consumer/registry-results.json") ||
+  !existsSync("artifacts/registry-consumer/dist/index.html")
+) {
+  throw new Error(
+    "Run `npm run check:registry` before `npm run check:browser` to prepare the installed registry consumer.",
+  );
+}
 
 const preview = spawn(process.execPath, ["scripts/serve.mjs"], {
   stdio: ["ignore", "pipe", "inherit"],

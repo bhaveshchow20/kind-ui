@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { test } from "node:test";
 import ts from "typescript";
 import { allExamples, families } from "../examples/catalog.mjs";
+import { registryInstallCommand } from "../lib/example-files.mjs";
+import { publicPath } from "../lib/routing.mjs";
 import { recipeSource, validateCatalog } from "./registry.mjs";
 import { registryItemSchema } from "./registry-schema.mjs";
 
@@ -60,5 +65,77 @@ test("every public JSON item contains only its recipe and required support files
     assert.ok(component.content.includes('import "../styles.css"'));
     assert.ok(component.content.includes("data-chart-alternative"));
     assert.doesNotMatch(component.content, /packages\/charts|\.\/dist\//);
+    if (item.name === "kind-combo-motion")
+      assert.ok(!built.files.some((file) => file.target.endsWith("/options.tsx")));
+  }
+});
+
+test("retrieved registry usage preserves every fixed selected variant", () => {
+  let loadingExamples = 0;
+  for (const page of readdirSync("content/docs", { recursive: true }).filter((file) =>
+    file.endsWith(".mdx"),
+  )) {
+    const markdown = read(`public/markdown/${page.replace(/\.mdx$/, ".md")}`);
+    for (const [, id, variant] of read(`content/docs/${page}`).matchAll(
+      /<ChartExample id="([\w-]+)"(?: variant="([\w-]+)")?/g,
+    )) {
+      const bundle = bundles[id];
+      const selected = variant ?? bundle.defaultVariant;
+      const props =
+        selected && bundle.registry.variantProp
+          ? ` ${bundle.registry.variantProp}=${JSON.stringify(selected)}`
+          : "";
+      assert.ok(
+        markdown.includes(`Render \`<${bundle.registry.componentName}${props} />\``),
+        `${page}: ${id}:${selected}`,
+      );
+      if (variant === "loading") loadingExamples++;
+    }
+  }
+  assert.equal(loadingExamples, 13);
+});
+
+test("Markdown installs use the configured build origin or require the actual serving origin", () => {
+  const path = publicPath("/r/kind-line.json");
+  assert.equal(
+    registryInstallCommand("line", "https://example.test"),
+    `npx shadcn@latest add https://example.test${path}`,
+  );
+  const command = registryInstallCommand("line").replace("npx shadcn@latest add", "printf '%s'");
+  const env = { ...process.env, KIND_DOCS_ORIGIN: "http://127.0.0.1:6374" };
+  assert.equal(
+    execFileSync("bash", ["-c", command], { env, encoding: "utf8" }),
+    `http://127.0.0.1:6374${path}`,
+  );
+  delete env.KIND_DOCS_ORIGIN;
+  assert.throws(
+    () => execFileSync("bash", ["-c", command], { env, stdio: "pipe" }),
+    /Set KIND_DOCS_ORIGIN to the docs site origin/,
+  );
+  assert.throws(
+    () =>
+      execFileSync(process.execPath, ["scripts/generate.mjs"], {
+        env: { ...env, KIND_UI_DEPLOYMENT_ENV: "production" },
+        stdio: "pipe",
+      }),
+    /KIND_DOCS_ORIGIN is required for production registry install commands/,
+  );
+});
+
+test("browser checks explain missing registry consumer prerequisites before starting work", () => {
+  const scratch = mkdtempSync(path.join(tmpdir(), "kind-registry-browser-prereq-"));
+  try {
+    const launcher = path.resolve("scripts/start-browser-check.mjs");
+    const check = () =>
+      assert.throws(
+        () => execFileSync(process.execPath, [launcher], { cwd: scratch, stdio: "pipe" }),
+        /Run `npm run check:registry` before `npm run check:browser`/,
+      );
+    check();
+    mkdirSync(path.join(scratch, "artifacts/registry-consumer"), { recursive: true });
+    writeFileSync(path.join(scratch, "artifacts/registry-consumer/registry-results.json"), "{}");
+    check();
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
   }
 });

@@ -562,11 +562,6 @@
           "target": "components/charts/combo-motion/example.tsx"
         },
         {
-          "path": "examples/combo-motion/options.tsx",
-          "type": "registry:component",
-          "target": "components/charts/combo-motion/options.tsx"
-        },
-        {
           "path": "examples/shared/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"

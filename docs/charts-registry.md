@@ -12,7 +12,7 @@ The official CLI is an isolated npm-exec development tool, pinned by version rat
 
 ## Hosting and discovery
 
-The app exports `public/r/registry.json` and `public/r/kind-<example-id>.json` into `out/r/`. Root previews serve `/r/...`; the public build uses `NEXT_PUBLIC_KIND_DOCS_BASE_PATH=/charts/docs`, giving planned URLs `https://kindui.dev/charts/docs/r/...`. Client commands use the actual page origin and the configured docs mount. `KIND_DOCS_ORIGIN` controls generated Markdown links. Consumers can configure:
+The app exports `public/r/registry.json` and `public/r/kind-<example-id>.json` into `out/r/`. Root previews serve `/r/...`; the public build uses `NEXT_PUBLIC_KIND_DOCS_BASE_PATH=/charts/docs`, giving planned URLs `https://kindui.dev/charts/docs/r/...`. Client commands use the actual page origin and the configured docs mount. Production generation requires `KIND_DOCS_ORIGIN` for absolute Markdown links. When it is unset in a local build, Markdown install commands require it in the consumer's terminal (for example, `export KIND_DOCS_ORIGIN=http://127.0.0.1:6374` for that preview). They do not bake in a default preview port. Consumers can configure:
 
 ```json
 {
@@ -30,7 +30,7 @@ Then `npx shadcn@latest add @kind/kind-line` installs the line recipe. Direct it
 
 `npm run check:registry` checks catalog/schema contracts, serves real JSON under a local `/charts/docs/r` mount, and installs every item sequentially with the actual CLI into a clean src-based consumer. It verifies that no unrelated chart is installed, the supported npm version/integrity resolves, all selected variant props compile, strict Bundler/NodeNext declarations pass, and Vite builds. The retained consumer is in `artifacts/registry-consumer`; `registry-results.json` records each installed item. These are disposable evidence, not source files.
 
-`npm run check` in Docs checks exported JSON alongside existing docs contracts. `npm run check:browser` adds distribution control, persistence, commands/imports, preview preservation, mobile containment and hydration checks to existing browser coverage. Library checks remain `npm run check` at the repository root. Run the focused checks first, then required aggregates; use fixed, bounded concurrency.
+`npm run check` in Docs checks exported JSON alongside existing docs contracts. Run `npm run check:registry` before `npm run check:browser`; it prepares the published-core consumer receipt and production build used by the browser checks. The browser launcher stops immediately with this instruction if either output is missing. `npm run check:browser` adds distribution control, persistence, commands/imports, preview preservation, mobile containment and hydration checks to existing browser coverage. Library checks remain `npm run check` at the repository root. Run the focused checks first, then required aggregates; use fixed, bounded concurrency.
 
 Official schemas in `apps/docs/scripts/schemas` were retrieved from the maintainer's MIT-licensed repository at `c2a67849be260701852b0977ba15eb5f3a0ce2a4` (2026-10-10), under `apps/v4/public/schema/`. Keep their license and provenance notice. Ajv validates those schemas offline; the HTTPS draft-07 identifier is registered as an alias of Ajv's built-in HTTP meta-schema. Update snapshots only after reviewing the current official schemas.
 

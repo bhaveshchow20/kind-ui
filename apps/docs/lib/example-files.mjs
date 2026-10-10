@@ -1,4 +1,12 @@
 import { publicPath } from "./routing.mjs";
+
+export function registryInstallCommand(id, origin = "") {
+  const path = publicPath(`/r/kind-${id}.json`);
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: the consumer shell expands this value.
+  const configuredOrigin = "${KIND_DOCS_ORIGIN:?Set KIND_DOCS_ORIGIN to the docs site origin}";
+  const url = origin ? `${origin}${path}` : `"${configuredOrigin}${path}"`;
+  return `npx shadcn@latest add ${url}`;
+}
 export function filesFor(bundle, _settings, variant = bundle.defaultVariant) {
   const files = { ...bundle.files };
   if (variant && bundle.variants?.[variant])
