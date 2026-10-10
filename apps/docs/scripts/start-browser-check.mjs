@@ -20,12 +20,18 @@ try {
       }
     });
   });
-  const code = await new Promise((resolve, reject) => {
-    const check = spawn(process.execPath, ["scripts/check-browser.mjs"], { stdio: "inherit" });
-    check.once("error", reject);
-    check.once("exit", resolve);
-  });
-  if (code !== 0) throw new Error(`Docs browser check exited with ${code}`);
+  for (const script of [
+    "check-browser.mjs",
+    "check-distribution.mjs",
+    "check-registry-browser.mjs",
+  ]) {
+    const code = await new Promise((resolve, reject) => {
+      const check = spawn(process.execPath, [`scripts/${script}`], { stdio: "inherit" });
+      check.once("error", reject);
+      check.once("exit", resolve);
+    });
+    if (code !== 0) throw new Error(`Docs browser check exited with ${code}`);
+  }
 } finally {
   preview.kill("SIGTERM");
 }

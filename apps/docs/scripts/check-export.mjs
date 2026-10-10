@@ -185,7 +185,7 @@ for (const file of markdownFiles("public/markdown")) {
   } else assert.ok(index.includes(publicPath(`/markdown/${file}`)), `Agent index omits ${file}`);
   assert.ok(fullIndex.includes(body.trimEnd()), `Full agent index omits canonical ${file}`);
   if (
-    /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(
+    /<(?:ComponentPlayground|ChartExample|ChartInstall|DistributionContent|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(
       body,
     )
   )
@@ -203,3 +203,13 @@ if (missing.size) throw new Error([...missing].join("\n"));
 console.log(
   `${html.length} exported HTML routes and ${links} local asset/page links passed; clean Markdown and synchronized agent index passed.`,
 );
+
+assert.deepEqual(
+  readdirSync(path.join(root, "r")).sort(),
+  ["registry.json", ...allExamples.map(({ id }) => `kind-${id}.json`)].sort(),
+);
+for (const file of readdirSync(path.join(root, "r")))
+  assert.deepEqual(
+    JSON.parse(readFileSync(path.join(root, "r", file))),
+    JSON.parse(readFileSync(`public/r/${file}`)),
+  );

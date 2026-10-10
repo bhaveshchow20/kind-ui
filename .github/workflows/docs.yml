@@ -39,6 +39,7 @@ jobs:
           npm run generate
           npm run build
           npm run check
+          npm run check:registry
         working-directory: apps/docs
         env:
           KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
@@ -52,6 +53,8 @@ jobs:
             apps/docs/out/
             apps/docs/generated/
             apps/docs/public/
+            apps/docs/artifacts/registry-consumer/dist/
+            apps/docs/artifacts/registry-consumer/registry-results.json
           if-no-files-found: error
           retention-days: 14
       # Preserve the root-mounted preview fixtures above before rebuilding the public mount.
@@ -255,6 +258,7 @@ jobs:
           path: |
             apps/docs/artifacts/*.log
             apps/docs/artifacts/*-results.json
+            apps/docs/artifacts/registry/*.json
             apps/docs/artifacts/screenshots/*.png
             apps/docs/artifacts/pie/*.png
             apps/docs/artifacts/pie/*.json

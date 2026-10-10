@@ -48,3 +48,7 @@ Use `<ChartExample id="…" />` in MDX; the existing LineExample and AreaExample
 The default build keeps `/docs/` pages and nonindexable preview metadata. Production builds use `KIND_UI_DEPLOYMENT_ENV=production` and `NEXT_PUBLIC_KIND_DOCS_BASE_PATH=/charts/docs`. The prefix is compiled into routes, navigation, search, assets and retrieval links; changing it requires rebuilding. Component pages then live at `/charts/docs/components/line/`, without another `/docs/` segment.
 
 `NEXT_PUBLIC_KIND_DOCS_BASE_PATH=/charts/docs KIND_DOCS_PORT=6374 npm run preview` mounts `out/` beneath that prefix locally. An integration harness must strip `/charts/docs` before reading the intact export, serve directory `index.html` files for deep reloads, and keep this application's `_next`, Markdown, examples and search endpoint under the docs prefix. Set `KIND_DOCS_ORIGIN=https://kindui.dev` for absolute production agent links. Hosting and DNS remain part of the deployment owner's handoff.
+
+## shadcn distribution
+
+Use the npm / shadcn control in existing chart pages and Installation. Selection persists locally; previews and API references are shared. All 51 catalog examples have independently installable editable registry compositions using the npm core. `npm run generate` builds `/r/registry.json` and `/r/kind-<example-id>.json`; `npm run check:registry` checks real CLI installation, published npm resolution and all recipe/variant types. See [registry maintenance and hosting handoff](../../docs/charts-registry.md). Public URLs require deployment-owner verification.

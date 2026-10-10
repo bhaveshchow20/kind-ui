@@ -11,7 +11,7 @@ const examples = [...guide.matchAll(/```tsx title="(Dashboard.tsx)"\n([\s\S]*?)`
 test("Installation renders its exact first-chart example in an application", async () => {
   assert.deepEqual(
     examples.map((example) => example[1]),
-    ["Dashboard.tsx"],
+    ["Dashboard.tsx", "Dashboard.tsx"],
   );
   const fixture = await mkdtemp(join(root, "apps/docs/.composition-guide-"));
   try {
@@ -19,7 +19,9 @@ test("Installation renders its exact first-chart example in an application", asy
       assert.match(example[2], /MonthlyVisitorsChart/);
       await writeFile(
         join(fixture, `example-${index}.tsx`),
-        example[2].replace("./MonthlyVisitorsChart", "./MonthlyVisitorsChart.js"),
+        example[2]
+          .replace("./MonthlyVisitorsChart", "./MonthlyVisitorsChart.js")
+          .replace("@/components/charts/line-start/example", "./MonthlyVisitorsChart.js"),
       );
     }
     await writeFile(
