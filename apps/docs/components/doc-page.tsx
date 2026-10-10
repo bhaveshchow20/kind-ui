@@ -17,6 +17,7 @@ import {
   ComponentPlayground,
 } from "./component-playground";
 import { CopyMarkdown } from "./copy-markdown";
+import { ChartInstall, DistributionContent, DistributionSwitcher } from "./distribution";
 import { MobileDocsNavigation } from "./glass-docs-layout";
 import { TrackedCodeBlock } from "./tracked-code-block";
 
@@ -95,6 +96,7 @@ export function renderDoc(slug?: string[]) {
             <CopyMarkdown path={publicPath(`/markdown/${key}.md`)} />
           </div>
           <DocsDescription>{page.data.description}</DocsDescription>
+          {(key.startsWith("components/") || key === "installation") && <DistributionSwitcher />}
         </header>
         <DocsBody className="doc-body">
           <Content
@@ -103,6 +105,8 @@ export function renderDoc(slug?: string[]) {
               a: ({ href = "#", ...props }) => (
                 <defaultComponents.a {...props} href={docRoute(href)} />
               ),
+              ChartInstall,
+              DistributionContent,
               LineExample,
               ChartExample: LineExample,
               AreaExample: LineExample,

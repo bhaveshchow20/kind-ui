@@ -11,13 +11,18 @@ import {
   variantDefinitions,
 } from "../examples/catalog.mjs";
 import { referenceRows, referenceTitle } from "../lib/api-reference.mjs";
+import { registryInstallCommand } from "../lib/example-files.mjs";
 import { canonicalDocSlugs, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
+import { buildRegistry } from "./registry.mjs";
 
 const read = (file) => readFileSync(file, "utf8");
 const write = (file, text) => {
   mkdirSync(path.dirname(file), { recursive: true });
   writeFileSync(file, text);
 };
+const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
+if (!origin && process.env.KIND_UI_DEPLOYMENT_ENV === "production")
+  throw new Error("KIND_DOCS_ORIGIN is required for production registry install commands");
 const provenance = JSON.parse(read("vendor/provenance.json"));
 const installed = JSON.parse(read("node_modules/@kind-ui/charts/package.json"));
 if (installed.version !== provenance.version)
@@ -78,7 +83,6 @@ function literal(node) {
 rmSync("public/examples", { recursive: true, force: true });
 rmSync("public/markdown", { recursive: true, force: true });
 rmSync("generated", { recursive: true, force: true });
-const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
 const link = (path) => `${origin}${publicPath(path)}`;
 const bundles = {};
 for (const example of allExamples) {
@@ -180,6 +184,7 @@ for (const example of allExamples) {
     packageStatus: status,
     localPackage: local,
     version: provenance.version,
+    registry: { name: `kind-${example.id}`, componentName, variantProp: variantDefinition?.prop },
   };
   if (variants)
     for (const [value, variant] of Object.entries(variants))
@@ -201,6 +206,7 @@ for (const family of families)
       2,
     )}\n`,
   );
+buildRegistry(bundles);
 // Retain package provenance in vendor/evidence; never expose internal source receipts.
 rmSync("public/package-provenance.json", { force: true });
 const project = await createProject({ tsconfigPath: "tsconfig.json" });
@@ -291,6 +297,10 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
       if (!bundle) throw new Error(`Unknown example ${id}`);
       const sourceFile = `src/examples/${id}/example.tsx`;
       const selected = variant ?? bundle.defaultVariant;
+      const registryProps =
+        selected && bundle.registry.variantProp
+          ? ` ${bundle.registry.variantProp}=${JSON.stringify(selected)}`
+          : "";
       const sourceURL = selected
         ? `/examples/${id}/variants/${selected}/example.tsx`
         : `/examples/${id}/${sourceFile}`;
@@ -299,6 +309,7 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
       );
       return (
         `### ${bundle.title}${variant ? ` — ${variant}` : ""}\n\n` +
+        `shadcn: \`${registryInstallCommand(id, origin)}\`. Import \`${bundle.registry.componentName}\` from \`@/components/charts/${id}/example\`. Render \`<${bundle.registry.componentName}${registryProps} />\`.\n\n` +
         `[Complete example source](${link(sourceURL)}) · [Setup manifest](${link(`/examples/${id}/package.json`)})\n\n` +
         `\`\`\`tsx\n${bundle.files[sourceFile].trimEnd()}\n\`\`\`\n` +
         (support.length
@@ -307,6 +318,14 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
       );
     },
   );
+  body = body.replace(
+    /<ChartInstall(?: id="([\w-]+)")?\s*\/>/g,
+    (_, id = "line-start") =>
+      `\n#### npm\n\n\`\`\`sh\nnpm install @kind-ui/charts\n\`\`\`\n\n#### shadcn\n\n\`\`\`sh\n${registryInstallCommand(id, origin)}\n\`\`\`\n`,
+  );
+  body = body
+    .replace(/<DistributionContent value="(npm|shadcn)">/g, (_, value) => `\n#### ${value}\n`)
+    .replace(/<\/DistributionContent>/g, "");
   body = body.replace(/<ApiTable name="([\w]+)"(?:\s+compact)?\s*\/>/g, (_, name) =>
     tableMarkdown(name),
   );
@@ -347,7 +366,7 @@ write(
 write(
   "public/AGENTS.md",
   read("lib/consumer-agent-guide.md").replace(
-    /\/(?:llms(?:-full)?\.txt|markdown\/[\w/.-]+|package-provenance\.json|examples\/[\w/.-]+)/g,
+    /\/(?:llms(?:-full)?\.txt|markdown\/[\w/.-]+|package-provenance\.json|examples\/[\w/.-]+|r\/[\w/.-]+)/g,
     (path) => link(path),
   ),
 );
