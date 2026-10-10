@@ -60,4 +60,4 @@ jobs:
           name: homepage-motion-${{ matrix.deployment }}
           path: apps/showcase/test-results/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 7

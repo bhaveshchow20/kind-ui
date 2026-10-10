@@ -78,7 +78,7 @@ jobs:
             artifacts/line-integrations/
             examples/chart/dist/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 3
       - name: Retain integration build failure evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
@@ -86,7 +86,7 @@ jobs:
           name: integration-build-evidence
           path: artifacts/line-integrations/next-build.log
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 7
   playwright:
     name: "Browser tests · shard ${{ matrix.shard }}/4"
     needs: [changes, packed]
@@ -137,7 +137,7 @@ jobs:
             artifacts/line-integration-tests/
             artifacts/line-integrations/next-build.log
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
   # The required completion check fails closed on every incomplete prerequisite.
   check:
     name: All checks
