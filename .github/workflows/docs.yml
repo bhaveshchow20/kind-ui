@@ -53,7 +53,7 @@ jobs:
             apps/docs/generated/
             apps/docs/public/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 3
       # Preserve the root-mounted preview fixtures above before rebuilding the public mount.
       # Reuse installed dependencies; no copied-consumer or browser fleet is repeated.
       - name: Check production indexing at the public Docs mount
@@ -75,7 +75,7 @@ jobs:
           name: docs-production-indexing
           path: apps/docs/artifacts/production-indexing/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
   consumers:
     name: "Copied examples · shard ${{ matrix.shard }}/4"
     runs-on: ubuntu-latest
@@ -123,7 +123,7 @@ jobs:
             apps/docs/artifacts/consumers.log
             apps/docs/artifacts/consumer-results*.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
   browsers:
     name: "Browser checks · ${{ matrix.group }}"
     needs: build
@@ -272,7 +272,7 @@ jobs:
             apps/docs/artifacts/heatmap/*.png
             apps/docs/artifacts/heatmap/*.json
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 7
   docs:
     name: "All docs checks"
     needs: [build, consumers, browsers]
