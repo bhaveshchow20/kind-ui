@@ -15,7 +15,9 @@ Kind UI publishes `@kind-ui/charts` on npm. It remains before 1.0, with an open-
 ## Commands
 
 - `npm run build`: compile the library entry point and its declarations
-- `npm run typecheck`: run the strict TypeScript build
+- `npm run typecheck`: build Core and run strict tooling and public consumer/browser typechecks
+- `npm run check:tooling`: check maintained package/release contract and orchestration JavaScript
+- `npm run check:types`: check browser tests and public compile-time consumers
 - `npm run lint`: check formatting and lint rules
 - `npm run format`: apply formatting and safe lint fixes
 - `npm run check:package`: build, validate package-gate fixtures, then verify a tarball in an isolated consumer with pinned peers
@@ -29,6 +31,12 @@ Kind UI publishes `@kind-ui/charts` on npm. It remains before 1.0, with an open-
 - `npm run check`: all fast, packed-package and browser gates locally
 
 Component tests exercise zero/missing values, formatting, filtering, composition errors and native semantics. Browser checks cover controlled state, keyboard behavior, refs, resize and independent containers. The package gate checks required packed files, ESM import, and strict NodeNext/Bundler declaration resolution without workspace links. Its direct peers/type packages are pinned from the workspace; their installation may require npm registry access. Its small native Node tests prove missing outputs/docs and unwanted files fail validation. Each implementation PR must add its focused tests and include them in `check`. Package functionality must also be checked through packed public exports, rather than only workspace source imports.
+
+Compiler safety checks apply to Core, the homepage, Docs and public consumer/browser tests. Maintained JavaScript coverage is explicit in `tsconfig.tooling.json` and the app tooling configs; new checked tooling must use typed parameters and read external JSON as `unknown` before schema validation. Zod schemas describe boundary shapes; existing checksum, path, version and provenance policy checks remain authoritative. Validation dependencies stay in development tooling and are absent from the chart runtime.
+
+Biome blocks explicit `any`, implicit `any` variables, `@ts-ignore` and unchecked non-null assertions. Any necessary library-boundary exception must be local and explain the invariant or third-party type limitation. Negative consumers use `@ts-expect-error` so an unexpectedly accepted unsafe input fails the check. Host recipe consumers that require generated fixtures are checked by the packed gate.
+
+The actual tarball also passes strict publint and Are The Types Wrong's `esm-only` profile. This profile matches the declared ESM exports and checks ESM/Bundler resolution; it does not expand the package's documented compatibility. Focused axe checks complement keyboard and geometry regressions for public charts and maintained site interactions.
 
 ## Local artifact preparation
 
