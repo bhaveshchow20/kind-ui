@@ -23,9 +23,9 @@ function ChannelComposer({ channelId }: { channelId: string }) {
     <Composer.Frame>
       <Composer.Input
         value={state.input}
-        onChange={(text) => updateInput(text)}
+        onChange={(text) => sync.updateInput(text)}
       />
-      <Composer.Submit onPress={submit} />
+      <Composer.Submit onPress={() => sync.submit()} />
     </Composer.Frame>
   )
 }
