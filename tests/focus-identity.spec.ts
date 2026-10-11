@@ -155,6 +155,7 @@ for (const [family, selector] of Object.entries(marks)) {
     await expect(card.locator(selector)).not.toHaveCount(0);
     await card.scrollIntoViewIfNeeded();
     await expect(card.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
+    await expect(card.locator('[data-kind-ui="pie-entrance-window"]')).toHaveCount(0);
     await page.waitForTimeout(900);
     const shape = () =>
       card

@@ -66,7 +66,7 @@ for (const width of [1000, 320]) {
       .getByRole("region", { name: "Compact fixture" })
       .screenshot({ path: info.outputPath(`compact-${width}.png`) });
     await expect(cells.first().locator('[data-custom-cell="0"]')).toHaveCount(1);
-    await expect(cells.first()).toHaveClass("consumer-cell");
+    await expect(cells.first()).toHaveClass(/(?:^|\s)consumer-cell(?:\s|$)/);
     await expect(cells.first()).toHaveCSS("border-radius", "2px");
     await expect(cells.first()).toHaveCSS("opacity", "0.8");
     await page.getByRole("button", { name: "Focus consumer ref" }).click();

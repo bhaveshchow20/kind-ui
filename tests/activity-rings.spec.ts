@@ -24,6 +24,10 @@ test("packed activity rings match explicit native geometry and preserve identity
   await expect(page.locator('#defaults [data-kind-ui="chart-instructions"]')).toContainText(
     "Move75Exercise30Stand50",
   );
+  const instructions = page.locator('#defaults [data-kind-ui="chart-instructions"]');
+  await expect(instructions).toHaveCSS("position", "absolute");
+  await expect(instructions).toHaveCSS("width", "1px");
+  await expect(instructions).toHaveCSS("height", "1px");
   await page.getByRole("button", { name: "Reorder" }).click();
   await expect.poll(() => geometry("#defaults")).toEqual(await geometry("#explicit"));
   await expect(page.locator('#defaults [data-kind-ui="chart-legend"] li').first()).toContainText(

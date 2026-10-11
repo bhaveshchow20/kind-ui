@@ -115,6 +115,7 @@ export function ActivityRings({
       <dl
         id={descriptionId}
         data-kind-ui="chart-instructions"
+        className="sr-only"
         aria-hidden={chartProps.loading || undefined}
       >
         {data.map((ring) => (

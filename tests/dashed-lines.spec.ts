@@ -56,10 +56,18 @@ test("dash motion stays independent of reveal, native paint and lifecycle", asyn
   expect(errors).toEqual([]);
 });
 
-test("reduced motion stops stylesheet dashes without a React commit", async ({ page }) => {
+test("reduced motion stops generated CSS dashes without a React commit", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  // Use the stylesheet shipped with the existing packed consumer, including on CI shards.
-  await page.goto("http://127.0.0.1:4176/motion.html");
+  // Capture public rendered markup with its utilities and SVG keyframes, plus
+  // the consumer-generated stylesheet. The legacy marker class has no styles.
+  await page.goto("/contracts.html#dashed-lines");
+  const example = page.getByRole("region", { name: "Animated dashed strokes" });
+  const surface = example.locator('[data-example="line"] .recharts-surface');
+  await expect(surface.locator(".recharts-line-curve")).toHaveCSS(
+    "animation-name",
+    "kind-ui-line-dash",
+  );
+  const standalone = await surface.evaluate((node) => node.outerHTML);
   const stylesheetUrls = await page
     .locator('link[rel="stylesheet"]')
     .evaluateAll((links) => links.map((link) => (link as HTMLLinkElement).href));
@@ -73,11 +81,9 @@ test("reduced motion stops stylesheet dashes without a React commit", async ({ p
   );
   // Discard the fixture's React document before exercising the standalone SVG.
   await page.goto("about:blank");
-  await page.setContent(
-    `<svg class="kind-ui-line-dash" style="--kind-ui-dash-duration:800ms;--kind-ui-dash-cycle:10px;--kind-ui-dash-offset:3px;--kind-ui-dash-direction:normal"><path class="recharts-line-curve" d="M0,0L100,100" stroke="teal" stroke-dasharray="6 4" stroke-dashoffset="3" /></svg>`,
-  );
+  await page.setContent(standalone);
   await page.addStyleTag({ content: stylesheets.join("\n") });
-  const path = page.locator("path");
+  const path = page.locator(".recharts-line-curve");
   await expect(path).toHaveCSS("animation-name", "kind-ui-line-dash");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(path).toHaveCSS("animation-name", "none");

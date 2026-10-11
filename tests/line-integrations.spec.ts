@@ -10,7 +10,8 @@ test("Tailwind v4 utilities override Kind defaults and named Lucide icons use th
   await page.goto("/");
   const svg = page.getByRole("application", { name: "Monthly icon totals" });
   await expect(svg).toHaveAttribute("height", "320");
-  const legend = page.locator('[data-kind-ui="chart-legend"]');
+  const root = page.locator('[data-kind-ui="chart"]').filter({ has: svg });
+  const legend = root.locator('[data-kind-ui="chart-legend"]');
   await expect(legend).toHaveCSS("gap", "24px");
   await expect(legend).toHaveCSS("padding", "16px");
   const icon = legend.locator('[data-kind-ui="chart-icon"]');
@@ -18,16 +19,16 @@ test("Tailwind v4 utilities override Kind defaults and named Lucide icons use th
   await expect(icon.locator("svg.lucide-trending-up")).toHaveCount(1);
   await expect(legend.getByRole("button", { name: "Total", exact: true })).toBeVisible();
   await expect(
-    page.locator(".recharts-cartesian-grid-horizontal line").first(),
+    root.locator(".recharts-cartesian-grid-horizontal line").first(),
   ).not.toHaveAttribute("stroke", "#d1d5db");
-  const gridStroke = await page
+  const gridStroke = await root
     .locator(".recharts-cartesian-grid-horizontal line")
     .first()
     .evaluate((line) => getComputedStyle(line).stroke);
   expect(gridStroke).toContain("oklch");
   await expectLastVisibleGuard(
     legend.getByRole("button", { name: "Total", exact: true }),
-    page.locator(".recharts-line-curve"),
+    root.locator(".recharts-line-curve"),
   );
   expect(errors).toEqual([]);
 });
