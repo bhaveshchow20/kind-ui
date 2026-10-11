@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectHiddenPaint } from "./interaction-paint";
 
 test("named and namespace single-package compositions retain native geometry, defaults and interactions", async ({
   page,
@@ -82,4 +83,151 @@ test("named and namespace single-package compositions retain native geometry, de
     await expect.poll(() => line.getAttribute("width")).toBe("360");
   }
   expect(errors).toEqual([]);
+});
+
+test("compound families render through wrappers and keep HTML, geometry and state consumer-controlled", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/?compound");
+  const suite = page.locator("[data-compound-suite]");
+  const family = (name: string) => suite.locator(`[data-compound="${name}"]`);
+  for (const name of [
+    "line",
+    "area",
+    "bar",
+    "combo",
+    "pie",
+    "radar",
+    "radial",
+    "scatter",
+    "waterfall",
+    "histogram",
+    "box",
+    "activity",
+    "sankey",
+  ]) {
+    const chart = family(name);
+    await expect(chart.locator(".recharts-surface").first()).toBeVisible();
+    await expect(chart.locator('[data-kind-ui="chart"]')).toHaveCount(1);
+    const legend = chart.locator('[data-kind-ui="chart-legend"], [data-kind-ui="sankey-legend"]');
+    await expect(legend).toBeVisible();
+    expect(await legend.evaluate((node) => !node.closest("svg, .recharts-wrapper"))).toBe(true);
+  }
+  const heatmap = family("heatmap");
+  await expect(heatmap.getByRole("grid", { name: "Compound cells" })).toBeVisible();
+  await expect(heatmap.getByRole("table", { name: "Cell values" })).toBeVisible();
+  await heatmap.locator("td[data-cell-key]").first().focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(heatmap.locator("td[data-cell-key]").nth(1)).toBeFocused();
+  await expect(family("sankey").getByRole("table", { name: "Flow values" })).toBeVisible();
+  await expect(family("activity").locator("dl")).toHaveText("Value70Other40");
+  await expect(family("histogram").locator(".recharts-bar-rectangle")).toHaveCount(2);
+  await expect(family("box").locator('[data-kind-ui="box-plot-mark"]')).toHaveCount(1);
+  const line = family("line");
+  const path = line.locator(".recharts-line-curve");
+  await expect(path).toHaveCount(1); // Two metadata entries still produce only the explicit series.
+  await expect(line.locator('[data-compound-chart-ref="attached"]')).toHaveCount(1);
+  await expect(line.locator('[data-compound-ref="legend"]')).toHaveCount(1);
+  await line.locator(".recharts-surface").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(line.locator('[data-kind-ui="tooltip-frame"]')).toBeVisible();
+  await page.keyboard.press("Escape");
+  await suite.getByRole("button", { name: "Compound resize", exact: true }).click();
+  await expect(line.locator(".recharts-surface")).toHaveAttribute("width", "360");
+  await suite.getByRole("button", { name: "Compound theme", exact: true }).click();
+  await expect(path).toHaveCSS("stroke", "rgb(220, 38, 38)");
+  const value = line.getByRole("button", { name: "Value", exact: true });
+  await value.focus();
+  await page.keyboard.press("Space");
+  await expect(value).toHaveAttribute("aria-pressed", "false");
+  await expectHiddenPaint(path);
+  await page.keyboard.press("Space");
+  await expect(value).toHaveAttribute("aria-pressed", "true");
+  await suite.getByRole("button", { name: "Compound omit", exact: true }).click();
+  await expect(path).toHaveCount(0);
+  await expect(line.locator('[data-kind-ui="chart-legend"]')).toBeVisible();
+  await suite.getByRole("button", { name: "Compound omit", exact: true }).click();
+  await expect(path).toHaveCount(1);
+  await suite.getByRole("button", { name: "Compound loading", exact: true }).click();
+  await expect(line.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
+  await suite.getByRole("button", { name: "Compound loading", exact: true }).click();
+  await expect(path).toBeVisible();
+  const flowMarks = family("sankey").locator('[data-kind-ui="sankey-focus-mark"]');
+  await expect(flowMarks).toHaveCount(3);
+  await suite.getByRole("button", { name: "Compound flow nodes", exact: true }).click();
+  await expect(flowMarks).toHaveCount(1);
+  await suite.getByRole("button", { name: "Compound flow links", exact: true }).click();
+  await expect(flowMarks).toHaveCount(0);
+  await suite.getByRole("button", { name: "Compound flow links", exact: true }).click();
+  await expect(flowMarks).toHaveCount(1);
+  await suite.getByRole("button", { name: "Compound flow nodes", exact: true }).click();
+  await expect(flowMarks).toHaveCount(3);
+  expect(errors).toEqual([]);
+});
+
+test("compound pie initial tooltip resolves mounted wrapped parts and dismisses on interaction", async ({
+  page,
+}) => {
+  await page.goto("/?compound");
+  const pie = page.locator('[data-compound="pie"]');
+  const tooltip = pie.locator('[data-kind-ui="tooltip-frame"]');
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip).toContainText("B");
+  await pie.locator(".recharts-surface").focus();
+  await page.keyboard.press("Escape");
+  await expect(tooltip).not.toBeVisible();
+});
+
+test("Kind motion preferences share one subscription, react to changes and clean up on unmount", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const original = window.matchMedia.bind(window);
+    const active = new Set<EventListenerOrEventListenerObject>();
+    const state = {
+      get active() {
+        return active.size;
+      },
+    };
+    Object.defineProperty(window, "compoundMedia", { value: state });
+    window.matchMedia = (query) => {
+      const media = original(query);
+      if (query !== "(prefers-reduced-motion: reduce)") return media;
+      const add = media.addEventListener.bind(media);
+      const remove = media.removeEventListener.bind(media);
+      media.addEventListener = (
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions,
+      ) => {
+        if (type === "change") active.add(listener);
+        add(type, listener, options);
+      };
+      media.removeEventListener = (
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | EventListenerOptions,
+      ) => {
+        if (type === "change") active.delete(listener);
+        remove(type, listener, options);
+      };
+      return media;
+    };
+  });
+  await page.goto("/?motion");
+  const count = () => page.evaluate(() => Reflect.get(window, "compoundMedia").active);
+  await expect.poll(count).toBe(1);
+  await expect(page.locator('[data-kind-ui="tooltip-number"]')).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(page.locator('[data-kind-ui="tooltip-number"]')).toHaveCount(8);
+  await expect.poll(count).toBe(1);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator('[data-kind-ui="tooltip-number"]')).toHaveCount(0);
+  await expect.poll(count).toBe(1);
+  await page.getByRole("button", { name: "Preference mount", exact: true }).click();
+  await expect.poll(count).toBe(0);
+  await page.getByRole("button", { name: "Preference mount", exact: true }).click();
+  await expect.poll(count).toBe(1);
 });

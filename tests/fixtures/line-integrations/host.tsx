@@ -26,17 +26,21 @@ export function IntegrationHost() {
         { month: "Feb", total: 12 },
       ]}
       config={config}
-      xDataKey="month"
       aria-label="Monthly icon totals"
       className="h-80 text-blue-700"
       rootProps={{
         className: "max-w-xl",
+        id: "compound-integration",
         interaction: { kind: "series", mode: "visibility", eligibleKeys: ["total"] },
       }}
-      legend={{ className: "gap-6 p-4 text-blue-700" }}
-      grid={{ className: "stroke-fuchsia-600" }}
-      tooltip={{ formatter: (value) => [`${value} units`, "Total"] }}
-    />
+    >
+      <LineChart.Grid className="stroke-fuchsia-600" />
+      <LineChart.XAxis dataKey="month" />
+      <LineChart.YAxis />
+      <LineChart.Series dataKey="total" type="monotone" strokeWidth={2} dot={{ r: 2.5 }} />
+      <LineChart.Tooltip formatter={(value) => [`${value} units`, "Total"]} />
+      <LineChart.Legend className="gap-6 p-4 text-blue-700" />
+    </LineChart>
   );
 }
 

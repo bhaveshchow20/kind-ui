@@ -3,8 +3,7 @@
 Kind UI Charts (`@kind-ui/charts`) is an MIT-licensed React chart library built on
 Recharts and Motion, with TypeScript APIs and examples for React and Next.js.
 It provides composable chart components, shared interaction, controlled visibility
-and optional animation. Start with a complete chart, then
-customize its parts through public components and typed props.
+and optional animation. Compose a chart from styled family parts, then customize them through typed props.
 
 [Website](https://kindui.dev/charts) ·
 [Documentation](https://kindui.dev/charts/docs/) ·
@@ -95,8 +94,8 @@ Category charts use their configured category identity for this inference.
 
 ## Quick start
 
-Configured `LineChart` supplies responsive sizing, axes, series, tooltip and
-legend. Give the chart an accessible name and include a data alternative:
+A family root owns data, metadata, sizing and shared behavior. Compose the parts
+you want to show, give the chart an accessible name and include a data alternative:
 
 ```tsx
 "use client";
@@ -118,9 +117,15 @@ export function TasksChart() {
       <LineChart
         data={data}
         config={config}
-        xDataKey="day"
         aria-label="Tasks by day"
-      />
+      >
+        <LineChart.Grid />
+        <LineChart.XAxis dataKey="day" />
+        <LineChart.YAxis />
+        <LineChart.Series dataKey="tasks" type="monotone" strokeWidth={2} dot={{ r: 2.5 }} />
+        <LineChart.Tooltip />
+        <LineChart.Legend />
+      </LineChart>
       <table>
         <caption>Tasks by day</caption>
         <thead>
@@ -141,6 +146,56 @@ Use the [Line guide](https://kindui.dev/charts/docs/components/line/)
 for composition and customization. The documentation covers chart selection,
 peer requirements, styling, motion and accessibility; applications own their
 data, domains and business state.
+
+### Family parts
+
+Omitting a part omits that content. Config defines labels and colors; explicit
+children define the series. Parts work through fragments and custom components.
+HTML legends render outside the plot under the same family root. Set
+`legendPosition="top"` to place the legend before the plot. The default is below.
+
+| Root | Parts |
+| --- | --- |
+| `LineChart`, `AreaChart`, `BarChart` | `Grid`, `XAxis`, `YAxis`, `Series`, `Tooltip`, `Legend`, `Background` |
+| `ComboChart` | `Grid`, `XAxis`, `YAxis`, `Line`, `Area`, `Bar`, `Scatter`, `Tooltip`, `Legend`, `Background` |
+| `PieChart` | `Series`, `Cell`, `Labels`, `Tooltip`, `Legend` |
+| `RadarChart` | `Grid`, `AngleAxis`, `RadiusAxis`, `Series`, `Tooltip`, `Legend` |
+| `RadialBarChart` | `Grid`, `AngleAxis`, `RadiusAxis`, `Series`, `Cell`, `Labels`, `Label`, `Tooltip`, `Legend` |
+| `ScatterChart` | `Grid`, `XAxis`, `YAxis`, `ZAxis`, `Series`, `Tooltip`, `Legend` |
+| `WaterfallChart` | `Grid`, `XAxis`, `YAxis`, `Series`, `Connectors`, `Labels`, `Tooltip`, `Legend` |
+| `HistogramChart` | `Grid`, `XAxis`, `YAxis`, `Series`, `Tooltip`, `Legend` |
+| `BoxPlotChart` | `Grid`, `XAxis`, `YAxis`, `Series`, `Mark`, `Tooltip`, `Legend` |
+| `HeatmapChart` | `Grid`, `Tooltip`, `Legend`, `DataTable`, `Cell` |
+| `ActivityRings` | `Series`, `Labels`, `Tooltip`, `Legend` |
+| `SankeyChart` | `Nodes`, `Links`, `Node`, `Link`, `NodeLabel`, `Tooltip`, `Legend`, `Table` |
+
+Cartesian roots also expose `ReferenceLine`, `ReferenceArea`, `ReferenceDot` and
+`Brush`. Parts retain the props of their corresponding named exports. Cartesian Grid defaults to horizontal dashed lines; X/Y axes omit axis and tick lines and use muted 12px ticks. Explicit native presentation props override these defaults. Numeric
+Scatter axes default to number axes. Histogram axes use the validated bin domain
+and selected measure. `ActivityRings.Series` includes the hidden progress axes;
+put `ActivityRings.Labels` inside it. Sankey `Nodes` and `Links` declare their
+renderers; pass a `render` callback for custom marks. Its `Table` inherits root data.
+
+Use `config`, an accessible name and explicit children on each SVG family root.
+`rootProps` controls the outer frame; `className`, `style`, `height`, `width` and
+`responsive` control the plot. Plot height defaults to 280px and can be changed
+with `--kind-ui-chart-height`, utilities or explicit sizing. Heatmap retains its
+row/column model and table sizing; ActivityRings retains its 300px recipe default.
+Families keep their existing data contracts, animation defaults and interactions.
+Set `animate` to enable animation, or pass the family's animation options.
+
+`visibleSeries`, `defaultVisibleSeries` and `onVisibleSeriesChange` retain exclusive
+controlled/defaulted ownership. Put interaction settings on `rootProps.interaction`.
+Function and numeric series data keys still need an explicit `seriesKey` for metadata.
+
+The existing named exports and `Root`/`ResponsiveContainer` compositions remain
+available. Configured `LineChart` without children remains a convenience recipe
+using `xDataKey`; explicit children replace its generated parts. `ConfiguredLineChartProps` covers the owned root; `LineChartProps` retains the original native prop-forwarding contract. ActivityRings
+likewise retains its recipe when children are omitted. Its explicit children
+cannot be combined with recipe `series`, `labels`, `tooltip` or `legend` options.
+Compound HTML parts mount alongside the plot in the browser. For a server-rendered
+legend or data table, use the existing named HTML parts outside the engine under
+an explicit `Root`.
 
 ### Loading chart data
 

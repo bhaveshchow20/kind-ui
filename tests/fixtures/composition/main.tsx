@@ -1,6 +1,7 @@
 import * as Kind from "@kind-ui/charts";
 import { createRoot } from "react-dom/client";
 import * as Native from "recharts";
+import { FamilyCompositions, MotionPreferences } from "./compound.js";
 import { Compositions, NamespaceCompositions } from "./host.js";
 
 // Independent native supporting-part oracle; never expose competing roots publicly.
@@ -27,15 +28,22 @@ const baseline = {
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root container");
 createRoot(root).render(
-  <>
-    <div data-import="named">
-      <Compositions />
-    </div>
-    <div data-import="namespace">
-      <NamespaceCompositions />
-    </div>
-    <div data-import="native">
-      <Compositions api={baseline} />
-    </div>
-  </>,
+  new URLSearchParams(location.search).has("motion") ? (
+    <MotionPreferences />
+  ) : new URLSearchParams(location.search).has("compound") ? (
+    <FamilyCompositions />
+  ) : (
+    <>
+      <FamilyCompositions />
+      <div data-import="named">
+        <Compositions />
+      </div>
+      <div data-import="namespace">
+        <NamespaceCompositions />
+      </div>
+      <div data-import="native">
+        <Compositions api={baseline} />
+      </div>
+    </>
+  ),
 );

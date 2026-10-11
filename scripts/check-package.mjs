@@ -133,6 +133,7 @@ try {
   for (const file of [
     "chart.test.mjs",
     "configured-line.test.mjs",
+    "compound-chart.test.mjs",
     "tailwind-classes.test.mjs",
     "consumer.tsx",
   ]) {
@@ -141,7 +142,13 @@ try {
   // Stream component failures; captured child output can truncate the failing TAP record.
   run(
     process.execPath,
-    ["--test", "chart.test.mjs", "configured-line.test.mjs", "tailwind-classes.test.mjs"],
+    [
+      "--test",
+      "chart.test.mjs",
+      "configured-line.test.mjs",
+      "compound-chart.test.mjs",
+      "tailwind-classes.test.mjs",
+    ],
     ordinary,
     "inherit",
   );
@@ -335,9 +342,9 @@ try {
   assertCompositionConsumerSource(
     await readFile(join(root, "tests/fixtures/composition/host.tsx"), "utf8"),
   );
-  for (const file of ["host.tsx", "main.tsx", "contract.tsx", "index.html"])
+  for (const file of ["host.tsx", "main.tsx", "contract.tsx", "compound.tsx", "index.html"])
     await copyFixture("composition", file);
-  await typecheck(["host.tsx", "main.tsx", "contract.tsx"]);
+  await typecheck(["host.tsx", "main.tsx", "contract.tsx", "compound.tsx"]);
   await production("index.html", "packed-composition");
   console.log(
     "Single-package named/namespace Cartesian, polar, scatter and pie compositions: strict NodeNext/Bundler parity and production build passed",
@@ -458,12 +465,22 @@ createRoot(document.createElement("div")).render(
     await readFile(join(root, "tests/configured-line.test.mjs"), "utf8"),
   );
   await copyFile(
+    join(root, "tests/compound-chart.test.mjs"),
+    join(consumer, "compound-chart.test.mjs"),
+  );
+  await copyFile(
     join(root, "tests/tailwind-classes.test.mjs"),
     join(consumer, "tailwind-classes.test.mjs"),
   );
   run(
     process.execPath,
-    ["--test", "chart.test.mjs", "configured-line.test.mjs", "tailwind-classes.test.mjs"],
+    [
+      "--test",
+      "chart.test.mjs",
+      "configured-line.test.mjs",
+      "compound-chart.test.mjs",
+      "tailwind-classes.test.mjs",
+    ],
     consumer,
     "inherit",
   );

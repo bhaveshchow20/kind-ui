@@ -15,7 +15,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import {
   createHeatmapModel,
@@ -26,6 +25,7 @@ import {
 } from "./heatmap-model.js";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
 import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
+import { useReducedMotion } from "./motion-preference.js";
 import type { TooltipContentProps } from "./tooltip-content.js";
 import { TooltipNumber } from "./tooltip-number.js";
 import { cn } from "./utils.js";
@@ -62,14 +62,6 @@ function useHeatmap() {
   if (!value) throw new Error("Heatmap components require HeatmapChart");
   return value;
 }
-const reducedQuery = "(prefers-reduced-motion: reduce)";
-function subscribeReduced(change: () => void) {
-  const media = window.matchMedia(reducedQuery);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const reducedSnapshot = () => window.matchMedia(reducedQuery).matches;
-const reducedServerSnapshot = () => true;
 const number = (value: number) => String(value);
 const keyOf = (cell: HeatmapCell) => JSON.stringify([cell.row, cell.column]);
 type PointerPosition = Pick<PointerEvent, "pointerId" | "pointerType" | "clientX" | "clientY">;
@@ -135,7 +127,7 @@ export function HeatmapChart({
   );
   const tooltipId = useId();
   const [tooltipMounted, setTooltipMounted] = useState(false);
-  const reduced = useSyncExternalStore(subscribeReduced, reducedSnapshot, reducedServerSnapshot);
+  const reduced = useReducedMotion();
   const [finished, setFinished] = useState(false);
   const previousLoading = useRef(loading);
   const completing = previousLoading.current === true && loading !== true;

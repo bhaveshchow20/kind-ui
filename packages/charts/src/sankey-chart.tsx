@@ -15,7 +15,6 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import {
   Sankey as EngineSankey,
@@ -28,8 +27,9 @@ import { MotionContext, RegisterInteractionMotion } from "./animation.js";
 import { useOptionalChartInteraction } from "./chart-interaction.js";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
 import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
+import { useReducedMotion } from "./motion-preference.js";
 import { SankeyColors, type SankeyNodeConfig } from "./sankey-colors.js";
-import { prepareSankeyData, type SankeyFlowData } from "./sankey-data.js";
+import { prepareSankeyData, type SankeyFlowData, sankeyAdjacency } from "./sankey-data.js";
 import { SankeyFocusMark } from "./sankey-interaction.js";
 import {
   SankeyLink,
@@ -49,14 +49,6 @@ function NativeSize({ onSize }: { onSize: (width: number, height: number) => voi
   }, [width, height, onSize]);
   return null;
 }
-const query = "(prefers-reduced-motion: reduce)";
-function subscribe(change: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const snapshot = () => window.matchMedia(query).matches;
-const serverSnapshot = () => true;
 type NativeProps = ComponentProps<typeof EngineSankey>;
 type NativeEvent = NonNullable<NativeProps["onClick"]>;
 type IdentityEvent = (
@@ -121,19 +113,7 @@ export function SankeyChart({
     (!interaction || interaction.kind !== "node" || interaction.mode !== "focus")
   )
     throw new Error("SankeyChart Root interaction binding requires node focus");
-  const adjacent = new Map<string, Set<string>>();
-  for (const link of data.links) {
-    const source = typeof link.source === "string" ? link.source : data.nodes[link.source]?.id;
-    const target = typeof link.target === "string" ? link.target : data.nodes[link.target]?.id;
-    if (source && target) {
-      const from = adjacent.get(source) ?? new Set<string>();
-      from.add(target);
-      adjacent.set(source, from);
-      const to = adjacent.get(target) ?? new Set<string>();
-      to.add(source);
-      adjacent.set(target, to);
-    }
-  }
+  const adjacent = sankeyAdjacency(data);
   const loadingSeed = useLoadingSeed(loading);
   const duration = typeof animate === "object" ? (animate.revealDurationMs ?? 450) : 450;
   if (!Number.isFinite(duration) || duration < 0)
@@ -167,7 +147,7 @@ export function SankeyChart({
     source: mapping.get(link.source) as number,
     target: mapping.get(link.target) as number,
   }));
-  const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const reduced = useReducedMotion();
   const [interrupted, setInterrupted] = useState(false);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const measured = useRef<{ width: number; height: number } | null>(null);

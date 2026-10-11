@@ -14,6 +14,7 @@ import {
 import { EmphasisProvider, useEmphasisActions } from "./emphasis.js";
 import {
   type ColorStops,
+  colorBaseToken,
   colorResourceId,
   colorStopToken,
   resolveSeriesColor,
@@ -52,21 +53,21 @@ export function Root({
   const paints: Record<string, string> = {};
   const colorStops: Record<string, ColorStops> = {};
   for (const [key, item] of Object.entries(config)) {
-    if (!/^[a-zA-Z][\w-]*$/.test(key))
+    if (!/^[a-zA-Z][\w-]*$/.test(key) && interaction?.kind !== "node")
       throw new Error(
         `Chart series key "${key}" must start with a letter and contain only letters, numbers, underscores or hyphens`,
       );
     const resolved = resolveSeriesColor(item.color, key);
-    colors[`--color-${key}`] = resolved.colors[0]!;
+    colors[colorBaseToken(key)] = resolved.colors[0]!;
     for (const [index, color] of resolved.colors.entries())
       colors[colorStopToken(key, index)] = color;
     colorStops[key] = resolved;
     const gradientId = colorResourceId(id, key);
     const gradient = resolved.colors.length > 1;
-    paints[key] = gradient ? `url(#${gradientId})` : `var(--color-${key})`;
+    paints[key] = gradient ? `url(#${gradientId})` : `var(${colorBaseToken(key)})`;
     colors[colorStopToken(key, "gradient")] = gradient
       ? `linear-gradient(to right in srgb, ${resolved.offsets.map((offset, index) => `var(${colorStopToken(key, index)}) ${offset * 100}%`).join(", ")})`
-      : `var(--color-${key})`;
+      : `var(${colorBaseToken(key)})`;
   }
   const value: ChartContextValue = {
     ...(props.nonce !== undefined ? { nonce: props.nonce } : {}),

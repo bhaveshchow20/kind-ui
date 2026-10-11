@@ -35,6 +35,7 @@ import { useChartInteraction, useInteractionFocus } from "./chart-interaction.js
 import { EmphasisMark, useEmphasis } from "./emphasis.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { PieMotion } from "./pie-chart.js";
+import { usePieSeriesRegistration } from "./pie-composition-pin.js";
 import { type PieMaterial, PieMaterialFilter, type PiePaintBounds } from "./pie-material.js";
 import { registerPiePinComponent } from "./pie-pin-identity.js";
 
@@ -520,6 +521,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     throw new Error(
       "PieSeries Root interaction binding requires category-kind Root, categoryKey and explicit data",
     );
+  usePieSeriesRegistration(props.data, categoryKey, props.hide);
   const filtered = useMemo(
     () =>
       interactionBinding && props.data && categoryKey !== undefined

@@ -100,3 +100,61 @@ void (<Chart.XAxis<Row, number> dataKey="category" />);
 void (<Chart.XAxis<Row, number> dataKey={(row) => row.category} />);
 // @ts-expect-error No invented axis ref is introduced by the package.
 void (<Chart.XAxis ref={createRef<SVGPathElement>()} />);
+
+const config = { value: { label: "Value", color: "red" } };
+// @ts-expect-error Owned families require an accessible name.
+void (<Chart.BarChart config={config}>{null}</Chart.BarChart>);
+// @ts-expect-error Metadata alone never chooses series or axes.
+void (<Chart.AreaChart config={config} aria-label="Values" />);
+// @ts-expect-error Function data keys preserve their declared value type.
+void (<Chart.BarChart.XAxis<Row, number> dataKey={(row) => row.category} />);
+void (
+  (
+    // @ts-expect-error Owned histograms receive axes through explicit parts.
+    <Chart.HistogramChart
+      config={config}
+      aria-label="Bins"
+      bins={[]}
+      measure="count"
+      xAxisProps={{}}
+    >
+      {null}
+    </Chart.HistogramChart>
+  )
+);
+void (
+  (
+    // @ts-expect-error Explicit activity content cannot also select generated parts.
+    <Chart.ActivityRings config={config} aria-label="Rings" rings={[]} labels={false}>
+      {null}
+    </Chart.ActivityRings>
+  )
+);
+void (
+  (
+    // @ts-expect-error Sankey renderer ownership is declared by Nodes and Links.
+    <Chart.SankeyChart
+      config={config}
+      aria-label="Flow"
+      data={{ nodes: [], links: [] }}
+      node={<g />}
+    >
+      {null}
+    </Chart.SankeyChart>
+  )
+);
+void (
+  (
+    // @ts-expect-error Controlled and defaulted visibility remain exclusive.
+    <Chart.BarChart
+      config={config}
+      aria-label="Values"
+      visibleSeries={[]}
+      defaultVisibleSeries={[]}
+    >
+      {null}
+    </Chart.BarChart>
+  )
+);
+
+void (<Chart.BarChart.XAxis<Row, number> dataKey={(row) => row.value} />);

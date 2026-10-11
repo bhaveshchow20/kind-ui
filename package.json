@@ -33,7 +33,7 @@
     "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs scripts/release-plan.test.mjs scripts/github-release.test.mjs && node scripts/check-release-versioning.mjs",
     "test:chart": "playwright test",
     "check:framework": "npm run check:line-integrations && npm run test:line-integrations",
-    "test:unit": "node --test tests/chart.test.mjs tests/configured-line.test.mjs tests/activity-rings.test.mjs tests/tailwind-classes.test.mjs",
+    "test:unit": "node --test tests/chart.test.mjs tests/configured-line.test.mjs tests/activity-rings.test.mjs tests/tailwind-classes.test.mjs tests/compound-chart.test.mjs",
     "check:fast": "node scripts/run-checks.mjs preflight && npm run typecheck && npm run test:unit",
     "check:packed": "npm run pack:artifact && tsc -p tests/fixtures/browser && node scripts/check-browser-fixtures.mjs && npm run check:line-integrations",
     "check:preflight": "node scripts/run-checks.mjs preflight",

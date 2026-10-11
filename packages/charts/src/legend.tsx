@@ -8,7 +8,7 @@ import { useChart } from "./chart-context.js";
 import { useChartInteraction } from "./chart-interaction.js";
 import { useEmphasis } from "./emphasis.js";
 import { FillPatternSwatch } from "./fill-pattern.js";
-import { colorStopToken } from "./series-color.js";
+import { colorBaseToken, colorStopToken } from "./series-color.js";
 import { cn } from "./utils.js";
 
 export const legendClassName = "flex flex-wrap gap-2 list-none mx-0 mt-1 mb-2 p-0";
@@ -81,7 +81,7 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
               <Symbols type={item.legendShape} cx={0} cy={0} size={64} />
             </svg>
           ) : item.pattern && !hideIcon ? (
-            <FillPatternSwatch pattern={item.pattern} color={`var(--color-${key})`} />
+            <FillPatternSwatch pattern={item.pattern} color={`var(${colorBaseToken(key)})`} />
           ) : (
             <span
               aria-hidden="true"

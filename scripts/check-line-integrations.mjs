@@ -185,7 +185,11 @@ try {
   assert.equal(patternIds.length, 6, "SSR includes both charts' three pattern legend swatches");
   assert.equal(new Set(patternIds).size, 6, "SSR pattern resources must be unique");
   // Native responsive SSR emits an empty wrapper; the client supplies SVG ARIA.
-  assert.match(html, /lucide-trending-up/);
+  assert.match(
+    html,
+    /id="compound-integration"/,
+    "SSR retains the compound frame before its legend mounts during hydration",
+  );
   const nextOutput = join(root, "artifacts/packed-line-next");
   await rm(nextOutput, { recursive: true, force: true });
   await cp(join(scratch, "out"), nextOutput, { recursive: true });

@@ -2,7 +2,7 @@
 
 import { type ReactNode, use, useId, useMemo } from "react";
 import { ChartContext } from "./chart-context.js";
-import { colorResourceId, colorStopToken } from "./series-color.js";
+import { colorBaseToken, colorResourceId, colorStopToken } from "./series-color.js";
 
 /** Each native SVG owns its viewport-relative resources; metadata stays Root-owned. */
 export function SeriesPaintBoundary({ children }: { children: ReactNode }) {
@@ -16,7 +16,7 @@ export function SeriesPaintBoundary({ children }: { children: ReactNode }) {
           key,
           stops.colors.length > 1
             ? `url(#${colorResourceId(colorId, key)})`
-            : `var(--color-${key})`,
+            : `var(${colorBaseToken(key)})`,
         ]),
       ),
     [colorStops, colorId],

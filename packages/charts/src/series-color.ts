@@ -66,3 +66,7 @@ export function colorStopToken(key: string, index: number | "gradient") {
   const encoded = Array.from(key, (char) => char.codePointAt(0)?.toString(16)).join("-");
   return `--kind-ui-series-${encoded}-${index}`;
 }
+
+export function colorBaseToken(key: string) {
+  return /^[a-zA-Z][\w-]*$/.test(key) ? `--color-${key}` : colorStopToken(key, 0);
+}

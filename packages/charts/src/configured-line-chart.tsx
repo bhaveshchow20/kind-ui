@@ -23,6 +23,7 @@ import {
   type ChartBackgroundPatternProps,
 } from "./chart-background-pattern.js";
 import { ChartContext } from "./chart-context.js";
+import { FamilyLayout } from "./family-root.js";
 import { Legend, type LegendProps } from "./legend.js";
 import { Root, type RootProps } from "./root.js";
 import type { SeriesConfig } from "./types.js";
@@ -82,6 +83,7 @@ export type ConfiguredLineChartProps<DataPoint = DefaultDataPoint> = Omit<
   data: readonly DataPoint[];
   "aria-describedby"?: string;
   legend?: false | LegendProps;
+  legendPosition?: "top" | "bottom";
   rootProps?: Omit<
     RootProps,
     "config" | "children" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange"
@@ -90,9 +92,7 @@ export type ConfiguredLineChartProps<DataPoint = DefaultDataPoint> = Omit<
   Visibility &
   (GeneratedParts<DataPoint> | ExplicitParts);
 
-// Preserve the existing exported prop contract for native composition consumers.
-export type LineChartProps = ComposedLineChartProps;
-type CompositionLineChartProps = LineChartProps & {
+type CompositionLineChartProps = ComposedLineChartProps & {
   config?: never;
   xDataKey?: never;
   xAxis?: never;
@@ -104,11 +104,15 @@ type CompositionLineChartProps = LineChartProps & {
   material?: never;
   series?: never;
   legend?: never;
+  legendPosition?: never;
   rootProps?: never;
   visibleSeries?: never;
   defaultVisibleSeries?: never;
   onVisibleSeriesChange?: never;
 };
+
+/** Native composition props retained for existing prop-forwarding consumers. */
+export type LineChartProps = ComposedLineChartProps;
 
 /** Existing composition unchanged; config explicitly opts into package-owned composition. */
 export function LineChart<DataPoint = DefaultDataPoint>(
@@ -121,6 +125,7 @@ export function LineChart<DataPoint = DefaultDataPoint>(
 function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoint>) {
   const parent = useContext(ChartContext);
   const {
+    legendPosition,
     config,
     data,
     children,
@@ -165,10 +170,7 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
     );
   if (visibleSeries !== undefined && defaultVisibleSeries !== undefined)
     throw new Error("LineChart accepts visibleSeries or defaultVisibleSeries, not both");
-  if (
-    typeof chartProps["aria-label"] !== "string" &&
-    typeof chartProps["aria-labelledby"] !== "string"
-  )
+  if (!chartProps["aria-label"]?.trim() && !chartProps["aria-labelledby"]?.trim())
     throw new Error("Configured LineChart requires aria-label or aria-labelledby");
   const generated = children === undefined;
   if (
@@ -222,7 +224,10 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
   return (
     <Root
       {...rootProps}
-      className={cn("kind-ui-configured-line-root font-sans", rootProps?.className)}
+      className={cn(
+        "kind-ui-configured-line-root font-sans",
+        rootProps?.className,
+      )}
       config={activeConfig}
       visibleSeries={visible}
       {...(change ? { onVisibleSeriesChange: change } : {})}
@@ -233,93 +238,93 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
           tooltip.
         </p>
       )}
-      <ComposedLineChart
-        {...chartProps}
-        data={data}
-        accessibilityLayer={accessibilityLayer}
-        animate={animate}
-        loading={loading}
-        loadingLabel={loadingLabel}
-        {...(describedBy ? { "aria-describedby": describedBy } : {})}
-        responsive={responsive ?? true}
-        {...(width !== undefined ? { width } : {})}
-        {...(height !== undefined ? { height } : {})}
-        className={cn(
-          "kind-ui-configured-line-chart min-w-0",
-          width === undefined && style?.width === undefined && "w-full",
-          height === undefined && style?.height === undefined && "h-[280px]",
-          className,
-        )}
-        style={{
-          ...(width !== undefined ? { width } : {}),
-          ...(height !== undefined ? { height } : {}),
-          ...style,
-        }}
-      >
-        {generated ? (
-          <>
-            {backgroundPattern && <ChartBackgroundPattern {...backgroundPattern} />}
-            {grid !== false && (
-              <CartesianGrid
-                vertical={false}
-                stroke="var(--border, #d1d5db)"
-                strokeDasharray="3 3"
-                {...grid}
-              />
-            )}
-            {xAxis !== false && (
-              <XAxis
-                {...(xDataKey !== undefined ? { dataKey: xDataKey } : {})}
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fontSize: 12,
-                  fill: "var(--muted-foreground, #6b7280)",
-                }}
-                {...xAxis}
-              />
-            )}
-            {yAxis !== false && (
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fontSize: 12,
-                  fill: "var(--muted-foreground, #6b7280)",
-                }}
-                {...yAxis}
-              />
-            )}
-            {series !== undefined
-              ? series.map((item) => (
-                  <LineSeries<DataPoint>
-                    key={item.seriesKey}
-                    type={curve ?? "monotone"}
-                    material={material ?? "plain"}
-                    {...(item.pointStyle === undefined || item.pointStyle === "default"
-                      ? { dot: { r: 2.5 } }
-                      : {})}
-                    strokeWidth={2}
-                    {...item}
-                  />
-                ))
-              : keys.map((key) => (
-                  <LineSeries
-                    key={key}
-                    dataKey={key}
-                    seriesKey={key}
-                    type={curve ?? "monotone"}
-                    material={material ?? "plain"}
-                    dot={{ r: 2.5 }}
-                    strokeWidth={2}
-                  />
-                ))}
-            {tooltip !== false && <Tooltip {...tooltip} />}
-          </>
-        ) : (
-          children
-        )}
-      </ComposedLineChart>
+      <FamilyLayout {...(legendPosition ? { legendPosition } : {})}>
+        <ComposedLineChart
+          {...chartProps}
+          data={data}
+          accessibilityLayer={accessibilityLayer}
+          animate={animate}
+          loading={loading}
+          loadingLabel={loadingLabel}
+          {...(describedBy ? { "aria-describedby": describedBy } : {})}
+          responsive={responsive ?? true}
+          {...(width !== undefined ? { width } : {})}
+          {...(height !== undefined ? { height } : {})}
+          className={cn(
+            "kind-ui-configured-line-chart w-full min-w-0 h-[280px]",
+            className,
+          )}
+          style={{
+            ...(width !== undefined ? { width } : {}),
+            ...(height !== undefined ? { height } : {}),
+            ...style,
+          }}
+        >
+          {generated ? (
+            <>
+              {backgroundPattern && <ChartBackgroundPattern {...backgroundPattern} />}
+              {grid !== false && (
+                <CartesianGrid
+                  vertical={false}
+                  stroke="var(--border, #d1d5db)"
+                  strokeDasharray="3 3"
+                  {...grid}
+                />
+              )}
+              {xAxis !== false && (
+                <XAxis
+                  {...(xDataKey !== undefined ? { dataKey: xDataKey } : {})}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{
+                    fontSize: 12,
+                    fill: "var(--muted-foreground, #6b7280)",
+                  }}
+                  {...xAxis}
+                />
+              )}
+              {yAxis !== false && (
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{
+                    fontSize: 12,
+                    fill: "var(--muted-foreground, #6b7280)",
+                  }}
+                  {...yAxis}
+                />
+              )}
+              {series !== undefined
+                ? series.map((item) => (
+                    <LineSeries<DataPoint>
+                      key={item.seriesKey}
+                      type={curve ?? "monotone"}
+                      material={material ?? "plain"}
+                      {...(item.pointStyle === undefined || item.pointStyle === "default"
+                        ? { dot: { r: 2.5 } }
+                        : {})}
+                      strokeWidth={2}
+                      {...item}
+                    />
+                  ))
+                : keys.map((key) => (
+                    <LineSeries
+                      key={key}
+                      dataKey={key}
+                      seriesKey={key}
+                      type={curve ?? "monotone"}
+                      material={material ?? "plain"}
+                      dot={{ r: 2.5 }}
+                      strokeWidth={2}
+                    />
+                  ))}
+              {tooltip !== false && <Tooltip {...tooltip} />}
+            </>
+          ) : (
+            children
+          )}
+        </ComposedLineChart>
+      </FamilyLayout>
       {legend !== false && (generated || legend !== undefined) && <Legend {...legend} />}
     </Root>
   );

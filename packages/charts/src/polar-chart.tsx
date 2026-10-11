@@ -1,6 +1,6 @@
 "use client";
 
-import { animate as animateValue, type Transition } from "motion/react";
+import { animate as animateValue } from "motion/react";
 import {
   type ComponentProps,
   createContext,
@@ -8,7 +8,6 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { RadarChart as EngineRadarChart, RadialBarChart as EngineRadialBarChart } from "recharts";
 import { type BaseAnimation, MotionContext } from "./animation.js";
@@ -17,6 +16,7 @@ import { preserveCategoryRows } from "./category-cells.js";
 import { useChartInteraction } from "./chart-interaction.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
+import { defaultHover, useReducedMotion } from "./motion-preference.js";
 import { type RadarSelectionProps, RadarSelectionProvider } from "./radar-interaction.js";
 import { RadialCategory } from "./radial-category.js";
 
@@ -52,18 +52,9 @@ export const RadialMotion = createContext({
   progress: 1,
   direction: "clockwise" as "clockwise" | "anticlockwise",
 });
-const query = "(prefers-reduced-motion: reduce)";
-function subscribe(change: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const snapshot = () => window.matchMedia(query).matches;
-const serverSnapshot = () => true;
-const defaultHover: Transition = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 };
 
 function usePolarMotion(animate: RadarChartProps["animate"], loading: boolean | undefined) {
-  const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const reduced = useReducedMotion();
   const [finished, setFinished] = useState(false);
   const interrupt = useCallback(() => {
     if (!loading) setFinished(true);

@@ -1,9 +1,10 @@
 "use client";
 
-import { type ComponentProps, useContext, useId } from "react";
+import { type ComponentProps, createContext, type ReactNode, use, useContext, useId } from "react";
 import { Cell, LabelList, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { Tooltip, type TooltipProps } from "./animation.js";
 import { ChartContext } from "./chart-context.js";
+import { FamilyLayout } from "./family-root.js";
 import { Legend, type LegendProps } from "./legend.js";
 import { RadialBarChartFrame, type RadialBarChartProps } from "./polar-chart.js";
 import { RadialBarSeries, type RadialBarSeriesProps } from "./polar-series.js";
@@ -38,7 +39,7 @@ type Name =
   | { "aria-label": string; "aria-labelledby"?: string }
   | { "aria-labelledby": string; "aria-label"?: string };
 
-export type ActivityRingsProps = Omit<
+type ActivityBaseProps = Omit<
   RadialBarChartProps<ActivityRingDatum>,
   "data" | "children" | "layout" | "categoryKey"
 > &
@@ -48,6 +49,7 @@ export type ActivityRingsProps = Omit<
     config: SeriesConfig;
     /** Default domain for rings without their own domain. Defaults to [0, 100]. */
     domain?: readonly [number, number];
+    children?: ReactNode;
     /** Native chart geometry remains available: radii, center, angles and gaps. */
     series?: Omit<
       RadialBarSeriesProps<ActivityRingDatum, number>,
@@ -60,13 +62,32 @@ export type ActivityRingsProps = Omit<
     rootProps?: ActivityRootProps;
   };
 
+export type ActivityRingsProps = Omit<
+  ActivityBaseProps,
+  "children" | "series" | "labels" | "legend" | "tooltip"
+> &
+  Name &
+  (
+    | (Pick<ActivityBaseProps, "series" | "labels" | "legend" | "tooltip"> & {
+        children?: undefined;
+      })
+    | {
+        children: Exclude<ReactNode, undefined>;
+        series?: never;
+        labels?: never;
+        legend?: never;
+        tooltip?: never;
+      }
+  );
+
 /** A narrow progress recipe; native RadialBarChart remains the full composition escape hatch. */
 export function ActivityRings({
+  children,
   rings,
   config,
   domain = [0, 100],
   series,
-  labels = false,
+  labels,
   legend,
   tooltip,
   rootProps,
@@ -79,6 +100,11 @@ export function ActivityRings({
   ...chartProps
 }: ActivityRingsProps) {
   const parent = useContext(ChartContext);
+  const explicit = children !== undefined;
+  if (explicit && [series, labels, legend, tooltip].some((part) => part !== undefined))
+    throw new Error(
+      "Explicit ActivityRings children replace generated parts; remove series, labels, legend and tooltip options",
+    );
   const tooltipOptions = tooltip === false ? undefined : tooltip;
   const descriptionId = useId();
   if (parent)
@@ -126,69 +152,99 @@ export function ActivityRings({
           </div>
         ))}
       </dl>
-      <RadialBarChartFrame<ActivityRingDatum>
-        skeletonFamily="activity-rings"
-        innerRadius="30%"
-        outerRadius="90%"
-        startAngle={90}
-        endAngle={-270}
-        barCategoryGap="15%"
-        {...chartProps}
-        aria-describedby={describedBy}
-        data={data}
-        categoryKey="key"
-        {...(!rootProps?.interaction || rootProps.interaction.kind === "category"
-          ? { interactionBinding: "root" as const }
-          : {})}
-        layout="radial"
-        accessibilityLayer={accessibilityLayer}
-        responsive={responsive}
-        {...(width !== undefined ? { width } : {})}
-        {...(height !== undefined ? { height } : {})}
-        className={["kind-ui-activity-rings", className].filter(Boolean).join(" ")}
-        style={{ width: width ?? "100%", height: height ?? 300, ...style }}
-      >
-        <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
-        <PolarRadiusAxis type="category" dataKey="key" tick={false} axisLine={false} />
-        <RadialBarSeries<ActivityRingDatum, number>
-          background
-          cornerRadius="50%"
-          {...series}
-          dataKey="progress"
-        >
-          {data.some((ring) => ring.cellProps !== undefined) &&
-            data.map((ring) => <Cell key={ring.key} {...ring.cellProps} />)}
-          {labels !== false && (
-            <LabelList {...labels} content={labels.content ?? <RadialBarLabel />} dataKey="label" />
-          )}
-        </RadialBarSeries>
-        {tooltip !== false && (
-          <Tooltip
-            content={(native) => (
-              <TooltipContent
-                tooltip={{
-                  ...native,
-                  payload: native.payload.map((entry) => {
-                    const rawValue = (entry.payload as ActivityRingDatum | undefined)?.rawValue;
-                    return rawValue === undefined ? entry : { ...entry, value: rawValue };
-                  }),
-                }}
-                itemKey={
-                  tooltipOptions?.itemKey ??
-                  ((entry) =>
-                    (entry.payload as ActivityRingDatum | undefined)?.key ?? String(entry.dataKey))
-                }
-                {...(tooltipOptions?.valueAnimation
-                  ? { valueAnimation: tooltipOptions.valueAnimation }
-                  : {})}
-                hideLabel
-              />
+      <ActivityData value={data}>
+        <FamilyLayout>
+          <RadialBarChartFrame<ActivityRingDatum>
+            skeletonFamily="activity-rings"
+            innerRadius="30%"
+            outerRadius="90%"
+            startAngle={90}
+            endAngle={-270}
+            barCategoryGap="15%"
+            {...chartProps}
+            aria-describedby={describedBy}
+            data={data}
+            categoryKey="key"
+            {...(!rootProps?.interaction || rootProps.interaction.kind === "category"
+              ? { interactionBinding: "root" as const }
+              : {})}
+            layout="radial"
+            accessibilityLayer={accessibilityLayer}
+            responsive={responsive}
+            {...(width !== undefined ? { width } : {})}
+            {...(height !== undefined ? { height } : {})}
+            className={["kind-ui-activity-rings", className].filter(Boolean).join(" ")}
+            style={{ width: width ?? "100%", height: height ?? 300, ...style }}
+          >
+            {explicit ? (
+              children
+            ) : (
+              <>
+                <ActivitySeries {...series}>
+                  {labels !== undefined && labels !== false && <ActivityLabels {...labels} />}
+                </ActivitySeries>
+                {tooltip !== false && <ActivityTooltip {...tooltipOptions} />}
+              </>
             )}
-            {...tooltipOptions}
-          />
-        )}
-      </RadialBarChartFrame>
-      {legend !== false && <Legend {...legend} />}
+          </RadialBarChartFrame>
+        </FamilyLayout>
+      </ActivityData>
+      {!explicit && legend !== false && <Legend {...legend} />}
     </Root>
+  );
+}
+
+const ActivityData = createContext<readonly ActivityRingDatum[] | null>(null);
+export type ActivitySeriesProps = NonNullable<ActivityRingsProps["series"]> & {
+  children?: ReactNode;
+};
+export function ActivitySeries({ children, ...props }: ActivitySeriesProps) {
+  const data = use(ActivityData);
+  if (!data) throw new Error("ActivityRings.Series requires ActivityRings");
+  return (
+    <>
+      <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
+      <PolarRadiusAxis type="category" dataKey="key" tick={false} axisLine={false} />
+      <RadialBarSeries<ActivityRingDatum, number>
+        background
+        cornerRadius="50%"
+        {...props}
+        dataKey="progress"
+      >
+        {data.some((ring) => ring.cellProps !== undefined) &&
+          data.map((ring) => <Cell key={ring.key} {...ring.cellProps} />)}
+        {children}
+      </RadialBarSeries>
+    </>
+  );
+}
+export function ActivityLabels(props: Omit<ComponentProps<typeof LabelList>, "dataKey">) {
+  return <LabelList {...props} content={props.content ?? <RadialBarLabel />} dataKey="label" />;
+}
+export function ActivityTooltip(props: TooltipProps) {
+  const data = use(ActivityData);
+  if (!data) throw new Error("ActivityRings.Tooltip requires ActivityRings");
+  return (
+    <Tooltip
+      content={(native) => (
+        <TooltipContent
+          tooltip={{
+            ...native,
+            payload: native.payload.map((entry) => {
+              const rawValue = (entry.payload as ActivityRingDatum | undefined)?.rawValue;
+              return rawValue === undefined ? entry : { ...entry, value: rawValue };
+            }),
+          }}
+          itemKey={
+            props.itemKey ??
+            ((entry) =>
+              (entry.payload as ActivityRingDatum | undefined)?.key ?? String(entry.dataKey))
+          }
+          {...(props.valueAnimation ? { valueAnimation: props.valueAnimation } : {})}
+          hideLabel
+        />
+      )}
+      {...props}
+    />
   );
 }
