@@ -29,6 +29,7 @@ export function IntegrationHost() {
       aria-label="Monthly icon totals"
       className="h-80 text-blue-700"
       interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["total"] }}
+      defaultVisibleSeries={["total"]}
       frameProps={{ className: "max-w-xl", id: "compound-integration" }}
     >
       <LineChart.Grid className="stroke-fuchsia-600" />
