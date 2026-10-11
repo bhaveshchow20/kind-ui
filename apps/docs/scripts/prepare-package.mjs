@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   artifactReceiptSchema,
   docsProvenanceSchema,
+  npmPackSchema,
   packageIdentitySchema,
   parseJson,
 } from "../../../scripts/tooling-schemas.mjs";
@@ -49,19 +50,23 @@ const canonical = `vendor/kind-ui-charts-${release || packageManifest.version}.t
 let packed;
 let validation;
 if (release) {
-  packed = JSON.parse(
-    execFileSync(
-      "npm",
-      [
-        "pack",
-        `@kind-ui/charts@${release}`,
-        "--json",
-        "--pack-destination",
-        path.resolve("vendor"),
-      ],
-      { cwd: root, encoding: "utf8" },
+  const [registryArtifact] = npmPackSchema.parse(
+    parseJson(
+      execFileSync(
+        "npm",
+        [
+          "pack",
+          `@kind-ui/charts@${release}`,
+          "--json",
+          "--pack-destination",
+          path.resolve("vendor"),
+        ],
+        { cwd: root, encoding: "utf8" },
+      ),
     ),
-  )[0];
+  );
+  if (!registryArtifact) throw new Error("npm pack returned no artifact");
+  packed = { ...registryArtifact, ...packageIdentitySchema.parse(registryArtifact) };
   if (packed.filename !== path.basename(canonical))
     renameSync(`vendor/${packed.filename}`, canonical);
 } else {
