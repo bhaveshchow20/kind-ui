@@ -1,16 +1,10 @@
 "use client";
 
 import { animate, motion, useMotionValue, useTransform } from "motion/react";
-import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
+import { useLayoutEffect, useRef } from "react";
 
-const query = "(prefers-reduced-motion: reduce)";
-function subscribe(change: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const snapshot = () => window.matchMedia(query).matches;
-const serverSnapshot = () => true;
+import { useReducedMotion } from "./motion-preference.js";
+
 const reel = Array.from({ length: 30 }, (_, index) => index);
 
 // Keep a bounded repeating reel. Interrupted transitions start at the currently painted digit.
@@ -102,7 +96,7 @@ function RollingNumber({ text }: { text: string }) {
 
 /** Private presentation only: formatters and native tooltip selection remain upstream. */
 export function TooltipNumber({ value }: { value: string | number }) {
-  const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const reduced = useReducedMotion();
   const text = String(value);
   // Mixed scripts, non-ASCII digits and bidi text keep their original shaping/order.
   const unsupported =

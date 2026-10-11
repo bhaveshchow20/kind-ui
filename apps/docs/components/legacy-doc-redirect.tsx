@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { publicPath } from "@/lib/routing.mjs";
 
 const customizationSections: Record<string, string> = {
-  loading: "/docs/chart-components/root/#loading",
+  loading: "/docs/chart-components/chart/#loading",
   "labels-theme-colors-and-diagnostics":
     "/docs/chart-components/series-config/#labels-theme-colors-and-diagnostics",
   "series-patterns-and-projected-bars": "/docs/components/bar/#series-patterns",
@@ -13,18 +13,8 @@ const customizationSections: Record<string, string> = {
   "decorative-backgrounds": "/docs/components/line/#decorative-backgrounds",
   "pie-initial-inspection-and-selective-glow": "/docs/components/pie/#initial-tooltip",
   "sankey-labels-and-icons": "/docs/components/sankey/#sankey-labels-and-icons",
-  "shared-legend-and-mark-interactions": "/docs/chart-components/root/#interaction-and-eligibility",
+  "shared-legend-and-mark-interactions": "/docs/chart-components/chart/#focus-and-eligibility",
   materials: "/docs/guides/materials/",
-};
-const quickstartSections: Record<string, string> = {
-  "install-charts": "install-the-package",
-  "copy-the-complete-component": "build-your-first-chart",
-  "render-the-chart": "render-the-chart",
-  "use-your-own-data": "use-your-own-data",
-  composition: "composition",
-  "trends-with-line": "build-your-first-chart",
-  "comparisons-with-bar": "composition",
-  "pick-the-family-composition": "composition",
 };
 export function LegacyDocRedirect({ guide }: { guide: string }) {
   useEffect(() => {
@@ -33,11 +23,11 @@ export function LegacyDocRedirect({ guide }: { guide: string }) {
       guide === "customization"
         ? (customizationSections[section] ?? "/docs/components/line/")
         : guide === "quickstart"
-          ? `/docs/installation/#${quickstartSections[section] ?? (section || "build-your-first-chart")}`
+          ? "/docs/installation/#install-the-package"
           : guide === "composition"
-            ? "/docs/installation/#composition"
+            ? "/docs/installation/#install-the-package"
             : guide === "release"
-              ? "/docs/installation/#upgrading"
+              ? "/docs/installation/#install-the-package"
               : "/docs/concepts/identity/";
     window.location.replace(publicPath(target));
   }, [guide]);

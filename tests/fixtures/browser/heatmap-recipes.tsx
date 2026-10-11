@@ -134,6 +134,8 @@ export function HeatmapRecipes() {
           missingLabel="No sample"
           className="heatmap-card"
           animate={motion}
+          config={{}}
+          aria-label="Chart fixture"
         >
           <HeatmapGrid
             material={material}
@@ -176,6 +178,8 @@ export function HeatmapRecipes() {
           animate={motion}
           formatValue={(value) => `${value} deployments`}
           missingLabel="Not yet observed"
+          config={{}}
+          aria-label="Chart fixture"
         >
           <HeatmapGrid
             material={material}

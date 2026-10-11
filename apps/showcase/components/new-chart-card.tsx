@@ -1,5 +1,18 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import {
+  BoxPlotChart,
+  Cell,
+  computeWaterfallData,
+  createHeatmapScale,
+  HeatmapChart,
+  type HistogramBin,
+  HistogramChart,
+  LineChart,
+  ReferenceLine,
+  SankeyChart,
+  WaterfallChart,
+  type WaterfallDatum,
+} from "@kind-ui/charts";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useMemo, useRef } from "react";
 import type { Finish } from "@/lib/advanced-chart-recipes";
@@ -33,209 +46,205 @@ function NewChart({
   const bins = useMemo(() => histogramBins(r.id), [r.id]);
   const rows = useMemo(() => boxRows(r.id), [r.id]);
   const heat = useMemo(() => heatmapData(r.id), [r.id]);
-  const water = useMemo(() => Chart.computeWaterfallData(waterfallEntries(r.id)), [r.id]);
+  const water = useMemo(() => computeWaterfallData(waterfallEntries(r.id)), [r.id]);
   const flow = useMemo(() => sankeyData(r.id), [r.id]);
   const scale = useMemo(
-    () => Chart.createHeatmapScale({ domain: [0, heat.max], colors }),
+    () => createHeatmapScale({ domain: [0, heat.max], colors }),
     [heat.max, colors],
   );
   if (r.family === "Line") {
     return (
-      <Chart.LineChart
+      <LineChart
         key={entranceKey}
         data={conversionData}
         config={{
           trials: { label: "Trial starts", color: colors[0] },
           paid: { label: "Paid conversions", color: colors[1] },
         }}
-        xDataKey="month"
+        frameProps={{ className: "chart-root" }}
         responsive
         style={{ width: "100%", height: 280 }}
-        rootProps={{ className: "chart-root" }}
         animate={animate}
-        material={material}
-        curve={options.curve ?? "monotone"}
-        series={[
-          {
-            seriesKey: "trials",
-            dataKey: "trials",
-            dot: options.dots ?? false,
-            strokeWidth: options.strokeWidth ?? 3,
-          },
-          {
-            seriesKey: "paid",
-            dataKey: "paid",
-            dot: options.dots ?? false,
-            strokeWidth: options.strokeWidth ?? 3,
-          },
-        ]}
         aria-label={r.tag}
-        yAxis={{ width: "auto", tick: { fontSize: 11 } }}
-        xAxis={{ tick: { fontSize: 11 } }}
-        grid={
-          options.showGrid === false
-            ? false
-            : { stroke: "var(--chart-grid)", vertical: false, strokeDasharray: "3 5" }
-        }
-        legend={options.showLegend === false ? false : undefined}
-        tooltip={{ valueAnimation: animate ? "shuffle" : undefined }}
-      />
+      >
+        {options.showGrid !== false && (
+          <LineChart.Grid stroke="var(--chart-grid)" vertical={false} strokeDasharray="3 5" />
+        )}
+        <LineChart.XAxis dataKey="month" tick={{ fontSize: 11 }} />
+        <LineChart.YAxis width="auto" tick={{ fontSize: 11 }} />
+        <LineChart.Series
+          seriesKey="trials"
+          dataKey="trials"
+          material={material}
+          type={options.curve ?? "monotone"}
+          dot={options.dots ?? false}
+          strokeWidth={options.strokeWidth ?? 3}
+        />
+        <LineChart.Series
+          seriesKey="paid"
+          dataKey="paid"
+          material={material}
+          type={options.curve ?? "monotone"}
+          dot={options.dots ?? false}
+          strokeWidth={options.strokeWidth ?? 3}
+        />
+        <LineChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+        {options.showLegend !== false && <LineChart.Legend />}
+      </LineChart>
     );
   }
   if (r.family === "Histogram") {
     const latency = r.id === "histogram-latency";
     const density = options.density ?? latency;
     return (
-      <Chart.Root
+      <HistogramChart
         key={entranceKey}
-        className="chart-root"
-        interaction={{ kind: "series", mode: "focus", eligibleKeys: ["count"] }}
         config={{
-          count: { label: density ? "Density" : latency ? "Requests" : "Orders", color: colors[0] },
+          count: {
+            label: density ? "Density" : latency ? "Requests" : "Orders",
+            color: colors[0],
+          },
         }}
+        frameProps={{ className: "chart-root" }}
+        className="chart-canvas"
+        interaction={{ kind: "series", mode: "focus", eligibleKeys: ["count"] }}
+        bins={bins}
+        measure={density ? "density" : "count"}
+        animate={animate}
+        aria-label={r.tag}
+        margin={{ top: 16, right: 12, left: 0, bottom: 8 }}
       >
-        <div className="chart-canvas">
-          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <Chart.HistogramChart
-              bins={bins}
-              measure={density ? "density" : "count"}
-              animate={animate}
-              aria-label={r.tag}
-              margin={{ top: 16, right: 12, left: 0, bottom: 8 }}
-              xAxisProps={{
-                tickLine: false,
-                axisLine: false,
-                tick: { fontSize: 11 },
-                tickFormatter: (value) => (latency ? `${value} ms` : `$${value}`),
-              }}
-              yAxisProps={{
-                width: "auto",
-                tickLine: false,
-                axisLine: false,
-                tick: { fontSize: 11 },
-                ...(density ? { tickFormatter: (value: number) => value.toFixed(3) } : {}),
-              }}
-            >
-              <Chart.CartesianGrid
-                horizontal={options.showGrid ?? true}
-                vertical={false}
-                stroke="var(--chart-grid)"
-                strokeDasharray="3 5"
-              />
-              <Chart.HistogramSeries
-                material={material}
-                stroke={options.binBorders === false ? "none" : "var(--background)"}
-                strokeWidth={1.5}
-              />
-              <Chart.Tooltip
-                valueAnimation={animate ? "shuffle" : undefined}
-                labelFormatter={(_label, entries) => {
-                  const bin = entries[0]?.payload as Chart.HistogramBin | undefined;
-                  return bin ? `${bin.lower}–${bin.upper} ${latency ? "ms" : "USD"}` : "";
-                }}
-                formatter={(value) => [
-                  density ? Number(value).toFixed(4) : String(value),
-                  density
-                    ? latency
-                      ? "Density per ms"
-                      : "Density per dollar"
-                    : latency
-                      ? "Requests"
-                      : "Orders",
-                ]}
-              />
-            </Chart.HistogramChart>
-          </Chart.ResponsiveContainer>
-        </div>
-        {options.showLegend !== false && <Chart.Legend />}
-      </Chart.Root>
+        <HistogramChart.XAxis
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 11 }}
+          tickFormatter={(value) => (latency ? `${value} ms` : `$${value}`)}
+        />
+        <HistogramChart.YAxis
+          width="auto"
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 11 }}
+          {...(density ? { tickFormatter: (value: number) => value.toFixed(3) } : {})}
+        />
+        {options.showGrid !== false && (
+          <HistogramChart.Grid
+            horizontal={options.showGrid ?? true}
+            vertical={false}
+            stroke="var(--chart-grid)"
+            strokeDasharray="3 5"
+          />
+        )}
+        <HistogramChart.Series
+          material={material}
+          stroke={options.binBorders === false ? "none" : "var(--background)"}
+          strokeWidth={1.5}
+        />
+        <HistogramChart.Tooltip
+          valueAnimation={animate ? "shuffle" : undefined}
+          labelFormatter={(_label, entries) => {
+            const bin = entries[0]?.payload as HistogramBin | undefined;
+            return bin ? `${bin.lower}–${bin.upper} ${latency ? "ms" : "USD"}` : "";
+          }}
+          formatter={(value) => [
+            density ? Number(value).toFixed(4) : String(value),
+            density
+              ? latency
+                ? "Density per ms"
+                : "Density per dollar"
+              : latency
+                ? "Requests"
+                : "Orders",
+          ]}
+        />
+        {options.showLegend !== false && <HistogramChart.Legend />}
+      </HistogramChart>
     );
   }
   if (r.family === "Box Plot") {
     const horizontal = r.id === "box-regions";
     return (
-      <Chart.Root
+      <BoxPlotChart
         key={entranceKey}
-        className="chart-root"
-        interaction={{ kind: "series", mode: "focus", eligibleKeys: ["spread"] }}
         config={{
           spread: {
             label: horizontal ? "Weekly growth" : "Request time",
             color: colors[0],
           },
         }}
+        frameProps={{ className: "chart-root" }}
+        className="chart-canvas"
+        interaction={{
+          kind: "series",
+          mode: "focus",
+          eligibleKeys: ["spread"],
+        }}
+        data={rows}
+        layout={horizontal ? "vertical" : "horizontal"}
+        animate={animate}
+        aria-label={r.tag}
+        margin={{ top: 16, right: 12, left: 0, bottom: 8 }}
       >
-        <div className="chart-canvas">
-          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <Chart.BoxPlotChart
-              data={rows}
-              layout={horizontal ? "vertical" : "horizontal"}
-              animate={animate}
-              aria-label={r.tag}
-              margin={{ top: 16, right: 12, left: 0, bottom: 8 }}
-            >
-              <Chart.CartesianGrid
-                vertical={horizontal && (options.showGrid ?? true)}
-                horizontal={!horizontal && (options.showGrid ?? true)}
-                stroke="var(--chart-grid)"
-                strokeDasharray="3 5"
-              />
-              <Chart.XAxis
-                type={horizontal ? "number" : "category"}
-                {...(horizontal
-                  ? {
-                      domain: ["dataMin", "dataMax"],
-                      tickFormatter: (value: number) => `${value} pp`,
-                    }
-                  : { dataKey: "category" })}
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11 }}
-              />
-              <Chart.YAxis
-                width="auto"
-                type={horizontal ? "category" : "number"}
-                {...(horizontal
-                  ? { dataKey: "category" }
-                  : {
-                      domain: [0, "dataMax"],
-                      tickFormatter: (value: number) => `${value} ms`,
-                    })}
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11 }}
-              />
-              <Chart.ReferenceLine
-                {...(horizontal ? { x: 0 } : { y: 0 })}
-                stroke="var(--chart-axis)"
-              />
-              <Chart.BoxPlotSeries<BoxRow>
-                strokeWidth={options.strokeWidth ?? 3}
-                dataKey="summary"
-                seriesKey="spread"
-                barSize={options.width ?? 32}
-                outlierRadius={options.outlierRadius ?? 3}
-                material={material}
-                fillOpacity={0.65}
-              />
-              <Chart.Tooltip
-                valueAnimation={animate ? "shuffle" : undefined}
-                formatter={(_value, _name, item) => [
-                  String((item.payload as BoxRow).summary.median) + (horizontal ? " pp" : " ms"),
-                  "Median",
-                ]}
-              />
-            </Chart.BoxPlotChart>
-          </Chart.ResponsiveContainer>
-        </div>
-        {options.showLegend !== false && <Chart.Legend />}
-      </Chart.Root>
+        {options.showGrid !== false && (
+          <BoxPlotChart.Grid
+            vertical={horizontal && (options.showGrid ?? true)}
+            horizontal={!horizontal && (options.showGrid ?? true)}
+            stroke="var(--chart-grid)"
+            strokeDasharray="3 5"
+          />
+        )}
+        <BoxPlotChart.XAxis
+          type={horizontal ? "number" : "category"}
+          {...(horizontal
+            ? {
+                domain: ["dataMin", "dataMax"],
+                tickFormatter: (value: number) => `${value} pp`,
+              }
+            : { dataKey: "category" })}
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 11 }}
+        />
+        <BoxPlotChart.YAxis
+          width="auto"
+          type={horizontal ? "category" : "number"}
+          {...(horizontal
+            ? { dataKey: "category" }
+            : {
+                domain: [0, "dataMax"],
+                tickFormatter: (value: number) => `${value} ms`,
+              })}
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 11 }}
+        />
+        <ReferenceLine {...(horizontal ? { x: 0 } : { y: 0 })} stroke="var(--chart-axis)" />
+        <BoxPlotChart.Series<BoxRow>
+          strokeWidth={options.strokeWidth ?? 3}
+          dataKey="summary"
+          seriesKey="spread"
+          barSize={options.width ?? 32}
+          outlierRadius={options.outlierRadius ?? 3}
+          material={material}
+          fillOpacity={0.65}
+        />
+        <BoxPlotChart.Tooltip
+          valueAnimation={animate ? "shuffle" : undefined}
+          formatter={(_value, _name, item) => [
+            String((item.payload as BoxRow).summary.median) + (horizontal ? " pp" : " ms"),
+            "Median",
+          ]}
+        />
+        {options.showLegend !== false && <BoxPlotChart.Legend />}
+      </BoxPlotChart>
     );
   }
   if (r.family === "Heatmap")
     return (
-      <Chart.HeatmapChart
+      <HeatmapChart
         key={entranceKey}
+        config={{}}
+        aria-label={r.tag}
         className="showcase-heatmap"
         rows={heat.rows}
         columns={heat.columns}
@@ -244,7 +253,7 @@ function NewChart({
         animate={animate}
         formatValue={(value) => (r.id === "heatmap-retention" ? `${value}%` : String(value))}
       >
-        <Chart.HeatmapGrid
+        <HeatmapChart.Grid
           caption={r.tag}
           material={material}
           layout={{
@@ -255,125 +264,130 @@ function NewChart({
           cellProps={() => ({ style: { borderRadius: options.radius ?? 5 } })}
           Cell={(options.showValues ?? r.id === "heatmap-retention") ? undefined : () => null}
         />
-        <Chart.HeatmapLegend label={r.id === "heatmap-retention" ? "Active users" : "Tickets"} />
-        <Chart.HeatmapTooltip valueAnimation={animate ? "shuffle" : undefined} />
-      </Chart.HeatmapChart>
+        {options.showLegend !== false && (
+          <HeatmapChart.Legend label={r.id === "heatmap-retention" ? "Active users" : "Tickets"} />
+        )}
+        <HeatmapChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+      </HeatmapChart>
     );
   if (r.family === "Waterfall")
     return (
-      <Chart.Root
+      <WaterfallChart
         key={entranceKey}
-        className="chart-root"
         config={{ range: { label: "Balance", color: colors[0] } }}
+        frameProps={{ className: "chart-root" }}
+        className="chart-canvas"
+        data={water}
+        animate={animate}
+        accessibilityLayer
+        aria-label={r.tag}
+        margin={{ top: 20, right: 12, left: 0, bottom: 0 }}
       >
-        <div className="chart-canvas">
-          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            <Chart.WaterfallChart
-              data={water}
-              animate={animate}
-              accessibilityLayer
-              aria-label={r.tag}
-              margin={{ top: 20, right: 12, left: 0, bottom: 0 }}
-            >
-              <Chart.CartesianGrid
-                horizontal={options.showGrid ?? true}
-                vertical={false}
-                stroke="var(--chart-grid)"
-                strokeDasharray="3 5"
-              />
-              <Chart.XAxis
-                dataKey="id"
-                tickFormatter={(id) => water.find((row) => row.id === id)?.label ?? String(id)}
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11 }}
-              />
-              <Chart.YAxis
-                width="auto"
-                tickFormatter={(value) => `$${value / 1000}k`}
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11 }}
-              />
-              <Chart.ReferenceLine y={0} stroke="var(--chart-axis)" />
-              {(options.connectors ?? true) && (
-                <Chart.WaterfallConnectors data={water} stroke="var(--chart-axis)" />
-              )}
-              <Chart.WaterfallSeries
-                material={material}
-                radius={options.radius ?? 4}
-                maxBarSize={options.width ?? 35}
-              >
-                {water.map((row) => (
-                  <Chart.Cell
-                    key={row.id}
-                    fill={colors[row.kind !== "delta" ? 0 : (row.value ?? 0) < 0 ? 2 : 1]}
-                  />
-                ))}
-              </Chart.WaterfallSeries>
-              <Chart.Tooltip
-                formatter={(_value, _name, item) => {
-                  const row = item.payload as Chart.WaterfallDatum;
-                  return [`$${row.value?.toLocaleString("en-US")}`, row.label];
-                }}
-              />
-            </Chart.WaterfallChart>
-          </Chart.ResponsiveContainer>
-        </div>
-      </Chart.Root>
-    );
-  return (
-    <div className="showcase-sankey">
-      <div className="chart-canvas">
-        <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <Chart.SankeyChart
-            key={entranceKey}
-            data={flow}
-            animate={animate}
-            nodeWidth={options.nodeWidth ?? 12}
-            nodePadding={options.nodePadding ?? 24}
-            margin={{ top: 12, bottom: 12, left: 65, right: 85 }}
-            node={(props) => (
-              <g>
-                <Chart.SankeyNode {...props} color={colors[props.index % colors.length]} />
-                {options.showLabels !== false && (
-                  <text
-                    x={props.x < 100 ? props.x - 8 : props.x + props.width + 8}
-                    y={props.y + props.height / 2}
-                    textAnchor={props.x < 100 ? "end" : "start"}
-                    dominantBaseline="middle"
-                    fill="currentColor"
-                    fontSize={11}
-                  >
-                    {props.payload.name}
-                  </text>
-                )}
-              </g>
-            )}
-            link={(props) => (
-              <Chart.SankeyLink
-                {...props}
-                material="gradient"
-                color={
-                  colors[
-                    flow.nodes.findIndex((node) => node.id === props.payload.source.id) %
-                      colors.length
-                  ]
-                }
-                targetColor={
-                  colors[
-                    flow.nodes.findIndex((node) => node.id === props.payload.target.id) %
-                      colors.length
-                  ]
-                }
-                pathProps={{ opacity: options.linkOpacity ?? 0.45 }}
-              />
-            )}
+        {options.showGrid !== false && (
+          <WaterfallChart.Grid
+            horizontal={options.showGrid ?? true}
+            vertical={false}
+            stroke="var(--chart-grid)"
+            strokeDasharray="3 5"
           />
-        </Chart.ResponsiveContainer>
-      </div>
-      <Chart.SankeyTable data={flow} caption={r.tag} className="sr-only" />
-    </div>
+        )}
+        <WaterfallChart.XAxis
+          dataKey="id"
+          tickFormatter={(id) => water.find((row) => row.id === id)?.label ?? String(id)}
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 11 }}
+        />
+        <WaterfallChart.YAxis
+          width="auto"
+          tickFormatter={(value) => `$${value / 1000}k`}
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 11 }}
+        />
+        <ReferenceLine y={0} stroke="var(--chart-axis)" />
+        {(options.connectors ?? true) && (
+          <WaterfallChart.Connectors data={water} stroke="var(--chart-axis)" />
+        )}
+        <WaterfallChart.Series
+          material={material}
+          radius={options.radius ?? 4}
+          maxBarSize={options.width ?? 35}
+        >
+          {water.map((row) => (
+            <Cell
+              key={row.id}
+              fill={colors[row.kind !== "delta" ? 0 : (row.value ?? 0) < 0 ? 2 : 1]}
+            />
+          ))}
+        </WaterfallChart.Series>
+        <WaterfallChart.Tooltip
+          formatter={(_value, _name, item) => {
+            const row = item.payload as WaterfallDatum;
+            return [`$${row.value?.toLocaleString("en-US")}`, row.label];
+          }}
+        />
+      </WaterfallChart>
+    );
+
+  return (
+    <SankeyChart
+      key={entranceKey}
+      frameProps={{ className: "showcase-sankey" }}
+      className="chart-canvas"
+      config={Object.fromEntries(
+        flow.nodes.map((node, index) => [
+          node.id,
+          { label: node.name, color: colors[index % colors.length] },
+        ]),
+      )}
+      aria-label={r.tag}
+      data={flow}
+      animate={animate}
+      nodeWidth={options.nodeWidth ?? 12}
+      nodePadding={options.nodePadding ?? 24}
+      margin={{ top: 12, bottom: 12, left: 65, right: 85 }}
+    >
+      <SankeyChart.Nodes
+        render={(props) => (
+          <g>
+            <SankeyChart.Node {...props} color={colors[props.index % colors.length]} />
+            {options.showLabels !== false && (
+              <text
+                x={props.x < 100 ? props.x - 8 : props.x + props.width + 8}
+                y={props.y + props.height / 2}
+                textAnchor={props.x < 100 ? "end" : "start"}
+                dominantBaseline="middle"
+                fill="currentColor"
+                fontSize={11}
+              >
+                {props.payload.name}
+              </text>
+            )}
+          </g>
+        )}
+      />
+      <SankeyChart.Links
+        render={(props) => (
+          <SankeyChart.Link
+            {...props}
+            material="gradient"
+            color={
+              colors[
+                flow.nodes.findIndex((node) => node.id === props.payload.source.id) % colors.length
+              ]
+            }
+            targetColor={
+              colors[
+                flow.nodes.findIndex((node) => node.id === props.payload.target.id) % colors.length
+              ]
+            }
+            pathProps={{ opacity: options.linkOpacity ?? 0.45 }}
+          />
+        )}
+      />
+      <SankeyChart.Table caption={r.tag} className="sr-only" />
+    </SankeyChart>
   );
 }
 export function NewChartCard({

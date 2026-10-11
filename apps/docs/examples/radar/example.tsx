@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { RadarChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Speed", studio: 88, field: 62 },
@@ -12,35 +12,35 @@ const data = [
 const config = {
   studio: { label: "Studio", color: "#733bff" },
   field: { label: "Field", color: "#008b82" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function ProductRadarChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.RadarChart
-          loading={state === "loading"}
-          data={data}
-          animate
-          outerRadius="68%"
-          margin={{ top: 24, right: 36, bottom: 24, left: 36 }}
-          aria-label="Product research scores out of 100: Studio and Field"
-        >
-          <Chart.PolarGrid radialLines={false} />
-          <Chart.PolarAngleAxis dataKey="period" tick={{ fontSize: 12 }} />
-          <Chart.PolarRadiusAxis
-            domain={[0, 100]}
-            ticks={[25, 50, 75, 100]}
-            angle={60}
-            axisLine={false}
-            tick={{ fontSize: 10 }}
-          />
-          <Chart.RadarSeries dataKey="studio" strokeWidth={2} fillOpacity={0.18} />
-          <Chart.RadarSeries dataKey="field" strokeWidth={2} fillOpacity={0.18} />
-          <Chart.Tooltip />
-        </Chart.RadarChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+    <RadarChart
+      config={config}
+      height={280}
+      defaultVisibleSeries={Object.keys(config)}
+      legendPosition="top"
+      loading={state === "loading"}
+      data={data}
+      animate
+      outerRadius="68%"
+      margin={{ top: 24, right: 36, bottom: 24, left: 36 }}
+      aria-label="Product research scores out of 100: Studio and Field"
+    >
+      <RadarChart.Grid stroke="#ccc" radialLines={false} />
+      <RadarChart.AngleAxis dataKey="period" tick={{ fontSize: 12 }} />
+      <RadarChart.RadiusAxis
+        domain={[0, 100]}
+        ticks={[25, 50, 75, 100]}
+        angle={60}
+        axisLine={false}
+        tick={{ fontSize: 10 }}
+      />
+      <RadarChart.Series dataKey="studio" strokeWidth={2} fillOpacity={0.18} />
+      <RadarChart.Series dataKey="field" strokeWidth={2} fillOpacity={0.18} />
+      <RadarChart.Tooltip />
+      <RadarChart.Legend />
+    </RadarChart>
   );
 }

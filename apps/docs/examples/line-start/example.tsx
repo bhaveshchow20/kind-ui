@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { LineChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Jan", visitors: 420 },
@@ -9,21 +9,25 @@ const data = [
 ];
 const config = {
   visitors: { label: "Visitors", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function MonthlyVisitorsChart() {
   return (
     <figure>
-      <Chart.LineChart
+      <LineChart
         data={data}
         config={config}
-        xDataKey="period"
         height={280}
         margin={{ top: 24, right: 32, bottom: 16, left: 0 }}
-        xAxis={{ height: 56, minTickGap: 32 }}
-        yAxis={{ width: 60 }}
         aria-label="Monthly visitors"
-      />
+      >
+        <LineChart.Grid />
+        <LineChart.XAxis dataKey="period" height={56} minTickGap={32} />
+        <LineChart.YAxis width={60} />
+        <LineChart.Series dataKey="visitors" type="monotone" strokeWidth={2} dot={{ r: 2.5 }} />
+        <LineChart.Tooltip />
+        <LineChart.Legend />
+      </LineChart>
       <figcaption
         style={{
           position: "absolute",

@@ -94,6 +94,22 @@ test("native keyboard context survives hover/leave, Escape and blur clear transi
   await expect(plot.locator(dimmed)).toHaveCount(0);
 });
 
+test("legend pointer exit does not revive a cached native keyboard category", async ({ page }) => {
+  const plot = page.locator("#bar-focus");
+  await plot.locator(".recharts-surface").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(plot.locator(dimmed)).toHaveCount(2);
+  const legend = plot.locator('[data-kind-ui="chart-legend"] button');
+  await legend.focus();
+  await legend.click();
+  await expect(legend).toHaveAttribute("aria-pressed", "true");
+  await legend.focus();
+  await page.keyboard.press("Enter");
+  await expect(legend).toHaveAttribute("aria-pressed", "false");
+  await page.mouse.move(0, 0);
+  await expect(plot.locator(dimmed)).toHaveCount(0);
+});
+
 test("stable IDs, removal, opt-out, custom portal and no-dim comparison compose", async ({
   page,
 }) => {
@@ -107,6 +123,14 @@ test("stable IDs, removal, opt-out, custom portal and no-dim comparison compose"
   await page
     .getByRole("button", { name: "Reorder", exact: true })
     .evaluate((button: HTMLButtonElement) => button.click());
+  await expect(plot.locator(dimmed)).toHaveCount(4);
+  // Replacement native marks retain identity until a real pointer exit.
+  await page.mouse.move(0, 0);
+  await expect(plot.locator(dimmed)).toHaveCount(0);
+  await plot
+    .locator(".recharts-rectangle")
+    .nth(2)
+    .hover({ position: { x: 10, y: 10 } });
   await expect(plot.locator(dimmed)).toHaveCount(4);
   await page
     .getByRole("button", { name: "Remove A", exact: true })

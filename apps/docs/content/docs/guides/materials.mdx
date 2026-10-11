@@ -12,7 +12,6 @@ Most series use `material`. Sankey uses `finish` for Clay and Glow.
 
 | Chart part | Default | Clay | Glow |
 | --- | --- | --- | --- |
-| [Configured Line](/docs/components/line/) | Omit `material` | `material="clay"` | `material="glow"` |
 | [Line](/docs/components/line/), [Area](/docs/components/area/), [Bar](/docs/components/bar/) series | Omit `material` | `material="clay"` | `material="glow"` |
 | [Pie](/docs/components/pie/), [Radar](/docs/components/radar/), [Radial](/docs/components/radial/), [Scatter](/docs/components/scatter/) series | Omit `material` | `material="clay"` | `material="glow"` |
 | [HeatmapGrid](/docs/components/heatmap/) | Omit `material` | `material="clay"` | `material="glow"` |
@@ -24,17 +23,20 @@ parts. Open a family page to compare its live material previews.
 Set the finish on the series in your existing Bar composition:
 
 ```tsx
-<Chart.BarSeries dataKey="orders" material="clay" />
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart.Series dataKey="orders" material="clay" />
 ```
 
 For Sankey, set it in the node and link renderers:
 
 ```tsx
-<Chart.SankeyChart
-  data={flowData}
-  node={(props) => <Chart.SankeyNode {...props} finish="glow" />}
-  link={(props) => <Chart.SankeyLink {...props} finish="glow" />}
-/>
+import { SankeyChart } from "@kind-ui/charts";
+
+<SankeyChart config={nodeConfig} data={flowData} aria-label="Energy flows">
+  <SankeyChart.Nodes render={(props) => <SankeyChart.Node {...props} finish="glow" />} />
+  <SankeyChart.Links render={(props) => <SankeyChart.Link {...props} finish="glow" />} />
+</SankeyChart>
 ```
 
 <Callout type="info">

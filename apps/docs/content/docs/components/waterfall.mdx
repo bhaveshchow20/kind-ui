@@ -3,31 +3,29 @@ title: Waterfall Chart
 description: Trace signed contributions from an opening balance to a closing total.
 ---
 
-Trace how sales, refunds and costs change a cash balance.
-
 <ChartExample id="waterfall" />
 
 ## Usage
 
+`WaterfallChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+
 Use `computeWaterfallData` to prepare rows for the bars and connectors.
 
 ```tsx title="Composition sketch"
-<Chart.Root config={config}>
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.WaterfallChart data={data} layout="vertical" animate accessibilityLayer>
-      <Chart.XAxis type="number" />
-      <Chart.YAxis type="category" dataKey="id" />
-      <Chart.WaterfallConnectors data={data} position="middle" />
-      <Chart.WaterfallSeries>
-        {data.map((row) => <Chart.Cell key={row.id} fill={row.kind !== "delta" ? "#733bff" : (row.value ?? 0) < 0 ? "#be123c" : "#15803d"} />)}
-      </Chart.WaterfallSeries>
-      <Chart.Tooltip filterNull={false} content={(tooltip) => {
-        const row = data.find((row) => row.id === String(tooltip.label));
-        return tooltip.active && row ? <div>{row.label}: {row.value ?? "Unknown"} ($k); balance {row.balance ?? "Unknown"} ($k)</div> : null;
-      }} />
-    </Chart.WaterfallChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+import { Cell, WaterfallChart } from "@kind-ui/charts";
+
+<WaterfallChart config={config} height={280} aria-label="Waterfall values" data={data} layout="vertical" animate accessibilityLayer>
+  <WaterfallChart.XAxis type="number" />
+  <WaterfallChart.YAxis type="category" dataKey="id" />
+  <WaterfallChart.Connectors data={data} position="middle" />
+  <WaterfallChart.Series>
+    {data.map((row) => <Cell key={row.id} fill={row.kind !== "delta" ? "#733bff" : (row.value ?? 0) < 0 ? "#be123c" : "#15803d"} />)}
+  </WaterfallChart.Series>
+  <WaterfallChart.Tooltip filterNull={false} content={(tooltip) => {
+    const row = data.find((row) => row.id === String(tooltip.label));
+    return tooltip.active && row ? <div>{row.label}: {row.value ?? "Unknown"} ($k); balance {row.balance ?? "Unknown"} ($k)</div> : null;
+  }} />
+</WaterfallChart>
 ```
 
 Use one unstacked series. `layout="vertical"` produces horizontal bars.
@@ -70,7 +68,7 @@ Tooltips use `value`, `start` and `balance`; set `filterNull={false}` to inspect
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="waterfall" variant="loading" />
 
@@ -97,20 +95,26 @@ Returns `WaterfallDatum[]` with `value`, `start`, `balance` and sorted `range` e
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `data` | `WaterfallDatum[]` | — | Computed or host-owned range rows. |
 | `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | Vertical bars or horizontal bars, respectively. |
 | `animate` | `boolean \| BarAnimation` | `false` | Chart-owned motion with reduced-motion handling. |
 | `barCategoryGap` | `number \| string` | `"10%"` | Native category spacing; these components use `"32%"`. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Keyboard category inspection; set explicitly here. |
-| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name, including units. |
 
 </div>
 
 `BarAnimation` shares `LineAnimation`: default duration `1000`, easing `[0.25, 0.1, 0.25, 1]`, and supported inspection `hoverTransition`. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
 
-### WaterfallSeries
+<span id="waterfallseries" />
 
-<div className="line-props-scroll" role="region" aria-label="WaterfallSeries props" tabIndex={0}>
+### WaterfallChart.Series
+
+<div className="line-props-scroll" role="region" aria-label="WaterfallChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -144,11 +148,13 @@ See [Recharts ReferenceLine](https://recharts.github.io/en-US/api/ReferenceLine/
 
 ## Shared components
 
-Use Root for color metadata, axes for balances and Tooltip for each step.
+Use chart config for color metadata, axes for balances and Tooltip for each step.
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+
+Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

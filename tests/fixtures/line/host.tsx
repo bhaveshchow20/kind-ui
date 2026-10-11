@@ -1,4 +1,3 @@
-// Host-only fixture: chart data, controls and engine extensions. No chart implementation.
 import * as Static from "@kind-ui/charts";
 import {
   CartesianGrid,
@@ -7,7 +6,6 @@ import {
   LabelList,
   type LineDrawShapeProps,
   ReferenceLine,
-  ResponsiveContainer,
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
@@ -55,7 +53,18 @@ export function LineHost({
   chartProps,
   nativeVisibility = false,
 }: {
-  chartProps?: Static.LineChartProps;
+  chartProps?: Partial<
+    Omit<
+      Static.LineChartProps,
+      | "config"
+      | "children"
+      | "visibleSeries"
+      | "defaultVisibleSeries"
+      | "onVisibleSeriesChange"
+      | "aria-label"
+      | "aria-labelledby"
+    >
+  >;
   nativeVisibility?: boolean;
 }) {
   const { LineChart, LineSeries, Tooltip } = Static;
@@ -145,77 +154,89 @@ export function LineHost({
         data-native-visibility={visible.join(",")}
         data-visibility-callbacks={visibilityCallbacks}
       />
-      <Static.Root
-        interaction={{
-          kind: "series",
-          mode: "visibility",
-          eligibleKeys: ["value", renamed ? "alias" : "other"],
-        }}
-        config={{
-          value: { label: "Value", color: "#345", formatValue: (v) => `${v} units` },
-          other: { label: "Other", color: "#678" },
-          alias: { label: "Renamed", color: "#678" },
-        }}
-        visibleSeries={visible}
-        onVisibleSeriesChange={(next) => {
-          setVisible(next);
-          setVisibilityCallbacks((n) => n + 1);
-        }}
-      >
-        <Static.Legend />
-        {show && (
-          <LineChart
-            {...chartProps}
-            width={small ? 160 : 440}
-            height={220}
-            {...(!seriesData ? { data: rows } : {})}
-            aria-label="Packed chart"
-            ref={chartRef}
-            onMouseMove={() => setEntered((n) => n + 1)}
-            onMouseLeave={() => setLeft((n) => n + 1)}
+      {show && (
+        <LineChart
+          interaction={{
+            kind: "series",
+            mode: "visibility",
+            eligibleKeys: ["value", renamed ? "alias" : "other"],
+          }}
+          config={{
+            value: { label: "Value", color: "#345", formatValue: (v) => `${v} units` },
+            other: { label: "Other", color: "#678" },
+            alias: { label: "Renamed", color: "#678" },
+          }}
+          visibleSeries={visible}
+          onVisibleSeriesChange={(next) => {
+            setVisible(next);
+            setVisibilityCallbacks((n) => n + 1);
+          }}
+          {...chartProps}
+          width={small ? 160 : 440}
+          height={220}
+          {...(!seriesData ? { data: rows } : {})}
+          aria-label="Packed chart"
+          ref={chartRef}
+          onMouseMove={() => setEntered((n) => n + 1)}
+          onMouseLeave={() => setLeft((n) => n + 1)}
+        >
+          <CartesianGrid vertical={false} />
+          <XAxis dataKey="time" />
+          <YAxis width={32} />
+          <ReferenceLine y={3} />
+          <Tooltip
+            maxWidth={180}
+            {...(custom ? { content: <Content /> } : {})}
+            ref={tooltipRef}
+            frameProps={{
+              "aria-label": "Bounded tooltip",
+              onMouseDown: () => setClicked((n) => n + 1),
+            }}
+          />
+          <LineSeries
+            {...(seriesData ? { data: rows } : {})}
+            dataKey="value"
+            type="monotone"
+            dot={<Mark />}
+            shape={Shape}
+            onClick={() => setClicked((n) => n + 1)}
           >
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="time" />
-            <YAxis width={32} />
-            <ReferenceLine y={3} />
-            <Tooltip
-              maxWidth={180}
-              {...(custom ? { content: <Content /> } : {})}
-              ref={tooltipRef}
-              frameProps={{
-                "aria-label": "Bounded tooltip",
-                onMouseDown: () => setClicked((n) => n + 1),
-              }}
-            />
-            <LineSeries
-              {...(seriesData ? { data: rows } : {})}
-              dataKey="value"
-              type="monotone"
-              dot={<Mark />}
-              shape={Shape}
-              onClick={() => setClicked((n) => n + 1)}
-            >
-              <LabelList dataKey="value" />
-            </LineSeries>
-            <LineSeries
-              {...(seriesData ? { data: rows } : {})}
-              id=""
-              dataKey={otherValue}
-              hide={nativeHide}
-              seriesKey={renamed ? "alias" : "other"}
-              stroke="#678"
-              name="Engine other"
-              dot={{ r: 4 }}
-            />
-          </LineChart>
-        )}
-      </Static.Root>
+            <LabelList dataKey="value" />
+          </LineSeries>
+          <LineSeries
+            {...(seriesData ? { data: rows } : {})}
+            id=""
+            dataKey={otherValue}
+            hide={nativeHide}
+            seriesKey={renamed ? "alias" : "other"}
+            stroke="#678"
+            name="Engine other"
+            dot={{ r: 4 }}
+          />
+          <LineChart.Legend />
+        </LineChart>
+      )}
     </section>
   );
 }
 
 // Packed public material proof, intentionally a small host fixture rather than a recipe.
-export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartProps }) {
+export function MaterialsHost({
+  chartProps,
+}: {
+  chartProps?: Partial<
+    Omit<
+      Static.LineChartProps,
+      | "config"
+      | "children"
+      | "visibleSeries"
+      | "defaultVisibleSeries"
+      | "onVisibleSeriesChange"
+      | "aria-label"
+      | "aria-labelledby"
+    >
+  >;
+}) {
   const [palette, setPalette] = useState(false);
   const [custom, setCustom] = useState(false);
   const [flat, setFlat] = useState(false);
@@ -281,7 +302,8 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
           style={{ width: "min(560px, 100%)", marginTop: 20 }}
         >
           <h2 style={{ fontSize: 14, margin: "0 0 8px" }}>{material}</h2>
-          <Static.Root
+          <Static.LineChart
+            height={180}
             config={{
               value: {
                 label: "Completed",
@@ -290,62 +312,57 @@ export function MaterialsHost({ chartProps }: { chartProps?: Static.LineChartPro
               other: { label: "Planned", color: palette ? "#427768" : "#727272" },
             }}
             visibleSeries={hidden ? [] : ["value", "other"]}
-            style={{ "--host-series": "#6b45b3" } as CSSProperties}
+            frameProps={{ style: { "--host-series": "#6b45b3" } as CSSProperties }}
+            {...chartProps}
+            data={
+              gaps
+                ? points.map((p, index) => ({
+                    ...p,
+                    value: index === 1 ? null : index === 2 ? 0 : p.value,
+                  }))
+                : points
+            }
+            margin={{ top: 14, right: 14, bottom: 8, left: 4 }}
+            aria-label={`${material} chart`}
           >
-            <Static.Legend />
-            <ResponsiveContainer width="100%" height={180}>
-              <Static.LineChart
-                {...chartProps}
-                data={
-                  gaps
-                    ? points.map((p, index) => ({
-                        ...p,
-                        value: index === 1 ? null : index === 2 ? 0 : p.value,
-                      }))
-                    : points
-                }
-                margin={{ top: 14, right: 14, bottom: 8, left: 4 }}
-                aria-label={`${material} chart`}
-              >
-                <defs>
-                  <linearGradient id={`${material}-proof-gradient`}>
-                    <stop offset="0%" stopColor="#9e503b" />
-                    <stop offset="100%" stopColor="#427768" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} stroke="#e2e0db" />
-                <XAxis dataKey="time" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
-                <YAxis
-                  domain={[0, 10]}
-                  allowDataOverflow
-                  width={24}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fontSize: 11 }}
-                />
-                <Static.LineSeries
-                  dataKey="value"
-                  style={cssPaint ? { stroke: "#6b45b3" } : undefined}
-                  {...(gradient ? { stroke: `url(#${material}-proof-gradient)` } : {})}
-                  type="monotone"
-                  material={material}
-                  {...(equalWidth ? { strokeWidth: 6 } : {})}
-                  dot={dots}
-                  {...(native ? { shape: Shape } : {})}
-                  {...(filter ? { filter: "none" } : {})}
-                />
-                <Static.LineSeries
-                  dataKey="other"
-                  type="monotone"
-                  material={material}
-                  {...(equalWidth ? { strokeWidth: 6 } : {})}
-                  dot={false}
-                  strokeDasharray="7 5"
-                />
-                <Static.Tooltip />
-              </Static.LineChart>
-            </ResponsiveContainer>
-          </Static.Root>
+            <defs>
+              <linearGradient id={`${material}-proof-gradient`}>
+                <stop offset="0%" stopColor="#9e503b" />
+                <stop offset="100%" stopColor="#427768" />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke="#e2e0db" />
+            <XAxis dataKey="time" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+            <YAxis
+              domain={[0, 10]}
+              allowDataOverflow
+              width={24}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11 }}
+            />
+            <Static.LineSeries
+              dataKey="value"
+              style={cssPaint ? { stroke: "#6b45b3" } : undefined}
+              {...(gradient ? { stroke: `url(#${material}-proof-gradient)` } : {})}
+              type="monotone"
+              material={material}
+              {...(equalWidth ? { strokeWidth: 6 } : {})}
+              dot={dots}
+              {...(native ? { shape: Shape } : {})}
+              {...(filter ? { filter: "none" } : {})}
+            />
+            <Static.LineSeries
+              dataKey="other"
+              type="monotone"
+              material={material}
+              {...(equalWidth ? { strokeWidth: 6 } : {})}
+              dot={false}
+              strokeDasharray="7 5"
+            />
+            <Static.Tooltip />
+            <Static.LineChart.Legend />
+          </Static.LineChart>
         </section>
       ))}
     </main>

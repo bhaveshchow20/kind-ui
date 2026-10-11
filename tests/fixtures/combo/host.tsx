@@ -1,4 +1,3 @@
-// Public-only host proof; native marks are a geometry oracle, not copied implementation.
 import * as Chart from "@kind-ui/charts";
 import { ReferenceLine, XAxis, YAxis } from "@kind-ui/charts";
 import { createRef, useState } from "react";
@@ -55,7 +54,10 @@ export function ComboHost() {
     barGap: gap ? 24 : 4,
     stackOffset: "sign",
     margin: { top: 16, right: 0, left: 0, bottom: 0 },
-  } satisfies Chart.ComboChartProps;
+  } satisfies Pick<
+    Chart.ComboChartProps,
+    "width" | "height" | "data" | "barGap" | "stackOffset" | "margin"
+  >;
   const axes = (
     <>
       <XAxis dataKey="category" />
@@ -102,7 +104,7 @@ export function ComboHost() {
       <output aria-label="Events">{events}</output>
       <output aria-label="Ref">{ref.current?.tagName ?? "pending"}</output>
       <section aria-label="Managed">
-        <Chart.Root
+        <Chart.ComboChart
           interaction={{
             kind: "series",
             mode: "visibility",
@@ -114,33 +116,28 @@ export function ComboHost() {
           config={{ ...config, area: { ...config.area, color: color ? "#e11d48" : "#0d9488" } }}
           visibleSeries={visible}
           onVisibleSeriesChange={setVisible}
+          {...props}
+          ref={ref}
+          animate={
+            animate ? { ...animation, barReveal: barEntrance ? animation.barReveal : false } : false
+          }
+          aria-label="Managed combo"
+          onMouseMove={() => setEvents((value) => value + 1)}
         >
-          <Chart.Legend />
-          <Chart.ComboChart
-            {...props}
-            ref={ref}
-            animate={
-              animate
-                ? { ...animation, barReveal: barEntrance ? animation.barReveal : false }
-                : false
-            }
-            aria-label="Managed combo"
-            onMouseMove={() => setEvents((value) => value + 1)}
-          >
-            {axes}
-            <Chart.AreaSeries
-              dataKey="area"
-              yAxisId="left"
-              connectNulls={false}
-              fillOpacity={0.2}
-              dot={false}
-            />
-            <Chart.BarSeries dataKey="bar" yAxisId="left" stackId={stack ? "s" : undefined} />
-            <Chart.BarSeries dataKey="stacked" yAxisId="left" stackId={stack ? "s" : undefined} />
-            <Chart.LineSeries dataKey="line" yAxisId="right" dot={false} connectNulls={false} />
-            <Chart.Tooltip />
-          </Chart.ComboChart>
-        </Chart.Root>
+          {axes}
+          <Chart.AreaSeries
+            dataKey="area"
+            yAxisId="left"
+            connectNulls={false}
+            fillOpacity={0.2}
+            dot={false}
+          />
+          <Chart.BarSeries dataKey="bar" yAxisId="left" stackId={stack ? "s" : undefined} />
+          <Chart.BarSeries dataKey="stacked" yAxisId="left" stackId={stack ? "s" : undefined} />
+          <Chart.LineSeries dataKey="line" yAxisId="right" dot={false} connectNulls={false} />
+          <Chart.Tooltip />
+          <Chart.ComboChart.Legend />
+        </Chart.ComboChart>
       </section>
       <section aria-label="Native">
         <ComposedChart {...props} aria-label="Native combo">

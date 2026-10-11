@@ -1,8 +1,9 @@
 "use client";
 
-import { type ComponentProps, createContext, useMemo } from "react";
-import { XAxis, YAxis } from "recharts";
+import { type ComponentProps, createContext, use, useMemo } from "react";
+import type { XAxis, YAxis } from "recharts";
 import { BarChartImplementation, type BarChartProps } from "./bar-chart.js";
+import { XAxis as StyledXAxis, YAxis as StyledYAxis } from "./cartesian-parts.js";
 import { type HistogramBin, type HistogramMeasure, validateHistogram } from "./histogram-data.js";
 
 export type HistogramChartProps = Omit<
@@ -12,26 +13,54 @@ export type HistogramChartProps = Omit<
   bins: readonly HistogramBin[];
   /** Required: count height or normalized probability density (area sums to one). */
   measure: HistogramMeasure;
-  xAxisProps?: Omit<
-    ComponentProps<typeof XAxis>,
-    "dataKey" | "type" | "domain" | "scale" | "xAxisId" | "allowDataOverflow" | "reversed"
-  >;
-  yAxisProps?: Omit<
-    ComponentProps<typeof YAxis>,
-    "dataKey" | "type" | "domain" | "scale" | "yAxisId" | "allowDataOverflow" | "reversed"
-  >;
 };
+export type HistogramXAxisProps = Omit<
+  ComponentProps<typeof XAxis>,
+  "dataKey" | "type" | "domain" | "scale" | "xAxisId" | "allowDataOverflow" | "reversed"
+>;
+export type HistogramYAxisProps = Omit<
+  ComponentProps<typeof YAxis>,
+  "dataKey" | "type" | "domain" | "scale" | "yAxisId" | "allowDataOverflow" | "reversed"
+>;
+const HistogramGeometry = createContext<number[] | null>(null);
+export function HistogramXAxis(props: HistogramXAxisProps) {
+  const domain = use(HistogramGeometry);
+  if (!domain) throw new Error("HistogramChart.XAxis requires HistogramChart");
+  return (
+    <StyledXAxis
+      {...props}
+      xAxisId={0}
+      dataKey="midpoint"
+      type="number"
+      scale="linear"
+      domain={domain}
+      allowDataOverflow
+      reversed={false}
+    />
+  );
+}
+export function HistogramYAxis(props: HistogramYAxisProps) {
+  const domain = use(HistogramGeometry);
+  if (!domain) throw new Error("HistogramChart.YAxis requires HistogramChart");
+  return (
+    <StyledYAxis
+      {...props}
+      yAxisId={0}
+      type="number"
+      scale="linear"
+      domain={[0, "dataMax"]}
+      reversed={false}
+    />
+  );
+}
 export const HistogramContext = createContext<HistogramMeasure | null>(null);
 
-/** Bounded vertical histogram; quantitative axes are owned here, native children compose. */
-export function HistogramChart({
-  bins,
-  measure,
-  xAxisProps,
-  yAxisProps,
-  children,
-  ...props
-}: HistogramChartProps) {
+/** Bounded vertical histogram geometry; axes and series are explicit children. */
+export function HistogramChart({ bins, measure, children, ...props }: HistogramChartProps) {
+  if (["xAxisProps", "yAxisProps"].some((key) => Object.hasOwn(props, key)))
+    throw new Error(
+      "HistogramChart uses explicit XAxis and YAxis parts; root axis options are unsupported",
+    );
   const total = validateHistogram(bins);
   if (measure !== "count" && measure !== "density")
     throw new Error("Histogram requires count or density measure");
@@ -54,40 +83,20 @@ export function HistogramChart({
   if (!Number.isFinite((domain[1] ?? 1) - (domain[0] ?? 0)))
     throw new Error("Histogram domain must have a finite span");
   return (
-    <HistogramContext value={measure}>
-      <BarChartImplementation
-        family="histogram"
-        chartProps={{
-          ...props,
-          data,
-          layout: "horizontal",
-          barCategoryGap: 0,
-          barGap: 0,
-          children: (
-            <>
-              <XAxis
-                {...xAxisProps}
-                xAxisId={0}
-                dataKey="midpoint"
-                type="number"
-                scale="linear"
-                domain={domain}
-                allowDataOverflow
-                reversed={false}
-              />
-              <YAxis
-                {...yAxisProps}
-                yAxisId={0}
-                type="number"
-                scale="linear"
-                domain={[0, "dataMax"]}
-                reversed={false}
-              />
-              {children}
-            </>
-          ),
-        }}
-      />
-    </HistogramContext>
+    <HistogramGeometry value={domain}>
+      <HistogramContext value={measure}>
+        <BarChartImplementation
+          family="histogram"
+          chartProps={{
+            ...props,
+            data,
+            layout: "horizontal",
+            barCategoryGap: 0,
+            barGap: 0,
+            children,
+          }}
+        />
+      </HistogramContext>
+    </HistogramGeometry>
   );
 }

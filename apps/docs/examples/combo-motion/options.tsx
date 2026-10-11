@@ -1,5 +1,18 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import {
+  BarChart,
+  ComboChart,
+  createPercentStack,
+  defineChartBackgroundPattern,
+  PieChart,
+  SankeyChart,
+  type SankeyFlowData,
+  SankeyNode,
+  type SankeyNodeConfig,
+  SankeyNodeLabel,
+  type SeriesConfig,
+  TooltipContent,
+} from "@kind-ui/charts";
 
 const data = [
   { month: "Jan", capacity: 960, shipped: 640, target: 700 },
@@ -17,9 +30,9 @@ const config = {
   },
   shipped: { color: "#2563eb", pattern: { kind: "hatch" } },
   target: { color: "#0f766e" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 const projected = (row: Row) => row.month === "Jun";
-const background = Chart.defineChartBackgroundPattern(({ size, color }) => (
+const background = defineChartBackgroundPattern(({ size, color }) => (
   <circle cx={size / 2} cy={size / 2} r={1} fill={color} />
 ));
 
@@ -27,18 +40,19 @@ const background = Chart.defineChartBackgroundPattern(({ size, color }) => (
 export function PresentationOptions({ loading = false }: { loading?: boolean }) {
   return (
     <section aria-label="Monthly production options">
-      <Chart.Root
-        config={config}
-        interaction={{
-          kind: "series",
-          mode: "focus",
-          eligibleKeys: Object.keys(config),
-          markActivation: "matching-legend",
-        }}
-      >
-        <Chart.Legend />
-        <Chart.ResponsiveContainer width="100%" height={280}>
-          <Chart.ComboChart
+      <>
+        <>
+          <ComboChart
+            legendPosition="top"
+            config={config}
+            interaction={{
+              kind: "series",
+              mode: "focus",
+              eligibleKeys: Object.keys(config),
+              markActivation: "matching-legend",
+            }}
+            width="100%"
+            height={280}
             data={data}
             loading={loading}
             loadingLabel="Loading monthly production"
@@ -49,60 +63,38 @@ export function PresentationOptions({ loading = false }: { loading?: boolean }) 
               lineReveal: { revealDirection: "right-to-left" },
             }}
           >
-            <Chart.ChartBackgroundPattern pattern={background} />
-            <Chart.XAxis dataKey="month" />
-            <Chart.YAxis width={80} />
-            <Chart.AreaSeries dataKey="capacity" fillOpacity={0.15} pointStyle="border" />
-            <Chart.BarSeries<Row>
+            <ComboChart.Background pattern={background} />
+            <ComboChart.XAxis dataKey="month" tick={{ fill: "#666" }} />
+            <ComboChart.YAxis width={80} tick={{ fill: "#666" }} />
+            <ComboChart.Area dataKey="capacity" fillOpacity={0.15} pointStyle="border" />
+            <ComboChart.Bar<Row>
               dataKey="shipped"
               projection={{ isProjected: projected, pattern: { kind: "stripe" } }}
             />
-            <Chart.LineSeries
+            <ComboChart.Line
               dataKey="target"
               strokeDasharray="6 4"
               dashAnimation={{ durationMs: 1000 }}
               pointStyle="colored-border"
               activePointStyle="border"
             />
-            <Chart.Tooltip
+            <ComboChart.Tooltip
               content={(tooltip) => (
-                <Chart.TooltipContent
+                <TooltipContent
                   tooltip={tooltip}
                   isProjected={(entry) => entry.payload?.month === "Jun"}
                 />
               )}
             />
-          </Chart.ComboChart>
-        </Chart.ResponsiveContainer>
-      </Chart.Root>
-      <div className="sr-only">
-        <table>
-          <caption>Monthly production in units; June is projected</caption>
-          <thead>
-            <tr>
-              <th scope="col">Month</th>
-              <th scope="col">Capacity</th>
-              <th scope="col">Shipped</th>
-              <th scope="col">Target</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.month}>
-                <th scope="row">{row.month}</th>
-                <td>{row.capacity}</td>
-                <td>{row.shipped}</td>
-                <td>{row.target}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            <ComboChart.Legend />
+          </ComboChart>
+        </>
+      </>
     </section>
   );
 }
 
-const percent = Chart.createPercentStack({
+const percent = createPercentStack({
   values: (entry) =>
     ["capacity", "shipped"].includes(String(entry.dataKey))
       ? [entry.payload.capacity, entry.payload.shipped]
@@ -110,21 +102,28 @@ const percent = Chart.createPercentStack({
 });
 export function PercentageOptions() {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.BarChart
+    <>
+      <BarChart
+        config={config}
+        defaultVisibleSeries={Object.keys(config)}
         data={data}
         width={480}
         height={260}
         stackOffset="expand"
         aria-label="Capacity and shipped share; values in the production table"
       >
-        <Chart.XAxis dataKey="month" />
-        <Chart.YAxis domain={[0, 1]} tickFormatter={percent.tickFormatter} width={80} />
-        <Chart.BarSeries dataKey="capacity" stackId="share" />
-        <Chart.BarSeries dataKey="shipped" stackId="share" pattern={false} />
-        <Chart.Tooltip normalizedValue={percent.normalizedValue} />
-      </Chart.BarChart>
-    </Chart.Root>
+        <BarChart.XAxis dataKey="month" tick={{ fill: "#666" }} />
+        <BarChart.YAxis
+          domain={[0, 1]}
+          tickFormatter={percent.tickFormatter}
+          width={80}
+          tick={{ fill: "#666" }}
+        />
+        <BarChart.Series dataKey="capacity" stackId="share" />
+        <BarChart.Series dataKey="shipped" stackId="share" pattern={false} />
+        <BarChart.Tooltip normalizedValue={percent.normalizedValue} />
+      </BarChart>
+    </>
   );
 }
 
@@ -137,15 +136,14 @@ const categoryConfig = {
   retail: { color: "#2563eb" },
   service: { color: "#0f766e" },
   other: { color: "#7c3aed" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 export function PieOptions({ loading = false }: { loading?: boolean }) {
   return (
-    <Chart.Root
-      config={categoryConfig}
-      defaultVisibleSeries={["service", "other"]}
-      interaction={{ kind: "category", eligibleKeys: categories.map((row) => row.id) }}
-    >
-      <Chart.PieChart
+    <>
+      <PieChart
+        config={categoryConfig}
+        defaultVisibleSeries={["service", "other"]}
+        interaction={{ kind: "category", eligibleKeys: categories.map((row) => row.id) }}
         width={400}
         height={280}
         defaultPinnedCategory="service"
@@ -153,30 +151,16 @@ export function PieOptions({ loading = false }: { loading?: boolean }) {
         loadingLabel="Loading allocation"
         aria-label="Allocation; retail 35, service 45, other 20"
       >
-        <Chart.PieSeries
+        <PieChart.Series
           data={categories}
           dataKey="value"
           categoryKey="id"
-          interactionBinding="root"
           glowCategories={["service"]}
         />
-        <Chart.Tooltip itemKey={(entry) => entry.payload.id} />
-      </Chart.PieChart>
-      <Chart.Legend />
-      <div className="sr-only">
-        <table>
-          <caption>Allocation</caption>
-          <tbody>
-            {categories.map((row) => (
-              <tr key={row.id}>
-                <th scope="row">{row.id}</th>
-                <td>{row.value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Chart.Root>
+        <PieChart.Tooltip itemKey={(entry) => entry.payload.id} />
+        <PieChart.Legend />
+      </PieChart>
+    </>
   );
 }
 
@@ -186,7 +170,7 @@ const flow = {
     { id: "output", name: "Output" },
   ],
   links: [{ id: "input-output", source: "input", target: "output", value: 20 }],
-} satisfies Chart.SankeyFlowData;
+} satisfies SankeyFlowData;
 const nodeConfig = {
   input: {
     label: "Input",
@@ -194,33 +178,36 @@ const nodeConfig = {
     icon: <path d="M4 12h16M14 6l6 6-6 6" fill="none" stroke="currentColor" />,
   },
   output: { label: "Output", color: "#0f766e" },
-} satisfies Chart.SankeyNodeConfig;
+} satisfies SankeyNodeConfig;
 const units = (value: number) => `${value} units`;
 export function FlowLabelOptions() {
   return (
     <>
-      <Chart.SankeyChart
+      <SankeyChart
         data={flow}
-        nodeConfig={nodeConfig}
         width={480}
         height={260}
         margin={{ left: 96, right: 96, top: 16, bottom: 16 }}
         aria-label="Twenty units from input to output"
-        node={(node) => (
-          <g>
-            <Chart.SankeyNode {...node} />
-            <Chart.SankeyNodeLabel
-              node={node}
-              data={flow}
-              nodeConfig={nodeConfig}
-              position="outside"
-              showValues
-              valueFormatter={units}
-            />
-          </g>
-        )}
-      />
-      <Chart.SankeyTable data={flow} caption="Flow in units" formatValue={units} />
+        config={nodeConfig}
+      >
+        <SankeyChart.Links />
+        <SankeyChart.Nodes
+          render={(node) => (
+            <g>
+              <SankeyNode {...node} />
+              <SankeyNodeLabel
+                node={node}
+                data={flow}
+                nodeConfig={nodeConfig}
+                position="outside"
+                showValues
+                valueFormatter={units}
+              />
+            </g>
+          )}
+        />
+      </SankeyChart>
     </>
   );
 }

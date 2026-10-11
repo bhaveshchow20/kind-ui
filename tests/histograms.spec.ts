@@ -42,6 +42,9 @@ test("packed histogram uses numeric edges, widths, density areas and zero height
   expect(at(counts, 0).height / at(counts, 1).height).toBeCloseTo(1, 3);
   expect(at(counts, 2).height / at(counts, 1).height).toBeCloseTo(3, 3);
   await page.getByRole("button", { name: "Resize" }).click();
+  await expect
+    .poll(async () => at(await geometry(page), 2).width)
+    .toBeLessThan(at(counts, 2).width);
   const resized = await geometry(page);
   expect(at(resized, 2).width / at(resized, 1).width).toBeCloseTo(3, 3);
   expect(at(resized, 2).width).toBeLessThan(at(counts, 2).width);

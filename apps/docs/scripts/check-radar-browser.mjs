@@ -9,10 +9,11 @@ const browser = await chromium.launch({
 });
 const errors = [];
 const evidence = {};
+const origin = process.env.KIND_DOCS_BROWSER_ORIGIN ?? "http://127.0.0.1:6373";
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1080 } });
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("http://127.0.0.1:6373/docs/components/radar/");
+  await page.goto(`${origin}/docs/components/radar/`);
   const primary = page.locator('[data-component="radar"]');
   await primary.locator(".recharts-radar-polygon path").first().waitFor();
   const window = primary.locator('[data-kind-ui="radar-entrance-window"]');
@@ -23,8 +24,11 @@ try {
     evidence.entrance = "center-out circle observed and completed";
   } else throw new Error("Entrance mask was not observed");
   assert.equal(await primary.locator(".recharts-radar-polygon path").count(), 2);
-  assert.equal(await primary.locator("tbody tr").count(), 6);
-  assert.equal(await primary.getByRole("button", { name: /Highlight/ }).count(), 2);
+  assert.equal(await primary.locator(".recharts-polar-angle-axis-tick-value").count(), 6);
+  const primaryLegend = primary.locator('[data-kind-ui="chart-legend"]');
+  assert.equal(await primaryLegend.getByRole("button", { name: "Studio", exact: true }).count(), 1);
+  assert.equal(await primaryLegend.getByRole("button", { name: "Field", exact: true }).count(), 1);
+  assert.equal(await primaryLegend.locator('button[data-inactive="true"]').count(), 0);
   await page.waitForTimeout(1200);
   await page.screenshot({ path: "artifacts/radar/desktop.png", fullPage: true });
   await page.screenshot({ path: "artifacts/radar/desktop-viewport.png" });
@@ -112,7 +116,7 @@ try {
       hasTouch: true,
       reducedMotion: "reduce",
     });
-    await mobile.goto("http://127.0.0.1:6373/docs/components/radar/");
+    await mobile.goto(`${origin}/docs/components/radar/`);
     await mobile.locator(".recharts-radar-polygon path").first().waitFor();
     assert.equal(await mobile.locator('[data-kind-ui="radar-entrance-window"]').count(), 0);
     assert.ok(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
@@ -128,14 +132,14 @@ try {
     await mobile.close();
   }
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("http://127.0.0.1:6373/docs/components/radar/");
+  await page.goto(`${origin}/docs/components/radar/`);
   await page.addStyleTag({ content: "html { font-size: 200%; }" });
   await page.locator(".recharts-radar-polygon path").first().waitFor();
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   assert.equal(await page.locator('[data-kind-ui="radar-entrance-window"]').count(), 0);
   await page.screenshot({ path: "artifacts/radar/text-200.png", fullPage: true });
   await page.screenshot({ path: "artifacts/radar/text-200-viewport.png" });
-  await page.goto("http://127.0.0.1:6373/docs/components/line/");
+  await page.goto(`${origin}/docs/components/line/`);
   await page.locator(".recharts-line-curve").first().waitFor();
   assert.ok(await page.getByRole("link", { name: "Radar Chart", exact: true }).count());
   assert.deepEqual(errors, []);

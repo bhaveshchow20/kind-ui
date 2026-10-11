@@ -1,5 +1,16 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import {
+  ComboChart,
+  Label,
+  LabelList,
+  PieChart,
+  RadarChart,
+  RadialBarChart,
+  RadialBarLabel,
+  ScatterChart,
+  type SeriesConfig,
+  Symbols,
+} from "@kind-ui/charts";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useMemo, useRef } from "react";
 import { type AdvancedRecipe, advancedData, type Finish } from "@/lib/advanced-chart-recipes";
@@ -7,7 +18,7 @@ import type { DemoOptions } from "@/lib/demo-options";
 
 export { advancedRecipes } from "@/lib/advanced-chart-recipes";
 
-type PaletteConfig = Record<string, Chart.SeriesConfig[string] & { color: string }>;
+type PaletteConfig = Record<string, SeriesConfig[string] & { color: string }>;
 
 function formatAdvancedValue(id: string, value: unknown) {
   if (typeof value !== "number") return String(value);
@@ -46,7 +57,15 @@ function useChartExample({
   );
   if (r.family === "Combo")
     return (
-      <Chart.ComboChart
+      <ComboChart
+        config={config}
+        frameProps={{ className: "chart-root" }}
+        className="chart-canvas"
+        interaction={{
+          kind: "series",
+          mode: "focus",
+          eligibleKeys: Object.keys(config),
+        }}
         key={replay}
         data={data}
         animate={animate}
@@ -54,35 +73,42 @@ function useChartExample({
         aria-label={r.tag}
         margin={{ top: 20, right: 18, left: 0, bottom: 0 }}
       >
-        <Chart.CartesianGrid
-          horizontal={options.showGrid ?? true}
-          vertical={false}
-          stroke="var(--chart-grid)"
-          strokeDasharray="3 5"
+        {options.showGrid !== false && (
+          <ComboChart.Grid
+            horizontal={options.showGrid ?? true}
+            vertical={false}
+            stroke="var(--chart-grid)"
+            strokeDasharray="3 5"
+          />
+        )}
+        <ComboChart.XAxis
+          dataKey="month"
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 12 }}
         />
-        <Chart.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-        <Chart.YAxis
+        <ComboChart.YAxis
           tickLine={false}
           axisLine={false}
           width="auto"
           tickFormatter={(value) => (r.id === "combo" ? `$${value / 1000}k` : `${value} TB`)}
         />
         {r.id === "combo" ? (
-          <Chart.BarSeries
+          <ComboChart.Bar
             dataKey="a"
             radius={options.radius ?? 4}
             maxBarSize={28}
             material={material}
           />
         ) : (
-          <Chart.AreaSeries
+          <ComboChart.Area
             dataKey="a"
             type={options.curve ?? "monotone"}
             fillOpacity={0.2}
             material={material}
           />
         )}
-        <Chart.LineSeries
+        <ComboChart.Line
           dataKey="b"
           type="monotone"
           material={material}
@@ -90,14 +116,29 @@ function useChartExample({
           dot={options.dots ?? false}
           strokeWidth={options.strokeWidth ?? 2.5}
         />
-        <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
-      </Chart.ComboChart>
+        <ComboChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+        {options.showLegend !== false && (
+          <ComboChart.Legend aria-label={`Focus series for ${r.tag}`} />
+        )}
+      </ComboChart>
     );
   if (r.family === "Pie")
     return (
-      <Chart.PieChart key={replay} animate={animate} accessibilityLayer aria-label={r.tag}>
-        <Chart.PieSeries
-          interactionBinding="root"
+      <PieChart
+        key={replay}
+        config={config}
+        frameProps={{ className: "chart-root" }}
+        className="chart-canvas"
+        interaction={{
+          kind: "category",
+          mode: "focus",
+          eligibleKeys: Object.keys(config),
+        }}
+        animate={animate}
+        accessibilityLayer
+        aria-label={r.tag}
+      >
+        <PieChart.Series
           categoryKey="id"
           data={pieData}
           dataKey="value"
@@ -108,15 +149,26 @@ function useChartExample({
           startAngle={options.rotation ?? 90}
           endAngle={(options.rotation ?? 90) + 360}
         />
-        <Chart.Tooltip
+        <PieChart.Tooltip
           itemKey={(entry) => String(entry.payload.id)}
           valueAnimation={animate ? "shuffle" : undefined}
         />
-      </Chart.PieChart>
+        {options.showLegend !== false && (
+          <PieChart.Legend aria-label={`Focus series for ${r.tag}`} />
+        )}
+      </PieChart>
     );
   if (r.family === "Radar")
     return (
-      <Chart.RadarChart
+      <RadarChart
+        config={config}
+        frameProps={{ className: "chart-root" }}
+        className="chart-canvas"
+        interaction={{
+          kind: "series",
+          mode: "focus",
+          eligibleKeys: Object.keys(config),
+        }}
         key={replay}
         data={data}
         animate={animate}
@@ -124,34 +176,41 @@ function useChartExample({
         aria-label={r.tag}
         outerRadius={`${options.outerRadius ?? 70}%`}
       >
-        <Chart.PolarGrid
-          gridType={options.gridType ?? (r.id === "radar-outline" ? "circle" : "polygon")}
-          stroke="var(--chart-grid)"
-        />
-        <Chart.PolarAngleAxis dataKey="category" tick={{ fontSize: 11 }} tickLine={false} />
-        <Chart.PolarRadiusAxis
+        {options.showGrid !== false && (
+          <RadarChart.Grid
+            gridType={options.gridType ?? (r.id === "radar-outline" ? "circle" : "polygon")}
+            stroke="var(--chart-grid)"
+          />
+        )}
+        <RadarChart.AngleAxis dataKey="category" tick={{ fontSize: 11 }} tickLine={false} />
+        <RadarChart.RadiusAxis
           domain={[0, 100]}
           tickCount={3}
           tick={{ fontSize: 10 }}
           axisLine={false}
         />
         {r.id === "radar-range" ? (
-          <Chart.RadarSeries dataKey="range" seriesKey="a" isRange fillOpacity={0.2} />
+          <RadarChart.Series dataKey="range" seriesKey="a" isRange fillOpacity={0.2} />
         ) : (
           <>
-            <Chart.RadarSeries
+            <RadarChart.Series
               dataKey="a"
               strokeWidth={options.strokeWidth ?? 3}
               fillOpacity={options.fillOpacity ?? (r.id === "radar-outline" ? 0 : 0.18)}
-              dot={{ r: 3, fill: config.a.color, stroke: "var(--background)", strokeWidth: 1.5 }}
+              dot={{
+                r: 3,
+                fill: config.a.color,
+                stroke: "var(--background)",
+                strokeWidth: 1.5,
+              }}
             />
-            <Chart.RadarSeries
+            <RadarChart.Series
               dataKey="b"
               strokeWidth={options.strokeWidth ?? 3}
               fill="none"
               strokeDasharray="4 4"
               dot={(props) => (
-                <Chart.Symbols
+                <Symbols
                   cx={props.cx}
                   cy={props.cy}
                   type="diamond"
@@ -164,12 +223,23 @@ function useChartExample({
             />
           </>
         )}
-        <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
-      </Chart.RadarChart>
+        <RadarChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+        {options.showLegend !== false && (
+          <RadarChart.Legend aria-label={`Focus series for ${r.tag}`} />
+        )}
+      </RadarChart>
     );
   if (r.family === "Radial")
     return (
-      <Chart.RadialBarChart
+      <RadialBarChart
+        config={config}
+        frameProps={{ className: "chart-root" }}
+        className="chart-canvas"
+        interaction={{
+          kind: "series",
+          mode: "focus",
+          eligibleKeys: Object.keys(config),
+        }}
         key={replay}
         data={data}
         animate={animate}
@@ -184,8 +254,8 @@ function useChartExample({
         cy={r.id === "gauge" ? "65%" : "50%"}
         barGap={3}
       >
-        <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-        <Chart.PolarRadiusAxis
+        <RadialBarChart.AngleAxis type="number" domain={[0, 100]} tick={false} />
+        <RadialBarChart.RadiusAxis
           type="category"
           dataKey="category"
           tick={false}
@@ -193,53 +263,58 @@ function useChartExample({
           tickLine={false}
         >
           {r.id === "gauge" && options.showLabels && (
-            <Chart.Label
-              position="center"
-              value={`${options.progress ?? 72}%`}
-              fill="currentColor"
-            />
+            <Label position="center" value={`${options.progress ?? 72}%`} fill="currentColor" />
           )}
-        </Chart.PolarRadiusAxis>
-        <Chart.RadialBarSeries
+        </RadialBarChart.RadiusAxis>
+        <RadialBarChart.Series
           dataKey="a"
           background
           cornerRadius={options.radius ?? 4}
           stackId={r.id === "radial-stacked" ? "work" : undefined}
         >
           {r.id !== "gauge" && options.showLabels && (
-            <Chart.LabelList
-              dataKey="category"
-              fill="white"
-              content={<Chart.RadialBarLabel fontSize={10} />}
-            />
+            <LabelList dataKey="category" fill="white" content={<RadialBarLabel fontSize={10} />} />
           )}
-        </Chart.RadialBarSeries>
+        </RadialBarChart.Series>
         {r.id !== "gauge" && (
-          <Chart.RadialBarSeries
+          <RadialBarChart.Series
             dataKey="b"
             fillOpacity={0.5}
             cornerRadius={options.radius ?? 4}
             stackId={r.id === "radial-stacked" ? "work" : undefined}
           />
         )}
-        <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
-      </Chart.RadialBarChart>
+        <RadialBarChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+        {options.showLegend !== false && (
+          <RadialBarChart.Legend aria-label={`Focus series for ${r.tag}`} />
+        )}
+      </RadialBarChart>
     );
   return (
-    <Chart.ScatterChart
+    <ScatterChart
+      config={config}
+      frameProps={{ className: "chart-root" }}
+      className="chart-canvas"
+      interaction={{
+        kind: "series",
+        mode: "focus",
+        eligibleKeys: Object.keys(config),
+      }}
       key={replay}
       animate={animate}
       accessibilityLayer
       aria-label={r.tag}
       margin={{ top: 20, right: 18, left: 0, bottom: 10 }}
     >
-      <Chart.CartesianGrid
-        horizontal={options.showGrid ?? true}
-        vertical={options.showGrid ?? true}
-        stroke="var(--chart-grid)"
-        strokeDasharray="3 5"
-      />
-      <Chart.XAxis
+      {options.showGrid !== false && (
+        <ScatterChart.Grid
+          horizontal={options.showGrid ?? true}
+          vertical={options.showGrid ?? true}
+          stroke="var(--chart-grid)"
+          strokeDasharray="3 5"
+        />
+      )}
+      <ScatterChart.XAxis
         dataKey="x"
         type="number"
         name={r.id === "bubble" ? "Traffic" : "Ad spend"}
@@ -248,7 +323,7 @@ function useChartExample({
         axisLine={false}
         tick={{ fontSize: 11 }}
       />
-      <Chart.YAxis
+      <ScatterChart.YAxis
         dataKey="y"
         type="number"
         name={r.id === "bubble" ? "Latency" : "Conversions"}
@@ -258,12 +333,12 @@ function useChartExample({
         axisLine={false}
         tick={{ fontSize: 11 }}
       />
-      {r.id === "bubble" && <Chart.ZAxis dataKey="z" name="Requests" range={[50, 340]} />}
-      <Chart.ScatterSeries
+      {r.id === "bubble" && <ScatterChart.ZAxis dataKey="z" name="Requests" range={[50, 340]} />}
+      <ScatterChart.Series
         data={data}
         seriesKey="a"
         shape={(props) => (
-          <Chart.Symbols
+          <Symbols
             cx={props.cx}
             cy={props.cy}
             type={options.pointShape ?? "circle"}
@@ -277,11 +352,11 @@ function useChartExample({
         )}
       />
       {r.id !== "bubble" && (
-        <Chart.ScatterSeries
+        <ScatterChart.Series
           data={data.map((row) => ({ ...row, y: row.social }))}
           seriesKey="b"
           shape={(props) => (
-            <Chart.Symbols
+            <Symbols
               cx={props.cx}
               cy={props.cy}
               type={options.pointShape ?? "diamond"}
@@ -291,20 +366,18 @@ function useChartExample({
           )}
         />
       )}
-      <Chart.ScatterTooltip
+      <ScatterChart.Tooltip
         zDimension={r.id === "bubble" ? { dataKey: "z", name: "Requests" } : undefined}
         valueAnimation={animate ? "shuffle" : undefined}
       />
-    </Chart.ScatterChart>
+      {options.showLegend !== false && (
+        <ScatterChart.Legend aria-label={`Focus series for ${r.tag}`} />
+      )}
+    </ScatterChart>
   );
 }
 function ChartExample(props: Parameters<typeof useChartExample>[0]) {
-  const chart = useChartExample(props);
-  return (
-    <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-      {chart}
-    </Chart.ResponsiveContainer>
-  );
+  return useChartExample(props);
 }
 
 export function AdvancedChartCard({
@@ -363,31 +436,15 @@ export function AdvancedChartCard({
       <div className="card-top">
         <h3 className="chart-tag">{recipe.tag}</h3>
       </div>
-      <Chart.Root
-        className="chart-root"
-        emphasis="auto"
+      <ChartExample
+        key={`${replay}-${entered}`}
+        recipe={recipe}
+        material={material}
         config={config}
-        interaction={{
-          kind: recipe.family === "Pie" ? "category" : "series",
-          mode: "focus",
-          eligibleKeys: Object.keys(config),
-        }}
-      >
-        <div className="chart-canvas">
-          <ChartExample
-            key={`${replay}-${entered}`}
-            recipe={recipe}
-            material={material}
-            config={config}
-            animate={chartAnimate}
-            replay={replay}
-            options={options}
-          />
-        </div>
-        {options.showLegend !== false && (
-          <Chart.Legend aria-label={`Focus series for ${recipe.tag}`} />
-        )}
-      </Chart.Root>
+        animate={chartAnimate}
+        replay={replay}
+        options={options}
+      />
       <p className="chart-context">{recipe.context}</p>
     </motion.article>
   );

@@ -1,4 +1,5 @@
-import { Legend, Root, TooltipContent } from "@kind-ui/charts";
+import * as Chart from "@kind-ui/charts";
+import { Legend, TooltipContent } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./consumer.css";
@@ -16,7 +17,12 @@ function Panel({ custom }: { custom: boolean }) {
       <button type="button" onClick={() => setReverse(!reverse)}>
         Reverse series
       </button>
-      <Root
+      <Chart.HeatmapChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+        aria-label="Metadata chart"
         interaction={{
           kind: "series",
           mode: "visibility",
@@ -25,8 +31,10 @@ function Panel({ custom }: { custom: boolean }) {
         config={reverse ? { beta: series.beta, alpha: series.alpha } : series}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
-        className={custom ? "consumer" : undefined}
-        style={custom ? { width: 320 } : undefined}
+        frameProps={{
+          className: custom ? "consumer" : undefined,
+          style: custom ? { width: 320 } : undefined,
+        }}
       >
         <Legend style={custom ? { rowGap: 19 } : undefined} />
         <TooltipContent
@@ -43,7 +51,7 @@ function Panel({ custom }: { custom: boolean }) {
             ],
           }}
         />
-      </Root>
+      </Chart.HeatmapChart>
     </section>
   );
 }

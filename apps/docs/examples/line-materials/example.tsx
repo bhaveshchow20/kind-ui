@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { LineChart, type SeriesConfig } from "@kind-ui/charts";
 import { useEffect, useState } from "react";
 
 const data = [
@@ -18,7 +18,7 @@ const data = [
 ];
 const config = {
   visitors: { label: "Visitors", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function MaterialLineChart({
   appearance = "default",
@@ -47,31 +47,38 @@ export function MaterialLineChart({
     };
   }, []);
   return (
-    <Chart.LineChart
+    <LineChart
       data={data}
       config={config}
-      legend={{}}
       margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
       aria-label="Monthly visitors"
     >
-      <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-      <Chart.XAxis
+      <LineChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
+      <LineChart.XAxis
         dataKey="period"
         axisLine={false}
         tickLine={false}
         tickMargin={8}
         height={48}
         interval="preserveStartEnd"
+        tick={{ fill: "#666" }}
       />
-      <Chart.YAxis axisLine={false} tickLine={false} tickMargin={8} width={44 + 16 * fontScale} />
-      <Chart.LineSeries
+      <LineChart.YAxis
+        axisLine={false}
+        tickLine={false}
+        tickMargin={8}
+        width={44 + 16 * fontScale}
+        tick={{ fill: "#666" }}
+      />
+      <LineChart.Series
         dataKey="visitors"
         type="monotone"
         material={appearance === "default" ? undefined : appearance}
         strokeWidth={2}
         dot={{ r: 2.5 }}
       />
-      <Chart.Tooltip />
-    </Chart.LineChart>
+      <LineChart.Tooltip />
+      <LineChart.Legend />
+    </LineChart>
   );
 }

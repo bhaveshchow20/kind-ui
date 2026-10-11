@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { BarChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "North", orders: 124 },
@@ -10,37 +10,44 @@ const data = [
 ];
 const config = {
   orders: { label: "Orders", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function PickupOrdersChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.BarChart
-          loading={state === "loading"}
-          data={data}
-          animate
-          accessibilityLayer
-          emphasis="category"
-          margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
-          aria-label="Weekly pickup orders by location"
-        >
-          <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.XAxis
-            dataKey="period"
-            axisLine={false}
-            tickLine={false}
-            tickMargin={16}
-            height={56}
-            interval="preserveStartEnd"
-            minTickGap={32}
-          />
-          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={10} width={72} />
-          <Chart.BarSeries dataKey="orders" radius={[5, 5, 0, 0]} maxBarSize={48} />
-          <Chart.Tooltip />
-        </Chart.BarChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+    <BarChart
+      config={config}
+      height={280}
+      defaultVisibleSeries={Object.keys(config)}
+      legendPosition="top"
+      loading={state === "loading"}
+      data={data}
+      animate
+      accessibilityLayer
+      emphasis="category"
+      margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
+      aria-label="Weekly pickup orders by location"
+    >
+      <BarChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
+      <BarChart.XAxis
+        tick={{ fill: "#666" }}
+        dataKey="period"
+        axisLine={false}
+        tickLine={false}
+        tickMargin={16}
+        height={56}
+        interval="preserveStartEnd"
+        minTickGap={32}
+      />
+      <BarChart.YAxis
+        tick={{ fill: "#666" }}
+        axisLine={false}
+        tickLine={false}
+        tickMargin={10}
+        width={72}
+      />
+      <BarChart.Series dataKey="orders" radius={[5, 5, 0, 0]} maxBarSize={48} />
+      <BarChart.Tooltip />
+      <BarChart.Legend />
+    </BarChart>
   );
 }

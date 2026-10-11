@@ -165,61 +165,58 @@ export function ScatterRecipes() {
               {period ? "Current week" : "Next week"}
             </button>
           </header>
-          <Chart.Root
+          <Chart.ScatterChart
             config={{
               weekday: { label: "Weekday", color: purple, legendShape: relationshipShapes.weekday },
               weekend: { label: "Weekend", color: green, legendShape: relationshipShapes.weekend },
             }}
             visibleSeries={visible}
             onVisibleSeriesChange={setVisible}
+            responsive
+            style={{ width: "100%", height: 310 }}
+            margin={{ top: 16, right: 24, left: 0, bottom: 24 }}
+            animate={animate}
+            aria-label="Latency and acceptance by task"
           >
-            <Chart.Legend />
-            <Chart.ScatterChart
-              responsive
-              style={{ width: "100%", height: 310 }}
-              margin={{ top: 16, right: 24, left: 0, bottom: 24 }}
-              animate={animate}
-              aria-label="Latency and acceptance by task"
-            >
-              <CartesianGrid vertical={false} stroke="#e6e8ee" />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 10, fill: "#7c8598" }}
-                dataKey="x"
-                domain={[0, 110]}
-                name="Latency"
-                unit=" ms"
-                tickLine={false}
-                axisLine={false}
-                label={{ value: "Latency (ms)", position: "bottom", offset: 8 }}
-              />
-              <YAxis
-                type="number"
-                tick={{ fontSize: 10, fill: "#7c8598" }}
-                dataKey="y"
-                domain={[60, 100]}
-                name="Acceptance"
-                unit="%"
-                tickLine={false}
-                axisLine={false}
-                width={60}
-              />
-              <ReferenceLine y={90} stroke="#c4c9d5" strokeDasharray="4 4" />
-              <Chart.ScatterSeries
-                material={material}
-                seriesKey="weekday"
-                data={current}
-                shape={relationshipShapes.weekday}
-              />
-              <Chart.ScatterSeries
-                material={material}
-                seriesKey="weekend"
-                data={weekend}
-                shape={relationshipShapes.weekend}
-              />
-              <Chart.ScatterTooltip pointLabel={pointLabel} />
-            </Chart.ScatterChart>
-          </Chart.Root>
+            <CartesianGrid vertical={false} stroke="#e6e8ee" />
+            <XAxis
+              type="number"
+              tick={{ fontSize: 10, fill: "#7c8598" }}
+              dataKey="x"
+              domain={[0, 110]}
+              name="Latency"
+              unit=" ms"
+              tickLine={false}
+              axisLine={false}
+              label={{ value: "Latency (ms)", position: "bottom", offset: 8 }}
+            />
+            <YAxis
+              type="number"
+              tick={{ fontSize: 10, fill: "#7c8598" }}
+              dataKey="y"
+              domain={[60, 100]}
+              name="Acceptance"
+              unit="%"
+              tickLine={false}
+              axisLine={false}
+              width={60}
+            />
+            <ReferenceLine y={90} stroke="#c4c9d5" strokeDasharray="4 4" />
+            <Chart.ScatterSeries
+              material={material}
+              seriesKey="weekday"
+              data={current}
+              shape={relationshipShapes.weekday}
+            />
+            <Chart.ScatterSeries
+              material={material}
+              seriesKey="weekend"
+              data={weekend}
+              shape={relationshipShapes.weekend}
+            />
+            <Chart.ScatterTooltip pointLabel={pointLabel} />
+            <Chart.ScatterChart.Legend />
+          </Chart.ScatterChart>
           <p className="scatter-note">
             Acceptance (%) · the dashed line marks 90%. Toggle a series in the legend.
           </p>
@@ -233,50 +230,49 @@ export function ScatterRecipes() {
               <p>Same positions. Bubble area maps requests from 0–300k.</p>
             </div>
           </header>
-          <Chart.Root config={{ tasks: { label: "Task workload", color: blue } }}>
-            <Chart.Legend />
-            <Chart.ScatterChart
-              responsive
-              style={{ width: "100%", height: 285 }}
-              margin={{ top: 20, right: 22, left: 0, bottom: 24 }}
-              animate={animate}
-              aria-label="Task latency acceptance and request volume"
-            >
-              <CartesianGrid vertical={false} stroke="#e6e8ee" />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 10, fill: "#7c8598" }}
-                dataKey="x"
-                domain={[0, 110]}
-                name="Latency"
-                unit=" ms"
-                tickLine={false}
-                axisLine={false}
-                label={{ value: "Latency (ms)", position: "bottom", offset: 8 }}
-              />
-              <YAxis
-                type="number"
-                tick={{ fontSize: 10, fill: "#7c8598" }}
-                dataKey="y"
-                domain={[60, 100]}
-                name="Acceptance"
-                unit="%"
-                tickLine={false}
-                axisLine={false}
-                width={60}
-              />
-              <ZAxis dataKey="z" domain={[0, 300]} range={[35, 1200]} name="Requests" unit="k" />
-              <Chart.ScatterSeries
-                material={material}
-                seriesKey="tasks"
-                data={current}
-                fillOpacity={0.7}
-                stroke={color ? "#3e59b5" : "#505966"}
-                strokeWidth={1}
-              />
-              <Chart.ScatterTooltip pointLabel={pointLabel} />
-            </Chart.ScatterChart>
-          </Chart.Root>
+          <Chart.ScatterChart
+            config={{ tasks: { label: "Task workload", color: blue } }}
+            responsive
+            style={{ width: "100%", height: 285 }}
+            margin={{ top: 20, right: 22, left: 0, bottom: 24 }}
+            animate={animate}
+            aria-label="Task latency acceptance and request volume"
+          >
+            <CartesianGrid vertical={false} stroke="#e6e8ee" />
+            <XAxis
+              type="number"
+              tick={{ fontSize: 10, fill: "#7c8598" }}
+              dataKey="x"
+              domain={[0, 110]}
+              name="Latency"
+              unit=" ms"
+              tickLine={false}
+              axisLine={false}
+              label={{ value: "Latency (ms)", position: "bottom", offset: 8 }}
+            />
+            <YAxis
+              type="number"
+              tick={{ fontSize: 10, fill: "#7c8598" }}
+              dataKey="y"
+              domain={[60, 100]}
+              name="Acceptance"
+              unit="%"
+              tickLine={false}
+              axisLine={false}
+              width={60}
+            />
+            <ZAxis dataKey="z" domain={[0, 300]} range={[35, 1200]} name="Requests" unit="k" />
+            <Chart.ScatterSeries
+              material={material}
+              seriesKey="tasks"
+              data={current}
+              fillOpacity={0.7}
+              stroke={color ? "#3e59b5" : "#505966"}
+              strokeWidth={1}
+            />
+            <Chart.ScatterTooltip pointLabel={pointLabel} />
+            <Chart.ScatterChart.Legend />
+          </Chart.ScatterChart>
           <p className="scatter-note">
             Acceptance (%) · area range 35–1,200 px², with a visible minimum. Size is area, not
             radius.
@@ -291,78 +287,77 @@ export function ScatterRecipes() {
               <p>Zero stays at the origin. Two teams share one coordinate.</p>
             </div>
           </header>
-          <Chart.Root config={{ teams: { label: "Teams", color: orange } }}>
-            <Chart.Legend />
-            <Chart.ScatterChart
-              responsive
-              style={{ width: "100%", height: 285 }}
-              margin={{ top: 24, right: 25, left: 0, bottom: 24 }}
-              animate={animate}
-              aria-label="Cost and quality change by team"
+          <Chart.ScatterChart
+            config={{ teams: { label: "Teams", color: orange } }}
+            responsive
+            style={{ width: "100%", height: 285 }}
+            margin={{ top: 24, right: 25, left: 0, bottom: 24 }}
+            animate={animate}
+            aria-label="Cost and quality change by team"
+          >
+            <CartesianGrid vertical={false} stroke="#e6e8ee" />
+            <XAxis
+              type="number"
+              tick={{ fontSize: 10, fill: "#7c8598" }}
+              dataKey="x"
+              domain={[-40, 50]}
+              name="Cost change"
+              unit="%"
+              tickLine={false}
+              axisLine={false}
+              label={{ value: "Cost change (%)", position: "bottom", offset: 8 }}
+            />
+            <YAxis
+              type="number"
+              tick={{ fontSize: 10, fill: "#7c8598" }}
+              dataKey="y"
+              domain={[-20, 40]}
+              name="Quality change"
+              unit=" pp"
+              tickLine={false}
+              axisLine={false}
+              width={60}
+            />
+            <ReferenceLine x={0} stroke="#aeb5c4" />
+            <ReferenceLine y={0} stroke="#aeb5c4" />
+            <Chart.ScatterSeries
+              material={material}
+              seriesKey="teams"
+              data={signed.filter((row) => row.y !== null)}
+              shape={Diamond}
+              activeShape={Diamond}
             >
-              <CartesianGrid vertical={false} stroke="#e6e8ee" />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 10, fill: "#7c8598" }}
-                dataKey="x"
-                domain={[-40, 50]}
-                name="Cost change"
-                unit="%"
-                tickLine={false}
-                axisLine={false}
-                label={{ value: "Cost change (%)", position: "bottom", offset: 8 }}
+              <Cell fill={orange} />
+              <Cell fill={orange} />
+              <Cell fill={orange} />
+              <Cell fill={orange} />
+              <Cell fill={color ? "#8558bf" : "#a1a7b0"} />
+              <LabelList
+                dataKey={(row: unknown) =>
+                  pointLabel(row) === "Ember"
+                    ? ""
+                    : pointLabel(row) === "Dune"
+                      ? "Dune / Ember"
+                      : pointLabel(row)
+                }
+                content={({ x, y, width, value }) =>
+                  typeof x === "number" && typeof y === "number" ? (
+                    <text
+                      x={x + (typeof width === "number" ? width / 2 : 0)}
+                      y={y - 8}
+                      textAnchor="middle"
+                      fontSize={10}
+                      fill="#7c8598"
+                    >
+                      {String(value ?? "")}
+                    </text>
+                  ) : null
+                }
               />
-              <YAxis
-                type="number"
-                tick={{ fontSize: 10, fill: "#7c8598" }}
-                dataKey="y"
-                domain={[-20, 40]}
-                name="Quality change"
-                unit=" pp"
-                tickLine={false}
-                axisLine={false}
-                width={60}
-              />
-              <ReferenceLine x={0} stroke="#aeb5c4" />
-              <ReferenceLine y={0} stroke="#aeb5c4" />
-              <Chart.ScatterSeries
-                material={material}
-                seriesKey="teams"
-                data={signed.filter((row) => row.y !== null)}
-                shape={Diamond}
-                activeShape={Diamond}
-              >
-                <Cell fill={orange} />
-                <Cell fill={orange} />
-                <Cell fill={orange} />
-                <Cell fill={orange} />
-                <Cell fill={color ? "#8558bf" : "#a1a7b0"} />
-                <LabelList
-                  dataKey={(row: unknown) =>
-                    pointLabel(row) === "Ember"
-                      ? ""
-                      : pointLabel(row) === "Dune"
-                        ? "Dune / Ember"
-                        : pointLabel(row)
-                  }
-                  content={({ x, y, width, value }) =>
-                    typeof x === "number" && typeof y === "number" ? (
-                      <text
-                        x={x + (typeof width === "number" ? width / 2 : 0)}
-                        y={y - 8}
-                        textAnchor="middle"
-                        fontSize={10}
-                        fill="#7c8598"
-                      >
-                        {String(value ?? "")}
-                      </text>
-                    ) : null
-                  }
-                />
-              </Chart.ScatterSeries>
-              <Chart.ScatterTooltip pointLabel={pointLabel} />
-            </Chart.ScatterChart>
-          </Chart.Root>
+            </Chart.ScatterSeries>
+            <Chart.ScatterTooltip pointLabel={pointLabel} />
+            <Chart.ScatterChart.Legend />
+          </Chart.ScatterChart>
           <p className="scatter-note">
             Quality change (pp) · Dune and Ember overlap; arrows and the table distinguish them.
             Haven has no y measurement.
@@ -380,53 +375,52 @@ export function ScatterRecipes() {
               </p>
             </div>
           </header>
-          <Chart.Root config={{ regions: { label: "Regions", color: green } }}>
-            <Chart.Legend />
-            <Chart.ScatterChart
-              responsive
-              style={{ width: "100%", height: 270 }}
-              margin={{ top: 25, right: 25, left: 0, bottom: 24 }}
-              animate={animate}
-              aria-label="Coverage and adoption by region"
+          <Chart.ScatterChart
+            config={{ regions: { label: "Regions", color: green } }}
+            responsive
+            style={{ width: "100%", height: 270 }}
+            margin={{ top: 25, right: 25, left: 0, bottom: 24 }}
+            animate={animate}
+            aria-label="Coverage and adoption by region"
+          >
+            <CartesianGrid vertical={false} stroke="#e6e8ee" />
+            <XAxis
+              type="number"
+              tick={{ fontSize: 10, fill: "#7c8598" }}
+              dataKey="x"
+              domain={[0, 100]}
+              name="Coverage"
+              unit="%"
+              tickLine={false}
+              axisLine={false}
+              label={{ value: "Coverage (%)", position: "bottom", offset: 8 }}
+            />
+            <YAxis
+              type="number"
+              tick={{ fontSize: 10, fill: "#7c8598" }}
+              dataKey="y"
+              domain={[0, 100]}
+              name="Adoption"
+              unit="%"
+              tickLine={false}
+              axisLine={false}
+              width={60}
+            />
+            <ZAxis dataKey="z" domain={[0, 200]} range={[55, 1000]} name="Requests" unit="k" />
+            <Chart.ScatterSeries
+              material={material}
+              seriesKey="regions"
+              data={coverage.filter((row) => row.z == null || row.z >= 0)}
+              fillOpacity={0.75}
             >
-              <CartesianGrid vertical={false} stroke="#e6e8ee" />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 10, fill: "#7c8598" }}
-                dataKey="x"
-                domain={[0, 100]}
-                name="Coverage"
-                unit="%"
-                tickLine={false}
-                axisLine={false}
-                label={{ value: "Coverage (%)", position: "bottom", offset: 8 }}
-              />
-              <YAxis
-                type="number"
-                tick={{ fontSize: 10, fill: "#7c8598" }}
-                dataKey="y"
-                domain={[0, 100]}
-                name="Adoption"
-                unit="%"
-                tickLine={false}
-                axisLine={false}
-                width={60}
-              />
-              <ZAxis dataKey="z" domain={[0, 200]} range={[55, 1000]} name="Requests" unit="k" />
-              <Chart.ScatterSeries
-                material={material}
-                seriesKey="regions"
-                data={coverage.filter((row) => row.z == null || row.z >= 0)}
-                fillOpacity={0.75}
-              >
-                <LabelList dataKey="id" position="top" fontSize={11} />
-              </Chart.ScatterSeries>
-              <Chart.ScatterTooltip<Observation>
-                pointLabel={(row) => row.id}
-                zDimension={{ dataKey: "z", name: "Requests", unit: "k" }}
-              />
-            </Chart.ScatterChart>
-          </Chart.Root>
+              <LabelList dataKey="id" position="top" fontSize={11} />
+            </Chart.ScatterSeries>
+            <Chart.ScatterTooltip<Observation>
+              pointLabel={(row) => row.id}
+              zDimension={{ dataKey: "z", name: "Requests", unit: "k" }}
+            />
+            <Chart.ScatterChart.Legend />
+          </Chart.ScatterChart>
           <p className="scatter-note">
             Adoption (%) · North: 0k; South: no volume measurement. Central’s −12k is invalid as a
             count and appears only in the table. No jitter or imputed coordinates.

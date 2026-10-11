@@ -118,7 +118,7 @@ export function renderDoc(slug?: string[]) {
         {!key.startsWith("components/") && (
           <footer className="doc-footer">
             <span>Kind UI charts</span>
-            <Link href={docRoute("/docs/installation/#upgrading")}>Installation and upgrades</Link>
+            <Link href={docRoute("/docs/installation/")}>Installation</Link>
           </footer>
         )}
       </article>

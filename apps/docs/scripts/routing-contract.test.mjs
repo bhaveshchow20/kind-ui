@@ -12,6 +12,8 @@ test("old start links resolve to canonical pages without affecting other routes"
     ["guides", "identity-layout"],
     ["concepts", "composition"],
     ["guides", "release"],
+    ["chart-components", "root"],
+    ["chart-components", "responsive-container"],
   ]);
   for (const page of ["installation", "quickstart"])
     assert.deepEqual(canonicalDocSlugs(["start", page]), ["installation"]);
@@ -21,6 +23,8 @@ test("old start links resolve to canonical pages without affecting other routes"
   assert.deepEqual(canonicalDocSlugs(["concepts", "composition"]), ["installation"]);
   assert.deepEqual(canonicalDocSlugs(["guides", "release"]), ["installation"]);
   assert.deepEqual(canonicalDocSlugs(["quickstart"]), ["installation"]);
+  for (const old of ["root", "responsive-container"])
+    assert.deepEqual(canonicalDocSlugs(["chart-components", old]), ["chart-components", "chart"]);
   assert.equal(canonicalDocSlugs(null), null);
 });
 

@@ -1,9 +1,9 @@
-import { Legend, Root } from "@kind-ui/charts";
+import { createHeatmapScale, HeatmapChart, Legend } from "@kind-ui/charts";
 import { MotionConfig, motion } from "motion/react";
 import { useState } from "react";
 
 // Create outside render; Motion owns the outer DOM, Recharts owns chart marks.
-const MotionRoot = motion.create(Root);
+const MotionChart = motion.create(HeatmapChart);
 const MotionLegend = motion.create(Legend);
 const config = { value: { label: "Motion series", color: "#171717" } };
 export function MotionContract() {
@@ -13,7 +13,11 @@ export function MotionContract() {
       <button type="button" onClick={() => setVisible(visible.length ? [] : ["value"])}>
         External visibility
       </button>
-      <MotionRoot
+      <MotionChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
         aria-label="Motion contract"
         role="region"
         interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["value"] }}
@@ -42,7 +46,7 @@ export function MotionContract() {
             event.currentTarget.dataset.clicked = "yes";
           }}
         />
-      </MotionRoot>
+      </MotionChart>
     </MotionConfig>
   );
 }

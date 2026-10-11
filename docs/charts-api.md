@@ -22,11 +22,11 @@ The maintained [package reference](../packages/charts/README.md) documents publi
 
 ## Shared composition and presentation
 
-Use public `@kind-ui/charts` exports and register the package with Tailwind v4 `@source` as shown in the [installation guide](https://kindui.dev/charts/docs/installation/). Applications own data, units, domains, accessible names, data alternatives and request state. Each family reference specifies its native renderer, refs, handlers, visibility, missing-value and motion limits.
+Use direct named chart imports from `@kind-ui/charts` and build Tailwind v4 CSS with the installed package in your source paths. Each chart takes config, an accessible name and explicit parts. Applications own data, units, domains, accessible names, data alternatives and request state. Each family reference specifies its native renderer, refs, handlers, visibility, missing-value and motion limits.
 
-Shared references cover [Root](https://kindui.dev/charts/docs/chart-components/root/), [SeriesConfig](https://kindui.dev/charts/docs/chart-components/series-config/), [Legend](https://kindui.dev/charts/docs/chart-components/legend/), [Tooltip](https://kindui.dev/charts/docs/chart-components/tooltip/), responsive sizing, axes, grids and labels.
+Shared references cover [Chart frame](https://kindui.dev/charts/docs/chart-components/chart/), [SeriesConfig](https://kindui.dev/charts/docs/chart-components/series-config/), [Legend](https://kindui.dev/charts/docs/chart-components/legend/), [Tooltip](https://kindui.dev/charts/docs/chart-components/tooltip/), responsive sizing, axes, grids and labels.
 
-The [customization guide](https://kindui.dev/charts/docs/guides/customization/) covers inferred labels, theme-aware gradients, loading, fill/background patterns, projected bars, percentage stacks, point markers, dashed/directional motion, Pie defaults/glow, Sankey labels/icons and Root interactions. Its complete options source is included in the checked Combo consumer. Read its API tables, defaults and ownership limits before choosing an option.
+The [customization guide](https://kindui.dev/charts/docs/guides/customization/) covers inferred labels, theme-aware gradients, loading, fill/background patterns, projected bars, percentage stacks, point markers, dashed/directional motion, Pie pinning/glow, Sankey labels/icons and chart interactions. Its complete options source is included in the checked Combo consumer. Read its API tables, defaults and ownership limits before choosing an option.
 
 ## Agent retrieval and verification
 

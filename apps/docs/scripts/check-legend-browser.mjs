@@ -52,8 +52,7 @@ try {
         }
         const legends = card.locator('[data-kind-ui="chart-legend"]');
         const expected =
-          family.id === "line" ||
-          /Chart\.(Legend|SankeyLegend|ActivityRings)\b/.test(variant.source);
+          family.id !== "heatmap" && /<(?:\w+Chart|ActivityRings)\.Legend\b/.test(variant.source);
         assert.equal(
           await legends.count(),
           expected ? 1 : 0,
@@ -69,15 +68,7 @@ try {
     }
     console.log(`${family.id}: legend variants verified`);
   }
-  for (const owner of [
-    "root",
-    "series-config",
-    "responsive-container",
-    "axes-grid",
-    "legend",
-    "tooltip",
-    "labels",
-  ]) {
+  for (const owner of ["chart", "series-config", "axes-grid", "legend", "tooltip", "labels"]) {
     const mdx = readFileSync(`content/docs/chart-components/${owner}.mdx`, "utf8");
     const ids = [...mdx.matchAll(/<ChartExample id="([^"]+)"/g)].map((match) => match[1]);
     assert.ok(ids.length > 0, `${owner} has a live public example`);
@@ -127,9 +118,12 @@ try {
     await expect(
       card.getByRole("status").filter({ hasText: "Loading chart" }).first(),
     ).toBeAttached();
-    const pendingButtons = await buttons.count();
-    // Configuration controls outside the managed plot retain native public behavior.
-    // The example's same Root instance must restore its selection when data returns.
+    await expect(card.locator('[data-kind-ui="chart-legend"]')).toBeHidden();
+    const pendingButtons = await card
+      .locator('[data-kind-ui="chart-legend"] button:visible')
+      .count();
+    assert.equal(pendingButtons, 0);
+    // The same chart instance restores its selection when data returns.
     await consumer.getByRole("button", { name: "Toggle pending", exact: true }).click();
     await expect(card.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
     await expect(buttons).toHaveCount(count);

@@ -100,3 +100,46 @@ void (<Chart.XAxis<Row, number> dataKey="category" />);
 void (<Chart.XAxis<Row, number> dataKey={(row) => row.category} />);
 // @ts-expect-error No invented axis ref is introduced by the package.
 void (<Chart.XAxis ref={createRef<SVGPathElement>()} />);
+
+const config = { value: { label: "Value", color: "red" } };
+// @ts-expect-error Every family requires an accessible name.
+const unnamed: Chart.BarChartProps = { config, children: null };
+// @ts-expect-error Metadata never implicitly generates parts.
+const implicit: Chart.AreaChartProps = { config, "aria-label": "Values" };
+// @ts-expect-error Function data keys preserve their declared value type.
+void (<Chart.BarChart.XAxis<Row, number> dataKey={(row) => row.category} />);
+const unsupportedAxes: Chart.HistogramChartProps = {
+  config,
+  "aria-label": "Bins",
+  bins: [],
+  measure: "count",
+  children: null,
+  // @ts-expect-error Axes are explicit parts.
+  xAxisProps: {},
+};
+const recipeLabels: Chart.ActivityRingsProps = {
+  config,
+  "aria-label": "Rings",
+  rings: [],
+  children: null,
+  // @ts-expect-error Labels belong to an explicit child part.
+  labels: false,
+};
+const rendererOwnership: Chart.SankeyChartProps = {
+  config,
+  "aria-label": "Flow",
+  data: { nodes: [], links: [] },
+  children: null,
+  // @ts-expect-error Chart renderer options are replaced by explicit parts.
+  node: <g />,
+};
+// @ts-expect-error Controlled and default visibility are exclusive.
+const competingVisibility: Chart.BarChartProps = {
+  config,
+  "aria-label": "Values",
+  children: null,
+  visibleSeries: [],
+  defaultVisibleSeries: [],
+};
+void [unnamed, implicit, unsupportedAxes, recipeLabels, rendererOwnership, competingVisibility];
+void (<Chart.BarChart.XAxis<Row, number> dataKey={(row) => row.value} />);

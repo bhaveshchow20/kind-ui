@@ -93,7 +93,8 @@ test("packed finishes retain decoded native body alpha for translucent gradients
       )
       .toBeTruthy();
     await page.addStyleTag({
-      content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
+      content:
+        'html,body,section,[data-pie-oracle-frame],[data-kind-ui="chart"] {background:transparent !important;}',
     });
     // Isolate one native sector so alpha is measured without adjacent paint or page content.
     await page.addStyleTag({
@@ -176,7 +177,7 @@ test("material alpha proof rejects actual source, mask, gradient, clipping and e
     await proof.scrollIntoViewIfNeeded();
     await page.addStyleTag({
       content:
-        'html,body,section,[data-kind-ui="chart"] {background:transparent !important;} [data-kind-ui="pie-sector"] {visibility:hidden;} [data-alpha-proof] {visibility:visible !important;}',
+        'html,body,section,[data-pie-oracle-frame],[data-kind-ui="chart"] {background:transparent !important;} [data-kind-ui="pie-sector"] {visibility:hidden;} [data-alpha-proof] {visibility:visible !important;}',
     });
     await chart
       .locator(mark)
@@ -317,7 +318,8 @@ test("packed consumer CSS transforms retain native paint ownership, precedence a
       )
       .toBeTruthy();
     await page.addStyleTag({
-      content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
+      content:
+        'html,body,section,[data-pie-oracle-frame],[data-kind-ui="chart"] {background:transparent !important;}',
     });
     // Compare native ownership independently of live-inline Chromium paint-cache drift.
     const native = await pieNativeOwnership(chart);
@@ -505,7 +507,8 @@ test("packed controlled style, class, id, geometry and finish refresh native own
   const oracle = proof.getByRole("application", { name: "Native oracle", includeHidden: true });
   await expect(definitions).toHaveCount(2);
   await page.addStyleTag({
-    content: 'html,body,section,[data-kind-ui="chart"] {background:transparent !important;}',
+    content:
+      'html,body,section,[data-pie-oracle-frame],[data-kind-ui="chart"] {background:transparent !important;}',
   });
   const proveNative = async () => {
     await expect(definitions).toHaveCount(0);

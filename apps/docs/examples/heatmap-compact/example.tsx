@@ -1,18 +1,25 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { createHeatmapScale, HeatmapChart } from "@kind-ui/charts";
 
 const rows = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const columns = Array.from({ length: 26 }, (_, index) => `Week ${index + 1}`);
 const data = rows.flatMap((row, r) =>
   columns.map((column, c) => ({ row, column, value: (r + c) % 5 })),
 );
-const scale = Chart.createHeatmapScale({ domain: [0, 4], colors: ["#eef4eb", "#327448"] });
+const scale = createHeatmapScale({ domain: [0, 4], colors: ["#eef4eb", "#327448"] });
 
 export function CompactActivityHeatmap() {
   return (
     <div style={{ containerType: "inline-size", minWidth: 0, width: "100%" }}>
-      <Chart.HeatmapChart rows={rows} columns={columns} data={data} scale={scale}>
-        <Chart.HeatmapGrid
+      <HeatmapChart
+        rows={rows}
+        columns={columns}
+        data={data}
+        scale={scale}
+        config={{}}
+        aria-label="Contributions by day and week"
+      >
+        <HeatmapChart.Grid
           caption="Contributions by day and week"
           layout={{
             cellSize: "clamp(6px, calc((100cqw - 84px) / 26), 28px)",
@@ -22,8 +29,8 @@ export function CompactActivityHeatmap() {
           }}
           Cell={() => <span aria-hidden="true" />}
         />
-        <Chart.HeatmapTooltip />
-      </Chart.HeatmapChart>
+        <HeatmapChart.Tooltip />
+      </HeatmapChart>
     </div>
   );
 }

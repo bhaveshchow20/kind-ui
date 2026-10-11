@@ -1,19 +1,18 @@
 ---
 name: kind-ui-charts
-description: Build, adapt, or review React and Next.js charts consuming @kind-ui/charts from npm. Use for chart selection, configured or composed charts, styling, controlled legends, loading, accessibility, and consumer verification with the public 0.4 API.
+description: Build, adapt, or review React and Next.js charts consuming @kind-ui/charts from npm. Use for chart selection, explicit compound charts, styling, controlled legends, loading, accessibility, and consumer verification with the documented public API.
 ---
 
 # Kind UI charts
 
 Deliver working consumer code using public `@kind-ui/charts` exports. Keep data,
 units, domains, aggregation, request state, and accessible alternatives host-owned.
-This skill targets released 0.4; inspect the consumer's installed version before
-adapting a recipe. Do not substitute repository source imports for npm imports.
+Inspect the consumer’s installed version before adapting a documented example. Do not substitute repository source imports for npm imports.
 
 ## Decide, then read only what applies
 
 1. Choose the family from the question, units, and data using the selection table
-   in [composition](rules/composition.md). Then decide its composition owner.
+   in [composition](rules/composition.md). Then retrieve its explicit parts.
 2. Inspect the framework, installed version, and application entry. For a new
    consumer or Next boundary, read [setup and verification](rules/setup-testing.md).
 3. For paint, Default/Clay/Glow, or changing identities, read
@@ -27,8 +26,9 @@ Use the maintained docs examples for [Combo](https://kindui.dev/charts/docs/comp
 [Sankey](https://kindui.dev/charts/docs/components/sankey/),
 [Heatmap](https://kindui.dev/charts/docs/components/heatmap/),
 and [Line](https://kindui.dev/charts/docs/components/line/).
-Retrieve complete consumer source and its data alternative from the documentation;
-use the family table to route other chart requests.
+Retrieve complete consumer source from the documentation. Examples render only
+the graph; the host application owns any accessible data alternative. Use the
+family table to route other chart requests.
 
 ## Retrieve a family contract when needed
 
@@ -36,7 +36,7 @@ For each family or option, retrieve the relevant Markdown
 from the official [documentation index](https://kindui.dev/charts/docs/llms.txt).
 The [complete reference](https://kindui.dev/charts/docs/llms-full.txt) includes
 consumer code and API tables. Check the installed declarations for exact props;
-family roots and series do not all share one contract. Fetch only the needed
+chart families and series do not all share one contract. Fetch only the needed
 family/shared-part pages. These are HTTP documentation resources, not an MCP server.
 
 Do not invent a `Chart` namespace, schema, registry, or `material="default"`.

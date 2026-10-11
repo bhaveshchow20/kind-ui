@@ -2,7 +2,7 @@ import type { DemoOptions } from "./demo-options";
 
 export function activityCode(options: DemoOptions = {}, animate = true) {
   return `"use client";
-import * as Chart from "@kind-ui/charts";
+import { ActivityRings } from "@kind-ui/charts";
 const rings = [
   { key: "stand", value: ${options.stand ?? 9}, domain: [0, 12] as const },
   { key: "exercise", value: ${options.exercise ?? 30}, domain: [0, 60] as const },
@@ -14,11 +14,14 @@ const config = {
   stand: { label: "Stand", color: "#29cbe0", formatValue: (v: unknown) => v + " hours" },
 };
 export function DailyActivity() {
-  return <Chart.ActivityRings rings={rings} config={config} animate={${animate}}
+  return <ActivityRings rings={rings} config={config} animate={${animate}}
     barGap={${options.gap ?? 5}} innerRadius="28%" outerRadius="90%"
-    series={{cornerRadius: 20, background: {fill: "var(--muted)"}}}
-    rootProps={{style: {border:0,padding:0,background:"transparent"}}} tooltip={{valueAnimation:${animate} ? "shuffle" : undefined}}
-    responsive style={{width: "100%", height: 270}} aria-label="Daily activity" />;
+    frameProps={{style: {border:0,padding:0,background:"transparent"}}}
+    responsive style={{width: "100%", height: 270}} aria-label="Daily activity">
+    <ActivityRings.Series cornerRadius={20} background={{fill:"var(--muted)"}} />
+    <ActivityRings.Tooltip valueAnimation={${animate} ? "shuffle" : undefined} />
+    ${options.showLegend === false ? "" : "<ActivityRings.Legend />"}
+  </ActivityRings>;
 }
 `;
 }

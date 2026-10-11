@@ -1,13 +1,11 @@
 # Compact Heatmap layout
 
-`HeatmapGrid.layout` adds square cell dimensions, table spacing, and independent visual label controls. Omit it to retain the existing fluid table. Use the [Tailwind v4 setup](https://kindui.dev/charts/docs/installation/) to apply the layout styles.
+`HeatmapGrid.layout` adds square cell dimensions, table spacing, and independent visual label controls. Omit it to retain the existing fluid table. Build the chart utilities with Tailwind v4 using the installation guide.
 
 ```tsx
 import {
   createHeatmapScale,
   HeatmapChart,
-  HeatmapGrid,
-  HeatmapTooltip,
   type HeatmapCellContentProps,
 } from "@kind-ui/charts";
 
@@ -23,13 +21,13 @@ function ActivityCell({ cell }: HeatmapCellContentProps) {
 
 export function Contributions() {
   return (
-    <HeatmapChart rows={rows} columns={columns} data={data} scale={scale}>
-      <HeatmapGrid
+    <HeatmapChart config={{}} aria-label="Contributions by day and week" rows={rows} columns={columns} data={data} scale={scale}>
+      <HeatmapChart.Grid
         caption="Contributions by day and week"
         layout={{ cellSize: 12, gap: 3, rowLabels: "hidden", columnLabels: "hidden" }}
         Cell={ActivityCell}
       />
-      <HeatmapTooltip />
+      <HeatmapChart.Tooltip />
     </HeatmapChart>
   );
 }
@@ -41,6 +39,6 @@ export function Contributions() {
 
 The grid's existing horizontal scroll container retains fixed cells at narrow widths. Arrow navigation focuses and scrolls the destination into view. `HeatmapTooltip` remains in flow below the scroll container. Place a wide grid inside a width-constrained host; do not clip the scroll container. In a flex or CSS grid host, use the usual `min-width: 0` when needed for the host to shrink.
 
-`Cell` owns cell content, so an empty decorative cell is suitable for small contributions; the grid still supplies its accessible value name. `cellProps` retains native styles, refs and handlers; native table `style` overrides layout defaults. The grid continues to own quantitative background colors, focus semantics, header associations and navigation. For complete native table markup, compose a table inside `HeatmapChart` instead of using `HeatmapGrid`.
+`Cell` owns cell content, so an empty decorative cell is suitable for small contributions; the grid still supplies its accessible value name. `cellProps` retains native styles, refs and handlers; native table `style` overrides layout defaults. The grid continues to own quantitative background colors, focus semantics, header associations and navigation. For complete native table markup, compose a table in `HeatmapChart.Content` instead of using `HeatmapGrid`.
 
 The dedicated packed consumer checks desktop and 320px widths, CSS and numeric dimensions, zero gaps, visual label toggling, explicit header associations and Chromium accessibility-tree exposure, keyboard navigation and scroll, tooltip bounds, custom cells and consumer refs/styles/handlers. This is programmatic accessibility validation; it does not claim a manual screen-reader listening test.

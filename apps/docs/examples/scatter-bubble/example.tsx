@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { ScatterChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Search", latency: 28, acceptance: 84, requests: 260 },
@@ -11,21 +11,25 @@ const data = [
 ];
 const config = {
   tasks: { label: "Tasks", color: "#733bff", legendShape: "circle" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function TaskBubbleChart() {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.ScatterChart
+    <>
+      <>
+        <ScatterChart
+          legendPosition="top"
+          config={config}
+          defaultVisibleSeries={Object.keys(config)}
+          width="100%"
+          height={280}
           animate
           accessibilityLayer
           margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
           aria-label="Task latency in milliseconds, acceptance percentage and request volume in thousands"
         >
-          <Chart.CartesianGrid strokeDasharray="3 3" />
-          <Chart.XAxis
+          <ScatterChart.Grid vertical strokeDasharray="3 3" stroke="#ccc" />
+          <ScatterChart.XAxis
             type="number"
             dataKey="latency"
             name="Latency (ms)"
@@ -38,8 +42,9 @@ export function TaskBubbleChart() {
             interval="preserveStartEnd"
             minTickGap={48}
             label={{ value: "ms", position: "insideBottom", offset: 0 }}
+            tick={{ fill: "#666" }}
           />
-          <Chart.YAxis
+          <ScatterChart.YAxis
             type="number"
             dataKey="acceptance"
             name="Acceptance"
@@ -50,21 +55,23 @@ export function TaskBubbleChart() {
             tickLine={false}
             tickMargin={10}
             width={80}
+            tick={{ fill: "#666" }}
           />
-          <Chart.ZAxis
+          <ScatterChart.ZAxis
             dataKey="requests"
             name="Requests"
             unit="k"
             domain={[0, 300]}
             range={[48, 1000]}
           />
-          <Chart.ScatterSeries seriesKey="tasks" data={data} shape="circle" fillOpacity={0.72} />
-          <Chart.ScatterTooltip<(typeof data)[number]>
+          <ScatterChart.Series seriesKey="tasks" data={data} shape="circle" fillOpacity={0.72} />
+          <ScatterChart.Tooltip<(typeof data)[number]>
             pointLabel={(row) => row.period}
             zDimension={{ dataKey: "requests", name: "Requests", unit: "k" }}
           />
-        </Chart.ScatterChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          <ScatterChart.Legend />
+        </ScatterChart>
+      </>
+    </>
   );
 }

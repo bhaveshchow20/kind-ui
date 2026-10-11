@@ -59,7 +59,7 @@ function Distribution({
     measure === "count" ? `${value} samples` : `${value.toFixed(4)} per ${unit}`;
   return (
     <>
-      <Chart.Root
+      <Chart.HistogramChart
         config={{
           count: {
             label: measure === "count" ? "Sample count" : "Probability density",
@@ -69,57 +69,58 @@ function Distribution({
         }}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
+        bins={bins}
+        measure={measure}
+        responsive
+        style={{ width: "100%", height: 280 }}
+        animate
+        aria-label={title}
+        margin={{ top: 14, right: 14, left: 0, bottom: 18 }}
       >
-        <Chart.Legend />
-        <Chart.HistogramChart
-          bins={bins}
-          measure={measure}
-          responsive
-          style={{ width: "100%", height: 280 }}
-          animate
-          aria-label={title}
-          xAxisProps={{
+        <Chart.HistogramChart.XAxis
+          {...{
             tickFormatter: (value) => `${value}`,
             label: { value: unit, position: "insideBottom", offset: -5 },
           }}
-          yAxisProps={{
+        />
+        <Chart.HistogramChart.YAxis
+          {...{
             width: 62,
             tickFormatter: (value) => (measure === "count" ? `${value}` : Number(value).toFixed(3)),
           }}
-          margin={{ top: 14, right: 14, left: 0, bottom: 18 }}
-        >
-          <CartesianGrid vertical={false} stroke="#dfe7e3" />
-          {custom && <ReferenceLine x={20} stroke="#b66744" strokeDasharray="4 4" />}
-          <Chart.HistogramSeries
-            material={material}
-            shape={
-              custom
-                ? (props) => (
-                    <Rectangle
-                      x={props.x}
-                      y={props.y}
-                      width={props.width}
-                      height={props.height}
-                      fill={props.bin.lower < 20 ? "#167d77" : "#b66744"}
-                      stroke="#fff"
-                      strokeWidth={1}
-                      data-kind-ui="histogram-bin"
-                    />
-                  )
-                : undefined
-            }
-          />
-          <Chart.Tooltip
-            shared={false}
-            labelFormatter={(_label, entries) => {
-              const bin = entries[0]?.payload as Chart.HistogramBin | undefined;
-              return bin
-                ? `[${bin.lower}, ${bin.upper}${bin.upper === bins[bins.length - 1]?.upper ? "]" : ")"} ${unit} · ${bin.count} samples`
-                : "";
-            }}
-          />
-        </Chart.HistogramChart>
-      </Chart.Root>
+        />
+        <CartesianGrid vertical={false} stroke="#dfe7e3" />
+        {custom && <ReferenceLine x={20} stroke="#b66744" strokeDasharray="4 4" />}
+        <Chart.HistogramSeries
+          material={material}
+          shape={
+            custom
+              ? (props) => (
+                  <Rectangle
+                    x={props.x}
+                    y={props.y}
+                    width={props.width}
+                    height={props.height}
+                    fill={props.bin.lower < 20 ? "#167d77" : "#b66744"}
+                    stroke="#fff"
+                    strokeWidth={1}
+                    data-kind-ui="histogram-bin"
+                  />
+                )
+              : undefined
+          }
+        />
+        <Chart.Tooltip
+          shared={false}
+          labelFormatter={(_label, entries) => {
+            const bin = entries[0]?.payload as Chart.HistogramBin | undefined;
+            return bin
+              ? `[${bin.lower}, ${bin.upper}${bin.upper === bins[bins.length - 1]?.upper ? "]" : ")"} ${unit} · ${bin.count} samples`
+              : "";
+          }}
+        />
+        <Chart.HistogramChart.Legend />
+      </Chart.HistogramChart>
       <details>
         <summary>Data table · {total} samples</summary>
         <table>

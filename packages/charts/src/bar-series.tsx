@@ -12,6 +12,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import {
   Bar,
@@ -441,13 +442,46 @@ function CategoryBar({
   );
   // Native axis inspection owns the category, including whitespace above and between bars.
   // A painted mark's leave must not clear a category while the cursor remains in its band.
+  const mark = useRef<SVGGElement>(null);
+  const [pointerInside, setPointerInside] = useState<boolean | null>(null);
   useLayoutEffect(() => {
-    if (active && keyboard) emphasis.enter("keyboard");
-    if (active && pointer && !keyboard && hover) emphasis.enter("pointer");
-    else if (!hover || (pointer && !active)) emphasis.leave("pointer");
-  }, [active, keyboard, pointer, hover, emphasis.enter, emphasis.leave]);
+    const plot = mark.current?.closest("svg.recharts-surface");
+    if (!plot) return;
+    const enter = () => setPointerInside(true);
+    const leave = () => setPointerInside(false);
+    // Portaled HTML parts share React ancestry, but cannot inspect native plot categories.
+    plot.addEventListener("pointerenter", enter);
+    plot.addEventListener("pointerleave", leave);
+    plot.addEventListener("pointercancel", leave);
+    // A replacement native SVG has no :hover path until the browser processes
+    // another pointer event; its initial absence is not a real plot exit.
+    if (plot.matches(":hover")) setPointerInside(true);
+    return () => {
+      plot.removeEventListener("pointerenter", enter);
+      plot.removeEventListener("pointerleave", leave);
+      plot.removeEventListener("pointercancel", leave);
+    };
+  }, []);
+  useLayoutEffect(() => {
+    const nativeInspection =
+      document.activeElement?.getAttribute("role") === "application" &&
+      document.activeElement === mark.current?.closest("svg.recharts-surface");
+    if (active && keyboard && nativeInspection) emphasis.enter("keyboard");
+    // Cached native tooltip categories must not reclaim focus from HTML legend controls.
+    // Retain keyboard inspection while the plot is focused, even during pointer overlap.
+    else if (!nativeInspection) emphasis.leave("keyboard");
+    // Native portals can remount a retained category during consumer updates.
+    // Wait for its actual plot hover state before clearing that stable identity.
+    if (pointerInside === null) return;
+    if (active && pointer && !keyboard && hover && pointerInside) emphasis.enter("pointer");
+    else if (!pointerInside || !hover || (pointer && !active)) emphasis.leave("pointer");
+  }, [active, keyboard, pointer, hover, pointerInside, emphasis.enter, emphasis.leave]);
   return (
-    <g data-kind-ui="emphasis-mark" data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
+    <g
+      ref={mark}
+      data-kind-ui="emphasis-mark"
+      data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}
+    >
       <InteractionPaint
         data-kind-ui="emphasis-paint"
         className={emphasisPaintClassName}

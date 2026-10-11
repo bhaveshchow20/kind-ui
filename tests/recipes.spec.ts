@@ -81,7 +81,14 @@ test("optional motion respects changing preferences and survives interrupted int
   for (const line of await page.locator(".recipe-stack .recharts-line").all())
     await expect(line).toHaveCSS("clip-path", "none");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(clips).toHaveCount(8);
+  // The focused comparison stays interrupted; the other seven charts reveal.
+  await expect(clips).toHaveCount(7);
+  await expect(
+    page
+      .getByRole("application", { name: "Weekly comparison", exact: true })
+      .locator(".recharts-line")
+      .first(),
+  ).toHaveCSS("clip-path", "none");
 
   await page.getByLabel("Motion", { exact: true }).uncheck();
   await expect(clips).toHaveCount(0);
@@ -438,14 +445,18 @@ test("dotted guide toggles independently from the compact tooltip", async ({ pag
   await page.setViewportSize({ width: 320, height: 900 });
   await chart.focus();
   await page.keyboard.press("ArrowRight");
-  const bounds = await chart.boundingBox();
-  const tooltip = await tip.boundingBox();
-  expect(
-    bounds &&
-      tooltip &&
-      tooltip.x >= bounds.x &&
-      tooltip.x + tooltip.width <= bounds.x + bounds.width + 1,
-  ).toBe(true);
+  await expect
+    .poll(async () => {
+      const bounds = await chart.boundingBox();
+      const tooltip = await tip.boundingBox();
+      return Boolean(
+        bounds &&
+          tooltip &&
+          tooltip.x >= bounds.x &&
+          tooltip.x + tooltip.width <= bounds.x + bounds.width + 1,
+      );
+    })
+    .toBe(true);
   await region.screenshot({ path: info.outputPath("tooltip-guide-narrow.png") });
   await page.getByLabel("Hover guide", { exact: true }).uncheck();
   await chart.focus();

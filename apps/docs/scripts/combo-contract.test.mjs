@@ -15,31 +15,27 @@ test("Combo complete public sources, data alternatives and variants agree", () =
     assert.equal(bundle.files[`src/examples/${bundle.id}/example.tsx`], source);
     assert.match(source, /^"use client";/);
     assert.match(source, /export function \w+/);
-    assert.match(source, /<Chart.ComboChart/);
+    assert.match(source, /<ComboChart\b/);
     assert.match(source, /accessibilityLayer/);
     const imports = [...source.matchAll(/from "([^"]+)"/g)].map((match) => match[1]);
     assert.ok(imports.every((name) => name === "react" || name === "@kind-ui/charts"));
     assert.equal(bundle.dataAlternative.rows.length, 6);
     assert.equal(bundle.family, "combo");
-    assert.ok(promptFor(bundle, {}, "https://docs.example").includes("/docs/components/combo/"));
+    assert.ok(promptFor(bundle, {}).includes("/docs/components/combo/"));
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
         variant.source,
       );
       assert.match(variant.source, new RegExp(`${family.variants[bundle.id].prop} = "${value}"`));
-      assert.ok(
-        promptFor(bundle, {}, "https://docs.example", value).includes(
-          `/variants/${value}/example.tsx`,
-        ),
-      );
+      assert.ok(promptFor(bundle, {}, value).includes(`/variants/${value}/example.tsx`));
     }
   }
 });
 test("Composition keeps unit-aware native geometry and independent family entrances", () => {
   const primary = bundles.combo.files["src/examples/combo/example.tsx"];
-  for (const part of ["AreaSeries", "BarSeries", "LineSeries"])
-    assert.match(primary, new RegExp(`<Chart.${part}`));
+  for (const part of ["Area", "Bar", "Line"])
+    assert.match(primary, new RegExp(`<ComboChart\\.${part}\\b`));
   const stacked = bundles["combo-stacked"].files["src/examples/combo-stacked/example.tsx"];
   assert.equal([...stacked.matchAll(/stackId="revenue"/g)].length, 2);
   assert.equal([...stacked.matchAll(/yAxisId="revenue"/g)].length, 3);

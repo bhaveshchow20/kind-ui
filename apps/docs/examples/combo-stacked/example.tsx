@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { ComboChart, type SeriesConfig, type TooltipValueType } from "@kind-ui/charts";
 
 const data = [
   { period: "Jan", retail: 42000, wholesale: 26000, margin: 18 },
@@ -9,38 +9,40 @@ const data = [
   { period: "May", retail: 58000, wholesale: 36000, margin: 25 },
   { period: "Jun", retail: 63000, wholesale: 39000, margin: 27 },
 ];
-const dollars = (value: Chart.TooltipValueType) =>
+const dollars = (value: TooltipValueType) =>
   typeof value === "number" ? `$${value.toLocaleString("en-US")}` : String(value);
 const config = {
   retail: { label: "Retail · USD", color: "#733bff", formatValue: dollars },
   wholesale: { label: "Wholesale · USD", color: "#b2a0ef", formatValue: dollars },
   margin: { label: "Margin · %", color: "#087f78", formatValue: (value) => `${value}%` },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function RevenueMarginChart() {
   return (
-    <Chart.Root
-      config={config}
-      interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
-    >
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.ComboChart
+    <>
+      <>
+        <ComboChart
+          legendPosition="top"
+          config={config}
+          interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
+          width="100%"
+          height={280}
           data={data}
           animate
           accessibilityLayer
           margin={{ top: 20, right: 0, bottom: 8, left: 16 }}
           aria-label="Stacked monthly revenue in US dollars, with margin percentage on the right axis"
         >
-          <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.XAxis
+          <ComboChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
+          <ComboChart.XAxis
             dataKey="period"
             axisLine={false}
             tickLine={false}
             tickMargin={10}
             height={40}
+            tick={{ fill: "#666" }}
           />
-          <Chart.YAxis
+          <ComboChart.YAxis
             yAxisId="revenue"
             domain={[0, 120000]}
             ticks={[0, 40000, 80000, 120000]}
@@ -49,8 +51,9 @@ export function RevenueMarginChart() {
             axisLine={false}
             tickLine={false}
             tickMargin={8}
+            tick={{ fill: "#666" }}
           />
-          <Chart.YAxis
+          <ComboChart.YAxis
             yAxisId="margin"
             orientation="right"
             domain={[0, 40]}
@@ -60,24 +63,21 @@ export function RevenueMarginChart() {
             axisLine={false}
             tickLine={false}
             tickMargin={8}
+            tick={{ fill: "#666" }}
           />
-          <Chart.BarSeries dataKey="retail" yAxisId="revenue" stackId="revenue" maxBarSize={32} />
-          <Chart.BarSeries
-            dataKey="wholesale"
-            yAxisId="revenue"
-            stackId="revenue"
-            maxBarSize={32}
-          />
-          <Chart.LineSeries
+          <ComboChart.Bar dataKey="retail" yAxisId="revenue" stackId="revenue" maxBarSize={32} />
+          <ComboChart.Bar dataKey="wholesale" yAxisId="revenue" stackId="revenue" maxBarSize={32} />
+          <ComboChart.Line
             dataKey="margin"
             yAxisId="margin"
             type="linear"
             strokeWidth={2.5}
             dot={false}
           />
-          <Chart.Tooltip maxWidth={200} />
-        </Chart.ComboChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          <ComboChart.Tooltip maxWidth={200} />
+          <ComboChart.Legend />
+        </ComboChart>
+      </>
+    </>
   );
 }

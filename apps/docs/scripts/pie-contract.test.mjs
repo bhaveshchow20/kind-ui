@@ -7,7 +7,7 @@ import { filesFor, promptFor } from "../lib/example-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/pie-examples.json", "utf8"));
 function assertCategoryDefaults(source, rows) {
-  assert.match(source, /<Chart.Root\s+config=\{config\}/);
+  assert.match(source, /<PieChart\b[^>]*\bconfig=\{config\}/);
   assert.match(source, /categoryKey="key"/);
   const parsed = ts.createSourceFile("example.tsx", source, ts.ScriptTarget.Latest, true);
   const declaration = parsed.statements
@@ -64,7 +64,7 @@ test("Pie consumers preserve category identity and public source parity", () => 
     assert.match(source, /^"use client";/);
     if (bundle.id === "pie-interaction") {
       assert.match(source, /categoryKey="id"/);
-      assert.match(source, /interactionBinding="root"/);
+      assert.match(source, /<PieChart\b[\s\S]*?config=\{categoryConfig\}/);
       assert.equal(
         bundle.dataAlternative.rows.reduce((sum, row) => sum + row.value, 0),
         100,
@@ -82,7 +82,7 @@ test("Pie consumers preserve category identity and public source parity", () => 
         1000,
       );
     }
-    assert.ok(promptFor(bundle, {}, "https://docs.example").includes("/docs/components/pie/"));
+    assert.ok(promptFor(bundle, {}).includes("/docs/components/pie/"));
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
@@ -98,7 +98,7 @@ test("Pie consumers preserve category identity and public source parity", () => 
   const visibility = bundles["pie-visibility"].files["src/examples/pie-visibility/example.tsx"];
   assert.doesNotMatch(visibility, /data\.filter\(/);
   assert.match(visibility, /data=\{data\}/);
-  assert.match(visibility, /interactionBinding="root"/);
+  assert.match(visibility, /<PieChart\b[\s\S]*?config=\{config\}/);
   assert.match(visibility, /categoryKey="key"/);
   assert.ok(!visibility.includes("<Chart.Cell"));
   assert.ok(!visibility.includes("LabelList"));
@@ -120,7 +120,7 @@ test("Pie category-default contracts reject missing identity and category metada
   assert.throws(() => assertCategoryDefaults(source.replace("config={config}", ""), rows));
 });
 
-test("rounded and petal recipes reserve positive angular area and preserve data alternatives", () => {
+test("rounded and petal recipes reserve positive angular area and retain graph-only composition", () => {
   const bundle = bundles["pie-rounded"];
   assert.equal(bundle.defaultVariant, "rounded-donut");
   assert.deepEqual(Object.keys(bundle.variants), ["rounded-pie", "rounded-donut", "petal-donut"]);
@@ -133,8 +133,9 @@ test("rounded and petal recipes reserve positive angular area and preserve data 
     assert.match(variant.source, /animate=\{false\}/);
     assert.match(variant.source, /accessibilityLayer/);
     assert.match(variant.source, /aria-label=/);
-    assert.match(variant.source, /<caption>Team allocation \(1,000 hours\)<\/caption>/);
-    assert.match(variant.source, /<th scope="row">\{config\[row.key\].label\}<\/th>/);
+    assert.doesNotMatch(variant.source, /<table\b|data-chart-alternative/);
+    assert.match(variant.source, /<PieChart\.Series/);
+    assert.match(variant.source, /<PieChart\.Legend/);
     assert.ok(!variant.source.includes("shape={"), "Native sectors own geometry");
   }
   const source = bundle.variants["petal-donut"].source;

@@ -1,25 +1,22 @@
 # React and Next setup
 
-Install `@kind-ui/charts` with the app's package manager. Released 0.3.0 requires
-React/react-dom `^19.3.0`, Recharts `^3.10.1`, and Motion `^13.4.6`. Check the
-installed manifest and lockfile before resolving peer conflicts. Motion is still
-a required peer when `animate={false}`; disabling animation does not remove imports.
+Install `@kind-ui/charts` with the app’s package manager. Inspect its manifest
+and lockfile for peer versions. Motion remains required with `animate={false}`.
 
-Use Tailwind CSS v4 and register the package in your application CSS. Paths are
-relative to the CSS file:
+Build Tailwind v4 CSS with the app’s Vite or PostCSS integration and scan the
+installed package. The source path is relative to the CSS file:
 
 ```css
 @import "tailwindcss";
 @source "../node_modules/@kind-ui/charts/dist";
 ```
 
-Import that CSS at the app entry or Next.js root layout. Keep interactive charts
-in a client module:
+Import your built CSS once at the app entry. In Next App Router, use the root
+layout for CSS and a client module for interactive charts:
 
 ```tsx
-// app/revenue-chart.tsx
 "use client";
-import { ComboChart, BarSeries } from "@kind-ui/charts";
+import { ComboChart } from "@kind-ui/charts";
 ```
 
 **Bad:** put hooks/event handlers in a Server Component, or pass config formatter
@@ -27,10 +24,10 @@ functions from a Server Component into a client component. **Good:** define conf
 formatters, and interaction callbacks inside the client module; pass serializable
 rows across the server/client boundary.
 
-Configured Line supplies responsive sizing (set `height` deliberately). Explicit
-composition needs finite parent dimensions: a `ResponsiveContainer` with a
-percentage height inside an unsized parent cannot determine its chart height.
-Tailwind v4 is required; icon packs are optional.
+Chart families supply responsive sizing. Set `height` deliberately; percentage
+height requires a measurable parent. Use explicit fixed dimensions when
+`responsive={false}`.
+Do not add Tailwind, icon packs, or another stylesheet system just to use charts.
 
 # Verify what the consumer will receive
 

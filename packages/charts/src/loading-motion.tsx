@@ -8,15 +8,8 @@ import {
   useMotionValue,
   useTransform,
 } from "motion/react";
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useSyncExternalStore,
-} from "react";
+import { createContext, type ReactNode, use, useId, useLayoutEffect, useRef } from "react";
+import { useReducedMotion } from "./motion-preference.js";
 
 export type LoadingAnimation = {
   revealDurationMs?: number;
@@ -27,12 +20,6 @@ export type LoadingAnimation = {
   areaReveal?: false | Pick<LoadingAnimation, "revealDurationMs" | "revealEasing">;
   barReveal?: false | Pick<LoadingAnimation, "revealDurationMs" | "revealEasing">;
 };
-const query = "(prefers-reduced-motion: reduce)";
-function subscribe(change: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
 export function useLoadingProgress(
   pulse: number,
   duration: number,
@@ -40,11 +27,7 @@ export function useLoadingProgress(
   startDelay = 0,
   continuousTrail = false,
 ) {
-  const reduced = useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(query).matches,
-    () => true,
-  );
+  const reduced = useReducedMotion();
   const progress = useMotionValue(0);
   const easingCache = useRef(easing);
   if (Array.isArray(easing) && Array.isArray(easingCache.current)) {

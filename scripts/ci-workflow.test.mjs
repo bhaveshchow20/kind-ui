@@ -99,7 +99,7 @@ test("both test pipelines retain every aggregate browser suite's available failu
     [
       "playwright.config.mjs",
       "playwright.composition.config.mjs",
-      "playwright.configured-line.config.mjs",
+      "playwright.chart-frame.config.mjs",
       "playwright.line-integrations.config.mjs",
     ].map(async (file) => {
       const { default: config } = await import(new URL(`../${file}`, import.meta.url));
@@ -169,7 +169,7 @@ test("split CI covers all aggregate gates and sends shard args to every browser 
   for (const suite of [
     "test:chart",
     "test:composition",
-    "test:configured-line",
+    "test:chart-frame",
     "test:line-integrations",
   ])
     assert.ok(runner.includes(`"${suite}"`));

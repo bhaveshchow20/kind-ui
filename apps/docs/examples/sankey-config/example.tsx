@@ -1,6 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
-import { Tooltip } from "recharts";
+import { SankeyChart, type SankeyFlowData, type SankeyNodeConfig } from "@kind-ui/charts";
 
 const data = {
   nodes: [
@@ -15,52 +14,49 @@ const data = {
     { id: "wind-homes", source: "wind", target: "homes", value: 15 },
     { id: "wind-industry", source: "wind", target: "industry", value: 25 },
   ],
-} satisfies Chart.SankeyFlowData;
+} satisfies SankeyFlowData;
 const nodeConfig = {
   solar: { label: "Solar", color: "#d29319" },
   wind: { label: "Wind", color: "#159c91" },
   homes: { label: "Homes", color: "#8865ce" },
   industry: { label: "Industry", color: "#447fd1" },
-} satisfies Chart.SankeyNodeConfig;
+} satisfies SankeyNodeConfig;
 
 export function ConfiguredFlowChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root
-      config={nodeConfig}
-      interaction={{
-        kind: "node",
-        mode: "focus",
-        eligibleKeys: data.nodes.map((node) => node.id),
-        markActivation: "matching-legend",
-      }}
-    >
-      <section aria-label="Energy allocation">
-        <Chart.ResponsiveContainer width="100%" height={250}>
-          <Chart.SankeyChart
-            interactionBinding="root"
-            loading={state === "loading"}
-            data={data}
-            nodeConfig={nodeConfig}
-            animate={{ revealDurationMs: 900 }}
-          >
-            <Tooltip
-              isAnimationActive={false}
-              formatter={(value) => `${value} MWh`}
-              contentStyle={{
-                padding: "6px 8px",
-                fontSize: 12,
-                lineHeight: "16px",
-                background: "var(--popover, Canvas)",
-                color: "var(--popover-foreground, CanvasText)",
-                border: "1px solid var(--border, GrayText)",
-                borderRadius: "var(--radius, 8px)",
-              }}
-              itemStyle={{ padding: 0, color: "inherit" }}
-            />
-          </Chart.SankeyChart>
-        </Chart.ResponsiveContainer>
-        <Chart.SankeyLegend config={nodeConfig} interactionBinding="root" />
-      </section>
-    </Chart.Root>
+    <section aria-label="Energy allocation">
+      <SankeyChart
+        loading={state === "loading"}
+        data={data}
+        config={nodeConfig}
+        height={250}
+        aria-label="Energy allocation"
+        animate={{ revealDurationMs: 900 }}
+        interaction={{
+          kind: "node",
+          mode: "focus",
+          eligibleKeys: data.nodes.map((node) => node.id),
+          markActivation: "matching-legend",
+        }}
+      >
+        <SankeyChart.Nodes />
+        <SankeyChart.Links />
+        <SankeyChart.Tooltip
+          isAnimationActive={false}
+          formatter={(value) => `${value} MWh`}
+          contentStyle={{
+            padding: "6px 8px",
+            fontSize: 12,
+            lineHeight: "16px",
+            background: "var(--popover, Canvas)",
+            color: "var(--popover-foreground, CanvasText)",
+            border: "1px solid var(--border, GrayText)",
+            borderRadius: "var(--radius, 8px)",
+          }}
+          itemStyle={{ padding: 0, color: "inherit" }}
+        />
+        <SankeyChart.Legend />
+      </SankeyChart>
+    </section>
   );
 }

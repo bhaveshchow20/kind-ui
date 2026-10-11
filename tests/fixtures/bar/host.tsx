@@ -1,4 +1,3 @@
-// Host composition only: the tarball supplies the entire bar implementation.
 import * as Chart from "@kind-ui/charts";
 import {
   type BarShapeProps,
@@ -172,7 +171,7 @@ export function BarHost() {
       <div role="note" aria-label="Events">
         {clicked}/{moved}/{left}
       </div>
-      <Chart.Root
+      <Chart.BarChart
         interaction={{
           kind: "series",
           mode: "visibility",
@@ -189,148 +188,139 @@ export function BarHost() {
         }}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
+        animate={animate}
+        width={small ? 180 : 480}
+        height={240}
+        data={updated ? data.map((row) => ({ ...row, other: row.other + 50 })) : data}
+        layout={horizontal ? "vertical" : "horizontal"}
+        barGap={5}
+        barCategoryGap="20%"
+        stackOffset="sign"
+        aria-label="Packed bar chart"
+        ref={ref}
+        onMouseMove={() => setMoved((v) => v + 1)}
+        onMouseLeave={() => setLeft((v) => v + 1)}
       >
-        <Chart.Legend />
-        <Chart.BarChart
-          animate={animate}
-          width={small ? 180 : 480}
-          height={240}
-          data={updated ? data.map((row) => ({ ...row, other: row.other + 50 })) : data}
-          layout={horizontal ? "vertical" : "horizontal"}
-          barGap={5}
-          barCategoryGap="20%"
-          stackOffset="sign"
-          aria-label="Packed bar chart"
-          ref={ref}
-          onMouseMove={() => setMoved((v) => v + 1)}
-          onMouseLeave={() => setLeft((v) => v + 1)}
+        <defs>
+          <linearGradient id="bar-proof-gradient">
+            <stop
+              stopColor="#ff80bf"
+              stopOpacity={
+                new URLSearchParams(window.location.search).has("gradient-alpha") ? 0.2 : 1
+              }
+            />
+            <stop offset="1" stopColor="#6b45b3" />
+          </linearGradient>
+          <filter id="bar-host-filter">
+            <feOffset dx="1" dy="1" />
+          </filter>
+        </defs>
+        <CartesianGrid />
+        <XAxis
+          {...(horizontal
+            ? {
+                domain: [
+                  new URLSearchParams(window.location.search).has("fixed-zero") ? 0 : -10,
+                  domain,
+                ],
+                allowDataOverflow: true,
+                scale: sqrtScale ? "sqrt" : "linear",
+              }
+            : { padding: { left: categoryPadding ? 60 : 0, right: categoryPadding ? 60 : 0 } })}
+          xAxisId="category-axis"
+          dataKey={horizontal ? undefined : "category"}
+          type={horizontal ? "number" : "category"}
+        />
+        <YAxis
+          {...(!horizontal
+            ? {
+                domain: new URLSearchParams(window.location.search).has("exclude-zero")
+                  ? [50, domain]
+                  : [
+                      new URLSearchParams(window.location.search).has("fixed-zero") ? 0 : -10,
+                      domain,
+                    ],
+                allowDataOverflow: true,
+                scale: sqrtScale ? "sqrt" : "linear",
+              }
+            : { padding: { top: categoryPadding ? 40 : 0, bottom: categoryPadding ? 40 : 0 } })}
+          {...(new URLSearchParams(window.location.search).has("exclude-zero")
+            ? {
+                padding: { bottom: 20, top: 20 },
+                reversed: new URLSearchParams(window.location.search).has("reversed"),
+              }
+            : {})}
+          yAxisId="value-axis"
+          dataKey={horizontal ? "category" : undefined}
+          type={horizontal ? "category" : "number"}
+          width={40}
+        />
+        <ReferenceLine
+          xAxisId="category-axis"
+          yAxisId="value-axis"
+          {...(horizontal ? { x: 0 } : { y: 0 })}
+        />
+        <Chart.Tooltip
+          axisId={horizontal ? "value-axis" : "category-axis"}
+          ref={tooltipRef}
+          {...(custom ? { content: <Content /> } : {})}
+          frameProps={{
+            "aria-label": "Bounded bar tooltip",
+            onMouseDown: () => setClicked((v) => v + 1),
+          }}
+        />
+        <Chart.BarSeries
+          xAxisId="category-axis"
+          yAxisId="value-axis"
+          dataKey={key}
+          seriesKey="value"
+          material={material}
+          background={background}
+          activeBar={customActive ? Shape : false}
+          radius={new URLSearchParams(window.location.search).has("round") ? 8 : [3, 3, 0, 0]}
+          fillOpacity={
+            new URLSearchParams(window.location.search).has("zero-opacity")
+              ? 0
+              : new URLSearchParams(window.location.search).has("translucent")
+                ? 0.35
+                : 1
+          }
+          {...(nativeShape ? { shape: Shape } : {})}
+          {...(nativeFilter ? { filter: "url(#bar-host-filter)" } : {})}
+          onClick={() => setClicked((v) => v + 1)}
+          {...(stacked ? { stackId: "total" } : {})}
         >
-          <defs>
-            <linearGradient id="bar-proof-gradient">
-              <stop
-                stopColor="#ff80bf"
-                stopOpacity={
-                  new URLSearchParams(window.location.search).has("gradient-alpha") ? 0.2 : 1
-                }
-              />
-              <stop offset="1" stopColor="#6b45b3" />
-            </linearGradient>
-            <filter id="bar-host-filter">
-              <feOffset dx="1" dy="1" />
-            </filter>
-          </defs>
-          <CartesianGrid />
-          <XAxis
-            {...(horizontal
-              ? {
-                  domain: [
-                    new URLSearchParams(window.location.search).has("fixed-zero") ? 0 : -10,
-                    domain,
-                  ],
-                  allowDataOverflow: true,
-                  scale: sqrtScale ? "sqrt" : "linear",
-                }
-              : { padding: { left: categoryPadding ? 60 : 0, right: categoryPadding ? 60 : 0 } })}
-            xAxisId="category-axis"
-            dataKey={horizontal ? undefined : "category"}
-            type={horizontal ? "number" : "category"}
-          />
-          <YAxis
-            {...(!horizontal
-              ? {
-                  domain: new URLSearchParams(window.location.search).has("exclude-zero")
-                    ? [50, domain]
-                    : [
-                        new URLSearchParams(window.location.search).has("fixed-zero") ? 0 : -10,
-                        domain,
-                      ],
-                  allowDataOverflow: true,
-                  scale: sqrtScale ? "sqrt" : "linear",
-                }
-              : { padding: { top: categoryPadding ? 40 : 0, bottom: categoryPadding ? 40 : 0 } })}
-            {...(new URLSearchParams(window.location.search).has("exclude-zero")
-              ? {
-                  padding: { bottom: 20, top: 20 },
-                  reversed: new URLSearchParams(window.location.search).has("reversed"),
-                }
-              : {})}
-            yAxisId="value-axis"
-            dataKey={horizontal ? "category" : undefined}
-            type={horizontal ? "category" : "number"}
-            width={40}
-          />
-          <ReferenceLine
-            xAxisId="category-axis"
-            yAxisId="value-axis"
-            {...(horizontal ? { x: 0 } : { y: 0 })}
-          />
-          <Chart.Tooltip
-            axisId={horizontal ? "value-axis" : "category-axis"}
-            ref={tooltipRef}
-            {...(custom ? { content: <Content /> } : {})}
-            frameProps={{
-              "aria-label": "Bounded bar tooltip",
-              onMouseDown: () => setClicked((v) => v + 1),
-            }}
-          />
-          <Chart.BarSeries
-            xAxisId="category-axis"
-            yAxisId="value-axis"
-            dataKey={key}
-            seriesKey="value"
-            material={material}
-            background={background}
-            activeBar={customActive ? Shape : false}
-            radius={new URLSearchParams(window.location.search).has("round") ? 8 : [3, 3, 0, 0]}
-            fillOpacity={
-              new URLSearchParams(window.location.search).has("zero-opacity")
-                ? 0
-                : new URLSearchParams(window.location.search).has("translucent")
-                  ? 0.35
-                  : 1
-            }
-            {...(nativeShape ? { shape: Shape } : {})}
-            {...(nativeFilter ? { filter: "url(#bar-host-filter)" } : {})}
-            onClick={() => setClicked((v) => v + 1)}
-            {...(stacked ? { stackId: "total" } : {})}
-          >
-            <LabelList dataKey="value" position="top" />
-            {data.map((row, i) => (
-              <Cell
-                key={row.category}
-                {...(cellFilter && i === 1 ? { filter: "url(#bar-host-filter)" } : {})}
-                fill={
-                  gradient
-                    ? "url(#bar-proof-gradient)"
-                    : pink
-                      ? "#ed79ae"
-                      : i === 1
-                        ? "#b40"
-                        : "#246"
-                }
-              />
-            ))}
-          </Chart.BarSeries>
-          <Chart.BarSeries
-            xAxisId="category-axis"
-            yAxisId="value-axis"
-            dataKey={otherValue}
-            seriesKey={
-              new URLSearchParams(window.location.search).has("missing-key")
-                ? undefined
-                : renamed
-                  ? "alias"
-                  : "other"
-            }
-            hide={hide}
-            name="Native other"
-            fill={pink ? "#ed79ae" : "#682"}
-            radius={new URLSearchParams(window.location.search).has("round") ? 8 : 0}
-            material={material}
-            {...(stacked ? { stackId: "total" } : {})}
-          />
-        </Chart.BarChart>
-      </Chart.Root>
+          <LabelList dataKey="value" position="top" />
+          {data.map((row, i) => (
+            <Cell
+              key={row.category}
+              {...(cellFilter && i === 1 ? { filter: "url(#bar-host-filter)" } : {})}
+              fill={
+                gradient ? "url(#bar-proof-gradient)" : pink ? "#ed79ae" : i === 1 ? "#b40" : "#246"
+              }
+            />
+          ))}
+        </Chart.BarSeries>
+        <Chart.BarSeries
+          xAxisId="category-axis"
+          yAxisId="value-axis"
+          dataKey={otherValue}
+          seriesKey={
+            new URLSearchParams(window.location.search).has("missing-key")
+              ? undefined
+              : renamed
+                ? "alias"
+                : "other"
+          }
+          hide={hide}
+          name="Native other"
+          fill={pink ? "#ed79ae" : "#682"}
+          radius={new URLSearchParams(window.location.search).has("round") ? 8 : 0}
+          material={material}
+          {...(stacked ? { stackId: "total" } : {})}
+        />
+        <Chart.BarChart.Legend />
+      </Chart.BarChart>
       {new URLSearchParams(window.location.search).has("envelopes") && <StackProof />}
     </section>
   );
@@ -347,14 +337,13 @@ function StackProof() {
   return (
     <div data-proof-stack="">
       {[260, 140].map((width) => (
-        <Chart.Root
-          key={width}
-          config={{
-            value: { label: "Value", color: "#ed79ae" },
-            other: { label: "Other", color: "#682" },
-          }}
-        >
+        <>
           <Chart.BarChart
+            key={width}
+            config={{
+              value: { label: "Value", color: "#ed79ae" },
+              other: { label: "Other", color: "#682" },
+            }}
             width={width}
             height={120}
             data={[
@@ -370,7 +359,7 @@ function StackProof() {
               <Chart.BarSeries dataKey="other" material="clay" radius={0} />
             </BarStack>
           </Chart.BarChart>
-        </Chart.Root>
+        </>
       ))}
     </div>
   );
@@ -415,41 +404,24 @@ export function PatternHost({ horizontal = false }: { horizontal?: boolean }) {
         </select>
       </label>
       {[0, 1].map((chart) => (
-        <Chart.Root
-          interaction={{
-            kind: "series",
-            mode: "visibility",
-            eligibleKeys: Object.keys({
+        <>
+          <Chart.BarChart
+            interaction={{
+              kind: "series",
+              mode: "visibility",
+              eligibleKeys: Object.keys({
+                first: { color: "#789abc", pattern: { kind } },
+                second: { color: "#ed79ae", pattern: { kind: "stripe" } },
+              }),
+            }}
+            key={chart}
+            config={{
               first: { color: "#789abc", pattern: { kind } },
               second: { color: "#ed79ae", pattern: { kind: "stripe" } },
-            }),
-          }}
-          key={chart}
-          config={{
-            first: { color: "#789abc", pattern: { kind } },
-            second: { color: "#ed79ae", pattern: { kind: "stripe" } },
-          }}
-          visibleSeries={visible}
-          onVisibleSeriesChange={setVisible}
-        >
-          <Chart.Legend>
-            {chart === 1
-              ? (item) => (
-                  <>
-                    {item.key === "second" ? (
-                      <Chart.FillPatternSwatch
-                        pattern={{ kind: "duotone", color: "CanvasText" }}
-                        color="var(--color-second)"
-                      />
-                    ) : (
-                      item.marker
-                    )}
-                    {item.label}
-                  </>
-                )
-              : undefined}
-          </Chart.Legend>
-          <Chart.BarChart
+            }}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            aria-label="Chart fixture"
             width={360}
             height={220}
             data={patternRows}
@@ -488,8 +460,25 @@ export function PatternHost({ horizontal = false }: { horizontal?: boolean }) {
               pattern={{ kind: "duotone", color: "CanvasText" }}
               stackId={stacked ? "total" : undefined}
             />
+            <Chart.BarChart.Legend>
+              {chart === 1
+                ? (item) => (
+                    <>
+                      {item.key === "second" ? (
+                        <Chart.FillPatternSwatch
+                          pattern={{ kind: "duotone", color: "CanvasText" }}
+                          color="var(--color-second)"
+                        />
+                      ) : (
+                        item.marker
+                      )}
+                      {item.label}
+                    </>
+                  )
+                : undefined}
+            </Chart.BarChart.Legend>
           </Chart.BarChart>
-        </Chart.Root>
+        </>
       ))}
     </section>
   );
@@ -572,52 +561,50 @@ export function ProjectionHost({ horizontal = false }: { horizontal?: boolean })
       <button type="button" onClick={() => setDatumStyle(!datumStyle)}>
         Datum projection style
       </button>
-      <Chart.Root
+      <Chart.BarChart
         config={{
           value: { label: "Value", color: ["red", "blue"] },
           other: { label: "Other", color: "green", pattern: { kind: "lines" } },
         }}
+        aria-label="Chart fixture"
+        width={600}
+        height={300}
+        data={rows}
+        layout={horizontal ? "vertical" : "horizontal"}
       >
-        <Chart.BarChart
-          width={600}
-          height={300}
-          data={rows}
-          layout={horizontal ? "vertical" : "horizontal"}
-        >
-          <XAxis
-            type={horizontal ? "number" : "category"}
-            dataKey={horizontal ? undefined : "category"}
-          />
-          <YAxis
-            type={horizontal ? "category" : "number"}
-            dataKey={horizontal ? "category" : undefined}
-          />
-          {(["value", "other"] as const).map((key) => (
-            <Chart.BarSeries<(typeof projectionData)[number], number>
-              key={key}
-              dataKey={key}
-              projection={projection}
-              {...(emptyOverride ? { data: [] } : independent ? { data: rows } : {})}
-              activeBar={activeShape ? { fill: "pink" } : undefined}
-              shape={shape ? <Rectangle fill="pink" /> : undefined}
-              stackId={stacked ? "stack" : undefined}
-              fill={explicit ? "purple" : undefined}
-              pattern={none ? false : undefined}
-            >
-              {cells && rows.map((row) => <Cell key={row.category} fill="orange" />)}
-            </Chart.BarSeries>
-          ))}
-          {brush && <Brush dataKey="category" startIndex={1} endIndex={2} />}
-          <Chart.Tooltip
-            content={(tooltip) => (
-              <Chart.TooltipContent
-                tooltip={tooltip}
-                isProjected={(entry) => projection.isProjected(entry.payload)}
-              />
-            )}
-          />
-        </Chart.BarChart>
-      </Chart.Root>
+        <XAxis
+          type={horizontal ? "number" : "category"}
+          dataKey={horizontal ? undefined : "category"}
+        />
+        <YAxis
+          type={horizontal ? "category" : "number"}
+          dataKey={horizontal ? "category" : undefined}
+        />
+        {(["value", "other"] as const).map((key) => (
+          <Chart.BarSeries<(typeof projectionData)[number], number>
+            key={key}
+            dataKey={key}
+            projection={projection}
+            {...(emptyOverride ? { data: [] } : independent ? { data: rows } : {})}
+            activeBar={activeShape ? { fill: "pink" } : undefined}
+            shape={shape ? <Rectangle fill="pink" /> : undefined}
+            stackId={stacked ? "stack" : undefined}
+            fill={explicit ? "purple" : undefined}
+            pattern={none ? false : undefined}
+          >
+            {cells && rows.map((row) => <Cell key={row.category} fill="orange" />)}
+          </Chart.BarSeries>
+        ))}
+        {brush && <Brush dataKey="category" startIndex={1} endIndex={2} />}
+        <Chart.Tooltip
+          content={(tooltip) => (
+            <Chart.TooltipContent
+              tooltip={tooltip}
+              isProjected={(entry) => projection.isProjected(entry.payload)}
+            />
+          )}
+        />
+      </Chart.BarChart>
       <table>
         <caption>Observed and projected values</caption>
         <thead>

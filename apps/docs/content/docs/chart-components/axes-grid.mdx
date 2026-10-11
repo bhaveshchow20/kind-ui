@@ -3,7 +3,9 @@ title: Axes and Grid
 description: Set scales, tick labels and guides for Cartesian and polar charts.
 ---
 
-Kind exports these Recharts components directly. Compose them inside the chart; their props and defaults remain native.
+Compound axis and grid parts wrap Recharts components and accept their native props. Cartesian axes hide axis lines and tick lines and use muted 12px tick labels by default. Cartesian grids show horizontal dashed guides with the theme border color. Scatter axes default to numeric scales. Override these defaults with explicit props.
+
+The standalone `XAxis`, `YAxis`, `CartesianGrid`, `ZAxis` and polar exports remain native Recharts components; compound polar parts also retain native defaults.
 
 Workshop hours use a numeric X axis, topic labels on Y, and vertical grid guides.
 
@@ -14,9 +16,11 @@ Workshop hours use a numeric X axis, topic labels on Y, and vertical grid guides
 Use a category X axis and numeric Y axis for most Cartesian charts.
 
 ```tsx
-<Chart.XAxis dataKey="day" axisLine={false} tickLine={false} tickMargin={12} />
-<Chart.YAxis domain={[0, "auto"]} tickFormatter={(value) => `${value}`} />
-<Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart.XAxis dataKey="day" axisLine={false} tickLine={false} tickMargin={12} />
+<BarChart.YAxis domain={[0, "auto"]} tickFormatter={(value) => `${value}`} />
+<BarChart.Grid vertical={false} strokeDasharray="3 3" />
 ```
 
 Use `type="number"` on both axes for [Scatter](/docs/components/scatter/). For horizontal [Bar](/docs/components/bar/) charts, use numeric X and category Y with `layout="vertical"`.
@@ -36,7 +40,9 @@ See [Recharts CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/
 For bubble plots, `ZAxis` maps a third measurement to symbol area, not radius.
 
 ```tsx
-<Chart.ZAxis dataKey="volume" range={[40, 320]} name="Volume" unit=" requests" />
+import { ScatterChart } from "@kind-ui/charts";
+
+<ScatterChart.ZAxis dataKey="volume" range={[40, 320]} name="Volume" unit=" requests" />
 ```
 
 Set `domain` for consistent size comparisons. See [Recharts ZAxis](https://recharts.github.io/en-US/api/ZAxis/) and the [Scatter size guidance](/docs/components/scatter/#bubble-size) for zero or missing measurements.
@@ -46,9 +52,11 @@ Set `domain` for consistent size comparisons. See [Recharts ZAxis](https://recha
 Use polar axes for radar dimensions and radial scales. Set explicit bounds to compare scores or progress.
 
 ```tsx
-<Chart.PolarAngleAxis dataKey="dimension" />
-<Chart.PolarRadiusAxis domain={[0, 100]} />
-<Chart.PolarGrid gridType="polygon" radialLines={false} />
+import { RadarChart } from "@kind-ui/charts";
+
+<RadarChart.AngleAxis dataKey="dimension" />
+<RadarChart.RadiusAxis domain={[0, 100]} />
+<RadarChart.Grid gridType="polygon" radialLines={false} />
 ```
 
 `PolarGrid` supports polygon or circular guides. See [Recharts PolarAngleAxis](https://recharts.github.io/en-US/api/PolarAngleAxis/), [PolarRadiusAxis](https://recharts.github.io/en-US/api/PolarRadiusAxis/) and [PolarGrid](https://recharts.github.io/en-US/api/PolarGrid/).

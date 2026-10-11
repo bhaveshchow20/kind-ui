@@ -22,7 +22,6 @@ import {
   ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
-  Root,
   ScatterChart,
   ScatterSeries,
   Symbols,
@@ -60,7 +59,6 @@ const parts = {
   ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
-  Root,
   ScatterChart,
   ScatterSeries,
   Symbols,
@@ -84,107 +82,109 @@ export function Compositions({ api = parts }: { api?: typeof parts }) {
       </button>
       <output data-clicks>{clicks}</output>
       <output data-range>{range}</output>
-      <C.Root config={config}>
-        <div data-family="line">
-          <C.ResponsiveContainer width="100%" height={280}>
-            <C.LineChart
-              data={rows}
-              animate={false}
-              accessibilityLayer
-              aria-label="Line composition"
-              ref={(node) => {
-                if (node) node.dataset.compositionRef = "attached";
-              }}
-            >
-              <C.CartesianGrid />
-              <C.XAxis dataKey="category" onClick={() => setClicks((count) => count + 1)}>
-                <C.Label value="Category" position="insideBottom" />
-              </C.XAxis>
-              <C.YAxis />
-              <C.ReferenceArea y1={10} y2={15} />
-              <C.ReferenceDot x="B" y={40} r={4} />
-              <C.ReferenceLine y={25} />
-              <C.LineSeries dataKey="value">
-                <C.LabelList dataKey="value" />
-                <C.ErrorBar dataKey="error" />
-              </C.LineSeries>
-              <C.Brush
-                dataKey="category"
-                height={30}
-                onChange={(next) => setRange(`${next.startIndex}:${next.endIndex}`)}
-              />
-              <C.Tooltip />
-            </C.LineChart>
-          </C.ResponsiveContainer>
-        </div>
-        <div data-family="radar">
-          <C.RadarChart
+      <div data-family="line">
+        <C.ResponsiveContainer width="100%" height={280}>
+          <C.LineChart
+            config={config}
             data={rows}
-            width={340}
-            height={280}
             animate={false}
             accessibilityLayer
-            aria-label="Radar composition"
-          >
-            <C.PolarGrid />
-            <C.PolarAngleAxis dataKey="category" />
-            <C.PolarRadiusAxis domain={[0, 50]} />
-            <C.RadarSeries dataKey="value" />
-            <C.Tooltip />
-          </C.RadarChart>
-        </div>
-        <div data-family="scatter">
-          <C.ScatterChart
-            width={340}
-            height={280}
-            animate={false}
-            accessibilityLayer
-            aria-label="Scatter composition"
+            aria-label="Line composition"
+            ref={(node) => {
+              if (node) node.dataset.compositionRef = "attached";
+            }}
           >
             <C.CartesianGrid />
-            <C.XAxis type="number" dataKey="x" />
-            <C.YAxis type="number" dataKey="y" />
-            <C.ZAxis dataKey="z" range={[30, 150]} />
-            <C.ScatterSeries
-              data={rows}
-              seriesKey="value"
-              shape={<C.Symbols type="diamond" />}
-              onClick={() => setClicks((count) => count + 1)}
-            >
-              <C.Cell fill="#123456" />
-              <C.Cell fill="#234567" />
-              <C.Cell fill="#345678" />
-              <C.LabelList dataKey="y" position="top" />
-            </C.ScatterSeries>
+            <C.XAxis dataKey="category" onClick={() => setClicks((count) => count + 1)}>
+              <C.Label value="Category" position="insideBottom" />
+            </C.XAxis>
+            <C.YAxis />
+            <C.ReferenceArea y1={10} y2={15} />
+            <C.ReferenceDot x="B" y={40} r={4} />
+            <C.ReferenceLine y={25} />
+            <C.LineSeries dataKey="value">
+              <C.LabelList dataKey="value" />
+              <C.ErrorBar dataKey="error" />
+            </C.LineSeries>
+            <C.Brush
+              dataKey="category"
+              height={30}
+              onChange={(next) => setRange(`${next.startIndex}:${next.endIndex}`)}
+            />
             <C.Tooltip />
-          </C.ScatterChart>
-        </div>
-        <div data-family="pie">
-          <C.PieChart
-            width={340}
-            height={280}
-            animate={false}
-            accessibilityLayer
-            aria-label="Pie composition"
+            <C.LineChart.Legend />
+          </C.LineChart>
+        </C.ResponsiveContainer>
+      </div>
+      <div data-family="radar">
+        <C.RadarChart
+          config={config}
+          data={rows}
+          width={340}
+          height={280}
+          animate={false}
+          accessibilityLayer
+          aria-label="Radar composition"
+        >
+          <C.PolarGrid />
+          <C.PolarAngleAxis dataKey="category" />
+          <C.PolarRadiusAxis domain={[0, 50]} />
+          <C.RadarSeries dataKey="value" />
+          <C.Tooltip />
+        </C.RadarChart>
+      </div>
+      <div data-family="scatter">
+        <C.ScatterChart
+          config={config}
+          width={340}
+          height={280}
+          animate={false}
+          accessibilityLayer
+          aria-label="Scatter composition"
+        >
+          <C.CartesianGrid />
+          <C.XAxis type="number" dataKey="x" />
+          <C.YAxis type="number" dataKey="y" />
+          <C.ZAxis dataKey="z" range={[30, 150]} />
+          <C.ScatterSeries
+            data={rows}
+            seriesKey="value"
+            shape={<C.Symbols type="diamond" />}
+            onClick={() => setClicks((count) => count + 1)}
           >
-            <C.PieSeries
-              data={rows}
-              dataKey="value"
-              nameKey="category"
-              innerRadius={30}
-              onClick={() => setClicks((count) => count + 1)}
-            >
-              <C.Cell fill="#123456" />
-              <C.Cell fill="#234567" />
-              <C.Cell fill="#345678" />
-              <C.Label value="Total" position="center" />
-              <C.LabelList dataKey="category" position="outside" />
-            </C.PieSeries>
-            <C.Tooltip />
-          </C.PieChart>
-        </div>
-        <C.Legend />
-      </C.Root>
+            <C.Cell fill="#123456" />
+            <C.Cell fill="#234567" />
+            <C.Cell fill="#345678" />
+            <C.LabelList dataKey="y" position="top" />
+          </C.ScatterSeries>
+          <C.Tooltip />
+        </C.ScatterChart>
+      </div>
+      <div data-family="pie">
+        <C.PieChart
+          config={config}
+          width={340}
+          height={280}
+          animate={false}
+          accessibilityLayer
+          aria-label="Pie composition"
+        >
+          <C.PieSeries
+            data={rows}
+            dataKey="value"
+            nameKey="category"
+            innerRadius={30}
+            onClick={() => setClicks((count) => count + 1)}
+          >
+            <C.Cell fill="#123456" />
+            <C.Cell fill="#234567" />
+            <C.Cell fill="#345678" />
+            <C.Label value="Total" position="center" />
+            <C.LabelList dataKey="category" position="outside" />
+          </C.PieSeries>
+          <C.Tooltip />
+        </C.PieChart>
+      </div>
     </section>
   );
 }

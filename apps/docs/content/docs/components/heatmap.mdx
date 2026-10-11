@@ -3,8 +3,6 @@ title: Heatmap
 description: Compare numeric intensity across two ordered domains with native table cells.
 ---
 
-Find busy support hours by comparing request counts across days.
-
 <ChartExample id="heatmap" />
 
 ## Usage
@@ -12,14 +10,17 @@ Find busy support hours by comparing request counts across days.
 Supply ordered rows and columns, records and a color scale. Add the grid, legend and tooltip as children.
 
 ```tsx title="Composition sketch"
-<Chart.HeatmapChart
+import { HeatmapChart } from "@kind-ui/charts";
+
+<HeatmapChart
+  config={{}} aria-label="Support requests by day and hour"
   rows={rows} columns={columns} data={data} scale={scale}
   animate missingLabel="No report"
 >
-  <Chart.HeatmapGrid caption="Support requests by day and hour" />
-  <Chart.HeatmapLegend label="Requests per two-hour interval" />
-  <Chart.HeatmapTooltip valueAnimation="shuffle" />
-</Chart.HeatmapChart>
+  <HeatmapChart.Grid caption="Support requests by day and hour" />
+  <HeatmapChart.Legend label="Requests per two-hour interval" />
+  <HeatmapChart.Tooltip valueAnimation="shuffle" />
+</HeatmapChart>
 ```
 
 Missing records and `null` use patterned cells; zero remains a measured value.
@@ -52,13 +53,13 @@ Use arrows to inspect cells, Home/End for row ends and Ctrl+Home/End for matrix 
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="heatmap" variant="loading" />
 
 ## API reference
 
-Compose the grid, legend and tooltip inside `HeatmapChart`; no `Root` is needed.
+Pass `config={{}}`, an accessible name and explicit grid, legend and tooltip parts. The numeric scale supplies heatmap colors.
 
 ### HeatmapChart
 
@@ -66,6 +67,11 @@ Compose the grid, legend and tooltip inside `HeatmapChart`; no `Root` is needed.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Use an empty config for the quantitative grid. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
+| `interaction` | `ChartInteractionConfig` | — | Optional frame actions; grid inspection uses row/column identities independently. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `rows` / `columns` | `readonly string[]` | Required | Unique, explicitly ordered domains. Records outside them throw. |
 | `data` | `readonly HeatmapDatum[]` | Required | Records shaped as `{ row: string; column: string; value: number \| null }`. Nonfinite values throw. |
 | `scale` | `HeatmapScale` | Required | Shared numeric encoding for grid, legend and tooltip content. |
@@ -91,11 +97,13 @@ Produces the `HeatmapScale` passed to `HeatmapChart`.
 
 `color(value)` interpolates opaque hex colors and clamps to the explicit domain. Nonfinite values throw; data does not infer the scale or categorical palette.
 
-### HeatmapGrid
+<span id="heatmapgrid" />
+
+### HeatmapChart.Grid
 
 Captioned native table with row/column headers and roving grid focus. Empty domains show an empty state; wide matrices scroll horizontally.
 
-<div className="line-props-scroll" role="region" aria-label="HeatmapGrid props" tabIndex={0}>
+<div className="line-props-scroll" role="region" aria-label="HeatmapChart.Grid props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -124,9 +132,11 @@ Formats values and chooses black/white text from hex-fill luminance. Also usable
 
 </div>
 
-### HeatmapLegend
+<span id="heatmaplegend" />
 
-<div className="line-props-scroll" role="region" aria-label="HeatmapLegend props" tabIndex={0}>
+### HeatmapChart.Legend
+
+<div className="line-props-scroll" role="region" aria-label="HeatmapChart.Legend props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -136,11 +146,13 @@ Formats values and chooses black/white text from hex-fill luminance. Also usable
 
 Shows scale endpoints, zero for signed domains and the `missingLabel` swatch. It is a numeric key, without series toggles.
 
-### HeatmapTooltip
+<span id="heatmaptooltip" />
+
+### HeatmapChart.Tooltip
 
 Shows the focused, hovered or touched cell below the grid. Digit animation respects reduced motion and exposes the final value to assistive technology.
 
-<div className="line-props-scroll" role="region" aria-label="HeatmapTooltip props" tabIndex={0}>
+<div className="line-props-scroll" role="region" aria-label="HeatmapChart.Tooltip props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

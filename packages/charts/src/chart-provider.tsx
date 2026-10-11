@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithRef, useId } from "react";
+import { type ComponentPropsWithRef, useId, useRef } from "react";
 import { InteractionMotionRoot } from "./animation.js";
 import type { ChartContextValue } from "./chart-context.js";
 import { ChartContext } from "./chart-context.js";
@@ -14,6 +14,7 @@ import {
 import { EmphasisProvider, useEmphasisActions } from "./emphasis.js";
 import {
   type ColorStops,
+  colorBaseToken,
   colorResourceId,
   colorStopToken,
   resolveSeriesColor,
@@ -23,14 +24,14 @@ import { SeriesColorDefinitions } from "./series-paint.js";
 import type { SeriesConfig } from "./types.js";
 import { cn } from "./utils.js";
 
-export type RootProps = ComponentPropsWithRef<"div"> & {
+export type ChartProviderProps = ComponentPropsWithRef<"div"> & {
   config: SeriesConfig;
   emphasis?: "auto" | "none";
   interaction?: ChartInteractionConfig;
 } & ChartVisibilityProps;
 
 /** Scopes presentation metadata and CSS colors; the consumer owns chart geometry and state. */
-export function Root({
+export function ChartProvider({
   config,
   emphasis = "auto",
   interaction,
@@ -40,33 +41,36 @@ export function Root({
   style,
   children,
   ...props
-}: RootProps) {
+}: ChartProviderProps) {
+  const controlledVisibility = useRef(visibleSeries !== undefined);
+  if (controlledVisibility.current !== (visibleSeries !== undefined))
+    throw new Error("Chart cannot switch controlled visibility mode during a mount");
   if (onVisibleSeriesChange && visibleSeries === undefined && defaultVisibleSeries === undefined)
     throw new Error(
-      "Root requires visibleSeries or defaultVisibleSeries when onVisibleSeriesChange is provided",
+      "Chart requires visibleSeries or defaultVisibleSeries when onVisibleSeriesChange is provided",
     );
   if (visibleSeries !== undefined && defaultVisibleSeries !== undefined)
-    throw new Error("Root visibility cannot be both controlled and defaulted");
+    throw new Error("Chart visibility cannot be both controlled and defaulted");
   const id = useId();
   const colors: Record<string, string> = {};
   const paints: Record<string, string> = {};
   const colorStops: Record<string, ColorStops> = {};
   for (const [key, item] of Object.entries(config)) {
-    if (!/^[a-zA-Z][\w-]*$/.test(key))
+    if (!/^[a-zA-Z][\w-]*$/.test(key) && interaction?.kind !== "node")
       throw new Error(
         `Chart series key "${key}" must start with a letter and contain only letters, numbers, underscores or hyphens`,
       );
     const resolved = resolveSeriesColor(item.color, key);
-    colors[`--color-${key}`] = resolved.colors[0]!;
+    colors[colorBaseToken(key)] = resolved.colors[0]!;
     for (const [index, color] of resolved.colors.entries())
       colors[colorStopToken(key, index)] = color;
     colorStops[key] = resolved;
     const gradientId = colorResourceId(id, key);
     const gradient = resolved.colors.length > 1;
-    paints[key] = gradient ? `url(#${gradientId})` : `var(--color-${key})`;
+    paints[key] = gradient ? `url(#${gradientId})` : `var(${colorBaseToken(key)})`;
     colors[colorStopToken(key, "gradient")] = gradient
       ? `linear-gradient(to right in srgb, ${resolved.offsets.map((offset, index) => `var(${colorStopToken(key, index)}) ${offset * 100}%`).join(", ")})`
-      : `var(--color-${key})`;
+      : `var(${colorBaseToken(key)})`;
   }
   const value: ChartContextValue = {
     ...(props.nonce !== undefined ? { nonce: props.nonce } : {}),
@@ -97,7 +101,7 @@ export function Root({
         >
           <InteractionMotionRoot>
             <EmphasisProvider enabled={emphasis === "auto"}>
-              <RootFrame {...props} style={{ ...colors, ...style }}>
+              <ChartFrame {...props} style={{ ...colors, ...style }}>
                 {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
                   <svg
                     aria-hidden="true"
@@ -111,7 +115,7 @@ export function Root({
                   </svg>
                 )}
                 {children}
-              </RootFrame>
+              </ChartFrame>
             </EmphasisProvider>
           </InteractionMotionRoot>
         </ChartContext>
@@ -120,7 +124,7 @@ export function Root({
   );
 }
 
-function RootFrame({ children, ...props }: ComponentPropsWithRef<"div">) {
+function ChartFrame({ children, ...props }: ComponentPropsWithRef<"div">) {
   const { reset } = useEmphasisActions();
   const interaction = useChartInteraction();
   return (

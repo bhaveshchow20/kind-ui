@@ -5,17 +5,19 @@ import {
   type ComponentProps,
   createContext,
   memo,
+  use,
   useCallback,
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { PieChart as EnginePieChart } from "recharts";
 import { type BaseAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
+import { defaultHover, useReducedMotion } from "./motion-preference.js";
 
+import { PieCompositionPin } from "./pie-composition-pin.js";
 import { PieTooltipPin, pinnedPieIndex } from "./pie-tooltip-pin.js";
 
 export type PieAnimation = BaseAnimation;
@@ -39,15 +41,6 @@ export const PieMotion = createContext<{
   progress: 1,
   direction: "clockwise",
 });
-const query = "(prefers-reduced-motion: reduce)";
-function subscribe(change: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const snapshot = () => window.matchMedia(query).matches;
-const serverSnapshot = () => true;
-const defaultHover = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } as const;
 
 /** Native polar composition, shared interaction, and optional Motion-owned sector entrance. */
 export function PieChart({
@@ -59,16 +52,20 @@ export function PieChart({
   defaultPinnedCategory,
   ...props
 }: PieChartProps) {
+  const registeredPin = use(PieCompositionPin);
   const [initialCategory] = useState(defaultPinnedCategory);
   const [pinCleared, setPinCleared] = useState(false);
   const clearPin = useCallback(() => setPinCleared(true), []);
   const pinIndex =
     initialCategory === undefined || pinCleared
       ? undefined
-      : pinnedPieIndex(children, initialCategory);
+      : registeredPin
+        ? registeredPin.index
+        : pinnedPieIndex(children, initialCategory);
+  const pinReady = registeredPin?.ready ?? true;
   useLayoutEffect(() => {
-    if (initialCategory !== undefined && pinIndex === undefined) clearPin();
-  }, [initialCategory, pinIndex, clearPin]);
+    if (initialCategory !== undefined && pinIndex === undefined && pinReady) clearPin();
+  }, [initialCategory, pinIndex, clearPin, pinReady]);
   const chart = (
     <PieChartPlot
       {...props}
@@ -109,7 +106,7 @@ const PieChartPlot = memo(function PieChartPlot({
   children,
   ...props
 }: Omit<PieChartProps, "defaultPinnedCategory">) {
-  const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const reduced = useReducedMotion();
   const [interacted, setInteracted] = useState(false);
   const finish = useCallback(() => {
     if (!loading) setInteracted(true);

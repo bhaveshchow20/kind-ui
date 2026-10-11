@@ -69,8 +69,11 @@ test("controlled state stays authoritative and native props/refs reach the DOM",
   await expect(page.getByRole("status", { name: "A request" })).toHaveText("count");
   await expect(button).toHaveAttribute("aria-pressed", "false");
   await expect(a.locator('[data-owner="A"]')).toHaveAttribute("data-forwarded", "container");
-  await expect(a.getByRole("list")).toHaveAttribute("data-forwarded", "legend");
-  await expect(a.getByRole("list")).toHaveAttribute("data-clicked", "yes");
+  await expect(a.getByRole("list", { name: "A legend" })).toHaveAttribute(
+    "data-forwarded",
+    "legend",
+  );
+  await expect(a.getByRole("list", { name: "A legend" })).toHaveAttribute("data-clicked", "yes");
   await a.getByLabel("Hold A changes").uncheck();
   await button.click();
   await expect(button).toHaveAttribute("aria-pressed", "true");

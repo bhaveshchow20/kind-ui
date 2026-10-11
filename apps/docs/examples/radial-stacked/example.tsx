@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { RadialBarChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [{ period: "October", committed: 64, reserved: 22 }];
 const config = {
@@ -13,17 +13,18 @@ const config = {
     color: "#008b83",
     formatValue: (value: unknown) => `${value} hours`,
   },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function TeamCapacityChart() {
   return (
-    <Chart.Root
-      config={config}
-      interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
-    >
-      <Chart.Legend aria-label="Capacity allocation" />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.RadialBarChart
+    <>
+      <>
+        <RadialBarChart
+          legendPosition="top"
+          config={config}
+          interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
+          width="100%"
+          height={280}
           data={data}
           animate
           startAngle={210}
@@ -33,17 +34,23 @@ export function TeamCapacityChart() {
           barCategoryGap="10%"
           aria-label="October team capacity: 64 hours committed and 22 reserved out of 100 hours"
         >
-          <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-          <Chart.PolarRadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
-          <Chart.RadialBarSeries
+          <RadialBarChart.AngleAxis type="number" domain={[0, 100]} tick={false} />
+          <RadialBarChart.RadiusAxis
+            type="category"
+            dataKey="period"
+            tick={false}
+            axisLine={false}
+          />
+          <RadialBarChart.Series
             dataKey="committed"
             stackId="capacity"
             background={{ fill: "#e9e5f1" }}
           />
-          <Chart.RadialBarSeries dataKey="reserved" stackId="capacity" />
-          <Chart.Tooltip />
-        </Chart.RadialBarChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          <RadialBarChart.Series dataKey="reserved" stackId="capacity" />
+          <RadialBarChart.Tooltip />
+          <RadialBarChart.Legend aria-label="Capacity allocation" />
+        </RadialBarChart>
+      </>
+    </>
   );
 }

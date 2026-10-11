@@ -32,7 +32,6 @@ try {
     assert.ok(overflow <= 1, `page overflow at ${width}/${text}: ${overflow}`);
     const count = page.locator('[data-component="histogram"]');
     assert.equal(await count.locator('[data-kind-ui="histogram-bin"]').count(), 5);
-    assert.equal(await count.locator("table tbody tr").count(), 5);
     assert.match(await count.textContent(), /36 accepted.*1 missing.*0 nonfinite.*1 outside/s);
     await page.screenshot({
       path: `artifacts/screenshots/histogram-${width}-${text}.png`,

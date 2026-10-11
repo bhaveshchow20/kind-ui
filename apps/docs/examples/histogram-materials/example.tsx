@@ -1,5 +1,10 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import {
+  binHistogram,
+  type HistogramBin,
+  HistogramChart,
+  type SeriesConfig,
+} from "@kind-ui/charts";
 
 const data = [
   { period: "Request 1", milliseconds: 12 },
@@ -41,7 +46,7 @@ const data = [
   { period: "Missing reading", milliseconds: null },
   { period: "Outside window", milliseconds: 260 },
 ];
-const result = Chart.binHistogram(
+const result = binHistogram(
   data.map((row) => row.milliseconds),
   [0, 25, 50, 100, 200],
 );
@@ -51,7 +56,7 @@ const config = {
     color: "#733bff",
     formatValue: (value) => `${Number(value).toFixed(4)} / ms`,
   },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function MaterialHistogram({
   appearance = "default",
@@ -59,44 +64,48 @@ export function MaterialHistogram({
   appearance?: "default" | "clay" | "glow";
 } = {}) {
   return (
-    <Chart.Root config={config}>
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.HistogramChart
+    <>
+      <>
+        <HistogramChart
+          config={config}
+          width="100%"
+          height={280}
           bins={result.bins}
           measure="density"
           animate
           accessibilityLayer
           aria-label="Checkout response time, density by millisecond interval"
           margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
-          xAxisProps={{
-            axisLine: false,
-            tickLine: false,
-            tickMargin: 12,
-            height: 48,
-            ticks: [0, 50, 100, 150, 200],
-            tickFormatter: (value) => `${value} ms`,
-          }}
-          yAxisProps={{
-            axisLine: false,
-            tickLine: false,
-            tickMargin: 12,
-            width: 72,
-
-            tickFormatter: (value) => Number(value).toFixed(3),
-          }}
         >
-          <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.HistogramSeries material={appearance === "default" ? undefined : appearance} />
-          <Chart.Tooltip
+          <HistogramChart.YAxis
+            tick={{ fill: "#666" }}
+            axisLine={false}
+            tickLine={false}
+            tickMargin={12}
+            width={72}
+            tickFormatter={(value) => Number(value).toFixed(3)}
+          />
+          <HistogramChart.XAxis
+            tick={{ fill: "#666" }}
+            axisLine={false}
+            tickLine={false}
+            tickMargin={12}
+            height={48}
+            ticks={[0, 50, 100, 150, 200]}
+            tickFormatter={(value) => `${value} ms`}
+          />
+          <HistogramChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
+          <HistogramChart.Series material={appearance === "default" ? undefined : appearance} />
+          <HistogramChart.Tooltip
             labelFormatter={(_label, payload) => {
-              const bin = payload[0]?.payload as Chart.HistogramBin | undefined;
+              const bin = payload[0]?.payload as HistogramBin | undefined;
               return bin
                 ? `${bin.lower}–${bin.upper} ms${bin.upper === 200 ? " (final edge included)" : " (upper edge excluded)"}`
                 : "Response time";
             }}
           />
-        </Chart.HistogramChart>
-      </Chart.ResponsiveContainer>
+        </HistogramChart>
+      </>
       <p
         style={{
           fontSize: "0.75rem",
@@ -107,6 +116,6 @@ export function MaterialHistogram({
         {result.accepted} accepted · {result.missing} missing · {result.nonfinite} nonfinite ·{" "}
         {result.outOfRange} outside 0–200 ms
       </p>
-    </Chart.Root>
+    </>
   );
 }

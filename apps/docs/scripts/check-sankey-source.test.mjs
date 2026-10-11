@@ -41,9 +41,11 @@ for (const example of family.examples) {
         data.links.reduce((sum, link) => sum + link.value, 0),
         100,
       );
-      assert.match(source, /nodeConfig=\{nodeConfig\}/);
-      assert.match(source, /<Chart\.SankeyLegend config=\{nodeConfig\}/);
-      assert.doesNotMatch(source, /<Chart\.SankeyLink/);
+      assert.match(source, /<SankeyChart\b[^>]*\bconfig=\{nodeConfig\}/);
+      assert.match(source, /<SankeyChart\.Legend\s*\/>/);
+      assert.match(source, /<SankeyChart\.Nodes\s*\/>/);
+      assert.match(source, /<SankeyChart\.Links\s*\/>/);
+      assert.doesNotMatch(source, /<SankeyChart\.Link\b/);
       assert.match(source, /animate=\{\{ revealDurationMs: 900 \}\}/);
     } else {
       assert.equal(data.nodes.length, 9);
@@ -55,10 +57,13 @@ for (const example of family.examples) {
           .reduce((sum, link) => sum + link.value, 0),
         180,
       );
-      assert.match(source, /<Chart\.SankeyLink/);
+      assert.match(source, /<SankeyChart\.Links\b/);
+      assert.match(source, /<SankeyLink\b/);
       assert.match(source, /animate=\{\{ revealDurationMs: 900 \}\}/);
     }
-    assert.match(source, /^"use client";/);
+    const directive = ast.statements[0];
+    assert.ok(ts.isExpressionStatement(directive) && ts.isStringLiteral(directive.expression));
+    assert.equal(directive.expression.text, "use client");
     assert.doesNotMatch(source, /from ["'](?:@\/|\.\.\/)/);
     const bundle = JSON.parse(
       readFileSync(new URL("../generated/all-examples.json", import.meta.url), "utf8"),

@@ -1,5 +1,5 @@
 import * as Chart from "@kind-ui/charts";
-import { Cell, ResponsiveContainer, XAxis, YAxis } from "@kind-ui/charts";
+import { Cell, XAxis, YAxis } from "@kind-ui/charts";
 import { useState } from "react";
 import { Bar } from "recharts";
 import { useReducedMotionPreference } from "./use-reduced-motion.js";
@@ -115,13 +115,52 @@ export function PresentationExample() {
       </fieldset>
       <section aria-label="Task outcomes" className="presentation-card">
         <h2>Task outcomes</h2>
-        <Chart.Root
+        <p id="presentation-help">
+          Focus the chart; use arrow keys to explore. Escape dismisses the tooltip.
+        </p>
+        <Frame
+          height={240}
           config={config}
           interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
           visibleSeries={visible}
           onVisibleSeriesChange={setVisible}
+          animate
+          data={rows}
+          aria-label="Task outcomes by day"
+          aria-describedby="presentation-help"
+          accessibilityLayer
+          margin={{ left: 0, right: 16, top: 12, bottom: 4 }}
         >
-          <Chart.Legend aria-label="Task series focus" hideIcon={hideIcon}>
+          <XAxis dataKey="day" tickFormatter={(day: string) => day.slice(0, 3)} />
+          <YAxis width={30} domain={[0, 20]} />
+          <Series dataKey="count" />
+          <Series dataKey="review" />
+          <Chart.Tooltip
+            itemKey={itemKey}
+            {...formatting}
+            labelFormatter={(label) => `Day: ${label}`}
+            content={(tooltip) =>
+              custom ? (
+                <div role="status" data-owner="native-content">
+                  {tooltip.active &&
+                    tooltip.payload.map((entry) => (
+                      <p key={String(entry.dataKey)}>
+                        {entry.name}: {entry.value ?? "Missing"}
+                      </p>
+                    ))}
+                </div>
+              ) : (
+                <Chart.TooltipContent
+                  tooltip={tooltip}
+                  itemKey={itemKey}
+                  hideLabel={hideLabel}
+                  hideIndicator={hideIndicator}
+                  indicator={indicator}
+                />
+              )
+            }
+          />
+          <Frame.Legend aria-label="Task series focus" hideIcon={hideIcon}>
             {({ label, visible, marker }) => (
               <>
                 {marker}
@@ -129,51 +168,8 @@ export function PresentationExample() {
                 {composed && <small>{visible ? "Shown" : "Hidden"}</small>}
               </>
             )}
-          </Chart.Legend>
-          <p id="presentation-help">
-            Focus the chart; use arrow keys to explore. Escape dismisses the tooltip.
-          </p>
-          <ResponsiveContainer width="100%" height={240}>
-            <Frame
-              animate
-              data={rows}
-              aria-label="Task outcomes by day"
-              aria-describedby="presentation-help"
-              accessibilityLayer
-              margin={{ left: 0, right: 16, top: 12, bottom: 4 }}
-            >
-              <XAxis dataKey="day" tickFormatter={(day: string) => day.slice(0, 3)} />
-              <YAxis width={30} domain={[0, 20]} />
-              <Series dataKey="count" />
-              <Series dataKey="review" />
-              <Chart.Tooltip
-                itemKey={itemKey}
-                {...formatting}
-                labelFormatter={(label) => `Day: ${label}`}
-                content={(tooltip) =>
-                  custom ? (
-                    <div role="status" data-owner="native-content">
-                      {tooltip.active &&
-                        tooltip.payload.map((entry) => (
-                          <p key={String(entry.dataKey)}>
-                            {entry.name}: {entry.value ?? "Missing"}
-                          </p>
-                        ))}
-                    </div>
-                  ) : (
-                    <Chart.TooltipContent
-                      tooltip={tooltip}
-                      itemKey={itemKey}
-                      hideLabel={hideLabel}
-                      hideIndicator={hideIndicator}
-                      indicator={indicator}
-                    />
-                  )
-                }
-              />
-            </Frame>
-          </ResponsiveContainer>
-        </Chart.Root>
+          </Frame.Legend>
+        </Frame>
         <table>
           <caption>All task values, including hidden series</caption>
           <thead>
@@ -233,46 +229,46 @@ export function CategoryIdentityExample() {
         />
         Custom category content
       </label>
-      <Chart.Root
+      <Chart.BarChart
+        height={240}
         config={config}
         interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
+        data={categoryRows}
+        aria-label="Category amounts"
+        accessibilityLayer
       >
-        <Chart.Legend />
-        <ResponsiveContainer width="100%" height={240}>
-          <Chart.BarChart data={categoryRows} aria-label="Category amounts" accessibilityLayer>
-            <XAxis dataKey="category" />
-            <YAxis domain={[0, 12]} />
-            <Bar dataKey="amount" isAnimationActive={!reduced}>
-              {categoryRows.map((row) => (
-                <Cell
-                  key={row.category}
-                  fill={`var(--color-${row.category})`}
-                  opacity={visible.includes(row.category) ? 1 : 0}
-                />
-              ))}
-            </Bar>
-            <Chart.Tooltip
-              itemKey={categoryKey}
-              {...(custom
-                ? {
-                    content: (tooltip: import("recharts").TooltipContentProps) => (
-                      <div role="status" data-owner="category-content">
-                        {tooltip.active &&
-                          tooltip.payload.map((entry) => (
-                            <p key={categoryKey(entry)}>
-                              {categoryKey(entry)}: {entry.value}
-                            </p>
-                          ))}
-                      </div>
-                    ),
-                  }
-                : {})}
+        <XAxis dataKey="category" />
+        <YAxis domain={[0, 12]} />
+        <Bar dataKey="amount" isAnimationActive={!reduced}>
+          {categoryRows.map((row) => (
+            <Cell
+              key={row.category}
+              fill={`var(--color-${row.category})`}
+              opacity={visible.includes(row.category) ? 1 : 0}
             />
-          </Chart.BarChart>
-        </ResponsiveContainer>
-      </Chart.Root>
+          ))}
+        </Bar>
+        <Chart.Tooltip
+          itemKey={categoryKey}
+          {...(custom
+            ? {
+                content: (tooltip: import("recharts").TooltipContentProps) => (
+                  <div role="status" data-owner="category-content">
+                    {tooltip.active &&
+                      tooltip.payload.map((entry) => (
+                        <p key={categoryKey(entry)}>
+                          {categoryKey(entry)}: {entry.value}
+                        </p>
+                      ))}
+                  </div>
+                ),
+              }
+            : {})}
+        />
+        <Chart.BarChart.Legend />
+      </Chart.BarChart>
       <p>
         Focus the chart; arrow keys explore category values. Hidden categories remain in this table.
       </p>

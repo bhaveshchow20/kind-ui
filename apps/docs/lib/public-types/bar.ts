@@ -2,6 +2,10 @@ import type * as Chart from "@kind-ui/charts";
 
 export type BarChartComponent = Pick<
   Chart.BarChartProps,
+  | "config"
+  | "children"
+  | "frameProps"
+  | "interaction"
   | "data"
   | "animate"
   | "emphasis"

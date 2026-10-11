@@ -78,3 +78,20 @@ export function prepareSankeyData(data: SankeyFlowData) {
   });
   return { nodes: data.nodes.map((node) => ({ ...node })), links };
 }
+
+export function sankeyAdjacency(data: SankeyFlowData) {
+  const adjacent = new Map<string, Set<string>>();
+  for (const link of data.links) {
+    const source = typeof link.source === "string" ? link.source : data.nodes[link.source]?.id;
+    const target = typeof link.target === "string" ? link.target : data.nodes[link.target]?.id;
+    if (source && target) {
+      const from = adjacent.get(source) ?? new Set<string>();
+      from.add(target);
+      adjacent.set(source, from);
+      const to = adjacent.get(target) ?? new Set<string>();
+      to.add(source);
+      adjacent.set(target, to);
+    }
+  }
+  return adjacent;
+}
