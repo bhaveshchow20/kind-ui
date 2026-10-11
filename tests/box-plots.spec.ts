@@ -189,7 +189,6 @@ test("responsive box plot recipes have complete summaries and real desktop/phone
   page,
 }, info) => {
   await page.goto("/box-plots.html");
-  await expect(page.getByRole("heading", { name: "Spread tells the story." })).toBeVisible();
   await expect(page.locator(marks)).toHaveCount(8);
   await expect(page.getByRole("table")).toHaveCount(3);
   await expect(page.getByRole("table").last()).toContainText("Missing");

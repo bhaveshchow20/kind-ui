@@ -32,4 +32,4 @@ The [customization guide](https://kindui.dev/charts/docs/guides/customization/) 
 
 Start with [llms.txt](https://kindui.dev/charts/docs/llms.txt), then retrieve the relevant Markdown reference and complete example setup files. [llms-full.txt](https://kindui.dev/charts/docs/llms-full.txt) includes complete consumer code and generated API tables. Install the repository consumer skill with `npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`.
 
-Maintained executable compositions in `examples/chart`, public consumer fixtures in `tests/fixtures`, and Docs examples remain part of validation. See [CONTRIBUTING.md](../CONTRIBUTING.md) for library/package/browser checks and [release automation](release-automation.md) for exact artifact publication.
+Homepage (`apps/showcase`) and docs (`apps/docs`) own the maintained examples. Internal regression fixtures in `tests/fixtures` validate package and browser contracts. See [CONTRIBUTING.md](../CONTRIBUTING.md) for library/package/browser checks and [release automation](release-automation.md) for exact artifact publication.

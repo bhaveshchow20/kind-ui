@@ -19,7 +19,7 @@
 `aria-labelledby`) owns Root and default parts. Use it for ordinary line trends;
 set `height`, axis options, `series`, tooltip, or legend options as needed.
 Do not wrap configured Line in Root or another ResponsiveContainer.
-See the complete [Line example](../examples/configured-line.tsx).
+See the [Line examples](https://kindui.dev/charts/docs/components/line/).
 
 **Bad:** `<Root config={config}><LineChart config={config} ... /></Root>`.
 **Good:** one configured `<LineChart config={config} ... />`.
@@ -33,8 +33,8 @@ Composed Line (without `config`) follows the same explicit ownership pattern.
 Configured Line also accepts explicit children, but then omit generated-part
 props such as `xDataKey` and `series`; the modes are mutually exclusive.
 
-See [Combo](../examples/controlled-combo.tsx) for revenue bars and conversion
-lines on distinct axes. Root config supplies metadata, not geometry or a universal
+See the [Combo examples](https://kindui.dev/charts/docs/components/combo/) for explicit
+composition. Root config supplies metadata, not geometry or a universal
 schema. Match `seriesKey` to config; use explicit identity for function/numeric
 `dataKey`. Axis IDs must match their series. Preserve zero; represent a missing
 observation as null rather than fabricating zero. On lines, explicitly use
@@ -45,7 +45,7 @@ or percent denominators from labels.
 
 HeatmapChart supplies its own context for HeatmapGrid/Tooltip/Legend/DataTable;
 use its explicit rows, columns, data, and scale instead of Root's series config.
-See the [team matrix example](../examples/team-heatmap.tsx).
+See the [Heatmap examples](https://kindui.dev/charts/docs/components/heatmap/).
 SankeyChart owns flow layout and nodeConfig; custom SankeyNode/SankeyLink renderers
 receive native geometry. Validate supplied flows with `prepareSankeyData`, including
 zero-valued links: intermediate incoming/outgoing totals must balance. Represent

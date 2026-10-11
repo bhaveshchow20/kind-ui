@@ -112,7 +112,7 @@ test("docs-only filter is conservative for mixed changes and executable paths", 
     "scripts/ci-paths.mjs",
     ".github/workflows/ci.yml",
     "package-lock.json",
-    "examples/chart/index.html",
+    "tests/fixtures/browser/index.html",
     "unknown/new-file",
   ])
     assert.equal(needsBrowsers(["docs/readme.md", path]), true, path);

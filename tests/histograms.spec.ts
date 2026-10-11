@@ -121,7 +121,6 @@ test("desktop and phone recipes have real responsive geometry and complete table
   ] as const) {
     await page.setViewportSize({ width, height });
     await page.goto("/histograms.html");
-    await expect(page.getByRole("heading", { name: "Every interval matters." })).toBeVisible();
     await expect(page.locator('[data-kind-ui="histogram-bin"]')).toHaveCount(7);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       width,

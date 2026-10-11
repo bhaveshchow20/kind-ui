@@ -154,9 +154,8 @@ test("split CI covers all aggregate gates and sends shard args to every browser 
   assert.ok(ci.jobs.packed.steps.some((s) => s.run === "npm run check:packed"));
   for (const gate of [
     "pack:artifact",
-    "check-showcase-code.mjs",
-    "tsc -p examples/chart",
-    "vite build examples/chart",
+    "tsc -p tests/fixtures/browser",
+    "check-browser-fixtures.mjs",
     "check:line-integrations",
   ])
     assert.ok(scripts["check:packed"].includes(gate), `Missing gate: ${gate}`);
@@ -180,11 +179,13 @@ test("split CI covers all aggregate gates and sends shard args to every browser 
     s.uses?.startsWith("actions/download-artifact@"),
   );
   assert.equal(download.with.name, upload.with.name);
+  // All uploaded paths share artifacts/ as their archive root.
+  assert.equal(download.with.path, "artifacts");
   for (const path of [
     "artifacts/package/",
     "artifacts/packed-*/",
     "artifacts/line-integrations/",
-    "examples/chart/dist/",
+    "artifacts/browser-fixtures/",
   ])
     assert.ok(upload.with.path.split("\n").includes(path));
 });

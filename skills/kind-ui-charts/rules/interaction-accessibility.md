@@ -25,7 +25,7 @@ const [visible, setVisible] = useState<string[]>(["revenue", "conversion"]);
 </Root>;
 ```
 
-See the complete [Combo example](../examples/controlled-combo.tsx).
+See the [Combo examples](https://kindui.dev/charts/docs/components/combo/).
 Configured Line accepts visibility props directly and supports callback-only
 uncontrolled visibility. On an explicit Root, a callback alone is invalid:
 provide controlled `visibleSeries` or opt-in `defaultVisibleSeries`. Never pass

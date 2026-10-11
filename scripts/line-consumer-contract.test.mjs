@@ -17,7 +17,7 @@ for (const specifier of [
   "../../packages/charts/src/line-chart.tsx",
   "@kind-ui/charts/dist/index.js",
   "@/charts",
-  "file:///workspace/kind-ui/examples/chart/line-motion.tsx",
+  "file:///workspace/kind-ui/tests/fixtures/line/motion.tsx",
 ]) {
   test(`line proof rejects ${specifier}`, () => {
     assert.throws(

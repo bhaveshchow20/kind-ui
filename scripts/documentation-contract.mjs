@@ -3,9 +3,8 @@ import { existsSync } from "node:fs";
 
 export const repositorySourcePrefix = "https://github.com/bhaveshchow20/kind-ui/";
 export const documentationSource = "https://kindui.dev/charts/docs/";
-export const recipeSourcePrefix = `${repositorySourcePrefix}blob/main/examples/chart/`;
 
-export function assertDocumentationContract(readme, recipeFiles, packedFiles) {
+export function assertDocumentationContract(readme, packedFiles) {
   const links = [...readme.matchAll(/\]\(([^)]+)\)/g)].map(([, target]) => target);
   assert.ok(links.includes(documentationSource), "README must link the canonical documentation");
   assert.match(
@@ -15,10 +14,7 @@ export function assertDocumentationContract(readme, recipeFiles, packedFiles) {
   );
   assert.match(readme, /from\s+["']@kind-ui\/charts["']/, "Missing public package import");
   for (const target of links) {
-    if (target.startsWith(recipeSourcePrefix)) {
-      const file = target.slice(recipeSourcePrefix.length).split("#")[0];
-      assert.ok(recipeFiles.includes(file), `Missing recipe source: ${file}`);
-    } else if (target.startsWith(repositorySourcePrefix)) {
+    if (target.startsWith(repositorySourcePrefix)) {
       const route = target.slice(repositorySourcePrefix.length).split("#")[0];
       if (!route) continue;
       assert.match(route, /^(blob|tree)\/main\//, `Unsupported repository source route: ${target}`);
