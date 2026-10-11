@@ -1,6 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
+// Four full-page audits include the page, search dialog and both preview tabs.
+test.setTimeout(60_000);
+
 for (const scheme of ["light", "dark"] as const) {
   test(`homepage and keyboard dialogs satisfy automated accessibility checks in ${scheme}`, async ({
     page,
