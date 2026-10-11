@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const rows = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const columns = Array.from({ length: 26 }, (_, index) => `Week ${index + 1}`);

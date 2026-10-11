@@ -14,7 +14,6 @@ const files = [
   "LICENSE",
   "dist/index.js",
   "dist/index.d.ts",
-  "dist/styles.css",
 ];
 
 test("accepts the declared packed contract", () => assertPackageContract(manifest, files));
@@ -37,7 +36,6 @@ test("requires runtime and declarations for every source module", () => {
 for (const missing of [
   "dist/index.js",
   "dist/index.d.ts",
-  "dist/styles.css",
   "LICENSE",
   "README.md",
   "CHANGELOG.md",
@@ -53,7 +51,13 @@ for (const missing of [
     );
   });
 }
-for (const extra of ["src/index.ts", ".env", "dist/.tsbuildinfo", "dist/node_modules/leak.js"]) {
+for (const extra of [
+  "dist/styles.css",
+  "src/index.ts",
+  ".env",
+  "dist/.tsbuildinfo",
+  "dist/node_modules/leak.js",
+]) {
   test(`rejects an unexpected ${extra}`, () => {
     assert.throws(() => assertPackageContract(manifest, [...files, extra]));
   });
@@ -91,21 +95,24 @@ test("rejects missing or incorrect source metadata", () => {
     assertPackageContract({ ...manifest, homepage: "https://example.com/preview" }, files),
   );
 });
-test("rejects CSS that bundlers may drop or consumers cannot resolve", () => {
+test("rejects obsolete CSS exports and missing Tailwind peer", () => {
   assert.throws(
-    () => assertPackageContract({ ...manifest, sideEffects: false }, files),
-    /side effects/,
+    () => assertPackageContract({ ...manifest, sideEffects: ["**/*.css"] }, files),
+    /tree-shakeable/,
+  );
+  assert.throws(() =>
+    assertPackageContract(
+      { ...manifest, exports: { ...manifest.exports, "./styles.css": "./dist/styles.css" } },
+      files,
+    ),
   );
   assert.throws(
     () =>
       assertPackageContract(
-        {
-          ...manifest,
-          exports: { ".": manifest.exports["."] },
-        },
+        { ...manifest, peerDependencies: { ...manifest.peerDependencies, tailwindcss: undefined } },
         files,
       ),
-    /CSS export/,
+    /Tailwind v4/,
   );
 });
 

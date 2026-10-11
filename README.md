@@ -28,14 +28,21 @@ Install the package:
 npm install @kind-ui/charts
 ```
 
-Import the components you need and load the stylesheet once at your application entry:
+Kind UI uses Tailwind CSS v4. In your Tailwind entry CSS, scan the installed package (paths are relative to the CSS file):
+
+```css
+/* src/app.css or app/globals.css */
+@import "tailwindcss";
+@source "../node_modules/@kind-ui/charts/dist";
+```
+
+Import the components you need:
 
 ```tsx
 import { LineChart } from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 ```
 
-In Next.js, load the stylesheet in your root layout and render interactive charts in a client component. Check the [installation guide](https://kindui.dev/charts/docs/installation/) for required peer dependencies.
+Build that CSS with your Tailwind v4 Vite or PostCSS integration and import it at your application entry. In Next.js, import your CSS in the root layout and render interactive charts in a client component. The [installation guide](https://kindui.dev/charts/docs/installation/) includes build configuration and required peer dependencies.
 
 Copy a [complete line chart example](https://kindui.dev/charts/docs/components/line/), including its data and accessible table. The [package reference](packages/charts/README.md) covers API defaults and limits.
 

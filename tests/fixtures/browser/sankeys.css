@@ -1,3 +1,4 @@
+@import "./chart-utilities.css";
 @import "@fontsource-variable/geist";
 :root {
   font-family: "Geist Variable", sans-serif;

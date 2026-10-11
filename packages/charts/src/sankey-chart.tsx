@@ -279,7 +279,7 @@ export function SankeyChart({
             onFocusCapture={() => {
               if (!loading) setInterrupted(true);
             }}
-            style={{ position: "relative", width: "fit-content", height: "fit-content" }}
+            className="relative h-fit w-fit [font-family:var(--kind-ui-chart-font,inherit)] text-[color:var(--kind-ui-chart-foreground,var(--foreground,inherit))] [&>[data-kind-ui=chart-loading-skeleton]]:absolute [&>[data-kind-ui=chart-loading-skeleton]]:inset-0"
           >
             <div
               data-kind-ui="sankey-content"
@@ -287,7 +287,7 @@ export function SankeyChart({
               aria-busy={loading}
               aria-hidden={loading || undefined}
               inert={loading || undefined}
-              style={{ display: "contents" }}
+              className="contents data-loading:[&>*]:invisible"
             >
               <EngineSankey
                 {...(props as NativeProps)}
@@ -351,11 +351,11 @@ export function SankeyChart({
             )}
             <LoadingStatus loading={loading} label={loadingLabel} />
             {!loading && !links.length ? (
-              <div role="status" style={{ position: "absolute", inset: 0 }}>
+              <div role="status" className="absolute inset-0">
                 {empty}
               </div>
             ) : !loading && !drawable ? (
-              <div role="status" style={{ position: "absolute", inset: 0 }}>
+              <div role="status" className="absolute inset-0">
                 Insufficient space for flows; use the data table
               </div>
             ) : null}

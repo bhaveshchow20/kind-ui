@@ -22,6 +22,7 @@ import {
   useChartWidth,
 } from "recharts";
 import { RegisterInteractionMotion } from "./animation.js";
+import { chartClasses } from "./classes.js";
 import { useEmphasisActions } from "./emphasis.js";
 import type { LoadingAnimation } from "./loading-motion.js";
 import {
@@ -233,14 +234,13 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
     <SeriesPaintBoundary>
       <EngineChart
         {...props}
-        className={[
-          "kind-ui-line-chart",
+        className={chartClasses(
+          "kind-ui-line-chart [&_.recharts-line]:[clip-path:var(--kind-ui-line-clip,none)] [&_.recharts-line-dots]:[clip-path:var(--kind-ui-line-clip,none)]",
           loading !== undefined && "kind-ui-loading-chart",
-          loading && "kind-ui-loading-chart-pending",
+          loading &&
+            "kind-ui-loading-chart-pending [&_.recharts-tooltip-wrapper]:hidden [&>*]:invisible [&_.recharts-layer]:invisible",
           props.className,
-        ]
-          .filter(Boolean)
-          .join(" ")}
+        )}
         style={{ ...props.style, "--kind-ui-line-clip": clip ?? "none" } as CSSProperties}
         onMouseMove={(state, event) => {
           const { relativeX, relativeY } = getRelativeCoordinate(event);

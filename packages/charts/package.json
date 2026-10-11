@@ -32,9 +32,7 @@
     "sankey"
   ],
   "type": "module",
-  "sideEffects": [
-    "**/*.css"
-  ],
+  "sideEffects": false,
   "license": "MIT",
   "scripts": {
     "prepack": "node ../../scripts/prepare-package.mjs"
@@ -43,20 +41,22 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./styles.css": "./dist/styles.css"
+    }
   },
   "types": "./dist/index.d.ts",
   "files": [
     "CHANGELOG.md",
     "dist/**/*.js",
-    "dist/**/*.d.ts",
-    "dist/styles.css"
+    "dist/**/*.d.ts"
   ],
   "peerDependencies": {
+    "motion": "^13.4.6",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "recharts": "^3.10.1",
-    "motion": "^13.4.6"
+    "tailwindcss": "^4.0.0"
+  },
+  "dependencies": {
+    "tailwind-merge": "3.6.0"
   }
 }

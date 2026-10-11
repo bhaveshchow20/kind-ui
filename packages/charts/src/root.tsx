@@ -11,6 +11,7 @@ import {
   type ChartVisibilityProps,
   useChartInteraction,
 } from "./chart-interaction.js";
+import { chartClasses } from "./classes.js";
 import { EmphasisProvider, useEmphasisActions } from "./emphasis.js";
 import {
   type ColorStops,
@@ -20,7 +21,6 @@ import {
 } from "./series-color.js";
 import { resolveSeriesConfig } from "./series-label.js";
 import { SeriesColorDefinitions } from "./series-paint.js";
-import { StylesheetWarning } from "./stylesheet-warning.js";
 import type { SeriesConfig } from "./types.js";
 
 export type RootProps = ComponentPropsWithRef<"div"> & {
@@ -97,14 +97,13 @@ export function Root({
           <InteractionMotionRoot>
             <EmphasisProvider enabled={emphasis === "auto"}>
               <RootFrame {...props} style={{ ...colors, ...style }}>
-                {process.env.NODE_ENV === "development" && <StylesheetWarning />}
                 {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
                   <svg
                     aria-hidden="true"
                     focusable="false"
                     width={0}
                     height={0}
-                    style={{ position: "absolute" }}
+                    className="absolute"
                     data-kind-ui="color-resources"
                   >
                     <SeriesColorDefinitions />
@@ -127,6 +126,10 @@ function RootFrame({ children, ...props }: ComponentPropsWithRef<"div">) {
     // biome-ignore lint/a11y/noStaticElementInteractions: Delegates Escape from descendants after consumer handlers; this frame is not a control.
     <div
       {...props}
+      className={chartClasses(
+        "w-full min-w-0 [font-family:var(--kind-ui-chart-font,inherit)] text-[color:var(--kind-ui-chart-foreground,var(--foreground,inherit))]",
+        props.className,
+      )}
       data-kind-ui="chart"
       onKeyDown={(event) => {
         props.onKeyDown?.(event);

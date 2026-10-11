@@ -1,5 +1,4 @@
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 import { type TooltipRenderProps as TooltipContentProps, XAxis, YAxis } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";

@@ -55,17 +55,18 @@ try {
     tarball,
     ...dependencies.map((name) => `${name}@${manifest.devDependencies[name]}`),
     "next@16.3.8",
+    "@tailwindcss/postcss@4.3.3",
     "lucide-react@1.50.0",
   ]);
   const source = await readFile(join(root, "tests/fixtures/line-integrations/host.tsx"), "utf8");
   await writeFile(join(scratch, "host.tsx"), source);
   await writeFile(
     join(scratch, "main.tsx"),
-    'import { createRoot } from "react-dom/client"; import { IntegrationHost } from "./host.js"; import "./styles.css"; const root=document.getElementById("root"); if(!root)throw new Error("Missing root"); createRoot(root).render(<IntegrationHost />);',
+    'import { createRoot } from "react-dom/client"; import { IntegrationHost, ThemingHost } from "./host.js"; import "./styles.css"; const root=document.getElementById("root"); if(!root)throw new Error("Missing root"); createRoot(root).render(<><IntegrationHost /><ThemingHost /></>);',
   );
   await writeFile(
     join(scratch, "styles.css"),
-    '@layer theme, base, kind-ui, components, utilities;\n@import "tailwindcss";\n@import "@kind-ui/charts/styles.css";\n@source "./host.tsx";',
+    '@import "tailwindcss";\n@source "./host.tsx";\n@source "./node_modules/@kind-ui/charts/dist";',
   );
   await writeFile(
     join(scratch, "index.html"),
@@ -124,11 +125,15 @@ try {
   await writeFile(join(scratch, "app/charts.tsx"), `"use client";\n${source}`);
   await writeFile(
     join(scratch, "app/layout.tsx"),
-    'import "@kind-ui/charts/styles.css"; export default function Layout({children}:{children:React.ReactNode}){return <html lang="en"><body>{children}</body></html>}',
+    'import "../styles.css"; export default function Layout({children}:{children:React.ReactNode}){return <html lang="en"><body>{children}</body></html>}',
   );
   await writeFile(
     join(scratch, "app/page.tsx"),
-    `import { LineChart } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} xDataKey="month" aria-label="Server boundary totals" /><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /></main>}`,
+    `import { LineChart } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost, ThemingHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} xDataKey="month" aria-label="Server boundary totals" /><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /><ThemingHost /></main>}`,
+  );
+  await writeFile(
+    join(scratch, "postcss.config.mjs"),
+    'export default { plugins: { "@tailwindcss/postcss": {} } };',
   );
   await writeFile(
     join(scratch, "next.config.mjs"),

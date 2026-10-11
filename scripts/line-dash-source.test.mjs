@@ -48,8 +48,7 @@ test("dash ownership excludes custom shapes, hidden marks and native entrance", 
   assert.match(line, /props.shape === undefined &&\s+props.isAnimationActive !== true/);
   assert.match(line, /props.style\?\.strokeDasharray \?\? props.strokeDasharray/);
   assert.match(line, /props.style\?\.strokeDashoffset \?\? props.strokeDashoffset/);
-  const css = await readFile(new URL("../packages/charts/src/styles.css", import.meta.url), "utf8");
-  assert.match(css, /data-motion="off".*kind-ui-line-dash/);
-  assert.match(css, /loading-chart-pending.*kind-ui-line-dash/);
-  assert.match(css, /prefers-reduced-motion: reduce[\s\S]*kind-ui-line-dash/);
+  assert.match(line, /data-motion=off/);
+  assert.match(line, /loading-chart-pending/);
+  assert.match(line, /motion-reduce:[^" ]*animate-none/);
 });

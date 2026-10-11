@@ -19,24 +19,60 @@ Kind UI charts supports React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion
 </Step>
 <Step>
 
-### Import the stylesheet
+### Configure Tailwind CSS v4
+
+Kind UI uses Tailwind v4 utility classes. Add the installed chart package to your
+Tailwind sources; the `@source` path is relative to your CSS file.
 
 <Tabs items={["React", "Next.js"]}>
 <Tab value="React">
 
-Import CSS once at your application entry:
+For a Vite app, install the Tailwind integration:
 
-```tsx
-import "@kind-ui/charts/styles.css";
+```sh
+npm install -D tailwindcss @tailwindcss/vite
+```
+
+```ts title="vite.config.ts"
+import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({ plugins: [tailwindcss()] });
+```
+
+```css title="src/app.css"
+@import "tailwindcss";
+@source "../node_modules/@kind-ui/charts/dist";
+```
+
+Import your CSS once at your application entry:
+
+```tsx title="src/main.tsx"
+import "./app.css";
 ```
 
 </Tab>
 <Tab value="Next.js">
 
-Import CSS in your root layout:
+Install the Tailwind PostCSS integration:
+
+```sh
+npm install -D tailwindcss @tailwindcss/postcss
+```
+
+```js title="postcss.config.mjs"
+export default { plugins: { "@tailwindcss/postcss": {} } };
+```
+
+```css title="app/globals.css"
+@import "tailwindcss";
+@source "../node_modules/@kind-ui/charts/dist";
+```
+
+Import your CSS in the root layout:
 
 ```tsx title="app/layout.tsx"
-import "@kind-ui/charts/styles.css";
+import "./globals.css";
 ```
 
 Put interactive chart components behind a client boundary:
@@ -49,12 +85,15 @@ import * as Chart from "@kind-ui/charts";
 </Tab>
 </Tabs>
 
+If Tailwind v4 is already configured, add only the `@source` directive. Adjust the
+relative path when your CSS lives elsewhere. There is no package stylesheet to import.
+
 </Step>
 <Step>
 
 ### Build your first chart
 
-Open **Code**, copy the component into `MonthlyVisitorsChart.tsx`, and keep its stylesheet import. The example includes the data and chart name.
+Open **Code**, copy the component into `MonthlyVisitorsChart.tsx`, and keep the Tailwind setup above. The example includes the data and chart name.
 
 <ChartExample id="line-start" />
 

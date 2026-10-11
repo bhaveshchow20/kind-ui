@@ -6,6 +6,7 @@ import type { TooltipContentProps as UpstreamTooltipContentProps } from "rechart
 import { useInteractionOpacity } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction } from "./chart-interaction.js";
+import { chartClasses } from "./classes.js";
 import { LineInteraction } from "./line-chart.js";
 import { formatPercent, type NormalizedValue } from "./percent-stack.js";
 import { colorStopToken } from "./series-color.js";
@@ -108,7 +109,11 @@ export function TooltipContent({
       >
         {!hideIndicator &&
           (item?.icon ? (
-            <span aria-hidden="true" data-kind-ui="chart-icon">
+            <span
+              aria-hidden="true"
+              data-kind-ui="chart-icon"
+              className="inline-flex shrink-0 items-center [&>svg]:w-[12px] [&>svg]:h-[12px]"
+            >
               <item.icon />
             </span>
           ) : (
@@ -116,6 +121,12 @@ export function TooltipContent({
               aria-hidden="true"
               data-kind-ui="chart-indicator"
               data-indicator={indicator}
+              className={chartClasses(
+                "inline-block shrink-0 w-[3px] h-[12px] rounded-[1px] [background:var(--kind-ui-chart-indicator-background,var(--kind-ui-chart-indicator-color,currentColor))]",
+                indicator === "dot" && "w-[8px] h-[8px] rounded-[2px]",
+                indicator === "dashed" &&
+                  "[background:transparent] border-l-[2px] border-dashed border-[color:var(--kind-ui-chart-indicator-color,currentColor)] w-0 rounded-none",
+              )}
               style={
                 {
                   "--kind-ui-chart-indicator-background": item
@@ -150,16 +161,22 @@ export function TooltipContent({
       aria-live={accessibilityLayer ? "assertive" : undefined}
       aria-atomic="true"
       {...props}
+      className={chartClasses(
+        "py-[6px] px-[8px] [background:var(--kind-ui-chart-popover,var(--popover,Canvas))] text-[color:var(--kind-ui-chart-popover-foreground,var(--popover-foreground,CanvasText))] border border-solid border-[color:var(--kind-ui-chart-border,var(--border,GrayText))] rounded-[var(--kind-ui-chart-radius,var(--radius,8px))] text-[12px] leading-[16px]",
+        props.className,
+      )}
       data-kind-ui="chart-tooltip"
     >
       {entries.length > 0 && (
         <>
           {!hideLabel && (
-            <strong data-kind-ui="chart-tooltip-label">
+            <strong data-kind-ui="chart-tooltip-label" className="font-medium">
               {labelFormatter ? labelFormatter(label, entries) : label}
             </strong>
           )}
-          <ul data-kind-ui="chart-tooltip-list">{items}</ul>
+          <ul data-kind-ui="chart-tooltip-list" className="list-none p-0 mx-0 mb-0 mt-[2px]">
+            {items}
+          </ul>
         </>
       )}
     </div>
@@ -180,7 +197,13 @@ export function TooltipItem({
 }) {
   const opacity = useInteractionOpacity(inactive ? 0.28 : 1);
   return (
-    <motion.li {...props} data-inactive={inactive || undefined} initial={false} style={{ opacity }}>
+    <motion.li
+      {...props}
+      className="flex items-center gap-[4px] mt-[1px] [&>span:last-of-type]:text-[color:var(--kind-ui-chart-muted-foreground,var(--muted-foreground,inherit))] [&_[data-kind-ui=chart-tooltip-value]]:font-medium [&_[data-kind-ui=chart-tooltip-value]]:ml-auto [&_[data-kind-ui=chart-tooltip-value]]:pl-[4px] [&_[data-kind-ui=chart-tooltip-value]]:tabular-nums"
+      data-inactive={inactive || undefined}
+      initial={false}
+      style={{ opacity }}
+    >
       {children}
     </motion.li>
   );

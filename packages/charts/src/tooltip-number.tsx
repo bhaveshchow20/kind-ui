@@ -32,10 +32,19 @@ function Digit({ digit }: { digit: number }) {
     return () => controls.stop();
   }, [digit, position]);
   return (
-    <span data-kind-ui="tooltip-digit">
-      <motion.span data-kind-ui="tooltip-digit-reel" style={{ y }}>
+    <span
+      data-kind-ui="tooltip-digit"
+      className="relative inline-block w-max h-[1lh] overflow-clip shrink-0"
+    >
+      <motion.span
+        data-kind-ui="tooltip-digit-reel"
+        className="block leading-[inherit]"
+        style={{ y }}
+      >
         {reel.map((index) => (
-          <span key={index}>{index % 10}</span>
+          <span key={index} className="block h-[1lh]">
+            {index % 10}
+          </span>
         ))}
       </motion.span>
     </span>
@@ -66,11 +75,19 @@ function RollingNumber({ text }: { text: string }) {
   const characters = text.match(/[0-9]|[^0-9]+/g) ?? [];
   let place = characters.filter((character) => /^[0-9]$/.test(character)).length;
   return (
-    <motion.span data-kind-ui="tooltip-number" style={{ width }}>
-      <span ref={final} data-kind-ui="tooltip-number-final">
+    <motion.span
+      data-kind-ui="tooltip-number"
+      className="inline-block relative min-w-max overflow-clip align-bottom whitespace-pre tabular-nums"
+      style={{ width }}
+    >
+      <span ref={final} data-kind-ui="tooltip-number-final" className="inline-block opacity-0">
         {text}
       </span>
-      <span aria-hidden="true" data-kind-ui="tooltip-number-visual">
+      <span
+        aria-hidden="true"
+        data-kind-ui="tooltip-number-visual"
+        className="absolute inset-0 flex items-center justify-end [direction:ltr] pointer-events-none"
+      >
         {characters.map((character) =>
           /^[0-9]$/.test(character) ? (
             <Digit key={`digit-${--place}`} digit={Number(character)} />

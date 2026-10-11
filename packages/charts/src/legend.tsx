@@ -6,6 +6,7 @@ import { Symbols } from "recharts";
 import { useInteractionOpacity } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction } from "./chart-interaction.js";
+import { chartClasses } from "./classes.js";
 import { useEmphasis } from "./emphasis.js";
 import { FillPatternSwatch } from "./fill-pattern.js";
 import { colorStopToken } from "./series-color.js";
@@ -35,6 +36,10 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
     <ul
       aria-label="Chart legend"
       {...props}
+      className={chartClasses(
+        "flex flex-wrap gap-[8px] list-none mx-0 mt-[4px] mb-[8px] p-0",
+        props.className,
+      )}
       data-kind-ui="chart-legend"
       onClick={(event) => {
         props.onClick?.(event);
@@ -53,7 +58,11 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
         const visible = visibleSeries?.includes(key) ?? true;
         const marker =
           item.icon && !hideIcon ? (
-            <span aria-hidden="true" data-kind-ui="chart-icon">
+            <span
+              aria-hidden="true"
+              data-kind-ui="chart-icon"
+              className="inline-flex shrink-0 items-center [&>svg]:w-[12px] [&>svg]:h-[12px]"
+            >
               <item.icon />
             </span>
           ) : item.legendShape && !hideIcon ? (
@@ -62,6 +71,7 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
               focusable="false"
               data-kind-ui="chart-indicator"
               data-legend-shape={item.legendShape}
+              className="inline-block shrink-0 w-[12px] h-[12px] [background:none] fill-[var(--kind-ui-chart-indicator-color,currentColor)]"
               viewBox="-8 -8 16 16"
               style={
                 {
@@ -77,6 +87,7 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
             <span
               aria-hidden="true"
               data-kind-ui="chart-indicator"
+              className="inline-block shrink-0 w-[8px] h-[8px] [background:var(--kind-ui-chart-indicator-background,var(--kind-ui-chart-indicator-color,currentColor))]"
               style={
                 {
                   "--kind-ui-chart-indicator-color": `var(--color-${key})`,
@@ -123,6 +134,7 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
                     : undefined
                 }
                 data-kind-ui="chart-legend-button"
+                className="inline-flex items-center gap-[6px] border border-solid border-[color:var(--kind-ui-chart-border,var(--border,currentColor))] rounded-[var(--kind-ui-chart-radius,var(--radius,6px))] [background:var(--kind-ui-chart-legend-background,var(--chart-legend-background,transparent))] text-inherit min-h-[24px] py-[3px] px-[6px] [font-family:inherit] text-[11px] leading-[16px] cursor-pointer data-[inactive=true]:text-[color:var(--kind-ui-chart-muted-foreground,var(--muted-foreground,GrayText))] data-[inactive=true]:no-underline data-[inactive=true]:[&_[data-kind-ui=chart-indicator]:not([data-legend-shape],[data-fill-pattern])]:[background:currentColor] data-[inactive=true]:[&_[data-legend-shape]]:fill-current data-[inactive=true]:[&_[data-fill-pattern]]:opacity-50 data-[inactive=true]:[&_[data-fill-pattern]]:[background:none]"
                 data-legend-key={key}
               >
                 {content}
@@ -162,6 +174,7 @@ export function LegendItem({
     <motion.li
       initial={false}
       style={{ opacity }}
+      className="[&>span]:inline-flex [&>span]:items-center [&>span]:gap-[4px] [&>span]:py-[2px] [&>span]:px-0 [&>span]:text-[11px] [&>span]:leading-[16px]"
       data-kind-ui="chart-legend-item"
       data-series={seriesKey}
       tabIndex={enabled && !interactive ? 0 : undefined}

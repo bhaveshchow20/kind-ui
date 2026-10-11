@@ -26,7 +26,6 @@ import {
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 import { type CSSProperties, useState } from "react";
 
 const initial = [

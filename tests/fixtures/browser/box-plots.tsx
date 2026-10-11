@@ -10,7 +10,6 @@ import {
 } from "@kind-ui/charts";
 import { useState } from "react";
 
-import "@kind-ui/charts/styles.css";
 import "./box-plots.css";
 
 type Row = { category: string; summary: Chart.BoxPlotSummary | null };

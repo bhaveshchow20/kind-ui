@@ -3,12 +3,6 @@ import { createRoot, hydrateRoot, type Root } from "react-dom/client";
 import { StylesheetHost } from "./host.js";
 
 const params = new URLSearchParams(location.search);
-if (params.has("styles")) {
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = "./styles.css";
-  document.head.append(link);
-}
 const containers = ["first", "second"].map((id) => {
   const node = document.getElementById(id);
   if (!node) throw new Error("Missing stylesheet fixture root");
@@ -32,21 +26,6 @@ document.getElementById("mount")?.addEventListener("click", () => {
   roots = containers.map((node) => {
     const root = createRoot(node);
     root.render(host);
-    return root;
-  });
-});
-document.getElementById("late-styles")?.addEventListener("click", () => {
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = "./styles.css";
-  document.head.append(link);
-  roots = containers.map((node) => {
-    const root = createRoot(node);
-    root.render(
-      <StrictMode>
-        <StylesheetHost nested />
-      </StrictMode>,
-    );
     return root;
   });
 });

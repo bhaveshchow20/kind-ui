@@ -1,7 +1,6 @@
 import type * as Motion from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import "@kind-ui/charts/styles.css";
 import { LineHost, MaterialsHost } from "./host.js";
 
 const requestedDirection = new URLSearchParams(location.search).get("direction");

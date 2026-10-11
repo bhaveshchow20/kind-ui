@@ -2,7 +2,6 @@ import * as Chart from "@kind-ui/charts";
 import { CartesianGrid, Rectangle, ReferenceLine } from "@kind-ui/charts";
 import { useState } from "react";
 
-import "@kind-ui/charts/styles.css";
 import "./histograms.css";
 
 const samples = [

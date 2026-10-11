@@ -81,6 +81,7 @@ export function ChartBackgroundPattern({
       {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: SVG decoration is explicitly nonfocusable and ignores pointer events. */}
       <g
         data-kind-ui="chart-background-pattern"
+        className="pointer-events-none! [&_*]:pointer-events-none!"
         aria-hidden="true"
         focusable="false"
         pointerEvents="none"

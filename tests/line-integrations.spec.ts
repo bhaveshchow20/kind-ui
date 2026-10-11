@@ -124,3 +124,60 @@ test("Next color resources retain server IDs through hydration and theme changes
   );
   expect(errors).toEqual([]);
 });
+
+for (const host of ["vite", "next"] as const) {
+  test(`${host}: semantic themes inherit, local tokens win and utility/inline overrides remain predictable`, async ({
+    page,
+  }) => {
+    await page.goto(host === "next" ? "http://127.0.0.1:6901" : "/");
+    const proof = page.locator("[data-theme-proof]");
+    const semantic = proof.locator('[data-theme-case="semantic"]');
+    const tokens = proof.locator('[data-theme-case="tokens"]');
+    const utilities = proof.locator('[data-theme-case="utilities"]');
+    const box = (root: ReturnType<typeof page.locator>) =>
+      root.locator('[data-kind-ui="chart-tooltip"]');
+    await expect(semantic).toHaveCSS("color", "rgb(30, 40, 50)");
+    await expect(box(semantic)).toHaveCSS("background-color", "rgb(250, 245, 240)");
+    await expect(box(semantic)).toHaveCSS("border-color", "rgb(160, 170, 180)");
+    await expect(box(semantic)).toHaveCSS("border-radius", "10px");
+    await expect(semantic.locator('[data-kind-ui="chart-indicator"]').first()).toHaveCSS(
+      "background-color",
+      "rgb(30, 120, 90)",
+    );
+    await expect(tokens).toHaveCSS("color", "rgb(100, 40, 150)");
+    await expect(tokens).toHaveCSS("font-family", "monospace");
+    await expect(box(tokens)).toHaveCSS("background-color", "rgb(240, 220, 250)");
+    await expect(box(tokens)).toHaveCSS("border-color", "rgb(120, 60, 180)");
+    await expect(box(tokens)).toHaveCSS("border-radius", "14px");
+    await expect(utilities).toHaveCSS("width", "288px");
+    await expect(utilities.locator('[data-kind-ui="chart-legend"]')).toHaveCSS("gap", "24px");
+    await expect(box(utilities)).toHaveCSS("padding-top", "20px");
+    await expect(box(utilities)).toHaveCSS("padding-bottom", "7px");
+    await expect(box(utilities)).toHaveCSS("border-radius", "0px");
+    expect(await box(utilities).evaluate((el) => getComputedStyle(el).backgroundColor)).toContain(
+      "oklch",
+    );
+    const plot = proof.locator('[data-theme-case="plot"]');
+    await expect(plot.locator(".recharts-cartesian-grid line").first()).toHaveCSS(
+      "stroke",
+      "rgb(160, 170, 180)",
+    );
+    await expect(plot.locator(".recharts-cartesian-axis-tick-value").first()).toHaveCSS(
+      "fill",
+      "rgb(90, 100, 110)",
+    );
+    await proof.getByRole("button", { name: "Toggle semantic theme" }).click();
+    await expect(semantic).toHaveCSS("color", "rgb(230, 235, 240)");
+    await expect(box(semantic)).toHaveCSS("background-color", "rgb(20, 25, 30)");
+    await expect(box(semantic)).toHaveCSS("color", "rgb(220, 225, 230)");
+    await expect(semantic.locator('[data-kind-ui="chart-indicator"]').first()).toHaveCSS(
+      "background-color",
+      "rgb(90, 200, 150)",
+    );
+    await expect(plot.locator(".recharts-cartesian-axis-tick-value").first()).toHaveCSS(
+      "fill",
+      "rgb(190, 195, 200)",
+    );
+    await expect(box(tokens)).toHaveCSS("background-color", "rgb(240, 220, 250)");
+  });
+}

@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const data = [
   { period: "Search", latency: 28, acceptance: 84, requests: 260 },

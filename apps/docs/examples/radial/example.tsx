@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const data = [
   { period: "Design", label: "Design 92%", progress: 92 },

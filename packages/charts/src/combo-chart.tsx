@@ -14,6 +14,7 @@ import {
 import { ComposedChart as EngineComposedChart } from "recharts";
 import { type BaseAnimation, type LineAnimation, MotionContext } from "./animation.js";
 import { BarLifecycle, BarMotion } from "./bar-chart.js";
+import { chartClasses } from "./classes.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 import { RevealClip } from "./reveal-clip.js";
@@ -98,7 +99,10 @@ export function ComboChart({
           engine={EngineComposedChart}
           chartProps={{
             ...props,
-            className: ["kind-ui-combo-chart", props.className].filter(Boolean).join(" "),
+            className: chartClasses(
+              "kind-ui-combo-chart [&_.recharts-area]:[clip-path:var(--kind-ui-combo-area-clip,none)] [&_.recharts-area-dots]:[clip-path:var(--kind-ui-combo-area-clip,none)]",
+              props.className,
+            ),
             style: {
               ...props.style,
               "--kind-ui-combo-area-clip": revealArea ? `url(#${id}-area)` : "none",

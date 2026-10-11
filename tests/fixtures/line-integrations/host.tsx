@@ -6,6 +6,7 @@ import {
   LineSeries,
   Root,
   type SeriesConfig,
+  TooltipContent,
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
@@ -110,6 +111,80 @@ export function ColorHydrationHost() {
           </LineChart>
         </Root>
       ))}
+    </section>
+  );
+}
+
+/** Same semantic and local token contract in Vite and through the Next client boundary. */
+export function ThemingHost() {
+  const [dark, setDark] = useState(false);
+  const variables = {
+    colorScheme: dark ? "dark" : "light",
+    "--foreground": dark ? "rgb(230, 235, 240)" : "rgb(30, 40, 50)",
+    "--border": dark ? "rgb(80, 90, 100)" : "rgb(160, 170, 180)",
+    "--muted-foreground": dark ? "rgb(190, 195, 200)" : "rgb(90, 100, 110)",
+    "--popover": dark ? "rgb(20, 25, 30)" : "rgb(250, 245, 240)",
+    "--popover-foreground": dark ? "rgb(220, 225, 230)" : "rgb(40, 45, 50)",
+    "--radius": "10px",
+    "--chart-1": "rgb(30, 120, 90)",
+    "--chart-dark": "rgb(90, 200, 150)",
+  } as CSSProperties;
+  const config = {
+    total: { label: "Themed total", color: { light: "var(--chart-1)", dark: "var(--chart-dark)" } },
+  } satisfies SeriesConfig;
+  const content = {
+    active: true,
+    accessibilityLayer: true,
+    label: "Theme heading",
+    activeIndex: "0",
+    coordinate: undefined,
+    payload: [{ dataKey: "total", value: 12, name: "total" }],
+  };
+  return (
+    <section data-theme-proof="" style={variables}>
+      <button type="button" onClick={() => setDark(!dark)}>
+        Toggle semantic theme
+      </button>
+      <Root config={config} data-theme-case="semantic">
+        <Legend />
+        <TooltipContent tooltip={content} />
+      </Root>
+      <Root
+        config={config}
+        data-theme-case="tokens"
+        style={
+          {
+            "--kind-ui-chart-foreground": "rgb(100, 40, 150)",
+            "--kind-ui-chart-border": "rgb(120, 60, 180)",
+            "--kind-ui-chart-popover": "rgb(240, 220, 250)",
+            "--kind-ui-chart-popover-foreground": "rgb(90, 30, 140)",
+            "--kind-ui-chart-radius": "14px",
+            "--kind-ui-chart-font": "monospace",
+          } as CSSProperties
+        }
+      >
+        <Legend />
+        <TooltipContent tooltip={content} />
+      </Root>
+      <Root config={config} data-theme-case="utilities" className="w-72 text-red-700 font-serif">
+        <Legend className="gap-6 p-4" />
+        <TooltipContent
+          className="bg-blue-100 text-blue-900 rounded-none p-5"
+          style={{ paddingBottom: 7 }}
+          tooltip={content}
+        />
+      </Root>
+      <LineChart
+        config={config}
+        data={[
+          { month: "Jan", total: 1 },
+          { month: "Feb", total: 2 },
+        ]}
+        xDataKey="month"
+        aria-label="Semantic plot"
+        height={180}
+        rootProps={{ "data-theme-case": "plot" } as import("@kind-ui/charts").RootProps}
+      />
     </section>
   );
 }

@@ -1,7 +1,6 @@
 import { Legend, Root, TooltipContent } from "@kind-ui/charts";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import "@kind-ui/charts/styles.css";
 import "./consumer.css";
 import { MotionContract } from "./motion.js";
 

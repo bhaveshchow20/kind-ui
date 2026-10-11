@@ -245,6 +245,7 @@ export function EmphasisMark({
     >
       <InteractionPaint
         data-kind-ui="emphasis-paint"
+        className="transition-opacity duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
         opacity={emphasis.factor}
         identity={JSON.stringify(["emphasis", target.kind, target.scope, target.key])}
       >

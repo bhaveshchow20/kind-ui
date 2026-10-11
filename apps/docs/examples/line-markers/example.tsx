@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const data = [
   { period: "Mon", response: 140 },

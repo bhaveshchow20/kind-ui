@@ -260,7 +260,7 @@ export function newCode(
   animate: boolean,
   options: DemoOptions = {},
 ) {
-  const intro = `"use client";\n\nimport * as Chart from "@kind-ui/charts";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)};\nconst animate = ${animate};\n`;
+  const intro = `"use client";\n\nimport * as Chart from "@kind-ui/charts";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)};\nconst animate = ${animate};\n`;
   if (r.family === "Line") {
     return (
       intro +

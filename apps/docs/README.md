@@ -25,7 +25,7 @@ Thirteen component families have 51 complete examples, including ActivityRings w
 
 ## Verification and deployment
 
-The root guarded tarball gate verifies runtime/declarations/CSS/license and isolated typed production consumers. Docs build every copied example with strict NodeNext and Bundler resolution, verify selected prompts and agent assets, and check all browser groups. Required hosted `All checks` and `All docs checks` must pass at the final PR head. Coordinate local browser ports with other sessions. Public registry installation and deployment retrieval are checked during their separate authorized handoffs.
+The root guarded tarball gate verifies runtime/declarations/Tailwind classes/license and isolated typed production consumers. Docs build every copied example with strict NodeNext and Bundler resolution, verify selected prompts and agent assets, and check all browser groups. Required hosted `All checks` and `All docs checks` must pass at the final PR head. Coordinate local browser ports with other sessions. Public registry installation and deployment retrieval are checked during their separate authorized handoffs.
 
 The selected deployment owner controls the authorized Sites project and audience. `snapshot:site -- /absolute/generated/site/checkout` copies static output and provenance while preserving its hosting project ID. Coordinate homepage integration and deployment of the exact approved source with that owner. The production indexing handoff is documented in [docs/production-indexing.md](../../docs/production-indexing.md).
 

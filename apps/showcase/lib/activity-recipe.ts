@@ -3,7 +3,6 @@ import type { DemoOptions } from "./demo-options";
 export function activityCode(options: DemoOptions = {}, animate = true) {
   return `"use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 const rings = [
   { key: "stand", value: ${options.stand ?? 9}, domain: [0, 12] as const },
   { key: "exercise", value: ${options.exercise ?? 30}, domain: [0, 60] as const },

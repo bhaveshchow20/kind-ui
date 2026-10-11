@@ -35,6 +35,7 @@ import { useBarCategoryHover } from "./bar-category.js";
 import { BarMotion } from "./bar-chart.js";
 import { type BarMaterial, BarMaterialFilter } from "./bar-material.js";
 import { useChart } from "./chart-context.js";
+import { chartClasses } from "./classes.js";
 import { useEmphasis } from "./emphasis.js";
 import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
@@ -384,7 +385,11 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
               : color !== undefined
                 ? { fill: color }
                 : {})}
-            className={["kind-ui-bar-series", selector, className].filter(Boolean).join(" ")}
+            className={chartClasses(
+              "kind-ui-bar-series [clip-path:var(--kind-ui-bar-clip,none)]",
+              selector,
+              className,
+            )}
             style={style}
             isAnimationActive={false}
           >
@@ -443,6 +448,7 @@ function CategoryBar({
     <g data-kind-ui="emphasis-mark" data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
       <InteractionPaint
         data-kind-ui="emphasis-paint"
+        className="transition-opacity duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
         opacity={emphasis.active?.kind === "series" ? 1 : emphasis.factor}
       >
         <Rectangle {...props} />

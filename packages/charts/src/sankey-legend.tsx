@@ -2,6 +2,7 @@
 
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { useOptionalChartInteraction } from "./chart-interaction.js";
+import { chartClasses } from "./classes.js";
 import { LegendItem } from "./legend.js";
 import type { SankeyNodeConfig } from "./sankey-colors.js";
 
@@ -30,6 +31,10 @@ export function SankeyLegend({
     <ul
       aria-label="Chart legend"
       {...props}
+      className={chartClasses(
+        "flex flex-wrap gap-[8px] list-none mx-0 mt-[4px] mb-[8px] p-0",
+        props.className,
+      )}
       data-kind-ui="chart-legend"
       onClick={(event) => {
         props.onClick?.(event);
@@ -50,6 +55,7 @@ export function SankeyLegend({
             key={key}
             aria-hidden="true"
             data-kind-ui="chart-indicator"
+            className="inline-block shrink-0 w-[8px] h-[8px] [background:var(--kind-ui-chart-indicator-background,var(--kind-ui-chart-indicator-color,currentColor))]"
             style={{ "--kind-ui-chart-indicator-color": item.color } as CSSProperties}
           />
         );
@@ -84,12 +90,16 @@ export function SankeyLegend({
                 {content}
               </button>
             ) : (
-              <span>{content}</span>
+              <span className="inline-flex items-center gap-[4px] py-[2px] px-0 text-[11px] leading-[16px]">
+                {content}
+              </span>
             )}
           </LegendItem>
         ) : (
           <li key={key} data-kind-ui="chart-legend-item" data-node={key}>
-            <span>{content}</span>
+            <span className="inline-flex items-center gap-[4px] py-[2px] px-0 text-[11px] leading-[16px]">
+              {content}
+            </span>
           </li>
         );
       })}

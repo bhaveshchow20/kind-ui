@@ -12,14 +12,14 @@ const renderSvg = (element) => render(h("svg", null, element)).slice(5, -6);
 
 import { ScatterChart as NativeScatterChart, Scatter, XAxis, YAxis } from "recharts";
 
-test("development stylesheet diagnostic leaves SSR markup identical and never accesses DOM", () => {
+test("Tailwind classes leave SSR markup identical across environments without DOM access", () => {
   const previous = process.env.NODE_ENV;
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, "document");
   const chart = h(Root, { config: { total: { color: "red" } } }, "Chart");
   Object.defineProperty(globalThis, "document", {
     configurable: true,
     get() {
-      throw new Error("Stylesheet diagnostics must not read the SSR document");
+      throw new Error("Chart styling must not read the SSR document");
     },
   });
   try {
@@ -1261,13 +1261,13 @@ test("explicit native legend symbols retain icon/children priority and square fa
     assert.match(html, /aria-hidden="true" focusable="false"/);
     assert.match(html, /<path[^>]*d="M/);
     const fallback = render(h(Root, { config: symbolConfig }, h(Legend, { hideIcon: true })));
-    assert.doesNotMatch(fallback, /data-legend-shape|<svg/);
+    assert.doesNotMatch(fallback, /data-legend-shape=|<svg/);
     assert.match(fallback, /chart-indicator/);
     const icon = render(
       h(Root, { config: { count: { ...symbolConfig.count, icon: Icon } } }, h(Legend)),
     );
     assert.match(icon, /data-icon="task"/);
-    assert.doesNotMatch(icon, /data-legend-shape/);
+    assert.doesNotMatch(icon, /data-legend-shape=/);
     const custom = render(
       h(
         Root,
@@ -1276,11 +1276,11 @@ test("explicit native legend symbols retain icon/children priority and square fa
       ),
     );
     assert.match(custom, /data-custom-marker/);
-    assert.doesNotMatch(custom, /data-legend-shape/);
+    assert.doesNotMatch(custom, /data-legend-shape=/);
     const tooltipHtml = render(
       h(Root, { config: symbolConfig }, h(TooltipContent, { tooltip: tooltip([entry(0)]) })),
     );
-    assert.doesNotMatch(tooltipHtml, /data-legend-shape|<svg/);
+    assert.doesNotMatch(tooltipHtml, /data-legend-shape=|<svg/);
     assert.match(tooltipHtml, /data-indicator="line"/);
   }
 });
@@ -1397,9 +1397,9 @@ test("heatmap compact controls retain caption, scoped associated headers and cus
       style: { borderSpacing: 8 },
     },
   );
-  assert.match(markup, /<caption>Compact<\/caption>/);
-  assert.match(markup, /scope="row" id="([^"]+)">/);
-  assert.match(markup, /scope="col"[^>]*id="([^"]+)">X/);
+  assert.match(markup, /<caption\b[^>]*>Compact<\/caption>/);
+  assert.match(markup, /scope="row" id="([^"]+)"[^>]*>/);
+  assert.match(markup, /scope="col"[^>]*id="([^"]+)"[^>]*>X/);
   const rowId = markup.match(/scope="row" id="([^"]+)"/)[1];
   const columnId = markup.match(/scope="col"[^>]*id="([^"]+)"/)[1];
   assert.ok(markup.includes(`headers="${rowId} ${columnId}"`));
@@ -1409,7 +1409,7 @@ test("heatmap compact controls retain caption, scoped associated headers and cus
   assert.match(markup, /data-column-labels="hidden"/);
   assert.match(markup, /border-spacing:8px/);
   assert.match(markup, /height:20px;opacity:0.5;background-color:#ffffff/);
-  assert.match(markup, /class="consumer-cell"/);
+  assert.match(markup, /class="[^"]*\bconsumer-cell\b[^"]*"/);
   assert.match(markup, /<em data-consumer="cell">0<\/em>/);
   assert.doesNotMatch(
     grid(undefined),
@@ -1589,7 +1589,7 @@ test("legend glyph/symbol priority and hideIcon remain consumer-owned with patte
   assert.doesNotMatch(render(h(Root, { config }, h(Legend))), /<pattern/);
   assert.doesNotMatch(
     render(h(Root, { config }, h(Legend, { hideIcon: true }))),
-    /<pattern|Icon|data-legend-shape/,
+    /<pattern|Icon|data-legend-shape=/,
   );
 });
 

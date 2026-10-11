@@ -371,7 +371,6 @@ async function startConsumer() {
     "src/main.tsx",
     `import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import "@kind-ui/charts/styles.css";
 import "./example.css";
 ${imports.join("\n")}
 const examples = [${examples.join(",\n")}];

@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 import { type ReactNode, useState } from "react";
 import { Tooltip } from "recharts";
 

@@ -1,18 +1,19 @@
 # Charts release verification
 
-Kind charts ship as one ESM package with explicit named exports and an opt-in
-stylesheet. The monorepo workspace stays private. npm owns reusable chart
+Kind charts ship as one ESM package with explicit named exports and Tailwind v4
+component classes. The monorepo workspace stays private. npm owns reusable chart
 behavior, composition, interaction, accessibility and restrained defaults;
 host applications own palettes, typography, framing and dashboard presentation.
 Consumers own data, axes, application state and layout.
 
 ## Package contract
 
-`@kind-ui/charts` exposes its runtime and declarations through the root export,
-and `@kind-ui/charts/styles.css` through a separate CSS export. CSS is marked as
-side-effectful. The files allowlist includes compiled JavaScript, declarations,
-stylesheet and changelog; npm also includes the package README, manifest and MIT
-license. No development tools are runtime dependencies.
+`@kind-ui/charts` exposes its runtime and declarations through the root export.
+Consumers build Tailwind v4 CSS with an `@source` path to the installed package’s
+`dist` directory, relative to their CSS file. There is no stylesheet export.
+The files allowlist includes compiled JavaScript, declarations and changelog; npm also includes the package README, manifest and MIT
+license. `clsx` and `tailwind-merge` combine component and consumer classes.
+No development tools are runtime dependencies.
 
 React and React DOM are host peers. Recharts and Motion remain required engine
 peers, preserving native composition identity. Disabling animation does not
@@ -30,7 +31,7 @@ installation. Yarn hosts must supply peers; strict Yarn PnP support is not claim
 
 `npm run check` checks lint, release/CI guards, component tests, an actual packed
 package in isolated consumers, strict NodeNext/Bundler declarations and Chromium
-interaction contracts. Packed consumers verify ESM imports, CSS, license, public
+interaction contracts. Packed consumers verify ESM imports, Tailwind class generation, license, public
 exports, production builds and native composition. Primitive-only imports exclude
 Kind interaction/Motion runtime and stay within the existing native bundle budget.
 
@@ -61,7 +62,7 @@ with lifecycle scripts disabled. Never rebuild during publication. A package
 README, manifest, version or source change requires a fresh tested artifact.
 
 After publication, compare registry `dist.integrity`, install the exact version
-in a fresh consumer, run strict types and render LineChart with its stylesheet.
+in a fresh consumer, run strict types and render LineChart with consumer-built Tailwind CSS.
 Keep the outputs and browser evidence with the candidate receipt. Package metadata
 or a successful local tarball install does not prove public registry availability.
 

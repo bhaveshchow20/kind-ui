@@ -3,6 +3,7 @@
 import { type ComponentProps, type CSSProperties, useId, useLayoutEffect, useRef } from "react";
 import { DefaultZIndexes, Line, ZIndexLayer } from "recharts";
 import { useChart } from "./chart-context.js";
+import { chartClasses } from "./classes.js";
 import { useLineInteraction } from "./line-chart.js";
 import { dashCycle, dashDuration, type LineDashAnimation } from "./line-dash.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
@@ -82,6 +83,9 @@ export function LineSeries<
   const baseline = Number.isFinite(Number(offset)) ? `${Number(offset)}px` : offset;
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
+      {dashed && (
+        <style>{`@keyframes kind-ui-line-dash { from { stroke-dashoffset: var(--kind-ui-dash-offset); } to { stroke-dashoffset: calc(var(--kind-ui-dash-offset) - var(--kind-ui-dash-cycle)); } }`}</style>
+      )}
       <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
         <Line<DataPoint, Value>
           isAnimationActive={false}
@@ -124,9 +128,12 @@ export function LineSeries<
             : {})}
           {...(effectiveHide ? { activeDot: false as const } : {})}
           {...(color !== undefined ? { stroke: color } : {})}
-          className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className]
-            .filter(Boolean)
-            .join(" ")}
+          className={chartClasses(
+            "kind-ui-line-series",
+            dashed &&
+              "kind-ui-line-dash [&_.recharts-line-curve]:animate-[kind-ui-line-dash_var(--kind-ui-dash-duration)_linear_infinite] [&_.recharts-line-curve]:[animation-direction:var(--kind-ui-dash-direction)] motion-reduce:[&_.recharts-line-curve]:animate-none [[data-motion=off]_&_.recharts-line-curve]:animate-none [.kind-ui-loading-chart-pending_&_.recharts-line-curve]:animate-none",
+            className,
+          )}
         >
           {visibilityLabelChildren(props.children, effectiveHide, undefined, key)}
         </Line>

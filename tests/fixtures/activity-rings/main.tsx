@@ -10,7 +10,6 @@ import {
   RadialBarSeries,
   Root,
 } from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 

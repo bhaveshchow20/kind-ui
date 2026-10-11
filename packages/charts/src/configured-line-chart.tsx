@@ -23,6 +23,7 @@ import {
   type ChartBackgroundPatternProps,
 } from "./chart-background-pattern.js";
 import { ChartContext } from "./chart-context.js";
+import { chartClasses } from "./classes.js";
 import { Legend, type LegendProps } from "./legend.js";
 import { Root, type RootProps } from "./root.js";
 import type { SeriesConfig } from "./types.js";
@@ -221,13 +222,16 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
   return (
     <Root
       {...rootProps}
-      className={["kind-ui-configured-line-root", rootProps?.className].filter(Boolean).join(" ")}
+      className={chartClasses(
+        "kind-ui-configured-line-root [font-family:var(--kind-ui-chart-font,ui-sans-serif,system-ui,sans-serif)]",
+        rootProps?.className,
+      )}
       config={activeConfig}
       visibleSeries={visible}
       {...(change ? { onVisibleSeriesChange: change } : {})}
     >
       {accessibilityLayer && (
-        <p id={instructionId} data-kind-ui="chart-instructions">
+        <p id={instructionId} data-kind-ui="chart-instructions" className="sr-only">
           Focus the chart and use the arrow keys to inspect values. Press Escape to dismiss the
           tooltip.
         </p>
@@ -243,7 +247,10 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
         responsive={responsive ?? true}
         {...(width !== undefined ? { width } : {})}
         {...(height !== undefined ? { height } : {})}
-        className={["kind-ui-configured-line-chart", className].filter(Boolean).join(" ")}
+        className={chartClasses(
+          "kind-ui-configured-line-chart w-full min-w-0 h-[var(--kind-ui-chart-height,280px)]",
+          className,
+        )}
         style={{
           ...(width !== undefined ? { width } : {}),
           ...(height !== undefined ? { height } : {}),
@@ -256,7 +263,7 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
             {grid !== false && (
               <CartesianGrid
                 vertical={false}
-                stroke="var(--kind-ui-chart-grid, #d1d5db)"
+                stroke="var(--kind-ui-chart-grid, var(--border, #d1d5db))"
                 strokeDasharray="3 3"
                 {...grid}
               />
@@ -266,7 +273,10 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
                 {...(xDataKey !== undefined ? { dataKey: xDataKey } : {})}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: "var(--kind-ui-chart-muted-foreground, #6b7280)" }}
+                tick={{
+                  fontSize: 12,
+                  fill: "var(--kind-ui-chart-muted-foreground, var(--muted-foreground, #6b7280))",
+                }}
                 {...xAxis}
               />
             )}
@@ -274,7 +284,10 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: "var(--kind-ui-chart-muted-foreground, #6b7280)" }}
+                tick={{
+                  fontSize: 12,
+                  fill: "var(--kind-ui-chart-muted-foreground, var(--muted-foreground, #6b7280))",
+                }}
                 {...yAxis}
               />
             )}

@@ -1,4 +1,5 @@
-@layer base, kind-ui, host;
+@import "./chart-utilities.css";
+@layer base, host;
 @layer base {
   body {
     margin: 0;
