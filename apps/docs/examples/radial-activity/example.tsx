@@ -27,6 +27,10 @@ export function DailyActivityChart({ state = "ready" }: { state?: "ready" | "loa
         interaction: { kind: "category", eligibleKeys: data.map((ring) => ring.key) },
       }}
       aria-label="Daily activity"
-    />
+    >
+      <Chart.ActivityRings.Series />
+      <Chart.ActivityRings.Tooltip />
+      <Chart.ActivityRings.Legend />
+    </Chart.ActivityRings>
   );
 }

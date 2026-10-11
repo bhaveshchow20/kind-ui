@@ -28,7 +28,7 @@ export type TooltipContent = Pick<
 
 export type LineChart = Pick<
   Chart.ConfiguredLineChartProps,
-  "data" | "config" | "xDataKey" | "curve" | "material" | "legend" | "animate"
+  "data" | "config" | "children" | "rootProps" | "legendPosition" | "height" | "animate"
 >;
 export type LineSeries = Pick<
   Chart.LineSeriesProps,
@@ -38,7 +38,14 @@ export type MotionOptions = Chart.LineAnimation;
 
 export type AreaChart = Pick<
   Chart.AreaChartProps,
-  "data" | "animate" | "stackOffset" | "accessibilityLayer"
+  | "data"
+  | "config"
+  | "children"
+  | "rootProps"
+  | "legendPosition"
+  | "animate"
+  | "stackOffset"
+  | "accessibilityLayer"
 >;
 export type AreaSeries = Pick<
   Chart.AreaSeriesProps,

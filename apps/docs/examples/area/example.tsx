@@ -21,31 +21,43 @@ const config = {
 
 export function VisitorAreaChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.AreaChart
-          loading={state === "loading"}
-          data={data}
-          animate
-          accessibilityLayer
-          margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
-          aria-label="Monthly visitors"
-        >
-          <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.XAxis
-            dataKey="period"
-            axisLine={false}
-            tickLine={false}
-            tickMargin={8}
-            height={48}
-            interval="preserveStartEnd"
-          />
-          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={8} width={72} />
-          <Chart.AreaSeries dataKey="visitors" type="monotone" strokeWidth={2} fillOpacity={0.22} />
-          <Chart.Tooltip />
-        </Chart.AreaChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+    <Chart.AreaChart
+      config={config}
+      height={280}
+      defaultVisibleSeries={Object.keys(config)}
+      legendPosition="top"
+      loading={state === "loading"}
+      data={data}
+      animate
+      accessibilityLayer
+      margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
+      aria-label="Monthly visitors"
+    >
+      <Chart.AreaChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
+      <Chart.AreaChart.XAxis
+        tick={{ fill: "#666" }}
+        dataKey="period"
+        axisLine={false}
+        tickLine={false}
+        tickMargin={8}
+        height={48}
+        interval="preserveStartEnd"
+      />
+      <Chart.AreaChart.YAxis
+        tick={{ fill: "#666" }}
+        axisLine={false}
+        tickLine={false}
+        tickMargin={8}
+        width={72}
+      />
+      <Chart.AreaChart.Series
+        dataKey="visitors"
+        type="monotone"
+        strokeWidth={2}
+        fillOpacity={0.22}
+      />
+      <Chart.AreaChart.Tooltip />
+      <Chart.AreaChart.Legend />
+    </Chart.AreaChart>
   );
 }

@@ -16,31 +16,31 @@ const config = {
 
 export function ProductRadarChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.RadarChart
-          loading={state === "loading"}
-          data={data}
-          animate
-          outerRadius="68%"
-          margin={{ top: 24, right: 36, bottom: 24, left: 36 }}
-          aria-label="Product research scores out of 100: Studio and Field"
-        >
-          <Chart.PolarGrid radialLines={false} />
-          <Chart.PolarAngleAxis dataKey="period" tick={{ fontSize: 12 }} />
-          <Chart.PolarRadiusAxis
-            domain={[0, 100]}
-            ticks={[25, 50, 75, 100]}
-            angle={60}
-            axisLine={false}
-            tick={{ fontSize: 10 }}
-          />
-          <Chart.RadarSeries dataKey="studio" strokeWidth={2} fillOpacity={0.18} />
-          <Chart.RadarSeries dataKey="field" strokeWidth={2} fillOpacity={0.18} />
-          <Chart.Tooltip />
-        </Chart.RadarChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+    <Chart.RadarChart
+      config={config}
+      height={280}
+      defaultVisibleSeries={Object.keys(config)}
+      legendPosition="top"
+      loading={state === "loading"}
+      data={data}
+      animate
+      outerRadius="68%"
+      margin={{ top: 24, right: 36, bottom: 24, left: 36 }}
+      aria-label="Product research scores out of 100: Studio and Field"
+    >
+      <Chart.RadarChart.Grid stroke="#ccc" radialLines={false} />
+      <Chart.RadarChart.AngleAxis dataKey="period" tick={{ fontSize: 12 }} />
+      <Chart.RadarChart.RadiusAxis
+        domain={[0, 100]}
+        ticks={[25, 50, 75, 100]}
+        angle={60}
+        axisLine={false}
+        tick={{ fontSize: 10 }}
+      />
+      <Chart.RadarChart.Series dataKey="studio" strokeWidth={2} fillOpacity={0.18} />
+      <Chart.RadarChart.Series dataKey="field" strokeWidth={2} fillOpacity={0.18} />
+      <Chart.RadarChart.Tooltip />
+      <Chart.RadarChart.Legend />
+    </Chart.RadarChart>
   );
 }

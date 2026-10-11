@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import { Tooltip } from "recharts";
 
 const data = {
   nodes: [
@@ -25,42 +24,42 @@ const nodeConfig = {
 
 export function ConfiguredFlowChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root
-      config={nodeConfig}
-      interaction={{
-        kind: "node",
-        mode: "focus",
-        eligibleKeys: data.nodes.map((node) => node.id),
-        markActivation: "matching-legend",
-      }}
-    >
-      <section aria-label="Energy allocation">
-        <Chart.ResponsiveContainer width="100%" height={250}>
-          <Chart.SankeyChart
-            interactionBinding="root"
-            loading={state === "loading"}
-            data={data}
-            nodeConfig={nodeConfig}
-            animate={{ revealDurationMs: 900 }}
-          >
-            <Tooltip
-              isAnimationActive={false}
-              formatter={(value) => `${value} MWh`}
-              contentStyle={{
-                padding: "6px 8px",
-                fontSize: 12,
-                lineHeight: "16px",
-                background: "var(--popover, Canvas)",
-                color: "var(--popover-foreground, CanvasText)",
-                border: "1px solid var(--border, GrayText)",
-                borderRadius: "var(--radius, 8px)",
-              }}
-              itemStyle={{ padding: 0, color: "inherit" }}
-            />
-          </Chart.SankeyChart>
-        </Chart.ResponsiveContainer>
-        <Chart.SankeyLegend config={nodeConfig} interactionBinding="root" />
-      </section>
-    </Chart.Root>
+    <section aria-label="Energy allocation">
+      <Chart.SankeyChart
+        interactionBinding="root"
+        loading={state === "loading"}
+        data={data}
+        config={nodeConfig}
+        height={250}
+        aria-label="Energy allocation"
+        rootProps={{
+          interaction: {
+            kind: "node",
+            mode: "focus",
+            eligibleKeys: data.nodes.map((node) => node.id),
+            markActivation: "matching-legend",
+          },
+        }}
+        animate={{ revealDurationMs: 900 }}
+      >
+        <Chart.SankeyChart.Nodes />
+        <Chart.SankeyChart.Links />
+        <Chart.SankeyChart.Tooltip
+          isAnimationActive={false}
+          formatter={(value) => `${value} MWh`}
+          contentStyle={{
+            padding: "6px 8px",
+            fontSize: 12,
+            lineHeight: "16px",
+            background: "var(--popover, Canvas)",
+            color: "var(--popover-foreground, CanvasText)",
+            border: "1px solid var(--border, GrayText)",
+            borderRadius: "var(--radius, 8px)",
+          }}
+          itemStyle={{ padding: 0, color: "inherit" }}
+        />
+        <Chart.SankeyChart.Legend />
+      </Chart.SankeyChart>
+    </section>
   );
 }

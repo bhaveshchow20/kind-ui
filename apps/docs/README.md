@@ -31,7 +31,7 @@ The selected deployment owner controls the authorized Sites project and audience
 
 MIT for original contributions; see `THIRD_PARTY_NOTICES.md` for dependencies and reference provenance. The guarded tarball is retained as the reproducible documentation pin, alongside its source and checksum provenance. Do not commit generated output, screenshots, tokens, caches or node_modules.
 
-Area keeps explicit Root + ResponsiveContainer + AreaChart composition and consumer-owned legend selection. Area and Line consume the same guarded artifact recorded in provenance. Area browser checks run through `node scripts/start-area-checks.mjs` and record responsive, selected-source, keyboard, motion and scroll evidence.
+The primary Area example uses explicit AreaChart compound parts and consumer-owned legend selection; advanced examples retain the compatible Root + ResponsiveContainer composition. Area and Line consume the same guarded artifact recorded in provenance. Area browser checks run through `node scripts/start-area-checks.mjs` and record responsive, selected-source, keyboard, motion and scroll evidence.
 
 ## Adding a component page
 

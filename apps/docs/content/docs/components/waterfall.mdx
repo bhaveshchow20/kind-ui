@@ -9,25 +9,23 @@ Trace how sales, refunds and costs change a cash balance.
 
 ## Usage
 
+`WaterfallChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+
 Use `computeWaterfallData` to prepare rows for the bars and connectors.
 
 ```tsx title="Composition sketch"
-<Chart.Root config={config}>
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.WaterfallChart data={data} layout="vertical" animate accessibilityLayer>
-      <Chart.XAxis type="number" />
-      <Chart.YAxis type="category" dataKey="id" />
-      <Chart.WaterfallConnectors data={data} position="middle" />
-      <Chart.WaterfallSeries>
-        {data.map((row) => <Chart.Cell key={row.id} fill={row.kind !== "delta" ? "#733bff" : (row.value ?? 0) < 0 ? "#be123c" : "#15803d"} />)}
-      </Chart.WaterfallSeries>
-      <Chart.Tooltip filterNull={false} content={(tooltip) => {
-        const row = data.find((row) => row.id === String(tooltip.label));
-        return tooltip.active && row ? <div>{row.label}: {row.value ?? "Unknown"} ($k); balance {row.balance ?? "Unknown"} ($k)</div> : null;
-      }} />
-    </Chart.WaterfallChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+<Chart.WaterfallChart config={config} height={280} aria-label="Waterfall values" data={data} layout="vertical" animate accessibilityLayer>
+  <Chart.WaterfallChart.XAxis type="number" />
+  <Chart.WaterfallChart.YAxis type="category" dataKey="id" />
+  <Chart.WaterfallChart.Connectors data={data} position="middle" />
+  <Chart.WaterfallChart.Series>
+    {data.map((row) => <Chart.Cell key={row.id} fill={row.kind !== "delta" ? "#733bff" : (row.value ?? 0) < 0 ? "#be123c" : "#15803d"} />)}
+  </Chart.WaterfallChart.Series>
+  <Chart.WaterfallChart.Tooltip filterNull={false} content={(tooltip) => {
+    const row = data.find((row) => row.id === String(tooltip.label));
+    return tooltip.active && row ? <div>{row.label}: {row.value ?? "Unknown"} ($k); balance {row.balance ?? "Unknown"} ($k)</div> : null;
+  }} />
+</Chart.WaterfallChart>
 ```
 
 Use one unstacked series. `layout="vertical"` produces horizontal bars.
@@ -152,3 +150,5 @@ Use Root for color metadata, axes for balances and Tooltip for each step.
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+
+The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

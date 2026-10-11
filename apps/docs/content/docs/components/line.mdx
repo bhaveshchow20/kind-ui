@@ -9,19 +9,19 @@ Follow monthly visitors and compare trends across series.
 
 ## Usage
 
-Add one `LineSeries` per measure. Use `type="monotone"` for smooth curves and `legend={{}}` to show the legend.
+Add one `LineChart.Series` per measure. Use `type="monotone"` for smooth curves and include `LineChart.Legend` to show the legend.
 
 ```tsx title="Imports"
 import * as Chart from "@kind-ui/charts";
 ```
 
 ```tsx title="Composition sketch"
-<Chart.LineChart data={data} config={config} legend={{}} aria-label="Monthly visitors">
-  <Chart.CartesianGrid vertical={false} />
-  <Chart.XAxis dataKey="period" />
-  <Chart.YAxis />
-  <Chart.LineSeries dataKey="visitors" type="monotone" />
-  <Chart.Tooltip />
+<Chart.LineChart data={data} config={config} aria-label="Monthly visitors">
+  <Chart.LineChart.Grid vertical={false} />
+  <Chart.LineChart.XAxis dataKey="period" />
+  <Chart.LineChart.YAxis />
+  <Chart.LineChart.Series dataKey="visitors" type="monotone" />
+  <Chart.LineChart.Tooltip />
 </Chart.LineChart>
 ```
 

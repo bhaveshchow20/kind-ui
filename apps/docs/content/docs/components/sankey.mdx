@@ -12,27 +12,23 @@ Trace quantities from sources through intermediate stages to destinations.
 Open **Code** for the complete three-stage diagram and its flow data. Click a ribbon to inspect its route; the text alternative retains every quantity.
 
 ```tsx title="Composition sketch"
-<Chart.Root config={nodeConfig}
-  interaction={{ kind: "node", mode: "focus", eligibleKeys: Object.keys(nodeConfig) }}>
-  <Chart.ResponsiveContainer width="100%" height={250}>
-    <Chart.SankeyChart
-      data={data} nodeConfig={nodeConfig} interactionBinding="root"
-      animate={{ revealDurationMs: 900 }}
-    >
-      <Tooltip isAnimationActive={false} />
-    </Chart.SankeyChart>
-  </Chart.ResponsiveContainer>
-  <Chart.SankeyLegend config={nodeConfig} interactionBinding="root" />
-</Chart.Root>
+<Chart.SankeyChart config={nodeConfig} data={data} height={250}
+  aria-label="Energy allocation" animate={{ revealDurationMs: 900 }}>
+  <Chart.SankeyChart.Nodes />
+  <Chart.SankeyChart.Links />
+  <Chart.SankeyChart.Tooltip formatter={(value) => `${value} MWh`} />
+  <Chart.SankeyChart.Legend />
+  <Chart.SankeyChart.Table caption="Energy flows" />
+</Chart.SankeyChart>
 ```
 
-Use a node-focus `Root` to connect the legend to the diagram. Standalone Sankey needs no Root or axes. Map every node ID in `nodeConfig` to a label and color.
+With `config`, Sankey owns a node-focus Root and responsive plot. Map every node ID to a label and color. Include `Nodes` and `Links` explicitly; omitted renderer parts stay absent, including through fragments and wrapper components. `Legend` and `Table` inherit config/data and mount outside the plot in the browser. Use `rootProps` for shared interaction and frame attributes. The legacy `nodeConfig` composition remains available for advanced layouts and server-rendered HTML.
 
-Nodes use their own color; solid links use the source color. Import `Tooltip` from **Recharts**.
+Nodes use their own color; solid links use the source color. `SankeyChart.Tooltip` keeps native tooltip props and themed defaults.
 
 ## Node colors
 
-Share `nodeConfig` with the chart and legend. Click a legend item to highlight its node and connected routes.
+Use the family config for the chart and legend. Click a legend item to highlight its node and connected routes.
 
 <ChartExample id="sankey-config" />
 
@@ -50,7 +46,7 @@ Set `animate={{ revealDurationMs: 900 }}` for a ribbon entrance. Reduced motion 
 
 ## Labels and icons
 
-Place `SankeyNodeLabel` beside `SankeyNode` in the chart’s node-renderer callback, which supplies `node`. Pass the same `data` and `nodeConfig` as the diagram.
+Use `SankeyChart.Nodes render={(node) => ...}` to place `SankeyChart.NodeLabel` beside `SankeyChart.Node`. The callback supplies computed geometry and payload. Pass the same `data` and `nodeConfig` as the diagram.
 
 ```tsx
 <Chart.SankeyNodeLabel node={node} data={data} nodeConfig={nodeConfig}

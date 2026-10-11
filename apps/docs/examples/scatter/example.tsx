@@ -20,61 +20,62 @@ const config = {
 
 export function TaskScatterChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root
+    <Chart.ScatterChart
       config={config}
-      interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
+      height={280}
+      legendPosition="top"
+      rootProps={{
+        interaction: { kind: "series", mode: "focus", eligibleKeys: Object.keys(config) },
+      }}
+      loading={state === "loading"}
+      animate
+      accessibilityLayer
+      margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
+      aria-label="Task latency in milliseconds and acceptance percentage by cohort"
     >
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.ScatterChart
-          loading={state === "loading"}
-          animate
-          accessibilityLayer
-          margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
-          aria-label="Task latency in milliseconds and acceptance percentage by cohort"
-        >
-          <Chart.CartesianGrid strokeDasharray="3 3" />
-          <Chart.XAxis
-            type="number"
-            dataKey="latency"
-            name="Latency (ms)"
-            domain={[0, 100]}
-            ticks={[0, 50, 100]}
-            axisLine={false}
-            tickLine={false}
-            tickMargin={10}
-            height={64}
-            interval="preserveStartEnd"
-            minTickGap={48}
-            label={{ value: "ms", position: "insideBottom", offset: 0 }}
-          />
-          <Chart.YAxis
-            type="number"
-            dataKey="acceptance"
-            name="Acceptance"
-            unit="%"
-            domain={[70, 100]}
-            ticks={[70, 80, 90, 100]}
-            axisLine={false}
-            tickLine={false}
-            tickMargin={10}
-            width={80}
-          />
-          <Chart.ScatterSeries
-            seriesKey="weekday"
-            name="Weekday"
-            data={data.filter((row) => row.cohort === "weekday")}
-            shape={weekdayShape}
-          />
-          <Chart.ScatterSeries
-            seriesKey="weekend"
-            name="Weekend"
-            data={data.filter((row) => row.cohort === "weekend")}
-            shape={weekendShape}
-          />
-          <Chart.ScatterTooltip<(typeof data)[number]> pointLabel={(row) => row.period} />
-        </Chart.ScatterChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+      <Chart.ScatterChart.Grid vertical stroke="#ccc" strokeDasharray="3 3" />
+      <Chart.ScatterChart.XAxis
+        tick={{ fill: "#666" }}
+        type="number"
+        dataKey="latency"
+        name="Latency (ms)"
+        domain={[0, 100]}
+        ticks={[0, 50, 100]}
+        axisLine={false}
+        tickLine={false}
+        tickMargin={10}
+        height={64}
+        interval="preserveStartEnd"
+        minTickGap={48}
+        label={{ value: "ms", position: "insideBottom", offset: 0 }}
+      />
+      <Chart.ScatterChart.YAxis
+        tick={{ fill: "#666" }}
+        type="number"
+        dataKey="acceptance"
+        name="Acceptance"
+        unit="%"
+        domain={[70, 100]}
+        ticks={[70, 80, 90, 100]}
+        axisLine={false}
+        tickLine={false}
+        tickMargin={10}
+        width={80}
+      />
+      <Chart.ScatterChart.Series
+        seriesKey="weekday"
+        name="Weekday"
+        data={data.filter((row) => row.cohort === "weekday")}
+        shape={weekdayShape}
+      />
+      <Chart.ScatterChart.Series
+        seriesKey="weekend"
+        name="Weekend"
+        data={data.filter((row) => row.cohort === "weekend")}
+        shape={weekendShape}
+      />
+      <Chart.ScatterChart.Tooltip<(typeof data)[number]> pointLabel={(row) => row.period} />
+      <Chart.ScatterChart.Legend />
+    </Chart.ScatterChart>
   );
 }

@@ -9,22 +9,20 @@ Compare Studio and Field scores on a common 0–100 scale.
 
 ## Usage
 
+`RadarChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+
 Compare measures on a shared radial scale with one `RadarSeries` per profile.
 
 ```tsx title="Composition sketch"
-<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-  <Chart.Legend />
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.RadarChart data={data} animate outerRadius="68%" aria-label="Product research scores out of 100">
-      <Chart.PolarGrid radialLines={false} />
-      <Chart.PolarAngleAxis dataKey="period" />
-      <Chart.PolarRadiusAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} />
-      <Chart.RadarSeries dataKey="studio" fillOpacity={0.18} />
-      <Chart.RadarSeries dataKey="field" fillOpacity={0.18} />
-      <Chart.Tooltip />
-    </Chart.RadarChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+<Chart.RadarChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate outerRadius="68%" aria-label="Product research scores out of 100">
+  <Chart.RadarChart.Grid radialLines={false} />
+  <Chart.RadarChart.AngleAxis dataKey="period" />
+  <Chart.RadarChart.RadiusAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} />
+  <Chart.RadarChart.Series dataKey="studio" fillOpacity={0.18} />
+  <Chart.RadarChart.Series dataKey="field" fillOpacity={0.18} />
+  <Chart.RadarChart.Tooltip />
+  <Chart.RadarChart.Legend />
+</Chart.RadarChart>
 ```
 
 Use comparable units and a fixed domain across spokes. These research scores share a 0–100 scale.
@@ -119,3 +117,5 @@ Configure profile colors, radial scales and selection controls with these compon
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
+
+The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

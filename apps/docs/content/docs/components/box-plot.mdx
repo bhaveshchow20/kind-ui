@@ -9,40 +9,38 @@ Supply your own quartiles, whiskers and outliers to compare distributions.
 
 ## Usage
 
+`BoxPlotChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+
 Open **Code** for the complete component and its data. `BoxPlotSeries` draws each supplied summary; Root provides the series label and color.
 
 Use this composition when adapting the example:
 
 ```tsx title="Composition sketch"
-<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-  <Chart.Legend />
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.BoxPlotChart data={data} animate accessibilityLayer aria-label="Response time distributions">
-      <Chart.CartesianGrid vertical={false} />
-      <Chart.XAxis dataKey="period" />
-      <Chart.YAxis type="number" domain={[0, 180]} />
-      <Chart.BoxPlotSeries<(typeof data)[number]>
-        dataKey={(row) => ({
-          lowerWhisker: row.lowerWhisker,
-          q1: row.q1,
-          median: row.median,
-          q3: row.q3,
-          upperWhisker: row.upperWhisker,
-          outliers: [row.outlier],
-        })}
-        seriesKey="latency"
-        barSize={32}
-      />
-      <Chart.Tooltip content={({ active, payload }) =>
-        active && payload?.[0] ? (
-          <div data-kind-ui="chart-tooltip">
-            Median: {payload[0].payload.median} ms
-          </div>
-        ) : null
-      } />
-    </Chart.BoxPlotChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+<Chart.BoxPlotChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate accessibilityLayer aria-label="Response time distributions">
+  <Chart.BoxPlotChart.Grid vertical={false} />
+  <Chart.BoxPlotChart.XAxis dataKey="period" />
+  <Chart.BoxPlotChart.YAxis type="number" domain={[0, 180]} />
+  <Chart.BoxPlotChart.Series<(typeof data)[number]>
+    dataKey={(row) => ({
+      lowerWhisker: row.lowerWhisker,
+      q1: row.q1,
+      median: row.median,
+      q3: row.q3,
+      upperWhisker: row.upperWhisker,
+      outliers: [row.outlier],
+    })}
+    seriesKey="latency"
+    barSize={32}
+  />
+  <Chart.BoxPlotChart.Tooltip content={({ active, payload }) =>
+    active && payload?.[0] ? (
+      <div data-kind-ui="chart-tooltip">
+        Median: {payload[0].payload.median} ms
+      </div>
+    ) : null
+  } />
+  <Chart.BoxPlotChart.Legend />
+</Chart.BoxPlotChart>
 ```
 
 Read the original row from `payload` to show named statistics such as the median.
@@ -173,3 +171,5 @@ Use these building blocks to customize this chart. Each reference includes its f
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
+
+The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

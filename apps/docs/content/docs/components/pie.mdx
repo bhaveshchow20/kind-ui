@@ -9,24 +9,18 @@ Compare team allocation as slices of a shared total.
 
 ## Usage
 
+`PieChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+
 Set `categoryKey` for stable slice colors and `innerRadius` for a donut.
 
 ```tsx title="Composition sketch"
-<Chart.Root
-  config={config}
-  defaultVisibleSeries={Object.keys(config)}
-  interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
->
-  <Chart.Legend />
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.PieChart animate accessibilityLayer aria-label="Team allocation">
-      <Chart.PieSeries interactionBinding="root" data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
-        <Chart.LabelList dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
-      </Chart.PieSeries>
-      <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
-    </Chart.PieChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+<Chart.PieChart config={config} defaultVisibleSeries={Object.keys(config)} rootProps={{ interaction: { kind: "category", eligibleKeys: data.map((row) => row.key) } }} height={280} animate accessibilityLayer aria-label="Team allocation">
+  <Chart.PieChart.Series interactionBinding="root" data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
+    <Chart.PieChart.Labels dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
+  </Chart.PieChart.Series>
+  <Chart.PieChart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
+  <Chart.PieChart.Legend />
+</Chart.PieChart>
 ```
 
 Use the same stable category IDs for config, slices and tooltips. Set `animationDirection` to choose the entrance sweep.
@@ -49,7 +43,7 @@ Focus highlights a slice; Enter/Space activates it and Escape resets. In explici
 
 Set `defaultPinnedCategory="service"` to open the first tooltip on Service. It follows that ID when rows reorder.
 
-<Callout title="Initial tooltip">Use one direct category-keyed `PieSeries` and one `Tooltip` with `itemKey`. Inspection or hiding the category dismisses the initial pin until remount; explicit tooltip state takes precedence.</Callout>
+<Callout title="Initial tooltip">Use one category-keyed `PieChart.Series` with explicit data and one `PieChart.Tooltip` with `itemKey`. Compound parts can be wrapped in fragments or consumer components. The legacy native composition retains its direct-child requirement. Inspection or hiding the category dismisses the initial pin until remount; explicit tooltip state takes precedence.</Callout>
 
 ## Materials
 
@@ -157,3 +151,5 @@ Keep slice identities, legend actions and tooltip formatting aligned with these 
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
+
+The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

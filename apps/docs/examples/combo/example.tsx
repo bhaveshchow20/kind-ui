@@ -21,50 +21,52 @@ const config = {
 
 export function ProductionComboChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.ComboChart
-          loading={state === "loading"}
-          data={data}
-          animate
-          accessibilityLayer
-          margin={{ top: 20, right: 20, bottom: 8, left: 16 }}
-          aria-label="Monthly production, capacity and target in units"
-        >
-          <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.XAxis
-            dataKey="period"
-            axisLine={false}
-            tickLine={false}
-            tickMargin={10}
-            height={40}
-          />
-          <Chart.YAxis
-            domain={[0, 1200]}
-            ticks={[0, 400, 800, 1200]}
-            width={80}
-            axisLine={false}
-            tickLine={false}
-            tickMargin={8}
-          />
-          <Chart.AreaSeries
-            dataKey="capacity"
-            type="stepAfter"
-            fillOpacity={0.18}
-            strokeWidth={1}
-          />
-          <Chart.BarSeries dataKey="shipped" maxBarSize={32} radius={[4, 4, 0, 0]} />
-          <Chart.LineSeries
-            dataKey="target"
-            type="linear"
-            strokeWidth={2.5}
-            strokeDasharray="6 4"
-            dot={false}
-          />
-          <Chart.Tooltip maxWidth={200} />
-        </Chart.ComboChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+    <Chart.ComboChart
+      config={config}
+      height={280}
+      defaultVisibleSeries={Object.keys(config)}
+      legendPosition="top"
+      loading={state === "loading"}
+      data={data}
+      animate
+      accessibilityLayer
+      margin={{ top: 20, right: 20, bottom: 8, left: 16 }}
+      aria-label="Monthly production, capacity and target in units"
+    >
+      <Chart.ComboChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
+      <Chart.ComboChart.XAxis
+        tick={{ fill: "#666" }}
+        dataKey="period"
+        axisLine={false}
+        tickLine={false}
+        tickMargin={10}
+        height={40}
+      />
+      <Chart.ComboChart.YAxis
+        tick={{ fill: "#666" }}
+        domain={[0, 1200]}
+        ticks={[0, 400, 800, 1200]}
+        width={80}
+        axisLine={false}
+        tickLine={false}
+        tickMargin={8}
+      />
+      <Chart.ComboChart.Area
+        dataKey="capacity"
+        type="stepAfter"
+        fillOpacity={0.18}
+        strokeWidth={1}
+      />
+      <Chart.ComboChart.Bar dataKey="shipped" maxBarSize={32} radius={[4, 4, 0, 0]} />
+      <Chart.ComboChart.Line
+        dataKey="target"
+        type="linear"
+        strokeWidth={2.5}
+        strokeDasharray="6 4"
+        dot={false}
+      />
+      <Chart.ComboChart.Tooltip maxWidth={200} />
+      <Chart.ComboChart.Legend />
+    </Chart.ComboChart>
   );
 }

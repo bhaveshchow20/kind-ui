@@ -9,26 +9,24 @@ Track project completion on a fixed percentage scale.
 
 ## Usage
 
+`RadialBarChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+
 Use a fixed numeric domain, hide axis ticks and give each ring a stable category key. Labels start visible; use the chart’s Labels control to hide them.
 
 ```tsx title="Composition sketch"
-<Chart.Root config={config}>
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.RadialBarChart data={data} categoryKey="period" animate startAngle={90} endAngle={-270} innerRadius="18%" outerRadius="94%">
-      <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-      <Chart.PolarRadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
-      <Chart.RadialBarSeries dataKey="progress" background={{ fill: "#e9e5f1" }} />
-      <Chart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
-    </Chart.RadialBarChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+<Chart.RadialBarChart config={config} height={280} aria-label="Radial values" data={data} categoryKey="period" animate startAngle={90} endAngle={-270} innerRadius="18%" outerRadius="94%">
+  <Chart.RadialBarChart.AngleAxis type="number" domain={[0, 100]} tick={false} />
+  <Chart.RadialBarChart.RadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
+  <Chart.RadialBarChart.Series dataKey="progress" background={{ fill: "#e9e5f1" }} />
+  <Chart.RadialBarChart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
+</Chart.RadialBarChart>
 ```
 
 <Callout title="Note">Values remain available in the tooltip and accessible data table when labels are hidden.</Callout>
 
 ## Activity rings
 
-Give each ring a config key, value and optional domain. `ActivityRings` includes tracks, tooltip and a legend.
+Give each ring a config key, value and optional domain. Compose `ActivityRings.Series`, `ActivityRings.Tooltip` and `ActivityRings.Legend` explicitly. The Series part includes tracks and normalized progress axes; its Labels child adds arc labels. Omitting a part omits it. Without children, the existing convenience recipe still includes tracks, tooltip and a legend.
 
 <ChartExample id="radial-activity" />
 
@@ -72,8 +70,8 @@ Choose `ActivityRings` for a complete chart or compose custom plots with the rad
 | `animate` | `boolean \| RadialBarAnimation` | `false` | Same entrance options as RadialBarChart; respects reduced motion. |
 | `loading` / `loadingLabel` | `boolean` / `string` | `false` / `"Loading chart"` | Explicit pending state; preserves layout and blocks inspection. |
 | `rootProps` | Root options | — | Root styling and category interaction. Set category `eligibleKeys` for ring focus. Add explicit `mode: "visibility"` and `defaultVisibleSeries` for hide/show buttons. |
-| `series` | Native RadialBarSeries options | Tracks and rounded ends | Override series paint, background or geometry; explicit fill wins over config. |
-| `labels` | `false \| LabelList options` | `false` | Optional arc labels; custom content retains control. |
+| `series` (recipe only) | Native RadialBarSeries options | Tracks and rounded ends | Override series paint, background or geometry; explicit fill wins over config. |
+| `labels` (recipe only) | `false \| LabelList options` | `false` | Optional arc labels; custom content retains control. |
 | `legend` / `tooltip` | `false` or component options | Static legend / original-value tooltip | Disable either independently or supply custom rendering options. |
 
 </div>
@@ -151,3 +149,5 @@ Use these components for custom radial plots; ActivityRings already supplies its
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 | [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
+
+The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

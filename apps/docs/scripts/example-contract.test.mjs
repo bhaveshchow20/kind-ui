@@ -221,12 +221,20 @@ test("Area consumers preserve explicit composition and stacked series focus", ()
     const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
     assert.match(source, /"use client"/);
     assert.match(source, /satisfies Chart.SeriesConfig/);
-    assert.match(source, /<Chart.Root\s+config=\{config\}/);
-    assert.match(source, /<Chart.ResponsiveContainer width="100%" height=\{280\}>/);
+    if (bundle.id === "area") {
+      assert.match(source, /<Chart.AreaChart\s+config=\{config\}/);
+      assert.match(source, /height=\{280\}/);
+      assert.match(source, /<Chart.AreaChart.Series/);
+      assert.match(source, /<Chart.AreaChart.Legend/);
+      assert.ok(!/Chart.Root|Chart.ResponsiveContainer/.test(source));
+    } else {
+      assert.match(source, /<Chart.Root\s+config=\{config\}/);
+      assert.match(source, /<Chart.ResponsiveContainer width="100%" height=\{280\}>/);
+      assert.match(source, /<Chart.AreaSeries/);
+    }
     assert.match(source, /<Chart.AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
-    assert.match(source, /<Chart.AreaSeries/);
     assert.equal(bundle.dataAlternative.rows.length, 12);
-    assert.ok(!/settings|controls|<Chart.AreaChart[^>]*config=/s.test(source));
+    assert.ok(!/settings|controls/.test(source));
     assert.ok(
       promptFor(bundle, {}, "https://docs.example").includes(publicPath("/docs/components/area/")),
     );

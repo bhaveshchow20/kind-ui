@@ -44,14 +44,14 @@ export function SupportHeatmap({ state = "ready" }: { state?: "ready" | "loading
       animate
       missingLabel="No report"
     >
-      <Chart.HeatmapGrid
+      <Chart.HeatmapChart.Grid
         caption="Support requests by day and hour"
         style={{ borderCollapse: "separate", borderSpacing: 3 }}
         cellProps={() => ({ style: { height: "2rem" } })}
       />
-      <Chart.HeatmapLegend label="Requests per two-hour interval" />
-      <Chart.HeatmapTooltip valueAnimation="shuffle" />
-      <Chart.HeatmapDataTable
+      <Chart.HeatmapChart.Legend label="Requests per two-hour interval" />
+      <Chart.HeatmapChart.Tooltip valueAnimation="shuffle" />
+      <Chart.HeatmapChart.DataTable
         caption="Support requests, exact values"
         style={{
           position: "absolute",

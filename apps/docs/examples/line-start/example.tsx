@@ -17,13 +17,22 @@ export function MonthlyVisitorsChart() {
       <Chart.LineChart
         data={data}
         config={config}
-        xDataKey="period"
         height={280}
         margin={{ top: 24, right: 32, bottom: 16, left: 0 }}
-        xAxis={{ height: 56, minTickGap: 32 }}
-        yAxis={{ width: 60 }}
         aria-label="Monthly visitors"
-      />
+      >
+        <Chart.LineChart.Grid />
+        <Chart.LineChart.XAxis dataKey="period" height={56} minTickGap={32} />
+        <Chart.LineChart.YAxis width={60} />
+        <Chart.LineChart.Series
+          dataKey="visitors"
+          type="monotone"
+          strokeWidth={2}
+          dot={{ r: 2.5 }}
+        />
+        <Chart.LineChart.Tooltip />
+        <Chart.LineChart.Legend />
+      </Chart.LineChart>
       <figcaption
         style={{
           position: "absolute",

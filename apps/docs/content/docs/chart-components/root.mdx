@@ -3,7 +3,21 @@ title: Root
 description: Share series labels, colors, visibility and focus across a chart.
 ---
 
-`Root` connects your plot, legend and tooltip to a [series config](/docs/chart-components/series-config/).
+Chart families with `config` own a Root and responsive plot. Start with explicit family parts:
+
+```tsx
+<Chart.BarChart config={config} data={data} height={280} aria-label="Daily orders">
+  <Chart.BarChart.XAxis dataKey="day" />
+  <Chart.BarChart.YAxis />
+  <Chart.BarChart.Series dataKey="orders" />
+  <Chart.BarChart.Tooltip />
+  <Chart.BarChart.Legend />
+</Chart.BarChart>
+```
+
+Use `rootProps` for outer-frame attributes and shared interaction. Pass visibility state to the family root. Do not put a family with `config` inside another Root. Compound legends mount in the browser; use the explicit Root layout below when the legend must render on the server.
+
+For advanced layouts, `Root` connects your plot, legend and tooltip to a [series config](/docs/chart-components/series-config/).
 
 Focus Print or Digital to dim its peers while preserving the bars and tooltip values.
 

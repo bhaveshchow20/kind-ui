@@ -18,39 +18,44 @@ export function ProjectProgressChart({
   labels?: "hidden" | "visible" | "loading";
 }) {
   return (
-    <Chart.Root config={config}>
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.RadialBarChart
-          loading={labels === "loading"}
-          data={data}
-          categoryKey="period"
-          animate
-          animationDirection="clockwise"
-          startAngle={90}
-          endAngle={-270}
-          innerRadius="18%"
-          outerRadius="94%"
-          barCategoryGap="4%"
-          aria-label="Project completion: Design 92%, Build 76%, Review 58%"
-        >
-          <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-          <Chart.PolarRadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
-          <Chart.RadialBarSeries
-            dataKey="progress"
-            background={{ fill: "#e9e5f1" }}
-            cornerRadius={5}
-          >
-            {labels === "visible" && (
-              <Chart.LabelList
-                fill="white"
-                dataKey="label"
-                content={<Chart.RadialBarLabel fontSize={11} />}
-              />
-            )}
-          </Chart.RadialBarSeries>
-          <Chart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
-        </Chart.RadialBarChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+    <Chart.RadialBarChart
+      config={config}
+      height={280}
+      loading={labels === "loading"}
+      data={data}
+      categoryKey="period"
+      animate
+      animationDirection="clockwise"
+      startAngle={90}
+      endAngle={-270}
+      innerRadius="18%"
+      outerRadius="94%"
+      barCategoryGap="4%"
+      aria-label="Project completion: Design 92%, Build 76%, Review 58%"
+    >
+      <Chart.RadialBarChart.AngleAxis type="number" domain={[0, 100]} tick={false} />
+      <Chart.RadialBarChart.RadiusAxis
+        type="category"
+        dataKey="period"
+        tick={false}
+        axisLine={false}
+      />
+      <Chart.RadialBarChart.Series
+        dataKey="progress"
+        background={{ fill: "#e9e5f1" }}
+        cornerRadius={5}
+      >
+        {labels === "visible" && (
+          <Chart.RadialBarChart.Labels
+            fill="white"
+            dataKey="label"
+            content={<Chart.RadialBarChart.Label fontSize={11} />}
+          />
+        )}
+      </Chart.RadialBarChart.Series>
+      <Chart.RadialBarChart.Tooltip
+        itemKey={(entry) => String(entry.payload?.period ?? entry.name)}
+      />
+    </Chart.RadialBarChart>
   );
 }
