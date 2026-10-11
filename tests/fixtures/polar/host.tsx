@@ -181,7 +181,7 @@ export function PolarHost() {
     interaction: {
       kind: "series" as const,
       mode: "focus" as const,
-      ...(selectionEnabled ? {} : { eligibleKeys: [] }),
+      eligibleKeys: selectionEnabled && !empty ? ["value", "alias"] : [],
       ...(params.has("controlled")
         ? {
             selected,
