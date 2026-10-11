@@ -30,7 +30,7 @@ test("Combo complete public sources, data alternatives and variants agree", () =
       assert.match(variant.source, new RegExp(`${family.variants[bundle.id].prop} = "${value}"`));
       assert.ok(
         promptFor(bundle, {}, "https://docs.example", value).includes(
-          `/variants/${value}/example.tsx`,
+          `/registry-examples/${bundle.id}/${value}.tsx`,
         ),
       );
     }
