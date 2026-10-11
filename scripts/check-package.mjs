@@ -467,7 +467,8 @@ createRoot(document.createElement("div")).render(
     consumer,
     "inherit",
   );
-  for (const file of ["loading.tsx", "loading.css", "chart-utilities.css"]) await copyFixture("browser", file);
+  for (const file of ["loading.tsx", "loading.css", "chart-utilities.css"])
+    await copyFixture("browser", file);
   await writeFixtureEntry(consumer, "loading", "./loading.js");
   await typecheck(["loading.tsx", "loading-entry.tsx"]);
   await production("loading.html", "packed-loading");
