@@ -31,7 +31,8 @@ const fields = ["lowerWhisker", "q1", "median", "q3", "upperWhisker"] as const;
 /** Null/undefined mean missing. Malformed present summaries throw rather than fabricate values. */
 export function validateBoxPlotSummary(value: unknown): BoxPlotSummary | null {
   if (value == null) return null;
-  if (typeof value !== "object") throw new Error("BoxPlot summary must be an object or null");
+  if (typeof value !== "object" || Array.isArray(value))
+    throw new Error("BoxPlot summary must be an object or null");
   const record = value as Record<string, unknown>;
   for (const field of fields) {
     if (typeof record[field] !== "number" || !Number.isFinite(record[field]))
@@ -47,11 +48,11 @@ export function validateBoxPlotSummary(value: unknown): BoxPlotSummary | null {
     throw new Error("BoxPlot requires lowerWhisker <= q1 <= median <= q3 <= upperWhisker");
   if (summary.outliers !== undefined) {
     if (!Array.isArray(summary.outliers)) throw new Error("BoxPlot outliers must be an array");
-    for (const outlier of summary.outliers) {
+    for (const [index, outlier] of summary.outliers.entries()) {
       if (typeof outlier !== "number" || !Number.isFinite(outlier))
-        throw new Error("BoxPlot outliers must be finite numbers");
+        throw new Error(`BoxPlot outliers[${index}] must be a finite number`);
       if (outlier >= summary.lowerWhisker && outlier <= summary.upperWhisker)
-        throw new Error("BoxPlot outliers must lie strictly outside the whiskers");
+        throw new Error(`BoxPlot outliers[${index}] must lie strictly outside the whiskers`);
     }
   }
   return summary;
@@ -59,10 +60,11 @@ export function validateBoxPlotSummary(value: unknown): BoxPlotSummary | null {
 
 /** The complete native range includes every explicitly supplied outlier. */
 export function boxPlotExtent(summary: BoxPlotSummary): [number, number] {
-  validateBoxPlotSummary(summary);
-  let low = summary.lowerWhisker;
-  let high = summary.upperWhisker;
-  for (const value of summary.outliers ?? []) {
+  const validated = validateBoxPlotSummary(summary);
+  if (validated === null) throw new Error("BoxPlot extent requires a nonmissing summary object");
+  let low = validated.lowerWhisker;
+  let high = validated.upperWhisker;
+  for (const value of validated.outliers ?? []) {
     low = Math.min(low, value);
     high = Math.max(high, value);
   }

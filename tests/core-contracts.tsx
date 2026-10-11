@@ -1,5 +1,6 @@
 import {
   binHistogram,
+  boxPlotExtent,
   computeWaterfallData,
   createHeatmapModel,
   createHeatmapScale,
@@ -31,6 +32,9 @@ const heatmapData = [
 const heatmap = createHeatmapModel({ rows: ["A"], columns: ["X"], data: heatmapData });
 const scale = createHeatmapScale({ domain: [0, 0], colors: ["#000000", "#ffffff"] });
 void [endpoint, bins, histogram, heatmap, scale];
+
+// @ts-expect-error Extent requires a present summary; missing-value validation is separate.
+boxPlotExtent(null);
 
 // @ts-expect-error Subtotals compute their own balance and cannot supply a value.
 const valuedSubtotal: WaterfallEntry = { id: "s", label: "S", kind: "subtotal", value: 0 };

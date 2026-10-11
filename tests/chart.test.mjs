@@ -803,6 +803,34 @@ test("box summaries validate finite ordered values without selecting conventions
     assert.throws(() => Chart.validateBoxPlotSummary({ ...summary, outliers }), /outliers/);
   }
 });
+test("box boundaries reject array summaries, missing extents and invalid indexed outliers", () => {
+  const arraySummary = Object.assign([], summary);
+  assert.throws(
+    () => Chart.validateBoxPlotSummary(arraySummary),
+    /BoxPlot summary must be an object/,
+  );
+  assert.throws(() => Chart.boxPlotExtent(arraySummary), /BoxPlot summary must be an object/);
+  for (const missing of [null, undefined]) {
+    assert.equal(Chart.validateBoxPlotSummary(missing), null);
+    assert.throws(
+      () => Chart.boxPlotExtent(missing),
+      /BoxPlot extent requires a nonmissing summary object/,
+    );
+  }
+  for (const invalid of [undefined, null, NaN, Infinity, "20"])
+    assert.throws(
+      () => Chart.validateBoxPlotSummary({ ...summary, outliers: [-10, invalid] }),
+      /outliers\[1\] must be a finite number/,
+    );
+  assert.throws(
+    () => Chart.validateBoxPlotSummary({ ...summary, outliers: [-10, 0] }),
+    /outliers\[1\] must lie strictly outside/,
+  );
+  assert.throws(
+    () => Chart.validateBoxPlotSummary({ ...summary, outliers: new Array(1) }),
+    /outliers\[0\] must be a finite number/,
+  );
+});
 test("box SVG primitive preserves numeric geometry, zero IQR and native attributes", () => {
   const svg = renderSvg(
     h(
