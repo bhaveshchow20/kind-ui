@@ -1,11 +1,22 @@
 ---
 title: Installation
-description: Install charts, render your first example, and adapt it to your data.
+description: Install the chart dependencies and package, then configure Tailwind CSS.
 ---
 
-Install the ESM package in an existing React project. npm resolves its required peers.
+Set up Kind UI charts in an existing React 19 project.
 
 <Steps>
+<Step>
+
+### Install Motion and Recharts
+
+```sh
+npm install motion@^13.4.6 recharts@^3.10.1
+```
+
+Motion is required even when chart animation is off. Kind UI supports React and React DOM `^19.3.0`.
+
+</Step>
 <Step>
 
 ### Install the package
@@ -14,15 +25,24 @@ Install the ESM package in an existing React project. npm resolves its required 
 npm install @kind-ui/charts
 ```
 
-Kind UI charts supports React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Motion is required even with animation off.
-
 </Step>
 <Step>
 
 ### Configure Tailwind CSS v4
 
-Kind UI uses Tailwind v4 utility classes. Add the installed chart package to your
-Tailwind sources; the `@source` path is relative to your CSS file.
+Kind UI uses Tailwind v4 utility classes. If Tailwind v4 is already configured,
+add this one line to your existing CSS entry:
+
+```css
+@source "../node_modules/@kind-ui/charts/dist";
+```
+
+Tailwind skips `node_modules` by default. This directive includes the chart
+classes in your generated CSS. Its path is relative to the CSS file: use
+`../node_modules/...` from `src/app.css` or `app/globals.css`, and
+`../../node_modules/...` from `src/app/globals.css`.
+
+If you have not set up Tailwind yet, follow the steps for your app below.
 
 <Tabs items={["React", "Next.js"]}>
 <Tab value="React">
@@ -85,64 +105,9 @@ import { LineChart } from "@kind-ui/charts";
 </Tab>
 </Tabs>
 
-If Tailwind v4 is already configured, add only the `@source` directive. Adjust the
-relative path when your CSS lives elsewhere. There is no package stylesheet to import.
-
-</Step>
-<Step>
-
-### Build your first chart
-
-Open **Code**, copy the component into `MonthlyVisitorsChart.tsx`, and keep the Tailwind setup above. The example includes the data and chart name.
-
-<ChartExample id="line-start" />
-
-#### Render the chart
-
-```tsx title="Dashboard.tsx"
-import { MonthlyVisitorsChart } from "./MonthlyVisitorsChart";
-
-export function Dashboard() {
-  return <MonthlyVisitorsChart />;
-}
-```
-
-Run your app. You will see four months of visitors; inspect a point to read its value.
+There is no package stylesheet to import.
 
 </Step>
 </Steps>
 
-## Use your own data
-
-In the copied component, replace `data` with your observations. Keep `period` as the x-axis field and `visitors` as a number, or update `LineChart.XAxis.dataKey` and the Series data key.
-
-Change the config label and color to match your measure. Update the chart name and text alternative too.
-
-## Composition
-
-Each chart requires `config`, an accessible name and explicit children. Add its series, axes, tooltip and legend as parts. Set dimensions on the chart and use `Content` for contextual HTML controls or status text.
-
-Start with a complete example for your family:
-
-| Your task | Next example |
-| --- | --- |
-| Compare categories | [Bar](/docs/components/bar/) |
-| Show bounded progress | [Radial and Activity Rings](/docs/components/radial/) |
-| Show relationships | [Scatter](/docs/components/scatter/) |
-| Trace flows | [Sankey](/docs/components/sankey/) |
-
-Use [Line composition](/docs/components/line/#compose-plot-parts) when you need custom axes or series. See [Accessibility](/docs/guides/accessibility/) before embedding a chart in your product.
-
-## Public imports
-
-```tsx
-import { LineChart } from "@kind-ui/charts";
-```
-
-Use the documented exports. There is no `@kind-ui/charts/motion` entry.
-
-## Upgrading
-
-Review the [changelog](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/CHANGELOG.md), then typecheck and build your app. Check sizing, keyboard access, controlled visibility, missing/zero values and reduced motion. Keep chart labels and tooltips current.
-
-See [Troubleshooting](/docs/guides/troubleshooting/) if the chart is blank or an import fails.
+See [Troubleshooting](/docs/guides/troubleshooting/) if installation or styling fails.

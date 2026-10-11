@@ -6,53 +6,19 @@ import test from "node:test";
 
 const root = resolve(import.meta.dirname, "../../..");
 const guide = await readFile(join(root, "apps/docs/content/docs/installation.mdx"), "utf8");
-const examples = [...guide.matchAll(/```tsx title="(Dashboard.tsx)"\n([\s\S]*?)```/g)];
-
-test("Installation renders its exact first-chart example in an application", async () => {
+test("Installation contains only dependency, package, and Tailwind setup steps", () => {
   assert.deepEqual(
-    examples.map((example) => example[1]),
-    ["Dashboard.tsx"],
+    [...guide.matchAll(/^### (.+)$/gm)].map((match) => match[1]),
+    ["Install Motion and Recharts", "Install the package", "Configure Tailwind CSS v4"],
   );
-  const fixture = await mkdtemp(join(root, "apps/docs/.composition-guide-"));
-  try {
-    for (const [index, example] of examples.entries()) {
-      assert.match(example[2], /MonthlyVisitorsChart/);
-      await writeFile(
-        join(fixture, `example-${index}.tsx`),
-        example[2].replace("./MonthlyVisitorsChart", "./MonthlyVisitorsChart.js"),
-      );
-    }
-    await writeFile(
-      join(fixture, "MonthlyVisitorsChart.tsx"),
-      await readFile(join(root, "apps/docs/examples/line-start/example.tsx"), "utf8"),
-    );
-    for (const module of ["NodeNext", "ESNext"]) {
-      await writeFile(
-        join(fixture, "tsconfig.json"),
-        JSON.stringify({
-          compilerOptions: {
-            strict: true,
-            noEmit: true,
-            jsx: "react-jsx",
-            target: "ES2022",
-            module,
-            moduleResolution: module === "NodeNext" ? "NodeNext" : "Bundler",
-            skipLibCheck: false,
-            types: ["react", "react-dom"],
-          },
-          include: ["*.tsx"],
-        }),
-      );
-      const result = spawnSync(
-        process.execPath,
-        [join(root, "node_modules/typescript/bin/tsc"), "-p", fixture],
-        { encoding: "utf8" },
-      );
-      assert.equal(result.status, 0, `${module}: ${result.stdout}${result.stderr}`);
-    }
-  } finally {
-    await rm(fixture, { recursive: true, force: true });
-  }
+  assert.match(guide, /npm install motion@\^13\.4\.6 recharts@\^3\.10\.1/);
+  assert.match(guide, /npm install @kind-ui\/charts/);
+  assert.match(guide, /@source "\.\.\/node_modules\/@kind-ui\/charts\/dist"/);
+  assert.match(guide, /`\.\.\/\.\.\/node_modules\/\.\.\.` from `src\/app\/globals\.css`/);
+  assert.doesNotMatch(
+    guide,
+    /ChartExample|Build your first chart|MonthlyVisitorsChart|Use your own data|## Composition/,
+  );
 });
 
 test("focused chart-frame docs type retains exclusive visibility ownership", async () => {

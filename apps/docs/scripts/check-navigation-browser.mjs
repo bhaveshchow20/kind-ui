@@ -35,7 +35,7 @@ try {
     const response = await page.goto(`${origin}${publicPath(path)}`);
     assert.equal(response.status(), 200);
     if (path.includes("quickstart"))
-      await page.waitForURL(`**${publicPath("/docs/installation/#build-your-first-chart")}`);
+      await page.waitForURL(`**${publicPath("/docs/installation/#install-the-package")}`);
     assert.equal((await page.reload()).status(), 200);
     if (path === "/" || path === "/docs/") {
       assert.equal(await page.locator("h1").innerText(), "Introduction");
@@ -120,9 +120,9 @@ try {
     assert.equal(await trigger.innerText(), "Concepts");
   }
   for (const [legacy, destination] of [
-    ["/docs/quickstart/#use-your-own-data", "/docs/installation/#use-your-own-data"],
-    ["/docs/start/quickstart/#render-the-chart", "/docs/installation/#render-the-chart"],
-    ["/docs/concepts/composition/", "/docs/installation/#composition"],
+    ["/docs/quickstart/#use-your-own-data", "/docs/installation/#install-the-package"],
+    ["/docs/start/quickstart/#render-the-chart", "/docs/installation/#install-the-package"],
+    ["/docs/concepts/composition/", "/docs/installation/#install-the-package"],
   ]) {
     assert.equal((await page.goto(`${origin}${publicPath(legacy)}`)).status(), 200);
     await page.waitForURL(`**${publicPath(destination)}`);
@@ -130,7 +130,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    "Installation first-chart merge, legacy redirects/Markdown, and desktop/mobile Get Started links passed.",
+    "Installation setup, legacy redirects/Markdown, and desktop/mobile Get Started links passed.",
   );
 } finally {
   await browser.close();
