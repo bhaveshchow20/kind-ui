@@ -18,10 +18,12 @@ function stops(value: unknown, path: string): string[] {
 }
 
 function at(colors: string[], offset: number): string {
+  // biome-ignore lint/style/noNonNullAssertion: stops rejects empty palettes before at is called.
   if (colors.length === 1) return colors[0]!;
   const position = offset * (colors.length - 1);
   const index = Math.floor(position);
   const fraction = position - index;
+  // biome-ignore lint/style/noNonNullAssertion: offsets are constructed in [0, 1], so index is within the validated nonempty palette.
   if (fraction < 1e-10) return colors[index]!;
   return `color-mix(in srgb, ${colors[index]} ${(1 - fraction) * 100}%, ${colors[index + 1]} ${fraction * 100}%)`;
 }
