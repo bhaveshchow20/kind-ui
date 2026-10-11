@@ -8,11 +8,6 @@ family Markdown; /markdown/agents/consumer.md explains the retrieval workflow.
 The chart page's Copy prompt identifies the selected source, package version,
 setup manifest and task checks. /llms-full.txt is the optional complete set.
 
-Choose npm or shadcn on the existing chart page. Registry commands install only
-the selected editable composition and the npm core; use /r/registry.json to
-discover item names and version metadata. Standard shadcn MCP uses that index.
-Keep your lockfile and review local edits before updating a composition.
-
 Install @kind-ui/charts and import @kind-ui/charts/styles.css once. Inspect the
 installed package version and peers before adapting code. Motion is required.
 Use public exports; there is no @kind-ui/charts/motion entry.

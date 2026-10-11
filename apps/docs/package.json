@@ -13,12 +13,11 @@
     "dev": "next dev --webpack --hostname 127.0.0.1 --port 6373",
     "build": "npm run generate && next build --webpack",
     "typecheck": "fumadocs-mdx && tsc --noEmit",
-    "check": "npm run typecheck && node --test scripts/example-contract.test.mjs scripts/validated-artifact.test.mjs scripts/focus-contract.test.mjs scripts/registry-contract.test.mjs && node scripts/check-export.mjs",
+    "check": "npm run typecheck && node --test scripts/example-contract.test.mjs scripts/validated-artifact.test.mjs scripts/focus-contract.test.mjs && node scripts/check-export.mjs",
     "check:consumers": "node scripts/check-consumers.mjs",
     "preview": "node scripts/serve.mjs",
     "snapshot:site": "node scripts/snapshot-site.mjs",
-    "check:browser": "node scripts/start-browser-check.mjs",
-    "check:registry": "node --test scripts/registry-contract.test.mjs && node scripts/check-registry.mjs"
+    "check:browser": "node scripts/start-browser-check.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "5.3.0",
@@ -49,7 +48,6 @@
     "@types/node": "22.20.4",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "ajv": "8.20.0",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3"
   }

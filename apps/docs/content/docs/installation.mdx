@@ -3,14 +3,16 @@ title: Installation
 description: Install charts, render your first example, and adapt it to your data.
 ---
 
-Choose npm or shadcn above. Both use the same chart core; shadcn adds an editable composition to your project and installs `@kind-ui/charts@0.4.0`. Start from a shadcn-initialized React project for registry installs.
+Install the ESM package in an existing React project. npm resolves its required peers.
 
 <Steps>
 <Step>
 
-### Install
+### Install the package
 
-<ChartInstall id="line-start" />
+```sh
+npm install @kind-ui/charts
+```
 
 Kind UI charts supports React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Motion is required even with animation off.
 
@@ -52,13 +54,11 @@ import * as Chart from "@kind-ui/charts";
 
 ### Build your first chart
 
-For npm, open **Code** and copy the component into `MonthlyVisitorsChart.tsx`, and keep its stylesheet import. For shadcn, the install command adds the component; open its local file to edit it. The example includes the data and chart name.
+Open **Code**, copy the component into `MonthlyVisitorsChart.tsx`, and keep its stylesheet import. The example includes the data and chart name.
 
 <ChartExample id="line-start" />
 
 #### Render the chart
-
-<DistributionContent value="npm">
 
 ```tsx title="Dashboard.tsx"
 import { MonthlyVisitorsChart } from "./MonthlyVisitorsChart";
@@ -67,19 +67,6 @@ export function Dashboard() {
   return <MonthlyVisitorsChart />;
 }
 ```
-
-</DistributionContent>
-<DistributionContent value="shadcn">
-
-```tsx title="Dashboard.tsx"
-import { MonthlyVisitorsChart } from "@/components/charts/line-start/example";
-
-export function Dashboard() {
-  return <MonthlyVisitorsChart />;
-}
-```
-
-</DistributionContent>
 
 Run your app. You will see four months of visitors; inspect a point to read its value.
 
@@ -116,8 +103,6 @@ import * as Chart from "@kind-ui/charts";
 Use the documented exports. There is no `@kind-ui/charts/motion` entry.
 
 ## Upgrading
-
-Registry recipes request the tested core version. The CLI saves an npm `^0.4.0` range; keep your lockfile and check the installed version before updating. Review local edits before reinstalling a recipe; the CLI may prompt before overwriting files. Update recipes and core together, then check your app.
 
 Review the [changelog](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/CHANGELOG.md), then typecheck and build your app. Check sizing, keyboard access, controlled visibility, missing/zero values and reduced motion. Keep your data alternative current.
 

@@ -10,7 +10,6 @@
       "!**/vendor",
       "!**/public/markdown",
       "!**/public/examples",
-      "!**/public/r",
       "!**/artifacts",
       "!**/package-lock.json",
       "!**/consumer-package-lock.json"

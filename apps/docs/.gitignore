@@ -14,5 +14,3 @@ next-env.d.ts
 artifacts/
 .sites-runtime/
 .openai/
-
-public/r/
