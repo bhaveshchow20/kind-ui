@@ -1,9 +1,9 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { createHeatmapScale, HeatmapChart, type HeatmapDatum } from "@kind-ui/charts";
 
 const rows = ["North", "South", "East", "West"];
 const columns = ["Apr", "May", "Jun", "Jul"];
-const data: readonly Chart.HeatmapDatum[] = [
+const data: readonly HeatmapDatum[] = [
   { row: "North", column: "Apr", value: -12 },
   { row: "North", column: "May", value: -6 },
   { row: "North", column: "Jun", value: 0 },
@@ -21,7 +21,7 @@ const data: readonly Chart.HeatmapDatum[] = [
   { row: "West", column: "Jun", value: 9 },
   { row: "West", column: "Jul", value: 20 },
 ];
-const scale = Chart.createHeatmapScale({
+const scale = createHeatmapScale({
   domain: [-20, 20],
   colors: ["#9a3412", "#fff7ed", "#1e40af"],
 });
@@ -29,7 +29,7 @@ const formatValue = (value: number) => `${value > 0 ? "+" : ""}${value}%`;
 
 export function RegionalHeatmap() {
   return (
-    <Chart.HeatmapChart
+    <HeatmapChart
       rows={rows}
       columns={columns}
       data={data}
@@ -37,15 +37,17 @@ export function RegionalHeatmap() {
       formatValue={formatValue}
       missingLabel="No report"
       animate
+      config={{}}
+      aria-label="Heatmap chart"
     >
-      <Chart.HeatmapGrid
+      <HeatmapChart.Grid
         caption="Regional orders versus target"
         style={{ borderCollapse: "separate", borderSpacing: 3 }}
         cellProps={() => ({ style: { height: "2rem" } })}
       />
-      <Chart.HeatmapLegend label="Difference from monthly target" />
-      <Chart.HeatmapTooltip valueAnimation="shuffle" />
-      <Chart.HeatmapDataTable
+      <HeatmapChart.Legend label="Difference from monthly target" />
+      <HeatmapChart.Tooltip valueAnimation="shuffle" />
+      <HeatmapChart.DataTable
         caption="Regional orders versus target, exact values"
         style={{
           position: "absolute",
@@ -57,6 +59,6 @@ export function RegionalHeatmap() {
           whiteSpace: "nowrap",
         }}
       />
-    </Chart.HeatmapChart>
+    </HeatmapChart>
   );
 }

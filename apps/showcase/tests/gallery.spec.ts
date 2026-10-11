@@ -125,7 +125,7 @@ test("pie previews stay seamless, and grid and legend controls update the chart"
     page.locator(".playground-preview .recharts-cartesian-grid-horizontal line"),
   ).toHaveCount(0);
   await page.getByRole("tab", { name: "Code", exact: true }).click();
-  await expect(page.getByRole("region", { name: "Chart example code" })).toContainText(
-    "horizontal={false}",
+  await expect(page.getByRole("region", { name: "Chart example code" })).not.toContainText(
+    "<AreaChart.Grid",
   );
 });

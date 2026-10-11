@@ -1,5 +1,10 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import {
+  ComboChart,
+  defineChartBackgroundPattern,
+  type SeriesConfig,
+  TooltipContent,
+} from "@kind-ui/charts";
 
 const data = [
   { month: "Jan", capacity: 960, shipped: 640, target: 700 },
@@ -25,9 +30,9 @@ const config = {
   },
   shipped: { color: "#2563eb", pattern: { kind: "hatch" } },
   target: { color: "#0f766e", icon: TargetIcon },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 const projected = (row: Row) => row.month === "Jun";
-const background = Chart.defineChartBackgroundPattern(({ size, color }) => (
+const background = defineChartBackgroundPattern(({ size, color }) => (
   <circle cx={size / 2} cy={size / 2} r={1} fill={color} />
 ));
 
@@ -36,18 +41,19 @@ export function PresentationOptions({ status = "ready" }: { status?: "ready" | "
   const loading = status === "loading";
   return (
     <section aria-label="Monthly production options">
-      <Chart.Root
-        config={config}
-        interaction={{
-          kind: "series",
-          mode: "focus",
-          eligibleKeys: Object.keys(config),
-          markActivation: "matching-legend",
-        }}
-      >
-        <Chart.Legend />
-        <Chart.ResponsiveContainer width="100%" height={280}>
-          <Chart.ComboChart
+      <>
+        <>
+          <ComboChart
+            legendPosition="top"
+            config={config}
+            interaction={{
+              kind: "series",
+              mode: "focus",
+              eligibleKeys: Object.keys(config),
+              markActivation: "matching-legend",
+            }}
+            width="100%"
+            height={280}
             data={data}
             loading={loading}
             loadingLabel="Loading monthly production"
@@ -58,32 +64,33 @@ export function PresentationOptions({ status = "ready" }: { status?: "ready" | "
               lineReveal: { revealDirection: "right-to-left" },
             }}
           >
-            <Chart.ChartBackgroundPattern pattern={background} />
-            <Chart.XAxis dataKey="month" />
-            <Chart.YAxis width={80} />
-            <Chart.AreaSeries dataKey="capacity" fillOpacity={0.15} pointStyle="border" />
-            <Chart.BarSeries<Row>
+            <ComboChart.Background pattern={background} />
+            <ComboChart.XAxis dataKey="month" tick={{ fill: "#666" }} />
+            <ComboChart.YAxis width={80} tick={{ fill: "#666" }} />
+            <ComboChart.Area dataKey="capacity" fillOpacity={0.15} pointStyle="border" />
+            <ComboChart.Bar<Row>
               dataKey="shipped"
               projection={{ isProjected: projected, pattern: { kind: "stripe" } }}
             />
-            <Chart.LineSeries
+            <ComboChart.Line
               dataKey="target"
               strokeDasharray="6 4"
               dashAnimation={{ durationMs: 1000 }}
               pointStyle="colored-border"
               activePointStyle="border"
             />
-            <Chart.Tooltip
+            <ComboChart.Tooltip
               content={(tooltip) => (
-                <Chart.TooltipContent
+                <TooltipContent
                   tooltip={tooltip}
                   isProjected={(entry) => entry.payload?.month === "Jun"}
                 />
               )}
             />
-          </Chart.ComboChart>
-        </Chart.ResponsiveContainer>
-      </Chart.Root>
+            <ComboChart.Legend />
+          </ComboChart>
+        </>
+      </>
       <div className="sr-only">
         <table>
           <caption>Monthly production in units; June is projected</caption>

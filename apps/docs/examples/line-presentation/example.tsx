@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { LineChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Jan", visitors: 420 },
@@ -7,7 +7,7 @@ const data = [
   { period: "Mar", visitors: 510 },
   { period: "Apr", visitors: 760 },
 ];
-const config = { visitors: { label: "Visitors", color: "#733bff" } } satisfies Chart.SeriesConfig;
+const config = { visitors: { label: "Visitors", color: "#733bff" } } satisfies SeriesConfig;
 
 export function LinePresentationChart({
   presentation = "markers",
@@ -15,25 +15,31 @@ export function LinePresentationChart({
   presentation?: "markers" | "dashes" | "reveal" | "background";
 }) {
   return (
-    <Chart.LineChart
+    <LineChart
       key={presentation}
       data={data}
       config={config}
-      xDataKey="period"
+      height={280}
       aria-label="Monthly visitors"
       margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
       animate={{ revealDirection: presentation === "reveal" ? "center-out" : "left-to-right" }}
-      backgroundPattern={presentation === "background" ? { pattern: "crossings" } : undefined}
-      series={[
-        {
-          seriesKey: "visitors",
-          dataKey: "visitors",
-          pointStyle: presentation === "markers" ? "colored-border" : undefined,
-          activePointStyle: "border",
-          strokeDasharray: presentation === "dashes" ? "6 4" : undefined,
-          dashAnimation: presentation === "dashes" ? { durationMs: 1000 } : false,
-        },
-      ]}
-    />
+    >
+      {presentation === "background" && <LineChart.Background pattern="crossings" />}
+      <LineChart.Grid />
+      <LineChart.XAxis dataKey="period" />
+      <LineChart.YAxis />
+      <LineChart.Series
+        dataKey="visitors"
+        type="monotone"
+        dot={{ r: 2.5 }}
+        strokeWidth={2}
+        pointStyle={presentation === "markers" ? "colored-border" : undefined}
+        activePointStyle="border"
+        strokeDasharray={presentation === "dashes" ? "6 4" : undefined}
+        dashAnimation={presentation === "dashes" ? { durationMs: 1000 } : false}
+      />
+      <LineChart.Tooltip />
+      <LineChart.Legend />
+    </LineChart>
   );
 }

@@ -7,7 +7,7 @@ import { filesFor, promptFor } from "../lib/example-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/pie-examples.json", "utf8"));
 function assertCategoryDefaults(source, rows) {
-  assert.match(source, /<Chart.Root\s+config=\{config\}/);
+  assert.match(source, /<PieChart\b[^>]*\bconfig=\{config\}/);
   assert.match(source, /categoryKey="key"/);
   const parsed = ts.createSourceFile("example.tsx", source, ts.ScriptTarget.Latest, true);
   const declaration = parsed.statements
@@ -64,7 +64,7 @@ test("Pie consumers preserve category identity and public source parity", () => 
     assert.match(source, /^"use client";/);
     if (bundle.id === "pie-interaction") {
       assert.match(source, /categoryKey="id"/);
-      assert.match(source, /interactionBinding="root"/);
+      assert.match(source, /<PieChart\b[\s\S]*?config=\{categoryConfig\}/);
       assert.equal(
         bundle.dataAlternative.rows.reduce((sum, row) => sum + row.value, 0),
         100,
@@ -98,7 +98,7 @@ test("Pie consumers preserve category identity and public source parity", () => 
   const visibility = bundles["pie-visibility"].files["src/examples/pie-visibility/example.tsx"];
   assert.doesNotMatch(visibility, /data\.filter\(/);
   assert.match(visibility, /data=\{data\}/);
-  assert.match(visibility, /interactionBinding="root"/);
+  assert.match(visibility, /<PieChart\b[\s\S]*?config=\{config\}/);
   assert.match(visibility, /categoryKey="key"/);
   assert.ok(!visibility.includes("<Chart.Cell"));
   assert.ok(!visibility.includes("LabelList"));

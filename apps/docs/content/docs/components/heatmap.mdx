@@ -15,6 +15,7 @@ Supply ordered rows and columns, records and a color scale. Add the grid, legend
 import { HeatmapChart } from "@kind-ui/charts";
 
 <HeatmapChart
+  config={{}} aria-label="Support requests by day and hour"
   rows={rows} columns={columns} data={data} scale={scale}
   animate missingLabel="No report"
 >
@@ -54,13 +55,13 @@ Use arrows to inspect cells, Home/End for row ends and Ctrl+Home/End for matrix 
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="heatmap" variant="loading" />
 
 ## API reference
 
-Compose the grid, legend and tooltip inside `HeatmapChart`; no `Root` is needed.
+Pass `config={{}}`, an accessible name and explicit grid, legend and tooltip parts. The numeric scale supplies heatmap colors.
 
 ### HeatmapChart
 
@@ -68,6 +69,11 @@ Compose the grid, legend and tooltip inside `HeatmapChart`; no `Root` is needed.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Use an empty config for the quantitative grid. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
+| `interaction` | `ChartInteractionConfig` | — | Optional frame actions; grid inspection uses row/column identities independently. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `rows` / `columns` | `readonly string[]` | Required | Unique, explicitly ordered domains. Records outside them throw. |
 | `data` | `readonly HeatmapDatum[]` | Required | Records shaped as `{ row: string; column: string; value: number \| null }`. Nonfinite values throw. |
 | `scale` | `HeatmapScale` | Required | Shared numeric encoding for grid, legend and tooltip content. |

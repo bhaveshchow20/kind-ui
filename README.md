@@ -42,6 +42,8 @@ Import the components you need:
 import { LineChart } from "@kind-ui/charts";
 ```
 
+Each chart takes `config`, an accessible name and explicit children such as `LineChart.XAxis`, `LineChart.Series` and `LineChart.Tooltip`. Add only the parts you need.
+
 Build that CSS with your Tailwind v4 Vite or PostCSS integration and import it at your application entry. In Next.js, import your CSS in the root layout and render interactive charts in a client component. The [installation guide](https://kindui.dev/charts/docs/installation/) includes build configuration and required peer dependencies.
 
 Copy a [complete line chart example](https://kindui.dev/charts/docs/components/line/), including its data and accessible table. The [package reference](packages/charts/README.md) covers API defaults and limits.

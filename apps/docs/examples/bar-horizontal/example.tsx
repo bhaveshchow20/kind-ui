@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { BarChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Design ops", hours: 42 },
@@ -10,15 +10,19 @@ const data = [
 ];
 const config = {
   hours: { label: "Hours", color: "#14a39a", formatValue: (value) => `${value} h` },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function WorkshopHoursChart() {
   return (
     <figure style={{ margin: 0 }}>
-      <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-        <Chart.Legend />
-        <Chart.ResponsiveContainer width="100%" height={280}>
-          <Chart.BarChart
+      <>
+        <>
+          <BarChart
+            legendPosition="top"
+            config={config}
+            defaultVisibleSeries={Object.keys(config)}
+            width="100%"
+            height={280}
             data={data}
             layout="vertical"
             animate
@@ -27,8 +31,8 @@ export function WorkshopHoursChart() {
             margin={{ top: 8, right: 24, bottom: 8, left: 0 }}
             aria-label="Workshop hours by topic"
           >
-            <Chart.CartesianGrid horizontal={false} strokeDasharray="3 3" />
-            <Chart.XAxis
+            <BarChart.Grid vertical horizontal={false} strokeDasharray="3 3" stroke="#ccc" />
+            <BarChart.XAxis
               type="number"
               axisLine={false}
               tickLine={false}
@@ -36,8 +40,9 @@ export function WorkshopHoursChart() {
               height={40}
               interval="preserveStartEnd"
               minTickGap={32}
+              tick={{ fill: "#666" }}
             />
-            <Chart.YAxis
+            <BarChart.YAxis
               type="category"
               dataKey="period"
               axisLine={false}
@@ -45,12 +50,14 @@ export function WorkshopHoursChart() {
               tickMargin={10}
               width={160}
               interval={0}
+              tick={{ fill: "#666" }}
             />
-            <Chart.BarSeries dataKey="hours" radius={[0, 5, 5, 0]} maxBarSize={28} />
-            <Chart.Tooltip />
-          </Chart.BarChart>
-        </Chart.ResponsiveContainer>
-      </Chart.Root>
+            <BarChart.Series dataKey="hours" radius={[0, 5, 5, 0]} maxBarSize={28} />
+            <BarChart.Tooltip />
+            <BarChart.Legend />
+          </BarChart>
+        </>
+      </>
       <div
         style={{
           position: "absolute",

@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { PieChart, type SeriesConfig } from "@kind-ui/charts";
 import { useState } from "react";
 
 const config = {
@@ -19,7 +19,7 @@ const config = {
     color: "#147c68",
     formatValue: (value: unknown) => `${value} hours`,
   },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 const data: { key: keyof typeof config; hours: number; share: string }[] = [
   { key: "design", hours: 420, share: "42%" },
   { key: "engineering", hours: 310, share: "31%" },
@@ -35,29 +35,29 @@ export function VisibleAllocationChart() {
     0,
   );
   return (
-    <Chart.Root
-      config={config}
-      interaction={{ kind: "category", mode: "visibility", eligibleKeys: Object.keys(config) }}
-      visibleSeries={visible}
-      onVisibleSeriesChange={(next) => {
-        setVisible(next);
-        setChanges((count) => count + 1);
-      }}
-      data-visibility-changes={changes}
-    >
-      <Chart.Legend />
+    <>
       <p role="status" className="sr-only">
-        {visibleTotal.toLocaleString("en-US")} hours visible; slice positions retain the full
+        {visibleTotal.toLocaleString("en-US")}hours visible; slice positions retain the full
         allocation
       </p>
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.PieChart
+      <>
+        <PieChart
+          legendPosition="top"
+          config={config}
+          interaction={{ kind: "category", mode: "visibility", eligibleKeys: Object.keys(config) }}
+          visibleSeries={visible}
+          onVisibleSeriesChange={(next) => {
+            setVisible(next);
+            setChanges((count) => count + 1);
+          }}
+          frameProps={{ "data-visibility-changes": changes }}
+          width="100%"
+          height={280}
           animate
           accessibilityLayer
           aria-label="Team allocation with controlled visual visibility"
         >
-          <Chart.PieSeries
-            interactionBinding="root"
+          <PieChart.Series
             data={data}
             dataKey="hours"
             nameKey="key"
@@ -65,10 +65,11 @@ export function VisibleAllocationChart() {
             innerRadius={58}
             outerRadius={108}
             paddingAngle={0}
-          ></Chart.PieSeries>
-          <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
-        </Chart.PieChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          ></PieChart.Series>
+          <PieChart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
+          <PieChart.Legend />
+        </PieChart>
+      </>
+    </>
   );
 }

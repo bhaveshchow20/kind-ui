@@ -38,11 +38,32 @@ const loadingCoverage = chartExports.map((component) => {
       true,
       ts.ScriptKind.TSX,
     );
+    const namedImports = new Set();
+    const namespaceImports = new Set();
+    for (const statement of source.statements) {
+      if (
+        !ts.isImportDeclaration(statement) ||
+        !ts.isStringLiteral(statement.moduleSpecifier) ||
+        statement.moduleSpecifier.text !== "@kind-ui/charts" ||
+        statement.importClause?.isTypeOnly
+      )
+        continue;
+      const bindings = statement.importClause?.namedBindings;
+      if (bindings && ts.isNamespaceImport(bindings)) namespaceImports.add(bindings.name.text);
+      if (bindings && ts.isNamedImports(bindings))
+        for (const entry of bindings.elements)
+          if (!entry.isTypeOnly && (entry.propertyName?.text ?? entry.name.text) === component)
+            namedImports.add(entry.name.text);
+    }
     let found = false;
     function visit(node) {
       if (
         (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
-        node.tagName.getText(source) === `Chart.${component}` &&
+        ((ts.isIdentifier(node.tagName) && namedImports.has(node.tagName.text)) ||
+          (ts.isPropertyAccessExpression(node.tagName) &&
+            ts.isIdentifier(node.tagName.expression) &&
+            namespaceImports.has(node.tagName.expression.text) &&
+            node.tagName.name.text === component)) &&
         node.attributes.properties.some(
           (attribute) =>
             ts.isJsxAttribute(attribute) && attribute.name.getText(source) === "loading",
@@ -174,7 +195,7 @@ try {
     assert.equal(await page.locator("h1").first().innerText(), title);
   }
   await page.goto(origin + publicPath("/docs/guides/customization/#loading"));
-  await page.waitForURL(origin + publicPath("/docs/chart-components/root/#loading"));
+  await page.waitForURL(origin + publicPath("/docs/chart-components/chart/#loading"));
   const icons = await page
     .locator('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]')
     .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")));

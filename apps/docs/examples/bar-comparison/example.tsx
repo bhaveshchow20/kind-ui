@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { BarChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Fiction", print: 184, digital: 116 },
@@ -11,7 +11,7 @@ const data = [
 const config = {
   print: { label: "Print", color: "#733bff" },
   digital: { label: "Digital", color: "#14a39a" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function LibraryLoansChart({
   arrangement = "grouped",
@@ -21,13 +21,14 @@ export function LibraryLoansChart({
   const stackId = arrangement === "stacked" ? "loans" : undefined;
   return (
     <figure style={{ margin: 0 }}>
-      <Chart.Root
-        config={config}
-        interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
-      >
-        <Chart.Legend />
-        <Chart.ResponsiveContainer width="100%" height={280}>
-          <Chart.BarChart
+      <>
+        <>
+          <BarChart
+            legendPosition="top"
+            config={config}
+            interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
+            width="100%"
+            height={280}
             data={data}
             animate
             accessibilityLayer
@@ -36,8 +37,8 @@ export function LibraryLoansChart({
             margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
             aria-label="Library loans by subject and format"
           >
-            <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <Chart.XAxis
+            <BarChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
+            <BarChart.XAxis
               dataKey="period"
               axisLine={false}
               tickLine={false}
@@ -45,14 +46,22 @@ export function LibraryLoansChart({
               height={56}
               interval="preserveStartEnd"
               minTickGap={32}
+              tick={{ fill: "#666" }}
             />
-            <Chart.YAxis axisLine={false} tickLine={false} tickMargin={10} width={72} />
-            <Chart.BarSeries dataKey="print" stackId={stackId} maxBarSize={32} />
-            <Chart.BarSeries dataKey="digital" stackId={stackId} maxBarSize={32} />
-            <Chart.Tooltip />
-          </Chart.BarChart>
-        </Chart.ResponsiveContainer>
-      </Chart.Root>
+            <BarChart.YAxis
+              axisLine={false}
+              tickLine={false}
+              tickMargin={10}
+              width={72}
+              tick={{ fill: "#666" }}
+            />
+            <BarChart.Series dataKey="print" stackId={stackId} maxBarSize={32} />
+            <BarChart.Series dataKey="digital" stackId={stackId} maxBarSize={32} />
+            <BarChart.Tooltip />
+            <BarChart.Legend />
+          </BarChart>
+        </>
+      </>
       <div
         style={{
           position: "absolute",

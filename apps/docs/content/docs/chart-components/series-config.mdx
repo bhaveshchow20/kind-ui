@@ -3,7 +3,7 @@ title: SeriesConfig
 description: Define labels, colors and value formatting for chart series.
 ---
 
-`SeriesConfig` maps stable series or category keys to labels, colors and optional formatting. Pass it to [Root](/docs/chart-components/root/) or directly to a configured [LineChart](/docs/components/line/).
+`SeriesConfig` maps stable series or category keys to labels, colors and optional formatting. Pass it directly to the chart family’s `config` prop. See [Chart frame](/docs/chart-components/chart/) for shared options.
 
 Revenue and Target share labels, colors, and dollar formatting through their config entries.
 
@@ -57,7 +57,7 @@ Configured patterns supply Bar/Area fills and legend swatches. See [Bar patterns
 
 ## CSS colors and contrast
 
-`Root` exposes colors as `--color-<key>`; gradient colors use the first stop for this variable.
+Each chart exposes colors as `--color-<key>`; gradient colors use the first stop for this variable.
 
 <Callout type="info">
 Use nonempty color strings and gradient arrays. Choose colors with sufficient contrast in both themes.

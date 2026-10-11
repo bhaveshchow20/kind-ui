@@ -9,7 +9,7 @@ Show visitor volume over time, then compare stacked contributions.
 
 ## Usage
 
-`AreaChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+`AreaChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
 Add one `AreaSeries` per measure. Use `stackId` to stack related series.
 
@@ -48,7 +48,7 @@ Choose Default, Clay or Glow.
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="area" variant="loading" />
 
@@ -58,19 +58,22 @@ Use these props to configure the area plot and its series.
 
 ### AreaChart
 
-With `config`, this family owns its Root and responsive plot. Add its parts explicitly.
+Pass `config` and an accessible name. Add each plot part explicitly.
 
 <div className="line-props-scroll" role="region" aria-label="AreaChart props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `data` | `Row[]` | — | Observations for explicit series and axes. |
 | `animate` | `boolean \| AreaAnimation` | `false` | Chart-owned entrance and inspection motion; respects reduced motion. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Enables arrow-key inspection. Set explicitly in these components. |
 | `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
 | `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Space around plot parts. |
 | `stackOffset` | `"none" \| "expand" \| "wiggle" \| "silhouette" \| "sign" \| "positive"` | `"none"` | Native stack calculation. `"expand"` normalizes stacks; labels and tooltip formatting stay consumer-owned. |
-| `children` | `ReactNode` | — | Explicit axes, areas, grid and tooltip. |
+| `children` | `ReactNode` | Required | Explicit axes, areas, grid and tooltip. |
 
 </div>
 
@@ -92,7 +95,7 @@ String `dataKey` values identify config entries. Use `seriesKey` for numeric key
 | `stroke` / `fill` | `string` | Config color | Override outline or fill separately. |
 | `fillOpacity` | `number` | `0.6` in Recharts | Fill transparency; shown components set it explicitly. |
 | `connectNulls` | `boolean` | `false` | Connect missing values instead of leaving gaps. |
-| `hide` | `boolean` | `false` | Hide a series; Root selection also applies. |
+| `hide` | `boolean` | `false` | Hide a series; chart visibility also applies. |
 
 </div>
 
@@ -104,11 +107,10 @@ Customize series colors, stack visibility and plot labels with these components.
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
 
-The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

@@ -15,21 +15,19 @@ Check public imports, CSS, and the chart's container first.
 | Package or import cannot resolve | Follow [Installation](/docs/installation/); import from `@kind-ui/charts`, not its source files |
 | Motion import fails | Install the required Motion peer; there is no `@kind-ui/charts/motion` entry |
 | Chart appears unstyled | Follow the [Tailwind setup](/docs/installation/#configure-tailwind-css-v4) |
-| Chart is blank or has no height | Give [ResponsiveContainer](/docs/chart-components/responsive-container/) a measurable parent or numeric height |
+| Chart is blank or has no height | Set a numeric chart `height`, or give percentage sizing a measurable parent; see [Sizing](/docs/chart-components/chart/#sizing) |
 | Chart overflows a flex/grid layout | Give its parent `min-width: 0`; check axis-label space and long values |
 | Colors overlap between independent hydrated React roots | Assign a distinct React `identifierPrefix` to each root |
 
 ## Composition and interaction
 
-Configured Line owns its Root and generated parts. Other compositions place
-parts explicitly.
+Each chart owns its frame and requires explicit parts.
 
 | Symptom | Action |
 | --- | --- |
-| Configured Line reports a nested Root | Remove the outer Root when passing `config` to `LineChart` |
-| Explicit Root composition has no legend | Place `<Chart.Legend />` inside Root, outside ResponsiveContainer |
-| Configured Line with explicit children has no legend | Pass `legend={{}}` to `LineChart` |
-| Legend clicks do not change visibility | Focus dims by default. For hide/show, set Root `interaction.mode="visibility"` and pair controlled visibility with its callback, or use `defaultVisibleSeries` |
+| Chart has no marks or legend | Add explicit family Series and Legend parts; `config` only supplies metadata |
+| Chart reports a nested frame | Place each family in its own frame rather than nesting chart families |
+| Legend clicks do not change visibility | Focus dims by default. For hide/show, set chart `interaction.mode="visibility"` and pair controlled visibility with its callback, or use `defaultVisibleSeries` |
 | Accessor series ignores visibility or metadata | Give it a matching `seriesKey`; see [Identity and colors](/docs/concepts/identity/) |
 | Category colors move when rows reorder | Use stable category IDs rather than row positions; see the family example |
 | Arrow keys do not inspect every mark | Check the family's [keyboard access](/docs/guides/accessibility/#keyboard-access); retain a complete data alternative |

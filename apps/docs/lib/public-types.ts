@@ -6,9 +6,14 @@ import type * as Chart from "@kind-ui/charts";
 type DistributivePick<Props, Keys extends keyof Props> = Props extends unknown
   ? Pick<Props, Keys>
   : never;
-export type Root = DistributivePick<
-  Chart.RootProps,
+export type ChartFrame = DistributivePick<
+  Chart.LineChartProps,
   | "config"
+  | "children"
+  | "frameProps"
+  | "nonce"
+  | "aria-label"
+  | "aria-labelledby"
   | "emphasis"
   | "visibleSeries"
   | "defaultVisibleSeries"
@@ -27,8 +32,8 @@ export type TooltipContent = Pick<
 >;
 
 export type LineChart = Pick<
-  Chart.ConfiguredLineChartProps,
-  "data" | "config" | "children" | "rootProps" | "legendPosition" | "height" | "animate"
+  Chart.LineChartProps,
+  "data" | "config" | "children" | "frameProps" | "legendPosition" | "height" | "animate"
 >;
 export type LineSeries = Pick<
   Chart.LineSeriesProps,
@@ -41,7 +46,7 @@ export type AreaChart = Pick<
   | "data"
   | "config"
   | "children"
-  | "rootProps"
+  | "frameProps"
   | "legendPosition"
   | "animate"
   | "stackOffset"

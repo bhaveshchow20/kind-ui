@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { PieChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { id: "retail", value: 35 },
@@ -10,7 +10,7 @@ const categoryConfig = {
   retail: { color: "#2563eb" },
   service: { color: "#0f766e" },
   other: { color: "#7c3aed" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 export function PieOptions({
   status = "ready",
 }: {
@@ -18,38 +18,38 @@ export function PieOptions({
 }) {
   const loading = status === "loading";
   return (
-    <Chart.Root
-      config={categoryConfig}
-      interaction={{
-        kind: "category",
-        mode: "focus",
-        eligibleKeys: data.map((row) => row.id),
-        markActivation: "matching-legend",
-      }}
-    >
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.PieChart
+    <>
+      <>
+        <PieChart
+          config={categoryConfig}
+          interaction={{
+            kind: "category",
+            mode: "focus",
+            eligibleKeys: data.map((row) => row.id),
+            markActivation: "matching-legend",
+          }}
+          width="100%"
+          height={280}
           accessibilityLayer
           defaultPinnedCategory="service"
           loading={loading}
           loadingLabel="Loading allocation"
           aria-label="Allocation; retail 35, service 45, other 20"
         >
-          <Chart.PieSeries
+          <PieChart.Series
             data={data}
             dataKey="value"
             categoryKey="id"
-            interactionBinding="root"
             glowCategories={status === "selective-glow" ? ["service"] : []}
             innerRadius={58}
             outerRadius={108}
             cornerRadius={8}
             paddingAngle={2}
           />
-          <Chart.Tooltip itemKey={(entry) => entry.payload.id} />
-        </Chart.PieChart>
-      </Chart.ResponsiveContainer>
-      <Chart.Legend />
+          <PieChart.Tooltip itemKey={(entry) => entry.payload.id} />
+          <PieChart.Legend />
+        </PieChart>
+      </>
       <div className="sr-only">
         <table>
           <caption>Allocation</caption>
@@ -63,6 +63,6 @@ export function PieOptions({
           </tbody>
         </table>
       </div>
-    </Chart.Root>
+    </>
   );
 }

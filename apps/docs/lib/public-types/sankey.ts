@@ -1,6 +1,6 @@
 import type * as Chart from "@kind-ui/charts";
 export type SankeyChartReference = Pick<
   Chart.SankeyChartProps,
-  "data" | "nodeConfig" | "node" | "link" | "animate"
+  "data" | "config" | "children" | "frameProps" | "interaction" | "animate"
 >;
-export type SankeyLegendReference = Pick<Chart.SankeyLegendProps, "config" | "children">;
+export type SankeyLegendReference = Pick<Chart.SankeyLegendProps, "children" | "className">;

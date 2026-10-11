@@ -1,7 +1,8 @@
 // Display metadata augments types generated from the pinned public declarations.
 // Defaults below describe the candidate public implementations.
 const presentation = {
-  Root: {
+  ChartFrame: {
+    title: "Chart frame",
     defaults: {
       emphasis: '"auto"',
       interaction: "Series focus; matching-legend marks",
@@ -10,7 +11,7 @@ const presentation = {
     },
     descriptions: {
       interaction:
-        'Focus dims peers by default and supported marks share legend actions. Set mode to "visibility" for visual hide/show with preserved full-data layout, or markActivation to "none" for passive marks. Explicit bindings require kind and eligibleKeys; selected requires onSelectionChange. Legend actions retain an active item.',
+        'Focus dims peers by default and supported marks share legend actions. Set mode to "visibility" for visual hide/show with preserved full-data layout, or markActivation to "none" for passive marks. Explicit interaction requires kind and eligibleKeys; selected requires onSelectionChange. Legend actions retain an active item.',
       visibleSeries:
         "Controlled visibility; provide onVisibleSeriesChange for legend hide/show. Hidden data retains its geometry and dimmed legend/tooltip entries.",
       defaultVisibleSeries:

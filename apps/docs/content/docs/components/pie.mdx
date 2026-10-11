@@ -9,15 +9,15 @@ Compare team allocation as slices of a shared total.
 
 ## Usage
 
-`PieChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+`PieChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
 Set `categoryKey` for stable slice colors and `innerRadius` for a donut.
 
 ```tsx title="Composition sketch"
 import { PieChart } from "@kind-ui/charts";
 
-<PieChart config={config} defaultVisibleSeries={Object.keys(config)} rootProps={{ interaction: { kind: "category", eligibleKeys: data.map((row) => row.key) } }} height={280} animate accessibilityLayer aria-label="Team allocation">
-  <PieChart.Series interactionBinding="root" data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
+<PieChart config={config} defaultVisibleSeries={Object.keys(config)} interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }} height={280} animate accessibilityLayer aria-label="Team allocation">
+  <PieChart.Series data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
     <PieChart.Labels dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
   </PieChart.Series>
   <PieChart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
@@ -33,19 +33,19 @@ This example explicitly opts into visibility. Hide a category without moving or 
 
 <ChartExample id="pie-visibility" />
 
-Use `interactionBinding="root"` to share category actions between slices and legend.
+Set category `interaction` on PieChart and `categoryKey` on its Series to share actions between slices and legend.
 
 <ChartExample id="pie-interaction" />
 
-<Callout title="Category identities">Supply unique string IDs and complete `eligibleKeys`, including hidden and zero-valued categories. Bind `PieSeries` to Root with `interactionBinding="root"` and retain the complete data and Cells. Hiding suppresses a slice without reallocating its angle; `visibleSeries` alone does not bind slices.</Callout>
+<Callout title="Category identities">Supply unique string IDs and complete `eligibleKeys`, including hidden and zero-valued categories. Set category `interaction` on `PieChart`, give its Series a `categoryKey`, and retain complete data and Cells. Hiding suppresses a slice without reallocating its angle; `visibleSeries` alone does not bind slices.</Callout>
 
-Focus highlights a slice; Enter/Space activates it and Escape resets. In explicit visibility mode, the legend keeps at least one category visible. Focus never changes visibility; explicit controls can clear focus. See [Root interaction](/docs/chart-components/root/) for controlled actions.
+Focus highlights a slice; Enter/Space activates it and Escape resets. In explicit visibility mode, the legend keeps at least one category visible. Focus never changes visibility; explicit controls can clear focus. See [Chart interaction](/docs/chart-components/chart/) for controlled actions.
 
 ## Initial tooltip
 
 Set `defaultPinnedCategory="service"` to open the first tooltip on Service. It follows that ID when rows reorder.
 
-<Callout title="Initial tooltip">Use one category-keyed `PieChart.Series` with explicit data and one `PieChart.Tooltip` with `itemKey`. Compound parts can be wrapped in fragments or consumer components. The legacy native composition retains its direct-child requirement. Inspection or hiding the category dismisses the initial pin until remount; explicit tooltip state takes precedence.</Callout>
+<Callout title="Initial tooltip">Use one category-keyed `PieChart.Series` with explicit data and one `PieChart.Tooltip` with `itemKey`. Compound parts can be wrapped in fragments or consumer components. Inspection or hiding the category dismisses the initial pin until remount; explicit tooltip state takes precedence.</Callout>
 
 ## Materials
 
@@ -58,9 +58,9 @@ Labels show each category’s share of the original 1,000 hours, even when categ
 Use `glowCategories={["design"]}` to decorate a specific category.
 
 ```tsx title="Selected category on a rounded donut"
-import { PieSeries } from "@kind-ui/charts";
+import { PieChart } from "@kind-ui/charts";
 
-<PieSeries
+<PieChart.Series
   data={data}
   dataKey="hours"
   categoryKey="key"
@@ -87,7 +87,7 @@ Switch Geometry to compare the finishes.
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="pie" variant="loading" />
 
@@ -97,20 +97,23 @@ Configure the angular plot and its category-valued series.
 
 ### PieChart
 
-Use inside a sized `ResponsiveContainer`.
+Set the plot size on the chart and add its parts as children.
 
 <div className="line-props-scroll" role="region" aria-label="PieChart props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `animate` | `boolean \| PieAnimation` | `false` | Sector entrance and interaction motion; respects reduced motion. |
 | `animationDirection` | `"clockwise" \| "anticlockwise"` | `"clockwise"` | Continuous entrance sweep; native geometry and row order stay unchanged. |
-| `defaultPinnedCategory` | `string` | Off | Initial category tooltip; requires one direct category-keyed PieSeries and one Tooltip. Dismissal is permanent until remount. |
+| `defaultPinnedCategory` | `string` | Off | Initial category tooltip; requires one category-keyed PieChart.Series and one Tooltip. Dismissal is permanent until remount. |
 | `loading` | `boolean` | `false` | Explicit pending state with a chart-owned loading illustration and blocked inspection. |
 | `loadingLabel` | `string` | `"Loading chart"` | Accessible pending status. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Enables native keyboard inspection; set explicitly here. |
 | `aria-label` / `aria-labelledby` | `string` | — | Accessible chart name. |
-| `children` | `ReactNode` | — | Explicit PieSeries, labels and tooltip. |
+| `children` | `ReactNode` | Required | Explicit PieSeries, labels and tooltip. |
 
 </div>
 
@@ -126,8 +129,7 @@ Value and category identity use separate fields.
 | --- | --- | --- | --- |
 | `data` | `Row[]` | — | Consumer-owned category rows. |
 | `dataKey` | `string \| number \| ((row: Row) => unknown)` | `"value"` in Recharts | Numeric value field or accessor; set explicitly here. |
-| `categoryKey` | `string \| ((row: Row) => string)` | Off | Resolves an own top-level field or accessor into `Root.config`; requires explicit series data and string IDs. |
-| `interactionBinding` | `"root"` | Off | Shares category identities with category-kind Root interaction; filters original rows and Cells using Root visibility. |
+| `categoryKey` | `string \| ((row: Row) => string)` | Off | Resolves an own top-level field or accessor into chart `config`; requires explicit series data and string IDs. |
 | `nameKey` | `string \| number \| ((row: Row) => unknown)` | `"name"` | Native category name; use config keys for semantic identity. |
 | `innerRadius` | `number` or percentage | `0` | A positive radius produces a Donut. |
 | `outerRadius` | `number` or percentage | `"80%"` | Sector size; percentages use Recharts' available radius. |
@@ -149,11 +151,10 @@ Keep slice identities, legend actions and tooltip formatting aligned with these 
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
 
-The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

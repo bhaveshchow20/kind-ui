@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { BoxPlotChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   {
@@ -32,14 +32,18 @@ const data = [
 ];
 const config = {
   latency: { label: "Response time · ms", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function HorizontalResponseTimeBoxPlot() {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.BoxPlotChart
+    <>
+      <>
+        <BoxPlotChart
+          legendPosition="top"
+          config={config}
+          defaultVisibleSeries={Object.keys(config)}
+          width="100%"
+          height={280}
           data={data}
           animate
           accessibilityLayer
@@ -47,8 +51,8 @@ export function HorizontalResponseTimeBoxPlot() {
           margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
           aria-label="Response time distributions in milliseconds"
         >
-          <Chart.CartesianGrid horizontal={false} strokeDasharray="3 3" />
-          <Chart.XAxis
+          <BoxPlotChart.Grid vertical horizontal={false} strokeDasharray="3 3" stroke="#ccc" />
+          <BoxPlotChart.XAxis
             type="number"
             domain={[0, 180]}
             tickFormatter={(value: number) => `${value}`}
@@ -56,8 +60,9 @@ export function HorizontalResponseTimeBoxPlot() {
             tickLine={false}
             tickMargin={10}
             height={44}
+            tick={{ fill: "#666" }}
           />
-          <Chart.YAxis
+          <BoxPlotChart.YAxis
             type="category"
             dataKey="period"
             axisLine={false}
@@ -65,8 +70,9 @@ export function HorizontalResponseTimeBoxPlot() {
             tickMargin={8}
             width={120}
             interval={0}
+            tick={{ fill: "#666" }}
           />
-          <Chart.BoxPlotSeries<(typeof data)[number]>
+          <BoxPlotChart.Series<(typeof data)[number]>
             dataKey={(row) => ({
               lowerWhisker: row.lowerWhisker,
               q1: row.q1,
@@ -80,7 +86,7 @@ export function HorizontalResponseTimeBoxPlot() {
             strokeWidth={1.5}
             fillOpacity={0.28}
           />
-          <Chart.Tooltip
+          <BoxPlotChart.Tooltip
             maxWidth={220}
             content={({ active, payload, label }) => {
               const row = payload?.[0]?.payload as (typeof data)[number] | undefined;
@@ -113,7 +119,7 @@ export function HorizontalResponseTimeBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {row.lowerWhisker} ms
+                        {row.lowerWhisker}ms
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
@@ -125,7 +131,7 @@ export function HorizontalResponseTimeBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {row.q1} ms
+                        {row.q1}ms
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
@@ -137,7 +143,7 @@ export function HorizontalResponseTimeBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {row.median} ms
+                        {row.median}ms
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
@@ -149,7 +155,7 @@ export function HorizontalResponseTimeBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {row.q3} ms
+                        {row.q3}ms
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
@@ -161,7 +167,7 @@ export function HorizontalResponseTimeBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {row.upperWhisker} ms
+                        {row.upperWhisker}ms
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
@@ -173,7 +179,7 @@ export function HorizontalResponseTimeBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {row.outlier} ms
+                        {row.outlier}ms
                       </dd>
                     </div>
                   </dl>
@@ -181,8 +187,9 @@ export function HorizontalResponseTimeBoxPlot() {
               );
             }}
           />
-        </Chart.BoxPlotChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          <BoxPlotChart.Legend />
+        </BoxPlotChart>
+      </>
+    </>
   );
 }

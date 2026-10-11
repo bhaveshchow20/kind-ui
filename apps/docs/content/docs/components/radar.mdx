@@ -9,7 +9,7 @@ Compare Studio and Field scores on a common 0–100 scale.
 
 ## Usage
 
-`RadarChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+`RadarChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
 Compare measures on a shared radial scale with one `RadarSeries` per profile.
 
@@ -39,7 +39,7 @@ Click a polygon or press Enter/Space to select it. Repeat or press Escape to cle
 
 <ChartExample id="radar-selection" />
 
-Use Root `interaction={{ kind: "series", mode: "focus", eligibleKeys }}`. Pair `selected` with `onSelectionChange` for controlled focus. The local `RadarChart selection="series"` API remains available for compatibility.
+Set `RadarChart.interaction` to `{ kind: "series", mode: "focus", eligibleKeys }`. Pair `selected` with `onSelectionChange` for controlled focus.
 
 Selection highlights a profile without hiding other values.
 
@@ -55,7 +55,7 @@ See [material support](/docs/guides/materials/) for custom-shape limitations.
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="radar" variant="loading" />
 
@@ -65,21 +65,21 @@ Configure the shared scale, profile selection and series styling.
 
 ### RadarChart
 
-Use inside `Root` and a sized `ResponsiveContainer`.
+Pass `config` and an accessible name, then add the axes and series as children.
 
 <div className="line-props-scroll" role="region" aria-label="RadarChart props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `data` | `Row[]` | — | Category rows used by explicit axes and series. |
 | `animate` | `boolean \| RadarAnimation` | `false` | Center-out entrance for default polygons; respects reduced motion. |
-| `selection` | `"none" \| "series"` | `"none"` | Opts in to persistent series controls. |
-| `selectedSeries` | `string \| null` | Local state | Controlled selection when supplied; requires a callback. |
-| `onSelectedSeriesChange` | `(next: string \| null) => void` | — | User toggle/reset requests; does not control visibility. |
 | `cx` / `cy` | `number \| string` | `"50%"` | Native polar center. |
 | `outerRadius` | `number \| string` | `"80%"` | Plot radius; these components reserve label space with `"68%"`. |
 | `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name; does not add spoke keyboard inspection. |
-| `children` | `ReactNode` | — | Explicit polar axes, grid, series and tooltip. |
+| `children` | `ReactNode` | Required | Explicit polar axes, grid, series and tooltip. |
 
 </div>
 
@@ -100,7 +100,7 @@ String `dataKey` values identify config entries. Use `seriesKey` for numeric key
 | `fillOpacity` | `number` | SVG default `1` | These overlapping profiles explicitly use `0.18`. |
 | `dot` | `boolean` or native dot props / renderer | `false` | Optional native category marks. |
 | `activeDot` | `boolean` or native dot props / renderer | Kind active marker | Native inspected-category marker; independent of selection. |
-| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; Root visibility also applies. |
+| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; chart visibility also applies. |
 | `shape` | Native element or renderer | Kind default polygon | Consumer-owned shape bypasses material and center-out masking. |
 
 </div>
@@ -113,11 +113,10 @@ Configure profile colors, radial scales and selection controls with these compon
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
 
-The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

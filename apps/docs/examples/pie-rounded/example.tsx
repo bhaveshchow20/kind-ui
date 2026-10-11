@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { PieChart, type SeriesConfig } from "@kind-ui/charts";
 
 const config = {
   design: { label: "Design", color: "#733bff", formatValue: (value: unknown) => `${value} hours` },
@@ -18,7 +18,7 @@ const config = {
     color: "#147c68",
     formatValue: (value: unknown) => `${value} hours`,
   },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 const data: { key: keyof typeof config; hours: number; share: string }[] = [
   { key: "design", hours: 420, share: "42%" },
   { key: "engineering", hours: 310, share: "31%" },
@@ -34,20 +34,20 @@ export function RoundedAllocationChart({
   const petal = geometry === "petal-donut";
   const pie = geometry === "rounded-pie";
   return (
-    <Chart.Root
-      config={config}
-      defaultVisibleSeries={Object.keys(config)}
-      interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
-    >
-      <Chart.Legend aria-label="Allocation categories" />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.PieChart
+    <>
+      <>
+        <PieChart
+          legendPosition="top"
+          config={config}
+          defaultVisibleSeries={Object.keys(config)}
+          interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
+          width="100%"
+          height={280}
           animate={false}
           accessibilityLayer
           aria-label={`${pie ? "Rounded pie" : petal ? "Petal donut" : "Rounded donut"}: team allocation, 1,000 hours`}
         >
-          <Chart.PieSeries
-            interactionBinding="root"
+          <PieChart.Series
             data={data}
             dataKey="hours"
             nameKey="key"
@@ -59,9 +59,10 @@ export function RoundedAllocationChart({
             cornerRadius={petal ? 20 : 8}
             paddingAngle={petal ? 8 : 2}
           />
-          <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
-        </Chart.PieChart>
-      </Chart.ResponsiveContainer>
+          <PieChart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
+          <PieChart.Legend aria-label="Allocation categories" />
+        </PieChart>
+      </>
       <div className="sr-only">
         <table>
           <caption>Team allocation (1,000 hours)</caption>
@@ -83,6 +84,6 @@ export function RoundedAllocationChart({
           </tbody>
         </table>
       </div>
-    </Chart.Root>
+    </>
   );
 }

@@ -19,20 +19,24 @@ A string `dataKey` usually matches the config key. For a function or numeric
 `dataKey`, supply `seriesKey` so formatting and visibility use the same identity.
 
 ```tsx
+import { LineChart } from "@kind-ui/charts";
+
 const data = [{ month: "Jan", count: 42 }, { month: "Feb", count: 58 }];
 const config = { visitors: { label: "Visitors", color: "#733bff" } };
 
-<Chart.LineChart
+<LineChart
   data={data}
   config={config}
-  xDataKey="month"
-  series={[{ dataKey: (row) => row.count, seriesKey: "visitors" }]}
   aria-label="Monthly visitors"
-/>
+>
+  <LineChart.XAxis dataKey="month" />
+  <LineChart.Series<(typeof data)[number]> dataKey={(row) => row.count} seriesKey="visitors" />
+  <LineChart.Legend />
+</LineChart>
 ```
 
 The example reads `count` but uses `visitors` for its label, color, and legend.
-See [Root](/docs/chart-components/root/) to control visibility and
+See [Chart frame](/docs/chart-components/chart/) to control visibility and
 [SeriesConfig](/docs/chart-components/series-config/) to format values.
 
 ## Category and node colors
@@ -40,29 +44,34 @@ See [Root](/docs/chart-components/root/) to control visibility and
 Match category IDs to metadata independently of the measured value.
 
 ```tsx
+import { PieChart } from "@kind-ui/charts";
+
 const data = [{ id: "search", value: 35 }, { id: "direct", value: 65 }];
 const config = {
   search: { label: "Search", color: "#733bff" },
   direct: { label: "Direct", color: "#1c9d8f" },
 };
 
-<Chart.PieSeries data={data} dataKey="value" categoryKey="id" />
+<PieChart config={config} aria-label="Visitor sources">
+  <PieChart.Series data={data} dataKey="value" categoryKey="id" />
+  <PieChart.Legend />
+</PieChart>
 ```
 
-Place the Pie series inside a PieChart and `Root config={config}`. Reordering
+Pass the category config to PieChart. Reordering
 these rows keeps Search purple and Direct green.
 
 | Family | Identity and metadata |
 | --- | --- |
-| [Pie](/docs/components/pie/) | `PieSeries.categoryKey` matches rows to Root config |
-| [Radial](/docs/components/radial/) | `RadialBarChart.categoryKey` matches chart rows to Root config |
+| [Pie](/docs/components/pie/) | `PieSeries.categoryKey` matches rows to chart config |
+| [Radial](/docs/components/radial/) | `RadialBarChart.categoryKey` matches chart rows to chart config |
 | [ActivityRings](/docs/components/radial/#activityrings) | Each ring's `key` matches its config; `value` and `domain` describe progress |
-| [Sankey](/docs/components/sankey/) | Node IDs match `nodeConfig`; pass the same config to `SankeyLegend` |
+| [Sankey](/docs/components/sankey/) | Node IDs match chart `config`; `SankeyChart.Legend` inherits it |
 | [Heatmap](/docs/components/heatmap/) | Row/column IDs locate cells; a quantitative scale colors their values |
 
 Explicit series paint and per-item Cells can override config colors. Keep legend
 metadata consistent with those choices. For category visibility or node focus,
-use the family's documented Root interaction binding.
+use the family's documented `interaction` contract.
 
 ## Inspection and emphasis
 

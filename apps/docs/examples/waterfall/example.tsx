@@ -47,7 +47,6 @@ export function CashFlowChart({ state = "ready" }: { state?: "ready" | "loading"
           Decrease
         </span>
       </div>
-
       <WaterfallChart
         config={config}
         height={280}

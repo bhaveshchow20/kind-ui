@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { LineChart, type SeriesConfig } from "@kind-ui/charts";
 import { useEffect, useState } from "react";
 
 const data = [
@@ -19,7 +19,7 @@ const data = [
 const config = {
   actual: { label: "Revenue", color: "#733bff", formatValue: (value: unknown) => `$${value}k` },
   target: { label: "Target", color: "#119548", formatValue: (value: unknown) => `$${value}k` },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function RevenueComparisonChart() {
   const [fontScale, setFontScale] = useState(1);
@@ -45,23 +45,31 @@ export function RevenueComparisonChart() {
   }, []);
   return (
     <figure style={{ margin: 0 }}>
-      <Chart.LineChart
+      <LineChart
         data={data}
         config={config}
-        xDataKey="period"
-        xAxis={{ tickMargin: 12, height: 48, interval: "preserveStartEnd" }}
+        height={280}
         margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
         aria-label="Revenue and target in thousands of dollars"
-        yAxis={{
-          tickMargin: 12,
-          width: 72 + 16 * fontScale,
-          tickFormatter: (value) => `$${value}k`,
-        }}
-        series={[
-          { seriesKey: "actual", dataKey: "actual" },
-          { seriesKey: "target", dataKey: "target", type: "linear", strokeDasharray: "5 5" },
-        ]}
-      />
+      >
+        <LineChart.Grid />
+        <LineChart.XAxis dataKey="period" tickMargin={12} height={48} interval="preserveStartEnd" />
+        <LineChart.YAxis
+          tickMargin={12}
+          width={72 + 16 * fontScale}
+          tickFormatter={(value) => `$${value}k`}
+        />
+        <LineChart.Series dataKey="actual" type="monotone" dot={{ r: 2.5 }} strokeWidth={2} />
+        <LineChart.Series
+          dataKey="target"
+          type="linear"
+          dot={{ r: 2.5 }}
+          strokeWidth={2}
+          strokeDasharray="5 5"
+        />
+        <LineChart.Tooltip />
+        <LineChart.Legend />
+      </LineChart>
       <div
         style={{
           position: "absolute",

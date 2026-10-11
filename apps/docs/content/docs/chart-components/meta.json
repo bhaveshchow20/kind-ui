@@ -1,12 +1,4 @@
 {
   "title": "Chart Components",
-  "pages": [
-    "root",
-    "series-config",
-    "legend",
-    "tooltip",
-    "responsive-container",
-    "axes-grid",
-    "labels"
-  ]
+  "pages": ["chart", "series-config", "legend", "tooltip", "axes-grid", "labels"]
 }

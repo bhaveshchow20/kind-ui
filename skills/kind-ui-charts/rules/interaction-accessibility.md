@@ -1,8 +1,7 @@
 # Loading and controlled interaction
 
-Pass `loading={pending}` and a specific `loadingLabel` to the family chart root,
-not to `Root`. All 0.3 families support them. The stylesheet supplies decorative
-skeletons; real content remains mounted, hidden and inert while pending. Loading
+Pass `loading={pending}` and a specific `loadingLabel` to the chart.
+Built Tailwind styles supply decorative skeletons; real content remains mounted, hidden and inert while pending. Loading
 does not validate bad rows away or delay completion. External legends can remain
 active, so decide whether host controls should be disabled while pending.
 
@@ -12,23 +11,29 @@ empty/error text and retry controls; cancel stale requests in the app. Partial
 results need an explicit policy, not a fabricated finished dataset.
 
 `animate={false}` disables chart motion. Reduced motion is handled by the library
-and stylesheet; test the preference and do not add a CSS override that restarts
+and its styles; test the preference and do not add a CSS override that restarts
 skeleton or mark animation. Loading-to-ready rearms enabled entrance animation;
 ordinary hover/color updates should not force a remount.
 
 ## Visibility
 
 ```tsx
-const [visible, setVisible] = useState<string[]>(["revenue", "conversion"]);
-<Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
-  {/* chart + Legend */}
-</Root>;
+import { ComboChart } from "@kind-ui/charts";
+
+<ComboChart config={config} data={data} aria-label="Revenue and conversion"
+  interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+  visibleSeries={visible} onVisibleSeriesChange={setVisible}
+>
+  <ComboChart.XAxis dataKey="month" />
+  <ComboChart.Bar dataKey="revenue" />
+  <ComboChart.Line dataKey="conversion" />
+  <ComboChart.Legend />
+</ComboChart>
 ```
 
 See the [Combo examples](https://kindui.dev/charts/docs/components/combo/).
-Configured Line accepts visibility props directly and supports callback-only
-uncontrolled visibility. On an explicit Root, a callback alone is invalid:
-provide controlled `visibleSeries` or opt-in `defaultVisibleSeries`. Never pass
+A visibility callback alone is invalid: provide controlled `visibleSeries`
+or opt-in `defaultVisibleSeries`. Never pass
 both controlled and default values.
 Passing visibleSeries without a callback makes visibility read-only. Built-in
 Legend owns native buttons and keyboard behavior; do not nest buttons inside
@@ -36,22 +41,22 @@ Legend owns native buttons and keyboard behavior; do not nest buttons inside
 
 ## Persistent focus is separate from visibility
 
-Only when requested, use Root `interaction` with `kind`, `mode: "focus"`, and
+Use chart `interaction` with `kind`, `mode: "focus"`, and
 `eligibleKeys`; pair controlled `selected` with `onSelectionChange`, or use
 `defaultSelected`. Include hidden and zero-valued identities, exclude unavailable
-or removed identities. For mark activation, explicitly opt into
-`markActivation: "matching-legend"`. Hover emphasis is not persistent selection.
+or removed identities. Supported marks share legend actions by default in focus mode; use
+`markActivation: "none"` for passive marks. Hover emphasis is not persistent selection.
 Category and Sankey node bindings require their own family contracts; Sankey
 visibility and persistent Heatmap cell selection are not supported by this contract.
 
 # Name the chart and expose its observations
 
-Give each chart an informative accessible name with units/context; configured
-Line requires `aria-label` or `aria-labelledby`. In explicit composition name the
-host region/Root and preserve the native chart accessibility layer. Keep keyboard
+Give each chart an informative accessible name with units/context using
+`aria-label` or `aria-labelledby`. Preserve the native chart accessibility layer. Keep keyboard
 access and native Legend button semantics when replacing visual content.
 
 A tooltip, legend, or skeleton is not a complete accessible data alternative.
+Use the family’s Content part for controls or a table that needs chart context.
 Supply a visible table or an equally complete nearby representation of the actual
 observations, with caption, row/column headers, units, and missing-value text.
 The examples include tables; avoid treating zero as absent (`value || "No data"`).
@@ -67,6 +72,6 @@ A table may retain all observations while legend visibility only changes marks;
 label that policy. Do not copy skeleton values into the table or announce old
 rows as newly loaded data. Empty and error states need meaningful text.
 
-Heatmap has native table semantics and `HeatmapDataTable`; Sankey offers
-`SankeyTable`. Retrieve their family contracts before composing them. Names and
+Heatmap has native table semantics and `HeatmapChart.DataTable`; Sankey offers
+`SankeyChart.Table`. Retrieve their family contracts before composing them. Names and
 tables are necessary evidence, not a claim of full assistive-technology support.

@@ -9,7 +9,7 @@ Trace how sales, refunds and costs change a cash balance.
 
 ## Usage
 
-`WaterfallChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+`WaterfallChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
 Use `computeWaterfallData` to prepare rows for the bars and connectors.
 
@@ -70,7 +70,7 @@ Tooltips use `value`, `start` and `balance`; set `filterNull={false}` to inspect
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="waterfall" variant="loading" />
 
@@ -84,6 +84,11 @@ Prepare ordered balances, then configure bars and connectors.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `entries` | `readonly WaterfallEntry[]` | Required | Ordered inputs with unique nonempty `id`, `label`, `kind` and kind-specific value. |
 | `initialBalance` | `number \| null` | `0` | Balance before the first entry; `null` means unknown. |
 
@@ -144,13 +149,13 @@ See [Recharts ReferenceLine](https://recharts.github.io/en-US/api/ReferenceLine/
 
 ## Shared components
 
-Use Root for color metadata, axes for balances and Tooltip for each step.
+Use chart config for color metadata, axes for balances and Tooltip for each step.
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 
-The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

@@ -13,13 +13,18 @@ Use `aria-label` or `aria-labelledby` for the chart name. Add a visible summary,
 list, or table containing the data you need readers to access.
 
 ```tsx
+import { LineChart } from "@kind-ui/charts";
+
 <figure>
-  <Chart.LineChart
+  <LineChart
     data={[{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }]}
     config={{ visitors: { label: "Visitors", color: "#733bff" } }}
-    xDataKey="month"
     aria-label="Monthly visitors"
-  />
+  >
+    <LineChart.XAxis dataKey="month" />
+    <LineChart.Series dataKey="visitors" />
+    <LineChart.Tooltip />
+  </LineChart>
   <figcaption>January: 42 visitors. February: 58 visitors.</figcaption>
 </figure>
 ```
@@ -27,7 +32,7 @@ list, or table containing the data you need readers to access.
 Keep the alternative available before client rendering and while loading.
 Update it when data changes. Explain whether filters affect the values shown.
 [HeatmapDataTable](/docs/components/heatmap/#heatmapdatatable) and
-[SankeyTable](/docs/components/sankey/#sankeytable) provide family-specific data
+[SankeyTable](/docs/components/sankey/#sankeycharttable) provide family-specific data
 views.
 
 ## Keyboard access
@@ -57,7 +62,7 @@ motion. See [Motion](/docs/guides/motion/) for still-chart options.
 
 Set `loading` while a request is pending. Use `loadingLabel` to name that state;
 show a separate message for empty results or errors. See
-[Root loading](/docs/chart-components/root/#loading).
+[Chart loading](/docs/chart-components/chart/#loading).
 
 ## Check the result
 

@@ -23,10 +23,6 @@ Kind UI charts supports React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion
 
 Kind UI uses Tailwind v4 utility classes. Add the installed chart package to your
 Tailwind sources; the `@source` path is relative to your CSS file.
-Use unprefixed utilities for charts. If your app uses a Tailwind prefix, compile
-a separate unprefixed Tailwind CSS entry for the chart package.
-For a nonce-based Content Security Policy, pass your request nonce to `Root`
-or configured `LineChart` through `rootProps.nonce`.
 
 <Tabs items={["React", "Next.js"]}>
 <Tab value="React">
@@ -83,7 +79,7 @@ Put interactive chart components behind a client boundary:
 
 ```tsx title="Chart.tsx"
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { LineChart } from "@kind-ui/charts";
 ```
 
 </Tab>
@@ -118,15 +114,15 @@ Run your app. You will see four months of visitors; inspect a point to read its 
 
 ## Use your own data
 
-In the copied component, replace `data` with your observations. Keep `period` as the x-axis field and `visitors` as a number, or change `xDataKey` and the config key together.
+In the copied component, replace `data` with your observations. Keep `period` as the x-axis field and `visitors` as a number, or update `LineChart.XAxis.dataKey` and the Series data key.
 
 Change the config label and color to match your measure. Update the chart name and text alternative too.
 
 ## Composition
 
-Configured `LineChart` supplies context, sizing and plot parts. Do not wrap it in `Root`.
+Each chart requires `config`, an accessible name and explicit children. Add its series, axes, tooltip and legend as parts. Set dimensions on the chart and use `Content` for contextual HTML controls or a data alternative.
 
-Other families use their own composition. Start with their complete examples:
+Start with a complete example for your family:
 
 | Your task | Next example |
 | --- | --- |
@@ -140,7 +136,7 @@ Use [Line composition](/docs/components/line/#compose-plot-parts) when you need 
 ## Public imports
 
 ```tsx
-import * as Chart from "@kind-ui/charts";
+import { LineChart } from "@kind-ui/charts";
 ```
 
 Use the documented exports. There is no `@kind-ui/charts/motion` entry.

@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { RadarChart, type SeriesConfig } from "@kind-ui/charts";
 import { useState } from "react";
 
 const data = [
@@ -13,49 +13,51 @@ const data = [
 const config = {
   studio: { label: "Studio", color: "#733bff" },
   field: { label: "Field", color: "#008b82" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function SelectableRadarChart() {
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
   return (
-    <Chart.Root
-      config={config}
-      interaction={{
-        kind: "series",
-        mode: "focus",
-        eligibleKeys: Object.keys(config),
-        selected: selectedSeries,
-        onSelectionChange: setSelectedSeries,
-      }}
-    >
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.RadarChart
+    <>
+      <>
+        <RadarChart
+          legendPosition="top"
+          config={config}
+          interaction={{
+            kind: "series",
+            mode: "focus",
+            eligibleKeys: Object.keys(config),
+            selected: selectedSeries,
+            onSelectionChange: setSelectedSeries,
+          }}
+          width="100%"
+          height={280}
           data={data}
           animate
           outerRadius="68%"
           margin={{ top: 24, right: 36, bottom: 24, left: 36 }}
           aria-label="Product research scores out of 100: Studio and Field"
         >
-          <Chart.PolarGrid radialLines={false} />
-          <Chart.PolarAngleAxis dataKey="period" tick={{ fontSize: 12 }} />
-          <Chart.PolarRadiusAxis
+          <RadarChart.Grid radialLines={false} />
+          <RadarChart.AngleAxis dataKey="period" tick={{ fontSize: 12 }} />
+          <RadarChart.RadiusAxis
             domain={[0, 100]}
             ticks={[25, 50, 75, 100]}
             angle={60}
             axisLine={false}
             tick={{ fontSize: 10 }}
           />
-          <Chart.RadarSeries dataKey="studio" strokeWidth={2} fillOpacity={0.18} />
-          <Chart.RadarSeries dataKey="field" strokeWidth={2} fillOpacity={0.18} />
-          <Chart.Tooltip />
-        </Chart.RadarChart>
-      </Chart.ResponsiveContainer>
+          <RadarChart.Series dataKey="studio" strokeWidth={2} fillOpacity={0.18} />
+          <RadarChart.Series dataKey="field" strokeWidth={2} fillOpacity={0.18} />
+          <RadarChart.Tooltip />
+          <RadarChart.Legend />
+        </RadarChart>
+      </>
       <output aria-live="polite" className="sr-only">
         {selectedSeries
           ? `Selected: ${config[selectedSeries as keyof typeof config].label}`
           : "All series"}
       </output>
-    </Chart.Root>
+    </>
   );
 }

@@ -26,21 +26,18 @@ export function ConfiguredFlowChart({ state = "ready" }: { state?: "ready" | "lo
   return (
     <section aria-label="Energy allocation">
       <SankeyChart
-        interactionBinding="root"
         loading={state === "loading"}
         data={data}
         config={nodeConfig}
         height={250}
         aria-label="Energy allocation"
-        rootProps={{
-          interaction: {
-            kind: "node",
-            mode: "focus",
-            eligibleKeys: data.nodes.map((node) => node.id),
-            markActivation: "matching-legend",
-          },
-        }}
         animate={{ revealDurationMs: 900 }}
+        interaction={{
+          kind: "node",
+          mode: "focus",
+          eligibleKeys: data.nodes.map((node) => node.id),
+          markActivation: "matching-legend",
+        }}
       >
         <SankeyChart.Nodes />
         <SankeyChart.Links />

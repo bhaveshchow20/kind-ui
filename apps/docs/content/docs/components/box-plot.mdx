@@ -9,9 +9,9 @@ Supply your own quartiles, whiskers and outliers to compare distributions.
 
 ## Usage
 
-`BoxPlotChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+`BoxPlotChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
-Open **Code** for the complete component and its data. `BoxPlotSeries` draws each supplied summary; Root provides the series label and color.
+Open **Code** for the complete component and its data. `BoxPlotSeries` draws each supplied summary; Chart config provides the series label and color.
 
 Use this composition when adapting the example:
 
@@ -83,7 +83,7 @@ Choose Default, Clay or Glow. Explicit `filter` or `style.filter` overrides the 
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while summaries are pending. Use `loadingLabel` to name the pending data.
+Set [`loading`](/docs/chart-components/chart/#loading) while summaries are pending. Use `loadingLabel` to name the pending data.
 
 <ChartExample id="box-plot" variant="loading" />
 
@@ -97,12 +97,15 @@ Use these props when composing a Box Plot.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `data` | `Row[]` | — | Consumer-owned observations containing summaries or accessor inputs. |
 | `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | Native layout; `"vertical"` gives horizontal boxes with numeric X and categorical Y axes. |
 | `animate` | `boolean \| BarAnimation` | `false` | Chart-owned clipped entrance; respects reduced motion. Native per-series animation is disabled. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Native keyboard inspection. Set explicitly in these components. |
 | `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
-| `children` | `ReactNode` | — | Explicit series, axes, grid and tooltip. |
+| `children` | `ReactNode` | Required | Explicit series, axes, grid and tooltip. |
 
 </div>
 
@@ -115,14 +118,14 @@ Custom range shapes retain inspection but cannot use Bar category emphasis. See 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `dataKey` | `(keyof Row & string) \| ((row: Row) => BoxPlotSummary \| null \| undefined)` | Required | Direct property name or accessor; nested string paths are not interpreted. |
-| `seriesKey` | `string` | Required | Root metadata, color and visibility identity, independent of the generated range accessor. |
+| `seriesKey` | `string` | Required | Chart metadata, color and visibility identity, independent of the generated range accessor. |
 | `material` | `"clay" \| "glow"` | Omitted | Static mark finish. Explicit filters and custom shapes retain ownership. |
 | `barSize` | `number \| string` | Native automatic sizing | Category-axis width; numbers are pixels, native percentage strings are also accepted. |
 | `outlierRadius` | `number` | `3` | Radius of each outlier circle in screen pixels. |
 | `shape` | `(props: BoxPlotShapeProps) => ReactNode` | Built-in mark | Receives original summary, native Bar shape props and mapped coordinates. Owns returned markup. |
 | `markProps` | SVG group props, excluding `children` | — | Attributes, styles, handlers and refs forwarded to each present mark group. |
 | `xAxisId` / `yAxisId` | `string \| number` | `0` | Native axes used to map statistical values. |
-| `hide` | `boolean` | `false` | Suppresses paint and inspection while preserving full-data layout; Root visibility also applies. |
+| `hide` | `boolean` | `false` | Suppresses paint and inspection while preserving full-data layout; chart visibility also applies. |
 
 </div>
 
@@ -167,11 +170,10 @@ Use these building blocks to customize this chart. Each reference includes its f
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
 
-The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

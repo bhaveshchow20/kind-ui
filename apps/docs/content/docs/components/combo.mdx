@@ -9,7 +9,7 @@ Compare shipped units with production capacity and a target in one plot.
 
 ## Usage
 
-`ComboChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+`ComboChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
 Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
 
@@ -55,8 +55,7 @@ Focus a series through its legend or marks. June is projected; the target has an
 Use an expanded stack for proportions. Keep raw data; format the axis and tooltip as percentages.
 
 ```tsx
-import { BarSeries, ComboChart, ResponsiveContainer, Root, type SeriesConfig, Tooltip, XAxis, YAxis, createPercentStack } from "@kind-ui/charts";
-
+import { ComboChart, type SeriesConfig, createPercentStack } from "@kind-ui/charts";
 
 const data = [{ month: "Jan", online: 60, store: 40 }];
 const config = {
@@ -68,18 +67,14 @@ const percent = createPercentStack({
 });
 
 export function PercentageChart() {
-  return <Root config={config}>
-    <ResponsiveContainer width="100%" height={280}>
-      <ComboChart data={data} stackOffset="expand" aria-label="Sales channel share">
-        <XAxis dataKey="month" />
-        <YAxis domain={[0, 1]} tickFormatter={percent.tickFormatter} />
-        <BarSeries dataKey="online" stackId="share" />
-        <BarSeries dataKey="store" stackId="share" />
-        <Tooltip normalizedValue={percent.normalizedValue} />
-      </ComboChart>
-    </ResponsiveContainer>
-    <div className="sr-only">January: Online 60, Store 40.</div>
-  </Root>;
+  return <ComboChart config={config} data={data} stackOffset="expand" aria-label="Sales channel share">
+    <ComboChart.XAxis dataKey="month" />
+    <ComboChart.YAxis domain={[0, 1]} tickFormatter={percent.tickFormatter} />
+    <ComboChart.Bar dataKey="online" stackId="share" />
+    <ComboChart.Bar dataKey="store" stackId="share" />
+    <ComboChart.Tooltip normalizedValue={percent.normalizedValue} />
+    <ComboChart.Content><div className="sr-only">January: Online 60, Store 40.</div></ComboChart.Content>
+  </ComboChart>;
 }
 ```
 
@@ -87,7 +82,7 @@ export function PercentageChart() {
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="combo" variant="loading" />
 
@@ -101,6 +96,9 @@ Configure the shared plot, then set options on each series.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `data` | `Row[]` | — | Shared category observations; Kind does not aggregate or transform them. |
 | `animate` | `boolean \| ComboAnimation` | `false` | Chart-owned entrance and inspection motion, respecting reduced motion. |
 | `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | Native chart orientation; supply matching category and numeric axes. |
@@ -108,7 +106,7 @@ Configure the shared plot, then set options on each series.
 | `barCategoryGap` / `barGap` | `number \| string` | `"10%"` / `4` | Category and grouped-bar spacing in native geometry. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Keyboard category inspection; enabled explicitly in these components. |
 | `aria-label` / `aria-labelledby` | `string` | — | Consumer-supplied accessible plot name. |
-| `children` | `ReactNode` | — | Explicit axes, grid, series and tooltip. |
+| `children` | `ReactNode` | Required | Explicit axes, grid, series and tooltip. |
 
 </div>
 
@@ -195,11 +193,10 @@ Share series metadata and inspection across the bars, lines and areas.
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
 
-The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

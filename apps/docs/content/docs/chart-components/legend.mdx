@@ -3,7 +3,7 @@ title: Legend
 description: Display series labels and share visibility or focus controls.
 ---
 
-`Legend` reads labels and markers from [Root](/docs/chart-components/root/). Place it outside the plot's [ResponsiveContainer](/docs/chart-components/responsive-container/).
+Each family’s `Legend` reads labels and markers from chart config and mounts outside the SVG. Add it as an explicit child of the chart.
 
 Focus Print or Digital to compare library loans with the same legend controls in grouped or stacked views.
 
@@ -12,18 +12,23 @@ Focus Print or Digital to compare library loans with the same legend controls in
 ## Usage
 
 ```tsx
-<Chart.Root config={config} interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}>
-  <Chart.Legend />
-  {/* ResponsiveContainer and plot */}
-</Chart.Root>
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart config={config} data={data} aria-label="Daily orders"
+  interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
+>
+  <BarChart.XAxis dataKey="day" />
+  <BarChart.Series dataKey="orders" />
+  <BarChart.Legend />
+</BarChart>
 ```
 
 Click an item to focus it and dim peers. Focus preserves geometry, visibility and tooltip values.
 
-Explicit Root `interaction.mode="visibility"` enables hide/show using controlled visibility or `defaultVisibleSeries`. Keyboard users can activate items with Enter or Space and reset focus with Escape.
+Chart `interaction.mode="visibility"` enables hide/show using controlled visibility or `defaultVisibleSeries`. Keyboard users can activate items with Enter or Space and reset focus with Escape.
 
 <Callout type="info">
-Both modes retain an active legend item and its data: focus keeps the selected item active, clearing focus restores all, and visibility refuses to hide the last available item. Dimmed and hidden entries stay in place and remain selectable; unavailable items appear as labels. Configure visibility and focus on [Root](/docs/chart-components/root/).
+Both modes retain an active legend item and its data: focus keeps the selected item active, clearing focus restores all, and visibility refuses to hide the last available item. Dimmed and hidden entries stay in place and remain selectable; unavailable items appear as labels. Configure visibility and focus on [Chart frame](/docs/chart-components/chart/).
 </Callout>
 
 ## Markers and content
@@ -33,18 +38,20 @@ Use `icon` or `legendShape` in [SeriesConfig](/docs/chart-components/series-conf
 Customize item content with the render callback. Keep it noninteractive so the legend button remains the single control.
 
 ```tsx
-<Chart.Legend>
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart.Legend>
   {({ label, marker, visible, selected, mode }) => (
     <span>
       {marker}{label}
       {mode === "focus" ? (selected ? " (highlighted)" : "") : (visible ? "" : " (hidden)")}
     </span>
   )}
-</Chart.Legend>
+</BarChart.Legend>
 ```
 
 ## Props
 
 <ApiTable name="Legend" compact />
 
-Use `emphasis="series"` for hover or keyboard-focus highlighting of active entries in supported families. Hovering a dimmed or hidden legend entry or chart mark does not highlight its data; tooltip inspection and synchronized pointer movement continue. Click or use Enter/Space to restore it. Scatter supports emphasis through explicit Root focus.
+Use `emphasis="series"` for hover or keyboard-focus highlighting of active entries in supported families. Hovering a dimmed or hidden legend entry or chart mark does not highlight its data; tooltip inspection and synchronized pointer movement continue. Click or use Enter/Space to restore it. Scatter supports emphasis through chart focus.

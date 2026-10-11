@@ -10,7 +10,9 @@ filters, shapes, or geometry with material defaults.
 
 ```tsx
 // Good: Default, preserving normal paint.
-<BarSeries dataKey="revenue" seriesKey="revenue" />
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart.Series dataKey="revenue" seriesKey="revenue" />
 // Bad: material="default" is not a released token.
 ```
 
@@ -18,10 +20,13 @@ filters, shapes, or geometry with material defaults.
 and contain only letters, digits, underscores, or hyphens. Keep keys independent
 of display labels, locale, sort order, and row indices. Match seriesKey and controlled
 visibility to those keys. For Pie/Radial category binding, provide explicit
-`categoryKey`, unique stable strings matching config, and `interactionBinding="root"`.
+`categoryKey`, unique stable strings matching config, and direct category
+`interaction` on the chart.
 Do not assume series visibility automatically provides category interactions.
 
 ```tsx
+import type { SeriesConfig } from "@kind-ui/charts";
+
 const config = {
   revenue: { label: "Revenue", color: { light: "#3157a5", dark: "#91b5ff" } },
 } satisfies SeriesConfig;

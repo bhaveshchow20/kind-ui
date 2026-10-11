@@ -43,6 +43,8 @@ export function SupportHeatmap({ state = "ready" }: { state?: "ready" | "loading
       scale={scale}
       animate
       missingLabel="No report"
+      config={{}}
+      aria-label="Heatmap chart"
     >
       <HeatmapChart.Grid
         caption="Support requests by day and hour"

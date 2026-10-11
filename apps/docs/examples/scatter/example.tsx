@@ -24,14 +24,12 @@ export function TaskScatterChart({ state = "ready" }: { state?: "ready" | "loadi
       config={config}
       height={280}
       legendPosition="top"
-      rootProps={{
-        interaction: { kind: "series", mode: "focus", eligibleKeys: Object.keys(config) },
-      }}
       loading={state === "loading"}
       animate
       accessibilityLayer
       margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
       aria-label="Task latency in milliseconds and acceptance percentage by cohort"
+      interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
     >
       <ScatterChart.Grid vertical stroke="#ccc" strokeDasharray="3 3" />
       <ScatterChart.XAxis

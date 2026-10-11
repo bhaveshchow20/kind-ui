@@ -24,7 +24,7 @@ import { SankeyChart } from "@kind-ui/charts";
 </SankeyChart>
 ```
 
-With `config`, Sankey owns a node-focus Root and responsive plot. Map every node ID to a label and color. Include `Nodes` and `Links` explicitly; omitted renderer parts stay absent, including through fragments and wrapper components. `Legend` and `Table` inherit config/data and mount outside the plot in the browser. Use `rootProps` for shared interaction and frame attributes. The legacy `nodeConfig` composition remains available for advanced layouts and server-rendered HTML.
+Sankey requires `config`, an accessible name and explicit children. Map every node ID to a label and color. Include `Nodes` and `Links`; omitted renderer parts stay absent, including through fragments and wrapper components. `Legend` and `Table` inherit config/data and mount outside the plot in the browser. Set shared actions on `interaction` and outer HTML attributes on `frameProps`.
 
 Nodes use their own color; solid links use the source color. `SankeyChart.Tooltip` keeps native tooltip props and themed defaults.
 
@@ -51,9 +51,9 @@ Set `animate={{ revealDurationMs: 900 }}` for a ribbon entrance. Reduced motion 
 Use `SankeyChart.Nodes render={(node) => ...}` to place `SankeyChart.NodeLabel` beside `SankeyChart.Node`. The callback supplies computed geometry and payload. Pass the same `data` and `nodeConfig` as the diagram.
 
 ```tsx
-import { SankeyNodeLabel } from "@kind-ui/charts";
+import { SankeyChart } from "@kind-ui/charts";
 
-<SankeyNodeLabel node={node} data={data} nodeConfig={nodeConfig}
+<SankeyChart.NodeLabel node={node} data={data} nodeConfig={nodeConfig}
   position="outside" showValues />
 ```
 
@@ -63,7 +63,7 @@ Node-config icons appear alongside the label.
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while flows are pending. Use `loadingLabel` to name the pending data.
+Set [`loading`](/docs/chart-components/chart/#loading) while flows are pending. Use `loadingLabel` to name the pending data.
 
 <ChartExample id="sankey" variant="loading" />
 
@@ -77,11 +77,10 @@ Customize the diagram with these props.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `data` | `SankeyFlowData` | Required | Immutable nodes and links; validates identities, quantities, acyclicity and intermediate balance. |
-| `nodeConfig` | `SankeyNodeConfig` | Off | Explicit node-ID labels/colors; enables default Kind node and source-link paint. |
-| `interactionBinding` | `"root"` | Off | Shares node focus with Root; requires `kind: "node"` and `mode: "focus"`. |
-| `node` | Native object, element or `(props: SankeyNodeProps) => ReactNode` | Kind node with `nodeConfig`; otherwise native | Receives computed geometry and typed node identity. |
-| `link` | Native object, element or native-compatible callback using `SankeyLinkProps` | Kind link with `nodeConfig`; otherwise native | Metadata enables default Kind paint/motion; custom callbacks retain control. |
 | `animate` | `boolean \| { revealDurationMs?: number }` | `false` | Flow paint reveal; `true` uses 450ms. Duration must be finite and nonnegative. |
 | `empty` | `ReactNode` | `"No positive flows"` | Status for empty or all-zero data. |
 | `nodeWidth` | `number` | `10` | Native node rectangle width. |
@@ -91,7 +90,8 @@ Customize the diagram with these props.
 | `iterations` | `number` | `32` | Native layout relaxation iterations. |
 | `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Reserve space for consumer labels. |
 | `onClick` / `onMouseEnter` / `onMouseLeave` | `(item, type, event) => void` | — | Native event with typed node/link IDs; `type` is `"node" \| "link"`. |
-| `children` | `ReactNode` | — | Native tooltip or other supported children. |
+| `config` | `SankeyNodeConfig` | Required | Labels and colors for every node ID. |
+| `children` | `ReactNode` | Required | Explicit Nodes, Links, Tooltip and HTML parts. |
 
 </div>
 
@@ -110,7 +110,7 @@ Equal-value positive parallel links are rejected; distinct values are supported.
 
 </div>
 
-Supply node labels as sibling SVG text. Root binding coordinates node focus; custom route selection can remain independent.
+Supply node labels as sibling SVG text. Chart interaction coordinates node focus; custom route selection can remain independent.
 
 ### SankeyLink
 
@@ -129,27 +129,24 @@ Supply node labels as sibling SVG text. Root binding coordinates node focus; cus
 
 Explicit filters bypass finishes; transformed paths bypass reveal. Custom renderers own motion. Glow changes neither quantities nor hit targets.
 
-### SankeyLegend
+### SankeyChart.Legend
 
-Share the chart’s config to keep names and colors aligned. Set `interactionBinding="root"` for node-focus buttons. Without binding, the legend is a static list. Node focus highlights routes without removing flows.
+`SankeyChart.Legend` inherits the chart’s config and node interaction. Node focus highlights connected routes without removing flows.
 
 <div className="line-props-scroll" role="region" aria-label="SankeyLegend props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `config` | `SankeyNodeConfig` | Required | Explicit node-ID labels/colors; extra entries remain visible in the legend. |
-| `interactionBinding` | `"root"` | Off | Enables legend buttons inside a node-focus Root. |
 | `children` | `(item: { key: string; label: string; color: string; marker: ReactNode }) => ReactNode` | Label and marker | Custom legend content; native list attributes and refs remain available. |
 
 </div>
 
-### SankeyTable
+### SankeyChart.Table
 
 <div className="line-props-scroll" role="region" aria-label="SankeyTable props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `data` | `SankeyFlowData` | Required | Complete input, including zero flows; validated independently. |
 | `caption` | `string` | Required | Accessible table name. |
 | `formatValue` | `(value: number) => string` | `String` | Consumer-owned units. |
 | `onInspect` | `(link: SankeyFlowLink) => void` | — | Adds native inspection buttons receiving the original link. |
@@ -186,8 +183,7 @@ Use these building blocks to customize this chart. Each reference includes its f
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Coordinate node focus between the legend and diagram. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
+| [Chart frame](/docs/chart-components/chart/) | Coordinate node focus between the legend and diagram. |
 
 Native Recharts Tooltip handles hover inspection; path handlers and status text provide keyboard selection.
 

@@ -114,7 +114,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {row.lowerWhisker} ms
+                    {row.lowerWhisker}ms
                   </dd>
                 </div>
                 <div style={{ display: "contents" }}>
@@ -126,7 +126,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {row.q1} ms
+                    {row.q1}ms
                   </dd>
                 </div>
                 <div style={{ display: "contents" }}>
@@ -138,7 +138,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {row.median} ms
+                    {row.median}ms
                   </dd>
                 </div>
                 <div style={{ display: "contents" }}>
@@ -150,7 +150,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {row.q3} ms
+                    {row.q3}ms
                   </dd>
                 </div>
                 <div style={{ display: "contents" }}>
@@ -162,7 +162,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {row.upperWhisker} ms
+                    {row.upperWhisker}ms
                   </dd>
                 </div>
                 <div style={{ display: "contents" }}>
@@ -174,7 +174,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {row.outlier} ms
+                    {row.outlier}ms
                   </dd>
                 </div>
               </dl>

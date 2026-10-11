@@ -9,7 +9,7 @@ See how checkout response times are distributed across numeric intervals.
 
 ## Usage
 
-`HistogramChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+`HistogramChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
 Use `binHistogram` to prepare numeric bins for `HistogramSeries`.
 
@@ -41,13 +41,13 @@ Choose Default, Clay or Glow.
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="histogram" variant="loading" />
 
 ## API reference
 
-Use `HistogramChart.XAxis` and `HistogramChart.YAxis` to format ticks on the numeric scales. The legacy Root composition retains `xAxisProps` and `yAxisProps`.
+Use `HistogramChart.XAxis` and `HistogramChart.YAxis` to format ticks on the numeric scales.
 
 ### binHistogram
 
@@ -55,6 +55,11 @@ Use `HistogramChart.XAxis` and `HistogramChart.YAxis` to format ticks on the num
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `samples` | `readonly (number \| null \| undefined)[]` | Required | Raw observations; missing, nonfinite and out-of-range values are counted separately. |
 | `edges` | `readonly number[]` | Required | At least two finite, strictly increasing edges with finite positive widths. Invalid edges throw. |
 
@@ -73,8 +78,6 @@ Pre-aggregated bins may have gaps. Bounds must be ordered, nonoverlapping and fi
 | `bins` | `readonly HistogramBin[]` | Required | Validated intervals; their first lower and final upper bounds define the horizontal domain. |
 | `measure` | `"count" \| "density"` | Required | Count height or normalized probability density. Numerically unrepresentable density throws. |
 | `animate` | `boolean \| BarAnimation` | `false` | Reuses chart-owned Bar entrance and reduced-motion handling. Options include `revealDurationMs`, `revealEasing` and `hoverTransition`. |
-| `xAxisProps` (legacy only) | Native XAxis presentation props | — | Ticks, tick formatting and spacing; numeric scale, domain, axis identity and bin midpoint are owned. |
-| `yAxisProps` (legacy only) | Native YAxis presentation props | — | Tick presentation; numeric domain is `[0, "dataMax"]`. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Arrow-key inspection; set explicitly in these components. |
 | `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Plot spacing. |
 | `children` | `ReactNode` | — | Explicit histogram series, grid and tooltip. |
@@ -83,17 +86,24 @@ Pre-aggregated bins may have gaps. Bounds must be ordered, nonoverlapping and fi
 
 Owns data, vertical layout, scales and spacing. See [XAxis](https://recharts.github.io/en-US/api/XAxis/), [YAxis](https://recharts.github.io/en-US/api/YAxis/) and [BarChart](https://recharts.github.io/en-US/api/BarChart/) for presentation options.
 
+### Histogram axes
+
+Add axes explicitly. Their numeric scales and bin domain are chart-owned; tick formatting and presentation remain yours.
+
+<ApiTable name="HistogramXAxisReference" />
+<ApiTable name="HistogramYAxisReference" />
+
 ### HistogramSeries
 
 <div className="line-props-scroll" role="region" aria-label="HistogramSeries props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `seriesKey` | `string` | `"count"` | Root metadata and visibility identity; internal `dataKey` is owned. |
+| `seriesKey` | `string` | `"count"` | Chart metadata and visibility identity; internal `dataKey` is owned. |
 | `material` | `"clay" \| "glow"` | Omitted | Finish on corrected bin rectangles. |
 | `shape` | `(props: HistogramShapeProps) => ReactElement` | — | Native bar shape props with corrected numeric `x`, `width` and original `bin`; custom geometry becomes consumer-owned. |
 | `fill` / `stroke` | `string` | Config color / unset | Explicit paint overrides. |
-| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; Root visibility also applies. |
+| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; chart visibility also applies. |
 
 </div>
 
@@ -101,14 +111,13 @@ Use inside `HistogramChart`; stacking and custom bar sizing are unsupported. See
 
 ## Shared components
 
-Use Root for the measure’s color and Tooltip for bin values.
+Use chart config for the measure’s color and Tooltip for bin values.
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
 
-The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

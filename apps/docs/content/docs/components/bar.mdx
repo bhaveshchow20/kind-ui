@@ -9,7 +9,7 @@ Compare pickup orders across locations with rounded columns.
 
 ## Usage
 
-`BarChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+`BarChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
 Add one `BarSeries` per measure. Use `stackId` for stacks and `layout="vertical"` for horizontal bars.
 
@@ -57,14 +57,14 @@ See `BarSeries` below for supported values and shapes.
 Add a pattern to distinguish a series. Its legend swatch follows the same config.
 
 ```tsx
-import { BarSeries, type SeriesConfig } from "@kind-ui/charts";
+import { BarChart, type SeriesConfig } from "@kind-ui/charts";
 
 const config = {
   orders: { label: "Orders", color: "#733bff", pattern: { kind: "hatch" } },
 } satisfies SeriesConfig;
 
 // Inside the chart:
-<BarSeries dataKey="orders" />
+<BarChart.Series dataKey="orders" />
 ```
 
 Override the config with `BarSeries.pattern`; use `pattern={false}` to turn it off.
@@ -76,7 +76,7 @@ Override the config with `BarSeries.pattern`; use `pattern={false}` to turn it o
 In the copied Bar example, mark projected rows in `data`. Then use the same rule for the series and tooltip:
 
 ```tsx
-import { BarSeries, Tooltip, TooltipContent } from "@kind-ui/charts";
+import { BarChart, TooltipContent } from "@kind-ui/charts";
 
 const data = [
   { period: "North", orders: 124 },
@@ -85,9 +85,9 @@ const data = [
 type ProjectionRow = (typeof data)[number];
 const isProjected = (row: ProjectionRow) => row.projected === true;
 
-<BarSeries dataKey="orders"
+<BarChart.Series dataKey="orders"
   projection={{ isProjected, pattern: { kind: "stripe" } }} />
-<Tooltip content={(tooltip) => (
+<BarChart.Tooltip content={(tooltip) => (
   <TooltipContent tooltip={tooltip}
     isProjected={(entry) => isProjected(entry.payload)} />
 )} />
@@ -97,7 +97,7 @@ const isProjected = (row: ProjectionRow) => row.projected === true;
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="bar" variant="loading" />
 
@@ -107,15 +107,18 @@ Use these props to configure bars, stacks and presentation.
 
 ### BarChart
 
-Use inside `Root` and a sized `ResponsiveContainer`.
+Pass `config` and an accessible name, then add the axes and series as children.
 
 <div className="line-props-scroll" role="region" aria-label="BarChart props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `data` | `Row[]` | — | Consumer-owned category observations. |
 | `animate` | `boolean \| BarAnimation` | `false` | Reveal from numeric zero or nearest domain edge; respects reduced motion. |
-| `emphasis` | `"none" \| "category"` | `"none"` | Opt in to eligible category comparisons. |
+| `emphasis` | `"auto" \| "none" \| "category"` | `"auto"` | Shared emphasis; category opts in to eligible category comparisons. |
 | `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | `"horizontal"` draws columns; `"vertical"` draws horizontal bars. |
 | `barGap` | `number \| string` | `4` | Gap between grouped bars. |
 | `barCategoryGap` | `number \| string` | `"10%"` | Space between category groups. |
@@ -123,7 +126,7 @@ Use inside `Root` and a sized `ResponsiveContainer`.
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Native keyboard inspection; explicit in these components. |
 | `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
 | `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Space around plot parts. |
-| `children` | `ReactNode` | — | Explicit axes, series, grid and tooltip. |
+| `children` | `ReactNode` | Required | Explicit axes, series, grid and tooltip. |
 
 </div>
 
@@ -145,7 +148,7 @@ String value keys identify config entries; controlled numeric keys or accessors 
 | `radius` | `number \| [number, number, number, number]` | `0` | Native corner rounding: top-left, top-right, bottom-right, bottom-left. |
 | `maxBarSize` | `number` | — | Limit each bar's thickness. |
 | `fill` | `string` | Config color | Native fill override; Cells can customize individual bars. |
-| `hide` | `boolean` | `false` | Native hide and Root selection both apply. |
+| `hide` | `boolean` | `false` | Native hide and chart visibility both apply. |
 | `children` | `ReactNode` | — | Native Cells, LabelList and ErrorBar composition. |
 
 </div>
@@ -168,11 +171,10 @@ Add visibility controls, value formatting and category labels with these compone
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
 
-The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

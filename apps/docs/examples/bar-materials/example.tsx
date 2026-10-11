@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { BarChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "North", orders: 124 },
@@ -10,7 +10,7 @@ const data = [
 ];
 const config = {
   orders: { label: "Orders", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function MaterialBarChart({
   appearance = "default",
@@ -18,10 +18,14 @@ export function MaterialBarChart({
   appearance?: "default" | "clay" | "glow";
 } = {}) {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.BarChart
+    <>
+      <>
+        <BarChart
+          legendPosition="top"
+          config={config}
+          defaultVisibleSeries={Object.keys(config)}
+          width="100%"
+          height={280}
           data={data}
           animate
           accessibilityLayer
@@ -29,8 +33,8 @@ export function MaterialBarChart({
           margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
           aria-label="Weekly pickup orders by location"
         >
-          <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.XAxis
+          <BarChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
+          <BarChart.XAxis
             dataKey="period"
             axisLine={false}
             tickLine={false}
@@ -38,17 +42,25 @@ export function MaterialBarChart({
             height={56}
             interval="preserveStartEnd"
             minTickGap={32}
+            tick={{ fill: "#666" }}
           />
-          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={10} width={72} />
-          <Chart.BarSeries
+          <BarChart.YAxis
+            axisLine={false}
+            tickLine={false}
+            tickMargin={10}
+            width={72}
+            tick={{ fill: "#666" }}
+          />
+          <BarChart.Series
             dataKey="orders"
             material={appearance === "default" ? undefined : appearance}
             radius={8}
             maxBarSize={48}
           />
-          <Chart.Tooltip />
-        </Chart.BarChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          <BarChart.Tooltip />
+          <BarChart.Legend />
+        </BarChart>
+      </>
+    </>
   );
 }

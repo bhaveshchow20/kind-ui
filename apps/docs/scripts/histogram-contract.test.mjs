@@ -12,9 +12,11 @@ test("histogram copies retain native quantitative composition and matching varia
     const source = readFileSync(`examples/${bundle.id}/example.tsx`, "utf8");
     assert.equal(source, bundle.files[`src/examples/${bundle.id}/example.tsx`]);
     assert.match(source, /^"use client"/);
-    assert.match(source, /Chart.binHistogram/);
-    assert.match(source, /<Chart.HistogramChart/);
-    assert.match(source, /<Chart.HistogramSeries/);
+    assert.match(source, /\bbinHistogram\(/);
+    assert.match(source, /<HistogramChart\b[\s\S]*?config=\{config\}/);
+    for (const part of ["XAxis", "YAxis", "Series"])
+      assert.match(source, new RegExp(`<HistogramChart\\.${part}\\b`));
+    assert.doesNotMatch(source, /\bxAxis=|\byAxis=/);
     assert.ok(!/<Chart.(BarSeries|XAxis|YAxis)\b/.test(source));
     assert.match(source, /animate\s+accessibilityLayer/);
     assert.equal(bundle.dataAlternative.rows.length, bundle.id === "histogram" ? 5 : 4);

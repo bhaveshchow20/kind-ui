@@ -8,9 +8,7 @@ const bundles = JSON.parse(readFileSync("generated/waterfall-examples.json", "ut
 test("every Waterfall hidden row matches arithmetic from the copied public inputs", () => {
   for (const bundle of Object.values(bundles)) {
     const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
-    const entries = source.match(
-      /const entries = ([\s\S]*?) satisfies Chart.WaterfallEntry\[\];/,
-    )[1];
+    const entries = source.match(/const entries = ([\s\S]*?) satisfies WaterfallEntry\[\];/)[1];
     const js = ts.transpile(`const entries = ${entries};`, { target: ts.ScriptTarget.ES2022 });
     const inputs = new Function(`${js}\nreturn entries;`)();
     const rows = computeWaterfallData(inputs).map(({ id, label, kind, value, start, balance }) => ({
@@ -24,7 +22,7 @@ test("every Waterfall hidden row matches arithmetic from the copied public input
     assert.deepEqual(bundle.dataAlternative.rows, rows);
     assert.match(source, /role="status"/);
     assert.match(source, /aria-live="polite"/);
-    assert.match(source, /<Chart.WaterfallConnectors\s+data={data}/);
+    assert.match(source, /<WaterfallChart.Connectors\s+data={data}/);
     assert.match(source, /filterNull={false}/);
   }
   const missing = bundles["waterfall-missing"].dataAlternative.rows;

@@ -33,14 +33,13 @@ export function TeamAllocationChart({ shape = "pie" }: { shape?: "pie" | "donut"
       height={280}
       defaultVisibleSeries={Object.keys(config)}
       legendPosition="top"
-      rootProps={{ interaction: { kind: "category", eligibleKeys: data.map((row) => row.key) } }}
       loading={shape === "loading"}
       animate
       accessibilityLayer
       aria-label="Team allocation: 1,000 hours"
+      interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
     >
       <PieChart.Series
-        interactionBinding="root"
         data={data}
         dataKey="hours"
         nameKey="key"

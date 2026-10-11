@@ -1,5 +1,11 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import {
+  Cell,
+  computeWaterfallData,
+  type SeriesConfig,
+  WaterfallChart,
+  type WaterfallEntry,
+} from "@kind-ui/charts";
 
 // Values are USD thousands. Checkpoints are absolute; deltas are signed changes.
 const entries = [
@@ -10,17 +16,17 @@ const entries = [
   { id: "audited", label: "Audited", kind: "total", value: 105 },
   { id: "adjustment", label: "No change", kind: "delta", value: 0 },
   { id: "closing", label: "Closing", kind: "end", value: 105 },
-] satisfies Chart.WaterfallEntry[];
-const data = Chart.computeWaterfallData(entries);
+] satisfies WaterfallEntry[];
+const data = computeWaterfallData(entries);
 const labels = new Map(data.map((row) => [row.id, row.label]));
 const money = (value: number | null) => (value === null ? "Unknown" : `$${value}k`);
 const config = {
   range: { label: "Cash balance", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function MissingCashFlowChart() {
   return (
-    <Chart.Root config={config}>
+    <>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12 }}>
         <span>
           <span aria-hidden="true" style={{ color: "#733bff" }}>
@@ -41,8 +47,11 @@ export function MissingCashFlowChart() {
           Decrease
         </span>
       </div>
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.WaterfallChart
+      <>
+        <WaterfallChart
+          config={config}
+          width="100%"
+          height={280}
           data={data}
           layout="vertical"
           animate
@@ -51,8 +60,8 @@ export function MissingCashFlowChart() {
           margin={{ top: 12, right: 24, bottom: 4, left: 0 }}
           barCategoryGap="32%"
         >
-          <Chart.CartesianGrid horizontal={false} strokeDasharray="3 3" />
-          <Chart.XAxis
+          <WaterfallChart.Grid vertical horizontal={false} strokeDasharray="3 3" stroke="#ccc" />
+          <WaterfallChart.XAxis
             type="number"
             domain={[0, "auto"]}
             axisLine={false}
@@ -60,8 +69,9 @@ export function MissingCashFlowChart() {
             tickFormatter={(value) => money(Number(value))}
             tickMargin={10}
             height={36}
+            tick={{ fill: "#666" }}
           />
-          <Chart.YAxis
+          <WaterfallChart.YAxis
             type="category"
             dataKey="id"
             width={76}
@@ -69,25 +79,26 @@ export function MissingCashFlowChart() {
             tickLine={false}
             tickFormatter={(id) => labels.get(String(id)) ?? String(id)}
             tickMargin={8}
+            tick={{ fill: "#666" }}
           />
-          <Chart.ReferenceLine x={0} stroke="currentColor" strokeOpacity={0.3} />
-          <Chart.WaterfallConnectors
+          <WaterfallChart.ReferenceLine x={0} stroke="currentColor" strokeOpacity={0.3} />
+          <WaterfallChart.Connectors
             data={data}
             position="middle"
             stroke="currentColor"
             strokeOpacity={0.35}
           />
-          <Chart.WaterfallSeries radius={3}>
+          <WaterfallChart.Series radius={3}>
             {data.map((row) => (
-              <Chart.Cell
+              <Cell
                 key={row.id}
                 fill={
                   row.kind !== "delta" ? "#733bff" : (row.value ?? 0) < 0 ? "#be123c" : "#15803d"
                 }
               />
             ))}
-          </Chart.WaterfallSeries>
-          <Chart.Tooltip
+          </WaterfallChart.Series>
+          <WaterfallChart.Tooltip
             filterNull={false}
             maxWidth={180}
             content={(tooltip) => {
@@ -122,8 +133,8 @@ export function MissingCashFlowChart() {
               );
             }}
           />
-        </Chart.WaterfallChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+        </WaterfallChart>
+      </>
+    </>
   );
 }

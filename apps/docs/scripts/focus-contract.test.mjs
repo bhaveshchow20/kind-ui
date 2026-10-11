@@ -21,16 +21,17 @@ test("series focus examples preserve source data and bind stable eligible identi
   }
 });
 
-test("controlled pie visibility retains full source rows and binds categories to Root", () => {
+test("controlled pie visibility retains full source rows and binds categories to the chart", () => {
   const code = source("pie-visibility");
   assert.match(code, /mode: "visibility"/);
-  assert.match(code, /interactionBinding="root"/);
+  assert.match(code, /<PieChart\b[\s\S]*?config=\{config\}/);
+  assert.match(code, /categoryKey="key"/);
   assert.match(code, /data=\{data\}/);
   assert.doesNotMatch(code, /data\.filter\(/);
 });
 
-test("existing Root API table describes focus and supported mark activation defaults", () => {
-  const [row] = referenceRows("Root", [
+test("chart-frame API table describes focus and supported mark activation defaults", () => {
+  const [row] = referenceRows("ChartFrame", [
     { name: "interaction", type: "ChartInteractionConfig", description: "", required: false },
   ]);
   assert.match(row.default, /focus/);

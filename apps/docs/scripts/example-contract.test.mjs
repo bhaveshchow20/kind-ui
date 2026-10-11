@@ -82,7 +82,7 @@ test("presentation options remain complete in copied and agent-retrieved consume
     "components/bar",
     "components/combo",
     "components/sankey",
-    "chart-components/root",
+    "chart-components/chart",
   ]
     .map((page) => readFileSync(`public/markdown/${page}.md`, "utf8"))
     .join("\n");
@@ -93,7 +93,7 @@ test("presentation options remain complete in copied and agent-retrieved consume
     "createPercentStack",
     "PointMarker",
     "LineDashAnimation",
-    "SankeyNodeLabel",
+    "SankeyChart.NodeLabel",
   ])
     assert.ok(reference.includes(type), `${type} reference missing`);
   assert.ok(!readFileSync("public/llms.txt", "utf8").includes("guides/customization.md"));
@@ -220,21 +220,13 @@ test("Area consumers preserve explicit composition and stacked series focus", ()
   for (const bundle of Object.values(areas)) {
     const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
     assert.match(source, /"use client"/);
-    if (bundle.id === "area") {
-      assert.match(source, /satisfies SeriesConfig/);
-      assert.match(source, /<AreaChart\s+config=\{config\}/);
-      assert.match(source, /height=\{280\}/);
-      assert.match(source, /<AreaChart\.Series/);
-      assert.match(source, /<AreaChart\.Legend/);
-      assert.ok(!/Chart.Root|Chart.ResponsiveContainer/.test(source));
-      assert.match(source, /<AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
-    } else {
-      assert.match(source, /satisfies Chart.SeriesConfig/);
-      assert.match(source, /<Chart.Root\s+config=\{config\}/);
-      assert.match(source, /<Chart.ResponsiveContainer width="100%" height=\{280\}>/);
-      assert.match(source, /<Chart.AreaSeries/);
-      assert.match(source, /<Chart.AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
-    }
+    assert.match(source, /satisfies SeriesConfig/);
+    assert.match(source, /<AreaChart\b[\s\S]*?config=\{config\}/);
+    assert.match(source, /height=\{280\}/);
+    assert.match(source, /<AreaChart\.Series/);
+    assert.match(source, /<AreaChart\.Legend/);
+    assert.doesNotMatch(source, /Chart\.Root|ResponsiveContainer/);
+    assert.match(source, /<AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
     assert.equal(bundle.dataAlternative.rows.length, 12);
     assert.ok(!/settings|controls/.test(source));
     assert.ok(

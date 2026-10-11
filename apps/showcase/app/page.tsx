@@ -1,6 +1,6 @@
 "use client";
 
-import * as Chart from "@kind-ui/charts";
+import { AreaChart, BarChart, LineChart, ReferenceLine } from "@kind-ui/charts";
 import {
   ArrowUpRight,
   BookOpen,
@@ -211,7 +211,7 @@ function snippet(
   const series = r.keys
     .map(
       (k, i) =>
-        `          <Chart.${family}Series dataKey="${k}" material="${material}"${family === "Line" ? ` type="${options.curve ?? (r.id === "steps" ? "stepAfter" : "monotone")}" dot={${options.dots ?? false}} strokeWidth={${options.strokeWidth ?? (material === "clay" ? 5 : 3)}}` : family === "Area" ? ` type="${options.curve ?? "monotone"}" fill="${colors[i]}" fillOpacity={${options.fillOpacity ?? (r.id === "area" ? 0.16 : 0.5)}} strokeWidth={${options.strokeWidth ?? 2.5}}${r.id === "stacked" ? ' stackId="devices"' : ""}` : ` radius={${options.radius ?? 5}} maxBarSize={${options.width ?? (horizontal ? 18 : 35)}}${options.stacked ? ' stackId="customers"' : ""}`} />`,
+        `          <${family}Chart.Series dataKey="${k}" material="${material}"${family === "Line" ? ` type="${options.curve ?? (r.id === "steps" ? "stepAfter" : "monotone")}" dot={${options.dots ?? false}} strokeWidth={${options.strokeWidth ?? (material === "clay" ? 5 : 3)}}` : family === "Area" ? ` type="${options.curve ?? "monotone"}" fill="${colors[i]}" fillOpacity={${options.fillOpacity ?? (r.id === "area" ? 0.16 : 0.5)}} strokeWidth={${options.strokeWidth ?? 2.5}}${r.id === "stacked" ? ' stackId="devices"' : ""}` : ` radius={${options.radius ?? 5}} maxBarSize={${options.width ?? (horizontal ? 18 : 35)}}${options.stacked ? ' stackId="customers"' : ""}`} />`,
     )
     .join("\n");
   const chartData = recipeData(r.id);
@@ -226,36 +226,29 @@ function snippet(
   );
   return `"use client";
 
-import * as Chart from "@kind-ui/charts";
+import { ${family}Chart, ReferenceLine, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
 ${chartData.map((d) => `  ${JSON.stringify(d)},`).join("\n")}
 ];
 
-const config: Chart.SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.stringify(config, null, 2)}).map(([key, value]) => [key, {\n    ...value, formatValue: (v: unknown) => typeof v === "number" ? ${r.id === "area" || r.id === "line" ? '"$" + ' : ""}v.toLocaleString("en-US") : String(v)\n  }])\n);
+const config: SeriesConfig = Object.fromEntries(\n  Object.entries(${JSON.stringify(config, null, 2)}).map(([key, value]) => [key, {\n    ...value, formatValue: (v: unknown) => typeof v === "number" ? ${r.id === "area" || r.id === "line" ? '"$" + ' : ""}v.toLocaleString("en-US") : String(v)\n  }])\n);
 
 export function Example() {
   const animate = ${animate};
   return (
-    <Chart.Root emphasis="auto" config={config} interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
-      style={{ border: 0, padding: 0, background: "transparent" }}>
-      <div style={{ height: 240, width: "100%" }}>
-        <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <Chart.${family}Chart data={data} animate={${animate}} layout="${horizontal ? "vertical" : "horizontal"}"${r.id === "grouped" ? ' emphasis="category"' : ""}
+          <${family}Chart config={config} style={{height:240,width:"100%"}} data={data} animate={${animate}} layout="${horizontal ? "vertical" : "horizontal"}"${r.id === "grouped" ? ' emphasis="category"' : ""}
             accessibilityLayer aria-label="${r.subtitle}"
             margin={{ top: 20, right: 18, left: 0, bottom: 0 }}>
-            <Chart.CartesianGrid horizontal={${options.showGrid ?? true}} vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />
-            <Chart.XAxis ${horizontal ? 'type="number"' : 'dataKey="month" type="category"'} tickLine={false} axisLine={false}
+            ${options.showGrid === false ? "" : `<${family}Chart.Grid horizontal vertical={false} stroke="var(--chart-grid, #e4e5eb)" strokeDasharray="3 5" />`}
+            <${family}Chart.XAxis ${horizontal ? 'type="number"' : 'dataKey="month" type="category"'} tickLine={false} axisLine={false}
               tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} tickMargin={10} />
-            <Chart.YAxis ${horizontal ? 'dataKey="month" type="category"' : 'type="number"'} tickLine={false} axisLine={false}
-              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width="auto"${r.id === "area" || r.id === "line" ? ' tickFormatter={value => "$" + Number(value) / 1000 + "k"}' : ""} />${r.id === "signed" ? '\n            <Chart.ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}
+            <${family}Chart.YAxis ${horizontal ? 'dataKey="month" type="category"' : 'type="number"'} tickLine={false} axisLine={false}
+              tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width="auto"${r.id === "area" || r.id === "line" ? ' tickFormatter={value => "$" + Number(value) / 1000 + "k"}' : ""} />${r.id === "signed" ? '\n            <ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}
 ${series}
-            <Chart.Tooltip cursor={${family === "Bar" ? '{ fill: "#a4a8be", fillOpacity: .09 }' : '{ stroke: "#8d8e9b", strokeDasharray: "3 4" }'}} valueAnimation={animate ? "shuffle" : undefined} />
-          </Chart.${family}Chart>
-        </Chart.ResponsiveContainer>
-      </div>
-      ${(options.showLegend ?? true) ? `<Chart.Legend aria-label="Focus series for ${r.tag}" />` : ""}
-    </Chart.Root>
+            <${family}Chart.Tooltip cursor={${family === "Bar" ? '{ fill: "#a4a8be", fillOpacity: .09 }' : '{ stroke: "#8d8e9b", strokeDasharray: "3 4" }'}} valueAnimation={animate ? "shuffle" : undefined} />
+            ${(options.showLegend ?? true) ? `<${family}Chart.Legend aria-label="Focus series for ${r.tag}" />` : ""}
+          </${family}Chart>
   );
 }`;
 }
@@ -298,17 +291,19 @@ function ChartCard({
     [r, colors],
   );
   const ChartComponent =
-    r.family === "Line" ? Chart.LineChart : r.family === "Area" ? Chart.AreaChart : Chart.BarChart;
+    r.family === "Line" ? LineChart : r.family === "Area" ? AreaChart : BarChart;
   const horizontal = r.id === "horizontal";
   const chartChildren = (
     <>
-      <Chart.CartesianGrid
-        horizontal={options.showGrid ?? true}
-        vertical={false}
-        stroke="var(--chart-grid)"
-        strokeDasharray="3 5"
-      />
-      <Chart.XAxis
+      {options.showGrid !== false && (
+        <ChartComponent.Grid
+          horizontal={options.showGrid ?? true}
+          vertical={false}
+          stroke="var(--chart-grid)"
+          strokeDasharray="3 5"
+        />
+      )}
+      <ChartComponent.XAxis
         dataKey={horizontal ? undefined : "month"}
         type={horizontal ? "number" : "category"}
         tickLine={false}
@@ -316,7 +311,7 @@ function ChartCard({
         tick={{ fontSize: 12, fill: "var(--chart-axis)" }}
         tickMargin={10}
       />
-      <Chart.YAxis
+      <ChartComponent.YAxis
         dataKey={horizontal ? "month" : undefined}
         type={horizontal ? "category" : "number"}
         tickLine={false}
@@ -327,10 +322,10 @@ function ChartCard({
           r.id === "area" || r.id === "line" ? (value) => `$${Number(value) / 1000}k` : undefined
         }
       />
-      {r.id === "signed" && <Chart.ReferenceLine y={0} stroke="var(--chart-axis)" />}
+      {r.id === "signed" && <ReferenceLine y={0} stroke="var(--chart-axis)" />}
       {r.keys.map((k, i) =>
         r.family === "Line" ? (
-          <Chart.LineSeries
+          <LineChart.Series
             key={k}
             dataKey={k}
             type={options.curve ?? (r.id === "steps" ? "stepAfter" : "monotone")}
@@ -339,7 +334,7 @@ function ChartCard({
             material={material}
           />
         ) : r.family === "Area" ? (
-          <Chart.AreaSeries
+          <AreaChart.Series
             key={k}
             dataKey={k}
             type={options.curve ?? "monotone"}
@@ -350,7 +345,7 @@ function ChartCard({
             strokeWidth={options.strokeWidth ?? 2.5}
           />
         ) : (
-          <Chart.BarSeries
+          <BarChart.Series
             key={k}
             dataKey={k}
             material={material}
@@ -360,7 +355,7 @@ function ChartCard({
           />
         ),
       )}
-      <Chart.Tooltip
+      <ChartComponent.Tooltip
         cursor={
           r.family === "Bar"
             ? { fill: "#a4a8be", fillOpacity: 0.09 }
@@ -368,6 +363,9 @@ function ChartCard({
         }
         valueAnimation={chartAnimate ? "shuffle" : undefined}
       />
+      {options.showLegend !== false && (
+        <ChartComponent.Legend aria-label={`Focus series for ${r.tag}`} />
+      )}
     </>
   );
   return (
@@ -395,44 +393,48 @@ function ChartCard({
         </strong>
         <span>{r.id === "line" ? "This week" : r.id === "horizontal" ? "June" : "August"}</span>
       </div>
-      <Chart.Root
-        className="chart-root"
-        emphasis="auto"
-        config={config}
-        interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
-      >
-        <div className="chart-canvas">
-          <Chart.ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            {r.family === "Bar" ? (
-              <Chart.BarChart
-                key={`${replay}-${entered}`}
-                data={chartData}
-                emphasis={r.id === "grouped" ? "category" : "none"}
-                animate={chartAnimate}
-                layout={horizontal ? "vertical" : "horizontal"}
-                accessibilityLayer
-                aria-label={r.subtitle}
-                margin={{ top: 20, right: 18, left: 0, bottom: 0 }}
-              >
-                {chartChildren}
-              </Chart.BarChart>
-            ) : (
-              <ChartComponent
-                key={`${replay}-${entered}`}
-                data={chartData}
-                animate={chartAnimate}
-                layout="horizontal"
-                accessibilityLayer
-                aria-label={r.subtitle}
-                margin={{ top: 20, right: 18, left: 0, bottom: 0 }}
-              >
-                {chartChildren}
-              </ChartComponent>
-            )}
-          </Chart.ResponsiveContainer>
-        </div>
-        {options.showLegend !== false && <Chart.Legend aria-label={`Focus series for ${r.tag}`} />}
-      </Chart.Root>
+      {r.family === "Bar" ? (
+        <BarChart
+          config={config}
+          frameProps={{ className: "chart-root" }}
+          className="chart-canvas"
+          interaction={{
+            kind: "series",
+            mode: "focus",
+            eligibleKeys: Object.keys(config),
+          }}
+          key={`${replay}-${entered}`}
+          data={chartData}
+          emphasis={r.id === "grouped" ? "category" : "auto"}
+          animate={chartAnimate}
+          layout={horizontal ? "vertical" : "horizontal"}
+          accessibilityLayer
+          aria-label={r.subtitle}
+          margin={{ top: 20, right: 18, left: 0, bottom: 0 }}
+        >
+          {chartChildren}
+        </BarChart>
+      ) : (
+        <ChartComponent
+          config={config}
+          frameProps={{ className: "chart-root" }}
+          className="chart-canvas"
+          interaction={{
+            kind: "series",
+            mode: "focus",
+            eligibleKeys: Object.keys(config),
+          }}
+          key={`${replay}-${entered}`}
+          data={chartData}
+          animate={chartAnimate}
+          layout="horizontal"
+          accessibilityLayer
+          aria-label={r.subtitle}
+          margin={{ top: 20, right: 18, left: 0, bottom: 0 }}
+        >
+          {chartChildren}
+        </ChartComponent>
+      )}
 
       <p className="chart-context">{r.context}</p>
     </motion.article>
@@ -795,7 +797,9 @@ export default function Page() {
   useEffect(() => {
     const context = (
       document as Document & {
-        modelContext?: { registerTool: (tool: unknown, options: unknown) => void | Promise<void> };
+        modelContext?: {
+          registerTool: (tool: unknown, options: unknown) => void | Promise<void>;
+        };
       }
     ).modelContext;
     if (!context) return;
@@ -818,7 +822,9 @@ export default function Page() {
             };
           setFamily(value);
           setOpen(false);
-          return { content: [{ type: "text", text: `Showing ${value} examples.` }] };
+          return {
+            content: [{ type: "text", text: `Showing ${value} examples.` }],
+          };
         },
       },
       { signal: lifecycle.signal },

@@ -9,7 +9,7 @@ Compare task latency and acceptance across weekday and weekend cohorts.
 
 ## Usage
 
-`ScatterChart` owns its Root and responsive plot when given `config`. Include each part explicitly; metadata does not create marks, axes, tooltips or legends. Omitted parts stay absent. `height` controls the plot; `rootProps` controls the outer frame and shared interaction.
+`ScatterChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
 Supply records to each `ScatterSeries` and numeric keys to the X and Y axes.
 
@@ -51,7 +51,7 @@ Left/Right inspects the first series in data order; Escape dismisses inspection.
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="scatter" variant="loading" />
 
@@ -65,10 +65,13 @@ Configure numeric dimensions, point symbols and tooltip values.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `animate` | `boolean \| ScatterAnimation` | `false` | In-place entrance fade and shared tooltip motion; respects reduced motion. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Native first-series keyboard inspection; set explicitly here. |
 | `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each | Plot spacing for axes and marks. |
-| `children` | `ReactNode` | — | Explicit axes, grid, series and Scatter tooltip. |
+| `children` | `ReactNode` | Required | Explicit axes, grid, series and Scatter tooltip. |
 | `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
 
 </div>
@@ -88,7 +91,7 @@ See [Recharts ScatterChart](https://recharts.github.io/en-US/api/ScatterChart/).
 | `shape` | `"circle" \| "cross" \| "diamond" \| "square" \| "star" \| "triangle" \| "wye"` or native custom shape | `"circle"` | Built-in symbol or consumer-owned renderer. |
 | `material` | `"clay" \| "glow"` | Omitted | Finish for built-in symbols, preserving native geometry. |
 | `fill` | `string` | Config color when identified | Explicit color overrides metadata. |
-| `hide` | `boolean` | `false` | Suppresses paint and inspection while preserving coordinates; Root visibility also applies. |
+| `hide` | `boolean` | `false` | Suppresses paint and inspection while preserving coordinates; chart visibility also applies. |
 | `xAxisId` / `yAxisId` / `zAxisId` | `string \| number` | `0` | Native axis association. |
 
 </div>
@@ -130,10 +133,9 @@ Configure cohort metadata and numeric scales with these components. Use ScatterT
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
 
-The named parts and explicit `Root`/`ResponsiveContainer` composition remain available for advanced layouts and server-rendered legends. Compound HTML parts mount in the browser. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

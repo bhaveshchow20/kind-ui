@@ -13,13 +13,15 @@ node_modules/@kind-ui/charts/dist relative to your CSS file. Inspect the
 installed package version and peers before adapting code. Motion is required.
 Use public exports; there is no @kind-ui/charts/motion entry.
 
-Configured LineChart and ActivityRings own Root. Other families use their own
-published composition; Sankey and Heatmap do not require Root. Read the family's
-API before transferring a pattern from another chart.
+Import chart families directly by name. Each chart requires config, an accessible
+name and explicit children. Compose the family’s Series, axes, Tooltip and Legend
+parts; omitted parts stay absent. Set interaction directly on the chart and use
+Content for contextual HTML controls or a data alternative. Read each family’s
+API for its geometry and data contracts.
 
 Adapt the example to the requested data. Keep units, domains, identities,
 visibility and missing-value policy explicit. Add a chart name and complete data
-alternative. For loading read /markdown/chart-components/root.md; for metadata
+alternative. For loading read /markdown/chart-components/chart.md; for metadata
 read /markdown/chart-components/series-config.md.
 
 Verify strict types and a production build, then inspect mobile containment,

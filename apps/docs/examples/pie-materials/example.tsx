@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { PieChart, type SeriesConfig } from "@kind-ui/charts";
 
 const config = {
   design: { label: "Design", color: "#733bff", formatValue: (value: unknown) => `${value} hours` },
@@ -18,7 +18,7 @@ const config = {
     color: "#147c68",
     formatValue: (value: unknown) => `${value} hours`,
   },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 const data: { key: keyof typeof config; hours: number; share: string }[] = [
   { key: "design", hours: 420, share: "42%" },
   { key: "engineering", hours: 310, share: "31%" },
@@ -33,16 +33,20 @@ export function AllocationMaterialChart({
 }) {
   return (
     <figure style={{ margin: 0 }}>
-      <Chart.Root
-        config={config}
-        defaultVisibleSeries={Object.keys(config)}
-        interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
-      >
-        <Chart.Legend />
-        <Chart.ResponsiveContainer width="100%" height={280}>
-          <Chart.PieChart animate accessibilityLayer aria-label="Team allocation: 1,000 hours">
-            <Chart.PieSeries
-              interactionBinding="root"
+      <>
+        <>
+          <PieChart
+            legendPosition="top"
+            config={config}
+            defaultVisibleSeries={Object.keys(config)}
+            interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
+            width="100%"
+            height={280}
+            animate
+            accessibilityLayer
+            aria-label="Team allocation: 1,000 hours"
+          >
+            <PieChart.Series
               data={data}
               dataKey="hours"
               nameKey="key"
@@ -53,20 +57,21 @@ export function AllocationMaterialChart({
               paddingAngle={0}
             >
               {data.map((row) => (
-                <Chart.Cell key={row.key} fill={config[row.key].color} />
+                <PieChart.Cell key={row.key} fill={config[row.key].color} />
               ))}
-              <Chart.LabelList
+              <PieChart.Labels
                 dataKey="share"
                 position="inside"
                 fill="white"
                 stroke="none"
                 style={{ fill: "white", fontWeight: 600 }}
               />
-            </Chart.PieSeries>
-            <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
-          </Chart.PieChart>
-        </Chart.ResponsiveContainer>
-      </Chart.Root>
+            </PieChart.Series>
+            <PieChart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
+            <PieChart.Legend />
+          </PieChart>
+        </>
+      </>
       <div
         style={{
           position: "absolute",

@@ -1,0 +1,122 @@
+---
+title: Chart frame
+description: Name, size and control a chart with explicit family parts.
+---
+
+Each chart family takes `config`, an accessible name and explicit children. Config supplies labels and colors; children supply the plotted marks, axes and optional parts.
+
+```tsx
+import { BarChart, type SeriesConfig } from "@kind-ui/charts";
+
+const config = {
+  orders: { label: "Orders", color: "#4477aa" },
+} satisfies SeriesConfig;
+const data = [{ day: "Mon", orders: 24 }];
+
+<BarChart config={config} data={data} height={280} aria-label="Daily orders">
+  <BarChart.XAxis dataKey="day" />
+  <BarChart.YAxis />
+  <BarChart.Series dataKey="orders" />
+  <BarChart.Tooltip />
+  <BarChart.Legend />
+</BarChart>
+```
+
+Focus Print or Digital to dim its peers while preserving the bars and tooltip values.
+
+<ChartExample id="bar-comparison" />
+
+## Sizing
+
+Ordinary plots fill the available width and use a 280px height. ActivityRings uses 300px. Set `width`, `height`, `style` or `className` for your layout; explicit dimensions and inline styles take precedence over the defaults. A percentage height needs a measurable parent. Set `responsive={false}` when using fixed native chart dimensions.
+
+`className`, `style`, native handlers and refs stay on the plot. `frameProps` supplies attributes, styles, handlers and a ref for the outer HTML frame.
+
+## Visibility
+
+Pass `visibleSeries` to control visibility in your own state. Focus never changes it. To request hide/show from the legend, use visibility interaction and a callback:
+
+```tsx
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart
+  config={config} data={data} aria-label="Daily orders"
+  interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+  visibleSeries={visibleSeries} onVisibleSeriesChange={setVisibleSeries}
+>
+  <BarChart.XAxis dataKey="day" />
+  <BarChart.Series dataKey="orders" />
+  <BarChart.Legend />
+</BarChart>
+```
+
+Use `defaultVisibleSeries` for uncontrolled visibility. Controlled and default values are mutually exclusive. A callback without either value is invalid. Visibility without a callback is read-only.
+
+Legend actions keep at least one eligible item visible. Consumer-controlled visibility can hide every item; provide an empty-result message.
+
+## Focus and eligibility
+
+Focus highlights an item without hiding its data. Provide stable `eligibleKeys`, including hidden and zero-valued identities:
+
+```tsx
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart config={config} data={data} aria-label="Daily orders"
+  interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
+>
+  <BarChart.XAxis dataKey="day" />
+  <BarChart.Series dataKey="orders" />
+  <BarChart.Legend />
+</BarChart>
+```
+
+Use `selected` with `onSelectionChange` for controlled focus, or `defaultSelected` for uncontrolled focus. Activating the same item or pressing Escape clears focus. Supported marks share legend actions unless `markActivation="none"` is set in the interaction options.
+
+Your event handlers run first. Call `event.preventDefault()` or return `false` from `onBeforeInteraction` to cancel a shared action.
+
+## Controls and data alternatives
+
+Use `Content` for contextual HTML controls, status text or a data table. It mounts outside the SVG while preserving chart context, including through fragments and consumer components. Compound HTML parts mount in the browser.
+
+```tsx
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart config={config} data={data} aria-label="Daily orders">
+  <BarChart.XAxis dataKey="day" />
+  <BarChart.Series dataKey="orders" />
+  <BarChart.Content>
+    <table>
+      <caption>Daily orders</caption>
+      <thead><tr><th scope="col">Day</th><th scope="col">Orders</th></tr></thead>
+      <tbody>{data.map((row) => <tr key={row.day}><th scope="row">{row.day}</th><td>{row.orders}</td></tr>)}</tbody>
+    </table>
+  </BarChart.Content>
+</BarChart>
+```
+
+A complete nearby data alternative can also stay outside the chart when it does not need chart context. `children={null}` intentionally renders no plot parts.
+
+## Props
+
+<ApiTable name="ChartFrame" compact />
+
+`emphasis` defaults to `"auto"`. Set `"none"` to disable Kind emphasis. Bar also supports `"category"` for safe category comparisons. Each config key supplies a `--color-{key}` CSS variable for custom marks.
+
+## Loading
+
+Set `loading` while data is pending. The chart keeps its size, and `loadingLabel` is announced to screen readers.
+
+```tsx
+import { LineChart } from "@kind-ui/charts";
+
+<LineChart data={data} config={config} loading={isPending}
+  loadingLabel="Loading monthly sales" aria-label="Monthly sales">
+  <LineChart.XAxis dataKey="month" />
+  <LineChart.Series dataKey="sales" />
+  <LineChart.Tooltip />
+</LineChart>
+```
+
+Reduced motion keeps the loading preview still. Show your own message for errors or empty results.
+
+<ApiTable name="LoadingReference" />

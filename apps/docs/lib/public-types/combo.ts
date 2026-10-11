@@ -2,6 +2,10 @@ import type * as Chart from "@kind-ui/charts";
 
 export type ComboChartReference = Pick<
   Chart.ComboChartProps,
+  | "config"
+  | "children"
+  | "frameProps"
+  | "interaction"
   | "data"
   | "animate"
   | "layout"
@@ -9,7 +13,6 @@ export type ComboChartReference = Pick<
   | "barCategoryGap"
   | "barGap"
   | "accessibilityLayer"
-  | "children"
 >;
 export type ComboMotionReference = Chart.ComboAnimation;
 export type ComboBarReference = Pick<

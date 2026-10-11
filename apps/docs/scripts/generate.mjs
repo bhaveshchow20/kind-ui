@@ -256,7 +256,7 @@ const api = Object.fromEntries(
     })),
   ]),
 );
-if (!api.Root?.length || !api.LineSeries?.length || !api.LineChart?.length)
+if (!api.ChartFrame?.length || !api.LineSeries?.length || !api.LineChart?.length)
   throw new Error("Public API generation returned incomplete tables");
 write("generated/api.json", `${JSON.stringify(api, null, 2)}\n`);
 const tableMarkdown = (name) => {

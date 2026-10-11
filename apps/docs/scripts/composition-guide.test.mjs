@@ -55,22 +55,23 @@ test("Installation renders its exact first-chart example in an application", asy
   }
 });
 
-test("focused Root docs type retains exclusive visibility ownership", async () => {
+test("focused chart-frame docs type retains exclusive visibility ownership", async () => {
   const fixture = await mkdtemp(join(root, "apps/docs/.composition-guide-"));
   try {
     await writeFile(
       join(fixture, "ownership.tsx"),
       `
-import type { Root } from "../lib/public-types.js";
+import type { ChartFrame } from "../lib/public-types.js";
 const config = { sales: { label: "Sales", color: "#4477aa" } };
-const passive: Root = { config };
-const readOnly: Root = { config, visibleSeries: ["sales"] };
-const controlled: Root = { config, visibleSeries: ["sales"], onVisibleSeriesChange: (next: string[]) => void next };
-const defaulted: Root = { config, defaultVisibleSeries: ["sales"], onVisibleSeriesChange: (next: string[]) => void next };
+const base = { config, children: null, "aria-label": "Sales" };
+const passive: ChartFrame = { ...base };
+const readOnly: ChartFrame = { ...base, visibleSeries: ["sales"] };
+const controlled: ChartFrame = { ...base, visibleSeries: ["sales"], onVisibleSeriesChange: (next: string[]) => void next };
+const defaulted: ChartFrame = { ...base, defaultVisibleSeries: ["sales"], onVisibleSeriesChange: (next: string[]) => void next };
 // @ts-expect-error Controlled and defaulted ownership are exclusive.
-const mixed: Root = { config, visibleSeries: ["sales"], defaultVisibleSeries: ["sales"] };
+const mixed: ChartFrame = { ...base, visibleSeries: ["sales"], defaultVisibleSeries: ["sales"] };
 // @ts-expect-error A visibility callback requires controlled or defaulted ownership.
-const callbackOnly: Root = { config, onVisibleSeriesChange: (next: string[]) => void next };
+const callbackOnly: ChartFrame = { ...base, onVisibleSeriesChange: (next: string[]) => void next };
 void [passive, readOnly, controlled, defaulted, mixed, callbackOnly];
 `,
     );

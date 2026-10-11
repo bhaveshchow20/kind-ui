@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { AreaChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Jan", visitors: 420 },
@@ -17,7 +17,7 @@ const data = [
 ];
 const config = {
   visitors: { label: "Visitors", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function VisitorAreaCurveChart({
   curve = "monotone",
@@ -25,30 +25,42 @@ export function VisitorAreaCurveChart({
   curve?: "monotone" | "linear" | "stepAfter";
 } = {}) {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.AreaChart
+    <>
+      <>
+        <AreaChart
+          legendPosition="top"
+          config={config}
+          defaultVisibleSeries={Object.keys(config)}
+          width="100%"
+          height={280}
           data={data}
           animate
           accessibilityLayer
           margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
           aria-label="Monthly visitors"
         >
-          <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.XAxis
+          <AreaChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
+          <AreaChart.XAxis
             dataKey="period"
             axisLine={false}
             tickLine={false}
             tickMargin={8}
             height={48}
             interval="preserveStartEnd"
+            tick={{ fill: "#666" }}
           />
-          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={8} width={72} />
-          <Chart.AreaSeries dataKey="visitors" type={curve} strokeWidth={2} fillOpacity={0.22} />
-          <Chart.Tooltip />
-        </Chart.AreaChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          <AreaChart.YAxis
+            axisLine={false}
+            tickLine={false}
+            tickMargin={8}
+            width={72}
+            tick={{ fill: "#666" }}
+          />
+          <AreaChart.Series dataKey="visitors" type={curve} strokeWidth={2} fillOpacity={0.22} />
+          <AreaChart.Tooltip />
+          <AreaChart.Legend />
+        </AreaChart>
+      </>
+    </>
   );
 }

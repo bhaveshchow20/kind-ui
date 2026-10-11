@@ -22,11 +22,9 @@ export function DailyActivityChart({ state = "ready" }: { state?: "ready" | "loa
       loading={state === "loading"}
       rings={data}
       config={config}
-      rootProps={{
-        defaultVisibleSeries: Object.keys(config),
-        interaction: { kind: "category", eligibleKeys: data.map((ring) => ring.key) },
-      }}
       aria-label="Daily activity"
+      defaultVisibleSeries={Object.keys(config)}
+      interaction={{ kind: "category", eligibleKeys: data.map((ring) => ring.key) }}
     >
       <ActivityRings.Series />
       <ActivityRings.Tooltip />

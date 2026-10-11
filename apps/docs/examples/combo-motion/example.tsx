@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { type ComboAnimation, ComboChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Jan", capacity: 960, shipped: 640, target: 700 },
@@ -17,7 +17,7 @@ const config = {
   },
   shipped: { label: "Shipped · units", color: "#733bff", formatValue: (value) => `${value} units` },
   target: { label: "Target · units", color: "#087f78", formatValue: (value) => `${value} units` },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 type Entrance = "independent" | "together" | "lineOnly";
 const entrances = {
@@ -28,14 +28,18 @@ const entrances = {
   },
   together: { revealDurationMs: 900 },
   lineOnly: { areaReveal: false, barReveal: false, lineReveal: { revealDurationMs: 900 } },
-} satisfies Record<Entrance, Chart.ComboAnimation>;
+} satisfies Record<Entrance, ComboAnimation>;
 
 export function ProductionMotionChart({ entrance = "independent" }: { entrance?: Entrance }) {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.ComboChart
+    <>
+      <>
+        <ComboChart
+          legendPosition="top"
+          config={config}
+          defaultVisibleSeries={Object.keys(config)}
+          width="100%"
+          height={280}
           key={entrance}
           data={data}
           animate={entrances[entrance]}
@@ -43,39 +47,37 @@ export function ProductionMotionChart({ entrance = "independent" }: { entrance?:
           margin={{ top: 20, right: 20, bottom: 8, left: 0 }}
           aria-label="Monthly production, capacity and target in units"
         >
-          <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.XAxis
+          <ComboChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
+          <ComboChart.XAxis
             dataKey="period"
             axisLine={false}
             tickLine={false}
             tickMargin={10}
             height={40}
+            tick={{ fill: "#666" }}
           />
-          <Chart.YAxis
+          <ComboChart.YAxis
             domain={[0, 1200]}
             ticks={[0, 400, 800, 1200]}
             width={80}
             axisLine={false}
             tickLine={false}
             tickMargin={8}
+            tick={{ fill: "#666" }}
           />
-          <Chart.AreaSeries
-            dataKey="capacity"
-            type="stepAfter"
-            fillOpacity={0.18}
-            strokeWidth={1}
-          />
-          <Chart.BarSeries dataKey="shipped" maxBarSize={32} radius={[4, 4, 0, 0]} />
-          <Chart.LineSeries
+          <ComboChart.Area dataKey="capacity" type="stepAfter" fillOpacity={0.18} strokeWidth={1} />
+          <ComboChart.Bar dataKey="shipped" maxBarSize={32} radius={[4, 4, 0, 0]} />
+          <ComboChart.Line
             dataKey="target"
             type="linear"
             strokeWidth={2.5}
             strokeDasharray="6 4"
             dot={false}
           />
-          <Chart.Tooltip maxWidth={200} />
-        </Chart.ComboChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          <ComboChart.Tooltip maxWidth={200} />
+          <ComboChart.Legend />
+        </ComboChart>
+      </>
+    </>
   );
 }

@@ -15,8 +15,12 @@ export const legacyDocSlugs = [
   ["guides", "identity-layout"],
   ["concepts", "composition"],
   ["guides", "release"],
+  ["chart-components", "root"],
+  ["chart-components", "responsive-container"],
 ];
 export function canonicalDocSlugs(slug) {
+  if (["chart-components/root", "chart-components/responsive-container"].includes(slug?.join("/")))
+    return ["chart-components", "chart"];
   if (["quickstart", "start/quickstart", "concepts/composition"].includes(slug?.join("/")))
     return ["installation"];
   if (slug?.join("/") === "guides/release") return ["installation"];
