@@ -39,6 +39,7 @@ void invalidValue;
 
 function App() {
   const [rings, setRings] = useState(initial);
+  const visibilityMode = new URLSearchParams(window.location.search).has("visibility");
   const tooltipMode = new URLSearchParams(window.location.search).get("tooltip");
   return (
     <>
@@ -51,6 +52,16 @@ function App() {
       <div id="defaults">
         <ActivityRings
           config={config}
+          {...(visibilityMode
+            ? {
+                defaultVisibleSeries: Object.keys(config),
+                interaction: {
+                  kind: "category" as const,
+                  mode: "visibility" as const,
+                  eligibleKeys: Object.keys(config),
+                },
+              }
+            : {})}
           rings={rings}
           aria-label="Daily activity"
           width={300}
