@@ -66,13 +66,15 @@ function BarFrame<T extends { category: string }>({
 }) {
   const id = useId();
   return (
-    <Chart.Root config={config} className="recipe-chart">
+    <>
       {legend}
       <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
       </p>
       <ResponsiveContainer width="100%" height={220}>
         <Chart.BarChart
+          config={config}
+          frameProps={{ className: "recipe-chart" }}
           data={data}
           layout={horizontal ? "vertical" : "horizontal"}
           animate={options ?? false}
@@ -108,7 +110,7 @@ function BarFrame<T extends { category: string }>({
           />
         </Chart.BarChart>
       </ResponsiveContainer>
-    </Chart.Root>
+    </>
   );
 }
 const zeroDomain = ([min, max]: readonly [number, number]): [number, number] => [

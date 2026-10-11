@@ -18,7 +18,7 @@ export const legendButtonClassName =
 export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
   /** Use the existing square color swatch instead of configured icons or symbols. */
   hideIcon?: boolean;
-  /** Explicit series emphasis; visibility click behavior remains controlled by Root. */
+  /** Explicit series emphasis; visibility click behavior remains controlled by chart. */
   emphasis?: "none" | "series";
   /** Compose each item's noninteractive content; Kind retains list/button/state ownership. */
   children?: (item: {

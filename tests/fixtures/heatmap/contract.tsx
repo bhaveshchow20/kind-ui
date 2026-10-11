@@ -12,14 +12,27 @@ export const Materials = materials.map((material) => (
 ));
 // @ts-expect-error Unsupported finishes must not silently become Default.
 export const RejectedGridMaterial = <Chart.HeatmapGrid caption="Wrong" material="glass" />;
-// @ts-expect-error Heatmap has no material prop.
-export const RejectedMaterial = <Chart.HeatmapChart {...props} material="clay" />;
+export const RejectedMaterial = (
+  <Chart.HeatmapChart
+    {...props}
+    // @ts-expect-error Heatmap has no material prop.
+    material="clay"
+    config={{}}
+    aria-label="Chart fixture"
+  >
+    {null}
+  </Chart.HeatmapChart>
+);
 export const NativeHost = (
   <Chart.HeatmapChart
     {...props}
     className="host-card"
     style={{ padding: 16, border: "1px solid #d1d5db" }}
-  />
+    config={{}}
+    aria-label="Chart fixture"
+  >
+    {null}
+  </Chart.HeatmapChart>
 );
 
 // @ts-expect-error Paper is no longer a supported cell material.

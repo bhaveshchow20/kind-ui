@@ -1,36 +1,48 @@
 import * as Chart from "@kind-ui/charts";
-import { Legend, Root, type SeriesConfig, TooltipContent } from "@kind-ui/charts";
+import { Legend, LineChart, type SeriesConfig, TooltipContent } from "@kind-ui/charts";
 import { createRef } from "react";
-import { Line, LineChart, Tooltip } from "recharts";
+import { Line, Tooltip } from "recharts";
 
 const config = {
   count: { label: "Tasks", color: "#2563eb", formatValue: (value) => `${value}` },
 } satisfies SeriesConfig;
 const ref = createRef<HTMLDivElement>();
 const component = (
-  <Root
-    config={config}
-    visibleSeries={["count"]}
-    onVisibleSeriesChange={() => {}}
-    ref={ref}
-    aria-label="Chart"
-  >
-    <Legend ref={createRef<HTMLUListElement>()} />
-    <LineChart width={300} height={200} data={[{ count: 0 }]}>
+  <>
+    <LineChart
+      config={config}
+      visibleSeries={["count"]}
+      onVisibleSeriesChange={() => {}}
+      frameProps={{ ref: ref, "aria-label": "Chart" }}
+      aria-label="Chart fixture"
+      width={300}
+      height={200}
+      data={[{ count: 0 }]}
+    >
       <Line dataKey="count" stroke="var(--color-count)" />
       <Tooltip
         content={(tooltip) => <TooltipContent tooltip={tooltip} ref={ref} className="custom" />}
       />
+      <LineChart.Legend ref={createRef<HTMLUListElement>()} />
     </LineChart>
-  </Root>
+  </>
 );
 void component;
-const rootProps = { config, ref } satisfies Chart.RootProps;
+const rootProps = { config, frameProps: { ref } } satisfies Pick<
+  Chart.LineChartProps,
+  "config" | "frameProps"
+>;
 const legendProps = { ref: createRef<HTMLUListElement>() } satisfies Chart.LegendProps;
 const namespaceComponent = (
-  <Chart.Root {...rootProps}>
-    <Chart.Legend {...legendProps} />
-    <LineChart width={300} height={200} data={[{ count: 0 }]}>
+  <>
+    <LineChart
+      {...rootProps}
+      aria-label="Chart fixture"
+      width={300}
+      height={200}
+      data={[{ count: 0 }]}
+      config={config}
+    >
       <Line dataKey="count" stroke="var(--color-count)" />
       <Tooltip
         content={(tooltip) => {
@@ -38,12 +50,18 @@ const namespaceComponent = (
           return <Chart.TooltipContent {...props} />;
         }}
       />
+      <LineChart.Legend {...legendProps} />
     </LineChart>
-  </Chart.Root>
+  </>
 );
 void namespaceComponent;
 // @ts-expect-error A change callback requires consumer-owned visibility.
-const invalidControl = <Root config={config} onVisibleSeriesChange={() => {}} />;
+const invalidControl: Chart.LineChartProps = {
+  config,
+  "aria-label": "Values",
+  children: null,
+  onVisibleSeriesChange() {},
+};
 // @ts-expect-error Series colors must be CSS strings.
 const invalidConfig: SeriesConfig = { count: { label: "Tasks", color: 1 } };
 void invalidControl;
@@ -51,22 +69,32 @@ void invalidConfig;
 
 // All animation modes share the public components and declarations.
 void (
-  <Chart.Root config={config}>
-    <Chart.LineChart width={300} height={200} ref={createRef<SVGSVGElement>()}>
-      <Chart.LineSeries
-        dataKey={(point: { count: number }) => point.count}
-        seriesKey="count"
-        dot={false}
-      />
-      <Chart.Tooltip
-        ref={createRef<HTMLDivElement>()}
-        frameProps={{ onFocus: (event) => event.currentTarget.focus() }}
-      />
-    </Chart.LineChart>
-  </Chart.Root>
+  <Chart.LineChart
+    config={config}
+    aria-label="Chart fixture"
+    width={300}
+    height={200}
+    ref={createRef<SVGSVGElement>()}
+  >
+    <Chart.LineSeries
+      dataKey={(point: { count: number }) => point.count}
+      seriesKey="count"
+      dot={false}
+    />
+    <Chart.Tooltip
+      ref={createRef<HTMLDivElement>()}
+      frameProps={{ onFocus: (event) => event.currentTarget.focus() }}
+    />
+  </Chart.LineChart>
 );
-// @ts-expect-error The old motion prop is not part of the public API.
-void (<Chart.LineChart motion={{ revealDurationMs: 10 }} />);
+const oldMotion: Chart.LineChartProps = {
+  config,
+  "aria-label": "Values",
+  children: null,
+  // @ts-expect-error The old motion prop is not part of the public API.
+  motion: { revealDurationMs: 10 },
+};
+void oldMotion;
 // @ts-expect-error Recharts Line does not provide a component ref; use a custom shape's pathRef.
 void (<Chart.LineSeries dataKey="count" ref={createRef<SVGPathElement>()} />);
 // @ts-expect-error Kind owns the bounded tooltip anchor.
@@ -77,12 +105,24 @@ for (const animate of [
   true,
   { revealDurationMs: 10, hoverTransition: { duration: 0.2 } },
 ] satisfies Chart.LineChartProps["animate"][]) {
-  void (<Chart.LineChart animate={animate} />);
+  void (
+    <Chart.LineChart animate={animate} config={config} aria-label="Chart fixture">
+      <Chart.LineChart.Grid />
+      <Chart.LineChart.XAxis />
+      <Chart.LineChart.YAxis />
+      {Object.keys(config).map((key) => (
+        <Chart.LineChart.Series key={key} dataKey={key} />
+      ))}
+      <Chart.LineChart.Tooltip />
+      <Chart.LineChart.Legend />
+    </Chart.LineChart>
+  );
 }
 // @ts-expect-error Motion owns animation; Recharts animation cannot compete.
 void (<Chart.LineSeries dataKey="count" isAnimationActive />);
 // @ts-expect-error Invalid animation configuration.
-void (<Chart.LineChart animate={{ revealDurationMs: "fast" }} />);
+const badDuration: Chart.LineAnimation = { revealDurationMs: "fast" };
+void badDuration;
 
 for (const material of ["plain", "clay", "glow"] satisfies Chart.LineMaterial[]) {
   void (
@@ -120,9 +160,14 @@ for (const material of ["plain", "clay", "glow"] satisfies Chart.BarMaterial[]) 
 // @ts-expect-error Bar finishes use the established material vocabulary.
 void (<Chart.BarSeries dataKey="count" material="metal" />);
 const categoryKey: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(entry.payload.id);
-void (<Chart.PieChart defaultPinnedCategory="beta" />);
+void (
+  <Chart.PieChart defaultPinnedCategory="beta" config={config} aria-label="Chart fixture">
+    {null}
+  </Chart.PieChart>
+);
 // @ts-expect-error Initial identity is a category string, never a row index.
-void (<Chart.PieChart defaultPinnedCategory={1} />);
+const invalidPin: Pick<Chart.PieChartProps, "defaultPinnedCategory"> = { defaultPinnedCategory: 1 };
+void invalidPin;
 void (<Chart.Tooltip itemKey={categoryKey} />);
 const categoryContent: Chart.TooltipContentProps = {
   tooltip: {
@@ -157,8 +202,19 @@ const iconConfig = {
   count: { label: "Tasks", color: "var(--tasks)", icon: TaskIcon },
 } satisfies SeriesConfig;
 void (
-  <Chart.Root config={iconConfig}>
-    <Chart.Legend hideIcon>
+  <LineChart config={iconConfig} aria-label="Chart fixture">
+    <Tooltip
+      content={(tooltip) => (
+        <Chart.TooltipContent
+          tooltip={tooltip}
+          indicator="dashed"
+          hideIndicator
+          hideLabel
+          itemKey={(entry) => String(entry.dataKey)}
+        />
+      )}
+    />
+    <LineChart.Legend hideIcon>
       {({ key, label, visible, marker }) => (
         <>
           {marker}
@@ -167,21 +223,8 @@ void (
           </span>
         </>
       )}
-    </Chart.Legend>
-    <LineChart>
-      <Tooltip
-        content={(tooltip) => (
-          <Chart.TooltipContent
-            tooltip={tooltip}
-            indicator="dashed"
-            hideIndicator
-            hideLabel
-            itemKey={(entry) => String(entry.dataKey)}
-          />
-        )}
-      />
-    </LineChart>
-  </Chart.Root>
+    </LineChart.Legend>
+  </LineChart>
 );
 for (const indicator of [
   "dot",
@@ -189,7 +232,7 @@ for (const indicator of [
   "dashed",
 ] satisfies Chart.TooltipContentProps["indicator"][]) {
   void (
-    <LineChart>
+    <LineChart config={config} aria-label="Chart fixture">
       <Tooltip
         content={(tooltip) => <Chart.TooltipContent tooltip={tooltip} indicator={indicator} />}
       />
@@ -197,7 +240,7 @@ for (const indicator of [
   );
 }
 void (
-  <LineChart>
+  <LineChart config={config} aria-label="Chart fixture">
     <Tooltip
       // @ts-expect-error Unsupported decorative marker.
       content={(tooltip) => <Chart.TooltipContent tooltip={tooltip} indicator="triangle" />}
@@ -221,12 +264,10 @@ for (const legendShape of [
     search: { label: "Search", color: "#333", legendShape },
   } satisfies SeriesConfig;
   void (
-    <Chart.Root config={sharedConfig}>
-      <Chart.Legend />
-      <Chart.ScatterChart>
-        <Chart.ScatterSeries seriesKey="search" shape={sharedConfig.search.legendShape} />
-      </Chart.ScatterChart>
-    </Chart.Root>
+    <Chart.ScatterChart config={sharedConfig} aria-label="Chart fixture">
+      <Chart.ScatterSeries seriesKey="search" shape={sharedConfig.search.legendShape} />
+      <Chart.ScatterChart.Legend />
+    </Chart.ScatterChart>
   );
 }
 const invalidLegendShape: SeriesConfig = {
@@ -242,32 +283,37 @@ void invalidLegendRenderer;
 
 export function CompleteNamespaceChart() {
   return (
-    <Chart.Root config={{ count: { label: "Count", color: "#4055ee" } }}>
-      <Chart.ResponsiveContainer width="100%" height={240}>
-        <Chart.LineChart
-          data={[{ month: "Jan", count: 0 }]}
-          animate
-          accessibilityLayer
-          aria-label="Count by month"
-        >
-          <Chart.CartesianGrid vertical={false} />
-          <Chart.XAxis dataKey="month" />
-          <Chart.YAxis />
-          <Chart.ReferenceLine y={0} />
-          <Chart.LineSeries dataKey="count" />
-          <Chart.Tooltip />
-        </Chart.LineChart>
-      </Chart.ResponsiveContainer>
-      <Chart.Legend />
-    </Chart.Root>
+    <Chart.ResponsiveContainer width="100%" height={240}>
+      <Chart.LineChart
+        config={{ count: { label: "Count", color: "#4055ee" } }}
+        data={[{ month: "Jan", count: 0 }]}
+        animate
+        accessibilityLayer
+        aria-label="Count by month"
+      >
+        <Chart.CartesianGrid vertical={false} />
+        <Chart.XAxis dataKey="month" />
+        <Chart.YAxis />
+        <Chart.ReferenceLine y={0} />
+        <Chart.LineSeries dataKey="count" />
+        <Chart.Tooltip />
+        <Chart.LineChart.Legend />
+      </Chart.LineChart>
+    </Chart.ResponsiveContainer>
   );
 }
 
 const clockwisePie = {
+  config,
+  "aria-label": "Sweep",
+  children: null,
   animate: true,
   animationDirection: "clockwise",
 } satisfies Chart.PieChartProps;
 const anticlockwisePie = {
+  config,
+  "aria-label": "Sweep",
+  children: null,
   animate: { revealDurationMs: 600 },
   animationDirection: "anticlockwise",
 } satisfies Chart.PieChartProps;
@@ -277,9 +323,16 @@ void [clockwisePie, anticlockwisePie, invalidPieDirection];
 
 const inferredConfig = { monthlyVisitors: { color: "#3659b8" } } satisfies SeriesConfig;
 const inferredRoot = (
-  <Root config={inferredConfig}>
+  <Chart.HeatmapChart
+    rows={[]}
+    columns={[]}
+    data={[]}
+    scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+    aria-label="Metadata chart"
+    config={inferredConfig}
+  >
     <Legend>{({ label }) => label.toUpperCase()}</Legend>
-  </Root>
+  </Chart.HeatmapChart>
 );
 void inferredRoot;
 // @ts-expect-error Labels remain strings when supplied.
@@ -330,7 +383,11 @@ const sharedFocus = {
     request.event?.preventDefault();
   },
 } satisfies Chart.ChartInteractionConfig;
-void (<Root config={config} interaction={sharedFocus} />);
+void (
+  <Chart.LineChart config={config} aria-label="Shared focus" interaction={sharedFocus}>
+    {null}
+  </Chart.LineChart>
+);
 // @ts-expect-error Controlled focus requires a change callback.
 const missingFocusChange: Chart.ChartInteractionConfig = {
   kind: "series",
@@ -356,29 +413,36 @@ const customBackground = Chart.defineChartBackgroundPattern(({ size, color, idPr
 ));
 void (<Chart.ChartBackgroundPattern pattern={customBackground} opacity={0} size={24} />);
 void (
-  <Chart.LineChart
-    config={config}
-    data={[]}
-    xDataKey="count"
-    aria-label="Decorated"
-    backgroundPattern={{ pattern: "waves", opacity: 0.2 }}
-  />
+  <Chart.LineChart config={config} data={[]} aria-label="Decorated">
+    <Chart.LineChart.Grid />
+    <Chart.LineChart.XAxis dataKey={"count"} />
+    <Chart.LineChart.YAxis />
+    {Object.keys(config).map((key) => (
+      <Chart.LineChart.Series key={key} dataKey={key} />
+    ))}
+    <Chart.LineChart.Tooltip />
+    <Chart.LineChart.Legend />
+  </Chart.LineChart>
 );
 // @ts-expect-error Background decoration is not a series fill encoding.
 void (<Chart.ChartBackgroundPattern pattern={{ kind: "hatch" }} />);
 void (
-  <Chart.LineChart
-    config={config}
-    data={[]}
-    aria-label="Explicit"
-    // @ts-expect-error Explicit children replace generated decoration too.
-    backgroundPattern={{ pattern: "pinpoints" }}
-  >
+  <Chart.LineChart config={config} data={[]} aria-label="Explicit">
     {null}
   </Chart.LineChart>
 );
-// @ts-expect-error Native composition uses the part, not generated options.
-void (<Chart.LineChart data={[]} backgroundPattern={{ pattern: "waves" }} />);
+void (
+  <Chart.LineChart data={[]} config={config} aria-label="Chart fixture">
+    <Chart.LineChart.Grid />
+    <Chart.LineChart.XAxis />
+    <Chart.LineChart.YAxis />
+    {Object.keys(config).map((key) => (
+      <Chart.LineChart.Series key={key} dataKey={key} />
+    ))}
+    <Chart.LineChart.Tooltip />
+    <Chart.LineChart.Legend />
+  </Chart.LineChart>
+);
 for (const revealDirection of [
   "left-to-right",
   "right-to-left",
@@ -393,9 +457,28 @@ for (const revealDirection of [
     areaReveal: { revealDirection: "edges-in" },
     barReveal: false,
   } satisfies Chart.ComboAnimation;
-  void (<Chart.LineChart animate={line} />);
-  void (<Chart.AreaChart animate={area} />);
-  void (<Chart.ComboChart animate={combo} />);
+  void (
+    <Chart.LineChart animate={line} config={config} aria-label="Chart fixture">
+      <Chart.LineChart.Grid />
+      <Chart.LineChart.XAxis />
+      <Chart.LineChart.YAxis />
+      {Object.keys(config).map((key) => (
+        <Chart.LineChart.Series key={key} dataKey={key} />
+      ))}
+      <Chart.LineChart.Tooltip />
+      <Chart.LineChart.Legend />
+    </Chart.LineChart>
+  );
+  void (
+    <Chart.AreaChart animate={area} config={config} aria-label="Chart fixture">
+      {null}
+    </Chart.AreaChart>
+  );
+  void (
+    <Chart.ComboChart animate={combo} config={config} aria-label="Chart fixture">
+      {null}
+    </Chart.ComboChart>
+  );
 }
 // @ts-expect-error Direction names are a closed physical-direction union.
 const invalidReveal: Chart.LineAnimation = { revealDirection: "up" };
@@ -417,7 +500,6 @@ import {
   AreaSeries,
   ComboChart,
   LineChart as DirectionalLineChart,
-  Root as DirectionalRoot,
   LineSeries,
 } from "@kind-ui/charts";
 
@@ -432,8 +514,9 @@ const directionalConfig = {
 
 export function DirectionalCharts() {
   return (
-    <DirectionalRoot config={directionalConfig}>
+    <>
       <DirectionalLineChart
+        config={directionalConfig}
         data={directionalData}
         width={480}
         height={240}
@@ -448,6 +531,7 @@ export function DirectionalCharts() {
         height={240}
         aria-label="Daily forecast"
         animate={{ revealDirection: "center-out" }}
+        config={directionalConfig}
       >
         <AreaSeries dataKey="forecast" />
       </AreaChart>
@@ -462,11 +546,12 @@ export function DirectionalCharts() {
           areaReveal: { revealDirection: "edges-in", revealDurationMs: 1200 },
           barReveal: false,
         }}
+        config={directionalConfig}
       >
         <LineSeries dataKey="total" />
         <AreaSeries dataKey="forecast" />
       </ComboChart>
-    </DirectionalRoot>
+    </>
   );
 }
 
@@ -516,26 +601,29 @@ const sankeyIconData: Chart.SankeyFlowData = {
   links: [{ id: "flow", source: "source", target: "sink", value: 7 }],
 };
 const sankeyIconConsumer = (
-  <Chart.SankeyChart
-    data={sankeyIconData}
-    nodeConfig={sankeyIconConfig}
-    node={(node) => (
-      <g>
-        <Chart.SankeyNode {...node} />
-        <Chart.SankeyNodeLabel
-          node={node}
-          data={sankeyIconData}
-          nodeConfig={sankeyIconConfig}
-          iconSize={18}
-          iconGap={3}
-          position="outside"
-          showValues
-          ref={createRef<SVGTextElement>()}
-        >
-          <tspan>Custom name</tspan>
-        </Chart.SankeyNodeLabel>
-      </g>
-    )}
-  />
+  <Chart.SankeyChart data={sankeyIconData} config={sankeyIconConfig} aria-label="Chart fixture">
+    {null}
+    {/* Explicit renderer ownership belongs to the family parts. */}
+    <Chart.SankeyChart.Nodes
+      render={(node) => (
+        <g>
+          <Chart.SankeyNode {...node} />
+          <Chart.SankeyNodeLabel
+            node={node}
+            data={sankeyIconData}
+            nodeConfig={sankeyIconConfig}
+            iconSize={18}
+            iconGap={3}
+            position="outside"
+            showValues
+            ref={createRef<SVGTextElement>()}
+          >
+            <tspan>Custom name</tspan>
+          </Chart.SankeyNodeLabel>
+        </g>
+      )}
+    />
+    <Chart.SankeyChart.Links></Chart.SankeyChart.Links>
+  </Chart.SankeyChart>
 );
 void sankeyIconConsumer;

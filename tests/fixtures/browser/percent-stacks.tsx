@@ -53,69 +53,67 @@ export function PercentStacks() {
         return (
           <section key={family} aria-label={`Percent ${family}`}>
             <h2>Percent {family}</h2>
-            <Chart.Root
-              config={{
-                first: { label: "First", color: "#2563eb" },
-                second: { label: "Second", color: "#15803d" },
-                latency: { label: "Latency", color: "#9333ea" },
-              }}
-            >
-              <Chart.ResponsiveContainer width="100%" height={240}>
-                <Engine
-                  data={data}
-                  stackOffset={family === "Combo" ? "none" : "expand"}
-                  layout={horizontal ? "vertical" : "horizontal"}
-                  accessibilityLayer
-                >
-                  {horizontal ? (
-                    <>
-                      <Chart.YAxis type="category" dataKey="category" />
-                      <Chart.XAxis
-                        type="number"
-                        domain={[0, 1]}
-                        ticks={[0, 0.5, 1]}
-                        tickFormatter={percent.tickFormatter}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <Chart.XAxis dataKey="category" />
-                      <Chart.YAxis
-                        yAxisId="share"
-                        domain={[0, 1]}
-                        ticks={[0, 0.5, 1]}
-                        tickFormatter={percent.tickFormatter}
-                      />
-                    </>
-                  )}
-                  <Series
-                    dataKey={family === "Combo" ? firstShare : "first"}
-                    seriesKey="first"
-                    name="First"
-                    stackId="parts"
-                    yAxisId={horizontal ? 0 : "share"}
-                  />
-                  <Series
-                    dataKey={family === "Combo" ? secondShare : "second"}
-                    seriesKey="second"
-                    name="Second"
-                    stackId="parts"
-                    yAxisId={horizontal ? 0 : "share"}
-                  />
-                  {family === "Combo" && (
-                    <>
-                      <Chart.YAxis yAxisId="latency" orientation="right" domain={[0, 10]} />
-                      <Chart.LineSeries dataKey="latency" yAxisId="latency" dot />
-                    </>
-                  )}
-                  <Chart.Tooltip
-                    {...(family === "Combo"
-                      ? { formatter: comboFormatter }
-                      : { normalizedValue: percent.normalizedValue })}
-                  />
-                </Engine>
-              </Chart.ResponsiveContainer>
-            </Chart.Root>
+            <Chart.ResponsiveContainer width="100%" height={240}>
+              <Engine
+                config={{
+                  first: { label: "First", color: "#2563eb" },
+                  second: { label: "Second", color: "#15803d" },
+                  latency: { label: "Latency", color: "#9333ea" },
+                }}
+                aria-label="Chart fixture"
+                data={data}
+                stackOffset={family === "Combo" ? "none" : "expand"}
+                layout={horizontal ? "vertical" : "horizontal"}
+                accessibilityLayer
+              >
+                {horizontal ? (
+                  <>
+                    <Chart.YAxis type="category" dataKey="category" />
+                    <Chart.XAxis
+                      type="number"
+                      domain={[0, 1]}
+                      ticks={[0, 0.5, 1]}
+                      tickFormatter={percent.tickFormatter}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Chart.XAxis dataKey="category" />
+                    <Chart.YAxis
+                      yAxisId="share"
+                      domain={[0, 1]}
+                      ticks={[0, 0.5, 1]}
+                      tickFormatter={percent.tickFormatter}
+                    />
+                  </>
+                )}
+                <Series
+                  dataKey={family === "Combo" ? firstShare : "first"}
+                  seriesKey="first"
+                  name="First"
+                  stackId="parts"
+                  yAxisId={horizontal ? 0 : "share"}
+                />
+                <Series
+                  dataKey={family === "Combo" ? secondShare : "second"}
+                  seriesKey="second"
+                  name="Second"
+                  stackId="parts"
+                  yAxisId={horizontal ? 0 : "share"}
+                />
+                {family === "Combo" && (
+                  <>
+                    <Chart.YAxis yAxisId="latency" orientation="right" domain={[0, 10]} />
+                    <Chart.LineSeries dataKey="latency" yAxisId="latency" dot />
+                  </>
+                )}
+                <Chart.Tooltip
+                  {...(family === "Combo"
+                    ? { formatter: comboFormatter }
+                    : { normalizedValue: percent.normalizedValue })}
+                />
+              </Engine>
+            </Chart.ResponsiveContainer>
             <table aria-label={`${family} raw values`}>
               <caption>Original values; percentages appear in the chart tooltip</caption>
               <thead>

@@ -132,7 +132,7 @@ try {
   }
   for (const file of [
     "chart.test.mjs",
-    "configured-line.test.mjs",
+    "chart-frame.test.mjs",
     "compound-chart.test.mjs",
     "tailwind-classes.test.mjs",
     "consumer.tsx",
@@ -145,7 +145,7 @@ try {
     [
       "--test",
       "chart.test.mjs",
-      "configured-line.test.mjs",
+      "chart-frame.test.mjs",
       "compound-chart.test.mjs",
       "tailwind-classes.test.mjs",
     ],
@@ -351,14 +351,14 @@ try {
   );
 
   assertCompositionConsumerSource(
-    await readFile(join(root, "tests/fixtures/configured-line/host.tsx"), "utf8"),
+    await readFile(join(root, "tests/fixtures/chart-frame/host.tsx"), "utf8"),
   );
   for (const file of ["host.tsx", "main.tsx", "contract.tsx", "index.html"])
-    await copyFixture("configured-line", file);
+    await copyFixture("chart-frame", file);
   await typecheck(["host.tsx", "main.tsx", "contract.tsx"]);
-  await production("index.html", "packed-configured-line");
+  await production("index.html", "packed-chart-frame");
   console.log(
-    "Configured LineChart: public-only standalone/explicit/controlled consumers, generic props and strict NodeNext/Bundler passed",
+    "LineChart: explicit public parts, controlled consumers, generic props and strict NodeNext/Bundler passed",
   );
 
   await copyFixture("activity-rings", "index.html", "activity-rings.html");
@@ -422,7 +422,9 @@ import { LineChart } from "@kind-ui/charts";
 const rows = [{ month: "Jan", sales: 12 }, { month: "Feb", sales: 30 }];
 createRoot(document.createElement("div")).render(
   <LineChart data={rows} config={{ sales: { label: "Sales", color: "#537f76" } }}
-    xDataKey="month" height={260} aria-label="Monthly sales"${loading ? " loading={true}" : ""} />
+    height={260} aria-label="Monthly sales"${loading ? " loading={true}" : ""}>
+    <LineChart.XAxis dataKey="month" /><LineChart.YAxis /><LineChart.Series dataKey="sales" />
+  </LineChart>
 );`,
     );
     const result = await build({
@@ -461,8 +463,8 @@ createRoot(document.createElement("div")).render(
     await readFile(join(root, "tests/chart.test.mjs"), "utf8"),
   );
   await writeFile(
-    join(consumer, "configured-line.test.mjs"),
-    await readFile(join(root, "tests/configured-line.test.mjs"), "utf8"),
+    join(consumer, "chart-frame.test.mjs"),
+    await readFile(join(root, "tests/chart-frame.test.mjs"), "utf8"),
   );
   await copyFile(
     join(root, "tests/compound-chart.test.mjs"),
@@ -477,7 +479,7 @@ createRoot(document.createElement("div")).render(
     [
       "--test",
       "chart.test.mjs",
-      "configured-line.test.mjs",
+      "chart-frame.test.mjs",
       "compound-chart.test.mjs",
       "tailwind-classes.test.mjs",
     ],
@@ -612,7 +614,7 @@ createRoot(document.createElement("div")).render(
   for (const file of ["host.tsx", "main.tsx", "index.html", "render.mjs"])
     await copyFixture("tailwind-setup", file);
   await typecheck(["host.tsx", "main.tsx"]);
-  // Hydrate the same public packed host, rather than duplicating Root's server markup.
+  // Hydrate the same public packed host, rather than duplicating the chart’s server markup.
   run(
     process.execPath,
     [
@@ -709,28 +711,6 @@ createRoot(document.createElement("div")).render(
   await production("index.html", "packed-emphasis");
   console.log("Emphasis tarball: strict NodeNext/Bundler and production build passed");
 
-  // Separate host recipe evidence, outside the public line/area/bar fixture proof.
-  const legacy = join(consumer, "legacy");
-  await mkdir(legacy);
-  for (const file of [
-    "recipe-motion.tsx",
-    "bar-recipes.tsx",
-    "area-recipes.tsx",
-    "use-reduced-motion.ts",
-  ]) {
-    await writeFile(
-      join(legacy, file),
-      await readFile(join(root, "tests/fixtures/browser", file), "utf8"),
-    );
-  }
-  await writeFile(
-    join(legacy, "recipe-consumer.tsx"),
-    await readFile(join(root, "tests/recipe-consumer.tsx"), "utf8"),
-  );
-  await typecheck(["legacy/recipe-consumer.tsx"]);
-  console.log(
-    "Migrated area and bar host recipe typechecks passed; separate from packed public-export proof",
-  );
   console.log(
     "Packed contents, Tailwind class discovery, license, ESM import, component tests, strict consumers and production styling build passed",
   );

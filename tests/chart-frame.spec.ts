@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { expectHiddenPaint } from "./interaction-paint";
 import { expectLastVisibleGuard } from "./last-visible";
 
-test("configured line is complete, responsive and owns explicit uncontrolled visibility without website CSS", async ({
+test("explicit line is complete, responsive and owns explicit uncontrolled visibility without website CSS", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -26,7 +26,7 @@ test("configured line is complete, responsive and owns explicit uncontrolled vis
   await expect(basic.locator(".recharts-line-curve").first()).toHaveAttribute("stroke-width", "2");
   await expect(basic.locator(".recharts-line-dot")).toHaveCount(5);
   await expect(svg).toHaveAttribute("aria-describedby", /.+/);
-  await basic.screenshot({ path: "artifacts/configured-line-tests/basic-line.png" });
+  await basic.screenshot({ path: "artifacts/chart-frame-tests/basic-line.png" });
   await basic.getByRole("button", { name: "Total", exact: true }).click();
   await expect(basic.getByRole("button", { name: "Total", exact: true })).toHaveAttribute(
     "aria-pressed",
@@ -142,7 +142,7 @@ test("controlled visibility, config reconciliation, accessors and explicit empty
   await expect(empty.locator('[data-kind-ui="chart-legend"]')).toHaveCount(0);
 });
 
-test("configured default motion respects reduced motion and explicit off", async ({ page }) => {
+test("chart default motion respects reduced motion and explicit off", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.clock.install();
   await page.goto("/");
@@ -253,7 +253,7 @@ test("backgrounds clip, scope paint and preserve data interaction", async ({ pag
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(basic.locator('[data-kind-ui="tooltip-frame"]')).not.toBeVisible();
-  await basic.screenshot({ path: "artifacts/configured-line-tests/decorative-background.png" });
+  await basic.screenshot({ path: "artifacts/chart-frame-tests/decorative-background.png" });
 });
 
 test("point styles preserve keyboard/pointer inspection, native overrides and independent charts", async ({

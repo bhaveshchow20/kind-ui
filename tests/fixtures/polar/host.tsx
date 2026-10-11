@@ -1,4 +1,3 @@
-// Host composition only; the installed tarball supplies every Kind component.
 import * as Chart from "@kind-ui/charts";
 import {
   Cell,
@@ -178,23 +177,23 @@ export function PolarHost() {
       ),
     [portalTarget],
   );
-  const selectionProps: Chart.RadarSelectionProps = params.has("controlled")
-    ? {
-        selection: selectionEnabled ? "series" : "none",
-        selectedSeries: selected,
-        onSelectedSeriesChange: (next) => {
-          setRequests((old) => [...old, next]);
-          if (!frozen) setSelected(next);
-        },
-      }
-    : {
-        selection: selectionEnabled ? "series" : "none",
-        ...(params.has("bare")
-          ? {}
-          : {
-              onSelectedSeriesChange: (next: string | null) => setRequests((old) => [...old, next]),
-            }),
-      };
+  const selectionProps = {
+    interaction: {
+      kind: "series" as const,
+      mode: "focus" as const,
+      eligibleKeys: selectionEnabled ? ["value", "alias"] : [],
+      ...(params.has("controlled")
+        ? {
+            selected,
+            onSelectionChange: (next: string | null) => {
+              setRequests((old) => [...old, next]);
+              if (!frozen) setSelected(next);
+            },
+          }
+        : { onSelectionChange: (next: string | null) => setRequests((old) => [...old, next]) }),
+    },
+  };
+
   const ref = useCallback((node: SVGSVGElement | null) => {
     if (node) {
       node.dataset.hostRef = "attached";
@@ -303,81 +302,79 @@ export function PolarHost() {
         Clicks {clicks}; selected {selected ?? "none"}; requests {JSON.stringify(requests)};{" "}
         <DotEvents ref={dotEvents} />
       </output>
-      <Chart.Root
-        interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+      <Chart.RadarChart
+        interaction={
+          params.has("selection")
+            ? selectionProps.interaction
+            : { kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }
+        }
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
-        data-host="radar"
         emphasis={emphasisEnabled ? "auto" : "none"}
+        frameProps={{ "data-host": "radar" }}
+        ref={ref}
+        data={data}
+        width={width}
+        height={360}
+        animate={animate}
+        cx={shift ? "40%" : "50%"}
+        startAngle={shift ? 0 : 90}
+        aria-label="Radar comparison"
+        onMouseMove={() => dotEvents.current?.move()}
       >
-        <Chart.Legend aria-label="Radar series" />
-        <Chart.RadarChart
-          {...selectionProps}
-          ref={ref}
-          data={data}
-          width={width}
-          height={360}
-          animate={animate}
-          cx={shift ? "40%" : "50%"}
-          startAngle={shift ? 0 : 90}
-          aria-label="Radar comparison"
-          onMouseMove={() => dotEvents.current?.move()}
-        >
-          <defs>
-            <linearGradient id="polar-paint">
-              <stop stopColor="#df55a0" stopOpacity={0.2} />
-              <stop offset="1" stopColor="#8346cc" stopOpacity={0.8} />
-            </linearGradient>
-            <filter id="host-filter">
-              <feOffset dx={0} dy={0} />
-            </filter>
-          </defs>
-          <PolarGrid />
-          <PolarAngleAxis dataKey="category" />
-          <PolarRadiusAxis domain={radiusDomain} />
-          <Chart.RadarSeries<(typeof initial)[number], number | [number, number]>
-            dataKey={params.has("range") ? range : "value"}
-            seriesKey="value"
-            isRange={params.has("range")}
-            material={material}
-            filter={nativeFilter ? "url(#host-filter)" : undefined}
-            style={params.has("style-filter") ? { filter: "none" } : undefined}
-            shape={
-              params.has("portal-shape")
-                ? portalShape
-                : params.has("radar-shape")
-                  ? nativeShape
-                  : undefined
-            }
-            fill={
-              params.has("paint")
-                ? params.has("solid")
-                  ? "#df55a0"
-                  : "url(#polar-paint)"
+        <defs>
+          <linearGradient id="polar-paint">
+            <stop stopColor="#df55a0" stopOpacity={0.2} />
+            <stop offset="1" stopColor="#8346cc" stopOpacity={0.8} />
+          </linearGradient>
+          <filter id="host-filter">
+            <feOffset dx={0} dy={0} />
+          </filter>
+        </defs>
+        <PolarGrid />
+        <PolarAngleAxis dataKey="category" />
+        <PolarRadiusAxis domain={radiusDomain} />
+        <Chart.RadarSeries<(typeof initial)[number], number | [number, number]>
+          dataKey={params.has("range") ? range : "value"}
+          seriesKey="value"
+          isRange={params.has("range")}
+          material={material}
+          filter={nativeFilter ? "url(#host-filter)" : undefined}
+          style={params.has("style-filter") ? { filter: "none" } : undefined}
+          shape={
+            params.has("portal-shape")
+              ? portalShape
+              : params.has("radar-shape")
+                ? nativeShape
                 : undefined
-            }
-            stroke={params.has("paint") ? "none" : undefined}
-            fillOpacity={params.has("transparent") ? 0 : 0.25}
-            hide={hide}
-            dot={dot}
-            label={
-              !["single", "dot-object", "dot-element", "dot-function"].some((key) =>
-                params.has(key),
-              )
-            }
-            onClick={nativeClick}
-          />
-          <Chart.RadarSeries<(typeof initial)[number], number>
-            dataKey={other}
-            material={material}
-            {...(params.has("invalid") ? {} : { seriesKey: "alias" })}
-            fill="none"
-            strokeDasharray="4 3"
-          />
-          <Chart.Tooltip content={content ? <Content /> : undefined} />
-        </Chart.RadarChart>
-      </Chart.Root>
+          }
+          fill={
+            params.has("paint")
+              ? params.has("solid")
+                ? "#df55a0"
+                : "url(#polar-paint)"
+              : undefined
+          }
+          stroke={params.has("paint") ? "none" : undefined}
+          fillOpacity={params.has("transparent") ? 0 : 0.25}
+          hide={hide}
+          dot={dot}
+          label={
+            !["single", "dot-object", "dot-element", "dot-function"].some((key) => params.has(key))
+          }
+          onClick={nativeClick}
+        />
+        <Chart.RadarSeries<(typeof initial)[number], number>
+          dataKey={other}
+          material={material}
+          {...(params.has("invalid") ? {} : { seriesKey: "alias" })}
+          fill="none"
+          strokeDasharray="4 3"
+        />
+        <Chart.Tooltip content={content ? <Content /> : undefined} />
+        <Chart.RadarChart.Legend aria-label="Radar series" />
+      </Chart.RadarChart>
       {(params.has("portal-dot") || params.has("portal-shape")) && (
         <svg
           width={520}
@@ -387,82 +384,79 @@ export function PolarHost() {
           data-host="portal"
         />
       )}
-      <Chart.Root
+      <Chart.RadialBarChart
         interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
-        data-host="radial"
+        frameProps={{ "data-host": "radial" }}
+        ref={ref}
+        data={data}
+        width={width}
+        height={360}
+        animate={animate}
+        animationDirection={params.has("anticlockwise") ? "anticlockwise" : "clockwise"}
+        innerRadius="22%"
+        outerRadius="88%"
+        {...(params.has("thin") ? { barSize: 2 } : {})}
+        startAngle={shift ? 180 : 90}
+        endAngle={shift ? 0 : -270}
+        aria-label="Radial comparison"
       >
-        <Chart.Legend aria-label="Radial series" />
-        <Chart.RadialBarChart
-          ref={ref}
-          data={data}
-          width={width}
-          height={360}
-          animate={animate}
-          animationDirection={params.has("anticlockwise") ? "anticlockwise" : "clockwise"}
-          innerRadius="22%"
-          outerRadius="88%"
-          {...(params.has("thin") ? { barSize: 2 } : {})}
-          startAngle={shift ? 180 : 90}
-          endAngle={shift ? 0 : -270}
-          aria-label="Radial comparison"
+        <defs>
+          <linearGradient id="polar-radial-paint">
+            <stop stopColor="#df55a0" stopOpacity={0.2} />
+            <stop offset="1" stopColor="#8346cc" stopOpacity={0.8} />
+          </linearGradient>
+          <filter id="radial-host-filter">
+            <feOffset dx={0} dy={0} />
+          </filter>
+        </defs>
+        <PolarAngleAxis type="number" domain={radiusDomain} tick={false} />
+        <PolarRadiusAxis type="category" dataKey="category" tick />
+        <Chart.RadialBarSeries<(typeof initial)[number], number | [number, number]>
+          dataKey={params.has("radial-range") ? range : "value"}
+          seriesKey="value"
+          material={material}
+          filter={nativeFilter ? "url(#radial-host-filter)" : undefined}
+          activeShape={params.has("active-shape") ? Shape : undefined}
+          style={params.has("style-filter") ? { filter: "none" } : undefined}
+          fill={
+            params.has("paint")
+              ? params.has("solid")
+                ? "#df55a0"
+                : "url(#polar-radial-paint)"
+              : undefined
+          }
+          fillOpacity={params.has("transparent") ? 0 : params.has("paint") ? 0.35 : 1}
+          hide={hide}
+          {...(params.has("stack") ? { stackId: "scores" } : {})}
+          cornerRadius={4}
+          background={
+            params.has("owned-background") ? { fill: "#123456", className: "owned-track" } : true
+          }
+          shape={custom ? Shape : params.has("boolean-shape") ? true : undefined}
+          onClick={() => setClicks((n) => n + 1)}
         >
-          <defs>
-            <linearGradient id="polar-radial-paint">
-              <stop stopColor="#df55a0" stopOpacity={0.2} />
-              <stop offset="1" stopColor="#8346cc" stopOpacity={0.8} />
-            </linearGradient>
-            <filter id="radial-host-filter">
-              <feOffset dx={0} dy={0} />
-            </filter>
-          </defs>
-          <PolarAngleAxis type="number" domain={radiusDomain} tick={false} />
-          <PolarRadiusAxis type="category" dataKey="category" tick />
-          <Chart.RadialBarSeries<(typeof initial)[number], number | [number, number]>
-            dataKey={params.has("radial-range") ? range : "value"}
-            seriesKey="value"
-            material={material}
-            filter={nativeFilter ? "url(#radial-host-filter)" : undefined}
-            activeShape={params.has("active-shape") ? Shape : undefined}
-            style={params.has("style-filter") ? { filter: "none" } : undefined}
-            fill={
-              params.has("paint")
-                ? params.has("solid")
-                  ? "#df55a0"
-                  : "url(#polar-radial-paint)"
-                : undefined
-            }
-            fillOpacity={params.has("transparent") ? 0 : params.has("paint") ? 0.35 : 1}
-            hide={hide}
-            {...(params.has("stack") ? { stackId: "scores" } : {})}
-            cornerRadius={4}
-            background={
-              params.has("owned-background") ? { fill: "#123456", className: "owned-track" } : true
-            }
-            shape={custom ? Shape : params.has("boolean-shape") ? true : undefined}
-            onClick={() => setClicks((n) => n + 1)}
-          >
-            {data.map((row) => (
-              <Cell
-                key={row.id}
-                {...(!params.has("paint") && row.id === "quality" ? { fill: "#27806a" } : {})}
-                data-category-id={row.id}
-              />
-            ))}
-            <LabelList dataKey="value" position="insideEnd" />
-          </Chart.RadialBarSeries>
-          <Chart.RadialBarSeries<(typeof initial)[number], number | [number, number]>
-            dataKey={other}
-            material={material}
-            {...(params.has("invalid") ? {} : { seriesKey: "alias" })}
-            {...(params.has("stack") ? { stackId: "scores" } : {})}
-            fillOpacity={0.55}
-          />
-          <Chart.Tooltip content={content ? <Content /> : undefined} />
-        </Chart.RadialBarChart>
-      </Chart.Root>
+          {data.map((row) => (
+            <Cell
+              key={row.id}
+              {...(!params.has("paint") && row.id === "quality" ? { fill: "#27806a" } : {})}
+              data-category-id={row.id}
+            />
+          ))}
+          <LabelList dataKey="value" position="insideEnd" />
+        </Chart.RadialBarSeries>
+        <Chart.RadialBarSeries<(typeof initial)[number], number | [number, number]>
+          dataKey={other}
+          material={material}
+          {...(params.has("invalid") ? {} : { seriesKey: "alias" })}
+          {...(params.has("stack") ? { stackId: "scores" } : {})}
+          fillOpacity={0.55}
+        />
+        <Chart.Tooltip content={content ? <Content /> : undefined} />
+        <Chart.RadialBarChart.Legend aria-label="Radial series" />
+      </Chart.RadialBarChart>
       <section data-host="native" style={{ display: "none" }}>
         <NativeRadarChart
           data={data}
@@ -513,11 +507,20 @@ export function PolarHost() {
 
 // Strict packed declarations preserve polar layouts, callbacks and generic data keys.
 const radarProps: Chart.RadarChartProps<(typeof initial)[number]> = {
+  config: { value: { color: "red" }, other: { color: "blue" } },
+  "aria-label": "Radar",
+  children: null,
   layout: "centric",
   animate: { revealDurationMs: 400 },
   data: initial,
 };
-const radialProps: Chart.RadialBarChartProps = { layout: "radial", animate: true };
+const radialProps: Chart.RadialBarChartProps = {
+  config: { value: { color: "red" }, other: { color: "blue" } },
+  "aria-label": "Radial",
+  children: null,
+  layout: "radial",
+  animate: true,
+};
 void radarProps;
 void radialProps;
 // @ts-expect-error Polar layouts cannot be Cartesian.

@@ -96,35 +96,42 @@ function Recipe({
               onClick={(item, kind) => {
                 if (kind === "link") setActive(item.payload.id);
               }}
-              node={(props) => (
-                <g>
-                  <SankeyNode finish={finish} {...props} color="#4338ca" />
-                  <SankeyNodeLabel
-                    node={props}
-                    data={flow}
-                    nodeConfig={nodeConfig}
-                    position={material === "solid" ? "outside" : "inside"}
-                    showValues
-                    valueFormatter={(value) => `${value} MWh`}
-                    fill={material === "solid" ? "currentColor" : "white"}
-                  />
-                </g>
-              )}
-              link={(props) => (
-                <SankeyLink
-                  {...props}
-                  material={material}
-                  finish={finish}
-                  pathProps={
-                    {
-                      opacity: active && active !== props.payload.id ? 0.35 : 0.8,
-                      "data-flow-id": String(props.payload.id),
-                    } as React.SVGProps<SVGPathElement>
-                  }
-                />
-              )}
+              config={{}}
+              aria-label="Chart fixture"
             >
               <Tooltip />
+              {/* Explicit renderer ownership belongs to the family parts. */}
+              <SankeyChart.Nodes
+                render={(props) => (
+                  <g>
+                    <SankeyNode finish={finish} {...props} color="#4338ca" />
+                    <SankeyNodeLabel
+                      node={props}
+                      data={flow}
+                      nodeConfig={nodeConfig}
+                      position={material === "solid" ? "outside" : "inside"}
+                      showValues
+                      valueFormatter={(value) => `${value} MWh`}
+                      fill={material === "solid" ? "currentColor" : "white"}
+                    />
+                  </g>
+                )}
+              />
+              <SankeyChart.Links
+                render={(props) => (
+                  <SankeyLink
+                    {...props}
+                    material={material}
+                    finish={finish}
+                    pathProps={
+                      {
+                        opacity: active && active !== props.payload.id ? 0.35 : 0.8,
+                        "data-flow-id": String(props.payload.id),
+                      } as React.SVGProps<SVGPathElement>
+                    }
+                  />
+                )}
+              />
             </SankeyChart>
           </ResponsiveContainer>
         </div>
@@ -170,7 +177,14 @@ function App() {
               : { nodes: data.nodes, links: data.links.filter((link) => link.id === "reserve") }
           }
           animate
-        />
+          config={{}}
+          aria-label="Chart fixture"
+        >
+          {null}
+          {/* Explicit renderer ownership belongs to the family parts. */}
+          <SankeyChart.Nodes></SankeyChart.Nodes>
+          <SankeyChart.Links></SankeyChart.Links>
+        </SankeyChart>
         <SankeyTable
           data={
             empty

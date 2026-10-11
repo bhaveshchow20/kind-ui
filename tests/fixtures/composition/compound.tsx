@@ -89,40 +89,57 @@ export function FamilyCompositions() {
               loading={loading}
               visibleSeries={visible}
               onVisibleSeriesChange={setVisible}
-              rootProps={{
-                style: { "--color-value": theme ? "#dc2626" : "#733bff" } as CSSProperties,
-                interaction: {
-                  kind: "series",
-                  mode: "visibility",
-                  eligibleKeys: ["value", "other"],
-                },
+              interaction={{
+                kind: "series",
+                mode: "visibility",
+                eligibleKeys: ["value", "other"],
               }}
+              frameProps={{
+                style: { "--color-value": theme ? "#dc2626" : "#733bff" } as CSSProperties,
+              }}
+              config={config}
             >
               <Parts>
-                <>
-                  <Chart.LineChart.Grid />
-                  <Chart.LineChart.XAxis dataKey="label" />
-                  <Chart.LineChart.YAxis />
-                  {!omit && (
-                    <Chart.LineChart.Series
-                      dataKey={value}
-                      seriesKey="value"
-                      type="monotone"
-                      dot={false}
-                    />
-                  )}
-                  <Chart.LineChart.Tooltip />
-                  <Chart.LineChart.Legend
-                    ref={(node) => {
-                      if (node) node.dataset.compoundRef = "legend";
-                    }}
+                <Chart.LineChart.Grid />
+                <Chart.LineChart.XAxis dataKey="label" />
+                <Chart.LineChart.YAxis />
+                {!omit && (
+                  <Chart.LineChart.Series
+                    dataKey={value}
+                    seriesKey="value"
+                    type="monotone"
+                    dot={false}
                   />
-                </>
+                )}
+                <Chart.LineChart.Tooltip />
+                <Chart.LineChart.Legend
+                  ref={(node) => {
+                    if (node) node.dataset.compoundRef = "legend";
+                  }}
+                />
               </Parts>
+              <Group name="heatmap">
+                <Chart.HeatmapChart
+                  rows={["A"]}
+                  columns={["B", "C"]}
+                  data={[{ row: "A", column: "B", value: 5 }]}
+                  scale={heatScale}
+                  aria-label="Compound heatmap"
+                  animate
+                  config={config}
+                >
+                  <Parts>
+                    <Chart.HeatmapChart.Grid caption="Compound cells" />
+                    <Chart.HeatmapChart.Tooltip />
+                    <Chart.HeatmapChart.Legend label="Cell scale" />
+                    <Chart.HeatmapChart.DataTable caption="Cell values" />
+                  </Parts>
+                </Chart.HeatmapChart>
+              </Group>
             </Chart.LineChart>
           </Group>
           <Group name="area">
-            <Chart.AreaChart {...frame} aria-label="Compound area">
+            <Chart.AreaChart {...frame} aria-label="Compound area" config={config}>
               <Parts>
                 <Chart.AreaChart.Grid />
                 <Chart.AreaChart.XAxis dataKey="label" />
@@ -134,7 +151,7 @@ export function FamilyCompositions() {
             </Chart.AreaChart>
           </Group>
           <Group name="bar">
-            <Chart.BarChart {...frame} aria-label="Compound bar">
+            <Chart.BarChart {...frame} aria-label="Compound bar" config={config}>
               <Parts>
                 <Chart.BarChart.Grid />
                 <Chart.BarChart.XAxis dataKey="label" />
@@ -146,7 +163,7 @@ export function FamilyCompositions() {
             </Chart.BarChart>
           </Group>
           <Group name="combo">
-            <Chart.ComboChart {...frame} aria-label="Compound combo">
+            <Chart.ComboChart {...frame} aria-label="Compound combo" config={config}>
               <Parts>
                 <Chart.ComboChart.Grid />
                 <Chart.ComboChart.XAxis dataKey="label" />
@@ -178,7 +195,7 @@ export function FamilyCompositions() {
             </Chart.PieChart>
           </Group>
           <Group name="radar">
-            <Chart.RadarChart {...frame} aria-label="Compound radar">
+            <Chart.RadarChart {...frame} aria-label="Compound radar" config={config}>
               <Parts>
                 <Chart.RadarChart.Grid />
                 <Chart.RadarChart.AngleAxis dataKey="label" />
@@ -190,7 +207,7 @@ export function FamilyCompositions() {
             </Chart.RadarChart>
           </Group>
           <Group name="radial">
-            <Chart.RadialBarChart {...frame} aria-label="Compound radial">
+            <Chart.RadialBarChart {...frame} aria-label="Compound radial" config={config}>
               <Parts>
                 <Chart.RadialBarChart.AngleAxis type="number" domain={[0, 10]} tick={false} />
                 <Chart.RadialBarChart.RadiusAxis type="category" dataKey="label" tick={false} />
@@ -201,7 +218,7 @@ export function FamilyCompositions() {
             </Chart.RadialBarChart>
           </Group>
           <Group name="scatter">
-            <Chart.ScatterChart {...frame} aria-label="Compound scatter">
+            <Chart.ScatterChart {...frame} aria-label="Compound scatter" config={config}>
               <Parts>
                 <Chart.ScatterChart.Grid />
                 <Chart.ScatterChart.XAxis dataKey="value" />
@@ -295,23 +312,6 @@ export function FamilyCompositions() {
               </Parts>
             </Chart.ActivityRings>
           </Group>
-          <Group name="heatmap">
-            <Chart.HeatmapChart
-              rows={["A"]}
-              columns={["B", "C"]}
-              data={[{ row: "A", column: "B", value: 5 }]}
-              scale={heatScale}
-              aria-label="Compound heatmap"
-              animate
-            >
-              <Parts>
-                <Chart.HeatmapChart.Grid caption="Compound cells" />
-                <Chart.HeatmapChart.Tooltip />
-                <Chart.HeatmapChart.Legend label="Cell scale" />
-                <Chart.HeatmapChart.DataTable caption="Cell values" />
-              </Parts>
-            </Chart.HeatmapChart>
-          </Group>
           <Group name="sankey">
             <Chart.SankeyChart
               config={flowConfig}
@@ -345,7 +345,15 @@ export function MotionPreferences() {
       </button>
       {mounted &&
         [0, 1].map((id) => (
-          <Chart.Root key={id} config={config}>
+          <Chart.HeatmapChart
+            rows={[]}
+            columns={[]}
+            data={[]}
+            scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+            aria-label="Metadata chart"
+            key={id}
+            config={config}
+          >
             {[1, 2, 3, 4].map((value) => (
               <Chart.TooltipContent
                 key={value}
@@ -367,7 +375,7 @@ export function MotionPreferences() {
                 }}
               />
             ))}
-          </Chart.Root>
+          </Chart.HeatmapChart>
         ))}
     </section>
   );

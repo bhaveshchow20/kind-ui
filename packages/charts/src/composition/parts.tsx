@@ -12,7 +12,7 @@ import {
 import { Tooltip } from "../animation.js";
 import { Grid, XAxis, YAxis } from "../cartesian-parts.js";
 import { ChartBackgroundPattern } from "../chart-background-pattern.js";
-import { FamilyLegend } from "../family-root.js";
+import { FamilyLegend, OutsidePlot } from "../family-root.js";
 
 export const cartesian = {
   Grid,
@@ -20,6 +20,7 @@ export const cartesian = {
   YAxis,
   Tooltip,
   Legend: FamilyLegend,
+  Content: OutsidePlot,
   Background: ChartBackgroundPattern,
   ReferenceLine,
   ReferenceArea,
@@ -32,4 +33,5 @@ export const polar = {
   RadiusAxis: PolarRadiusAxis,
   Tooltip,
   Legend: FamilyLegend,
+  Content: OutsidePlot,
 };

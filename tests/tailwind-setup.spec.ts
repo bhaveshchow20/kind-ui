@@ -19,7 +19,7 @@ for (const [mode, port] of [
     await expect(roots.first()).toHaveCSS("min-width", "0px");
     await expect(roots.first()).toHaveCSS(
       "width",
-      await roots.first().evaluate((el) => `${el.parentElement!.clientWidth}px`),
+      await roots.first().evaluate((el) => `${el.parentElement?.clientWidth}px`),
     );
     await page.getByRole("button", { name: "Unmount", exact: true }).click();
     await expect(roots).toHaveCount(0);

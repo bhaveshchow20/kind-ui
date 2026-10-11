@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
-import { type ComponentProps, useCallback, useState } from "react";
+import { type ComponentProps, cloneElement, useCallback, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
@@ -108,48 +108,66 @@ function NativeLifetimeCase({ family, active = false }: { family: string; active
       <output data-lifetime-clicks>{clicks}</output>
       <output data-lifetime-selected>{selected ?? "none"}</output>
       <output data-lifetime-changes>{changes}</output>
-      <Chart.Root
-        config={{ first: config.first }}
-        interaction={
-          active
-            ? {
-                kind: "series",
-                mode: "focus",
-                eligibleKeys: ["first"],
-                markActivation: "matching-legend",
-                selected,
-                onSelectionChange: (next) => {
-                  setSelected(next);
-                  setChanges((n) => n + 1);
-                },
-              }
-            : { kind: "series", mode: "visibility", eligibleKeys: ["first"] }
-        }
-      >
-        {scatter ? (
-          <Chart.ScatterChart width={340} height={240} animate={false}>
-            <Chart.XAxis type="number" dataKey="x" />
-            <Chart.YAxis type="number" dataKey="y" />
-            <Series seriesKey="first" data={scatterRows} shape="diamond" onClick={scatterClick} />
-          </Chart.ScatterChart>
-        ) : (
-          <Chart.RadarChart
-            data={rows}
-            width={340}
-            height={240}
-            animate={false}
-            selection={active ? "none" : "series"}
-          >
-            <Chart.PolarAngleAxis dataKey="category" />
-            <Chart.PolarRadiusAxis />
-            <Chart.RadarSeries
-              dataKey="first"
-              dot={family === "radar-element" ? lifetimeDotElement : lifetimeDot}
-              onClick={radarClick}
-            />
-          </Chart.RadarChart>
-        )}
-      </Chart.Root>
+      {scatter ? (
+        <Chart.ScatterChart
+          config={{ first: config.first }}
+          interaction={
+            active
+              ? {
+                  kind: "series",
+                  mode: "focus",
+                  eligibleKeys: ["first"],
+                  markActivation: "matching-legend",
+                  selected,
+                  onSelectionChange: (next) => {
+                    setSelected(next);
+                    setChanges((n) => n + 1);
+                  },
+                }
+              : { kind: "series", mode: "visibility", eligibleKeys: ["first"] }
+          }
+          aria-label="Chart fixture"
+          width={340}
+          height={240}
+          animate={false}
+        >
+          <Chart.XAxis type="number" dataKey="x" />
+          <Chart.YAxis type="number" dataKey="y" />
+          <Series seriesKey="first" data={scatterRows} shape="diamond" onClick={scatterClick} />
+        </Chart.ScatterChart>
+      ) : (
+        <Chart.RadarChart
+          config={{ first: config.first }}
+          interaction={
+            active
+              ? {
+                  kind: "series",
+                  mode: "focus",
+                  eligibleKeys: ["first"],
+                  markActivation: "matching-legend",
+                  selected,
+                  onSelectionChange: (next) => {
+                    setSelected(next);
+                    setChanges((n) => n + 1);
+                  },
+                }
+              : { kind: "series", mode: "visibility", eligibleKeys: ["first"] }
+          }
+          aria-label="Chart fixture"
+          data={rows}
+          width={340}
+          height={240}
+          animate={false}
+        >
+          <Chart.PolarAngleAxis dataKey="category" />
+          <Chart.PolarRadiusAxis />
+          <Chart.RadarSeries
+            dataKey="first"
+            dot={family === "radar-element" ? lifetimeDotElement : lifetimeDot}
+            onClick={radarClick}
+          />
+        </Chart.RadarChart>
+      )}
     </section>
   );
 }
@@ -187,7 +205,7 @@ function CellIdentityCase({ accessor }: { accessor: boolean }) {
       <output data-cell-selected>{selected ?? "none"}</output>
       <output data-cell-clicks>{clicks}</output>
       <output data-cell-payload>{payload}</output>
-      <Chart.Root
+      <Chart.PieChart
         config={{ first: config.first, second: config.second }}
         visibleSeries={visible}
         interaction={{
@@ -198,36 +216,37 @@ function CellIdentityCase({ accessor }: { accessor: boolean }) {
           selected,
           onSelectionChange: setSelected,
         }}
+        aria-label="Chart fixture"
+        width={340}
+        height={240}
+        animate={false}
       >
-        <Chart.PieChart width={340} height={240} animate={false}>
-          <Chart.PieSeries
-            data={data}
-            categoryKey={accessor ? (row) => row.id : "id"}
-            dataKey="value"
-            nameKey="id"
-            interactionBinding="root"
-            onClick={(sector) => {
-              setPayload(String(sector.payload.id));
-              if (synchronous) flushSync(() => setReversed((value) => !value));
-            }}
-          >
-            {data.map((row) => (
-              <Chart.Cell
-                key={row.id}
-                id="first"
-                fill="#e11d48"
-                data-original-category={row.id}
-                onClick={(event) => {
-                  setClicks((count) => count + 1);
-                  if (veto) event.preventDefault();
-                  if (cellSynchronous) flushSync(() => setReversed((value) => !value));
-                }}
-              />
-            ))}
-          </Chart.PieSeries>
-        </Chart.PieChart>
-        <Chart.Legend />
-      </Chart.Root>
+        <Chart.PieSeries
+          data={data}
+          categoryKey={accessor ? (row) => row.id : "id"}
+          dataKey="value"
+          nameKey="id"
+          onClick={(sector) => {
+            setPayload(String(sector.payload.id));
+            if (synchronous) flushSync(() => setReversed((value) => !value));
+          }}
+        >
+          {data.map((row) => (
+            <Chart.Cell
+              key={row.id}
+              id="first"
+              fill="#e11d48"
+              data-original-category={row.id}
+              onClick={(event) => {
+                setClicks((count) => count + 1);
+                if (veto) event.preventDefault();
+                if (cellSynchronous) flushSync(() => setReversed((value) => !value));
+              }}
+            />
+          ))}
+        </Chart.PieSeries>
+        <Chart.PieChart.Legend />
+      </Chart.PieChart>
     </section>
   );
 }
@@ -241,24 +260,31 @@ function ConfiguredInteractionCase() {
         aria-label="Configured focus"
         config={{ first: config.first, second: config.second }}
         data={rows}
-        xDataKey="category"
         width={340}
         height={240}
         animate={false}
-        rootProps={{
-          interaction: {
-            kind: "series",
-            mode: "focus",
-            eligibleKeys: ["first", "second"],
-            markActivation: "matching-legend",
-            selected,
-            onSelectionChange: (next) => {
-              setSelected(next);
-              setChanges((n) => n + 1);
-            },
+        interaction={{
+          kind: "series",
+          mode: "focus",
+          eligibleKeys: ["first", "second"],
+          markActivation: "matching-legend",
+          selected,
+          onSelectionChange: (next) => {
+            setSelected(next);
+            setChanges((n) => n + 1);
           },
         }}
-      />
+        frameProps={{}}
+      >
+        <Chart.LineChart.Grid />
+        <Chart.LineChart.XAxis dataKey={"category"} />
+        <Chart.LineChart.YAxis />
+        {Object.keys({ first: config.first, second: config.second }).map((key) => (
+          <Chart.LineChart.Series key={key} dataKey={key} />
+        ))}
+        <Chart.LineChart.Tooltip />
+        <Chart.LineChart.Legend />
+      </Chart.LineChart>
       <output data-configured-selected>{selected ?? "none"}</output>
       <output data-configured-changes>{changes}</output>
     </section>
@@ -336,13 +362,18 @@ function SharedInteractions() {
   );
   const chart =
     family === "pie" ? (
-      <Chart.PieChart width={340} height={240} animate={false}>
+      <Chart.PieChart
+        width={340}
+        height={240}
+        animate={false}
+        config={config}
+        aria-label="Chart fixture"
+      >
         <Chart.PieSeries
           data={categories}
           dataKey="value"
           nameKey="key"
           categoryKey="key"
-          interactionBinding="root"
           shape={customShape ? customSector : undefined}
         >
           {categories.map((row) => (
@@ -357,36 +388,70 @@ function SharedInteractions() {
         animate={false}
         data={categories}
         categoryKey="key"
-        interactionBinding="root"
+        config={config}
+        aria-label="Chart fixture"
       >
         <Chart.PolarAngleAxis type="number" domain={[0, 30]} tick={false} />
         <Chart.PolarRadiusAxis type="category" dataKey="key" tick={false} />
         <Chart.RadialBarSeries dataKey="value" shape={customShape ? customSector : undefined} />
       </Chart.RadialBarChart>
     ) : family === "radar" ? (
-      <Chart.RadarChart width={340} height={240} animate={false} data={rows}>
+      <Chart.RadarChart
+        width={340}
+        height={240}
+        animate={false}
+        data={rows}
+        config={config}
+        aria-label="Chart fixture"
+      >
         <Chart.PolarAngleAxis dataKey="category" />
         <Chart.PolarRadiusAxis />
         {series}
       </Chart.RadarChart>
     ) : family === "scatter" ? (
-      <Chart.ScatterChart width={340} height={240} animate={false}>
+      <Chart.ScatterChart
+        width={340}
+        height={240}
+        animate={false}
+        config={config}
+        aria-label="Chart fixture"
+      >
         <Chart.XAxis type="number" dataKey="x" />
         <Chart.YAxis type="number" dataKey="y" />
         {series}
       </Chart.ScatterChart>
     ) : family === "line" ? (
-      <Chart.LineChart width={340} height={240} data={rows}>
+      <Chart.LineChart
+        width={340}
+        height={240}
+        data={rows}
+        config={config}
+        aria-label="Chart fixture"
+      >
         {axes}
         {series}
       </Chart.LineChart>
     ) : family === "area" ? (
-      <Chart.AreaChart width={340} height={240} data={rows} animate={false}>
+      <Chart.AreaChart
+        width={340}
+        height={240}
+        data={rows}
+        animate={false}
+        config={config}
+        aria-label="Chart fixture"
+      >
         {axes}
         {series}
       </Chart.AreaChart>
     ) : (
-      <Chart.BarChart width={340} height={240} data={rows} animate={false}>
+      <Chart.BarChart
+        width={340}
+        height={240}
+        data={rows}
+        animate={false}
+        config={config}
+        aria-label="Chart fixture"
+      >
         {axes}
         {series}
       </Chart.BarChart>
@@ -479,29 +544,35 @@ function SharedInteractions() {
       </button>
       <output data-interaction-changes>{changes}</output>
       <output data-interaction-clicks>{clicks}</output>
-      <Chart.Root
-        key={`${family}/${controlled}/${mode}`}
-        config={{ first: config.first, second: config.second, stale: { color: "red" } }}
-        emphasis={transient ? "auto" : "none"}
-        interaction={interaction}
-        visibleSeries={visible}
-        onVisibleSeriesChange={(next) => {
-          setChanges((n) => n + 1);
-          setVisible(next);
-        }}
-        onKeyDown={(event) => {
-          if (veto) event.preventDefault();
-        }}
-      >
-        {chart}
-        <Chart.Legend
+      {cloneElement(
+        chart,
+        {
+          key: `${family}/${controlled}/${mode}`,
+          config: { first: config.first, second: config.second, stale: { color: "red" } },
+          emphasis: transient ? "auto" : "none",
+          interaction,
+          visibleSeries: visible,
+          onVisibleSeriesChange: (next: string[]) => {
+            setChanges((n) => n + 1);
+            setVisible(next);
+          },
+          frameProps: {
+            onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
+              if (veto) event.preventDefault();
+            },
+          },
+        },
+        chart.props.children,
+        <Chart.BarChart.Legend
           emphasis="series"
           onClick={(event) => {
             if (veto) event.preventDefault();
           }}
-        />
-        <ResetInteraction />
-      </Chart.Root>
+        />,
+        <Chart.BarChart.Content>
+          <ResetInteraction />
+        </Chart.BarChart.Content>,
+      )}
     </section>
   );
 }
@@ -534,7 +605,7 @@ function SankeyInteractionCase() {
   };
   return (
     <section aria-label="Shared Sankey focus">
-      <Chart.Root
+      <Chart.SankeyChart
         config={config}
         interaction={{
           kind: "node",
@@ -544,20 +615,23 @@ function SankeyInteractionCase() {
           markActivation: "matching-legend",
           onSelectionChange: () => setChanges((n) => n + 1),
         }}
+        aria-label="Chart fixture"
+        width={400}
+        height={250}
+        data={data}
+        onClick={(item, type, event) => setPayload(`${type}/${item.payload.id}/${event.type}`)}
       >
-        <Chart.SankeyChart
-          width={400}
-          height={250}
-          data={data}
-          nodeConfig={config}
-          interactionBinding="root"
-          onClick={(item, type, event) => setPayload(`${type}/${item.payload.id}/${event.type}`)}
-        />
-        <Chart.SankeyLegend config={config} interactionBinding="root" />
-        <ResetInteraction />
-        <output data-sankey-changes>{changes}</output>
-        <output data-sankey-payload>{payload}</output>
-      </Chart.Root>
+        {null}
+        {/* Explicit renderer ownership belongs to the family parts. */}
+        <Chart.SankeyChart.Nodes></Chart.SankeyChart.Nodes>
+        <Chart.SankeyChart.Links></Chart.SankeyChart.Links>
+        <Chart.SankeyChart.Legend />
+        <Chart.SankeyChart.Content>
+          <ResetInteraction />
+        </Chart.SankeyChart.Content>
+      </Chart.SankeyChart>
+      <output data-sankey-changes>{changes}</output>
+      <output data-sankey-payload>{payload}</output>
     </section>
   );
 }
@@ -572,23 +646,25 @@ function LegacyAndDuplicateIdentities() {
   return (
     <>
       <section aria-label="Legacy Scatter visibility">
-        <Chart.Root
+        <Chart.ScatterChart
           interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
           config={config}
           visibleSeries={scatterVisible}
           onVisibleSeriesChange={setScatterVisible}
+          aria-label="Chart fixture"
+          width={320}
+          height={200}
+          animate={false}
         >
-          <Chart.ScatterChart width={320} height={200} animate={false}>
-            <Chart.XAxis type="number" dataKey="x" />
-            <Chart.YAxis type="number" dataKey="y" />
-            <Chart.ScatterSeries seriesKey="first" data={[{ x: 10, y: 10 }]} />
-            <Chart.ScatterSeries seriesKey="second" data={[{ x: 20, y: 20 }]} />
-          </Chart.ScatterChart>
-          <Chart.Legend />
-        </Chart.Root>
+          <Chart.XAxis type="number" dataKey="x" />
+          <Chart.YAxis type="number" dataKey="y" />
+          <Chart.ScatterSeries seriesKey="first" data={[{ x: 10, y: 10 }]} />
+          <Chart.ScatterSeries seriesKey="second" data={[{ x: 20, y: 20 }]} />
+          <Chart.ScatterChart.Legend />
+        </Chart.ScatterChart>
       </section>
       <section aria-label="Duplicate series availability">
-        <Chart.Root
+        <Chart.BarChart
           config={config}
           interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["first", "second"] }}
           visibleSeries={duplicateVisible}
@@ -596,26 +672,37 @@ function LegacyAndDuplicateIdentities() {
             setDuplicateVisible(next);
             setChanges((n) => n + 1);
           }}
+          aria-label="Chart fixture"
+          data={[{ first: 10, second: 20 }]}
+          width={320}
+          height={200}
+          animate={false}
         >
-          <Chart.BarChart
-            data={[{ first: 10, second: 20 }]}
-            width={320}
-            height={200}
-            animate={false}
-          >
-            <Chart.XAxis />
-            <Chart.YAxis />
-            <Chart.BarSeries dataKey="first" />
-            <Chart.BarSeries dataKey="second" hide />
-          </Chart.BarChart>
-          <Chart.BarChart data={[{ second: 20 }]} width={320} height={200} animate={false}>
-            <Chart.XAxis />
-            <Chart.YAxis />
-            <Chart.BarSeries dataKey="second" />
-          </Chart.BarChart>
-          <Chart.Legend />
-          <output data-duplicate-changes>{changes}</output>
-        </Chart.Root>
+          <Chart.XAxis />
+          <Chart.YAxis />
+          <Chart.BarSeries dataKey="first" />
+          <Chart.BarSeries dataKey="second" hide />
+          <Chart.BarChart.Legend />
+        </Chart.BarChart>
+        <Chart.BarChart
+          config={config}
+          interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["first", "second"] }}
+          visibleSeries={duplicateVisible}
+          onVisibleSeriesChange={(next) => {
+            setDuplicateVisible(next);
+            setChanges((n) => n + 1);
+          }}
+          aria-label="Chart fixture"
+          data={[{ second: 20 }]}
+          width={320}
+          height={200}
+          animate={false}
+        >
+          <Chart.XAxis />
+          <Chart.YAxis />
+          <Chart.BarSeries dataKey="second" />
+        </Chart.BarChart>
+        <output data-duplicate-changes>{changes}</output>
       </section>
     </>
   );
@@ -678,207 +765,264 @@ function App() {
       <p>
         Consumer clicks: <output>{clicks}</output>
       </p>
-      <Chart.Root
-        interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
-        config={config}
-        emphasis={enabled ? "auto" : "none"}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
-      >
-        <section id="bars" style={{ width: "min(440px, calc(100vw - 48px))" }}>
-          <h2>Grouped category inspection</h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <Chart.BarChart data={data} accessibilityLayer emphasis="category">
-              <CartesianGrid vertical={false} />
-              <XAxis dataKey="category" />
-              <YAxis />
-              <ReferenceLine y={10} label="Reference" />
-              <Chart.BarSeries
-                dataKey="first"
-                material="clay"
-                opacity={0.5}
-                {...(stacked ? { stackId: "stack" } : {})}
-                onClick={() => setClicks(clicks + 1)}
-              >
-                <LabelList dataKey="first" />
-              </Chart.BarSeries>
-              <Chart.BarSeries
-                dataKey="second"
-                material="clay"
-                {...(customPeer ? { shape: nativeShape } : {})}
-                {...(stacked ? { stackId: "stack" } : {})}
-              />
-              <Chart.Tooltip />
-            </Chart.BarChart>
-          </ResponsiveContainer>
-          <Chart.Legend emphasis="series" />
-        </section>
-        <section id="oracle">
-          <h2>Unchanged native filtering oracle</h2>
-          <Chart.BarChart width={440} height={250} data={data}>
+      <section id="bars" style={{ width: "min(440px, calc(100vw - 48px))" }}>
+        <h2>Grouped category inspection</h2>
+        <ResponsiveContainer width="100%" height={250}>
+          <Chart.BarChart
+            interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+            config={config}
+            emphasis={enabled ? "category" : "none"}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            aria-label="Chart fixture"
+            data={data}
+            accessibilityLayer
+          >
             <CartesianGrid vertical={false} />
             <XAxis dataKey="category" />
             <YAxis />
             <ReferenceLine y={10} label="Reference" />
-            <Chart.BarSeries dataKey="first" {...(stacked ? { stackId: "stack" } : {})}>
+            <Chart.BarSeries
+              dataKey="first"
+              material="clay"
+              opacity={0.5}
+              {...(stacked ? { stackId: "stack" } : {})}
+              onClick={() => setClicks(clicks + 1)}
+            >
               <LabelList dataKey="first" />
             </Chart.BarSeries>
             <Chart.BarSeries
               dataKey="second"
-              {...(stacked ? { stackId: "stack" } : {})}
+              material="clay"
               {...(customPeer ? { shape: nativeShape } : {})}
+              {...(stacked ? { stackId: "stack" } : {})}
             />
             <Chart.Tooltip />
+            <Chart.BarChart.Legend emphasis="series" />
           </Chart.BarChart>
-        </section>
-        <section id="independent">
-          <h2>Independent plot</h2>
-          <Chart.BarChart width={440} height={250} data={data}>
-            <XAxis dataKey="category" />
-            <YAxis />
-            <Chart.BarSeries dataKey="first" />
-            <Chart.Tooltip />
-          </Chart.BarChart>
-        </section>
-      </Chart.Root>
-      <Chart.Root config={config} emphasis={enabled ? "auto" : "none"}>
-        <section id="pie">
-          <h2>Donut sector inspection</h2>
-          <Chart.PieChart width={440} height={260} accessibilityLayer>
-            <Chart.PieSeries
-              data={[
-                { id: "alpha", value: 60 },
-                { id: "beta", value: 40 },
-              ]}
-              dataKey="value"
-              nameKey="id"
-              innerRadius={60}
-              outerRadius={105}
-              label
-            >
-              <Cell fill="#635bff" opacity={0.4} />
-              <Cell fill="#00a6a0" />
-            </Chart.PieSeries>
-            <Chart.Tooltip itemKey={(entry) => String(entry.payload.id)} />
-          </Chart.PieChart>
-        </section>
-      </Chart.Root>
-      <Chart.Root config={config}>
-        <section id="custom">
-          <h2>Explicit custom portal contract</h2>
-          <Chart.BarChart width={440} height={250} data={data}>
-            <XAxis dataKey="category" />
-            <YAxis />
-            <Chart.BarSeries dataKey="first" shape={portalShape} />
-            <Chart.Tooltip />
-          </Chart.BarChart>
-        </section>
-      </Chart.Root>
-      <Chart.Root config={config}>
-        <section id="index-default">
-          <h2>Positional identity stays native</h2>
-          <Chart.BarChart width={440} height={250} data={data} emphasis="category">
-            <XAxis />
-            <YAxis />
-            <Chart.BarSeries dataKey="first" />
-            <Chart.BarSeries dataKey="second" />
-          </Chart.BarChart>
-        </section>
-      </Chart.Root>
-      <Chart.Root config={config}>
-        <section id="index-explicit">
-          <h2>Explicit stable category identity</h2>
-          <Chart.BarChart width={440} height={250} data={data} emphasis="category">
-            <XAxis />
-            <YAxis />
-            <Chart.BarSeries dataKey="first" emphasisKey={categoryIdentity} />
-            <Chart.BarSeries dataKey="second" emphasisKey={categoryIdentity} />
-          </Chart.BarChart>
-        </section>
-      </Chart.Root>
-      <Chart.Root config={config}>
-        <section id="deduplicated">
-          <h2>Ambiguous native category mapping stays native</h2>
-          <Chart.BarChart
-            width={440}
-            height={250}
-            data={[rows[0], rows[0], rows[1]]}
-            emphasis="category"
+        </ResponsiveContainer>
+      </section>
+      <section id="oracle">
+        <h2>Unchanged native filtering oracle</h2>
+        <Chart.BarChart
+          interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+          config={config}
+          emphasis={enabled ? "auto" : "none"}
+          visibleSeries={visible}
+          onVisibleSeriesChange={setVisible}
+          aria-label="Chart fixture"
+          width={440}
+          height={250}
+          data={data}
+        >
+          <CartesianGrid vertical={false} />
+          <XAxis dataKey="category" />
+          <YAxis />
+          <ReferenceLine y={10} label="Reference" />
+          <Chart.BarSeries dataKey="first" {...(stacked ? { stackId: "stack" } : {})}>
+            <LabelList dataKey="first" />
+          </Chart.BarSeries>
+          <Chart.BarSeries
+            dataKey="second"
+            {...(stacked ? { stackId: "stack" } : {})}
+            {...(customPeer ? { shape: nativeShape } : {})}
+          />
+          <Chart.Tooltip />
+        </Chart.BarChart>
+      </section>
+      <section id="independent">
+        <h2>Independent plot</h2>
+        <Chart.BarChart
+          interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+          config={config}
+          emphasis={enabled ? "auto" : "none"}
+          visibleSeries={visible}
+          onVisibleSeriesChange={setVisible}
+          aria-label="Chart fixture"
+          width={440}
+          height={250}
+          data={data}
+        >
+          <XAxis dataKey="category" />
+          <YAxis />
+          <Chart.BarSeries dataKey="first" />
+          <Chart.Tooltip />
+        </Chart.BarChart>
+      </section>
+      <section id="pie">
+        <h2>Donut sector inspection</h2>
+        <Chart.PieChart
+          config={config}
+          emphasis={enabled ? "auto" : "none"}
+          aria-label="Chart fixture"
+          width={440}
+          height={260}
+          accessibilityLayer
+        >
+          <Chart.PieSeries
+            data={[
+              { id: "alpha", value: 60 },
+              { id: "beta", value: 40 },
+            ]}
+            dataKey="value"
+            nameKey="id"
+            innerRadius={60}
+            outerRadius={105}
+            label
           >
-            <XAxis dataKey="category" allowDuplicatedCategory={false} />
-            <YAxis />
-            <Chart.BarSeries dataKey="first" />
-            <Chart.BarSeries dataKey="second" />
-          </Chart.BarChart>
-        </section>
-      </Chart.Root>
-      <Chart.Root config={config}>
-        <section id="line">
-          <h2>Shared comparison stays legible</h2>
-          <Chart.LineChart width={440} height={250} data={data}>
-            <XAxis dataKey="category" />
-            <YAxis />
-            <Chart.LineSeries dataKey="first" />
-            <Chart.LineSeries dataKey="second" />
-            <Chart.Tooltip />
-          </Chart.LineChart>
-        </section>
-      </Chart.Root>
-      <Chart.Root
-        interaction={{
-          kind: "series",
-          mode: "visibility",
-          eligibleKeys: Object.keys({
+            <Cell fill="#635bff" opacity={0.4} />
+            <Cell fill="#00a6a0" />
+          </Chart.PieSeries>
+          <Chart.Tooltip itemKey={(entry) => String(entry.payload.id)} />
+        </Chart.PieChart>
+      </section>
+      <section id="custom">
+        <h2>Explicit custom portal contract</h2>
+        <Chart.BarChart
+          config={config}
+          aria-label="Chart fixture"
+          width={440}
+          height={250}
+          data={data}
+        >
+          <XAxis dataKey="category" />
+          <YAxis />
+          <Chart.BarSeries dataKey="first" shape={portalShape} />
+          <Chart.Tooltip />
+        </Chart.BarChart>
+      </section>
+      <section id="index-default">
+        <h2>Positional identity stays native</h2>
+        <Chart.BarChart
+          config={config}
+          aria-label="Chart fixture"
+          width={440}
+          height={250}
+          data={data}
+          emphasis="category"
+        >
+          <XAxis />
+          <YAxis />
+          <Chart.BarSeries dataKey="first" />
+          <Chart.BarSeries dataKey="second" />
+        </Chart.BarChart>
+      </section>
+      <section id="index-explicit">
+        <h2>Explicit stable category identity</h2>
+        <Chart.BarChart
+          config={config}
+          aria-label="Chart fixture"
+          width={440}
+          height={250}
+          data={data}
+          emphasis="category"
+        >
+          <XAxis />
+          <YAxis />
+          <Chart.BarSeries dataKey="first" emphasisKey={categoryIdentity} />
+          <Chart.BarSeries dataKey="second" emphasisKey={categoryIdentity} />
+        </Chart.BarChart>
+      </section>
+      <section id="deduplicated">
+        <h2>Ambiguous native category mapping stays native</h2>
+        <Chart.BarChart
+          config={config}
+          aria-label="Chart fixture"
+          width={440}
+          height={250}
+          data={[rows[0], rows[0], rows[1]]}
+          emphasis="category"
+        >
+          <XAxis dataKey="category" allowDuplicatedCategory={false} />
+          <YAxis />
+          <Chart.BarSeries dataKey="first" />
+          <Chart.BarSeries dataKey="second" />
+        </Chart.BarChart>
+      </section>
+      <section id="line">
+        <h2>Shared comparison stays legible</h2>
+        <Chart.LineChart
+          config={config}
+          aria-label="Chart fixture"
+          width={440}
+          height={250}
+          data={data}
+        >
+          <XAxis dataKey="category" />
+          <YAxis />
+          <Chart.LineSeries dataKey="first" />
+          <Chart.LineSeries dataKey="second" />
+          <Chart.Tooltip />
+        </Chart.LineChart>
+      </section>
+      <section id="incoming">
+        <h2>Incoming families keep native materials</h2>
+        <Chart.HistogramChart
+          interaction={{
+            kind: "series",
+            mode: "visibility",
+            eligibleKeys: Object.keys({
+              bins: { label: "Bins", color: "#635bff" },
+              distribution: { label: "Distribution", color: "#00a6a0" },
+            }),
+          }}
+          visibleSeries={incomingVisible}
+          onVisibleSeriesChange={setIncomingVisible}
+          config={{
             bins: { label: "Bins", color: "#635bff" },
             distribution: { label: "Distribution", color: "#00a6a0" },
-          }),
-        }}
-        visibleSeries={incomingVisible}
-        onVisibleSeriesChange={setIncomingVisible}
-        config={{
-          bins: { label: "Bins", color: "#635bff" },
-          distribution: { label: "Distribution", color: "#00a6a0" },
-        }}
-      >
-        <section id="incoming">
-          <h2>Incoming families keep native materials</h2>
-          <Chart.Legend emphasis="series" />
-          <Chart.HistogramChart
-            width={440}
-            height={250}
-            bins={[
-              { lower: 0, upper: 1, count: 3 },
-              { lower: 1, upper: 2, count: 5 },
-            ]}
-            measure="count"
-            emphasis="category"
-          >
-            <Chart.HistogramSeries seriesKey="bins" material="clay" />
-          </Chart.HistogramChart>
-          <Chart.BoxPlotChart
-            width={440}
-            height={250}
-            data={[
-              {
-                category: "A",
-                summary: {
-                  lowerWhisker: 1,
-                  q1: 2,
-                  median: 3,
-                  q3: 4,
-                  upperWhisker: 5,
-                  outliers: [7],
-                },
+          }}
+          aria-label="Chart fixture"
+          width={440}
+          height={250}
+          bins={[
+            { lower: 0, upper: 1, count: 3 },
+            { lower: 1, upper: 2, count: 5 },
+          ]}
+          measure="count"
+          emphasis="auto"
+        >
+          <Chart.HistogramSeries seriesKey="bins" material="clay" />
+          <Chart.HistogramChart.Legend emphasis="series" />
+        </Chart.HistogramChart>
+        <Chart.BoxPlotChart
+          interaction={{
+            kind: "series",
+            mode: "visibility",
+            eligibleKeys: Object.keys({
+              bins: { label: "Bins", color: "#635bff" },
+              distribution: { label: "Distribution", color: "#00a6a0" },
+            }),
+          }}
+          visibleSeries={incomingVisible}
+          onVisibleSeriesChange={setIncomingVisible}
+          config={{
+            bins: { label: "Bins", color: "#635bff" },
+            distribution: { label: "Distribution", color: "#00a6a0" },
+          }}
+          aria-label="Chart fixture"
+          width={440}
+          height={250}
+          data={[
+            {
+              category: "A",
+              summary: {
+                lowerWhisker: 1,
+                q1: 2,
+                median: 3,
+                q3: 4,
+                upperWhisker: 5,
+                outliers: [7],
               },
-            ]}
-            emphasis="category"
-          >
-            <XAxis dataKey="category" />
-            <YAxis />
-            <Chart.BoxPlotSeries dataKey="summary" seriesKey="distribution" material="clay" />
-          </Chart.BoxPlotChart>
-        </section>
-      </Chart.Root>
+            },
+          ]}
+          emphasis="auto"
+        >
+          <XAxis dataKey="category" />
+          <YAxis />
+          <Chart.BoxPlotSeries dataKey="summary" seriesKey="distribution" material="clay" />
+        </Chart.BoxPlotChart>
+      </section>
     </main>
   );
 }

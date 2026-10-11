@@ -1,24 +1,20 @@
 "use client";
 
-import { type ComponentProps, createContext, type ReactNode, use, useContext, useId } from "react";
+import { type ComponentProps, createContext, type ReactNode, use, useId } from "react";
 import { Cell, LabelList, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { Tooltip, type TooltipProps } from "./animation.js";
-import { ChartContext } from "./chart-context.js";
-import { FamilyLayout } from "./family-root.js";
-import { Legend, type LegendProps } from "./legend.js";
+import {
+  type ChartName,
+  type FamilyOptions,
+  FamilyRoot,
+  familyFrame,
+  familyVisibility,
+} from "./family-root.js";
 import { RadialBarChartFrame, type RadialBarChartProps } from "./polar-chart.js";
 import { RadialBarSeries, type RadialBarSeriesProps } from "./polar-series.js";
 import { RadialBarLabel } from "./radial-bar-label.js";
-import { Root, type RootProps } from "./root.js";
 import { resolveSeriesLabel } from "./series-label.js";
 import { TooltipContent } from "./tooltip-content.js";
-import type { SeriesConfig } from "./types.js";
-
-type ActivityRootProps = RootProps extends infer Props
-  ? Props extends object
-    ? Omit<Props, "config" | "children">
-    : never
-  : never;
 
 export type ActivityRing = {
   /** Stable metadata identity in config. Array order controls ring order. */
@@ -35,62 +31,33 @@ export type ActivityRingDatum = ActivityRing & {
   /** Preserved through native computed sector payloads, whose value is normalized. */
   rawValue: number;
 };
-type Name =
-  | { "aria-label": string; "aria-labelledby"?: string }
-  | { "aria-labelledby": string; "aria-label"?: string };
-
-type ActivityBaseProps = Omit<
+export type ActivityRingsProps = Omit<
   RadialBarChartProps<ActivityRingDatum>,
-  "data" | "children" | "layout" | "categoryKey"
+  "data" | "children" | "layout" | "categoryKey" | "interactionBinding" | keyof FamilyOptions
 > &
-  Name & {
+  FamilyOptions &
+  ChartName & {
     "aria-describedby"?: string;
     rings: readonly ActivityRing[];
-    config: SeriesConfig;
     /** Default domain for rings without their own domain. Defaults to [0, 100]. */
     domain?: readonly [number, number];
-    children?: ReactNode;
-    /** Native chart geometry remains available: radii, center, angles and gaps. */
-    series?: Omit<
-      RadialBarSeriesProps<ActivityRingDatum, number>,
-      "data" | "dataKey" | "seriesKey" | "children" | "angleAxisId" | "radiusAxisId"
-    >;
-    labels?: false | Omit<ComponentProps<typeof LabelList>, "dataKey">;
-    legend?: false | LegendProps;
-    /** Custom content receives native payload with original value and normalized progress. */
-    tooltip?: false | TooltipProps;
-    rootProps?: ActivityRootProps;
+    children: Exclude<ReactNode, undefined>;
   };
 
-export type ActivityRingsProps = Omit<
-  ActivityBaseProps,
-  "children" | "series" | "labels" | "legend" | "tooltip"
-> &
-  Name &
-  (
-    | (Pick<ActivityBaseProps, "series" | "labels" | "legend" | "tooltip"> & {
-        children?: undefined;
-      })
-    | {
-        children: Exclude<ReactNode, undefined>;
-        series?: never;
-        labels?: never;
-        legend?: never;
-        tooltip?: never;
-      }
-  );
-
-/** A narrow progress recipe; native RadialBarChart remains the full composition escape hatch. */
+/** Ring data normalization with explicitly composed presentation parts. */
 export function ActivityRings({
   children,
   rings,
   config,
   domain = [0, 100],
-  series,
-  labels,
-  legend,
-  tooltip,
-  rootProps,
+  interaction,
+  emphasis,
+  nonce,
+  frameProps,
+  visibleSeries,
+  defaultVisibleSeries,
+  onVisibleSeriesChange,
+  legendPosition,
   width,
   height,
   style,
@@ -99,18 +66,18 @@ export function ActivityRings({
   accessibilityLayer = true,
   ...chartProps
 }: ActivityRingsProps) {
-  const parent = useContext(ChartContext);
-  const explicit = children !== undefined;
-  if (explicit && [series, labels, legend, tooltip].some((part) => part !== undefined))
-    throw new Error(
-      "Explicit ActivityRings children replace generated parts; remove series, labels, legend and tooltip options",
-    );
-  const tooltipOptions = tooltip === false ? undefined : tooltip;
   const descriptionId = useId();
-  if (parent)
-    throw new Error("ActivityRings owns Root; use native RadialBarChart inside Root instead");
-  if (!chartProps["aria-label"]?.trim() && !chartProps["aria-labelledby"]?.trim())
-    throw new Error("ActivityRings requires aria-label or aria-labelledby");
+  if (children === undefined) throw new Error("ActivityRings requires explicit children");
+  if (!config || typeof config !== "object" || Array.isArray(config))
+    throw new Error("ActivityRings requires config");
+  if (
+    ["rootProps", "series", "labels", "legend", "tooltip"].some((key) =>
+      Object.hasOwn(chartProps, key),
+    )
+  )
+    throw new Error(
+      "ActivityRings uses explicit Series, Labels, Tooltip and Legend parts; recipe options are unsupported",
+    );
   const keys = rings.map((ring) => ring.key);
   if (new Set(keys).size !== keys.length) throw new Error("ActivityRings ring keys must be unique");
   const data = rings.map((ring) => {
@@ -133,10 +100,16 @@ export function ActivityRings({
   const activeConfig = Object.fromEntries(keys.map((key) => [key, config[key]!]));
   const describedBy = [chartProps["aria-describedby"], descriptionId].filter(Boolean).join(" ");
   return (
-    <Root
-      {...rootProps}
+    <FamilyRoot
+      family="ActivityRings"
+      name={chartProps}
       config={activeConfig}
-      interaction={rootProps?.interaction ?? { kind: "category", eligibleKeys: keys }}
+      interaction={interaction ?? { kind: "category", eligibleKeys: keys }}
+      {...(emphasis !== undefined ? { emphasis } : {})}
+      {...(nonce !== undefined ? { nonce } : {})}
+      {...(frameProps !== undefined ? { frameProps } : {})}
+      {...familyVisibility({ visibleSeries, defaultVisibleSeries, onVisibleSeriesChange })}
+      {...(legendPosition ? { legendPosition } : {})}
     >
       <dl
         id={descriptionId}
@@ -153,51 +126,47 @@ export function ActivityRings({
         ))}
       </dl>
       <ActivityData value={data}>
-        <FamilyLayout>
-          <RadialBarChartFrame<ActivityRingDatum>
-            skeletonFamily="activity-rings"
-            innerRadius="30%"
-            outerRadius="90%"
-            startAngle={90}
-            endAngle={-270}
-            barCategoryGap="15%"
-            {...chartProps}
-            aria-describedby={describedBy}
-            data={data}
-            categoryKey="key"
-            {...(!rootProps?.interaction || rootProps.interaction.kind === "category"
-              ? { interactionBinding: "root" as const }
-              : {})}
-            layout="radial"
-            accessibilityLayer={accessibilityLayer}
-            responsive={responsive}
-            {...(width !== undefined ? { width } : {})}
-            {...(height !== undefined ? { height } : {})}
-            className={["kind-ui-activity-rings", className].filter(Boolean).join(" ")}
-            style={{ width: width ?? "100%", height: height ?? 300, ...style }}
-          >
-            {explicit ? (
-              children
-            ) : (
-              <>
-                <ActivitySeries {...series}>
-                  {labels !== undefined && labels !== false && <ActivityLabels {...labels} />}
-                </ActivitySeries>
-                {tooltip !== false && <ActivityTooltip {...tooltipOptions} />}
-              </>
-            )}
-          </RadialBarChartFrame>
-        </FamilyLayout>
+        <RadialBarChartFrame<ActivityRingDatum>
+          skeletonFamily="activity-rings"
+          innerRadius="30%"
+          outerRadius="90%"
+          startAngle={90}
+          endAngle={-270}
+          barCategoryGap="15%"
+          {...chartProps}
+          aria-describedby={describedBy}
+          data={data}
+          categoryKey="key"
+          {...(!interaction || interaction.kind === "category"
+            ? { interactionBinding: "root" as const }
+            : {})}
+          layout="radial"
+          accessibilityLayer={accessibilityLayer}
+          responsive={responsive}
+          {...(width !== undefined ? { width } : {})}
+          {...(height !== undefined ? { height } : {})}
+          {...familyFrame(
+            {
+              width,
+              height,
+              className: ["kind-ui-activity-rings", className].filter(Boolean).join(" "),
+              style,
+            },
+            300,
+          )}
+        >
+          {children}
+        </RadialBarChartFrame>
       </ActivityData>
-      {!explicit && legend !== false && <Legend {...legend} />}
-    </Root>
+    </FamilyRoot>
   );
 }
 
 const ActivityData = createContext<readonly ActivityRingDatum[] | null>(null);
-export type ActivitySeriesProps = NonNullable<ActivityRingsProps["series"]> & {
-  children?: ReactNode;
-};
+export type ActivitySeriesProps = Omit<
+  RadialBarSeriesProps<ActivityRingDatum, number>,
+  "data" | "dataKey" | "seriesKey" | "children" | "angleAxisId" | "radiusAxisId"
+> & { children?: ReactNode };
 export function ActivitySeries({ children, ...props }: ActivitySeriesProps) {
   const data = use(ActivityData);
   if (!data) throw new Error("ActivityRings.Series requires ActivityRings");

@@ -96,119 +96,122 @@ export function PolarRecipeCard({
     <article className="polar-card">
       <h2>{recipe}</h2>
       <p>{descriptions[recipe]}</p>
-      <Chart.Root
-        config={
-          range
-            ? { range: config.range }
-            : gauge
-              ? { actual: config.actual }
-              : { actual: config.actual, target: config.target }
-        }
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
-      >
-        <Chart.Legend aria-label={`${recipe} visible series`} />
-        {visible.length === 0 && <p role="status">Choose a series to display.</p>}
-        <ResponsiveContainer width="100%" height={300}>
-          {radar ? (
-            <Chart.RadarChart
-              data={rows}
-              animate={animate}
-              outerRadius="72%"
-              aria-label={`${recipe} scores`}
-            >
-              <PolarGrid gridType={recipe === "Outline" ? "circle" : "polygon"} />
-              <PolarAngleAxis dataKey="category" tickLine={false} />
-              <PolarRadiusAxis domain={[0, 100]} tickCount={3} />
-              {range ? (
-                <Chart.RadarSeries material={material} dataKey="range" isRange fillOpacity={0.2} />
-              ) : (
-                <>
-                  <Chart.RadarSeries
-                    material={material}
-                    dataKey="actual"
-                    fillOpacity={recipe === "Outline" ? 0 : 0.2}
-                    dot={recipe === "Outline"}
-                  />
-                  <Chart.RadarSeries
-                    material={material}
-                    dataKey="target"
-                    fill="none"
-                    strokeDasharray="5 4"
-                    dot={recipe === "Outline"}
-                  />
-                </>
-              )}
-              <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
-            </Chart.RadarChart>
-          ) : (
-            <Chart.RadialBarChart
-              data={rows}
-              animate={animate}
-              startAngle={gauge ? 180 : 90}
-              endAngle={gauge ? 0 : -270}
-              innerRadius={gauge ? "55%" : "10%"}
-              outerRadius={gauge ? "85%" : "95%"}
-              barCategoryGap="4%"
-              barGap={2}
-              cy={gauge ? "68%" : "50%"}
-              aria-label={`${recipe} scores`}
-            >
-              <PolarAngleAxis
-                type="number"
-                domain={[0, recipe === "Stacked" ? 200 : 100]}
-                tick={false}
-              />
-              <PolarRadiusAxis
-                type="category"
-                dataKey="category"
-                tick={false}
-                axisLine={false}
-                tickLine={false}
-              >
-                {gauge && showText && visible.includes("actual") && rows[0] && (
-                  <Label value={rows[0].actual} content={GaugeValue} />
-                )}
-              </PolarRadiusAxis>
-              <Chart.RadialBarSeries
-                material={material}
-                dataKey="actual"
-                background
-                cornerRadius={recipe === "Stacked" ? 0 : 5}
-                {...(recipe === "Stacked" ? { stackId: "scores" } : {})}
-              >
-                {!gauge && (
-                  <LabelList
-                    fill="white"
-                    dataKey="category"
-                    content={
-                      <Chart.RadialBarLabel
-                        show={showText}
-                        fontSize={recipe === "Rings" ? 10 : 11}
-                      />
-                    }
-                  />
-                )}
-              </Chart.RadialBarSeries>
-              {!gauge && (
-                <Chart.RadialBarSeries
+      {visible.length === 0 && <p role="status">Choose a series to display.</p>}
+      <ResponsiveContainer width="100%" height={300}>
+        {radar ? (
+          <Chart.RadarChart
+            config={
+              range
+                ? { range: config.range }
+                : gauge
+                  ? { actual: config.actual }
+                  : { actual: config.actual, target: config.target }
+            }
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            data={rows}
+            animate={animate}
+            outerRadius="72%"
+            aria-label={`${recipe} scores`}
+          >
+            <PolarGrid gridType={recipe === "Outline" ? "circle" : "polygon"} />
+            <PolarAngleAxis dataKey="category" tickLine={false} />
+            <PolarRadiusAxis domain={[0, 100]} tickCount={3} />
+            {range ? (
+              <Chart.RadarSeries material={material} dataKey="range" isRange fillOpacity={0.2} />
+            ) : (
+              <>
+                <Chart.RadarSeries
+                  material={material}
+                  dataKey="actual"
+                  fillOpacity={recipe === "Outline" ? 0 : 0.2}
+                  dot={recipe === "Outline"}
+                />
+                <Chart.RadarSeries
                   material={material}
                   dataKey="target"
-                  fillOpacity={0.55}
-                  {...(recipe === "Stacked" ? { stackId: "scores" } : {})}
-                >
-                  <LabelList
-                    fill="var(--foreground, #171717)"
-                    dataKey="target"
-                    content={<Chart.RadialBarLabel show={showText} fontSize={10} />}
-                  />
-                </Chart.RadialBarSeries>
+                  fill="none"
+                  strokeDasharray="5 4"
+                  dot={recipe === "Outline"}
+                />
+              </>
+            )}
+            <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
+            <Chart.RadarChart.Legend aria-label={`${recipe} visible series`} />
+          </Chart.RadarChart>
+        ) : (
+          <Chart.RadialBarChart
+            config={
+              range
+                ? { range: config.range }
+                : gauge
+                  ? { actual: config.actual }
+                  : { actual: config.actual, target: config.target }
+            }
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            data={rows}
+            animate={animate}
+            startAngle={gauge ? 180 : 90}
+            endAngle={gauge ? 0 : -270}
+            innerRadius={gauge ? "55%" : "10%"}
+            outerRadius={gauge ? "85%" : "95%"}
+            barCategoryGap="4%"
+            barGap={2}
+            cy={gauge ? "68%" : "50%"}
+            aria-label={`${recipe} scores`}
+          >
+            <PolarAngleAxis
+              type="number"
+              domain={[0, recipe === "Stacked" ? 200 : 100]}
+              tick={false}
+            />
+            <PolarRadiusAxis
+              type="category"
+              dataKey="category"
+              tick={false}
+              axisLine={false}
+              tickLine={false}
+            >
+              {gauge && showText && visible.includes("actual") && rows[0] && (
+                <Label value={rows[0].actual} content={GaugeValue} />
               )}
-              <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
-            </Chart.RadialBarChart>
-          )}
-        </ResponsiveContainer>
-      </Chart.Root>
+            </PolarRadiusAxis>
+            <Chart.RadialBarSeries
+              material={material}
+              dataKey="actual"
+              background
+              cornerRadius={recipe === "Stacked" ? 0 : 5}
+              {...(recipe === "Stacked" ? { stackId: "scores" } : {})}
+            >
+              {!gauge && (
+                <LabelList
+                  fill="white"
+                  dataKey="category"
+                  content={
+                    <Chart.RadialBarLabel show={showText} fontSize={recipe === "Rings" ? 10 : 11} />
+                  }
+                />
+              )}
+            </Chart.RadialBarSeries>
+            {!gauge && (
+              <Chart.RadialBarSeries
+                material={material}
+                dataKey="target"
+                fillOpacity={0.55}
+                {...(recipe === "Stacked" ? { stackId: "scores" } : {})}
+              >
+                <LabelList
+                  fill="var(--foreground, #171717)"
+                  dataKey="target"
+                  content={<Chart.RadialBarLabel show={showText} fontSize={10} />}
+                />
+              </Chart.RadialBarSeries>
+            )}
+            <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
+          </Chart.RadialBarChart>
+        )}
+      </ResponsiveContainer>
       {rows.length === 0 && <p role="status">No scores yet.</p>}
       <details>
         <summary>View values</summary>

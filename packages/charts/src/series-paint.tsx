@@ -4,7 +4,7 @@ import { type ReactNode, use, useId, useMemo } from "react";
 import { ChartContext } from "./chart-context.js";
 import { colorBaseToken, colorResourceId, colorStopToken } from "./series-color.js";
 
-/** Each native SVG owns its viewport-relative resources; metadata stays Root-owned. */
+/** Each native SVG owns its viewport-relative resources; metadata stays chart-owned. */
 export function SeriesPaintBoundary({ children }: { children: ReactNode }) {
   const chart = use(ChartContext);
   const colorId = useId();

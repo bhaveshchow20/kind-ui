@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import "./tailwind.css";
 import * as Chart from "@kind-ui/charts";
 import { useState } from "react";
@@ -47,6 +48,7 @@ function DocsCases() {
             React.ComponentType
           >;
           const Demo = Object.values(module)[0];
+          if (!Demo) throw new Error(`Missing docs example for ${family}`);
           return (
             <section id={`docs-${family}`} key={family} style={{ width: 600, minHeight: 320 }}>
               <h2>{family} docs</h2>
@@ -90,7 +92,7 @@ function Case({ family, explicit = false }: { family: string; explicit?: boolean
       <button type="button" onClick={() => setOrder((v) => [...v].reverse())}>
         Reorder
       </button>
-      <Chart.Root
+      <Engine
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
@@ -104,56 +106,54 @@ function Case({ family, explicit = false }: { family: string; explicit?: boolean
               },
             }
           : {})}
+        aria-label="Chart fixture"
+        data={rows}
+        width={500}
+        height={240}
+        animate={
+          new URLSearchParams(location.search).has("static")
+            ? false
+            : { revealDurationMs: 200, hoverTransition: { duration: 0.5, ease: "linear" } }
+        }
       >
-        <Engine
-          data={rows}
-          width={500}
-          height={240}
-          animate={
-            new URLSearchParams(location.search).has("static")
-              ? false
-              : { revealDurationMs: 200, hoverTransition: { duration: 0.5, ease: "linear" } }
-          }
-        >
-          {family === "radar" ? (
-            <>
-              <Chart.PolarGrid />
-              <Chart.PolarAngleAxis dataKey="category" />
-              <Chart.PolarRadiusAxis domain={[0, 100]} />
-            </>
+        {family === "radar" ? (
+          <>
+            <Chart.PolarGrid />
+            <Chart.PolarAngleAxis dataKey="category" />
+            <Chart.PolarRadiusAxis domain={[0, 100]} />
+          </>
+        ) : (
+          <>
+            <Chart.XAxis dataKey="category" />
+            <Chart.YAxis domain={[0, 100]} />
+          </>
+        )}
+        {order.map((key) =>
+          family === "combo" && key === "first" ? (
+            <Chart.BarSeries key={key} dataKey={key} />
           ) : (
+            <Series key={key} dataKey={key} dot={true} />
+          ),
+        )}
+        <Chart.Tooltip
+          content={(props) => (
             <>
-              <Chart.XAxis dataKey="category" />
-              <Chart.YAxis domain={[0, 100]} />
+              <Chart.TooltipContent tooltip={props} valueAnimation="shuffle" />
+              <output
+                data-native-payload={JSON.stringify(
+                  props.payload.map((entry) => ({
+                    series: String(entry.dataKey),
+                    row: entry.payload.category,
+                    value: entry.value,
+                    id: entry.graphicalItemId,
+                  })),
+                )}
+              />
             </>
           )}
-          {order.map((key) =>
-            family === "combo" && key === "first" ? (
-              <Chart.BarSeries key={key} dataKey={key} />
-            ) : (
-              <Series key={key} dataKey={key} dot={true} />
-            ),
-          )}
-          <Chart.Tooltip
-            content={(props) => (
-              <>
-                <Chart.TooltipContent tooltip={props} valueAnimation="shuffle" />
-                <output
-                  data-native-payload={JSON.stringify(
-                    props.payload.map((entry) => ({
-                      series: String(entry.dataKey),
-                      row: entry.payload.category,
-                      value: entry.value,
-                      id: entry.graphicalItemId,
-                    })),
-                  )}
-                />
-              </>
-            )}
-          />
-        </Engine>
-        <Chart.Legend />
-      </Chart.Root>
+        />
+        <Engine.Legend />
+      </Engine>
     </section>
   );
 }
@@ -169,28 +169,25 @@ function GuardCase({ mode }: { mode: "focus" | "visibility" }) {
         Consumer empty
       </button>
       <output data-visible={JSON.stringify(visible)} />
-      <Chart.Root
+      <Chart.LineChart
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
-        interaction={{
-          kind: "series",
-          mode,
-          eligibleKeys: eligible,
-          markActivation: "matching-legend",
-        }}
+        interaction={
+          mode === "focus"
+            ? { kind: "series", mode, eligibleKeys: eligible, markActivation: "matching-legend" }
+            : { kind: "series", mode, eligibleKeys: eligible, markActivation: "matching-legend" }
+        }
+        aria-label="Chart fixture"
+        data={rows}
+        width={500}
+        height={240}
+        animate={{ revealDurationMs: 200, hoverTransition: { duration: 0.5, ease: "linear" } }}
       >
-        <Chart.LineChart
-          data={rows}
-          width={500}
-          height={240}
-          animate={{ revealDurationMs: 200, hoverTransition: { duration: 0.5, ease: "linear" } }}
-        >
-          <Chart.LineSeries dataKey="first" />
-          <Chart.LineSeries dataKey="second" />
-        </Chart.LineChart>
-        <Chart.Legend />
-      </Chart.Root>
+        <Chart.LineSeries dataKey="first" />
+        <Chart.LineSeries dataKey="second" />
+        <Chart.LineChart.Legend />
+      </Chart.LineChart>
     </section>
   );
 }
@@ -210,16 +207,25 @@ createRoot(root).render(
     {(!only || only === "pie") && <PieHideFixture />}
     {only === "derived" && testFamily && <DerivedHide family={testFamily} />}
     {(!only || only === "standalone") && <StandaloneFocus />}
-    {(!only || only === "configured") && (
+    {(!only || only === "explicit-focus") && (
       <Chart.LineChart
         data={rows}
         config={config}
-        xDataKey="category"
-        aria-label="Configured focus"
+        aria-label="Explicit focus"
+        interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
         width={500}
         height={240}
         animate={true}
-      />
+      >
+        <Chart.LineChart.Grid />
+        <Chart.LineChart.XAxis dataKey={"category"} />
+        <Chart.LineChart.YAxis />
+        {Object.keys(config).map((key) => (
+          <Chart.LineChart.Series key={key} dataKey={key} />
+        ))}
+        <Chart.LineChart.Tooltip />
+        <Chart.LineChart.Legend />
+      </Chart.LineChart>
     )}
   </>,
 );

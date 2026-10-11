@@ -47,10 +47,8 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
   "isAnimationActive"
 > & {
-  /** Opt-in category colors from Root.config; requires explicit series data. */
+  /** Category colors from chart config; requires explicit series data. */
   categoryKey?: CategoryKey<DataPoint> | undefined;
-  /** Explicitly share this Pie's category identities and actions with Root/Legend. */
-  interactionBinding?: "root";
   /** Finish on default native sectors; custom shapes, filters and CSS transforms keep ownership. */
   material?: PieMaterial | undefined;
   /** Categories receiving glow instead of material; requires categoryKey and explicit data. Unknown IDs are ignored. */
@@ -509,18 +507,13 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     glowCategories,
     emphasisKey,
     categoryKey,
-    interactionBinding,
     hide,
     ...nativeProps
   } = props;
   const interaction = useChartInteraction();
-  if (
-    interactionBinding &&
-    (interaction.kind !== "category" || categoryKey === undefined || props.data === undefined)
-  )
-    throw new Error(
-      "PieSeries Root interaction binding requires category-kind Root, categoryKey and explicit data",
-    );
+  const interactionBinding = interaction.kind === "category" && categoryKey !== undefined;
+  if (interactionBinding && props.data === undefined)
+    throw new Error("PieSeries category interaction requires explicit data");
   usePieSeriesRegistration(props.data, categoryKey, props.hide);
   const filtered = useMemo(
     () =>
@@ -625,7 +618,7 @@ export function PieSeries<DataPoint = unknown, Value = unknown>(
     useLineInteraction();
   const nativeId = props.id ?? seriesId;
   useLayoutEffect(() => {
-    if (interactionBinding === "root") return registerCategoryKeys(nativeId, resolveInteractionKey);
+    if (interactionBinding) return registerCategoryKeys(nativeId, resolveInteractionKey);
   }, [interactionBinding, nativeId, registerCategoryKeys, resolveInteractionKey]);
   useLayoutEffect(
     () => registerHiddenItem(nativeId, hide === true),

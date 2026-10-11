@@ -1,5 +1,7 @@
 "use client";
 
+import { OutsidePlot } from "../family-root.js";
+
 import {
   CompoundSankeyLegend,
   CompoundSankeyTable,
@@ -12,6 +14,7 @@ import { SankeyLink, SankeyNode } from "../sankey-marks.js";
 import { SankeyNodeLabel } from "../sankey-node-label.js";
 
 export const SankeyChart = /* @__PURE__ */ Object.assign(NativeSankeyChart, {
+  Content: OutsidePlot,
   Nodes: SankeyNodes,
   Links: SankeyLinks,
   Legend: CompoundSankeyLegend,

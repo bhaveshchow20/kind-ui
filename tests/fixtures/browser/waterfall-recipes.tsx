@@ -76,17 +76,16 @@ export function WaterfallRecipe({
   const help = useId();
   const labels = new Map(data.map((row) => [row.id, row.label]));
   return (
-    <Chart.Root
-      config={{ range: { label: "Balance", color: "var(--chart-1)" } }}
-      visibleSeries={visible ? ["range"] : []}
-      className="recipe-chart"
-    >
+    <>
       <p id={help} className="recipe-help">
         Focus the chart and use left/right arrows to explore; Escape dismisses. Values are sample
         units.
       </p>
       <ResponsiveContainer width="100%" height={280}>
         <Chart.WaterfallChart
+          config={{ range: { label: "Balance", color: "var(--chart-1)" } }}
+          visibleSeries={visible ? ["range"] : []}
+          frameProps={{ className: "recipe-chart" }}
           data={data}
           animate={animate}
           accessibilityLayer
@@ -163,6 +162,6 @@ export function WaterfallRecipe({
           />
         </Chart.WaterfallChart>
       </ResponsiveContainer>
-    </Chart.Root>
+    </>
   );
 }

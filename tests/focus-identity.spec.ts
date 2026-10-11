@@ -195,11 +195,11 @@ for (const [family, selector] of Object.entries(marks)) {
     }
   });
 }
-test("configured line default focuses; quantitative Heatmap legend stays static", async ({
+test("explicit line focus preserves geometry; quantitative Heatmap legend stays static", async ({
   page,
 }) => {
-  await page.goto("/?only=configured");
-  const card = page.locator(".kind-ui-configured-line-root").last();
+  await page.goto("/?only=explicit-focus");
+  const card = page.locator('[data-kind-ui="chart"]').last();
   await expect(card.locator(".recharts-line-curve")).toHaveCount(2);
   const baseline = await card
     .locator(".recharts-line-curve")

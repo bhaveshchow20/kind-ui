@@ -25,7 +25,7 @@ export function SankeyLegend({
     interactionBinding &&
     (!interaction || interaction.kind !== "node" || interaction.mode !== "focus")
   )
-    throw new Error("SankeyLegend Root interaction binding requires node focus");
+    throw new Error("SankeyLegend chart interaction binding requires node focus");
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: Delegates clicks from native buttons, which already implement Enter and Space.
     <ul

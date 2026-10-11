@@ -128,18 +128,13 @@ export { BoxPlotChart, type BoxPlotChartProps } from "./composition/box-plot.js"
 export { ComboChart, type ComboChartProps } from "./composition/combo.js";
 export { HeatmapChart } from "./composition/heatmap.js";
 export { HistogramChart, type HistogramChartProps } from "./composition/histogram.js";
-export { LineChart } from "./composition/line.js";
+export { LineChart, type LineChartProps } from "./composition/line.js";
 export { PieChart, type PieChartProps } from "./composition/pie.js";
 export { RadarChart, type RadarChartProps } from "./composition/radar.js";
 export { RadialBarChart, type RadialBarChartProps } from "./composition/radial-bar.js";
 export { SankeyChart } from "./composition/sankey.js";
 export { ScatterChart, type ScatterChartProps } from "./composition/scatter.js";
 export { WaterfallChart, type WaterfallChartProps } from "./composition/waterfall.js";
-export type {
-  ConfiguredLineChartProps,
-  ConfiguredLineSeries,
-  LineChartProps,
-} from "./configured-line-chart.js";
 export {
   EmphasisMark,
   type EmphasisMarkProps,
@@ -176,6 +171,7 @@ export {
   type HeatmapScale,
   type HeatmapScaleOptions,
 } from "./heatmap-model.js";
+export type { HistogramXAxisProps, HistogramYAxisProps } from "./histogram-chart.js";
 export {
   binHistogram,
   type HistogramBin,
@@ -211,13 +207,15 @@ export {
   RadialBarSeries,
   type RadialBarSeriesProps,
 } from "./polar-series.js";
-export type { RadarSelectionProps } from "./radar-interaction.js";
 export { RadialBarLabel, type RadialBarLabelProps } from "./radial-bar-label.js";
 export type { RevealDirection } from "./reveal-clip.js";
-export { Root, type RootProps } from "./root.js";
 export type { SankeyAnimation } from "./sankey-chart.js";
 export type { SankeyNodeConfig } from "./sankey-colors.js";
 export type { SankeyChartProps } from "./sankey-composition.js";
+export {
+  CompoundSankeyLegend as SankeyLegend,
+  type CompoundSankeyLegendProps as SankeyLegendProps,
+} from "./sankey-composition.js";
 export {
   prepareSankeyData,
   type SankeyFlowData,
@@ -225,7 +223,6 @@ export {
   type SankeyFlowNode,
 } from "./sankey-data.js";
 export type { SankeyFinish } from "./sankey-finish.js";
-export { SankeyLegend, type SankeyLegendProps } from "./sankey-legend.js";
 export {
   SankeyLink,
   type SankeyLinkProps,
@@ -247,7 +244,6 @@ export {
 } from "./scatter-tooltip.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
 export type { SeriesColor, SeriesConfig } from "./types.js";
-export {} from "./waterfall-chart.js";
 export {
   computeWaterfallData,
   type WaterfallDatum,

@@ -145,39 +145,48 @@ export function SankeyNetwork() {
                   if (kind === "link")
                     setActive((current) => (current === item.payload.id ? null : item.payload.id));
                 }}
-                node={(props) => (
-                  <g>
-                    <SankeyNode {...props} finish={finish} color={colors.get(props.payload.id)} />
-                    <text
-                      x={props.x + props.width / 2}
-                      y={props.y - 23}
-                      textAnchor="middle"
-                      className="network-label"
-                    >
-                      <tspan x={props.x + props.width / 2}>{props.payload.name}</tspan>
-                      <tspan x={props.x + props.width / 2} dy={16} className="network-value">
-                        {totals.get(props.payload.id)} MWh
-                      </tspan>
-                    </text>
-                  </g>
-                )}
-                link={(props) => (
-                  <SankeyLink
-                    {...props}
-                    material="gradient"
-                    finish={finish}
-                    color={colors.get(props.payload.source.id)}
-                    targetColor={colors.get(props.payload.target.id)}
-                    pathProps={
-                      {
-                        "aria-label": `${props.payload.id}: ${props.payload.value} MWh`,
-                        opacity: active && active !== props.payload.id ? 0.14 : 0.52,
-                        "data-network-flow": props.payload.id,
-                      } as React.SVGProps<SVGPathElement>
-                    }
-                  />
-                )}
-              />
+                config={{}}
+                aria-label="Chart fixture"
+              >
+                {null}
+                {/* Explicit renderer ownership belongs to the family parts. */}
+                <SankeyChart.Nodes
+                  render={(props) => (
+                    <g>
+                      <SankeyNode {...props} finish={finish} color={colors.get(props.payload.id)} />
+                      <text
+                        x={props.x + props.width / 2}
+                        y={props.y - 23}
+                        textAnchor="middle"
+                        className="network-label"
+                      >
+                        <tspan x={props.x + props.width / 2}>{props.payload.name}</tspan>
+                        <tspan x={props.x + props.width / 2} dy={16} className="network-value">
+                          {totals.get(props.payload.id)} MWh
+                        </tspan>
+                      </text>
+                    </g>
+                  )}
+                />
+                <SankeyChart.Links
+                  render={(props) => (
+                    <SankeyLink
+                      {...props}
+                      material="gradient"
+                      finish={finish}
+                      color={colors.get(props.payload.source.id)}
+                      targetColor={colors.get(props.payload.target.id)}
+                      pathProps={
+                        {
+                          "aria-label": `${props.payload.id}: ${props.payload.value} MWh`,
+                          opacity: active && active !== props.payload.id ? 0.14 : 0.52,
+                          "data-network-flow": props.payload.id,
+                        } as React.SVGProps<SVGPathElement>
+                      }
+                    />
+                  )}
+                />
+              </SankeyChart>
             </ResponsiveContainer>
           </div>
         </section>

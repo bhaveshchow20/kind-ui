@@ -277,7 +277,7 @@ test("stateful packed tooltip content and refs survive mode, preference and geom
   expect(after).toEqual(before);
 });
 
-test("packed native hide preserves entrance progress, Root visibility and data", async ({
+test("packed native hide preserves entrance progress, chart visibility and data", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });

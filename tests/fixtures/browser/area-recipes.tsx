@@ -63,20 +63,25 @@ function AreaFrame<T extends { period: string }>({
     const fraction = percentStack.normalizedValue(entry);
     return fraction === undefined ? value : `${(fraction * 100).toFixed(0)}%`;
   };
-  const rootProps = {
-    config,
-    className: "recipe-chart",
-  };
   const content = (
     <>
-      {(showLegend || (visibleSeries !== undefined && onVisibleSeriesChange !== undefined)) && (
-        <Chart.Legend />
-      )}
       <p id={id} className="recipe-help">
         Use left and right arrow keys to explore values. Escape dismisses the tooltip.
       </p>
       <ResponsiveContainer width="100%" height={220}>
         <Chart.AreaChart
+          visibleSeries={visibleSeries ?? Object.keys(config)}
+          {...(onVisibleSeriesChange
+            ? {
+                onVisibleSeriesChange: (series: string[]) =>
+                  onVisibleSeriesChange(
+                    series.filter(
+                      (value): value is AreaSeries => value === "desktop" || value === "mobile",
+                    ),
+                  ),
+              }
+            : {})}
+          frameProps={{ className: "recipe-chart" }}
           data={data}
           stackOffset={offset}
           accessibilityLayer
@@ -84,6 +89,7 @@ function AreaFrame<T extends { period: string }>({
           aria-describedby={id}
           animate={options ?? false}
           margin={{ top: 20, right: 12, bottom: 0, left: 0 }}
+          config={config}
         >
           <CartesianGrid vertical={false} stroke="var(--border)" />
           {children}
@@ -119,28 +125,14 @@ function AreaFrame<T extends { period: string }>({
             width={36}
           />
           <Chart.Tooltip {...(percentage ? { formatter: tooltipFormatter } : {})} />
+          {(showLegend || (visibleSeries !== undefined && onVisibleSeriesChange !== undefined)) && (
+            <Chart.AreaChart.Legend />
+          )}
         </Chart.AreaChart>
       </ResponsiveContainer>
     </>
   );
-  if (visibleSeries !== undefined && onVisibleSeriesChange !== undefined) {
-    return (
-      <Chart.Root
-        {...rootProps}
-        visibleSeries={visibleSeries}
-        onVisibleSeriesChange={(series) =>
-          onVisibleSeriesChange(
-            series.filter(
-              (value): value is AreaSeries => value === "desktop" || value === "mobile",
-            ),
-          )
-        }
-      >
-        {content}
-      </Chart.Root>
-    );
-  }
-  return <Chart.Root {...rootProps}>{content}</Chart.Root>;
+  return content;
 }
 
 function SingleArea({

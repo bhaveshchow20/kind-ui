@@ -181,140 +181,140 @@ export function PolarGalleryCard({
         </label>
       )}
       <p>{details[variant]}</p>
-      <Chart.Root
-        config={(radar && multiple) || stacked ? config : { actual: config.actual }}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
-      >
-        <Chart.Legend aria-label={`${kind} gallery series focus`} />
-        <ResponsiveContainer width="100%" height={300}>
-          {radar ? (
-            <Chart.RadarChart
-              data={data}
-              animate={animate}
-              outerRadius="68%"
-              aria-label="Radar gallery scores"
-            >
-              <PolarAngleAxis
-                dataKey="category"
-                tick={radarVariant === "label-custom" ? <ScoreTick data={data} /> : true}
+      <ResponsiveContainer width="100%" height={300}>
+        {radar ? (
+          <Chart.RadarChart
+            config={(radar && multiple) || stacked ? config : { actual: config.actual }}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            data={data}
+            animate={animate}
+            outerRadius="68%"
+            aria-label="Radar gallery scores"
+          >
+            <PolarAngleAxis
+              dataKey="category"
+              tick={radarVariant === "label-custom" ? <ScoreTick data={data} /> : true}
+            />
+            <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+            {radarVariant !== "grid-none" && (
+              <PolarGrid
+                gridType={circle ? "circle" : "polygon"}
+                radialLines={
+                  !["lines-only", "grid-custom", "grid-circle-no-lines"].includes(radarVariant)
+                }
+                {...(radarVariant === "grid-custom" ? { polarRadius: [96] } : {})}
+                {...(gridFill ? { fill: "var(--color-actual)", fillOpacity: 0.08 } : {})}
+                data-gallery-grid={variant}
               />
-              <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
-              {radarVariant !== "grid-none" && (
-                <PolarGrid
-                  gridType={circle ? "circle" : "polygon"}
-                  radialLines={
-                    !["lines-only", "grid-custom", "grid-circle-no-lines"].includes(radarVariant)
-                  }
-                  {...(radarVariant === "grid-custom" ? { polarRadius: [96] } : {})}
-                  {...(gridFill ? { fill: "var(--color-actual)", fillOpacity: 0.08 } : {})}
-                  data-gallery-grid={variant}
-                />
-              )}
+            )}
+            <Chart.RadarSeries
+              material={material}
+              dataKey="actual"
+              fillOpacity={radarVariant === "lines-only" ? 0 : 0.25}
+              dot={radarVariant === "dots" ? { r: 4, fillOpacity: 1 } : false}
+            />
+            {multiple && (
               <Chart.RadarSeries
                 material={material}
-                dataKey="actual"
-                fillOpacity={radarVariant === "lines-only" ? 0 : 0.25}
-                dot={radarVariant === "dots" ? { r: 4, fillOpacity: 1 } : false}
+                dataKey="target"
+                fillOpacity={radarVariant === "lines-only" ? 0 : 0.18}
               />
-              {multiple && (
-                <Chart.RadarSeries
-                  material={material}
-                  dataKey="target"
-                  fillOpacity={radarVariant === "lines-only" ? 0 : 0.18}
-                />
-              )}
-              <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
-            </Chart.RadarChart>
-          ) : (
-            <Chart.RadialBarChart
-              data={rows}
-              animate={animate}
-              startAngle={radialVariant === "label" ? -90 : 0}
-              endAngle={
-                radialVariant === "label"
-                  ? 380
-                  : radialVariant === "text"
-                    ? 250
-                    : radialVariant === "shape"
-                      ? 100
-                      : stacked
-                        ? 180
-                        : 360
-              }
-              innerRadius={singleRing ? "55%" : "16%"}
-              outerRadius="90%"
-              barCategoryGap="12%"
-              aria-label="Radial gallery scores"
+            )}
+            <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
+            <Chart.RadarChart.Legend aria-label={`${kind} gallery series focus`} />
+          </Chart.RadarChart>
+        ) : (
+          <Chart.RadialBarChart
+            config={(radar && multiple) || stacked ? config : { actual: config.actual }}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            data={rows}
+            animate={animate}
+            startAngle={radialVariant === "label" ? -90 : 0}
+            endAngle={
+              radialVariant === "label"
+                ? 380
+                : radialVariant === "text"
+                  ? 250
+                  : radialVariant === "shape"
+                    ? 100
+                    : stacked
+                      ? 180
+                      : 360
+            }
+            innerRadius={singleRing ? "55%" : "16%"}
+            outerRadius="90%"
+            barCategoryGap="12%"
+            aria-label="Radial gallery scores"
+          >
+            <PolarAngleAxis type="number" domain={[0, stacked ? 200 : 100]} tick={false} />
+            <PolarRadiusAxis
+              type="category"
+              dataKey="category"
+              tick={false}
+              tickLine={false}
+              axisLine={false}
             >
-              <PolarAngleAxis type="number" domain={[0, stacked ? 200 : 100]} tick={false} />
-              <PolarRadiusAxis
-                type="category"
+              {singleRing && center && <Label value={summary} content={CenterSummary} />}
+            </PolarRadiusAxis>
+            {radialVariant === "grid" && <PolarGrid gridType="circle" />}
+            {["text", "shape"].includes(radialVariant) && (
+              <>
+                <PolarGrid
+                  gridType="circle"
+                  radialLines={false}
+                  polarRadius={[radialVariant === "text" ? 110 : 106]}
+                  fill="var(--border, #e5e5e5)"
+                  stroke="none"
+                />
+                <PolarGrid
+                  gridType="circle"
+                  radialLines={false}
+                  polarRadius={[radialVariant === "text" ? 82 : 84]}
+                  fill="var(--card, white)"
+                  stroke="none"
+                />
+              </>
+            )}
+            <Chart.RadialBarSeries
+              material={material}
+              dataKey="actual"
+              background={radialVariant !== "grid" && !stacked}
+              cornerRadius={singleRing ? 5 : 0}
+              {...(stacked ? { stackId: "scores" } : {})}
+            >
+              {!singleRing &&
+                rows.map((row, index) => (
+                  <Cell
+                    key={row.category}
+                    fill={categoryColors[index % categoryColors.length] ?? "var(--color-actual)"}
+                  />
+                ))}
+              <LabelList
+                fill="white"
                 dataKey="category"
-                tick={false}
-                tickLine={false}
-                axisLine={false}
-              >
-                {singleRing && center && <Label value={summary} content={CenterSummary} />}
-              </PolarRadiusAxis>
-              {radialVariant === "grid" && <PolarGrid gridType="circle" />}
-              {["text", "shape"].includes(radialVariant) && (
-                <>
-                  <PolarGrid
-                    gridType="circle"
-                    radialLines={false}
-                    polarRadius={[radialVariant === "text" ? 110 : 106]}
-                    fill="var(--border, #e5e5e5)"
-                    stroke="none"
-                  />
-                  <PolarGrid
-                    gridType="circle"
-                    radialLines={false}
-                    polarRadius={[radialVariant === "text" ? 82 : 84]}
-                    fill="var(--card, white)"
-                    stroke="none"
-                  />
-                </>
-              )}
+                content={<Chart.RadialBarLabel show={showText} />}
+              />
+            </Chart.RadialBarSeries>
+            {stacked && (
               <Chart.RadialBarSeries
                 material={material}
-                dataKey="actual"
-                background={radialVariant !== "grid" && !stacked}
-                cornerRadius={singleRing ? 5 : 0}
-                {...(stacked ? { stackId: "scores" } : {})}
+                dataKey="target"
+                stackId="scores"
+                cornerRadius={5}
               >
-                {!singleRing &&
-                  rows.map((row, index) => (
-                    <Cell
-                      key={row.category}
-                      fill={categoryColors[index % categoryColors.length] ?? "var(--color-actual)"}
-                    />
-                  ))}
                 <LabelList
                   fill="white"
-                  dataKey="category"
+                  dataKey="target"
                   content={<Chart.RadialBarLabel show={showText} />}
                 />
               </Chart.RadialBarSeries>
-              {stacked && (
-                <Chart.RadialBarSeries
-                  material={material}
-                  dataKey="target"
-                  stackId="scores"
-                  cornerRadius={5}
-                >
-                  <LabelList
-                    fill="white"
-                    dataKey="target"
-                    content={<Chart.RadialBarLabel show={showText} />}
-                  />
-                </Chart.RadialBarSeries>
-              )}
-              <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
-            </Chart.RadialBarChart>
-          )}
-        </ResponsiveContainer>
-      </Chart.Root>
+            )}
+            <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
+          </Chart.RadialBarChart>
+        )}
+      </ResponsiveContainer>
       <details>
         <summary>View values</summary>
         <table>

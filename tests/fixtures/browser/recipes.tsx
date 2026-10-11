@@ -92,17 +92,24 @@ function MarkerGallery() {
           <LineChart
             config={{ total: { label: "Total", color: "var(--gallery-series)" } }}
             data={markerData}
-            xDataKey="month"
             aria-label={`${variant} markers`}
-            series={[
+          >
+            <LineChart.Grid />
+            <LineChart.XAxis dataKey={"month"} />
+            <LineChart.YAxis />
+            {[
               {
                 seriesKey: "total",
                 dataKey: "total",
                 pointStyle: variant,
                 activePointStyle: variant,
               },
-            ]}
-          />
+            ].map((series) => (
+              <LineChart.Series key={series.seriesKey ?? String(series.dataKey)} {...series} />
+            ))}
+            <LineChart.Tooltip />
+            <LineChart.Legend />
+          </LineChart>
         </section>
       ))}
       <table>

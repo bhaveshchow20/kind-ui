@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ActivityRings, RadialBarChart, Root } from "@kind-ui/charts";
+import { ActivityRings } from "@kind-ui/charts";
 import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 
@@ -18,19 +18,48 @@ const defaults = {
   "aria-label": "Daily activity",
 };
 test("rings own context and preserve accessible names, original values and consumer description", () => {
-  const html = render(h(ActivityRings, { ...defaults, "aria-describedby": "explanation" }));
+  const html = render(
+    h(
+      ActivityRings,
+      {
+        config: config,
+        "aria-label": "Chart fixture",
+        ...{ ...defaults, "aria-describedby": "explanation" },
+      },
+      null,
+    ),
+  );
   assert.match(html, /data-kind-ui="chart"/);
   assert.match(html, /<dt>Move<\/dt><dd>75 kcal<\/dd>/);
   assert.match(html, /<dt>Exercise<\/dt><dd>30<\/dd>/);
-  assert.match(html, /chart-legend/);
-  assert.match(html, /<button/);
+  assert.doesNotMatch(html, /chart-legend/);
 });
 test("config subset and order follow the ring data; empty rings remain valid", () => {
-  const html = render(h(ActivityRings, { ...defaults, rings: [...defaults.rings].reverse() }));
+  const html = render(
+    h(
+      ActivityRings,
+      {
+        config: config,
+        "aria-label": "Chart fixture",
+        ...{ ...defaults, rings: [...defaults.rings].reverse() },
+      },
+      null,
+    ),
+  );
   assert.ok(html.indexOf("Exercise") < html.indexOf("Move"));
   assert.doesNotMatch(html, /Stand/);
   assert.doesNotMatch(
-    render(h(ActivityRings, { ...defaults, rings: [], legend: false })),
+    render(
+      h(
+        ActivityRings,
+        {
+          config: config,
+          "aria-label": "Chart fixture",
+          ...{ ...defaults, rings: [], children: null },
+        },
+        null,
+      ),
+    ),
     /chart-legend/,
   );
 });
@@ -51,14 +80,17 @@ for (const [label, props, error] of [
   ],
 ])
   test(`rings reject ${label}`, () =>
-    assert.throws(() => render(h(ActivityRings, { ...defaults, ...props })), error));
-test("native composition remains consumer-owned", () => {
-  assert.throws(() => render(h(Root, { config }, h(ActivityRings, defaults))), /owns Root/);
-  const html = render(
-    h(Root, { config }, h(RadialBarChart, { data: [], width: 300, height: 300 })),
-  );
-  assert.doesNotMatch(html, /chart-instructions|chart-legend|activity-rings/);
-});
+    assert.throws(
+      () =>
+        render(
+          h(
+            ActivityRings,
+            { config: config, "aria-label": "Chart fixture", ...{ ...defaults, ...props } },
+            null,
+          ),
+        ),
+      error,
+    ));
 
 test("inferred ring labels agree between the data alternative and legend", () => {
   const inferred = {
@@ -66,18 +98,26 @@ test("inferred ring labels agree between the data alternative and legend", () =>
     custom: { color: "blue", label: "Custom name" },
   };
   const html = render(
-    h(ActivityRings, {
-      ...defaults,
-      config: inferred,
-      rings: [
-        { key: "monthlyVisitors", value: 25 },
-        { key: "custom", value: 10 },
-      ],
-    }),
+    h(
+      ActivityRings,
+      {
+        config: config,
+        "aria-label": "Chart fixture",
+        ...{
+          ...defaults,
+          config: inferred,
+          rings: [
+            { key: "monthlyVisitors", value: 25 },
+            { key: "custom", value: 10 },
+          ],
+        },
+      },
+      null,
+    ),
   );
   assert.match(html, /<dt>Monthly visitors<\/dt><dd>25<\/dd>/);
   assert.match(html, /<dt>Custom name<\/dt><dd>10<\/dd>/);
-  assert.equal(html.split("Monthly visitors").length - 1, 2);
-  assert.equal(html.split("Custom name").length - 1, 2);
-  assert.match(html, /data-series="monthlyVisitors"/);
+  assert.equal(html.split("Monthly visitors").length - 1, 1);
+  assert.equal(html.split("Custom name").length - 1, 1);
+  assert.doesNotMatch(html, /chart-legend/);
 });

@@ -111,18 +111,7 @@ function Preview() {
       {children}
     </Card>
   );
-  const rooted = (children: ReactNode, interactive = false) =>
-    interactive ? (
-      <Chart.Root
-        config={config}
-        visibleSeries={visibleBars}
-        onVisibleSeriesChange={setVisibleBars}
-      >
-        {children}
-      </Chart.Root>
-    ) : (
-      <Chart.Root config={config}>{children}</Chart.Root>
-    );
+  const rooted = (children: ReactNode, _interactive = false) => children;
   return (
     <main>
       <p className="eyebrow">Kind UI / all-family loading study</p>
@@ -211,19 +200,29 @@ function Preview() {
           <Chart.LineChart
             {...pending}
             config={config}
-            series={[{ dataKey: "sales", seriesKey: "sales" }]}
             data={rows}
-            xDataKey="month"
             aria-label="Monthly sales"
             height={260}
             animate={motion}
-          />,
+          >
+            <Chart.LineChart.Grid />
+            <Chart.LineChart.XAxis dataKey={"month"} />
+            <Chart.LineChart.YAxis />
+            {[{ dataKey: "sales", seriesKey: "sales" }].map((series) => (
+              <Chart.LineChart.Series
+                key={series.seriesKey ?? String(series.dataKey)}
+                {...series}
+              />
+            ))}
+            <Chart.LineChart.Tooltip />
+            <Chart.LineChart.Legend />
+          </Chart.LineChart>,
         )}
         {card(
           "area",
           "Area",
           rooted(
-            <Chart.AreaChart {...native} data={rows} aria-label="Sales area">
+            <Chart.AreaChart {...native} data={rows} aria-label="Sales area" config={config}>
               {axes}
               <Chart.AreaSeries dataKey="sales" seriesKey="sales" />
               <Chart.Tooltip />
@@ -236,16 +235,20 @@ function Preview() {
           rooted(
             <>
               <Chart.BarChart
+                visibleSeries={visibleBars}
+                onVisibleSeriesChange={setVisibleBars}
                 {...native}
                 data={rows}
                 aria-label="Sales bars"
                 onClick={() => setEvents((value) => value + 1)}
+                config={config}
               >
                 {axes}
                 <Chart.BarSeries dataKey="sales" seriesKey="sales" />
                 <Chart.Tooltip />
+                <Chart.BarChart.Legend />
               </Chart.BarChart>
-              <Chart.Legend />
+
               <p>
                 Consumer clicks: <output>{events}</output>
               </p>
@@ -257,7 +260,7 @@ function Preview() {
           "combo",
           "Combo",
           rooted(
-            <Chart.ComboChart {...native} data={rows} aria-label="Sales and target">
+            <Chart.ComboChart {...native} data={rows} aria-label="Sales and target" config={config}>
               {axes}
               <Chart.BarSeries dataKey="sales" seriesKey="sales" />
               <Chart.LineSeries dataKey="target" seriesKey="target" />
@@ -269,7 +272,7 @@ function Preview() {
           "scatter",
           "Scatter",
           rooted(
-            <Chart.ScatterChart {...native} aria-label="Sales distribution">
+            <Chart.ScatterChart {...native} aria-label="Sales distribution" config={config}>
               <Chart.XAxis type="number" dataKey="x" domain={[0, 80]} />
               <Chart.YAxis type="number" dataKey="y" domain={[0, 80]} />
               <Chart.ScatterSeries data={rows} seriesKey="sales" />
@@ -285,6 +288,7 @@ function Preview() {
               {...native}
               data={empty ? [] : waterfall}
               aria-label="Sales balance"
+              config={config}
             >
               <Chart.XAxis dataKey="label" />
               <Chart.YAxis domain={[0, 80]} />
@@ -303,6 +307,7 @@ function Preview() {
               bins={empty ? [] : bins}
               measure="count"
               aria-label="Sales frequency"
+              config={config}
             >
               <Chart.HistogramSeries seriesKey="sales" />
               <Chart.Tooltip />
@@ -313,7 +318,12 @@ function Preview() {
           "box-plot",
           "Box plot",
           rooted(
-            <Chart.BoxPlotChart {...native} data={empty ? [] : boxes} aria-label="Sales summaries">
+            <Chart.BoxPlotChart
+              {...native}
+              data={empty ? [] : boxes}
+              aria-label="Sales summaries"
+              config={config}
+            >
               {axes}
               <Chart.BoxPlotSeries dataKey="summary" seriesKey="spread" />
               <Chart.Tooltip />
@@ -324,7 +334,7 @@ function Preview() {
           "pie",
           "Pie",
           rooted(
-            <Chart.PieChart {...native} aria-label="Sales allocation">
+            <Chart.PieChart {...native} aria-label="Sales allocation" config={config}>
               <Chart.PieSeries data={rows} dataKey="sales" nameKey="month" outerRadius="80%" />
               <Chart.Tooltip />
             </Chart.PieChart>,
@@ -334,7 +344,7 @@ function Preview() {
           "radar",
           "Radar",
           rooted(
-            <Chart.RadarChart {...native} data={rows} aria-label="Sales radar">
+            <Chart.RadarChart {...native} data={rows} aria-label="Sales radar" config={config}>
               <Chart.PolarGrid />
               <Chart.PolarAngleAxis dataKey="month" />
               <Chart.PolarRadiusAxis domain={[0, 80]} />
@@ -353,6 +363,7 @@ function Preview() {
               aria-label="Sales rings"
               innerRadius="20%"
               outerRadius="85%"
+              config={config}
             >
               <Chart.PolarAngleAxis type="number" domain={[0, 80]} tick={false} />
               <Chart.RadialBarSeries dataKey="sales" seriesKey="sales" />
@@ -375,8 +386,12 @@ function Preview() {
                   ]
             }
             aria-label="Daily activity"
-            legend={false}
-          />,
+          >
+            <Chart.ActivityRings.Series>
+              <Chart.ActivityRings.Labels />
+            </Chart.ActivityRings.Series>
+            <Chart.ActivityRings.Tooltip />
+          </Chart.ActivityRings>,
         )}
         {card(
           "heatmap",
@@ -390,6 +405,7 @@ function Preview() {
             animate
             style={{ height: 260 }}
             aria-label="Weekly sales matrix"
+            config={config}
           >
             <Chart.HeatmapGrid caption="Weekly sales by region" />
             <Chart.HeatmapTooltip />
@@ -407,7 +423,11 @@ function Preview() {
               nodePadding={24}
               nodeWidth={12}
               margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
-            />
+              config={config}
+              aria-label="Chart fixture"
+            >
+              {null}
+            </Chart.SankeyChart>
           </Chart.ResponsiveContainer>,
         )}
       </section>

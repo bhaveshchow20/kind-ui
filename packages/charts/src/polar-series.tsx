@@ -40,7 +40,6 @@ import { EmphasisMark, useEmphasis } from "./emphasis.js";
 import { useLineInteraction } from "./line-chart.js";
 import { PolarMotion, RadarMotion, RadialMotion } from "./polar-chart.js";
 import { type PolarMaterial, PolarMaterialFilter } from "./polar-material.js";
-import { RadarSelectionLayer, useRadarSelectionDot } from "./radar-interaction.js";
 import { RadialCategory } from "./radial-category.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
@@ -268,10 +267,6 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
     () => visibilityLabelChildren(props.children, series.hide, undefined, key),
     [props.children, series.hide, key],
   );
-  const selectionDot = useRadarSelectionDot(
-    props.dot,
-    seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
-  );
   const { nonce } = useChart();
   const filterId = `kind-ui-polar-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const materialized =
@@ -295,49 +290,43 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
         seriesKey={seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)}
         hidden={series.hide}
       >
-        <RadarSelectionLayer
-          seriesKey={seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined)}
-          hidden={series.hide}
+        <motion.g
+          data-kind-ui="radar-reveal"
+          initial={false}
+          pointerEvents={series.hide ? "none" : undefined}
         >
-          <motion.g
-            data-kind-ui="radar-reveal"
-            initial={false}
-            pointerEvents={series.hide ? "none" : undefined}
+          <RadarActivePaint
+            value={{
+              inactive: interaction.inactive,
+              option: props.activeDot ?? (Object.hasOwn(props, "activeDot") ? true : undefined),
+            }}
           >
-            <RadarActivePaint
-              value={{
-                inactive: interaction.inactive,
-                option: props.activeDot ?? (Object.hasOwn(props, "activeDot") ? true : undefined),
-              }}
+            <StableRadar<DataPoint, Value>
+              {...props}
+              activeDot={radarActiveDot}
+              {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
+              {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
+              {...(nativeLabel !== undefined ? { label: nativeLabel } : {})}
+              id={series.id}
+              hide={false}
+              isAnimationActive={false}
+              zIndex={0}
+              {...(stroke !== undefined
+                ? { stroke }
+                : series.color !== undefined
+                  ? { stroke: series.color }
+                  : {})}
+              {...(fill !== undefined
+                ? { fill }
+                : series.color !== undefined
+                  ? { fill: series.color }
+                  : {})}
+              className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
             >
-              <StableRadar<DataPoint, Value>
-                {...props}
-                activeDot={radarActiveDot}
-                {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
-                {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
-                {...(selectionDot !== undefined ? { dot: selectionDot } : {})}
-                {...(nativeLabel !== undefined ? { label: nativeLabel } : {})}
-                id={series.id}
-                hide={false}
-                isAnimationActive={false}
-                zIndex={0}
-                {...(stroke !== undefined
-                  ? { stroke }
-                  : series.color !== undefined
-                    ? { stroke: series.color }
-                    : {})}
-                {...(fill !== undefined
-                  ? { fill }
-                  : series.color !== undefined
-                    ? { fill: series.color }
-                    : {})}
-                className={["kind-ui-radar-series", filterId, className].filter(Boolean).join(" ")}
-              >
-                {nativeChildren}
-              </StableRadar>
-            </RadarActivePaint>
-          </motion.g>
-        </RadarSelectionLayer>
+              {nativeChildren}
+            </StableRadar>
+          </RadarActivePaint>
+        </motion.g>
       </SeriesInteractionLayer>
     </ZIndexLayer>
   );

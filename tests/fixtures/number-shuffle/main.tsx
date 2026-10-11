@@ -135,6 +135,8 @@ function Host() {
           data={data}
           scale={scale}
           formatValue={(v) => `${v} commits`}
+          config={config}
+          aria-label="Chart fixture"
         >
           <Chart.HeatmapGrid caption="Activity by day" />
           <Chart.HeatmapTooltip {...animation} {...(custom ? { Content: CustomHeatmap } : {})} />
@@ -142,28 +144,35 @@ function Host() {
       </section>
       <section aria-label="Line preview">
         <h2>Shared tooltip</h2>
-        <Chart.Root config={config}>
-          <Chart.LineChart width={700} height={220} data={points} aria-label="Shuffle line">
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Chart.LineSeries dataKey="count" />
-            <Chart.Tooltip {...animation} {...(custom ? { content: CustomContent } : {})} />
-          </Chart.LineChart>
-        </Chart.Root>
+        <Chart.LineChart
+          config={config}
+          width={700}
+          height={220}
+          data={points}
+          aria-label="Shuffle line"
+        >
+          <XAxis dataKey="day" />
+          <YAxis />
+          <Chart.LineSeries dataKey="count" />
+          <Chart.Tooltip {...animation} {...(custom ? { content: CustomContent } : {})} />
+        </Chart.LineChart>
       </section>
       <section aria-label="Scatter preview">
         <h2>Scatter dimensions</h2>
-        <Chart.Root config={{ points: { label: "Points", color: "#06b6b8" } }}>
-          <Chart.ScatterChart width={700} height={220} aria-label="Shuffle scatter">
-            <XAxis type="number" dataKey="x" />
-            <YAxis type="number" dataKey="y" />
-            <Chart.ScatterSeries seriesKey="points" data={points} />
-            <Chart.ScatterTooltip
-              {...animation}
-              pointLabel={(record: (typeof points)[number]) => record.day}
-            />
-          </Chart.ScatterChart>
-        </Chart.Root>
+        <Chart.ScatterChart
+          config={{ points: { label: "Points", color: "#06b6b8" } }}
+          width={700}
+          height={220}
+          aria-label="Shuffle scatter"
+        >
+          <XAxis type="number" dataKey="x" />
+          <YAxis type="number" dataKey="y" />
+          <Chart.ScatterSeries seriesKey="points" data={points} />
+          <Chart.ScatterTooltip
+            {...animation}
+            pointLabel={(record: (typeof points)[number]) => record.day}
+          />
+        </Chart.ScatterChart>
       </section>
       <section aria-label="Direct content">
         <h2>Formatting and interruption contracts</h2>
@@ -181,16 +190,30 @@ function Host() {
         <button type="button" onClick={() => setLocale(!locale)}>
           Arabic formatter
         </button>
-        <Chart.Root config={config}>
+        <Chart.HeatmapChart
+          rows={[]}
+          columns={[]}
+          data={[]}
+          scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+          aria-label="Metadata chart"
+          config={config}
+        >
           <Chart.TooltipContent tooltip={tooltip} {...animation} data-direct="true" />
-        </Chart.Root>
-        <Chart.Root config={config}>
+        </Chart.HeatmapChart>
+        <Chart.HeatmapChart
+          rows={[]}
+          columns={[]}
+          data={[]}
+          scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+          aria-label="Metadata chart"
+          config={config}
+        >
           <Chart.ScatterTooltipContent
             tooltip={{ ...tooltip, payload: tooltip.payload.slice(0, 3) }}
             {...animation}
             data-scatter-direct="true"
           />
-        </Chart.Root>
+        </Chart.HeatmapChart>
       </section>
     </main>
   );

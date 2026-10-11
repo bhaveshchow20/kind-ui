@@ -2,7 +2,7 @@
 
 import { createContext, type ReactNode } from "react";
 
-/** Sankey IDs are arbitrary nonempty strings, independent from Root CSS variable keys. */
+/** Sankey IDs are arbitrary nonempty strings, independent from chart CSS variable keys. */
 export type SankeyNodeConfig = Readonly<
   Record<string, { label: string; color: string; icon?: ReactNode }>
 >;

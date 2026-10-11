@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import * as Chart from "@kind-ui/charts";
 import {
   createHeatmapScale,
   HeatmapChart,
   HeatmapGrid,
   Legend,
   LineChart,
-  Root,
   TooltipContent,
 } from "@kind-ui/charts";
-import { createElement as h } from "react";
+import { Fragment, createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 
 const config = { total: { label: "Total", color: ["red", "blue"] } };
@@ -21,21 +21,45 @@ const tooltip = {
   accessibilityLayer: false,
 };
 const tooltipHtml = (props = {}) =>
-  render(h(Root, { config }, h(TooltipContent, { tooltip, ...props })));
-const configuredHtml = (props = {}) =>
-  render(
-    h(LineChart, {
-      config,
-      data: [],
-      xDataKey: "day",
-      "aria-label": "Totals",
-      ...props,
-    }),
-  );
+  render(metadataChart({ config }, h(TooltipContent, { tooltip, ...props }, null)));
+const chartHtml = (props = {}) =>
+  render(h(LineChart, { config, data: [], "aria-label": "Totals", ...props }, null));
 function classes(html, marker) {
   const tag = html.match(/<[^>]+>/g)?.find((item) => item.includes(marker));
   assert.ok(tag, `Expected a rendered element containing ${marker}`);
   return tag.match(/class="([^"]*)"/)?.[1].split(/\s+/) ?? [];
+}
+
+function metadataChart(options, ...children) {
+  const {
+    config,
+    interaction,
+    emphasis,
+    nonce,
+    visibleSeries,
+    defaultVisibleSeries,
+    onVisibleSeriesChange,
+    ...frameProps
+  } = options;
+  return h(
+    Chart.HeatmapChart,
+    {
+      rows: [],
+      columns: [],
+      data: [],
+      scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
+      config,
+      "aria-label": "Metadata chart",
+      interaction,
+      emphasis,
+      nonce,
+      ...(visibleSeries !== undefined ? { visibleSeries } : {}),
+      ...(defaultVisibleSeries !== undefined ? { defaultVisibleSeries } : {}),
+      ...(onVisibleSeriesChange ? { onVisibleSeriesChange } : {}),
+      frameProps,
+    },
+    ...children,
+  );
 }
 
 test("default tooltip uses host semantic colors and direct gradient paint", () => {
@@ -61,16 +85,16 @@ test("consumer color utilities replace defaults without discarding typography", 
   );
 });
 
-test("configured chart font and height accept standard Tailwind overrides", () => {
-  const html = configuredHtml({
-    rootProps: { className: "font-serif consumer-root" },
+test("chart font and height accept standard Tailwind overrides", () => {
+  const html = chartHtml({
+    frameProps: { className: "font-serif consumer-root" },
     className: "h-[360px] consumer-plot",
   });
-  const root = classes(html, "kind-ui-configured-line-root");
+  const root = classes(html, 'data-kind-ui="chart"');
   assert.ok(root.includes("font-serif"));
   assert.ok(root.includes("consumer-root"));
   assert.ok(!root.includes("font-sans"));
-  const plot = classes(html, "kind-ui-configured-line-chart");
+  const plot = classes(html, "recharts-wrapper");
   assert.ok(plot.includes("h-[360px]"));
   assert.ok(plot.includes("consumer-plot"));
   assert.ok(!plot.includes("h-[280px]"));
@@ -86,7 +110,7 @@ test("consumer spacing utilities replace defaults and preserve variants", () => 
   assert.ok(values.includes("consumer-tooltip"));
   for (const value of ["px-2", "py-1.5", "hover:px-4"]) assert.ok(!values.includes(value));
   const legend = classes(
-    render(h(Root, { config }, h(Legend, { className: "gap-4 m-6" }))),
+    render(metadataChart({ config }, h(Legend, { className: "gap-4 m-6" }, null))),
     'data-kind-ui="chart-legend"',
   );
   assert.ok(legend.includes("gap-4"));
@@ -94,9 +118,9 @@ test("consumer spacing utilities replace defaults and preserve variants", () => 
   for (const value of ["gap-2", "mx-0", "mt-1", "mb-2"]) assert.ok(!legend.includes(value));
 });
 
-test("Root width and color utilities override defaults", () => {
+test("Chart width and color utilities override defaults", () => {
   const values = classes(
-    render(h(Root, { config, className: "w-[240px] min-w-24 text-red-500" })),
+    render(metadataChart({ config, className: "w-[240px] min-w-24 text-red-500" }, null)),
     'data-kind-ui="chart"',
   );
   for (const value of ["w-[240px]", "min-w-24", "text-red-500"]) assert.ok(values.includes(value));
@@ -132,17 +156,23 @@ test("heatmap spacing and material image accept standard utility overrides", () 
     h(
       HeatmapChart,
       {
+        config: config,
+        "aria-label": "Chart fixture",
         rows: ["A"],
         columns: ["X"],
         data: [{ row: "A", column: "X", value: 1 }],
         scale: createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
       },
-      h(HeatmapGrid, {
-        caption: "Matrix",
-        className: "border-spacing-6",
-        material: "clay",
-        cellProps: () => ({ className: "bg-none" }),
-      }),
+      h(
+        HeatmapGrid,
+        {
+          caption: "Matrix",
+          className: "border-spacing-6",
+          material: "clay",
+          cellProps: () => ({ className: "bg-none" }),
+        },
+        null,
+      ),
     ),
   );
   const grid = classes(html, 'data-kind-ui="heatmap-grid"');
@@ -156,8 +186,8 @@ test("heatmap spacing and material image accept standard utility overrides", () 
 
 test("explicit configured dimensions omit competing default utilities", () => {
   for (const props of [{ height: 180, width: 320 }, { style: { height: 180, width: 320 } }]) {
-    const html = configuredHtml(props);
-    const plot = classes(html, "kind-ui-configured-line-chart");
+    const html = chartHtml(props);
+    const plot = classes(html, "recharts-wrapper");
     assert.ok(!plot.includes("h-[280px]"));
     assert.ok(!plot.includes("w-full"));
     assert.match(html, /height:180px/);
@@ -168,18 +198,21 @@ test("explicit configured dimensions omit competing default utilities", () => {
 test("loading styles carry the consumer CSP nonce", () => {
   const html = render(
     h(
-      Root,
-      { config: {}, nonce: "request-nonce" },
+      Fragment,
+      null,
       h(
         HeatmapChart,
         {
+          "aria-label": "Chart fixture",
+          config: {},
+          nonce: "request-nonce",
           rows: [],
           columns: [],
           data: [],
           loading: true,
           scale: createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
         },
-        h(HeatmapGrid, { caption: "Matrix" }),
+        h(HeatmapGrid, { caption: "Matrix" }, null),
       ),
     ),
   );

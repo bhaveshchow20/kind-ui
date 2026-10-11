@@ -17,25 +17,22 @@ import { useChartInteraction } from "./chart-interaction.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
 import { defaultHover, useReducedMotion } from "./motion-preference.js";
-import { type RadarSelectionProps, RadarSelectionProvider } from "./radar-interaction.js";
 import { RadialCategory } from "./radial-category.js";
 
 export type RadarAnimation = BaseAnimation;
 export type RadialBarAnimation = BaseAnimation;
 export type RadarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadarChart<DataPoint>
-> &
-  RadarSelectionProps & {
-    animate?: boolean | RadarAnimation | undefined;
-    loading?: boolean | undefined;
-    loadingLabel?: string | undefined;
-  };
+> & {
+  animate?: boolean | RadarAnimation | undefined;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
+};
 export type RadialBarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadialBarChart<DataPoint>
 > & {
-  /** Opt-in category colors from Root.config, resolved from original chart rows. */
+  /** Category colors from chart config, resolved from original chart rows. */
   categoryKey?: CategoryKey<DataPoint> | undefined;
-  interactionBinding?: "root";
   animate?: boolean | RadialBarAnimation | undefined;
   loading?: boolean | undefined;
   loadingLabel?: string | undefined;
@@ -113,9 +110,6 @@ export function RadarChart<DataPoint = unknown>({
   animate = false,
   loading,
   loadingLabel,
-  selection,
-  selectedSeries,
-  onSelectedSeriesChange,
   children,
   ...props
 }: RadarChartProps<DataPoint>) {
@@ -158,26 +152,20 @@ export function RadarChart<DataPoint = unknown>({
     <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
       <RadarMotion value={{ reveal, progress }}>
         <PolarMotion value={{ reveal, options }}>
-          <RadarSelectionProvider
-            selection={selection}
-            selectedSeries={selectedSeries}
-            onSelectedSeriesChange={onSelectedSeriesChange}
+          <LineChartFrame
+            engine={EngineRadarChart<DataPoint>}
+            loading={loading}
+            loadingLabel={loadingLabel}
+            loadingSkeleton="radar"
+            loadingDesign={(seed) => <PolarLoadingDesign family={"radar"} seed={seed} />}
+            loadingAnimation={options}
+            chartProps={props}
+            motionEnabled={enabled}
+            interrupt={interrupt}
           >
-            <LineChartFrame
-              engine={EngineRadarChart<DataPoint>}
-              loading={loading}
-              loadingLabel={loadingLabel}
-              loadingSkeleton="radar"
-              loadingDesign={(seed) => <PolarLoadingDesign family={"radar"} seed={seed} />}
-              loadingAnimation={options}
-              chartProps={props}
-              motionEnabled={enabled}
-              interrupt={interrupt}
-            >
-              <PolarLifecycle {...props}>{children}</PolarLifecycle>
-              {children}
-            </LineChartFrame>
-          </RadarSelectionProvider>
+            <PolarLifecycle {...props}>{children}</PolarLifecycle>
+            {children}
+          </LineChartFrame>
         </PolarMotion>
       </RadarMotion>
     </MotionContext>
@@ -185,10 +173,18 @@ export function RadarChart<DataPoint = unknown>({
 }
 
 export function RadialBarChart<DataPoint = unknown>(props: RadialBarChartProps<DataPoint>) {
-  return <RadialBarChartFrame {...props} />;
+  const interaction = useChartInteraction();
+  return (
+    <RadialBarChartFrame
+      {...props}
+      {...(interaction.kind === "category" && props.categoryKey !== undefined
+        ? { interactionBinding: "root" as const }
+        : {})}
+    />
+  );
 }
 
-/** Private recipe integration; the public chart keeps its native prop contract. */
+/** Private native frame shared by RadialBarChart and ActivityRings. */
 export function RadialBarChartFrame<DataPoint = unknown>({
   skeletonFamily = "radial-bar",
   animate = false,
@@ -201,15 +197,14 @@ export function RadialBarChartFrame<DataPoint = unknown>({
   ...props
 }: RadialBarChartProps<DataPoint> & {
   skeletonFamily?: "radial-bar" | "activity-rings";
+  interactionBinding?: "root";
 }) {
   const interaction = useChartInteraction();
   if (
     interactionBinding &&
     (interaction.kind !== "category" || categoryKey === undefined || props.data === undefined)
   )
-    throw new Error(
-      "RadialBarChart Root interaction binding requires category-kind Root, categoryKey and explicit data",
-    );
+    throw new Error("RadialBarChart category interaction requires categoryKey and explicit data");
   const filtered =
     interactionBinding && categoryKey !== undefined && props.data
       ? preserveCategoryRows(props.data, categoryKey, interaction.visible, null)

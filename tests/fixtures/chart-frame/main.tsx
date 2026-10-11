@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
-import { ConfiguredHost } from "./host.js";
+import { ChartFrameHost } from "./host.js";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
-createRoot(root).render(<ConfiguredHost />);
+createRoot(root).render(<ChartFrameHost />);

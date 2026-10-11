@@ -1,10 +1,8 @@
 import * as Chart from "@kind-ui/charts";
 import {
-  Legend,
   LineChart,
   LineSeries,
   ResponsiveContainer,
-  Root,
   Tooltip,
   TooltipContent,
 } from "@kind-ui/charts";
@@ -28,51 +26,50 @@ function Fixture({ name, color }: { name: string; color: string }) {
         Hold {name} changes
       </label>
       <output aria-label={`${name} request`}>{request}</output>
-      <Root
-        config={{ count: { label: `${name} tasks`, color } }}
-        interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["count"] }}
-        visibleSeries={visible}
-        onVisibleSeriesChange={(next) => {
-          setRequest(next.join(","));
-          if (!locked) setVisible(next);
-        }}
-        data-owner={name}
-        ref={(node) => {
-          if (node) node.dataset.forwarded = "container";
-        }}
-      >
-        <Legend
-          className="gap-[19px] p-[7px] text-[17px] [&_[data-kind-ui=chart-legend-button]]:p-[3px]"
-          aria-label={`${name} legend`}
-          ref={(node) => {
-            if (node) node.dataset.forwarded = "legend";
+      <ResponsiveContainer width="100%" height={180}>
+        <LineChart
+          config={{ count: { label: `${name} tasks`, color } }}
+          interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["count"] }}
+          visibleSeries={visible}
+          onVisibleSeriesChange={(next) => {
+            setRequest(next.join(","));
+            if (!locked) setVisible(next);
           }}
-          onClick={(event) => {
-            event.currentTarget.dataset.clicked = "yes";
+          frameProps={{
+            "data-owner": name,
+            ref: (node) => {
+              if (node) node.dataset.forwarded = "container";
+            },
           }}
-        />
-        <ResponsiveContainer width="100%" height={180}>
-          <LineChart
-            data={[{ count: 0 }, { count: 10 }]}
-            accessibilityLayer
-            aria-label={`Chart ${name}`}
-          >
-            <LineSeries dataKey="count" stroke="var(--color-count)" />
-            <Tooltip
-              content={(tooltip) => (
-                <TooltipContent
-                  className="p-[5px] text-[18px]"
-                  tooltip={tooltip}
-                  aria-label={`${name} tooltip`}
-                  ref={(node) => {
-                    if (node) node.dataset.forwarded = "tooltip";
-                  }}
-                />
-              )}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </Root>
+          data={[{ count: 0 }, { count: 10 }]}
+          accessibilityLayer
+          aria-label={`Chart ${name}`}
+        >
+          <LineSeries dataKey="count" stroke="var(--color-count)" />
+          <Tooltip
+            content={(tooltip) => (
+              <TooltipContent
+                className="p-[5px] text-[18px]"
+                tooltip={tooltip}
+                aria-label={`${name} tooltip`}
+                ref={(node) => {
+                  if (node) node.dataset.forwarded = "tooltip";
+                }}
+              />
+            )}
+          />
+          <LineChart.Legend
+            className="gap-[19px] p-[7px] text-[17px] [&_[data-kind-ui=chart-legend-button]]:p-[3px]"
+            aria-label={`${name} legend`}
+            ref={(node) => {
+              if (node) node.dataset.forwarded = "legend";
+            }}
+            onClick={(event) => {
+              event.currentTarget.dataset.clicked = "yes";
+            }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </section>
   );
 }
@@ -109,72 +106,71 @@ function DashedLinesContract() {
       {mounted && (
         <>
           <section data-example="line">
-            <Chart.Root
+            <Chart.LineChart
               nonce="request-nonce"
               config={{ value: { label: "Value", color: "teal" } }}
               visibleSeries={visible ? ["value"] : []}
+              aria-label="Chart fixture"
+              width={480}
+              height={240}
+              data={data}
+              animate={animate}
+              loading={loading}
             >
-              <Chart.LineChart
-                width={480}
-                height={240}
-                data={data}
-                animate={animate}
-                loading={loading}
-              >
-                <Chart.XAxis dataKey="x" />
-                <Chart.YAxis />
-                <Chart.LineSeries
-                  dataKey="value"
-                  strokeDasharray="6 4"
-                  strokeDashoffset={3}
-                  dashAnimation={{ durationMs: 800 }}
-                  pointStyle="border"
-                  material="glow"
-                />
-              </Chart.LineChart>
-            </Chart.Root>
+              <Chart.XAxis dataKey="x" />
+              <Chart.YAxis />
+              <Chart.LineSeries
+                dataKey="value"
+                strokeDasharray="6 4"
+                strokeDashoffset={3}
+                dashAnimation={{ durationMs: 800 }}
+                pointStyle="border"
+                material="glow"
+              />
+            </Chart.LineChart>
           </section>
           <section data-example="combo">
-            <Chart.Root nonce="request-nonce" config={{ value: { label: "Value", color: "teal" } }}>
-              <Chart.ComboChart
-                width={480}
-                height={240}
-                data={data}
-                animate={animate}
-                loading={loading}
-              >
-                <Chart.XAxis dataKey="x" />
-                <Chart.YAxis />
-                <Chart.AreaSeries
-                  {...unsupportedAreaInput}
-                  dataKey="value"
-                  stroke="none"
-                  fillOpacity={0.2}
-                />
-                <Chart.LineSeries
-                  dataKey="value"
-                  className="reverse-dashes"
-                  strokeDasharray="3 2 1"
-                  dashAnimation={{ durationMs: 1200, direction: "reverse" }}
-                  dot={false}
-                />
-                <Chart.LineSeries
-                  className="style-dashes"
-                  dataKey="value"
-                  strokeDasharray="8 2"
-                  strokeDashoffset={2}
-                  style={{ strokeDasharray: "2 2", strokeDashoffset: 7, strokeWidth: 5 }}
-                  dashAnimation={{ durationMs: 600 }}
-                  dot={false}
-                />
-                <Chart.LineSeries
-                  dataKey="value"
-                  strokeDasharray="6 4"
-                  dashAnimation={{}}
-                  shape={<Chart.Curve data-custom="owned" />}
-                />
-              </Chart.ComboChart>
-            </Chart.Root>
+            <Chart.ComboChart
+              nonce="request-nonce"
+              config={{ value: { label: "Value", color: "teal" } }}
+              aria-label="Chart fixture"
+              width={480}
+              height={240}
+              data={data}
+              animate={animate}
+              loading={loading}
+            >
+              <Chart.XAxis dataKey="x" />
+              <Chart.YAxis />
+              <Chart.AreaSeries
+                {...unsupportedAreaInput}
+                dataKey="value"
+                stroke="none"
+                fillOpacity={0.2}
+              />
+              <Chart.LineSeries
+                dataKey="value"
+                className="reverse-dashes"
+                strokeDasharray="3 2 1"
+                dashAnimation={{ durationMs: 1200, direction: "reverse" }}
+                dot={false}
+              />
+              <Chart.LineSeries
+                className="style-dashes"
+                dataKey="value"
+                strokeDasharray="8 2"
+                strokeDashoffset={2}
+                style={{ strokeDasharray: "2 2", strokeDashoffset: 7, strokeWidth: 5 }}
+                dashAnimation={{ durationMs: 600 }}
+                dot={false}
+              />
+              <Chart.LineSeries
+                dataKey="value"
+                strokeDasharray="6 4"
+                dashAnimation={{}}
+                shape={<Chart.Curve data-custom="owned" />}
+              />
+            </Chart.ComboChart>
           </section>
         </>
       )}

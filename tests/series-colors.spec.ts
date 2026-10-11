@@ -91,8 +91,19 @@ test("theme stops switch in place across chart paints and swatches", async ({
     },
     { png: (await page.screenshot()).toString("base64"), box },
   );
-  expect(pixels[0]![0]! - pixels[1]![0]!).toBeGreaterThan(20);
-  expect(pixels[1]![2]! - pixels[0]![2]!).toBeGreaterThan(20);
+  const [left, right] = pixels;
+  if (
+    !left ||
+    !right ||
+    left[0] === undefined ||
+    right[0] === undefined ||
+    left[2] === undefined ||
+    right[2] === undefined
+  ) {
+    throw new Error("Missing sampled gradient channels");
+  }
+  expect(left[0] - right[0]).toBeGreaterThan(20);
+  expect(right[2] - left[2]).toBeGreaterThan(20);
   await page.screenshot({ path: testInfo.outputPath("light.png"), fullPage: true });
   await page.getByRole("button", { name: "Theme", exact: true }).click();
   await expect(stops.nth(0)).toHaveCSS("stop-color", "rgb(255, 255, 255)");

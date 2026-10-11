@@ -1,5 +1,5 @@
+import type * as Chart from "@kind-ui/charts";
 import type { LineAnimation, LineMaterial } from "@kind-ui/charts";
-import * as Chart from "@kind-ui/charts";
 import * as Line from "@kind-ui/charts";
 import {
   CartesianGrid,
@@ -66,21 +66,20 @@ function SingleSeriesLine({
   }) {
   const id = useId();
   return (
-    <Chart.Root
-      config={{
-        value: {
-          label: seriesLabel,
-          color: "var(--chart-1)",
-          formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
-        },
-      }}
-      className="recipe-chart"
-    >
+    <>
       <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
       </p>
       <ResponsiveContainer width="100%" height={196}>
         <Line.LineChart
+          config={{
+            value: {
+              label: seriesLabel,
+              color: "var(--chart-1)",
+              formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
+            },
+          }}
+          frameProps={{ className: "recipe-chart" }}
           data={data}
           animate={animate}
           accessibilityLayer
@@ -111,7 +110,7 @@ function SingleSeriesLine({
           </Line.LineSeries>
         </Line.LineChart>
       </ResponsiveContainer>
-    </Chart.Root>
+    </>
   );
 }
 export function TrendLine(props: TrendProps) {
@@ -156,22 +155,21 @@ export function TargetLine({
 }: TrendProps & { target: number; targetLabel: string }) {
   const id = useId();
   return (
-    <Chart.Root
-      config={{
-        value: {
-          label: seriesLabel,
-          color: "var(--chart-1)",
-          formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
-        },
-      }}
-      className="recipe-chart"
-    >
+    <>
       <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. {targetLabel}:{" "}
         {formatValue(target)}.
       </p>
       <ResponsiveContainer width="100%" height={196}>
         <Line.LineChart
+          config={{
+            value: {
+              label: seriesLabel,
+              color: "var(--chart-1)",
+              formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
+            },
+          }}
+          frameProps={{ className: "recipe-chart" }}
           data={data}
           animate={animate}
           accessibilityLayer
@@ -209,7 +207,7 @@ export function TargetLine({
       <p className="recipe-target">
         Dashed line · {targetLabel}: {formatValue(target)}
       </p>
-    </Chart.Root>
+    </>
   );
 }
 
@@ -234,13 +232,7 @@ export function ComparisonLine({
 }) {
   const id = useId();
   return (
-    <Chart.Root
-      config={config}
-      visibleSeries={visibleSeries}
-      onVisibleSeriesChange={onVisibleSeriesChange}
-      className="recipe-chart"
-    >
-      <Chart.Legend aria-label={`${label} series`} />
+    <>
       <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip. Previous values use
         a dashed line.
@@ -253,6 +245,10 @@ export function ComparisonLine({
         )}
         <ResponsiveContainer width="100%" height={196}>
           <Line.LineChart
+            config={config}
+            visibleSeries={visibleSeries}
+            onVisibleSeriesChange={onVisibleSeriesChange}
+            frameProps={{ className: "recipe-chart" }}
             data={data}
             animate={animate}
             accessibilityLayer
@@ -294,9 +290,10 @@ export function ComparisonLine({
               dot={{ r: 3.5, fill: "var(--card)", strokeWidth: 2, strokeDasharray: "none" }}
               connectNulls={false}
             />
+            <Line.LineChart.Legend aria-label={`${label} series`} />
           </Line.LineChart>
         </ResponsiveContainer>
       </div>
-    </Chart.Root>
+    </>
   );
 }

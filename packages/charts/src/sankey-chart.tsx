@@ -19,7 +19,6 @@ import {
 import {
   Sankey as EngineSankey,
   type SankeyLinkProps as NativeLinkProps,
-  type SankeyNodeProps as NativeNodeProps,
   useChartHeight,
   useChartWidth,
 } from "recharts";
@@ -29,17 +28,8 @@ import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading
 import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
 import { useReducedMotion } from "./motion-preference.js";
 import { SankeyColors, type SankeyNodeConfig } from "./sankey-colors.js";
-import { prepareSankeyData, type SankeyFlowData, sankeyAdjacency } from "./sankey-data.js";
-import { SankeyFocusMark } from "./sankey-interaction.js";
-import {
-  SankeyLink,
-  type SankeyLinkProps,
-  SankeyNode,
-  type SankeyNodeProps,
-} from "./sankey-marks.js";
-
-const configuredNode = (shape: NativeNodeProps) => <SankeyNode {...(shape as SankeyNodeProps)} />;
-const configuredLink = (shape: NativeLinkProps) => <SankeyLink {...(shape as SankeyLinkProps)} />;
+import { prepareSankeyData, type SankeyFlowData } from "./sankey-data.js";
+import type { SankeyLinkProps, SankeyNodeProps } from "./sankey-marks.js";
 
 function NativeSize({ onSize }: { onSize: (width: number, height: number) => void }) {
   const width = useChartWidth();
@@ -65,20 +55,14 @@ export type SankeyChartProps = Omit<
   "data" | "node" | "link" | "onClick" | "onMouseEnter" | "onMouseLeave"
 > & {
   data: SankeyFlowData;
-  /** Explicit node-ID metadata; enables matching default Kind node/source-link paint. */
-  nodeConfig?: SankeyNodeConfig | undefined;
-  /** Explicit node-focus binding; Root must use kind node and mode focus. */
+  /** Node-ID metadata supplied by the owning compound chart. */
+  nodeConfig: SankeyNodeConfig;
+  /** Explicit node-focus binding; the owning chart must use node focus. */
   interactionBinding?: "root";
-  node?:
-    | Exclude<NativeProps["node"], (props: NativeNodeProps) => ReactNode>
-    | ((props: SankeyNodeProps) => ReactNode);
-  link?:
-    | Exclude<NativeProps["link"], (props: NativeLinkProps) => ReactNode>
-    | ((
-        props: SankeyLinkProps,
-      ) => ReturnType<
-        NonNullable<Extract<NativeProps["link"], (props: NativeLinkProps) => ReactNode>>
-      >);
+  node: (props: SankeyNodeProps) => ReactNode;
+  link: (
+    props: SankeyLinkProps,
+  ) => ReturnType<NonNullable<Extract<NativeProps["link"], (props: NativeLinkProps) => ReactNode>>>;
   onClick?: IdentityEvent;
   onMouseEnter?: IdentityEvent;
   onMouseLeave?: IdentityEvent;
@@ -86,6 +70,8 @@ export type SankeyChartProps = Omit<
   animate?: boolean | SankeyAnimation;
   loading?: boolean | undefined;
   loadingLabel?: string | undefined;
+  /** Internal: a responsive owning frame can render this boundary before native geometry mounts. */
+  loadingPresentation?: boolean;
   empty?: ReactNode;
 };
 
@@ -95,6 +81,25 @@ export const SankeyMotion = createContext<{
   width: number;
 }>({ reveal: false, progress: null, width: 1 });
 
+/** Validate semantic/native identity before responsive geometry is available. */
+export function validateSankeyChartData(data: SankeyFlowData, nodeConfig: SankeyNodeConfig) {
+  const validated = prepareSankeyData(data);
+  for (const node of validated.nodes) {
+    if (!Object.hasOwn(nodeConfig, node.id))
+      throw new Error(`Sankey config requires metadata for node "${node.id}"`);
+  }
+  const nativeKeys = new Set<string>();
+  for (const link of validated.links.filter((link) => link.value > 0)) {
+    const key = `${link.source}-${link.target}-${link.value}`;
+    if (nativeKeys.has(key))
+      throw new Error(
+        "Sankey native renderer cannot distinguish equal-value parallel links; keep the table or supply a renderer that supports them.",
+      );
+    nativeKeys.add(key);
+  }
+  return validated;
+}
+
 /** Recharts owns layout, renderers, labels and events. Zero flows remain in the data alternative. */
 export function SankeyChart({
   data,
@@ -103,6 +108,7 @@ export function SankeyChart({
   animate = false,
   loading,
   loadingLabel,
+  loadingPresentation = true,
   empty = "No positive flows",
   ...props
 }: SankeyChartProps) {
@@ -112,29 +118,13 @@ export function SankeyChart({
     interactionBinding &&
     (!interaction || interaction.kind !== "node" || interaction.mode !== "focus")
   )
-    throw new Error("SankeyChart Root interaction binding requires node focus");
-  const adjacent = sankeyAdjacency(data);
+    throw new Error("SankeyChart interaction binding requires node focus");
   const loadingSeed = useLoadingSeed(loading);
   const duration = typeof animate === "object" ? (animate.revealDurationMs ?? 450) : 450;
   if (!Number.isFinite(duration) || duration < 0)
     throw new Error("Sankey revealDurationMs must be finite and nonnegative");
-  const validated = prepareSankeyData(data);
-  if (nodeConfig) {
-    for (const node of validated.nodes) {
-      if (!Object.hasOwn(nodeConfig, node.id))
-        throw new Error(`Sankey nodeConfig requires metadata for node "${node.id}"`);
-    }
-  }
+  const validated = validateSankeyChartData(data, nodeConfig);
   const positive = validated.links.filter((link) => link.value > 0);
-  const nativeKeys = new Set<string>();
-  for (const link of positive) {
-    const key = `${link.source}-${link.target}-${link.value}`;
-    if (nativeKeys.has(key))
-      throw new Error(
-        "Sankey native renderer cannot distinguish equal-value parallel links; keep the table or supply a renderer that supports them.",
-      );
-    nativeKeys.add(key);
-  }
   const used = new Set(positive.flatMap((link) => [link.source, link.target]));
   const mapping = new Map<number, number>();
   const nodes = validated.nodes.filter((_, index) => {
@@ -271,12 +261,6 @@ export function SankeyChart({
             >
               <EngineSankey
                 {...(props as NativeProps)}
-                {...(nodeConfig
-                  ? ({
-                      node: props.node ?? configuredNode,
-                      link: props.link ?? configuredLink,
-                    } as NativeProps)
-                  : {})}
                 onClick={(item, type, event) => {
                   props.onClick?.(item as SankeyNodeProps | SankeyLinkProps, type, event);
                   if (interactionBinding && type === "node")
@@ -286,40 +270,13 @@ export function SankeyChart({
                       event,
                     );
                 }}
-                {...(interactionBinding
-                  ? {
-                      node:
-                        (props.node as NativeProps["node"]) ??
-                        ((shape: NativeNodeProps) => (
-                          <SankeyFocusMark
-                            nodeKey={(shape as SankeyNodeProps).payload.id}
-                            adjacent={adjacent}
-                          >
-                            <SankeyNode {...(shape as SankeyNodeProps)} />
-                          </SankeyFocusMark>
-                        )),
-                      link:
-                        (props.link as NativeProps["link"]) ??
-                        ((shape: NativeLinkProps) => (
-                          <SankeyFocusMark
-                            endpoints={[
-                              (shape as SankeyLinkProps).payload.source.id,
-                              (shape as SankeyLinkProps).payload.target.id,
-                            ]}
-                            adjacent={adjacent}
-                          >
-                            <SankeyLink {...(shape as SankeyLinkProps)} />
-                          </SankeyFocusMark>
-                        )),
-                    }
-                  : {})}
                 data={drawable && links.length ? { nodes, links } : { nodes: [], links: [] }}
               >
                 <NativeSize onSize={onSize} />
                 {props.children}
               </EngineSankey>
             </div>
-            {loading && (
+            {loading && loadingPresentation && (
               <LoadingSkeletonSurface
                 family="sankey"
                 design={(seed) => <StandaloneLoadingDesign family="sankey" seed={seed} />}
@@ -329,12 +286,12 @@ export function SankeyChart({
                 animation={{ revealDurationMs: duration }}
               />
             )}
-            <LoadingStatus loading={loading} label={loadingLabel} />
-            {!loading && !links.length ? (
+            {loadingPresentation && <LoadingStatus loading={loading} label={loadingLabel} />}
+            {!loading && !links.length && loadingPresentation ? (
               <div role="status" className="absolute inset-0">
                 {empty}
               </div>
-            ) : !loading && !drawable ? (
+            ) : !loading && links.length > 0 && !drawable ? (
               <div role="status" className="absolute inset-0">
                 Insufficient space for flows; use the data table
               </div>

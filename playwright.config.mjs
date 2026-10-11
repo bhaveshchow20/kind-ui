@@ -7,7 +7,7 @@ export default defineConfig({
   testMatch: "*.spec.ts",
   testIgnore: [
     "composition.spec.ts",
-    "configured-line.spec.ts",
+    "chart-frame.spec.ts",
     "line-integrations.spec.ts",
     "focus-identity.spec.ts",
     "polar-hide.spec.ts",

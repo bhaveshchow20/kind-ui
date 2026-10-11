@@ -11,33 +11,39 @@ import {
 import { createPortal } from "react-dom";
 import { ChartContext } from "./chart-context.js";
 import type { ChartVisibilityProps } from "./chart-interaction.js";
+import { ChartProvider, type ChartProviderProps } from "./chart-provider.js";
 import { Legend, type LegendProps } from "./legend.js";
-import { Root, type RootProps } from "./root.js";
 import { cn } from "./utils.js";
 
 export type ChartName =
   | { "aria-label": string; "aria-labelledby"?: string }
   | { "aria-labelledby": string; "aria-label"?: string };
-export type FamilyFrameOptions = ChartVisibilityProps & {
-  legendPosition?: "top" | "bottom";
-  rootProps?: Omit<
-    RootProps,
-    "config" | "children" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange"
-  >;
-};
-export type FamilyOptions = FamilyFrameOptions & Pick<RootProps, "config">;
-/** A family can own its frame, or retain the original native composition contract. */
-export type FamilyProps<Props, Explicit = Props> =
-  | (Props & {
-      config?: never;
-      rootProps?: never;
-      legendPosition?: never;
-      visibleSeries?: never;
-      defaultVisibleSeries?: never;
-      onVisibleSeriesChange?: never;
-    })
-  | (Explicit & FamilyOptions & ChartName & { children: ReactNode });
+export type FamilyFrameOptions = ChartVisibilityProps &
+  Pick<ChartProviderProps, "interaction" | "emphasis" | "nonce"> & {
+    legendPosition?: "top" | "bottom";
+    /** Attributes, handlers and ref for the outer HTML frame. Plot props remain on the chart. */
+    frameProps?: Omit<
+      ChartProviderProps,
+      | "config"
+      | "children"
+      | "interaction"
+      | "emphasis"
+      | "nonce"
+      | "visibleSeries"
+      | "defaultVisibleSeries"
+      | "onVisibleSeriesChange"
+    > & { [key: `data-${string}`]: unknown };
+  };
+export type FamilyOptions = FamilyFrameOptions & Pick<ChartProviderProps, "config">;
+/** Every public family owns metadata and its frame; explicit children own the content. */
+export type FamilyProps<Props, Explicit = Props> = Omit<
+  Explicit,
+  keyof FamilyOptions | keyof ChartName | "children" | "rootProps"
+> &
+  FamilyOptions &
+  ChartName & { children: Exclude<ReactNode, undefined> };
 const FamilySlot = createContext<{ host: HTMLDivElement | null } | null>(null);
+type Instructions = { id: string; text: string };
 
 /** Mount HTML parts outside the engine while retaining their React context and handlers. */
 export function FamilyLayout({
@@ -57,12 +63,9 @@ export function FamilyLayout({
     </FamilySlot>
   );
 }
-export function useFamilyOwned() {
-  return use(FamilySlot) !== null;
-}
 export function OutsidePlot({ children }: { children: ReactNode }) {
   const slot = use(FamilySlot);
-  if (!slot) throw new Error("Compound HTML parts require a chart-family root with config");
+  if (!slot) throw new Error("Compound HTML parts require a chart-family frame");
   return slot.host ? createPortal(children, slot.host) : null;
 }
 export function FamilyLegend(props: LegendProps) {
@@ -76,95 +79,132 @@ export function FamilyRoot({
   family,
   children,
   name,
+  instructions,
   ...options
 }: FamilyOptions & {
   family: string;
   children: ReactNode;
   name: { "aria-label"?: string | undefined; "aria-labelledby"?: string | undefined };
+  instructions?: Instructions;
 }) {
   const parent = use(ChartContext);
-  if (parent) throw new Error(`${family} with config owns Root; remove the surrounding Root`);
+  if (parent) throw new Error(`${family} owns its chart frame; do not nest chart families`);
+  if (!options.config || typeof options.config !== "object" || Array.isArray(options.config))
+    throw new Error(`${family} requires config`);
   if (!name["aria-label"]?.trim() && !name["aria-labelledby"]?.trim())
     throw new Error(`${family} requires aria-label or aria-labelledby`);
   if (children === undefined) throw new Error(`${family} requires explicit children`);
   const {
     config,
-    rootProps,
+    frameProps,
+    interaction,
+    emphasis,
+    nonce,
     visibleSeries,
     defaultVisibleSeries,
     onVisibleSeriesChange,
     legendPosition,
   } = options;
   return (
-    <Root
-      {...rootProps}
+    <ChartProvider
+      {...frameProps}
       config={config}
+      {...(interaction !== undefined ? { interaction } : {})}
+      {...(emphasis !== undefined ? { emphasis } : {})}
+      {...(nonce !== undefined ? { nonce } : {})}
       {...familyVisibility({ visibleSeries, defaultVisibleSeries, onVisibleSeriesChange })}
     >
+      {instructions && (
+        <p id={instructions.id} data-kind-ui="chart-instructions" className="sr-only">
+          {instructions.text}
+        </p>
+      )}
       <FamilyLayout {...(legendPosition ? { legendPosition } : {})}>{children}</FamilyLayout>
-    </Root>
+    </ChartProvider>
   );
 }
-export const familyChartClass = "w-full min-w-0 h-[280px]";
-export function familyClass(className?: string) {
-  return cn(familyChartClass, className);
-}
 
-type NativeFrame = {
-  children?: ReactNode;
-  responsive?: boolean | undefined;
+type FrameSizing = {
   width?: number | string | undefined;
   height?: number | string | undefined;
-  className?: string | undefined;
   style?: CSSProperties | undefined;
+};
+export function familyClass(
+  className?: string,
+  sizing: FrameSizing = {},
+  defaultHeight: 280 | 300 = 280,
+) {
+  return cn(
+    "min-w-0",
+    sizing.width === undefined && sizing.style?.width === undefined && "w-full",
+    sizing.height === undefined &&
+      sizing.style?.height === undefined &&
+      (defaultHeight === 300 ? "h-[300px]" : "h-[280px]"),
+    className,
+  );
+}
+/** Consumer dimensions and inline styles take precedence over sizing defaults. */
+export function familyFrame(
+  props: FrameSizing & { className?: string | undefined },
+  defaultHeight: 280 | 300 = 280,
+) {
+  return {
+    className: familyClass(props.className, props, defaultHeight),
+    style: {
+      ...(props.width !== undefined ? { width: props.width } : {}),
+      ...(props.height !== undefined ? { height: props.height } : {}),
+      ...props.style,
+    },
+  };
+}
+
+type NativeFrame = FrameSizing & {
+  children?: ReactNode;
+  responsive?: boolean | undefined;
+  className?: string | undefined;
   "aria-label"?: string | undefined;
   "aria-labelledby"?: string | undefined;
 };
-/** Only frame ownership is shared; the supplied family retains its native contract and renderer. */
+/** Only frame ownership is shared; each supplied native renderer retains its geometry contract. */
 export function familyChart<Props extends NativeFrame>(
   Component: ComponentType<Props>,
   props: FamilyProps<Props>,
   family: string,
+  instructions?: Instructions,
 ) {
   const {
     config,
-    rootProps,
+    frameProps,
+    interaction,
+    emphasis,
+    nonce,
     visibleSeries,
     defaultVisibleSeries,
     onVisibleSeriesChange,
     legendPosition,
     ...rest
   } = props;
-  // Remove only the frame options introduced by this adapter. Family fields pass through intact.
-  const chartProps = rest as Props;
-  if (config === undefined) {
-    if (
-      [rootProps, visibleSeries, defaultVisibleSeries, onVisibleSeriesChange, legendPosition].some(
-        (option) => option !== undefined,
-      )
-    )
-      throw new Error(`${family} frame options require config`);
-    return <Component {...chartProps} />;
-  }
+  if (Object.hasOwn(props, "rootProps"))
+    throw new Error(`${family} uses direct chart options and frameProps; remove rootProps`);
+  const chartProps = rest as unknown as Props;
   if (chartProps.children === undefined) throw new Error(`${family} requires explicit children`);
   return (
     <FamilyRoot
       family={family}
       config={config}
       name={chartProps}
-      {...(rootProps ? { rootProps } : {})}
+      {...(frameProps ? { frameProps } : {})}
+      {...(interaction !== undefined ? { interaction } : {})}
+      {...(emphasis !== undefined ? { emphasis } : {})}
+      {...(nonce !== undefined ? { nonce } : {})}
       {...familyVisibility({ visibleSeries, defaultVisibleSeries, onVisibleSeriesChange })}
       {...(legendPosition ? { legendPosition } : {})}
+      {...(instructions ? { instructions } : {})}
     >
       <Component
         {...chartProps}
         responsive={chartProps.responsive ?? true}
-        className={familyClass(chartProps.className)}
-        style={{
-          ...(chartProps.width !== undefined ? { width: chartProps.width } : {}),
-          ...(chartProps.height !== undefined ? { height: chartProps.height } : {}),
-          ...chartProps.style,
-        }}
+        {...familyFrame(chartProps)}
       />
     </FamilyRoot>
   );

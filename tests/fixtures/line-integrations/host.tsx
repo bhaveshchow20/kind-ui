@@ -1,3 +1,4 @@
+import * as Chart from "@kind-ui/charts";
 import {
   BarChart,
   BarSeries,
@@ -7,7 +8,6 @@ import {
   Legend,
   LineChart,
   LineSeries,
-  Root,
   type SeriesConfig,
   TooltipContent,
   XAxis,
@@ -28,11 +28,8 @@ export function IntegrationHost() {
       config={config}
       aria-label="Monthly icon totals"
       className="h-80 text-blue-700"
-      rootProps={{
-        className: "max-w-xl",
-        id: "compound-integration",
-        interaction: { kind: "series", mode: "visibility", eligibleKeys: ["total"] },
-      }}
+      interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["total"] }}
+      frameProps={{ className: "max-w-xl", id: "compound-integration" }}
     >
       <LineChart.Grid className="stroke-fuchsia-600" />
       <LineChart.XAxis dataKey="month" />
@@ -50,27 +47,26 @@ export function PatternHydrationHost() {
   return (
     <section data-pattern-hydration="">
       {[0, 1].map((chart) => (
-        <Root
-          interaction={{
-            kind: "series",
-            mode: "visibility",
-            eligibleKeys: Object.keys({
+        <>
+          <BarChart
+            interaction={{
+              kind: "series",
+              mode: "visibility",
+              eligibleKeys: Object.keys({
+                first: { color: "red", pattern: { kind: "hatch" } },
+                second: { color: "blue", pattern: { kind: "stripe" } },
+                third: { color: "green", pattern: { kind: "duotone" } },
+              }),
+            }}
+            key={chart}
+            config={{
               first: { color: "red", pattern: { kind: "hatch" } },
               second: { color: "blue", pattern: { kind: "stripe" } },
               third: { color: "green", pattern: { kind: "duotone" } },
-            }),
-          }}
-          key={chart}
-          config={{
-            first: { color: "red", pattern: { kind: "hatch" } },
-            second: { color: "blue", pattern: { kind: "stripe" } },
-            third: { color: "green", pattern: { kind: "duotone" } },
-          }}
-          visibleSeries={visible}
-          onVisibleSeriesChange={setVisible}
-        >
-          <Legend />
-          <BarChart
+            }}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            aria-label="Chart fixture"
             width={320}
             height={180}
             data={[
@@ -83,14 +79,15 @@ export function PatternHydrationHost() {
             <BarSeries dataKey="first" />
             <BarSeries dataKey="second" />
             <BarSeries dataKey="third" />
+            <BarChart.Legend />
           </BarChart>
-        </Root>
+        </>
       ))}
     </section>
   );
 }
 
-// Root gradient resources are emitted by the real Next server before hydration.
+// Chart gradient resources are emitted by the real Next server before hydration.
 export function ColorHydrationHost() {
   const [dark, setDark] = useState(false);
   return (
@@ -102,21 +99,25 @@ export function ColorHydrationHost() {
         Color theme
       </button>
       {[0, 1].map((chart) => (
-        <Root
-          key={chart}
-          config={{
-            value: {
-              color: { light: ["var(--brand)", "blue"], dark: ["white", "gray", "black"] },
-            },
-          }}
-        >
-          <Legend />
-          <LineChart width={320} height={180} data={[{ value: 8 }, { value: 8 }]}>
+        <>
+          <LineChart
+            key={chart}
+            config={{
+              value: {
+                color: { light: ["var(--brand)", "blue"], dark: ["white", "gray", "black"] },
+              },
+            }}
+            aria-label="Chart fixture"
+            width={320}
+            height={180}
+            data={[{ value: 8 }, { value: 8 }]}
+          >
             <XAxis />
             <YAxis />
             <LineSeries dataKey="value" dot={false} />
+            <LineChart.Legend />
           </LineChart>
-        </Root>
+        </>
       ))}
     </section>
   );
@@ -152,11 +153,24 @@ export function ThemingHost() {
       <button type="button" onClick={() => setDark(!dark)}>
         Toggle semantic theme
       </button>
-      <Root config={config} data-theme-case="semantic">
+      <Chart.HeatmapChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+        aria-label="Metadata chart"
+        config={config}
+        data-theme-case="semantic"
+      >
         <Legend />
         <TooltipContent tooltip={content} />
-      </Root>
-      <Root
+      </Chart.HeatmapChart>
+      <Chart.HeatmapChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+        aria-label="Metadata chart"
         config={config}
         data-theme-case="tokens"
         style={
@@ -172,28 +186,44 @@ export function ThemingHost() {
       >
         <Legend />
         <TooltipContent tooltip={content} />
-      </Root>
-      <Root config={config} data-theme-case="utilities" className="w-72 text-red-700 font-serif">
+      </Chart.HeatmapChart>
+      <Chart.HeatmapChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+        aria-label="Metadata chart"
+        config={config}
+        data-theme-case="utilities"
+        className="w-72 text-red-700 font-serif"
+      >
         <Legend className="gap-6 p-4" />
         <TooltipContent
           className="bg-blue-100 text-blue-900 rounded-none p-5"
           style={{ paddingBottom: 7 }}
           tooltip={content}
         />
-      </Root>
-      <Root
+      </Chart.HeatmapChart>
+      <Chart.HeatmapChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+        aria-label="Metadata chart"
         config={config}
         data-theme-case="properties"
         className="w-[240px] text-[color:rgb(70,80,90)]"
       >
         <TooltipContent tooltip={content} className="p-6 text-[color:rgb(20,30,40)]" />
-      </Root>
+      </Chart.HeatmapChart>
       <HeatmapChart
         rows={["A"]}
         columns={["B"]}
         data={[{ row: "A", column: "B", value: 1 }]}
         scale={createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
         data-theme-case="heatmap-overrides"
+        config={config}
+        aria-label="Chart fixture"
       >
         <HeatmapGrid
           caption="Utility overrides"
@@ -208,11 +238,19 @@ export function ThemingHost() {
           { month: "Jan", total: 1 },
           { month: "Feb", total: 2 },
         ]}
-        xDataKey="month"
         aria-label="Semantic plot"
         height={180}
-        rootProps={{ title: "Semantic plot" }}
-      />
+        frameProps={{ title: "Semantic plot" }}
+      >
+        <LineChart.Grid />
+        <LineChart.XAxis dataKey={"month"} />
+        <LineChart.YAxis />
+        {Object.keys(config).map((key) => (
+          <LineChart.Series key={key} dataKey={key} />
+        ))}
+        <LineChart.Tooltip />
+        <LineChart.Legend />
+      </LineChart>
     </section>
   );
 }

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as Chart from "@kind-ui/charts";
-import { Legend, Root, TooltipContent } from "@kind-ui/charts";
+import { Legend, TooltipContent } from "@kind-ui/charts";
 import { Fragment, createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 import * as Native from "recharts";
@@ -12,10 +12,42 @@ const renderSvg = (element) => render(h("svg", null, element)).slice(5, -6);
 
 import { ScatterChart as NativeScatterChart, Scatter, XAxis, YAxis } from "recharts";
 
+function metadataChart(options, ...children) {
+  const {
+    config,
+    interaction,
+    emphasis,
+    nonce,
+    visibleSeries,
+    defaultVisibleSeries,
+    onVisibleSeriesChange,
+    ...frameProps
+  } = options;
+  return h(
+    Chart.HeatmapChart,
+    {
+      rows: [],
+      columns: [],
+      data: [],
+      scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
+      config,
+      "aria-label": "Metadata chart",
+      interaction,
+      emphasis,
+      nonce,
+      ...(visibleSeries !== undefined ? { visibleSeries } : {}),
+      ...(defaultVisibleSeries !== undefined ? { defaultVisibleSeries } : {}),
+      ...(onVisibleSeriesChange ? { onVisibleSeriesChange } : {}),
+      frameProps,
+    },
+    ...children,
+  );
+}
+
 test("Tailwind classes leave SSR markup identical across environments without DOM access", () => {
   const previous = process.env.NODE_ENV;
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, "document");
-  const chart = h(Root, { config: { total: { color: "red" } } }, "Chart");
+  const chart = metadataChart({ config: { total: { color: "red" } } }, "Chart");
   Object.defineProperty(globalThis, "document", {
     configurable: true,
     get() {
@@ -38,8 +70,8 @@ test("Tailwind classes leave SSR markup identical across environments without DO
 
 test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a data alternative", () => {
   const axes = [
-    h(XAxis, { key: "x", type: "number", dataKey: "x" }),
-    h(YAxis, { key: "y", type: "number", dataKey: "y" }),
+    h(XAxis, { key: "x", type: "number", dataKey: "x" }, null),
+    h(YAxis, { key: "y", type: "number", dataKey: "y" }, null),
   ];
   const data = [{ x: 1, y: 2 }];
   const native = render(
@@ -47,18 +79,24 @@ test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a da
       NativeScatterChart,
       { width: 320, height: 240 },
       ...axes,
-      h(Scatter, { data, isAnimationActive: false }),
+      h(Scatter, { data, isAnimationActive: false }, null),
     ),
   );
   const kind = render(
     h(
-      Root,
-      { config: { points: { label: "Points", color: "#123456" } } },
+      Fragment,
+      null,
       h(
         Chart.ScatterChart,
-        { width: 320, height: 240, animate: false },
+        {
+          "aria-label": "Chart fixture",
+          config: { points: { label: "Points", color: "#123456" } },
+          width: 320,
+          height: 240,
+          animate: false,
+        },
         ...axes,
-        h(Chart.ScatterSeries, { data, seriesKey: "points" }),
+        h(Chart.ScatterSeries, { data, seriesKey: "points" }, null),
       ),
     ),
   );
@@ -122,7 +160,6 @@ test("direct and namespace imports expose the same public components", () => {
     "ReferenceDot",
     "ReferenceLine",
     "ResponsiveContainer",
-    "Root",
     "SankeyChart",
     "SankeyLegend",
     "SankeyLink",
@@ -161,7 +198,7 @@ test("direct and namespace imports expose the same public components", () => {
     "useYAxisScale",
     "validateBoxPlotSummary",
   ]);
-  assert.equal(Chart.Root, Root);
+  assert.equal("Root" in Chart, false);
   assert.equal(Chart.Legend, Legend);
   assert.equal(Chart.TooltipContent, TooltipContent);
 });
@@ -187,14 +224,13 @@ const tooltip = (payload, extra = {}) => ({
 });
 const content = (payload, extra = {}) =>
   render(
-    h(
-      Root,
+    metadataChart(
       { config },
-      h(TooltipContent, {
-        tooltip: tooltip(payload, extra),
-        id: "tip",
-        "data-owner": "consumer",
-      }),
+      h(
+        TooltipContent,
+        { tooltip: tooltip(payload, extra), id: "tip", "data-owner": "consumer" },
+        null,
+      ),
     ),
   );
 
@@ -210,9 +246,9 @@ test("optional numeric shuffle preserves exact SSR/default text and arbitrary fo
   for (const Content of [Chart.TooltipContent, Chart.ScatterTooltipContent]) {
     for (const value of [0, -12.5, 0.125, null, Number.NaN, Number.POSITIVE_INFINITY]) {
       const props = { tooltip: tooltip([entry(value), entry(2, { graphicalItemId: "other" })]) };
-      const plain = render(h(Root, { config }, h(Content, props)));
+      const plain = render(metadataChart({ config }, h(Content, props)));
       const shuffle = render(
-        h(Root, { config }, h(Content, { ...props, valueAnimation: "shuffle" })),
+        metadataChart({ config }, h(Content, { ...props, valueAnimation: "shuffle" }, null)),
       );
       assert.equal(
         shuffle,
@@ -227,7 +263,7 @@ test("optional numeric shuffle preserves exact SSR/default text and arbitrary fo
       }),
       valueAnimation: "shuffle",
     };
-    const html = render(h(Root, { config }, h(Content, props)));
+    const html = render(metadataChart({ config }, h(Content, props)));
     assert.match(html, /<em data-custom="value">Twelve<\/em>/);
     assert.doesNotMatch(html, /tooltip-number|valueAnimation/);
   }
@@ -250,7 +286,10 @@ test("hidden entries retain dimmed values; type-none and inactive tooltips are o
   assert.doesNotMatch(content([entry(9, { type: "none" })]), /9 tasks/);
   assert.doesNotMatch(content([entry(9)], { active: false }), /9 tasks/);
   const html = render(
-    h(Root, { config, visibleSeries: [] }, h(TooltipContent, { tooltip: tooltip([entry(9)]) })),
+    metadataChart(
+      { config, visibleSeries: [] },
+      h(TooltipContent, { tooltip: tooltip([entry(9)]) }, null),
+    ),
   );
   assert.match(html, /9 tasks/);
   assert.match(html, /data-inactive="true"[^>]*style="opacity:0.28"/);
@@ -265,23 +304,26 @@ test("content preserves live-region semantics and forwards DOM props", () => {
 });
 test("legend focuses by default and container colors are scoped", () => {
   const html = render(
-    h(Root, { config, id: "scope", className: "custom" }, h(Legend, { id: "legend" })),
+    metadataChart({ config, id: "scope", className: "custom" }, h(Legend, { id: "legend" }, null)),
   );
   assert.match(html, /--color-count:#2563eb/);
   assert.match(html, /id="legend"/);
   assert.match(html, /<button[^>]+aria-pressed="false"/);
   const hidden = render(
-    h(Root, { config, visibleSeries: [], onVisibleSeriesChange() {} }, h(Legend)),
+    metadataChart({ config, visibleSeries: [], onVisibleSeriesChange() {} }, h(Legend)),
   );
   assert.match(hidden, /aria-pressed="false"/);
 });
 test("invalid composition and keys have actionable errors", () => {
-  assert.throws(() => render(h(Legend)), /inside Root/);
+  assert.throws(() => render(h(Legend)), /inside chart/);
   assert.throws(
-    () => render(h(Root, { config, onVisibleSeriesChange() {} })),
+    () => render(metadataChart({ config, onVisibleSeriesChange() {} }, null)),
     /requires visibleSeries/,
   );
-  assert.throws(() => render(h(Root, { config: { "bad key": config.count } })), /Chart series key/);
+  assert.throws(
+    () => render(metadataChart({ config: { "bad key": config.count } }, null)),
+    /Chart series key/,
+  );
 });
 
 test("upstream null formatter suppresses an entry and per-entry formatters take precedence", () => {
@@ -314,22 +356,21 @@ test("unknown prototype-named keys use upstream metadata without inherited confi
 test("line components reject missing composition boundaries", () => {
   assert.throws(() => render(h(Chart.Tooltip)), /inside LineChart/);
   assert.throws(
-    () => render(h(Root, { config }, h(Chart.LineSeries, { dataKey: "count" }))),
+    () => render(metadataChart({ config }, h(Chart.LineSeries, { dataKey: "count" }, null))),
     /inside LineChart/,
   );
 });
 
-test("area composition requires Root and a chart interaction boundary", () => {
+test("area composition requires chart context and a chart interaction boundary", () => {
   assert.throws(
-    () => render(h(Root, { config }, h(Chart.AreaSeries, { dataKey: "count" }))),
+    () => render(metadataChart({ config }, h(Chart.AreaSeries, { dataKey: "count" }, null))),
     /inside LineChart/,
   );
 });
 
 const scatterContent = (payload, extra = {}, root = {}) =>
   render(
-    h(
-      Root,
+    metadataChart(
       {
         config: {
           alpha: { label: "Alpha", color: "purple" },
@@ -337,10 +378,11 @@ const scatterContent = (payload, extra = {}, root = {}) =>
         },
         ...root,
       },
-      h(Chart.ScatterTooltipContent, {
-        tooltip: tooltip(payload, extra),
-        pointLabel: (row) => row.id,
-      }),
+      h(
+        Chart.ScatterTooltipContent,
+        { tooltip: tooltip(payload, extra), pointLabel: (row) => row.id },
+        null,
+      ),
     ),
   );
 test("scatter dimensions keep point identity, signed and zero values, native units and formatters", () => {
@@ -389,17 +431,20 @@ test("scatter default content does not fabricate omitted dimensions or coerce mi
 test("scatter explicit size mapping recovers zero/missing from raw records and honors custom missing content", () => {
   const show = (z, dataKey, extra = {}) =>
     render(
-      h(
-        Root,
+      metadataChart(
         { config },
-        h(Chart.ScatterTooltipContent, {
-          tooltip: tooltip([
-            entry(2, { dataKey: "x", payload: { size: z } }),
-            entry(3, { dataKey: "y", payload: { size: z } }),
-          ]),
-          zDimension: { dataKey, name: "Volume", unit: " jobs" },
-          ...extra,
-        }),
+        h(
+          Chart.ScatterTooltipContent,
+          {
+            tooltip: tooltip([
+              entry(2, { dataKey: "x", payload: { size: z } }),
+              entry(3, { dataKey: "y", payload: { size: z } }),
+            ]),
+            zDimension: { dataKey, name: "Volume", unit: " jobs" },
+            ...extra,
+          },
+          null,
+        ),
       ),
     );
   assert.match(show(0, "size"), /0 jobs/);
@@ -413,16 +458,19 @@ test("scatter explicit size mapping recovers zero/missing from raw records and h
 
 test("scatter raw size recovery preserves native nonzero Z after filterNull removes Y", () => {
   const html = render(
-    h(
-      Root,
+    metadataChart(
       { config },
-      h(Chart.ScatterTooltipContent, {
-        tooltip: tooltip([
-          entry(7, { dataKey: "x", payload: { size: 60 } }),
-          entry(60, { dataKey: "size", name: "Volume", unit: " jobs", payload: { size: 60 } }),
-        ]),
-        zDimension: { dataKey: "size", name: "Volume", unit: " jobs" },
-      }),
+      h(
+        Chart.ScatterTooltipContent,
+        {
+          tooltip: tooltip([
+            entry(7, { dataKey: "x", payload: { size: 60 } }),
+            entry(60, { dataKey: "size", name: "Volume", unit: " jobs", payload: { size: 60 } }),
+          ]),
+          zDimension: { dataKey: "size", name: "Volume", unit: " jobs" },
+        },
+        null,
+      ),
     ),
   );
   assert.equal((html.match(/60 jobs/g) || []).length, 1);
@@ -432,16 +480,19 @@ test("scatter nonzero function Z is not duplicated when Recharts wraps the acces
   const original = (row) => row.size;
   const wrapped = (row) => original(row);
   const html = render(
-    h(
-      Root,
+    metadataChart(
       { config },
-      h(Chart.ScatterTooltipContent, {
-        tooltip: tooltip([
-          entry(7, { dataKey: "x", payload: { size: 60 } }),
-          entry(60, { dataKey: wrapped, name: "Volume", unit: " jobs", payload: { size: 60 } }),
-        ]),
-        zDimension: { dataKey: original, name: "Volume", unit: " jobs" },
-      }),
+      h(
+        Chart.ScatterTooltipContent,
+        {
+          tooltip: tooltip([
+            entry(7, { dataKey: "x", payload: { size: 60 } }),
+            entry(60, { dataKey: wrapped, name: "Volume", unit: " jobs", payload: { size: 60 } }),
+          ]),
+          zDimension: { dataKey: original, name: "Volume", unit: " jobs" },
+        },
+        null,
+      ),
     ),
   );
   assert.equal((html.match(/60 jobs/g) || []).length, 1);
@@ -454,13 +505,9 @@ test("category itemKey resolves metadata, zero, formatting and visibility indepe
   };
   const renderCategory = (visibleSeries) =>
     render(
-      h(
-        Root,
+      metadataChart(
         { config: categoryConfig, visibleSeries },
-        h(TooltipContent, {
-          tooltip: tooltip(payload),
-          itemKey: (item) => item.payload.id,
-        }),
+        h(TooltipContent, { tooltip: tooltip(payload), itemKey: (item) => item.payload.id }, null),
       ),
     );
   assert.match(renderCategory(["category"]), /Category label/);
@@ -475,9 +522,9 @@ for (const [name, Component] of [
   ["RadialBarSeries", Chart.RadialBarSeries],
 ]) {
   test(`${name} rejects missing polar composition boundaries`, () => {
-    assert.throws(() => render(h(Component, { dataKey: "count" })), /inside Root/);
+    assert.throws(() => render(h(Component, { dataKey: "count" }, null)), /inside chart/);
     assert.throws(
-      () => render(h(Root, { config }, h(Component, { dataKey: "count" }))),
+      () => render(metadataChart({ config }, h(Component, { dataKey: "count" }, null))),
       /inside LineChart/,
     );
   });
@@ -505,7 +552,7 @@ test("RadialBarLabel preserves SSR metadata and omits invalid or disabled geomet
     { value: null },
   ])
     assert.equal(
-      render(h(Chart.RadialBarLabel, { ...props, ...overrides, formatter: undefined })),
+      render(h(Chart.RadialBarLabel, { ...props, ...overrides, formatter: undefined }, null)),
       "",
     );
 });
@@ -559,9 +606,13 @@ test("histogram counts conserve accepted samples without mutating inputs", () =>
 const histogramMarkup = (bins, measure = "count") =>
   render(
     h(
-      Root,
-      { config },
-      h(Chart.HistogramChart, { bins, measure, width: 300, height: 200 }, h(Chart.HistogramSeries)),
+      Fragment,
+      null,
+      h(
+        Chart.HistogramChart,
+        { "aria-label": "Chart fixture", config, bins, measure, width: 300, height: 200 },
+        h(Chart.HistogramSeries),
+      ),
     ),
   );
 test("histogram validates pre-binned aggregates instead of repairing them", () => {
@@ -596,7 +647,10 @@ test("histogram validates pre-binned aggregates instead of repairing them", () =
     /density/,
   );
   assert.throws(() => histogramMarkup([], "fraction"), /measure/);
-  assert.throws(() => render(h(Root, { config }, h(Chart.HistogramSeries))), /HistogramChart/);
+  assert.throws(
+    () => render(metadataChart({ config }, h(Chart.HistogramSeries))),
+    /HistogramChart/,
+  );
 });
 
 test("histogram rejects domain overflow and positive-density underflow", () => {
@@ -655,25 +709,33 @@ test("box summaries validate finite ordered values without selecting conventions
 });
 test("box SVG primitive preserves numeric geometry, zero IQR and native attributes", () => {
   const svg = renderSvg(
-    h(Chart.BoxPlotMark, {
-      coordinates: summary,
-      center: 30,
-      size: 20,
-      "aria-label": "distribution",
-      className: "custom",
-    }),
+    h(
+      Chart.BoxPlotMark,
+      {
+        coordinates: summary,
+        center: 30,
+        size: 20,
+        "aria-label": "distribution",
+        className: "custom",
+      },
+      null,
+    ),
   );
   assert.match(svg, /data-box-part="box"[^>]*x="20"[^>]*y="-2"[^>]*width="20"[^>]*height="5"/);
   assert.match(svg, /data-box-part="median"[^>]*y1="0"/);
   assert.match(svg, /aria-label="distribution"/);
   assert.equal((svg.match(/data-box-part="outlier"/g) ?? []).length, 3);
   const collapsed = renderSvg(
-    h(Chart.BoxPlotMark, {
-      coordinates: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 },
-      center: 10,
-      size: 8,
-      orientation: "horizontal",
-    }),
+    h(
+      Chart.BoxPlotMark,
+      {
+        coordinates: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 },
+        center: 10,
+        size: 8,
+        orientation: "horizontal",
+      },
+      null,
+    ),
   );
   assert.match(collapsed, /data-box-part="box"[^>]*width="0"/);
   assert.match(collapsed, /data-box-part="collapsed-box"/);
@@ -694,7 +756,7 @@ test("box materials retain native geometry and consumer filter ownership, includ
   const geometry = (svg) =>
     [...svg.matchAll(/<(?:rect|line|circle)\b[^>]*>/g)].map((match) => match[0]);
   for (const material of ["clay", "glow"]) {
-    const svg = renderSvg(h(Chart.BoxPlotMark, { ...attrs, material, filter: undefined }));
+    const svg = renderSvg(h(Chart.BoxPlotMark, { ...attrs, material, filter: undefined }, null));
     assert.match(svg, /data-kind-ui="box-plot-mark"[^>]*filter="url\(#kind-ui-box-/);
     assert.deepEqual(geometry(svg), geometry(plain));
     assert.match(svg, /filterUnits="userSpaceOnUse"/);
@@ -702,17 +764,21 @@ test("box materials retain native geometry and consumer filter ownership, includ
     assert.match(svg, /visibility="hidden"/);
     for (const override of [{ filter: "none" }, { style: { filter: "none" } }]) {
       assert.doesNotMatch(
-        renderSvg(h(Chart.BoxPlotMark, { ...attrs, material, ...override })),
+        renderSvg(h(Chart.BoxPlotMark, { ...attrs, material, ...override }, null)),
         /data-kind-ui="box-material"/,
       );
     }
     const collapsed = renderSvg(
-      h(Chart.BoxPlotMark, {
-        material,
-        coordinates: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 },
-        center: 4,
-        size: 0.5,
-      }),
+      h(
+        Chart.BoxPlotMark,
+        {
+          material,
+          coordinates: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 },
+          center: 4,
+          size: 0.5,
+        },
+        null,
+      ),
     );
     assert.match(collapsed, /data-box-part="collapsed-box"/);
     assert.match(collapsed, /width="0.5"[^>]*height="0"/);
@@ -802,15 +868,17 @@ test("heatmap public components compose native grid, numeric legend and static a
     h(
       Chart.HeatmapChart,
       {
+        config: config,
+        "aria-label": "Chart fixture",
         rows: ["A"],
         columns: ["X", "Y"],
         data: [{ row: "A", column: "X", value: 0 }],
         scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
       },
-      h(Chart.HeatmapGrid, { caption: "Example" }),
-      h(Chart.HeatmapLegend, { label: "Count" }),
+      h(Chart.HeatmapGrid, { caption: "Example" }, null),
+      h(Chart.HeatmapLegend, { label: "Count" }, null),
       h(Chart.HeatmapTooltip),
-      h(Chart.HeatmapDataTable, { caption: "Data" }),
+      h(Chart.HeatmapDataTable, { caption: "Data" }, null),
     ),
   );
   assert.match(markup, /role="grid"/);
@@ -819,7 +887,7 @@ test("heatmap public components compose native grid, numeric legend and static a
   assert.match(markup, /data-missing="true"/);
   assert.match(markup, /data-kind-ui="heatmap-data-table"/);
   assert.throws(
-    () => render(h(Chart.HeatmapGrid, { caption: "No provider" })),
+    () => render(h(Chart.HeatmapGrid, { caption: "No provider" }, null)),
     /require HeatmapChart/,
   );
 });
@@ -827,10 +895,9 @@ const Icon = () => h("svg", { "data-icon": "task" }, h("title", {}, "Decorative 
 const iconConfig = { ...config, count: { ...config.count, icon: Icon } };
 const optionContent = (options = {}, extra = {}) =>
   render(
-    h(
-      Root,
+    metadataChart(
       { config: iconConfig },
-      h(TooltipContent, { tooltip: tooltip([entry(0)], extra), ...options }),
+      h(TooltipContent, { tooltip: tooltip([entry(0)], extra), ...options }, null),
     ),
   );
 test("tooltip icon takes precedence; hiding decoration preserves value and live feedback", () => {
@@ -854,7 +921,10 @@ test("tooltip icon takes precedence; hiding decoration preserves value and live 
 test("indicator choices, missing/unknown metadata and header formatters remain independent", () => {
   for (const indicator of ["dot", "line", "dashed"]) {
     const html = render(
-      h(Root, { config }, h(TooltipContent, { tooltip: tooltip([entry(0)]), indicator })),
+      metadataChart(
+        { config },
+        h(TooltipContent, { tooltip: tooltip([entry(0)]), indicator }, null),
+      ),
     );
     assert.match(html, new RegExp(`data-indicator="${indicator}"`));
     assert.match(html, /aria-hidden="true"/);
@@ -880,7 +950,7 @@ test("indicator choices, missing/unknown metadata and header formatters remain i
 });
 test("legend icon fallback and composed noninteractive contents retain controlled semantics", () => {
   const legend = (props = {}, root = {}) =>
-    render(h(Root, { config: iconConfig, ...root }, h(Legend, props)));
+    render(metadataChart({ config: iconConfig, ...root }, h(Legend, props)));
   assert.match(legend(), /data-icon="task"/);
   assert.doesNotMatch(legend({ hideIcon: true }), /data-icon="task"/);
   assert.match(legend({ hideIcon: true }), /chart-indicator/);
@@ -904,13 +974,13 @@ test("category itemKey resolves icon, formatting, zero and hidden state together
     indicator: "dashed",
   };
   const html = render(
-    h(Root, { config: iconConfig, visibleSeries: ["count"] }, h(TooltipContent, props)),
+    metadataChart({ config: iconConfig, visibleSeries: ["count"] }, h(TooltipContent, props)),
   );
   assert.match(html, /data-series="count"/);
   assert.match(html, /data-icon="task"/);
   assert.match(html, /0 tasks/);
   assert.match(
-    render(h(Root, { config: iconConfig, visibleSeries: [] }, h(TooltipContent, props))),
+    render(metadataChart({ config: iconConfig, visibleSeries: [] }, h(TooltipContent, props))),
     /data-inactive="true"[^>]*style="opacity:0.28"/,
   );
 });
@@ -921,10 +991,9 @@ test("presentation options preserve unknown native colors and mixed missing/zero
     entry(null),
   ];
   const markup = render(
-    h(
-      Root,
+    metadataChart(
       { config: iconConfig },
-      h(TooltipContent, { tooltip: tooltip(payload), indicator: "dashed" }),
+      h(TooltipContent, { tooltip: tooltip(payload), indicator: "dashed" }, null),
     ),
   );
   assert.match(markup, /data-indicator="dashed"/);
@@ -933,10 +1002,9 @@ test("presentation options preserve unknown native colors and mixed missing/zero
   assert.match(markup, /No data/);
   assert.match(markup, />0</);
   const hidden = render(
-    h(
-      Root,
+    metadataChart(
       { config: iconConfig },
-      h(TooltipContent, { tooltip: tooltip(payload), hideIndicator: true }),
+      h(TooltipContent, { tooltip: tooltip(payload), hideIndicator: true }, null),
     ),
   );
   assert.doesNotMatch(hidden, /chart-icon|chart-indicator/);
@@ -1011,7 +1079,7 @@ test("waterfall rejects invalid values, identities, kinds and overflow", () => {
   );
   assert.throws(() => Chart.computeWaterfallData([], NaN), /initialBalance/);
   for (const key of ["stackId", "minPointSize", "dataKey", "data"])
-    assert.throws(() => render(h(Chart.WaterfallSeries, { [key]: 0 })), /does not accept/);
+    assert.throws(() => render(h(Chart.WaterfallSeries, { [key]: 0 }, null)), /does not accept/);
 });
 
 const flowData = () => ({
@@ -1090,25 +1158,57 @@ test("Sankey table retains measured zero and escapes labels; empty chart skips n
     links: [{ id: "zero", source: "a", target: "b", value: 0 }],
   };
   const table = render(
-    h(Chart.SankeyTable, {
-      data,
-      caption: "All flows",
-      onInspect: () => {},
-      activeLinkId: "zero",
-      formatValue: (v) => `${v} MWh`,
-    }),
+    h(
+      Chart.SankeyTable,
+      {
+        data,
+        caption: "All flows",
+        onInspect: () => {},
+        activeLinkId: "zero",
+        formatValue: (v) => `${v} MWh`,
+      },
+      null,
+    ),
   );
   assert.match(table, /&lt;A&gt;/);
   assert.match(table, /0 MWh/);
   assert.match(table, /aria-pressed="true"/);
   assert.match(table, /scope="row"/);
   assert.match(
-    render(h(Chart.SankeyChart, { data, width: 200, height: 100 })),
+    render(
+      h(
+        Chart.SankeyChart,
+        {
+          config: {
+            a: { label: "Source", color: "red" },
+            b: { label: "Destination", color: "blue" },
+          },
+          "aria-label": "Chart fixture",
+          data,
+          width: 200,
+          height: 100,
+        },
+        null,
+      ),
+    ),
     /No positive flows/,
   );
   assert.throws(
     () =>
-      render(h(Chart.SankeyChart, { data: { ...data, links: [{ ...data.links[0], value: -1 }] } })),
+      render(
+        h(
+          Chart.SankeyChart,
+          {
+            config: {
+              a: { label: "Source", color: "red" },
+              b: { label: "Destination", color: "blue" },
+            },
+            "aria-label": "Chart fixture",
+            data: { ...data, links: [{ ...data.links[0], value: -1 }] },
+          },
+          null,
+        ),
+      ),
     /finite nonnegative/,
   );
 });
@@ -1129,12 +1229,16 @@ test("Sankey finishes keep computed curve and width even with competing presenta
   for (const finish of ["plain", "clay", "glow"])
     for (const material of ["solid", "gradient"]) {
       const markup = renderSvg(
-        h(Chart.SankeyLink, {
-          ...props,
-          material,
-          finish,
-          pathProps: { strokeWidth: 99, style: { strokeWidth: 99 }, d: "M0,0" },
-        }),
+        h(
+          Chart.SankeyLink,
+          {
+            ...props,
+            material,
+            finish,
+            pathProps: { strokeWidth: 99, style: { strokeWidth: 99 }, d: "M0,0" },
+          },
+          null,
+        ),
       );
       assert.match(markup, /stroke-width="7"/);
       assert.match(markup, /style="stroke-width:7"/);
@@ -1155,16 +1259,44 @@ test("Sankey keeps parallel identities in validation but rejects native equal-va
     ],
   };
   assert.equal(Chart.prepareSankeyData(data).links.length, 2);
-  assert.throws(() => render(h(Chart.SankeyChart, { data })), /equal-value parallel/);
-  assert.doesNotThrow(() => render(h(Chart.SankeyTable, { data, caption: "Parallel flows" })));
+  assert.throws(
+    () =>
+      render(
+        h(
+          Chart.SankeyChart,
+          {
+            config: {
+              a: { label: "Source", color: "red" },
+              b: { label: "Destination", color: "blue" },
+            },
+            "aria-label": "Chart fixture",
+            data,
+          },
+          null,
+        ),
+      ),
+    /equal-value parallel/,
+  );
+  assert.doesNotThrow(() =>
+    render(h(Chart.SankeyTable, { data, caption: "Parallel flows" }, null)),
+  );
   for (const duration of [-1, Infinity, NaN]) {
     assert.throws(
       () =>
         render(
-          h(Chart.SankeyChart, {
-            data: { nodes: [], links: [] },
-            animate: { revealDurationMs: duration },
-          }),
+          h(
+            Chart.SankeyChart,
+            {
+              config: {
+                a: { label: "Source", color: "red" },
+                b: { label: "Destination", color: "blue" },
+              },
+              "aria-label": "Chart fixture",
+              data: { nodes: [], links: [] },
+              animate: { revealDurationMs: duration },
+            },
+            null,
+          ),
         ),
       /finite and nonnegative/,
     );
@@ -1175,7 +1307,7 @@ test("Sankey explicit filters own surfaces and plain nodes retain direct rectang
   const node = { x: 10, y: 20, width: 14, height: 50, index: 0, payload: {} };
   for (const finish of ["clay", "glow"]) {
     for (const rectProps of [{ filter: "url(#custom)" }, { style: { filter: "none" } }]) {
-      const markup = renderSvg(h(Chart.SankeyNode, { ...node, finish, rectProps }));
+      const markup = renderSvg(h(Chart.SankeyNode, { ...node, finish, rectProps }, null));
       assert.doesNotMatch(markup, /<filter/);
       assert.match(markup, /width="14"/);
       assert.match(markup, /height="50"/);
@@ -1187,37 +1319,45 @@ test("Sankey explicit filters own surfaces and plain nodes retain direct rectang
 test("Sankey undefined filters retain generated finishes and wide node strokes retain bounds", () => {
   for (const finish of ["clay", "glow"]) {
     const markup = renderSvg(
-      h(Chart.SankeyNode, {
-        x: 10,
-        y: 20,
-        width: 14,
-        height: 50,
-        index: 0,
-        payload: {},
-        finish,
-        filter: undefined,
-        rectProps: { filter: undefined, strokeWidth: 10 },
-      }),
+      h(
+        Chart.SankeyNode,
+        {
+          x: 10,
+          y: 20,
+          width: 14,
+          height: 50,
+          index: 0,
+          payload: {},
+          finish,
+          filter: undefined,
+          rectProps: { filter: undefined, strokeWidth: 10 },
+        },
+        null,
+      ),
     );
     assert.match(markup, /<rect[^>]*filter="url\(#/);
     assert.match(markup, /x="-100%" y="-100%" width="300%" height="300%"/);
     const link = renderSvg(
-      h(Chart.SankeyLink, {
-        sourceX: 0,
-        sourceY: 20,
-        targetX: 100,
-        targetY: 50,
-        sourceControlX: 40,
-        targetControlX: 60,
-        sourceRelativeY: 0,
-        targetRelativeY: 0,
-        linkWidth: 7,
-        index: 0,
-        payload: {},
-        finish,
-        filter: undefined,
-        pathProps: { filter: undefined },
-      }),
+      h(
+        Chart.SankeyLink,
+        {
+          sourceX: 0,
+          sourceY: 20,
+          targetX: 100,
+          targetY: 50,
+          sourceControlX: 40,
+          targetControlX: 60,
+          sourceRelativeY: 0,
+          targetRelativeY: 0,
+          linkWidth: 7,
+          index: 0,
+          payload: {},
+          finish,
+          filter: undefined,
+          pathProps: { filter: undefined },
+        },
+        null,
+      ),
     );
     assert.match(link, /<path[^>]*filter="url\(#/);
   }
@@ -1229,20 +1369,26 @@ test("heatmap materials decorate measured cells only and retain custom content/s
       h(
         Chart.HeatmapChart,
         {
+          config: config,
+          "aria-label": "Chart fixture",
           rows: ["A"],
           columns: ["X", "Y"],
           data: [{ row: "A", column: "X", value: 0 }],
           scale: Chart.createHeatmapScale({ domain: [-1, 1], colors: ["#000000", "#ffffff"] }),
         },
-        h(Chart.HeatmapGrid, {
-          caption: "Materials",
-          material,
-          Cell: ({ formattedValue }) => h("b", {}, formattedValue),
-          cellProps: () => ({
-            style: { filter: "brightness(1)", backgroundImage: "none" },
-            "data-host": "yes",
-          }),
-        }),
+        h(
+          Chart.HeatmapGrid,
+          {
+            caption: "Materials",
+            material,
+            Cell: ({ formattedValue }) => h("b", {}, formattedValue),
+            cellProps: () => ({
+              style: { filter: "brightness(1)", backgroundImage: "none" },
+              "data-host": "yes",
+            }),
+          },
+          null,
+        ),
       ),
     );
     assert.equal((markup.match(new RegExp(`data-material="${material}"`, "g")) ?? []).length, 1);
@@ -1256,21 +1402,22 @@ test("heatmap materials decorate measured cells only and retain custom content/s
 test("explicit native legend symbols retain icon/children priority and square fallback", () => {
   for (const shape of ["circle", "cross", "diamond", "square", "star", "triangle", "wye"]) {
     const symbolConfig = { count: { ...config.count, legendShape: shape } };
-    const html = render(h(Root, { config: symbolConfig }, h(Legend)));
+    const html = render(metadataChart({ config: symbolConfig }, h(Legend)));
     assert.match(html, new RegExp(`data-legend-shape="${shape}"`));
     assert.match(html, /aria-hidden="true" focusable="false"/);
     assert.match(html, /<path[^>]*d="M/);
-    const fallback = render(h(Root, { config: symbolConfig }, h(Legend, { hideIcon: true })));
+    const fallback = render(
+      metadataChart({ config: symbolConfig }, h(Legend, { hideIcon: true }, null)),
+    );
     assert.doesNotMatch(fallback, /data-legend-shape=|<svg/);
     assert.match(fallback, /chart-indicator/);
     const icon = render(
-      h(Root, { config: { count: { ...symbolConfig.count, icon: Icon } } }, h(Legend)),
+      metadataChart({ config: { count: { ...symbolConfig.count, icon: Icon } } }, h(Legend)),
     );
     assert.match(icon, /data-icon="task"/);
     assert.doesNotMatch(icon, /data-legend-shape=/);
     const custom = render(
-      h(
-        Root,
+      metadataChart(
         { config: symbolConfig },
         h(Legend, {}, ({ label }) => h("span", { "data-custom-marker": true }, label)),
       ),
@@ -1278,7 +1425,10 @@ test("explicit native legend symbols retain icon/children priority and square fa
     assert.match(custom, /data-custom-marker/);
     assert.doesNotMatch(custom, /data-legend-shape=/);
     const tooltipHtml = render(
-      h(Root, { config: symbolConfig }, h(TooltipContent, { tooltip: tooltip([entry(0)]) })),
+      metadataChart(
+        { config: symbolConfig },
+        h(TooltipContent, { tooltip: tooltip([entry(0)]) }, null),
+      ),
     );
     assert.doesNotMatch(tooltipHtml, /data-legend-shape=|<svg/);
     assert.match(tooltipHtml, /data-indicator="line"/);
@@ -1323,53 +1473,37 @@ test("composition components and helpers preserve native identity", () => {
   }
 });
 
-test("Radar selection is SSR-safe without state glue and rejects ownerless controlled state", () => {
+test("Radar focus is SSR-safe and rejects ownerless controlled state", () => {
   const config = { value: { label: "Actual", color: "#3161bd" } };
   const props = {
+    config,
+    "aria-label": "Scores",
     width: 400,
     height: 250,
     data: [{ category: "A", value: 10 }],
-    selection: "series",
   };
-  assert.doesNotThrow(() =>
-    render(
-      h(
-        Chart.Root,
-        {
-          config,
-          interaction: { kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) },
-        },
-        h(Chart.RadarChart, props),
-      ),
-    ),
-  );
+  const interaction = { kind: "series", mode: "focus", eligibleKeys: ["value"] };
+  assert.doesNotThrow(() => render(h(Chart.RadarChart, { ...props, interaction }, null)));
   assert.throws(
     () =>
       render(
-        h(
-          Chart.Root,
-          {
-            config,
-            interaction: { kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) },
-          },
-          h(Chart.RadarChart, { ...props, selectedSeries: "value" }),
-        ),
+        h(Chart.RadarChart, { ...props, interaction: { ...interaction, selected: "value" } }, null),
       ),
-    /requires onSelectedSeriesChange for controlled selectedSeries/,
+    /change callback/,
   );
   assert.doesNotThrow(() =>
     render(
       h(
-        Chart.Root,
+        Chart.RadarChart,
         {
-          config,
-          interaction: { kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) },
-        },
-        h(Chart.RadarChart, {
           ...props,
-          selectedSeries: null,
-          onSelectedSeriesChange: () => assert.fail("SSR must not emit selection changes"),
-        }),
+          interaction: {
+            ...interaction,
+            selected: null,
+            onSelectionChange: () => assert.fail("SSR must not emit changes"),
+          },
+        },
+        null,
       ),
     ),
   );
@@ -1381,12 +1515,14 @@ test("heatmap compact controls retain caption, scoped associated headers and cus
       h(
         Chart.HeatmapChart,
         {
+          config: config,
+          "aria-label": "Chart fixture",
           rows: ["A"],
           columns: ["X"],
           data: [{ row: "A", column: "X", value: 0 }],
           scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
         },
-        h(Chart.HeatmapGrid, { caption: "Compact", layout, ...extra }),
+        h(Chart.HeatmapGrid, { caption: "Compact", layout, ...extra }, null),
       ),
     );
   const markup = grid(
@@ -1432,19 +1568,41 @@ test("category mode rejects missing data and unconfigured identities", () => {
     { categoryKey: "id", dataKey: "value", data: [{ id: "missing", value: 1 }] },
   ])
     assert.throws(
-      () => render(h(Root, { config }, h(Chart.PieSeries, props))),
-      /explicit data|Root.config/,
+      () => render(metadataChart({ config }, h(Chart.PieSeries, props))),
+      /explicit data|chart config/,
     );
   assert.throws(
-    () => render(h(Root, { config }, h(Chart.RadialBarChart, { categoryKey: "id" }))),
+    () =>
+      render(
+        h(
+          Fragment,
+          null,
+          h(
+            Chart.RadialBarChart,
+            { "aria-label": "Chart fixture", config, categoryKey: "id" },
+            null,
+          ),
+        ),
+      ),
     /explicit chart data/,
   );
 });
-test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/explicit paint", () => {
+test("Sankey node metadata uses arbitrary IDs and preserves explicit paint", () => {
   const config = { "node / a": { label: "Input", color: "#123456" } };
-  const legend = render(h(Chart.SankeyLegend, { config }));
-  assert.match(legend, /data-node="node \/ a"/);
-  assert.match(legend, /background-color:#123456/);
+  const html = render(
+    h(
+      Chart.SankeyChart,
+      {
+        config,
+        data: { nodes: [{ id: "node / a", name: "Input" }], links: [] },
+        "aria-label": "Flow",
+        width: 200,
+        height: 100,
+      },
+      null,
+    ),
+  );
+  assert.match(html, /data-kind-ui="chart"/);
   const props = {
     x: 0,
     y: 0,
@@ -1458,10 +1616,15 @@ test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/ex
   assert.throws(
     () =>
       render(
-        h(Chart.SankeyChart, {
-          nodeConfig: config,
-          data: { nodes: [{ id: "unknown", name: "Other" }], links: [] },
-        }),
+        h(
+          Chart.SankeyChart,
+          {
+            config,
+            data: { nodes: [{ id: "unknown", name: "Other" }], links: [] },
+            "aria-label": "Flow",
+          },
+          null,
+        ),
       ),
     /requires metadata/,
   );
@@ -1483,17 +1646,22 @@ test("missing config labels share inference across public legends and tooltip co
     const inferred = Object.freeze({ [key]: meta });
     let rendered;
     const html = render(
-      h(
-        Root,
+      metadataChart(
         { config: inferred, visibleSeries: [key] },
         h(Legend, null, (item) => {
           rendered = item;
           return item.label;
         }),
-        h(TooltipContent, { tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]) }),
-        h(Chart.ScatterTooltipContent, {
-          tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]),
-        }),
+        h(
+          TooltipContent,
+          { tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]) },
+          null,
+        ),
+        h(
+          Chart.ScatterTooltipContent,
+          { tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]) },
+          null,
+        ),
       ),
     );
     assert.equal(rendered.key, key);
@@ -1506,12 +1674,9 @@ test("missing config labels share inference across public legends and tooltip co
     assert.match(html, /role="status" aria-live="assertive"/);
     for (const Content of [TooltipContent, Chart.ScatterTooltipContent]) {
       const tip = render(
-        h(
-          Root,
+        metadataChart(
           { config: inferred },
-          h(Content, {
-            tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]),
-          }),
+          h(Content, { tooltip: tooltip([entry(0, { dataKey: key, name: "Native name" })]) }, null),
         ),
       );
       assert.ok(tip.includes(`<span>${expected}</span>`));
@@ -1526,10 +1691,9 @@ test("inferred metadata retains formatter, item identity and unmatched fallback 
   const inferred = { visitors: { color: "red", formatValue: (value) => `${value} visits` } };
   const renderTip = (payload, extra = {}) =>
     render(
-      h(
-        Root,
+      metadataChart(
         { config: inferred },
-        h(TooltipContent, { tooltip: tooltip(payload, extra), itemKey: () => "visitors" }),
+        h(TooltipContent, { tooltip: tooltip(payload, extra), itemKey: () => "visitors" }, null),
       ),
     );
   assert.match(renderTip([entry(0)]), /Visitors.*0 visits/);
@@ -1539,26 +1703,26 @@ test("inferred metadata retains formatter, item identity and unmatched fallback 
   assert.match(formatted, /<b>Override<\/b>/);
   assert.match(formatted, /<em>one<\/em>/);
   const unmatched = render(
-    h(
-      Root,
+    metadataChart(
       { config: inferred },
-      h(TooltipContent, {
-        tooltip: tooltip([entry(2, { name: "Native unmatched", color: "blue" })]),
-      }),
+      h(
+        TooltipContent,
+        { tooltip: tooltip([entry(2, { name: "Native unmatched", color: "blue" })]) },
+        null,
+      ),
     ),
   );
   assert.match(unmatched, /Native unmatched/);
   assert.match(unmatched, /background:blue/);
   assert.throws(
-    () => render(h(Root, { config: { 2026: { color: "red" } } }, h(Legend))),
+    () => render(metadataChart({ config: { 2026: { color: "red" } } }, h(Legend))),
     /must start with a letter/,
   );
 });
 
 test("pattern swatches use independent SVG resources and all public encodings", () => {
   const html = render(
-    h(
-      Root,
+    metadataChart(
       {
         config: {
           a: { color: "#123456", pattern: { kind: "hatch" } },
@@ -1567,7 +1731,11 @@ test("pattern swatches use independent SVG resources and all public encodings", 
         },
       },
       h(Legend),
-      h(Chart.FillPatternSwatch, { pattern: { kind: "hatch" }, color: "red", "data-host": "yes" }),
+      h(
+        Chart.FillPatternSwatch,
+        { pattern: { kind: "hatch" }, color: "red", "data-host": "yes" },
+        null,
+      ),
     ),
   );
   const ids = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
@@ -1586,9 +1754,9 @@ test("legend glyph/symbol priority and hideIcon remain consumer-owned with patte
     a: { color: "red", pattern: { kind: "hatch" }, icon: () => h("i", null, "Icon") },
     b: { color: "blue", pattern: { kind: "stripe" }, legendShape: "diamond" },
   };
-  assert.doesNotMatch(render(h(Root, { config }, h(Legend))), /<pattern/);
+  assert.doesNotMatch(render(metadataChart({ config }, h(Legend))), /<pattern/);
   assert.doesNotMatch(
-    render(h(Root, { config }, h(Legend, { hideIcon: true }))),
+    render(metadataChart({ config }, h(Legend, { hideIcon: true }, null))),
     /<pattern|Icon|data-legend-shape=/,
   );
 });
@@ -1602,7 +1770,7 @@ test("invalid public pattern geometry fails explicitly", () => {
     { kind: "duotone", angle: Infinity },
   ]) {
     assert.throws(
-      () => render(h(Chart.FillPatternSwatch, { pattern, color: "red" })),
+      () => render(h(Chart.FillPatternSwatch, { pattern, color: "red" }, null)),
       /FillPattern requires/,
     );
   }
@@ -1610,8 +1778,7 @@ test("invalid public pattern geometry fails explicitly", () => {
 
 test("series colors compile theme stops without changing labels or pattern metadata", () => {
   const html = render(
-    h(
-      Root,
+    metadataChart(
       {
         config: {
           revenueTotal: {
@@ -1636,19 +1803,12 @@ test("series colors compile theme stops without changing labels or pattern metad
   assert.match(html, /fill="var\(--color-revenueTotal\)"/);
 });
 
-test("color resources are unique across sibling Roots and stable on SSR", () => {
+test("color resources are unique across sibling charts and stable on SSR", () => {
   const tree = h(
     "main",
     null,
     ...[0, 1].map((key) =>
-      h(
-        Root,
-        {
-          key,
-          config: { sales: { color: ["red", "blue"] } },
-        },
-        h(Legend),
-      ),
+      metadataChart({ key, config: { sales: { color: ["red", "blue"] } } }, h(Legend)),
     ),
   );
   const html = render(tree);
@@ -1670,7 +1830,10 @@ test("malformed new color shapes fail before emitting resources", () => {
     null,
     3,
   ]) {
-    assert.throws(() => render(h(Root, { config: { sales: { color } } })), /[Ss]eries color/);
+    assert.throws(
+      () => render(metadataChart({ config: { sales: { color } } }, null)),
+      /[Ss]eries color/,
+    );
   }
 });
 
@@ -1697,12 +1860,15 @@ test("color errors identify only the offending series and property", () => {
     assert.throws(
       () =>
         render(
-          h(Root, {
-            config: {
-              unrelated: { color: "purple", label: "PRIVATE_LABEL" },
-              sales: { color, label: "PRIVATE_SERIES_LABEL" },
+          metadataChart(
+            {
+              config: {
+                unrelated: { color: "purple", label: "PRIVATE_LABEL" },
+                sales: { color, label: "PRIVATE_SERIES_LABEL" },
+              },
             },
-          }),
+            null,
+          ),
         ),
       (error) => {
         assert.ok(error.message.includes(path));
@@ -1722,15 +1888,14 @@ test("color shape validation preserves CSS syntax during SSR", () => {
     "color(display-p3 1 0.5 0)",
     "color-mix(in oklch, red 30%, blue)",
   ]) {
-    const html = render(h(Root, { config: { sales: { color } } }));
+    const html = render(metadataChart({ config: { sales: { color } } }, null));
     assert.ok(html.includes(`--color-sales:${color}`));
   }
 });
 
 test("indexed stops cannot collide with valid legacy series keys", () => {
   const html = render(
-    h(
-      Root,
+    metadataChart(
       {
         config: {
           sales: { color: ["red", "blue"] },
@@ -1749,8 +1914,7 @@ test("indexed stops cannot collide with valid legacy series keys", () => {
 
 test("dots and lines share public swatch resources with existing patterns", () => {
   const html = render(
-    h(
-      Root,
+    metadataChart(
       {
         config: {
           dots: { color: "red", pattern: { kind: "dots", size: 10, width: 4 } },
@@ -1768,7 +1932,7 @@ test("dots and lines share public swatch resources with existing patterns", () =
   for (const id of ids) assert.ok(html.includes(`fill="url(#${id})"`));
 });
 
-test("Root shared interaction guards last eligible item and emits one callback", () => {
+test("Chart shared interaction guards last eligible item and emits one callback", () => {
   let interaction;
   const changes = [];
   function Probe() {
@@ -1776,8 +1940,7 @@ test("Root shared interaction guards last eligible item and emits one callback",
     return null;
   }
   render(
-    h(
-      Root,
+    metadataChart(
       {
         config: { first: { color: "red" }, stale: { color: "blue" } },
         visibleSeries: ["first", "stale"],
@@ -1807,8 +1970,7 @@ test("shared focus is independent of emphasis and consumer before hook vetoes", 
   }
   const config = { first: { color: "red" }, second: { color: "blue" } };
   const html = render(
-    h(
-      Root,
+    metadataChart(
       {
         config,
         emphasis: "none",
@@ -1856,26 +2018,23 @@ test("controlled invalid focus paints null and selection controls reject conflic
       onSelectionChange() {},
     },
   };
-  render(h(Root, props, h(Probe)));
+  render(metadataChart({ config: config, ...props }, h(Probe)));
   assert.equal(selected, null);
   render(
-    h(
-      Root,
-      { ...props, interaction: { ...props.interaction, eligibleKeys: ["first", "second"] } },
+    metadataChart(
+      {
+        config: config,
+        ...props,
+        interaction: { ...props.interaction, eligibleKeys: ["first", "second"] },
+      },
       h(Probe),
     ),
   );
   assert.equal(selected, "second");
   assert.throws(
     () =>
-      render(h(Root, props, h(Chart.RadarChart, { width: 300, height: 200, selection: "series" }))),
-    /one selection owner/,
-  );
-  assert.throws(
-    () =>
       render(
-        h(
-          Root,
+        metadataChart(
           { config, interaction: { ...props.interaction, defaultSelected: "first" } },
           h(Probe),
         ),
@@ -1885,8 +2044,7 @@ test("controlled invalid focus paints null and selection controls reject conflic
   assert.throws(
     () =>
       render(
-        h(
-          Root,
+        metadataChart(
           { config, interaction: { ...props.interaction, onSelectionChange: undefined } },
           h(Probe),
         ),
@@ -1896,7 +2054,7 @@ test("controlled invalid focus paints null and selection controls reject conflic
 });
 // These run both in workspace tests and the isolated packed public consumer.
 test("custom backgrounds are reusable frozen definitions, with no shared registry", () => {
-  const renderTile = ({ size, color }) => h("circle", { r: size / 4, fill: color });
+  const renderTile = ({ size, color }) => h("circle", { r: size / 4, fill: color }, null);
   const a = Chart.defineChartBackgroundPattern(renderTile);
   const b = Chart.defineChartBackgroundPattern(renderTile);
   assert.notEqual(a, b);
@@ -1922,20 +2080,20 @@ test("background validation runs even before plot geometry is available", () => 
       /ChartBackgroundPattern/,
     );
   }
-  assert.equal(renderSvg(h(Chart.ChartBackgroundPattern, { pattern: "pinpoints" })), "");
+  assert.equal(renderSvg(h(Chart.ChartBackgroundPattern, { pattern: "pinpoints" }, null)), "");
 });
 
 test("tooltip projection status uses caller identity without changing values or labels", () => {
   const row = Object.freeze({ id: "forecast" });
   const projected = entry(0, { payload: row });
   const html = render(
-    h(
-      Root,
+    metadataChart(
       { config: { value: { label: "Value", color: "red" } } },
-      h(TooltipContent, {
-        tooltip: tooltip([projected]),
-        isProjected: (item) => item.payload.id === "forecast",
-      }),
+      h(
+        TooltipContent,
+        { tooltip: tooltip([projected]), isProjected: (item) => item.payload.id === "forecast" },
+        null,
+      ),
     ),
   );
   assert.match(html, /data-projected="true"/);
@@ -1943,13 +2101,16 @@ test("tooltip projection status uses caller identity without changing values or 
   assert.match(html, /chart-tooltip-value">0/);
   assert.equal(projected.payload, row);
   const observed = render(
-    h(
-      Root,
+    metadataChart(
       { config: {} },
-      h(TooltipContent, {
-        tooltip: tooltip([entry(9, { payload: { id: "observed" } })]),
-        isProjected: (item) => item.payload.id === "forecast",
-      }),
+      h(
+        TooltipContent,
+        {
+          tooltip: tooltip([entry(9, { payload: { id: "observed" } })]),
+          isProjected: (item) => item.payload.id === "forecast",
+        },
+        null,
+      ),
     ),
   );
   assert.doesNotMatch(observed, /projection-status|data-projected/);
@@ -1959,13 +2120,9 @@ test("tooltip projection status respects missing, hidden and formatter ownership
   const props = { isProjected: () => true, projectedLabel: "Incomplete" };
   const content = (items, overrides = {}) =>
     render(
-      h(
-        Root,
+      metadataChart(
         { config: {} },
-        h(TooltipContent, {
-          ...props,
-          tooltip: { ...tooltip(items), ...overrides },
-        }),
+        h(TooltipContent, { ...props, tooltip: { ...tooltip(items), ...overrides } }, null),
       ),
     );
   assert.doesNotMatch(
@@ -1987,15 +2144,20 @@ test("tooltip projection status respects missing, hidden and formatter ownership
 test("chart loading props stay off the native engine and expose a chart-owned status", () => {
   const html = render(
     h(
-      Root,
-      { config: { sales: { label: "Sales", color: "#123" } } },
-      h(Chart.BarChart, {
-        width: 320,
-        height: 240,
-        loading: true,
-        loadingLabel: "Loading sales",
-        "aria-label": "Sales",
-      }),
+      Fragment,
+      null,
+      h(
+        Chart.BarChart,
+        {
+          config: { sales: { label: "Sales", color: "#123" } },
+          width: 320,
+          height: 240,
+          loading: true,
+          loadingLabel: "Loading sales",
+          "aria-label": "Sales",
+        },
+        null,
+      ),
     ),
   );
   assert.match(html, /aria-busy="true" aria-hidden="true" inert=""/);
@@ -2003,27 +2165,42 @@ test("chart loading props stay off the native engine and expose a chart-owned st
   assert.match(html, /width:320px;height:240px/);
   assert.doesNotMatch(html, /loadingLabel=| loading="/);
   const empty = render(
-    h(Chart.LineChart, {
-      config: {},
-      data: [],
-      xDataKey: "month",
-      loading: false,
-      "aria-label": "Empty sales",
-      height: 280,
-    }),
+    h(
+      Chart.LineChart,
+      {
+        config: {},
+        data: [],
+        xDataKey: "month",
+        loading: false,
+        "aria-label": "Empty sales",
+        height: 280,
+      },
+      null,
+    ),
   );
   assert.match(empty, /aria-busy="false"/);
   assert.match(empty, /role="status" aria-atomic="true"[^>]*><\/span>/);
 });
 
-test("bar-backed charts inherit chart-owned loading without fabricating data", () => {
+test("bar-backed charts own loading without fabricating data", () => {
   for (const [Component, props] of [
     [Chart.WaterfallChart, { data: [] }],
     [Chart.BoxPlotChart, { data: [] }],
     [Chart.HistogramChart, { bins: [], measure: "count" }],
   ]) {
     const html = render(
-      h(Root, { config: {} }, h(Component, { ...props, width: 320, height: 240, loading: true })),
+      h(
+        Component,
+        {
+          config: {},
+          "aria-label": "Loading values",
+          ...props,
+          width: 320,
+          height: 240,
+          loading: true,
+        },
+        null,
+      ),
     );
     assert.match(html, /kind-ui-loading-chart-pending/);
     assert.match(html, /Loading chart/);
@@ -2051,22 +2228,19 @@ test("all fourteen chart families expose deterministic loading SSR without nativ
   ];
   assert.equal(families.length, 14);
   for (const [family, Component, props] of families) {
-    const view = (loading) => {
-      const element = h(
+    const view = (loading) =>
+      h(
         Component,
         {
+          config: {},
           ...props,
           ...(family === "heatmap" ? {} : { width: 320, height: 240 }),
           loading,
           loadingLabel: `Loading ${family}`,
           "aria-label": `${family} data`,
         },
-        ...(family === "heatmap" ? [h(Chart.HeatmapGrid, { caption: "Matrix" })] : []),
+        family === "heatmap" ? h(Chart.HeatmapChart.Grid, { caption: "Matrix" }) : null,
       );
-      return family === "activity-rings" || family === "heatmap" || family === "sankey"
-        ? element
-        : h(Root, { config: {} }, element);
-    };
     const pending = render(view(true));
     assert.equal(render(view(true)), pending, `${family}: deterministic server markup`);
     assert.match(pending, /aria-busy="true"/, `${family}: pending state`);
@@ -2094,6 +2268,8 @@ test("standalone SSR skeletons preserve family identity independently of real da
     h(
       Chart.HeatmapChart,
       {
+        config: config,
+        "aria-label": "Chart fixture",
         rows: ["Region"],
         columns: ["Month"],
         data,
@@ -2101,22 +2277,31 @@ test("standalone SSR skeletons preserve family identity independently of real da
         loading: true,
         loadingLabel: "Loading matrix",
       },
-      h(Chart.HeatmapGrid, { caption: "Matrix" }),
+      h(Chart.HeatmapGrid, { caption: "Matrix" }, null),
     );
   const flows = (links) =>
-    h(Chart.SankeyChart, {
-      data: {
-        nodes: [
-          { id: "a", name: "Source" },
-          { id: "b", name: "Destination" },
-        ],
-        links,
+    h(
+      Chart.SankeyChart,
+      {
+        config: {
+          a: { label: "Source", color: "red" },
+          b: { label: "Destination", color: "blue" },
+        },
+        "aria-label": "Chart fixture",
+        data: {
+          nodes: [
+            { id: "a", name: "Source" },
+            { id: "b", name: "Destination" },
+          ],
+          links,
+        },
+        width: 320,
+        height: 240,
+        loading: true,
+        loadingLabel: "Loading flows",
       },
-      width: 320,
-      height: 240,
-      loading: true,
-      loadingLabel: "Loading flows",
-    });
+      null,
+    );
   const skeletons = [];
   for (const [family, empty, populated] of [
     ["heatmap", matrix([]), matrix([{ row: "Region", column: "Month", value: 1 }])],
@@ -2168,17 +2353,21 @@ test("standalone SSR skeletons preserve family identity independently of real da
 
 test("PointMarker retains native geometry and style while applying variant paint", () => {
   const html = renderSvg(
-    h(Chart.PointMarker, {
-      cx: 12,
-      cy: 15,
-      r: 7,
-      variant: "colored-border",
-      stroke: "red",
-      fill: "gold",
-      strokeWidth: 4,
-      style: { fill: "gold" },
-      "aria-label": "Value",
-    }),
+    h(
+      Chart.PointMarker,
+      {
+        cx: 12,
+        cy: 15,
+        r: 7,
+        variant: "colored-border",
+        stroke: "red",
+        fill: "gold",
+        strokeWidth: 4,
+        style: { fill: "gold" },
+        "aria-label": "Value",
+      },
+      null,
+    ),
   );
   assert.match(html, /cx="12"/);
   assert.match(html, /r="7"/);
@@ -2186,32 +2375,35 @@ test("PointMarker retains native geometry and style while applying variant paint
   assert.match(html, /stroke-width="2"/);
   assert.match(html, /aria-label="Value"/);
   assert.doesNotMatch(html, /<defs|<filter/);
-  const native = renderSvg(h(Native.Dot, { cx: 2, cy: 3, r: 3 }));
-  const plain = renderSvg(h(Chart.PointMarker, { cx: 2, cy: 3, r: 3 }));
+  const native = renderSvg(h(Native.Dot, { cx: 2, cy: 3, r: 3 }, null));
+  const plain = renderSvg(h(Chart.PointMarker, { cx: 2, cy: 3, r: 3 }, null));
   assert.equal(
     plain.replace(/ data-kind-ui="point-marker"| data-point-style="default"/g, ""),
     native,
   );
 });
 
-test("directional entrance options do not leak clip or configuration attributes into the SSR shell", () => {
-  for (const Component of [Chart.LineChart, Chart.AreaChart, Chart.ComboChart]) {
+test("directional entrance options do not leak configuration into the SSR shell", () => {
+  for (const Component of [Chart.LineChart, Chart.AreaChart, Chart.ComboChart])
     for (const revealDirection of ["left-to-right", "right-to-left", "center-out", "edges-in"]) {
-      const html = renderSvg(
+      const html = render(
         h(
-          Chart.Root,
-          { config: {} },
-          h(Component, {
+          Component,
+          {
+            config: {},
+            "aria-label": "Directions",
             width: 300,
             height: 200,
             animate: { revealDirection },
-          }),
+          },
+          null,
         ),
       );
-      assert.doesNotMatch(html, /data-reveal-direction|data-combo-reveal|data-area-reveal/);
-      assert.doesNotMatch(html, /revealDirection=/);
+      assert.doesNotMatch(
+        html,
+        /data-reveal-direction|data-combo-reveal|data-area-reveal|revealDirection=/,
+      );
     }
-  }
 });
 
 test("dashed line and combo SSR retain the chart shell without leaking dash props", () => {
@@ -2219,17 +2411,20 @@ test("dashed line and combo SSR retain the chart shell without leaking dash prop
   for (const Engine of [Chart.LineChart, Chart.ComboChart]) {
     const markup = render(
       h(
-        Chart.Root,
-        { config: { value: { label: "Value", color: "teal" } } },
-        h(
-          Engine,
-          { width: 480, height: 240, data, animate: true },
-          h(Chart.LineSeries, {
-            dataKey: "value",
-            strokeDasharray: "6 4",
-            dashAnimation: { durationMs: 800 },
-          }),
-        ),
+        Engine,
+        {
+          config: { value: { label: "Value", color: "teal" } },
+          "aria-label": "Dashed values",
+          width: 480,
+          height: 240,
+          data,
+          animate: true,
+        },
+        h(Chart.LineSeries, {
+          dataKey: "value",
+          strokeDasharray: "6 4",
+          dashAnimation: { durationMs: 800 },
+        }),
       ),
     );
     assert.match(markup, /recharts-wrapper/);
@@ -2241,7 +2436,7 @@ test("dashed line and combo SSR retain the chart shell without leaking dash prop
 test("selective Pie glow requires existing explicit category identity", () => {
   const config = { alpha: { label: "Alpha", color: "#123456" } };
   const series = (props) =>
-    render(h(Root, { config }, h(Chart.PieSeries, { dataKey: "value", ...props })));
+    render(metadataChart({ config }, h(Chart.PieSeries, { dataKey: "value", ...props }, null)));
   assert.throws(() => series({ glowCategories: [] }), /glowCategories requires categoryKey/);
   assert.throws(() => series({ categoryKey: "id", glowCategories: ["alpha"] }), /explicit data/);
   assert.throws(
@@ -2251,7 +2446,7 @@ test("selective Pie glow requires existing explicit category identity", () => {
         data: [{ id: "missing", value: 1 }],
         glowCategories: ["missing"],
       }),
-    /Root.config/,
+    /chart config/,
   );
 });
 
@@ -2267,18 +2462,16 @@ test("selective Pie glow leaves the native SSR shell and host data alternative u
   const chart = (glowCategories) =>
     render(
       h(
-        Root,
-        { config },
+        Fragment,
+        null,
         h(
           Chart.PieChart,
-          { width: 320, height: 240, "aria-label": "Allocation" },
-          h(Chart.PieSeries, {
-            data,
-            dataKey: "value",
-            categoryKey: "id",
-            nameKey: "id",
-            glowCategories,
-          }),
+          { config, width: 320, height: 240, "aria-label": "Allocation" },
+          h(
+            Chart.PieSeries,
+            { data, dataKey: "value", categoryKey: "id", nameKey: "id", glowCategories },
+            null,
+          ),
         ),
         h(
           "table",
@@ -2299,51 +2492,43 @@ test("selective Pie glow leaves the native SSR shell and host data alternative u
   assert.match(chart(["alpha"]), /Category values/);
 });
 
-test("initial Pie pin rejects unsupported composition through public exports", () => {
+test("initial Pie pin accepts wrapped and fragment composition during SSR", () => {
   const config = { beta: { label: "Beta", color: "blue" } };
-  const chart = (...children) =>
-    render(
-      h(
-        Chart.Root,
-        { config },
-        h(Chart.PieChart, { width: 320, height: 240, defaultPinnedCategory: "beta" }, ...children),
-      ),
-    );
-  assert.throws(() => chart(h(Chart.PieSeries, { dataKey: "value" })), /one direct PieSeries/);
-  const series = () =>
-    h(Chart.PieSeries, {
+  const WrappedSeries = () =>
+    h(Chart.PieChart.Series, {
       data: [{ id: "beta", value: 4 }],
       categoryKey: "id",
       dataKey: "value",
     });
-  assert.throws(() => chart(series(), series()), /one direct PieSeries/);
-  assert.throws(() => chart(series(), h(Chart.Tooltip), h(Chart.Tooltip)), /one direct Tooltip/);
-  assert.throws(() => chart(series()), /one direct Tooltip/);
-  assert.throws(() => chart(series(), h(Native.Tooltip)), /one direct Tooltip/);
-  const WrappedTooltip = (props) => h(Chart.Tooltip, props);
-  WrappedTooltip.displayName = "Tooltip";
-  assert.throws(() => chart(series(), h(WrappedTooltip)), /one direct Tooltip/);
-  const WrappedSeries = (props) => h(Chart.PieSeries, props);
-  WrappedSeries.displayName = "PieSeries";
-  assert.throws(() => chart(h(WrappedSeries), h(Chart.Tooltip)), /one direct PieSeries/);
-  assert.throws(
-    () => chart(series(), h(Native.Pie, { dataKey: "value" }), h(Chart.Tooltip)),
-    /one direct PieSeries/,
-  );
-  assert.doesNotThrow(() =>
-    chart(series(), h(Chart.Tooltip, { itemKey: (entry) => entry.payload.id })),
-  );
-  assert.doesNotThrow(() => chart(h(Fragment, null, series(), h(Chart.Tooltip))));
-  assert.doesNotThrow(() =>
-    chart(
-      h(Chart.PieSeries, {
+  const WrappedTooltip = () => h(Chart.PieChart.Tooltip);
+  for (const children of [
+    h(Fragment, null, h(WrappedSeries), h(WrappedTooltip)),
+    h(
+      Fragment,
+      null,
+      h(Chart.PieChart.Series, {
         data: [{ id: "beta", value: 0 }],
         categoryKey: (row) => row.id,
         dataKey: "value",
       }),
-      h(Chart.Tooltip),
+      h(Chart.PieChart.Tooltip),
     ),
-  );
+  ])
+    assert.doesNotThrow(() =>
+      render(
+        h(
+          Chart.PieChart,
+          {
+            config,
+            "aria-label": "Pinned allocation",
+            width: 320,
+            height: 240,
+            defaultPinnedCategory: "beta",
+          },
+          children,
+        ),
+      ),
+    );
 });
 
 test("Sankey labels use stable identity, totals, explicit contents and bounded inside text", () => {
@@ -2357,13 +2542,11 @@ test("Sankey labels use stable identity, totals, explicit contents and bounded i
   const node = { x: 10, y: 20, width: 0, height: 1, payload: { id: "a", name: "stale" } };
   const label = (props = {}) =>
     renderSvg(
-      h(Chart.SankeyNodeLabel, {
-        node,
-        data,
-        showValues: true,
-        valueFormatter: (v) => `${v} MWh`,
-        ...props,
-      }),
+      h(
+        Chart.SankeyNodeLabel,
+        { node, data, showValues: true, valueFormatter: (v) => `${v} MWh`, ...props },
+        null,
+      ),
     );
   assert.match(label(), /Source: 7 MWh/);
   assert.match(label(), /x="18"/);
@@ -2377,7 +2560,7 @@ test("Sankey labels use stable identity, totals, explicit contents and bounded i
   assert.throws(() => label({ offset: -1 }), /nonnegative/);
   assert.match(label({ data: { ...data, links: [] } }), /Source: 0 MWh/);
   assert.match(
-    render(h(Chart.SankeyTable, { data, caption: "Flows", formatValue: (v) => `${v} MWh` })),
+    render(h(Chart.SankeyTable, { data, caption: "Flows", formatValue: (v) => `${v} MWh` }, null)),
     /7 MWh/,
   );
 });
@@ -2399,15 +2582,19 @@ test("Sankey intermediate labels count throughput once including rounding tolera
   const node = { x: 20, y: 0, width: 10, height: 30, payload: { id: "m" } };
   const label = (flow = data) =>
     renderSvg(
-      h(Chart.SankeyNodeLabel, {
-        data: flow,
-        node,
-        showValues: true,
-        side: "left",
-        offset: 4,
-        className: "custom",
-        "aria-label": "Throughput",
-      }),
+      h(
+        Chart.SankeyNodeLabel,
+        {
+          data: flow,
+          node,
+          showValues: true,
+          side: "left",
+          offset: 4,
+          className: "custom",
+          "aria-label": "Throughput",
+        },
+        null,
+      ),
     );
   assert.match(label(), /Middle: 10/);
   assert.match(label(), /x="16"/);
@@ -2440,11 +2627,11 @@ test("Sankey configured icons preserve identity, text ownership and bounded plac
     index: 0,
   };
   const nodeConfig = {
-    source: { label: "Legend only", color: "red", icon: h("path", { d: "M0 0h24v24z" }) },
+    source: { label: "Legend only", color: "red", icon: h("path", { d: "M0 0h24v24z" }, null) },
     sink: { label: "Sink metadata", color: "blue" },
   };
   const label = (props = {}) =>
-    renderSvg(h(Chart.SankeyNodeLabel, { node, data, nodeConfig, ...props }));
+    renderSvg(h(Chart.SankeyNodeLabel, { node, data, nodeConfig, ...props }, null));
   assert.match(label(), /data-kind-ui="sankey-node-icon"/);
   assert.match(label(), /aria-hidden="true" focusable="false"/);
   assert.match(label(), /<text x="68" y="20.5"/);
@@ -2504,17 +2691,23 @@ test("percent formatting is scoped to caller-selected raw stack members and neve
 test("normalized tooltip preserves raw formatting, explicit formatter precedence and projection", () => {
   const renderPercent = (extra = {}, ...fractions) =>
     render(
-      h(
-        Root,
+      metadataChart(
         { config },
-        h(TooltipContent, {
-          tooltip: tooltip(
-            [entry(1, { payload: { id: "future" } }), entry(null, { graphicalItemId: "missing" })],
-            extra,
-          ),
-          normalizedValue: () => (fractions.length ? fractions[0] : 0.25),
-          isProjected: (item) => item.payload?.id === "future",
-        }),
+        h(
+          TooltipContent,
+          {
+            tooltip: tooltip(
+              [
+                entry(1, { payload: { id: "future" } }),
+                entry(null, { graphicalItemId: "missing" }),
+              ],
+              extra,
+            ),
+            normalizedValue: () => (fractions.length ? fractions[0] : 0.25),
+            isProjected: (item) => item.payload?.id === "future",
+          },
+          null,
+        ),
       ),
     );
   assert.match(renderPercent(), /25% \(1 tasks\)/);

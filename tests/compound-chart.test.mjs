@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as Chart from "@kind-ui/charts";
-import { Fragment, createElement as h } from "react";
+import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 
 const config = { value: { label: "Value", color: "red" } };
@@ -28,8 +28,8 @@ for (const Family of families) {
   });
   test(`${Family.name} rejects missing names, implicit content and nested frame ownership`, () => {
     assert.throws(
-      () => render(h(Family, { ...propsFor(Family), rootProps: {} }, null)),
-      /frame options require config/,
+      () => render(h(Family, { ...propsFor(Family), "aria-label": "Values" }, null)),
+      /requires config/,
     );
     assert.throws(
       () => render(h(Family, { ...propsFor(Family), config }, null)),
@@ -40,22 +40,53 @@ for (const Family of families) {
       /requires aria-label/,
     );
     assert.throws(
-      () => render(h(Family, { ...propsFor(Family), config, "aria-label": "Values" })),
+      () => render(h(Family, { ...propsFor(Family), config, "aria-label": "Values" }, null)),
       /requires explicit children/,
     );
     assert.throws(
       () =>
         render(
-          h(
-            Chart.Root,
+          metadataChart(
             { config },
             h(Family, { ...propsFor(Family), config, "aria-label": "Values" }, null),
           ),
         ),
-      /owns Root/,
+      /owns|nested/,
     );
   });
 }
+function metadataChart(options, ...children) {
+  const {
+    config,
+    interaction,
+    emphasis,
+    nonce,
+    visibleSeries,
+    defaultVisibleSeries,
+    onVisibleSeriesChange,
+    ...frameProps
+  } = options;
+  return h(
+    Chart.HeatmapChart,
+    {
+      rows: [],
+      columns: [],
+      data: [],
+      scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
+      config,
+      "aria-label": "Metadata chart",
+      interaction,
+      emphasis,
+      nonce,
+      ...(visibleSeries !== undefined ? { visibleSeries } : {}),
+      ...(defaultVisibleSeries !== undefined ? { defaultVisibleSeries } : {}),
+      ...(onVisibleSeriesChange ? { onVisibleSeriesChange } : {}),
+      frameProps,
+    },
+    ...children,
+  );
+}
+
 test("every family exposes its parts, with mixed series explicit and named primitives retained", () => {
   for (const [Family, members] of [
     [Chart.LineChart, ["Series", "Grid", "XAxis", "YAxis", "Tooltip", "Legend"]],
@@ -84,21 +115,10 @@ test("every family exposes its parts, with mixed series explicit and named primi
   assert.equal(Chart.ComboChart.Bar, Chart.BarSeries);
   assert.equal(Chart.PieChart.Series, Chart.PieSeries);
 });
-test("explicit activity children omit generated content and reject conflicting recipe options", () => {
+test("explicit activity children retain the data alternative and omit unrequested parts", () => {
   const props = { config, rings: [{ key: "value", value: 70 }], "aria-label": "Activity" };
   assert.doesNotMatch(render(h(Chart.ActivityRings, props, null)), /chart-legend/);
   assert.match(render(h(Chart.ActivityRings, props, null)), /<dt>Value<\/dt><dd>70<\/dd>/);
-  for (const option of [
-    { legend: false },
-    { tooltip: false },
-    { series: {} },
-    { labels: {} },
-    { labels: false },
-  ])
-    assert.throws(
-      () => render(h(Chart.ActivityRings, { ...props, ...option }, h(Fragment))),
-      /replace generated parts/,
-    );
 });
 test("Sankey retains arbitrary node identities under its owned metadata and data root", () => {
   const data = {
@@ -116,8 +136,8 @@ test("Sankey retains arbitrary node identities under its owned metadata and data
 });
 test("compound HTML parts fail clearly outside owned family frames", () => {
   assert.throws(
-    () => render(h(Chart.Root, { config }, h(Chart.BarChart.Legend))),
-    /require a chart-family root/,
+    () => render(h(Chart.BarChart.Legend)),
+    /require a chart-family|chart context|chart-family frame/,
   );
   assert.throws(() => render(h(Chart.SankeyChart.Nodes)), /require SankeyChart with config/);
 });
@@ -127,7 +147,7 @@ test("owned Sankey rejects competing native renderers and compound parts reject 
   for (const option of [{ node: h("g") }, { link: h("g") }, { nodeConfig: {} }])
     assert.throws(
       () => render(h(Chart.SankeyChart, { config, data, "aria-label": "Flows", ...option }, null)),
-      /uses Nodes and Links parts/,
+      /uses explicit Nodes and Links parts/,
     );
   assert.throws(() => render(h(Chart.SankeyChart.Nodes)), /require SankeyChart with config/);
   assert.throws(() => render(h(Chart.ActivityRings.Series)), /requires ActivityRings/);

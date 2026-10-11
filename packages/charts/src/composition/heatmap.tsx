@@ -1,5 +1,7 @@
 "use client";
 
+import { OutsidePlot } from "../family-root.js";
+
 import {
   HeatmapCellContent,
   HeatmapDataTable,
@@ -10,6 +12,7 @@ import {
 } from "../heatmap.js";
 
 export const HeatmapChart = /* @__PURE__ */ Object.assign(NativeHeatmapChart, {
+  Content: OutsidePlot,
   Grid: HeatmapGrid,
   Tooltip: HeatmapTooltip,
   Legend: HeatmapLegend,

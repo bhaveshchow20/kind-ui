@@ -21,13 +21,16 @@ import {
   type ChartName,
   type FamilyFrameOptions,
   FamilyRoot,
-  familyClass,
+  familyFrame,
   familyVisibility,
   OutsidePlot,
 } from "./family-root.js";
+import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
+import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
 import {
   SankeyChart as NativeSankeyChart,
   type SankeyChartProps as NativeSankeyChartProps,
+  validateSankeyChartData,
 } from "./sankey-chart.js";
 import type { SankeyNodeConfig } from "./sankey-colors.js";
 import { type SankeyFlowData, sankeyAdjacency } from "./sankey-data.js";
@@ -40,6 +43,7 @@ import {
   type SankeyNodeProps,
 } from "./sankey-marks.js";
 import { SankeyTable, type SankeyTableProps } from "./sankey-table.js";
+import { cn } from "./utils.js";
 
 type Slots = {
   node?: ((props: SankeyNodeProps) => ReactNode) | true | undefined;
@@ -59,43 +63,47 @@ function useFlow() {
   if (!context) throw new Error("Sankey compound parts require SankeyChart with config");
   return context;
 }
-export type SankeyChartProps =
-  | (NativeSankeyChartProps & { config?: never; rootProps?: never; legendPosition?: never })
-  | (Omit<NativeSankeyChartProps, "node" | "link" | "nodeConfig" | "width" | "height"> &
-      FamilyFrameOptions &
-      ChartName & {
-        config: SankeyNodeConfig;
-        children: ReactNode;
-        width?: ResponsiveContainerProps["width"];
-        height?: ResponsiveContainerProps["height"];
-        responsive?: boolean;
-        node?: never;
-        link?: never;
-        nodeConfig?: never;
-      });
+export type SankeyChartProps = Omit<
+  NativeSankeyChartProps,
+  | "node"
+  | "link"
+  | "nodeConfig"
+  | "width"
+  | "height"
+  | "children"
+  | "interactionBinding"
+  | "loadingPresentation"
+  | keyof FamilyFrameOptions
+> &
+  FamilyFrameOptions &
+  ChartName & {
+    config: SankeyNodeConfig;
+    children: Exclude<ReactNode, undefined>;
+    width?: ResponsiveContainerProps["width"];
+    height?: ResponsiveContainerProps["height"];
+    responsive?: boolean;
+  };
 const renderNode = (props: SankeyNodeProps) => <FlowNode {...props} />;
 const renderLink = (props: SankeyLinkProps) => <FlowLink {...props} />;
-export function SankeyChart(props: SankeyChartProps) {
-  if (props.config === undefined) {
-    if (props.rootProps !== undefined || props.legendPosition !== undefined)
-      throw new Error("SankeyChart frame options require config");
-    return <NativeSankeyChart {...props} />;
-  }
-  if (props.node !== undefined || props.link !== undefined || props.nodeConfig !== undefined)
-    throw new Error(
-      "Explicit SankeyChart uses Nodes and Links parts; remove node, link and nodeConfig",
-    );
-  return <FlowRoot {...props} />;
-}
-function FlowRoot({
+export function SankeyChart({
   config,
-  rootProps,
+  interaction,
+  emphasis,
+  nonce,
+  frameProps,
   visibleSeries,
   defaultVisibleSeries,
   onVisibleSeriesChange,
   legendPosition,
   ...props
-}: Extract<SankeyChartProps, { config: SankeyNodeConfig }>) {
+}: SankeyChartProps) {
+  if (!config || typeof config !== "object" || Array.isArray(config))
+    throw new Error("SankeyChart requires config");
+  if (["rootProps", "node", "link", "nodeConfig"].some((key) => Object.hasOwn(props, key)))
+    throw new Error(
+      "SankeyChart uses explicit Nodes and Links parts; root renderer options are unsupported",
+    );
+  validateSankeyChartData(props.data, config);
   const [entries, setEntries] = useState<{
     [Kind in SlotKind]?: { id: string; renderer: Slots[Kind] };
   }>({});
@@ -137,14 +145,16 @@ function FlowRoot({
       family="SankeyChart"
       config={metadata}
       name={props}
-      rootProps={{
-        ...rootProps,
-        interaction: rootProps?.interaction ?? {
+      interaction={
+        interaction ?? {
           kind: "node",
           mode: "focus",
           eligibleKeys: props.data.nodes.map((node) => node.id),
-        },
-      }}
+        }
+      }
+      {...(emphasis !== undefined ? { emphasis } : {})}
+      {...(nonce !== undefined ? { nonce } : {})}
+      {...(frameProps !== undefined ? { frameProps } : {})}
       {...familyVisibility({ visibleSeries, defaultVisibleSeries, onVisibleSeriesChange })}
       {...(legendPosition ? { legendPosition } : {})}
     >
@@ -160,45 +170,78 @@ function FlowPlot({
   responsive = true,
   className,
   style,
+  loading,
+  loadingLabel,
+  empty = "No positive flows",
   ...props
-}: Omit<NativeSankeyChartProps, "width" | "height"> & {
+}: Omit<
+  NativeSankeyChartProps,
+  "width" | "height" | "node" | "link" | "nodeConfig" | "loadingPresentation"
+> & {
   width?: ResponsiveContainerProps["width"];
   height?: ResponsiveContainerProps["height"];
   responsive?: boolean;
 }) {
   const { config } = useFlow();
-  const renderers = {
+  const seed = useLoadingSeed(loading);
+  const duration =
+    typeof props.animate === "object" ? (props.animate.revealDurationMs ?? 450) : 450;
+  if (!Number.isFinite(duration) || duration < 0)
+    throw new Error("Sankey revealDurationMs must be finite and nonnegative");
+  const native = {
+    ...props,
+    loading,
     node: renderNode,
     link: renderLink,
     nodeConfig: config,
-    interactionBinding: props.interactionBinding ?? ("root" as const),
+    interactionBinding: "root" as const,
+    loadingPresentation: false,
   };
-  if (!responsive) {
-    if (typeof width !== "number" || typeof height !== "number")
-      throw new Error("SankeyChart with responsive=false requires numeric width and height");
-    return (
-      <NativeSankeyChart
-        {...props}
-        {...renderers}
-        width={width}
-        height={height}
-        {...(className ? { className } : {})}
-        {...(style ? { style } : {})}
-      />
-    );
-  }
+  if (!responsive && (typeof width !== "number" || typeof height !== "number"))
+    throw new Error("SankeyChart with responsive=false requires numeric width and height");
+  const frame = familyFrame({ width, height, className, style });
+  const hasFlows = props.data.links.some((link) => link.value > 0);
   return (
     <div
-      className={familyClass(className)}
-      style={{
-        ...(width !== undefined ? { width } : {}),
-        ...(height !== undefined ? { height } : {}),
-        ...style,
-      }}
+      data-kind-ui="sankey-frame"
+      {...frame}
+      className={cn(
+        frame.className,
+        "relative [&>[data-kind-ui=chart-loading-skeleton]]:absolute [&>[data-kind-ui=chart-loading-skeleton]]:inset-0",
+      )}
     >
-      <ResponsiveContainer width="100%" height="100%">
-        <NativeSankeyChart {...props} {...renderers} />
-      </ResponsiveContainer>
+      <div
+        data-kind-ui="sankey-geometry"
+        data-loading={loading || undefined}
+        aria-busy={loading}
+        aria-hidden={loading || undefined}
+        inert={loading || undefined}
+        className="contents data-loading:[&>*]:invisible"
+      >
+        {responsive ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <NativeSankeyChart {...native} />
+          </ResponsiveContainer>
+        ) : (
+          <NativeSankeyChart {...native} width={width as number} height={height as number} />
+        )}
+      </div>
+      {loading && (
+        <LoadingSkeletonSurface
+          family="sankey"
+          design={(value) => <StandaloneLoadingDesign family="sankey" seed={value} />}
+          width="100%"
+          height="100%"
+          seed={seed}
+          animation={{ revealDurationMs: duration }}
+        />
+      )}
+      <LoadingStatus loading={loading} label={loadingLabel} />
+      {!loading && !hasFlows && (
+        <div role="status" className="absolute inset-0">
+          {empty}
+        </div>
+      )}
     </div>
   );
 }
@@ -236,7 +279,8 @@ export function SankeyLinks({ render }: { render?: Exclude<Slots["link"], true> 
   useLayoutEffect(() => register("link", id, render ?? true), [register, id, render]);
   return null;
 }
-export function CompoundSankeyLegend(props: Omit<SankeyLegendProps, "config">) {
+export type CompoundSankeyLegendProps = Omit<SankeyLegendProps, "config" | "interactionBinding">;
+export function CompoundSankeyLegend(props: CompoundSankeyLegendProps) {
   const { config } = useFlow();
   return (
     <OutsidePlot>

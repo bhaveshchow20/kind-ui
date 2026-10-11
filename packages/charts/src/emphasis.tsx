@@ -19,7 +19,7 @@ import { useChartInteraction } from "./chart-interaction.js";
 export const emphasisPaintClassName =
   "transition-opacity duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:duration-0";
 
-/** Identity is data-owned. scope separates independent plots within one Root. */
+/** Identity is data-owned. scope separates independent plots within one chart. */
 export type EmphasisTarget = {
   kind: "category" | "sector" | "series";
   key: string;
@@ -123,7 +123,7 @@ export function useOptionalEmphasisActions() {
 
 export function useEmphasisActions() {
   const value = use(Actions);
-  if (!value) throw new Error("Emphasis marks must be inside Root");
+  if (!value) throw new Error("Emphasis marks must be inside chart");
   return value;
 }
 
@@ -195,7 +195,7 @@ export function useEmphasis(target: EmphasisTarget, enabled = true, persistent =
 export type EmphasisMarkProps = Omit<ComponentPropsWithRef<"g">, "target"> & {
   target: EmphasisTarget;
   enabled?: boolean | undefined;
-  /** Explicitly bind persistent Root focus paint for custom marks. */
+  /** Explicitly bind persistent chart focus paint for custom marks. */
   persistent?: boolean | undefined;
   /** Adapter input from the engine, used only during native keyboard inspection. */
   keyboardActive?: boolean | undefined;

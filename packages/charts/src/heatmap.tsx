@@ -16,6 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { type ChartName, type FamilyOptions, FamilyRoot, familyVisibility } from "./family-root.js";
 import {
   createHeatmapModel,
   type HeatmapCell,
@@ -30,7 +31,7 @@ import type { TooltipContentProps } from "./tooltip-content.js";
 import { TooltipNumber } from "./tooltip-number.js";
 import { cn } from "./utils.js";
 
-export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
+type HeatmapPlotProps = ComponentPropsWithRef<"div"> &
   HeatmapModelOptions & {
     scale: HeatmapScale;
     formatValue?: (value: number) => string;
@@ -40,6 +41,10 @@ export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
     loading?: boolean | undefined;
     loadingLabel?: string | undefined;
   };
+export type HeatmapChartProps = Omit<HeatmapPlotProps, "children" | keyof FamilyOptions> &
+  FamilyOptions &
+  ChartName & { children: Exclude<ReactNode, undefined> };
+
 type Context = {
   loadingSeed: number;
   loading: boolean | undefined;
@@ -80,8 +85,40 @@ const samePointer = (a: PointerPosition | null, b: PointerPosition) =>
 const labelOf = (cell: HeatmapCell, context: Context) =>
   `${cell.row}, ${cell.column}: ${cell.value === null ? context.missingLabel : context.formatValue(cell.value)}`;
 
-/** Native table layout owns categorical geometry. No numeric scatter approximation or SVG overlay. */
+/** Native table geometry with explicit cells, tooltip, legend and data alternative. */
 export function HeatmapChart({
+  config,
+  interaction,
+  emphasis,
+  nonce,
+  frameProps,
+  visibleSeries,
+  defaultVisibleSeries,
+  onVisibleSeriesChange,
+  legendPosition,
+  ...props
+}: HeatmapChartProps) {
+  if (props.children === undefined) throw new Error("HeatmapChart requires explicit children");
+  if (Object.hasOwn(props, "rootProps")) throw new Error("HeatmapChart does not accept rootProps");
+  return (
+    <FamilyRoot
+      family="HeatmapChart"
+      config={config}
+      name={props}
+      {...(interaction !== undefined ? { interaction } : {})}
+      {...(emphasis !== undefined ? { emphasis } : {})}
+      {...(nonce !== undefined ? { nonce } : {})}
+      {...(frameProps !== undefined ? { frameProps } : {})}
+      {...familyVisibility({ visibleSeries, defaultVisibleSeries, onVisibleSeriesChange })}
+      {...(legendPosition ? { legendPosition } : {})}
+    >
+      <HeatmapPlot {...props} />
+    </FamilyRoot>
+  );
+}
+
+/** Native table layout owns categorical geometry. No numeric scatter approximation or SVG overlay. */
+function HeatmapPlot({
   rows,
   columns,
   data,
@@ -95,7 +132,7 @@ export function HeatmapChart({
   children,
   onPointerLeave,
   ...props
-}: HeatmapChartProps) {
+}: HeatmapPlotProps) {
   const loadingSeed = useLoadingSeed(loading);
   const model = useMemo(
     () => createHeatmapModel({ rows, columns, data, ...(duplicates ? { duplicates } : {}) }),

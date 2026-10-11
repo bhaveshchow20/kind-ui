@@ -91,7 +91,7 @@ jobs:
           path: |
             artifacts/chart-tests/
             artifacts/composition-tests/
-            artifacts/configured-line-tests/
+            artifacts/chart-frame-tests/
             artifacts/line-integration-tests/
             artifacts/line-integrations/next-build.log
           if-no-files-found: warn
