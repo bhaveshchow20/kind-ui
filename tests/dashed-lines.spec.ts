@@ -114,3 +114,36 @@ test("unsupported Area dashes preserve native paint and diagnose only in develop
     expect(unsupported).toEqual([]);
   }
 });
+
+test("nonce-authorized loading and dash keyframes work under CSP", async ({ page }) => {
+  await page.route("**/contracts.html", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      headers: {
+        ...response.headers(),
+        "content-security-policy": "style-src-elem 'self' 'nonce-request-nonce'",
+      },
+    });
+  });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/contracts.html#dashed-lines");
+  const example = page.getByRole("region", { name: "Animated dashed strokes" });
+  const path = example.locator('[data-example="line"] .recharts-line-curve');
+  await expect(path).toHaveCSS("animation-name", "kind-ui-line-dash");
+  const before = await path.evaluate((node) => getComputedStyle(node).strokeDashoffset);
+  await expect
+    .poll(() => path.evaluate((node) => getComputedStyle(node).strokeDashoffset))
+    .not.toBe(before);
+  await example.getByText("Toggle loading", { exact: true }).click();
+  const skeleton = example.locator('[data-example="line"] [data-kind-ui="chart-loading-skeleton"]');
+  await expect(skeleton).toHaveCSS("animation-name", "kind-ui-loading-pulse");
+  expect(await skeleton.locator("style").evaluate((node) => node.nonce)).toBe("request-nonce");
+  await expect
+    .poll(() =>
+      skeleton.evaluate((node) =>
+        node.getAnimations().some((animation) => animation.playState === "running"),
+      ),
+    )
+    .toBe(true);
+});
