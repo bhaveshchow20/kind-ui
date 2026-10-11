@@ -726,7 +726,7 @@ const exampleColors: Record<string, string[]> = {
   gauge: ["#20bc9d", "#a5ead9", "#dbf8ef"],
   scatter: ["#2b91ff", "#ff8a57", "#bbe1ff"],
   bubble: ["#a666f0", "#d5b2ff", "#eee3ff"],
-  "line-configured": ["#498fff", "#20b997", "#c5e9ff"],
+  "line-trials": ["#498fff", "#20b997", "#c5e9ff"],
   "heatmap-support": ["#fff5e1", "#ffc768", "#f57e37"],
   "heatmap-retention": ["#e6fbec", "#88dfa2", "#20a675"],
   "waterfall-revenue": ["#7388e7", "#28bf99", "#ff6c91"],

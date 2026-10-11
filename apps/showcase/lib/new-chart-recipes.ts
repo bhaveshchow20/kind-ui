@@ -2,7 +2,7 @@ import type { BoxPlotSummary, HistogramBin, SankeyFlowData, WaterfallEntry } fro
 import type { DemoOptions } from "./demo-options";
 export const newRecipes = [
   {
-    id: "line-configured",
+    id: "line-trials",
     family: "Line",
     tag: "Trials & subscriptions",
     context:
