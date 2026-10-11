@@ -6,7 +6,7 @@ export const family = {
       title: "Radial Chart",
       notes: "Three project stages share an explicit 0–100 percent scale.",
       acceptance:
-        "Three category-colored rings retain 92%, 76% and 58% in tooltip and hidden data; optional labels agree.",
+        "Three category-colored rings retain 92%, 76% and 58% in tooltips and plotted values; optional labels agree.",
     },
     {
       id: "radial-activity",

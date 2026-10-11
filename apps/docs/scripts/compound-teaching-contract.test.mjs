@@ -117,3 +117,26 @@ test("histogram reference separates binning parameters and bounds native axis de
   assert.match(axes, /chart-owned and cannot be overridden/);
   assert.ok(source.includes('<span id="histogramseries" />'));
 });
+
+test("reviewed defaults and helper contracts match the compound API", async () => {
+  const line = await text("content/docs/components/line.mdx");
+  assert.match(line, /\| `animate` \|[^\n]+\| `true` \|/);
+  const motion = await text("content/docs/guides/motion.mdx");
+  assert.match(motion, /\| \[Line\]\([^\n]+\| Yes \|/);
+  const waterfall = await text("content/docs/components/waterfall.mdx");
+  const helper = waterfall.split("### computeWaterfallData")[1].split("### WaterfallChart")[0];
+  assert.deepEqual(
+    [...helper.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]),
+    ["entries", "initialBalance"],
+  );
+  for (const path of [
+    "../../README.md",
+    "../../skills/kind-ui-charts/SKILL.md",
+    "examples/bar-catalog.mjs",
+    "examples/radial-catalog.mjs",
+  ])
+    assert.doesNotMatch(
+      await text(path),
+      /including its data and accessible table|source and hidden data agree|tooltip and hidden data|source and its data alternative/,
+    );
+});

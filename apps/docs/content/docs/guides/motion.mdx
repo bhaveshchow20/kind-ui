@@ -3,7 +3,7 @@ title: Motion
 description: Enable chart entrances and adjust their timing.
 ---
 
-Set `animate` on the chart to reveal its marks when it appears. Animation is off by default.
+Set `animate` on the chart to reveal its marks when it appears. Line charts animate by default; other families require `animate` to enable animation.
 
 ## Enable an entrance
 
@@ -29,7 +29,7 @@ its entrance intentionally.
 
 | Family | Enabled by default | Entrance |
 | --- | --- | --- |
-| [Line](/docs/components/line/) | No | Line reveal across the plot |
+| [Line](/docs/components/line/) | Yes | Line reveal across the plot |
 | [Area](/docs/components/area/) | No | Area reveal across the plot |
 | [Bar](/docs/components/bar/) | No | Bars reveal from zero, clamped to the numeric domain |
 | [Histogram](/docs/components/histogram/) | No | Bar reveal |

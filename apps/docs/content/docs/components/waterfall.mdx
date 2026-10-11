@@ -82,11 +82,6 @@ Prepare ordered balances, then configure bars and connectors.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
-| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
-| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `entries` | `readonly WaterfallEntry[]` | Required | Ordered inputs with unique nonempty `id`, `label`, `kind` and kind-specific value. |
 | `initialBalance` | `number \| null` | `0` | Balance before the first entry; `null` means unknown. |
 
@@ -100,12 +95,16 @@ Returns `WaterfallDatum[]` with `value`, `start`, `balance` and sorted `range` e
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `data` | `WaterfallDatum[]` | — | Computed or host-owned range rows. |
 | `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | Vertical bars or horizontal bars, respectively. |
 | `animate` | `boolean \| BarAnimation` | `false` | Chart-owned motion with reduced-motion handling. |
 | `barCategoryGap` | `number \| string` | `"10%"` | Native category spacing; these components use `"32%"`. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Keyboard category inspection; set explicitly here. |
-| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name, including units. |
 
 </div>
 

@@ -26,8 +26,9 @@ Use the maintained docs examples for [Combo](https://kindui.dev/charts/docs/comp
 [Sankey](https://kindui.dev/charts/docs/components/sankey/),
 [Heatmap](https://kindui.dev/charts/docs/components/heatmap/),
 and [Line](https://kindui.dev/charts/docs/components/line/).
-Retrieve complete consumer source and its data alternative from the documentation;
-use the family table to route other chart requests.
+Retrieve complete consumer source from the documentation. Examples render only
+the graph; the host application owns any accessible data alternative. Use the
+family table to route other chart requests.
 
 ## Retrieve a family contract when needed
 

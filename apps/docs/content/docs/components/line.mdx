@@ -106,7 +106,7 @@ Add one `LineChart.Series` for each measure you want to plot.
 | `config` | `SeriesConfig` | Required | Series labels, colors and optional value formatters. |
 | `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. Keyboard inspection instructions are provided. |
 | `height` / `width` | Native chart dimensions | `280px` / `100%` | Responsive plot dimensions; `style` and `className` can also override sizing. |
-| `animate` | `boolean` or `LineAnimation` | `false` | Entrance and emphasis motion; respects reduced motion. |
+| `animate` | `boolean` or `LineAnimation` | `true` | Entrance and emphasis motion; respects reduced motion. |
 | `defaultVisibleSeries` | `readonly string[]` | All series | Initial uncontrolled visibility. Explicit visibility interaction lets legend actions update it. |
 | `visibleSeries` / `onVisibleSeriesChange` | `readonly string[]` / callback | Uncontrolled | Consumer-controlled visual visibility; explicit visibility mode enables legend hide/show. Without a callback, visibility is read-only. |
 | `children` | `ReactNode` | Required | Explicit plot parts; `null` or an empty fragment intentionally omits them. |

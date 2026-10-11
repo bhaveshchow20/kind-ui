@@ -11,7 +11,7 @@ export const barExamples = [
     title: "Horizontal bars",
     notes: "Workshop hours with a numeric X axis and categorical Y axis.",
     acceptance:
-      "Five topic labels remain readable beside horizontal bars; source and hidden data agree.",
+      "Five topic labels remain readable beside horizontal bars; source and plotted values agree.",
   },
   {
     id: "bar-materials",
