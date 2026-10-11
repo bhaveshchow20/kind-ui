@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { twMerge } from "tailwind-merge";
 
 const browser = await chromium.launch(
   process.env.KIND_UI_CHROMIUM_PATH ? { executablePath: process.env.KIND_UI_CHROMIUM_PATH } : {},
@@ -47,21 +48,37 @@ try {
           }
           const measured = await tooltip.evaluate((node) => {
             const box = node.getBoundingClientRect();
+            const frame = node.closest('[data-kind-ui="tooltip-frame"]');
+            const frameBox = frame.getBoundingClientRect();
+            const scale = frameBox.width / frame.offsetWidth;
             const list = node.querySelector('[data-kind-ui="chart-tooltip-list"]');
             const items = [...node.querySelectorAll('[data-kind-ui="chart-tooltip-item"]')];
             const style = getComputedStyle(node);
             return {
               padding: style.padding,
+              rootFontSize: Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
               border: style.borderWidth,
               listMargin: getComputedStyle(list).margin,
               listPadding: getComputedStyle(list).padding,
               itemMargins: items.map((item) => getComputedStyle(item).margin),
-              rightInsets: items.map(
-                (item) =>
-                  box.right -
-                  item.querySelector('[data-kind-ui="chart-tooltip-value"]').getBoundingClientRect()
-                    .right,
-              ),
+              frameScrollable:
+                (frame.scrollWidth <= frame.clientWidth ||
+                  ["auto", "scroll"].includes(getComputedStyle(frame).overflowX)) &&
+                (frame.scrollHeight <= frame.clientHeight ||
+                  ["auto", "scroll"].includes(getComputedStyle(frame).overflowY)),
+              valuesReachable: items.every((item) => {
+                const value = item
+                  .querySelector('[data-kind-ui="chart-tooltip-value"]')
+                  .getBoundingClientRect();
+                return (
+                  value.left >= frameBox.left - frame.scrollLeft * scale - 0.5 &&
+                  value.right <=
+                    frameBox.left + (frame.scrollWidth - frame.scrollLeft) * scale + 0.5 &&
+                  value.top >= frameBox.top - frame.scrollTop * scale - 0.5 &&
+                  value.bottom <=
+                    frameBox.top + (frame.scrollHeight - frame.scrollTop) * scale + 0.5
+                );
+              }),
               valueFits: items.every((item) => {
                 const value = item.querySelector('[data-kind-ui="chart-tooltip-value"]');
                 return value.scrollWidth <= value.clientWidth + 1;
@@ -70,14 +87,17 @@ try {
               viewport: innerWidth,
             };
           });
-          assert.equal(measured.padding, "6px 8px");
+          assert.equal(
+            measured.padding,
+            `${measured.rootFontSize * 0.375}px ${measured.rootFontSize * 0.5}px`,
+          );
           assert.equal(measured.border, "1px");
           assert.equal(measured.listMargin, "2px 0px 0px");
           assert.equal(measured.listPadding, "0px");
           assert.ok(measured.itemMargins.every((margin) => margin === "1px 0px 0px"));
           assert.ok(
-            measured.rightInsets.every((inset) => inset >= 8 && inset <= 10),
-            JSON.stringify(measured),
+            measured.frameScrollable && measured.valuesReachable,
+            JSON.stringify({ id, width, enlarged, ...measured }),
           );
           assert.ok(measured.valueFits && measured.width < measured.viewport);
           results.push({ family, id, width, enlarged, rows, ...measured });
@@ -98,10 +118,11 @@ try {
     await page.keyboard.press("ArrowRight");
     const tooltip = card.locator('[data-kind-ui="chart-tooltip"]');
     await tooltip.waitFor();
-    await tooltip.evaluate((node) => {
+    const overriddenClasses = twMerge(await tooltip.getAttribute("class"), "p-6");
+    await tooltip.evaluate((node, className) => {
       node.style.setProperty("--popover", "rgb(12, 34, 56)");
-      node.classList.add("p-6");
-    });
+      node.className = className;
+    }, overriddenClasses);
     await page.waitForTimeout(100);
     assert.deepEqual(
       await tooltip.evaluate((node) => ({
