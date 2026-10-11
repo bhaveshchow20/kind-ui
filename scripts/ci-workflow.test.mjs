@@ -10,6 +10,26 @@ const seo = parse(await read(".github/workflows/seo.yml"));
 const release = parse(await read(".github/workflows/release.yml"));
 const dependabot = parse(await read(".github/dependabot.yml"));
 
+test("routine CI artifacts expire quickly without shortening release retention", () => {
+  for (const workflow of [ci, docs]) {
+    for (const job of Object.values(workflow.jobs)) {
+      for (const step of job.steps.filter((step) =>
+        step.uses?.startsWith("actions/upload-artifact@"),
+      )) {
+        const retention = step.with.name.endsWith("-browser-fixtures")
+          ? 1
+          : `\${{ job.status != 'success' && 3 || 1 }}`;
+        assert.equal(step.with["retention-days"], retention, step.with.name);
+      }
+    }
+  }
+  for (const step of release.jobs.validate.steps.filter((step) =>
+    step.uses?.startsWith("actions/upload-artifact@"),
+  )) {
+    assert.equal(step.with["retention-days"], 14, step.with.name);
+  }
+});
+
 test("PR checks run without trigger exclusions and preserve required receipts", () => {
   assert.equal(ci.on.pull_request, null);
   assert.deepEqual(ci.on.push.branches, ["main"]);

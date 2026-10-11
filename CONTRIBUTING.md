@@ -60,6 +60,18 @@ The [repository configuration](.coderabbit.yaml) requests CodeRabbit reviews for
 
 ## CI timing and path filtering
 
+Routine CI and Docs fixture handoffs expire after one day. Verification artifacts
+expire after one day for successful jobs and three days for failed or cancelled
+jobs; every existing evidence upload remains enabled. Release artifacts retain
+their separate 14-day handoff window. Retention changes apply only to new uploads,
+so existing artifacts require expiration or separately authorized deletion.
+
+Generated screenshots, traces, videos, and browser reports belong in ignored
+`artifacts/`, `test-results/`, `playwright-report/`, or `blob-report/` directories,
+not Git commits. CI uploads are separate from repository files and use the
+retention windows above. Intentional site images and reviewed snapshot baselines
+remain trackable; do not blanket-ignore image file extensions.
+
 CI runs on Node 22. Fast checks and the packed-package gate start independently;
 browser shards wait only for packed fixture preparation and change detection.
 All four browser configurations receive `--shard`, with no tests excluded.
