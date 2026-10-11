@@ -541,11 +541,11 @@ export function HeatmapGrid({
           <tr>
             <th
               scope="col"
-              className={cn(
-                headerClasses,
-                "w-[6rem] text-left",
-                layout?.rowLabels === "hidden" && hiddenLabelClasses,
-              )}
+              className={
+                layout?.rowLabels === "hidden"
+                  ? hiddenLabelClasses
+                  : cn(headerClasses, "w-[6rem] text-left")
+              }
             >
               Row / column
             </th>
@@ -562,12 +562,15 @@ export function HeatmapGrid({
               <th
                 scope="row"
                 id={`${headerId}-row-${r}`}
-                className={cn(
-                  headerClasses,
-                  "w-[6rem] text-left",
-                  layout?.cellSize !== undefined && "py-0 leading-(--heatmap-cell-size)",
-                  layout?.rowLabels === "hidden" && hiddenLabelClasses,
-                )}
+                className={
+                  layout?.rowLabels === "hidden"
+                    ? hiddenLabelClasses
+                    : cn(
+                        headerClasses,
+                        "w-[6rem] text-left",
+                        layout?.cellSize !== undefined && "py-0 leading-(--heatmap-cell-size)",
+                      )
+                }
               >
                 <span
                   data-kind-ui="heatmap-row-label"
