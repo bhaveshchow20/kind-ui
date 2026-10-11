@@ -1,6 +1,6 @@
 ---
 name: kind-ui-charts
-description: Build, adapt, or review React and Next.js charts consuming @kind-ui/charts through npm or editable shadcn compositions. Use for chart selection, configured or composed charts, styling, controlled legends, loading, accessibility, and consumer verification with the public 0.4 API.
+description: Build, adapt, or review React and Next.js charts consuming @kind-ui/charts from npm. Use for chart selection, configured or composed charts, styling, controlled legends, loading, accessibility, and consumer verification with the public 0.4 API.
 ---
 
 # Kind UI charts
@@ -38,9 +38,6 @@ consumer code and API tables. Check the installed declarations for exact props;
 family roots and series do not all share one contract. Fetch only the needed
 family/shared-part pages. These are HTTP documentation resources, not an MCP server.
 
-Choose the distribution in the existing documentation. Registry recipes import the
-same npm core; check the registry metadata and installed version together. Use the
-registry index for actual item names and dependencies. Do not invent a `Chart`
-namespace, schema, registry item, or `material="default"`.
+Do not invent a `Chart` namespace, schema, registry, or `material="default"`.
 Default is the appearance label; omit `material` for it. Clay and Glow are
 the opt-in materials. See the theme rule for Sankey's separate `finish` API.

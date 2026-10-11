@@ -144,7 +144,3 @@
 .chart-example :is(.recharts-surface, [tabindex]):focus:not(:focus-visible) {
   outline: none;
 }
-/* Keep absolutely positioned Heatmap data alternatives inside their scroll viewport. */
-.chart-example [data-kind-ui="heatmap-scroll"] {
-  position: relative;
-}

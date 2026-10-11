@@ -6,8 +6,6 @@ import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { docRoute, publicPath } from "@/lib/routing.mjs";
 
-import { DistributionProvider } from "./distribution";
-
 const SearchDialog = dynamic(() => import("fumadocs-ui/components/dialog/search-default"), {
   ssr: false,
 });
@@ -39,9 +37,7 @@ export function Provider({ children }: { children: ReactNode }) {
         preload: false,
       }}
     >
-      <DistributionProvider>
-        <MotionConfig reducedMotion="user">{children}</MotionConfig>
-      </DistributionProvider>
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </RootProvider>
   );
 }

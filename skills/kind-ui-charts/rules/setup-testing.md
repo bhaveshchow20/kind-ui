@@ -1,18 +1,9 @@
 # React and Next setup
 
-Install `@kind-ui/charts` with the app's package manager. Released 0.4.0 requires
+Install `@kind-ui/charts` with the app's package manager. Released 0.3.0 requires
 React/react-dom `^19.3.0`, Recharts `^3.10.1`, and Motion `^13.4.6`. Check the
 installed manifest and lockfile before resolving peer conflicts. Motion is still
 a required peer when `animate={false}`; disabling animation does not remove imports.
-
-For an editable shadcn composition, choose shadcn in the existing chart guide,
-then run its item-specific command in a shadcn-initialized app. The recipe installs
-the npm core and its peers plus local composition/CSS files. Import the installed
-component from `@/components/charts/<example-id>/example`. Keep your lockfile:
-the CLI requests tested 0.4.0 but saves `^0.4.0`. Review local edits before updating
-recipes and compare their core-version metadata with your installed declarations.
-For agents, configure the Docs `/r/{name}.json` namespace and use the standard
-shadcn MCP server; verify the hosted index before relying on production endpoints.
 
 Import `@kind-ui/charts/styles.css` once at the app entry. In Next App Router,
 put it in `app/layout.tsx`; keep the interactive chart in a client module:
