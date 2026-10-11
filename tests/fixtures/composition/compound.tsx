@@ -49,6 +49,7 @@ export function FamilyCompositions() {
   const [small, setSmall] = useState(false);
   const [omit, setOmit] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [legendTop, setLegendTop] = useState(true);
   const [theme, setTheme] = useState(false);
   const [flowNodes, setFlowNodes] = useState(true);
   const [flowLinks, setFlowLinks] = useState(true);
@@ -76,6 +77,9 @@ export function FamilyCompositions() {
       </button>
       <button type="button" onClick={() => setMounted(!mounted)}>
         Compound mount
+      </button>
+      <button type="button" onClick={() => setLegendTop(!legendTop)}>
+        Compound legend position
       </button>
       {mounted && (
         <>
@@ -118,25 +122,26 @@ export function FamilyCompositions() {
                   }}
                 />
               </Parts>
-              <Group name="heatmap">
-                <Chart.HeatmapChart
-                  rows={["A"]}
-                  columns={["B", "C"]}
-                  data={[{ row: "A", column: "B", value: 5 }]}
-                  scale={heatScale}
-                  aria-label="Compound heatmap"
-                  animate
-                  config={config}
-                >
-                  <Parts>
-                    <Chart.HeatmapChart.Grid caption="Compound cells" />
-                    <Chart.HeatmapChart.Tooltip />
-                    <Chart.HeatmapChart.Legend label="Cell scale" />
-                    <Chart.HeatmapChart.DataTable caption="Cell values" />
-                  </Parts>
-                </Chart.HeatmapChart>
-              </Group>
             </Chart.LineChart>
+          </Group>
+          <Group name="heatmap">
+            <Chart.HeatmapChart
+              rows={["A"]}
+              columns={["B", "C"]}
+              data={[{ row: "A", column: "B", value: 5 }]}
+              scale={heatScale}
+              aria-label="Compound heatmap"
+              legendPosition={legendTop ? "top" : "bottom"}
+              animate
+              config={config}
+            >
+              <Parts>
+                <Chart.HeatmapChart.Grid caption="Compound cells" />
+                <Chart.HeatmapChart.Tooltip />
+                <Chart.HeatmapChart.Legend label="Cell scale" />
+                <Chart.HeatmapChart.DataTable caption="Cell values" />
+              </Parts>
+            </Chart.HeatmapChart>
           </Group>
           <Group name="area">
             <Chart.AreaChart {...frame} aria-label="Compound area" config={config}>

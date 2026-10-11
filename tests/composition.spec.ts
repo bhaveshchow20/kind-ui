@@ -118,6 +118,22 @@ test("compound families render through wrappers and keep HTML, geometry and stat
   const heatmap = family("heatmap");
   await expect(heatmap.getByRole("grid", { name: "Compound cells" })).toBeVisible();
   await expect(heatmap.getByRole("table", { name: "Cell values" })).toBeVisible();
+  await expect(heatmap.locator('[data-kind-ui="heatmap-legend"]')).toBeVisible();
+  const partsBeforePlot = () =>
+    heatmap.evaluate((node) => {
+      const slot = node.querySelector('[data-kind-ui="chart-parts"]');
+      const plot = node.querySelector('[data-kind-ui="heatmap"]');
+      return Boolean(
+        slot && plot && slot.compareDocumentPosition(plot) & Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    });
+  expect(await partsBeforePlot()).toBe(true);
+  await expect(
+    heatmap.locator('[data-kind-ui="chart-parts"] [data-kind-ui="heatmap-legend"]'),
+  ).toHaveCount(1);
+  await suite.getByRole("button", { name: "Compound legend position", exact: true }).click();
+  expect(await partsBeforePlot()).toBe(false);
+  await expect(heatmap.locator('[data-kind-ui="heatmap-legend"]')).toContainText("Cell scale");
   await heatmap.locator("td[data-cell-key]").first().focus();
   await page.keyboard.press("ArrowRight");
   await expect(heatmap.locator("td[data-cell-key]").nth(1)).toBeFocused();
