@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   artifactReceiptSchema,
   changesetStatusSchema,
+  docsProvenanceSchema,
   integrationEvidenceSchema,
   npmPackSchema,
   packageIdentitySchema,
@@ -25,6 +26,36 @@ const receipt = {
   },
   workflow: { event: null, runId: null, runAttempt: null, runUrl: null },
 };
+
+test("hosted docs provenance preserves workflow and tool validation evidence", () => {
+  const provenance = {
+    mode: "local",
+    version: receipt.package.version,
+    package: receipt.package.name,
+    integrity: receipt.integrity,
+    sha256: receipt.sha256,
+    sourceCommit: receipt.source.checkoutCommit,
+    publicExportsOnly: true,
+    guardedArtifact: true,
+  };
+  assert.deepEqual(docsProvenanceSchema.parse(provenance), provenance);
+  const hosted = {
+    ...provenance,
+    validation: {
+      event: "workflow_dispatch",
+      runId: "123",
+      runAttempt: "1",
+      runUrl: "https://github.com/owner/repo/actions/runs/123",
+      tools: { node: "v22.16.0", npm: "11.9.0", typescript: "5.9.3", vite: "8.3.1" },
+    },
+  };
+  assert.deepEqual(docsProvenanceSchema.parse(parseJson(JSON.stringify(hosted))), hosted);
+  for (const validation of [
+    { ...hosted.validation, runId: 123 },
+    { ...hosted.validation, tools: { ...hosted.validation.tools, typescript: null } },
+  ])
+    assert.throws(() => docsProvenanceSchema.parse({ ...provenance, validation }));
+});
 
 test("local and workflow receipts retain typed provenance without granting release approval", () => {
   assert.deepEqual(artifactReceiptSchema.parse(parseJson(JSON.stringify(receipt))), receipt);

@@ -107,6 +107,9 @@ export const docsProvenanceSchema = z.strictObject({
   sourceCommit: commit,
   publicExportsOnly: z.boolean(),
   guardedArtifact: z.boolean(),
+  validation: artifactReceiptSchema.shape.workflow
+    .extend({ tools: artifactReceiptSchema.shape.tools })
+    .optional(),
 });
 
 export const npmPackSchema = z

@@ -6,9 +6,14 @@ import { join } from "node:path";
  * @param {string} consumer
  * @param {string} compiler
  * @param {string[]} files
- * @param {{stdio?: import("node:child_process").StdioOptions}} [options]
+ * @param {{stdio?: import("node:child_process").StdioOptions, strictOptionalTypes?: boolean}} [options]
  */
-export async function checkTypes(consumer, compiler, files, { stdio = "inherit" } = {}) {
+export async function checkTypes(
+  consumer,
+  compiler,
+  files,
+  { stdio = "inherit", strictOptionalTypes = false } = {},
+) {
   // Independent resolution modes share only immutable installed dependencies.
   // Separate configs prevent one process from reading the other mode's options.
   const results = await Promise.allSettled(
@@ -25,10 +30,13 @@ export async function checkTypes(consumer, compiler, files, { stdio = "inherit" 
             moduleResolution: mode,
             strict: true,
             noUncheckedIndexedAccess: true,
-            exactOptionalPropertyTypes: true,
+            // Redux Toolkit's TaskAbortError.code/asyncThunk declarations fail
+            // exact optional checking. Baseline modes check all declarations;
+            // focused strict fixtures check consumer source with that flag.
+            exactOptionalPropertyTypes: strictOptionalTypes,
             isolatedModules: true,
             noImplicitOverride: true,
-            skipLibCheck: false,
+            skipLibCheck: strictOptionalTypes,
             noEmit: true,
             typeRoots: [join(consumer, "node_modules", "@types")],
           },
