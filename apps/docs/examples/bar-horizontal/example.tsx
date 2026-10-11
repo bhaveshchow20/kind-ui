@@ -58,37 +58,6 @@ export function WorkshopHoursChart() {
           </BarChart>
         </>
       </>
-      <div
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-          border: 0,
-        }}
-      >
-        <table data-chart-alternative aria-label="Workshop hours data">
-          <caption>Workshop hours</caption>
-          <thead>
-            <tr>
-              <th scope="col">Team</th>
-              <th scope="col">Hours</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.period}>
-                <th scope="row">{row.period}</th>
-                <td>{row.hours}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </figure>
   );
 }

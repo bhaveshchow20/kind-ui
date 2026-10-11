@@ -62,39 +62,6 @@ export function LibraryLoansChart({
           </BarChart>
         </>
       </>
-      <div
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-          border: 0,
-        }}
-      >
-        <table data-chart-alternative aria-label="Library loans by subject and format data">
-          <caption>Library loans by subject and format</caption>
-          <thead>
-            <tr>
-              <th scope="col">Subject</th>
-              <th scope="col">Print</th>
-              <th scope="col">Digital</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.period}>
-                <th scope="row">{row.period}</th>
-                <td>{row.print}</td>
-                <td>{row.digital}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </figure>
   );
 }

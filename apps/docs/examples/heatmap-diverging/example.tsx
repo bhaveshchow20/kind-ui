@@ -47,18 +47,6 @@ export function RegionalHeatmap() {
       />
       <HeatmapChart.Legend label="Difference from monthly target" />
       <HeatmapChart.Tooltip valueAnimation="shuffle" />
-      <HeatmapChart.DataTable
-        caption="Regional orders versus target, exact values"
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-        }}
-      />
     </HeatmapChart>
   );
 }

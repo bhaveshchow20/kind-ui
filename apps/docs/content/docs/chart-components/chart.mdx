@@ -78,9 +78,9 @@ Use `selected` with `onSelectionChange` for controlled focus, or `defaultSelecte
 
 Your event handlers run first. Call `event.preventDefault()` or return `false` from `onBeforeInteraction` to cancel a shared action.
 
-## Controls and data alternatives
+## Controls and status
 
-Use `Content` for contextual HTML controls, status text or a data table. It mounts outside the SVG while preserving chart context, including through fragments and consumer components. Compound HTML parts mount in the browser.
+Use `Content` for contextual HTML controls or status text. It mounts outside the SVG while preserving chart context, including through fragments and consumer components. Compound HTML parts mount in the browser.
 
 ```tsx
 import { BarChart } from "@kind-ui/charts";
@@ -89,16 +89,12 @@ import { BarChart } from "@kind-ui/charts";
   <BarChart.XAxis dataKey="day" />
   <BarChart.Series dataKey="orders" />
   <BarChart.Content>
-    <table>
-      <caption>Daily orders</caption>
-      <thead><tr><th scope="col">Day</th><th scope="col">Orders</th></tr></thead>
-      <tbody>{data.map((row) => <tr key={row.day}><th scope="row">{row.day}</th><td>{row.orders}</td></tr>)}</tbody>
-    </table>
+    <p role="status">{data.length} daily observations</p>
   </BarChart.Content>
 </BarChart>
 ```
 
-A complete nearby data alternative can also stay outside the chart when it does not need chart context. `children={null}` intentionally renders no plot parts.
+`children={null}` intentionally renders no plot parts.
 
 ## Props
 
@@ -108,7 +104,7 @@ A complete nearby data alternative can also stay outside the chart when it does 
 
 ## Loading
 
-Set `loading` while data is pending. The chart keeps its size, and `loadingLabel` is announced to screen readers.
+Set `loading` while data is pending. Only the plot placeholder is visible; chart-owned legends, content and instructions stay hidden until ready. The chart keeps its size, announces `loadingLabel` and preserves selection and visibility through loading.
 
 ```tsx
 import { LineChart } from "@kind-ui/charts";

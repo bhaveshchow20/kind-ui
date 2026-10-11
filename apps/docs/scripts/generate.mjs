@@ -173,9 +173,7 @@ for (const example of allExamples) {
     "\n";
   bundles[example.id] = {
     ...example,
-    // Examples with their own complete table retain it in every copied consumer.
     ...(dataAlternative ? { dataAlternative } : {}),
-    ...(exampleSource.includes("data-chart-alternative") ? { dataAlternativeInSource: true } : {}),
     ...(variants
       ? {
           variants,

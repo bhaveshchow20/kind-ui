@@ -29,7 +29,6 @@ try {
     await page.waitForTimeout(250);
     assert.equal(await rings.locator(".recharts-radial-bar-sector").count(), 3);
     assert.equal(await rings.locator('[data-kind-ui="radial-entrance-window"]').count(), 0);
-    assert.equal(await rings.locator("table tbody tr").count(), 3);
     assert.equal(await rings.locator('[data-kind-ui="radial-label"]').count(), 3);
     await expect(rings.locator(".recharts-surface")).toHaveAttribute(
       "aria-label",
@@ -76,7 +75,6 @@ try {
       "aria-label",
       "Storage capacity: 72 of 100 GB used, 28 GB available",
     );
-    await expect(gauge.locator("table tbody")).toContainText("72");
     await gaugeLabels.focus();
     await page.keyboard.press("Space");
     await expect(gaugeLabels).not.toBeChecked();
@@ -106,7 +104,6 @@ try {
     await activity.scrollIntoViewIfNeeded();
     await activity.locator(".recharts-radial-bar-sector").first().waitFor();
     assert.equal(await activity.locator('[data-kind-ui="radial-label"]').count(), 0);
-    assert.equal(await activity.locator("table tbody tr").count(), 3);
     for (const value of ["350 kcal", "30 min", "9 hours"])
       await expect(activity.locator('[data-kind-ui="chart-instructions"]')).toContainText(value);
     const activityPaths = await activity

@@ -73,7 +73,6 @@ export function PercentageChart() {
     <ComboChart.Bar dataKey="online" stackId="share" />
     <ComboChart.Bar dataKey="store" stackId="share" />
     <ComboChart.Tooltip normalizedValue={percent.normalizedValue} />
-    <ComboChart.Content><div className="sr-only">January: Online 60, Store 40.</div></ComboChart.Content>
   </ComboChart>;
 }
 ```
@@ -205,4 +204,4 @@ Share series metadata and inspection across the bars, lines and areas.
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 
-Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

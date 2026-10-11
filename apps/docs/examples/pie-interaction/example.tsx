@@ -50,19 +50,6 @@ export function PieOptions({
           <PieChart.Legend />
         </PieChart>
       </>
-      <div className="sr-only">
-        <table>
-          <caption>Allocation</caption>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.id}>
-                <th scope="row">{row.id}</th>
-                <td>{row.value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </>
   );
 }

@@ -53,18 +53,6 @@ export function SupportHeatmap({ state = "ready" }: { state?: "ready" | "loading
       />
       <HeatmapChart.Legend label="Requests per two-hour interval" />
       <HeatmapChart.Tooltip valueAnimation="shuffle" />
-      <HeatmapChart.DataTable
-        caption="Support requests, exact values"
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-        }}
-      />
     </HeatmapChart>
   );
 }

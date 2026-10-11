@@ -67,37 +67,6 @@ export function ResponseTimeChart() {
         <LineChart.Tooltip />
         <LineChart.Legend />
       </LineChart>
-      <div
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-          border: 0,
-        }}
-      >
-        <table data-chart-alternative aria-label="Response time in milliseconds data">
-          <caption>Response time in milliseconds</caption>
-          <thead>
-            <tr>
-              <th scope="col">Day</th>
-              <th scope="col">Response time (ms)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.period}>
-                <th scope="row">{row.period}</th>
-                <td>{row.response}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </figure>
   );
 }

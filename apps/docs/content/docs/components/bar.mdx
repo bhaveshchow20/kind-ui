@@ -69,7 +69,7 @@ const config = {
 
 Override the config with `BarChart.Series.pattern`; use `pattern={false}` to turn it off.
 
-<Callout title="Note">Explicit `fill`, Cells and custom shapes override the pattern. Keep labels and an accessible data table alongside patterns.</Callout>
+<Callout title="Note">Explicit `fill`, Cells and custom shapes override the pattern. Keep labels clear when using patterns.</Callout>
 
 ## Projected bars
 
@@ -93,7 +93,7 @@ const isProjected = (row: ProjectionRow) => row.projected === true;
 )} />
 ```
 
-<Callout title="Note">This styles supplied values; it does not calculate a forecast. Label projected rows in your accessible data table.</Callout>
+<Callout title="Note">This styles supplied values; it does not calculate a forecast. Label projected values in the tooltip.</Callout>
 
 ## Loading State
 
@@ -179,4 +179,4 @@ Add visibility controls, value formatting and category labels with these compone
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 
-Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

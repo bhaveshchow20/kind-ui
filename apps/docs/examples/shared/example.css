@@ -58,32 +58,12 @@
 .chart-example [data-kind-ui="chart-legend-item"]::marker {
   content: "";
 }
-.chart-example table:not([data-kind-ui^="heatmap-"]) {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-  text-align: left;
-}
-.chart-example table:not([data-kind-ui^="heatmap-"]) th,
-.chart-example table:not([data-kind-ui^="heatmap-"]) td {
-  border-bottom: 1px solid var(--border);
-  padding: 0.5rem 0.6rem;
-  white-space: nowrap;
-}
-.chart-example table:not([data-kind-ui^="heatmap-"]) caption {
-  text-align: left;
-  margin: 0.5rem 0;
-}
 .chart-example details {
   margin-top: 0.8rem;
 }
 .chart-example summary {
   cursor: pointer;
   font-size: 0.875rem;
-}
-.table-scroll {
-  overflow-x: auto;
-  max-width: 100%;
 }
 .chart-example :focus-visible {
   outline: 2px solid #733bff;

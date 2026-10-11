@@ -20,7 +20,6 @@ import { SankeyChart } from "@kind-ui/charts";
   <SankeyChart.Links />
   <SankeyChart.Tooltip formatter={(value) => `${value} MWh`} />
   <SankeyChart.Legend />
-  <SankeyChart.Table caption="Energy flows" />
 </SankeyChart>
 ```
 
@@ -59,7 +58,7 @@ import { SankeyChart } from "@kind-ui/charts";
 
 Node-config icons appear alongside the label.
 
-<Callout title="Note">Reserve space for outside labels. Inside labels clip to the node; the data table retains full names and values.</Callout>
+<Callout title="Note">Reserve space for outside labels. Inside labels clip to the node; tooltips retain full names and values.</Callout>
 
 ## Loading State
 

@@ -4,8 +4,7 @@ export const lineExamples = [
     title: "Monthly visitors",
     notes:
       "A LineChart composed from explicit axes, Series, Tooltip and Legend parts with four months of data.",
-    acceptance:
-      "Complete source renders all four months with a named chart and complete data alternative.",
+    acceptance: "Complete source renders all four months with a named chart and plotted values.",
   },
   {
     id: "line-presentation",
@@ -17,28 +16,31 @@ export const lineExamples = [
     id: "line-smooth",
     title: "Curve types",
     source: "line-recipes.tsx",
-    acceptance: "Straight lines renders all 12 observations; code, legend and data table agree.",
+    acceptance:
+      "Straight lines renders all 12 observations; code, legend and plotted values agree.",
     notes: "Linear curve override.",
   },
   {
     id: "line-comparison",
     title: "Multiple series",
     source: "line-recipes.tsx",
-    acceptance: "Multiple series renders all 12 observations; code, legend and data table agree.",
+    acceptance:
+      "Multiple series renders all 12 observations; code, legend and plotted values agree.",
     notes: "Multiple series line composition.",
   },
   {
     id: "line-markers",
     title: "Dots and labels",
     source: "line-recipes.tsx",
-    acceptance: "Dots and labels renders all 7 observations; code, legend and data table agree.",
+    acceptance:
+      "Dots and labels renders all 7 observations; code, legend and plotted values agree.",
     notes: "Dots and labels line composition.",
   },
   {
     id: "line-materials",
     title: "Materials",
     source: "line-recipes.tsx",
-    acceptance: "All materials render all 12 observations; code, legend and data table agree.",
+    acceptance: "All materials render all 12 observations; code, legend and plotted values agree.",
     notes: "Default, Clay and Glow line composition.",
   },
 ];
@@ -111,7 +113,7 @@ export const family = {
       title: "Line Chart",
       source: "line-recipes.tsx",
       acceptance:
-        "Twelve monthly visitor observations use a smooth curve; legend focus, source and data table agree.",
+        "Twelve monthly visitor observations use a smooth curve; legend focus, source and plotted values agree.",
       notes: "A single smooth series with complete monthly visitor data.",
     },
     ...lineExamples,

@@ -6,7 +6,6 @@ import {
   SankeyLink,
   SankeyNode,
   type SankeyNodeConfig,
-  SankeyTable,
   useChartInteraction,
 } from "@kind-ui/charts";
 import { type ReactNode, useState } from "react";
@@ -192,21 +191,6 @@ export function EnergyFlowFinishChart({
             ? `${names.get(selected.source)} → ${names.get(selected.target)}: ${selected.value} MWh`
             : "180 MWh · Select a ribbon to inspect its route."}
         </p>
-        <SankeyTable
-          data={data}
-          caption="Illustrative allocation in MWh"
-          style={{
-            position: "absolute",
-            width: 1,
-            height: 1,
-            padding: 0,
-            margin: -1,
-            overflow: "hidden",
-            clipPath: "inset(50%)",
-            whiteSpace: "nowrap",
-            border: 0,
-          }}
-        />
       </section>
     </>
   );

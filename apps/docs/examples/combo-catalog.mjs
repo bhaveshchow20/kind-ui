@@ -4,7 +4,7 @@ export const comboExamples = [
     title: "Production and capacity",
     notes: "Shipped units, available capacity and a production target on one numeric scale.",
     acceptance:
-      "Six monthly observations agree across the three composed families, source and hidden data alternative.",
+      "Six monthly observations agree across the three composed families, source and plotted values.",
   },
   {
     id: "combo-stacked",

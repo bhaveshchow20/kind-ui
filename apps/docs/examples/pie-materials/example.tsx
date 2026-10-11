@@ -72,39 +72,6 @@ export function AllocationMaterialChart({
           </PieChart>
         </>
       </>
-      <div
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-          border: 0,
-        }}
-      >
-        <table data-chart-alternative aria-label="Team allocation (1,000 hours) data">
-          <caption>Team allocation (1,000 hours)</caption>
-          <thead>
-            <tr>
-              <th scope="col">Team</th>
-              <th scope="col">Hours</th>
-              <th scope="col">Share of original total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.key}>
-                <th scope="row">{config[row.key].label}</th>
-                <td>{row.hours}</td>
-                <td>{row.share}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </figure>
   );
 }

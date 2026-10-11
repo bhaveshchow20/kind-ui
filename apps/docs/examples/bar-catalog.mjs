@@ -71,8 +71,7 @@ export const family = {
       id: "bar",
       title: "Bar Chart",
       notes: "Weekly pickup orders across five locations with opt-in category emphasis.",
-      acceptance:
-        "Five locations agree with the complete source and accessible hidden data alternative.",
+      acceptance: "Five locations agree with the complete source and plotted values.",
     },
     ...barExamples,
   ],

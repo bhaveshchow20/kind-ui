@@ -24,7 +24,7 @@ import { RadialBarChart } from "@kind-ui/charts";
 </RadialBarChart>
 ```
 
-<Callout title="Note">Values remain available in the tooltip and accessible data table when labels are hidden.</Callout>
+<Callout title="Note">Values remain available in the tooltip when labels are hidden.</Callout>
 
 ## Activity rings
 
@@ -93,7 +93,7 @@ Choose `ActivityRings` for normalized progress rings or `RadialBarChart` for cus
 | `innerRadius` / `outerRadius` | `number \| string` | `"0%"` / `"80%"` in Recharts | Pixels or percentages of the native maximum radius. |
 | `cx` / `cy` | `number \| string` | `"50%"` | Native center position; the gauge lowers `cy` for its semicircle. |
 | `barCategoryGap` | `number \| string` | `"10%"` in Recharts | Space between category bands. |
-| `aria-label` | `string` | — | Accessible plot name; include a separate data alternative. |
+| `aria-label` | `string` | — | Accessible plot name. |
 
 </div>
 
@@ -152,4 +152,4 @@ Use these components for custom radial plots and compose ActivityRings parts exp
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
 
-Place custom HTML controls or a data alternative in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

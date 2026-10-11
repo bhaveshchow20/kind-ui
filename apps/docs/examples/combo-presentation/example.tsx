@@ -91,29 +91,6 @@ export function PresentationOptions({ status = "ready" }: { status?: "ready" | "
           </ComboChart>
         </>
       </>
-      <div className="sr-only">
-        <table>
-          <caption>Monthly production in units; June is projected</caption>
-          <thead>
-            <tr>
-              <th scope="col">Month</th>
-              <th scope="col">Capacity</th>
-              <th scope="col">Shipped</th>
-              <th scope="col">Target</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.month}>
-                <th scope="row">{row.month}</th>
-                <td>{row.capacity}</td>
-                <td>{row.shipped}</td>
-                <td>{row.target}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </section>
   );
 }

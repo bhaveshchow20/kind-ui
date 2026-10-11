@@ -35,8 +35,6 @@ try {
   assert.equal(await scatter.locator(mark).count(), 8);
   assert.equal(await scatter.locator('[data-legend-shape="circle"]').count(), 1);
   assert.equal(await scatter.locator('[data-legend-shape="diamond"]').count(), 1);
-  assert.equal(await scatter.locator(".sr-only tbody tr").count(), 8);
-  assert.equal(await bubble.locator(".sr-only tbody tr").count(), 6);
   for (const [id, bundle] of Object.entries(bundles)) {
     const card = page.locator(`[data-component="${id}"]`);
     for (const [value, option] of Object.entries(

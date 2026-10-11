@@ -70,39 +70,6 @@ export function RevenueComparisonChart() {
         <LineChart.Tooltip />
         <LineChart.Legend />
       </LineChart>
-      <div
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-          border: 0,
-        }}
-      >
-        <table data-chart-alternative aria-label="Revenue and target in thousands of dollars data">
-          <caption>Revenue and target in thousands of dollars</caption>
-          <thead>
-            <tr>
-              <th scope="col">Month</th>
-              <th scope="col">Revenue ($k)</th>
-              <th scope="col">Target ($k)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.period}>
-                <th scope="row">{row.period}</th>
-                <td>{row.actual}</td>
-                <td>{row.target}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </figure>
   );
 }

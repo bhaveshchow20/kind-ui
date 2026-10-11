@@ -117,7 +117,6 @@ try {
           (await page.locator(".doc-body > h2").first().innerText()).startsWith("Usage"),
           `${key} order`,
         );
-        await expect(card.locator(".sr-only table")).toHaveCount(1);
         const loading = bundles[id].variants.loading;
         assert.ok(loading, `${id} loading source`);
         const pending = page.locator(`[data-component="${id}-loading"]`);

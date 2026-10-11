@@ -67,7 +67,7 @@ export const family = {
       id: "area",
       title: "Area Chart",
       notes: "A single area with complete monthly visitor data.",
-      acceptance: "Twelve monthly observations match the public source and accessible data table.",
+      acceptance: "Twelve monthly observations match the public source and plotted values.",
     },
     ...areaExamples,
   ],

@@ -28,7 +28,6 @@ try {
     assert.equal(await grid.locator("td").count(), 24);
     assert.equal(await grid.locator('td[data-missing="true"]').count(), 2);
     assert.equal(await grid.locator('td[tabindex="0"]').count(), 1);
-    assert.equal(await primary.locator(".sr-only table").count(), 1);
     assert.equal(await primary.locator('[data-kind-ui="heatmap-data-table"]').count(), 1);
     await page.screenshot({ path: `artifacts/heatmap/initial-${width}.png` });
     const cell = grid.locator("td").first();

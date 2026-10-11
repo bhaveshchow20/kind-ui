@@ -29,11 +29,6 @@ try {
     .screenshot({ path: "artifacts/waterfall/chart-desktop.png" });
   for (const [id, b] of Object.entries(bundles)) {
     const card = p.locator(`[data-component="${id}"]`);
-    assert.equal(await card.locator("table tbody tr").count(), b.dataAlternative.rows.length);
-    const data = await card.locator("table tbody").textContent();
-    for (const r of b.dataAlternative.rows)
-      for (const k of Object.keys(b.dataAlternative.columns))
-        assert.ok(data.includes(String(r[k])));
     for (const [value, v] of Object.entries(
       b.variants ?? { default: { source: b.files[`src/examples/${id}/example.tsx`] } },
     )) {

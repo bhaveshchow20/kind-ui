@@ -22,7 +22,7 @@ export function promptFor(bundle, _settings, origin, variant = bundle.defaultVar
     `Retrieve the standalone source: ${source}.`,
     `Read the family contract: ${markdown}. Setup: ${new URL(publicPath("/markdown/installation.md"), origin).href}. Example manifest: ${new URL(publicPath(`/examples/${bundle.id}/package.json`), origin).href}.`,
     `Install @kind-ui/charts and its documented React, React DOM, Recharts and Motion peers. Build Tailwind v4 CSS with an @source path to node_modules/@kind-ui/charts/dist relative to your CSS file. Use public exports and the example's composition owner.`,
-    `Adapt the data to my task. Keep units, domains, stable identities and missing-value rules explicit; ask if they are unspecified. Include a chart name and complete data alternative.`,
+    `Adapt the data to my task. Keep units, domains, stable identities and missing-value rules explicit; ask if they are unspecified. Include a meaningful chart name. Keep the example graph-only; do not add hidden alternative tables.`,
     `Run strict TypeScript and a production build. Check mobile containment, keyboard access, loading and reduced motion; report the results.`,
   ].join("\n\n");
 }

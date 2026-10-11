@@ -118,9 +118,12 @@ try {
     await expect(
       card.getByRole("status").filter({ hasText: "Loading chart" }).first(),
     ).toBeAttached();
-    const pendingButtons = await buttons.count();
-    // Configuration controls outside the managed plot retain native public behavior.
-    // The example's same chart instance must restore its selection when data returns.
+    await expect(card.locator('[data-kind-ui="chart-legend"]')).toBeHidden();
+    const pendingButtons = await card
+      .locator('[data-kind-ui="chart-legend"] button:visible')
+      .count();
+    assert.equal(pendingButtons, 0);
+    // The same chart instance restores its selection when data returns.
     await consumer.getByRole("button", { name: "Toggle pending", exact: true }).click();
     await expect(card.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
     await expect(buttons).toHaveCount(count);

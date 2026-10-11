@@ -10,7 +10,6 @@ import {
   SankeyNode,
   type SankeyNodeConfig,
   SankeyNodeLabel,
-  SankeyTable,
   type SeriesConfig,
   TooltipContent,
 } from "@kind-ui/charts";
@@ -91,29 +90,6 @@ export function PresentationOptions({ loading = false }: { loading?: boolean }) 
           </ComboChart>
         </>
       </>
-      <div className="sr-only">
-        <table>
-          <caption>Monthly production in units; June is projected</caption>
-          <thead>
-            <tr>
-              <th scope="col">Month</th>
-              <th scope="col">Capacity</th>
-              <th scope="col">Shipped</th>
-              <th scope="col">Target</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.month}>
-                <th scope="row">{row.month}</th>
-                <td>{row.capacity}</td>
-                <td>{row.shipped}</td>
-                <td>{row.target}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </section>
   );
 }
@@ -184,19 +160,6 @@ export function PieOptions({ loading = false }: { loading?: boolean }) {
         <PieChart.Tooltip itemKey={(entry) => entry.payload.id} />
         <PieChart.Legend />
       </PieChart>
-      <div className="sr-only">
-        <table>
-          <caption>Allocation</caption>
-          <tbody>
-            {categories.map((row) => (
-              <tr key={row.id}>
-                <th scope="row">{row.id}</th>
-                <td>{row.value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </>
   );
 }
@@ -245,7 +208,6 @@ export function FlowLabelOptions() {
           )}
         />
       </SankeyChart>
-      <SankeyTable data={flow} caption="Flow in units" formatValue={units} />
     </>
   );
 }

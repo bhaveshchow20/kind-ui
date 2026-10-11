@@ -63,27 +63,6 @@ export function RoundedAllocationChart({
           <PieChart.Legend aria-label="Allocation categories" />
         </PieChart>
       </>
-      <div className="sr-only">
-        <table>
-          <caption>Team allocation (1,000 hours)</caption>
-          <thead>
-            <tr>
-              <th scope="col">Team</th>
-              <th scope="col">Hours</th>
-              <th scope="col">Share of total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.key}>
-                <th scope="row">{config[row.key].label}</th>
-                <td>{row.hours}</td>
-                <td>{row.share}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </>
   );
 }

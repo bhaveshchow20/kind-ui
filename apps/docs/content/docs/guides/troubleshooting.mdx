@@ -30,7 +30,7 @@ Each chart owns its frame and requires explicit parts.
 | Legend clicks do not change visibility | Focus dims by default. For hide/show, set chart `interaction.mode="visibility"` and pair controlled visibility with its callback, or use `defaultVisibleSeries` |
 | Accessor series ignores visibility or metadata | Give it a matching `seriesKey`; see [Identity and colors](/docs/concepts/identity/) |
 | Category colors move when rows reorder | Use stable category IDs rather than row positions; see the family example |
-| Arrow keys do not inspect every mark | Check the family's [keyboard access](/docs/guides/accessibility/#keyboard-access); retain a complete data alternative |
+| Arrow keys do not inspect every mark | Check the family's [keyboard access](/docs/guides/accessibility/#keyboard-access); use meaningful chart labels |
 | Arrow keys stay on the hovered category | Move the pointer out of the plot before entering keyboard inspection |
 | Material does not affect a custom mark | Custom shapes, paint, and filters can replace the built-in appearance |
 | Entrance stops after an update | Data/layout changes finish the entrance; remount to replay intentionally |

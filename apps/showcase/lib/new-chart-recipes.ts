@@ -369,7 +369,6 @@ export function Example(){
  return <SankeyChart config={config} aria-label="${r.tag}" data={data} style={{width:"100%",height:240}} animate={animate} nodeWidth={${options.nodeWidth ?? 12}} nodePadding={${options.nodePadding ?? 24}} margin={{top:12,bottom:12,left:65,right:85}}>
   <SankeyChart.Nodes render={props => <g><SankeyChart.Node {...props} color={colors[props.index%colors.length]} />${(options.showLabels ?? true) ? '<text x={props.x<100?props.x-8:props.x+props.width+8} y={props.y+props.height/2} textAnchor={props.x<100?"end":"start"} dominantBaseline="middle" fill="currentColor" fontSize={11}>{props.payload.name}</text>' : ""}</g>} />
   <SankeyChart.Links render={props => <SankeyChart.Link {...props} material="gradient" color={colors[data.nodes.findIndex(node => node.id===props.payload.source.id)%colors.length]} targetColor={colors[data.nodes.findIndex(node => node.id===props.payload.target.id)%colors.length]} pathProps={{opacity:${options.linkOpacity ?? 0.45}}} />} />
-  <SankeyChart.Table caption="${r.tag}" className="sr-only" />
  </SankeyChart>;
 }
 `

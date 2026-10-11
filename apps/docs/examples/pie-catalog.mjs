@@ -24,7 +24,7 @@ export const pieExamples = [
     notes:
       "Native cornerRadius and paddingAngle produce rounded pies, rounded donuts and a petal donut without custom shapes.",
     acceptance:
-      "Geometry selection matches copied source; category identity and the 1,000-hour data alternative remain unchanged.",
+      "Geometry selection matches copied source; category identity and the 1,000-hour total remain unchanged.",
   },
   {
     id: "pie-interaction",

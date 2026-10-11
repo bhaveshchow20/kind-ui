@@ -5,7 +5,6 @@ interface ExampleBundle {
   files: Record<string, string>;
   variants?: Record<string, { label: string; source: string }>;
   defaultVariant?: string;
-  dataAlternative?: unknown;
   packageStatus?: string;
   localPackage?: boolean;
   version?: string;

@@ -124,8 +124,6 @@ try {
       await card.getByRole("tab", { name: "Preview", exact: true }).getAttribute("aria-selected"),
       "true",
     );
-    const rows = card.locator(".sr-only table tbody tr, table[data-chart-alternative] tbody tr");
-    assert.equal(await rows.count(), bundle.dataAlternative.rows.length);
   }
   assert.notDeepEqual(geometries.grouped, geometries.stacked);
   const comparison = page.locator('[data-component="bar-comparison"]');

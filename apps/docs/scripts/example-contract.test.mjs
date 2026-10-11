@@ -178,7 +178,7 @@ test("private package bytes match validation without public provenance or archiv
   assert.equal(existsSync("public/examples/package"), false);
 });
 
-test("Line snippets are standalone public consumers with a shared data alternative", () => {
+test("Line snippets are standalone public chart consumers", () => {
   const lines = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
   assert.equal(Object.keys(lines).length, 7);
   for (const bundle of Object.values(lines)) {
@@ -189,10 +189,6 @@ test("Line snippets are standalone public consumers with a shared data alternati
       `${bundle.id}: ${imports}`,
     );
     assert.ok(!Object.keys(bundle.files).some((file) => /settings\.ts|controls\.tsx/.test(file)));
-    assert.ok(
-      bundle.dataAlternative.rows.length >=
-        (["line-presentation", "line-start"].includes(bundle.id) ? 4 : 7),
-    );
     assert.deepEqual(filesFor(bundle, {}), bundle.files);
   }
   const basic = lines.line.files["src/examples/line/example.tsx"];
@@ -248,7 +244,7 @@ test("Area consumers preserve explicit composition and stacked series focus", ()
   );
 });
 
-test("every family recipe is generated with its own prompt route and complete data alternative", () => {
+test("every family recipe is generated with its own prompt route", () => {
   const all = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
   assert.deepEqual(Object.keys(all).sort(), allExamples.map(({ id }) => id).sort());
   for (const example of allExamples) {
@@ -259,10 +255,6 @@ test("every family recipe is generated with its own prompt route and complete da
         publicPath(`/docs/components/${example.family}/`),
       ),
     );
-    assert.ok(bundle.dataAlternative.rows.length > 0);
-    for (const row of bundle.dataAlternative.rows)
-      for (const column of Object.keys(bundle.dataAlternative.columns))
-        assert.ok(Object.hasOwn(row, column));
     for (const [value, variant] of Object.entries(bundle.variants ?? {}))
       assert.notEqual(variant.source, "", `${example.id}:${value}`);
   }
@@ -373,20 +365,13 @@ test("page Markdown keeps selected examples and readable presentation fallbacks"
   assert.match(readFileSync("public/markdown/installation.md", "utf8"), /#### Next\.js/);
 });
 
-test("shared copied examples own complete data alternatives without preview duplication", () => {
-  for (const id of [
-    "bar-comparison",
-    "line-markers",
-    "line-comparison",
-    "bar-horizontal",
-    "pie-materials",
-  ]) {
+test("copied examples focus on chart rendering", () => {
+  for (const [id, bundle] of Object.entries(completeBundles)) {
     const source = readFileSync(`examples/${id}/example.tsx`, "utf8");
-    assert.ok(source.includes("data-chart-alternative"));
-    assert.ok(source.includes("data.map((row)"));
-    assert.ok(source.includes('scope="row"'));
-    assert.equal(completeBundles[id].dataAlternativeInSource, true);
-    assert.ok(completeBundles[id].dataAlternative.rows.length > 0);
-    assert.equal(completeBundles[id].files[`src/examples/${id}/example.tsx`], source);
+    assert.ok(
+      !/data-chart-alternative|<table\b|<\w+(?:Chart)?\.(?:Table|DataTable)\b/.test(source),
+      id,
+    );
+    assert.equal(bundle.files[`src/examples/${id}/example.tsx`], source);
   }
 });

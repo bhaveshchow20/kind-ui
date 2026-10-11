@@ -72,7 +72,7 @@ export const boxPlotPrimary = {
   id: "box-plot",
   title: "BoxPlot",
   notes: "Compare three caller-computed response time distributions, in milliseconds.",
-  acceptance: "Quartiles, whiskers and outliers match the complete source and hidden data table.",
+  acceptance: "Quartiles, whiskers and outliers match the complete source and plotted values.",
 };
 
 // Native chart loading uses the same source in Preview, Code and Copy prompt.
