@@ -5,18 +5,50 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 const app = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-async function evaluate(source) {
+function moduleUrl(source) {
   const { outputText } = ts.transpileModule(source, {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
       module: ts.ModuleKind.ESNext,
     },
   });
-  return import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
+  return `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`;
+}
+// Recipes use the maintained data/palette guard. Extract that exported function
+// from its actual source so evaluation need not import unrelated CSS utilities.
+const utilities = ts.createSourceFile(
+  "utils.ts",
+  await readFile(join(app, "lib/utils.ts"), "utf8"),
+  ts.ScriptTarget.Latest,
+  true,
+  ts.ScriptKind.TS,
+);
+const helpers = utilities.statements.filter(
+  (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === "demoEntry",
+);
+assert.equal(
+  helpers.length,
+  1,
+  "Snippet evaluation requires one maintained demoEntry in lib/utils.ts",
+);
+const helper = helpers[0];
+assert.ok(
+  helper.body &&
+    helper.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword),
+  "Snippet evaluation requires lib/utils.ts to export the demoEntry function implementation",
+);
+const helperUrl = moduleUrl(helper.getText(utilities));
+async function evaluate(source) {
+  const linked = source.replace(
+    /from\s*(["'])@\/lib\/utils\1/g,
+    `from ${JSON.stringify(helperUrl)}`,
+  );
+  return import(moduleUrl(linked));
 }
 const page = await readFile(join(app, "app/page.tsx"), "utf8");
 const basic = await evaluate(
-  page.slice(page.indexOf("const recipes ="), page.indexOf("function ChartCard(")) +
+  'import { demoEntry } from "@/lib/utils";\n' +
+    page.slice(page.indexOf("const recipes ="), page.indexOf("function ChartCard(")) +
     "\nexport { recipes, snippet };",
 );
 const advanced = await evaluate(await readFile(join(app, "lib/advanced-chart-recipes.ts"), "utf8"));

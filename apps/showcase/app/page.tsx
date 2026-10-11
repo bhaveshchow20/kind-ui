@@ -213,7 +213,7 @@ function snippet(
   const series = r.keys
     .map(
       (k, i) =>
-        `          <${family}Chart.Series dataKey="${k}" material="${material}"${family === "Line" ? ` type="${options.curve ?? (r.id === "steps" ? "stepAfter" : "monotone")}" dot={${options.dots ?? false}} strokeWidth={${options.strokeWidth ?? (material === "clay" ? 5 : 3)}}` : family === "Area" ? ` type="${options.curve ?? "monotone"}" fill="${colors[i]}" fillOpacity={${options.fillOpacity ?? (r.id === "area" ? 0.16 : 0.5)}} strokeWidth={${options.strokeWidth ?? 2.5}}${r.id === "stacked" ? ' stackId="devices"' : ""}` : ` radius={${options.radius ?? 5}} maxBarSize={${options.width ?? (horizontal ? 18 : 35)}}${options.stacked ? ' stackId="customers"' : ""}`} />`,
+        `          <${family}Chart.Series dataKey="${k}" material="${material}"${family === "Line" ? ` type="${options.curve ?? (r.id === "steps" ? "stepAfter" : "monotone")}" dot={${options.dots ?? false}} strokeWidth={${options.strokeWidth ?? (material === "clay" ? 5 : 3)}}` : family === "Area" ? ` type="${options.curve ?? "monotone"}" fill="${demoEntry(colors, i)}" fillOpacity={${options.fillOpacity ?? (r.id === "area" ? 0.16 : 0.5)}} strokeWidth={${options.strokeWidth ?? 2.5}}${r.id === "stacked" ? ' stackId="devices"' : ""}` : ` radius={${options.radius ?? 5}} maxBarSize={${options.width ?? (horizontal ? 18 : 35)}}${options.stacked ? ' stackId="customers"' : ""}`} />`,
     )
     .join("\n");
   const chartData = recipeData(r.id);
@@ -222,13 +222,13 @@ function snippet(
       k,
       {
         label: r.keys.length === 1 ? r.subtitle : (recipeLabels(r.id)[k] ?? k),
-        color: colors[i],
+        color: demoEntry(colors, i),
       },
     ]),
   );
   return `"use client";
 
-import { ${family}Chart, ReferenceLine, type SeriesConfig } from "@kind-ui/charts";
+import { ${family}Chart, ${r.id === "signed" ? "ReferenceLine, " : ""}type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
 ${chartData.map((d) => `  ${JSON.stringify(d)},`).join("\n")}
