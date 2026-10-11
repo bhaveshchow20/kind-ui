@@ -4,7 +4,7 @@
   "package": "@kind-ui/charts",
   "integrity": "sha512-jmUjadZpLd0O0lVm6QTdKAS8V5+vSmo0N/klmE1dBvzFeE/bbstFU6ruLBu/WoiC2Hfl83igq6Puu2WPc418jg==",
   "sha256": "10d20d303978bcf5d053932002b84decf12e638ea31502d260e27aa5c2a291e6",
-  "sourceCommit": "d6ab1a2b1f9bf97f21a0d583b4b851d12683baec",
+  "sourceCommit": "637a81337d126a43b9157dd16e17968fa749a6a6",
   "publicExportsOnly": true,
   "guardedArtifact": true
 }
