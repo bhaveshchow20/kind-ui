@@ -17,7 +17,7 @@ export function CompactActivityHeatmap() {
         data={data}
         scale={scale}
         config={{}}
-        aria-label="Heatmap chart"
+        aria-label="Contributions by day and week"
       >
         <HeatmapChart.Grid
           caption="Contributions by day and week"

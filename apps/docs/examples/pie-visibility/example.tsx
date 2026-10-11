@@ -37,7 +37,7 @@ export function VisibleAllocationChart() {
   return (
     <>
       <p role="status" className="sr-only">
-        {visibleTotal.toLocaleString("en-US")}hours visible; slice positions retain the full
+        {visibleTotal.toLocaleString("en-US")} hours visible; slice positions retain the full
         allocation
       </p>
       <>

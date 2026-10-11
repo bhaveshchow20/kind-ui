@@ -89,7 +89,7 @@ export function EdgeCaseBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {summary.lowerWhisker}pp
+                        {summary.lowerWhisker} pp
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
@@ -101,7 +101,7 @@ export function EdgeCaseBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {summary.q1}pp
+                        {summary.q1} pp
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
@@ -113,7 +113,7 @@ export function EdgeCaseBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {summary.median}pp
+                        {summary.median} pp
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
@@ -125,7 +125,7 @@ export function EdgeCaseBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {summary.q3}pp
+                        {summary.q3} pp
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
@@ -137,7 +137,7 @@ export function EdgeCaseBoxPlot() {
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {summary.upperWhisker}pp
+                        {summary.upperWhisker} pp
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>

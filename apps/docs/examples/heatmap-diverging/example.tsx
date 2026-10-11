@@ -38,7 +38,7 @@ export function RegionalHeatmap() {
       missingLabel="No report"
       animate
       config={{}}
-      aria-label="Heatmap chart"
+      aria-label="Regional orders versus monthly target"
     >
       <HeatmapChart.Grid
         caption="Regional orders versus target"

@@ -103,8 +103,8 @@ export function CheckoutLatencyHistogram({ state = "ready" }: { state?: "ready" 
           color: "var(--color-fd-muted-foreground, #666)",
         }}
       >
-        {result.accepted}accepted · {result.missing}missing · {result.nonfinite}nonfinite ·{" "}
-        {result.outOfRange}outside 0–200 ms
+        {result.accepted} accepted · {result.missing} missing · {result.nonfinite} nonfinite ·{" "}
+        {result.outOfRange} outside 0–200 ms
       </p>
     </div>
   );

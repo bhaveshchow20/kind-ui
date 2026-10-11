@@ -3,7 +3,9 @@ title: Axes and Grid
 description: Set scales, tick labels and guides for Cartesian and polar charts.
 ---
 
-Kind exports these Recharts components directly. Compose them inside the chart; their props and defaults remain native.
+Compound axis and grid parts wrap Recharts components and accept their native props. Cartesian axes hide axis lines and tick lines and use muted 12px tick labels by default. Cartesian grids show horizontal dashed guides with the theme border color. Scatter axes default to numeric scales. Override these defaults with explicit props.
+
+The standalone `XAxis`, `YAxis`, `CartesianGrid`, `ZAxis` and polar exports remain native Recharts components; compound polar parts also retain native defaults.
 
 Workshop hours use a numeric X axis, topic labels on Y, and vertical grid guides.
 

@@ -47,7 +47,7 @@ export function MaterialHeatmap({
       animate
       missingLabel="No report"
       config={{}}
-      aria-label="Heatmap chart"
+      aria-label="Support requests by day and hour"
     >
       <HeatmapChart.Grid
         caption="Support requests by day and hour"

@@ -20,6 +20,7 @@ import { filesFor, promptFor } from "../lib/example-files.mjs";
 import { publicPath } from "../lib/routing.mjs";
 import { verificationFiles } from "./consumer-validation-files.mjs";
 import "./routing-contract.test.mjs";
+import "./review-comments-contract.test.mjs";
 import "./composition-guide.test.mjs";
 import "./material-contract.test.mjs";
 
