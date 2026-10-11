@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { assertToc } from "./docs-browser-contracts.mjs";
 import { expectDimmedSeries } from "./interaction-paint.mjs";
+import { candidatePromptSource } from "./prompt-source.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/area-examples.json", "utf8"));
 const browser = await chromium.launch(
@@ -62,7 +63,7 @@ try {
         const prompt = await p.evaluate(() => navigator.clipboard.readText());
         const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
         assert.equal(
-          (await (await context.request.get(url)).text()).trimEnd(),
+          (await (await context.request.get(candidatePromptSource(url, origin))).text()).trimEnd(),
           variant.source.trimEnd(),
         );
         await pending.getByRole("tab", { name: "Preview", exact: true }).click();
@@ -93,7 +94,9 @@ try {
       assert.ok(prompt.includes("/docs/components/area/"));
       const selectedUrl = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
       assert.equal(
-        (await (await context.request.get(selectedUrl)).text()).trimEnd(),
+        (
+          await (await context.request.get(candidatePromptSource(selectedUrl, origin))).text()
+        ).trimEnd(),
         variant.source.trimEnd(),
       );
       const path = await card.locator(".recharts-area-area").first().getAttribute("d");

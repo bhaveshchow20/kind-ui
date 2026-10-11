@@ -384,3 +384,22 @@ test("copied examples focus on chart rendering", () => {
     assert.equal(bundle.files[`src/examples/${id}/example.tsx`], source);
   }
 });
+
+test("prompt retrieval checks compare the candidate export and reject non-deployed links", async () => {
+  const { candidatePromptSource } = await import("./prompt-source.mjs");
+  const origin = "http://127.0.0.1:6376";
+  assert.equal(
+    candidatePromptSource(
+      "https://kindui.dev/charts/docs/examples/line/variants/loading/example.tsx",
+      origin,
+    ),
+    new URL(publicPath("/examples/line/variants/loading/example.tsx"), origin).href,
+  );
+  for (const url of [
+    "http://127.0.0.1:6376/examples/line/example.tsx",
+    "https://foreign.example/charts/docs/examples/line/example.tsx",
+    "https://kindui.dev/examples/line/example.tsx",
+    "https://kindui.dev/charts/docs/markdown/installation.md",
+  ])
+    assert.throws(() => candidatePromptSource(url, origin));
+});

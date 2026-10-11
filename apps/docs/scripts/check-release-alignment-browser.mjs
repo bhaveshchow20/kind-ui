@@ -59,7 +59,7 @@ try {
         );
         await card.getByRole("button", { name: "Copy prompt", exact: true }).click();
         const prompt = await page.evaluate(() => navigator.clipboard.readText());
-        assert.ok(prompt.includes(origin + publicPath(`/docs/components/${family}/`)));
+        assert.ok(prompt.includes(`https://kindui.dev/charts/docs/components/${family}/`));
         assert.ok(prompt.includes("Install @kind-ui/charts"));
         assert.ok(!prompt.includes(".tgz"));
         assert.ok(!prompt.includes("sourceCommit"));
