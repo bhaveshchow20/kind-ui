@@ -2013,7 +2013,7 @@ test("chart loading props stay off the native engine and expose a chart-owned st
     }),
   );
   assert.match(empty, /aria-busy="false"/);
-  assert.match(empty, /role="status" aria-atomic="true"><\/span>/);
+  assert.match(empty, /role="status" aria-atomic="true"[^>]*><\/span>/);
 });
 
 test("bar-backed charts inherit chart-owned loading without fabricating data", () => {
