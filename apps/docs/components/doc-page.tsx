@@ -1,6 +1,7 @@
 import { highlight } from "fumadocs-core/highlight";
 import { Callout } from "fumadocs-ui/components/callout";
 import { Pre } from "fumadocs-ui/components/codeblock";
+import { ServerCodeBlock } from "fumadocs-ui/components/codeblock.rsc";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/glass/page";
@@ -8,6 +9,7 @@ import defaultComponents from "fumadocs-ui/mdx";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import bundles from "@/generated/all-examples.json";
+import usage from "@/generated/charts/usage.json";
 import installations from "@/generated/registry-installations.json";
 import { localExample } from "@/lib/registry-catalog.mjs";
 import { docRoute, publicPath } from "@/lib/routing.mjs";
@@ -78,6 +80,35 @@ async function LineExample({
     />
   );
 }
+async function Installation({ name }: { name: keyof typeof installations }) {
+  const item = installations[name];
+  const options = {
+    lang: "tsx",
+    themes: { light: "github-light", dark: "github-dark" },
+    defaultColor: false as const,
+  };
+  const sourceFiles = await Promise.all(
+    item.files
+      .filter((file) => /\.tsx?$/.test(file.target))
+      .map(async (file) => (
+        <ServerCodeBlock
+          key={file.target}
+          code={file.content}
+          {...options}
+          codeblock={{ title: file.target }}
+        />
+      )),
+  );
+  const example = (
+    <ServerCodeBlock
+      code={usage[item.meta.family as keyof typeof usage]}
+      {...options}
+      codeblock={{ title: "Dashboard.tsx" }}
+    />
+  );
+  return <ChartInstallation item={item} sourceFiles={sourceFiles} example={example} />;
+}
+
 export function renderDoc(slug?: string[]) {
   const page = source.getPage(slug);
   if (!page) notFound();
@@ -108,9 +139,7 @@ export function renderDoc(slug?: string[]) {
               a: ({ href = "#", ...props }) => (
                 <defaultComponents.a {...props} href={docRoute(href)} />
               ),
-              ChartInstallation: ({ name }: { name: keyof typeof installations }) => (
-                <ChartInstallation item={installations[name]} />
-              ),
+              ChartInstallation: Installation,
               LineExample,
               ChartExample: LineExample,
               AreaExample: LineExample,

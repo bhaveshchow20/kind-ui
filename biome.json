@@ -9,7 +9,9 @@
       "!**/artifacts",
       "!**/.next",
       "!**/playwright-report",
-      "!**/test-results"
+      "!**/test-results",
+      "!registry/charts/legacy",
+      "!apps/docs/generated"
     ]
   },
   "formatter": {

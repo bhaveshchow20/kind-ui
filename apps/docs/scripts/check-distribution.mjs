@@ -41,24 +41,26 @@ try {
       .elementHandle();
     assert.ok(
       await install
-        .getByRole("tabpanel")
+        .locator(':scope > [role="tabpanel"]')
         .innerText()
         .then((s) => s.includes(`npx shadcn@latest add @kind-ui/${name}`)),
     );
     assert.ok(
       await install
-        .getByRole("tabpanel")
+        .locator(':scope > [role="tabpanel"]')
         .innerText()
-        .then((s) => s.includes(`${origin}${publicPath("/r/{name}.json")}`)),
+        .then((s) => s.includes("installation guide")),
     );
     const cli = install.getByRole("tab", { name: "CLI", exact: true });
     await cli.focus();
     await page.keyboard.press("ArrowRight");
     const manual = install.getByRole("tab", { name: "Manual", exact: true });
     await expect(manual).toHaveAttribute("aria-selected", "true");
-    const panel = install.getByRole("tabpanel");
+    const panel = install.locator(':scope > [role="tabpanel"]');
     assert.ok((await panel.innerText()).includes(`components/charts/${name}.tsx`));
-    assert.equal(await panel.locator("ol > li").count(), 3);
+    assert.equal(await panel.locator(".fd-steps > .fd-step").count(), 3);
+    assert.equal(await panel.getByText("components/charts/LICENSE", { exact: true }).count(), 0);
+    assert.ok(await panel.locator("pre .line").count(), "Manual source lacks syntax highlighting");
     assert.ok((await panel.innerText()).includes("npm install @kind-ui/charts@0.4.0"));
     if (chart)
       assert.equal(
@@ -68,7 +70,7 @@ try {
       );
     await page.keyboard.press("ArrowLeft");
     await expect(cli).toHaveAttribute("aria-selected", "true");
-    const blocks = install.getByRole("tabpanel").locator("pre");
+    const blocks = install.locator(':scope > [role="tabpanel"]').locator("pre:visible");
     const command = blocks.last();
     assert.equal((await command.innerText()).trim(), `npx shadcn@latest add @kind-ui/${name}`);
     const block = command.locator("xpath=ancestor::figure[1]");
@@ -77,6 +79,24 @@ try {
       await page.evaluate(() => navigator.clipboard.readText()),
       `npx shadcn@latest add @kind-ui/${name}`,
     );
+    for (const [manager, prefix] of [
+      ["pnpm", "pnpm dlx"],
+      ["yarn", "yarn dlx"],
+      ["bun", "bunx --bun"],
+      ["npm", "npx"],
+    ]) {
+      await install.getByRole("tab", { name: manager, exact: true }).click();
+      const commandBlock = install.locator("pre:visible");
+      assert.equal(
+        (await commandBlock.innerText()).trim(),
+        `${prefix} shadcn@latest add @kind-ui/${name}`,
+      );
+    }
+    assert.ok(
+      await install.locator(".preview-tabs").count(),
+      "Installation must reuse the preview switcher",
+    );
+    assert.doesNotMatch(await install.innerText(), /127\.0\.0\.1|localhost|registry\.json|LICENSE/);
     results.push({ family: family.id, name, tabs: true, steps: true, clipboard: true });
   }
   await page.setViewportSize({ width: 390, height: 844 });

@@ -28,6 +28,7 @@ Use Node 22.12+ and npm 11.9. Use npm and the checked-in lockfile; do not add a 
 - Component tests: `npm test`
 - Chart example: `npm run dev:chart`; packed-consumer and browser checks: `npm run check:chart`
 - Browser prerequisite: `npm exec playwright install -- --with-deps chromium`
+- Shared registry: `npm run build:registry`; standalone contracts: `npm run test:registry`
 - Required aggregate check: `npm run check`
 
 Component tests use public exports and are repeated against the packed package. The package gate tests its own failure cases and checks an actual tarball in an isolated consumer; keep it in CI. When implementing behavior, introduce focused regression tests and package-consumer checks in the same PR, using exported APIs wherever practical. Test intentional error paths as well as successful input. Check the touched package and affected consumers, then run the full available aggregate check before proposing a change. Distinguish passed, failed, and unrun checks.

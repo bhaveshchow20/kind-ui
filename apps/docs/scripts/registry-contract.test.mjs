@@ -5,15 +5,18 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import ts from "typescript";
+import {
+  readRegistry,
+  registryCatalog,
+  validateCatalog,
+} from "../../../scripts/build-registry.mjs";
+import { registryItemSchema } from "../../../scripts/registry/schema.mjs";
 import { allExamples, families } from "../examples/catalog.mjs";
 import { registryInstallCommand } from "../lib/example-files.mjs";
 import { registryName } from "../lib/registry-catalog.mjs";
-import { publicPath } from "../lib/routing.mjs";
-import { validateCatalog } from "./registry.mjs";
-import { registryItemSchema } from "./registry-schema.mjs";
 
 const read = (file) => readFileSync(file, "utf8");
-const index = JSON.parse(read("registry.json"));
+const index = registryCatalog();
 test("registry covers all families, recipes and chart-like public exports", () => {
   validateCatalog(index);
   assert.equal(families.length, 13);
@@ -51,7 +54,7 @@ test("missing, duplicate and incompatible items fail the catalog gate", () => {
 });
 test("prepared directory entry includes current upstream requirements", () => {
   // shadcn-ui/ui apps/v4/lib/registry-directory.ts requires an inline logo.
-  const entry = JSON.parse(read("registry/directory-entry.json"));
+  const entry = JSON.parse(readRegistry("registry/directory-entry.json"));
   assert.deepEqual(Object.keys(entry).sort(), ["description", "homepage", "logo", "name", "url"]);
   assert.match(entry.name, /^@[a-zA-Z0-9][a-zA-Z0-9_-]*$/);
   assert.equal(entry.name, "@kind-ui");
@@ -67,7 +70,7 @@ test("items use canonical source and every catalog example maps to a family item
     registryItemSchema.parse(built);
     assert.equal(built.files.length, item.files.length);
     for (const [i, file] of built.files.entries()) {
-      assert.equal(file.content, read(item.files[i].path));
+      assert.equal(file.content, readRegistry(item.files[i].path));
       assert.ok(file.target.startsWith("components/charts/"));
       assert.doesNotMatch(file.content, /const data =|const config =|packages\/charts|\.\/dist\//);
     }
@@ -79,7 +82,7 @@ test("items use canonical source and every catalog example maps to a family item
     registryItemSchema.parse(JSON.parse(read(`public/r/kind-${example.id}.json`)));
 });
 test("retrieved pages show one family installation and preserve selected examples", () => {
-  const usage = JSON.parse(read("registry/usage.json"));
+  const usage = JSON.parse(readRegistry("registry/charts/usage.json"));
   for (const family of families) {
     assert.ok(
       read(`content/docs/components/${family.id}.mdx`).includes(usage[family.id]),
@@ -88,6 +91,8 @@ test("retrieved pages show one family installation and preserve selected example
     const markdown = read(`public/markdown/components/${family.id}.md`);
     assert.ok(markdown.indexOf("## Installation") < markdown.indexOf("## Usage"));
     assert.ok(markdown.includes(`npx shadcn@latest add @kind-ui/${registryName(family.id)}`));
+    assert.doesNotMatch(markdown, /localhost|127\.0\.0\.1|registry\.json|#### .*LICENSE/);
+    assert.ok(markdown.includes("See [CLI setup]"));
     assert.doesNotMatch(
       markdown,
       /\/r\/kind-|components\/charts\/line-start\/example|Install the editable recipe/,
@@ -96,34 +101,36 @@ test("retrieved pages show one family installation and preserve selected example
   }
 });
 
-test("Markdown installs use the configured build origin or require the actual serving origin", () => {
-  const path = publicPath("/r/line-chart.json");
+test("installation commands use the public namespace independently of serving origin", () => {
+  assert.equal(registryInstallCommand("line-chart"), "npx shadcn@latest add @kind-ui/line-chart");
   assert.equal(
-    registryInstallCommand("line-chart", "https://example.test"),
-    `npx shadcn@latest add https://example.test${path}`,
-  );
-  const command = registryInstallCommand("line-chart").replace(
-    "npx shadcn@latest add",
-    "printf '%s'",
-  );
-  const env = { ...process.env, KIND_DOCS_ORIGIN: "http://127.0.0.1:6374" };
-  assert.equal(
-    execFileSync("bash", ["-c", command], { env, encoding: "utf8" }),
-    `http://127.0.0.1:6374${path}`,
-  );
-  delete env.KIND_DOCS_ORIGIN;
-  assert.throws(
-    () => execFileSync("bash", ["-c", command], { env, stdio: "pipe" }),
-    /Set KIND_DOCS_ORIGIN to the docs site origin/,
+    registryInstallCommand("line-chart", "https://kindui.dev"),
+    registryInstallCommand("line-chart"),
   );
   assert.throws(
     () =>
       execFileSync(process.execPath, ["scripts/generate.mjs"], {
-        env: { ...env, KIND_UI_DEPLOYMENT_ENV: "production" },
+        env: { ...process.env, KIND_DOCS_ORIGIN: "", KIND_UI_DEPLOYMENT_ENV: "production" },
         stdio: "pipe",
       }),
-    /KIND_DOCS_ORIGIN is required for production registry install commands/,
+    /KIND_DOCS_ORIGIN is required for production docs links/,
   );
+});
+
+test("a prefixed docs mount keeps registry commands at the domain root", () => {
+  const result = execFileSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      'import { registryInstallCommand } from "./lib/example-files.mjs"; import { publicPath } from "./lib/routing.mjs"; console.log(JSON.stringify({ command: registryInstallCommand("line-chart", "https://kindui.dev"), docs: publicPath("/markdown/installation.md") }));',
+    ],
+    { env: { ...process.env, NEXT_PUBLIC_KIND_DOCS_BASE_PATH: "/charts/docs" }, encoding: "utf8" },
+  );
+  assert.deepEqual(JSON.parse(result), {
+    command: "npx shadcn@latest add @kind-ui/line-chart",
+    docs: "/charts/docs/markdown/installation.md",
+  });
 });
 
 test("browser checks explain missing registry consumer prerequisites before starting work", () => {

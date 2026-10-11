@@ -30,7 +30,7 @@
     "changeset": "changeset",
     "release:status": "changeset status",
     "release:version": "node scripts/prepare-release-version.mjs",
-    "check:ci": "node --test scripts/ci-workflow.test.mjs scripts/ci-tools.test.mjs scripts/indexing.test.mjs apps/docs/scripts/consumer-shards.test.mjs apps/showcase/scripts/runtime-dependencies.test.mjs",
+    "check:ci": "node --test scripts/ci-workflow.test.mjs scripts/ci-tools.test.mjs scripts/indexing.test.mjs apps/docs/scripts/consumer-shards.test.mjs apps/showcase/scripts/runtime-dependencies.test.mjs scripts/registry.test.mjs",
     "check:release": "node --test scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs scripts/release-plan.test.mjs scripts/github-release.test.mjs && node scripts/check-release-versioning.mjs",
     "test:chart": "playwright test",
     "check:framework": "npm run check:line-integrations && npm run test:line-integrations",
@@ -40,7 +40,11 @@
     "check:preflight": "node scripts/run-checks.mjs preflight",
     "check:browsers": "node scripts/run-checks.mjs consumers",
     "test:focus-identity": "playwright test --config playwright.focus-identity.config.mjs",
-    "test:cartesian-visibility": "playwright test --config playwright.cartesian-visibility.config.mjs"
+    "test:cartesian-visibility": "playwright test --config playwright.cartesian-visibility.config.mjs",
+    "build:registry": "node scripts/build-registry.mjs",
+    "dev:registry": "npm run build:registry && node scripts/serve-registry.mjs",
+    "snapshot:registry": "node scripts/snapshot-registry.mjs",
+    "test:registry": "node --test scripts/registry.test.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
@@ -51,6 +55,7 @@
     "@types/node": "22.20.4",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "ajv": "8.20.0",
     "motion": "13.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",

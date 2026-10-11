@@ -4,6 +4,8 @@ Read repository AGENTS.md and CONTRIBUTING.md first. This application is indepen
 
 Use public @kind-ui/charts exports and pinned peers in examples. The catalogs maintain 13 component families and 51 complete examples; Radial also covers ActivityRings. Keep selected options synchronized with Preview, Code, Copy prompt and agent retrieval. Generated files are outputs; edit source examples, MDX or public type aliases instead. Family changes own their catalog, preview bindings and checks; use the README ownership contract. Shared registration and the single guarded vendor pin/lockfiles belong to integration.
 
+Canonical editable components and registry metadata live at the repository root in `registry/charts/` and the shared root catalog. Docs generation consumes them; do not edit generated component copies. Registry URLs always use domain-root `/r/`, independently of the docs deployment prefix.
+
 Read actual declarations before writing generated reference aliases. Clearly distinguish built-in, explicit composition and unsupported behavior. Materials are family-specific. Automatic paint emphasis is narrower than tooltip inspection. Glass stays paused.
 
 Keep the clean example-first Preview/Usage/Code flow, accessible navigation and restrained brand cues. Fumadocs supplies infrastructure; avoid a handwritten docs engine. Keep API/Markdown generation and syntax highlighting on the build/server side; lazy-load chart demos and search. Measure route behavior and transferred JS before claiming performance.

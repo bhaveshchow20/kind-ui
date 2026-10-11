@@ -2,6 +2,7 @@ import { readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
 
+import { serveRegistry } from "../../../scripts/registry/server.mjs";
 import { basePath } from "../lib/routing.mjs";
 
 const root = path.resolve("out");
@@ -18,6 +19,7 @@ const mime = {
   ".tgz": "application/gzip",
 };
 const server = createServer((request, response) => {
+  if (serveRegistry(request, response)) return;
   try {
     let pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
     if (basePath) {

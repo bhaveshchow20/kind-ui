@@ -9,11 +9,10 @@ The chart page's Copy prompt identifies the selected source, package version,
 setup manifest and task checks. /llms-full.txt is the optional complete set.
 
 Use CLI / Manual Installation on the chart page. Both paths install the same
-editable family component and npm core. Configure the one-time @kind-ui mapping
-in components.json before namespace commands; global registration is pending.
-Use /r/registry.json to discover the 14 items and version metadata. Standard
-shadcn MCP uses that index. Import the local component, supply your own data and
-keep your lockfile. Review local source edits before updating a composition.
+editable family component and npm core. Install with
+`npx shadcn@latest add @kind-ui/line-chart`, or follow the family page's Manual
+steps. Import the local component, supply your own data and keep your lockfile.
+Review local source edits before updating a composition.
 
 Install @kind-ui/charts and import @kind-ui/charts/styles.css once. Inspect the
 installed package version and peers before adapting code. Motion is required.

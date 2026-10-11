@@ -3,11 +3,20 @@ import { execFileSync, spawn } from "node:child_process";
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
+import {
+  coreVersion,
+  publishedIntegrity,
+  registryCatalog,
+  registryOutput,
+  repositoryRoot,
+  validateCatalog,
+} from "../../../scripts/build-registry.mjs";
 import { localExample } from "../lib/registry-catalog.mjs";
-import { coreVersion, docsRoot, publishedIntegrity, validateCatalog } from "./registry.mjs";
+
+const docsRoot = path.join(repositoryRoot, "apps/docs");
 
 const read = (file) => readFileSync(file, "utf8");
-const index = JSON.parse(read("registry.json"));
+const index = registryCatalog();
 validateCatalog(index);
 const root = path.join(docsRoot, "artifacts/registry-consumer");
 rmSync(root, { recursive: true, force: true });
@@ -77,23 +86,21 @@ const server = createServer((req, res) => {
     res.setHeader("Content-Type", "application/json");
     return res.end(read(process.env.KIND_UI_SHADCN_COLORS_FILE));
   }
-  const name = new URL(req.url, "http://localhost").pathname.match(
-    /^\/charts\/docs\/r\/([a-z-]+)\.json$/,
-  )?.[1];
+  const name = new URL(req.url, "http://localhost").pathname.match(/^\/r\/([a-z-]+)\.json$/)?.[1];
   if (!name) {
     res.writeHead(404);
     return res.end();
   }
   try {
     res.setHeader("Content-Type", "application/json");
-    res.end(read(`public/r/${name}.json`));
+    res.end(read(path.join(registryOutput, `public/r/${name}.json`)));
   } catch {
     res.writeHead(404);
     res.end();
   }
 });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-const base = `http://127.0.0.1:${server.address().port}/charts/docs/r`;
+const base = `http://127.0.0.1:${server.address().port}/r`;
 // Optional verbatim official color fixture for network-restricted cloud environments.
 // Normal CI reads the official registry directly. Never substitute Kind item payloads.
 if (process.env.KIND_UI_SHADCN_COLORS_FILE)
@@ -113,6 +120,24 @@ try {
     "Published npm bytes changed: review compatibility pin",
   );
   await run("npm", ["install", "--no-audit", "--no-fund"]);
+  // Exercise the visible direct URL command before configuring any namespace.
+  const directConfig = { ...config };
+  delete directConfig.registries;
+  json("components.json", directConfig);
+  await run("npm", [
+    "exec",
+    "--yes",
+    "--package=shadcn@4.21.4",
+    "--",
+    "shadcn",
+    "add",
+    `${base}/line-chart.json`,
+    "--yes",
+    "--silent",
+  ]);
+  assert.ok(read(path.join(root, "src/components/charts/line-chart.tsx")).length);
+  json("components.json", config);
+
   await run("npm", [
     "exec",
     "--yes",
@@ -203,7 +228,7 @@ const callbackOnly=<AreaChart config={config} rootProps={{onVisibleSeriesChange:
 const selected=<RadarChart data={rows} selectedSeries="sales"/>;
 void [line,area,invalid,callbackOnly,selected];`,
   );
-  const usage = JSON.parse(read("registry/usage.json"));
+  const usage = JSON.parse(read(path.join(repositoryRoot, "registry/charts/usage.json")));
   for (const [name, source] of Object.entries(usage))
     write(
       `src/usage-${name}.tsx`,
@@ -240,7 +265,8 @@ void [line,area,invalid,callbackOnly,selected];`,
   // Discard CLI-installed modules; manual source comes directly from public JSON, as displayed in Manual.
   rmSync(path.join(manual, "src/components"), { recursive: true, force: true });
   for (const item of index.items)
-    for (const file of JSON.parse(read(`public/r/${item.name}.json`)).files) {
+    for (const file of JSON.parse(read(path.join(registryOutput, `public/r/${item.name}.json`)))
+      .files) {
       const target = path.join(manual, "src", file.target);
       mkdirSync(path.dirname(target), { recursive: true });
       writeFileSync(target, file.content);
@@ -272,6 +298,7 @@ void [line,area,invalid,callbackOnly,selected];`,
         officialColorFixture: Boolean(process.env.KIND_UI_SHADCN_COLORS_FILE),
         examples: Object.keys(bundles).length,
         items: evidence,
+        directUrlInstall: true,
       },
       null,
       2,

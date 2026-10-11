@@ -21,7 +21,7 @@ test("Installation renders its exact first-chart example in an application", asy
         join(fixture, `example-${index}.tsx`),
         example[2]
           .replace("./MonthlyVisitorsChart", "./MonthlyVisitorsChart.js")
-          .replace("@/components/charts/line-chart", "../registry/line-chart.js"),
+          .replace("@/components/charts/line-chart", "../../../registry/charts/line-chart.js"),
       );
     }
     await writeFile(

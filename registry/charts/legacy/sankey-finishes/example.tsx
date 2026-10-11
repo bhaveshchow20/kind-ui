@@ -1,0 +1,225 @@
+"use client";
+import * as Chart from "@kind-ui/charts";
+import "@kind-ui/charts/styles.css";
+import "../styles.css";
+import { type ReactNode, useState } from "react";
+import { Tooltip } from "recharts";
+
+const data = {
+  nodes: [
+    { id: "solar", name: "Solar" },
+    { id: "wind", name: "Wind" },
+    { id: "hydro", name: "Hydro" },
+    { id: "north", name: "North" },
+    { id: "central", name: "Central" },
+    { id: "south", name: "South" },
+    { id: "homes", name: "Homes" },
+    { id: "industry", name: "Industry" },
+    { id: "services", name: "Services" },
+  ],
+  links: [
+    { id: "solar-north", source: "solar", target: "north", value: 30 },
+    { id: "solar-central", source: "solar", target: "central", value: 20 },
+    { id: "solar-south", source: "solar", target: "south", value: 10 },
+    { id: "wind-north", source: "wind", target: "north", value: 20 },
+    { id: "wind-central", source: "wind", target: "central", value: 30 },
+    { id: "wind-south", source: "wind", target: "south", value: 30 },
+    { id: "hydro-north", source: "hydro", target: "north", value: 20 },
+    { id: "hydro-central", source: "hydro", target: "central", value: 10 },
+    { id: "hydro-south", source: "hydro", target: "south", value: 10 },
+    { id: "north-homes", source: "north", target: "homes", value: 35 },
+    { id: "north-industry", source: "north", target: "industry", value: 25 },
+    { id: "north-services", source: "north", target: "services", value: 10 },
+    { id: "central-homes", source: "central", target: "homes", value: 15 },
+    { id: "central-industry", source: "central", target: "industry", value: 30 },
+    { id: "central-services", source: "central", target: "services", value: 15 },
+    { id: "south-homes", source: "south", target: "homes", value: 10 },
+    { id: "south-industry", source: "south", target: "industry", value: 15 },
+    { id: "south-services", source: "south", target: "services", value: 25 },
+  ],
+} satisfies Chart.SankeyFlowData;
+const nodeConfig = {
+  solar: { label: "Solar", color: "#d29319" },
+  wind: { label: "Wind", color: "#159c91" },
+  hydro: { label: "Hydro", color: "#447fd1" },
+  north: { label: "North", color: "#8865ce" },
+  central: { label: "Central", color: "#d27559" },
+  south: { label: "South", color: "#569951" },
+  homes: { label: "Homes", color: "#d29319" },
+  industry: { label: "Industry", color: "#447fd1" },
+  services: { label: "Services", color: "#159c91" },
+} satisfies Chart.SankeyNodeConfig;
+const names = new Map(data.nodes.map((node) => [node.id, node.name]));
+
+function FocusedFlow({ nodeIds, children }: { nodeIds: string[]; children: ReactNode }) {
+  const { selected } = Chart.useChartInteraction();
+  const dimmed = selected !== null && !nodeIds.includes(selected);
+  return (
+    <g data-focus={dimmed ? "dimmed" : "baseline"} style={{ opacity: dimmed ? 0.28 : 1 }}>
+      {children}
+    </g>
+  );
+}
+
+function EnergyFlowFinishChartComposition({
+  appearance = "default",
+}: {
+  appearance?: "default" | "clay" | "glow";
+}) {
+  const [active, setActive] = useState<string | null>(null);
+  const selected = data.links.find((link) => link.id === active);
+  return (
+    <Chart.Root
+      config={nodeConfig}
+      interaction={{
+        kind: "node",
+        mode: "focus",
+        eligibleKeys: data.nodes.map((node) => node.id),
+        markActivation: "matching-legend",
+      }}
+    >
+      <section aria-label="Illustrative energy allocation">
+        <section
+          aria-label="Energy flow diagram; scroll horizontally on small screens"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: Horizontal chart scrolling is keyboard accessible.
+          tabIndex={0}
+          style={{ overflowX: "auto", overscrollBehaviorY: "auto" }}
+        >
+          <div style={{ minWidth: 540 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 12,
+                padding: "0 28px",
+              }}
+            >
+              <span>Generation</span>
+              <span>Balancing zones</span>
+              <span>End use</span>
+            </div>
+            <Chart.ResponsiveContainer width="100%" height={250}>
+              <Chart.SankeyChart
+                interactionBinding="root"
+                data={data}
+                nodeConfig={nodeConfig}
+                animate={{ revealDurationMs: 900 }}
+                nodeWidth={10}
+                nodePadding={16}
+                sort={false}
+                margin={{ top: 28, right: 32, bottom: 8, left: 32 }}
+                title="Energy allocation: 180 MWh across three stages"
+                desc="Nine nodes and eighteen flows. Ribbon widths represent MWh. Select a flow with a click, Enter or Space; Escape clears selection."
+                node={(props) => (
+                  <FocusedFlow
+                    nodeIds={[
+                      props.payload.id,
+                      ...data.links
+                        .filter(
+                          (link) =>
+                            link.source === props.payload.id || link.target === props.payload.id,
+                        )
+                        .flatMap((link) => [link.source, link.target]),
+                    ]}
+                  >
+                    <Chart.SankeyNode
+                      {...props}
+                      finish={appearance === "default" ? undefined : appearance}
+                    />
+                    <text
+                      x={props.x + props.width / 2}
+                      y={props.y - 7}
+                      textAnchor="middle"
+                      fill="currentColor"
+                      fontSize={11}
+                    >
+                      {props.payload.name}
+                    </text>
+                  </FocusedFlow>
+                )}
+                link={(props) => (
+                  <FocusedFlow nodeIds={[props.payload.source.id, props.payload.target.id]}>
+                    <Chart.SankeyLink
+                      {...props}
+                      finish={appearance === "default" ? undefined : appearance}
+                      material="gradient"
+                      pathProps={{
+                        role: "button",
+                        tabIndex: 0,
+                        "aria-label": `${props.payload.source.name} to ${props.payload.target.name}: ${props.payload.value} MWh`,
+                        "aria-pressed": active === props.payload.id,
+                        opacity: active && active !== props.payload.id ? 0.12 : 0.55,
+                        onClick: () =>
+                          setActive(active === props.payload.id ? null : props.payload.id),
+                        onKeyDown: (event) => {
+                          if (event.key === "Escape") setActive(null);
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setActive(active === props.payload.id ? null : props.payload.id);
+                          }
+                        },
+                      }}
+                    />
+                  </FocusedFlow>
+                )}
+              >
+                <Tooltip
+                  isAnimationActive={false}
+                  formatter={(value) => `${value} MWh`}
+                  contentStyle={{
+                    padding: "6px 8px",
+                    fontSize: 12,
+                    lineHeight: "16px",
+                    background: "var(--kind-ui-chart-popover, var(--popover, Canvas))",
+                    color:
+                      "var(--kind-ui-chart-popover-foreground, var(--popover-foreground, CanvasText))",
+                    border: "1px solid var(--kind-ui-chart-border, var(--border, GrayText))",
+                    borderRadius: "var(--kind-ui-chart-radius, var(--radius, 8px))",
+                  }}
+                  itemStyle={{ padding: 0, color: "inherit" }}
+                />
+              </Chart.SankeyChart>
+            </Chart.ResponsiveContainer>
+          </div>
+        </section>
+        <Chart.SankeyLegend config={nodeConfig} interactionBinding="root" />
+        <p role="status" style={{ fontSize: 12, margin: "8px 0 0" }}>
+          {selected
+            ? `${names.get(selected.source)} → ${names.get(selected.target)}: ${selected.value} MWh`
+            : "180 MWh · Select a ribbon to inspect its route."}
+        </p>
+        <Chart.SankeyTable
+          data={data}
+          caption="Illustrative allocation in MWh"
+          style={{
+            position: "absolute",
+            width: 1,
+            height: 1,
+            padding: 0,
+            margin: -1,
+            overflow: "hidden",
+            clipPath: "inset(50%)",
+            whiteSpace: "nowrap",
+            border: 0,
+          }}
+        />
+      </section>
+    </Chart.Root>
+  );
+}
+
+// Editable composition; the chart engine remains in @kind-ui/charts@0.4.0.
+export function EnergyFlowFinishChart(props: import("react").ComponentProps<typeof EnergyFlowFinishChartComposition>) {
+  return (
+    <div className="chart-example">
+      <EnergyFlowFinishChartComposition {...props} />
+      <div className="sr-only">
+        <table data-chart-alternative aria-label="Flow finishes data">
+          <caption>{"Illustrative energy allocation (MWh)"}</caption>
+          <thead><tr><th scope="col">{"Flow"}</th><th scope="col">{"Source ID"}</th><th scope="col">{"Target ID"}</th><th scope="col">{"MWh"}</th></tr></thead>
+          <tbody><tr><th scope="row">{"solar-north"}</th><td>{"solar"}</td><td>{"north"}</td><td>{30}</td></tr><tr><th scope="row">{"solar-central"}</th><td>{"solar"}</td><td>{"central"}</td><td>{20}</td></tr><tr><th scope="row">{"solar-south"}</th><td>{"solar"}</td><td>{"south"}</td><td>{10}</td></tr><tr><th scope="row">{"wind-north"}</th><td>{"wind"}</td><td>{"north"}</td><td>{20}</td></tr><tr><th scope="row">{"wind-central"}</th><td>{"wind"}</td><td>{"central"}</td><td>{30}</td></tr><tr><th scope="row">{"wind-south"}</th><td>{"wind"}</td><td>{"south"}</td><td>{30}</td></tr><tr><th scope="row">{"hydro-north"}</th><td>{"hydro"}</td><td>{"north"}</td><td>{20}</td></tr><tr><th scope="row">{"hydro-central"}</th><td>{"hydro"}</td><td>{"central"}</td><td>{10}</td></tr><tr><th scope="row">{"hydro-south"}</th><td>{"hydro"}</td><td>{"south"}</td><td>{10}</td></tr><tr><th scope="row">{"north-homes"}</th><td>{"north"}</td><td>{"homes"}</td><td>{35}</td></tr><tr><th scope="row">{"north-industry"}</th><td>{"north"}</td><td>{"industry"}</td><td>{25}</td></tr><tr><th scope="row">{"north-services"}</th><td>{"north"}</td><td>{"services"}</td><td>{10}</td></tr><tr><th scope="row">{"central-homes"}</th><td>{"central"}</td><td>{"homes"}</td><td>{15}</td></tr><tr><th scope="row">{"central-industry"}</th><td>{"central"}</td><td>{"industry"}</td><td>{30}</td></tr><tr><th scope="row">{"central-services"}</th><td>{"central"}</td><td>{"services"}</td><td>{15}</td></tr><tr><th scope="row">{"south-homes"}</th><td>{"south"}</td><td>{"homes"}</td><td>{10}</td></tr><tr><th scope="row">{"south-industry"}</th><td>{"south"}</td><td>{"industry"}</td><td>{15}</td></tr><tr><th scope="row">{"south-services"}</th><td>{"south"}</td><td>{"services"}</td><td>{25}</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

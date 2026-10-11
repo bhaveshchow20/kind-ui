@@ -1,83 +1,110 @@
 "use client";
-import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock";
-import { useEffect, useState } from "react";
-import { publicPath } from "@/lib/routing.mjs";
+import {
+  CodeBlock,
+  CodeBlockTab,
+  CodeBlockTabs,
+  CodeBlockTabsList,
+  CodeBlockTabsTrigger,
+  Pre,
+} from "fumadocs-ui/components/codeblock";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import Link from "next/link";
+import { type ReactNode, useState } from "react";
+import { docRoute } from "@/lib/routing.mjs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
-type Item = { name: string; dependencies: string[]; files: { target: string; content: string }[] };
-function Code({ title, children }: { title: string; children: string }) {
+type Item = { name: string; dependencies: string[] };
+const managers = ["npm", "pnpm", "yarn", "bun"] as const;
+
+function InstallCommands({ item, manual = false }: { item: Item; manual?: boolean }) {
+  const packages = item.dependencies.join(" ");
+  const commands = manual
+    ? {
+        npm: `npm install ${packages}`,
+        pnpm: `pnpm add ${packages}`,
+        yarn: `yarn add ${packages}`,
+        bun: `bun add ${packages}`,
+      }
+    : {
+        npm: `npx shadcn@latest add @kind-ui/${item.name}`,
+        pnpm: `pnpm dlx shadcn@latest add @kind-ui/${item.name}`,
+        yarn: `yarn dlx shadcn@latest add @kind-ui/${item.name}`,
+        bun: `bunx --bun shadcn@latest add @kind-ui/${item.name}`,
+      };
   return (
-    <CodeBlock title={title}>
-      <Pre>
-        <code>{children}</code>
-      </Pre>
-    </CodeBlock>
+    <CodeBlockTabs defaultValue="npm" className="install-command">
+      <CodeBlockTabsList aria-label="Package manager">
+        {managers.map((manager) => (
+          <CodeBlockTabsTrigger key={manager} value={manager}>
+            {manager}
+          </CodeBlockTabsTrigger>
+        ))}
+      </CodeBlockTabsList>
+      {managers.map((manager) => (
+        <CodeBlockTab key={manager} value={manager}>
+          <CodeBlock>
+            <Pre>
+              <code>{commands[manager]}</code>
+            </Pre>
+          </CodeBlock>
+        </CodeBlockTab>
+      ))}
+    </CodeBlockTabs>
   );
 }
-export function ChartInstallation({ item }: { item: Item }) {
+
+export function ChartInstallation({
+  item,
+  sourceFiles,
+  example,
+}: {
+  item: Item;
+  sourceFiles: ReactNode;
+  example: ReactNode;
+}) {
   const [tab, setTab] = useState("cli");
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(location.origin), []);
-  const mapping = JSON.stringify(
-    { registries: { "@kind-ui": `${origin || "<docs-origin>"}${publicPath("/r/{name}.json")}` } },
-    null,
-    2,
-  );
   return (
     <Tabs
       value={tab}
       onValueChange={setTab}
       data-installation={item.name}
-      className="chart-installation"
+      className="chart-installation component-workbench"
     >
-      <TabsList aria-label={`${item.name} installation`}>
-        <TabsTrigger value="cli">CLI</TabsTrigger>
-        <TabsTrigger value="manual">Manual</TabsTrigger>
-      </TabsList>
+      <div className="playground-header">
+        <TabsList aria-label={`${item.name} installation`} className="preview-tabs">
+          <TabsTrigger value="cli">CLI</TabsTrigger>
+          <TabsTrigger value="manual">Manual</TabsTrigger>
+        </TabsList>
+      </div>
       <TabsContent value="cli">
-        <ol>
-          <li>
-            <p>Initialize shadcn in your React project if needed.</p>
-            <Code title="Terminal">npx shadcn@latest init</Code>
-          </li>
-          <li>
-            <p>
-              Merge this registry mapping into <code>components.json</code> once.
-            </p>
-            <Code title="components.json">{mapping}</Code>
-            <p>
-              The namespace is configured in your project. Global directory registration is pending.
-            </p>
-          </li>
-          <li>
-            <p>Install the component and its dependencies.</p>
-            <Code title="Terminal">{`npx shadcn@latest add @kind-ui/${item.name}`}</Code>
-          </li>
-        </ol>
+        <InstallCommands item={item} />
+        <p>
+          For a new project, start with the{" "}
+          <Link href={docRoute("/docs/installation/#cli-setup")}>installation guide</Link>.
+        </p>
       </TabsContent>
       <TabsContent value="manual">
-        <ol>
-          <li>
-            <p>Install the npm core and its supported peers.</p>
-            <Code title="Terminal">{`npm install ${item.dependencies.join(" ")}`}</Code>
-          </li>
-          <li>
+        <Steps>
+          <Step>
+            <h3>Install dependencies</h3>
+            <InstallCommands item={item} manual />
+          </Step>
+          <Step>
+            <h3>Copy the component source</h3>
             <p>
-              Copy these files into your source directory. Keep your existing edits to shared files.
+              Create these files in your source directory. Keep your existing edits to shared files.
             </p>
-            {item.files.map((file) => (
-              <Code title={file.target} key={file.target}>
-                {file.content}
-              </Code>
-            ))}
-          </li>
-          <li>
+            {sourceFiles}
+          </Step>
+          <Step>
+            <h3>Use the component</h3>
+            {example}
             <p>
-              Import the local component as shown in Usage. The examples use @/ for your source
-              directory; adjust the import if your alias differs. Both paths install the same files.
+              Replace the sample data with your own. The imports use @/ for your source directory;
+              adjust them if your alias differs.
             </p>
-          </li>
-        </ol>
+          </Step>
+        </Steps>
       </TabsContent>
     </Tabs>
   );

@@ -21,7 +21,7 @@ Original docs source and adaptations of Kind UI examples use this repository's M
 | Tailwind CSS and PostCSS adapter | 4.3.3 | MIT |
 | Ajv (offline registry schema validation) | 8.20.0 | MIT |
 | shadcn CLI (isolated npm-exec tooling) | 4.21.4 | MIT |
-| Official shadcn registry schema snapshots | c2a67849be260701852b0977ba15eb5f3a0ce2a4 | MIT, notice in scripts/schemas/LICENSE.md |
+| Official shadcn registry schema snapshots | c2a67849be260701852b0977ba15eb5f3a0ce2a4 | MIT, notice in ../../scripts/registry/schemas/LICENSE.md |
 | TypeScript | 5.9.3 | Apache-2.0 |
 | Geist variable font through Fontsource | 5.3.0 package | OFL-1.1 |
 | DefinitelyTyped React/DOM/Node/MDX types | package-lock versions | MIT |

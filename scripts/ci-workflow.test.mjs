@@ -68,6 +68,7 @@ test("Docs follows shared dependency, build configuration, and package gate chan
   for (const event of ["pull_request", "push"]) {
     for (const path of [
       "apps/docs/**",
+      "registry/**",
       "apps/seo.mjs",
       "packages/charts/**",
       "package.json",
@@ -260,11 +261,22 @@ test("Docs separates copied consumers without dropping any browser or build gate
   assert.deepEqual(docs.jobs.docs.needs, ["build", "consumers", "browsers"]);
   assert.equal(docs.jobs.docs.if, "always()");
   const fixtures = docs.jobs.build.steps.find((s) => s.with?.name === "docs-browser-fixtures");
-  for (const path of ["apps/docs/out/", "apps/docs/generated/", "apps/docs/public/"])
+  for (const path of [
+    "apps/docs/out/",
+    "apps/docs/generated/",
+    "apps/docs/public/",
+    "artifacts/registry/public/r/",
+  ])
     assert.ok(
       fixtures.with.path.split("\n").includes(path),
       `Missing Docs browser fixture: ${path}`,
     );
+  const download = docs.jobs.browsers.steps.find(
+    (step) => step.with?.name === "docs-browser-fixtures",
+  );
+  assert.equal(download.with.path, ".");
+  const registry = docs.jobs.build.steps.find((step) => step.with?.name === "kind-ui-registry");
+  assert.equal(registry.with.path, "artifacts/registry/public/");
   const build = docs.jobs.build.steps.map((s) => s.run ?? "").join("\n");
   for (const command of ["npm run generate", "npm run build", "npm run check"])
     assert.ok(build.includes(command));

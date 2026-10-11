@@ -1,13 +1,10 @@
 import { registryName } from "./registry-catalog.mjs";
 import { publicPath } from "./routing.mjs";
 
-export function registryInstallCommand(id, origin = "") {
-  const path = publicPath(`/r/${id}.json`);
-  // biome-ignore lint/suspicious/noTemplateCurlyInString: the consumer shell expands this value.
-  const configuredOrigin = "${KIND_DOCS_ORIGIN:?Set KIND_DOCS_ORIGIN to the docs site origin}";
-  const url = origin ? `${origin}${path}` : `"${configuredOrigin}${path}"`;
-  return `npx shadcn@latest add ${url}`;
+export function registryInstallCommand(id) {
+  return `npx shadcn@latest add @kind-ui/${id}`;
 }
+
 export function filesFor(bundle, _settings, variant = bundle.defaultVariant) {
   const files = { ...bundle.files };
   if (variant && bundle.variants?.[variant])
@@ -26,7 +23,7 @@ export function promptFor(bundle, _settings, origin, variant = bundle.defaultVar
     origin,
   ).href;
   const name = registryName(bundle.family, bundle.id);
-  const install = `Install the reusable ${name} component: configure @kind-ui in components.json as ${new URL(publicPath("/r/{name}.json"), origin).href.replace("%7Bname%7D", "{name}")}, then run npx shadcn@latest add @kind-ui/${name}. The namespace requires that one-time project mapping until official registration. Manual installation uses the identical source and dependencies at ${new URL(publicPath(`/r/${name}.json`), origin).href}. Edit components/charts/${name}.tsx. The npm core remains @kind-ui/charts@${bundle.version}. Supply your own data; preserve the selected example variant (${variant ?? "default"}) in the caller composition. Do not install an old named demo recipe.`;
+  const install = `Install the reusable ${name} component with npx shadcn@latest add @kind-ui/${name}. Manual installation uses the same component source and dependencies shown on the chart page. Edit components/charts/${name}.tsx. The npm core remains @kind-ui/charts@${bundle.version}. Supply your own data; preserve the selected example variant (${variant ?? "default"}) in the caller composition.`;
   return [
     `Build or adapt the Kind UI ${bundle.title} example from ${base}.`,
     `Reference package: @kind-ui/charts@${bundle.version}. Check the app's installed version before using these APIs. Selected example: ${bundle.id}${variant ? ` (${variant})` : ""}.`,

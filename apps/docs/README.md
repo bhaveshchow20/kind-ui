@@ -51,6 +51,10 @@ The default build keeps `/docs/` pages and nonindexable preview metadata. Produc
 
 ## shadcn distribution
 
-Use the npm / shadcn control in existing chart pages and Installation. Selection persists locally; previews and API references are shared. All 51 catalog examples have independently installable editable registry compositions using the npm core. `npm run generate` builds `/r/registry.json` and `/r/kind-<example-id>.json`; `npm run check:registry` checks real CLI installation, published npm resolution and all recipe/variant types. See [registry maintenance and hosting handoff](../../docs/charts-registry.md). Public URLs require deployment-owner verification.
+The shared registry belongs to the repository root: the shared catalog indexes 14 editable components in `registry/charts/`. npm packages remain independently versioned in `packages/`. Docs generation invokes the root builder, then consumes its exact source and payloads for Manual installation and agent retrieval. Do not edit generated copies.
 
-If generated Markdown has no build-time `KIND_DOCS_ORIGIN`, set it in the consumer's terminal to the origin serving the docs (for example, `export KIND_DOCS_ORIGIN=http://127.0.0.1:6374`). Markdown registry commands require that value instead of assuming a preview port; browser commands use the current page origin.
+Chart pages show package manager commands for `@kind-ui` installation and a step-by-step Manual guide. Initial shadcn setup lives in the installation guide. Registry paths are always domain-root `/r/<name>.json`, independently of the docs base path. The 51 old recipe URLs remain available as compatibility endpoints under both root `/r/` and the old docs mount, without cluttering the discovery index.
+
+Run `npm run build:registry` from the repository root to build without docs dependencies. `npm run dev:registry` serves port 6374; the docs static preview also serves those files at root `/r/`. Run `npm run check:registry` here for real CLI and Manual installs. See [registry maintenance and hosting handoff](../../docs/charts-registry.md) for the separate domain-root deployment snapshot.
+
+Production generation uses `KIND_DOCS_ORIGIN=https://kindui.dev` for canonical retrieval links, including when docs are mounted at `/charts/docs`. Namespace installation becomes available after the deployment and official directory registration handoff.

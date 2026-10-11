@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { registryOutput } from "../../../scripts/build-registry.mjs";
 import {
   assertIndexingHTML,
   assertIndexingRoutes,
@@ -208,7 +209,9 @@ assert.deepEqual(
   readdirSync(path.join(root, "r")).sort(),
   [
     "registry.json",
-    ...JSON.parse(readFileSync("registry.json", "utf8")).items.map((item) => `${item.name}.json`),
+    ...JSON.parse(readFileSync("../../registry/registry.json", "utf8")).items.map(
+      (item) => `${item.name}.json`,
+    ),
     ...allExamples.map(({ id }) => `kind-${id}.json`),
   ].sort(),
 );
@@ -217,3 +220,13 @@ for (const file of readdirSync(path.join(root, "r")))
     JSON.parse(readFileSync(path.join(root, "r", file))),
     JSON.parse(readFileSync(`public/r/${file}`)),
   );
+
+for (const file of readdirSync(path.join(root, "r")))
+  assert.deepEqual(
+    JSON.parse(readFileSync(path.join(root, "r", file))),
+    JSON.parse(readFileSync(path.join(registryOutput, "public/r", file))),
+  );
+for (const family of families) {
+  const markdown = readFileSync(path.join(root, `markdown/components/${family.id}.md`), "utf8");
+  assert.doesNotMatch(markdown, /\/charts\/docs\/r\/|registry\.json|localhost|127\.0\.0\.1/);
+}

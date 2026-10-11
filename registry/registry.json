@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "kind-ui",
-  "homepage": "https://kindui.dev/charts",
+  "homepage": "https://kindui.dev",
   "items": [
     {
       "name": "line-chart",
@@ -17,17 +17,17 @@
       ],
       "files": [
         {
-          "path": "registry/line-chart.tsx",
+          "path": "registry/charts/line-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/line-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -37,7 +37,8 @@
         "family": "line",
         "component": "LineChart",
         "composition": "standalone"
-      }
+      },
+      "categories": ["charts", "line"]
     },
     {
       "name": "area-chart",
@@ -53,17 +54,17 @@
       ],
       "files": [
         {
-          "path": "registry/area-chart.tsx",
+          "path": "registry/charts/area-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/area-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -73,7 +74,8 @@
         "family": "area",
         "component": "AreaChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "area"]
     },
     {
       "name": "bar-chart",
@@ -89,17 +91,17 @@
       ],
       "files": [
         {
-          "path": "registry/bar-chart.tsx",
+          "path": "registry/charts/bar-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/bar-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -109,7 +111,8 @@
         "family": "bar",
         "component": "BarChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "bar"]
     },
     {
       "name": "box-plot-chart",
@@ -125,17 +128,17 @@
       ],
       "files": [
         {
-          "path": "registry/box-plot-chart.tsx",
+          "path": "registry/charts/box-plot-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/box-plot-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -145,7 +148,8 @@
         "family": "box-plot",
         "component": "BoxPlotChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "box-plot"]
     },
     {
       "name": "combo-chart",
@@ -161,17 +165,17 @@
       ],
       "files": [
         {
-          "path": "registry/combo-chart.tsx",
+          "path": "registry/charts/combo-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/combo-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -181,7 +185,8 @@
         "family": "combo",
         "component": "ComboChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "combo"]
     },
     {
       "name": "heatmap-chart",
@@ -197,17 +202,17 @@
       ],
       "files": [
         {
-          "path": "registry/heatmap-chart.tsx",
+          "path": "registry/charts/heatmap-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/heatmap-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -217,7 +222,8 @@
         "family": "heatmap",
         "component": "HeatmapChart",
         "composition": "standalone"
-      }
+      },
+      "categories": ["charts", "heatmap"]
     },
     {
       "name": "histogram-chart",
@@ -233,17 +239,17 @@
       ],
       "files": [
         {
-          "path": "registry/histogram-chart.tsx",
+          "path": "registry/charts/histogram-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/histogram-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -253,7 +259,8 @@
         "family": "histogram",
         "component": "HistogramChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "histogram"]
     },
     {
       "name": "pie-chart",
@@ -269,17 +276,17 @@
       ],
       "files": [
         {
-          "path": "registry/pie-chart.tsx",
+          "path": "registry/charts/pie-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/pie-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -289,7 +296,8 @@
         "family": "pie",
         "component": "PieChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "pie"]
     },
     {
       "name": "radar-chart",
@@ -305,17 +313,17 @@
       ],
       "files": [
         {
-          "path": "registry/radar-chart.tsx",
+          "path": "registry/charts/radar-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/radar-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -325,7 +333,8 @@
         "family": "radar",
         "component": "RadarChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "radar"]
     },
     {
       "name": "radial-bar-chart",
@@ -341,17 +350,17 @@
       ],
       "files": [
         {
-          "path": "registry/radial-bar-chart.tsx",
+          "path": "registry/charts/radial-bar-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/radial-bar-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -361,7 +370,8 @@
         "family": "radial",
         "component": "RadialBarChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "radial"]
     },
     {
       "name": "sankey-chart",
@@ -377,17 +387,17 @@
       ],
       "files": [
         {
-          "path": "registry/sankey-chart.tsx",
+          "path": "registry/charts/sankey-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/sankey-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -397,7 +407,8 @@
         "family": "sankey",
         "component": "SankeyChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "sankey"]
     },
     {
       "name": "scatter-chart",
@@ -413,17 +424,17 @@
       ],
       "files": [
         {
-          "path": "registry/scatter-chart.tsx",
+          "path": "registry/charts/scatter-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/scatter-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -433,7 +444,8 @@
         "family": "scatter",
         "component": "ScatterChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "scatter"]
     },
     {
       "name": "waterfall-chart",
@@ -449,17 +461,17 @@
       ],
       "files": [
         {
-          "path": "registry/waterfall-chart.tsx",
+          "path": "registry/charts/waterfall-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/waterfall-chart.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -469,7 +481,8 @@
         "family": "waterfall",
         "component": "WaterfallChart",
         "composition": "optional-frame"
-      }
+      },
+      "categories": ["charts", "waterfall"]
     },
     {
       "name": "activity-rings",
@@ -485,17 +498,17 @@
       ],
       "files": [
         {
-          "path": "registry/activity-rings.tsx",
+          "path": "registry/charts/activity-rings.tsx",
           "type": "registry:component",
           "target": "components/charts/activity-rings.tsx"
         },
         {
-          "path": "registry/chart.tsx",
+          "path": "registry/charts/chart.tsx",
           "type": "registry:component",
           "target": "components/charts/chart.tsx"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -505,7 +518,8 @@
         "family": "radial",
         "component": "ActivityRings",
         "composition": "standalone"
-      }
+      },
+      "categories": ["charts", "radial"]
     }
   ]
 }

@@ -11,9 +11,10 @@ import {
   variantDefinitions,
 } from "../examples/catalog.mjs";
 import { referenceRows, referenceTitle } from "../lib/api-reference.mjs";
+import { registryInstallCommand } from "../lib/example-files.mjs";
 import { localExample, registryName } from "../lib/registry-catalog.mjs";
 import { canonicalDocSlugs, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
-import { buildRegistry } from "./registry.mjs";
+import { syncRegistry } from "./sync-registry.mjs";
 
 const read = (file) => readFileSync(file, "utf8");
 const write = (file, text) => {
@@ -22,7 +23,7 @@ const write = (file, text) => {
 };
 const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
 if (!origin && process.env.KIND_UI_DEPLOYMENT_ENV === "production")
-  throw new Error("KIND_DOCS_ORIGIN is required for production registry install commands");
+  throw new Error("KIND_DOCS_ORIGIN is required for production docs links");
 const provenance = JSON.parse(read("vendor/provenance.json"));
 const installed = JSON.parse(read("node_modules/@kind-ui/charts/package.json"));
 if (installed.version !== provenance.version)
@@ -210,7 +211,7 @@ for (const family of families)
       2,
     )}\n`,
   );
-buildRegistry(bundles);
+syncRegistry();
 // Retain package provenance in vendor/evidence; never expose internal source receipts.
 rmSync("public/package-provenance.json", { force: true });
 const project = await createProject({ tsconfigPath: "tsconfig.json" });
@@ -331,10 +332,13 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
   );
   body = body.replace(/<ChartInstallation name="([\w-]+)"\s*\/>/g, (_, name) => {
     const item = JSON.parse(read(`public/r/${name}.json`));
-    const mapping = origin
-      ? `${origin}${publicPath("/r/{name}.json")}`
-      : `<docs-origin>${publicPath("/r/{name}.json")}`;
-    return `\n### CLI\n\n1. Initialize your React project with shadcn: \`npx shadcn@latest init\`.\n2. Merge this one-time mapping into components.json (replace <docs-origin> with the origin serving these docs):\n\n\`\`\`json\n${JSON.stringify({ registries: { "@kind-ui": mapping } }, null, 2)}\n\`\`\`\n\n3. Install the component:\n\n\`\`\`sh\nnpx shadcn@latest add @kind-ui/${name}\n\`\`\`\n\nThe namespace is project-configured; global directory registration is pending.\n\n### Manual\n\n1. Install dependencies:\n\n\`\`\`sh\nnpm install ${item.dependencies.join(" ")}\n\`\`\`\n\n2. Copy these exact files into your source directory:\n\n${item.files.map((file) => `#### ${file.target}\n\n\`\`\`${file.target.endsWith(".tsx") ? "tsx" : "text"}\n${file.content.trimEnd()}\n\`\`\`\n`).join("\n")}\n3. Use the local component shown below. Examples use @/ for the source directory; adjust the import if your alias differs. Both paths install the same source and npm core.\n`;
+    const usage = JSON.parse(read("generated/charts/usage.json"))[item.meta.family];
+    return `\n### CLI\n\n\`\`\`sh\n${registryInstallCommand(name)}\n\`\`\`\n\nSee [CLI setup](${link("/docs/installation/#cli-setup")}) for initial setup.\n\n### Manual\n\n1. Install dependencies:\n\n\`\`\`sh\nnpm install ${item.dependencies.join(" ")}\n\`\`\`\n\n2. Copy the component source into these files:\n\n${item.files
+      .filter((file) => /\.tsx?$/.test(file.target))
+      .map((file) => `#### ${file.target}\n\n\`\`\`tsx\n${file.content.trimEnd()}\n\`\`\`\n`)
+      .join(
+        "\n",
+      )}\n3. Use the component in Dashboard.tsx:\n\n\`\`\`tsx\n${usage}\n\`\`\`\n\nReplace the sample data with your own. The imports use @/ for the source directory; adjust them if your alias differs.\n`;
   });
   body = body.replace(/<ApiTable name="([\w]+)"(?:\s+compact)?\s*\/>/g, (_, name) =>
     tableMarkdown(name),

@@ -25,17 +25,17 @@
       },
       "files": [
         {
-          "path": "examples/area/example.tsx",
+          "path": "registry/charts/legacy/area/example.tsx",
           "type": "registry:component",
           "target": "components/charts/area/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -63,17 +63,17 @@
       },
       "files": [
         {
-          "path": "examples/area-curves/example.tsx",
+          "path": "registry/charts/legacy/area-curves/example.tsx",
           "type": "registry:component",
           "target": "components/charts/area-curves/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -101,17 +101,17 @@
       },
       "files": [
         {
-          "path": "examples/area-stacked/example.tsx",
+          "path": "registry/charts/legacy/area-stacked/example.tsx",
           "type": "registry:component",
           "target": "components/charts/area-stacked/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -139,17 +139,17 @@
       },
       "files": [
         {
-          "path": "examples/area-materials/example.tsx",
+          "path": "registry/charts/legacy/area-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/area-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -177,17 +177,17 @@
       },
       "files": [
         {
-          "path": "examples/bar/example.tsx",
+          "path": "registry/charts/legacy/bar/example.tsx",
           "type": "registry:component",
           "target": "components/charts/bar/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -215,17 +215,17 @@
       },
       "files": [
         {
-          "path": "examples/bar-comparison/example.tsx",
+          "path": "registry/charts/legacy/bar-comparison/example.tsx",
           "type": "registry:component",
           "target": "components/charts/bar-comparison/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -253,17 +253,17 @@
       },
       "files": [
         {
-          "path": "examples/bar-horizontal/example.tsx",
+          "path": "registry/charts/legacy/bar-horizontal/example.tsx",
           "type": "registry:component",
           "target": "components/charts/bar-horizontal/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -291,17 +291,17 @@
       },
       "files": [
         {
-          "path": "examples/bar-materials/example.tsx",
+          "path": "registry/charts/legacy/bar-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/bar-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -329,17 +329,17 @@
       },
       "files": [
         {
-          "path": "examples/box-plot/example.tsx",
+          "path": "registry/charts/legacy/box-plot/example.tsx",
           "type": "registry:component",
           "target": "components/charts/box-plot/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -367,17 +367,17 @@
       },
       "files": [
         {
-          "path": "examples/box-plot-edge-cases/example.tsx",
+          "path": "registry/charts/legacy/box-plot-edge-cases/example.tsx",
           "type": "registry:component",
           "target": "components/charts/box-plot-edge-cases/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -405,17 +405,17 @@
       },
       "files": [
         {
-          "path": "examples/box-plot-horizontal/example.tsx",
+          "path": "registry/charts/legacy/box-plot-horizontal/example.tsx",
           "type": "registry:component",
           "target": "components/charts/box-plot-horizontal/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -443,17 +443,17 @@
       },
       "files": [
         {
-          "path": "examples/box-plot-materials/example.tsx",
+          "path": "registry/charts/legacy/box-plot-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/box-plot-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -481,17 +481,17 @@
       },
       "files": [
         {
-          "path": "examples/combo/example.tsx",
+          "path": "registry/charts/legacy/combo/example.tsx",
           "type": "registry:component",
           "target": "components/charts/combo/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -519,17 +519,17 @@
       },
       "files": [
         {
-          "path": "examples/combo-stacked/example.tsx",
+          "path": "registry/charts/legacy/combo-stacked/example.tsx",
           "type": "registry:component",
           "target": "components/charts/combo-stacked/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -557,17 +557,17 @@
       },
       "files": [
         {
-          "path": "examples/combo-motion/example.tsx",
+          "path": "registry/charts/legacy/combo-motion/example.tsx",
           "type": "registry:component",
           "target": "components/charts/combo-motion/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -595,17 +595,17 @@
       },
       "files": [
         {
-          "path": "examples/combo-presentation/example.tsx",
+          "path": "registry/charts/legacy/combo-presentation/example.tsx",
           "type": "registry:component",
           "target": "components/charts/combo-presentation/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -633,17 +633,17 @@
       },
       "files": [
         {
-          "path": "examples/heatmap/example.tsx",
+          "path": "registry/charts/legacy/heatmap/example.tsx",
           "type": "registry:component",
           "target": "components/charts/heatmap/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -671,17 +671,17 @@
       },
       "files": [
         {
-          "path": "examples/heatmap-compact/example.tsx",
+          "path": "registry/charts/legacy/heatmap-compact/example.tsx",
           "type": "registry:component",
           "target": "components/charts/heatmap-compact/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -709,17 +709,17 @@
       },
       "files": [
         {
-          "path": "examples/heatmap-diverging/example.tsx",
+          "path": "registry/charts/legacy/heatmap-diverging/example.tsx",
           "type": "registry:component",
           "target": "components/charts/heatmap-diverging/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -747,17 +747,17 @@
       },
       "files": [
         {
-          "path": "examples/heatmap-materials/example.tsx",
+          "path": "registry/charts/legacy/heatmap-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/heatmap-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -785,17 +785,17 @@
       },
       "files": [
         {
-          "path": "examples/histogram/example.tsx",
+          "path": "registry/charts/legacy/histogram/example.tsx",
           "type": "registry:component",
           "target": "components/charts/histogram/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -823,17 +823,17 @@
       },
       "files": [
         {
-          "path": "examples/histogram-density/example.tsx",
+          "path": "registry/charts/legacy/histogram-density/example.tsx",
           "type": "registry:component",
           "target": "components/charts/histogram-density/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -861,17 +861,17 @@
       },
       "files": [
         {
-          "path": "examples/histogram-materials/example.tsx",
+          "path": "registry/charts/legacy/histogram-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/histogram-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -899,17 +899,17 @@
       },
       "files": [
         {
-          "path": "examples/line/example.tsx",
+          "path": "registry/charts/legacy/line/example.tsx",
           "type": "registry:component",
           "target": "components/charts/line/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -937,17 +937,17 @@
       },
       "files": [
         {
-          "path": "examples/line-start/example.tsx",
+          "path": "registry/charts/legacy/line-start/example.tsx",
           "type": "registry:component",
           "target": "components/charts/line-start/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -975,17 +975,17 @@
       },
       "files": [
         {
-          "path": "examples/line-presentation/example.tsx",
+          "path": "registry/charts/legacy/line-presentation/example.tsx",
           "type": "registry:component",
           "target": "components/charts/line-presentation/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1013,17 +1013,17 @@
       },
       "files": [
         {
-          "path": "examples/line-smooth/example.tsx",
+          "path": "registry/charts/legacy/line-smooth/example.tsx",
           "type": "registry:component",
           "target": "components/charts/line-smooth/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1051,17 +1051,17 @@
       },
       "files": [
         {
-          "path": "examples/line-comparison/example.tsx",
+          "path": "registry/charts/legacy/line-comparison/example.tsx",
           "type": "registry:component",
           "target": "components/charts/line-comparison/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1089,17 +1089,17 @@
       },
       "files": [
         {
-          "path": "examples/line-markers/example.tsx",
+          "path": "registry/charts/legacy/line-markers/example.tsx",
           "type": "registry:component",
           "target": "components/charts/line-markers/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1127,17 +1127,17 @@
       },
       "files": [
         {
-          "path": "examples/line-materials/example.tsx",
+          "path": "registry/charts/legacy/line-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/line-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1165,17 +1165,17 @@
       },
       "files": [
         {
-          "path": "examples/pie/example.tsx",
+          "path": "registry/charts/legacy/pie/example.tsx",
           "type": "registry:component",
           "target": "components/charts/pie/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1203,17 +1203,17 @@
       },
       "files": [
         {
-          "path": "examples/pie-visibility/example.tsx",
+          "path": "registry/charts/legacy/pie-visibility/example.tsx",
           "type": "registry:component",
           "target": "components/charts/pie-visibility/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1241,17 +1241,17 @@
       },
       "files": [
         {
-          "path": "examples/pie-materials/example.tsx",
+          "path": "registry/charts/legacy/pie-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/pie-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1279,17 +1279,17 @@
       },
       "files": [
         {
-          "path": "examples/pie-rounded/example.tsx",
+          "path": "registry/charts/legacy/pie-rounded/example.tsx",
           "type": "registry:component",
           "target": "components/charts/pie-rounded/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1317,17 +1317,17 @@
       },
       "files": [
         {
-          "path": "examples/pie-interaction/example.tsx",
+          "path": "registry/charts/legacy/pie-interaction/example.tsx",
           "type": "registry:component",
           "target": "components/charts/pie-interaction/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1355,17 +1355,17 @@
       },
       "files": [
         {
-          "path": "examples/radar/example.tsx",
+          "path": "registry/charts/legacy/radar/example.tsx",
           "type": "registry:component",
           "target": "components/charts/radar/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1393,17 +1393,17 @@
       },
       "files": [
         {
-          "path": "examples/radar-selection/example.tsx",
+          "path": "registry/charts/legacy/radar-selection/example.tsx",
           "type": "registry:component",
           "target": "components/charts/radar-selection/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1431,17 +1431,17 @@
       },
       "files": [
         {
-          "path": "examples/radar-materials/example.tsx",
+          "path": "registry/charts/legacy/radar-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/radar-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1469,17 +1469,17 @@
       },
       "files": [
         {
-          "path": "examples/radial/example.tsx",
+          "path": "registry/charts/legacy/radial/example.tsx",
           "type": "registry:component",
           "target": "components/charts/radial/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1507,17 +1507,17 @@
       },
       "files": [
         {
-          "path": "examples/radial-activity/example.tsx",
+          "path": "registry/charts/legacy/radial-activity/example.tsx",
           "type": "registry:component",
           "target": "components/charts/radial-activity/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1545,17 +1545,17 @@
       },
       "files": [
         {
-          "path": "examples/radial-gauge/example.tsx",
+          "path": "registry/charts/legacy/radial-gauge/example.tsx",
           "type": "registry:component",
           "target": "components/charts/radial-gauge/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1583,17 +1583,17 @@
       },
       "files": [
         {
-          "path": "examples/radial-stacked/example.tsx",
+          "path": "registry/charts/legacy/radial-stacked/example.tsx",
           "type": "registry:component",
           "target": "components/charts/radial-stacked/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1621,17 +1621,17 @@
       },
       "files": [
         {
-          "path": "examples/sankey/example.tsx",
+          "path": "registry/charts/legacy/sankey/example.tsx",
           "type": "registry:component",
           "target": "components/charts/sankey/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1659,17 +1659,17 @@
       },
       "files": [
         {
-          "path": "examples/sankey-config/example.tsx",
+          "path": "registry/charts/legacy/sankey-config/example.tsx",
           "type": "registry:component",
           "target": "components/charts/sankey-config/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1697,17 +1697,17 @@
       },
       "files": [
         {
-          "path": "examples/sankey-finishes/example.tsx",
+          "path": "registry/charts/legacy/sankey-finishes/example.tsx",
           "type": "registry:component",
           "target": "components/charts/sankey-finishes/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1735,17 +1735,17 @@
       },
       "files": [
         {
-          "path": "examples/scatter/example.tsx",
+          "path": "registry/charts/legacy/scatter/example.tsx",
           "type": "registry:component",
           "target": "components/charts/scatter/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1773,17 +1773,17 @@
       },
       "files": [
         {
-          "path": "examples/scatter-bubble/example.tsx",
+          "path": "registry/charts/legacy/scatter-bubble/example.tsx",
           "type": "registry:component",
           "target": "components/charts/scatter-bubble/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1811,17 +1811,17 @@
       },
       "files": [
         {
-          "path": "examples/scatter-materials/example.tsx",
+          "path": "registry/charts/legacy/scatter-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/scatter-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1849,17 +1849,17 @@
       },
       "files": [
         {
-          "path": "examples/waterfall/example.tsx",
+          "path": "registry/charts/legacy/waterfall/example.tsx",
           "type": "registry:component",
           "target": "components/charts/waterfall/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1887,17 +1887,17 @@
       },
       "files": [
         {
-          "path": "examples/waterfall-missing/example.tsx",
+          "path": "registry/charts/legacy/waterfall-missing/example.tsx",
           "type": "registry:component",
           "target": "components/charts/waterfall-missing/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
@@ -1925,17 +1925,17 @@
       },
       "files": [
         {
-          "path": "examples/waterfall-materials/example.tsx",
+          "path": "registry/charts/legacy/waterfall-materials/example.tsx",
           "type": "registry:component",
           "target": "components/charts/waterfall-materials/example.tsx"
         },
         {
-          "path": "examples/shared/example.css",
+          "path": "registry/charts/legacy/example.css",
           "type": "registry:file",
           "target": "components/charts/styles.css"
         },
         {
-          "path": "../../LICENSE",
+          "path": "LICENSE",
           "type": "registry:file",
           "target": "components/charts/LICENSE"
         }
