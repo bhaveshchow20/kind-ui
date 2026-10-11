@@ -8,7 +8,7 @@ export const { staticGET: GET } = createFromSource(source, {
     const structuredData = page.data.structuredData;
     return {
       title: page.data.title,
-      description: page.data.description,
+      ...(page.data.description === undefined ? {} : { description: page.data.description }),
       id: publicPath(page.url),
       url: page.url,
       structuredData,

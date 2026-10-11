@@ -77,7 +77,10 @@ export function ComponentPlayground({
           <TabsTrigger value="code">Code</TabsTrigger>
         </TabsList>
         {!fixedVariant && options.length > 1 && (
-          <Select.Root value={variant} onValueChange={setVariant}>
+          <Select.Root
+            {...(variant === undefined ? {} : { value: variant })}
+            onValueChange={setVariant}
+          >
             <Select.Trigger
               id={controlId}
               aria-label={bundle.variantControl}
@@ -126,7 +129,7 @@ export function ComponentPlayground({
         className="preview-panel"
       >
         <div className="chart-example not-prose">
-          <Preview variant={variant} />
+          <Preview {...(variant === undefined ? {} : { variant })} />
         </div>
       </TabsContent>
       <TabsContent value="code" forceMount hidden={tab !== "code"} className="code-files">

@@ -37,9 +37,14 @@ function fixture(t) {
     package: manifest,
     sha256: createHash("sha256").update(bytes).digest("hex"),
     integrity: `sha512-${createHash("sha512").update(bytes).digest("base64")}`,
-    source: { checkoutCommit: git("rev-parse", "HEAD"), dirty: false },
-    workflow: { runId: 123, runAttempt: 1 },
-    tools: { node: "v22.23.3" },
+    source: {
+      checkoutCommit: git("rev-parse", "HEAD"),
+      pullRequestHeadCommit: null,
+      pullRequestBaseCommit: null,
+      dirty: false,
+    },
+    workflow: { event: "push", runId: "123", runAttempt: "1", runUrl: null },
+    tools: { node: "v22.23.3", npm: "11.9.0", typescript: "5.9.3", vite: "8.3.1" },
   };
   writeFileSync(path.join(directory, metadata.filename), bytes);
   const save = () =>
@@ -70,7 +75,7 @@ test("retained artifact rejects a different package version and unsafe filename"
   f.metadata.package = f.manifest;
   f.metadata.filename = "../kind-ui-charts-0.2.0.tgz";
   f.save();
-  assert.throws(f.read, /filename differs/);
+  assert.throws(f.read, /plain tarball filename/);
 });
 
 test("retained artifact rejects corrupt bytes and mismatched npm integrity", (t) => {
@@ -101,3 +106,17 @@ test("retained artifact rejects dirty or changed source and the wrong Node gate"
   );
   assert.throws(f.read);
 });
+
+for (const [field, invalid] of [
+  ["source", null],
+  ["workflow", []],
+  ["package", { version: 12 }],
+  ["sha256", false],
+]) {
+  test(`retained artifact rejects malformed ${field} before using the receipt`, (t) => {
+    const f = fixture(t);
+    f.metadata[field] = invalid;
+    f.save();
+    assert.throws(f.read, /invalid_type/);
+  });
+}

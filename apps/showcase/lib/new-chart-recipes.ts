@@ -1,4 +1,5 @@
 import type { BoxPlotSummary, HistogramBin, SankeyFlowData, WaterfallEntry } from "@kind-ui/charts";
+import { demoEntry } from "@/lib/utils";
 import type { DemoOptions } from "./demo-options";
 export const newRecipes = [
   {
@@ -102,7 +103,7 @@ export function heatmapData(id: string) {
     rows,
     columns,
     data: rows.flatMap((row, r) =>
-      columns.map((column, c) => ({ row, column, value: values[r][c] })),
+      columns.map((column, c) => ({ row, column, value: demoEntry(demoEntry(values, r), c) })),
     ),
     max: retention ? 100 : 45,
   };

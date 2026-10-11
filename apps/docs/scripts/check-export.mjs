@@ -7,6 +7,7 @@ import {
   assertPageSEO,
   textExportFiles,
 } from "../../../scripts/indexing-output.mjs";
+import { docsProvenanceSchema, parseJson } from "../../../scripts/tooling-schemas.mjs";
 import { canonicalDocURL, docsURL } from "../../indexing.mjs";
 import { basePath, canonicalDocSlugs, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
 import { assertPublicCopy } from "./public-copy.mjs";
@@ -15,7 +16,9 @@ const routePrefix = basePath ? "" : "docs/";
 
 import { allExamples, families } from "../examples/catalog.mjs";
 
-const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
+const provenance = docsProvenanceSchema.parse(
+  parseJson(readFileSync("vendor/provenance.json", "utf8")),
+);
 
 const familyIds = families.map(({ id }) => id);
 

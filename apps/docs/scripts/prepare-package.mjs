@@ -2,6 +2,12 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cpSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import {
+  artifactReceiptSchema,
+  docsProvenanceSchema,
+  packageIdentitySchema,
+  parseJson,
+} from "../../../scripts/tooling-schemas.mjs";
 import { readValidatedArtifact, sourcePaths } from "./validated-artifact.mjs";
 
 const root = path.resolve("../..");
@@ -22,8 +28,8 @@ if (
   )
 )
   throw new Error("Unknown package preparation argument");
-const packageManifest = JSON.parse(
-  readFileSync(path.join(root, "packages/charts/package.json"), "utf8"),
+const packageManifest = packageIdentitySchema.parse(
+  parseJson(readFileSync(path.join(root, "packages/charts/package.json"), "utf8")),
 );
 let commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
 if (
@@ -64,7 +70,9 @@ if (release) {
   const checked = retained ? readValidatedArtifact(root, retained, packageManifest) : undefined;
   const metadata =
     checked?.metadata ??
-    JSON.parse(readFileSync(path.join(root, "artifacts/package/validated-artifact.json"), "utf8"));
+    artifactReceiptSchema.parse(
+      parseJson(readFileSync(path.join(root, "artifacts/package/validated-artifact.json"), "utf8")),
+    );
   const artifact = checked?.artifact ?? path.join(root, "artifacts/package", metadata.filename);
   const actual = createHash("sha256").update(readFileSync(artifact)).digest("hex");
   if (actual !== metadata.sha256)
@@ -74,7 +82,9 @@ if (release) {
     validation = { ...metadata.workflow, tools: metadata.tools };
   }
   if (reuse) {
-    const previous = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
+    const previous = docsProvenanceSchema.parse(
+      parseJson(readFileSync("vendor/provenance.json", "utf8")),
+    );
     if (
       previous.sha256 !== actual ||
       previous.integrity !== metadata.integrity ||

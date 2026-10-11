@@ -303,11 +303,11 @@ export function DemoControls({
                   value={String(choice.value)}
                   aria-label={choice.label}
                 >
-                  <motion.button type="button" whileTap={reduced ? undefined : { scale: 0.97 }}>
+                  <motion.button type="button" {...(!reduced ? { whileTap: { scale: 0.97 } } : {})}>
                     {value === choice.value && (
                       <motion.span
                         className="demo-choice-selection"
-                        layoutId={reduced ? undefined : `${scope}-${control.key}`}
+                        {...(!reduced ? { layoutId: `${scope}-${control.key}` } : {})}
                         transition={{ type: "spring", stiffness: 450, damping: 35 }}
                       />
                     )}

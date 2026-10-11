@@ -3,6 +3,11 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import {
+  artifactReceiptSchema,
+  packageIdentitySchema,
+  parseJson,
+} from "../../../scripts/tooling-schemas.mjs";
 
 export const sourcePaths = [
   "packages/charts",
@@ -14,9 +19,11 @@ export const sourcePaths = [
 ];
 
 // Promote retained hosted package-gate bytes without creating a second tarball.
-export function readValidatedArtifact(root, directory, manifest) {
-  const metadata = JSON.parse(
-    readFileSync(path.join(directory, "validated-artifact.json"), "utf8"),
+/** @param {string} root @param {string} directory @param {unknown} inputManifest */
+export function readValidatedArtifact(root, directory, inputManifest) {
+  const manifest = packageIdentitySchema.parse(inputManifest);
+  const metadata = artifactReceiptSchema.parse(
+    parseJson(readFileSync(path.join(directory, "validated-artifact.json"), "utf8")),
   );
   assert.equal(metadata.package?.name, manifest.name, "Validated package name differs");
   assert.equal(metadata.package?.version, manifest.version, "Validated package version differs");

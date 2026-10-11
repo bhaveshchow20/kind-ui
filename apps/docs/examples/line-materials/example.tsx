@@ -73,7 +73,7 @@ export function MaterialLineChart({
       <LineChart.Series
         dataKey="visitors"
         type="monotone"
-        material={appearance === "default" ? undefined : appearance}
+        {...(appearance !== "default" ? { material: appearance } : {})}
         strokeWidth={2}
         dot={{ r: 2.5 }}
       />

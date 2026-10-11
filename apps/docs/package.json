@@ -17,7 +17,8 @@
     "check:consumers": "node scripts/check-consumers.mjs",
     "preview": "node scripts/serve.mjs",
     "snapshot:site": "node scripts/snapshot-site.mjs",
-    "check:browser": "node scripts/start-browser-check.mjs"
+    "check:browser": "node scripts/start-browser-check.mjs",
+    "check:accessibility": "playwright test"
   },
   "dependencies": {
     "@fontsource-variable/geist": "5.3.0",

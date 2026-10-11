@@ -5,6 +5,7 @@ import path from "node:path";
 import { basePath } from "../lib/routing.mjs";
 
 const root = path.resolve("out");
+/** @type {Record<string, string>} */
 const mime = {
   ".html": "text/html",
   ".js": "text/javascript",
@@ -19,7 +20,7 @@ const mime = {
 };
 const server = createServer((request, response) => {
   try {
-    let pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
+    let pathname = decodeURIComponent(new URL(request.url ?? "/", "http://localhost").pathname);
     if (basePath) {
       if (pathname !== basePath && !pathname.startsWith(`${basePath}/`)) throw new Error();
       pathname = pathname.slice(basePath.length) || "/";

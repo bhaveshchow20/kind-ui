@@ -25,7 +25,7 @@ function DocsLink({
   ) {
     return <a {...props} href={publicPath(route)} />;
   }
-  return <Link {...props} prefetch={prefetch} href={route} />;
+  return <Link {...props} {...(prefetch === undefined ? {} : { prefetch })} href={route} />;
 }
 export function Provider({ children }: { children: ReactNode }) {
   return (

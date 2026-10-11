@@ -20,7 +20,12 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "allowJs": true
+    "allowJs": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "include": [
     "next-env.d.ts",

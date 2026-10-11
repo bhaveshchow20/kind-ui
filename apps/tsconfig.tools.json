@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "skipLibCheck": false
+  },
+  "include": [
+    "analytics.mjs",
+    "indexing.mjs",
+    "seo.mjs",
+    "docs/lib/routing.mjs",
+    "docs/scripts/consumer-shards.mjs",
+    "docs/scripts/serve.mjs",
+    "docs/scripts/validated-artifact.mjs",
+    "docs/scripts/verify-pinned-package.mjs",
+    "showcase/postcss.config.mjs"
+  ]
+}

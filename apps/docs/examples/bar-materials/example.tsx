@@ -53,7 +53,7 @@ export function MaterialBarChart({
           />
           <BarChart.Series
             dataKey="orders"
-            material={appearance === "default" ? undefined : appearance}
+            {...(appearance !== "default" ? { material: appearance } : {})}
             radius={8}
             maxBarSize={48}
           />

@@ -125,7 +125,7 @@ test("footer directory keeps chart and resource links visible on desktop and nar
   for (const name of ["Charts", "Guides", "Resources"]) {
     await expect(directory.getByRole("heading", { name, exact: true })).toBeVisible();
   }
-  for (const href of footerLinkGroups[0].links.slice(0, 6).map((chart) => chart.href)) {
+  for (const href of (footerLinkGroups.at(0)?.links ?? []).slice(0, 6).map((chart) => chart.href)) {
     await expect(directory.locator(`a[href="${href}"]`)).toHaveCount(1);
   }
   await expect(directory.getByRole("link", { name: /^View all/ })).toHaveAttribute(
@@ -165,14 +165,16 @@ test("initial homepage HTML and metadata routes match deployment indexing intent
   expect(html).toContain(`href="${siteLinks.docs}"`);
   // Links must exist before JS, rather than appearing only inside the search dialog.
   const initialHTML = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
-  for (const href of footerLinkGroups[0].links.map((chart) => chart.href)) {
+  for (const href of (footerLinkGroups.at(0)?.links ?? []).map((chart) => chart.href)) {
     expect(initialHTML).toContain(`href="${href}"`);
   }
   const structuredData = [
     ...html.matchAll(/<script type="application\/ld\+json">([^<]+)<\/script>/g),
   ];
   expect(structuredData).toHaveLength(1);
-  const source = JSON.parse(structuredData[0][1]);
+  const json = structuredData[0]?.[1];
+  if (json === undefined) throw new Error("Missing source JSON-LD");
+  const source = JSON.parse(json);
   expect(source["@type"]).toBe("SoftwareSourceCode");
   expect(source.name).toBe("@kind-ui/charts");
   expect(source.url).toBe("https://kindui.dev/charts");

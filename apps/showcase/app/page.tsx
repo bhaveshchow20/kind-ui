@@ -45,6 +45,7 @@ import {
   siteLinks,
 } from "@/lib/site-links";
 import { useCopyCode } from "@/lib/use-copy-code";
+import { demoEntry } from "@/lib/utils";
 import { chartSourceData } from "../../seo.mjs";
 
 type Material = "plain" | "clay" | "glow";
@@ -184,8 +185,9 @@ function recipeData(id: string) {
     signed: { a: [18, 32, -12, 43, -19, 54, -8, 62] },
   };
   const v = values[id];
+  if (!v) throw new Error(`Unknown chart recipe: ${id}`);
   return v.a.map((a, i) => ({
-    month: v.periods?.[i] ?? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"][i],
+    month: v.periods?.[i] ?? demoEntry(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"], i),
     a,
     b: v.b?.[i] ?? 0,
     c: v.c?.[i] ?? 0,
@@ -219,7 +221,7 @@ function snippet(
     r.keys.map((k, i) => [
       k,
       {
-        label: r.keys.length === 1 ? r.subtitle : recipeLabels(r.id)[k],
+        label: r.keys.length === 1 ? r.subtitle : (recipeLabels(r.id)[k] ?? k),
         color: colors[i],
       },
     ]),
@@ -246,7 +248,7 @@ export function Example() {
             <${family}Chart.YAxis ${horizontal ? 'dataKey="month" type="category"' : 'type="number"'} tickLine={false} axisLine={false}
               tick={{ fontSize: 12, fill: "var(--chart-axis, #767782)" }} width="auto"${r.id === "area" || r.id === "line" ? ' tickFormatter={value => "$" + Number(value) / 1000 + "k"}' : ""} />${r.id === "signed" ? '\n            <ReferenceLine y={0} stroke="var(--chart-axis, #767782)" />' : ""}
 ${series}
-            <${family}Chart.Tooltip cursor={${family === "Bar" ? '{ fill: "#a4a8be", fillOpacity: .09 }' : '{ stroke: "#8d8e9b", strokeDasharray: "3 4" }'}} valueAnimation={animate ? "shuffle" : undefined} />
+            <${family}Chart.Tooltip cursor={${family === "Bar" ? '{ fill: "#a4a8be", fillOpacity: .09 }' : '{ stroke: "#8d8e9b", strokeDasharray: "3 4" }'}} {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
             ${(options.showLegend ?? true) ? `<${family}Chart.Legend aria-label="Focus series for ${r.tag}" />` : ""}
           </${family}Chart>
   );
@@ -279,8 +281,8 @@ function ChartCard({
         r.keys.map((k, i) => [
           k,
           {
-            label: r.keys.length === 1 ? r.subtitle : recipeLabels(r.id)[k],
-            color: colors[i],
+            label: r.keys.length === 1 ? r.subtitle : (recipeLabels(r.id)[k] ?? k),
+            color: demoEntry(colors, i),
             formatValue: (v: unknown) =>
               typeof v === "number"
                 ? `${r.id === "area" || r.id === "line" ? "$" : ""}${v.toLocaleString("en-US")}`
@@ -304,7 +306,7 @@ function ChartCard({
         />
       )}
       <ChartComponent.XAxis
-        dataKey={horizontal ? undefined : "month"}
+        {...(!horizontal ? { dataKey: "month" } : {})}
         type={horizontal ? "number" : "category"}
         tickLine={false}
         axisLine={false}
@@ -312,15 +314,15 @@ function ChartCard({
         tickMargin={10}
       />
       <ChartComponent.YAxis
-        dataKey={horizontal ? "month" : undefined}
+        {...(horizontal ? { dataKey: "month" } : {})}
         type={horizontal ? "category" : "number"}
         tickLine={false}
         axisLine={false}
         tick={{ fontSize: 12, fill: "var(--chart-axis)" }}
         width="auto"
-        tickFormatter={
-          r.id === "area" || r.id === "line" ? (value) => `$${Number(value) / 1000}k` : undefined
-        }
+        {...(r.id === "area" || r.id === "line"
+          ? { tickFormatter: (value: unknown) => `$${Number(value) / 1000}k` }
+          : {})}
       />
       {r.id === "signed" && <ReferenceLine y={0} stroke="var(--chart-axis)" />}
       {r.keys.map((k, i) =>
@@ -339,8 +341,8 @@ function ChartCard({
             dataKey={k}
             type={options.curve ?? "monotone"}
             material={material}
-            stackId={r.id === "stacked" ? "devices" : undefined}
-            fill={colors[i]}
+            {...(r.id === "stacked" ? { stackId: "devices" } : {})}
+            fill={demoEntry(colors, i)}
             fillOpacity={options.fillOpacity ?? (r.id === "area" ? 0.16 : 0.5)}
             strokeWidth={options.strokeWidth ?? 2.5}
           />
@@ -351,7 +353,7 @@ function ChartCard({
             material={material}
             radius={options.radius ?? 5}
             maxBarSize={options.width ?? (horizontal ? 18 : 35)}
-            stackId={options.stacked ? "customers" : undefined}
+            {...(options.stacked ? { stackId: "customers" } : {})}
           />
         ),
       )}
@@ -361,7 +363,7 @@ function ChartCard({
             ? { fill: "#a4a8be", fillOpacity: 0.09 }
             : { stroke: "#8d8e9b", strokeDasharray: "3 4" }
         }
-        valueAnimation={chartAnimate ? "shuffle" : undefined}
+        {...(chartAnimate ? { valueAnimation: "shuffle" as const } : {})}
       />
       {options.showLegend !== false && (
         <ChartComponent.Legend aria-label={`Focus series for ${r.tag}`} />
@@ -467,8 +469,8 @@ function MobileThemeSwitcher({ enabled }: { enabled: boolean }) {
   const { theme, setTheme } = useTheme();
   const selected = enabled ? (theme ?? "system") : "system";
   const index = mobileAppearanceOptions.findIndex((option) => option.value === selected);
-  const current = mobileAppearanceOptions[index < 0 ? 2 : index];
-  const next = mobileAppearanceOptions[(index + 1) % mobileAppearanceOptions.length];
+  const current = demoEntry(mobileAppearanceOptions, index < 0 ? 2 : index);
+  const next = demoEntry(mobileAppearanceOptions, (index + 1) % mobileAppearanceOptions.length);
   const Icon = current.Icon;
   return (
     <button
@@ -503,7 +505,7 @@ function ThemeSwitcher({ enabled }: { enabled: boolean }) {
               <motion.span
                 className="nav-theme-selection"
                 aria-hidden="true"
-                layoutId={reduced ? undefined : `${id}-theme`}
+                {...(!reduced ? { layoutId: `${id}-theme` } : {})}
                 transition={{ type: "spring", stiffness: 430, damping: 36 }}
               />
             )}
@@ -529,7 +531,7 @@ function DocumentationSearch() {
     return () => window.removeEventListener("keydown", shortcut);
   }, []);
   const filtered = documentationCharts.filter(({ name }) =>
-    name.toLowerCase().includes(query.trim().toLowerCase()),
+    (name ?? "").toLowerCase().includes(query.trim().toLowerCase()),
   );
   return (
     <Dialog

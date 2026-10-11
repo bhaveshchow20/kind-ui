@@ -34,23 +34,29 @@ async function prepare(page: import("@playwright/test").Page) {
 
 async function record(page: import("@playwright/test").Page) {
   return page.evaluate(() => {
+    const element = (selector: string) => {
+      const node = document.querySelector<HTMLElement>(selector);
+      if (!node) throw new Error(`Missing headline element: ${selector}`);
+      return node;
+    };
     const samples: Sample[] = [];
     let running = true;
     const sample = () => {
       if (!running) return;
-      const headline = document.querySelector<HTMLElement>("#hero-title")!;
+      const headline = element("#hero-title");
       const tops: number[] = [];
       const wordRows: number[] = [];
       const walker = document.createTreeWalker(headline, NodeFilter.SHOW_TEXT);
       while (walker.nextNode()) {
         const node = walker.currentNode;
-        const parent = node.parentElement!;
+        const parent = node.parentElement;
+        if (!parent) throw new Error("Missing headline text parent");
         if (!node.textContent?.trim() || parent.closest(".brand-pill-face, [aria-hidden='true']"))
           continue;
         const range = document.createRange();
-        for (const word of node.textContent!.matchAll(/\S+/g)) {
-          range.setStart(node, word.index!);
-          range.setEnd(node, word.index! + word[0].length);
+        for (const word of (node.textContent ?? "").matchAll(/\S+/g)) {
+          range.setStart(node, word.index);
+          range.setEnd(node, word.index + word[0].length);
           wordRows.push(range.getBoundingClientRect().top);
         }
         range.selectNodeContents(node);
@@ -68,15 +74,15 @@ async function record(page: import("@playwright/test").Page) {
       }
       samples.push({
         height: headline.getBoundingClientRect().height,
-        installY: document.querySelector(".hero-install")!.getBoundingClientRect().top,
+        installY: element(".hero-install").getBoundingClientRect().top,
         lines: tops.length,
         overflow: document.documentElement.scrollWidth - window.innerWidth,
-        width: document.querySelector(".brand-pill-stack")!.getBoundingClientRect().width,
-        beforeX: document.querySelector(".hero-stack-phrase")!.getBoundingClientRect().left,
-        afterX: document.querySelector(".hero-ready-words")!.getBoundingClientRect().left,
+        width: element(".brand-pill-stack").getBoundingClientRect().width,
+        beforeX: element(".hero-stack-phrase").getBoundingClientRect().left,
+        afterX: element(".hero-ready-words").getBoundingClientRect().left,
         wordRows,
         labels: [...headline.querySelectorAll(".brand-pill-sizer")].map(
-          (node) => node.textContent!,
+          (node) => node.textContent ?? "",
         ),
       });
       requestAnimationFrame(sample);
@@ -138,10 +144,14 @@ for (const width of widths) {
     expect([...new Set(samples.map((s) => s.lines))]).toEqual([
       width >= 768 ? 2 : width >= 641 ? 3 : width >= 375 ? 4 : 5,
     ]);
+    const initial = samples[0];
+    if (!initial) throw new Error("Missing headline samples");
     for (const sample of samples) {
-      expect(sample.wordRows).toHaveLength(samples[0].wordRows.length);
+      expect(sample.wordRows).toHaveLength(initial.wordRows.length);
       for (const [index, top] of sample.wordRows.entries()) {
-        expect(Math.abs(top - samples[0].wordRows[index])).toBeLessThanOrEqual(1);
+        const initialTop = initial.wordRows[index];
+        if (initialTop === undefined) throw new Error("Missing initial word row");
+        expect(Math.abs(top - initialTop)).toBeLessThanOrEqual(1);
       }
     }
     expect(Math.max(...samples.map((s) => s.overflow))).toBeLessThanOrEqual(0);
@@ -169,6 +179,7 @@ test("a resizing pill continuously pushes adjacent inline text in both direction
   });
   const first = samples[0];
   const last = samples[samples.length - 1];
+  if (!first || !last) throw new Error("Missing headline geometry samples");
   expect(first.width - last.width).toBeGreaterThan(15);
   expect(new Set(samples.map((s) => Math.round(s.width * 10))).size).toBeGreaterThan(8);
   for (const sample of samples) {
@@ -193,7 +204,9 @@ test("longest labels retain their fit across viewport changes", async ({ page })
       await expect
         .poll(() =>
           button.evaluate((element) => {
-            const face = element.querySelector(".brand-pill-face")!.getBoundingClientRect();
+            const node = element.querySelector(".brand-pill-face");
+            if (!node) throw new Error("Missing brand pill face");
+            const face = node.getBoundingClientRect();
             const outer = element.getBoundingClientRect();
             const padding = Number.parseFloat(getComputedStyle(element).paddingRight);
             return face.left >= outer.left + padding - 1 && face.right <= outer.right - padding + 1;

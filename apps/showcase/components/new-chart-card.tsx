@@ -27,6 +27,7 @@ import {
   sankeyData,
   waterfallEntries,
 } from "@/lib/new-chart-recipes";
+import { demoEntry } from "@/lib/utils";
 
 function NewChart({
   recipe: r,
@@ -58,8 +59,8 @@ function NewChart({
         key={entranceKey}
         data={conversionData}
         config={{
-          trials: { label: "Trial starts", color: colors[0] },
-          paid: { label: "Paid conversions", color: colors[1] },
+          trials: { label: "Trial starts", color: demoEntry(colors, 0) },
+          paid: { label: "Paid conversions", color: demoEntry(colors, 1) },
         }}
         frameProps={{ className: "chart-root" }}
         responsive
@@ -88,7 +89,7 @@ function NewChart({
           dot={options.dots ?? false}
           strokeWidth={options.strokeWidth ?? 3}
         />
-        <LineChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+        <LineChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
         {options.showLegend !== false && <LineChart.Legend />}
       </LineChart>
     );
@@ -102,7 +103,7 @@ function NewChart({
         config={{
           count: {
             label: density ? "Density" : latency ? "Requests" : "Orders",
-            color: colors[0],
+            color: demoEntry(colors, 0),
           },
         }}
         frameProps={{ className: "chart-root" }}
@@ -141,7 +142,7 @@ function NewChart({
           strokeWidth={1.5}
         />
         <HistogramChart.Tooltip
-          valueAnimation={animate ? "shuffle" : undefined}
+          {...(animate ? { valueAnimation: "shuffle" as const } : {})}
           labelFormatter={(_label, entries) => {
             const bin = entries[0]?.payload as HistogramBin | undefined;
             return bin ? `${bin.lower}–${bin.upper} ${latency ? "ms" : "USD"}` : "";
@@ -169,7 +170,7 @@ function NewChart({
         config={{
           spread: {
             label: horizontal ? "Weekly growth" : "Request time",
-            color: colors[0],
+            color: demoEntry(colors, 0),
           },
         }}
         frameProps={{ className: "chart-root" }}
@@ -229,7 +230,7 @@ function NewChart({
           fillOpacity={0.65}
         />
         <BoxPlotChart.Tooltip
-          valueAnimation={animate ? "shuffle" : undefined}
+          {...(animate ? { valueAnimation: "shuffle" as const } : {})}
           formatter={(_value, _name, item) => [
             String((item.payload as BoxRow).summary.median) + (horizontal ? " pp" : " ms"),
             "Median",
@@ -262,19 +263,19 @@ function NewChart({
             columnLabels: options.showLabels === false ? "hidden" : "visible",
           }}
           cellProps={() => ({ style: { borderRadius: options.radius ?? 5 } })}
-          Cell={(options.showValues ?? r.id === "heatmap-retention") ? undefined : () => null}
+          {...(!(options.showValues ?? r.id === "heatmap-retention") ? { Cell: () => null } : {})}
         />
         {options.showLegend !== false && (
           <HeatmapChart.Legend label={r.id === "heatmap-retention" ? "Active users" : "Tickets"} />
         )}
-        <HeatmapChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+        <HeatmapChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
       </HeatmapChart>
     );
   if (r.family === "Waterfall")
     return (
       <WaterfallChart
         key={entranceKey}
-        config={{ range: { label: "Balance", color: colors[0] } }}
+        config={{ range: { label: "Balance", color: demoEntry(colors, 0) } }}
         frameProps={{ className: "chart-root" }}
         className="chart-canvas"
         data={water}
@@ -317,7 +318,7 @@ function NewChart({
           {water.map((row) => (
             <Cell
               key={row.id}
-              fill={colors[row.kind !== "delta" ? 0 : (row.value ?? 0) < 0 ? 2 : 1]}
+              fill={demoEntry(colors, row.kind !== "delta" ? 0 : (row.value ?? 0) < 0 ? 2 : 1)}
             />
           ))}
         </WaterfallChart.Series>
@@ -338,7 +339,7 @@ function NewChart({
       config={Object.fromEntries(
         flow.nodes.map((node, index) => [
           node.id,
-          { label: node.name, color: colors[index % colors.length] },
+          { label: node.name, color: demoEntry(colors, index % colors.length) },
         ]),
       )}
       aria-label={r.tag}
@@ -351,7 +352,7 @@ function NewChart({
       <SankeyChart.Nodes
         render={(props) => (
           <g>
-            <SankeyChart.Node {...props} color={colors[props.index % colors.length]} />
+            <SankeyChart.Node {...props} color={demoEntry(colors, props.index % colors.length)} />
             {options.showLabels !== false && (
               <text
                 x={props.x < 100 ? props.x - 8 : props.x + props.width + 8}
@@ -372,16 +373,14 @@ function NewChart({
           <SankeyChart.Link
             {...props}
             material="gradient"
-            color={
-              colors[
-                flow.nodes.findIndex((node) => node.id === props.payload.source.id) % colors.length
-              ]
-            }
-            targetColor={
-              colors[
-                flow.nodes.findIndex((node) => node.id === props.payload.target.id) % colors.length
-              ]
-            }
+            color={demoEntry(
+              colors,
+              flow.nodes.findIndex((node) => node.id === props.payload.source.id) % colors.length,
+            )}
+            targetColor={demoEntry(
+              colors,
+              flow.nodes.findIndex((node) => node.id === props.payload.target.id) % colors.length,
+            )}
             pathProps={{ opacity: options.linkOpacity ?? 0.45 }}
           />
         )}

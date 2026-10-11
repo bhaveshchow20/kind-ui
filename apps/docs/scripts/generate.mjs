@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import path from "node:path";
 import { createGenerator, createProject } from "fumadocs-typescript";
 import ts from "typescript";
+import { docsProvenanceSchema, parseJson } from "../../../scripts/tooling-schemas.mjs";
 import {
   allExamples,
   dataLabels,
@@ -18,7 +19,7 @@ const write = (file, text) => {
   mkdirSync(path.dirname(file), { recursive: true });
   writeFileSync(file, text);
 };
-const provenance = JSON.parse(read("vendor/provenance.json"));
+const provenance = docsProvenanceSchema.parse(parseJson(read("vendor/provenance.json")));
 const installed = JSON.parse(read("node_modules/@kind-ui/charts/package.json"));
 if (installed.version !== provenance.version)
   throw new Error(

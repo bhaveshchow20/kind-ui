@@ -48,7 +48,7 @@ export function StorageGaugeChart({
           <RadialBarChart.RadiusAxis type="category" dataKey="period" tick={false} axisLine={false}>
             {labels && (
               <Label
-                value={data[0].used}
+                value={data.at(0)?.used}
                 content={({ viewBox }) => {
                   if (!viewBox || !("cx" in viewBox)) return null;
                   return (

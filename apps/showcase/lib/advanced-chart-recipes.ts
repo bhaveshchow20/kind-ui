@@ -1,3 +1,4 @@
+import { demoEntry } from "@/lib/utils";
 import type { DemoOptions } from "./demo-options";
 export type Finish = "plain" | "clay" | "glow";
 export const advancedRecipes = [
@@ -114,33 +115,36 @@ export function advancedData(
 ): Record<string, string | number | number[]>[] {
   if (id === "combo")
     return [42000, 47000, 45000, 53000, 58000, 62000].map((a, i) => ({
-      month: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"][i],
+      month: demoEntry(["Jan", "Feb", "Mar", "Apr", "May", "Jun"], i),
       a,
-      b: [44000, 46000, 48000, 52000, 55000, 58000][i],
+      b: demoEntry([44000, 46000, 48000, 52000, 55000, 58000], i),
     }));
   if (id === "combo-area")
     return [28, 37, 42, 54, 63, 78].map((a, i) => ({
-      month: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"][i],
+      month: demoEntry(["Jan", "Feb", "Mar", "Apr", "May", "Jun"], i),
       a,
       b: 100,
     }));
   if (id === "pie" || id === "donut")
     return ["a", "b", "c"].map((key, i) => ({
       id: key,
-      value: (id === "pie" ? [13920, 7200, 2880] : [144, 216, 120])[i],
+      value: demoEntry(id === "pie" ? [13920, 7200, 2880] : [144, 216, 120], i),
     }));
   if (id.startsWith("radar"))
     return ["Delivery", "Quality", "Access", "Reliability", "Support"].map((category, i) => ({
       category,
-      a: (id === "radar-outline" ? [68, 92, 77, 85, 63] : [76, 84, 92, 88, 73])[i],
-      b: (id === "radar-outline" ? [89, 75, 91, 68, 82] : [85, 72, 80, 74, 88])[i],
-      range: [
-        [68, 79],
-        [76, 88],
-        [84, 95],
-        [81, 92],
-        [65, 80],
-      ][i],
+      a: demoEntry(id === "radar-outline" ? [68, 92, 77, 85, 63] : [76, 84, 92, 88, 73], i),
+      b: demoEntry(id === "radar-outline" ? [89, 75, 91, 68, 82] : [85, 72, 80, 74, 88], i),
+      range: demoEntry(
+        [
+          [68, 79],
+          [76, 88],
+          [84, 95],
+          [81, 92],
+          [65, 80],
+        ],
+        i,
+      ),
     }));
   if (id === "gauge") return [{ category: "Sprint", a: options.progress ?? 72, b: 100 }];
   if (id === "radial-stacked")
@@ -165,9 +169,9 @@ export function advancedData(
       { name: "Australia", x: 240, y: 163, z: 4900 },
     ];
   return [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({
-    x: [120, 180, 240, 310, 380, 440, 520, 600][i],
-    y: [18, 29, 41, 49, 62, 74, 85, 99][i],
-    social: [14, 21, 26, 38, 45, 53, 63, 71][i],
+    x: demoEntry([120, 180, 240, 310, 380, 440, 520, 600], i),
+    y: demoEntry([18, 29, 41, 49, 62, 74, 85, 99], i),
+    social: demoEntry([14, 21, 26, 38, 45, 53, 63, 71], i),
   }));
 }
 export function advancedBody(r: AdvancedRecipe, material: Finish, options: DemoOptions = {}) {

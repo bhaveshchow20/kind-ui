@@ -86,7 +86,7 @@ export function MaterialResponseTimeBoxPlot({
             barSize={32}
             strokeWidth={1.5}
             fillOpacity={0.28}
-            material={appearance === "default" ? undefined : appearance}
+            {...(appearance !== "default" ? { material: appearance } : {})}
           />
           <BoxPlotChart.Tooltip
             maxWidth={220}

@@ -51,7 +51,9 @@ async function LineExample({
       },
     });
   }
-  const sourceCode = await codeBlock(bundle.files[`src/examples/${id}/example.tsx`]);
+  const example = bundle.files[`src/examples/${id}/example.tsx`];
+  if (example === undefined) throw new Error(`Missing example source: ${id}`);
+  const sourceCode = await codeBlock(example);
   const variantCode = bundle.variants
     ? Object.fromEntries(
         await Promise.all(
@@ -65,11 +67,11 @@ async function LineExample({
   return (
     <ComponentPlayground
       key={`${id}-${variant ?? "ready"}`}
-      fixedVariant={variant}
-      instance={instance}
+      {...(variant === undefined ? {} : { fixedVariant: variant })}
+      {...(instance === undefined ? {} : { instance })}
       bundle={bundle}
       sourceCode={sourceCode}
-      variantCode={variantCode}
+      {...(variantCode === undefined ? {} : { variantCode })}
     />
   );
 }
