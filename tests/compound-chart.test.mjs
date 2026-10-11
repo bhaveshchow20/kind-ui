@@ -40,7 +40,7 @@ for (const Family of families) {
       /requires aria-label/,
     );
     assert.throws(
-      () => render(h(Family, { ...propsFor(Family), config, "aria-label": "Values" }, null)),
+      () => render(h(Family, { ...propsFor(Family), config, "aria-label": "Values" })),
       /requires explicit children/,
     );
     assert.throws(
@@ -122,7 +122,10 @@ test("explicit activity children retain the data alternative and omit unrequeste
 });
 test("Sankey retains arbitrary node identities under its owned metadata and data root", () => {
   const data = {
-    nodes: [{ id: "source one" }, { id: "target two" }],
+    nodes: [
+      { id: "source one", name: "Source" },
+      { id: "target two", name: "Target" },
+    ],
     links: [{ id: "route", source: "source one", target: "target two", value: 5 }],
   };
   const config = {

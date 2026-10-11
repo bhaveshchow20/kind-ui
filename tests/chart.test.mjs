@@ -2542,11 +2542,13 @@ test("Sankey labels use stable identity, totals, explicit contents and bounded i
   const node = { x: 10, y: 20, width: 0, height: 1, payload: { id: "a", name: "stale" } };
   const label = (props = {}) =>
     renderSvg(
-      h(
-        Chart.SankeyNodeLabel,
-        { node, data, showValues: true, valueFormatter: (v) => `${v} MWh`, ...props },
-        null,
-      ),
+      h(Chart.SankeyNodeLabel, {
+        node,
+        data,
+        showValues: true,
+        valueFormatter: (v) => `${v} MWh`,
+        ...props,
+      }),
     );
   assert.match(label(), /Source: 7 MWh/);
   assert.match(label(), /x="18"/);
@@ -2554,6 +2556,7 @@ test("Sankey labels use stable identity, totals, explicit contents and bounded i
   assert.match(label({ position: "inside", children: h("tspan", null, "Custom") }), /clipPath/);
   assert.match(label({ position: "inside" }), /width="0" height="1"/);
   assert.match(label({ children: "Custom" }), /<title>Source: 7 MWh<\/title>/);
+  assert.match(label({ children: "Custom" }), />Custom<\/text>/);
   assert.match(label({ node: { ...node, payload: { id: "b" } } }), /Sink: 7 MWh/);
   assert.match(label({ node: { ...node, payload: { id: "b" } } }), /text-anchor="end"/);
   assert.throws(() => label({ node: { ...node, payload: { id: "missing" } } }), /requires node id/);
@@ -2631,7 +2634,7 @@ test("Sankey configured icons preserve identity, text ownership and bounded plac
     sink: { label: "Sink metadata", color: "blue" },
   };
   const label = (props = {}) =>
-    renderSvg(h(Chart.SankeyNodeLabel, { node, data, nodeConfig, ...props }, null));
+    renderSvg(h(Chart.SankeyNodeLabel, { node, data, nodeConfig, ...props }));
   assert.match(label(), /data-kind-ui="sankey-node-icon"/);
   assert.match(label(), /aria-hidden="true" focusable="false"/);
   assert.match(label(), /<text x="68" y="20.5"/);
