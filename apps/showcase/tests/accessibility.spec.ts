@@ -15,11 +15,11 @@ for (const scheme of ["light", "dark"] as const) {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const audit = () =>
       new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
-    expect((await audit()).violations).toEqual([]);
+    expect.soft((await audit()).violations).toEqual([]);
     await page.getByRole("button", { name: "Search documentation", exact: true }).focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("textbox", { name: "Search components" })).toBeFocused();
-    expect((await audit()).violations).toEqual([]);
+    expect.soft((await audit()).violations).toEqual([]);
     await page.keyboard.press("Escape");
     await expect(
       page.getByRole("button", { name: "Search documentation", exact: true }),
@@ -29,10 +29,10 @@ for (const scheme of ["light", "dark"] as const) {
     await trigger.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("dialog")).toBeVisible();
-    expect((await audit()).violations).toEqual([]);
+    expect.soft((await audit()).violations).toEqual([]);
     await page.getByRole("tab", { name: "Code", exact: true }).click();
     await expect(page.getByRole("region", { name: "Chart example code" })).toBeVisible();
-    expect((await audit()).violations).toEqual([]);
+    expect.soft((await audit()).violations).toEqual([]);
     await page.keyboard.press("Escape");
     await expect(trigger).toBeFocused();
   });
