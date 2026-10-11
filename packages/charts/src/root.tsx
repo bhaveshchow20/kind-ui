@@ -69,6 +69,7 @@ export function Root({
       : `var(--color-${key})`;
   }
   const value: ChartContextValue = {
+    ...(props.nonce !== undefined ? { nonce: props.nonce } : {}),
     config: resolveSeriesConfig(config),
     paints,
     colorId: id,

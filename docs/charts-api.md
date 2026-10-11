@@ -22,7 +22,7 @@ The maintained [package reference](../packages/charts/README.md) documents publi
 
 ## Shared composition and presentation
 
-Use public `@kind-ui/charts` exports and import `@kind-ui/charts/styles.css` once at the application entry. Applications own data, units, domains, accessible names, data alternatives and request state. Each family reference specifies its native renderer, refs, handlers, visibility, missing-value and motion limits.
+Use public `@kind-ui/charts` exports and register the package with Tailwind v4 `@source` as shown in the [installation guide](https://kindui.dev/charts/docs/installation/). Applications own data, units, domains, accessible names, data alternatives and request state. Each family reference specifies its native renderer, refs, handlers, visibility, missing-value and motion limits.
 
 Shared references cover [Root](https://kindui.dev/charts/docs/chart-components/root/), [SeriesConfig](https://kindui.dev/charts/docs/chart-components/series-config/), [Legend](https://kindui.dev/charts/docs/chart-components/legend/), [Tooltip](https://kindui.dev/charts/docs/chart-components/tooltip/), responsive sizing, axes, grids and labels.
 

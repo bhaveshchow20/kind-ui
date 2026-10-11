@@ -44,7 +44,7 @@ export function LineSeries<
   dashAnimation = false,
   ...props
 }: LineSeriesProps<DataPoint, Value>) {
-  const { config, paints, visibleSeries } = useChart();
+  const { config, paints, visibleSeries, nonce } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
   const id = props.id || generatedId;
@@ -84,7 +84,9 @@ export function LineSeries<
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
       {dashed && (
-        <style>{`@keyframes kind-ui-line-dash { from { stroke-dashoffset: var(--kind-ui-dash-offset); } to { stroke-dashoffset: calc(var(--kind-ui-dash-offset) - var(--kind-ui-dash-cycle)); } }`}</style>
+        <style
+          nonce={nonce}
+        >{`@keyframes kind-ui-line-dash { from { stroke-dashoffset: var(--kind-ui-dash-offset); } to { stroke-dashoffset: calc(var(--kind-ui-dash-offset) - var(--kind-ui-dash-cycle)); } }`}</style>
       )}
       <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
         <Line<DataPoint, Value>

@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, useTransform } from "motion/react";
-import { type CSSProperties, type ReactNode, useId, useState } from "react";
+import { type CSSProperties, type ReactNode, useContext, useId, useState } from "react";
 import { usePlotArea } from "recharts";
+import { ChartContext } from "./chart-context.js";
 import {
   LoadingAngularBand,
   type LoadingAnimation,
@@ -85,6 +86,7 @@ export function LoadingSkeletonSurface({
   animation?: LoadingAnimation | undefined;
   design?: LoadingDesign | undefined;
 }) {
+  const nonce = useContext(ChartContext)?.nonce;
   const id = useId().replace(/:/g, "");
   const seed =
     suppliedSeed ??
@@ -193,7 +195,9 @@ export function LoadingSkeletonSurface({
       viewBox={polar ? "200 0 240 240" : "0 0 640 240"}
       preserveAspectRatio={polar || family === "scatter" ? "xMidYMid meet" : "none"}
     >
-      <style>{`@keyframes kind-ui-loading-pulse { 0%, 12%, 94%, 100% { opacity: 0; } 14%, 90% { opacity: 1; } }`}</style>
+      <style
+        nonce={nonce}
+      >{`@keyframes kind-ui-loading-pulse { 0%, 12%, 94%, 100% { opacity: 0; } 14%, 90% { opacity: 1; } }`}</style>
       <defs>
         <linearGradient id={`${id}-soft-x`}>
           <stop offset="0" stopColor="white" stopOpacity="0" />

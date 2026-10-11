@@ -272,6 +272,7 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
     props.dot,
     seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined),
   );
+  const { nonce } = useChart();
   const filterId = `kind-ui-polar-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const materialized =
     material !== "plain" &&
@@ -285,7 +286,9 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
           <PolarMaterialFilter material={material} id={filterId} />
           {/* A series filter would also reach RadarDotsWrapper. Scope to the native
             Polygon root, including its range subpaths, so custom dots stay owned. */}
-          <style>{`.${filterId} .recharts-radar-polygon > .recharts-polygon { filter: url(#${filterId}); }`}</style>
+          <style
+            nonce={nonce}
+          >{`.${filterId} .recharts-radar-polygon > .recharts-polygon { filter: url(#${filterId}); }`}</style>
         </>
       )}
       <SeriesInteractionLayer

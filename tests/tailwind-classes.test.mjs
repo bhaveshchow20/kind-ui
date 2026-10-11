@@ -151,5 +151,37 @@ test("heatmap spacing and material image accept standard utility overrides", () 
   const cell = classes(html, 'data-material="clay"');
   assert.ok(cell.includes("bg-none"));
   assert.ok(!cell.some((value) => value.startsWith("bg-[url(")));
-  assert.ok(cell.includes("bg-size-[100%_100%]"));
+  assert.ok(cell.includes("bg-[length:100%_100%]"));
+});
+
+test("explicit configured dimensions omit competing default utilities", () => {
+  for (const props of [{ height: 180, width: 320 }, { style: { height: 180, width: 320 } }]) {
+    const html = configuredHtml(props);
+    const plot = classes(html, "kind-ui-configured-line-chart");
+    assert.ok(!plot.includes("h-[280px]"));
+    assert.ok(!plot.includes("w-full"));
+    assert.match(html, /height:180px/);
+    assert.match(html, /width:320px/);
+  }
+});
+
+test("loading styles carry the consumer CSP nonce", () => {
+  const html = render(
+    h(
+      Root,
+      { config: {}, nonce: "request-nonce" },
+      h(
+        HeatmapChart,
+        {
+          rows: [],
+          columns: [],
+          data: [],
+          loading: true,
+          scale: createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
+        },
+        h(HeatmapGrid, { caption: "Matrix" }),
+      ),
+    ),
+  );
+  assert.match(html, /<style nonce="request-nonce">@keyframes kind-ui-loading-pulse/);
 });

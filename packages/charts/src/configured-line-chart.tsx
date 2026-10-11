@@ -244,7 +244,12 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
         responsive={responsive ?? true}
         {...(width !== undefined ? { width } : {})}
         {...(height !== undefined ? { height } : {})}
-        className={cn("kind-ui-configured-line-chart w-full min-w-0 h-[280px]", className)}
+        className={cn(
+          "kind-ui-configured-line-chart min-w-0",
+          width === undefined && style?.width === undefined && "w-full",
+          height === undefined && style?.height === undefined && "h-[280px]",
+          className,
+        )}
         style={{
           ...(width !== undefined ? { width } : {}),
           ...(height !== undefined ? { height } : {}),

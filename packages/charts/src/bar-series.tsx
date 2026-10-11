@@ -79,7 +79,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   children,
   ...props
 }: BarSeriesProps<DataPoint, Value>) {
-  const { config, paints, visibleSeries } = useChart();
+  const { config, paints, visibleSeries, nonce } = useChart();
   const { registerSeries, invalidate, data, categoryEmphasis, registerCategoryEligibility } =
     useLineInteraction();
   const { reveal, options, finish } = use(BarMotion);
@@ -298,7 +298,9 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   return (
     <>
       {/* Bar marks render through Recharts portals; put the variable on their generated class. */}
-      <style>{`.${selector} { --kind-ui-bar-clip: ${clipped ? `url(#${clipId})` : "none"}; }`}</style>
+      <style
+        nonce={nonce}
+      >{`.${selector} { --kind-ui-bar-clip: ${clipped ? `url(#${clipId})` : "none"}; }`}</style>
       {clipped && (
         <defs>
           <clipPath id={clipId} clipPathUnits="userSpaceOnUse">

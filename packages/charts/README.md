@@ -48,7 +48,10 @@ configuration examples.
 
 The package has no stylesheet export. Components carry their default Tailwind
 classes, and consumer `className` utilities override conflicting defaults.
-Explicit `style` props remain available.
+Explicit `style` props remain available. Use unprefixed Tailwind utilities for charts;
+prefixed builds must provide a separate unprefixed Tailwind entry for the package.
+For a nonce-based Content Security Policy, pass the request nonce to `Root` or
+configured `LineChart` through `rootProps.nonce` to authorize animation styles.
 
 ### Theme and local overrides
 

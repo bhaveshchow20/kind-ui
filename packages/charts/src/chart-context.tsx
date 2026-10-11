@@ -9,6 +9,7 @@ type Visibility = {
   onVisibleSeriesChange?: (next: string[]) => void;
 };
 export type ChartContextValue = Visibility & {
+  nonce?: string;
   config: ResolvedSeriesConfig;
   colorId: string;
   colorStops: Readonly<Record<string, ColorStops>>;

@@ -1,6 +1,6 @@
 # Compact Heatmap layout
 
-`HeatmapGrid.layout` adds square cell dimensions, table spacing, and independent visual label controls. Omit it to retain the existing fluid table. Import `@kind-ui/charts/styles.css` to apply the layout styles.
+`HeatmapGrid.layout` adds square cell dimensions, table spacing, and independent visual label controls. Omit it to retain the existing fluid table. Use the [Tailwind v4 setup](https://kindui.dev/charts/docs/installation/) to apply the layout styles.
 
 ```tsx
 import {
@@ -10,7 +10,6 @@ import {
   HeatmapTooltip,
   type HeatmapCellContentProps,
 } from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const rows = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const columns = Array.from({ length: 26 }, (_, i) => `Week ${i + 1}`);

@@ -23,6 +23,10 @@ Kind UI charts supports React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion
 
 Kind UI uses Tailwind v4 utility classes. Add the installed chart package to your
 Tailwind sources; the `@source` path is relative to your CSS file.
+Use unprefixed utilities for charts. If your app uses a Tailwind prefix, compile
+a separate unprefixed Tailwind CSS entry for the chart package.
+For a nonce-based Content Security Policy, pass your request nonce to `Root`
+or configured `LineChart` through `rootProps.nonce`.
 
 <Tabs items={["React", "Next.js"]}>
 <Tab value="React">
