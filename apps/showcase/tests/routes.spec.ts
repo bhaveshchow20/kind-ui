@@ -8,13 +8,19 @@ import { showcaseURL } from "../../indexing.mjs";
 import { documentationCharts, footerLinkGroups, siteLinks } from "../lib/site-links";
 
 const basePath = process.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH ?? "";
+function previewOrigin(baseURL: string | undefined): string {
+  if (baseURL === undefined) throw new Error("Homepage route checks require a configured baseURL");
+  return new URL(baseURL).origin;
+}
 
 test("agent reference aliases resolve directly to the generated Docs reference", async ({
   request,
+  baseURL,
 }) => {
+  const serverOrigin = previewOrigin(baseURL);
   for (const prefix of new Set(["", basePath])) {
     for (const file of ["llms.txt", "llms-full.txt"]) {
-      const response = await request.get(`http://127.0.0.1:7273${prefix}/${file}`, {
+      const response = await request.get(`${serverOrigin}${prefix}/${file}`, {
         maxRedirects: 0,
       });
       expect(response.status()).toBe(308);
@@ -26,13 +32,15 @@ test("agent reference aliases resolve directly to the generated Docs reference",
 test("home redirects only in prefixed mode and direct refresh loads assets", async ({
   page,
   request,
+  baseURL,
 }) => {
-  const root = await request.get("http://127.0.0.1:7273/", { maxRedirects: 0 });
+  const serverOrigin = previewOrigin(baseURL);
+  const root = await request.get(`${serverOrigin}/`, { maxRedirects: 0 });
   expect(root.status()).toBe(basePath ? 307 : 200);
   if (basePath) expect(root.headers().location).toBe(basePath);
   const missing: string[] = [];
   page.on("response", (response) => {
-    if (response.url().startsWith("http://127.0.0.1:7273/") && response.status() >= 400)
+    if (response.url().startsWith(`${serverOrigin}/`) && response.status() >= 400)
       missing.push(response.url());
   });
   await page.goto("./");
@@ -47,7 +55,7 @@ test("home redirects only in prefixed mode and direct refresh loads assets", asy
     "kind-bloom.ico",
     "kind-bloom-apple.png",
   ]) {
-    expect((await request.get(`http://127.0.0.1:7273${basePath}/${asset}`)).status()).toBe(200);
+    expect((await request.get(`${serverOrigin}${basePath}/${asset}`)).status()).toBe(200);
   }
   await expect(page.locator("head link[rel='icon']").first()).toHaveAttribute(
     "href",
@@ -152,8 +160,10 @@ test("footer directory keeps chart and resource links visible on desktop and nar
 
 test("initial homepage HTML and metadata routes match deployment indexing intent", async ({
   request,
+  baseURL,
 }) => {
-  const origin = `http://127.0.0.1:7273${basePath}`;
+  const serverOrigin = previewOrigin(baseURL);
+  const origin = `${serverOrigin}${basePath}`;
   const page = await request.get(`${origin}/`);
   expect(page.status()).toBe(200);
   const html = await page.text();
