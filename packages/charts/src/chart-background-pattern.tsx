@@ -35,7 +35,7 @@ export type ChartBackgroundPatternProps = {
 /** Decorative plot chrome, independent of series paint and interactions. */
 export function ChartBackgroundPattern({
   pattern,
-  color = "var(--kind-ui-chart-grid, CanvasText)",
+  color = "var(--border, CanvasText)",
   opacity = 0.15,
   size = 16,
 }: ChartBackgroundPatternProps) {

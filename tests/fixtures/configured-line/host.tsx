@@ -216,7 +216,7 @@ export function ConfiguredHost() {
           aria-label="Styled markers"
           width={500}
           rootProps={{
-            style: { "--kind-ui-chart-marker-surface": "#172033" } as import("react").CSSProperties,
+            style: { "--card": "#172033" } as import("react").CSSProperties,
           }}
           series={[
             {

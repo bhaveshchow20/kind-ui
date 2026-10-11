@@ -48,18 +48,15 @@ configuration examples.
 
 The package has no stylesheet export. Components carry their default Tailwind
 classes, and consumer `className` utilities override conflicting defaults.
-Existing chart theme variables and explicit `style` props remain available.
+Explicit `style` props remain available.
 
 ### Theme and local overrides
 
-Charts inherit host `--foreground`, `--border`, `--muted-foreground`, `--popover`,
-`--popover-foreground` and `--radius` variables. Matching `--kind-ui-chart-*`
-variables take precedence for chart-specific overrides. Root inherits text color
-and font; `--kind-ui-chart-foreground` and `--kind-ui-chart-font` can override them.
-Configured LineChart keeps its default sans-serif font. Its grid uses
-`--kind-ui-chart-grid`, then `--border`, then `#d1d5db`; axes use
-`--kind-ui-chart-muted-foreground`, then `--muted-foreground`, then `#6b7280`.
-Set variables on a chart wrapper or Root to scope a theme locally.
+Charts inherit host `--foreground`, `--border`, `--muted`, `--muted-foreground`,
+`--popover`, `--popover-foreground` and `--radius` variables. Set them on a chart
+wrapper or Root to scope a theme locally. Root inherits the host font; configured
+LineChart defaults to sans-serif. Its grid uses `--border` and its axes use
+`--muted-foreground`.
 
 Series colors remain consumer-owned: reference `var(--chart-1)`, `var(--chart-2)`
 and other palette variables in your config, or provide `{ light, dark }` colors.
@@ -435,7 +432,7 @@ replace generated parts, so do not also pass `backgroundPattern`:
 Presets are `pinpoints`, `crossings` and `waves`. `size` is a positive finite tile
 size in SVG user units (default 16), and `opacity` is finite in [0, 1] (default
 0.15). Zero opacity is supported. `color` accepts CSS paint, including theme
-variables; the default is `var(--kind-ui-chart-grid, CanvasText)`. Resize changes
+variables; the default is `var(--border, CanvasText)`. Resize changes
 the plot rectangle and clip, preserving tile density and IDs. Missing or empty
 plot geometry renders nothing; invalid options throw even before geometry exists.
 
@@ -592,7 +589,7 @@ Omitted/default values keep the existing appearance (including Area's normally
 hidden regular dots). Opting into a regular style enables regular dots. Border
 uses a series-colored center with a surface-colored ring; colored-border uses a
 surface-colored center with a series-colored ring. The surface is
-`--kind-ui-chart-marker-surface`, falling back to `--card` then white; set it on
+`--card`, falling back to white; set it on
 Root for your theme. Series paint follows the existing config/theme identity or
 explicit series stroke. Styles introduce no SVG resources or additional motion.
 

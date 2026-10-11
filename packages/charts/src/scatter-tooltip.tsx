@@ -5,10 +5,10 @@ import type { TooltipContentProps as NativeContentProps } from "recharts";
 import { Tooltip, type TooltipProps } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction } from "./chart-interaction.js";
-import { chartClasses } from "./classes.js";
 import { LineInteraction } from "./line-chart.js";
-import { type TooltipContentProps, TooltipItem } from "./tooltip-content.js";
+import { type TooltipContentProps, TooltipItem, tooltipClassName } from "./tooltip-content.js";
 import { TooltipNumber } from "./tooltip-number.js";
+import { cn } from "./utils.js";
 
 export type ScatterSizeDimension<Row = unknown> = {
   /** Own top-level property key, or the same typed record accessor used by ZAxis. */
@@ -137,10 +137,7 @@ export function ScatterTooltipContent<Row = unknown>({
       aria-live={tooltip.accessibilityLayer ? "assertive" : undefined}
       aria-atomic="true"
       {...props}
-      className={chartClasses(
-        "px-[8px] py-[6px] [background:var(--kind-ui-chart-popover,var(--popover,Canvas))] text-[color:var(--kind-ui-chart-popover-foreground,var(--popover-foreground,CanvasText))] border border-solid border-[color:var(--kind-ui-chart-border,var(--border,GrayText))] rounded-[var(--kind-ui-chart-radius,var(--radius,8px))] text-[12px] leading-[16px]",
-        props.className,
-      )}
+      className={cn(tooltipClassName, props.className)}
       data-kind-ui="chart-tooltip"
     >
       {title != null && (

@@ -14,10 +14,10 @@ import {
 import { ComposedChart as EngineComposedChart } from "recharts";
 import { type BaseAnimation, type LineAnimation, MotionContext } from "./animation.js";
 import { BarLifecycle, BarMotion } from "./bar-chart.js";
-import { chartClasses } from "./classes.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 import { RevealClip } from "./reveal-clip.js";
+import { cn } from "./utils.js";
 
 type Reveal = Pick<BaseAnimation, "revealDurationMs" | "revealEasing">;
 type DirectionalReveal = Reveal & Pick<LineAnimation, "revealDirection">;
@@ -99,7 +99,7 @@ export function ComboChart({
           engine={EngineComposedChart}
           chartProps={{
             ...props,
-            className: chartClasses(
+            className: cn(
               "kind-ui-combo-chart [&_.recharts-area]:[clip-path:var(--kind-ui-combo-area-clip,none)] [&_.recharts-area-dots]:[clip-path:var(--kind-ui-combo-area-clip,none)]",
               props.className,
             ),

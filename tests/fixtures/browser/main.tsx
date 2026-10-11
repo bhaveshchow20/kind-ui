@@ -93,7 +93,7 @@ function App() {
           >
             <Chart.Legend
               aria-label="Visible series"
-              className="mt-1 mb-2.5 gap-1 text-[13px] [&_[data-kind-ui=chart-legend-button]]:border-transparent [&_[data-kind-ui=chart-legend-button]:hover]:[--chart-legend-background:var(--accent)] [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-offset-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-ring [&_[aria-pressed=false]]:text-muted-foreground [&_[data-series=completed]_[data-kind-ui=chart-indicator]]:rounded-full [&_[data-series=review]_[data-kind-ui=chart-indicator]]:rotate-45 [&_[data-kind-ui=chart-indicator]]:size-2"
+              className="mt-1 mb-2.5 gap-1 text-[13px] [&_[data-kind-ui=chart-legend-button]]:border-transparent [&_[data-kind-ui=chart-legend-button]:hover]:[--muted:var(--accent)] [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-offset-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-ring [&_[aria-pressed=false]]:text-muted-foreground [&_[data-series=completed]_[data-kind-ui=chart-indicator]]:rounded-full [&_[data-series=review]_[data-kind-ui=chart-indicator]]:rotate-45 [&_[data-kind-ui=chart-indicator]]:size-2"
             />
             <p id="chart-help" className="sr-only">
               Focus the chart and use left and right arrow keys to explore values. Escape dismisses

@@ -101,9 +101,8 @@ export function CashFlowChart({ state = "ready" }: { state?: "ready" | "loading"
                   style={{
                     padding: 12,
                     borderRadius: 10,
-                    background: "var(--kind-ui-chart-popover, var(--popover, Canvas))",
-                    color:
-                      "var(--kind-ui-chart-popover-foreground, var(--popover-foreground, CanvasText))",
+                    background: "var(--popover, Canvas)",
+                    color: "var(--popover-foreground, CanvasText)",
                     border: "1px solid #8886",
                     fontSize: 12,
                   }}

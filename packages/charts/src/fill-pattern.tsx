@@ -1,7 +1,7 @@
 "use client";
 
 import { type ComponentPropsWithRef, useId } from "react";
-import { chartClasses } from "./classes.js";
+import { cn } from "./utils.js";
 
 /** Static paint encoding, independent of material and chart geometry. */
 export type FillPattern = {
@@ -92,10 +92,7 @@ export function FillPatternSwatch({ pattern, color, ...props }: FillPatternSwatc
       focusable="false"
       viewBox="0 0 16 16"
       {...props}
-      className={chartClasses(
-        "inline-block shrink-0 w-[16px] h-[16px] [background:none]",
-        props.className,
-      )}
+      className={cn("inline-block shrink-0 size-4 bg-none", props.className)}
       data-kind-ui="chart-indicator"
       data-fill-pattern=""
     >

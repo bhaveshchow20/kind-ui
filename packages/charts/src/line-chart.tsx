@@ -22,7 +22,6 @@ import {
   useChartWidth,
 } from "recharts";
 import { RegisterInteractionMotion } from "./animation.js";
-import { chartClasses } from "./classes.js";
 import { useEmphasisActions } from "./emphasis.js";
 import type { LoadingAnimation } from "./loading-motion.js";
 import {
@@ -32,6 +31,7 @@ import {
   useLoadingSeed,
 } from "./loading-skeleton.js";
 import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
+import { cn } from "./utils.js";
 
 export type LineChartProps = ComponentProps<typeof EngineLineChart> & {
   loading?: boolean | undefined;
@@ -234,7 +234,7 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
     <SeriesPaintBoundary>
       <EngineChart
         {...props}
-        className={chartClasses(
+        className={cn(
           "kind-ui-line-chart [&_.recharts-line]:[clip-path:var(--kind-ui-line-clip,none)] [&_.recharts-line-dots]:[clip-path:var(--kind-ui-line-clip,none)]",
           loading !== undefined && "kind-ui-loading-chart",
           loading &&

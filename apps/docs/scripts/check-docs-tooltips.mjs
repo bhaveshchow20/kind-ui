@@ -99,7 +99,7 @@ try {
     const tooltip = card.locator('[data-kind-ui="chart-tooltip"]');
     await tooltip.waitFor();
     await tooltip.evaluate((node) => {
-      node.style.setProperty("--kind-ui-chart-popover", "rgb(12, 34, 56)");
+      node.style.setProperty("--popover", "rgb(12, 34, 56)");
       node.classList.add("p-6");
     });
     await page.waitForTimeout(100);

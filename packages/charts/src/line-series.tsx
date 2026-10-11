@@ -3,12 +3,12 @@
 import { type ComponentProps, type CSSProperties, useId, useLayoutEffect, useRef } from "react";
 import { DefaultZIndexes, Line, ZIndexLayer } from "recharts";
 import { useChart } from "./chart-context.js";
-import { chartClasses } from "./classes.js";
 import { useLineInteraction } from "./line-chart.js";
 import { dashCycle, dashDuration, type LineDashAnimation } from "./line-dash.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { cn } from "./utils.js";
 import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 // Preserve the legacy native defaults while allowing explicit row/value parameters.
@@ -128,7 +128,7 @@ export function LineSeries<
             : {})}
           {...(effectiveHide ? { activeDot: false as const } : {})}
           {...(color !== undefined ? { stroke: color } : {})}
-          className={chartClasses(
+          className={cn(
             "kind-ui-line-series",
             dashed &&
               "kind-ui-line-dash [&_.recharts-line-curve]:animate-[kind-ui-line-dash_var(--kind-ui-dash-duration)_linear_infinite] [&_.recharts-line-curve]:[animation-direction:var(--kind-ui-dash-direction)] motion-reduce:[&_.recharts-line-curve]:animate-none [[data-motion=off]_&_.recharts-line-curve]:animate-none [.kind-ui-loading-chart-pending_&_.recharts-line-curve]:animate-none",

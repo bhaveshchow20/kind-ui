@@ -1,16 +1,19 @@
 "use client";
 
 import { motion } from "motion/react";
-import { type ComponentPropsWithRef, type CSSProperties, type ReactNode, use } from "react";
+import { type ComponentPropsWithRef, type ReactNode, use } from "react";
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
 import { useInteractionOpacity } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import { useChartInteraction } from "./chart-interaction.js";
-import { chartClasses } from "./classes.js";
 import { LineInteraction } from "./line-chart.js";
 import { formatPercent, type NormalizedValue } from "./percent-stack.js";
 import { colorStopToken } from "./series-color.js";
 import { TooltipNumber } from "./tooltip-number.js";
+import { cn } from "./utils.js";
+
+export const tooltipClassName =
+  "py-1.5 px-2 bg-[color:var(--popover,Canvas)] text-[color:var(--popover-foreground,CanvasText)] border border-solid border-[color:var(--border,GrayText)] rounded-[var(--radius,8px)] text-xs leading-4";
 
 export type TooltipContentProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
   /** Pass the upstream content callback's props here so engine-only props never reach the DOM. */
@@ -121,22 +124,26 @@ export function TooltipContent({
               aria-hidden="true"
               data-kind-ui="chart-indicator"
               data-indicator={indicator}
-              className={chartClasses(
-                "inline-block shrink-0 w-[3px] h-[12px] rounded-[1px] [background:var(--kind-ui-chart-indicator-background,var(--kind-ui-chart-indicator-color,currentColor))]",
-                indicator === "dot" && "w-[8px] h-[8px] rounded-[2px]",
+              className={cn(
+                "inline-block shrink-0 w-[3px] h-3 rounded-[1px]",
+                indicator === "dot" && "size-2 rounded-[2px]",
                 indicator === "dashed" &&
-                  "[background:transparent] border-l-[2px] border-dashed border-[color:var(--kind-ui-chart-indicator-color,currentColor)] w-0 rounded-none",
+                  "bg-transparent border-l-2 border-dashed w-0 rounded-none",
               )}
-              style={
-                {
-                  "--kind-ui-chart-indicator-background": item
-                    ? `var(${colorStopToken(key, "gradient")})`
-                    : (entry.color ?? "currentColor"),
-                  "--kind-ui-chart-indicator-color": item
-                    ? `var(--color-${key})`
-                    : (entry.color ?? "currentColor"),
-                } as CSSProperties
-              }
+              style={{
+                background:
+                  indicator === "dashed"
+                    ? undefined
+                    : item
+                      ? `var(${colorStopToken(key, "gradient")})`
+                      : (entry.color ?? "currentColor"),
+                borderColor:
+                  indicator === "dashed"
+                    ? item
+                      ? `var(--color-${key})`
+                      : (entry.color ?? "currentColor")
+                    : undefined,
+              }}
             />
           ))}
         <span>{name}</span>
@@ -161,10 +168,7 @@ export function TooltipContent({
       aria-live={accessibilityLayer ? "assertive" : undefined}
       aria-atomic="true"
       {...props}
-      className={chartClasses(
-        "py-[6px] px-[8px] [background:var(--kind-ui-chart-popover,var(--popover,Canvas))] text-[color:var(--kind-ui-chart-popover-foreground,var(--popover-foreground,CanvasText))] border border-solid border-[color:var(--kind-ui-chart-border,var(--border,GrayText))] rounded-[var(--kind-ui-chart-radius,var(--radius,8px))] text-[12px] leading-[16px]",
-        props.className,
-      )}
+      className={cn(tooltipClassName, props.className)}
       data-kind-ui="chart-tooltip"
     >
       {entries.length > 0 && (
@@ -199,7 +203,7 @@ export function TooltipItem({
   return (
     <motion.li
       {...props}
-      className="flex items-center gap-[4px] mt-[1px] [&>span:last-of-type]:text-[color:var(--kind-ui-chart-muted-foreground,var(--muted-foreground,inherit))] [&_[data-kind-ui=chart-tooltip-value]]:font-medium [&_[data-kind-ui=chart-tooltip-value]]:ml-auto [&_[data-kind-ui=chart-tooltip-value]]:pl-[4px] [&_[data-kind-ui=chart-tooltip-value]]:tabular-nums"
+      className="flex items-center gap-1 mt-[1px] [&>span:last-of-type]:text-[color:var(--muted-foreground,inherit)] [&_[data-kind-ui=chart-tooltip-value]]:font-medium [&_[data-kind-ui=chart-tooltip-value]]:ml-auto [&_[data-kind-ui=chart-tooltip-value]]:pl-[4px] [&_[data-kind-ui=chart-tooltip-value]]:tabular-nums"
       data-inactive={inactive || undefined}
       initial={false}
       style={{ opacity }}

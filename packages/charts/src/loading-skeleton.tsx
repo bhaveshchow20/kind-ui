@@ -155,7 +155,7 @@ export function LoadingSkeletonSurface({
   const polar = ["pie", "radar", "radial-bar", "activity-rings"].includes(family);
   return (
     <svg
-      className="visible pointer-events-none text-[var(--kind-ui-chart-loading-color,#8b969b)] animate-[kind-ui-loading-pulse_var(--kind-ui-loading-cycle,1770ms)_linear_infinite] motion-reduce:animate-none [&_svg]:overflow-visible [&_[data-loading-motion=grow]]:[mask:var(--kind-ui-loading-vertical)] [&:is([data-family=bar],[data-family=waterfall],[data-family=histogram],[data-family=box-plot])_[data-loading-motion=grow]]:[mask:none] [&_[data-loading-motion=reveal]]:[mask:var(--kind-ui-loading-horizontal)] [&_[data-loading-motion=area-reveal]]:[mask:var(--kind-ui-loading-area)] [&[data-family=combo][data-loading-layout=vertical]_[data-loading-motion=grow]]:[transform:matrix(0,0.375,-2.6666667,0,640,0)]"
+      className="visible pointer-events-none text-[color:var(--muted-foreground,#8b969b)] animate-[kind-ui-loading-pulse_var(--kind-ui-loading-cycle,1770ms)_linear_infinite] motion-reduce:animate-none [&_svg]:overflow-visible [&_[data-loading-motion=grow]]:[mask:var(--kind-ui-loading-vertical)] [&:is([data-family=bar],[data-family=waterfall],[data-family=histogram],[data-family=box-plot])_[data-loading-motion=grow]]:[mask:none] [&_[data-loading-motion=reveal]]:[mask:var(--kind-ui-loading-horizontal)] [&_[data-loading-motion=area-reveal]]:[mask:var(--kind-ui-loading-area)] [&[data-family=combo][data-loading-layout=vertical]_[data-loading-motion=grow]]:[transform:matrix(0,0.375,-2.6666667,0,640,0)]"
       data-kind-ui="chart-loading-skeleton"
       data-family={family}
       data-loading-layout={animation?.layout}

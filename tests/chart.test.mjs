@@ -306,7 +306,7 @@ test("unknown prototype-named keys use upstream metadata without inherited confi
   for (const dataKey of ["constructor", "toString"]) {
     const html = content([entry(1, { dataKey, name: "Unknown", color: "#f00" })]);
     assert.match(html, /Unknown/);
-    assert.match(html, /--kind-ui-chart-indicator-color:#f00/);
+    assert.match(html, /background:#f00/);
     assert.doesNotMatch(html, new RegExp(`var\\(--color-${dataKey}`));
   }
 });
@@ -928,7 +928,7 @@ test("presentation options preserve unknown native colors and mixed missing/zero
     ),
   );
   assert.match(markup, /data-indicator="dashed"/);
-  assert.match(markup, /--kind-ui-chart-indicator-color:rebeccapurple/);
+  assert.match(markup, /border-color:rebeccapurple/);
   assert.match(markup, /data-icon="task"/);
   assert.match(markup, /No data/);
   assert.match(markup, />0</);
@@ -1444,7 +1444,7 @@ test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/ex
   const config = { "node / a": { label: "Input", color: "#123456" } };
   const legend = render(h(Chart.SankeyLegend, { config }));
   assert.match(legend, /data-node="node \/ a"/);
-  assert.match(legend, /--kind-ui-chart-indicator-color:#123456/);
+  assert.match(legend, /background-color:#123456/);
   const props = {
     x: 0,
     y: 0,
@@ -1548,7 +1548,7 @@ test("inferred metadata retains formatter, item identity and unmatched fallback 
     ),
   );
   assert.match(unmatched, /Native unmatched/);
-  assert.match(unmatched, /indicator-color:blue/);
+  assert.match(unmatched, /background:blue/);
   assert.throws(
     () => render(h(Root, { config: { 2026: { color: "red" } } }, h(Legend))),
     /must start with a letter/,

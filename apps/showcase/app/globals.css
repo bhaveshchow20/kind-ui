@@ -26,10 +26,8 @@
   --input: #cccdd9;
   --ring: #4055ee;
   --accent: #ecebff;
-  --kind-ui-chart-popover: #fff;
-  --kind-ui-chart-popover-foreground: #202028;
-  --kind-ui-chart-border: #e2e2eb;
-  --kind-ui-chart-legend-background: #f0f0fa;
+  --popover: #fff;
+  --popover-foreground: #202028;
 }
 * {
   box-sizing: border-box;

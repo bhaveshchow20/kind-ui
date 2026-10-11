@@ -157,12 +157,12 @@ export function ThemingHost() {
         data-theme-case="tokens"
         style={
           {
-            "--kind-ui-chart-foreground": "rgb(100, 40, 150)",
-            "--kind-ui-chart-border": "rgb(120, 60, 180)",
-            "--kind-ui-chart-popover": "rgb(240, 220, 250)",
-            "--kind-ui-chart-popover-foreground": "rgb(90, 30, 140)",
-            "--kind-ui-chart-radius": "14px",
-            "--kind-ui-chart-font": "monospace",
+            "--foreground": "rgb(100, 40, 150)",
+            "--border": "rgb(120, 60, 180)",
+            "--popover": "rgb(240, 220, 250)",
+            "--popover-foreground": "rgb(90, 30, 140)",
+            "--radius": "14px",
+            fontFamily: "monospace",
           } as CSSProperties
         }
       >
@@ -180,9 +180,9 @@ export function ThemingHost() {
       <Root
         config={config}
         data-theme-case="properties"
-        className="[width:240px] [color:rgb(70,80,90)]"
+        className="w-[240px] text-[color:rgb(70,80,90)]"
       >
-        <TooltipContent tooltip={content} className="[padding:24px] [color:rgb(20,30,40)]" />
+        <TooltipContent tooltip={content} className="p-6 text-[color:rgb(20,30,40)]" />
       </Root>
       <HeatmapChart
         rows={["A"]}
@@ -195,7 +195,7 @@ export function ThemingHost() {
           caption="Utility overrides"
           material="clay"
           className="border-spacing-6"
-          cellProps={() => ({ className: "[background-image:none]" })}
+          cellProps={() => ({ className: "bg-none" })}
         />
       </HeatmapChart>
       <LineChart

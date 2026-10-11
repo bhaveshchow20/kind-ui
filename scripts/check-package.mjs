@@ -248,7 +248,7 @@ try {
     .join("\n");
   assert.doesNotMatch(
     missingSourceCss,
-    /--kind-ui-chart-popover/,
+    /--popover,Canvas/,
     "Without source registration Tailwind must not secretly include chart styles",
   );
   async function copyFixture(folder, file, target = file) {
@@ -323,7 +323,7 @@ try {
       .join("\n");
     assert.match(
       generatedCss,
-      /--kind-ui-chart-popover/,
+      /--popover,Canvas/,
       "Package @source must discover chart token utilities in the installed tarball",
     );
   }

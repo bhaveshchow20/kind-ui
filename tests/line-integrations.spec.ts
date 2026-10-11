@@ -127,7 +127,7 @@ test("Next color resources retain server IDs through hydration and theme changes
 });
 
 for (const host of ["vite", "next"] as const) {
-  test(`${host}: semantic themes inherit, local tokens win and utility/inline overrides remain predictable`, async ({
+  test(`${host}: semantic themes inherit, locally scoped themes apply and utility/inline overrides remain predictable`, async ({
     page,
   }) => {
     await page.goto(host === "next" ? "http://127.0.0.1:6901" : "/");

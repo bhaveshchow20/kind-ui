@@ -219,7 +219,7 @@ test("removed focused row has a valid tab reentry and custom missing foreground"
     .locator("..")
     .evaluate((node: HTMLElement) => {
       node.style.setProperty("--heatmap-missing", "#000000");
-      node.style.setProperty("--heatmap-missing-foreground", "#ffffff");
+      node.style.setProperty("--foreground", "#ffffff");
     });
   await expect(missing).toHaveCSS("background-color", "rgb(0, 0, 0)");
   await expect(missing.locator("span")).toHaveCSS("color", "rgb(255, 255, 255)");

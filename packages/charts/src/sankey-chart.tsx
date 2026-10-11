@@ -279,7 +279,7 @@ export function SankeyChart({
             onFocusCapture={() => {
               if (!loading) setInterrupted(true);
             }}
-            className="relative h-fit w-fit [font-family:var(--kind-ui-chart-font,inherit)] text-[color:var(--kind-ui-chart-foreground,var(--foreground,inherit))] [&>[data-kind-ui=chart-loading-skeleton]]:absolute [&>[data-kind-ui=chart-loading-skeleton]]:inset-0"
+            className="relative h-fit w-fit text-[color:var(--foreground,inherit)] [&>[data-kind-ui=chart-loading-skeleton]]:absolute [&>[data-kind-ui=chart-loading-skeleton]]:inset-0"
           >
             <div
               data-kind-ui="sankey-content"

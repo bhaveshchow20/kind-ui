@@ -32,125 +32,80 @@ const configuredHtml = (props = {}) =>
       ...props,
     }),
   );
-
 function classes(html, marker) {
   const tag = html.match(/<[^>]+>/g)?.find((item) => item.includes(marker));
   assert.ok(tag, `Expected a rendered element containing ${marker}`);
   return tag.match(/class="([^"]*)"/)?.[1].split(/\s+/) ?? [];
 }
-function assertNoPropertyClass(values, property) {
-  assert.equal(
-    values.some((value) => value.startsWith(`[${property}:`)),
-    false,
-    `Unexpected default ${property} class: ${values.join(" ")}`,
-  );
-}
 
-test("default tokens and gradient swatches survive without consumer overrides", () => {
+test("default tooltip uses host semantic colors and direct gradient paint", () => {
   const html = tooltipHtml();
   const values = classes(html, 'data-kind-ui="chart-tooltip"');
-  assert.ok(values.includes("[background:var(--kind-ui-chart-popover,var(--popover,Canvas))]"));
-  assert.ok(values.includes("px-[8px]"));
-  assert.ok(values.includes("py-[6px]"));
-  const indicator = classes(html, 'data-kind-ui="chart-indicator"');
-  assert.ok(
-    indicator.includes(
-      "[background:var(--kind-ui-chart-indicator-background,var(--kind-ui-chart-indicator-color,currentColor))]",
-    ),
-  );
+  assert.ok(values.includes("bg-[color:var(--popover,Canvas)]"));
+  assert.ok(values.includes("px-2"));
+  assert.ok(values.includes("py-1.5"));
+  assert.match(html, /style="background:var\(--kind-ui-series-/);
   assert.match(html, /linear-gradient/);
+  assert.doesNotMatch(html, /--kind-ui-chart-/);
 });
 
-for (const override of ["bg-red-500", "bg-none", "bg-[url(/texture.svg)]"]) {
-  test(`consumer ${override} replaces the tooltip background shorthand`, () => {
-    const values = classes(tooltipHtml({ className: override }), 'data-kind-ui="chart-tooltip"');
-    assert.ok(values.includes(override));
-    assertNoPropertyClass(values, "background");
-    assert.ok(values.includes("px-[8px]"));
-  });
-}
-
-test("a later background shorthand replaces earlier color and image utilities", () => {
+test("consumer color utilities replace defaults without discarding typography", () => {
   const values = classes(
-    tooltipHtml({ className: "bg-red-500 bg-[url(/texture.svg)] [background:navy]" }),
+    tooltipHtml({ className: "bg-red-500 text-indigo-600 consumer-tooltip" }),
     'data-kind-ui="chart-tooltip"',
   );
-  assert.ok(values.includes("[background:navy]"));
-  assert.ok(!values.includes("bg-red-500"));
-  assert.ok(!values.includes("bg-[url(/texture.svg)]"));
-});
-
-test("configured font utilities replace the inherited token font in either order", () => {
-  const defaults = classes(configuredHtml(), "kind-ui-configured-line-root");
+  for (const value of ["bg-red-500", "text-indigo-600", "text-xs", "consumer-tooltip"])
+    assert.ok(values.includes(value));
   assert.ok(
-    defaults.includes("[font-family:var(--kind-ui-chart-font,ui-sans-serif,system-ui,sans-serif)]"),
+    !values.some((value) => value.startsWith("bg-[color:") || value.startsWith("text-[color:")),
   );
-  const values = classes(
-    configuredHtml({ rootProps: { className: "font-serif consumer-root" } }),
-    "kind-ui-configured-line-root",
-  );
-  assert.ok(values.includes("font-serif"));
-  assert.ok(values.includes("consumer-root"));
-  assertNoPropertyClass(values, "font-family");
-  const arbitrary = classes(
-    configuredHtml({ rootProps: { className: "font-serif [font-family:Georgia]" } }),
-    "kind-ui-configured-line-root",
-  );
-  assert.ok(arbitrary.includes("[font-family:Georgia]"));
-  assert.ok(!arbitrary.includes("font-serif"));
 });
 
-test("height, gap and padding utilities replace matching defaults and retain custom classes", () => {
-  const chart = classes(
-    configuredHtml({ className: "h-96 consumer-chart" }),
-    "kind-ui-configured-line-chart",
+test("configured chart font and height accept standard Tailwind overrides", () => {
+  const html = configuredHtml({
+    rootProps: { className: "font-serif consumer-root" },
+    className: "h-[360px] consumer-plot",
+  });
+  const root = classes(html, "kind-ui-configured-line-root");
+  assert.ok(root.includes("font-serif"));
+  assert.ok(root.includes("consumer-root"));
+  assert.ok(!root.includes("font-sans"));
+  const plot = classes(html, "kind-ui-configured-line-chart");
+  assert.ok(plot.includes("h-[360px]"));
+  assert.ok(plot.includes("consumer-plot"));
+  assert.ok(!plot.includes("h-[280px]"));
+});
+
+test("consumer spacing utilities replace defaults and preserve variants", () => {
+  const values = classes(
+    tooltipHtml({ className: "p-6 hover:px-4 hover:px-5 consumer-tooltip" }),
+    'data-kind-ui="chart-tooltip"',
   );
-  assert.ok(chart.includes("h-96"));
-  assert.ok(chart.includes("consumer-chart"));
-  assert.ok(!chart.includes("h-[var(--kind-ui-chart-height,280px)]"));
+  assert.ok(values.includes("p-6"));
+  assert.ok(values.includes("hover:px-5"));
+  assert.ok(values.includes("consumer-tooltip"));
+  for (const value of ["px-2", "py-1.5", "hover:px-4"]) assert.ok(!values.includes(value));
   const legend = classes(
-    render(h(Root, { config }, h(Legend, { className: "gap-4 consumer-legend" }))),
+    render(h(Root, { config }, h(Legend, { className: "gap-4 m-6" }))),
     'data-kind-ui="chart-legend"',
   );
   assert.ok(legend.includes("gap-4"));
-  assert.ok(legend.includes("consumer-legend"));
-  assert.ok(!legend.includes("gap-[8px]"));
-  const tip = classes(
-    tooltipHtml({
-      className: "px-4 py-3 hover:px-4 hover:px-5 hover:py-4 hover:py-6 consumer-tooltip",
-    }),
-    'data-kind-ui="chart-tooltip"',
-  );
-  for (const value of ["px-4", "py-3", "hover:px-5", "hover:py-6", "consumer-tooltip"]) {
-    assert.ok(tip.includes(value));
-  }
-  assert.ok(!tip.includes("px-[8px]"));
-  assert.ok(!tip.includes("py-[6px]"));
-  assert.ok(!tip.includes("hover:px-4"));
-  assert.ok(!tip.includes("hover:py-4"));
+  assert.ok(legend.includes("m-6"));
+  for (const value of ["gap-2", "mx-0", "mt-1", "mb-2"]) assert.ok(!legend.includes(value));
 });
 
-test("background and font conflicts respect variants and leave base defaults intact", () => {
-  const tip = classes(
-    tooltipHtml({
-      className: "hover:[background:red] hover:bg-blue-500 focus:[background:green]",
-    }),
-    'data-kind-ui="chart-tooltip"',
+test("Root width and color utilities override defaults", () => {
+  const values = classes(
+    render(h(Root, { config, className: "w-[240px] min-w-24 text-red-500" })),
+    'data-kind-ui="chart"',
   );
-  assert.ok(tip.includes("hover:bg-blue-500"));
-  assert.ok(tip.includes("focus:[background:green]"));
-  assert.ok(!tip.includes("hover:[background:red]"));
-  assert.ok(tip.includes("[background:var(--kind-ui-chart-popover,var(--popover,Canvas))]"));
-  const root = classes(
-    configuredHtml({ rootProps: { className: "md:[font-family:Georgia] md:font-serif" } }),
-    "kind-ui-configured-line-root",
-  );
-  assert.ok(root.includes("md:font-serif"));
-  assert.ok(!root.includes("md:[font-family:Georgia]"));
-  assert.ok(root.some((value) => value.startsWith("[font-family:")));
+  for (const value of ["w-[240px]", "min-w-24", "text-red-500"]) assert.ok(values.includes(value));
+  assert.ok(!values.includes("w-full"));
+  assert.ok(!values.includes("min-w-0"));
+  assert.ok(!values.some((value) => value.startsWith("text-[color:")));
 });
 
-test("consumer inline styles remain attached alongside resolved class overrides", () => {
+test("explicit consumer styles remain attached alongside class overrides", () => {
   const html = tooltipHtml({
     className: "bg-red-500",
     style: { background: "purple", padding: "17px" },
@@ -160,18 +115,20 @@ test("consumer inline styles remain attached alongside resolved class overrides"
   assert.ok(classes(html, 'data-kind-ui="chart-tooltip"').includes("bg-red-500"));
 });
 
-test("typed token text colors resolve against consumer color utilities", () => {
-  const values = classes(
-    tooltipHtml({ className: "text-indigo-600 consumer-tooltip" }),
-    'data-kind-ui="chart-tooltip"',
-  );
-  assert.ok(values.includes("text-indigo-600"));
-  assert.ok(values.includes("text-[12px]"));
-  assert.ok(!values.some((value) => value.startsWith("text-[color:")));
+test("indicator variants retain data paint with a solid dashed border", () => {
+  const dotted = classes(tooltipHtml({ indicator: "dot" }), 'data-kind-ui="chart-indicator"');
+  assert.ok(dotted.includes("size-2"));
+  assert.ok(!dotted.includes("w-[3px]"));
+  assert.ok(!dotted.includes("h-3"));
+  const dashed = tooltipHtml({ indicator: "dashed" });
+  assert.match(dashed, /style="border-color:var\(--color-total\)"/);
+  const values = classes(dashed, 'data-kind-ui="chart-indicator"');
+  assert.ok(values.includes("border-dashed"));
+  assert.ok(values.includes("w-0"));
 });
 
-const heatmapHtml = (props = {}) =>
-  render(
+test("heatmap spacing and material image accept standard utility overrides", () => {
+  const html = render(
     h(
       HeatmapChart,
       {
@@ -180,109 +137,19 @@ const heatmapHtml = (props = {}) =>
         data: [{ row: "A", column: "X", value: 1 }],
         scale: createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
       },
-      h(HeatmapGrid, { caption: "Matrix", ...props }),
+      h(HeatmapGrid, {
+        caption: "Matrix",
+        className: "border-spacing-6",
+        material: "clay",
+        cellProps: () => ({ className: "bg-none" }),
+      }),
     ),
   );
-
-test("arbitrary Root width, minimum width and text color replace token utilities", () => {
-  const values = classes(
-    render(h(Root, { config, className: "[width:400px] [min-width:100px] [color:red]" })),
-    'data-kind-ui="chart"',
-  );
-  for (const value of ["[width:400px]", "[min-width:100px]", "[color:red]"]) {
-    assert.ok(values.includes(value));
-  }
-  assert.ok(!values.includes("w-full"));
-  assert.ok(!values.includes("min-w-0"));
-  assert.ok(!values.some((value) => value.startsWith("text-[color:")));
-});
-
-test("arbitrary configured height replaces default sizing", () => {
-  const values = classes(
-    configuredHtml({ className: "[height:360px]" }),
-    "kind-ui-configured-line-chart",
-  );
-  assert.ok(values.includes("[height:360px]"));
-  assert.ok(!values.includes("h-[var(--kind-ui-chart-height,280px)]"));
-});
-
-test("arbitrary padding shorthand replaces both tooltip padding axes", () => {
-  const values = classes(
-    tooltipHtml({ className: "[padding:24px]" }),
-    'data-kind-ui="chart-tooltip"',
-  );
-  assert.ok(values.includes("[padding:24px]"));
-  assert.ok(!values.includes("px-[8px]"));
-  assert.ok(!values.includes("py-[6px]"));
-});
-
-test("arbitrary spacing axes replace their own defaults and preserve unrelated edges", () => {
-  const tip = classes(
-    tooltipHtml({ className: "[padding-inline:24px]" }),
-    'data-kind-ui="chart-tooltip"',
-  );
-  assert.ok(tip.includes("[padding-inline:24px]"));
-  assert.ok(!tip.includes("px-[8px]"));
-  assert.ok(tip.includes("py-[6px]"));
-  const legend = classes(
-    render(h(Root, { config }, h(Legend, { className: "[margin-inline:24px] [margin-top:12px]" }))),
-    'data-kind-ui="chart-legend"',
-  );
-  assert.ok(legend.includes("[margin-inline:24px]"));
-  assert.ok(legend.includes("[margin-top:12px]"));
-  assert.ok(!legend.includes("mx-0"));
-  assert.ok(!legend.includes("mt-[4px]"));
-  assert.ok(legend.includes("mb-[8px]"));
-});
-
-test("arbitrary margin shorthand replaces legend axes and edges", () => {
-  const values = classes(
-    render(h(Root, { config }, h(Legend, { className: "[margin:24px]" }))),
-    'data-kind-ui="chart-legend"',
-  );
-  assert.ok(values.includes("[margin:24px]"));
-  assert.ok(!values.includes("mx-0"));
-  assert.ok(!values.includes("mt-[4px]"));
-  assert.ok(!values.includes("mb-[8px]"));
-});
-
-test("standard border spacing replaces the heatmap gap property", () => {
-  const values = classes(
-    heatmapHtml({ className: "border-spacing-6" }),
-    'data-kind-ui="heatmap-grid"',
-  );
-  assert.ok(values.includes("border-spacing-6"));
-  assertNoPropertyClass(values, "border-spacing");
-});
-
-test("arbitrary background image removes heatmap material paint without discarding its size", () => {
-  const values = classes(
-    heatmapHtml({ material: "clay", cellProps: () => ({ className: "[background-image:none]" }) }),
-    'data-material="clay"',
-  );
-  assert.ok(values.includes("[background-image:none]"));
-  assert.ok(!values.some((value) => value.startsWith("bg-[url(")));
-  assert.ok(values.includes("bg-size-[100%_100%]"));
-  assert.ok(values.includes("bg-no-repeat"));
-});
-
-test("property aliases resolve utility overrides in both orders within matching variants", () => {
-  const values = classes(
-    tooltipHtml({
-      className:
-        "[padding:24px] p-6 hover:[width:100px] hover:w-80 focus:[color:red] focus:text-blue-500 [background-image:none] bg-none",
-    }),
-    'data-kind-ui="chart-tooltip"',
-  );
-  for (const value of ["p-6", "hover:w-80", "focus:text-blue-500", "bg-none"]) {
-    assert.ok(values.includes(value));
-  }
-  for (const value of [
-    "[padding:24px]",
-    "hover:[width:100px]",
-    "focus:[color:red]",
-    "[background-image:none]",
-  ]) {
-    assert.ok(!values.includes(value));
-  }
+  const grid = classes(html, 'data-kind-ui="heatmap-grid"');
+  assert.ok(grid.includes("border-spacing-6"));
+  assert.ok(!grid.some((value) => value.startsWith("border-spacing-[")));
+  const cell = classes(html, 'data-material="clay"');
+  assert.ok(cell.includes("bg-none"));
+  assert.ok(!cell.some((value) => value.startsWith("bg-[url(")));
+  assert.ok(cell.includes("bg-size-[100%_100%]"));
 });

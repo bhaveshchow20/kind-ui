@@ -2,4 +2,4 @@
 "@kind-ui/charts": minor
 ---
 
-Require consumer Tailwind v4 source registration for chart styling, replacing the standalone stylesheet export with component utilities. Preserve chart defaults and existing theme tokens, inherit semantic theme colors, and merge consumer utility overrides predictably.
+Require Tailwind v4 source registration and replace the standalone stylesheet with component utilities. Use host semantic theme variables and standard clsx/tailwind-merge class composition. Remove chart-specific styling aliases; use className, style, or locally scoped host variables to customize presentation.
