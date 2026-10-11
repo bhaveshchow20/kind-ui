@@ -24,6 +24,18 @@ for (const scheme of ["light", "dark"] as const) {
     expect.soft((await audit()).violations).toEqual([]);
     await page.keyboard.press("Escape");
     await expect(search).toBeFocused();
+  });
+
+  test(`docs selector and code satisfy automated accessibility checks in ${scheme}`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+    await page.goto(`.${docRoute("/docs/components/line/")}`);
+    if (scheme === "dark") await expect(page.locator("html")).toHaveClass(/dark/);
+    else await expect(page.locator("html")).not.toHaveClass(/dark/);
+    await expect(page.locator(".recharts-line-curve").first()).toBeVisible();
+    const audit = () =>
+      new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
     const example = page.locator('[data-component="line-smooth"]');
     await example.getByRole("combobox", { name: "Curve", exact: true }).click();
     await expect(page.getByRole("option", { name: "Step after", exact: true })).toBeVisible();
