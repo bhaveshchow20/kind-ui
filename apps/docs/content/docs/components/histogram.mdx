@@ -14,13 +14,15 @@ See how checkout response times are distributed across numeric intervals.
 Use `binHistogram` to prepare numeric bins for `HistogramSeries`.
 
 ```tsx title="Composition sketch"
-<Chart.HistogramChart config={config} height={280} aria-label="Histogram values" bins={result.bins} measure="count" animate accessibilityLayer>
-  <Chart.HistogramChart.XAxis />
-  <Chart.HistogramChart.YAxis />
-  <Chart.HistogramChart.Grid vertical={false} />
-  <Chart.HistogramChart.Series />
-  <Chart.HistogramChart.Tooltip />
-</Chart.HistogramChart>
+import { HistogramChart } from "@kind-ui/charts";
+
+<HistogramChart config={config} height={280} aria-label="Histogram values" bins={result.bins} measure="count" animate accessibilityLayer>
+  <HistogramChart.XAxis />
+  <HistogramChart.YAxis />
+  <HistogramChart.Grid vertical={false} />
+  <HistogramChart.Series />
+  <HistogramChart.Tooltip />
+</HistogramChart>
 ```
 
 Bar height shows count; width shows the interval. Bins include the lower edge, and the final bin includes the upper edge.

@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { SankeyChart, type SankeyFlowData, type SankeyNodeConfig } from "@kind-ui/charts";
 
 const data = {
   nodes: [
@@ -14,18 +14,18 @@ const data = {
     { id: "wind-homes", source: "wind", target: "homes", value: 15 },
     { id: "wind-industry", source: "wind", target: "industry", value: 25 },
   ],
-} satisfies Chart.SankeyFlowData;
+} satisfies SankeyFlowData;
 const nodeConfig = {
   solar: { label: "Solar", color: "#d29319" },
   wind: { label: "Wind", color: "#159c91" },
   homes: { label: "Homes", color: "#8865ce" },
   industry: { label: "Industry", color: "#447fd1" },
-} satisfies Chart.SankeyNodeConfig;
+} satisfies SankeyNodeConfig;
 
 export function ConfiguredFlowChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
     <section aria-label="Energy allocation">
-      <Chart.SankeyChart
+      <SankeyChart
         interactionBinding="root"
         loading={state === "loading"}
         data={data}
@@ -42,9 +42,9 @@ export function ConfiguredFlowChart({ state = "ready" }: { state?: "ready" | "lo
         }}
         animate={{ revealDurationMs: 900 }}
       >
-        <Chart.SankeyChart.Nodes />
-        <Chart.SankeyChart.Links />
-        <Chart.SankeyChart.Tooltip
+        <SankeyChart.Nodes />
+        <SankeyChart.Links />
+        <SankeyChart.Tooltip
           isAnimationActive={false}
           formatter={(value) => `${value} MWh`}
           contentStyle={{
@@ -58,8 +58,8 @@ export function ConfiguredFlowChart({ state = "ready" }: { state?: "ready" | "lo
           }}
           itemStyle={{ padding: 0, color: "inherit" }}
         />
-        <Chart.SankeyChart.Legend />
-      </Chart.SankeyChart>
+        <SankeyChart.Legend />
+      </SankeyChart>
     </section>
   );
 }

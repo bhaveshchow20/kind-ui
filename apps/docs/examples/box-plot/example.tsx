@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { BoxPlotChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   {
@@ -32,11 +32,11 @@ const data = [
 ];
 const config = {
   latency: { label: "Response time · ms", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.BoxPlotChart
+    <BoxPlotChart
       config={config}
       height={280}
       defaultVisibleSeries={Object.keys(config)}
@@ -48,8 +48,8 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
       margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
       aria-label="Response time distributions in milliseconds"
     >
-      <Chart.BoxPlotChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
-      <Chart.BoxPlotChart.XAxis
+      <BoxPlotChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
+      <BoxPlotChart.XAxis
         tick={{ fill: "#666" }}
         dataKey="period"
         axisLine={false}
@@ -58,7 +58,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
         height={48}
         interval={0}
       />
-      <Chart.BoxPlotChart.YAxis
+      <BoxPlotChart.YAxis
         tick={{ fill: "#666" }}
         type="number"
         domain={[0, 180]}
@@ -67,7 +67,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
         tickMargin={8}
         width={72}
       />
-      <Chart.BoxPlotChart.Series<(typeof data)[number]>
+      <BoxPlotChart.Series<(typeof data)[number]>
         dataKey={(row) => ({
           lowerWhisker: row.lowerWhisker,
           q1: row.q1,
@@ -81,7 +81,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
         strokeWidth={1.5}
         fillOpacity={0.28}
       />
-      <Chart.BoxPlotChart.Tooltip
+      <BoxPlotChart.Tooltip
         maxWidth={220}
         content={({ active, payload, label }) => {
           const row = payload?.[0]?.payload as (typeof data)[number] | undefined;
@@ -182,7 +182,7 @@ export function ResponseTimeBoxPlot({ state = "ready" }: { state?: "ready" | "lo
           );
         }}
       />
-      <Chart.BoxPlotChart.Legend />
-    </Chart.BoxPlotChart>
+      <BoxPlotChart.Legend />
+    </BoxPlotChart>
   );
 }

@@ -6,13 +6,15 @@ description: Share series labels, colors, visibility and focus across a chart.
 Chart families with `config` own a Root and responsive plot. Start with explicit family parts:
 
 ```tsx
-<Chart.BarChart config={config} data={data} height={280} aria-label="Daily orders">
-  <Chart.BarChart.XAxis dataKey="day" />
-  <Chart.BarChart.YAxis />
-  <Chart.BarChart.Series dataKey="orders" />
-  <Chart.BarChart.Tooltip />
-  <Chart.BarChart.Legend />
-</Chart.BarChart>
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart config={config} data={data} height={280} aria-label="Daily orders">
+  <BarChart.XAxis dataKey="day" />
+  <BarChart.YAxis />
+  <BarChart.Series dataKey="orders" />
+  <BarChart.Tooltip />
+  <BarChart.Legend />
+</BarChart>
 ```
 
 Use `rootProps` for outer-frame attributes and shared interaction. Pass visibility state to the family root. Do not put a family with `config` inside another Root. Compound legends mount in the browser; use the explicit Root layout below when the legend must render on the server.

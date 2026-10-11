@@ -14,14 +14,16 @@ Compare pickup orders across locations with rounded columns.
 Add one `BarSeries` per measure. Use `stackId` for stacks and `layout="vertical"` for horizontal bars.
 
 ```tsx title="Composition sketch"
-<Chart.BarChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate accessibilityLayer aria-label="Pickup orders by location">
-  <Chart.BarChart.Grid vertical={false} />
-  <Chart.BarChart.XAxis dataKey="period" />
-  <Chart.BarChart.YAxis />
-  <Chart.BarChart.Series dataKey="orders" radius={[5, 5, 0, 0]} />
-  <Chart.BarChart.Tooltip />
-  <Chart.BarChart.Legend />
-</Chart.BarChart>
+import { BarChart } from "@kind-ui/charts";
+
+<BarChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate accessibilityLayer aria-label="Pickup orders by location">
+  <BarChart.Grid vertical={false} />
+  <BarChart.XAxis dataKey="period" />
+  <BarChart.YAxis />
+  <BarChart.Series dataKey="orders" radius={[5, 5, 0, 0]} />
+  <BarChart.Tooltip />
+  <BarChart.Legend />
+</BarChart>
 ```
 
 The compound legend mounts outside the plot while remaining a child in your composition. Legend focuses and dims by default; explicit `interaction.mode="visibility"` enables hide/show.
@@ -55,12 +57,14 @@ See `BarSeries` below for supported values and shapes.
 Add a pattern to distinguish a series. Its legend swatch follows the same config.
 
 ```tsx
+import { BarSeries, type SeriesConfig } from "@kind-ui/charts";
+
 const config = {
   orders: { label: "Orders", color: "#733bff", pattern: { kind: "hatch" } },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 // Inside the chart:
-<Chart.BarSeries dataKey="orders" />
+<BarSeries dataKey="orders" />
 ```
 
 Override the config with `BarSeries.pattern`; use `pattern={false}` to turn it off.
@@ -72,6 +76,8 @@ Override the config with `BarSeries.pattern`; use `pattern={false}` to turn it o
 In the copied Bar example, mark projected rows in `data`. Then use the same rule for the series and tooltip:
 
 ```tsx
+import { BarSeries, Tooltip, TooltipContent } from "@kind-ui/charts";
+
 const data = [
   { period: "North", orders: 124 },
   { period: "East", orders: 186, projected: true },
@@ -79,10 +85,10 @@ const data = [
 type ProjectionRow = (typeof data)[number];
 const isProjected = (row: ProjectionRow) => row.projected === true;
 
-<Chart.BarSeries dataKey="orders"
+<BarSeries dataKey="orders"
   projection={{ isProjected, pattern: { kind: "stripe" } }} />
-<Chart.Tooltip content={(tooltip) => (
-  <Chart.TooltipContent tooltip={tooltip}
+<Tooltip content={(tooltip) => (
+  <TooltipContent tooltip={tooltip}
     isProjected={(entry) => isProjected(entry.payload)} />
 )} />
 ```

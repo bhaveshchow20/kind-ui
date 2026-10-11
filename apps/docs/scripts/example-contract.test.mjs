@@ -194,7 +194,7 @@ test("Line snippets are standalone public consumers with a shared data alternati
     assert.deepEqual(filesFor(bundle, {}), bundle.files);
   }
   const basic = lines.line.files["src/examples/line/example.tsx"];
-  assert.equal([...basic.matchAll(/<Chart\.LineChart\b/g)].length, 1);
+  assert.equal([...basic.matchAll(/<LineChart(?=[\s>])/g)].length, 1);
   assert.ok(!/useId|Root|ResponsiveContainer/.test(basic));
 });
 
@@ -220,19 +220,21 @@ test("Area consumers preserve explicit composition and stacked series focus", ()
   for (const bundle of Object.values(areas)) {
     const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
     assert.match(source, /"use client"/);
-    assert.match(source, /satisfies Chart.SeriesConfig/);
     if (bundle.id === "area") {
-      assert.match(source, /<Chart.AreaChart\s+config=\{config\}/);
+      assert.match(source, /satisfies SeriesConfig/);
+      assert.match(source, /<AreaChart\s+config=\{config\}/);
       assert.match(source, /height=\{280\}/);
-      assert.match(source, /<Chart.AreaChart.Series/);
-      assert.match(source, /<Chart.AreaChart.Legend/);
+      assert.match(source, /<AreaChart\.Series/);
+      assert.match(source, /<AreaChart\.Legend/);
       assert.ok(!/Chart.Root|Chart.ResponsiveContainer/.test(source));
+      assert.match(source, /<AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
     } else {
+      assert.match(source, /satisfies Chart.SeriesConfig/);
       assert.match(source, /<Chart.Root\s+config=\{config\}/);
       assert.match(source, /<Chart.ResponsiveContainer width="100%" height=\{280\}>/);
       assert.match(source, /<Chart.AreaSeries/);
+      assert.match(source, /<Chart.AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
     }
-    assert.match(source, /<Chart.AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
     assert.equal(bundle.dataAlternative.rows.length, 12);
     assert.ok(!/settings|controls/.test(source));
     assert.ok(

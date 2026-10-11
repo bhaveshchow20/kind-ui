@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { ScatterChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Search (weekday)", cohort: "weekday", latency: 28, acceptance: 84 },
@@ -16,11 +16,11 @@ const weekendShape = "diamond";
 const config = {
   weekday: { label: "Weekday", color: "#733bff", legendShape: weekdayShape },
   weekend: { label: "Weekend", color: "#07948b", legendShape: weekendShape },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function TaskScatterChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.ScatterChart
+    <ScatterChart
       config={config}
       height={280}
       legendPosition="top"
@@ -33,8 +33,8 @@ export function TaskScatterChart({ state = "ready" }: { state?: "ready" | "loadi
       margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
       aria-label="Task latency in milliseconds and acceptance percentage by cohort"
     >
-      <Chart.ScatterChart.Grid vertical stroke="#ccc" strokeDasharray="3 3" />
-      <Chart.ScatterChart.XAxis
+      <ScatterChart.Grid vertical stroke="#ccc" strokeDasharray="3 3" />
+      <ScatterChart.XAxis
         tick={{ fill: "#666" }}
         type="number"
         dataKey="latency"
@@ -49,7 +49,7 @@ export function TaskScatterChart({ state = "ready" }: { state?: "ready" | "loadi
         minTickGap={48}
         label={{ value: "ms", position: "insideBottom", offset: 0 }}
       />
-      <Chart.ScatterChart.YAxis
+      <ScatterChart.YAxis
         tick={{ fill: "#666" }}
         type="number"
         dataKey="acceptance"
@@ -62,20 +62,20 @@ export function TaskScatterChart({ state = "ready" }: { state?: "ready" | "loadi
         tickMargin={10}
         width={80}
       />
-      <Chart.ScatterChart.Series
+      <ScatterChart.Series
         seriesKey="weekday"
         name="Weekday"
         data={data.filter((row) => row.cohort === "weekday")}
         shape={weekdayShape}
       />
-      <Chart.ScatterChart.Series
+      <ScatterChart.Series
         seriesKey="weekend"
         name="Weekend"
         data={data.filter((row) => row.cohort === "weekend")}
         shape={weekendShape}
       />
-      <Chart.ScatterChart.Tooltip<(typeof data)[number]> pointLabel={(row) => row.period} />
-      <Chart.ScatterChart.Legend />
-    </Chart.ScatterChart>
+      <ScatterChart.Tooltip<(typeof data)[number]> pointLabel={(row) => row.period} />
+      <ScatterChart.Legend />
+    </ScatterChart>
   );
 }

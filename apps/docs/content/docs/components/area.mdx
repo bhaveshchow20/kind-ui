@@ -14,14 +14,16 @@ Show visitor volume over time, then compare stacked contributions.
 Add one `AreaSeries` per measure. Use `stackId` to stack related series.
 
 ```tsx title="Composition sketch"
-<Chart.AreaChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate accessibilityLayer aria-label="Monthly visitors">
-  <Chart.AreaChart.Grid vertical={false} />
-  <Chart.AreaChart.XAxis dataKey="period" />
-  <Chart.AreaChart.YAxis />
-  <Chart.AreaChart.Series dataKey="visitors" type="monotone" fillOpacity={0.22} />
-  <Chart.AreaChart.Tooltip />
-  <Chart.AreaChart.Legend />
-</Chart.AreaChart>
+import { AreaChart } from "@kind-ui/charts";
+
+<AreaChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate accessibilityLayer aria-label="Monthly visitors">
+  <AreaChart.Grid vertical={false} />
+  <AreaChart.XAxis dataKey="period" />
+  <AreaChart.YAxis />
+  <AreaChart.Series dataKey="visitors" type="monotone" fillOpacity={0.22} />
+  <AreaChart.Tooltip />
+  <AreaChart.Legend />
+</AreaChart>
 ```
 
 The compound legend mounts outside the plot while remaining a child in your composition. Legend focuses and dims by default; explicit `interaction.mode="visibility"` enables hide/show.

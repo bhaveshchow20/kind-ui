@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { LineChart, type SeriesConfig } from "@kind-ui/charts";
 import { useEffect, useState } from "react";
 
 const data = [
@@ -18,7 +18,7 @@ const data = [
 ];
 const config = {
   visitors: { label: "Visitors", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function VisitorTrendChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   const [fontScale, setFontScale] = useState(1);
@@ -43,15 +43,15 @@ export function VisitorTrendChart({ state = "ready" }: { state?: "ready" | "load
     };
   }, []);
   return (
-    <Chart.LineChart
+    <LineChart
       loading={state === "loading"}
       data={data}
       config={config}
       margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
       aria-label="Monthly visitors"
     >
-      <Chart.LineChart.Grid vertical={false} strokeDasharray="3 3" />
-      <Chart.LineChart.XAxis
+      <LineChart.Grid vertical={false} strokeDasharray="3 3" />
+      <LineChart.XAxis
         dataKey="period"
         axisLine={false}
         tickLine={false}
@@ -59,15 +59,15 @@ export function VisitorTrendChart({ state = "ready" }: { state?: "ready" | "load
         height={48}
         interval="preserveStartEnd"
       />
-      <Chart.LineChart.YAxis
+      <LineChart.YAxis
         axisLine={false}
         tickLine={false}
         tickMargin={8}
         width={44 + 16 * fontScale}
       />
-      <Chart.LineChart.Series dataKey="visitors" type="monotone" strokeWidth={2} dot={{ r: 2.5 }} />
-      <Chart.LineChart.Tooltip />
-      <Chart.LineChart.Legend />
-    </Chart.LineChart>
+      <LineChart.Series dataKey="visitors" type="monotone" strokeWidth={2} dot={{ r: 2.5 }} />
+      <LineChart.Tooltip />
+      <LineChart.Legend />
+    </LineChart>
   );
 }

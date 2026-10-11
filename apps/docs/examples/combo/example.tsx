@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { ComboChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Jan", capacity: 960, shipped: 640, target: 700 },
@@ -17,11 +17,11 @@ const config = {
   },
   shipped: { label: "Shipped · units", color: "#733bff", formatValue: (value) => `${value} units` },
   target: { label: "Target · units", color: "#087f78", formatValue: (value) => `${value} units` },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function ProductionComboChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.ComboChart
+    <ComboChart
       config={config}
       height={280}
       defaultVisibleSeries={Object.keys(config)}
@@ -33,8 +33,8 @@ export function ProductionComboChart({ state = "ready" }: { state?: "ready" | "l
       margin={{ top: 20, right: 20, bottom: 8, left: 16 }}
       aria-label="Monthly production, capacity and target in units"
     >
-      <Chart.ComboChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
-      <Chart.ComboChart.XAxis
+      <ComboChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
+      <ComboChart.XAxis
         tick={{ fill: "#666" }}
         dataKey="period"
         axisLine={false}
@@ -42,7 +42,7 @@ export function ProductionComboChart({ state = "ready" }: { state?: "ready" | "l
         tickMargin={10}
         height={40}
       />
-      <Chart.ComboChart.YAxis
+      <ComboChart.YAxis
         tick={{ fill: "#666" }}
         domain={[0, 1200]}
         ticks={[0, 400, 800, 1200]}
@@ -51,22 +51,17 @@ export function ProductionComboChart({ state = "ready" }: { state?: "ready" | "l
         tickLine={false}
         tickMargin={8}
       />
-      <Chart.ComboChart.Area
-        dataKey="capacity"
-        type="stepAfter"
-        fillOpacity={0.18}
-        strokeWidth={1}
-      />
-      <Chart.ComboChart.Bar dataKey="shipped" maxBarSize={32} radius={[4, 4, 0, 0]} />
-      <Chart.ComboChart.Line
+      <ComboChart.Area dataKey="capacity" type="stepAfter" fillOpacity={0.18} strokeWidth={1} />
+      <ComboChart.Bar dataKey="shipped" maxBarSize={32} radius={[4, 4, 0, 0]} />
+      <ComboChart.Line
         dataKey="target"
         type="linear"
         strokeWidth={2.5}
         strokeDasharray="6 4"
         dot={false}
       />
-      <Chart.ComboChart.Tooltip maxWidth={200} />
-      <Chart.ComboChart.Legend />
-    </Chart.ComboChart>
+      <ComboChart.Tooltip maxWidth={200} />
+      <ComboChart.Legend />
+    </ComboChart>
   );
 }

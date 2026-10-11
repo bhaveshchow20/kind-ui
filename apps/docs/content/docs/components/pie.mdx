@@ -14,13 +14,15 @@ Compare team allocation as slices of a shared total.
 Set `categoryKey` for stable slice colors and `innerRadius` for a donut.
 
 ```tsx title="Composition sketch"
-<Chart.PieChart config={config} defaultVisibleSeries={Object.keys(config)} rootProps={{ interaction: { kind: "category", eligibleKeys: data.map((row) => row.key) } }} height={280} animate accessibilityLayer aria-label="Team allocation">
-  <Chart.PieChart.Series interactionBinding="root" data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
-    <Chart.PieChart.Labels dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
-  </Chart.PieChart.Series>
-  <Chart.PieChart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
-  <Chart.PieChart.Legend />
-</Chart.PieChart>
+import { PieChart } from "@kind-ui/charts";
+
+<PieChart config={config} defaultVisibleSeries={Object.keys(config)} rootProps={{ interaction: { kind: "category", eligibleKeys: data.map((row) => row.key) } }} height={280} animate accessibilityLayer aria-label="Team allocation">
+  <PieChart.Series interactionBinding="root" data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
+    <PieChart.Labels dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
+  </PieChart.Series>
+  <PieChart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
+  <PieChart.Legend />
+</PieChart>
 ```
 
 Use the same stable category IDs for config, slices and tooltips. Set `animationDirection` to choose the entrance sweep.
@@ -56,7 +58,9 @@ Labels show each category’s share of the original 1,000 hours, even when categ
 Use `glowCategories={["design"]}` to decorate a specific category.
 
 ```tsx title="Selected category on a rounded donut"
-<Chart.PieSeries
+import { PieSeries } from "@kind-ui/charts";
+
+<PieSeries
   data={data}
   dataKey="hours"
   categoryKey="key"

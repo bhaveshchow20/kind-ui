@@ -14,18 +14,20 @@ Trace how sales, refunds and costs change a cash balance.
 Use `computeWaterfallData` to prepare rows for the bars and connectors.
 
 ```tsx title="Composition sketch"
-<Chart.WaterfallChart config={config} height={280} aria-label="Waterfall values" data={data} layout="vertical" animate accessibilityLayer>
-  <Chart.WaterfallChart.XAxis type="number" />
-  <Chart.WaterfallChart.YAxis type="category" dataKey="id" />
-  <Chart.WaterfallChart.Connectors data={data} position="middle" />
-  <Chart.WaterfallChart.Series>
-    {data.map((row) => <Chart.Cell key={row.id} fill={row.kind !== "delta" ? "#733bff" : (row.value ?? 0) < 0 ? "#be123c" : "#15803d"} />)}
-  </Chart.WaterfallChart.Series>
-  <Chart.WaterfallChart.Tooltip filterNull={false} content={(tooltip) => {
+import { Cell, WaterfallChart } from "@kind-ui/charts";
+
+<WaterfallChart config={config} height={280} aria-label="Waterfall values" data={data} layout="vertical" animate accessibilityLayer>
+  <WaterfallChart.XAxis type="number" />
+  <WaterfallChart.YAxis type="category" dataKey="id" />
+  <WaterfallChart.Connectors data={data} position="middle" />
+  <WaterfallChart.Series>
+    {data.map((row) => <Cell key={row.id} fill={row.kind !== "delta" ? "#733bff" : (row.value ?? 0) < 0 ? "#be123c" : "#15803d"} />)}
+  </WaterfallChart.Series>
+  <WaterfallChart.Tooltip filterNull={false} content={(tooltip) => {
     const row = data.find((row) => row.id === String(tooltip.label));
     return tooltip.active && row ? <div>{row.label}: {row.value ?? "Unknown"} ($k); balance {row.balance ?? "Unknown"} ($k)</div> : null;
   }} />
-</Chart.WaterfallChart>
+</WaterfallChart>
 ```
 
 Use one unstacked series. `layout="vertical"` produces horizontal bars.

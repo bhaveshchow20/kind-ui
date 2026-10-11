@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { RadarChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Speed", studio: 88, field: 62 },
@@ -12,11 +12,11 @@ const data = [
 const config = {
   studio: { label: "Studio", color: "#733bff" },
   field: { label: "Field", color: "#008b82" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function ProductRadarChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.RadarChart
+    <RadarChart
       config={config}
       height={280}
       defaultVisibleSeries={Object.keys(config)}
@@ -28,19 +28,19 @@ export function ProductRadarChart({ state = "ready" }: { state?: "ready" | "load
       margin={{ top: 24, right: 36, bottom: 24, left: 36 }}
       aria-label="Product research scores out of 100: Studio and Field"
     >
-      <Chart.RadarChart.Grid stroke="#ccc" radialLines={false} />
-      <Chart.RadarChart.AngleAxis dataKey="period" tick={{ fontSize: 12 }} />
-      <Chart.RadarChart.RadiusAxis
+      <RadarChart.Grid stroke="#ccc" radialLines={false} />
+      <RadarChart.AngleAxis dataKey="period" tick={{ fontSize: 12 }} />
+      <RadarChart.RadiusAxis
         domain={[0, 100]}
         ticks={[25, 50, 75, 100]}
         angle={60}
         axisLine={false}
         tick={{ fontSize: 10 }}
       />
-      <Chart.RadarChart.Series dataKey="studio" strokeWidth={2} fillOpacity={0.18} />
-      <Chart.RadarChart.Series dataKey="field" strokeWidth={2} fillOpacity={0.18} />
-      <Chart.RadarChart.Tooltip />
-      <Chart.RadarChart.Legend />
-    </Chart.RadarChart>
+      <RadarChart.Series dataKey="studio" strokeWidth={2} fillOpacity={0.18} />
+      <RadarChart.Series dataKey="field" strokeWidth={2} fillOpacity={0.18} />
+      <RadarChart.Tooltip />
+      <RadarChart.Legend />
+    </RadarChart>
   );
 }

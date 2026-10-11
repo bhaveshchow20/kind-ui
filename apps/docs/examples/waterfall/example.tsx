@@ -1,5 +1,11 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import {
+  Cell,
+  computeWaterfallData,
+  type SeriesConfig,
+  WaterfallChart,
+  type WaterfallEntry,
+} from "@kind-ui/charts";
 
 // Values are USD thousands. Checkpoints are absolute; deltas are signed changes.
 const entries = [
@@ -10,13 +16,13 @@ const entries = [
   { id: "costs", label: "Costs", kind: "delta", value: -65 },
   { id: "tax", label: "Tax", kind: "delta", value: -20 },
   { id: "closing", label: "Closing", kind: "end", value: 95 },
-] satisfies Chart.WaterfallEntry[];
-const data = Chart.computeWaterfallData(entries);
+] satisfies WaterfallEntry[];
+const data = computeWaterfallData(entries);
 const labels = new Map(data.map((row) => [row.id, row.label]));
 const money = (value: number | null) => (value === null ? "Unknown" : `$${value}k`);
 const config = {
   range: { label: "Cash balance", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function CashFlowChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
@@ -42,7 +48,7 @@ export function CashFlowChart({ state = "ready" }: { state?: "ready" | "loading"
         </span>
       </div>
 
-      <Chart.WaterfallChart
+      <WaterfallChart
         config={config}
         height={280}
         loading={state === "loading"}
@@ -54,13 +60,8 @@ export function CashFlowChart({ state = "ready" }: { state?: "ready" | "loading"
         margin={{ top: 12, right: 24, bottom: 4, left: 0 }}
         barCategoryGap="32%"
       >
-        <Chart.WaterfallChart.Grid
-          vertical
-          stroke="#ccc"
-          horizontal={false}
-          strokeDasharray="3 3"
-        />
-        <Chart.WaterfallChart.XAxis
+        <WaterfallChart.Grid vertical stroke="#ccc" horizontal={false} strokeDasharray="3 3" />
+        <WaterfallChart.XAxis
           tick={{ fill: "#666" }}
           type="number"
           domain={[0, "auto"]}
@@ -70,7 +71,7 @@ export function CashFlowChart({ state = "ready" }: { state?: "ready" | "loading"
           tickMargin={10}
           height={36}
         />
-        <Chart.WaterfallChart.YAxis
+        <WaterfallChart.YAxis
           tick={{ fill: "#666" }}
           type="category"
           dataKey="id"
@@ -80,22 +81,22 @@ export function CashFlowChart({ state = "ready" }: { state?: "ready" | "loading"
           tickFormatter={(id) => labels.get(String(id)) ?? String(id)}
           tickMargin={8}
         />
-        <Chart.WaterfallChart.ReferenceLine x={0} stroke="currentColor" strokeOpacity={0.3} />
-        <Chart.WaterfallChart.Connectors
+        <WaterfallChart.ReferenceLine x={0} stroke="currentColor" strokeOpacity={0.3} />
+        <WaterfallChart.Connectors
           data={data}
           position="middle"
           stroke="currentColor"
           strokeOpacity={0.35}
         />
-        <Chart.WaterfallChart.Series radius={3}>
+        <WaterfallChart.Series radius={3}>
           {data.map((row) => (
-            <Chart.Cell
+            <Cell
               key={row.id}
               fill={row.kind !== "delta" ? "#733bff" : (row.value ?? 0) < 0 ? "#be123c" : "#15803d"}
             />
           ))}
-        </Chart.WaterfallChart.Series>
-        <Chart.WaterfallChart.Tooltip
+        </WaterfallChart.Series>
+        <WaterfallChart.Tooltip
           filterNull={false}
           maxWidth={180}
           content={(tooltip) => {
@@ -131,7 +132,7 @@ export function CashFlowChart({ state = "ready" }: { state?: "ready" | "loading"
             );
           }}
         />
-      </Chart.WaterfallChart>
+      </WaterfallChart>
     </div>
   );
 }

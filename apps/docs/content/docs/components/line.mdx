@@ -11,18 +11,16 @@ Follow monthly visitors and compare trends across series.
 
 Add one `LineChart.Series` per measure. Use `type="monotone"` for smooth curves and include `LineChart.Legend` to show the legend.
 
-```tsx title="Imports"
-import * as Chart from "@kind-ui/charts";
-```
-
 ```tsx title="Composition sketch"
-<Chart.LineChart data={data} config={config} aria-label="Monthly visitors">
-  <Chart.LineChart.Grid vertical={false} />
-  <Chart.LineChart.XAxis dataKey="period" />
-  <Chart.LineChart.YAxis />
-  <Chart.LineChart.Series dataKey="visitors" type="monotone" />
-  <Chart.LineChart.Tooltip />
-</Chart.LineChart>
+import { LineChart } from "@kind-ui/charts";
+
+<LineChart data={data} config={config} aria-label="Monthly visitors">
+  <LineChart.Grid vertical={false} />
+  <LineChart.XAxis dataKey="period" />
+  <LineChart.YAxis />
+  <LineChart.Series dataKey="visitors" type="monotone" />
+  <LineChart.Tooltip />
+</LineChart>
 ```
 
 ## Compose plot parts
@@ -67,14 +65,16 @@ Choose a presentation to see the effect and copy its complete example.
 
 <Callout title="Note">Motion respects reduced motion. Explicit `dot`, `activeDot` and custom marker renderers override the built-in point styles.</Callout>
 
-For custom point styling, pass `dot={<Chart.PointMarker variant="colored-border" />}` to `LineSeries`; see the [PointMarker reference](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/README.md#point-marker-styles).
+For custom point styling, pass `dot={<PointMarker variant="colored-border" />}` to `LineSeries`; see the [PointMarker reference](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/README.md#point-marker-styles).
 
 ## Decorative backgrounds
 
 Select **Background** in the [Line presentation example](/docs/components/line/#point-markers-dashed-lines-and-reveal-direction), or add a preset to your chart:
 
 ```tsx
-<Chart.LineChart data={data} config={config} xDataKey="period"
+import { LineChart } from "@kind-ui/charts";
+
+<LineChart data={data} config={config} xDataKey="period"
   backgroundPattern={{ pattern: "crossings", opacity: 0.15 }}
   aria-label="Monthly visitors" />
 ```

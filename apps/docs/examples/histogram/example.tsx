@@ -1,5 +1,10 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import {
+  binHistogram,
+  type HistogramBin,
+  HistogramChart,
+  type SeriesConfig,
+} from "@kind-ui/charts";
 
 const data = [
   { period: "Request 1", milliseconds: 12 },
@@ -41,18 +46,18 @@ const data = [
   { period: "Missing reading", milliseconds: null },
   { period: "Outside window", milliseconds: 260 },
 ];
-const result = Chart.binHistogram(
+const result = binHistogram(
   data.map((row) => row.milliseconds),
   [0, 40, 80, 120, 160, 200],
 );
 const config = {
   count: { label: "Requests", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function CheckoutLatencyHistogram({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
     <div>
-      <Chart.HistogramChart
+      <HistogramChart
         config={config}
         height={280}
         loading={state === "loading"}
@@ -63,7 +68,7 @@ export function CheckoutLatencyHistogram({ state = "ready" }: { state?: "ready" 
         aria-label="Checkout response time, count by millisecond interval"
         margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
       >
-        <Chart.HistogramChart.XAxis
+        <HistogramChart.XAxis
           tick={{ fill: "#666" }}
           axisLine={false}
           tickLine={false}
@@ -72,7 +77,7 @@ export function CheckoutLatencyHistogram({ state = "ready" }: { state?: "ready" 
           ticks={[0, 50, 100, 150, 200]}
           tickFormatter={(value) => `${value} ms`}
         />
-        <Chart.HistogramChart.YAxis
+        <HistogramChart.YAxis
           tick={{ fill: "#666" }}
           axisLine={false}
           tickLine={false}
@@ -80,17 +85,17 @@ export function CheckoutLatencyHistogram({ state = "ready" }: { state?: "ready" 
           width={40}
           allowDecimals={false}
         />
-        <Chart.HistogramChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
-        <Chart.HistogramChart.Series />
-        <Chart.HistogramChart.Tooltip
+        <HistogramChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
+        <HistogramChart.Series />
+        <HistogramChart.Tooltip
           labelFormatter={(_label, payload) => {
-            const bin = payload[0]?.payload as Chart.HistogramBin | undefined;
+            const bin = payload[0]?.payload as HistogramBin | undefined;
             return bin
               ? `${bin.lower}–${bin.upper} ms${bin.upper === 200 ? " (final edge included)" : " (upper edge excluded)"}`
               : "Response time";
           }}
         />
-      </Chart.HistogramChart>
+      </HistogramChart>
 
       <p
         style={{

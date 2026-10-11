@@ -12,14 +12,16 @@ Find busy support hours by comparing request counts across days.
 Supply ordered rows and columns, records and a color scale. Add the grid, legend and tooltip as children.
 
 ```tsx title="Composition sketch"
-<Chart.HeatmapChart
+import { HeatmapChart } from "@kind-ui/charts";
+
+<HeatmapChart
   rows={rows} columns={columns} data={data} scale={scale}
   animate missingLabel="No report"
 >
-  <Chart.HeatmapChart.Grid caption="Support requests by day and hour" />
-  <Chart.HeatmapChart.Legend label="Requests per two-hour interval" />
-  <Chart.HeatmapChart.Tooltip valueAnimation="shuffle" />
-</Chart.HeatmapChart>
+  <HeatmapChart.Grid caption="Support requests by day and hour" />
+  <HeatmapChart.Legend label="Requests per two-hour interval" />
+  <HeatmapChart.Tooltip valueAnimation="shuffle" />
+</HeatmapChart>
 ```
 
 Missing records and `null` use patterned cells; zero remains a measured value.

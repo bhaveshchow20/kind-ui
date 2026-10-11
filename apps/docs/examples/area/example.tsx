@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { AreaChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Jan", visitors: 420 },
@@ -17,11 +17,11 @@ const data = [
 ];
 const config = {
   visitors: { label: "Visitors", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function VisitorAreaChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.AreaChart
+    <AreaChart
       config={config}
       height={280}
       defaultVisibleSeries={Object.keys(config)}
@@ -33,8 +33,8 @@ export function VisitorAreaChart({ state = "ready" }: { state?: "ready" | "loadi
       margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
       aria-label="Monthly visitors"
     >
-      <Chart.AreaChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
-      <Chart.AreaChart.XAxis
+      <AreaChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
+      <AreaChart.XAxis
         tick={{ fill: "#666" }}
         dataKey="period"
         axisLine={false}
@@ -43,21 +43,16 @@ export function VisitorAreaChart({ state = "ready" }: { state?: "ready" | "loadi
         height={48}
         interval="preserveStartEnd"
       />
-      <Chart.AreaChart.YAxis
+      <AreaChart.YAxis
         tick={{ fill: "#666" }}
         axisLine={false}
         tickLine={false}
         tickMargin={8}
         width={72}
       />
-      <Chart.AreaChart.Series
-        dataKey="visitors"
-        type="monotone"
-        strokeWidth={2}
-        fillOpacity={0.22}
-      />
-      <Chart.AreaChart.Tooltip />
-      <Chart.AreaChart.Legend />
-    </Chart.AreaChart>
+      <AreaChart.Series dataKey="visitors" type="monotone" strokeWidth={2} fillOpacity={0.22} />
+      <AreaChart.Tooltip />
+      <AreaChart.Legend />
+    </AreaChart>
   );
 }

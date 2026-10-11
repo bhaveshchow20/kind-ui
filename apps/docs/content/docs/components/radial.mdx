@@ -14,12 +14,14 @@ Track project completion on a fixed percentage scale.
 Use a fixed numeric domain, hide axis ticks and give each ring a stable category key. Labels start visible; use the chart’s Labels control to hide them.
 
 ```tsx title="Composition sketch"
-<Chart.RadialBarChart config={config} height={280} aria-label="Radial values" data={data} categoryKey="period" animate startAngle={90} endAngle={-270} innerRadius="18%" outerRadius="94%">
-  <Chart.RadialBarChart.AngleAxis type="number" domain={[0, 100]} tick={false} />
-  <Chart.RadialBarChart.RadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
-  <Chart.RadialBarChart.Series dataKey="progress" background={{ fill: "#e9e5f1" }} />
-  <Chart.RadialBarChart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
-</Chart.RadialBarChart>
+import { RadialBarChart } from "@kind-ui/charts";
+
+<RadialBarChart config={config} height={280} aria-label="Radial values" data={data} categoryKey="period" animate startAngle={90} endAngle={-270} innerRadius="18%" outerRadius="94%">
+  <RadialBarChart.AngleAxis type="number" domain={[0, 100]} tick={false} />
+  <RadialBarChart.RadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
+  <RadialBarChart.Series dataKey="progress" background={{ fill: "#e9e5f1" }} />
+  <RadialBarChart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
+</RadialBarChart>
 ```
 
 <Callout title="Note">Values remain available in the tooltip and accessible data table when labels are hidden.</Callout>

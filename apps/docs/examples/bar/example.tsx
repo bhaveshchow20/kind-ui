@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { BarChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "North", orders: 124 },
@@ -10,11 +10,11 @@ const data = [
 ];
 const config = {
   orders: { label: "Orders", color: "#733bff" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function PickupOrdersChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.BarChart
+    <BarChart
       config={config}
       height={280}
       defaultVisibleSeries={Object.keys(config)}
@@ -27,8 +27,8 @@ export function PickupOrdersChart({ state = "ready" }: { state?: "ready" | "load
       margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
       aria-label="Weekly pickup orders by location"
     >
-      <Chart.BarChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
-      <Chart.BarChart.XAxis
+      <BarChart.Grid stroke="#ccc" vertical={false} strokeDasharray="3 3" />
+      <BarChart.XAxis
         tick={{ fill: "#666" }}
         dataKey="period"
         axisLine={false}
@@ -38,16 +38,16 @@ export function PickupOrdersChart({ state = "ready" }: { state?: "ready" | "load
         interval="preserveStartEnd"
         minTickGap={32}
       />
-      <Chart.BarChart.YAxis
+      <BarChart.YAxis
         tick={{ fill: "#666" }}
         axisLine={false}
         tickLine={false}
         tickMargin={10}
         width={72}
       />
-      <Chart.BarChart.Series dataKey="orders" radius={[5, 5, 0, 0]} maxBarSize={48} />
-      <Chart.BarChart.Tooltip />
-      <Chart.BarChart.Legend />
-    </Chart.BarChart>
+      <BarChart.Series dataKey="orders" radius={[5, 5, 0, 0]} maxBarSize={48} />
+      <BarChart.Tooltip />
+      <BarChart.Legend />
+    </BarChart>
   );
 }

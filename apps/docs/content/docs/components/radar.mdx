@@ -14,15 +14,17 @@ Compare Studio and Field scores on a common 0–100 scale.
 Compare measures on a shared radial scale with one `RadarSeries` per profile.
 
 ```tsx title="Composition sketch"
-<Chart.RadarChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate outerRadius="68%" aria-label="Product research scores out of 100">
-  <Chart.RadarChart.Grid radialLines={false} />
-  <Chart.RadarChart.AngleAxis dataKey="period" />
-  <Chart.RadarChart.RadiusAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} />
-  <Chart.RadarChart.Series dataKey="studio" fillOpacity={0.18} />
-  <Chart.RadarChart.Series dataKey="field" fillOpacity={0.18} />
-  <Chart.RadarChart.Tooltip />
-  <Chart.RadarChart.Legend />
-</Chart.RadarChart>
+import { RadarChart } from "@kind-ui/charts";
+
+<RadarChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate outerRadius="68%" aria-label="Product research scores out of 100">
+  <RadarChart.Grid radialLines={false} />
+  <RadarChart.AngleAxis dataKey="period" />
+  <RadarChart.RadiusAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} />
+  <RadarChart.Series dataKey="studio" fillOpacity={0.18} />
+  <RadarChart.Series dataKey="field" fillOpacity={0.18} />
+  <RadarChart.Tooltip />
+  <RadarChart.Legend />
+</RadarChart>
 ```
 
 Use comparable units and a fixed domain across spokes. These research scores share a 0–100 scale.

@@ -1,9 +1,9 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { createHeatmapScale, HeatmapChart, type HeatmapDatum } from "@kind-ui/charts";
 
 const rows = ["Mon", "Tue", "Wed", "Thu"];
 const columns = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00"];
-const data: readonly Chart.HeatmapDatum[] = [
+const data: readonly HeatmapDatum[] = [
   { row: "Mon", column: "08:00", value: 12 },
   { row: "Mon", column: "10:00", value: 34 },
   { row: "Mon", column: "12:00", value: 48 },
@@ -28,14 +28,14 @@ const data: readonly Chart.HeatmapDatum[] = [
   { row: "Thu", column: "14:00", value: 52 },
   { row: "Thu", column: "16:00", value: 33 },
 ];
-const scale = Chart.createHeatmapScale({
+const scale = createHeatmapScale({
   domain: [0, 60],
   colors: ["#eff6ff", "#93c5fd", "#2563eb", "#1e3a8a"],
 });
 
 export function SupportHeatmap({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.HeatmapChart
+    <HeatmapChart
       loading={state === "loading"}
       rows={rows}
       columns={columns}
@@ -44,14 +44,14 @@ export function SupportHeatmap({ state = "ready" }: { state?: "ready" | "loading
       animate
       missingLabel="No report"
     >
-      <Chart.HeatmapChart.Grid
+      <HeatmapChart.Grid
         caption="Support requests by day and hour"
         style={{ borderCollapse: "separate", borderSpacing: 3 }}
         cellProps={() => ({ style: { height: "2rem" } })}
       />
-      <Chart.HeatmapChart.Legend label="Requests per two-hour interval" />
-      <Chart.HeatmapChart.Tooltip valueAnimation="shuffle" />
-      <Chart.HeatmapChart.DataTable
+      <HeatmapChart.Legend label="Requests per two-hour interval" />
+      <HeatmapChart.Tooltip valueAnimation="shuffle" />
+      <HeatmapChart.DataTable
         caption="Support requests, exact values"
         style={{
           position: "absolute",
@@ -63,6 +63,6 @@ export function SupportHeatmap({ state = "ready" }: { state?: "ready" | "loading
           whiteSpace: "nowrap",
         }}
       />
-    </Chart.HeatmapChart>
+    </HeatmapChart>
   );
 }

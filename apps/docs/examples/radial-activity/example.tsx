@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { ActivityRings, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { key: "move", value: 350, domain: [0, 500] as const },
@@ -14,11 +14,11 @@ const config = {
     formatValue: (value: unknown) => `${value} min`,
   },
   stand: { label: "Stand", color: "#2469d4", formatValue: (value: unknown) => `${value} hours` },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function DailyActivityChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.ActivityRings
+    <ActivityRings
       loading={state === "loading"}
       rings={data}
       config={config}
@@ -28,9 +28,9 @@ export function DailyActivityChart({ state = "ready" }: { state?: "ready" | "loa
       }}
       aria-label="Daily activity"
     >
-      <Chart.ActivityRings.Series />
-      <Chart.ActivityRings.Tooltip />
-      <Chart.ActivityRings.Legend />
-    </Chart.ActivityRings>
+      <ActivityRings.Series />
+      <ActivityRings.Tooltip />
+      <ActivityRings.Legend />
+    </ActivityRings>
   );
 }

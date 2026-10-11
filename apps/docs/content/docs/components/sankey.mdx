@@ -12,14 +12,16 @@ Trace quantities from sources through intermediate stages to destinations.
 Open **Code** for the complete three-stage diagram and its flow data. Click a ribbon to inspect its route; the text alternative retains every quantity.
 
 ```tsx title="Composition sketch"
-<Chart.SankeyChart config={nodeConfig} data={data} height={250}
+import { SankeyChart } from "@kind-ui/charts";
+
+<SankeyChart config={nodeConfig} data={data} height={250}
   aria-label="Energy allocation" animate={{ revealDurationMs: 900 }}>
-  <Chart.SankeyChart.Nodes />
-  <Chart.SankeyChart.Links />
-  <Chart.SankeyChart.Tooltip formatter={(value) => `${value} MWh`} />
-  <Chart.SankeyChart.Legend />
-  <Chart.SankeyChart.Table caption="Energy flows" />
-</Chart.SankeyChart>
+  <SankeyChart.Nodes />
+  <SankeyChart.Links />
+  <SankeyChart.Tooltip formatter={(value) => `${value} MWh`} />
+  <SankeyChart.Legend />
+  <SankeyChart.Table caption="Energy flows" />
+</SankeyChart>
 ```
 
 With `config`, Sankey owns a node-focus Root and responsive plot. Map every node ID to a label and color. Include `Nodes` and `Links` explicitly; omitted renderer parts stay absent, including through fragments and wrapper components. `Legend` and `Table` inherit config/data and mount outside the plot in the browser. Use `rootProps` for shared interaction and frame attributes. The legacy `nodeConfig` composition remains available for advanced layouts and server-rendered HTML.
@@ -49,7 +51,9 @@ Set `animate={{ revealDurationMs: 900 }}` for a ribbon entrance. Reduced motion 
 Use `SankeyChart.Nodes render={(node) => ...}` to place `SankeyChart.NodeLabel` beside `SankeyChart.Node`. The callback supplies computed geometry and payload. Pass the same `data` and `nodeConfig` as the diagram.
 
 ```tsx
-<Chart.SankeyNodeLabel node={node} data={data} nodeConfig={nodeConfig}
+import { SankeyNodeLabel } from "@kind-ui/charts";
+
+<SankeyNodeLabel node={node} data={data} nodeConfig={nodeConfig}
   position="outside" showValues />
 ```
 
