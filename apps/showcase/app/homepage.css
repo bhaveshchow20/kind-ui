@@ -1311,8 +1311,3 @@ button:disabled {
     justify-content: center;
   }
 }
-
-.dark .chart-card {
-  --border: #303030;
-  --muted: #222;
-}
