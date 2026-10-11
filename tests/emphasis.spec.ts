@@ -94,6 +94,22 @@ test("native keyboard context survives hover/leave, Escape and blur clear transi
   await expect(plot.locator(dimmed)).toHaveCount(0);
 });
 
+test("legend pointer exit does not revive a cached native keyboard category", async ({ page }) => {
+  const plot = page.locator("#bar-focus");
+  await plot.locator(".recharts-surface").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(plot.locator(dimmed)).toHaveCount(2);
+  const legend = plot.locator('[data-kind-ui="chart-legend"] button');
+  await legend.focus();
+  await legend.click();
+  await expect(legend).toHaveAttribute("aria-pressed", "true");
+  await legend.focus();
+  await page.keyboard.press("Enter");
+  await expect(legend).toHaveAttribute("aria-pressed", "false");
+  await page.mouse.move(0, 0);
+  await expect(plot.locator(dimmed)).toHaveCount(0);
+});
+
 test("stable IDs, removal, opt-out, custom portal and no-dim comparison compose", async ({
   page,
 }) => {

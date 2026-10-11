@@ -441,13 +441,25 @@ function CategoryBar({
   );
   // Native axis inspection owns the category, including whitespace above and between bars.
   // A painted mark's leave must not clear a category while the cursor remains in its band.
+  const mark = useRef<SVGGElement>(null);
+  const nativeInspection =
+    typeof document !== "undefined" &&
+    document.activeElement?.getAttribute("role") === "application" &&
+    document.activeElement === mark.current?.closest("svg.recharts-surface");
   useLayoutEffect(() => {
-    if (active && keyboard) emphasis.enter("keyboard");
+    if (active && keyboard && nativeInspection) emphasis.enter("keyboard");
+    // Cached native tooltip categories must not reclaim focus from HTML legend controls.
+    // Retain keyboard inspection while the plot is focused, even during pointer overlap.
+    else if (!nativeInspection) emphasis.leave("keyboard");
     if (active && pointer && !keyboard && hover) emphasis.enter("pointer");
     else if (!hover || (pointer && !active)) emphasis.leave("pointer");
-  }, [active, keyboard, pointer, hover, emphasis.enter, emphasis.leave]);
+  }, [active, keyboard, nativeInspection, pointer, hover, emphasis.enter, emphasis.leave]);
   return (
-    <g data-kind-ui="emphasis-mark" data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
+    <g
+      ref={mark}
+      data-kind-ui="emphasis-mark"
+      data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}
+    >
       <InteractionPaint
         data-kind-ui="emphasis-paint"
         className={emphasisPaintClassName}

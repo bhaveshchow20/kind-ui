@@ -802,6 +802,24 @@ function App() {
           </Chart.BarChart>
         </ResponsiveContainer>
       </section>
+      <section id="bar-focus">
+        <Chart.BarChart
+          config={{ first: config.first }}
+          interaction={{ kind: "series", mode: "focus" }}
+          emphasis="category"
+          aria-label="Single series focus"
+          width={440}
+          height={250}
+          data={data}
+          accessibilityLayer
+        >
+          <XAxis dataKey="category" />
+          <YAxis />
+          <Chart.BarChart.Series dataKey="first" />
+          <Chart.BarChart.Tooltip />
+          <Chart.BarChart.Legend emphasis="none" />
+        </Chart.BarChart>
+      </section>
       <section id="oracle">
         <h2>Unchanged native filtering oracle</h2>
         <Chart.BarChart

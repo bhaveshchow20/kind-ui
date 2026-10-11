@@ -23,7 +23,7 @@ test("explicit line is complete, responsive and owns explicit uncontrolled visib
   ).toHaveCount(0);
   await expect(basic.locator(".recharts-cartesian-grid-vertical line")).toHaveCount(0);
   await expect(basic.locator("clipPath[id$='-reveal'] rect")).toHaveCount(0);
-  await expect(basic.locator(".recharts-line-curve").first()).toHaveAttribute("stroke-width", "2");
+  await expect(basic.locator(".recharts-line-curve").first()).toHaveAttribute("stroke-width", "1");
   await expect(basic.locator(".recharts-line-dot")).toHaveCount(5);
   await expect(svg).toHaveAttribute("aria-describedby", /.+/);
   await basic.screenshot({ path: "artifacts/chart-frame-tests/basic-line.png" });
@@ -91,7 +91,7 @@ test("explicit line is complete, responsive and owns explicit uncontrolled visib
   expect(errors).toEqual([]);
 });
 
-test("controlled visibility, config reconciliation, accessors and explicit empty parts are deliberate", async ({
+test("controlled visibility, initial default selection, accessors and explicit empty parts are deliberate", async ({
   page,
 }) => {
   await page.goto("/");
@@ -99,12 +99,20 @@ test("controlled visibility, config reconciliation, accessors and explicit empty
   await page.getByRole("button", { name: "Update config", exact: true }).click();
   await expect(basic.getByRole("button", { name: "Added", exact: true })).toHaveAttribute(
     "aria-pressed",
-    "true",
+    "false",
   );
   await basic.getByRole("button", { name: "Total", exact: true }).click();
   await page.getByRole("button", { name: "Update config", exact: true }).click();
   await page.getByRole("button", { name: "Update config", exact: true }).click();
   await expect(basic.getByRole("button", { name: "Added", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(basic.getByRole("button", { name: "Total", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(basic.getByRole("button", { name: "Other", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -334,3 +342,18 @@ test("point styles preserve keyboard/pointer inspection, native overrides and in
   const ids = await page.locator("svg [id]").evaluateAll((nodes) => nodes.map((node) => node.id));
   expect(new Set(ids).size).toBe(ids.length);
 });
+
+for (const initiallyControlled of [true, false]) {
+  const direction = initiallyControlled ? "read-only to uncontrolled" : "uncontrolled to read-only";
+  test(`callback-less chart rejects ownership switch ${direction}`, async ({ page }) => {
+    await page.goto("/");
+    const scope = page.locator(
+      `[data-case="ownership-${initiallyControlled ? "controlled" : "uncontrolled"}"]`,
+    );
+    await expect(scope.getByRole("button", { name: "Total", exact: true })).toBeVisible();
+    await scope.getByRole("button", { name: `Switch ${direction}`, exact: true }).click();
+    await expect(scope.getByRole("alert")).toContainText(
+      "cannot switch controlled visibility mode",
+    );
+  });
+}

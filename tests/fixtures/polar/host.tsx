@@ -313,7 +313,7 @@ export function PolarHost() {
         config={config}
         {...(params.has("controlled") || !params.has("selection")
           ? { visibleSeries: visible, onVisibleSeriesChange: setVisible }
-          : {})}
+          : { visibleSeries: undefined, onVisibleSeriesChange: undefined })}
         emphasis={emphasisEnabled ? "auto" : "none"}
         frameProps={{ "data-host": "radar" }}
         ref={ref}

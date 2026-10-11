@@ -1,7 +1,14 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
 import { LineChart } from "@kind-ui/charts";
-import { Component, type ErrorInfo, type ReactNode, useCallback, useState } from "react";
+import {
+  Component,
+  type CSSProperties,
+  type ErrorInfo,
+  type ReactNode,
+  useCallback,
+  useState,
+} from "react";
 
 const allRows = [
   { month: "Jan", total: 0, other: 6 },
@@ -102,6 +109,7 @@ export function ChartFrameHost() {
           }}
           frameProps={{}}
         >
+          <LineChart.Background pattern="pinpoints" color="var(--background-ink, currentColor)" />
           <LineChart.Grid />
           <LineChart.XAxis dataKey={"month"} />
           <LineChart.YAxis />
@@ -235,7 +243,13 @@ export function ChartFrameHost() {
       </section>
       <output data-marker-clicks>{markerClicks}</output>
       <section data-case="markers">
-        <LineChart config={config} data={allRows} aria-label="Styled markers" width={500}>
+        <LineChart
+          frameProps={{ style: { "--card": "#172033" } as CSSProperties }}
+          config={config}
+          data={allRows}
+          aria-label="Styled markers"
+          width={500}
+        >
           <LineChart.Grid />
           <LineChart.XAxis dataKey={"month"} />
           <LineChart.YAxis />
@@ -334,6 +348,34 @@ export function ChartFrameHost() {
           <Chart.Tooltip />
         </Chart.AreaChart>
       </section>
+      <ReadOnlyOwnershipSwitch initiallyControlled />
+      <ReadOnlyOwnershipSwitch initiallyControlled={false} />
     </main>
+  );
+}
+
+function ReadOnlyOwnershipSwitch({ initiallyControlled }: { initiallyControlled: boolean }) {
+  const [controlled, setControlled] = useState(initiallyControlled);
+  const direction = initiallyControlled ? "read-only to uncontrolled" : "uncontrolled to read-only";
+  return (
+    <section data-case={`ownership-${initiallyControlled ? "controlled" : "uncontrolled"}`}>
+      <button type="button" onClick={() => setControlled(!controlled)}>
+        Switch {direction}
+      </button>
+      <Boundary>
+        <LineChart
+          data={allRows}
+          config={config}
+          aria-label={`Ownership ${direction}`}
+          width={500}
+          animate={false}
+          {...(controlled ? { visibleSeries: ["total"] } : { defaultVisibleSeries: ["total"] })}
+        >
+          <LineChart.XAxis dataKey="month" />
+          <LineChart.Series dataKey="total" />
+          <LineChart.Legend />
+        </LineChart>
+      </Boundary>
+    </section>
   );
 }
