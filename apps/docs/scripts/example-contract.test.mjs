@@ -1,6 +1,19 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { test } from "node:test";
 import { allExamples, examples, families, variantDefinitions } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
@@ -13,6 +26,46 @@ import "./material-contract.test.mjs";
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const completeBundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
+test("regeneration removes withdrawn registry routes from an existing checkout", () => {
+  const root = mkdtempSync(path.join(tmpdir(), "kind-withdrawn-registry-"));
+  const fixture = path.join(root, "apps/docs");
+  try {
+    mkdirSync(fixture, { recursive: true });
+    for (const file of [
+      "examples",
+      "lib",
+      "content",
+      "vendor",
+      "tsconfig.json",
+      "package-lock.json",
+    ])
+      cpSync(file, path.join(fixture, file), { recursive: true });
+    cpSync("../../LICENSE", path.join(root, "LICENSE"));
+    symlinkSync(path.resolve("node_modules"), path.join(fixture, "node_modules"), "dir");
+    mkdirSync(path.join(fixture, "public/r/nested"), { recursive: true });
+    writeFileSync(path.join(fixture, "public/r/registry.json"), '{"items":[]}');
+    writeFileSync(path.join(fixture, "public/r/nested/line-chart.json"), "{}");
+    writeFileSync(path.join(fixture, "public/keep.txt"), "unrelated public asset");
+    execFileSync(process.execPath, [path.resolve("scripts/generate.mjs")], {
+      cwd: fixture,
+      stdio: "pipe",
+      timeout: 60000,
+    });
+    assert.equal(existsSync(path.join(fixture, "public/r")), false);
+    assert.equal(
+      readFileSync(path.join(fixture, "public/keep.txt"), "utf8"),
+      "unrelated public asset",
+    );
+    assert.ok(
+      existsSync(
+        path.join(fixture, "public/examples/line-start/src/examples/line-start/example.tsx"),
+      ),
+    );
+    assert.ok(existsSync(path.join(fixture, "public/markdown/index.md")));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 test("presentation options remain complete in copied and agent-retrieved consumers", () => {
   const bundle = completeBundles["combo-motion"];
   const file = "src/examples/combo-motion/options.tsx";

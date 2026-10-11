@@ -1,13 +1,13 @@
 ---
 name: kind-ui-charts
-description: Build, adapt, or review React and Next.js charts consuming @kind-ui/charts from npm. Use for chart selection, configured or composed charts, styling, controlled legends, loading, accessibility, and consumer verification with the public 0.3 API.
+description: Build, adapt, or review React and Next.js charts consuming @kind-ui/charts from npm. Use for chart selection, configured or composed charts, styling, controlled legends, loading, accessibility, and consumer verification with the public 0.4 API.
 ---
 
 # Kind UI charts
 
 Deliver working consumer code using public `@kind-ui/charts` exports. Keep data,
 units, domains, aggregation, request state, and accessible alternatives host-owned.
-This skill targets released 0.3; inspect the consumer's installed version before
+This skill targets released 0.4; inspect the consumer's installed version before
 adapting a recipe. Do not substitute repository source imports for npm imports.
 
 ## Decide, then read only what applies

@@ -75,6 +75,7 @@ function literal(node) {
   throw new Error("Settings must contain only JSON literals");
 }
 // Rebuild the published asset sets so removed pages and examples cannot survive.
+rmSync("public/r", { recursive: true, force: true });
 rmSync("public/examples", { recursive: true, force: true });
 rmSync("public/markdown", { recursive: true, force: true });
 rmSync("generated", { recursive: true, force: true });
