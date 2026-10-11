@@ -188,7 +188,7 @@ export function ThemingHost() {
         rows={["A"]}
         columns={["B"]}
         data={[{ row: "A", column: "B", value: 1 }]}
-        scale={createHeatmapScale({ domain: [0, 1], colors: ["#fff", "#000"] })}
+        scale={createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
         data-theme-case="heatmap-overrides"
       >
         <HeatmapGrid
