@@ -111,7 +111,12 @@ test("homepage indexing checks build and serve both preview and public mounts", 
   assert.equal(job.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH, "${{ matrix.base_path }}");
   const appSteps = job.steps.filter((step) => step["working-directory"] === "apps/showcase");
   assert.ok(appSteps.some((step) => step.run === "npm run build"));
-  assert.ok(appSteps.some((step) => step.run === "npm run test:browser -- tests/routes.spec.ts"));
+  assert.ok(
+    appSteps.some(
+      (step) =>
+        step.run === "npm run test:browser -- tests/routes.spec.ts tests/accessibility.spec.ts",
+    ),
+  );
 });
 
 test("both test pipelines retain every aggregate browser suite's available failure output", async () => {
@@ -262,7 +267,13 @@ test("Docs separates copied consumers without dropping any browser or build gate
       s.run !== "npm ci" &&
       s.run !== "npm audit --audit-level=high --include=dev",
   );
-  assert.equal(browserChecks.length, 15);
+  assert.equal(browserChecks.length, 16);
+  assert.ok(
+    browserChecks.some(
+      (step) =>
+        step.run === "npm run check:accessibility" && step.if === "matrix.group == 'general'",
+    ),
+  );
   assert.ok(
     browserChecks.some(
       (step) =>
