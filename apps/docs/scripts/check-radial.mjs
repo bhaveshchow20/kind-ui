@@ -270,7 +270,9 @@ try {
   await page.mouse.move(290, 20);
   await gauge.locator('[data-kind-ui="chart-tooltip"]').waitFor({ state: "hidden" });
   evidence.interactions.push("pointer tooltip formatter and dismissal");
-  await page.goto("http://127.0.0.1:6373/docs/components/line/");
+  await page.goto(
+    `${process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373"}/docs/components/line/`,
+  );
   await page.locator(".recharts-line-curve").first().waitFor();
   await page.getByRole("heading", { name: "Line Chart", exact: true }).waitFor();
   evidence.interactions.push("Line route compatibility");
