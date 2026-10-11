@@ -4,6 +4,18 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { validRange } from "semver";
+import {
+  artifactReceiptSchema,
+  integrationEvidenceSchema,
+  parseJson,
+  releaseManifestSchema,
+} from "./tooling-schemas.mjs";
+
+/**
+ * @param {string} directory
+ * @param {{commit: string, repository: string, runId: string, runAttempt: string, version: string, tag: string, event?: string, sha256?: string}} expected
+ * @param {{requirePublic?: boolean}} [options]
+ */
 
 export async function verifyReleaseArtifact(directory, expected, { requirePublic = false } = {}) {
   assert.match(expected.commit, /^[a-f0-9]{40}$/, "Expected an immutable checkout commit");
@@ -21,7 +33,9 @@ export async function verifyReleaseArtifact(directory, expected, { requirePublic
   );
   assert.match(expected.tag, /^[a-z][a-z0-9-]*$/, "Expected a plain npm dist-tag");
   assert.equal(validRange(expected.tag), null, "npm dist-tag must not be a SemVer range");
-  const receipt = JSON.parse(await readFile(join(directory, "package/validated-artifact.json")));
+  const receipt = artifactReceiptSchema.parse(
+    parseJson(await readFile(join(directory, "package/validated-artifact.json"), "utf8")),
+  );
   assert.equal(
     receipt.filename,
     `kind-ui-charts-${expected.version}.tgz`,
@@ -92,19 +106,21 @@ export async function verifyReleaseArtifact(directory, expected, { requirePublic
     receipt.integrity,
     "npm integrity differs",
   );
-  const manifest = JSON.parse(
-    execFileSync("tar", ["-xOzf", tarball, "package/package.json"], {
-      encoding: "utf8",
-      maxBuffer: 1024 * 1024,
-    }),
+  const manifest = releaseManifestSchema.parse(
+    parseJson(
+      execFileSync("tar", ["-xOzf", tarball, "package/package.json"], {
+        encoding: "utf8",
+        maxBuffer: 1024 * 1024,
+      }),
+    ),
   );
   assert.equal(manifest.name, receipt.package.name);
   assert.equal(manifest.version, receipt.package.version);
   assert.equal(manifest.repository?.url, `git+https://github.com/${expected.repository}.git`);
   assert.equal(manifest.repository.directory, "packages/charts");
   assert.equal(manifest.license, "MIT");
-  const integration = JSON.parse(
-    await readFile(join(directory, "line-integrations/evidence.json")),
+  const integration = integrationEvidenceSchema.parse(
+    parseJson(await readFile(join(directory, "line-integrations/evidence.json"), "utf8")),
   );
   assert.equal(
     integration.sha256,

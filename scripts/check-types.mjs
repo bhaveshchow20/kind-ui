@@ -2,6 +2,12 @@ import { spawn } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+/**
+ * @param {string} consumer
+ * @param {string} compiler
+ * @param {string[]} files
+ * @param {{stdio?: import("node:child_process").StdioOptions}} [options]
+ */
 export async function checkTypes(consumer, compiler, files, { stdio = "inherit" } = {}) {
   // Independent resolution modes share only immutable installed dependencies.
   // Separate configs prevent one process from reading the other mode's options.
@@ -18,6 +24,10 @@ export async function checkTypes(consumer, compiler, files, { stdio = "inherit" 
             module: mode === "Bundler" ? "ESNext" : mode,
             moduleResolution: mode,
             strict: true,
+            noUncheckedIndexedAccess: true,
+            exactOptionalPropertyTypes: true,
+            isolatedModules: true,
+            noImplicitOverride: true,
             skipLibCheck: false,
             noEmit: true,
             typeRoots: [join(consumer, "node_modules", "@types")],
@@ -25,19 +35,21 @@ export async function checkTypes(consumer, compiler, files, { stdio = "inherit" 
           files,
         }),
       );
-      await new Promise((resolve, reject) => {
-        const child = spawn(process.execPath, [compiler, "-p", config], {
-          cwd: consumer,
-          stdio,
-          env: { ...process.env, NODE_PATH: "" },
-        });
-        child.on("error", reject);
-        child.on("exit", (code, signal) =>
-          code === 0
-            ? resolve()
-            : reject(new Error(`${mode} consumer types failed (${signal ?? code})`)),
-        );
-      });
+      await new Promise(
+        /** @param {(value?: void) => void} resolve */ (resolve, reject) => {
+          const child = spawn(process.execPath, [compiler, "-p", config], {
+            cwd: consumer,
+            stdio,
+            env: { ...process.env, NODE_PATH: "" },
+          });
+          child.on("error", reject);
+          child.on("exit", (code, signal) =>
+            code === 0
+              ? resolve()
+              : reject(new Error(`${mode} consumer types failed (${signal ?? code})`)),
+          );
+        },
+      );
     }),
   );
   for (const result of results) if (result.status === "rejected") throw result.reason;

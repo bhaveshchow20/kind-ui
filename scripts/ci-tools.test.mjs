@@ -82,8 +82,22 @@ test("parallel modes retain strict checking and independent configs on failure",
       const config = JSON.parse(await readFile(join(consumer, `tsconfig.${mode}.json`), "utf8"));
       assert.equal(config.compilerOptions.moduleResolution, mode);
       assert.equal(config.compilerOptions.strict, true);
+      assert.equal(config.compilerOptions.noUncheckedIndexedAccess, true);
+      assert.equal(config.compilerOptions.exactOptionalPropertyTypes, true);
+      assert.equal(config.compilerOptions.isolatedModules, true);
+      assert.equal(config.compilerOptions.noImplicitOverride, true);
       assert.equal(config.compilerOptions.skipLibCheck, false);
       assert.deepEqual(config.files, ["invalid.ts"]);
+    }
+    for (const source of [
+      "export const value: number = [1][0];",
+      "type Optional = { name?: string }; export const value: Optional = { name: undefined };",
+    ]) {
+      await writeFile(join(consumer, "invalid.ts"), source);
+      await assert.rejects(
+        checkTypes(consumer, compiler, ["invalid.ts"], { stdio: "ignore" }),
+        /consumer types failed/,
+      );
     }
   } finally {
     await rm(consumer, { recursive: true, force: true });

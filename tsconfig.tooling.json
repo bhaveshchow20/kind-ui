@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true,
+    "skipLibCheck": false,
+    "types": ["node"]
+  },
+  "include": [
+    "scripts/tooling-schemas.mjs",
+    "scripts/check-package.mjs",
+    "scripts/release-intent.mjs",
+    "scripts/release-artifact.mjs",
+    "scripts/release-plan.mjs",
+    "scripts/prepare-package.mjs",
+    "scripts/prepare-release-version.mjs",
+    "scripts/package-contract.mjs",
+    "scripts/documentation-contract.mjs",
+    "scripts/line-consumer-contract.mjs",
+    "scripts/browser-directives.mjs",
+    "scripts/check-types.mjs",
+    "scripts/ci-paths.mjs",
+    "scripts/run-checks.mjs"
+  ]
+}
