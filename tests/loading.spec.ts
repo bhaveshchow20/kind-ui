@@ -250,15 +250,33 @@ test("Sankey and short Heatmap retain native bounds through loading and replay",
   expect(flowBounds?.height).toBe(260);
   expect(hostBounds?.height).toBe(flowBounds?.height);
   expect(placeholderBounds?.height).toBeLessThanOrEqual(gridBounds?.height ?? 0);
+  // Legends above these cards reappear on release, moving their page positions.
+  // Native geometry must retain its dimensions and position inside its own chart frame.
+  const relativeBounds = (locator: Locator) =>
+    locator.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const frame = element.closest('[data-kind-ui="chart"]')?.getBoundingClientRect();
+      if (!frame) throw new Error("Missing chart frame");
+      return {
+        width: bounds.width,
+        height: bounds.height,
+        x: bounds.x - frame.x,
+        y: bounds.y - frame.y,
+      };
+    });
+  const originalFlow = await relativeBounds(flow);
+  const originalHost = await relativeBounds(sankey);
+  const originalGrid = await relativeBounds(heatmap);
+  const originalSkeleton = await relativeBounds(heatSkeleton);
   await page.getByRole("button", { name: "Load data" }).click();
-  expect(await flow.boundingBox()).toEqual(flowBounds);
-  expect(await sankey.boundingBox()).toEqual(hostBounds);
-  expect(await heatmap.boundingBox()).toEqual(gridBounds);
+  expect(await relativeBounds(flow)).toEqual(originalFlow);
+  expect(await relativeBounds(sankey)).toEqual(originalHost);
+  expect(await relativeBounds(heatmap)).toEqual(originalGrid);
   await page.getByRole("button", { name: "Replay loading" }).click();
-  expect(await flow.boundingBox()).toEqual(flowBounds);
-  expect(await sankey.boundingBox()).toEqual(hostBounds);
-  expect(await heatmap.boundingBox()).toEqual(gridBounds);
-  expect(await heatSkeleton.boundingBox()).toEqual(placeholderBounds);
+  expect(await relativeBounds(flow)).toEqual(originalFlow);
+  expect(await relativeBounds(sankey)).toEqual(originalHost);
+  expect(await relativeBounds(heatmap)).toEqual(originalGrid);
+  expect(await relativeBounds(heatSkeleton)).toEqual(originalSkeleton);
 });
 
 test("three normal-speed pulses give pulse-based families visibly distinct geometry at invisible boundaries", async ({
