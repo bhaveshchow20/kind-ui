@@ -13,6 +13,14 @@ for (const scheme of ["light", "dark"] as const) {
     if (scheme === "dark") await expect(page.locator("html")).toHaveClass(/dark/);
     else await expect(page.locator("html")).not.toHaveClass(/dark/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // Viewport-triggered card entrances must settle before a full-page contrast audit.
+    const cards = await page.locator(".chart-card").all();
+    for (const card of cards) {
+      await card.scrollIntoViewIfNeeded();
+      await expect(card).toHaveCSS("opacity", "1");
+    }
+    await page.getByRole("heading", { level: 1 }).scrollIntoViewIfNeeded();
+    for (const card of cards) await expect(card).toHaveCSS("opacity", "1");
     const audit = () =>
       new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
     expect.soft((await audit()).violations).toEqual([]);
