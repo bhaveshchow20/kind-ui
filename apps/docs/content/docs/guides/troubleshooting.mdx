@@ -14,7 +14,7 @@ Check public imports, CSS, and the chart's container first.
 | --- | --- |
 | Package or import cannot resolve | Follow [Installation](/docs/installation/); import from `@kind-ui/charts`, not its source files |
 | Motion import fails | Install the required Motion peer; there is no `@kind-ui/charts/motion` entry |
-| Chart appears unstyled | Import `@kind-ui/charts/styles.css` once at the application entry |
+| Chart appears unstyled | Follow the [Tailwind setup](/docs/installation/#configure-tailwind-css-v4) |
 | Chart is blank or has no height | Give [ResponsiveContainer](/docs/chart-components/responsive-container/) a measurable parent or numeric height |
 | Chart overflows a flex/grid layout | Give its parent `min-width: 0`; check axis-label space and long values |
 | Colors overlap between independent hydrated React roots | Assign a distinct React `identifierPrefix` to each root |
