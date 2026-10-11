@@ -6,7 +6,7 @@ export const newRecipes = [
     family: "Line",
     tag: "Trials & subscriptions",
     context:
-      "Six months of trial starts and paid conversions. A complete chart composed from the library’s config API.",
+      "Six months of trial starts and paid conversions. A chart composed from explicit LineChart axes, Series, Tooltip and Legend parts.",
   },
   {
     id: "histogram-orders",

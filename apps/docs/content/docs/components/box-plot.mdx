@@ -11,7 +11,7 @@ Supply your own quartiles, whiskers and outliers to compare distributions.
 
 `BoxPlotChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
-Open **Code** for the complete component and its data. `BoxPlotSeries` draws each supplied summary; Chart config provides the series label and color.
+Open **Code** for the complete component and its data. `BoxPlotChart.Series` draws each supplied summary; Chart config provides the series label and color.
 
 Use this composition when adapting the example:
 
@@ -111,9 +111,11 @@ Use these props when composing a Box Plot.
 
 Custom range shapes retain inspection but cannot use Bar category emphasis. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
 
-### BoxPlotSeries
+<span id="boxplotseries" />
 
-<div className="line-props-scroll" role="region" aria-label="BoxPlotSeries props" tabIndex={0}>
+### BoxPlotChart.Series
+
+<div className="line-props-scroll" role="region" aria-label="BoxPlotChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

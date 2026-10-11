@@ -11,7 +11,7 @@ Compare Studio and Field scores on a common 0–100 scale.
 
 `RadarChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
-Compare measures on a shared radial scale with one `RadarSeries` per profile.
+Compare measures on a shared radial scale with one `RadarChart.Series` per profile.
 
 ```tsx title="Composition sketch"
 import { RadarChart } from "@kind-ui/charts";
@@ -85,11 +85,13 @@ Pass `config` and an accessible name, then add the axes and series as children.
 
 `RadarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` (default `"easeOut"`) and `hoverTransition` (shared spring). See [Recharts RadarChart](https://recharts.github.io/en-US/api/RadarChart/).
 
-### RadarSeries
+<span id="radarseries" />
+
+### RadarChart.Series
 
 String `dataKey` values identify config entries. Use `seriesKey` for numeric keys or accessors with visibility or selection.
 
-<div className="line-props-scroll" role="region" aria-label="RadarSeries props" tabIndex={0}>
+<div className="line-props-scroll" role="region" aria-label="RadarChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

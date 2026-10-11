@@ -11,7 +11,7 @@ Compare shipped units with production capacity and a target in one plot.
 
 `ComboChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
-Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
+Combine `ComboChart.Bar`, `ComboChart.Area` and `ComboChart.Line` in one plot.
 
 ```tsx title="Composition sketch"
 import { ComboChart } from "@kind-ui/charts";
@@ -127,9 +127,11 @@ Pass to `ComboChart.animate` to set timing by family.
 
 </div>
 
-### BarSeries
+<span id="barseries" />
 
-<div className="line-props-scroll" role="region" aria-label="BarSeries props" tabIndex={0}>
+### ComboChart.Bar
+
+<div className="line-props-scroll" role="region" aria-label="ComboChart.Bar props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -146,9 +148,11 @@ Pass to `ComboChart.animate` to set timing by family.
 
 See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
 
-### LineSeries
+<span id="lineseries" />
 
-<div className="line-props-scroll" role="region" aria-label="LineSeries props" tabIndex={0}>
+### ComboChart.Line
+
+<div className="line-props-scroll" role="region" aria-label="ComboChart.Line props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -164,9 +168,11 @@ See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
 
 Line material choices apply to the line independently of Area and Bar. See [Recharts Line](https://recharts.github.io/en-US/api/Line/) and [Line components](/docs/components/line/).
 
-### AreaSeries
+<span id="areaseries" />
 
-<div className="line-props-scroll" role="region" aria-label="AreaSeries props" tabIndex={0}>
+### ComboChart.Area
+
+<div className="line-props-scroll" role="region" aria-label="ComboChart.Area props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

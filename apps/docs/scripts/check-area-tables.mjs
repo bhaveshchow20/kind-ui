@@ -15,7 +15,7 @@ try {
   const tables = desktop.locator(".line-props-scroll");
   assert.deepEqual(
     await tables.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label"))),
-    ["AreaChart props", "AreaSeries props"],
+    ["AreaChart props", "AreaChart.Series props"],
   );
   for (let i = 0; i < (await tables.count()); i++) {
     await tables.nth(i).scrollIntoViewIfNeeded();

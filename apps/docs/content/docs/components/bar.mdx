@@ -11,7 +11,7 @@ Compare pickup orders across locations with rounded columns.
 
 `BarChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
-Add one `BarSeries` per measure. Use `stackId` for stacks and `layout="vertical"` for horizontal bars.
+Add one `BarChart.Series` per measure. Use `stackId` for stacks and `layout="vertical"` for horizontal bars.
 
 ```tsx title="Composition sketch"
 import { BarChart } from "@kind-ui/charts";
@@ -50,7 +50,7 @@ Choose Default, Clay or Glow. Use `radius` to round corners.
 
 Set `emphasis="category"` to dim other categories during hover or keyboard inspection.
 
-See `BarSeries` below for supported values and shapes.
+See `BarChart.Series` below for supported values and shapes.
 
 ## Series patterns
 
@@ -67,7 +67,7 @@ const config = {
 <BarChart.Series dataKey="orders" />
 ```
 
-Override the config with `BarSeries.pattern`; use `pattern={false}` to turn it off.
+Override the config with `BarChart.Series.pattern`; use `pattern={false}` to turn it off.
 
 <Callout title="Note">Explicit `fill`, Cells and custom shapes override the pattern. Keep labels and an accessible data table alongside patterns.</Callout>
 
@@ -132,11 +132,13 @@ Pass `config` and an accessible name, then add the axes and series as children.
 
 `BarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
 
-### BarSeries
+<span id="barseries" />
+
+### BarChart.Series
 
 String value keys identify config entries; controlled numeric keys or accessors require `seriesKey`.
 
-<div className="line-props-scroll" role="region" aria-label="BarSeries props" tabIndex={0}>
+<div className="line-props-scroll" role="region" aria-label="BarChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

@@ -11,7 +11,7 @@ Compare task latency and acceptance across weekday and weekend cohorts.
 
 `ScatterChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
-Supply records to each `ScatterSeries` and numeric keys to the X and Y axes.
+Supply records to each `ScatterChart.Series` and numeric keys to the X and Y axes.
 
 ```tsx title="Composition sketch"
 import { ScatterChart } from "@kind-ui/charts";
@@ -80,9 +80,11 @@ See [Recharts ScatterChart](https://recharts.github.io/en-US/api/ScatterChart/).
 
 <Callout title="Server rendering">At the pinned Recharts version, fixed-size server rendering omits Scatter marks. Include a server-rendered data alternative or summary.</Callout>
 
-### ScatterSeries
+<span id="scatterseries" />
 
-<div className="line-props-scroll" role="region" aria-label="ScatterSeries props" tabIndex={0}>
+### ScatterChart.Series
+
+<div className="line-props-scroll" role="region" aria-label="ScatterChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

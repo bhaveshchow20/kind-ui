@@ -11,7 +11,7 @@ See how checkout response times are distributed across numeric intervals.
 
 `HistogramChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
-Use `binHistogram` to prepare numeric bins for `HistogramSeries`.
+Use `binHistogram` to prepare numeric bins for `HistogramChart.Series`.
 
 ```tsx title="Composition sketch"
 import { HistogramChart } from "@kind-ui/charts";
@@ -93,9 +93,11 @@ Add axes explicitly. Their numeric scales and bin domain are chart-owned; tick f
 <ApiTable name="HistogramXAxisReference" />
 <ApiTable name="HistogramYAxisReference" />
 
-### HistogramSeries
+<span id="histogramseries" />
 
-<div className="line-props-scroll" role="region" aria-label="HistogramSeries props" tabIndex={0}>
+### HistogramChart.Series
+
+<div className="line-props-scroll" role="region" aria-label="HistogramChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

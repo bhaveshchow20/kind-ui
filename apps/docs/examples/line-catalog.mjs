@@ -2,7 +2,8 @@ export const lineExamples = [
   {
     id: "line-start",
     title: "Monthly visitors",
-    notes: "A configured LineChart with four months of data.",
+    notes:
+      "A LineChart composed from explicit axes, Series, Tooltip and Legend parts with four months of data.",
     acceptance:
       "Complete source renders all four months with a named chart and complete data alternative.",
   },

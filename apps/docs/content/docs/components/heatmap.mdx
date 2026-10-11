@@ -99,11 +99,13 @@ Produces the `HeatmapScale` passed to `HeatmapChart`.
 
 `color(value)` interpolates opaque hex colors and clamps to the explicit domain. Nonfinite values throw; data does not infer the scale or categorical palette.
 
-### HeatmapGrid
+<span id="heatmapgrid" />
+
+### HeatmapChart.Grid
 
 Captioned native table with row/column headers and roving grid focus. Empty domains show an empty state; wide matrices scroll horizontally.
 
-<div className="line-props-scroll" role="region" aria-label="HeatmapGrid props" tabIndex={0}>
+<div className="line-props-scroll" role="region" aria-label="HeatmapChart.Grid props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -132,9 +134,11 @@ Formats values and chooses black/white text from hex-fill luminance. Also usable
 
 </div>
 
-### HeatmapLegend
+<span id="heatmaplegend" />
 
-<div className="line-props-scroll" role="region" aria-label="HeatmapLegend props" tabIndex={0}>
+### HeatmapChart.Legend
+
+<div className="line-props-scroll" role="region" aria-label="HeatmapChart.Legend props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -144,11 +148,13 @@ Formats values and chooses black/white text from hex-fill luminance. Also usable
 
 Shows scale endpoints, zero for signed domains and the `missingLabel` swatch. It is a numeric key, without series toggles.
 
-### HeatmapTooltip
+<span id="heatmaptooltip" />
+
+### HeatmapChart.Tooltip
 
 Shows the focused, hovered or touched cell below the grid. Digit animation respects reduced motion and exposes the final value to assistive technology.
 
-<div className="line-props-scroll" role="region" aria-label="HeatmapTooltip props" tabIndex={0}>
+<div className="line-props-scroll" role="region" aria-label="HeatmapChart.Tooltip props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

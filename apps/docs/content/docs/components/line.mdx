@@ -66,7 +66,7 @@ Choose a presentation to see the effect and copy its complete example.
 
 <Callout title="Note">Motion respects reduced motion. Explicit `dot`, `activeDot` and custom marker renderers override the built-in point styles.</Callout>
 
-For custom point styling, pass `dot={<PointMarker variant="colored-border" />}` to `LineSeries`; see the [PointMarker reference](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/README.md#point-marker-styles).
+For custom point styling, pass `dot={<PointMarker variant="colored-border" />}` to `LineChart.Series`; see the [PointMarker reference](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/README.md#point-marker-styles).
 
 ## Decorative backgrounds
 
@@ -119,11 +119,13 @@ Add one `LineChart.Series` for each measure you want to plot.
 
 See [Recharts LineChart](https://recharts.github.io/en-US/api/LineChart/) for native plot props.
 
-### LineSeries
+<span id="lineseries" />
+
+### LineChart.Series
 
 Compose `LineChart.Series` as children. String `dataKey` values identify config entries; accessor and numeric keys use `seriesKey`.
 
-<div className="line-props-scroll" role="region" aria-label="LineSeries props" tabIndex={0}>
+<div className="line-props-scroll" role="region" aria-label="LineChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

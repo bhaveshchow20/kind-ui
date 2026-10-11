@@ -113,17 +113,19 @@ Set the plot size on the chart and add its parts as children.
 | `loadingLabel` | `string` | `"Loading chart"` | Accessible pending status. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Enables native keyboard inspection; set explicitly here. |
 | `aria-label` / `aria-labelledby` | `string` | — | Accessible chart name. |
-| `children` | `ReactNode` | Required | Explicit PieSeries, labels and tooltip. |
+| `children` | `ReactNode` | Required | Explicit PieChart.Series, labels and tooltip. |
 
 </div>
 
 `PieAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. See [Recharts PieChart](https://recharts.github.io/en-US/api/PieChart/).
 
-### PieSeries
+<span id="pieseries" />
+
+### PieChart.Series
 
 Value and category identity use separate fields.
 
-<div className="line-props-scroll" role="region" aria-label="PieSeries props" tabIndex={0}>
+<div className="line-props-scroll" role="region" aria-label="PieChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |

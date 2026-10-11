@@ -30,9 +30,9 @@ export const pieExamples = [
     id: "pie-interaction",
     title: "Category focus and initial inspection",
     notes:
-      "A Root-bound donut starts with Default paint and initially inspects Service. Choose Selective glow for its halo. Activate a slice or legend to focus; Escape clears focus.",
+      "A PieChart donut composed from explicit Series, Tooltip and Legend parts starts with Default paint and initially inspects Service. Choose Selective glow for its halo. Activate a slice or legend to focus; Escape clears focus.",
     acceptance:
-      "Original category IDs drive Root binding, shared focus, the initial tooltip and selective glow. Loading preserves layout.",
+      "Original category IDs drive chart-owned interaction, shared focus, the initial tooltip and selective glow. Loading preserves layout.",
   },
 ];
 export const pieDataLabels = Object.fromEntries(

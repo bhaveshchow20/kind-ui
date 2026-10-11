@@ -11,7 +11,7 @@ Show visitor volume over time, then compare stacked contributions.
 
 `AreaChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
 
-Add one `AreaSeries` per measure. Use `stackId` to stack related series.
+Add one `AreaChart.Series` per measure. Use `stackId` to stack related series.
 
 ```tsx title="Composition sketch"
 import { AreaChart } from "@kind-ui/charts";
@@ -79,11 +79,13 @@ Pass `config` and an accessible name. Add each plot part explicitly.
 
 See [Recharts AreaChart](https://recharts.github.io/en-US/api/AreaChart/).
 
-### AreaSeries
+<span id="areaseries" />
+
+### AreaChart.Series
 
 String `dataKey` values identify config entries. Use `seriesKey` for numeric keys or accessors when controlling visibility.
 
-<div className="line-props-scroll" role="region" aria-label="AreaSeries props" tabIndex={0}>
+<div className="line-props-scroll" role="region" aria-label="AreaChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
