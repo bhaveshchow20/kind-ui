@@ -3,7 +3,6 @@ import {
   CartesianGrid,
   Cell,
   ReferenceLine,
-  ResponsiveContainer,
   type TooltipRenderProps as TooltipContentProps,
   XAxis,
   YAxis,
@@ -99,52 +98,51 @@ function Distribution({
 }) {
   const [visible, setVisible] = useState(["spread"]);
   return (
-    <ResponsiveContainer width="100%" height={270}>
-      <Chart.BoxPlotChart
-        config={{ spread: { label: `Distribution · ${unit}`, color } }}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
-        data={rows}
-        animate={animate}
-        layout={horizontal ? "vertical" : "horizontal"}
-        aria-label={title}
-        aria-describedby={`${id}-note`}
-        margin={{ top: 20, right: 18, bottom: 12, left: 0 }}
+    <Chart.BoxPlotChart
+      height={270}
+      config={{ spread: { label: `Distribution · ${unit}`, color } }}
+      visibleSeries={visible}
+      onVisibleSeriesChange={setVisible}
+      data={rows}
+      animate={animate}
+      layout={horizontal ? "vertical" : "horizontal"}
+      aria-label={title}
+      aria-describedby={`${id}-note`}
+      margin={{ top: 20, right: 18, bottom: 12, left: 0 }}
+    >
+      <CartesianGrid stroke="#e1e6e3" vertical={horizontal} horizontal={!horizontal} />
+      <XAxis
+        type={horizontal ? "number" : "category"}
+        {...(!horizontal ? { dataKey: "category" } : {})}
+        tickLine={false}
+        axisLine={false}
+        tick={{ fill: "#52635c", fontSize: 11 }}
+        {...(horizontal ? { domain: ["dataMin", "dataMax"] } : {})}
+      />
+      <YAxis
+        type={horizontal ? "category" : "number"}
+        {...(horizontal ? { dataKey: "category" } : {})}
+        width={horizontal ? 56 : 38}
+        tickLine={false}
+        axisLine={false}
+        tick={{ fill: "#52635c", fontSize: 11 }}
+        {...(!horizontal ? { domain: ["dataMin", "dataMax"] } : {})}
+      />
+      <ReferenceLine {...(horizontal ? { x: 0 } : { y: 0 })} stroke="#b1bcb5" />
+      <Chart.Tooltip content={<Summary unit={unit} />} maxWidth={250} />
+      <Chart.BoxPlotSeries<Row>
+        dataKey="summary"
+        seriesKey="spread"
+        barSize={32}
+        material={material}
+        fillOpacity={0.65}
       >
-        <CartesianGrid stroke="#e1e6e3" vertical={horizontal} horizontal={!horizontal} />
-        <XAxis
-          type={horizontal ? "number" : "category"}
-          {...(!horizontal ? { dataKey: "category" } : {})}
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: "#52635c", fontSize: 11 }}
-          {...(horizontal ? { domain: ["dataMin", "dataMax"] } : {})}
-        />
-        <YAxis
-          type={horizontal ? "category" : "number"}
-          {...(horizontal ? { dataKey: "category" } : {})}
-          width={horizontal ? 56 : 38}
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: "#52635c", fontSize: 11 }}
-          {...(!horizontal ? { domain: ["dataMin", "dataMax"] } : {})}
-        />
-        <ReferenceLine {...(horizontal ? { x: 0 } : { y: 0 })} stroke="#b1bcb5" />
-        <Chart.Tooltip content={<Summary unit={unit} />} maxWidth={250} />
-        <Chart.BoxPlotSeries<Row>
-          dataKey="summary"
-          seriesKey="spread"
-          barSize={32}
-          material={material}
-          fillOpacity={0.65}
-        >
-          {rows.map((row) => (
-            <Cell key={row.category} fill={color} />
-          ))}
-        </Chart.BoxPlotSeries>
-        <Chart.BoxPlotChart.Legend aria-label={`${title} focus`} />
-      </Chart.BoxPlotChart>
-    </ResponsiveContainer>
+        {rows.map((row) => (
+          <Cell key={row.category} fill={color} />
+        ))}
+      </Chart.BoxPlotSeries>
+      <Chart.BoxPlotChart.Legend aria-label={`${title} focus`} />
+    </Chart.BoxPlotChart>
   );
 }
 function Table({ rows, title, unit }: { rows: Row[]; title: string; unit: string }) {

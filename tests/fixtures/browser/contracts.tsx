@@ -1,11 +1,5 @@
 import * as Chart from "@kind-ui/charts";
-import {
-  LineChart,
-  LineSeries,
-  ResponsiveContainer,
-  Tooltip,
-  TooltipContent,
-} from "@kind-ui/charts";
+import { LineChart, LineSeries, Tooltip, TooltipContent } from "@kind-ui/charts";
 import { useState } from "react";
 
 import "./style.css";
@@ -26,50 +20,49 @@ function Fixture({ name, color }: { name: string; color: string }) {
         Hold {name} changes
       </label>
       <output aria-label={`${name} request`}>{request}</output>
-      <ResponsiveContainer width="100%" height={180}>
-        <LineChart
-          config={{ count: { label: `${name} tasks`, color } }}
-          interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["count"] }}
-          visibleSeries={visible}
-          onVisibleSeriesChange={(next) => {
-            setRequest(next.join(","));
-            if (!locked) setVisible(next);
+      <LineChart
+        height={180}
+        config={{ count: { label: `${name} tasks`, color } }}
+        interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["count"] }}
+        visibleSeries={visible}
+        onVisibleSeriesChange={(next) => {
+          setRequest(next.join(","));
+          if (!locked) setVisible(next);
+        }}
+        frameProps={{
+          "data-owner": name,
+          ref: (node) => {
+            if (node) node.dataset.forwarded = "container";
+          },
+        }}
+        data={[{ count: 0 }, { count: 10 }]}
+        accessibilityLayer
+        aria-label={`Chart ${name}`}
+      >
+        <LineSeries dataKey="count" stroke="var(--color-count)" />
+        <Tooltip
+          content={(tooltip) => (
+            <TooltipContent
+              className="p-[5px] text-[18px]"
+              tooltip={tooltip}
+              aria-label={`${name} tooltip`}
+              ref={(node) => {
+                if (node) node.dataset.forwarded = "tooltip";
+              }}
+            />
+          )}
+        />
+        <LineChart.Legend
+          className="gap-[19px] p-[7px] text-[17px] [&_[data-kind-ui=chart-legend-button]]:p-[3px]"
+          aria-label={`${name} legend`}
+          ref={(node) => {
+            if (node) node.dataset.forwarded = "legend";
           }}
-          frameProps={{
-            "data-owner": name,
-            ref: (node) => {
-              if (node) node.dataset.forwarded = "container";
-            },
+          onClick={(event) => {
+            event.currentTarget.dataset.clicked = "yes";
           }}
-          data={[{ count: 0 }, { count: 10 }]}
-          accessibilityLayer
-          aria-label={`Chart ${name}`}
-        >
-          <LineSeries dataKey="count" stroke="var(--color-count)" />
-          <Tooltip
-            content={(tooltip) => (
-              <TooltipContent
-                className="p-[5px] text-[18px]"
-                tooltip={tooltip}
-                aria-label={`${name} tooltip`}
-                ref={(node) => {
-                  if (node) node.dataset.forwarded = "tooltip";
-                }}
-              />
-            )}
-          />
-          <LineChart.Legend
-            className="gap-[19px] p-[7px] text-[17px] [&_[data-kind-ui=chart-legend-button]]:p-[3px]"
-            aria-label={`${name} legend`}
-            ref={(node) => {
-              if (node) node.dataset.forwarded = "legend";
-            }}
-            onClick={(event) => {
-              event.currentTarget.dataset.clicked = "yes";
-            }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+        />
+      </LineChart>
     </section>
   );
 }

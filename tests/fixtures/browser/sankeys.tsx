@@ -1,5 +1,4 @@
 import {
-  ResponsiveContainer,
   SankeyChart,
   type SankeyFinish,
   type SankeyFlowData,
@@ -84,56 +83,55 @@ function Recipe({
         tabIndex={0}
       >
         <div className="diagram">
-          <ResponsiveContainer width="100%" height={320}>
-            <SankeyChart
-              data={flow}
-              animate={active === null}
-              nodePadding={45}
-              nodeWidth={material === "solid" ? 14 : 110}
-              margin={{ left: 90, right: 100, top: 25, bottom: 25 }}
-              title={`${material} energy flows`}
-              desc="Link widths are proportional to MWh. Inspect every flow using the table below."
-              onClick={(item, kind) => {
-                if (kind === "link") setActive(item.payload.id);
-              }}
-              config={{}}
-              aria-label="Chart fixture"
-            >
-              <Tooltip />
-              {/* Explicit renderer ownership belongs to the family parts. */}
-              <SankeyChart.Nodes
-                render={(props) => (
-                  <g>
-                    <SankeyNode finish={finish} {...props} color="#4338ca" />
-                    <SankeyNodeLabel
-                      node={props}
-                      data={flow}
-                      nodeConfig={nodeConfig}
-                      position={material === "solid" ? "outside" : "inside"}
-                      showValues
-                      valueFormatter={(value) => `${value} MWh`}
-                      fill={material === "solid" ? "currentColor" : "white"}
-                    />
-                  </g>
-                )}
-              />
-              <SankeyChart.Links
-                render={(props) => (
-                  <SankeyLink
-                    {...props}
-                    material={material}
-                    finish={finish}
-                    pathProps={
-                      {
-                        opacity: active && active !== props.payload.id ? 0.35 : 0.8,
-                        "data-flow-id": String(props.payload.id),
-                      } as React.SVGProps<SVGPathElement>
-                    }
+          <SankeyChart
+            height={320}
+            data={flow}
+            animate={active === null}
+            nodePadding={45}
+            nodeWidth={material === "solid" ? 14 : 110}
+            margin={{ left: 90, right: 100, top: 25, bottom: 25 }}
+            title={`${material} energy flows`}
+            desc="Link widths are proportional to MWh. Inspect every flow using the table below."
+            onClick={(item, kind) => {
+              if (kind === "link") setActive(item.payload.id);
+            }}
+            config={nodeConfig}
+            aria-label="Chart fixture"
+          >
+            <Tooltip />
+            {/* Explicit renderer ownership belongs to the family parts. */}
+            <SankeyChart.Nodes
+              render={(props) => (
+                <g>
+                  <SankeyNode finish={finish} {...props} color="#4338ca" />
+                  <SankeyNodeLabel
+                    node={props}
+                    data={flow}
+                    nodeConfig={nodeConfig}
+                    position={material === "solid" ? "outside" : "inside"}
+                    showValues
+                    valueFormatter={(value) => `${value} MWh`}
+                    fill={material === "solid" ? "currentColor" : "white"}
                   />
-                )}
-              />
-            </SankeyChart>
-          </ResponsiveContainer>
+                </g>
+              )}
+            />
+            <SankeyChart.Links
+              render={(props) => (
+                <SankeyLink
+                  {...props}
+                  material={material}
+                  finish={finish}
+                  pathProps={
+                    {
+                      opacity: active && active !== props.payload.id ? 0.35 : 0.8,
+                      "data-flow-id": String(props.payload.id),
+                    } as React.SVGProps<SVGPathElement>
+                  }
+                />
+              )}
+            />
+          </SankeyChart>
         </div>
       </section>
       <p role="status">
@@ -177,7 +175,7 @@ function App() {
               : { nodes: data.nodes, links: data.links.filter((link) => link.id === "reserve") }
           }
           animate
-          config={{}}
+          config={nodeConfig}
           aria-label="Chart fixture"
         >
           {null}

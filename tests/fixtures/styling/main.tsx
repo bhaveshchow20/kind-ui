@@ -31,8 +31,10 @@ function Panel({ custom }: { custom: boolean }) {
         config={reverse ? { beta: series.beta, alpha: series.alpha } : series}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
-        className={custom ? "consumer" : undefined}
-        style={custom ? { width: 320 } : undefined}
+        frameProps={{
+          className: custom ? "consumer" : undefined,
+          style: custom ? { width: 320 } : undefined,
+        }}
       >
         <Legend style={custom ? { rowGap: 19 } : undefined} />
         <TooltipContent

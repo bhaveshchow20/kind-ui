@@ -1,6 +1,5 @@
 import {
   prepareSankeyData,
-  ResponsiveContainer,
   SankeyChart,
   type SankeyFinish,
   type SankeyFlowData,
@@ -174,7 +173,9 @@ export function Host() {
           width={300}
           height={80}
           data={data}
-          config={{}}
+          config={Object.fromEntries(
+            flow.nodes.map((node) => [node.id, { label: node.name, color: "#2563eb" }]),
+          )}
           aria-label="Chart fixture"
         >
           {null}
@@ -210,59 +211,60 @@ export function Host() {
       </button>
       <div style={{ width: narrow ? 5 : "100%", height: extreme === "padding" ? 41 : 250 }}>
         {shown && (
-          <ResponsiveContainer>
-            <SankeyChart
-              data={flow}
-              animate={{ revealDurationMs: 3000 }}
-              title="Packed Sankey"
-              onClick={(item, type, event) => {
-                void item.index;
-                const id: string = item.payload.id;
-                void id;
-                void type;
-                void event.clientX;
-              }}
-              config={{}}
-              aria-label="Chart fixture"
-            >
-              <Tooltip />
-              {/* Explicit renderer ownership belongs to the family parts. */}
-              <SankeyChart.Nodes
-                render={(props) => (
-                  <g>
-                    <SankeyNode
-                      finish="clay"
-                      {...props}
-                      rectProps={{ "aria-label": "Native node" }}
-                    />
-                    <SankeyNodeLabel node={props} data={flow} showValues />
-                  </g>
-                )}
-              />
-              <SankeyChart.Links
-                render={(props: SankeyLinkProps) => (
-                  <SankeyLink
+          <SankeyChart
+            data={flow}
+            height={extreme === "padding" ? 41 : 250}
+            animate={{ revealDurationMs: 3000 }}
+            title="Packed Sankey"
+            onClick={(item, type, event) => {
+              void item.index;
+              const id: string = item.payload.id;
+              void id;
+              void type;
+              void event.clientX;
+            }}
+            config={Object.fromEntries(
+              flow.nodes.map((node) => [node.id, { label: node.name, color: "#2563eb" }]),
+            )}
+            aria-label="Chart fixture"
+          >
+            <Tooltip />
+            {/* Explicit renderer ownership belongs to the family parts. */}
+            <SankeyChart.Nodes
+              render={(props) => (
+                <g>
+                  <SankeyNode
+                    finish="clay"
                     {...props}
-                    material={paint}
-                    finish={finish}
-                    pathProps={{
-                      "aria-label": props.payload.id,
-                      ref: (node) => {
-                        if (node) node.dataset.consumerRef = "attached";
-                      },
-                      onClick: () => setClicks((count) => count + 1),
-                      style: {
-                        strokeWidth: 99,
-                        ...(new URLSearchParams(location.search).has("ownership")
-                          ? { opacity: 0.7 }
-                          : {}),
-                      },
-                    }}
+                    rectProps={{ "aria-label": "Native node" }}
                   />
-                )}
-              />
-            </SankeyChart>
-          </ResponsiveContainer>
+                  <SankeyNodeLabel node={props} data={flow} showValues />
+                </g>
+              )}
+            />
+            <SankeyChart.Links
+              render={(props: SankeyLinkProps) => (
+                <SankeyLink
+                  {...props}
+                  material={paint}
+                  finish={finish}
+                  pathProps={{
+                    "aria-label": props.payload.id,
+                    ref: (node) => {
+                      if (node) node.dataset.consumerRef = "attached";
+                    },
+                    onClick: () => setClicks((count) => count + 1),
+                    style: {
+                      strokeWidth: 99,
+                      ...(new URLSearchParams(location.search).has("ownership")
+                        ? { opacity: 0.7 }
+                        : {}),
+                    },
+                  }}
+                />
+              )}
+            />
+          </SankeyChart>
         )}
       </div>
       <SankeyTable

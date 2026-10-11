@@ -3,6 +3,7 @@
 import { type ComponentProps, createContext, type ReactNode, use, useId } from "react";
 import { Cell, LabelList, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { Tooltip, type TooltipProps } from "./animation.js";
+import { useChartInteraction } from "./chart-interaction.js";
 import {
   type ChartName,
   type FamilyOptions,
@@ -15,6 +16,7 @@ import { RadialBarSeries, type RadialBarSeriesProps } from "./polar-series.js";
 import { RadialBarLabel } from "./radial-bar-label.js";
 import { resolveSeriesLabel } from "./series-label.js";
 import { TooltipContent } from "./tooltip-content.js";
+import { visibilityLabel } from "./visibility-labels.js";
 
 export type ActivityRing = {
   /** Stable metadata identity in config. Array order controls ring order. */
@@ -189,7 +191,21 @@ export function ActivitySeries({ children, ...props }: ActivitySeriesProps) {
   );
 }
 export function ActivityLabels(props: Omit<ComponentProps<typeof LabelList>, "dataKey">) {
-  return <LabelList {...props} content={props.content ?? <RadialBarLabel />} dataKey="label" />;
+  const data = use(ActivityData);
+  const { visible } = useChartInteraction();
+  if (!data) throw new Error("ActivityRings.Labels requires ActivityRings");
+  return (
+    <LabelList
+      {...visibilityLabel(
+        { ...props, content: props.content ?? <RadialBarLabel /> },
+        false,
+        data.map((ring) => visible !== undefined && !visible.includes(ring.key)),
+        undefined,
+        data.map((ring) => ring.key),
+      )}
+      dataKey="label"
+    />
+  );
 }
 export function ActivityTooltip(props: TooltipProps) {
   const data = use(ActivityData);

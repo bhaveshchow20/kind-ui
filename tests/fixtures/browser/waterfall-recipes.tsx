@@ -1,13 +1,5 @@
 import * as Chart from "@kind-ui/charts";
-import {
-  CartesianGrid,
-  Cell,
-  LabelList,
-  ReferenceLine,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from "@kind-ui/charts";
+import { CartesianGrid, Cell, LabelList, ReferenceLine, XAxis, YAxis } from "@kind-ui/charts";
 import { useId } from "react";
 
 export const waterfallSample: Chart.WaterfallEntry[] = [
@@ -81,87 +73,86 @@ export function WaterfallRecipe({
         Focus the chart and use left/right arrows to explore; Escape dismisses. Values are sample
         units.
       </p>
-      <ResponsiveContainer width="100%" height={280}>
-        <Chart.WaterfallChart
-          config={{ range: { label: "Balance", color: "var(--chart-1)" } }}
-          visibleSeries={visible ? ["range"] : []}
-          frameProps={{ className: "recipe-chart" }}
-          data={data}
-          animate={animate}
-          accessibilityLayer
-          aria-label={label}
-          aria-describedby={help}
-          margin={{ top: 25, right: 12, bottom: 5, left: 0 }}
-          barCategoryGap="32%"
+      <Chart.WaterfallChart
+        height={280}
+        config={{ range: { label: "Balance", color: "var(--chart-1)" } }}
+        visibleSeries={visible ? ["range"] : []}
+        frameProps={{ className: "recipe-chart" }}
+        data={data}
+        animate={animate}
+        accessibilityLayer
+        aria-label={label}
+        aria-describedby={help}
+        margin={{ top: 25, right: 12, bottom: 5, left: 0 }}
+        barCategoryGap="32%"
+      >
+        <CartesianGrid vertical={false} stroke="var(--border)" />
+        <XAxis
+          dataKey="id"
+          tickFormatter={(id) => labels.get(String(id)) ?? String(id)}
+          tickLine={false}
+          axisLine={false}
+          minTickGap={5}
+        />
+        <YAxis domain={["auto", "auto"]} width={40} tickLine={false} axisLine={false} />
+        <ReferenceLine y={0} stroke="var(--foreground)" />
+        <Chart.WaterfallConnectors data={data} hide={hide} stroke="var(--muted-foreground)" />
+        <Chart.WaterfallSeries
+          material={material}
+          hide={hide}
+          {...(onClick ? { onClick } : {})}
+          {...(custom
+            ? {
+                shape: (props) => (
+                  <rect
+                    data-native-extension="shape"
+                    x={props.x}
+                    y={props.y}
+                    width={props.width}
+                    height={props.height}
+                    fill={props.fill}
+                    stroke="var(--foreground)"
+                  />
+                ),
+              }
+            : {})}
         >
-          <CartesianGrid vertical={false} stroke="var(--border)" />
-          <XAxis
-            dataKey="id"
-            tickFormatter={(id) => labels.get(String(id)) ?? String(id)}
-            tickLine={false}
-            axisLine={false}
-            minTickGap={5}
-          />
-          <YAxis domain={["auto", "auto"]} width={40} tickLine={false} axisLine={false} />
-          <ReferenceLine y={0} stroke="var(--foreground)" />
-          <Chart.WaterfallConnectors data={data} hide={hide} stroke="var(--muted-foreground)" />
-          <Chart.WaterfallSeries
-            material={material}
-            hide={hide}
-            {...(onClick ? { onClick } : {})}
-            {...(custom
-              ? {
-                  shape: (props) => (
-                    <rect
-                      data-native-extension="shape"
-                      x={props.x}
-                      y={props.y}
-                      width={props.width}
-                      height={props.height}
-                      fill={props.fill}
-                      stroke="var(--foreground)"
-                    />
-                  ),
-                }
-              : {})}
-          >
-            {data.map((row) => (
-              <Cell
-                key={row.id}
-                fill={
-                  row.kind !== "delta"
-                    ? "var(--chart-1)"
-                    : (row.value ?? 0) < 0
-                      ? "var(--chart-3)"
-                      : "var(--chart-2)"
-                }
-              />
-            ))}
-            {custom && (
-              <LabelList
-                dataKey="value"
-                position="top"
-                formatter={(value) => (typeof value === "number" ? String(value) : "")}
-              />
-            )}
-          </Chart.WaterfallSeries>
-          <Chart.Tooltip
-            filterNull={false}
-            content={(tooltip) => {
-              const row = data.find((row) => row.id === String(tooltip.label));
-              return tooltip.active && row && visible && !hide ? (
-                <div role="status" aria-live="polite" className="waterfall-tooltip">
-                  <strong>{row.label}</strong>
-                  <div>
-                    {row.kind}: {format(row.value)}
-                  </div>
-                  <div>Balance: {format(row.balance)}</div>
+          {data.map((row) => (
+            <Cell
+              key={row.id}
+              fill={
+                row.kind !== "delta"
+                  ? "var(--chart-1)"
+                  : (row.value ?? 0) < 0
+                    ? "var(--chart-3)"
+                    : "var(--chart-2)"
+              }
+            />
+          ))}
+          {custom && (
+            <LabelList
+              dataKey="value"
+              position="top"
+              formatter={(value) => (typeof value === "number" ? String(value) : "")}
+            />
+          )}
+        </Chart.WaterfallSeries>
+        <Chart.Tooltip
+          filterNull={false}
+          content={(tooltip) => {
+            const row = data.find((row) => row.id === String(tooltip.label));
+            return tooltip.active && row && visible && !hide ? (
+              <div role="status" aria-live="polite" className="waterfall-tooltip">
+                <strong>{row.label}</strong>
+                <div>
+                  {row.kind}: {format(row.value)}
                 </div>
-              ) : null;
-            }}
-          />
-        </Chart.WaterfallChart>
-      </ResponsiveContainer>
+                <div>Balance: {format(row.balance)}</div>
+              </div>
+            ) : null;
+          }}
+        />
+      </Chart.WaterfallChart>
     </>
   );
 }

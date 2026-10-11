@@ -34,40 +34,39 @@ function AllocationMaterialChart({
   glowCategories?: readonly string[];
 }) {
   return (
-    <Chart.ResponsiveContainer width="100%" height={280}>
-      <Chart.PieChart
-        config={config}
-        animate
-        accessibilityLayer
-        aria-label="Team allocation: 1,000 hours"
+    <Chart.PieChart
+      height={280}
+      config={config}
+      animate
+      accessibilityLayer
+      aria-label="Team allocation: 1,000 hours"
+    >
+      <Chart.PieSeries
+        data={data}
+        dataKey="hours"
+        categoryKey="key"
+        glowCategories={glowCategories}
+        nameKey="key"
+        innerRadius={58}
+        material={material}
+        outerRadius={108}
+        cornerRadius={8}
+        paddingAngle={2}
       >
-        <Chart.PieSeries
-          data={data}
-          dataKey="hours"
-          categoryKey="key"
-          glowCategories={glowCategories}
-          nameKey="key"
-          innerRadius={58}
-          material={material}
-          outerRadius={108}
-          cornerRadius={8}
-          paddingAngle={2}
-        >
-          {data.map((row) => (
-            <Chart.Cell key={row.key} fill={config[row.key].color} />
-          ))}
-          <Chart.LabelList
-            dataKey="share"
-            position="inside"
-            fill="white"
-            stroke="none"
-            style={{ fill: "white", fontWeight: 600 }}
-          />
-        </Chart.PieSeries>
-        <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
-        <Chart.PieChart.Legend />
-      </Chart.PieChart>
-    </Chart.ResponsiveContainer>
+        {data.map((row) => (
+          <Chart.Cell key={row.key} fill={config[row.key].color} />
+        ))}
+        <Chart.LabelList
+          dataKey="share"
+          position="inside"
+          fill="white"
+          stroke="none"
+          style={{ fill: "white", fontWeight: 600 }}
+        />
+      </Chart.PieSeries>
+      <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
+      <Chart.PieChart.Legend />
+    </Chart.PieChart>
   );
 }
 

@@ -485,7 +485,11 @@ export function ScatterMaterialHost() {
         />
         <Chart.ScatterChart.Legend />
       </Chart.ScatterChart>
-      <NativeChart responsive style={{ width: "100%", height: 260 }} aria-label="Native symbols">
+      <NativeChart
+        responsive
+        style={{ width: narrow ? 280 : 700, maxWidth: "100%", height: 260 }}
+        aria-label="Native symbols"
+      >
         {axes}
         <Scatter
           data={values}

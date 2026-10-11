@@ -52,8 +52,9 @@ function Case({ family }: { family: string }) {
                   index,
                 }),
             }}
-          />
-          <Chart.ActivityRings.Labels {...{}} />
+          >
+            <Chart.ActivityRings.Labels />
+          </Chart.ActivityRings.Series>
           <Chart.ActivityRings.Tooltip />
           <Chart.ActivityRings.Legend />
         </Chart.ActivityRings>
@@ -127,6 +128,7 @@ function Case({ family }: { family: string }) {
           >
             <Chart.LabelList dataKey="second" />
           </Chart.RadialBarSeries>
+          <Chart.RadialBarChart.Legend />
         </Chart.RadialBarChart>
       )}
       <output data-polar-pointer={JSON.stringify(pointer)} />

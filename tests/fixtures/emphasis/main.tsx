@@ -7,7 +7,6 @@ import {
   ScatterSeries as NamedScatterSeries,
   Rectangle,
   ReferenceLine,
-  ResponsiveContainer,
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
@@ -682,25 +681,8 @@ function LegacyAndDuplicateIdentities() {
           <Chart.YAxis />
           <Chart.BarSeries dataKey="first" />
           <Chart.BarSeries dataKey="second" hide />
-          <Chart.BarChart.Legend />
-        </Chart.BarChart>
-        <Chart.BarChart
-          config={config}
-          interaction={{ kind: "series", mode: "visibility", eligibleKeys: ["first", "second"] }}
-          visibleSeries={duplicateVisible}
-          onVisibleSeriesChange={(next) => {
-            setDuplicateVisible(next);
-            setChanges((n) => n + 1);
-          }}
-          aria-label="Chart fixture"
-          data={[{ second: 20 }]}
-          width={320}
-          height={200}
-          animate={false}
-        >
-          <Chart.XAxis />
-          <Chart.YAxis />
           <Chart.BarSeries dataKey="second" />
+          <Chart.BarChart.Legend />
         </Chart.BarChart>
         <output data-duplicate-changes>{changes}</output>
       </section>
@@ -767,40 +749,39 @@ function App() {
       </p>
       <section id="bars" style={{ width: "min(440px, calc(100vw - 48px))" }}>
         <h2>Grouped category inspection</h2>
-        <ResponsiveContainer width="100%" height={250}>
-          <Chart.BarChart
-            interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
-            config={config}
-            emphasis={enabled ? "category" : "none"}
-            visibleSeries={visible}
-            onVisibleSeriesChange={setVisible}
-            aria-label="Chart fixture"
-            data={data}
-            accessibilityLayer
+        <Chart.BarChart
+          height={250}
+          interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
+          config={config}
+          emphasis={enabled ? "category" : "none"}
+          visibleSeries={visible}
+          onVisibleSeriesChange={setVisible}
+          aria-label="Chart fixture"
+          data={data}
+          accessibilityLayer
+        >
+          <CartesianGrid vertical={false} />
+          <XAxis dataKey="category" />
+          <YAxis />
+          <ReferenceLine y={10} label="Reference" />
+          <Chart.BarSeries
+            dataKey="first"
+            material="clay"
+            opacity={0.5}
+            {...(stacked ? { stackId: "stack" } : {})}
+            onClick={() => setClicks(clicks + 1)}
           >
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="category" />
-            <YAxis />
-            <ReferenceLine y={10} label="Reference" />
-            <Chart.BarSeries
-              dataKey="first"
-              material="clay"
-              opacity={0.5}
-              {...(stacked ? { stackId: "stack" } : {})}
-              onClick={() => setClicks(clicks + 1)}
-            >
-              <LabelList dataKey="first" />
-            </Chart.BarSeries>
-            <Chart.BarSeries
-              dataKey="second"
-              material="clay"
-              {...(customPeer ? { shape: nativeShape } : {})}
-              {...(stacked ? { stackId: "stack" } : {})}
-            />
-            <Chart.Tooltip />
-            <Chart.BarChart.Legend emphasis="series" />
-          </Chart.BarChart>
-        </ResponsiveContainer>
+            <LabelList dataKey="first" />
+          </Chart.BarSeries>
+          <Chart.BarSeries
+            dataKey="second"
+            material="clay"
+            {...(customPeer ? { shape: nativeShape } : {})}
+            {...(stacked ? { stackId: "stack" } : {})}
+          />
+          <Chart.Tooltip />
+          <Chart.BarChart.Legend emphasis="series" />
+        </Chart.BarChart>
       </section>
       <section id="bar-focus">
         <Chart.BarChart

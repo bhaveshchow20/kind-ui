@@ -1,12 +1,5 @@
 import * as Chart from "@kind-ui/charts";
-import {
-  CartesianGrid,
-  type DotProps,
-  ResponsiveContainer,
-  Symbols,
-  XAxis,
-  YAxis,
-} from "@kind-ui/charts";
+import { CartesianGrid, type DotProps, Symbols, XAxis, YAxis } from "@kind-ui/charts";
 import { useState } from "react";
 
 import "./style.css";
@@ -94,65 +87,64 @@ function App() {
               No data yet.
             </p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <Chart.LineChart
-                config={config}
-                visibleSeries={visible}
-                onVisibleSeriesChange={setVisible}
-                frameProps={{
-                  className:
-                    "text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-surface]:focus-visible:outline-2 [&_.recharts-surface]:focus-visible:outline-offset-2 [&_.recharts-surface]:focus-visible:outline-ring",
-                }}
-                data={rows}
-                accessibilityLayer
-                aria-label="Task outcomes by day"
-                aria-describedby="chart-help"
-                margin={{ top: 12, right: 12, bottom: 8, left: 0 }}
-              >
-                <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.65} />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} />
-                <YAxis width={32} axisLine={false} tickLine={false} domain={[0, 100]} />
-                <Chart.Tooltip cursor />
-                {keys.map((key) => (
-                  <Chart.LineSeries
-                    key={key}
-                    dataKey={key}
-                    stroke={`var(--color-${key})`}
-                    strokeWidth={2.5}
-                    dot={
-                      key === "review" ? (
-                        <ReviewMarker />
-                      ) : (
-                        {
-                          r: 3.5,
-                          strokeWidth: 1.5,
-                          stroke: "var(--card)",
-                          fill: "var(--color-completed)",
-                        }
-                      )
-                    }
-                    activeDot={
-                      key === "review" ? (
-                        <ReviewMarker size={64} />
-                      ) : (
-                        {
-                          r: 5,
-                          strokeWidth: 2,
-                          stroke: "var(--card)",
-                          fill: "var(--color-completed)",
-                        }
-                      )
-                    }
-                    strokeDasharray={key === "review" ? "5 4" : "none"}
-                    connectNulls={false}
-                  />
-                ))}
-                <Chart.LineChart.Legend
-                  aria-label="Visible series"
-                  className="mt-1 mb-2.5 gap-1 text-[13px] [&_[data-kind-ui=chart-legend-button]]:border-transparent [&_[data-kind-ui=chart-legend-button]:hover]:[--muted:var(--accent)] [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-offset-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-ring [&_[aria-pressed=false]]:text-muted-foreground [&_[data-series=completed]_[data-kind-ui=chart-indicator]]:rounded-full [&_[data-series=review]_[data-kind-ui=chart-indicator]]:rotate-45 [&_[data-kind-ui=chart-indicator]]:size-2"
+            <Chart.LineChart
+              height={220}
+              config={config}
+              visibleSeries={visible}
+              onVisibleSeriesChange={setVisible}
+              frameProps={{
+                className:
+                  "text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-surface]:focus-visible:outline-2 [&_.recharts-surface]:focus-visible:outline-offset-2 [&_.recharts-surface]:focus-visible:outline-ring",
+              }}
+              data={rows}
+              accessibilityLayer
+              aria-label="Task outcomes by day"
+              aria-describedby="chart-help"
+              margin={{ top: 12, right: 12, bottom: 8, left: 0 }}
+            >
+              <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.65} />
+              <XAxis dataKey="day" axisLine={false} tickLine={false} />
+              <YAxis width={32} axisLine={false} tickLine={false} domain={[0, 100]} />
+              <Chart.Tooltip cursor />
+              {keys.map((key) => (
+                <Chart.LineSeries
+                  key={key}
+                  dataKey={key}
+                  stroke={`var(--color-${key})`}
+                  strokeWidth={2.5}
+                  dot={
+                    key === "review" ? (
+                      <ReviewMarker />
+                    ) : (
+                      {
+                        r: 3.5,
+                        strokeWidth: 1.5,
+                        stroke: "var(--card)",
+                        fill: "var(--color-completed)",
+                      }
+                    )
+                  }
+                  activeDot={
+                    key === "review" ? (
+                      <ReviewMarker size={64} />
+                    ) : (
+                      {
+                        r: 5,
+                        strokeWidth: 2,
+                        stroke: "var(--card)",
+                        fill: "var(--color-completed)",
+                      }
+                    )
+                  }
+                  strokeDasharray={key === "review" ? "5 4" : "none"}
+                  connectNulls={false}
                 />
-              </Chart.LineChart>
-            </ResponsiveContainer>
+              ))}
+              <Chart.LineChart.Legend
+                aria-label="Visible series"
+                className="mt-1 mb-2.5 gap-1 text-[13px] [&_[data-kind-ui=chart-legend-button]]:border-transparent [&_[data-kind-ui=chart-legend-button]:hover]:[--muted:var(--accent)] [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-offset-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-ring [&_[aria-pressed=false]]:text-muted-foreground [&_[data-series=completed]_[data-kind-ui=chart-indicator]]:rounded-full [&_[data-series=review]_[data-kind-ui=chart-indicator]]:rotate-45 [&_[data-kind-ui=chart-indicator]]:size-2"
+              />
+            </Chart.LineChart>
           )}
           <p className="mt-3 text-xs text-muted-foreground">
             Gaps mean no data. Hidden series stay in the table.

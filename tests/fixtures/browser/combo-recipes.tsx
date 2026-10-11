@@ -1,5 +1,5 @@
 import * as Chart from "@kind-ui/charts";
-import { CartesianGrid, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "@kind-ui/charts";
+import { CartesianGrid, ReferenceLine, XAxis, YAxis } from "@kind-ui/charts";
 import { useState } from "react";
 
 export type ComboPoint = {
@@ -43,51 +43,50 @@ const money = (value: unknown) => `$${value}k`;
 export function LoadCombo({ animate = false, data = loadData }: ComboRecipeProps) {
   const [visible, setVisible] = useState(["volume", "buffer", "latency"]);
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <Chart.ComboChart
-        config={{
-          volume: { label: "Completed", color: "#2563eb", formatValue: tasks },
-          buffer: { label: "Queued", color: "#93c5fd", formatValue: tasks },
-          latency: { label: "Latency", color: "#d97706", formatValue: ms },
-        }}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
-        key={animate === false ? "static" : "motion"}
-        data={data}
-        animate={animate}
-        aria-label="Workload and latency"
-        margin={{ top: 12, right: 4, left: 0, bottom: 0 }}
-      >
-        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-        <XAxis {...axis} dataKey="period" />
-        <YAxis {...axis} yAxisId="tasks" width={36} domain={[0, 80]} />
-        <YAxis
-          {...axis}
-          yAxisId="ms"
-          orientation="right"
-          width={40}
-          domain={[0, 400]}
-          tickFormatter={(v) => `${v}`}
-        />
-        <Chart.AreaSeries
-          dataKey="buffer"
-          yAxisId="tasks"
-          type="monotone"
-          fillOpacity={0.22}
-          dot={false}
-        />
-        <Chart.BarSeries dataKey="volume" yAxisId="tasks" radius={3} maxBarSize={32} />
-        <Chart.LineSeries
-          dataKey="latency"
-          yAxisId="ms"
-          type="monotone"
-          strokeWidth={2}
-          dot={false}
-        />
-        <Chart.Tooltip />
-        <Chart.ComboChart.Legend />
-      </Chart.ComboChart>
-    </ResponsiveContainer>
+    <Chart.ComboChart
+      height={250}
+      config={{
+        volume: { label: "Completed", color: "#2563eb", formatValue: tasks },
+        buffer: { label: "Queued", color: "#93c5fd", formatValue: tasks },
+        latency: { label: "Latency", color: "#d97706", formatValue: ms },
+      }}
+      visibleSeries={visible}
+      onVisibleSeriesChange={setVisible}
+      key={animate === false ? "static" : "motion"}
+      data={data}
+      animate={animate}
+      aria-label="Workload and latency"
+      margin={{ top: 12, right: 4, left: 0, bottom: 0 }}
+    >
+      <CartesianGrid vertical={false} strokeDasharray="3 3" />
+      <XAxis {...axis} dataKey="period" />
+      <YAxis {...axis} yAxisId="tasks" width={36} domain={[0, 80]} />
+      <YAxis
+        {...axis}
+        yAxisId="ms"
+        orientation="right"
+        width={40}
+        domain={[0, 400]}
+        tickFormatter={(v) => `${v}`}
+      />
+      <Chart.AreaSeries
+        dataKey="buffer"
+        yAxisId="tasks"
+        type="monotone"
+        fillOpacity={0.22}
+        dot={false}
+      />
+      <Chart.BarSeries dataKey="volume" yAxisId="tasks" radius={3} maxBarSize={32} />
+      <Chart.LineSeries
+        dataKey="latency"
+        yAxisId="ms"
+        type="monotone"
+        strokeWidth={2}
+        dot={false}
+      />
+      <Chart.Tooltip />
+      <Chart.ComboChart.Legend />
+    </Chart.ComboChart>
   );
 }
 
@@ -95,39 +94,38 @@ export function LoadCombo({ animate = false, data = loadData }: ComboRecipeProps
 export function BalanceCombo({ animate = false, data = balanceData }: ComboRecipeProps) {
   const [visible, setVisible] = useState(["volume", "buffer", "latency"]);
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <Chart.ComboChart
-        config={{
-          volume: { label: "Product", color: "#0d9488", formatValue: money },
-          buffer: { label: "Services", color: "#99d5cb", formatValue: money },
-          latency: { label: "Plan", color: "#7c3aed", formatValue: money },
-        }}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
-        key={animate === false ? "static" : "motion"}
-        data={data}
-        animate={animate}
-        stackOffset="sign"
-        aria-label="Net cash against plan"
-        margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
-      >
-        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-        <XAxis {...axis} dataKey="period" />
-        <YAxis {...axis} width={36} domain={[-20, 40]} />
-        <ReferenceLine y={0} stroke="var(--muted-foreground)" />
-        <Chart.BarSeries dataKey="volume" stackId="cash" maxBarSize={30} />
-        <Chart.BarSeries dataKey="buffer" stackId="cash" maxBarSize={30} />
-        <Chart.LineSeries
-          dataKey="latency"
-          strokeDasharray="5 4"
-          strokeWidth={2}
-          dot={{ r: 3 }}
-          connectNulls={false}
-        />
-        <Chart.Tooltip />
-        <Chart.ComboChart.Legend />
-      </Chart.ComboChart>
-    </ResponsiveContainer>
+    <Chart.ComboChart
+      height={250}
+      config={{
+        volume: { label: "Product", color: "#0d9488", formatValue: money },
+        buffer: { label: "Services", color: "#99d5cb", formatValue: money },
+        latency: { label: "Plan", color: "#7c3aed", formatValue: money },
+      }}
+      visibleSeries={visible}
+      onVisibleSeriesChange={setVisible}
+      key={animate === false ? "static" : "motion"}
+      data={data}
+      animate={animate}
+      stackOffset="sign"
+      aria-label="Net cash against plan"
+      margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
+    >
+      <CartesianGrid vertical={false} strokeDasharray="3 3" />
+      <XAxis {...axis} dataKey="period" />
+      <YAxis {...axis} width={36} domain={[-20, 40]} />
+      <ReferenceLine y={0} stroke="var(--muted-foreground)" />
+      <Chart.BarSeries dataKey="volume" stackId="cash" maxBarSize={30} />
+      <Chart.BarSeries dataKey="buffer" stackId="cash" maxBarSize={30} />
+      <Chart.LineSeries
+        dataKey="latency"
+        strokeDasharray="5 4"
+        strokeWidth={2}
+        dot={{ r: 3 }}
+        connectNulls={false}
+      />
+      <Chart.Tooltip />
+      <Chart.ComboChart.Legend />
+    </Chart.ComboChart>
   );
 }
 
@@ -135,38 +133,37 @@ export function BalanceCombo({ animate = false, data = balanceData }: ComboRecip
 export function ForecastCombo({ animate = false, data = forecastData }: ComboRecipeProps) {
   const [visible, setVisible] = useState(["volume", "buffer", "latency"]);
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <Chart.ComboChart
-        config={{
-          volume: { label: "Actual", color: "#334155", formatValue: tasks },
-          buffer: { label: "Capacity", color: "#cbd5e1", formatValue: tasks },
-          latency: { label: "Forecast", color: "#e11d48", formatValue: tasks },
-        }}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
-        key={animate === false ? "static" : "motion"}
-        data={data}
-        animate={animate}
-        aria-label="Actuals, forecast and capacity"
-        margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
-      >
-        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-        <XAxis {...axis} dataKey="period" />
-        <YAxis {...axis} width={36} domain={[0, 80]} />
-        <Chart.AreaSeries dataKey="buffer" type="stepAfter" fillOpacity={0.3} strokeWidth={0} />
-        <Chart.BarSeries dataKey="volume" maxBarSize={32} radius={3} />
-        <Chart.LineSeries
-          dataKey="latency"
-          type="linear"
-          strokeDasharray="4 3"
-          strokeWidth={2}
-          dot={({ cx, cy }) => (
-            <path d={`M${cx},${(cy ?? 0) - 4} l4,4 l-4,4 l-4,-4 Z`} fill="#e11d48" />
-          )}
-        />
-        <Chart.Tooltip />
-        <Chart.ComboChart.Legend />
-      </Chart.ComboChart>
-    </ResponsiveContainer>
+    <Chart.ComboChart
+      height={250}
+      config={{
+        volume: { label: "Actual", color: "#334155", formatValue: tasks },
+        buffer: { label: "Capacity", color: "#cbd5e1", formatValue: tasks },
+        latency: { label: "Forecast", color: "#e11d48", formatValue: tasks },
+      }}
+      visibleSeries={visible}
+      onVisibleSeriesChange={setVisible}
+      key={animate === false ? "static" : "motion"}
+      data={data}
+      animate={animate}
+      aria-label="Actuals, forecast and capacity"
+      margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
+    >
+      <CartesianGrid vertical={false} strokeDasharray="3 3" />
+      <XAxis {...axis} dataKey="period" />
+      <YAxis {...axis} width={36} domain={[0, 80]} />
+      <Chart.AreaSeries dataKey="buffer" type="stepAfter" fillOpacity={0.3} strokeWidth={0} />
+      <Chart.BarSeries dataKey="volume" maxBarSize={32} radius={3} />
+      <Chart.LineSeries
+        dataKey="latency"
+        type="linear"
+        strokeDasharray="4 3"
+        strokeWidth={2}
+        dot={({ cx, cy }) => (
+          <path d={`M${cx},${(cy ?? 0) - 4} l4,4 l-4,4 l-4,-4 Z`} fill="#e11d48" />
+        )}
+      />
+      <Chart.Tooltip />
+      <Chart.ComboChart.Legend />
+    </Chart.ComboChart>
   );
 }

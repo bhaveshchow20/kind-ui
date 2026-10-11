@@ -46,7 +46,14 @@ function App() {
   };
   function plot(label: string) {
     return (
-      <Chart.ScatterChart width={500} height={140} aria-label={label} config={config}>
+      <Chart.ScatterChart
+        width={500}
+        height={140}
+        aria-label={label}
+        config={config}
+        visibleSeries={visible}
+        onVisibleSeriesChange={setVisible}
+      >
         <XAxis type="number" dataKey="x" domain={[0, 3]} />
         <YAxis type="number" dataKey="y" domain={[0, 4]} />
         {entries.map(([key, item], i) => (
@@ -113,13 +120,13 @@ function App() {
               )
             : undefined}
         </Chart.Legend>
-        {mounted ? (
-          <>
-            {plot("First scatter")}
-            {plot("Second scatter")}
-          </>
-        ) : null}
       </Chart.HeatmapChart>
+      {mounted ? (
+        <>
+          {plot("First scatter")}
+          {plot("Second scatter")}
+        </>
+      ) : null}
       <Chart.HeatmapChart
         rows={[]}
         columns={[]}

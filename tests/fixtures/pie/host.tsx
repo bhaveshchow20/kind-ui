@@ -34,10 +34,10 @@ export function PinnedPieHost({
   const [generation, setGeneration] = useState(0);
   const [override, setOverride] = useState(false);
   const [nativeIndex, setNativeIndex] = useState(false);
-  const [visible, setVisible] = useState<string[] | undefined>(
-    bound ? ["beta", "zero", "missing"] : undefined,
+  const [visible, setVisible] = useState<string[]>(
+    bound ? ["beta", "zero", "missing"] : Object.keys(config),
   );
-  const visibilityProps = visible === undefined ? {} : { visibleSeries: visible };
+  const visibilityProps = { visibleSeries: visible };
   return (
     <main>
       <button type="button" onClick={() => setData((rows) => [...rows].reverse())}>
@@ -64,7 +64,7 @@ export function PinnedPieHost({
       <button type="button" onClick={() => setVisible(["alpha"])}>
         Filter pin
       </button>
-      <button type="button" onClick={() => setVisible(undefined)}>
+      <button type="button" onClick={() => setVisible(Object.keys(config))}>
         Show pin
       </button>
       <button type="button" onClick={() => setData([...original, { id: "beta", value: 5 }])}>
@@ -590,61 +590,57 @@ function ContinuityHost() {
       <output aria-label="Oracle state">
         {scenario}/{String(included)}/{String(donut)}/{String(gaps)}/{String(rings)}
       </output>
-      <Chart.PieChart
-        config={config}
-        frameProps={{ style: { position: "relative", width: 300, background: "white" } }}
-        width={300}
-        height={280}
-        aria-label="Kind continuity"
-      >
-        <defs>
-          <clipPath id="host-clip">
-            <rect x={120} y={0} width={30} height={1000} />
-          </clipPath>
-          <filter id="host-filter">
-            <feGaussianBlur stdDeviation={0.2} />
-          </filter>
-          <linearGradient id="host-gradient">
-            <stop stopColor="#db6baa" stopOpacity={0.2} />
-            <stop offset="1" stopColor="#eb9cc7" stopOpacity={0.7} />
-          </linearGradient>
-        </defs>
-        <Chart.PieSeries {...props} material={material}>
-          {cells}
-        </Chart.PieSeries>
-        {rings && (
-          <Chart.PieSeries {...props} material={material} innerRadius={115} outerRadius={130}>
+      <div style={{ position: "relative", width: 300, background: "white" }}>
+        <Chart.PieChart config={config} width={300} height={280} aria-label="Kind continuity">
+          <defs>
+            <clipPath id="host-clip">
+              <rect x={120} y={0} width={30} height={1000} />
+            </clipPath>
+            <filter id="host-filter">
+              <feGaussianBlur stdDeviation={0.2} />
+            </filter>
+            <linearGradient id="host-gradient">
+              <stop stopColor="#db6baa" stopOpacity={0.2} />
+              <stop offset="1" stopColor="#eb9cc7" stopOpacity={0.7} />
+            </linearGradient>
+          </defs>
+          <Chart.PieSeries {...props} material={material}>
             {cells}
           </Chart.PieSeries>
-        )}
-        <Chart.Tooltip itemKey={identity} />
-      </Chart.PieChart>
-      <NativePieChart
-        width={300}
-        height={280}
-        aria-label="Native oracle"
-        style={{ position: "absolute", top: 0, left: 0, visibility: "hidden" }}
-      >
-        <Pie
-          {...props}
-          stroke={gaps ? "#fff" : query.has("thick") ? "#db6baa" : "none"}
-          isAnimationActive={false}
+          {rings && (
+            <Chart.PieSeries {...props} material={material} innerRadius={115} outerRadius={130}>
+              {cells}
+            </Chart.PieSeries>
+          )}
+          <Chart.Tooltip itemKey={identity} />
+        </Chart.PieChart>
+        <NativePieChart
+          width={300}
+          height={280}
+          aria-label="Native oracle"
+          style={{ position: "absolute", top: 0, left: 0, visibility: "hidden" }}
         >
-          {cells}
-        </Pie>
-        {rings && (
           <Pie
             {...props}
-            innerRadius={115}
-            outerRadius={130}
             stroke={gaps ? "#fff" : query.has("thick") ? "#db6baa" : "none"}
             isAnimationActive={false}
           >
             {cells}
           </Pie>
-        )}
-        <NativeTooltip isAnimationActive={false} />
-      </NativePieChart>
+          {rings && (
+            <Pie
+              {...props}
+              innerRadius={115}
+              outerRadius={130}
+              stroke={gaps ? "#fff" : query.has("thick") ? "#db6baa" : "none"}
+              isAnimationActive={false}
+            >
+              {cells}
+            </Pie>
+          )}
+          <NativeTooltip isAnimationActive={false} />
+        </NativePieChart>
+      </div>
     </section>
   );
 }

@@ -4,7 +4,6 @@ import {
   Cell,
   LabelList,
   ReferenceLine,
-  ResponsiveContainer,
   type TooltipRenderProps as TooltipContentProps,
   XAxis,
   YAxis,
@@ -109,105 +108,102 @@ export function BoxHost() {
         Paint
       </button>
       <output aria-label="Events">{events}</output>
-      <ResponsiveContainer width="100%" height={320}>
-        <Chart.BoxPlotChart
-          interaction={{
-            kind: "series",
-            mode: "visibility",
-            eligibleKeys: Object.keys({
-              distribution: { label: "Distribution", color: "#176b69" },
-            }),
-          }}
-          config={{ distribution: { label: "Distribution", color: "#176b69" } }}
-          visibleSeries={visible}
-          onVisibleSeriesChange={setVisible}
-          data={rows}
-          layout={horizontal ? "vertical" : "horizontal"}
-          ref={ref}
-          animate={animate ? { revealDurationMs: 10000 } : false}
-          aria-label="Box distribution"
-          onMouseMove={() => setEvents((v) => v + 1)}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            xAxisId="x"
-            type={horizontal ? "number" : "category"}
-            {...(!horizontal ? { dataKey: "category" } : {})}
-            {...(horizontal
-              ? { domain: domain ? [-30, 40] : ["dataMin", "dataMax"], reversed }
-              : {})}
-          />
-          <YAxis
-            yAxisId="y"
-            type={horizontal ? "category" : "number"}
-            {...(horizontal ? { dataKey: "category" } : {})}
-            width={horizontal ? 76 : 44}
-            {...(!horizontal
-              ? { domain: domain ? [-30, 40] : ["dataMin", "dataMax"], reversed }
-              : {})}
-          />
+      <Chart.BoxPlotChart
+        height={320}
+        interaction={{
+          kind: "series",
+          mode: "visibility",
+          eligibleKeys: Object.keys({
+            distribution: { label: "Distribution", color: "#176b69" },
+          }),
+        }}
+        config={{ distribution: { label: "Distribution", color: "#176b69" } }}
+        visibleSeries={visible}
+        onVisibleSeriesChange={setVisible}
+        data={rows}
+        layout={horizontal ? "vertical" : "horizontal"}
+        ref={ref}
+        animate={animate ? { revealDurationMs: 10000 } : false}
+        aria-label="Box distribution"
+        onMouseMove={() => setEvents((v) => v + 1)}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis
+          xAxisId="x"
+          type={horizontal ? "number" : "category"}
+          {...(!horizontal ? { dataKey: "category" } : {})}
+          {...(horizontal ? { domain: domain ? [-30, 40] : ["dataMin", "dataMax"], reversed } : {})}
+        />
+        <YAxis
+          yAxisId="y"
+          type={horizontal ? "category" : "number"}
+          {...(horizontal ? { dataKey: "category" } : {})}
+          width={horizontal ? 76 : 44}
+          {...(!horizontal
+            ? { domain: domain ? [-30, 40] : ["dataMin", "dataMax"], reversed }
+            : {})}
+        />
+        <ReferenceLine
+          xAxisId="x"
+          yAxisId="y"
+          {...(horizontal ? { x: 0 } : { y: 0 })}
+          stroke="#444"
+        />
+        {[-20, -12, -8, -3, 0, 2, 3, 5, 7, 8, 13, 16, 17, 24].map((value) => (
           <ReferenceLine
+            key={value}
             xAxisId="x"
             yAxisId="y"
-            {...(horizontal ? { x: 0 } : { y: 0 })}
-            stroke="#444"
+            {...(horizontal ? { x: value } : { y: value })}
+            ifOverflow="visible"
+            shape={({ x1, x2, y1, y2 }: { x1: number; x2: number; y1: number; y2: number }) => (
+              <line
+                data-native-value={value}
+                x1={x1}
+                x2={x2}
+                y1={y1}
+                y2={y2}
+                opacity={0}
+                pointerEvents="none"
+              />
+            )}
           />
-          {[-20, -12, -8, -3, 0, 2, 3, 5, 7, 8, 13, 16, 17, 24].map((value) => (
-            <ReferenceLine
-              key={value}
-              xAxisId="x"
-              yAxisId="y"
-              {...(horizontal ? { x: value } : { y: value })}
-              ifOverflow="visible"
-              shape={({ x1, x2, y1, y2 }: { x1: number; x2: number; y1: number; y2: number }) => (
-                <line
-                  data-native-value={value}
-                  x1={x1}
-                  x2={x2}
-                  y1={y1}
-                  y2={y2}
-                  opacity={0}
-                  pointerEvents="none"
-                />
-              )}
+        ))}
+        <Chart.Tooltip axisId={horizontal ? "y" : "x"} content={<Content />} maxWidth={250} />
+        <Chart.BoxPlotSeries<Row>
+          material={material}
+          dataKey="summary"
+          seriesKey="distribution"
+          xAxisId="x"
+          yAxisId="y"
+          barSize={36}
+          markProps={{ ref: markRef, "aria-label": "summary mark" }}
+          onClick={() => setEvents((v) => v + 1)}
+          {...(custom
+            ? {
+                shape: (props: Chart.BoxPlotShapeProps) => {
+                  const { summary: _summary, native: _native, ...mark } = props;
+                  return <Chart.BoxPlotMark {...mark} data-custom="yes" stroke="purple" />;
+                },
+              }
+            : {})}
+        >
+          {rows.map((row) => (
+            <Cell
+              fillOpacity={paint ? 0.65 : 0}
+              clipPath="none"
+              mask="none"
+              visibility="visible"
+              strokeWidth={4}
+              strokeDasharray="4 2"
+              key={row.category}
+              fill={row.category === "Positive" ? "#935b2d" : "#176b69"}
             />
           ))}
-          <Chart.Tooltip axisId={horizontal ? "y" : "x"} content={<Content />} maxWidth={250} />
-          <Chart.BoxPlotSeries<Row>
-            material={material}
-            dataKey="summary"
-            seriesKey="distribution"
-            xAxisId="x"
-            yAxisId="y"
-            barSize={36}
-            markProps={{ ref: markRef, "aria-label": "summary mark" }}
-            onClick={() => setEvents((v) => v + 1)}
-            {...(custom
-              ? {
-                  shape: (props: Chart.BoxPlotShapeProps) => {
-                    const { summary: _summary, native: _native, ...mark } = props;
-                    return <Chart.BoxPlotMark {...mark} data-custom="yes" stroke="purple" />;
-                  },
-                }
-              : {})}
-          >
-            {rows.map((row) => (
-              <Cell
-                fillOpacity={paint ? 0.65 : 0}
-                clipPath="none"
-                mask="none"
-                visibility="visible"
-                strokeWidth={4}
-                strokeDasharray="4 2"
-                key={row.category}
-                fill={row.category === "Positive" ? "#935b2d" : "#176b69"}
-              />
-            ))}
-            <LabelList dataKey={(row: unknown) => (row as Row).summary?.median} position="top" />
-          </Chart.BoxPlotSeries>
-          <Chart.BoxPlotChart.Legend />
-        </Chart.BoxPlotChart>
-      </ResponsiveContainer>
+          <LabelList dataKey={(row: unknown) => (row as Row).summary?.median} position="top" />
+        </Chart.BoxPlotSeries>
+        <Chart.BoxPlotChart.Legend />
+      </Chart.BoxPlotChart>
       <div style={{ maxWidth: "100%", overflowX: "auto" }}>
         <table>
           <caption>Full distribution statistics, units</caption>

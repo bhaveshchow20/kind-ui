@@ -7,7 +7,6 @@ import {
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
-  ResponsiveContainer,
 } from "@kind-ui/charts";
 import { type ComponentProps, useId, useState } from "react";
 
@@ -181,9 +180,10 @@ export function PolarGalleryCard({
         </label>
       )}
       <p>{details[variant]}</p>
-      <ResponsiveContainer width="100%" height={300}>
+      <>
         {radar ? (
           <Chart.RadarChart
+            height={300}
             config={(radar && multiple) || stacked ? config : { actual: config.actual }}
             visibleSeries={visible}
             onVisibleSeriesChange={setVisible}
@@ -226,6 +226,7 @@ export function PolarGalleryCard({
           </Chart.RadarChart>
         ) : (
           <Chart.RadialBarChart
+            height={300}
             config={(radar && multiple) || stacked ? config : { actual: config.actual }}
             visibleSeries={visible}
             onVisibleSeriesChange={setVisible}
@@ -314,7 +315,7 @@ export function PolarGalleryCard({
             <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
           </Chart.RadialBarChart>
         )}
-      </ResponsiveContainer>
+      </>
       <details>
         <summary>View values</summary>
         <table>

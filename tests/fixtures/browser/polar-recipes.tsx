@@ -6,7 +6,6 @@ import {
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
-  ResponsiveContainer,
 } from "@kind-ui/charts";
 import { useState } from "react";
 
@@ -97,9 +96,10 @@ export function PolarRecipeCard({
       <h2>{recipe}</h2>
       <p>{descriptions[recipe]}</p>
       {visible.length === 0 && <p role="status">Choose a series to display.</p>}
-      <ResponsiveContainer width="100%" height={300}>
+      <>
         {radar ? (
           <Chart.RadarChart
+            height={300}
             config={
               range
                 ? { range: config.range }
@@ -141,6 +141,7 @@ export function PolarRecipeCard({
           </Chart.RadarChart>
         ) : (
           <Chart.RadialBarChart
+            height={300}
             config={
               range
                 ? { range: config.range }
@@ -211,7 +212,7 @@ export function PolarRecipeCard({
             <Chart.Tooltip {...(tooltips ? {} : { active: false })} />
           </Chart.RadialBarChart>
         )}
-      </ResponsiveContainer>
+      </>
       {rows.length === 0 && <p role="status">No scores yet.</p>}
       <details>
         <summary>View values</summary>

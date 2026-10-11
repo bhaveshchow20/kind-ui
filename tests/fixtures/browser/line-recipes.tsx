@@ -6,7 +6,6 @@ import {
   type DotProps,
   LabelList,
   ReferenceLine,
-  ResponsiveContainer,
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
@@ -70,46 +69,45 @@ function SingleSeriesLine({
       <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
       </p>
-      <ResponsiveContainer width="100%" height={196}>
-        <Line.LineChart
-          config={{
-            value: {
-              label: seriesLabel,
-              color: "var(--chart-1)",
-              formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
-            },
-          }}
-          frameProps={{ className: "recipe-chart" }}
-          data={data}
-          animate={animate}
-          accessibilityLayer
-          aria-label={label}
-          aria-describedby={id}
-          margin={{ top: 28, right: 16, left: 16, bottom: 0 }}
+      <Line.LineChart
+        height={196}
+        config={{
+          value: {
+            label: seriesLabel,
+            color: "var(--chart-1)",
+            formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
+          },
+        }}
+        frameProps={{ className: "recipe-chart" }}
+        data={data}
+        animate={animate}
+        accessibilityLayer
+        aria-label={label}
+        aria-describedby={id}
+        margin={{ top: 28, right: 16, left: 16, bottom: 0 }}
+      >
+        <CartesianGrid vertical={false} stroke="var(--border)" />
+        <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
+        <YAxis hide domain={[0, "auto"]} />
+        <Line.Tooltip
+          cursor={
+            guide
+              ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
+              : false
+          }
+        />
+        <Line.LineSeries
+          dataKey="value"
+          type={type}
+          stroke="var(--color-value)"
+          strokeWidth={material === "clay" ? 6 : material === "glow" ? 3 : 2}
+          material={material}
+          dot={dot}
+          connectNulls={false}
         >
-          <CartesianGrid vertical={false} stroke="var(--border)" />
-          <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
-          <YAxis hide domain={[0, "auto"]} />
-          <Line.Tooltip
-            cursor={
-              guide
-                ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
-                : false
-            }
-          />
-          <Line.LineSeries
-            dataKey="value"
-            type={type}
-            stroke="var(--color-value)"
-            strokeWidth={material === "clay" ? 6 : material === "glow" ? 3 : 2}
-            material={material}
-            dot={dot}
-            connectNulls={false}
-          >
-            {children}
-          </Line.LineSeries>
-        </Line.LineChart>
-      </ResponsiveContainer>
+          {children}
+        </Line.LineSeries>
+      </Line.LineChart>
     </>
   );
 }
@@ -160,50 +158,49 @@ export function TargetLine({
         Use left and right arrow keys to explore. Escape dismisses the tooltip. {targetLabel}:{" "}
         {formatValue(target)}.
       </p>
-      <ResponsiveContainer width="100%" height={196}>
-        <Line.LineChart
-          config={{
-            value: {
-              label: seriesLabel,
-              color: "var(--chart-1)",
-              formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
-            },
-          }}
-          frameProps={{ className: "recipe-chart" }}
-          data={data}
-          animate={animate}
-          accessibilityLayer
-          aria-label={label}
-          aria-describedby={id}
-          margin={{ top: 20, right: 16, left: 0, bottom: 0 }}
-        >
-          <CartesianGrid vertical={false} stroke="var(--border)" />
-          <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
-          <YAxis width={44} axisLine={false} tickLine={false} domain={[0, "auto"]} />
-          <ReferenceLine
-            y={target}
-            ifOverflow="extendDomain"
-            stroke="var(--muted-foreground)"
-            strokeDasharray="4 4"
-          />
-          <Line.Tooltip
-            cursor={
-              guide
-                ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
-                : false
-            }
-          />
-          <Line.LineSeries
-            dataKey="value"
-            type="linear"
-            stroke="var(--color-value)"
-            strokeWidth={material === "clay" ? 6 : material === "glow" ? 3 : 2}
-            material={material}
-            dot={solidDot}
-            connectNulls={false}
-          />
-        </Line.LineChart>
-      </ResponsiveContainer>
+      <Line.LineChart
+        height={196}
+        config={{
+          value: {
+            label: seriesLabel,
+            color: "var(--chart-1)",
+            formatValue: (value) => (typeof value === "number" ? formatValue(value) : "No data"),
+          },
+        }}
+        frameProps={{ className: "recipe-chart" }}
+        data={data}
+        animate={animate}
+        accessibilityLayer
+        aria-label={label}
+        aria-describedby={id}
+        margin={{ top: 20, right: 16, left: 0, bottom: 0 }}
+      >
+        <CartesianGrid vertical={false} stroke="var(--border)" />
+        <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
+        <YAxis width={44} axisLine={false} tickLine={false} domain={[0, "auto"]} />
+        <ReferenceLine
+          y={target}
+          ifOverflow="extendDomain"
+          stroke="var(--muted-foreground)"
+          strokeDasharray="4 4"
+        />
+        <Line.Tooltip
+          cursor={
+            guide
+              ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
+              : false
+          }
+        />
+        <Line.LineSeries
+          dataKey="value"
+          type="linear"
+          stroke="var(--color-value)"
+          strokeWidth={material === "clay" ? 6 : material === "glow" ? 3 : 2}
+          material={material}
+          dot={solidDot}
+          connectNulls={false}
+        />
+      </Line.LineChart>
       <p className="recipe-target">
         Dashed line · {targetLabel}: {formatValue(target)}
       </p>
@@ -243,56 +240,55 @@ export function ComparisonLine({
             No visible series.
           </p>
         )}
-        <ResponsiveContainer width="100%" height={196}>
-          <Line.LineChart
-            config={config}
-            visibleSeries={visibleSeries}
-            onVisibleSeriesChange={onVisibleSeriesChange}
-            frameProps={{ className: "recipe-chart" }}
-            data={data}
-            animate={animate}
-            accessibilityLayer
-            aria-label={label}
-            aria-describedby={id}
-            margin={{ top: 20, right: 16, left: 0, bottom: 0 }}
-          >
-            <CartesianGrid vertical={false} stroke="var(--border)" />
-            <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
-            <YAxis width={36} axisLine={false} tickLine={false} domain={[0, "auto"]} />
-            <Line.Tooltip
-              cursor={
-                guide
-                  ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
-                  : false
-              }
-            />
-            <Line.LineSeries
-              dataKey="current"
-              type="linear"
-              stroke="var(--color-current)"
-              strokeWidth={material === "clay" ? 6 : material === "glow" ? 3 : 2}
-              material={material}
-              dot={{
-                r: 3.5,
-                fill: "var(--color-current)",
-                strokeWidth: 2,
-                strokeDasharray: "none",
-              }}
-              connectNulls={false}
-            />
-            <Line.LineSeries
-              dataKey="previous"
-              type="linear"
-              stroke="var(--color-previous)"
-              strokeDasharray="5 4"
-              strokeWidth={material === "clay" ? 6 : material === "glow" ? 3 : 2}
-              material={material}
-              dot={{ r: 3.5, fill: "var(--card)", strokeWidth: 2, strokeDasharray: "none" }}
-              connectNulls={false}
-            />
-            <Line.LineChart.Legend aria-label={`${label} series`} />
-          </Line.LineChart>
-        </ResponsiveContainer>
+        <Line.LineChart
+          height={196}
+          config={config}
+          visibleSeries={visibleSeries}
+          onVisibleSeriesChange={onVisibleSeriesChange}
+          frameProps={{ className: "recipe-chart" }}
+          data={data}
+          animate={animate}
+          accessibilityLayer
+          aria-label={label}
+          aria-describedby={id}
+          margin={{ top: 20, right: 16, left: 0, bottom: 0 }}
+        >
+          <CartesianGrid vertical={false} stroke="var(--border)" />
+          <XAxis dataKey="period" axisLine={false} tickLine={false} minTickGap={24} />
+          <YAxis width={36} axisLine={false} tickLine={false} domain={[0, "auto"]} />
+          <Line.Tooltip
+            cursor={
+              guide
+                ? { stroke: "var(--muted-foreground)", strokeDasharray: "2 4", strokeWidth: 1 }
+                : false
+            }
+          />
+          <Line.LineSeries
+            dataKey="current"
+            type="linear"
+            stroke="var(--color-current)"
+            strokeWidth={material === "clay" ? 6 : material === "glow" ? 3 : 2}
+            material={material}
+            dot={{
+              r: 3.5,
+              fill: "var(--color-current)",
+              strokeWidth: 2,
+              strokeDasharray: "none",
+            }}
+            connectNulls={false}
+          />
+          <Line.LineSeries
+            dataKey="previous"
+            type="linear"
+            stroke="var(--color-previous)"
+            strokeDasharray="5 4"
+            strokeWidth={material === "clay" ? 6 : material === "glow" ? 3 : 2}
+            material={material}
+            dot={{ r: 3.5, fill: "var(--card)", strokeWidth: 2, strokeDasharray: "none" }}
+            connectNulls={false}
+          />
+          <Line.LineChart.Legend aria-label={`${label} series`} />
+        </Line.LineChart>
       </div>
     </>
   );

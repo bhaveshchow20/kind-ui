@@ -64,6 +64,8 @@ export function DerivedHide({ family }: { family: string }) {
           measure="count"
           animate={animation}
         >
+          <Chart.HistogramChart.XAxis />
+          <Chart.HistogramChart.YAxis />
           <Chart.HistogramSeries seriesKey="first" onClick={pointer} />
           <Chart.Tooltip />
           <Chart.HistogramChart.Legend />
@@ -85,6 +87,7 @@ export function DerivedHide({ family }: { family: string }) {
           <Chart.WaterfallConnectors data={waterfall} seriesKey="first" />
           <Chart.WaterfallSeries seriesKey="first" onClick={pointer} />
           <Chart.Tooltip />
+          <Chart.WaterfallChart.Legend />
         </Chart.WaterfallChart>
       ) : (
         <Chart.BoxPlotChart
@@ -103,6 +106,7 @@ export function DerivedHide({ family }: { family: string }) {
           <Chart.BoxPlotSeries seriesKey="first" dataKey="first" onClick={pointer} />
           <Chart.BoxPlotSeries seriesKey="second" dataKey="second" onClick={pointer} />
           <Chart.Tooltip />
+          <Chart.BoxPlotChart.Legend />
         </Chart.BoxPlotChart>
       )}
     </section>

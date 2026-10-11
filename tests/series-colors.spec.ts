@@ -18,21 +18,21 @@ test("theme stops switch in place across chart paints and swatches", async ({
   );
   const roots = page.locator('[data-kind-ui="chart"]');
   const gradients = page.locator('[data-kind-ui="color-resources"] linearGradient');
-  await expect(gradients).toHaveCount(2);
+  await expect(roots).toHaveCount(8);
+  await expect(gradients).toHaveCount(8);
   const allGradients = page.locator("linearGradient");
-  await expect(allGradients).toHaveCount(10);
+  await expect(allGradients).toHaveCount(16);
   const allIds = await allGradients.evaluateAll((nodes) => nodes.map((node) => node.id));
-  expect(new Set(allIds).size).toBe(10);
+  expect(new Set(allIds).size).toBe(16);
   const ids = await gradients.evaluateAll((nodes) => nodes.map((node) => node.id));
-  expect(new Set(ids).size).toBe(2);
+  expect(new Set(ids).size).toBe(8);
   const stops = gradients.first().locator("stop");
   await expect(stops.nth(0)).toHaveCSS("stop-color", "rgb(255, 0, 0)");
   await expect(stops.nth(2)).toHaveCSS("stop-color", "rgb(0, 0, 255)");
-  const marks = roots
-    .first()
-    .locator(
-      ".recharts-line-curve, .recharts-area-area, .recharts-bar-rectangle path, path.recharts-sector",
-    );
+  const firstGroup = roots.nth(0).or(roots.nth(1)).or(roots.nth(2)).or(roots.nth(3));
+  const marks = firstGroup.locator(
+    ".recharts-line-curve, .recharts-area-area, .recharts-bar-rectangle path, path.recharts-sector",
+  );
   await expect(marks).toHaveCount(6);
   const before = await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
   await roots.first().evaluate((node) => {
@@ -45,7 +45,7 @@ test("theme stops switch in place across chart paints and swatches", async ({
     "path.recharts-sector",
   ]) {
     const attribute = selector.includes("line") ? "stroke" : "fill";
-    const mark = roots.first().locator(selector).first();
+    const mark = firstGroup.locator(selector).first();
     const resource = await mark.evaluate(
       (node) => node.closest("svg")?.querySelector("linearGradient")?.id,
     );
@@ -64,7 +64,7 @@ test("theme stops switch in place across chart paints and swatches", async ({
   expect(await tooltip.evaluate((node) => getComputedStyle(node).backgroundImage)).toEqual(
     await legend.evaluate((node) => getComputedStyle(node).backgroundImage),
   );
-  const bar = roots.first().locator(".recharts-bar-rectangle path").first();
+  const bar = roots.nth(2).locator(".recharts-bar-rectangle path").first();
   const box = await bar.boundingBox();
   if (!box) throw new Error("Missing rendered bar");
   const pixels = await page.evaluate(
@@ -122,22 +122,22 @@ test("theme stops switch in place across chart paints and swatches", async ({
     ".recharts-bar-rectangle path",
     "path.recharts-sector",
   ]) {
-    await expect(roots.first().locator(selector).first()).toHaveAttribute(
+    await expect(firstGroup.locator(selector).first()).toHaveAttribute(
       selector.includes("line") ? "stroke" : "fill",
       "#00ff00",
     );
   }
   await page.getByRole("button", { name: "Override", exact: true }).click();
   await page.getByRole("button", { name: "Pattern", exact: true }).click();
-  await expect(roots.first().locator(".recharts-bar-rectangle path").first()).toHaveAttribute(
+  await expect(roots.nth(2).locator(".recharts-bar-rectangle path").first()).toHaveAttribute(
     "fill",
     /kind-ui-pattern/,
   );
-  await expect(roots.first().locator("pattern rect").first()).toHaveAttribute(
+  await expect(roots.nth(2).locator(".recharts-surface pattern rect").first()).toHaveAttribute(
     "fill",
     "var(--color-value)",
   );
-  await expect(roots.first().locator("pattern rect").first()).toHaveCSS(
+  await expect(roots.nth(2).locator(".recharts-surface pattern rect").first()).toHaveCSS(
     "fill",
     "rgb(255, 255, 255)",
   );
@@ -147,7 +147,7 @@ test("theme stops switch in place across chart paints and swatches", async ({
   expect(await symbol.evaluate((node) => getComputedStyle(node).fill)).toContain(ids[0]);
   await expectLastVisibleGuard(
     symbolLegend.getByRole("button", { name: "Value", exact: true }),
-    roots.first().locator(".recharts-line-curve, .recharts-bar-rectangle path"),
+    firstGroup.locator(".recharts-line-curve, .recharts-bar-rectangle path"),
   );
   expect(await symbol.evaluate((node) => getComputedStyle(node).fill)).toContain(ids[0]);
   await page.getByRole("button", { name: "External visibility", exact: true }).click();
@@ -161,7 +161,7 @@ test("theme stops switch in place across chart paints and swatches", async ({
     "var(--color-value)",
   );
   await page.getByRole("button", { name: "Solid", exact: true }).click();
-  await expect(allGradients).toHaveCount(10);
+  await expect(allGradients).toHaveCount(16);
   expect(await allGradients.evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(allIds);
   expect(errors).toEqual([]);
 });

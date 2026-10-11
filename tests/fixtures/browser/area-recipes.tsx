@@ -1,5 +1,5 @@
 import * as Chart from "@kind-ui/charts";
-import { CartesianGrid, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "@kind-ui/charts";
+import { CartesianGrid, ReferenceLine, XAxis, YAxis } from "@kind-ui/charts";
 import { type ReactNode, useId } from "react";
 
 export type AreaPoint = { period: string; value: number | null };
@@ -68,68 +68,67 @@ function AreaFrame<T extends { period: string }>({
       <p id={id} className="recipe-help">
         Use left and right arrow keys to explore values. Escape dismisses the tooltip.
       </p>
-      <ResponsiveContainer width="100%" height={220}>
-        <Chart.AreaChart
-          visibleSeries={visibleSeries ?? Object.keys(config)}
-          {...(onVisibleSeriesChange
-            ? {
-                onVisibleSeriesChange: (series: string[]) =>
-                  onVisibleSeriesChange(
-                    series.filter(
-                      (value): value is AreaSeries => value === "desktop" || value === "mobile",
-                    ),
+      <Chart.AreaChart
+        height={220}
+        visibleSeries={visibleSeries ?? Object.keys(config)}
+        {...(onVisibleSeriesChange
+          ? {
+              onVisibleSeriesChange: (series: string[]) =>
+                onVisibleSeriesChange(
+                  series.filter(
+                    (value): value is AreaSeries => value === "desktop" || value === "mobile",
                   ),
+                ),
+            }
+          : {})}
+        frameProps={{ className: "recipe-chart" }}
+        data={data}
+        stackOffset={offset}
+        accessibilityLayer
+        aria-label={label}
+        aria-describedby={id}
+        animate={options ?? false}
+        margin={{ top: 20, right: 12, bottom: 0, left: 0 }}
+        config={config}
+      >
+        <CartesianGrid vertical={false} stroke="var(--border)" />
+        {children}
+        {threshold !== undefined && (
+          <ReferenceLine
+            y={threshold}
+            stroke="var(--muted-foreground)"
+            strokeDasharray="4 4"
+            ifOverflow="extendDomain"
+            label={{ value: "Goal", position: "insideTopRight", fill: "var(--muted-foreground)" }}
+          />
+        )}
+        <XAxis dataKey="period" axisLine={false} tickLine={false} tickMargin={8} />
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          domain={
+            percentage
+              ? [0, 1]
+              : threshold === undefined
+                ? ["auto", "auto"]
+                : ([min, max]) => [
+                    Math.min(min, threshold),
+                    Math.max(max, threshold) + Math.max(1, Math.abs(max - min) * 0.05),
+                  ]
+          }
+          {...(percentage
+            ? {
+                ticks: [0, 0.25, 0.5, 0.75, 1],
+                tickFormatter: percentStack.tickFormatter,
               }
             : {})}
-          frameProps={{ className: "recipe-chart" }}
-          data={data}
-          stackOffset={offset}
-          accessibilityLayer
-          aria-label={label}
-          aria-describedby={id}
-          animate={options ?? false}
-          margin={{ top: 20, right: 12, bottom: 0, left: 0 }}
-          config={config}
-        >
-          <CartesianGrid vertical={false} stroke="var(--border)" />
-          {children}
-          {threshold !== undefined && (
-            <ReferenceLine
-              y={threshold}
-              stroke="var(--muted-foreground)"
-              strokeDasharray="4 4"
-              ifOverflow="extendDomain"
-              label={{ value: "Goal", position: "insideTopRight", fill: "var(--muted-foreground)" }}
-            />
-          )}
-          <XAxis dataKey="period" axisLine={false} tickLine={false} tickMargin={8} />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            domain={
-              percentage
-                ? [0, 1]
-                : threshold === undefined
-                  ? ["auto", "auto"]
-                  : ([min, max]) => [
-                      Math.min(min, threshold),
-                      Math.max(max, threshold) + Math.max(1, Math.abs(max - min) * 0.05),
-                    ]
-            }
-            {...(percentage
-              ? {
-                  ticks: [0, 0.25, 0.5, 0.75, 1],
-                  tickFormatter: percentStack.tickFormatter,
-                }
-              : {})}
-            width={36}
-          />
-          <Chart.Tooltip {...(percentage ? { formatter: tooltipFormatter } : {})} />
-          {(showLegend || (visibleSeries !== undefined && onVisibleSeriesChange !== undefined)) && (
-            <Chart.AreaChart.Legend />
-          )}
-        </Chart.AreaChart>
-      </ResponsiveContainer>
+          width={36}
+        />
+        <Chart.Tooltip {...(percentage ? { formatter: tooltipFormatter } : {})} />
+        {(showLegend || (visibleSeries !== undefined && onVisibleSeriesChange !== undefined)) && (
+          <Chart.AreaChart.Legend />
+        )}
+      </Chart.AreaChart>
     </>
   );
   return content;

@@ -149,9 +149,11 @@ const marks = {
   waterfall: ".recharts-bar-rectangle",
 };
 for (const [family, selector] of Object.entries(marks)) {
-  test(`${family} docs: legend focus preserves all plotted geometry`, async ({ page }) => {
-    await page.goto(`/?only=docs&doc=${family}`);
-    const card = page.locator(`#docs-${family}`);
+  test(`${family} compound family: legend focus preserves all plotted geometry`, async ({
+    page,
+  }) => {
+    await page.goto(`/?only=family-contracts&contract=${family}&static`);
+    const card = page.locator(`#family-contract-${family}`);
     await expect(card.locator(selector)).not.toHaveCount(0);
     await card.scrollIntoViewIfNeeded();
     await expect(card.locator('[data-kind-ui="bar-reveal"]')).toHaveCount(0);
@@ -210,8 +212,10 @@ test("explicit line focus preserves geometry; quantitative Heatmap legend stays 
       .locator(".recharts-line-curve")
       .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("d"))),
   ).toEqual(baseline);
-  await page.goto("/?only=docs&doc=heatmap");
-  await expect(page.locator('#docs-heatmap [data-kind-ui="heatmap-legend"] button')).toHaveCount(0);
+  await page.goto("/?only=family-contracts&contract=heatmap&static");
+  await expect(
+    page.locator('#family-contract-heatmap [data-kind-ui="heatmap-legend"] button'),
+  ).toHaveCount(0);
 });
 
 for (const family of ["line", "area", "bar", "combo", "radar"]) {
