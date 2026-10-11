@@ -157,6 +157,17 @@ for (const host of ["vite", "next"] as const) {
     expect(await box(utilities).evaluate((el) => getComputedStyle(el).backgroundColor)).toContain(
       "oklch",
     );
+    const properties = proof.locator('[data-theme-case="properties"]');
+    await expect(properties).toHaveCSS("width", "240px");
+    await expect(properties).toHaveCSS("color", "rgb(70, 80, 90)");
+    await expect(box(properties)).toHaveCSS("padding", "24px");
+    await expect(box(properties)).toHaveCSS("color", "rgb(20, 30, 40)");
+    const heatmap = proof.locator('[data-theme-case="heatmap-overrides"]');
+    await expect(heatmap.locator('[data-kind-ui="heatmap-grid"]')).toHaveCSS(
+      "border-spacing",
+      "24px",
+    );
+    await expect(heatmap.locator("td")).toHaveCSS("background-image", "none");
     const plot = proof.locator('[title="Semantic plot"]');
     await expect(plot.locator(".recharts-cartesian-grid line").first()).toHaveCSS(
       "stroke",

@@ -272,7 +272,7 @@ try {
         "box-plot",
         "number-shuffle",
         "activity-rings",
-        "stylesheet-warning",
+        "tailwind-setup",
       ].includes(folder) &&
       file.endsWith(".tsx")
     )
@@ -293,10 +293,16 @@ try {
           transformIndexHtml: {
             order: "pre",
             handler(html) {
-              return html.replace(
-                "</head>",
-                '<link rel="stylesheet" href="/chart-tailwind.css"></head>',
-              );
+              return {
+                html,
+                tags: [
+                  {
+                    tag: "link",
+                    attrs: { rel: "stylesheet", href: "/chart-tailwind.css" },
+                    injectTo: "head",
+                  },
+                ],
+              };
             },
           },
         },
@@ -586,7 +592,7 @@ createRoot(document.createElement("div")).render(
   await production("index.html", "packed-polar-development", true);
   console.log("Radar/radial tarball consumer: strict NodeNext/Bundler and production build passed");
   for (const file of ["host.tsx", "main.tsx", "index.html", "render.mjs"])
-    await copyFixture("stylesheet-warning", file);
+    await copyFixture("tailwind-setup", file);
   await typecheck(["host.tsx", "main.tsx"]);
   // Hydrate the same public packed host, rather than duplicating Root's server markup.
   run(
@@ -608,8 +614,8 @@ createRoot(document.createElement("div")).render(
     consumer,
   );
   run(process.execPath, ["render.mjs"], consumer);
-  await production("index.html", "packed-stylesheet-production");
-  await production("index.html", "packed-stylesheet-development", true);
+  await production("index.html", "packed-tailwind-production");
+  await production("index.html", "packed-tailwind-development", true);
   console.log(
     "Tailwind source registration: packed SSR hydration consumer built in both modes without chart CSS imports",
   );
@@ -708,7 +714,7 @@ createRoot(document.createElement("div")).render(
     "Migrated area and bar host recipe typechecks passed; separate from packed public-export proof",
   );
   console.log(
-    "Packed contents, CSS, license, ESM import, component tests, strict consumers and production styling build passed",
+    "Packed contents, Tailwind class discovery, license, ESM import, component tests, strict consumers and production styling build passed",
   );
   if (process.argv.includes("--keep-artifact")) {
     const destination = artifactDestination;

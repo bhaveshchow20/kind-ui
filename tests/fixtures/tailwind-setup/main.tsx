@@ -1,22 +1,18 @@
 import { StrictMode } from "react";
 import { createRoot, hydrateRoot, type Root } from "react-dom/client";
-import { StylesheetHost } from "./host.js";
+import { TailwindHost } from "./host.js";
 
-const params = new URLSearchParams(location.search);
 const containers = ["first", "second"].map((id) => {
   const node = document.getElementById(id);
-  if (!node) throw new Error("Missing stylesheet fixture root");
+  if (!node) throw new Error("Missing Tailwind fixture root");
   return node;
 });
 const host = (
   <StrictMode>
-    <StylesheetHost />
+    <TailwindHost />
   </StrictMode>
 );
-let roots: Root[] = [];
-if (params.has("late")) {
-  for (const node of containers) node.replaceChildren();
-} else roots = containers.map((node) => hydrateRoot(node, host));
+let roots: Root[] = containers.map((node) => hydrateRoot(node, host));
 document.getElementById("unmount")?.addEventListener("click", () => {
   for (const root of roots) root.unmount();
   roots = [];

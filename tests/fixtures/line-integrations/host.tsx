@@ -1,6 +1,9 @@
 import {
   BarChart,
   BarSeries,
+  createHeatmapScale,
+  HeatmapChart,
+  HeatmapGrid,
   Legend,
   LineChart,
   LineSeries,
@@ -174,6 +177,27 @@ export function ThemingHost() {
           tooltip={content}
         />
       </Root>
+      <Root
+        config={config}
+        data-theme-case="properties"
+        className="[width:240px] [color:rgb(70,80,90)]"
+      >
+        <TooltipContent tooltip={content} className="[padding:24px] [color:rgb(20,30,40)]" />
+      </Root>
+      <HeatmapChart
+        rows={["A"]}
+        columns={["B"]}
+        data={[{ row: "A", column: "B", value: 1 }]}
+        scale={createHeatmapScale({ domain: [0, 1], colors: ["#fff", "#000"] })}
+        data-theme-case="heatmap-overrides"
+      >
+        <HeatmapGrid
+          caption="Utility overrides"
+          material="clay"
+          className="border-spacing-6"
+          cellProps={() => ({ className: "[background-image:none]" })}
+        />
+      </HeatmapChart>
       <LineChart
         config={config}
         data={[
