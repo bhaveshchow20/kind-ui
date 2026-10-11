@@ -629,18 +629,12 @@ const sankeyIconConsumer = (
 void sankeyIconConsumer;
 
 // @ts-expect-error The chart-owned API has no public provider prop contract.
+export type RemovedRootProps = Chart.RootProps;
 // @ts-expect-error Configured recipes are not a second public chart API.
-import type { ConfiguredLineChartProps, RootProps } from "@kind-ui/charts";
+export type RemovedConfiguredLineChartProps = Chart.ConfiguredLineChartProps;
 // @ts-expect-error The chart-owned API has no public provider component.
-import { Root } from "@kind-ui/charts";
-
-void (null as unknown as RootProps);
-void (null as unknown as ConfiguredLineChartProps);
-void Root;
-
+export type RemovedRoot = typeof Chart.Root;
 // @ts-expect-error Configured line series belong to the removed recipe API.
+export type RemovedConfiguredLineSeries = Chart.ConfiguredLineSeries;
 // @ts-expect-error Selection is chart-owned, with no separate Radar recipe contract.
-import type { ConfiguredLineSeries, RadarSelectionProps } from "@kind-ui/charts";
-
-void (null as unknown as ConfiguredLineSeries);
-void (null as unknown as RadarSelectionProps);
+export type RemovedRadarSelectionProps = Chart.RadarSelectionProps;

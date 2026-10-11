@@ -1,10 +1,10 @@
 import { expect, type Locator, test } from "./browser.js";
 
 const url = "http://127.0.0.1:4177";
-const control = "[data-kind-ui=radar-selection]";
-const dimmed = `${control}[data-selection=dimmed]`;
+const control = "[data-kind-ui=series-interaction][role=button]";
+const dimmed = `${control}[aria-pressed=false] > [data-kind-ui=series-interaction-paint][style*="0.28"]`;
 const radar = "[data-host=radar]";
-const selected = `${control}[data-selection=selected]`;
+const selected = `${control}[aria-pressed=true]`;
 
 async function polygonCenter(path: Locator) {
   return path.evaluate((node: SVGPathElement) => {
@@ -180,7 +180,7 @@ test("native spoke inspection and portaled labels/active markers stay independen
     await host
       .locator(".recharts-label, [data-kind-ui=active-marker]")
       .evaluateAll((nodes) =>
-        nodes.every((node) => !node.closest("[data-kind-ui=radar-selection-paint]")),
+        nodes.every((node) => !node.closest("[data-kind-ui=series-interaction-paint]")),
       ),
   ).toBe(true);
   await host.locator(".recharts-label").first().click();
@@ -194,7 +194,7 @@ test("default charts remain unselected and consumer custom shapes/veto retain ow
   page,
 }) => {
   await page.goto(url);
-  await expect(page.locator(radar).locator(control)).toHaveCount(0);
+  await expect(page.locator(radar).getByRole("button", { name: /^Highlight / })).toHaveCount(0);
   await page.goto(`${url}?selection&radar-shape&veto`);
   const host = page.locator(radar);
   const actual = host.getByRole("button", { name: "Highlight Actual", exact: true });

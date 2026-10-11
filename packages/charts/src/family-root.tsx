@@ -223,9 +223,7 @@ export function familyVisibility(options: {
     return { visibleSeries, ...callback };
   }
   if (defaultVisibleSeries !== undefined) return { defaultVisibleSeries, ...callback };
-  if (onVisibleSeriesChange)
-    throw new Error(
-      "Chart requires visibleSeries or defaultVisibleSeries when onVisibleSeriesChange is provided",
-    );
+  // Defer callback validation to the mounted provider so ownership changes fail first.
+  if (onVisibleSeriesChange) return { onVisibleSeriesChange } as ChartVisibilityProps;
   return {};
 }

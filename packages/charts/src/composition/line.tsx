@@ -25,6 +25,7 @@ function LineFamily<DataPoint = unknown>(props: LineChartProps<DataPoint>) {
     NativeLineChart,
     {
       ...props,
+      animate: props.animate ?? true,
       accessibilityLayer,
       ...(describedBy ? { "aria-describedby": describedBy } : {}),
     },

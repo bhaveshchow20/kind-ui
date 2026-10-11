@@ -190,7 +190,9 @@ export function PolarHost() {
               if (!frozen) setSelected(next);
             },
           }
-        : { onSelectionChange: (next: string | null) => setRequests((old) => [...old, next]) }),
+        : params.has("bare")
+          ? {}
+          : { onSelectionChange: (next: string | null) => setRequests((old) => [...old, next]) }),
     },
   };
 
@@ -309,8 +311,9 @@ export function PolarHost() {
             : { kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }
         }
         config={config}
-        visibleSeries={visible}
-        onVisibleSeriesChange={setVisible}
+        {...(params.has("controlled") || !params.has("selection")
+          ? { visibleSeries: visible, onVisibleSeriesChange: setVisible }
+          : {})}
         emphasis={emphasisEnabled ? "auto" : "none"}
         frameProps={{ "data-host": "radar" }}
         ref={ref}

@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithRef, useId } from "react";
+import { type ComponentPropsWithRef, useId, useRef } from "react";
 import { InteractionMotionRoot } from "./animation.js";
 import type { ChartContextValue } from "./chart-context.js";
 import { ChartContext } from "./chart-context.js";
@@ -42,6 +42,9 @@ export function ChartProvider({
   children,
   ...props
 }: ChartProviderProps) {
+  const controlledVisibility = useRef(visibleSeries !== undefined);
+  if (controlledVisibility.current !== (visibleSeries !== undefined))
+    throw new Error("Chart cannot switch controlled visibility mode during a mount");
   if (onVisibleSeriesChange && visibleSeries === undefined && defaultVisibleSeries === undefined)
     throw new Error(
       "Chart requires visibleSeries or defaultVisibleSeries when onVisibleSeriesChange is provided",

@@ -9,6 +9,7 @@ import {
   memo,
   type ReactElement,
   type ReactNode,
+  type SVGProps,
   use,
   useCallback,
   useId,
@@ -21,6 +22,7 @@ import {
   type ActiveDotProps,
   DefaultZIndexes,
   Dot,
+  type DotItemDotProps,
   Polygon,
   Radar,
   RadialBar,
@@ -77,6 +79,79 @@ function RadarActiveDot(props: Partial<ActiveDotProps>) {
   );
 }
 const radarActiveDot = <RadarActiveDot />;
+
+type RadarDot = ComponentProps<typeof Radar>["dot"];
+
+/** Keep native dot options stable while painting inside Recharts' dot portal. */
+function useRadarInteractionDot(dot: RadarDot, seriesKey: string | undefined, hidden: boolean) {
+  const interaction = useChartInteraction();
+  const enabled = interaction.configured && interaction.kind === "series";
+  return useMemo(() => {
+    if (!enabled && !hidden) return dot;
+    const props = isValidElement<SVGProps<SVGElement>>(dot)
+      ? dot.props
+      : typeof dot === "object"
+        ? dot
+        : {};
+    return <RadarInteractionDot {...props} option={dot} seriesKey={seriesKey} hidden={hidden} />;
+  }, [enabled, dot, seriesKey, hidden]);
+}
+
+function RadarInteractionDot({
+  option,
+  seriesKey,
+  hidden,
+  ...props
+}: {
+  option: RadarDot;
+  seriesKey: string | undefined;
+  hidden: boolean;
+  [key: string]: unknown;
+}) {
+  const interaction = useChartInteraction();
+  const enabled = !hidden && seriesKey !== undefined && interaction.eligible.includes(seriesKey);
+  const emphasis = useEmphasis(
+    { kind: "series", key: seriesKey ?? "", scope: "series", seriesKey },
+    enabled,
+  );
+  // Match the native one-point fallback, including dot={false}.
+  if (!option && (!Array.isArray(props.points) || props.points.length !== 1)) return null;
+  let paint: ReactNode;
+  if (isValidElement(option)) paint = cloneElement(option, props);
+  else if (typeof option === "function") paint = option(props as DotItemDotProps);
+  else
+    paint = (
+      <Dot
+        {...props}
+        className={[
+          "recharts-radar-dot",
+          typeof option === "object" ? option?.className : undefined,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      />
+    );
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Pointer equivalent of the series keyboard control.
+    <g
+      data-kind-ui="radar-interaction-dot"
+      pointerEvents={hidden ? "none" : undefined}
+      onClick={(event) => {
+        // Consumer portals bubble React events but retain their own DOM and interaction.
+        if (
+          enabled &&
+          interaction.interactive &&
+          interaction.markActivation &&
+          event.button === 0 &&
+          event.currentTarget.contains(event.target as Node)
+        )
+          interaction.activate({ kind: "series", key: seriesKey }, "mark", event);
+      }}
+    >
+      <InteractionPaint opacity={hidden ? 0 : emphasis.factor}>{paint}</InteractionPaint>
+    </g>
+  );
+}
 
 export type RadarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Radar<DataPoint, Value>>,
@@ -267,6 +342,7 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
     () => visibilityLabelChildren(props.children, series.hide, undefined, key),
     [props.children, series.hide, key],
   );
+  const interactionDot = useRadarInteractionDot(props.dot, key, series.hide);
   const { nonce } = useChart();
   const filterId = `kind-ui-polar-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const materialized =
@@ -304,6 +380,7 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
             <StableRadar<DataPoint, Value>
               {...props}
               activeDot={radarActiveDot}
+              {...(interactionDot !== undefined ? { dot: interactionDot } : {})}
               {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
               {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
               {...(nativeLabel !== undefined ? { label: nativeLabel } : {})}
