@@ -22,7 +22,9 @@ The registry is checked against published `@kind-ui/charts@0.4.0` and its record
 
 Until genuine global registration, users must merge the one-time @kind-ui mapping into components.json. Bare namespace commands are only valid after that setup. Normal registry indexing supports shadcn CLI discovery and its MCP tooling; no Kind-specific MCP server is added.
 
-Global registration is a separate publication action: verify stable public endpoints, add the entry to shadcn-ui/ui `apps/v4/registry/directory.json`, run `pnpm validate:registries`, and submit for maintainer review. The registry must be public/open source, schema-valid and flat; discovery file entries omit content. See https://ui.shadcn.com/docs/registry/registry-index. No external submission is authorized by this corrective PR. Prepared metadata is in `apps/docs/registry/directory-entry.json`; verify it against the authoritative deployment before submission.
+Global registration follows separately authorized merge and deployment. Prepared metadata is in `apps/docs/registry/directory-entry.json`, including the required inline logo from the existing Kind flower asset. Verify that the live index returns all 14 items with no embedded file content, every item URL returns schema-valid source, and a clean consumer can discover/install the live registry using the one-time namespace mapping. Confirm @kind-ui is still available.
+
+The parent/owner can then add that exact entry to shadcn-ui/ui `apps/v4/registry/directory.json`, run `pnpm validate:registries` from `apps/v4`, and submit for maintainer review. The current upstream validator checks directory/public-payload schemas and namespace uniqueness; it does not prove endpoint availability. The registry must remain public/open source and flat. See https://ui.shadcn.com/docs/registry/registry-index and the upstream `apps/v4/lib/registry-directory.ts` schema. No external submission is performed by this corrective PR.
 
 ## Verification
 

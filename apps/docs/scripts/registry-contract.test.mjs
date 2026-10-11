@@ -49,6 +49,18 @@ test("missing, duplicate and incompatible items fail the catalog gate", () => {
   drift.items[0].dependencies[0] = "@kind-ui/charts@latest";
   assert.throws(() => validateCatalog(drift));
 });
+test("prepared directory entry includes current upstream requirements", () => {
+  // shadcn-ui/ui apps/v4/lib/registry-directory.ts requires an inline logo.
+  const entry = JSON.parse(read("registry/directory-entry.json"));
+  assert.deepEqual(Object.keys(entry).sort(), ["description", "homepage", "logo", "name", "url"]);
+  assert.match(entry.name, /^@[a-zA-Z0-9][a-zA-Z0-9_-]*$/);
+  assert.equal(entry.name, "@kind-ui");
+  assert.equal(new URL(entry.homepage).protocol, "https:");
+  assert.equal(new URL(entry.url).protocol, "https:");
+  assert.ok(entry.url.includes("{name}"));
+  assert.match(entry.logo, /^<svg .*xmlns="http:\/\/www.w3.org\/2000\/svg"/);
+  assert.match(entry.logo, /kind-ui-petal/);
+});
 test("items use canonical source and every catalog example maps to a family item", () => {
   for (const item of index.items) {
     const built = JSON.parse(read(`public/r/${item.name}.json`));
