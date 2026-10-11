@@ -331,6 +331,19 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
     props.onClick,
   );
   const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
+  const clickOwner = useRef({ handler: props.onClick, activate: interaction.onClick, key });
+  useLayoutEffect(() => {
+    clickOwner.current = { handler: props.onClick, activate: interaction.onClick, key };
+  });
+  const onClick = useCallback<NonNullable<RadarSeriesProps<DataPoint, Value>["onClick"]>>(
+    (event) => {
+      const owner = (event.target as Element).closest('[data-kind-ui="series-interaction"]');
+      const current = clickOwner.current;
+      if (owner?.getAttribute("data-series") === current.key) current.activate?.(event);
+      else current.handler?.(event);
+    },
+    [],
+  );
   const nativeLabel = useMemo(
     () =>
       props.label === undefined
@@ -381,7 +394,7 @@ export function RadarSeries<DataPoint = unknown, Value = unknown>({
               {...props}
               activeDot={radarActiveDot}
               {...(interactionDot !== undefined ? { dot: interactionDot } : {})}
-              {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
+              {...(interaction.onClick !== undefined ? { onClick } : {})}
               {...(props.shape === undefined ? { shape: renderRadarEntrance } : {})}
               {...(nativeLabel !== undefined ? { label: nativeLabel } : {})}
               id={series.id}
