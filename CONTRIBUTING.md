@@ -36,6 +36,8 @@ Compiler safety checks apply to Core, the homepage, Docs and public consumer/bro
 
 Biome blocks explicit `any`, implicit `any` variables, `@ts-ignore` and unchecked non-null assertions. Any necessary library-boundary exception must be local and explain the invariant or third-party type limitation. Negative consumers use `@ts-expect-error` so an unexpectedly accepted unsafe input fails the check. Host recipe consumers that require generated fixtures are checked by the packed gate.
 
+Core and app sources retain exact optional-property checks. The packed declaration gate keeps `skipLibCheck=false` with exact optional properties disabled because the installed Recharts/Redux Toolkit declarations fail that combination (`TaskAbortError.code` and async-thunk constraints). The focused packed negative consumer enables exact optional properties while skipping dependency declaration bodies; its consumer expressions still typecheck. Browser/public consumer sources also retain exact optional properties. This exception applies to dependency declaration compatibility, not owned source code.
+
 The actual tarball also passes strict publint and Are The Types Wrong's `esm-only` profile. This profile matches the declared ESM exports and checks ESM/Bundler resolution; it does not expand the package's documented compatibility. Focused axe checks complement keyboard and geometry regressions for public charts and maintained site interactions.
 
 ## Local artifact preparation

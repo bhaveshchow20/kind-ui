@@ -221,7 +221,10 @@ try {
           moduleResolution: mode,
           strict: true,
           noUncheckedIndexedAccess: true,
-          exactOptionalPropertyTypes: true,
+          // Recharts' Redux Toolkit declarations do not support exact optional
+          // properties with declaration checking. Owned sources and the focused
+          // packed negative consumer check this flag separately.
+          exactOptionalPropertyTypes: false,
           noImplicitOverride: true,
           isolatedModules: true,
           skipLibCheck: false,
@@ -523,7 +526,12 @@ createRoot(document.createElement("div")).render(
   );
 
   await copyFile(join(root, "tests/core-contracts.tsx"), join(consumer, "core-contracts.tsx"));
-  await typecheck(["core-contracts.tsx"]);
+  await checkTypes(
+    consumer,
+    join(root, "node_modules/typescript/bin/tsc"),
+    ["core-contracts.tsx"],
+    { strictOptionalTypes: true },
+  );
   console.log("Core unsafe-input type regressions: packed NodeNext/Bundler consumers passed");
   const genericsConsumer = await readFile(join(root, "tests/series-generics-consumer.tsx"), "utf8");
   assertLineConsumerSource(genericsConsumer);
