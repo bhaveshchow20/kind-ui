@@ -493,7 +493,7 @@ test("point marker gallery keeps theme, keyboard inspection and data alternative
   await expect(theme).toHaveAttribute("aria-pressed", "false");
   await theme.click();
   await expect(theme).toHaveAttribute("aria-pressed", "true");
-  await expect(gallery).toHaveCSS("--kind-ui-chart-marker-surface", "#172033");
+  await expect(gallery).toHaveCSS("--card", "#172033");
   const chart = gallery.getByRole("application", { name: "border markers", exact: true });
   await chart.focus();
   await page.keyboard.press("ArrowRight");

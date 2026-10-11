@@ -14,6 +14,7 @@ import { type LineAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
 import { RevealClip } from "./reveal-clip.js";
+import { cn } from "./utils.js";
 
 export type AreaAnimation = LineAnimation;
 export type AreaChartProps = ComponentProps<typeof EngineAreaChart> & {
@@ -62,7 +63,10 @@ export function AreaChart({
         loadingAnimation={options}
         chartProps={{
           ...props,
-          className: ["kind-ui-area-chart", props.className].filter(Boolean).join(" "),
+          className: cn(
+            "kind-ui-area-chart [&_.recharts-area]:[clip-path:var(--kind-ui-line-clip,none)] [&_.recharts-area-dots]:[clip-path:var(--kind-ui-line-clip,none)]",
+            props.className,
+          ),
         }}
         engine={EngineAreaChart}
         motionEnabled={enabled}

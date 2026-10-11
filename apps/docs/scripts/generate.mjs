@@ -46,6 +46,8 @@ const manifest = {
     motion: "13.4.6",
   },
   devDependencies: {
+    "@tailwindcss/vite": "4.3.3",
+    tailwindcss: "4.3.3",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     typescript: "5.9.3",
@@ -145,10 +147,14 @@ for (const example of allExamples) {
       null,
       2,
     )}\n`,
-    "src/main.tsx": `import { StrictMode } from "react";\nimport { createRoot } from "react-dom/client";\nimport { ${componentName} } from "./examples/${example.id}/example";\nimport "@kind-ui/charts/styles.css";\nimport "./example.css";\nconst root = document.getElementById("root");\nif (!root) throw new Error("Missing mount element");\ncreateRoot(root).render(<StrictMode><${componentName} /></StrictMode>);\n`,
-    "src/example.css": read("examples/shared/example.css"),
+    "src/main.tsx": `import { StrictMode } from "react";\nimport { createRoot } from "react-dom/client";\nimport { ${componentName} } from "./examples/${example.id}/example";\nimport "./example.css";\nconst root = document.getElementById("root");\nif (!root) throw new Error("Missing mount element");\ncreateRoot(root).render(<StrictMode><${componentName} /></StrictMode>);\n`,
+    "vite.config.mjs":
+      'import tailwindcss from "@tailwindcss/vite";\nimport { defineConfig } from "vite";\nexport default defineConfig({ plugins: [tailwindcss()] });\n',
+    "src/example.css":
+      '@import "tailwindcss";\n@source "../node_modules/@kind-ui/charts/dist";\n\n' +
+      read("examples/shared/example.css"),
     [`src/examples/${example.id}/example.tsx`]: exampleSource,
-    "README.md": `# ${example.title} — complete consumer\n\nInstall dependencies with npm install, then run npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports. Preserve the documented family composition and visibility ownership. Import @kind-ui/charts/styles.css once at the application entry.\n`,
+    "README.md": `# ${example.title} — complete consumer\n\nInstall dependencies with npm install, then run npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports. Preserve the documented family composition and visibility ownership. Build the included Tailwind v4 CSS, which scans the installed chart package with @source. In an existing app, add an @source path to node_modules/@kind-ui/charts/dist relative to your CSS file.\n`,
     LICENSE: read("../../LICENSE"),
   };
 
@@ -341,7 +347,7 @@ for (const slug of legacyDocSlugs) {
 }
 write(
   "public/llms.txt",
-  `# Kind UI charts documentation\n\nInstall @kind-ui/charts and its peers, then import the stylesheet. Start with the AI agents guide and retrieve the relevant family Markdown. Keep data and composition in your application.\n\n` +
+  `# Kind UI charts documentation\n\nInstall @kind-ui/charts and its peers, then build Tailwind v4 CSS with an @source path to the installed chart package. Start with the AI agents guide and retrieve the relevant family Markdown. Keep data and composition in your application.\n\n` +
     index.map(({ key, title }) => `- [${title}](${link(`/markdown/${key}.md`)})`).join("\n") +
     "\n",
 );

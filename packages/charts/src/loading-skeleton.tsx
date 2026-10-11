@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, useTransform } from "motion/react";
-import { type CSSProperties, type ReactNode, useId, useState } from "react";
+import { type CSSProperties, type ReactNode, useContext, useId, useState } from "react";
 import { usePlotArea } from "recharts";
+import { ChartContext } from "./chart-context.js";
 import {
   LoadingAngularBand,
   type LoadingAnimation,
@@ -85,6 +86,7 @@ export function LoadingSkeletonSurface({
   animation?: LoadingAnimation | undefined;
   design?: LoadingDesign | undefined;
 }) {
+  const nonce = useContext(ChartContext)?.nonce;
   const id = useId().replace(/:/g, "");
   const seed =
     suppliedSeed ??
@@ -155,6 +157,7 @@ export function LoadingSkeletonSurface({
   const polar = ["pie", "radar", "radial-bar", "activity-rings"].includes(family);
   return (
     <svg
+      className="visible pointer-events-none text-[color:var(--muted-foreground,#8b969b)] animate-[kind-ui-loading-pulse_var(--kind-ui-loading-cycle,1770ms)_linear_infinite] motion-reduce:animate-none [&_svg]:overflow-visible [&_[data-loading-motion=grow]]:[mask:var(--kind-ui-loading-vertical)] [&:is([data-family=bar],[data-family=waterfall],[data-family=histogram],[data-family=box-plot])_[data-loading-motion=grow]]:[mask:none] [&_[data-loading-motion=reveal]]:[mask:var(--kind-ui-loading-horizontal)] [&_[data-loading-motion=area-reveal]]:[mask:var(--kind-ui-loading-area)] [&[data-family=combo][data-loading-layout=vertical]_[data-loading-motion=grow]]:[transform:matrix(0,0.375,-2.6666667,0,640,0)]"
       data-kind-ui="chart-loading-skeleton"
       data-family={family}
       data-loading-layout={animation?.layout}
@@ -192,6 +195,9 @@ export function LoadingSkeletonSurface({
       viewBox={polar ? "200 0 240 240" : "0 0 640 240"}
       preserveAspectRatio={polar || family === "scatter" ? "xMidYMid meet" : "none"}
     >
+      <style
+        nonce={nonce}
+      >{`@keyframes kind-ui-loading-pulse { 0%, 12%, 94%, 100% { opacity: 0; } 14%, 90% { opacity: 1; } }`}</style>
       <defs>
         <linearGradient id={`${id}-soft-x`}>
           <stop offset="0" stopColor="white" stopOpacity="0" />
@@ -355,7 +361,7 @@ export function LoadingStatus({
   label?: string | undefined;
 }) {
   return loading === undefined ? null : (
-    <span role="status" data-kind-ui="chart-loading-status">
+    <span role="status" data-kind-ui="chart-loading-status" className="sr-only">
       {loading ? (label ?? "Loading chart") : ""}
     </span>
   );

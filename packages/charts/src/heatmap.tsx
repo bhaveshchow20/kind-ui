@@ -28,6 +28,7 @@ import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading
 import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
 import type { TooltipContentProps } from "./tooltip-content.js";
 import { TooltipNumber } from "./tooltip-number.js";
+import { cn } from "./utils.js";
 
 export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
   HeatmapModelOptions & {
@@ -243,6 +244,7 @@ export function HeatmapChart({
         {...props}
         ref={ref}
         data-kind-ui="heatmap"
+        className={cn("text-[color:var(--foreground,inherit)]", props.className)}
         aria-busy={props["aria-busy"]}
         onFocusCapture={(event) => {
           props.onFocusCapture?.(event);
@@ -333,7 +335,7 @@ export function HeatmapCellContent({ fill, formattedValue }: HeatmapCellContentP
           ? luminance > 0.179
             ? "#000000"
             : "#ffffff"
-          : "var(--heatmap-missing-foreground, #172033)",
+          : "var(--foreground, #172033)",
       }}
     >
       {formattedValue}
@@ -341,6 +343,16 @@ export function HeatmapCellContent({ fill, formattedValue }: HeatmapCellContentP
   );
 }
 export type HeatmapMaterial = "plain" | "clay" | "glow";
+
+// Static utilities let consumer Tailwind builds discover the exact perimeter paint.
+const materialClasses: Record<HeatmapMaterial, string> = {
+  plain: "",
+  clay: "bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22top%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.7%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22bottom%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23172033%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23172033%22%20stop-opacity%3D%22.4%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22left%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.5%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22right%22%3E%3Cstop%20stop-color%3D%22%23172033%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23172033%22%20stop-opacity%3D%22.3%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M0%200H100V8H0Z%22%20fill%3D%22url%28%23top%29%22%2F%3E%3Cpath%20d%3D%22M0%2092H100V100H0Z%22%20fill%3D%22url%28%23bottom%29%22%2F%3E%3Cpath%20d%3D%22M0%208H8V92H0Z%22%20fill%3D%22url%28%23left%29%22%2F%3E%3Cpath%20d%3D%22M92%208H100V92H92Z%22%20fill%3D%22url%28%23right%29%22%2F%3E%3C%2Fsvg%3E')] bg-[length:100%_100%] bg-no-repeat",
+  glow: "bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22top%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.95%22%2F%3E%3Cstop%20offset%3D%22.2%22%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22bottom%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%22.8%22%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.95%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22left%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.95%22%2F%3E%3Cstop%20offset%3D%22.2%22%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22right%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.35%22%2F%3E%3Cstop%20offset%3D%22.8%22%20stop-color%3D%22%23fff%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.95%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M0%200H100V8H0Z%22%20fill%3D%22url%28%23top%29%22%2F%3E%3Cpath%20d%3D%22M0%2092H100V100H0Z%22%20fill%3D%22url%28%23bottom%29%22%2F%3E%3Cpath%20d%3D%22M0%208H8V92H0Z%22%20fill%3D%22url%28%23left%29%22%2F%3E%3Cpath%20d%3D%22M92%208H100V92H92Z%22%20fill%3D%22url%28%23right%29%22%2F%3E%3C%2Fsvg%3E')] bg-[length:100%_100%] bg-no-repeat",
+};
+const hiddenLabelClasses = "sr-only";
+const headerClasses = "p-[0.4rem] text-center text-[0.75rem] font-medium wrap-anywhere";
+const scrollClasses = "max-w-full overflow-x-auto [container-type:inline-size]";
 
 export type HeatmapGridProps = Omit<ComponentPropsWithRef<"table">, "children"> & {
   /** Required accessible name, also rendered as a native caption. */
@@ -452,7 +464,15 @@ export function HeatmapGrid({
     }
   }
   return (
-    <div data-kind-ui="heatmap-scroll" data-loading={context.loading || undefined}>
+    <div
+      data-kind-ui="heatmap-scroll"
+      data-loading={context.loading || undefined}
+      className={cn(
+        scrollClasses,
+        "[&>[data-kind-ui=chart-loading-skeleton]]:absolute [&>[data-kind-ui=chart-loading-skeleton]]:inset-0",
+        context.loading && "relative",
+      )}
+    >
       <table
         {...props}
         ref={(node) => {
@@ -470,6 +490,20 @@ export function HeatmapGrid({
         data-cell-sizing={layout?.cellSize === undefined ? undefined : "fixed"}
         data-row-labels={layout?.rowLabels}
         data-column-labels={layout?.columnLabels}
+        className={cn(
+          "table-fixed border-separate border-spacing-[var(--heatmap-gap,3px)]",
+          layout?.cellSize === undefined
+            ? layout?.rowLabels === "hidden"
+              ? "w-full min-w-[calc(var(--heatmap-columns)*3.25rem)]"
+              : "w-full min-w-[calc(7rem+var(--heatmap-columns)*3.25rem)]"
+            : "min-w-0 w-[calc(var(--heatmap-row-width)+var(--heatmap-gap,3px)+var(--heatmap-columns)*(var(--heatmap-cell-size)+var(--heatmap-gap,3px))+var(--heatmap-gap,3px))]",
+          layout?.cellSize !== undefined &&
+            (layout.rowLabels === "hidden"
+              ? "[--heatmap-row-width:0px]"
+              : "[--heatmap-row-width:6.8rem]"),
+          context.loading && "invisible",
+          props.className,
+        )}
         style={
           {
             "--heatmap-columns": model.columns.length,
@@ -487,20 +521,36 @@ export function HeatmapGrid({
         }}
         onPointerLeave={onPointerLeave}
       >
-        <caption>{caption}</caption>
+        <caption
+          className={cn(
+            "max-w-[100cqw] pb-[1rem] text-left font-semibold wrap-anywhere",
+            layout?.cellSize === undefined ? "w-[100cqw]" : "w-auto",
+          )}
+        >
+          {caption}
+        </caption>
         {layout?.cellSize === undefined ? null : (
           <colgroup>
-            <col data-kind-ui="heatmap-row-column" />
+            <col data-kind-ui="heatmap-row-column" className="w-(--heatmap-row-width)" />
             {model.columns.map((column) => (
-              <col key={column} />
+              <col key={column} className="w-(--heatmap-cell-size)" />
             ))}
           </colgroup>
         )}
-        <thead>
+        <thead className={layout?.columnLabels === "hidden" ? hiddenLabelClasses : undefined}>
           <tr>
-            <th scope="col">Row / column</th>
+            <th
+              scope="col"
+              className={
+                layout?.rowLabels === "hidden"
+                  ? hiddenLabelClasses
+                  : cn(headerClasses, "w-[6rem] text-left")
+              }
+            >
+              Row / column
+            </th>
             {model.columns.map((column, c) => (
-              <th scope="col" key={column} id={`${headerId}-column-${c}`}>
+              <th scope="col" key={column} id={`${headerId}-column-${c}`} className={headerClasses}>
                 {columnLabel?.(column) ?? column}
               </th>
             ))}
@@ -509,8 +559,24 @@ export function HeatmapGrid({
         <tbody>
           {model.rows.map((row, r) => (
             <tr key={row}>
-              <th scope="row" id={`${headerId}-row-${r}`}>
-                <span data-kind-ui="heatmap-row-label" title={row}>
+              <th
+                scope="row"
+                id={`${headerId}-row-${r}`}
+                className={
+                  layout?.rowLabels === "hidden"
+                    ? hiddenLabelClasses
+                    : cn(
+                        headerClasses,
+                        "w-[6rem] text-left",
+                        layout?.cellSize !== undefined && "py-0 leading-(--heatmap-cell-size)",
+                      )
+                }
+              >
+                <span
+                  data-kind-ui="heatmap-row-label"
+                  title={row}
+                  className="block max-h-[1.3rem] truncate"
+                >
                   {rowLabel?.(row) ?? row}
                 </span>
               </th>
@@ -530,6 +596,16 @@ export function HeatmapGrid({
                     data-cell-key={keyOf(cell)}
                     data-missing={cell.value === null ? "true" : "false"}
                     data-material={cell.value === null ? undefined : material}
+                    className={cn(
+                      "cursor-default truncate rounded-[3px] text-center text-[0.75rem] text-[#111827] tabular-nums focus-visible:outline-[3px] focus-visible:outline-solid focus-visible:outline-[var(--foreground,#172033)] focus-visible:outline-offset-[1px]",
+                      layout?.cellSize === undefined
+                        ? "h-[2.6rem] p-px"
+                        : "box-border h-(--heatmap-cell-size) w-(--heatmap-cell-size) p-0 leading-(--heatmap-cell-size)",
+                      cell.value === null
+                        ? "bg-[repeating-linear-gradient(135deg,transparent_0_5px,#17203315_5px_6px)]"
+                        : materialClasses[material],
+                      extra.className,
+                    )}
                     tabIndex={keyOf(cell) === tabKey ? 0 : -1}
                     aria-label={labelOf(cell, context)}
                     aria-describedby={
@@ -600,6 +676,10 @@ export function HeatmapTooltip({ Content, valueAnimation, ...props }: HeatmapToo
       id={context.tooltipId}
       role="tooltip"
       data-kind-ui="heatmap-tooltip"
+      className={cn(
+        "mt-[0.75rem] rounded-[var(--radius,0.5rem)] border border-solid border-[var(--border,#d1d5db)] px-[0.8rem] py-[0.6rem] text-[0.8rem] wrap-anywhere [&[hidden]]:hidden",
+        props.className,
+      )}
       hidden={!cell}
     >
       {cell ? (
@@ -638,11 +718,16 @@ export function HeatmapLegend({ label, ...props }: HeatmapLegendProps) {
     <fieldset
       {...props}
       data-kind-ui="heatmap-legend"
+      className={cn(
+        "mx-0 mt-[1rem] w-full min-w-0 max-w-[22rem] border-0 p-0 text-[0.75rem]",
+        props.className,
+      )}
       aria-label={`${label}: ${formatValue(min)} to ${formatValue(max)}; ${missingLabel}`}
     >
       <legend>{label}</legend>
       <div
         data-kind-ui="heatmap-ramp"
+        className="relative mt-[0.5rem] h-[0.65rem] rounded-[3px]"
         aria-hidden="true"
         style={{
           background:
@@ -654,19 +739,28 @@ export function HeatmapLegend({ label, ...props }: HeatmapLegendProps) {
         {min < 0 && max > 0 ? (
           <i
             data-kind-ui="heatmap-zero-marker"
+            className="absolute -top-[2px] -bottom-[2px] w-px bg-[var(--foreground,#172033)]"
             style={{ left: `${(-min / (max - min)) * 100}%` }}
           />
         ) : null}
       </div>
-      <div data-kind-ui="heatmap-ticks">
-        <span>{formatValue(min)}</span>
-        <span>{formatValue(max)}</span>
+      <div data-kind-ui="heatmap-ticks" className="relative mt-[0.3rem] flex justify-between">
+        <span className="max-w-[48%] wrap-anywhere">{formatValue(min)}</span>
+        <span className="max-w-[48%] wrap-anywhere">{formatValue(max)}</span>
       </div>
       {min < 0 && max > 0 ? (
-        <span data-kind-ui="heatmap-zero-label">Zero marker: {formatValue(0)}</span>
+        <span data-kind-ui="heatmap-zero-label" className="mt-[0.25rem] block wrap-anywhere">
+          Zero marker: {formatValue(0)}
+        </span>
       ) : null}
-      <span data-kind-ui="heatmap-missing-key">
-        <i aria-hidden="true" />
+      <span
+        data-kind-ui="heatmap-missing-key"
+        className="mt-[0.5rem] inline-flex items-center gap-[0.4rem]"
+      >
+        <i
+          aria-hidden="true"
+          className="h-[0.85rem] w-[0.85rem] rounded-[2px] bg-(--heatmap-missing,#e5e7eb) bg-[repeating-linear-gradient(135deg,transparent_0_5px,#17203315_5px_6px)]"
+        />
         {missingLabel}
       </span>
     </fieldset>
@@ -681,9 +775,16 @@ export function HeatmapDataTable({ caption, ...props }: HeatmapDataTableProps) {
   const context = useHeatmap();
   const { model, formatValue, missingLabel } = context;
   return (
-    <div data-kind-ui="heatmap-scroll">
-      <table {...props} data-kind-ui="heatmap-data-table">
-        <caption>{caption}</caption>
+    <div data-kind-ui="heatmap-scroll" className={scrollClasses}>
+      <table
+        {...props}
+        data-kind-ui="heatmap-data-table"
+        className={cn(
+          "w-full border-collapse text-[0.8rem] [&_th]:border [&_th]:border-solid [&_th]:border-[var(--border,#d1d5db)] [&_th]:p-[0.5rem] [&_th]:text-left [&_td]:border [&_td]:border-solid [&_td]:border-[var(--border,#d1d5db)] [&_td]:p-[0.5rem] [&_td]:text-left",
+          props.className,
+        )}
+      >
+        <caption className="py-[0.75rem] text-left">{caption}</caption>
         <thead>
           <tr>
             <th scope="col">Row / column</th>

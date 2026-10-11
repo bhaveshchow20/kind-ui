@@ -1,5 +1,4 @@
 import { createRoot, hydrateRoot } from "react-dom/client";
-import "@kind-ui/charts/styles.css";
 import {
   CellIdentityPieHost,
   MaterialGallery,

@@ -32,6 +32,7 @@ try {
         for (const animate of [false, true]) {
           const file = join(temporary, `${recipe.id}-${finish}-${animate}.tsx`);
           const source = generate(recipe, finish, ["#733bff", "#119548", "#f22e79"], animate);
+          assert.doesNotMatch(source, /@kind-ui\/charts\/styles\.css/);
           assert.doesNotMatch(
             source,
             /visibleSeries=|onVisibleSeriesChange=|data\.filter\(/,

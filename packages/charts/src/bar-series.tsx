@@ -35,11 +35,12 @@ import { useBarCategoryHover } from "./bar-category.js";
 import { BarMotion } from "./bar-chart.js";
 import { type BarMaterial, BarMaterialFilter } from "./bar-material.js";
 import { useChart } from "./chart-context.js";
-import { useEmphasis } from "./emphasis.js";
+import { emphasisPaintClassName, useEmphasis } from "./emphasis.js";
 import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { SeriesEscapePaint } from "./series-escape-paint.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { cn } from "./utils.js";
 import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 /** Caller-owned identity selection; this component never computes forecast values. */
@@ -78,7 +79,7 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   children,
   ...props
 }: BarSeriesProps<DataPoint, Value>) {
-  const { config, paints, visibleSeries } = useChart();
+  const { config, paints, visibleSeries, nonce } = useChart();
   const { registerSeries, invalidate, data, categoryEmphasis, registerCategoryEligibility } =
     useLineInteraction();
   const { reveal, options, finish } = use(BarMotion);
@@ -297,7 +298,9 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
   return (
     <>
       {/* Bar marks render through Recharts portals; put the variable on their generated class. */}
-      <style>{`.${selector} { --kind-ui-bar-clip: ${clipped ? `url(#${clipId})` : "none"}; }`}</style>
+      <style
+        nonce={nonce}
+      >{`.${selector} { --kind-ui-bar-clip: ${clipped ? `url(#${clipId})` : "none"}; }`}</style>
       {clipped && (
         <defs>
           <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
@@ -384,7 +387,11 @@ export function BarSeries<DataPoint = unknown, Value = unknown>({
               : color !== undefined
                 ? { fill: color }
                 : {})}
-            className={["kind-ui-bar-series", selector, className].filter(Boolean).join(" ")}
+            className={cn(
+              "kind-ui-bar-series [clip-path:var(--kind-ui-bar-clip,none)]",
+              selector,
+              className,
+            )}
             style={style}
             isAnimationActive={false}
           >
@@ -443,6 +450,7 @@ function CategoryBar({
     <g data-kind-ui="emphasis-mark" data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
       <InteractionPaint
         data-kind-ui="emphasis-paint"
+        className={emphasisPaintClassName}
         opacity={emphasis.active?.kind === "series" ? 1 : emphasis.factor}
       >
         <Rectangle {...props} />

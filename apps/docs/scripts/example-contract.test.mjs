@@ -136,13 +136,27 @@ test("each registered family has a complete public consumer", () => {
     examples.map((example) => example.id),
   );
   const bundle = bundles.line;
-  assert.match(bundle.files["src/main.tsx"], /@kind-ui\/charts\/styles\.css/);
+  assert.match(bundle.files["src/main.tsx"], /import "\.\/example\.css"/);
+  assert.match(bundle.files["src/example.css"], /@import "tailwindcss"/);
+  assert.match(
+    bundle.files["src/example.css"],
+    /@source "\.\.\/node_modules\/@kind-ui\/charts\/dist"/,
+  );
+  assert.match(bundle.files["vite.config.mjs"], /plugins: \[tailwindcss\(\)\]/);
+  for (const candidate of Object.values(completeBundles)) {
+    for (const body of Object.values(candidate.files)) {
+      assert.doesNotMatch(body, /@kind-ui\/charts\/styles\.css/);
+    }
+  }
   const manifest = JSON.parse(bundle.files["package.json"]);
   assert.equal(manifest.private, true);
+  assert.equal(manifest.devDependencies.tailwindcss, "4.3.3");
+  assert.equal(manifest.devDependencies["@tailwindcss/vite"], "4.3.3");
   assert.equal(manifest.dependencies["@kind-ui/charts"], `^${provenance.version}`);
   assert.ok(!Object.hasOwn(bundle.files, "package-lock.json"));
   for (const file of [
     "package.json",
+    "vite.config.mjs",
     "src/main.tsx",
     "src/example.css",
     "src/examples/line/example.tsx",

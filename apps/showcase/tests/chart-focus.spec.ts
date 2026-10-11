@@ -29,6 +29,7 @@ test("chart pointer focus stays quiet; keyboard focus and modal lifecycle remain
       const host = modal
         ? page.locator(".playground-preview .chart-card").first()
         : page.locator(".demo-grid .chart-card").first();
+      await expect(host.locator("svg.recharts-surface, [data-kind-ui=heatmap-grid]")).toBeVisible();
       const target = host
         .locator(
           '.recharts-surface[tabindex], [role="grid"] [tabindex="0"], g[tabindex="0"], button',

@@ -1,8 +1,7 @@
-@layer theme, base, kind-ui, components, utilities;
 @import "tailwindcss";
-@import "@kind-ui/charts/styles.css";
 @import "tw-animate-css";
 @import "./chart-focus.css";
+@source "../node_modules/@kind-ui/charts/dist";
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -27,10 +26,8 @@
   --input: #cccdd9;
   --ring: #4055ee;
   --accent: #ecebff;
-  --kind-ui-chart-popover: #fff;
-  --kind-ui-chart-popover-foreground: #202028;
-  --kind-ui-chart-border: #e2e2eb;
-  --kind-ui-chart-legend-background: #f0f0fa;
+  --popover: #fff;
+  --popover-foreground: #202028;
 }
 * {
   box-sizing: border-box;

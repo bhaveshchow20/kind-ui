@@ -29,20 +29,50 @@ Donut and Bubble use `PieChart` and `ScatterChart` composition.
 npm install @kind-ui/charts
 ```
 
-Import `@kind-ui/charts/styles.css` once at your application entry. In Next.js,
-import it in the root layout and place interactive chart code in a client component.
-Development builds warn once per document if mounted chart roots lack the stylesheet,
-after the document and pending stylesheets load. The warning does not run during SSR
-or in production. Keep the import in copied examples.
+Kind UI uses Tailwind CSS v4. Add the installed package to your Tailwind entry CSS;
+`@source` paths are relative to that CSS file:
 
-CSS remains explicit: importing it from the ESM entry would break plain Node imports;
-runtime injection would change CSS layer ordering and require inline-style CSP permission.
-No styles are injected or fetched. Core styles and tokens remain in the stylesheet;
-consumer overrides still win. If you intentionally replace all chart styles, set
-`--kind-ui-styles-loaded: 1` on your chart roots to acknowledge that setup.
-The diagnostic conservatively waits on unresolved stylesheet links. A link which
-failed before mounting after document load can therefore defer the warning; it
-does not guess a timeout and warn while a slow stylesheet is still loading.
+```css
+/* src/app.css or app/globals.css */
+@import "tailwindcss";
+@source "../node_modules/@kind-ui/charts/dist";
+```
+
+For Vite, install `tailwindcss` and `@tailwindcss/vite` as development dependencies
+and add `tailwindcss()` to the `plugins` array in `vite.config`. For Next.js, use
+`tailwindcss` and `@tailwindcss/postcss` with your PostCSS configuration. Import
+your CSS at the application entry or Next.js root layout, and place interactive
+Next.js chart code in a client component. The
+[installation guide](https://kindui.dev/charts/docs/installation/) includes complete
+configuration examples.
+
+The package has no stylesheet export. Components carry their default Tailwind
+classes, and consumer `className` utilities override conflicting defaults.
+Explicit `style` props remain available. Use unprefixed Tailwind utilities for charts;
+prefixed builds must provide a separate unprefixed Tailwind entry for the package.
+For a nonce-based Content Security Policy, pass the request nonce to `Root` or
+configured `LineChart` through `rootProps.nonce` to authorize animation styles.
+
+### Theme and local overrides
+
+Charts inherit host `--foreground`, `--border`, `--muted`, `--muted-foreground`,
+`--popover`, `--popover-foreground` and `--radius` variables. Set them on a chart
+wrapper or Root to scope a theme locally. Root inherits the host font; configured
+LineChart defaults to sans-serif. Its grid uses `--border` and its axes use
+`--muted-foreground`.
+
+Series colors remain consumer-owned: reference `var(--chart-1)`, `var(--chart-2)`
+and other palette variables in your config, or provide `{ light, dark }` colors.
+Themed colors follow the host’s `color-scheme`; set it when changing light/dark
+mode, or update your CSS palette variables directly.
+
+For configured LineChart, `rootProps.className` and `rootProps.style` customize the
+outer Root; chart `className` and `style` customize the plot container. Pass
+`legend={{ className, style }}` for the legend, or use those props on composed
+`Legend`. `TooltipContent` also accepts `className` and `style`; compose it through
+`Tooltip.content` to control the tooltip panel. Consumer Tailwind utilities replace
+conflicting component defaults without extra CSS layers, and explicit styles retain
+normal inline-style precedence.
 
 ## Materials
 
@@ -72,7 +102,6 @@ legend. Give the chart an accessible name and include a data alternative:
 "use client";
 
 import { LineChart, type SeriesConfig } from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const data = [
   { day: "Mon", tasks: 0 },
@@ -116,7 +145,7 @@ data, domains and business state.
 ### Loading chart data
 
 All chart families accept `loading?: boolean` alongside `animate`, plus
-`loadingLabel?: string` (default “Loading chart”). Import the default stylesheet.
+`loadingLabel?: string` (default “Loading chart”). Use the Tailwind setup above.
 
 ```tsx
 <LineChart
@@ -198,7 +227,7 @@ const config = {
 
 Config patterns supply implicit bar paint and legend swatches. `BarSeries.pattern` overrides config; `false` opts out. For an explicit override, compose `FillPatternSwatch` through `Legend.children` with the same pattern and color. Icons and native legend symbols take precedence; `hideIcon` requests solid swatches. Explicit series `fill` (including gradients), `style.fill`, and `Cell` fills retain native ownership. Custom shapes or custom active bars disable automatic series patterns; compose your own SVG paint for those shapes. Existing material/filter rules apply independently.
 
-Grouped/stacked and horizontal/vertical charts share the same user-space tile; changing orientation does not rotate the encoding automatically. The base ink keeps the configured CSS color. Second ink defaults to `CanvasText`, following the host's `color-scheme`; choose contrasting theme-aware colors deliberately. With the stylesheet, forced colors use `Canvas`/`CanvasText` while retaining the pattern geometry. Patterns are decorative, static and unchanged by reduced motion or print; printer color settings can still affect contrast. Keep text labels and a data alternative, and verify the chosen ink combination in print and each theme.
+Grouped/stacked and horizontal/vertical charts share the same user-space tile; changing orientation does not rotate the encoding automatically. The base ink keeps the configured CSS color. Second ink defaults to `CanvasText`, following the host's `color-scheme`; choose contrasting theme-aware colors deliberately. In forced colors, charts use `Canvas`/`CanvasText` while retaining the pattern geometry. Patterns are decorative, static and unchanged by reduced motion or print; printer color settings can still affect contrast. Keep text labels and a data alternative, and verify the chosen ink combination in print and each theme.
 
 Resources use React IDs, independently of consumer series IDs, and are stable through matching SSR/hydration trees. Hosts using multiple independent React roots must supply distinct `identifierPrefix` values to server rendering and hydration, as required by React. Recharts retains its native SSR shell; a server-visible legend and data alternative do not imply server-rendered bar geometry.
 
@@ -374,7 +403,7 @@ plot area (excluding margins and axes), a scoped clip path and SVG IDs, and the
 [Recharts layer contract](https://recharts.github.io/en-US/guide/zIndex/) just below
 the default grid. Custom negative series/grid z-index overrides remain caller-owned.
 It adds no layout, axes, tooltip payload, animation or accessibility semantics.
-The stylesheet prevents descendant pointer interception.
+Default component classes prevent descendant pointer interception.
 
 Generated configured LineChart opts in with:
 
@@ -406,7 +435,7 @@ replace generated parts, so do not also pass `backgroundPattern`:
 Presets are `pinpoints`, `crossings` and `waves`. `size` is a positive finite tile
 size in SVG user units (default 16), and `opacity` is finite in [0, 1] (default
 0.15). Zero opacity is supported. `color` accepts CSS paint, including theme
-variables; the default is `var(--kind-ui-chart-grid, CanvasText)`. Resize changes
+variables; the default is `var(--border, CanvasText)`. Resize changes
 the plot rectangle and clip, preserving tile density and IDs. Missing or empty
 plot geometry renders nothing; invalid options throw even before geometry exists.
 
@@ -563,7 +592,7 @@ Omitted/default values keep the existing appearance (including Area's normally
 hidden regular dots). Opting into a regular style enables regular dots. Border
 uses a series-colored center with a surface-colored ring; colored-border uses a
 surface-colored center with a series-colored ring. The surface is
-`--kind-ui-chart-marker-surface`, falling back to `--card` then white; set it on
+`--card`, falling back to white; set it on
 Root for your theme. Series paint follows the existing config/theme identity or
 explicit series stroke. Styles introduce no SVG resources or additional motion.
 
@@ -615,7 +644,6 @@ import {
   AreaChart, AreaSeries, ComboChart, LineChart, LineSeries, Root,
   type SeriesConfig,
 } from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const data = [
   { day: "Mon", total: 12, forecast: 16 },
@@ -681,7 +709,7 @@ patterns stay static. Odd lists repeat twice per cycle, matching SVG.
 </ComboChart>
 ```
 
-Load the package stylesheet. Motion stops with chart `animate={false}`, reduced
+Use the Tailwind setup above. Motion stops with chart `animate={false}`, reduced
 motion, loading, or hidden series. Disabling restores the native dash offset;
 reenabling starts a fresh cycle. Use `dashAnimation={false}` to disable an individual series. Native width, dash array, offset and
 styles remain intact; style dash values take precedence. Custom shapes own their

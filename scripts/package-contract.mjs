@@ -31,7 +31,6 @@ export function assertPackageContract(manifest, files, sources = []) {
   assert.ok(manifest.peerDependencies.motion, "Motion peer must be declared");
   assert.notEqual(manifest.peerDependenciesMeta?.motion?.optional, true, "Motion must be required");
   for (const [name, exported] of Object.entries(manifest.exports)) {
-    if (name === "./styles.css") continue;
     for (const [condition, suffix] of [
       ["import", ".js"],
       ["types", ".d.ts"],
@@ -44,20 +43,24 @@ export function assertPackageContract(manifest, files, sources = []) {
       required.push(target.slice(2));
     }
   }
+  assert.equal(manifest.exports["./styles.css"], undefined, "Standalone CSS export is removed");
+  assert.equal(manifest.sideEffects, false, "Component modules must remain tree-shakeable");
   assert.equal(
-    manifest.exports["./styles.css"],
-    "./dist/styles.css",
-    "CSS export must point to dist/styles.css",
+    manifest.peerDependencies.tailwindcss,
+    "^4.0.0",
+    "Consumer Tailwind v4 build is required",
   );
-  assert.deepEqual(manifest.sideEffects, ["**/*.css"], "CSS imports must remain side effects");
-  required.push("dist/styles.css");
+  assert.ok(
+    manifest.dependencies["tailwind-merge"],
+    "Consumer utility overrides require Tailwind merging",
+  );
   for (const source of sources) {
     assert.ok(/\.tsx?$/.test(source) && !source.endsWith(".d.ts"), `Unexpected source: ${source}`);
     const stem = source.replace(/\.tsx?$/, "");
     required.push(`dist/${stem}.js`, `dist/${stem}.d.ts`);
   }
   const allowed =
-    /^(package\.json|README\.md|CHANGELOG\.md|LICENSE|dist\/styles\.css|dist\/(?:[^/.][^/]*\/)*[^/.][^/]*\.(js|d\.ts))$/;
+    /^(package\.json|README\.md|CHANGELOG\.md|LICENSE|dist\/(?:[^/.][^/]*\/)*[^/.][^/]*\.(js|d\.ts))$/;
   for (const file of files) {
     assert.ok(allowed.test(file), `Unexpected packed file: ${file}`);
     assert.ok(!file.split("/").includes("node_modules"), `Nested dependency in package: ${file}`);

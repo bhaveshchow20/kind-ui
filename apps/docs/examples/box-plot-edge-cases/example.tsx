@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 type Row = { period: string; summary: Chart.BoxPlotSummary | null };
 const data: Row[] = [
@@ -77,9 +76,7 @@ export function EdgeCaseBoxPlot() {
                     }}
                   >
                     <div style={{ display: "contents" }}>
-                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>
-                        Lower whisker
-                      </dt>
+                      <dt style={{ color: "var(--muted-foreground, GrayText)" }}>Lower whisker</dt>
                       <dd
                         style={{
                           margin: 0,
@@ -91,7 +88,7 @@ export function EdgeCaseBoxPlot() {
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
-                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Q1</dt>
+                      <dt style={{ color: "var(--muted-foreground, GrayText)" }}>Q1</dt>
                       <dd
                         style={{
                           margin: 0,
@@ -103,7 +100,7 @@ export function EdgeCaseBoxPlot() {
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
-                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Median</dt>
+                      <dt style={{ color: "var(--muted-foreground, GrayText)" }}>Median</dt>
                       <dd
                         style={{
                           margin: 0,
@@ -115,7 +112,7 @@ export function EdgeCaseBoxPlot() {
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
-                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Q3</dt>
+                      <dt style={{ color: "var(--muted-foreground, GrayText)" }}>Q3</dt>
                       <dd
                         style={{
                           margin: 0,
@@ -127,9 +124,7 @@ export function EdgeCaseBoxPlot() {
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
-                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>
-                        Upper whisker
-                      </dt>
+                      <dt style={{ color: "var(--muted-foreground, GrayText)" }}>Upper whisker</dt>
                       <dd
                         style={{
                           margin: 0,
@@ -141,7 +136,7 @@ export function EdgeCaseBoxPlot() {
                       </dd>
                     </div>
                     <div style={{ display: "contents" }}>
-                      <dt style={{ color: "var(--kind-ui-chart-muted, GrayText)" }}>Outliers</dt>
+                      <dt style={{ color: "var(--muted-foreground, GrayText)" }}>Outliers</dt>
                       <dd
                         style={{
                           margin: 0,

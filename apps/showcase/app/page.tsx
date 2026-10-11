@@ -227,7 +227,6 @@ function snippet(
   return `"use client";
 
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const data = [
 ${chartData.map((d) => `  ${JSON.stringify(d)},`).join("\n")}

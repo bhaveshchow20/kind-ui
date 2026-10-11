@@ -157,6 +157,7 @@ test("reduced motion and pointer cancel retain meaning without changing hit test
   const paint = plot.locator(`${dimmed} > [data-kind-ui=emphasis-paint]`).first();
   await expect(paint).toHaveCSS("opacity", "0.28");
   await expect(paint).toHaveCSS("transition-duration", "0s");
+  await expect(paint).toHaveCSS("transition-property", "none");
   expect(await paint.evaluate((node) => getComputedStyle(node).pointerEvents)).not.toBe("none");
   await plot.locator(marks).first().dispatchEvent("pointercancel", { pointerType: "mouse" });
   await expect(plot.locator(dimmed)).toHaveCount(0);

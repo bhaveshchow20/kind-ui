@@ -1,7 +1,6 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
 import { useEffect, useState } from "react";
-import "@kind-ui/charts/styles.css";
 
 const data = [
   { period: "Jan", visitors: 420 },

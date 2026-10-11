@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import "@kind-ui/charts/styles.css";
 import { CompactHeatmap, DismissalHeatmaps, Edges, HeatmapRecipes } from "./host.js";
 
 const root = document.getElementById("root");

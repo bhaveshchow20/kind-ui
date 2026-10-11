@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const data = [
   { period: "Mon", response: 140 },
@@ -24,7 +23,7 @@ function Diamond({ cx, cy }: Pick<Chart.DotProps, "cx" | "cy">) {
   return (
     <path
       d={`M ${cx} ${cy - 4} l 4 4 -4 4 -4 -4 Z`}
-      fill="var(--kind-ui-chart-background, #fff)"
+      fill="var(--card, #fff)"
       stroke="var(--color-response)"
       strokeWidth={1.5}
     />
@@ -60,7 +59,7 @@ export function ResponseTimeChart() {
             dataKey="response"
             position="top"
             offset={14}
-            fill="var(--kind-ui-chart-foreground, #111827)"
+            fill="var(--foreground, #111827)"
             fontSize={12}
           />
         </Chart.LineSeries>

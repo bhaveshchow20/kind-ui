@@ -5,13 +5,16 @@ React/react-dom `^19.3.0`, Recharts `^3.10.1`, and Motion `^13.4.6`. Check the
 installed manifest and lockfile before resolving peer conflicts. Motion is still
 a required peer when `animate={false}`; disabling animation does not remove imports.
 
-Import `@kind-ui/charts/styles.css` once at the app entry. In Next App Router,
-put it in `app/layout.tsx`; keep the interactive chart in a client module:
+Use Tailwind CSS v4 and register the package in your application CSS. Paths are
+relative to the CSS file:
 
-```tsx
-// app/layout.tsx (keep the existing layout markup)
-import "@kind-ui/charts/styles.css";
+```css
+@import "tailwindcss";
+@source "../node_modules/@kind-ui/charts/dist";
 ```
+
+Import that CSS at the app entry or Next.js root layout. Keep interactive charts
+in a client module:
 
 ```tsx
 // app/revenue-chart.tsx
@@ -27,7 +30,7 @@ rows across the server/client boundary.
 Configured Line supplies responsive sizing (set `height` deliberately). Explicit
 composition needs finite parent dimensions: a `ResponsiveContainer` with a
 percentage height inside an unsized parent cannot determine its chart height.
-Do not add Tailwind, icon packs, or another stylesheet system just to use charts.
+Tailwind v4 is required; icon packs are optional.
 
 # Verify what the consumer will receive
 

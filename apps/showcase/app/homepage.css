@@ -11,10 +11,8 @@
   --accent: #f2f2f2;
   --chart-grid: #eee;
   --chart-axis: #939393;
-  --kind-ui-chart-popover: #ffffffeb;
-  --kind-ui-chart-popover-foreground: #242424;
-  --kind-ui-chart-border: #e9e9e9;
-  --kind-ui-chart-legend-background: #f5f5f5;
+  --popover: #ffffffeb;
+  --popover-foreground: #242424;
 }
 .dark {
   --background: #000;
@@ -28,10 +26,8 @@
   --accent: #1c1c1c;
   --chart-grid: #252525;
   --chart-axis: #888;
-  --kind-ui-chart-popover: #141414eb;
-  --kind-ui-chart-popover-foreground: #fafafa;
-  --kind-ui-chart-border: #303030;
-  --kind-ui-chart-legend-background: #222;
+  --popover: #141414eb;
+  --popover-foreground: #fafafa;
 }
 body {
   background: var(--background);
@@ -1284,8 +1280,8 @@ button:disabled {
   width: max-content;
   max-width: 100%;
   margin-top: 0;
-  background: var(--kind-ui-chart-popover);
-  color: var(--kind-ui-chart-popover-foreground);
+  background: var(--popover);
+  color: var(--popover-foreground);
   box-shadow: 0 4px 16px #00000012;
   backdrop-filter: blur(16px);
 }

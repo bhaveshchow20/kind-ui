@@ -8,7 +8,8 @@ family Markdown; /markdown/agents/consumer.md explains the retrieval workflow.
 The chart page's Copy prompt identifies the selected source, package version,
 setup manifest and task checks. /llms-full.txt is the optional complete set.
 
-Install @kind-ui/charts and import @kind-ui/charts/styles.css once. Inspect the
+Install @kind-ui/charts and build Tailwind v4 CSS. Add an @source path to
+node_modules/@kind-ui/charts/dist relative to your CSS file. Inspect the
 installed package version and peers before adapting code. Motion is required.
 Use public exports; there is no @kind-ui/charts/motion entry.
 

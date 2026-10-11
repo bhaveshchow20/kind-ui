@@ -1,6 +1,5 @@
-@layer theme, base, kind-ui, components, utilities;
 @import "tailwindcss";
-@import "@kind-ui/charts/styles.css";
+@source "../../../node_modules/@kind-ui/charts/dist";
 @source "./";
 
 @font-face {

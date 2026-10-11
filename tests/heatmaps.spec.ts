@@ -93,7 +93,7 @@ for (const packed of [false, true]) {
         );
       const plain = await capture();
       const chart = grid.locator("..").locator("..").locator("..");
-      await expect(chart).toHaveClass("heatmap-card");
+      await expect(chart).toHaveClass(/(?:^| )heatmap-card(?: |$)/);
       await chart.evaluate((node: HTMLElement) => {
         node.style.backgroundColor = "rgb(250, 246, 240)";
         node.style.boxShadow = "0 2px 5px #17203314";
@@ -219,7 +219,7 @@ test("removed focused row has a valid tab reentry and custom missing foreground"
     .locator("..")
     .evaluate((node: HTMLElement) => {
       node.style.setProperty("--heatmap-missing", "#000000");
-      node.style.setProperty("--heatmap-missing-foreground", "#ffffff");
+      node.style.setProperty("--foreground", "#ffffff");
     });
   await expect(missing).toHaveCSS("background-color", "rgb(0, 0, 0)");
   await expect(missing.locator("span")).toHaveCSS("color", "rgb(255, 255, 255)");

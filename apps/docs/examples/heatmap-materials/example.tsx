@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 const rows = ["Mon", "Tue", "Wed", "Thu"];
 const columns = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00"];

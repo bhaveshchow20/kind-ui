@@ -1,6 +1,5 @@
 import * as Chart from "@kind-ui/charts";
 import { type ReactNode, useState } from "react";
-import "@kind-ui/charts/styles.css";
 import "./loading.css";
 
 const config = {

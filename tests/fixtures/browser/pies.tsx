@@ -1,4 +1,3 @@
-import "@kind-ui/charts/styles.css";
 import "./pies.css";
 import { Allocation } from "./pie-recipes.js";
 import { SelectiveGlowChart } from "./pie-selective-glow.js";

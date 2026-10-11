@@ -8,7 +8,6 @@ export const sourcePaths = [
   "packages/charts",
   "scripts/prepare-package.mjs",
   "scripts/check-package.mjs",
-  "scripts/copy-styles.mjs",
   "package.json",
   "package-lock.json",
   "tsconfig.json",

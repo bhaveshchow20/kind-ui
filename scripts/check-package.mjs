@@ -14,6 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
 import { build } from "vite";
 import { browserDirectives } from "./browser-directives.mjs";
 import { checkTypes } from "./check-types.mjs";
@@ -34,6 +35,7 @@ const peerNames = [
   "react-is",
   "recharts",
   "motion",
+  "tailwindcss",
   "@types/react",
   "@types/react-dom",
 ];
@@ -128,13 +130,18 @@ try {
       await readFile(join(ordinary, "node_modules", name, "package.json"), "utf8"),
     ).version;
   }
-  for (const file of ["chart.test.mjs", "configured-line.test.mjs", "consumer.tsx"]) {
+  for (const file of [
+    "chart.test.mjs",
+    "configured-line.test.mjs",
+    "tailwind-classes.test.mjs",
+    "consumer.tsx",
+  ]) {
     await copyFile(join(root, "tests", file), join(ordinary, file));
   }
   // Stream component failures; captured child output can truncate the failing TAP record.
   run(
     process.execPath,
-    ["--test", "chart.test.mjs", "configured-line.test.mjs"],
+    ["--test", "chart.test.mjs", "configured-line.test.mjs", "tailwind-classes.test.mjs"],
     ordinary,
     "inherit",
   );
@@ -219,10 +226,30 @@ try {
     "Packed license must match the repository license",
   );
   run(process.execPath, ["--input-type=module", "-e", "await import('@kind-ui/charts')"], consumer);
-  assert.equal(
-    await readFile(join(installed, "dist/styles.css"), "utf8"),
-    await readFile(join(root, "packages/charts/src/styles.css"), "utf8"),
-    "Packed CSS must match the component defaults",
+  assert.ok(
+    !packed.files.some((file) => file.path.endsWith(".css")),
+    "Consumer Tailwind generates chart styles; package ships no CSS",
+  );
+  await writeFile(
+    join(consumer, "chart-tailwind.css"),
+    '@import "tailwindcss/theme" layer(theme);\n@import "tailwindcss/utilities" layer(utilities);\n@source "./node_modules/@kind-ui/charts/dist";',
+  );
+  await writeFile(join(consumer, "missing-source.css"), '@import "tailwindcss" source(none);');
+  const missingSourceBuild = await build({
+    configFile: false,
+    root: consumer,
+    logLevel: "silent",
+    plugins: [tailwindcss()],
+    build: { write: false, rolldownOptions: { input: join(consumer, "missing-source.css") } },
+  });
+  const missingSourceCss = missingSourceBuild.output
+    .filter((item) => item.type === "asset" && item.fileName.endsWith(".css"))
+    .map((item) => String(item.source))
+    .join("\n");
+  assert.doesNotMatch(
+    missingSourceCss,
+    /--popover,Canvas/,
+    "Without source registration Tailwind must not secretly include chart styles",
   );
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
@@ -245,7 +272,7 @@ try {
         "box-plot",
         "number-shuffle",
         "activity-rings",
-        "stylesheet-warning",
+        "tailwind-setup",
       ].includes(folder) &&
       file.endsWith(".tsx")
     )
@@ -257,8 +284,29 @@ try {
   }
   async function production(entry, outDir, developmentReact = false) {
     const diagnostics = browserDirectives(consumer, [join(consumer, "host.tsx")]);
-    await build({
-      plugins: [diagnostics.plugin],
+    const productionOutput = await build({
+      plugins: [
+        tailwindcss(),
+        diagnostics.plugin,
+        {
+          name: "consumer-tailwind-setup",
+          transformIndexHtml: {
+            order: "pre",
+            handler(html) {
+              return {
+                html,
+                tags: [
+                  {
+                    tag: "link",
+                    attrs: { rel: "stylesheet", href: "/chart-tailwind.css" },
+                    injectTo: "head",
+                  },
+                ],
+              };
+            },
+          },
+        },
+      ],
       configFile: false,
       root: consumer,
       logLevel: "warn",
@@ -269,6 +317,15 @@ try {
         rolldownOptions: { input: join(consumer, entry), onwarn: diagnostics.onwarn },
       },
     });
+    const generatedCss = productionOutput.output
+      .filter((item) => item.type === "asset" && item.fileName.endsWith(".css"))
+      .map((item) => String(item.source))
+      .join("\n");
+    assert.match(
+      generatedCss,
+      /--popover,Canvas/,
+      "Package @source must discover chart token utilities in the installed tarball",
+    );
   }
   assert.match(
     await readFile(join(installed, "dist/index.js"), "utf8"),
@@ -400,13 +457,18 @@ createRoot(document.createElement("div")).render(
     join(consumer, "configured-line.test.mjs"),
     await readFile(join(root, "tests/configured-line.test.mjs"), "utf8"),
   );
+  await copyFile(
+    join(root, "tests/tailwind-classes.test.mjs"),
+    join(consumer, "tailwind-classes.test.mjs"),
+  );
   run(
     process.execPath,
-    ["--test", "chart.test.mjs", "configured-line.test.mjs"],
+    ["--test", "chart.test.mjs", "configured-line.test.mjs", "tailwind-classes.test.mjs"],
     consumer,
     "inherit",
   );
-  for (const file of ["loading.tsx", "loading.css"]) await copyFixture("browser", file);
+  for (const file of ["loading.tsx", "loading.css", "chart-utilities.css"])
+    await copyFixture("browser", file);
   await writeFixtureEntry(consumer, "loading", "./loading.js");
   await typecheck(["loading.tsx", "loading-entry.tsx"]);
   await production("loading.html", "packed-loading");
@@ -531,7 +593,7 @@ createRoot(document.createElement("div")).render(
   await production("index.html", "packed-polar-development", true);
   console.log("Radar/radial tarball consumer: strict NodeNext/Bundler and production build passed");
   for (const file of ["host.tsx", "main.tsx", "index.html", "render.mjs"])
-    await copyFixture("stylesheet-warning", file);
+    await copyFixture("tailwind-setup", file);
   await typecheck(["host.tsx", "main.tsx"]);
   // Hydrate the same public packed host, rather than duplicating Root's server markup.
   run(
@@ -553,25 +615,10 @@ createRoot(document.createElement("div")).render(
     consumer,
   );
   run(process.execPath, ["render.mjs"], consumer);
-  await mkdir(join(consumer, "public"), { recursive: true });
-  await writeFile(
-    join(consumer, "public/styles.css"),
-    await readFile(join(consumer, "node_modules/@kind-ui/charts/dist/styles.css")),
-  );
-  await production("index.html", "packed-stylesheet-production");
-  const stylesheetAssets = join(root, "artifacts/packed-stylesheet-production/assets");
-  for (const asset of await readdir(stylesheetAssets)) {
-    if (!asset.endsWith(".js")) continue;
-    assert.doesNotMatch(
-      await readFile(join(stylesheetAssets, asset), "utf8"),
-      /Kind UI chart styles are missing|--kind-ui-styles-loaded/,
-      "Production JS must remove the stylesheet diagnostic",
-    );
-  }
-  await production("index.html", "packed-stylesheet-development", true);
-  await rm(join(consumer, "public/styles.css"));
+  await production("index.html", "packed-tailwind-production");
+  await production("index.html", "packed-tailwind-development", true);
   console.log(
-    "Stylesheet diagnostic: guarded public consumer, strict types and both build modes passed",
+    "Tailwind source registration: packed SSR hydration consumer built in both modes without chart CSS imports",
   );
   const polarGallery = await readFile(
     join(root, "tests/fixtures/browser/polar-gallery.tsx"),
@@ -668,7 +715,7 @@ createRoot(document.createElement("div")).render(
     "Migrated area and bar host recipe typechecks passed; separate from packed public-export proof",
   );
   console.log(
-    "Packed contents, CSS, license, ESM import, component tests, strict consumers and production styling build passed",
+    "Packed contents, Tailwind class discovery, license, ESM import, component tests, strict consumers and production styling build passed",
   );
   if (process.argv.includes("--keep-artifact")) {
     const destination = artifactDestination;

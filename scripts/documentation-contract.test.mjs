@@ -12,38 +12,54 @@ const files = ["README.md", "CHANGELOG.md", "LICENSE", "package.json"];
 const check = (body, packed = files) => assertDocumentationContract(body, packed);
 const withoutPublicImports = (body) =>
   body.replaceAll(/from\s+["']@kind-ui\/charts["']/g, 'from "../src"');
-const withoutStylesheetImports = (body) =>
-  body.replaceAll(/import\s+["']@kind-ui\/charts\/styles\.css["'];?/g, "");
+const withoutTailwindImports = (body) => body.replaceAll(/@import\s+["']tailwindcss["'];?/g, "");
+const withoutPackageSources = (body) =>
+  body.replaceAll(/@source\s+["'][^"']*node_modules\/@kind-ui\/charts\/dist["'];?/g, "");
 
-test("quick-start README uses public imports, stylesheet and existing documentation sources", () => {
+test("quick-start README uses public imports, Tailwind setup and existing documentation sources", () => {
   check(readme);
 });
-test("rejects missing documentation, public package import and stylesheet setup", () => {
+test("rejects missing documentation, public package import and Tailwind setup", () => {
   assert.throws(
     () => check(readme.replace(documentationSource, "https://example.com")),
     /canonical documentation/,
   );
   assert.throws(() => check(withoutPublicImports(readme)), /public package import/);
-  assert.throws(() => check(withoutStylesheetImports(readme)), /stylesheet import/);
+  assert.throws(() => check(withoutTailwindImports(readme)), /Tailwind CSS import/);
+  assert.throws(() => check(withoutPackageSources(readme)), /Tailwind package source/);
+  assert.throws(
+    () => check(`${readme}\nimport "@kind-ui/charts/styles.css";`),
+    /Removed stylesheet export/,
+  );
 });
-test("negative fixtures remove setup imports from every example", () => {
+test("negative fixtures remove Tailwind setup from every example", () => {
   const multipleExamples = `[Documentation](${documentationSource})
+
+\`\`\`css
+@import "tailwindcss";
+@source "../node_modules/@kind-ui/charts/dist";
+\`\`\`
 
 \`\`\`tsx
 import { LineChart } from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
+\`\`\`
+
+\`\`\`css
+@import
+  'tailwindcss';
+@source
+  '../node_modules/@kind-ui/charts/dist';
 \`\`\`
 
 \`\`\`tsx
 import { AreaChart } from
   '@kind-ui/charts';
-import
-  '@kind-ui/charts/styles.css';
 \`\`\`
 `;
   check(multipleExamples);
   assert.throws(() => check(withoutPublicImports(multipleExamples)), /public package import/);
-  assert.throws(() => check(withoutStylesheetImports(multipleExamples)), /stylesheet import/);
+  assert.throws(() => check(withoutTailwindImports(multipleExamples)), /Tailwind CSS import/);
+  assert.throws(() => check(withoutPackageSources(multipleExamples)), /Tailwind package source/);
 });
 test("rejects missing or unsupported repository source links", () => {
   assert.throws(

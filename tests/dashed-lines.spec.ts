@@ -56,10 +56,18 @@ test("dash motion stays independent of reveal, native paint and lifecycle", asyn
   expect(errors).toEqual([]);
 });
 
-test("reduced motion stops stylesheet dashes without a React commit", async ({ page }) => {
+test("reduced motion stops generated CSS dashes without a React commit", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  // Use the stylesheet shipped with the existing packed consumer, including on CI shards.
-  await page.goto("http://127.0.0.1:4176/motion.html");
+  // Capture public rendered markup with its utilities and SVG keyframes, plus
+  // the consumer-generated stylesheet. The legacy marker class has no styles.
+  await page.goto("/contracts.html#dashed-lines");
+  const example = page.getByRole("region", { name: "Animated dashed strokes" });
+  const surface = example.locator('[data-example="line"] .recharts-surface');
+  await expect(surface.locator(".recharts-line-curve")).toHaveCSS(
+    "animation-name",
+    "kind-ui-line-dash",
+  );
+  const standalone = await surface.evaluate((node) => node.outerHTML);
   const stylesheetUrls = await page
     .locator('link[rel="stylesheet"]')
     .evaluateAll((links) => links.map((link) => (link as HTMLLinkElement).href));
@@ -73,11 +81,9 @@ test("reduced motion stops stylesheet dashes without a React commit", async ({ p
   );
   // Discard the fixture's React document before exercising the standalone SVG.
   await page.goto("about:blank");
-  await page.setContent(
-    `<svg class="kind-ui-line-dash" style="--kind-ui-dash-duration:800ms;--kind-ui-dash-cycle:10px;--kind-ui-dash-offset:3px;--kind-ui-dash-direction:normal"><path class="recharts-line-curve" d="M0,0L100,100" stroke="teal" stroke-dasharray="6 4" stroke-dashoffset="3" /></svg>`,
-  );
+  await page.setContent(standalone);
   await page.addStyleTag({ content: stylesheets.join("\n") });
-  const path = page.locator("path");
+  const path = page.locator(".recharts-line-curve");
   await expect(path).toHaveCSS("animation-name", "kind-ui-line-dash");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(path).toHaveCSS("animation-name", "none");
@@ -107,4 +113,37 @@ test("unsupported Area dashes preserve native paint and diagnose only in develop
   } else {
     expect(unsupported).toEqual([]);
   }
+});
+
+test("nonce-authorized loading and dash keyframes work under CSP", async ({ page }) => {
+  await page.route("**/contracts.html", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      headers: {
+        ...response.headers(),
+        "content-security-policy": "style-src-elem 'self' 'nonce-request-nonce'",
+      },
+    });
+  });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/contracts.html#dashed-lines");
+  const example = page.getByRole("region", { name: "Animated dashed strokes" });
+  const path = example.locator('[data-example="line"] .recharts-line-curve');
+  await expect(path).toHaveCSS("animation-name", "kind-ui-line-dash");
+  const before = await path.evaluate((node) => getComputedStyle(node).strokeDashoffset);
+  await expect
+    .poll(() => path.evaluate((node) => getComputedStyle(node).strokeDashoffset))
+    .not.toBe(before);
+  await example.getByText("Toggle loading", { exact: true }).click();
+  const skeleton = example.locator('[data-example="line"] [data-kind-ui="chart-loading-skeleton"]');
+  await expect(skeleton).toHaveCSS("animation-name", "kind-ui-loading-pulse");
+  expect(await skeleton.locator("style").evaluate((node) => node.nonce)).toBe("request-nonce");
+  await expect
+    .poll(() =>
+      skeleton.evaluate((node) =>
+        node.getAnimations().some((animation) => animation.playState === "running"),
+      ),
+    )
+    .toBe(true);
 });

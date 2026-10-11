@@ -1,3 +1,4 @@
+import "./tailwind.css";
 import * as Chart from "@kind-ui/charts";
 import { useState } from "react";
 

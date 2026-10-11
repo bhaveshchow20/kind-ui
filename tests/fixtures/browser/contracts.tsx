@@ -110,6 +110,7 @@ function DashedLinesContract() {
         <>
           <section data-example="line">
             <Chart.Root
+              nonce="request-nonce"
               config={{ value: { label: "Value", color: "teal" } }}
               visibleSeries={visible ? ["value"] : []}
             >
@@ -134,7 +135,7 @@ function DashedLinesContract() {
             </Chart.Root>
           </section>
           <section data-example="combo">
-            <Chart.Root config={{ value: { label: "Value", color: "teal" } }}>
+            <Chart.Root nonce="request-nonce" config={{ value: { label: "Value", color: "teal" } }}>
               <Chart.ComboChart
                 width={480}
                 height={240}

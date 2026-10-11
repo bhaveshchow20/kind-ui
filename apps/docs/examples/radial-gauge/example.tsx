@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 import { useState } from "react";
 
 const data = [{ period: "Storage", used: 72 }];

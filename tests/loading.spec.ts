@@ -62,6 +62,11 @@ test("all public families show decorative skeletons and suspend chart inspection
     await expect(skeleton).toBeVisible();
     await expect(card.locator('[aria-busy="true"]')).toHaveCount(1);
     await expect(card.locator("[inert]")).toHaveCount(1);
+    await expect(card.locator('[data-kind-ui="chart-loading-status"]')).toHaveCSS(
+      "position",
+      "absolute",
+    );
+    await expect(card.locator('[data-kind-ui="chart-loading-status"]')).toHaveCSS("width", "1px");
     await expect(card.locator('[data-kind-ui="chart-loading-status"]')).toHaveText(
       "Loading chart data",
     );

@@ -1,6 +1,7 @@
 "use client";
 
 import { type ComponentPropsWithRef, useId } from "react";
+import { cn } from "./utils.js";
 
 /** Static paint encoding, independent of material and chart geometry. */
 export type FillPattern = {
@@ -50,6 +51,7 @@ export function FillPatternDefinition({
     <pattern
       id={id}
       data-kind-ui="fill-pattern"
+      className="forced-colors:forced-color-adjust-none forced-colors:[&>rect:first-child]:fill-[Canvas] forced-colors:[&>rect:not(:first-child)]:fill-[CanvasText] forced-colors:[&>circle]:fill-[CanvasText] forced-colors:[&>path]:stroke-[CanvasText]"
       data-pattern={kind}
       width={size}
       height={size}
@@ -90,6 +92,7 @@ export function FillPatternSwatch({ pattern, color, ...props }: FillPatternSwatc
       focusable="false"
       viewBox="0 0 16 16"
       {...props}
+      className={cn("inline-block shrink-0 size-4 bg-none", props.className)}
       data-kind-ui="chart-indicator"
       data-fill-pattern=""
     >

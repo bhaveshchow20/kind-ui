@@ -197,15 +197,17 @@ export function InteractionPaint({
   identity,
   children,
   "data-kind-ui": kind = "interaction-paint",
+  className,
 }: {
   opacity: number;
   identity?: string | undefined;
   children: ReactNode;
   "data-kind-ui"?: string | undefined;
+  className?: string | undefined;
 }) {
   const value = useInteractionOpacity(opacity, identity);
   return (
-    <motion.g data-kind-ui={kind} initial={false} style={{ opacity: value }}>
+    <motion.g data-kind-ui={kind} className={className} initial={false} style={{ opacity: value }}>
       {children}
     </motion.g>
   );

@@ -1,5 +1,4 @@
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 

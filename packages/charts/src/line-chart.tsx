@@ -31,6 +31,7 @@ import {
   useLoadingSeed,
 } from "./loading-skeleton.js";
 import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
+import { cn } from "./utils.js";
 
 export type LineChartProps = ComponentProps<typeof EngineLineChart> & {
   loading?: boolean | undefined;
@@ -233,14 +234,13 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
     <SeriesPaintBoundary>
       <EngineChart
         {...props}
-        className={[
-          "kind-ui-line-chart",
+        className={cn(
+          "kind-ui-line-chart [&_.recharts-line]:[clip-path:var(--kind-ui-line-clip,none)] [&_.recharts-line-dots]:[clip-path:var(--kind-ui-line-clip,none)]",
           loading !== undefined && "kind-ui-loading-chart",
-          loading && "kind-ui-loading-chart-pending",
+          loading &&
+            "kind-ui-loading-chart-pending [&_.recharts-tooltip-wrapper]:hidden [&>*]:invisible [&_.recharts-layer]:invisible",
           props.className,
-        ]
-          .filter(Boolean)
-          .join(" ")}
+        )}
         style={{ ...props.style, "--kind-ui-line-clip": clip ?? "none" } as CSSProperties}
         onMouseMove={(state, event) => {
           const { relativeX, relativeY } = getRelativeCoordinate(event);
@@ -336,7 +336,12 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         {chart}
       </div>
       {loading !== undefined && (
-        <span data-kind-ui="chart-loading-status" role="status" aria-atomic="true">
+        <span
+          data-kind-ui="chart-loading-status"
+          role="status"
+          aria-atomic="true"
+          className="sr-only"
+        >
           {loading ? (loadingLabel ?? "Loading chart") : ""}
         </span>
       )}

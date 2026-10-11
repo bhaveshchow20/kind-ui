@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import "@kind-ui/charts/styles.css";
 import { LineHost, MaterialsHost } from "./host.js";
 
 const root = document.getElementById("root");

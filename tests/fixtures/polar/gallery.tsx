@@ -2,7 +2,6 @@ import { RadialBarLabel } from "@kind-ui/charts";
 import { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { PolarGalleryCard } from "./host.js";
-import "@kind-ui/charts/styles.css";
 
 const sample = [
   { category: "Speed", actual: 85, target: 75 },

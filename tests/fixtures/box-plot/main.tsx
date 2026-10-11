@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import "@kind-ui/charts/styles.css";
 import { BoxHost, MaterialGallery } from "./host.js";
 
 const root = document.getElementById("root");

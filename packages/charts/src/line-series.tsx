@@ -8,6 +8,7 @@ import { dashCycle, dashDuration, type LineDashAnimation } from "./line-dash.js"
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
+import { cn } from "./utils.js";
 import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 // Preserve the legacy native defaults while allowing explicit row/value parameters.
@@ -43,7 +44,7 @@ export function LineSeries<
   dashAnimation = false,
   ...props
 }: LineSeriesProps<DataPoint, Value>) {
-  const { config, paints, visibleSeries } = useChart();
+  const { config, paints, visibleSeries, nonce } = useChart();
   const { registerSeries, invalidate } = useLineInteraction();
   const generatedId = useId();
   const id = props.id || generatedId;
@@ -82,6 +83,11 @@ export function LineSeries<
   const baseline = Number.isFinite(Number(offset)) ? `${Number(offset)}px` : offset;
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
+      {dashed && (
+        <style
+          nonce={nonce}
+        >{`@keyframes kind-ui-line-dash { from { stroke-dashoffset: var(--kind-ui-dash-offset); } to { stroke-dashoffset: calc(var(--kind-ui-dash-offset) - var(--kind-ui-dash-cycle)); } }`}</style>
+      )}
       <SeriesInteractionLayer seriesKey={key} hidden={effectiveHide}>
         <Line<DataPoint, Value>
           isAnimationActive={false}
@@ -124,9 +130,12 @@ export function LineSeries<
             : {})}
           {...(effectiveHide ? { activeDot: false as const } : {})}
           {...(color !== undefined ? { stroke: color } : {})}
-          className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className]
-            .filter(Boolean)
-            .join(" ")}
+          className={cn(
+            "kind-ui-line-series",
+            dashed &&
+              "kind-ui-line-dash [&_.recharts-line-curve]:animate-[kind-ui-line-dash_var(--kind-ui-dash-duration)_linear_infinite] [&_.recharts-line-curve]:[animation-direction:var(--kind-ui-dash-direction)] motion-reduce:[&_.recharts-line-curve]:animate-none [[data-motion=off]_&_.recharts-line-curve]:animate-none [.kind-ui-loading-chart-pending_&_.recharts-line-curve]:animate-none",
+            className,
+          )}
         >
           {visibilityLabelChildren(props.children, effectiveHide, undefined, key)}
         </Line>

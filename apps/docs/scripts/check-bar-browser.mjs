@@ -218,6 +218,7 @@ try {
       await tooltip.waitFor();
       const spacing = await tooltip.evaluate((node) => ({
         padding: getComputedStyle(node).padding,
+        rootFontSize: Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
         listMargin: getComputedStyle(node.querySelector('[data-kind-ui="chart-tooltip-list"]'))
           .margin,
         valueFits: [...node.querySelectorAll('[data-kind-ui="chart-tooltip-value"]')].every(
@@ -226,7 +227,10 @@ try {
         width: node.getBoundingClientRect().width,
         viewport: innerWidth,
       }));
-      assert.equal(spacing.padding, "6px 8px");
+      assert.equal(
+        spacing.padding,
+        `${spacing.rootFontSize * 0.375}px ${spacing.rootFontSize * 0.5}px`,
+      );
       assert.equal(spacing.listMargin, "2px 0px 0px");
       assert.ok(spacing.valueFits && spacing.width < spacing.viewport);
       await page.keyboard.press("Escape");

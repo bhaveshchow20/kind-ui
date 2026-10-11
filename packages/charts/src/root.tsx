@@ -20,8 +20,8 @@ import {
 } from "./series-color.js";
 import { resolveSeriesConfig } from "./series-label.js";
 import { SeriesColorDefinitions } from "./series-paint.js";
-import { StylesheetWarning } from "./stylesheet-warning.js";
 import type { SeriesConfig } from "./types.js";
+import { cn } from "./utils.js";
 
 export type RootProps = ComponentPropsWithRef<"div"> & {
   config: SeriesConfig;
@@ -69,6 +69,7 @@ export function Root({
       : `var(--color-${key})`;
   }
   const value: ChartContextValue = {
+    ...(props.nonce !== undefined ? { nonce: props.nonce } : {}),
     config: resolveSeriesConfig(config),
     paints,
     colorId: id,
@@ -97,14 +98,13 @@ export function Root({
           <InteractionMotionRoot>
             <EmphasisProvider enabled={emphasis === "auto"}>
               <RootFrame {...props} style={{ ...colors, ...style }}>
-                {process.env.NODE_ENV === "development" && <StylesheetWarning />}
                 {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
                   <svg
                     aria-hidden="true"
                     focusable="false"
                     width={0}
                     height={0}
-                    style={{ position: "absolute" }}
+                    className="absolute"
                     data-kind-ui="color-resources"
                   >
                     <SeriesColorDefinitions />
@@ -127,6 +127,7 @@ function RootFrame({ children, ...props }: ComponentPropsWithRef<"div">) {
     // biome-ignore lint/a11y/noStaticElementInteractions: Delegates Escape from descendants after consumer handlers; this frame is not a control.
     <div
       {...props}
+      className={cn("w-full min-w-0 text-[color:var(--foreground,inherit)]", props.className)}
       data-kind-ui="chart"
       onKeyDown={(event) => {
         props.onKeyDown?.(event);

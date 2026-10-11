@@ -1,5 +1,4 @@
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 import {
   type BarShapeProps,
   CartesianGrid,

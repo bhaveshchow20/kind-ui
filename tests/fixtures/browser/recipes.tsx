@@ -74,7 +74,7 @@ function MarkerGallery() {
       style={
         {
           "--gallery-series": dark ? "#9eaaff" : "#4055ee",
-          "--kind-ui-chart-marker-surface": dark ? "#172033" : "white",
+          "--card": dark ? "#172033" : "white",
           background: dark ? "#172033" : "white",
           color: dark ? "white" : "#172033",
           padding: 24,

@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 import { type ReactNode, useState } from "react";
 import { Tooltip } from "recharts";
 
@@ -162,11 +161,10 @@ export function EnergyFlowChart({ state = "ready" }: { state?: "ready" | "loadin
                     padding: "6px 8px",
                     fontSize: 12,
                     lineHeight: "16px",
-                    background: "var(--kind-ui-chart-popover, var(--popover, Canvas))",
-                    color:
-                      "var(--kind-ui-chart-popover-foreground, var(--popover-foreground, CanvasText))",
-                    border: "1px solid var(--kind-ui-chart-border, var(--border, GrayText))",
-                    borderRadius: "var(--kind-ui-chart-radius, var(--radius, 8px))",
+                    background: "var(--popover, Canvas)",
+                    color: "var(--popover-foreground, CanvasText)",
+                    border: "1px solid var(--border, GrayText)",
+                    borderRadius: "var(--radius, 8px)",
                   }}
                   itemStyle={{ padding: 0, color: "inherit" }}
                 />

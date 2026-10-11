@@ -1,9 +1,10 @@
 "use client";
 
-import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { useOptionalChartInteraction } from "./chart-interaction.js";
-import { LegendItem } from "./legend.js";
+import { LegendItem, legendButtonClassName, legendClassName } from "./legend.js";
 import type { SankeyNodeConfig } from "./sankey-colors.js";
+import { cn } from "./utils.js";
 
 export type SankeyLegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
   /** Share this explicit reference with SankeyChart.nodeConfig. Config order owns legend order. */
@@ -30,6 +31,7 @@ export function SankeyLegend({
     <ul
       aria-label="Chart legend"
       {...props}
+      className={cn(legendClassName, props.className)}
       data-kind-ui="chart-legend"
       onClick={(event) => {
         props.onClick?.(event);
@@ -45,12 +47,16 @@ export function SankeyLegend({
       }}
     >
       {Object.entries(config).map(([key, item]) => {
+        const inactive = Boolean(
+          interactionBinding && interaction?.selected !== null && interaction?.selected !== key,
+        );
         const marker = (
           <span
             key={key}
             aria-hidden="true"
             data-kind-ui="chart-indicator"
-            style={{ "--kind-ui-chart-indicator-color": item.color } as CSSProperties}
+            className="inline-block shrink-0 size-2 bg-current"
+            style={{ backgroundColor: inactive ? undefined : item.color }}
           />
         );
         const content = children ? (
@@ -70,12 +76,13 @@ export function SankeyLegend({
               interaction.eligible.includes(key) &&
               (interaction.selected === null || interaction.selected === key)
             }
-            inactive={interaction.selected !== null && interaction.selected !== key}
+            inactive={inactive}
           >
             {interaction.eligible.includes(key) ? (
               <button
                 type="button"
                 aria-pressed={interaction.selected === key}
+                className={legendButtonClassName}
                 data-node-key={key}
                 data-inactive={
                   interaction.selected !== null && interaction.selected !== key ? "true" : undefined
@@ -84,12 +91,16 @@ export function SankeyLegend({
                 {content}
               </button>
             ) : (
-              <span>{content}</span>
+              <span className="inline-flex items-center gap-1 py-[2px] px-0 text-[11px] leading-4">
+                {content}
+              </span>
             )}
           </LegendItem>
         ) : (
           <li key={key} data-kind-ui="chart-legend-item" data-node={key}>
-            <span>{content}</span>
+            <span className="inline-flex items-center gap-1 py-[2px] px-0 text-[11px] leading-4">
+              {content}
+            </span>
           </li>
         );
       })}

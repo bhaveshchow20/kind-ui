@@ -8,7 +8,7 @@ export type PointMarkerProps = DotProps & { variant?: PointStyle | undefined };
 /** Paint only: native coordinates, radius, events and inspection remain owned by Recharts. */
 export function markerPaint(variant: PointStyle, color: string | undefined) {
   if (variant === "default") return {};
-  const surface = "var(--kind-ui-chart-marker-surface, var(--card, white))";
+  const surface = "var(--card, white)";
   return {
     fill: variant === "border" ? color : surface,
     stroke: variant === "border" ? surface : color,

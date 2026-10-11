@@ -1,5 +1,5 @@
+import "./tailwind.css";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { DerivedHide } from "./derived-hide";

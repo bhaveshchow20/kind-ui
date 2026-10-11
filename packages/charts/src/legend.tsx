@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Symbols } from "recharts";
 import { useInteractionOpacity } from "./animation.js";
 import { useChart } from "./chart-context.js";
@@ -9,6 +9,11 @@ import { useChartInteraction } from "./chart-interaction.js";
 import { useEmphasis } from "./emphasis.js";
 import { FillPatternSwatch } from "./fill-pattern.js";
 import { colorStopToken } from "./series-color.js";
+import { cn } from "./utils.js";
+
+export const legendClassName = "flex flex-wrap gap-2 list-none mx-0 mt-1 mb-2 p-0";
+export const legendButtonClassName =
+  "inline-flex items-center gap-1.5 border border-solid border-[color:var(--border,currentColor)] rounded-[var(--radius,6px)] bg-[color:var(--muted,transparent)] text-inherit min-h-6 py-[3px] px-1.5 font-[family-name:inherit] text-[11px] leading-4 cursor-pointer data-[inactive=true]:text-[color:var(--muted-foreground,GrayText)] data-[inactive=true]:no-underline data-[inactive=true]:[&_[data-fill-pattern]]:opacity-50";
 
 export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
   /** Use the existing square color swatch instead of configured icons or symbols. */
@@ -35,6 +40,7 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
     <ul
       aria-label="Chart legend"
       {...props}
+      className={cn(legendClassName, props.className)}
       data-kind-ui="chart-legend"
       onClick={(event) => {
         props.onClick?.(event);
@@ -51,9 +57,15 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
     >
       {Object.entries(config).map(([key, item]) => {
         const visible = visibleSeries?.includes(key) ?? true;
+        const inactive =
+          !visible || (interaction.selected !== null && interaction.selected !== key);
         const marker =
           item.icon && !hideIcon ? (
-            <span aria-hidden="true" data-kind-ui="chart-icon">
+            <span
+              aria-hidden="true"
+              data-kind-ui="chart-icon"
+              className="inline-flex shrink-0 items-center [&>svg]:w-[12px] [&>svg]:h-[12px]"
+            >
               <item.icon />
             </span>
           ) : item.legendShape && !hideIcon ? (
@@ -62,12 +74,9 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
               focusable="false"
               data-kind-ui="chart-indicator"
               data-legend-shape={item.legendShape}
+              className="inline-block shrink-0 size-3 bg-none fill-current"
               viewBox="-8 -8 16 16"
-              style={
-                {
-                  "--kind-ui-chart-indicator-color": paints[key],
-                } as CSSProperties
-              }
+              style={{ fill: inactive ? undefined : paints[key] }}
             >
               <Symbols type={item.legendShape} cx={0} cy={0} size={64} />
             </svg>
@@ -77,12 +86,10 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
             <span
               aria-hidden="true"
               data-kind-ui="chart-indicator"
-              style={
-                {
-                  "--kind-ui-chart-indicator-color": `var(--color-${key})`,
-                  "--kind-ui-chart-indicator-background": `var(${colorStopToken(key, "gradient")})`,
-                } as CSSProperties
-              }
+              className="inline-block shrink-0 size-2 bg-current"
+              style={{
+                background: inactive ? undefined : `var(${colorStopToken(key, "gradient")})`,
+              }}
             />
           );
         const content = children ? (
@@ -110,7 +117,7 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
               interaction.eligible.includes(key) &&
               (interaction.selected === null || interaction.selected === key)
             }
-            inactive={!visible || (interaction.selected !== null && interaction.selected !== key)}
+            inactive={inactive}
             interactive={interaction.interactive && interaction.eligible.includes(key)}
           >
             {interaction.interactive && interaction.eligible.includes(key) ? (
@@ -123,6 +130,7 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
                     : undefined
                 }
                 data-kind-ui="chart-legend-button"
+                className={legendButtonClassName}
                 data-legend-key={key}
               >
                 {content}
@@ -162,6 +170,7 @@ export function LegendItem({
     <motion.li
       initial={false}
       style={{ opacity }}
+      className="[&>span]:inline-flex [&>span]:items-center [&>span]:gap-1 [&>span]:py-[2px] [&>span]:px-0 [&>span]:text-[11px] [&>span]:leading-4"
       data-kind-ui="chart-legend-item"
       data-series={seriesKey}
       tabIndex={enabled && !interactive ? 0 : undefined}

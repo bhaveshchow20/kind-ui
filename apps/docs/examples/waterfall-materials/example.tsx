@@ -1,6 +1,5 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
 
 // Values are USD thousands. Checkpoints are absolute; deltas are signed changes.
 const entries = [
@@ -108,9 +107,8 @@ export function MaterialCashFlowChart({
                   style={{
                     padding: 12,
                     borderRadius: 10,
-                    background: "var(--kind-ui-chart-popover, var(--popover, Canvas))",
-                    color:
-                      "var(--kind-ui-chart-popover-foreground, var(--popover-foreground, CanvasText))",
+                    background: "var(--popover, Canvas)",
+                    color: "var(--popover-foreground, CanvasText)",
                     border: "1px solid #8886",
                     fontSize: 12,
                   }}

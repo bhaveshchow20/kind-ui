@@ -7,10 +7,16 @@ export const documentationSource = "https://kindui.dev/charts/docs/";
 export function assertDocumentationContract(readme, packedFiles) {
   const links = [...readme.matchAll(/\]\(([^)]+)\)/g)].map(([, target]) => target);
   assert.ok(links.includes(documentationSource), "README must link the canonical documentation");
+  assert.match(readme, /@import\s+["']tailwindcss["']/, "Missing Tailwind CSS import");
   assert.match(
     readme,
+    /@source\s+["'][^"']*node_modules\/@kind-ui\/charts\/dist["']/,
+    "Missing Tailwind package source",
+  );
+  assert.doesNotMatch(
+    readme,
     /import\s+["']@kind-ui\/charts\/styles\.css["']/,
-    "Missing stylesheet import",
+    "Removed stylesheet export must not be imported",
   );
   assert.match(readme, /from\s+["']@kind-ui\/charts["']/, "Missing public package import");
   for (const target of links) {
