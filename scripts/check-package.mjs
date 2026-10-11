@@ -18,6 +18,7 @@ import { build } from "vite";
 import { browserDirectives } from "./browser-directives.mjs";
 import { checkTypes } from "./check-types.mjs";
 import { assertDocumentationContract } from "./documentation-contract.mjs";
+import { writeFixtureEntry } from "./fixture-entry.mjs";
 import {
   assertCompositionConsumerSource,
   assertLineConsumerSource,
@@ -210,7 +211,6 @@ try {
   );
   assertDocumentationContract(
     await readFile(join(installed, "README.md"), "utf8"),
-    await readdir(join(root, "examples/chart")),
     packed.files.map((file) => file.path),
   );
   assert.equal(
@@ -406,9 +406,9 @@ createRoot(document.createElement("div")).render(
     consumer,
     "inherit",
   );
-  for (const file of ["loading.html", "loading.tsx", "loading.css"])
-    await copyFile(join(root, "examples/chart", file), join(consumer, file));
-  await typecheck(["loading.tsx"]);
+  for (const file of ["loading.tsx", "loading.css"]) await copyFixture("browser", file);
+  await writeFixtureEntry(consumer, "loading", "./loading.js");
+  await typecheck(["loading.tsx", "loading-entry.tsx"]);
   await production("loading.html", "packed-loading");
   console.log("Loading boundary: packed public-only strict types and production preview passed");
   for (const file of ["index.html", "main.tsx"]) await copyFixture("number-shuffle", file);
@@ -573,7 +573,10 @@ createRoot(document.createElement("div")).render(
   console.log(
     "Stylesheet diagnostic: guarded public consumer, strict types and both build modes passed",
   );
-  const polarGallery = await readFile(join(root, "examples/chart/polar-gallery.tsx"), "utf8");
+  const polarGallery = await readFile(
+    join(root, "tests/fixtures/browser/polar-gallery.tsx"),
+    "utf8",
+  );
   assertLineConsumerSource(polarGallery);
   await writeFile(join(consumer, "host.tsx"), polarGallery);
   for (const file of ["gallery.tsx", "gallery.html"]) await copyFixture("polar", file);
@@ -618,19 +621,19 @@ createRoot(document.createElement("div")).render(
   await production("index.html", "packed-box-plot");
   console.log("Box plot tarball: public-only strict NodeNext/Bundler and production build passed");
 
-  // The actual presentation recipe is independently checked through the installed tarball.
+  // Presentation behavior is independently checked through the installed tarball.
   for (const file of [
     "use-reduced-motion.ts",
     "presentation.tsx",
     "presentation-main.tsx",
     "presentation.css",
-    "presentation.html",
   ]) {
-    const source = await readFile(join(root, "examples/chart", file), "utf8");
+    const source = await readFile(join(root, "tests/fixtures/browser", file), "utf8");
     if (file.endsWith(".tsx") || file.endsWith(".ts")) assertLineConsumerSource(source);
     await writeFile(join(consumer, file), source);
   }
-  await typecheck(["presentation.tsx", "presentation-main.tsx"]);
+  await writeFixtureEntry(consumer, "presentation", "./presentation-main.js");
+  await typecheck(["presentation.tsx", "presentation-main.tsx", "presentation-entry.tsx"]);
   await production("presentation.html", "packed-presentation");
   console.log(
     "Presentation recipe: guarded public imports, strict NodeNext/Bundler and tarball production build passed",
@@ -651,7 +654,10 @@ createRoot(document.createElement("div")).render(
     "area-recipes.tsx",
     "use-reduced-motion.ts",
   ]) {
-    await writeFile(join(legacy, file), await readFile(join(root, "examples/chart", file), "utf8"));
+    await writeFile(
+      join(legacy, file),
+      await readFile(join(root, "tests/fixtures/browser", file), "utf8"),
+    );
   }
   await writeFile(
     join(legacy, "recipe-consumer.tsx"),

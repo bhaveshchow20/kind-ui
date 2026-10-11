@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   assertDocumentationContract,
@@ -8,9 +8,8 @@ import {
 } from "./documentation-contract.mjs";
 
 const readme = await readFile(new URL("../packages/charts/README.md", import.meta.url), "utf8");
-const recipes = await readdir(new URL("../examples/chart/", import.meta.url));
 const files = ["README.md", "CHANGELOG.md", "LICENSE", "package.json"];
-const check = (body, packed = files) => assertDocumentationContract(body, recipes, packed);
+const check = (body, packed = files) => assertDocumentationContract(body, packed);
 const withoutPublicImports = (body) =>
   body.replaceAll(/from\s+["']@kind-ui\/charts["']/g, 'from "../src"');
 const withoutStylesheetImports = (body) =>
@@ -54,14 +53,16 @@ test("rejects missing or unsupported repository source links", () => {
   assert.throws(
     () =>
       check(
-        `${readme}\n[branch](${repositorySourcePrefix}blob/unknown/examples/chart/line-recipes.tsx)`,
+        `${readme}\n[branch](${repositorySourcePrefix}blob/unknown/apps/docs/examples/line/example.tsx)`,
       ),
     /Unsupported repository source route/,
   );
   assert.throws(
     () =>
-      check(`${readme}\n[recipe](${repositorySourcePrefix}blob/main/examples/chart/missing.md)`),
-    /Missing recipe source/,
+      check(
+        `${readme}\n[recipe](${repositorySourcePrefix}blob/main/apps/docs/examples/missing.tsx)`,
+      ),
+    /Missing repository source/,
   );
 });
 test("rejects links outside the package and an unpacked license", () => {

@@ -437,7 +437,7 @@ test("recipes remain continuous before hover, after selection, filter/unhide and
   await expect.poll(() => paint(charts.first())).toEqual(finalPaint);
   await charts.first().locator(".recharts-pie-sector path").first().hover();
   await expect.poll(() => paint(charts.first())).toEqual(finalPaint);
-  await page.getByRole("heading", { name: "Pie & donut", exact: true }).click();
+  await page.getByRole("heading", { name: "Pie regression cases", exact: true }).click();
   await first.getByRole("button", { name: "Delivery", exact: true }).click();
   await expect(first.getByRole("status").filter({ hasText: "allocated hours" })).toContainText(
     "88 allocated hours",

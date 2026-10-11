@@ -7,7 +7,7 @@ test("polar recipes use public components, accessible tables and controlled lege
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/polar.html");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Radar & radial charts");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Polar regression cases");
   await expect(page.locator(".polar-card")).toHaveCount(8);
   await expect(page.locator(".polar-card svg[role=application]")).toHaveCount(8);
   await expect(page.locator('[data-kind-ui="radial-label"][data-fit="yes"]').first()).toBeVisible();

@@ -9,3 +9,6 @@ coverage/
 
 # Local development research
 /.local/research/
+
+# Temporary browser fixture entry files
+/tests/fixtures/browser/.browser-input-*/

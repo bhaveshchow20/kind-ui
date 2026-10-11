@@ -31,6 +31,5 @@ const sources = (
 assertPackageContract(manifest, files, sources);
 assertDocumentationContract(
   await readFile(new URL("../packages/charts/README.md", import.meta.url), "utf8"),
-  await readdir(new URL("../examples/chart/", import.meta.url)),
   files,
 );

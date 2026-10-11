@@ -19,9 +19,8 @@
     "check:package": "node scripts/check-package.mjs",
     "pack:artifact": "node scripts/check-package.mjs --keep-artifact",
     "test": "npm run build && npm run test:unit",
-    "dev:chart": "npm run build && vite examples/chart --host 127.0.0.1",
     "check:chart": "npm run check:packed && node scripts/run-checks.mjs consumers",
-    "dev:showcase": "npm run build && vite examples/chart --host 127.0.0.1 --port 4873 --open /showcase.html",
+    "dev:showcase": "npm --prefix apps/showcase run dev",
     "test:composition": "playwright test --config playwright.composition.config.mjs",
     "check:line-integrations": "node scripts/check-line-integrations.mjs",
     "test:configured-line": "playwright test --config playwright.configured-line.config.mjs",
@@ -36,11 +35,12 @@
     "check:framework": "npm run check:line-integrations && npm run test:line-integrations",
     "test:unit": "node --test tests/chart.test.mjs tests/configured-line.test.mjs tests/activity-rings.test.mjs",
     "check:fast": "node scripts/run-checks.mjs preflight && npm run typecheck && npm run test:unit",
-    "check:packed": "npm run pack:artifact && tsc -p examples/chart && node scripts/check-showcase-code.mjs && vite build examples/chart && npm run check:line-integrations",
+    "check:packed": "npm run pack:artifact && tsc -p tests/fixtures/browser && node scripts/check-browser-fixtures.mjs && npm run check:line-integrations",
     "check:preflight": "node scripts/run-checks.mjs preflight",
     "check:browsers": "node scripts/run-checks.mjs consumers",
     "test:focus-identity": "playwright test --config playwright.focus-identity.config.mjs",
-    "test:cartesian-visibility": "playwright test --config playwright.cartesian-visibility.config.mjs"
+    "test:cartesian-visibility": "playwright test --config playwright.cartesian-visibility.config.mjs",
+    "dev:docs": "npm --prefix apps/docs run dev"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

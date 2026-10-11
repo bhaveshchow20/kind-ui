@@ -8,7 +8,7 @@ customize its parts through public components and typed props.
 
 [Website](https://kindui.dev/charts) ·
 [Documentation](https://kindui.dev/charts/docs/) ·
-[Examples](https://github.com/bhaveshchow20/kind-ui/tree/main/examples/chart) ·
+[Examples](https://kindui.dev/charts/docs/components/line/) ·
 [GitHub](https://github.com/bhaveshchow20/kind-ui)
 
 ## Chart types
@@ -160,9 +160,6 @@ completion. Loading does not change validation of supplied chart data. Requests,
 cancellation, retries, partial results, errors and portals outside the native
 chart remain host-owned. Supply an accessible data alternative alongside charts.
 
-Run `npm run dev:chart` and open `/loading.html` for all-family replay, load,
-empty-input, resize and interrupted-update controls.
-
 
 ## Selective Pie glow
 
@@ -304,7 +301,7 @@ const config = {
 </Root>;
 ```
 
-Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also accept these patterns through their `config`. Omit `stackId` for unstacked explicit areas. Explicit composition can instead use `pattern={{ kind: "hatch", angle: 45 }}` on each `AreaSeries`. Series patterns override configuration; `pattern={false}` opts out. Explicit `fill` (including gradients), `style.fill`, and custom `shape` retain ownership and disable automatic pattern resources. With a configured gradient, pattern tiles use the solid first-stop `--color-key` ink; unpatterned areas use the complete chart-local gradient. Explicit stroke still supplies the pattern base when provided. Native `fillOpacity`, filters, geometry and existing material rules remain in effect. Configuration drives default legend swatches; when overriding a series pattern, compose `FillPatternSwatch` through `Legend.children` with the matching pattern/color. Icon/symbol priority and theme/forced-colors behavior follow the shared bar pattern contract above. The mounted packed area fixture at `static.html?patterns` demonstrates overrides, materials, stacking, themes and two independent charts.
+Configured `StackedArea`, `PercentArea` and `InteractiveArea` host recipes also accept these patterns through their `config`. Omit `stackId` for unstacked explicit areas. Explicit composition can instead use `pattern={{ kind: "hatch", angle: 45 }}` on each `AreaSeries`. Series patterns override configuration; `pattern={false}` opts out. Explicit `fill` (including gradients), `style.fill`, and custom `shape` retain ownership and disable automatic pattern resources. With a configured gradient, pattern tiles use the solid first-stop `--color-key` ink; unpatterned areas use the complete chart-local gradient. Explicit stroke still supplies the pattern base when provided. Native `fillOpacity`, filters, geometry and existing material rules remain in effect. Configuration drives default legend swatches; when overriding a series pattern, compose `FillPatternSwatch` through `Legend.children` with the matching pattern/color. Icon/symbol priority and theme/forced-colors behavior follow the shared bar pattern contract above. The packed area regression fixture checks overrides, materials, stacking, themes and two independent charts.
 
 The existing Next integration fixture additionally checks real server-rendered
 color resource IDs through hydration and a theme change.
@@ -549,10 +546,8 @@ normalized source data, provide a resolver that returns the existing fraction;
 do not compute another share or apply expand to data already transformed elsewhere.
 Hosts still own raw data tables and accessible alternatives.
 
-The source-only example at `/contracts.html` includes vertical/horizontal Bar,
-Area and Combo with a separate raw latency axis and original data tables.
 Recharts 3.10.1 applies native expand to every numeric axis. For mixed-unit Combo
-charts, the example therefore uses caller-selected fraction `dataKey` accessors
+charts, use caller-selected fraction `dataKey` accessors
 for the stacked bars with `stackOffset="none"`, a `[0, 1]` share axis, and an
 unchanged raw latency line on `[0, 10]`. The raw rows stay intact; an explicit
 native tooltip formatter pairs each fraction with its original row value. Do not
@@ -593,8 +588,7 @@ existing non-intercepting behavior and reduced-motion policy. Radar's selection
 dots and Scatter's symbols have separate contracts and do not accept these
 series options. Bar, Pie and other shape families are outside this API.
 
-Run `npm run dev:chart` and visit `/recipes.html#point-markers` for the marker gallery and
-its accessible data table.
+See the [Line examples](https://kindui.dev/charts/docs/components/line/) for point markers and accessible data tables.
 
 ### Directional Line and Area entrances
 
@@ -698,8 +692,7 @@ Stylesheets overriding dash paint remain consumer-owned and can change appearanc
 `AreaSeries` does not accept this option: its closed perimeter includes baseline
 and closing edges. For an open animated outline, overlay `LineSeries` in a
 `ComboChart` as above. Match data keys, interpolation and axes yourself; stacked
-or range areas require an explicitly derived outline dataset. See
-`/contracts.html#dashed-lines` for the interactive line and combo contract examples.
+or range areas require an explicitly derived outline dataset.
 
 ### Initial Pie tooltip
 
@@ -721,7 +714,7 @@ re-pins. No focus is moved or trapped. The existing tooltip is the sole readout
 and live announcement; Kind adds no announcement region or hover selection.
 Explicit Tooltip `active` and `defaultIndex` retain native ownership and take
 precedence. Custom content owns its markup and accessibility. Omitted defaults
-preserve existing behavior. See the weekly Pie in `examples/chart/pie-recipes.tsx`.
+preserve existing behavior. See the [Pie examples](https://kindui.dev/charts/docs/components/pie/).
 
 ### Sankey node labels
 
@@ -739,7 +732,7 @@ node={(node) => (
 
 Optional `SankeyNodeConfig` entries accept an `icon: ReactNode`. Pass that config
 explicitly as `SankeyNodeLabel`'s `nodeConfig` in your native callback (see the
-energy example in `examples/chart/sankeys.tsx`). Icons use a square `iconSize`
+[Sankey examples](https://kindui.dev/charts/docs/components/sankey/)). Icons use a square `iconSize`
 (default 16 chart units) SVG viewport with `viewBox="0 0 24 24"`; supply SVG
 content, or a nested SVG with its own viewBox. `iconGap` defaults to 4 units.
 Outside icons sit nearest the node and shift the text by size plus gap on either
@@ -770,4 +763,4 @@ Reserve margins for outside text; the native SVG viewport still clips overflow.
 The full name/value remains in a SVG title even when inside text clips. Keep the table
 as the complete accessible data alternative. Custom `children` (including `tspan`)
 replace visual text while preserving the default title. No label or animation is
-installed implicitly. `/sankeys.html` demonstrates both positions.
+installed implicitly. See the [Sankey examples](https://kindui.dev/charts/docs/components/sankey/).

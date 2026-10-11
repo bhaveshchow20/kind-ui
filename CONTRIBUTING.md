@@ -21,10 +21,10 @@ Kind UI publishes `@kind-ui/charts` on npm. It remains before 1.0, with an open-
 - `npm run check:package`: build, validate package-gate fixtures, then verify a tarball in an isolated consumer with pinned peers
 - `npm run pack:artifact`: run the same full package gate and retain the exact validated tarball and checksum in `artifacts/package/`
 - `npm test`: build and run public component tests
-- `npm run dev:chart`: run the minimal usage example
-- `npm run check:chart`: prepare the packed consumer, typecheck/build the example and run browser checks
+- `npm run dev:showcase`: run the homepage; `npm run dev:docs`: run the documentation (see each app’s README for package preparation and dependency installation)
+- `npm run check:chart`: prepare the packed consumer, typecheck/build regression fixtures and run browser checks
 - `npm run check:fast`: lint, CI/release contracts, strict library typecheck and component tests
-- `npm run check:packed`: full packed-package gate, example typecheck/build and Next/Tailwind/Lucide build checks
+- `npm run check:packed`: full packed-package gate, regression fixture typecheck/build and Next/Tailwind/Lucide build checks
 - `npm run check:browsers -- --shard=1/4`: browser shard against fixtures prepared by `check:packed`
 - `npm run check`: all fast, packed-package and browser gates locally
 

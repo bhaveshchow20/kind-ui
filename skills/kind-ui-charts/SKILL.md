@@ -23,15 +23,16 @@ adapting a recipe. Do not substitute repository source imports for npm imports.
 5. Build the chosen consumer and report checks actually run using the verification
    steps in [setup and verification](rules/setup-testing.md).
 
-Adapt examples only when their family and ownership fit: [mixed-unit Combo](examples/controlled-combo.tsx),
-[directed Sankey flows](examples/sankey-flows.tsx), [team matrix](examples/team-heatmap.tsx),
-and [configured Line](examples/configured-line.tsx).
-Each preserves a complete data alternative. They are starting points, not a universal
-chart model; use the family table to route other chart requests.
+Use the maintained docs examples for [Combo](https://kindui.dev/charts/docs/components/combo/),
+[Sankey](https://kindui.dev/charts/docs/components/sankey/),
+[Heatmap](https://kindui.dev/charts/docs/components/heatmap/),
+and [Line](https://kindui.dev/charts/docs/components/line/).
+Retrieve complete consumer source and its data alternative from the documentation;
+use the family table to route other chart requests.
 
 ## Retrieve a family contract when needed
 
-For families or options beyond these examples, retrieve the relevant Markdown
+For each family or option, retrieve the relevant Markdown
 from the official [documentation index](https://kindui.dev/charts/docs/llms.txt).
 The [complete reference](https://kindui.dev/charts/docs/llms-full.txt) includes
 consumer code and API tables. Check the installed declarations for exact props;

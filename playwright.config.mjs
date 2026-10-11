@@ -126,7 +126,7 @@ export default defineConfig({
       url: `http://127.0.0.1:${port(4183)}`,
     },
     {
-      command: `npm exec vite preview -- --outDir examples/chart/dist --host 127.0.0.1 --port ${port(4173)} --strictPort`,
+      command: `npm exec vite preview -- --outDir artifacts/browser-fixtures --host 127.0.0.1 --port ${port(4173)} --strictPort`,
       url: `http://127.0.0.1:${port(4173)}`,
     },
     {

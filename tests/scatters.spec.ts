@@ -9,7 +9,6 @@ for (const phone of [false, true]) {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("/scatters.html");
-    await expect(page.getByRole("heading", { name: "Relationships, at a glance." })).toBeVisible();
     const relationship = page.getByRole("application", { name: "Latency and acceptance by task" });
     const bubble = page.getByRole("application", {
       name: "Task latency acceptance and request volume",

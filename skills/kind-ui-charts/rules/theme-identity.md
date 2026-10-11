@@ -5,7 +5,7 @@ use `material="clay"` or `material="glow"` when requested.
 SankeyNode/SankeyLink select Clay/Glow with `finish`; omit it for Default.
 There is no chart-level Sankey appearance `material`. SankeyLink has a separate `material="solid" | "gradient"` paint
 choice. Preserve `material="gradient"` when changing its finish; see the
-[flow example](../examples/sankey-flows.tsx). Paper was removed in 0.3. Do not silently replace custom SVG paint,
+[Sankey examples](https://kindui.dev/charts/docs/components/sankey/). Paper was removed in 0.3. Do not silently replace custom SVG paint,
 filters, shapes, or geometry with material defaults.
 
 ```tsx

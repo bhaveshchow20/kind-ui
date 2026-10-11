@@ -1,0 +1,210 @@
+import * as Chart from "@kind-ui/charts";
+import {
+  CartesianGrid,
+  type DotProps,
+  ResponsiveContainer,
+  Symbols,
+  XAxis,
+  YAxis,
+} from "@kind-ui/charts";
+import { useState } from "react";
+
+import "./style.css";
+
+const config = {
+  completed: {
+    label: "Completed",
+    color: "var(--chart-1)",
+    formatValue: (value) => `${value} tasks`,
+  },
+  review: {
+    label: "Needs review",
+    color: "var(--chart-2)",
+    formatValue: (value) => `${value} tasks`,
+  },
+} satisfies Chart.SeriesConfig;
+const data = [
+  { day: "Mon", completed: 42, review: 12 },
+  { day: "Tue", completed: 58, review: 8 },
+  { day: "Wed", completed: null, review: 14 },
+  { day: "Thu", completed: 64, review: 0 },
+  { day: "Fri", completed: 82, review: 9 },
+];
+const keys = ["completed", "review"] as const;
+const cellClass = "border-b border-border px-3 py-2.5 text-right";
+function ReviewMarker({ cx, cy, size = 34 }: Pick<DotProps, "cx" | "cy"> & { size?: number }) {
+  if (cx == null || cy == null) return <g />;
+  return (
+    <Symbols
+      cx={cx}
+      cy={cy}
+      type="diamond"
+      size={size}
+      fill="var(--color-review)"
+      stroke="var(--card)"
+      strokeWidth={1.5}
+    />
+  );
+}
+function App() {
+  const [palette, setPalette] = useState<"monochrome" | "color">("monochrome");
+  const [visible, setVisible] = useState<string[]>([...keys]);
+  const [empty, setEmpty] = useState(false);
+  const rows = empty ? [] : data;
+  return (
+    <div data-palette={palette} className="min-h-screen bg-background text-foreground">
+      <main className="mx-auto max-w-[760px] px-4 py-6 sm:px-6">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <fieldset
+            aria-label="Chart palette"
+            className="flex gap-1 rounded-lg bg-muted p-1 text-xs"
+          >
+            {(["monochrome", "color"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={palette === value}
+                onClick={() => setPalette(value)}
+                className="rounded-md px-3 py-2 text-muted-foreground aria-pressed:bg-card aria-pressed:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                {value === "monochrome" ? "Monochrome" : "Color"}
+              </button>
+            ))}
+          </fieldset>
+        </div>
+        <section aria-label="Task outcomes">
+          <header className="mb-2 flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-xl font-medium tracking-tight">Task outcomes</h1>
+            <label className="flex min-h-8 cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                className="size-4 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                checked={empty}
+                onChange={(event) => setEmpty(event.target.checked)}
+              />
+              Empty data
+            </label>
+          </header>
+          <Chart.Root
+            config={config}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            className="text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-surface]:focus-visible:outline-2 [&_.recharts-surface]:focus-visible:outline-offset-2 [&_.recharts-surface]:focus-visible:outline-ring"
+          >
+            <Chart.Legend
+              aria-label="Visible series"
+              className="mt-1 mb-2.5 gap-1 text-[13px] [&_[data-kind-ui=chart-legend-button]]:border-transparent [&_[data-kind-ui=chart-legend-button]:hover]:[--chart-legend-background:var(--accent)] [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-offset-2 [&_[data-kind-ui=chart-legend-button]]:focus-visible:outline-ring [&_[aria-pressed=false]]:text-muted-foreground [&_[data-series=completed]_[data-kind-ui=chart-indicator]]:rounded-full [&_[data-series=review]_[data-kind-ui=chart-indicator]]:rotate-45 [&_[data-kind-ui=chart-indicator]]:size-2"
+            />
+            <p id="chart-help" className="sr-only">
+              Focus the chart and use left and right arrow keys to explore values. Escape dismisses
+              the tooltip.
+            </p>
+            {rows.length === 0 ? (
+              <p className="grid h-[180px] place-items-center text-muted-foreground" role="status">
+                No data yet.
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <Chart.LineChart
+                  data={rows}
+                  accessibilityLayer
+                  aria-label="Task outcomes by day"
+                  aria-describedby="chart-help"
+                  margin={{ top: 12, right: 12, bottom: 8, left: 0 }}
+                >
+                  <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.65} />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} />
+                  <YAxis width={32} axisLine={false} tickLine={false} domain={[0, 100]} />
+                  <Chart.Tooltip cursor />
+                  {keys.map((key) => (
+                    <Chart.LineSeries
+                      key={key}
+                      dataKey={key}
+                      stroke={`var(--color-${key})`}
+                      strokeWidth={2.5}
+                      dot={
+                        key === "review" ? (
+                          <ReviewMarker />
+                        ) : (
+                          {
+                            r: 3.5,
+                            strokeWidth: 1.5,
+                            stroke: "var(--card)",
+                            fill: "var(--color-completed)",
+                          }
+                        )
+                      }
+                      activeDot={
+                        key === "review" ? (
+                          <ReviewMarker size={64} />
+                        ) : (
+                          {
+                            r: 5,
+                            strokeWidth: 2,
+                            stroke: "var(--card)",
+                            fill: "var(--color-completed)",
+                          }
+                        )
+                      }
+                      strokeDasharray={key === "review" ? "5 4" : "none"}
+                      connectNulls={false}
+                    />
+                  ))}
+                </Chart.LineChart>
+              </ResponsiveContainer>
+            )}
+          </Chart.Root>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Gaps mean no data. Hidden series stay in the table.
+          </p>
+        </section>
+        <div className="mt-6 overflow-hidden">
+          <table className="w-full border-collapse text-xs tabular-nums">
+            <caption className="sr-only">Task outcomes, all series</caption>
+            <thead className="text-muted-foreground">
+              <tr>
+                <th scope="col" className="border-b border-border px-3 py-2.5 text-left">
+                  Day
+                </th>
+                {keys.map((key) => (
+                  <th scope="col" key={key} className={cellClass}>
+                    {config[key].label}
+                    <small className="mt-1 block font-normal text-muted-foreground">
+                      {visible.includes(key) ? "Shown" : "Hidden"}
+                    </small>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="[&_tr:last-child>*]:border-b-0">
+              {rows.length ? (
+                rows.map((row) => (
+                  <tr key={row.day} className="hover:bg-muted/40">
+                    <th
+                      scope="row"
+                      className="border-b border-border px-3 py-2.5 text-left font-medium"
+                    >
+                      {row.day}
+                    </th>
+                    {keys.map((key) => (
+                      <td key={key} className={cellClass}>
+                        {row[key] == null ? "No data" : config[key].formatValue(row[key])}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} className={cellClass}>
+                    No data yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  );
+}
+export default App;
