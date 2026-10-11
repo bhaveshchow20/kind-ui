@@ -13,13 +13,13 @@ import {
 
 const tick = {
   fontSize: 12,
-  fill: "var(--kind-ui-chart-muted-foreground, var(--muted-foreground, #6b7280))",
+  fill: "var(--muted-foreground, #6b7280)",
 };
 export function Grid(props: CartesianGridProps) {
   return (
     <CartesianGrid
       vertical={false}
-      stroke="var(--kind-ui-chart-grid, var(--border, #d1d5db))"
+      stroke="var(--border, #d1d5db)"
       strokeDasharray="3 3"
       {...props}
     />

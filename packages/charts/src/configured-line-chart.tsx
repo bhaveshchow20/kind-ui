@@ -224,10 +224,7 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
   return (
     <Root
       {...rootProps}
-      className={cn(
-        "kind-ui-configured-line-root font-sans",
-        rootProps?.className,
-      )}
+      className={cn("kind-ui-configured-line-root font-sans", rootProps?.className)}
       config={activeConfig}
       visibleSeries={visible}
       {...(change ? { onVisibleSeriesChange: change } : {})}
@@ -250,10 +247,7 @@ function ConfiguredLineChart<DataPoint>(props: ConfiguredLineChartProps<DataPoin
           responsive={responsive ?? true}
           {...(width !== undefined ? { width } : {})}
           {...(height !== undefined ? { height } : {})}
-          className={cn(
-            "kind-ui-configured-line-chart w-full min-w-0 h-[280px]",
-            className,
-          )}
+          className={cn("kind-ui-configured-line-chart w-full min-w-0 h-[280px]", className)}
           style={{
             ...(width !== undefined ? { width } : {}),
             ...(height !== undefined ? { height } : {}),

@@ -179,7 +179,7 @@ renderers; pass a `render` callback for custom marks. Its `Table` inherits root 
 Use `config`, an accessible name and explicit children on each SVG family root.
 `rootProps` controls the outer frame; `className`, `style`, `height`, `width` and
 `responsive` control the plot. Plot height defaults to 280px and can be changed
-with `--kind-ui-chart-height`, utilities or explicit sizing. Heatmap retains its
+with utilities or explicit sizing. Heatmap retains its
 row/column model and table sizing; ActivityRings retains its 300px recipe default.
 Families keep their existing data contracts, animation defaults and interactions.
 Set `animate` to enable animation, or pass the family's animation options.
