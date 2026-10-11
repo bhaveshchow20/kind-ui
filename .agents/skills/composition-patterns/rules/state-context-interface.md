@@ -41,7 +41,7 @@ interface ComposerActions {
 }
 
 interface ComposerMeta {
-  inputRef: React.RefObject<TextInput | null>
+  inputRef: React.RefObject<TextInput>
 }
 
 interface ComposerContextValue {
@@ -51,14 +51,6 @@ interface ComposerContextValue {
 }
 
 const ComposerContext = createContext<ComposerContextValue | null>(null)
-
-function useComposerContext() {
-  const context = use(ComposerContext)
-  if (context === null) {
-    throw new Error("Composer components must be rendered within Composer.Provider")
-  }
-  return context
-}
 ```
 
 **UI components consume the interface, not the implementation:**
@@ -69,7 +61,7 @@ function ComposerInput() {
     state,
     actions: { update },
     meta,
-  } = useComposerContext()
+  } = use(ComposerContext)
 
   // This component works with ANY provider that implements the interface
   return (
@@ -88,7 +80,7 @@ function ComposerInput() {
 // Provider A: Local state for ephemeral forms
 function ForwardMessageProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState(initialState)
-  const inputRef = useRef<TextInput | null>(null)
+  const inputRef = useRef(null)
   const submit = useForwardMessage()
 
   return (
@@ -107,7 +99,7 @@ function ForwardMessageProvider({ children }: { children: React.ReactNode }) {
 // Provider B: Global synced state for channels
 function ChannelProvider({ channelId, children }: Props) {
   const { state, update, submit } = useGlobalChannel(channelId)
-  const inputRef = useRef<TextInput | null>(null)
+  const inputRef = useRef(null)
 
   return (
     <ComposerContext
@@ -180,13 +172,13 @@ function ForwardMessageDialog() {
 function ForwardButton() {
   const {
     actions: { submit },
-  } = useComposerContext()
+  } = use(ComposerContext)
   return <Button onPress={submit}>Forward</Button>
 }
 
 // This preview lives OUTSIDE Composer.Frame but can read composer's state!
 function MessagePreview() {
-  const { state } = useComposerContext()
+  const { state } = use(ComposerContext)
   return <Preview message={state.input} attachments={state.attachments} />
 }
 ```

@@ -42,9 +42,32 @@ Never add secrets, credentials, telemetry, external uploads, or hidden network b
 
 The workspace remains private at `0.0.0`; `@kind-ui/charts` is published on npm and independently versioned. Follow the versioning and changeset policy in [docs/development.md](docs/development.md). The existing version workflow opens one reviewed version PR for accumulated changesets; the release workflow publishes its exact validated artifact through the configured OIDC identity. Publication and persistent security changes require explicit authorization. Preserve existing user work and report blockers instead of bypassing permissions or verification.
 
-## Optional React agent skills
+## Optional upstream agent skills
 
-For component API or composition work, read `.agents/skills/composition-patterns/SKILL.md`, then only the specific rule files needed. For React render-performance work, read `.agents/skills/react-best-practices/SKILL.md`, then only its relevant selected rule. These references are on-demand; do not load the full set by default or treat guidance as a substitute for the current library API and consumer contract. Source and update notes are in `.agents/skills/UPSTREAM.md`.
+Select skills on demand for the authorized task; read `SKILL.md` first, then only
+its relevant rules or references. The complete upstream distributions live in
+`.agents/skills/`:
+
+| Task | Skill directory |
+| --- | --- |
+| React component APIs and composition | `composition-patterns` |
+| React rendering, data fetching, and measured performance | `react-best-practices` |
+| Module interfaces, testability, and architecture | `codebase-design` |
+| Keyboard, screen-reader, and accessibility audits | `accessibility` |
+| UI polish and interaction design | `emil-design-eng` |
+| Explicit animation and motion review | `review-animations` |
+| Web interface review | `web-design-guidelines` |
+| Existing shadcn/ui components and integration | `shadcn` |
+
+These are upstream references, not additional task authorization. Current user
+scope and authorization, repository public contracts, dependency versions, and
+actual measurements govern application of their advice. Examples and suggested
+commands do not authorize dependencies, CLI execution, network fetches, global
+configuration, redesigns, or publication. Preserve the intended look and feel
+when improving implementation quality. Keep repository-specific routing here;
+do not rewrite vendored guidance. Source pins, licenses, reproducible verification,
+and known upstream limitations are in `.agents/skills/UPSTREAM.md`. The public
+consumer skill remains separate at `skills/kind-ui-charts/`.
 
 ## Kind AI setup and focused sessions
 

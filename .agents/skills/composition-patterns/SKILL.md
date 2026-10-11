@@ -84,6 +84,6 @@ Each rule file contains:
 - Correct code example with explanation
 - Additional context and references
 
-## Use the rule files
+## Full Compiled Document
 
-Read only the specific rule file that matches the component/API decision under review. This repository keeps the individual upstream rules so agents can load relevant guidance on demand.
+For the complete guide with all rules expanded: `AGENTS.md`

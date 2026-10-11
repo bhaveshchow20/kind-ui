@@ -54,14 +54,6 @@ function ComposerProvider({ children, state, actions, meta }: ProviderProps) {
   )
 }
 
-function useComposerContext() {
-  const context = use(ComposerContext)
-  if (context === null) {
-    throw new Error("Composer components must be rendered within Composer.Provider")
-  }
-  return context
-}
-
 function ComposerFrame({ children }: { children: React.ReactNode }) {
   return <form>{children}</form>
 }
@@ -71,7 +63,7 @@ function ComposerInput() {
     state,
     actions: { update },
     meta: { inputRef },
-  } = useComposerContext()
+  } = use(ComposerContext)
   return (
     <TextInput
       ref={inputRef}
@@ -84,7 +76,7 @@ function ComposerInput() {
 function ComposerSubmit() {
   const {
     actions: { submit },
-  } = useComposerContext()
+  } = use(ComposerContext)
   return <Button onPress={submit}>Send</Button>
 }
 

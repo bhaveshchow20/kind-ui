@@ -9,7 +9,16 @@
       "!**/artifacts",
       "!**/.next",
       "!**/playwright-report",
-      "!**/test-results"
+      "!**/test-results",
+      "!.agents/skills/composition-patterns",
+      "!.agents/skills/react-best-practices",
+      "!.agents/skills/codebase-design",
+      "!.agents/skills/accessibility",
+      "!.agents/skills/emil-design-eng",
+      "!.agents/skills/review-animations",
+      "!.agents/skills/web-design-guidelines",
+      "!.agents/skills/shadcn",
+      "!.agents/skills/licenses"
     ]
   },
   "formatter": {
