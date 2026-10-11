@@ -15,9 +15,4 @@ export function filesFor(
   settings: unknown,
   variant?: string,
 ): Record<string, string>;
-export function promptFor(
-  bundle: ExampleBundle,
-  settings: unknown,
-  origin: string,
-  variant?: string,
-): string;
+export function promptFor(bundle: ExampleBundle, settings: unknown, variant?: string): string;

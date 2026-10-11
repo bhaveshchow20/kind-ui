@@ -21,18 +21,14 @@ test("Combo complete public sources, data alternatives and variants agree", () =
     assert.ok(imports.every((name) => name === "react" || name === "@kind-ui/charts"));
     assert.equal(bundle.dataAlternative.rows.length, 6);
     assert.equal(bundle.family, "combo");
-    assert.ok(promptFor(bundle, {}, "https://docs.example").includes("/docs/components/combo/"));
+    assert.ok(promptFor(bundle, {}).includes("/docs/components/combo/"));
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
         variant.source,
       );
       assert.match(variant.source, new RegExp(`${family.variants[bundle.id].prop} = "${value}"`));
-      assert.ok(
-        promptFor(bundle, {}, "https://docs.example", value).includes(
-          `/variants/${value}/example.tsx`,
-        ),
-      );
+      assert.ok(promptFor(bundle, {}, value).includes(`/variants/${value}/example.tsx`));
     }
   }
 });

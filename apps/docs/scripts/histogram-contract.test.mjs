@@ -20,9 +20,7 @@ test("histogram copies retain native quantitative composition and matching varia
     assert.ok(!/<Chart.(BarSeries|XAxis|YAxis)\b/.test(source));
     assert.match(source, /animate\s+accessibilityLayer/);
     assert.equal(bundle.dataAlternative.rows.length, bundle.id === "histogram" ? 5 : 4);
-    assert.ok(
-      promptFor(bundle, {}, "https://docs.example").includes("/docs/components/histogram/"),
-    );
+    assert.ok(promptFor(bundle, {}).includes("/docs/components/histogram/"));
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],

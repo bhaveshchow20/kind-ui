@@ -90,3 +90,30 @@ test("shared legend browser checks visit current compound documentation pages", 
     assert.match(page, /<ChartExample id="[^"]+"/);
   }
 });
+
+test("chart pages begin with their example instead of a dataset scenario", async () => {
+  const files = (await readdir("content/docs/components")).filter((file) => file.endsWith(".mdx"));
+  assert.equal(files.length, 13);
+  for (const file of files) {
+    const source = await text(`content/docs/components/${file}`);
+    const body = source.replace(/^---[\s\S]*?---\s*/, "");
+    assert.match(body, /^<(?:Chart|Line|Area)Example\b/, file);
+  }
+});
+
+test("histogram reference separates binning parameters and bounds native axis detail", async () => {
+  const source = await text("content/docs/components/histogram.mdx");
+  const binning = source.split("### binHistogram")[1].split("### HistogramChart")[0];
+  const parameters = [...binning.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
+  assert.deepEqual(parameters, ["samples", "edges"]);
+  const chart = source.split("### HistogramChart\n")[1].split("### Histogram axes")[0];
+  for (const name of ["config", "aria-label", "children", "interaction", "frameProps"])
+    assert.ok(chart.includes(`\`${name}\``), `${name} belongs to HistogramChart`);
+  const axes = source.split("### Histogram axes")[1].split('<span id="histogramseries"')[0];
+  assert.doesNotMatch(axes, /<ApiTable/);
+  assert.equal([...axes.matchAll(/^\| `/gm)].length, 6);
+  assert.match(axes, /https:\/\/recharts\.github\.io\/en-US\/api\/XAxis\//);
+  assert.match(axes, /https:\/\/recharts\.github\.io\/en-US\/api\/YAxis\//);
+  assert.match(axes, /chart-owned and cannot be overridden/);
+  assert.ok(source.includes('<span id="histogramseries" />'));
+});

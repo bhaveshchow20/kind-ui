@@ -3,8 +3,6 @@ title: Histogram
 description: Show response-time distributions with explicit numeric bins.
 ---
 
-See how checkout response times are distributed across numeric intervals.
-
 <ChartExample id="histogram" />
 
 ## Usage
@@ -55,11 +53,6 @@ Use `HistogramChart.XAxis` and `HistogramChart.YAxis` to format ticks on the num
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
-| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
-| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `samples` | `readonly (number \| null \| undefined)[]` | Required | Raw observations; missing, nonfinite and out-of-range values are counted separately. |
 | `edges` | `readonly number[]` | Required | At least two finite, strictly increasing edges with finite positive widths. Invalid edges throw. |
 
@@ -75,12 +68,16 @@ Pre-aggregated bins may have gaps. Bounds must be ordered, nonoverlapping and fi
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `bins` | `readonly HistogramBin[]` | Required | Validated intervals; their first lower and final upper bounds define the horizontal domain. |
 | `measure` | `"count" \| "density"` | Required | Count height or normalized probability density. Numerically unrepresentable density throws. |
 | `animate` | `boolean \| BarAnimation` | `false` | Reuses chart-owned Bar entrance and reduced-motion handling. Options include `revealDurationMs`, `revealEasing` and `hoverTransition`. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Arrow-key inspection; set explicitly in these components. |
 | `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Plot spacing. |
-| `children` | `ReactNode` | — | Explicit histogram series, grid and tooltip. |
 
 </div>
 
@@ -90,8 +87,16 @@ Owns data, vertical layout, scales and spacing. See [XAxis](https://recharts.git
 
 Add axes explicitly. Their numeric scales and bin domain are chart-owned; tick formatting and presentation remain yours.
 
-<ApiTable name="HistogramXAxisReference" />
-<ApiTable name="HistogramYAxisReference" />
+| Prop | Applies to | Purpose |
+| --- | --- | --- |
+| `tickFormatter` | Both axes | Format each numeric tick, for example milliseconds or percentages. |
+| `ticks` / `tickCount` | Both axes | Supply explicit numeric ticks or request a tick count. |
+| `tick` / `tickLine` / `axisLine` | Both axes | Customize tick labels and axis strokes, or hide them with `false`. |
+| `label` | Both axes | Add an axis title using Recharts label options. |
+| `orientation` | Both axes | Place XAxis at `"top"` or `"bottom"`, and YAxis at `"left"` or `"right"`. |
+| `height` / `width` | XAxis / YAxis | Reserve space for tick labels and the axis title. |
+
+Both parts accept Recharts presentation props, including refs and handlers. See [XAxis props](https://recharts.github.io/en-US/api/XAxis/) and [YAxis props](https://recharts.github.io/en-US/api/YAxis/) for the full reference. `dataKey`, `type`, `domain`, `scale`, axis IDs, `allowDataOverflow` and `reversed` are chart-owned and cannot be overridden.
 
 <span id="histogramseries" />
 

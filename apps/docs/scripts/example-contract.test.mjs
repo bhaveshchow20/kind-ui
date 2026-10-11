@@ -203,11 +203,7 @@ test("Line variant sources match selected public defaults without runtime compil
       const files = filesFor(bundle, {}, value);
       assert.equal(files[`src/examples/${bundle.id}/example.tsx`], variant.source);
       assert.ok(variant.source.includes(`${variantDefinitions[bundle.id].prop} = "${value}"`));
-      assert.ok(
-        promptFor(bundle, {}, "https://docs.example", value).includes(
-          `/variants/${value}/example.tsx`,
-        ),
-      );
+      assert.ok(promptFor(bundle, {}, value).includes(`/variants/${value}/example.tsx`));
     }
   }
 });
@@ -227,9 +223,7 @@ test("Area consumers preserve explicit composition and stacked series focus", ()
     assert.match(source, /<AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
     assert.equal(bundle.dataAlternative.rows.length, 12);
     assert.ok(!/settings|controls/.test(source));
-    assert.ok(
-      promptFor(bundle, {}, "https://docs.example").includes(publicPath("/docs/components/area/")),
-    );
+    assert.ok(promptFor(bundle, {}).includes(publicPath("/docs/components/area/")));
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
@@ -250,13 +244,28 @@ test("every family recipe is generated with its own prompt route", () => {
   for (const example of allExamples) {
     const bundle = all[example.id];
     assert.equal(bundle.family, example.family);
-    assert.ok(
-      promptFor(bundle, {}, "https://docs.example").includes(
-        publicPath(`/docs/components/${example.family}/`),
-      ),
-    );
+    assert.ok(promptFor(bundle, {}).includes(publicPath(`/docs/components/${example.family}/`)));
     for (const [value, variant] of Object.entries(bundle.variants ?? {}))
       assert.notEqual(variant.source, "", `${example.id}:${value}`);
+  }
+});
+
+test("every copied prompt uses deployed retrieval URLs for all examples and variants", () => {
+  const all = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
+  for (const bundle of Object.values(all)) {
+    for (const variant of [undefined, ...Object.keys(bundle.variants ?? {})]) {
+      const prompt = promptFor(bundle, {}, variant);
+      const links = [...prompt.matchAll(/https?:\/\/[^\s]+/g)].map(
+        ([link]) => new URL(link.replace(/\.$/, "")),
+      );
+      assert.equal(links.length, 5, `${bundle.id}:${variant}`);
+      for (const link of links) {
+        assert.equal(link.origin, "https://kindui.dev");
+        assert.ok(link.pathname.startsWith("/charts/docs/"), link.href);
+      }
+      assert.ok(prompt.includes(`https://kindui.dev/charts/docs/components/${bundle.family}/`));
+      assert.doesNotMatch(prompt, /localhost|127\.0\.0\.1/);
+    }
   }
 });
 
@@ -273,7 +282,7 @@ test("public copy rejects stale release receipts and registry install claims", a
     assert.throws(() => assertPublicCopy(stale, "fixture"));
   assert.doesNotThrow(() => assertPublicCopy("npm install @kind-ui/charts", "fixture"));
   for (const [id, bundle] of Object.entries(completeBundles)) {
-    assertPublicCopy(promptFor(bundle, {}, "https://example.com"), `${id} prompt`);
+    assertPublicCopy(promptFor(bundle, {}), `${id} prompt`);
     for (const [name, body] of Object.entries(bundle.files))
       if (/\.(?:md|json)$/.test(name)) assertPublicCopy(body, `${id}/${name}`);
   }

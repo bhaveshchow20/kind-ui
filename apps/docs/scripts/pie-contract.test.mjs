@@ -82,7 +82,7 @@ test("Pie consumers preserve category identity and public source parity", () => 
         1000,
       );
     }
-    assert.ok(promptFor(bundle, {}, "https://docs.example").includes("/docs/components/pie/"));
+    assert.ok(promptFor(bundle, {}).includes("/docs/components/pie/"));
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],

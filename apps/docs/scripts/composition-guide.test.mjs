@@ -11,7 +11,7 @@ test("Installation contains only dependency, package, and Tailwind setup steps",
     [...guide.matchAll(/^### (.+)$/gm)].map((match) => match[1]),
     ["Install Motion and Recharts", "Install the package", "Configure Tailwind CSS v4"],
   );
-  assert.match(guide, /npm install motion@\^13\.4\.6 recharts@\^3\.10\.1/);
+  assert.match(guide, /npm install motion recharts/);
   assert.match(guide, /npm install @kind-ui\/charts/);
   assert.match(guide, /@source "\.\.\/node_modules\/@kind-ui\/charts\/dist"/);
   assert.match(guide, /`\.\.\/\.\.\/node_modules\/\.\.\.` from `src\/app\/globals\.css`/);
