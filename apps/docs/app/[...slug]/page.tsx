@@ -33,7 +33,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   )
     return (
       <>
-        <LegacyDocRedirect guide={requested[requested.length - 1]} />
+        <LegacyDocRedirect guide={requested.at(-1) ?? requested.join("/")} />
         {renderDoc(slug)}
       </>
     );

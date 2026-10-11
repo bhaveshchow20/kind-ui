@@ -1,14 +1,14 @@
 interface ExampleBundle {
   id: string;
   family: string;
-  title?: string;
+  title?: string | undefined;
   files: Record<string, string>;
-  variants?: Record<string, { label: string; source: string }>;
-  defaultVariant?: string;
-  packageStatus?: string;
-  localPackage?: boolean;
-  version?: string;
-  acceptance?: string;
+  variants?: Record<string, { label: string; source: string }> | undefined;
+  defaultVariant?: string | undefined;
+  packageStatus?: string | undefined;
+  localPackage?: boolean | undefined;
+  version?: string | undefined;
+  acceptance?: string | undefined;
 }
 export function filesFor(
   bundle: ExampleBundle,

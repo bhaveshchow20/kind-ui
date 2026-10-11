@@ -8,6 +8,8 @@ for (const scheme of ["light", "dark"] as const) {
   }) => {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
     await page.goto(`.${docRoute("/docs/components/line/")}`);
+    if (scheme === "dark") await expect(page.locator("html")).toHaveClass(/dark/);
+    else await expect(page.locator("html")).not.toHaveClass(/dark/);
     await expect(
       page.getByRole("heading", { name: "Line Chart", exact: true, level: 1 }),
     ).toBeVisible();

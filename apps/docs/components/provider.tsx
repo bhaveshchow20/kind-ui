@@ -15,6 +15,9 @@ function StaticSearchDialog(props: ComponentProps<typeof SearchDialog>) {
 function DocsLink({
   href = "#",
   prefetch,
+  onMouseEnter,
+  onTouchStart,
+  onClick,
   ...props
 }: ComponentProps<"a"> & { prefetch?: boolean }) {
   const route = docRoute(href);
@@ -23,9 +26,26 @@ function DocsLink({
       route,
     )
   ) {
-    return <a {...props} href={publicPath(route)} />;
+    return (
+      <a
+        {...props}
+        onMouseEnter={onMouseEnter}
+        onTouchStart={onTouchStart}
+        onClick={onClick}
+        href={publicPath(route)}
+      />
+    );
   }
-  return <Link {...props} {...(prefetch === undefined ? {} : { prefetch })} href={route} />;
+  return (
+    <Link
+      {...props}
+      {...(prefetch === undefined ? {} : { prefetch })}
+      {...(onMouseEnter === undefined ? {} : { onMouseEnter })}
+      {...(onTouchStart === undefined ? {} : { onTouchStart })}
+      {...(onClick === undefined ? {} : { onClick })}
+      href={route}
+    />
+  );
 }
 export function Provider({ children }: { children: ReactNode }) {
   return (

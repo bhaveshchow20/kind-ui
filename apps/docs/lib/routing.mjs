@@ -18,7 +18,7 @@ export const legacyDocSlugs = [
   ["chart-components", "root"],
   ["chart-components", "responsive-container"],
 ];
-/** @param {string[] | undefined} slug */
+/** @param {string[] | null | undefined} slug */
 export function canonicalDocSlugs(slug) {
   if (["chart-components/root", "chart-components/responsive-container"].includes(slug?.join("/") ?? ""))
     return ["chart-components", "chart"];
@@ -27,10 +27,12 @@ export function canonicalDocSlugs(slug) {
   if (slug?.join("/") === "guides/release") return ["installation"];
   if (slug?.join("/") === "guides/customization") return ["components", "line"];
   if (slug?.join("/") === "guides/identity-layout") return ["concepts", "identity"];
+  const page = slug?.[1];
   return slug?.length === 2 &&
     slug[0] === "start" &&
-    ["installation", "quickstart"].includes(slug[1] ?? "")
-    ? [slug[1]]
+    page !== undefined &&
+    ["installation", "quickstart"].includes(page)
+    ? [page]
     : slug;
 }
 /** Internal route for Next/Fumadocs links; Next adds its own basePath. */
