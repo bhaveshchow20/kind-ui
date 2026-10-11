@@ -213,7 +213,10 @@ operable so consumers can restore them.
 
 Each family accepts `animate` and its family-specific animation options. Reduced
 motion disables decorative movement. Use `loading` and an optional `loadingLabel`
-while awaiting data. Loading is independent of whether the data array is empty.
+while awaiting data. Loading shows only the graph skeleton: legends, content, data
+tables and chart inspection remain hidden until the data is ready. Chart parts stay
+mounted, preserving consumer state and selected or hidden series across loading.
+Loading is independent of whether the data array is empty.
 
 ```tsx
 <LineChart

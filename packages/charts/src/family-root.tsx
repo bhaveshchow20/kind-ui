@@ -49,12 +49,21 @@ type Instructions = { id: string; text: string };
 export function FamilyLayout({
   children,
   legendPosition = "bottom",
+  loading,
 }: {
   children: ReactNode;
+  loading?: boolean | undefined;
   legendPosition?: "top" | "bottom";
 }) {
   const [host, setHost] = useState<HTMLDivElement | null>(null);
-  const slot = <div data-kind-ui="chart-parts" className="empty:hidden" ref={setHost} />;
+  const slot = (
+    <div
+      data-kind-ui="chart-parts"
+      className="empty:hidden [&[hidden]]:hidden"
+      hidden={loading || undefined}
+      ref={setHost}
+    />
+  );
   return (
     <FamilySlot value={{ host }}>
       {legendPosition === "top" && slot}
@@ -80,12 +89,14 @@ export function FamilyRoot({
   children,
   name,
   instructions,
+  loading,
   ...options
 }: FamilyOptions & {
   family: string;
   children: ReactNode;
   name: { "aria-label"?: string | undefined; "aria-labelledby"?: string | undefined };
   instructions?: Instructions;
+  loading?: boolean | undefined;
 }) {
   const parent = use(ChartContext);
   if (parent) throw new Error(`${family} owns its chart frame; do not nest chart families`);
@@ -115,11 +126,18 @@ export function FamilyRoot({
       {...familyVisibility({ visibleSeries, defaultVisibleSeries, onVisibleSeriesChange })}
     >
       {instructions && (
-        <p id={instructions.id} data-kind-ui="chart-instructions" className="sr-only">
+        <p
+          id={instructions.id}
+          data-kind-ui="chart-instructions"
+          className="sr-only"
+          hidden={loading || undefined}
+        >
           {instructions.text}
         </p>
       )}
-      <FamilyLayout {...(legendPosition ? { legendPosition } : {})}>{children}</FamilyLayout>
+      <FamilyLayout loading={loading} {...(legendPosition ? { legendPosition } : {})}>
+        {children}
+      </FamilyLayout>
     </ChartProvider>
   );
 }
@@ -159,6 +177,7 @@ export function familyFrame(
 }
 
 type NativeFrame = FrameSizing & {
+  loading?: boolean | undefined;
   children?: ReactNode;
   responsive?: boolean | undefined;
   className?: string | undefined;
@@ -193,6 +212,7 @@ export function familyChart<Props extends NativeFrame>(
       family={family}
       config={config}
       name={chartProps}
+      loading={chartProps.loading}
       {...(frameProps ? { frameProps } : {})}
       {...(interaction !== undefined ? { interaction } : {})}
       {...(emphasis !== undefined ? { emphasis } : {})}

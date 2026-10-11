@@ -103,6 +103,7 @@ export function ActivityRings({
     <FamilyRoot
       family="ActivityRings"
       name={chartProps}
+      loading={chartProps.loading}
       config={activeConfig}
       interaction={interaction ?? { kind: "category", eligibleKeys: keys }}
       {...(emphasis !== undefined ? { emphasis } : {})}

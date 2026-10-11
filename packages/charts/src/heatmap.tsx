@@ -105,6 +105,7 @@ export function HeatmapChart({
       family="HeatmapChart"
       config={config}
       name={props}
+      loading={props.loading}
       {...(interaction !== undefined ? { interaction } : {})}
       {...(emphasis !== undefined ? { emphasis } : {})}
       {...(nonce !== undefined ? { nonce } : {})}
@@ -804,7 +805,11 @@ export function HeatmapDataTable({ caption, ...props }: HeatmapDataTableProps) {
   const context = useHeatmap();
   const { model, formatValue, missingLabel } = context;
   return (
-    <div data-kind-ui="heatmap-scroll" className={scrollClasses}>
+    <div
+      data-kind-ui="heatmap-scroll"
+      className={cn(scrollClasses, "[&[hidden]]:hidden")}
+      hidden={context.loading || undefined}
+    >
       <table
         {...props}
         data-kind-ui="heatmap-data-table"

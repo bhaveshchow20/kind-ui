@@ -216,6 +216,9 @@ function Preview() {
             ))}
             <Chart.LineChart.Tooltip />
             <Chart.LineChart.Legend />
+            <Chart.LineChart.Content>
+              <p data-loading-content>Ready chart content</p>
+            </Chart.LineChart.Content>
           </Chart.LineChart>,
         )}
         {card(
@@ -226,6 +229,10 @@ function Preview() {
               {axes}
               <Chart.AreaSeries dataKey="sales" seriesKey="sales" />
               <Chart.Tooltip />
+              <Chart.AreaChart.Legend />
+              <Chart.AreaChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.AreaChart.Content>
             </Chart.AreaChart>,
           ),
         )}
@@ -247,6 +254,9 @@ function Preview() {
                 <Chart.BarSeries dataKey="sales" seriesKey="sales" />
                 <Chart.Tooltip />
                 <Chart.BarChart.Legend />
+                <Chart.BarChart.Content>
+                  <input aria-label="Chart note" defaultValue="Keep me" />
+                </Chart.BarChart.Content>
               </Chart.BarChart>
 
               <p>
@@ -265,6 +275,10 @@ function Preview() {
               <Chart.BarSeries dataKey="sales" seriesKey="sales" />
               <Chart.LineSeries dataKey="target" seriesKey="target" />
               <Chart.Tooltip />
+              <Chart.ComboChart.Legend />
+              <Chart.ComboChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.ComboChart.Content>
             </Chart.ComboChart>,
           ),
         )}
@@ -277,6 +291,10 @@ function Preview() {
               <Chart.YAxis type="number" dataKey="y" domain={[0, 80]} />
               <Chart.ScatterSeries data={rows} seriesKey="sales" />
               <Chart.ScatterTooltip />
+              <Chart.ScatterChart.Legend />
+              <Chart.ScatterChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.ScatterChart.Content>
             </Chart.ScatterChart>,
           ),
         )}
@@ -295,6 +313,10 @@ function Preview() {
               <Chart.WaterfallSeries seriesKey="sales" />
               <Chart.WaterfallConnectors data={empty ? [] : waterfall} />
               <Chart.Tooltip />
+              <Chart.WaterfallChart.Legend />
+              <Chart.WaterfallChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.WaterfallChart.Content>
             </Chart.WaterfallChart>,
           ),
         )}
@@ -311,6 +333,10 @@ function Preview() {
             >
               <Chart.HistogramSeries seriesKey="sales" />
               <Chart.Tooltip />
+              <Chart.HistogramChart.Legend />
+              <Chart.HistogramChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.HistogramChart.Content>
             </Chart.HistogramChart>,
           ),
         )}
@@ -327,6 +353,10 @@ function Preview() {
               {axes}
               <Chart.BoxPlotSeries dataKey="summary" seriesKey="spread" />
               <Chart.Tooltip />
+              <Chart.BoxPlotChart.Legend />
+              <Chart.BoxPlotChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.BoxPlotChart.Content>
             </Chart.BoxPlotChart>,
           ),
         )}
@@ -337,6 +367,10 @@ function Preview() {
             <Chart.PieChart {...native} aria-label="Sales allocation" config={config}>
               <Chart.PieSeries data={rows} dataKey="sales" nameKey="month" outerRadius="80%" />
               <Chart.Tooltip />
+              <Chart.PieChart.Legend />
+              <Chart.PieChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.PieChart.Content>
             </Chart.PieChart>,
           ),
         )}
@@ -350,6 +384,10 @@ function Preview() {
               <Chart.PolarRadiusAxis domain={[0, 80]} />
               <Chart.RadarSeries dataKey="sales" seriesKey="sales" />
               <Chart.Tooltip />
+              <Chart.RadarChart.Legend />
+              <Chart.RadarChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.RadarChart.Content>
             </Chart.RadarChart>,
           ),
         )}
@@ -368,6 +406,10 @@ function Preview() {
               <Chart.PolarAngleAxis type="number" domain={[0, 80]} tick={false} />
               <Chart.RadialBarSeries dataKey="sales" seriesKey="sales" />
               <Chart.Tooltip />
+              <Chart.RadialBarChart.Legend />
+              <Chart.RadialBarChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.RadialBarChart.Content>
             </Chart.RadialBarChart>,
           ),
         )}
@@ -391,6 +433,10 @@ function Preview() {
               <Chart.ActivityRings.Labels />
             </Chart.ActivityRings.Series>
             <Chart.ActivityRings.Tooltip />
+            <Chart.ActivityRings.Legend />
+            <Chart.ActivityRings.Content>
+              <p data-loading-content>Ready chart content</p>
+            </Chart.ActivityRings.Content>
           </Chart.ActivityRings>,
         )}
         {card(
@@ -409,26 +455,38 @@ function Preview() {
           >
             <Chart.HeatmapGrid caption="Weekly sales by region" />
             <Chart.HeatmapTooltip />
+            <Chart.HeatmapChart.Legend label="Sales intensity" />
+            <Chart.HeatmapChart.Content>
+              <p data-loading-content>Ready chart content</p>
+            </Chart.HeatmapChart.Content>
+            <Chart.HeatmapChart.DataTable caption="Heatmap values" />
           </Chart.HeatmapChart>,
         )}
         {card(
           "sankey",
           "Sankey",
-          <Chart.ResponsiveContainer width="100%" height={260}>
-            <Chart.SankeyChart
-              {...pending}
-              data={empty ? noFlow : flow}
-              animate={motion}
-              title="Sales flow"
-              nodePadding={24}
-              nodeWidth={12}
-              margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
-              config={config}
-              aria-label="Chart fixture"
-            >
-              {null}
-            </Chart.SankeyChart>
-          </Chart.ResponsiveContainer>,
+          <Chart.SankeyChart
+            {...pending}
+            data={empty ? noFlow : flow}
+            animate={motion}
+            title="Sales flow"
+            height={260}
+            nodePadding={24}
+            nodeWidth={12}
+            margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
+            config={{
+              in: { label: "Supply", color: "#568577" },
+              work: { label: "Work", color: "#568577" },
+              out: { label: "Delivery", color: "#568577" },
+              loss: { label: "Loss", color: "#b68967" },
+            }}
+            aria-label="Chart fixture"
+          >
+            <Chart.SankeyChart.Legend />
+            <Chart.SankeyChart.Content>
+              <p data-loading-content>Ready chart content</p>
+            </Chart.SankeyChart.Content>
+          </Chart.SankeyChart>,
         )}
       </section>
       <details>
@@ -459,7 +517,7 @@ function Preview() {
       </details>
       <p>
         Replay can interrupt an entrance, resize keeps consumer dimensions, and empty input never
-        determines a loading silhouette. Legends stay available while chart inspection is suspended.
+        determines a loading silhouette. Only chart skeletons appear until loading completes.
       </p>
     </main>
   );

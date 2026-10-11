@@ -64,6 +64,38 @@ for (const Family of families) {
     );
   });
 }
+test("loading families hide chart-owned HTML parts without removing their host", () => {
+  const allFamilies = [
+    Chart.LineChart,
+    ...families,
+    Chart.ActivityRings,
+    Chart.HeatmapChart,
+    Chart.SankeyChart,
+  ];
+  for (const Family of allFamilies) {
+    const extra =
+      Family === Chart.ActivityRings
+        ? { rings: [] }
+        : Family === Chart.HeatmapChart
+          ? {
+              rows: [],
+              columns: [],
+              data: [],
+              scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#ff0000"] }),
+            }
+          : Family === Chart.SankeyChart
+            ? { data: { nodes: [], links: [] } }
+            : propsFor(Family);
+    for (const legendPosition of ["top", "bottom"]) {
+      const props = { ...extra, config, "aria-label": "Values", legendPosition };
+      const pending = render(h(Family, { ...props, loading: true }, null));
+      const ready = render(h(Family, { ...props, loading: false }, null));
+      assert.match(pending, /data-kind-ui="chart-parts"[^>]*hidden=""/, Family.name);
+      assert.doesNotMatch(ready, /data-kind-ui="chart-parts"[^>]*hidden=""/, Family.name);
+    }
+  }
+});
+
 function metadataChart(options, ...children) {
   const {
     config,

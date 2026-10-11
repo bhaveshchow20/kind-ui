@@ -145,6 +145,7 @@ export function SankeyChart({
       family="SankeyChart"
       config={metadata}
       name={props}
+      loading={props.loading}
       interaction={
         interaction ?? {
           kind: "node",
