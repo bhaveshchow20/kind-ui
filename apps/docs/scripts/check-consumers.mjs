@@ -44,6 +44,10 @@ for (const bundle of consumers) {
       compilerOptions: {
         module: "NodeNext",
         moduleResolution: "NodeNext",
+        // Public peer declarations (Recharts/Redux) are also checked, but currently
+        // fail exact optional properties. The build above checks our copied source
+        // with exactOptionalPropertyTypes:true and skipLibCheck:true instead.
+        exactOptionalPropertyTypes: false,
         skipLibCheck: false,
         types: ["react", "react-dom"],
       },
@@ -77,6 +81,8 @@ for (const bundle of consumers) {
     workspaceImports: false,
     declarationModes: ["NodeNext", "Bundler"],
     skipLibCheck: false,
+    exactOptionalPropertyTypes: false,
+    sourceCheck: { exactOptionalPropertyTypes: true, skipLibCheck: true },
   });
 }
 writeFileSync(`artifacts/consumer-results${suffix}.json`, `${JSON.stringify(evidence, null, 2)}\n`);

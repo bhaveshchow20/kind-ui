@@ -23,7 +23,7 @@ test("material selectors start with Default and retain public Clay and Glow vari
     assert.ok(source.includes(`${variant.prop} = "default"`), `${id} standalone default`);
     assert.match(
       source,
-      /(?:material|finish)=\{appearance === "default" \? undefined : appearance\}/,
+      /\{\.\.\.\(appearance !== "default" \? \{ (?:material|finish): appearance \} : \{\}\)\}/,
       `${id} omits native material for Default`,
     );
   }

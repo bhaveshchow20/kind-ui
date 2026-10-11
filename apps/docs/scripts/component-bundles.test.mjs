@@ -19,7 +19,10 @@ function fixture() {
       dataAlternative: {
         caption: "Values",
         columns: { day: "Day", value: "Value" },
-        rows: [{ day: "Monday", value: 0 }],
+        rows: [
+          { day: "Monday", value: 0 },
+          { day: "Tuesday", value: null },
+        ],
       },
     },
   };
@@ -65,7 +68,7 @@ for (const [name, mutate] of [
   [
     "malformed alternative",
     (bundle) => {
-      bundle.dataAlternative.rows[0].value = null;
+      bundle.dataAlternative.rows[0].value = false;
     },
   ],
 ]) {

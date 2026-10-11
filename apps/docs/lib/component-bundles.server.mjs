@@ -18,7 +18,7 @@ export const componentBundleSchema = z.looseObject({
     .object({
       caption: z.string(),
       columns: z.record(z.string(), z.string()),
-      rows: z.array(z.record(z.string(), z.union([z.string(), z.number()]))),
+      rows: z.array(z.record(z.string(), z.union([z.string(), z.number(), z.null()]))),
     })
     .optional(),
 });
