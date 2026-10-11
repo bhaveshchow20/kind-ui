@@ -16,6 +16,9 @@ import {
 import { InteractionPaint } from "./animation.js";
 import { useChartInteraction } from "./chart-interaction.js";
 
+export const emphasisPaintClassName =
+  "transition-opacity duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:duration-0";
+
 /** Identity is data-owned. scope separates independent plots within one Root. */
 export type EmphasisTarget = {
   kind: "category" | "sector" | "series";
@@ -245,7 +248,7 @@ export function EmphasisMark({
     >
       <InteractionPaint
         data-kind-ui="emphasis-paint"
-        className="transition-opacity duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:duration-0"
+        className={emphasisPaintClassName}
         opacity={emphasis.factor}
         identity={JSON.stringify(["emphasis", target.kind, target.scope, target.key])}
       >

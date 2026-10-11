@@ -36,7 +36,7 @@ import { BarMotion } from "./bar-chart.js";
 import { type BarMaterial, BarMaterialFilter } from "./bar-material.js";
 import { useChart } from "./chart-context.js";
 import { chartClasses } from "./classes.js";
-import { useEmphasis } from "./emphasis.js";
+import { emphasisPaintClassName, useEmphasis } from "./emphasis.js";
 import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useChartKeyboard, useLineInteraction } from "./line-chart.js";
 import { SeriesEscapePaint } from "./series-escape-paint.js";
@@ -448,7 +448,7 @@ function CategoryBar({
     <g data-kind-ui="emphasis-mark" data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
       <InteractionPaint
         data-kind-ui="emphasis-paint"
-        className="transition-opacity duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:duration-0"
+        className={emphasisPaintClassName}
         opacity={emphasis.active?.kind === "series" ? 1 : emphasis.factor}
       >
         <Rectangle {...props} />
