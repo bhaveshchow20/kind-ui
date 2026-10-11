@@ -448,7 +448,7 @@ function CategoryBar({
     <g data-kind-ui="emphasis-mark" data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
       <InteractionPaint
         data-kind-ui="emphasis-paint"
-        className="transition-opacity duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        className="transition-opacity duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:duration-0"
         opacity={emphasis.active?.kind === "series" ? 1 : emphasis.factor}
       >
         <Rectangle {...props} />
