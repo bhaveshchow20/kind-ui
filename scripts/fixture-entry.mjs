@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+/** @param {string} directory @param {string} name @param {string} module */
 export async function writeFixtureEntry(directory, name, module) {
   await writeFile(
     join(directory, `${name}-entry.tsx`),
