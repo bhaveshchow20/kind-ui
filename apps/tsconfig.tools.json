@@ -25,6 +25,7 @@
     "docs/scripts/serve.mjs",
     "docs/scripts/validated-artifact.mjs",
     "docs/scripts/verify-pinned-package.mjs",
-    "showcase/postcss.config.mjs"
+    "showcase/postcss.config.mjs",
+    "docs/lib/component-bundles.server.mjs"
   ]
 }
