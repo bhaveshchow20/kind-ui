@@ -120,7 +120,7 @@ test("Pie category-default contracts reject missing identity and category metada
   assert.throws(() => assertCategoryDefaults(source.replace("config={config}", ""), rows));
 });
 
-test("rounded and petal recipes reserve positive angular area and preserve data alternatives", () => {
+test("rounded and petal recipes reserve positive angular area and retain graph-only composition", () => {
   const bundle = bundles["pie-rounded"];
   assert.equal(bundle.defaultVariant, "rounded-donut");
   assert.deepEqual(Object.keys(bundle.variants), ["rounded-pie", "rounded-donut", "petal-donut"]);
@@ -133,8 +133,9 @@ test("rounded and petal recipes reserve positive angular area and preserve data 
     assert.match(variant.source, /animate=\{false\}/);
     assert.match(variant.source, /accessibilityLayer/);
     assert.match(variant.source, /aria-label=/);
-    assert.match(variant.source, /<caption>Team allocation \(1,000 hours\)<\/caption>/);
-    assert.match(variant.source, /<th scope="row">\{config\[row.key\].label\}<\/th>/);
+    assert.doesNotMatch(variant.source, /<table\b|data-chart-alternative/);
+    assert.match(variant.source, /<PieChart\.Series/);
+    assert.match(variant.source, /<PieChart\.Legend/);
     assert.ok(!variant.source.includes("shape={"), "Native sectors own geometry");
   }
   const source = bundle.variants["petal-donut"].source;

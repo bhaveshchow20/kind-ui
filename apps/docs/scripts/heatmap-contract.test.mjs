@@ -27,12 +27,12 @@ for (const example of family.examples) {
       assert.match(source, /columnLabels: "hidden"/);
       assert.match(source, /<HeatmapChart.Tooltip/);
     } else if (example.id === "heatmap") {
-      assert.match(source, /<HeatmapChart.DataTable/);
       assert.match(source, /<HeatmapChart.Tooltip valueAnimation="shuffle"/);
     } else {
-      assert.match(source, /<HeatmapChart.DataTable/);
       assert.match(source, /<HeatmapChart.Tooltip valueAnimation="shuffle"/);
     }
+    assert.doesNotMatch(source, /<HeatmapChart.DataTable/);
+    assert.match(source, /<HeatmapChart.Grid/);
     assert.ok(!/from ["']\.\.?\//.test(source));
     for (const [variant, selection] of Object.entries(bundles[example.id].variants ?? {})) {
       assert.equal(
