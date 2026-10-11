@@ -1,9 +1,10 @@
 # Loading and controlled interaction
 
 Pass `loading={pending}` and a specific `loadingLabel` to the chart.
-Built Tailwind styles supply decorative skeletons; real content remains mounted, hidden and inert while pending. Loading
-does not validate bad rows away or delay completion. External legends can remain
-active, so decide whether host controls should be disabled while pending.
+Built Tailwind styles supply the plot placeholder. Chart-owned legends, content
+and instructions remain hidden until ready; loading preserves selection and
+visibility. Loading does not validate bad rows away or delay completion. Host
+controls outside the chart remain consumer-owned.
 
 **Bad:** `loading={rows.length === 0}` (an empty completed result never finishes).
 **Good:** separate pending, success-empty, error, and ready states. Render host-owned
@@ -59,7 +60,7 @@ A tooltip, legend, or skeleton is not a complete accessible data alternative.
 Use the family’s Content part for controls or a table that needs chart context.
 Supply a visible table or an equally complete nearby representation of the actual
 observations, with caption, row/column headers, units, and missing-value text.
-The examples include tables; avoid treating zero as absent (`value || "No data"`).
+Documentation examples are graph-only. Do not add hidden alternative tables to copied examples; avoid treating zero as absent (`value || "No data"`).
 
 ```tsx
 // Good: distinguish an observation of zero from a missing observation.
