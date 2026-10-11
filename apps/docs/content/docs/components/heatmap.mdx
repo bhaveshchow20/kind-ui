@@ -7,22 +7,28 @@ Find busy support hours by comparing request counts across days.
 
 <ChartExample id="heatmap" />
 
+## Installation
+
+<ChartInstallation name="heatmap-chart" />
+
 ## Usage
 
-Supply ordered rows and columns, records and a color scale. Add the grid, legend and tooltip as children.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Composition sketch"
-<Chart.HeatmapChart
-  rows={rows} columns={columns} data={data} scale={scale}
-  animate missingLabel="No report"
->
-  <Chart.HeatmapGrid caption="Support requests by day and hour" />
-  <Chart.HeatmapLegend label="Requests per two-hour interval" />
-  <Chart.HeatmapTooltip valueAnimation="shuffle" />
-</Chart.HeatmapChart>
+```tsx title="Dashboard.tsx"
+import { HeatmapChart, createHeatmapScale } from "@/components/charts/heatmap-chart";
+
+const data = [{ row: "Mon", column: "AM", value: 12 }];
+const scale = createHeatmapScale({ domain: [0, 20], colors: ["#eff6ff", "#2563eb"] });
+
+export function Dashboard() {
+  return <HeatmapChart rows={["Mon"]} columns={["AM"]} data={data} scale={scale} aria-label="Requests by shift" />;
+}
 ```
 
-Missing records and `null` use patterned cells; zero remains a measured value.
+The local file supplies a grid, legend, tooltip and exact-value table. Pass children to replace these defaults. `HeatmapChart` supplies its own context.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts.
 
 ## Compact activity grid
 

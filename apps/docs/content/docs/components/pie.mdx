@@ -7,29 +7,28 @@ Compare team allocation as slices of a shared total.
 
 <ChartExample id="pie" />
 
+## Installation
+
+<ChartInstallation name="pie-chart" />
+
 ## Usage
 
-Set `categoryKey` for stable slice colors and `innerRadius` for a donut.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Composition sketch"
-<Chart.Root
-  config={config}
-  defaultVisibleSeries={Object.keys(config)}
-  interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }}
->
-  <Chart.Legend />
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.PieChart animate accessibilityLayer aria-label="Team allocation">
-      <Chart.PieSeries interactionBinding="root" data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
-        <Chart.LabelList dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
-      </Chart.PieSeries>
-      <Chart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
-    </Chart.PieChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+```tsx title="Dashboard.tsx"
+import { PieChart, PieSeries } from "@/components/charts/pie-chart";
+
+const data = [{ key: "sales", value: 120 }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <PieChart config={config}  aria-label="Chart data"><PieSeries data={data} dataKey="value" nameKey="key" categoryKey="key" /></PieChart>;
+}
 ```
 
-Use the same stable category IDs for config, slices and tooltips. Set `animationDirection` to choose the entrance sweep.
+The local file owns presentation defaults. Set `config` to use its frame; omit it when composing inside your own `Root`. Series and marks remain explicit children. Line, Heatmap and ActivityRings supply their own context.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts; the editable wrapper also accepts `config`, `rootProps`, `height`, `width` and optional `legend` where it supplies a frame.
 
 ## Controlled categories
 

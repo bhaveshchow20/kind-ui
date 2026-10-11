@@ -3,7 +3,6 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { allExamples } from "../examples/catalog.mjs";
 import { registryItemSchema, registrySchema } from "./registry-schema.mjs";
 
 export const docsRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -17,15 +16,31 @@ const write = (file, body) => {
 };
 export function validateCatalog(index) {
   registrySchema.parse(index);
+  const exports = [
+    "LineChart",
+    "AreaChart",
+    "BarChart",
+    "BoxPlotChart",
+    "ComboChart",
+    "HeatmapChart",
+    "HistogramChart",
+    "PieChart",
+    "RadarChart",
+    "RadialBarChart",
+    "SankeyChart",
+    "ScatterChart",
+    "WaterfallChart",
+    "ActivityRings",
+  ];
   assert.deepEqual(
-    index.items.map((item) => item.name).sort(),
-    allExamples.map(({ id }) => `kind-${id}`).sort(),
-    "Registry must cover every current example exactly once",
+    index.items.map((item) => item.meta.component).sort(),
+    exports.sort(),
+    "Every public chart must have exactly one reusable item",
   );
   assert.equal(
     JSON.parse(read("../../packages/charts/package.json")).version,
     coreVersion,
-    "Core version changed: review recipes against published npm before updating registry compatibility",
+    "Review registry compositions against the published npm version before updating compatibility",
   );
   for (const item of index.items) {
     assert.deepEqual(item.dependencies, [
@@ -39,8 +54,9 @@ export function validateCatalog(index) {
     assert.equal(
       item.registryDependencies?.length ?? 0,
       0,
-      "A single recipe must not install other charts",
+      "A family cannot pull other charts into the consumer",
     );
+    assert.ok(item.files.some((file) => file.path === `registry/${item.name}.tsx`));
   }
 }
 export function recipeSource(bundle) {
@@ -78,15 +94,17 @@ export function recipeSource(bundle) {
 export function buildRegistry(bundles) {
   const index = JSON.parse(read("registry.json"));
   validateCatalog(index);
+  const legacy = JSON.parse(read("registry/legacy.json"));
   rmSync(path.join(docsRoot, "generated/registry"), { recursive: true, force: true });
   rmSync(path.join(docsRoot, "public/r"), { recursive: true, force: true });
-  const staged = structuredClone(index);
+  const staged = structuredClone({ ...index, items: [...index.items, ...legacy.items] });
   for (const item of staged.items) {
-    const bundle = bundles[item.meta.example];
-    assert.equal(bundle.version, coreVersion, "Docs and registry core versions differ");
+    const bundle = item.meta.example ? bundles[item.meta.example] : undefined;
+    if (bundle) assert.equal(bundle.version, coreVersion, "Docs and registry core versions differ");
     for (const file of item.files) {
       let content = read(file.path);
-      if (file.path === `examples/${bundle.id}/example.tsx`) content = recipeSource(bundle);
+      if (bundle && file.path === `examples/${bundle.id}/example.tsx`)
+        content = recipeSource(bundle);
       file.path = `generated/registry/${item.name}/${path.basename(file.path)}`;
       write(file.path, content);
     }
@@ -108,12 +126,15 @@ export function buildRegistry(bundles) {
     { cwd: docsRoot, stdio: "inherit" },
   );
   write("public/r/registry.json", `${JSON.stringify(index, null, 2)}\n`);
+  const installations = {};
   for (const item of index.items) {
     const built = JSON.parse(read(`public/r/${item.name}.json`));
+    installations[item.name] = built;
     registryItemSchema.parse(built);
     assert.ok(built.files.every((file) => typeof file.content === "string"));
   }
+  write("generated/registry-installations.json", `${JSON.stringify(installations, null, 2)}\n`);
   console.log(
-    `Built ${index.items.length} individually installable registry recipes for @kind-ui/charts@${coreVersion}.`,
+    `Built ${index.items.length} reusable chart items and ${legacy.items.length} hidden legacy URLs for @kind-ui/charts@${coreVersion}.`,
   );
 }

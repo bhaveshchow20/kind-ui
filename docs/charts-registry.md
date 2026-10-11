@@ -1,37 +1,31 @@
-# Charts registry maintenance
+# Charts registry
 
-The existing Docs app builds a shadcn-compatible distribution of all 51 current chart compositions across 13 families. The editable sources remain `apps/docs/examples/<id>/example.tsx`; previews, npm downloads and registry recipes share them. `apps/docs/registry.json` is the standard source manifest. No chart engine is copied: every recipe imports the published `@kind-ui/charts` core. ActivityRings has its own `kind-radial-activity` item; donut, bubble, gauge, stacked, material and other catalog recipes install independently.
+The current registry distributes 14 reusable chart components over the existing `@kind-ui/charts` npm core. The installed source owns editable layout and presentation defaults; callers supply observations, identities and plot children. It does not copy the rendering or interaction engine.
 
-## Build and compatibility
+## Boundaries
 
-Run `npm run generate` or `npm run build` in `apps/docs`. Generation stages editable components, adds the existing example presentation stylesheet and a complete static data alternative when the source does not supply one, then invokes the official pinned `shadcn@4.21.4 build`. Every recipe installs only its composition, its supporting sources (where present), shared CSS and MIT license. Shared files use the same target and the CLI preserves identical files on subsequent installs.
+`apps/docs/registry/*.tsx` is canonical component source. `apps/docs/registry.json` indexes Line, Area, Bar, Box Plot, Combo, Heatmap, Histogram, Pie, Radar, Radial Bar, Sankey, Scatter, Waterfall and ActivityRings. Donut, bubble, gauge, stacked, horizontal, materials and loading use the existing native parts/options. The catalog gate maps all 51 documented examples onto these items and checks every public chart export.
 
-The source manifest requests `@kind-ui/charts@0.4.0` and its documented React/React DOM, Recharts and Motion peer ranges. npm metadata was inspected on 2026-10-10: latest was 0.4.0, with integrity recorded in `scripts/registry.mjs`. The CLI saves `^0.4.0` in the consumer manifest; its lockfile pins resolved bytes. This is a tested 0.4.0 composition, not a guarantee for future patches. Updating the core version requires reviewing recipes, metadata, peer ranges and the published integrity together, then repeating clean-consumer checks. The catalog gate rejects missing/duplicate recipes and unreviewed core version changes. A package release is unnecessary for this distribution-only change.
+A family install contains that family module, the identical shared `chart.tsx` frame/public parts, and the MIT notice. There are no dependencies on another family item. Styles come from the npm package. Native parts retain their original implementation and identity; preserve refs, handlers and discriminated ownership props. Components with built-in context (configured Line, Heatmap and ActivityRings) never add another Root. Other families can opt into the editable frame with `config` or compose normally in an existing Root without it.
 
-The official CLI is an isolated npm-exec development tool, pinned by version rather than a website dependency. Its current transitive `braces` dependency has advisory GHSA-vfj7-8cjw-p6xm with no fixed version at inspection. It receives repository-owned paths during builds; do not feed it untrusted glob patterns. The site's declared dependencies pass the repository's high-severity audit gate. The CLI's temporary dependency graph is not covered by that audit result.
+`registry/usage.json` contains caller examples, not installed datasets. CLI payloads and Manual display are generated from the exact same source files. Each documentation page has Installation before Usage, with CLI / Manual tabs and numbered steps. Preview code consumes the local module; separately downloaded npm examples remain available for direct package usage.
 
-## Hosting and discovery
+The previous 51 `kind-*.json` recipe URLs are generated from `registry/legacy.json` for compatibility and are omitted from the discovery index and prominent docs. Do not redirect them to exports with a different contract.
 
-The app exports `public/r/registry.json` and `public/r/kind-<example-id>.json` into `out/r/`. Root previews serve `/r/...`; the public build uses `NEXT_PUBLIC_KIND_DOCS_BASE_PATH=/charts/docs`, giving planned URLs `https://kindui.dev/charts/docs/r/...`. Client commands use the actual page origin and the configured docs mount. Production generation requires `KIND_DOCS_ORIGIN` for absolute Markdown links. When it is unset in a local build, Markdown install commands require it in the consumer's terminal (for example, `export KIND_DOCS_ORIGIN=http://127.0.0.1:6374` for that preview). They do not bake in a default preview port. Consumers can configure:
+## Version and build
 
-```json
-{
-  "registries": {
-    "@kind": "https://kindui.dev/charts/docs/r/{name}.json"
-  }
-}
-```
+The registry is checked against published `@kind-ui/charts@0.4.0` and its recorded npm integrity. Supported peers are React/DOM ^19.3.0, Recharts ^3.10.1 and Motion ^13.4.6. The CLI currently writes ^0.4.0 to package.json; a lockfile is necessary to retain the tested resolution. Core and compositions must be reviewed together before updating compatibility. npm distribution is unchanged.
 
-Then `npx shadcn@latest add @kind/kind-line` installs the line recipe. Direct item URLs need no namespace setup. The root `registry.json` index supports standard CLI discovery and the existing shadcn MCP server without a bespoke server.
+`npm run generate` validates official schemas and invokes shadcn 4.21.4 to build `public/r/registry.json` and individual JSON payloads. The existing Next static export carries these into `out/r`. `publicPath` applies the deployment base path. Production generation requires `KIND_DOCS_ORIGIN`; the visible mapping follows the actual browser origin. Local endpoint validation does not establish production availability. The website/docs publishing owner must deploy the corrected export before advertising it.
 
-`apps/docs/README.md` identifies this repo's app as the publishing source; the Sites checkout is a generated snapshot. Neither source build nor this PR deploys it. The deployment owner must publish the approved `out/` snapshot and verify the index and each item at the public mount. Do not describe the planned production endpoints as deployed until those HTTP responses have been checked.
+## Namespace and discovery
 
-## Validation
+Until genuine global registration, users must merge the one-time @kind-ui mapping into components.json. Bare namespace commands are only valid after that setup. Normal registry indexing supports shadcn CLI discovery and its MCP tooling; no Kind-specific MCP server is added.
 
-`npm run check:registry` checks catalog/schema contracts, serves real JSON under a local `/charts/docs/r` mount, and installs every item sequentially with the actual CLI into a clean src-based consumer. It verifies that no unrelated chart is installed, the supported npm version/integrity resolves, all selected variant props compile, strict Bundler/NodeNext declarations pass, and Vite builds. The retained consumer is in `artifacts/registry-consumer`; `registry-results.json` records each installed item. These are disposable evidence, not source files.
+Global registration is a separate publication action: verify stable public endpoints, add the entry to shadcn-ui/ui `apps/v4/registry/directory.json`, run `pnpm validate:registries`, and submit for maintainer review. The registry must be public/open source, schema-valid and flat; discovery file entries omit content. See https://ui.shadcn.com/docs/registry/registry-index. No external submission is authorized by this corrective PR. Prepared metadata is in `apps/docs/registry/directory-entry.json`; verify it against the authoritative deployment before submission.
 
-`npm run check` in Docs checks exported JSON alongside existing docs contracts. Run `npm run check:registry` before `npm run check:browser`; it prepares the published-core consumer receipt and production build used by the browser checks. The browser launcher stops immediately with this instruction if either output is missing. `npm run check:browser` adds distribution control, persistence, commands/imports, preview preservation, mobile containment and hydration checks to existing browser coverage. Library checks remain `npm run check` at the repository root. Run the focused checks first, then required aggregates; use fixed, bounded concurrency.
+## Verification
 
-Official schemas in `apps/docs/scripts/schemas` were retrieved from the maintainer's MIT-licensed repository at `c2a67849be260701852b0977ba15eb5f3a0ce2a4` (2026-10-10), under `apps/v4/public/schema/`. Keep their license and provenance notice. Ajv validates those schemas offline; the HTTPS draft-07 identifier is registered as an alias of Ajv's built-in HTTP meta-schema. Update snapshots only after reviewing the current official schemas.
+`npm run check:registry` uses the actual CLI to discover/install all 14 items through a project-configured @kind-ui namespace. It checks install isolation, npm integrity, strict Bundler/NodeNext typing, usage examples, all 51 existing caller compositions and variants, and a Vite production build. A second independent npm consumer installs Manual source directly from the public JSON and receives the same type/build checks. Browser checks cover installed caller behavior and installation tabs, keyboard, literal clipboard commands and mobile containment.
 
-References: [registry overview](https://ui.shadcn.com/docs/registry), [source index schema](https://ui.shadcn.com/docs/registry/registry-json), [item schema](https://ui.shadcn.com/docs/registry/registry-item-json), [MCP discovery](https://ui.shadcn.com/docs/registry/mcp).
+Cloud environments blocking the official shadcn colors endpoint may optionally set `KIND_UI_SHADCN_COLORS_FILE` to an independently retrieved, verbatim official neutral.json. Only the CLI's incidental official color request is mirrored, using its REGISTRY_URL support; Kind endpoints and npm installs remain real. The receipt records this limitation. Normal CI uses the official endpoint directly. Do not claim unrestricted official-network validation from the fixture path.

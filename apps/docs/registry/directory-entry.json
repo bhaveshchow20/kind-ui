@@ -1,0 +1,6 @@
+{
+  "name": "@kind-ui",
+  "url": "https://kindui.dev/charts/docs/r/{name}.json",
+  "description": "Editable chart compositions backed by the Kind UI Charts npm core.",
+  "homepage": "https://kindui.dev/charts"
+}

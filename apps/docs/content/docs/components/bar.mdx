@@ -7,26 +7,28 @@ Compare pickup orders across locations with rounded columns.
 
 <ChartExample id="bar" />
 
+## Installation
+
+<ChartInstallation name="bar-chart" />
+
 ## Usage
 
-Add one `BarSeries` per measure. Use `stackId` for stacks and `layout="vertical"` for horizontal bars.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Composition sketch"
-<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-  <Chart.Legend />
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.BarChart data={data} animate accessibilityLayer aria-label="Pickup orders by location">
-      <Chart.CartesianGrid vertical={false} />
-      <Chart.XAxis dataKey="period" />
-      <Chart.YAxis />
-      <Chart.BarSeries dataKey="orders" radius={[5, 5, 0, 0]} />
-      <Chart.Tooltip />
-    </Chart.BarChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+```tsx title="Dashboard.tsx"
+import { BarChart, BarSeries, XAxis, YAxis, CartesianGrid, Tooltip } from "@/components/charts/bar-chart";
+
+const data = [{ month: "Jan", sales: 120 }, { month: "Feb", sales: 180 }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <BarChart config={config} data={data} aria-label="Chart data"><CartesianGrid vertical={false} /><XAxis dataKey="month" /><YAxis /><BarSeries dataKey="sales" /><Tooltip /></BarChart>;
+}
 ```
 
-Place the legend outside the plot. Legend focuses and dims by default; explicit `interaction.mode="visibility"` enables hide/show.
+The local file owns presentation defaults. Set `config` to use its frame; omit it when composing inside your own `Root`. Series and marks remain explicit children. Line, Heatmap and ActivityRings supply their own context.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts; the editable wrapper also accepts `config`, `rootProps`, `height`, `width` and optional `legend` where it supplies a frame.
 
 ## Grouped and stacked series
 

@@ -7,26 +7,28 @@ Show visitor volume over time, then compare stacked contributions.
 
 <AreaExample id="area" />
 
+## Installation
+
+<ChartInstallation name="area-chart" />
+
 ## Usage
 
-Add one `AreaSeries` per measure. Use `stackId` to stack related series.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Composition sketch"
-<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-  <Chart.Legend />
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.AreaChart data={data} animate accessibilityLayer aria-label="Monthly visitors">
-      <Chart.CartesianGrid vertical={false} />
-      <Chart.XAxis dataKey="period" />
-      <Chart.YAxis />
-      <Chart.AreaSeries dataKey="visitors" type="monotone" fillOpacity={0.22} />
-      <Chart.Tooltip />
-    </Chart.AreaChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+```tsx title="Dashboard.tsx"
+import { AreaChart, AreaSeries, XAxis, YAxis, CartesianGrid, Tooltip } from "@/components/charts/area-chart";
+
+const data = [{ month: "Jan", sales: 120 }, { month: "Feb", sales: 180 }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <AreaChart config={config} data={data} aria-label="Chart data"><CartesianGrid vertical={false} /><XAxis dataKey="month" /><YAxis /><AreaSeries dataKey="sales" /><Tooltip /></AreaChart>;
+}
 ```
 
-Place the legend outside the plot. Legend focuses and dims by default; explicit `interaction.mode="visibility"` enables hide/show.
+The local file owns presentation defaults. Set `config` to use its frame; omit it when composing inside your own `Root`. Series and marks remain explicit children. Line, Heatmap and ActivityRings supply their own context.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts; the editable wrapper also accepts `config`, `rootProps`, `height`, `width` and optional `legend` where it supplies a frame.
 
 ## Curve types
 

@@ -1,10 +1,8 @@
 "use client";
 import * as Select from "@radix-ui/react-select";
-import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock";
 import { Check, ChevronDown, Copy } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 import { promptFor } from "@/lib/example-files.mjs";
-import { registryCommand, useDistribution } from "./distribution";
 import { previews } from "./previews";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -44,10 +42,7 @@ export function ComponentPlayground({
   instance?: string;
 }) {
   const { id } = bundle;
-  const { distribution, origin } = useDistribution();
-  const { componentName, variantProp } = bundle.registry;
   const [variant, setVariant] = useState(fixedVariant ?? bundle.defaultVariant);
-  const usage = `import { ${componentName} } from "@/components/charts/${id}/example";\n\nexport function Dashboard() {\n  return <${componentName}${variant && variantProp ? ` ${variantProp}="${variant}"` : ""} />;\n}`;
   const options = Object.entries(bundle.variants ?? {}).filter(([value]) => value !== "loading");
   const controlId = useId();
   const [status, setStatus] = useState("");
@@ -123,9 +118,7 @@ export function ComponentPlayground({
             size="sm"
             className="copy-prompt"
             aria-label={status === "Prompt copied" ? "Copied" : "Copy prompt"}
-            onClick={() =>
-              copy(promptFor(bundle, { distribution }, location.origin, variant), "Prompt")
-            }
+            onClick={() => copy(promptFor(bundle, {}, location.origin, variant), "Prompt")}
           >
             {status === "Prompt copied" ? <Check size={14} /> : <Copy size={14} />}
             <span>{status === "Prompt copied" ? "Copied" : "Copy prompt"}</span>
@@ -177,24 +170,7 @@ export function ComponentPlayground({
         )}
       </TabsContent>
       <TabsContent value="code" forceMount hidden={tab !== "code"} className="code-files">
-        {distribution === "shadcn" ? (
-          <>
-            <CodeBlock title="Terminal">
-              <Pre>
-                <code>{registryCommand(id, origin)}</code>
-              </Pre>
-            </CodeBlock>
-            <CodeBlock title="Dashboard.tsx">
-              <Pre>
-                <code>{usage}</code>
-              </Pre>
-            </CodeBlock>
-          </>
-        ) : variant && variantCode ? (
-          variantCode[variant]
-        ) : (
-          sourceCode
-        )}
+        {variant && variantCode ? variantCode[variant] : sourceCode}
       </TabsContent>
       <span role="status" className="sr-only">
         {status}

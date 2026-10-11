@@ -1,124 +1,50 @@
 ---
 title: Installation
-description: Install charts, render your first example, and adapt it to your data.
+description: Install editable chart components through the CLI or copy their source manually.
 ---
 
-Choose npm or shadcn above. Both use the same chart core; shadcn adds an editable composition to your project and installs `@kind-ui/charts@0.4.0`. Start from a shadcn-initialized React project for registry installs.
+## Installation
 
-<Steps>
-<Step>
+Start with a React project. CLI and Manual install the same editable component, backed by `@kind-ui/charts@0.4.0`.
 
-### Install
+<ChartInstallation name="line-chart" />
 
-<ChartInstall id="line-start" />
-
-Kind UI charts supports React/React DOM `^19.3.0`, Recharts `^3.10.1` and Motion `^13.4.6`. Motion is required even with animation off.
-
-</Step>
-<Step>
-
-### Import the stylesheet
-
-<Tabs items={["React", "Next.js"]}>
-<Tab value="React">
-
-Import CSS once at your application entry:
-
-```tsx
-import "@kind-ui/charts/styles.css";
-```
-
-</Tab>
-<Tab value="Next.js">
-
-Import CSS in your root layout:
-
-```tsx title="app/layout.tsx"
-import "@kind-ui/charts/styles.css";
-```
-
-Put interactive chart components behind a client boundary:
-
-```tsx title="Chart.tsx"
-"use client";
-import * as Chart from "@kind-ui/charts";
-```
-
-</Tab>
-</Tabs>
-
-</Step>
-<Step>
-
-### Build your first chart
-
-For npm, open **Code** and copy the component into `MonthlyVisitorsChart.tsx`, and keep its stylesheet import. For shadcn, the install command adds the component; open its local file to edit it. The example includes the data and chart name.
-
-<ChartExample id="line-start" />
-
-#### Render the chart
-
-<DistributionContent value="npm">
+## Usage
 
 ```tsx title="Dashboard.tsx"
-import { MonthlyVisitorsChart } from "./MonthlyVisitorsChart";
+import { LineChart } from "@/components/charts/line-chart";
+
+const data = [{ month: "Jan", sales: 120 }, { month: "Feb", sales: 180 }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
 
 export function Dashboard() {
-  return <MonthlyVisitorsChart />;
+  return <LineChart data={data} config={config} xDataKey="month" aria-label="Monthly sales" />;
 }
 ```
 
-</DistributionContent>
-<DistributionContent value="shadcn">
+Change the caller's data, labels and colors. Keep a meaningful chart name and an accurate text or table alternative beside your chart.
 
-```tsx title="Dashboard.tsx"
-import { MonthlyVisitorsChart } from "@/components/charts/line-start/example";
+## npm core
 
-export function Dashboard() {
-  return <MonthlyVisitorsChart />;
-}
+For direct npm usage, install the package and supported peers:
+
+```sh
+npm install @kind-ui/charts@0.4.0 react@^19.3.0 react-dom@^19.3.0 recharts@^3.10.1 motion@^13.4.6
 ```
 
-</DistributionContent>
-
-Run your app. You will see four months of visitors; inspect a point to read its value.
-
-</Step>
-</Steps>
-
-## Use your own data
-
-In the copied component, replace `data` with your observations. Keep `period` as the x-axis field and `visitors` as a number, or change `xDataKey` and the config key together.
-
-Change the config label and color to match your measure. Update the chart name and text alternative too.
-
-## Composition
-
-Configured `LineChart` supplies context, sizing and plot parts. Do not wrap it in `Root`.
-
-Other families use their own composition. Start with their complete examples:
-
-| Your task | Next example |
-| --- | --- |
-| Compare categories | [Bar](/docs/components/bar/) |
-| Show bounded progress | [Radial and Activity Rings](/docs/components/radial/) |
-| Show relationships | [Scatter](/docs/components/scatter/) |
-| Trace flows | [Sankey](/docs/components/sankey/) |
-
-Use [Line composition](/docs/components/line/#compose-plot-parts) when you need custom axes or series. See [Accessibility](/docs/guides/accessibility/) before embedding a chart in your product.
-
-## Public imports
+Import CSS once at your application entry or Next.js root layout:
 
 ```tsx
+import "@kind-ui/charts/styles.css";
 import * as Chart from "@kind-ui/charts";
 ```
 
-Use the documented exports. There is no `@kind-ui/charts/motion` entry.
+Use the same public plot parts with your own composition. Configured `LineChart`, `HeatmapChart` and `ActivityRings` already supply their context; do not add another `Root`. In Next.js, place interactive chart components behind a `"use client"` boundary.
 
 ## Upgrading
 
-Registry recipes request the tested core version. The CLI saves an npm `^0.4.0` range; keep your lockfile and check the installed version before updating. Review local edits before reinstalling a recipe; the CLI may prompt before overwriting files. Update recipes and core together, then check your app.
+The registry requests core 0.4.0 and the CLI currently saves a `^0.4.0` npm range. Keep your lockfile and check the resolved version before updating. Review local source edits before reinstalling; the CLI can prompt before overwriting shared files.
 
-Review the [changelog](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/CHANGELOG.md), then typecheck and build your app. Check sizing, keyboard access, controlled visibility, missing/zero values and reduced motion. Keep your data alternative current.
+Review the [changelog](https://github.com/bhaveshchow20/kind-ui/blob/main/packages/charts/CHANGELOG.md), then typecheck, build and check keyboard interaction, tooltips, loading, mobile sizing and reduced motion. The old named demo URLs remain available for compatibility but are absent from the current registry index.
 
-See [Troubleshooting](/docs/guides/troubleshooting/) if the chart is blank or an import fails.
+See [Troubleshooting](/docs/guides/troubleshooting/) if a chart is blank or an import fails.

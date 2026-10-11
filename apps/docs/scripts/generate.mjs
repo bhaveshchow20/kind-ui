@@ -11,7 +11,7 @@ import {
   variantDefinitions,
 } from "../examples/catalog.mjs";
 import { referenceRows, referenceTitle } from "../lib/api-reference.mjs";
-import { registryInstallCommand } from "../lib/example-files.mjs";
+import { localExample, registryName } from "../lib/registry-catalog.mjs";
 import { canonicalDocSlugs, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
 import { buildRegistry } from "./registry.mjs";
 
@@ -184,7 +184,11 @@ for (const example of allExamples) {
     packageStatus: status,
     localPackage: local,
     version: provenance.version,
-    registry: { name: `kind-${example.id}`, componentName, variantProp: variantDefinition?.prop },
+    registry: {
+      name: registryName(example.family, example.id),
+      componentName,
+      variantProp: variantDefinition?.prop,
+    },
   };
   if (variants)
     for (const [value, variant] of Object.entries(variants))
@@ -271,6 +275,18 @@ const tableMarkdown = (name) => {
       .join("\n")
   );
 };
+for (const bundle of Object.values(bundles)) {
+  const sourceFile = `src/examples/${bundle.id}/example.tsx`;
+  write(
+    `public/registry-examples/${bundle.id}/example.tsx`,
+    localExample(bundle.files[sourceFile], bundle.family, bundle.id),
+  );
+  for (const [variant, definition] of Object.entries(bundle.variants ?? {}))
+    write(
+      `public/registry-examples/${bundle.id}/${variant}.tsx`,
+      localExample(definition.source, bundle.family, bundle.id),
+    );
+}
 const index = [];
 for (const entry of readdirSync("content/docs", { recursive: true }).filter((entry) =>
   String(entry).endsWith(".mdx"),
@@ -297,35 +313,29 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
       if (!bundle) throw new Error(`Unknown example ${id}`);
       const sourceFile = `src/examples/${id}/example.tsx`;
       const selected = variant ?? bundle.defaultVariant;
-      const registryProps =
-        selected && bundle.registry.variantProp
-          ? ` ${bundle.registry.variantProp}=${JSON.stringify(selected)}`
-          : "";
       const sourceURL = selected
-        ? `/examples/${id}/variants/${selected}/example.tsx`
-        : `/examples/${id}/${sourceFile}`;
+        ? `/registry-examples/${id}/${selected}.tsx`
+        : `/registry-examples/${id}/example.tsx`;
       const support = Object.keys(bundle.files).filter(
         (file) => file !== sourceFile && /\.(tsx|ts)$/.test(file),
       );
       return (
         `### ${bundle.title}${variant ? ` — ${variant}` : ""}\n\n` +
-        `shadcn: \`${registryInstallCommand(id, origin)}\`. Import \`${bundle.registry.componentName}\` from \`@/components/charts/${id}/example\`. Render \`<${bundle.registry.componentName}${registryProps} />\`.\n\n` +
-        `[Complete example source](${link(sourceURL)}) · [Setup manifest](${link(`/examples/${id}/package.json`)})\n\n` +
-        `\`\`\`tsx\n${bundle.files[sourceFile].trimEnd()}\n\`\`\`\n` +
+        `[Caller example source](${link(sourceURL)}) · [Setup manifest](${link(`/examples/${id}/package.json`)})\n\n` +
+        `\`\`\`tsx\n${localExample(bundle.files[sourceFile], bundle.family, bundle.id).trimEnd()}\n\`\`\`\n` +
         (support.length
           ? `\nSupporting source:\n${support.map((file) => `- [${file}](${link(`/examples/${id}/${file}`)})`).join("\n")}\n`
           : "")
       );
     },
   );
-  body = body.replace(
-    /<ChartInstall(?: id="([\w-]+)")?\s*\/>/g,
-    (_, id = "line-start") =>
-      `\n#### npm\n\n\`\`\`sh\nnpm install @kind-ui/charts\n\`\`\`\n\n#### shadcn\n\n\`\`\`sh\n${registryInstallCommand(id, origin)}\n\`\`\`\n`,
-  );
-  body = body
-    .replace(/<DistributionContent value="(npm|shadcn)">/g, (_, value) => `\n#### ${value}\n`)
-    .replace(/<\/DistributionContent>/g, "");
+  body = body.replace(/<ChartInstallation name="([\w-]+)"\s*\/>/g, (_, name) => {
+    const item = JSON.parse(read(`public/r/${name}.json`));
+    const mapping = origin
+      ? `${origin}${publicPath("/r/{name}.json")}`
+      : `<docs-origin>${publicPath("/r/{name}.json")}`;
+    return `\n### CLI\n\n1. Initialize your React project with shadcn: \`npx shadcn@latest init\`.\n2. Merge this one-time mapping into components.json (replace <docs-origin> with the origin serving these docs):\n\n\`\`\`json\n${JSON.stringify({ registries: { "@kind-ui": mapping } }, null, 2)}\n\`\`\`\n\n3. Install the component:\n\n\`\`\`sh\nnpx shadcn@latest add @kind-ui/${name}\n\`\`\`\n\nThe namespace is project-configured; global directory registration is pending.\n\n### Manual\n\n1. Install dependencies:\n\n\`\`\`sh\nnpm install ${item.dependencies.join(" ")}\n\`\`\`\n\n2. Copy these exact files into your source directory:\n\n${item.files.map((file) => `#### ${file.target}\n\n\`\`\`${file.target.endsWith(".tsx") ? "tsx" : "text"}\n${file.content.trimEnd()}\n\`\`\`\n`).join("\n")}\n3. Use the local component shown below. Examples use @/ for the source directory; adjust the import if your alias differs. Both paths install the same source and npm core.\n`;
+  });
   body = body.replace(/<ApiTable name="([\w]+)"(?:\s+compact)?\s*\/>/g, (_, name) =>
     tableMarkdown(name),
   );

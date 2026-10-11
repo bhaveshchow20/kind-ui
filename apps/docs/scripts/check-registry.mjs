@@ -3,6 +3,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { coreVersion, docsRoot, publishedIntegrity, validateCatalog } from "./registry.mjs";
 
 const read = (file) => readFileSync(file, "utf8");
@@ -72,6 +73,10 @@ async function run(command, args, cwd = root) {
   });
 }
 const server = createServer((req, res) => {
+  if (process.env.KIND_UI_SHADCN_COLORS_FILE && req.url === "/shadcn/colors/neutral.json") {
+    res.setHeader("Content-Type", "application/json");
+    return res.end(read(process.env.KIND_UI_SHADCN_COLORS_FILE));
+  }
   const name = new URL(req.url, "http://localhost").pathname.match(
     /^\/charts\/docs\/r\/([a-z-]+)\.json$/,
   )?.[1];
@@ -89,8 +94,12 @@ const server = createServer((req, res) => {
 });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const base = `http://127.0.0.1:${server.address().port}/charts/docs/r`;
+// Optional verbatim official color fixture for network-restricted cloud environments.
+// Normal CI reads the official registry directly. Never substitute Kind item payloads.
+if (process.env.KIND_UI_SHADCN_COLORS_FILE)
+  process.env.REGISTRY_URL = `http://127.0.0.1:${server.address().port}/shadcn`;
 const config = JSON.parse(read(path.join(root, "components.json")));
-config.registries = { "@kind": `${base}/{name}.json` };
+config.registries = { "@kind-ui": `${base}/{name}.json` };
 json("components.json", config);
 
 const evidence = [];
@@ -111,7 +120,7 @@ try {
     "--",
     "shadcn",
     "search",
-    "@kind",
+    "@kind-ui",
     "--limit",
     "100",
   ]);
@@ -124,7 +133,7 @@ try {
       "--",
       "shadcn",
       "add",
-      `${base}/${item.name}.json`,
+      `@kind-ui/${item.name}`,
       "--yes",
       "--silent",
     ]);
@@ -145,25 +154,112 @@ try {
   const bundles = JSON.parse(read("generated/all-examples.json"));
   const imports = [],
     renders = [];
-  for (const item of index.items) {
-    const bundle = bundles[item.meta.example],
-      name = bundle.registry.componentName;
-    imports.push(`import { ${name} } from "./components/charts/${bundle.id}/example.js";`);
+  let exampleIndex = 0;
+  for (const bundle of Object.values(bundles)) {
+    const alternative = `<div className="consumer-alternative"><table data-chart-alternative aria-label=${JSON.stringify(bundle.title + " data")}><caption>{${JSON.stringify(bundle.dataAlternative.caption)}}</caption><tbody>${bundle.dataAlternative.rows
+      .map(
+        (row) =>
+          `<tr>${Object.values(row)
+            .map((value) => `<td>{${JSON.stringify(value)}}</td>`)
+            .join("")}</tr>`,
+      )
+      .join("")}</tbody></table></div>`;
+    const name = bundle.registry.componentName,
+      alias = `Example${exampleIndex++}`;
+    for (const [file, content] of Object.entries(bundle.files)) {
+      if (!/\.(tsx|ts)$/.test(file)) continue;
+      mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+      write(
+        file,
+        (file.endsWith("/example.tsx") ? localExample(content, bundle.family, bundle.id) : content)
+          .replaceAll('"@/components/charts/', '"../../components/charts/')
+          .replace(/(from "\.\.\/\.\.\/components\/charts\/[^".]+)(")/g, "$1.js$2"),
+      );
+    }
+    imports.push(`import { ${name} as ${alias} } from "./examples/${bundle.id}/example.js";`);
     renders.push(
-      `{(!selected || selected === "${bundle.id}") && <section data-recipe="${bundle.id}"><${name} /></section>}`,
+      `{(!selected || selected === "${bundle.id}") && <section className="chart-example" data-recipe="${bundle.id}"><${alias} />${alternative}</section>}`,
     );
     for (const variant of Object.keys(bundle.variants ?? {}))
       renders.push(
-        `{(!selected || selected === "${bundle.id}-${variant}") && <section data-recipe="${bundle.id}-${variant}"><${name} ${bundle.registry.variantProp}=${JSON.stringify(variant)} /></section>}`,
+        `{(!selected || selected === "${bundle.id}-${variant}") && <section className="chart-example" data-recipe="${bundle.id}-${variant}"><${alias} ${bundle.registry.variantProp}=${JSON.stringify(variant)} />${alternative}</section>}`,
       );
   }
   write(
+    "src/contracts.tsx",
+    `import {createRef} from "react";
+import {LineChart} from "./components/charts/line-chart.js";
+import {AreaChart} from "./components/charts/area-chart.js";
+import {RadarChart} from "./components/charts/radar-chart.js";
+const config={sales:{label:"Sales",color:"#733bff"}};
+const rows=[{month:"Jan",sales:12}];
+const line=<LineChart data={rows} config={config} aria-label="Sales" xDataKey={row=>row.month} series={[{seriesKey:"sales",dataKey:row=>row.sales}]} ref={createRef<SVGSVGElement>()}/>;
+const area=<AreaChart data={rows} config={config} legend={{}} rootProps={{ref:createRef<HTMLDivElement>(),visibleSeries:["sales"],onVisibleSeriesChange:next=>void next}} aria-label="Sales"/>;
+// @ts-expect-error Controlled and defaulted state remain exclusive across the editable frame.
+const invalid=<AreaChart config={config} rootProps={{visibleSeries:["sales"],defaultVisibleSeries:["sales"]}}/>;
+// @ts-expect-error A callback alone cannot own Root visibility.
+const callbackOnly=<AreaChart config={config} rootProps={{onVisibleSeriesChange:(_next:string[])=>{}}}/>;
+// @ts-expect-error Radar selection still requires its controller callback.
+const selected=<RadarChart data={rows} selectedSeries="sales"/>;
+void [line,area,invalid,callbackOnly,selected];`,
+  );
+  const usage = JSON.parse(read("registry/usage.json"));
+  for (const [name, source] of Object.entries(usage))
+    write(
+      `src/usage-${name}.tsx`,
+      source
+        .replaceAll('"@/components/charts/', '"./components/charts/')
+        .replace(/(from "\.\/components\/charts\/[^".]+)(")/g, "$1.js$2"),
+    );
+  for (const name of Object.keys(usage)) {
+    const alias = `Usage${name.replaceAll("-", "")}`;
+    imports.push(`import { Dashboard as ${alias} } from "./usage-${name}.js";`);
+    renders.push(
+      `{selected === "installed-${name}" && <section className="chart-example" data-recipe="installed-${name}"><${alias} /></section>}`,
+    );
+  }
+  write(
+    "src/consumer.css",
+    read("examples/shared/example.css") +
+      "\n.chart-example {position:relative} .consumer-alternative {position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%)}\n",
+  );
+  write(
     "src/main.tsx",
-    `import { createRoot } from "react-dom/client";\n${imports.join("\n")}\nconst selected = new URLSearchParams(location.search).get("recipe");\ncreateRoot(document.getElementById("root")!).render(<main>${renders.join("\n")}</main>);\n`,
+    `import "./consumer.css";\nimport { createRoot } from "react-dom/client";\n${imports.join("\n")}\nconst selected = new URLSearchParams(location.search).get("recipe");\ncreateRoot(document.getElementById("root")!).render(<main>${renders.join("\n")}</main>);\n`,
   );
   await run("npm", ["run", "build"]);
   await run("npm", ["exec", "tsc", "--", "--module", "NodeNext", "--moduleResolution", "NodeNext"]);
   await run("npm", ["ls", "--all"]);
+  const manual = path.join(docsRoot, "artifacts/registry-manual-consumer");
+  rmSync(manual, { recursive: true, force: true });
+  mkdirSync(manual, { recursive: true });
+  const { cpSync } = await import("node:fs");
+  for (const file of ["tsconfig.json", "index.html"])
+    cpSync(path.join(root, file), path.join(manual, file));
+  cpSync(path.join(root, "src"), path.join(manual, "src"), { recursive: true });
+  // Discard CLI-installed modules; manual source comes directly from public JSON, as displayed in Manual.
+  rmSync(path.join(manual, "src/components"), { recursive: true, force: true });
+  for (const item of index.items)
+    for (const file of JSON.parse(read(`public/r/${item.name}.json`)).files) {
+      const target = path.join(manual, "src", file.target);
+      mkdirSync(path.dirname(target), { recursive: true });
+      writeFileSync(target, file.content);
+      assert.equal(
+        read(target),
+        read(path.join(root, "src", file.target)),
+        "Manual and CLI installed source differ",
+      );
+    }
+  const manualManifest = JSON.parse(read(path.join(root, "package.json")));
+  manualManifest.dependencies["@kind-ui/charts"] = coreVersion;
+  writeFileSync(path.join(manual, "package.json"), JSON.stringify(manualManifest, null, 2));
+  await run("npm", ["install", "--no-audit", "--no-fund"], manual);
+  await run("npm", ["run", "build"], manual);
+  await run(
+    "npm",
+    ["exec", "tsc", "--", "--module", "NodeNext", "--moduleResolution", "NodeNext"],
+    manual,
+  );
   write(
     "registry-results.json",
     JSON.stringify(
@@ -172,6 +268,9 @@ try {
         publishedIntegrity,
         declarationModes: ["Bundler", "NodeNext"],
         productionBuild: true,
+        manualInstall: true,
+        officialColorFixture: Boolean(process.env.KIND_UI_SHADCN_COLORS_FILE),
+        examples: Object.keys(bundles).length,
         items: evidence,
       },
       null,
@@ -179,7 +278,7 @@ try {
     ),
   );
   console.log(
-    `All ${evidence.length} registry recipes and their variants installed with the actual shadcn CLI, typechecked and built against published npm.`,
+    `All ${evidence.length} reusable registry components, caller examples and variants installed with the actual shadcn CLI, typechecked and built against published npm.`,
   );
 } finally {
   server.close();

@@ -7,45 +7,28 @@ Supply your own quartiles, whiskers and outliers to compare distributions.
 
 <ChartExample id="box-plot" />
 
+## Installation
+
+<ChartInstallation name="box-plot-chart" />
+
 ## Usage
 
-Open **Code** for the complete component and its data. `BoxPlotSeries` draws each supplied summary; Root provides the series label and color.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-Use this composition when adapting the example:
+```tsx title="Dashboard.tsx"
+import { BoxPlotChart, BoxPlotSeries } from "@/components/charts/box-plot-chart";
 
-```tsx title="Composition sketch"
-<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-  <Chart.Legend />
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.BoxPlotChart data={data} animate accessibilityLayer aria-label="Response time distributions">
-      <Chart.CartesianGrid vertical={false} />
-      <Chart.XAxis dataKey="period" />
-      <Chart.YAxis type="number" domain={[0, 180]} />
-      <Chart.BoxPlotSeries<(typeof data)[number]>
-        dataKey={(row) => ({
-          lowerWhisker: row.lowerWhisker,
-          q1: row.q1,
-          median: row.median,
-          q3: row.q3,
-          upperWhisker: row.upperWhisker,
-          outliers: [row.outlier],
-        })}
-        seriesKey="latency"
-        barSize={32}
-      />
-      <Chart.Tooltip content={({ active, payload }) =>
-        active && payload?.[0] ? (
-          <div data-kind-ui="chart-tooltip">
-            Median: {payload[0].payload.median} ms
-          </div>
-        ) : null
-      } />
-    </Chart.BoxPlotChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+const data = [{ group: "A", summary: { lowerWhisker: 1, q1: 2, median: 3, q3: 4, upperWhisker: 5 } }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <BoxPlotChart config={config} data={data} aria-label="Chart data"><BoxPlotSeries seriesKey="sales" dataKey="summary" /></BoxPlotChart>;
+}
 ```
 
-Read the original row from `payload` to show named statistics such as the median.
+The local file owns presentation defaults. Set `config` to use its frame; omit it when composing inside your own `Root`. Series and marks remain explicit children. Line, Heatmap and ActivityRings supply their own context.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts; the editable wrapper also accepts `config`, `rootProps`, `height`, `width` and optional `legend` where it supplies a frame.
 
 ## Summary data
 

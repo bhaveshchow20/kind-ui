@@ -3,13 +3,13 @@
 Install the existing consumer skill:
 `npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`.
 
-Start with /llms.txt. Retrieve /markdown/installation.md and the relevant
-family Markdown; /markdown/agents/consumer.md explains the retrieval workflow.
+Start with https://kindui.dev/charts/docs/llms.txt. Retrieve https://kindui.dev/charts/docs/markdown/installation.md and the relevant
+family Markdown; https://kindui.dev/charts/docs/markdown/agents/consumer.md explains the retrieval workflow.
 The chart page's Copy prompt identifies the selected source, package version,
-setup manifest and task checks. /llms-full.txt is the optional complete set.
+setup manifest and task checks. https://kindui.dev/charts/docs/llms-full.txt is the optional complete set.
 
 Choose npm or shadcn on the existing chart page. Registry commands install only
-the selected editable composition and the npm core; use /r/registry.json to
+the selected editable composition and the npm core; use https://kindui.dev/charts/docs/r/registry.json to
 discover item names and version metadata. Standard shadcn MCP uses that index.
 Keep your lockfile and review local edits before updating a composition.
 
@@ -23,8 +23,8 @@ API before transferring a pattern from another chart.
 
 Adapt the example to the requested data. Keep units, domains, identities,
 visibility and missing-value policy explicit. Add a chart name and complete data
-alternative. For loading read /markdown/chart-components/root.md; for metadata
-read /markdown/chart-components/series-config.md.
+alternative. For loading read https://kindui.dev/charts/docs/markdown/chart-components/root.md; for metadata
+read https://kindui.dev/charts/docs/markdown/chart-components/series-config.md.
 
 Verify strict types and a production build, then inspect mobile containment,
 keyboard access, zero/missing values and reduced motion. Report actual checks.

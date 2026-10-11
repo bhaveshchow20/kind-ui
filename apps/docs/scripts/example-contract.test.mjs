@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { allExamples, examples, families, variantDefinitions } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { publicPath } from "../lib/routing.mjs";
 import { verificationFiles } from "./consumer-validation-files.mjs";
 import "./routing-contract.test.mjs";
@@ -138,11 +139,7 @@ test("Line variant sources match selected public defaults without runtime compil
       const files = filesFor(bundle, {}, value);
       assert.equal(files[`src/examples/${bundle.id}/example.tsx`], variant.source);
       assert.ok(variant.source.includes(`${variantDefinitions[bundle.id].prop} = "${value}"`));
-      assert.ok(
-        promptFor(bundle, {}, "https://docs.example", value).includes(
-          `/variants/${value}/example.tsx`,
-        ),
-      );
+      assert.ok(promptFor(bundle, {}, "https://docs.example", value).includes(`/${value}.tsx`));
     }
   }
 });
@@ -281,7 +278,10 @@ test("page Markdown keeps selected examples and readable presentation fallbacks"
       const source = variant
         ? bundle.variants[variant].source
         : bundle.files[`src/examples/${id}/example.tsx`];
-      assert.ok(markdown.includes(source.trimEnd()), `${key}: ${id}:${variant ?? "default"}`);
+      assert.ok(
+        markdown.includes(localExample(source, bundle.family, id).trimEnd()),
+        `${key}: ${id}:${variant ?? "default"}`,
+      );
     }
     if (mdx.includes("<ApiTable"))
       assert.ok(markdown.includes("| Prop | Type | Default | Description |"), key);
@@ -299,7 +299,7 @@ test("page Markdown keeps selected examples and readable presentation fallbacks"
     );
     assert.ok(!index.includes(`/markdown/${alias}.md`));
   }
-  assert.match(readFileSync("public/markdown/installation.md", "utf8"), /#### Next\.js/);
+  assert.match(readFileSync("public/markdown/installation.md", "utf8"), /## npm core/);
 });
 
 test("shared copied examples own complete data alternatives without preview duplication", () => {

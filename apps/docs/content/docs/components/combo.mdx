@@ -7,28 +7,28 @@ Compare shipped units with production capacity and a target in one plot.
 
 <ChartExample id="combo" />
 
+## Installation
+
+<ChartInstallation name="combo-chart" />
+
 ## Usage
 
-Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Composition sketch"
-<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-  <Chart.Legend />
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.ComboChart data={data} animate accessibilityLayer aria-label="Monthly production in units">
-      <Chart.CartesianGrid vertical={false} />
-      <Chart.XAxis dataKey="period" />
-      <Chart.YAxis domain={[0, 1200]} width={80} />
-      <Chart.AreaSeries dataKey="capacity" type="stepAfter" fillOpacity={0.18} />
-      <Chart.BarSeries dataKey="shipped" maxBarSize={32} />
-      <Chart.LineSeries dataKey="target" type="linear" dot={false} strokeDasharray="6 4" />
-      <Chart.Tooltip />
-    </Chart.ComboChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+```tsx title="Dashboard.tsx"
+import { ComboChart, LineSeries, XAxis, YAxis, CartesianGrid, Tooltip } from "@/components/charts/combo-chart";
+
+const data = [{ month: "Jan", sales: 120 }, { month: "Feb", sales: 180 }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <ComboChart config={config} data={data} aria-label="Chart data"><CartesianGrid vertical={false} /><XAxis dataKey="month" /><YAxis /><LineSeries dataKey="sales" /><Tooltip /></ComboChart>;
+}
 ```
 
-Set interpolation and paint on each series; format each axis for its measure.
+The local file owns presentation defaults. Set `config` to use its frame; omit it when composing inside your own `Root`. Series and marks remain explicit children. Line, Heatmap and ActivityRings supply their own context.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts; the editable wrapper also accepts `config`, `rootProps`, `height`, `width` and optional `legend` where it supplies a frame.
 
 ## Stacks and two axes
 

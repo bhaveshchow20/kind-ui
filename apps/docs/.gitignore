@@ -16,3 +16,5 @@ artifacts/
 .openai/
 
 public/r/
+
+public/registry-examples/

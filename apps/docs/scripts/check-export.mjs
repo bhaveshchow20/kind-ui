@@ -185,7 +185,7 @@ for (const file of markdownFiles("public/markdown")) {
   } else assert.ok(index.includes(publicPath(`/markdown/${file}`)), `Agent index omits ${file}`);
   assert.ok(fullIndex.includes(body.trimEnd()), `Full agent index omits canonical ${file}`);
   if (
-    /<(?:ComponentPlayground|ChartExample|ChartInstall|DistributionContent|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(
+    /<(?:ComponentPlayground|ChartExample|ChartInstallation|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(
       body,
     )
   )
@@ -206,7 +206,11 @@ console.log(
 
 assert.deepEqual(
   readdirSync(path.join(root, "r")).sort(),
-  ["registry.json", ...allExamples.map(({ id }) => `kind-${id}.json`)].sort(),
+  [
+    "registry.json",
+    ...JSON.parse(readFileSync("registry.json", "utf8")).items.map((item) => `${item.name}.json`),
+    ...allExamples.map(({ id }) => `kind-${id}.json`),
+  ].sort(),
 );
 for (const file of readdirSync(path.join(root, "r")))
   assert.deepEqual(

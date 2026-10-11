@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { families } from "../examples/catalog.mjs";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { checkMobileLayout } from "./check-mobile-layout.mjs";
 import { checkThemeSwitch } from "./check-theme-switch-browser.mjs";
 import { expectDimmedSeries } from "./interaction-paint.mjs";
@@ -87,15 +88,18 @@ try {
   await page.getByRole("option", { name: "Step after", exact: true }).click();
   await curve.getByRole("button", { name: "Copy prompt", exact: true }).click();
   const prompt = await page.evaluate(() => navigator.clipboard.readText());
-  assert.ok(prompt.includes("/examples/line-smooth/variants/stepAfter/example.tsx"));
+  assert.ok(prompt.includes("/registry-examples/line-smooth/stepAfter.tsx"));
   assert.ok(
     prompt.includes("/docs/components/line/") && prompt.includes("/markdown/installation.md"),
   );
   assert.ok(prompt.length < 7000);
   const selected = await context.request.get(
-    `${origin}/examples/line-smooth/variants/stepAfter/example.tsx`,
+    `${origin}/registry-examples/line-smooth/stepAfter.tsx`,
   );
-  assert.equal(await selected.text(), bundles["line-smooth"].variants.stepAfter.source);
+  assert.equal(
+    await selected.text(),
+    localExample(bundles["line-smooth"].variants.stepAfter.source, "line", "line-smooth"),
+  );
   const comparison = page.locator('[data-component="line-comparison"]');
   await comparison.getByRole("button", { name: "Target", exact: true }).click();
   assert.equal(

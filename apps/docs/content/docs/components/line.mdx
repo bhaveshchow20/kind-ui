@@ -7,24 +7,28 @@ Follow monthly visitors and compare trends across series.
 
 <LineExample id="line-start" />
 
+## Installation
+
+<ChartInstallation name="line-chart" />
+
 ## Usage
 
-Add one `LineSeries` per measure. Use `type="monotone"` for smooth curves and `legend={{}}` to show the legend.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Imports"
-import * as Chart from "@kind-ui/charts";
-import "@kind-ui/charts/styles.css";
+```tsx title="Dashboard.tsx"
+import { LineChart } from "@/components/charts/line-chart";
+
+const data = [{ month: "Jan", sales: 120 }, { month: "Feb", sales: 180 }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <LineChart data={data} config={config} xDataKey="month" aria-label="Monthly sales" />;
+}
 ```
 
-```tsx title="Composition sketch"
-<Chart.LineChart data={data} config={config} legend={{}} aria-label="Monthly visitors">
-  <Chart.CartesianGrid vertical={false} />
-  <Chart.XAxis dataKey="period" />
-  <Chart.YAxis />
-  <Chart.LineSeries dataKey="visitors" type="monotone" />
-  <Chart.Tooltip />
-</Chart.LineChart>
-```
+The local file sets presentation defaults. Configured `LineChart` supplies context, sizing and generated plot parts; explicit children replace those parts. Omit `config` for native composition inside your own `Root`.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts.
 
 ## Compose plot parts
 

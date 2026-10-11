@@ -4,6 +4,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
 import ts from "typescript";
 import { families } from "../examples/catalog.mjs";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { publicPath } from "../lib/routing.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
@@ -93,7 +94,8 @@ try {
           .first()
           .waitFor();
         assert.ok(
-          (await page.locator(".doc-body > h2").first().innerText()).startsWith("Usage"),
+          (await page.locator(".doc-body > h2").nth(0).innerText()).startsWith("Installation") &&
+            (await page.locator(".doc-body > h2").nth(1).innerText()).startsWith("Usage"),
           `${key} order`,
         );
         await expect(card.locator(".sr-only table")).toHaveCount(1);
@@ -112,7 +114,10 @@ try {
         }
         await expect(pending.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
         await pending.getByRole("tab", { name: "Code", exact: true }).click();
-        assert.equal((await pending.locator("pre").textContent()).trim(), loading.source.trim());
+        assert.equal(
+          (await pending.locator("pre").textContent()).trim(),
+          localExample(loading.source, family, id).trim(),
+        );
         await pending.getByRole("tab", { name: "Preview", exact: true }).click();
       }
       const measurements = await page.evaluate(() => {

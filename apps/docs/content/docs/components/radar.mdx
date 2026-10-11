@@ -7,27 +7,28 @@ Compare Studio and Field scores on a common 0–100 scale.
 
 <ChartExample id="radar" />
 
+## Installation
+
+<ChartInstallation name="radar-chart" />
+
 ## Usage
 
-Compare measures on a shared radial scale with one `RadarSeries` per profile.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Composition sketch"
-<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-  <Chart.Legend />
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.RadarChart data={data} animate outerRadius="68%" aria-label="Product research scores out of 100">
-      <Chart.PolarGrid radialLines={false} />
-      <Chart.PolarAngleAxis dataKey="period" />
-      <Chart.PolarRadiusAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} />
-      <Chart.RadarSeries dataKey="studio" fillOpacity={0.18} />
-      <Chart.RadarSeries dataKey="field" fillOpacity={0.18} />
-      <Chart.Tooltip />
-    </Chart.RadarChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+```tsx title="Dashboard.tsx"
+import { RadarChart, RadarSeries, PolarAngleAxis, PolarGrid } from "@/components/charts/radar-chart";
+
+const data = [{ metric: "Speed", sales: 80 }, { metric: "Quality", sales: 90 }, { metric: "Cost", sales: 70 }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <RadarChart config={config} data={data} aria-label="Chart data"><PolarGrid /><PolarAngleAxis dataKey="metric" /><RadarSeries dataKey="sales" /></RadarChart>;
+}
 ```
 
-Use comparable units and a fixed domain across spokes. These research scores share a 0–100 scale.
+The local file owns presentation defaults. Set `config` to use its frame; omit it when composing inside your own `Root`. Series and marks remain explicit children. Line, Heatmap and ActivityRings supply their own context.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts; the editable wrapper also accepts `config`, `rootProps`, `height`, `width` and optional `legend` where it supplies a frame.
 
 ## Center-out motion
 

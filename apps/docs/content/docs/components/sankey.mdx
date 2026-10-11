@@ -7,28 +7,28 @@ Trace quantities from sources through intermediate stages to destinations.
 
 <ChartExample id="sankey" />
 
+## Installation
+
+<ChartInstallation name="sankey-chart" />
+
 ## Usage
 
-Open **Code** for the complete three-stage diagram and its flow data. Click a ribbon to inspect its route; the text alternative retains every quantity.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Composition sketch"
-<Chart.Root config={nodeConfig}
-  interaction={{ kind: "node", mode: "focus", eligibleKeys: Object.keys(nodeConfig) }}>
-  <Chart.ResponsiveContainer width="100%" height={250}>
-    <Chart.SankeyChart
-      data={data} nodeConfig={nodeConfig} interactionBinding="root"
-      animate={{ revealDurationMs: 900 }}
-    >
-      <Tooltip isAnimationActive={false} />
-    </Chart.SankeyChart>
-  </Chart.ResponsiveContainer>
-  <Chart.SankeyLegend config={nodeConfig} interactionBinding="root" />
-</Chart.Root>
+```tsx title="Dashboard.tsx"
+import { SankeyChart } from "@/components/charts/sankey-chart";
+
+const data = { nodes: [{ id: "a", name: "Source" }, { id: "b", name: "Destination" }], links: [{ id: "ab", source: "a", target: "b", value: 12 }] };
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <SankeyChart config={config} data={data} title="Flow from source to destination" aria-label="Chart data"></SankeyChart>;
+}
 ```
 
-Use a node-focus `Root` to connect the legend to the diagram. Standalone Sankey needs no Root or axes. Map every node ID in `nodeConfig` to a label and color.
+The local file owns presentation defaults. Set `config` to use its frame; omit it when composing inside your own `Root`. Series and marks remain explicit children. Line, Heatmap and ActivityRings supply their own context.
 
-Nodes use their own color; solid links use the source color. Import `Tooltip` from **Recharts**.
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts; the editable wrapper also accepts `config`, `rootProps`, `height`, `width` and optional `legend` where it supplies a frame.
 
 ## Node colors
 

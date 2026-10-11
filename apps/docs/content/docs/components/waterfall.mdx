@@ -7,30 +7,28 @@ Trace how sales, refunds and costs change a cash balance.
 
 <ChartExample id="waterfall" />
 
+## Installation
+
+<ChartInstallation name="waterfall-chart" />
+
 ## Usage
 
-Use `computeWaterfallData` to prepare rows for the bars and connectors.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Composition sketch"
-<Chart.Root config={config}>
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.WaterfallChart data={data} layout="vertical" animate accessibilityLayer>
-      <Chart.XAxis type="number" />
-      <Chart.YAxis type="category" dataKey="id" />
-      <Chart.WaterfallConnectors data={data} position="middle" />
-      <Chart.WaterfallSeries>
-        {data.map((row) => <Chart.Cell key={row.id} fill={row.kind !== "delta" ? "#733bff" : (row.value ?? 0) < 0 ? "#be123c" : "#15803d"} />)}
-      </Chart.WaterfallSeries>
-      <Chart.Tooltip filterNull={false} content={(tooltip) => {
-        const row = data.find((row) => row.id === String(tooltip.label));
-        return tooltip.active && row ? <div>{row.label}: {row.value ?? "Unknown"} ($k); balance {row.balance ?? "Unknown"} ($k)</div> : null;
-      }} />
-    </Chart.WaterfallChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+```tsx title="Dashboard.tsx"
+import { WaterfallChart, WaterfallSeries } from "@/components/charts/waterfall-chart";
+
+const data = [{ label: "Start", value: 100, kind: "total" as const }, { label: "Change", value: -20 }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <WaterfallChart config={config} data={data} aria-label="Chart data"><WaterfallSeries seriesKey="sales" /></WaterfallChart>;
+}
 ```
 
-Use one unstacked series. `layout="vertical"` produces horizontal bars.
+The local file owns presentation defaults. Set `config` to use its frame; omit it when composing inside your own `Root`. Series and marks remain explicit children. Line, Heatmap and ActivityRings supply their own context.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts; the editable wrapper also accepts `config`, `rootProps`, `height`, `width` and optional `legend` where it supplies a frame.
 
 ## Inputs and checkpoints
 

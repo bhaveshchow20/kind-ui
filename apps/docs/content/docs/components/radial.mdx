@@ -7,28 +7,45 @@ Track project completion on a fixed percentage scale.
 
 <ChartExample id="radial" />
 
+## Installation
+
+<ChartInstallation name="radial-bar-chart" />
+
 ## Usage
 
-Use a fixed numeric domain, hide axis ticks and give each ring a stable category key. Labels start visible; use the chart’s Labels control to hide them.
+Supply your own data and accessible name. Both installation paths use this local component.
 
-```tsx title="Composition sketch"
-<Chart.Root config={config}>
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.RadialBarChart data={data} categoryKey="period" animate startAngle={90} endAngle={-270} innerRadius="18%" outerRadius="94%">
-      <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-      <Chart.PolarRadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
-      <Chart.RadialBarSeries dataKey="progress" background={{ fill: "#e9e5f1" }} />
-      <Chart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
-    </Chart.RadialBarChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+```tsx title="Dashboard.tsx"
+import { RadialBarChart, RadialBarSeries } from "@/components/charts/radial-bar-chart";
+
+const data = [{ key: "sales", sales: 72 }];
+const config = { sales: { label: "Sales", color: "#733bff" } };
+
+export function Dashboard() {
+  return <RadialBarChart config={config} data={data} aria-label="Chart data"><RadialBarSeries dataKey="sales" seriesKey="sales" /></RadialBarChart>;
+}
 ```
 
-<Callout title="Note">Values remain available in the tooltip and accessible data table when labels are hidden.</Callout>
+The local file owns presentation defaults. Set `config` to use its frame; omit it when composing inside your own `Root`. Series and marks remain explicit children. Line, Heatmap and ActivityRings supply their own context.
+
+See the [npm core installation](/docs/installation/#npm-core) for direct package imports. The API reference below describes the underlying core parts; the editable wrapper also accepts `config`, `rootProps`, `height`, `width` and optional `legend` where it supplies a frame.
 
 ## Activity rings
 
 Give each ring a config key, value and optional domain. `ActivityRings` includes tracks, tooltip and a legend.
+
+<ChartInstallation name="activity-rings" />
+
+```tsx title="Activity.tsx"
+import { ActivityRings } from "@/components/charts/activity-rings";
+
+const rings = [{ key: "move", value: 350, domain: [0, 500] as const }];
+const config = { move: { label: "Move", color: "#e02266" } };
+
+export function Dashboard() {
+  return <ActivityRings rings={rings} config={config} aria-label="Daily activity" />;
+}
+```
 
 <ChartExample id="radial-activity" />
 

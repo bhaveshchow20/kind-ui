@@ -6,7 +6,7 @@ import { chromium } from "@playwright/test";
 
 const root = path.resolve("artifacts/registry-consumer/dist");
 const evidence = JSON.parse(readFileSync("artifacts/registry-consumer/registry-results.json"));
-assert.equal(evidence.items.length, 51);
+assert.equal(evidence.items.length, 14);
 const server = createServer((req, res) => {
   try {
     const pathname = new URL(req.url, "http://localhost").pathname;
@@ -134,6 +134,28 @@ try {
     motion: "normal and reduced",
     identityPreserved: true,
   });
+  // Exercise opt-in local frame composition as well as existing native caller compositions.
+  for (const name of [
+    "area",
+    "bar",
+    "box-plot",
+    "combo",
+    "heatmap",
+    "histogram",
+    "line",
+    "pie",
+    "radar",
+    "radial",
+    "sankey",
+    "scatter",
+    "waterfall",
+    "activity-rings",
+  ]) {
+    await page.goto(`${origin}/?recipe=installed-${name}`);
+    const chart = page.locator(`[data-recipe="installed-${name}"]`);
+    await chart.locator('svg, [data-kind-ui="heatmap-grid"]').first().waitFor();
+    results.push({ id: `installed-${name}`, passed: true, callerData: true });
+  }
   assert.deepEqual(errors, []);
   mkdirSync("artifacts/registry", { recursive: true });
   writeFileSync(

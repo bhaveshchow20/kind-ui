@@ -8,6 +8,8 @@ import defaultComponents from "fumadocs-ui/mdx";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import bundles from "@/generated/all-examples.json";
+import installations from "@/generated/registry-installations.json";
+import { localExample } from "@/lib/registry-catalog.mjs";
 import { docRoute, publicPath } from "@/lib/routing.mjs";
 import { source } from "@/lib/source";
 import { ApiTable } from "./api-table";
@@ -17,7 +19,7 @@ import {
   ComponentPlayground,
 } from "./component-playground";
 import { CopyMarkdown } from "./copy-markdown";
-import { ChartInstall, DistributionContent, DistributionSwitcher } from "./distribution";
+import { ChartInstallation } from "./distribution";
 import { MobileDocsNavigation } from "./glass-docs-layout";
 import { TrackedCodeBlock } from "./tracked-code-block";
 
@@ -52,13 +54,15 @@ async function LineExample({
       },
     });
   }
-  const sourceCode = await codeBlock(bundle.files[`src/examples/${id}/example.tsx`]);
+  const sourceCode = await codeBlock(
+    localExample(bundle.files[`src/examples/${id}/example.tsx`], bundle.family, id),
+  );
   const variantCode = bundle.variants
     ? Object.fromEntries(
         await Promise.all(
           Object.entries(bundle.variants).map(async ([value, variant]) => [
             value,
-            await codeBlock(variant.source),
+            await codeBlock(localExample(variant.source, bundle.family, id)),
           ]),
         ),
       )
@@ -96,7 +100,6 @@ export function renderDoc(slug?: string[]) {
             <CopyMarkdown path={publicPath(`/markdown/${key}.md`)} />
           </div>
           <DocsDescription>{page.data.description}</DocsDescription>
-          {(key.startsWith("components/") || key === "installation") && <DistributionSwitcher />}
         </header>
         <DocsBody className="doc-body">
           <Content
@@ -105,8 +108,9 @@ export function renderDoc(slug?: string[]) {
               a: ({ href = "#", ...props }) => (
                 <defaultComponents.a {...props} href={docRoute(href)} />
               ),
-              ChartInstall,
-              DistributionContent,
+              ChartInstallation: ({ name }: { name: keyof typeof installations }) => (
+                <ChartInstallation item={installations[name]} />
+              ),
               LineExample,
               ChartExample: LineExample,
               AreaExample: LineExample,
