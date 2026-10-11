@@ -79,3 +79,14 @@ test("copied examples and agent guidance omit removed chart wrappers and shortcu
       assert.doesNotMatch(match[1], /\b(?:Root|RootProps|ResponsiveContainer)\b/, path);
   }
 });
+
+test("shared legend browser checks visit current compound documentation pages", async () => {
+  const browserCheck = await text("scripts/check-legend-browser.mjs");
+  const owners = browserCheck.match(/for \(const owner of \[([\s\S]*?)\]\)/)[1];
+  const names = [...owners.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+  assert.ok(names.includes("chart"));
+  for (const name of names) {
+    const page = await text(`content/docs/chart-components/${name}.mdx`);
+    assert.match(page, /<ChartExample id="[^"]+"/);
+  }
+});

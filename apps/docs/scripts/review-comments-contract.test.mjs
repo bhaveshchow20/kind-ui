@@ -105,3 +105,15 @@ test("legacy interaction fragment and Line legend remain available", async () =>
   const usage = line.match(/```tsx title="Composition sketch"\n([\s\S]*?)```/)[1];
   assert.match(usage, /<LineChart.Legend\s*\/>/);
 });
+
+test("legacy root and responsive-container usage links retain their destination", async () => {
+  for (const legacy of ["root", "responsive-container"]) {
+    const destination = canonicalDocSlugs(["chart-components", legacy]);
+    assert.deepEqual(destination, ["chart-components", "chart"]);
+    const page = await readFile(`content/docs/${destination.join("/")}.mdx`, "utf8");
+    assert.match(page, /^## Usage$/m);
+    const usage = page.split("## Usage\n")[1].split("## Sizing")[0];
+    assert.match(usage, /<BarChart config=\{config\}/);
+    assert.match(usage, /<BarChart.Series/);
+  }
+});
