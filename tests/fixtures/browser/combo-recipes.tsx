@@ -42,9 +42,17 @@ const money = (value: unknown) => `$${value}k`;
 /** Different native axes keep counts and latency in their own units. */
 export function LoadCombo({ animate = false, data = loadData }: ComboRecipeProps) {
   const [visible, setVisible] = useState(["volume", "buffer", "latency"]);
+  const [selected, setSelected] = useState<string | null>(null);
   return (
     <Chart.ComboChart
       height={250}
+      interaction={{
+        kind: "series",
+        mode: "focus",
+        eligibleKeys: ["volume", "buffer", "latency"],
+        selected,
+        onSelectionChange: setSelected,
+      }}
       config={{
         volume: { label: "Completed", color: "#2563eb", formatValue: tasks },
         buffer: { label: "Queued", color: "#93c5fd", formatValue: tasks },
@@ -93,9 +101,17 @@ export function LoadCombo({ animate = false, data = loadData }: ComboRecipeProps
 /** Sign stacking uses separate positive and negative totals, including a true zero. */
 export function BalanceCombo({ animate = false, data = balanceData }: ComboRecipeProps) {
   const [visible, setVisible] = useState(["volume", "buffer", "latency"]);
+  const [selected, setSelected] = useState<string | null>(null);
   return (
     <Chart.ComboChart
       height={250}
+      interaction={{
+        kind: "series",
+        mode: "focus",
+        eligibleKeys: ["volume", "buffer", "latency"],
+        selected,
+        onSelectionChange: setSelected,
+      }}
       config={{
         volume: { label: "Product", color: "#0d9488", formatValue: money },
         buffer: { label: "Services", color: "#99d5cb", formatValue: money },
@@ -132,9 +148,17 @@ export function BalanceCombo({ animate = false, data = balanceData }: ComboRecip
 /** A projected envelope and a custom native marker distinguish forecast from actuals. */
 export function ForecastCombo({ animate = false, data = forecastData }: ComboRecipeProps) {
   const [visible, setVisible] = useState(["volume", "buffer", "latency"]);
+  const [selected, setSelected] = useState<string | null>(null);
   return (
     <Chart.ComboChart
       height={250}
+      interaction={{
+        kind: "series",
+        mode: "focus",
+        eligibleKeys: ["volume", "buffer", "latency"],
+        selected,
+        onSelectionChange: setSelected,
+      }}
       config={{
         volume: { label: "Actual", color: "#334155", formatValue: tasks },
         buffer: { label: "Capacity", color: "#cbd5e1", formatValue: tasks },

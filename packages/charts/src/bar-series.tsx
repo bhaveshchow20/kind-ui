@@ -443,7 +443,7 @@ function CategoryBar({
   // Native axis inspection owns the category, including whitespace above and between bars.
   // A painted mark's leave must not clear a category while the cursor remains in its band.
   const mark = useRef<SVGGElement>(null);
-  const [pointerInside, setPointerInside] = useState(false);
+  const [pointerInside, setPointerInside] = useState<boolean | null>(null);
   useLayoutEffect(() => {
     const plot = mark.current?.closest("svg.recharts-surface");
     if (!plot) return;
@@ -453,7 +453,9 @@ function CategoryBar({
     plot.addEventListener("pointerenter", enter);
     plot.addEventListener("pointerleave", leave);
     plot.addEventListener("pointercancel", leave);
-    setPointerInside(plot.matches(":hover"));
+    // A replacement native SVG has no :hover path until the browser processes
+    // another pointer event; its initial absence is not a real plot exit.
+    if (plot.matches(":hover")) setPointerInside(true);
     return () => {
       plot.removeEventListener("pointerenter", enter);
       plot.removeEventListener("pointerleave", leave);
@@ -468,6 +470,9 @@ function CategoryBar({
     // Cached native tooltip categories must not reclaim focus from HTML legend controls.
     // Retain keyboard inspection while the plot is focused, even during pointer overlap.
     else if (!nativeInspection) emphasis.leave("keyboard");
+    // Native portals can remount a retained category during consumer updates.
+    // Wait for its actual plot hover state before clearing that stable identity.
+    if (pointerInside === null) return;
     if (active && pointer && !keyboard && hover && pointerInside) emphasis.enter("pointer");
     else if (!pointerInside || !hover || (pointer && !active)) emphasis.leave("pointer");
   }, [active, keyboard, pointer, hover, pointerInside, emphasis.enter, emphasis.leave]);

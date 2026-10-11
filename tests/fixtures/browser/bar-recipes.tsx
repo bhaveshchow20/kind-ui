@@ -95,6 +95,7 @@ function BarFrame<T extends { category: string }>({
             ? {
                 content: (tooltip) => (
                   <Chart.TooltipContent
+                    itemKey={() => String(tooltip.label)}
                     tooltip={{
                       ...tooltip,
                       payload: tooltip.payload.map((entry) => {

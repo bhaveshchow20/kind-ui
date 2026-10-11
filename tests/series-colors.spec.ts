@@ -144,12 +144,17 @@ test("theme stops switch in place across chart paints and swatches", async ({
   await page.screenshot({ path: testInfo.outputPath("pattern.png"), fullPage: true });
   const symbolLegend = roots.first().getByTestId("symbols");
   const symbol = symbolLegend.locator('[data-legend-shape="square"]');
-  expect(await symbol.evaluate((node) => getComputedStyle(node).fill)).toContain(ids[0]);
+  const nativePaint = await roots
+    .first()
+    .locator(".recharts-surface linearGradient")
+    .first()
+    .getAttribute("id");
+  expect(await symbol.evaluate((node) => getComputedStyle(node).fill)).toContain(nativePaint);
   await expectLastVisibleGuard(
     symbolLegend.getByRole("button", { name: "Value", exact: true }),
     firstGroup.locator(".recharts-line-curve, .recharts-bar-rectangle path"),
   );
-  expect(await symbol.evaluate((node) => getComputedStyle(node).fill)).toContain(ids[0]);
+  expect(await symbol.evaluate((node) => getComputedStyle(node).fill)).toContain(nativePaint);
   await page.getByRole("button", { name: "External visibility", exact: true }).click();
   const hiddenColor = await symbol.evaluate((node) => getComputedStyle(node).color);
   await expect(symbol).toHaveCSS("fill", hiddenColor);

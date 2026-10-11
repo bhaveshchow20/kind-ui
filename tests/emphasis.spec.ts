@@ -124,6 +124,14 @@ test("stable IDs, removal, opt-out, custom portal and no-dim comparison compose"
     .getByRole("button", { name: "Reorder", exact: true })
     .evaluate((button: HTMLButtonElement) => button.click());
   await expect(plot.locator(dimmed)).toHaveCount(4);
+  // Replacement native marks retain identity until a real pointer exit.
+  await page.mouse.move(0, 0);
+  await expect(plot.locator(dimmed)).toHaveCount(0);
+  await plot
+    .locator(".recharts-rectangle")
+    .nth(2)
+    .hover({ position: { x: 10, y: 10 } });
+  await expect(plot.locator(dimmed)).toHaveCount(4);
   await page
     .getByRole("button", { name: "Remove A", exact: true })
     .evaluate((button: HTMLButtonElement) => button.click());

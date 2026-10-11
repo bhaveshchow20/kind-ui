@@ -82,8 +82,7 @@ export function EmphasisProvider({
   const clear = useCallback((channel: Channel, owner?: string, target?: EmphasisTarget) => {
     (channel === "pointer" ? setPointer : setKeyboard)((old) =>
       owner === undefined ||
-      old?.owner === owner ||
-      (target && old && identity(target) === identity(old.target))
+      (target ? old !== null && identity(target) === identity(old.target) : old?.owner === owner)
         ? null
         : old,
     );

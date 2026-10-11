@@ -590,7 +590,7 @@ function ContinuityHost() {
       <output aria-label="Oracle state">
         {scenario}/{String(included)}/{String(donut)}/{String(gaps)}/{String(rings)}
       </output>
-      <div style={{ position: "relative", width: 300, background: "white" }}>
+      <div data-pie-oracle-frame style={{ position: "relative", width: 300, background: "white" }}>
         <Chart.PieChart config={config} width={300} height={280} aria-label="Kind continuity">
           <defs>
             <clipPath id="host-clip">

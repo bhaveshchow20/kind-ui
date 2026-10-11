@@ -64,18 +64,34 @@ test("packed native axes horizontal layout, reversed categories and resize", asy
   await page.getByRole("button", { name: "Orientation", exact: true }).click();
   for (const control of [null, "Reverse", "Resize"]) {
     if (control) await page.getByRole("button", { name: control, exact: true }).click();
+    await expect(page.getByRole("application")).toHaveAttribute(
+      "width",
+      control === "Resize" ? "240" : "640",
+    );
     const data: Row[] = JSON.parse(
       (await page.locator("[data-probe]").getAttribute("data-probe")) ?? "[]",
     );
     for (const row of data.filter((row) => row.range && row.range[0] !== row.range[1])) {
-      const b = await page
-        .locator(`.recharts-bar-rectangle path[id="${row.id}"]`)
-        .evaluate((node) => {
-          const b = (node as SVGGraphicsElement).getBBox();
-          return { x: b.x, width: b.width };
-        });
-      expect(b.x).toBeCloseTo(Math.min(row.first ?? NaN, row.last ?? NaN), 2);
-      expect(b.width).toBeCloseTo(Math.abs((row.first ?? NaN) - (row.last ?? NaN)), 2);
+      await expect
+        .poll(() =>
+          page.locator("[data-probe]").evaluate((probe, id) => {
+            const current = (JSON.parse(probe.getAttribute("data-probe") ?? "[]") as Row[]).find(
+              (item) => item.id === id,
+            );
+            const mark = probe
+              .closest("svg")
+              ?.querySelector<SVGGraphicsElement>(
+                `.recharts-bar-rectangle path[id="${CSS.escape(id)}"]`,
+              );
+            if (!mark || current?.first == null || current.last == null) return Infinity;
+            const bounds = mark.getBBox();
+            return Math.max(
+              Math.abs(bounds.x - Math.min(current.first, current.last)),
+              Math.abs(bounds.width - Math.abs(current.first - current.last)),
+            );
+          }, row.id),
+        )
+        .toBeLessThan(0.005);
     }
     await expect(page.locator(links)).toHaveCount(6);
   }
