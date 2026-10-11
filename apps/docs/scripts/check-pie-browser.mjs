@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { expectHiddenPaint } from "./interaction-paint.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
@@ -72,12 +73,12 @@ try {
   await blockCopy.click();
   assert.equal(
     (await page.evaluate(() => navigator.clipboard.readText())).trim(),
-    bundles.pie.variants.donut.source.trim(),
+    localExample(bundles.pie.variants.donut.source, "pie", "pie").trim(),
   );
   await first.getByRole("button", { name: "Copy prompt", exact: true }).click();
   assert.ok(
     (await page.evaluate(() => navigator.clipboard.readText())).includes(
-      "/examples/pie/variants/donut/example.tsx",
+      "/registry-examples/pie/donut.tsx",
     ),
   );
   const viewport = first.locator(".line-code-viewport");

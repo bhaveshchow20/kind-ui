@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { expectDimmedSeries } from "./interaction-paint.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
@@ -98,7 +99,10 @@ try {
       .evaluate((node) => node.getBoundingClientRect().height);
     assert.equal(codeHeight, previewHeight);
     const code = await workbench.locator("pre").textContent();
-    assert.equal(code.trim(), bundle.files[`src/examples/${id}/example.tsx`].trim());
+    assert.equal(
+      code.trim(),
+      localExample(bundle.files[`src/examples/${id}/example.tsx`], "combo", id).trim(),
+    );
     await workbench.locator(".line-code-viewport").evaluate((node) => {
       node.scrollTop = 60;
     });
@@ -141,11 +145,14 @@ try {
       0,
     );
     await motion.getByRole("tab", { name: "Code", exact: true }).click();
-    assert.equal((await motion.locator("pre").textContent()).trim(), variant.source.trim());
+    assert.equal(
+      (await motion.locator("pre").textContent()).trim(),
+      localExample(variant.source, "combo", "combo-motion").trim(),
+    );
     await motion.locator("button.copy-prompt").click();
     assert.ok(
       (await page.evaluate(() => navigator.clipboard.readText())).includes(
-        `/variants/${value}/example.tsx`,
+        `/registry-examples/combo-motion/${value}.tsx`,
       ),
     );
     await motion.getByRole("tab", { name: "Preview", exact: true }).click();

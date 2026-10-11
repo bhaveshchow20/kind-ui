@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
@@ -142,7 +143,11 @@ try {
     const code = await materials.locator("pre").innerText();
     assert.equal(
       code.replace(/\s+/g, ""),
-      bundles["box-plot-materials"].variants[value].source.replace(/\s+/g, ""),
+      localExample(
+        bundles["box-plot-materials"].variants[value].source,
+        "box-plot",
+        "box-plot-materials",
+      ).replace(/\s+/g, ""),
     );
     await materials.getByRole("tab", { name: "Preview", exact: true }).click();
   }
@@ -157,11 +162,18 @@ try {
   await materials.getByRole("button", { name: "Copy prompt", exact: true }).click();
   const prompt = await page.evaluate(() => navigator.clipboard.readText());
   assert.match(prompt, /docs\/components\/box-plot\//);
-  assert.match(prompt, /variants\/default\/example.tsx/);
+  assert.match(prompt, /registry-examples\/box-plot-materials\/default.tsx/);
   const linkedSource = await (
-    await page.request.get(`${origin}/examples/box-plot-materials/variants/default/example.tsx`)
+    await page.request.get(`${origin}/registry-examples/box-plot-materials/default.tsx`)
   ).text();
-  assert.equal(linkedSource, bundles["box-plot-materials"].variants.default.source);
+  assert.equal(
+    linkedSource,
+    localExample(
+      bundles["box-plot-materials"].variants.default.source,
+      "box-plot",
+      "box-plot-materials",
+    ),
+  );
   for (const region of [page.locator("#nd-toc"), page.locator(".line-props-scroll").first()]) {
     await region.scrollIntoViewIfNeeded();
     await region.hover();

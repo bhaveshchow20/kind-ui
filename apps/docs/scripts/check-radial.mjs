@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { expectDimmedSeries } from "./interaction-paint.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
@@ -49,12 +50,12 @@ try {
     await rings.getByRole("tab", { name: "Code", exact: true }).click();
     assert.equal(
       (await rings.locator(".line-code-block pre").textContent()).trim(),
-      bundles.radial.variants.visible.source.trim(),
+      localExample(bundles.radial.variants.visible.source, "radial", "radial").trim(),
     );
     await rings.getByRole("button", { name: "Copy prompt" }).click();
     assert.ok(
       (await page.evaluate(() => navigator.clipboard.readText())).includes(
-        "/variants/visible/example.tsx",
+        "/registry-examples/radial/visible.tsx",
       ),
     );
     await rings.getByRole("tab", { name: "Preview", exact: true }).click();
@@ -94,12 +95,16 @@ try {
     const code = gauge.locator(".line-code-block pre");
     assert.equal(
       (await code.textContent()).trim(),
-      bundles["radial-gauge"].variants.anticlockwise.source.trim(),
+      localExample(
+        bundles["radial-gauge"].variants.anticlockwise.source,
+        "radial",
+        "radial-gauge",
+      ).trim(),
     );
     await gauge.getByRole("button", { name: "Copy prompt" }).click();
     const prompt = await page.evaluate(() => navigator.clipboard.readText());
     assert.ok(prompt.includes("/docs/components/radial/"));
-    assert.ok(prompt.includes("/variants/anticlockwise/example.tsx"));
+    assert.ok(prompt.includes("/registry-examples/radial-gauge/anticlockwise.tsx"));
     await gauge.getByRole("tab", { name: "Preview", exact: true }).click();
     await page.screenshot({ path: `artifacts/radial/${width}-gauge.png` });
     const activity = page.locator('[data-component="radial-activity"]');

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = "http://127.0.0.1:6373";
@@ -96,12 +97,12 @@ try {
         await material.getByRole("tab", { name: "Code", exact: true }).click();
         assert.equal(
           (await material.locator(".line-code-block pre").textContent()).trim(),
-          variant.source.trim(),
+          localExample(variant.source, "histogram", "histogram-materials").trim(),
         );
         await material.locator(".copy-prompt").click();
         assert.ok(
           (await page.evaluate(() => navigator.clipboard.readText())).includes(
-            `/variants/${value}/example.tsx`,
+            `/registry-examples/histogram-materials/${value}.tsx`,
           ),
         );
         await material.getByRole("tab", { name: "Preview", exact: true }).click();

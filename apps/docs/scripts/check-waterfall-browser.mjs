@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
@@ -44,16 +45,22 @@ try {
           .locator('[data-kind-ui="chart-loading-skeleton"]')
           .waitFor({ state: "visible" });
         await pending.getByRole("tab", { name: "Code", exact: true }).click();
-        assert.equal((await pending.locator("pre").textContent()).trimEnd(), v.source.trimEnd());
+        assert.equal(
+          (await pending.locator("pre").textContent()).trimEnd(),
+          localExample(v.source, "waterfall", id).trimEnd(),
+        );
         await pending.getByRole("button", { name: "Copy Text", exact: true }).click();
         assert.equal(
           (await p.evaluate(() => navigator.clipboard.readText())).trimEnd(),
-          v.source.trimEnd(),
+          localExample(v.source, "waterfall", id).trimEnd(),
         );
         await pending.locator("button.copy-prompt").click();
         const prompt = await p.evaluate(() => navigator.clipboard.readText());
         const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
-        assert.equal((await (await context.request.get(url)).text()).trimEnd(), v.source.trimEnd());
+        assert.equal(
+          (await (await context.request.get(url)).text()).trimEnd(),
+          localExample(v.source, "waterfall", id).trimEnd(),
+        );
         await pending.getByRole("tab", { name: "Preview", exact: true }).click();
         assert.equal(await card.locator('[data-kind-ui="chart-loading-skeleton"]').count(), 0);
         evidence.variants.push({ id, value, loading: "fixed preview, code and copy parity" });
@@ -64,11 +71,14 @@ try {
         await p.getByRole("option", { name: v.label, exact: true }).click();
       }
       await card.getByRole("tab", { name: "Code", exact: true }).click();
-      assert.equal((await card.locator("pre").textContent()).trimEnd(), v.source.trimEnd());
+      assert.equal(
+        (await card.locator("pre").textContent()).trimEnd(),
+        localExample(v.source, "waterfall", id).trimEnd(),
+      );
       await card.getByRole("button", { name: "Copy Text", exact: true }).click();
       assert.equal(
         (await p.evaluate(() => navigator.clipboard.readText())).trimEnd(),
-        v.source.trimEnd(),
+        localExample(v.source, "waterfall", id).trimEnd(),
       );
       await card.getByRole("tab", { name: "Preview", exact: true }).click();
 

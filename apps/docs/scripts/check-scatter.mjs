@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { expectDimmedSeries } from "./interaction-paint.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
@@ -51,19 +52,19 @@ try {
         await pending.getByRole("tab", { name: "Code", exact: true }).click();
         assert.equal(
           (await pending.locator("pre").textContent()).trimEnd(),
-          option.source.trimEnd(),
+          localExample(option.source, "scatter", id).trimEnd(),
         );
         await pending.getByRole("button", { name: "Copy Text", exact: true }).click();
         assert.equal(
           (await page.evaluate(() => navigator.clipboard.readText())).trimEnd(),
-          option.source.trimEnd(),
+          localExample(option.source, "scatter", id).trimEnd(),
         );
         await pending.locator("button.copy-prompt").click();
         const prompt = await page.evaluate(() => navigator.clipboard.readText());
         const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
         assert.equal(
           (await (await context.request.get(url)).text()).trimEnd(),
-          option.source.trimEnd(),
+          localExample(option.source, "scatter", id).trimEnd(),
         );
         await pending.getByRole("tab", { name: "Preview", exact: true }).click();
         assert.equal(await card.locator('[data-kind-ui="chart-loading-skeleton"]').count(), 0);
@@ -76,11 +77,14 @@ try {
       }
       await card.getByRole("tab", { name: "Code", exact: true }).click();
       assert.equal(await card.locator("figcaption").textContent(), "example.tsx");
-      assert.equal((await card.locator("pre").textContent()).trimEnd(), option.source.trimEnd());
+      assert.equal(
+        (await card.locator("pre").textContent()).trimEnd(),
+        localExample(option.source, "scatter", id).trimEnd(),
+      );
       await card.getByRole("button", { name: "Copy Text", exact: true }).click();
       assert.equal(
         (await page.evaluate(() => navigator.clipboard.readText())).trimEnd(),
-        option.source.trimEnd(),
+        localExample(option.source, "scatter", id).trimEnd(),
       );
       assert.ok(
         await card
@@ -96,7 +100,7 @@ try {
       const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
       assert.equal(
         (await (await context.request.get(url)).text()).trimEnd(),
-        option.source.trimEnd(),
+        localExample(option.source, "scatter", id).trimEnd(),
       );
       if (id === "scatter-materials") {
         assert.equal(

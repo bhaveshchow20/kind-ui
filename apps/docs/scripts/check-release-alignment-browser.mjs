@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium, expect } from "@playwright/test";
+import { localExample, registryName } from "../lib/registry-catalog.mjs";
 import { basePath, publicPath } from "../lib/routing.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:7175";
@@ -49,7 +50,11 @@ try {
           .waitFor();
         const previewHeight = (await card.locator(".preview-panel").boundingBox()).height;
         await card.getByRole("tab", { name: "Code", exact: true }).click();
-        const source = bundles[id].files[`src/examples/${id}/example.tsx`];
+        const source = localExample(
+          bundles[id].files[`src/examples/${id}/example.tsx`],
+          family,
+          id,
+        );
         assert.equal((await card.locator("pre").textContent()).trim(), source.trim(), `${id} Code`);
         await card.getByRole("button", { name: "Copy Text", exact: true }).click();
         assert.equal(
@@ -60,7 +65,7 @@ try {
         await card.getByRole("button", { name: "Copy prompt", exact: true }).click();
         const prompt = await page.evaluate(() => navigator.clipboard.readText());
         assert.ok(prompt.includes(origin + publicPath(`/docs/components/${family}/`)));
-        assert.ok(prompt.includes("Install @kind-ui/charts"));
+        assert.ok(prompt.includes(`npx shadcn@latest add @kind-ui/${registryName(family, id)}`));
         assert.ok(!prompt.includes(".tgz"));
         assert.ok(!prompt.includes("sourceCommit"));
         assert.equal(
@@ -245,7 +250,7 @@ try {
         await card.getByRole("tab", { name: "Code", exact: true }).click();
         assert.equal(
           (await card.locator("pre").textContent()).trim(),
-          option.source.trim(),
+          localExample(option.source, bundles[id].family, id).trim(),
           `${id} ${value} source parity`,
         );
         await card.getByRole("tab", { name: "Preview", exact: true }).click();

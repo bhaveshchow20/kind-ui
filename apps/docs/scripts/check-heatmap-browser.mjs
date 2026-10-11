@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
@@ -149,12 +150,16 @@ try {
       const code = material.locator("pre");
       assert.equal(
         (await code.textContent()).trim(),
-        bundles["heatmap-materials"].variants[value].source.trim(),
+        localExample(
+          bundles["heatmap-materials"].variants[value].source,
+          "heatmap",
+          "heatmap-materials",
+        ).trim(),
       );
       await material.locator("button.copy-prompt").click();
       const prompt = await page.evaluate(() => navigator.clipboard.readText());
       assert.ok(prompt.includes(`/docs/components/heatmap/`));
-      assert.ok(prompt.includes(`/variants/${value}/example.tsx`));
+      assert.ok(prompt.includes(`/registry-examples/heatmap-materials/${value}.tsx`));
       const viewport = material.locator(".line-code-viewport");
       await viewport.evaluate((node) => {
         node.scrollTop = node.scrollHeight;

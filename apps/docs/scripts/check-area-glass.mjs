@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { assertToc } from "./docs-browser-contracts.mjs";
 import { expectDimmedSeries } from "./interaction-paint.mjs";
 
@@ -29,6 +30,7 @@ try {
   assert.equal(await p.getByRole("heading", { name: "Basic", exact: true }).count(), 0);
   assert.equal(await p.locator("[data-area-reveal]").count(), 0);
   await assertToc(p, [
+    "Installation",
     "Usage",
     "Curve types",
     "Stacked series",
@@ -51,19 +53,19 @@ try {
         await pending.getByRole("tab", { name: "Code", exact: true }).click();
         assert.equal(
           (await pending.locator("pre").textContent()).trimEnd(),
-          variant.source.trimEnd(),
+          localExample(variant.source, "area", id).trimEnd(),
         );
         await pending.getByRole("button", { name: "Copy Text", exact: true }).click();
         assert.equal(
           (await p.evaluate(() => navigator.clipboard.readText())).trimEnd(),
-          variant.source.trimEnd(),
+          localExample(variant.source, "area", id).trimEnd(),
         );
         await pending.locator("button.copy-prompt").click();
         const prompt = await p.evaluate(() => navigator.clipboard.readText());
         const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
         assert.equal(
           (await (await context.request.get(url)).text()).trimEnd(),
-          variant.source.trimEnd(),
+          localExample(variant.source, "area", id).trimEnd(),
         );
         await pending.getByRole("tab", { name: "Preview", exact: true }).click();
         assert.equal(await card.locator('[data-kind-ui="chart-loading-skeleton"]').count(), 0);
@@ -76,11 +78,14 @@ try {
       }
       await card.getByRole("tab", { name: "Code", exact: true }).click();
       assert.equal(await card.locator("figcaption").textContent(), "example.tsx");
-      assert.equal((await card.locator("pre").textContent()).trimEnd(), variant.source.trimEnd());
+      assert.equal(
+        (await card.locator("pre").textContent()).trimEnd(),
+        localExample(variant.source, "area", id).trimEnd(),
+      );
       await card.getByRole("button", { name: "Copy Text", exact: true }).click();
       assert.equal(
         (await p.evaluate(() => navigator.clipboard.readText())).trimEnd(),
-        variant.source.trimEnd(),
+        localExample(variant.source, "area", id).trimEnd(),
       );
       assert.ok(
         await card.locator(".line-code-viewport").evaluate((n) => n.scrollHeight > n.clientHeight),
@@ -94,7 +99,7 @@ try {
       const selectedUrl = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
       assert.equal(
         (await (await context.request.get(selectedUrl)).text()).trimEnd(),
-        variant.source.trimEnd(),
+        localExample(variant.source, "area", id).trimEnd(),
       );
       const path = await card.locator(".recharts-area-area").first().getAttribute("d");
       assert.ok(path && !path.includes("NaN"));

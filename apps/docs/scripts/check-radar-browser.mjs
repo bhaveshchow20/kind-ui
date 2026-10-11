@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { localExample } from "../lib/registry-catalog.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 mkdirSync("artifacts/radar", { recursive: true });
@@ -74,11 +75,14 @@ try {
   await material.getByRole("button", { name: "Copy Text", exact: true }).click();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   const bundle = JSON.parse(readFileSync("generated/radar-examples.json", "utf8"));
-  assert.equal(copied.trim(), bundle["radar-materials"].variants.clay.source.trim());
+  assert.equal(
+    copied.trim(),
+    localExample(bundle["radar-materials"].variants.clay.source, "radar", "radar-materials").trim(),
+  );
   await material.getByRole("button", { name: "Copy prompt", exact: true }).click();
   assert.match(
     await page.evaluate(() => navigator.clipboard.readText()),
-    /radar-materials\/variants\/clay\/example.tsx/,
+    /registry-examples\/radar-materials\/clay.tsx/,
   );
   const viewport = material.locator(".line-code-viewport");
   const dimensions = await viewport.evaluate((node) => ({

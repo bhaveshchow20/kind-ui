@@ -29,6 +29,7 @@ try {
   const toc = p.locator("#nd-toc");
   assert.equal(await toc.locator("h3").textContent(), "On this page");
   await assertToc(p, [
+    "Installation",
     "Usage",
     "Compose plot parts",
     "Curve types",
