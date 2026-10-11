@@ -4,6 +4,15 @@ import * as Chart from "@kind-ui/charts";
 import { createElement as h } from "react";
 import { renderToStaticMarkup as render } from "react-dom/server";
 
+test("removed providers and configured chart APIs are absent from public exports", () => {
+  assert.equal(Object.hasOwn(Chart, "Root"), false);
+  assert.equal(Object.hasOwn(Chart, "ChartProvider"), false);
+  assert.equal(
+    Object.keys(Chart).some((name) => /configured/i.test(name)),
+    false,
+  );
+});
+
 const config = { value: { label: "Value", color: "red" } };
 const families = [
   Chart.AreaChart,
