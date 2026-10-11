@@ -349,6 +349,7 @@ export function MotionPreferences() {
             {[1, 2, 3, 4].map((value) => (
               <Chart.TooltipContent
                 key={value}
+                valueAnimation="shuffle"
                 tooltip={{
                   active: true,
                   accessibilityLayer: true,
