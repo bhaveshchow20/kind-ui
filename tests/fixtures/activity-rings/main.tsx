@@ -52,9 +52,9 @@ function App() {
       <div id="defaults">
         <ActivityRings
           config={config}
+          defaultVisibleSeries={Object.keys(config)}
           {...(visibilityMode
             ? {
-                defaultVisibleSeries: Object.keys(config),
                 interaction: {
                   kind: "category" as const,
                   mode: "visibility" as const,
