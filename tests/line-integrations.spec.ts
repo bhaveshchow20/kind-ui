@@ -157,7 +157,7 @@ for (const host of ["vite", "next"] as const) {
     expect(await box(utilities).evaluate((el) => getComputedStyle(el).backgroundColor)).toContain(
       "oklch",
     );
-    const plot = proof.locator('[data-theme-case="plot"]');
+    const plot = proof.locator('[title="Semantic plot"]');
     await expect(plot.locator(".recharts-cartesian-grid line").first()).toHaveCSS(
       "stroke",
       "rgb(160, 170, 180)",

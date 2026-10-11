@@ -290,11 +290,14 @@ try {
         diagnostics.plugin,
         {
           name: "consumer-tailwind-setup",
-          transformIndexHtml(html) {
-            return html.replace(
-              "</head>",
-              '<link rel="stylesheet" href="/chart-tailwind.css"></head>',
-            );
+          transformIndexHtml: {
+            order: "pre",
+            handler(html) {
+              return html.replace(
+                "</head>",
+                '<link rel="stylesheet" href="/chart-tailwind.css"></head>',
+              );
+            },
           },
         },
       ],

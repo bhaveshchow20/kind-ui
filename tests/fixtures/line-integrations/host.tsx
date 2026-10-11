@@ -138,7 +138,7 @@ export function ThemingHost() {
     label: "Theme heading",
     activeIndex: "0",
     coordinate: undefined,
-    payload: [{ dataKey: "total", value: 12, name: "total" }],
+    payload: [{ dataKey: "total", value: 12, name: "total", graphicalItemId: "theme-total" }],
   };
   return (
     <section data-theme-proof="" style={variables}>
@@ -183,7 +183,7 @@ export function ThemingHost() {
         xDataKey="month"
         aria-label="Semantic plot"
         height={180}
-        rootProps={{ "data-theme-case": "plot" } as import("@kind-ui/charts").RootProps}
+        rootProps={{ title: "Semantic plot" }}
       />
     </section>
   );

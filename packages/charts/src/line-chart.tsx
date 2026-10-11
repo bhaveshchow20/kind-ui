@@ -336,7 +336,12 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         {chart}
       </div>
       {loading !== undefined && (
-        <span data-kind-ui="chart-loading-status" role="status" aria-atomic="true">
+        <span
+          data-kind-ui="chart-loading-status"
+          role="status"
+          aria-atomic="true"
+          className="sr-only"
+        >
           {loading ? (loadingLabel ?? "Loading chart") : ""}
         </span>
       )}

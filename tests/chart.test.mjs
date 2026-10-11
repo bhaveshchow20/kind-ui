@@ -1999,7 +1999,7 @@ test("chart loading props stay off the native engine and expose a chart-owned st
     ),
   );
   assert.match(html, /aria-busy="true" aria-hidden="true" inert=""/);
-  assert.match(html, /role="status" aria-atomic="true">Loading sales/);
+  assert.match(html, /role="status" aria-atomic="true"[^>]*>Loading sales/);
   assert.match(html, /width:320px;height:240px/);
   assert.doesNotMatch(html, /loadingLabel=| loading="/);
   const empty = render(
