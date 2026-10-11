@@ -805,7 +805,7 @@ function App() {
       <section id="bar-focus">
         <Chart.BarChart
           config={{ first: config.first }}
-          interaction={{ kind: "series", mode: "focus", eligibleKeys: ["value"] }}
+          interaction={{ kind: "series", mode: "focus", eligibleKeys: ["first"] }}
           emphasis="category"
           aria-label="Single series focus"
           width={440}
