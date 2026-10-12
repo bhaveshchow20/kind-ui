@@ -509,6 +509,8 @@ try {
   await writeFixtureEntry(consumer, "loading", "./loading.js");
   await typecheck(["loading.tsx", "loading-entry.tsx"]);
   await production("loading.html", "packed-loading");
+  // LazyMotion's strict enforcement runs only in development.
+  await production("loading.html", "packed-loading-development", true);
   console.log("Loading boundary: packed public-only strict types and production preview passed");
   for (const file of ["index.html", "main.tsx"]) await copyFixture("number-shuffle", file);
   await typecheck(["main.tsx"]);

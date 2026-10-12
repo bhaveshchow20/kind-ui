@@ -39,6 +39,10 @@ export default defineConfig({
       url: `http://127.0.0.1:${port(4202)}/loading.html`,
     },
     {
+      command: `npm exec vite preview -- --outDir artifacts/packed-loading-development --host 127.0.0.1 --port ${port(4203)} --strictPort`,
+      url: `http://127.0.0.1:${port(4203)}/loading.html`,
+    },
+    {
       command: `npm exec vite preview -- --outDir artifacts/packed-identity-colors --host 127.0.0.1 --port ${port(4198)} --strictPort`,
       url: `http://127.0.0.1:${port(4198)}`,
     },

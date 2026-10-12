@@ -1,5 +1,6 @@
 import {
   createHeatmapScale,
+  type DotItemDotProps,
   HeatmapCellContent,
   type HeatmapCellContentProps,
   HeatmapChart,
@@ -10,6 +11,10 @@ import {
   HeatmapLegend,
   type HeatmapMaterial,
   HeatmapTooltip,
+  LineChart,
+  LineSeries,
+  XAxis,
+  YAxis,
 } from "@kind-ui/charts";
 import { useRef, useState } from "react";
 
@@ -54,6 +59,69 @@ const activity: HeatmapDatum[] = days.flatMap((row, r) =>
 );
 const signed = createHeatmapScale({ domain: [-20, 20], colors: ["#3b6fa8", "#f5f5ee", "#bf5b38"] });
 const counts = createHeatmapScale({ domain: [0, 12], colors: ["#eef4eb", "#abc9a1", "#327448"] });
+
+export function RetainedPresentationLine() {
+  const renders = useRef(0);
+  function Dot({ cx, cy }: DotItemDotProps) {
+    return <circle cx={cx} cy={cy} r={3} data-native-dot-renders={++renders.current} />;
+  }
+  return (
+    <LineChart
+      width={400}
+      height={160}
+      responsive={false}
+      config={{ metric: { label: "Retained metric", color: ["#000000", "#333333"] } }}
+      data={[
+        { x: "A", metric: 1 },
+        { x: "B", metric: 2 },
+      ]}
+      aria-label="Retained presentation line"
+    >
+      <XAxis dataKey="x" hide />
+      <YAxis hide />
+      <LineSeries dataKey="metric" dot={Dot} />
+      <LineChart.Legend />
+    </LineChart>
+  );
+}
+
+/** Retained state must not recalculate the grid for repeated inspection of the same identity. */
+export function RetainedHeatmap() {
+  const renders = useRef(0);
+  const [updated, setUpdated] = useState(false);
+  return (
+    <section>
+      <button type="button" onClick={() => setUpdated(!updated)}>
+        Update retained heatmap
+      </button>
+      <HeatmapChart
+        rows={["Retained"]}
+        columns={["First", "Second"]}
+        data={[
+          { row: "Retained", column: "First", value: updated ? 2 : 1 },
+          { row: "Retained", column: "Second", value: null },
+        ]}
+        scale={counts}
+        config={{}}
+        aria-label="Retained heatmap"
+      >
+        <HeatmapGrid
+          caption="Retained inspection grid"
+          cellProps={() =>
+            ({
+              "data-cell-renders": ++renders.current,
+              onPointerDown: (event: React.PointerEvent<HTMLTableCellElement>) => {
+                const node = event.currentTarget;
+                node.dataset.nativePresses = String(Number(node.dataset.nativePresses ?? 0) + 1);
+              },
+            }) as React.ComponentPropsWithRef<"td">
+          }
+        />
+        <HeatmapTooltip />
+      </HeatmapChart>
+    </section>
+  );
+}
 function Value(props: HeatmapCellContentProps) {
   return (
     <HeatmapCellContent

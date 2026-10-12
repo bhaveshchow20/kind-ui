@@ -1,5 +1,12 @@
 import { createRoot } from "react-dom/client";
-import { CompactHeatmap, DismissalHeatmaps, Edges, HeatmapRecipes } from "./host.js";
+import {
+  CompactHeatmap,
+  DismissalHeatmaps,
+  Edges,
+  HeatmapRecipes,
+  RetainedHeatmap,
+  RetainedPresentationLine,
+} from "./host.js";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
@@ -10,5 +17,11 @@ createRoot(root).render(
     <Edges />
     <CompactHeatmap />
     <DismissalHeatmaps />
+    {new URLSearchParams(location.search).has("performance") && (
+      <>
+        <RetainedHeatmap />
+        <RetainedPresentationLine />
+      </>
+    )}
   </>,
 );

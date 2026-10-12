@@ -6,6 +6,53 @@ const chart = (page: Page, name = "First") =>
   page.getByRole("grid", { name: `${name} dismissal grid` });
 const tooltip = (grid: Locator) =>
   grid.locator("xpath=../..").locator('[data-kind-ui="heatmap-tooltip"]');
+
+test("packed focus updates state and announcements without recalculating native line dots", async ({
+  page,
+}) => {
+  await page.goto(`${url}?performance`);
+  const frame = page
+    .getByLabel("Retained presentation line", { exact: true })
+    .locator('xpath=ancestor::*[@data-kind-ui="chart"]');
+  const dot = frame.locator("[data-native-dot-renders]").first();
+  await expect(dot).toBeVisible();
+  const calculations = await dot.getAttribute("data-native-dot-renders");
+  const legend = frame.getByRole("button", { name: "Retained metric", exact: true });
+  await legend.click();
+  await expect(legend).toHaveAttribute("aria-pressed", "true");
+  await expect(frame.locator('[data-kind-ui="chart-interaction-status"]')).toHaveText(
+    "Highlighted Retained metric.",
+  );
+  await expect(dot).toHaveAttribute("data-native-dot-renders", calculations ?? "");
+  await legend.click();
+  await expect(legend).toHaveAttribute("aria-pressed", "false");
+  await expect(dot).toHaveAttribute("data-native-dot-renders", calculations ?? "");
+});
+
+test("packed repeated inspection retains cell calculations and native handlers, then updates data", async ({
+  page,
+}) => {
+  await page.goto(`${url}?performance`);
+  const grid = page.getByRole("grid", { name: "Retained inspection grid" });
+  const cell = grid.getByRole("gridcell").first();
+  await cell.dispatchEvent("pointerdown", { pointerType: "mouse" });
+  await expect(tooltip(grid)).toHaveText("Retained, First: 1");
+  const calculations = await cell.getAttribute("data-cell-renders");
+  const presses = Number(await cell.getAttribute("data-native-presses"));
+  for (let i = 0; i < 3; i++) await cell.dispatchEvent("pointerdown", { pointerType: "mouse" });
+  await expect(cell).toHaveAttribute("data-cell-renders", calculations ?? "");
+  await expect(cell).toHaveAttribute("data-native-presses", String(presses + 3));
+  await grid.getByRole("gridcell").nth(1).dispatchEvent("pointerdown", { pointerType: "touch" });
+  await expect(tooltip(grid)).toHaveText("Retained, Second: Missing");
+  await cell.dispatchEvent("pointerdown", { pointerType: "mouse" });
+  await page.getByRole("button", { name: "Update retained heatmap" }).click();
+  await expect(cell).toHaveAttribute("aria-label", "Retained, First: 2");
+  await cell.dispatchEvent("pointerdown", { pointerType: "mouse" });
+  await expect(tooltip(grid)).toHaveText("Retained, First: 2");
+  expect(Number(await cell.getAttribute("data-cell-renders"))).toBeGreaterThan(
+    Number(calculations),
+  );
+});
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     document.addEventListener(

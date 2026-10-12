@@ -49,6 +49,7 @@ type Context = {
   loadingSeed: number;
   loading: boolean | undefined;
   model: HeatmapModel;
+  cellsByKey: ReadonlyMap<string, HeatmapCell>;
   entrance: boolean;
   scale: HeatmapScale;
   formatValue: (value: number) => string;
@@ -139,6 +140,10 @@ function HeatmapPlot({
     () => createHeatmapModel({ rows, columns, data, ...(duplicates ? { duplicates } : {}) }),
     [rows, columns, data, duplicates],
   );
+  const cellsByKey = useMemo(
+    () => new Map(model.cells.flatMap((row) => row.map((cell) => [keyOf(cell), cell] as const))),
+    [model],
+  );
   const [active, updateActive] = useState<readonly [string, string] | null>(null);
   const pointer = useRef<PointerPosition | null>(null);
   const dismissed = useRef(false);
@@ -146,7 +151,12 @@ function HeatmapPlot({
     (key: readonly [string, string] | null) => {
       if (loading) return;
       if (key) dismissed.current = false;
-      updateActive(key);
+      updateActive((previous) =>
+        previous === key ||
+        (previous !== null && key !== null && previous[0] === key[0] && previous[1] === key[1])
+          ? previous
+          : key,
+      );
     },
     [loading],
   );
@@ -195,14 +205,12 @@ function HeatmapPlot({
       const target =
         event.target instanceof Element ? event.target.closest("td[data-cell-key]") : null;
       if (!target || !root.current?.contains(target)) return;
-      const cell = model.cells
-        .flat()
-        .find((item) => keyOf(item) === target.getAttribute("data-cell-key"));
+      const cell = cellsByKey.get(target.getAttribute("data-cell-key") ?? "");
       if (cell) setActive([cell.row, cell.column]);
     };
     document.addEventListener("pointermove", move, true);
     return () => document.removeEventListener("pointermove", move, true);
-  }, [tooltipMounted, model, setActive]);
+  }, [tooltipMounted, cellsByKey, setActive]);
   const consumerRef = props.ref;
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
@@ -257,6 +265,7 @@ function HeatmapPlot({
         loading,
         loadingSeed,
         model,
+        cellsByKey,
         entrance,
         scale,
         formatValue,
@@ -297,7 +306,7 @@ function HeatmapPlot({
           if (!active) return;
           const focused = document.activeElement as HTMLElement | null;
           const cell = event.currentTarget.contains(focused)
-            ? model.cells.flat().find((item) => keyOf(item) === focused?.dataset.cellKey)
+            ? cellsByKey.get(focused?.dataset.cellKey ?? "")
             : undefined;
           setActive(cell ? [cell.row, cell.column] : null);
         }}
@@ -439,15 +448,14 @@ export function HeatmapGrid({
   const { model, scale, active, setActive, tooltipId } = context;
   const [focusedKey, setFocusedKey] = useState<string | null>(null);
   const table = useRef<HTMLTableElement | null>(null);
-  const focused =
-    model.cells.flat().find((cell) => keyOf(cell) === focusedKey) ?? model.cells[0]?.[0];
+  const focused = context.cellsByKey.get(focusedKey ?? "") ?? model.cells[0]?.[0];
   const tabKey = focused ? keyOf(focused) : null;
   function move(event: React.KeyboardEvent<HTMLTableElement>) {
     onKeyDown?.(event);
     if (event.defaultPrevented) return;
     const target = event.target;
     if (!(target instanceof HTMLTableCellElement) || target.dataset.cellKey === undefined) return;
-    const cell = model.cells.flat().find((item) => keyOf(item) === target.dataset.cellKey);
+    const cell = context.cellsByKey.get(target.dataset.cellKey);
     if (!cell) return;
     let r = cell.rowIndex;
     let c = cell.columnIndex;
@@ -697,9 +705,7 @@ export function HeatmapTooltip({ Content, valueAnimation, ...props }: HeatmapToo
     context.setTooltipMounted(true);
     return () => context.setTooltipMounted(false);
   }, [context.setTooltipMounted]);
-  const cell = context.model.cells
-    .flat()
-    .find((item) => item.row === context.active?.[0] && item.column === context.active[1]);
+  const cell = context.active ? context.cellsByKey.get(JSON.stringify(context.active)) : undefined;
   return (
     <div
       {...props}
