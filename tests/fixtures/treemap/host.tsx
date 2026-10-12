@@ -62,6 +62,7 @@ function Inspector() {
   return (
     <TreemapChart.Content>
       <output aria-label="Resolved view">{chart.viewId ?? "root"}</output>
+      <output aria-label="Resolved active">{chart.activeId ?? "none"}</output>
     </TreemapChart.Content>
   );
 }
@@ -75,26 +76,39 @@ function SuspendRender({ pending }: { pending: boolean }) {
   return null;
 }
 export function TreemapHost() {
-  const count = Number(new URLSearchParams(window.location.search).get("count") ?? 0);
-  const initial = count
-    ? [
-        {
-          key: "dense",
-          title: "Resources",
-          nodes: Array.from({ length: count }, (_, i) => ({
-            key: `resource-${i}`,
-            title: `Resource ${i}`,
-            area: (i % 11) + 1,
-            change: (i % 10) - 5,
-          })),
-        },
-      ]
-    : original;
+  const params = new URLSearchParams(window.location.search);
+  const count = Number(params.get("count") ?? 0);
+  const duplicateLegend = params.has("duplicate-legend");
+  const initial = params.has("empty-group")
+    ? [{ key: "empty-group", title: "Empty group", nodes: [] }]
+    : duplicateLegend
+      ? Array.from({ length: 6 }, (_entry, index) => ({
+          key: `duplicate-group-${index}`,
+          title: "Same label",
+          nodes: [{ key: `duplicate-leaf-${index}`, title: `Leaf ${index}`, area: 1 }],
+        }))
+      : count
+        ? [
+            {
+              key: "dense",
+              title: "Resources",
+              nodes: Array.from({ length: count }, (_, i) => ({
+                key: `resource-${i}`,
+                title: `Resource ${i}`,
+                area: (i % 11) + 1,
+                change: (i % 10) - 5,
+              })),
+            },
+          ]
+        : original;
   const [data, setData] = useState<readonly Record[]>(initial);
   const [width, setWidth] = useState(720);
   const [selected, setSelected] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
-  const params = new URLSearchParams(window.location.search);
+  const [activeRequests, setActiveRequests] = useState<
+    readonly { id: string | null; metric: number | null }[]
+  >([]);
+  const [preventedEscapes, setPreventedEscapes] = useState(0);
   const held = params.has("held");
   const parts = params.get("parts");
   const [view, setView] = useState<string | null>(held ? "platforms" : null);
@@ -106,8 +120,26 @@ export function TreemapHost() {
   const [deep, setDeep] = useState(true);
   const [pending, setPending] = useState(false);
   const [activatedArea, setActivatedArea] = useState<number | null>(null);
+  const selectedEncoding: TreemapColorEncoding<Record> =
+    params.get("domain") === "positive"
+      ? { ...encoding, domain: [0, 5] }
+      : params.get("domain") === "constant"
+        ? { ...encoding, type: "sequential", domain: [2, 2] }
+        : encoding;
   return (
     <section aria-label="Treemap public consumer">
+      <input
+        aria-label="Outside focus"
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && params.has("prevent-escape")) {
+            event.preventDefault();
+            setPreventedEscapes((value) => value + 1);
+          }
+        }}
+      />
+      <output aria-label="Prevented escapes">{preventedEscapes}</output>
+      <output aria-label="Active requests">{activeRequests.length}</output>
+      <output aria-label="Active request log">{JSON.stringify(activeRequests)}</output>
       <button type="button" onClick={() => setWidth((v) => (v === 720 ? 540 : 720))}>
         Resize
       </button>
@@ -217,13 +249,7 @@ export function TreemapHost() {
         <TreemapChart<Record>
           data={data}
           accessors={accessors}
-          encoding={
-            params.get("domain") === "positive"
-              ? { ...encoding, domain: [0, 5] }
-              : params.get("domain") === "constant"
-                ? { ...encoding, type: "sequential", domain: [2, 2] }
-                : encoding
-          }
+          {...(duplicateLegend ? {} : { encoding: selectedEncoding })}
           groupHeaderHeight={params.has("header") ? Number(params.get("header")) : 20}
           config={{}}
           {...(params.has("fixed-width")
@@ -237,8 +263,18 @@ export function TreemapHost() {
           selectedId={selected}
           onSelectionChange={setSelected}
           onActivate={(item) => setActivatedArea(item.value)}
-          activeId={active}
-          onActiveChange={setActive}
+          {...(params.has("uncontrolled-active") ? {} : { activeId: active })}
+          onActiveChange={(id, item) => {
+            setActive(id);
+            setActiveRequests((requests) => [
+              ...requests,
+              { id, metric: item?.datum.change ?? null },
+            ]);
+          }}
+          onPointerMoveCapture={(event) => {
+            event.currentTarget.dataset.pointerX = String(event.clientX);
+            event.currentTarget.dataset.pointerY = String(event.clientY);
+          }}
           viewId={view}
           onViewChange={(id) => {
             setRequests((v) => v + 1);

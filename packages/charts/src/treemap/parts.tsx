@@ -6,6 +6,8 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
+  useRef,
 } from "react";
 import { OutsidePlot } from "../family-root.js";
 import { cn } from "../utils.js";
@@ -125,7 +127,7 @@ function Mark<T>({
         }
       }}
     >
-      {children}
+      {children === undefined ? buttonProps.children : children}
     </button>
   );
 }
@@ -188,6 +190,7 @@ export function TreemapGroups<T = TreemapDatum>({
         .filter((node) => node.kind === "group" && !context.frontierIds.has(node.id))
         .map((node) => {
           const attributes = groupProps?.(node);
+          const header = context.groupHeaderHeight > 0 ? headerProps?.(node) : undefined;
           return (
             <div
               {...attributes}
@@ -206,13 +209,20 @@ export function TreemapGroups<T = TreemapDatum>({
                   context={context}
                   kind="treemap-group-header"
                   height={Math.min(node.height, context.groupHeaderHeight)}
-                  {...(headerProps ? { buttonProps: headerProps(node) } : {})}
+                  {...(header ? { buttonProps: header } : {})}
                 >
                   <span className="block truncate px-1 text-xs font-medium bg-[var(--background,#fff)] text-[var(--foreground,#172033)]">
-                    {typeof children === "function" ? children(node) : (children ?? node.label)}
+                    {typeof children === "function"
+                      ? children(node)
+                      : children !== undefined
+                        ? children
+                        : header?.children !== undefined
+                          ? header.children
+                          : node.label}
                   </span>
                 </Mark>
               )}
+              {children === undefined ? attributes?.children : null}
             </div>
           );
         })}
@@ -379,11 +389,50 @@ export function TreemapDataTable<T = TreemapDatum>({
 }: TreemapDataTableProps<T>) {
   const context = useTreemap<T>();
   const nodes = scope === "root" ? context.model.nodes : context.viewNodes;
+  const table = useRef<HTMLTableElement | null>(null);
+  const pendingFocus = useRef<{ viewId: string; owner: HTMLButtonElement } | null>(null);
+  const consumerRef = props.ref;
+  const ref = useCallback(
+    (element: HTMLTableElement | null) => {
+      table.current = element;
+      if (typeof consumerRef === "function") {
+        const cleanup = consumerRef(element);
+        if (typeof cleanup === "function")
+          return () => {
+            table.current = null;
+            cleanup();
+          };
+      } else if (consumerRef) consumerRef.current = element;
+    },
+    [consumerRef],
+  );
+  useLayoutEffect(() => {
+    const intent = pendingFocus.current;
+    if (!intent) return;
+    if (context.viewId !== intent.viewId) {
+      if (!intent.owner.isConnected || document.activeElement !== intent.owner)
+        pendingFocus.current = null;
+      return;
+    }
+    pendingFocus.current = null;
+    if (
+      intent.owner.isConnected ||
+      (document.activeElement !== document.body && document.activeElement !== intent.owner)
+    )
+      return;
+    const next = nodes.length
+      ? table.current?.querySelector<HTMLButtonElement>("tbody button:not(:disabled)")
+      : undefined;
+    if (next) next.focus();
+    else table.current?.focus();
+  }, [context.viewId, nodes]);
   return (
     <OutsidePlot>
       <div className="max-w-full overflow-x-auto">
         <table
           {...props}
+          ref={ref}
+          tabIndex={props.tabIndex ?? -1}
           data-kind-ui="treemap-data-table"
           className={cn("w-full text-left text-xs [&_td]:p-1 [&_th]:p-1", props.className)}
         >
@@ -422,8 +471,26 @@ export function TreemapDataTable<T = TreemapDatum>({
                         <button
                           type="button"
                           aria-pressed={context.selectedId === node.id}
-                          onFocus={() => context.setActive(node.id)}
-                          onClick={() => context.activate(node)}
+                          onFocus={(event) => {
+                            if (!event.defaultPrevented) context.setActive(node.id);
+                          }}
+                          onBlur={(event) => {
+                            if (pendingFocus.current?.owner === event.currentTarget)
+                              pendingFocus.current = null;
+                          }}
+                          onClick={(event) => {
+                            if (!event.defaultPrevented) {
+                              if (
+                                node.kind === "group" &&
+                                document.activeElement === event.currentTarget
+                              )
+                                pendingFocus.current = {
+                                  viewId: node.id,
+                                  owner: event.currentTarget,
+                                };
+                              context.activate(node);
+                            }
+                          }}
                         >
                           {node.label}
                         </button>
@@ -486,8 +553,13 @@ export function TreemapColorLegend(props: TreemapColorLegendProps) {
             </div>
           </fieldset>
         ) : (
-          ("items" in legend ? legend.items : []).map((item) => (
-            <span key={`${item.label}-${item.color}`} className="inline-flex items-center gap-1">
+          ("items" in legend ? legend.items : []).map((item, index) => (
+            <span
+              // biome-ignore lint/suspicious/noArrayIndexKey: Stateless legend entries may repeat both label and paint; position makes each presentation entry unique.
+              key={`${index}-${item.label}-${item.color}`}
+              data-kind-ui="treemap-legend-item"
+              className="inline-flex items-center gap-1"
+            >
               <span
                 aria-hidden="true"
                 className="h-2 w-2 rounded"

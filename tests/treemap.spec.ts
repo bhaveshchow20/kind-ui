@@ -522,3 +522,136 @@ for (const domain of ["positive", "constant"]) {
     }
   });
 }
+
+test("treemap hover inspection dismisses with outside focus and stays dismissed under a stationary pointer", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const alpha = tile(page, "a");
+  await alpha.hover();
+  await expect(page.getByRole("tooltip")).toContainText("Alpha");
+  const root = page.locator('[data-kind-ui="treemap"]');
+  const coordinates = await root.evaluate((element) => ({
+    clientX: Number(element.getAttribute("data-pointer-x")),
+    clientY: Number(element.getAttribute("data-pointer-y")),
+  }));
+  expect(coordinates.clientX).toBeGreaterThan(0);
+  expect(coordinates.clientY).toBeGreaterThan(0);
+  const outside = page.getByRole("textbox", { name: "Outside focus" });
+  await outside.focus();
+  await expect(outside).toBeFocused();
+  await expect(page.getByRole("tooltip")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  await alpha.dispatchEvent("pointerover", { ...coordinates, pointerType: "mouse", pointerId: 1 });
+  await alpha.dispatchEvent("pointermove", { ...coordinates, pointerType: "mouse", pointerId: 1 });
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  const bounds = await alpha.boundingBox();
+  if (!bounds) throw new Error("Missing Alpha bounds after dismissal");
+  await page.mouse.move(bounds.x + bounds.width / 2 + 1, bounds.y + bounds.height / 2);
+  await expect(page.getByRole("tooltip")).toContainText("Alpha");
+});
+
+test("treemap document Escape respects an outside consumer's prevented event", async ({ page }) => {
+  await page.goto("/?prevent-escape");
+  await tile(page, "a").hover();
+  const outside = page.getByRole("textbox", { name: "Outside focus" });
+  await outside.focus();
+  await expect(page.getByRole("tooltip")).toContainText("Alpha");
+  await outside.press("Escape");
+  await expect(output(page, "Prevented escapes")).toHaveText("1");
+  await expect(page.getByRole("tooltip")).toContainText("Alpha");
+});
+
+test("treemap table group keyboard activation transfers focus into its surviving subtree", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const row = page.locator('tbody tr[data-node-id="technology"]');
+  const action = row.getByRole("button");
+  await action.focus();
+  await expect(action).toBeFocused();
+  await action.press("Enter");
+  await expect(output(page, "Resolved view")).toHaveText("technology");
+  await expect(row).toHaveCount(0);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const focused = document.activeElement;
+          if (!(focused instanceof HTMLButtonElement) || focused.disabled) return false;
+          if (focused.closest('[data-kind-ui="treemap-breadcrumbs"]')) return true;
+          const id = focused.closest("[data-node-id]")?.getAttribute("data-node-id");
+          return (
+            id !== null && id !== undefined && ["platforms", "a", "b", "c", "zero"].includes(id)
+          );
+        }),
+      {
+        message: "Removed table group focus moves to a surviving semantic descendant or breadcrumb",
+      },
+    )
+    .toBe(true);
+});
+
+test("treemap uncontrolled loading clears active inspection with one original-record callback", async ({
+  page,
+}) => {
+  await page.goto("/?uncontrolled-active");
+  await tile(page, "a").focus();
+  await expect(output(page, "Active ID")).toHaveText("a");
+  await expect(output(page, "Resolved active")).toHaveText("a");
+  await expect(output(page, "Active requests")).toHaveText("1");
+  await expect(output(page, "Active request log")).toHaveText('[{"id":"a","metric":-2}]');
+  await update(page, "Loading");
+  await expect(output(page, "Active ID")).toHaveText("none");
+  await expect(output(page, "Resolved active")).toHaveText("none");
+  await expect(output(page, "Active requests")).toHaveText("2");
+  await expect(output(page, "Active request log")).toHaveText(
+    '[{"id":"a","metric":-2},{"id":null,"metric":null}]',
+  );
+  await update(page, "Colors");
+  await update(page, "Resize");
+  await expect(output(page, "Active requests")).toHaveText("2");
+  await update(page, "Loading");
+  await expect(output(page, "Resolved active")).toHaveText("none");
+  await expect(output(page, "Active ID")).toHaveText("none");
+  await expect(output(page, "Active requests")).toHaveText("2");
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+});
+
+test("treemap repeated categorical labels and wrapped palette entries keep unique presentation keys", async ({
+  page,
+}) => {
+  const duplicateWarnings: string[] = [];
+  page.on("console", (message) => {
+    if (
+      ["warning", "error"].includes(message.type()) &&
+      /same key|unique.*key/i.test(message.text())
+    )
+      duplicateWarnings.push(message.text());
+  });
+  await page.goto("/?duplicate-legend");
+  const entries = page.locator('[data-kind-ui="treemap-legend-item"]');
+  await expect(entries).toHaveCount(6);
+  await expect(entries).toHaveText(Array.from({ length: 6 }, () => "Same label"));
+  for (const control of ["Reorder", "Colors", "Resize"]) {
+    await update(page, control);
+    await expect(entries).toHaveCount(6);
+  }
+  expect(duplicateWarnings).toEqual([]);
+});
+
+test("treemap empty table group keyboard activation retains focus on its named data alternative", async ({
+  page,
+}) => {
+  await page.goto("/?empty-group");
+  const row = page.locator('tbody tr[data-node-id="empty-group"]');
+  const action = row.getByRole("button");
+  await action.focus();
+  await action.press("Enter");
+  await expect(output(page, "Resolved view")).toHaveText("empty-group");
+  await expect(row).toHaveCount(0);
+  const table = page.getByRole("table", { name: "Allocation values and signed change" });
+  await expect(table).toBeFocused();
+  await expect(table.locator("tbody tr")).toHaveCount(0);
+});

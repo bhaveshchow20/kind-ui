@@ -13,13 +13,7 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  type ChartName,
-  type FamilyOptions,
-  FamilyRoot,
-  familyFrame,
-  familyVisibility,
-} from "../family-root.js";
+import { type ChartName, type FamilyOptions, FamilyRoot, familyFrame } from "../family-root.js";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "../loading-skeleton.js";
 import { useReducedMotion } from "../motion-preference.js";
 import { cn } from "../utils.js";
@@ -44,6 +38,20 @@ export type TreemapItem<T> = TreemapNode<T> & {
   rectangle: { x: number; y: number; width: number; height: number } | null;
   viewShare: number | null;
 };
+// Root arrays can contain only groups; their descendant records still reach every callback.
+// Stop at a previously covered record type for consumers with recursive record interfaces.
+type TreemapDescendants<T, Seen = T> =
+  | T
+  | (T extends { readonly children: readonly (infer Child)[] }
+      ? [Child] extends [Seen]
+        ? never
+        : TreemapDescendants<Child, Seen | Child>
+      : never);
+type TreemapRecords<T> = [T] extends [TreemapDatum] ? TreemapDescendants<T> : T;
+type TreemapFamilyOptions = Omit<
+  FamilyOptions,
+  "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange"
+>;
 type StateOptions<T> = {
   viewId?: string | null;
   defaultViewId?: string | null;
@@ -60,19 +68,19 @@ export type TreemapChartProps<T = TreemapDatum> = Omit<
   ComponentPropsWithRef<"div">,
   "children" | keyof FamilyOptions
 > &
-  FamilyOptions &
+  TreemapFamilyOptions &
   ChartName &
-  StateOptions<T> &
+  StateOptions<TreemapRecords<T>> &
   Omit<TreemapLayoutOptions, "width" | "height"> & {
     data: readonly T[];
-    encoding?: TreemapColorEncoding<T>;
+    encoding?: TreemapColorEncoding<TreemapRecords<T>>;
     width?: number | string;
     height?: number | string;
     animate?: boolean;
     loading?: boolean;
     loadingLabel?: string;
     empty?: ReactNode;
-    formatValue?: (value: number, node: TreemapNode<T>) => string;
+    formatValue?: (value: number, node: TreemapNode<TreemapRecords<T>>) => string;
     children: Exclude<ReactNode, undefined>;
   } & ([T] extends [TreemapDatum]
     ? { accessors?: TreemapAccessors<T> }
@@ -123,13 +131,13 @@ export function TreemapChartRoot<const T = TreemapDatum>({
   emphasis,
   nonce,
   frameProps,
-  visibleSeries,
-  defaultVisibleSeries,
-  onVisibleSeriesChange,
   legendPosition,
   ...props
 }: TreemapChartProps<T>) {
   if (Object.hasOwn(props, "rootProps")) throw new Error("TreemapChart does not accept rootProps");
+  for (const name of ["visibleSeries", "defaultVisibleSeries", "onVisibleSeriesChange"]) {
+    if (Object.hasOwn(props, name)) throw new Error(`TreemapChart does not accept ${name}`);
+  }
   if (props.children === undefined) throw new Error("TreemapChart requires explicit children");
   return (
     <FamilyRoot
@@ -141,10 +149,9 @@ export function TreemapChartRoot<const T = TreemapDatum>({
       {...(emphasis !== undefined ? { emphasis } : {})}
       {...(nonce !== undefined ? { nonce } : {})}
       {...(frameProps !== undefined ? { frameProps } : {})}
-      {...familyVisibility({ visibleSeries, defaultVisibleSeries, onVisibleSeriesChange })}
       {...(legendPosition ? { legendPosition } : {})}
     >
-      <TreemapPlot {...props} />
+      <TreemapPlot<T> {...props} />
     </FamilyRoot>
   );
 }
@@ -175,7 +182,7 @@ function TreemapPlot<T>({
   formatValue = defaultFormat,
   children,
   ...props
-}: Omit<TreemapChartProps<T>, keyof FamilyOptions>) {
+}: Omit<TreemapChartProps<T>, keyof TreemapFamilyOptions>) {
   for (const [name, controlled, initial] of [
     ["viewId", controlledView, defaultViewId],
     ["activeId", controlledActive, defaultActiveId],
@@ -184,16 +191,16 @@ function TreemapPlot<T>({
     if (controlled !== undefined && initial !== null)
       throw new Error(`Treemap ${name} cannot be both controlled and defaulted`);
   }
-  const model = useMemo(
+  const model = useMemo<TreemapModel<TreemapRecords<T>>>(
     () =>
       accessors
-        ? normalizeTreemap(data, accessors)
-        : (normalizeTreemap(
-            data as unknown as readonly TreemapDatum[],
-          ) as unknown as TreemapModel<T>),
+        ? (normalizeTreemap(data, accessors) as TreemapModel<TreemapRecords<T>>)
+        : (normalizeTreemap(data as unknown as readonly TreemapDatum[]) as unknown as TreemapModel<
+            TreemapRecords<T>
+          >),
     [data, accessors],
   );
-  const previousModel = useRef<TreemapModel<T> | undefined>(undefined);
+  const previousModel = useRef<TreemapModel<TreemapRecords<T>> | undefined>(undefined);
   const [localView, updateView] = useState(defaultViewId);
   const [localActive, updateActive] = useState(defaultActiveId);
   const [localSelected, updateSelected] = useState(defaultSelectedId);
@@ -278,7 +285,7 @@ function TreemapPlot<T>({
         : model.nodes.filter((node) => node.id !== viewId && node.path.includes(viewId)),
     [model, viewId],
   );
-  const fallbackEncoding = useMemo<TreemapColorEncoding<T>>(
+  const fallbackEncoding = useMemo<TreemapColorEncoding<TreemapRecords<T>>>(
     () => ({
       type: "categorical",
       value: (_datum, node) => node.path[0] ?? null,
@@ -339,15 +346,21 @@ function TreemapPlot<T>({
     },
     [loading, controlledView, model, onViewChange, readItem],
   );
+  const loadingClearRequested = useRef(false);
   const setActive = useCallback(
     (id: string | null) => {
-      if (loading) return;
-      setDismissed(false);
-      if (id === activeId) return;
+      if (loading) {
+        if (id !== null || controlledActive !== undefined || localActive === null) return;
+        if (loadingClearRequested.current) return;
+        loadingClearRequested.current = true;
+      } else {
+        setDismissed(false);
+        if (id === activeId) return;
+      }
       if (controlledActive === undefined) updateActive(id);
       onActiveChange?.(id, readItem(id));
     },
-    [loading, controlledActive, onActiveChange, readItem, activeId],
+    [loading, controlledActive, localActive, onActiveChange, readItem, activeId],
   );
   const inspectPointer = useCallback(
     (event: React.PointerEvent, id: string) => {
@@ -368,7 +381,7 @@ function TreemapPlot<T>({
     [loading, controlledSelected, onSelectionChange, readItem],
   );
   const activate = useCallback(
-    (node: TreemapNode<T>) => {
+    (node: TreemapNode<TreemapRecords<T>>) => {
       if (loading) return;
       setSelected(node.id);
       const item = readItem(node.id);
@@ -500,9 +513,19 @@ function TreemapPlot<T>({
   useEffect(() => {
     if (loading) {
       setDismissed(true);
-      if (controlledActive === undefined) updateActive(null);
+      if (controlledActive === undefined) setActive(null);
+    } else {
+      loadingClearRequested.current = false;
     }
-  }, [loading, controlledActive]);
+  }, [loading, controlledActive, setActive]);
+  useEffect(() => {
+    if (loading || activeId === null || !tooltipMounted) return;
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) setDismissed(true);
+    };
+    document.addEventListener("keydown", keydown);
+    return () => document.removeEventListener("keydown", keydown);
+  }, [loading, activeId, tooltipMounted]);
   const consumerRef = props.ref;
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
@@ -536,7 +559,7 @@ function TreemapPlot<T>({
           : String(latestOpacity.current);
     };
   }, [animate, reduced, loading, props.style?.opacity]);
-  const context: TreemapContextValue<T> = {
+  const context: TreemapContextValue<TreemapRecords<T>> = {
     model,
     items,
     frontierIds,
@@ -586,7 +609,7 @@ function TreemapPlot<T>({
         aria-busy={loading || undefined}
         onFocusCapture={(event) => {
           props.onFocusCapture?.(event);
-          focusedInside.current = true;
+          focusedInside.current = event.currentTarget.contains(event.target);
         }}
         onBlurCapture={(event) => {
           props.onBlurCapture?.(event);

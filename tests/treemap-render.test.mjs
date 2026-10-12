@@ -46,6 +46,60 @@ test("treemap glyphs exclude zero area, retain stable IDs and include group head
   assert.match(html, /Same: 6/);
 });
 
+test("treemap native tile props preserve children unless an explicit renderer overrides them", () => {
+  const tileProps = (node) => ({ children: h("strong", null, `Native tile ${node.id}`) });
+  const native = render(chart(h(TreemapChart.Tiles, { tileProps })));
+  for (const id of ["a", "b", "c"]) assert.match(native, new RegExp(`Native tile ${id}`));
+  const explicit = render(
+    chart(h(TreemapChart.Tiles, { tileProps }, (node) => `Rendered tile ${node.id}`)),
+  );
+  assert.match(explicit, /Rendered tile a/);
+  assert.doesNotMatch(explicit, /Native tile/);
+  const empty = render(chart(h(TreemapChart.Tiles, { tileProps }, null)));
+  assert.doesNotMatch(empty, /Native tile/);
+});
+
+test("treemap native header and group props preserve content without an explicit renderer", () => {
+  const props = {
+    headerProps: () => ({ children: h("strong", null, "Native header content") }),
+    groupProps: () => ({ children: h("span", null, "Native group content") }),
+  };
+  const native = render(chart(h(TreemapChart.Groups, props)));
+  assert.match(native, /Native header content/);
+  assert.match(native, /Native group content/);
+  const explicit = render(chart(h(TreemapChart.Groups, props, () => "Rendered group content")));
+  assert.match(explicit, /Rendered group content/);
+  assert.doesNotMatch(explicit, /Native (?:header|group) content/);
+});
+
+test("treemap categorical legend retains six equal-display groups through reorder", () => {
+  const repeated = Array.from({ length: 6 }, (_, index) => ({
+    kind: "group",
+    id: `group-${index}`,
+    label: "Same",
+    children: [{ kind: "leaf", id: `leaf-${index}`, label: "Same", value: 1 }],
+  }));
+  for (const hierarchy of [repeated, [...repeated].reverse()]) {
+    render(
+      chart(
+        h(Capture, {
+          check(context) {
+            const legend = context.colors.legend;
+            assert.equal(legend.type, "categorical");
+            assert.equal(legend.items.length, 6);
+            assert.deepEqual(
+              legend.items.map((item) => item.label),
+              Array(6).fill("Same"),
+            );
+            assert.equal(legend.items[0].color, legend.items[5].color);
+          },
+        }),
+        { data: hierarchy },
+      ),
+    );
+  }
+});
+
 function Capture({ check }) {
   check(useTreemap());
   return null;
@@ -178,4 +232,17 @@ test("stable layout sorts IDs by code units independently of the host locale", (
     ),
   );
   assert.deepEqual(ordered, ["Z", "a", "é"]);
+});
+
+test("Treemap rejects unsupported series visibility instead of silently ignoring it", () => {
+  for (const [name, value] of [
+    ["visibleSeries", []],
+    ["defaultVisibleSeries", []],
+    ["onVisibleSeriesChange", () => {}],
+  ]) {
+    assert.throws(
+      () => render(chart(null, { [name]: value })),
+      new RegExp(`does not accept ${name}`),
+    );
+  }
 });

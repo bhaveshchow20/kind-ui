@@ -187,3 +187,95 @@ const wrongArea: TreemapAccessors<MetadataRecord> = {
   value: (datum) => String(datum.size),
 };
 void wrongArea;
+
+// An inline root group does not describe the leaf records passed to callbacks.
+void (
+  <TreemapChart
+    config={{}}
+    aria-label="Nested inline allocation"
+    data={[
+      {
+        kind: "group",
+        id: "root",
+        label: "Root",
+        groupOnly: "root metadata",
+        children: [
+          {
+            kind: "group",
+            id: "nested",
+            label: "Nested",
+            groupOnly: "nested metadata",
+            children: [{ kind: "leaf", id: "leaf", label: "Leaf", value: 2, unit: "GB" }],
+          },
+        ],
+      },
+    ]}
+    onActivate={(item) => {
+      if (item.datum.kind === "leaf") {
+        const unit: "GB" = item.datum.unit;
+        void unit;
+      } else {
+        const children: readonly unknown[] = item.datum.children;
+        void children;
+      }
+      // @ts-expect-error Descendant leaves do not have root-only metadata.
+      void item.datum.groupOnly;
+    }}
+    formatValue={(value, item) =>
+      item.datum.kind === "leaf" ? `${value} ${item.datum.unit}` : String(value)
+    }
+    encoding={{
+      type: "sequential",
+      value: (datum) => (datum.kind === "leaf" ? datum.value : null),
+    }}
+  >
+    <TreemapChart.Tiles />
+  </TreemapChart>
+);
+
+const wrongVisibility: TreemapChartProps<MetadataRecord> = {
+  ...props,
+  // @ts-expect-error Treemap does not support series visibility.
+  visibleSeries: [],
+};
+const wrongDefaultVisibility: TreemapChartProps<MetadataRecord> = {
+  ...props,
+  // @ts-expect-error Treemap does not support default series visibility.
+  defaultVisibleSeries: [],
+};
+const wrongVisibilityCallback: TreemapChartProps<MetadataRecord> = {
+  ...props,
+  // @ts-expect-error Treemap does not support series visibility callbacks.
+  onVisibleSeriesChange: () => {},
+};
+void [wrongVisibility, wrongDefaultVisibility, wrongVisibilityCallback];
+
+// Accessor-owned records can use children for unrelated metadata.
+interface CustomChildrenRecord {
+  key: string;
+  name: string;
+  size: number;
+  children: readonly { note: string }[];
+  members?: readonly CustomChildrenRecord[];
+}
+const customChildren: readonly CustomChildrenRecord[] = [];
+void (
+  <TreemapChart
+    data={customChildren}
+    config={{}}
+    aria-label="Custom children metadata"
+    accessors={{
+      id: (datum) => datum.key,
+      label: (datum) => datum.name,
+      value: (datum) => datum.size,
+      children: (datum) => datum.members,
+    }}
+    onActivate={(item) => {
+      const original: CustomChildrenRecord = item.datum;
+      const key: string = item.datum.key;
+      void [original, key];
+    }}
+  >
+    {null}
+  </TreemapChart>
+);
