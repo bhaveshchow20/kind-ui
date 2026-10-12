@@ -63,7 +63,7 @@ jobs:
       - run: npm install --global npm@11.9.0
       - run: npm ci
       # All isolated tarball installs, both strict resolution modes, component
-      # re-tests, production builds, Next SSR, Tailwind and Lucide remain here.
+      # re-tests, JS/CSS budgets and both pinned Vite/Next compatibility rows stay here.
       - run: npm run check:packed
         env:
           KIND_UI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -74,6 +74,7 @@ jobs:
           name: charts-browser-fixtures
           path: |
             artifacts/package/
+            artifacts/bundle-measurements.json
             artifacts/packed-*/
             artifacts/line-integrations/
             artifacts/browser-fixtures/
@@ -84,7 +85,10 @@ jobs:
         if: always()
         with:
           name: integration-build-evidence
-          path: artifacts/line-integrations/next-build.log
+          path: |
+            artifacts/line-integrations/*build.log
+            artifacts/line-integrations/*evidence.json
+            artifacts/bundle-measurements.json
           if-no-files-found: warn
           retention-days: ${{ job.status != 'success' && 3 || 1 }}
   playwright:

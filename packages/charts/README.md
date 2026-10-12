@@ -52,6 +52,12 @@ prefixed builds must provide a separate unprefixed Tailwind entry for the packag
 For a nonce-based Content Security Policy, pass the request nonce directly to the
 chart with `nonce` to authorize runtime animation styles.
 
+The repository checks pinned minimum and selected stable Vite/Next combinations;
+the repository’s `docs/compatibility.md` and `docs/bundle-measurements.md`
+record exact versions and measurement limits. Peer ranges do not imply every combination has been
+tested. Package-wide Tailwind `@source` scanning includes utilities for all chart
+families, even when the JavaScript build removes unused families.
+
 ### Theme and overrides
 
 Charts inherit the host’s `--foreground`, `--border`, `--muted`,

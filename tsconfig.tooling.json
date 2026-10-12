@@ -19,6 +19,9 @@
   "include": [
     "scripts/tooling-schemas.mjs",
     "scripts/check-package.mjs",
+    "scripts/bundle-contract.mjs",
+    "scripts/compatibility-matrix.mjs",
+    "scripts/check-line-integrations.mjs",
     "scripts/release-intent.mjs",
     "scripts/release-artifact.mjs",
     "scripts/release-plan.mjs",
