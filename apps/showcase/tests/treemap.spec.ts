@@ -92,12 +92,13 @@ test("sector navigation and data selection retain the independent signed metric"
   // Outside-view nodes retain root/parent shares while the view-share cell is empty.
   await expect(missing.locator("td").nth(4)).toHaveText("—");
   const orbit = table.locator('tr[data-node-id="orbit"]').getByRole("button");
-  await orbit.focus();
   await orbit.click();
   await expect(card.locator('[data-kind-ui="treemap-tile"][data-node-id="orbit"]')).toHaveAttribute(
     "aria-pressed",
     "true",
   );
+  // Selection and keyboard inspection are separate; Safari pointer clicks do not retain focus.
+  await orbit.focus();
   await expect(card.getByRole("tooltip")).toContainText("−1.2%");
   await card
     .getByRole("navigation", { name: "Treemap navigation" })
