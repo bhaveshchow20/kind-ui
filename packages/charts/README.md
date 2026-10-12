@@ -181,9 +181,7 @@ Applications own aggregation, filtering, dates, units, domains and request state
 
 `TreemapChart` explores hierarchical nonnegative area measures. Storage, traffic,
 revenue, holding values and market activity use the same contract; applications
-provide their units, reporting period and accounting meaning. This API belongs to
-the current release candidate. The published `0.5.0` package does not export
-Treemap; installation from npm requires a subsequent release containing it.
+provide their units, reporting period and accounting meaning.
 
 Standard records use `TreemapDatum`: `{ kind: "leaf", id, label, value }` or
 `{ kind: "group", id, label, children }`. Groups derive their area from descendant

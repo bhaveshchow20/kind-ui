@@ -156,7 +156,7 @@ export function TreemapTiles<T = TreemapDatum>({
             kind="treemap-tile"
             {...(tileProps ? { buttonProps: tileProps(node) } : {})}
           >
-            {typeof children === "function" ? children(node) : children}
+            {typeof children === "function" ? (children(node) ?? null) : children}
           </Mark>
         ))}
     </div>
@@ -290,7 +290,13 @@ export function TreemapLabels<T = TreemapDatum>({
                 ...attributes?.style,
               }}
             >
-              {typeof children === "function" ? children(node) : (children ?? node.label)}
+              {typeof children === "function"
+                ? children(node)
+                : children !== undefined
+                  ? children
+                  : attributes?.children !== undefined
+                    ? attributes.children
+                    : node.label}
             </span>
           );
         })}

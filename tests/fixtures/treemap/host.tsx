@@ -114,6 +114,8 @@ export function TreemapHost() {
   const [view, setView] = useState<string | null>(held ? "platforms" : null);
   const [requests, setRequests] = useState(0);
   const [dark, setDark] = useState(false);
+  const [changedOpacity, setChangedOpacity] = useState(false);
+  const [inlineOpacity, setInlineOpacity] = useState<number | undefined>(undefined);
   const [disabled, setDisabled] = useState(false);
   const [groups, setGroups] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -128,6 +130,13 @@ export function TreemapHost() {
         : encoding;
   return (
     <section aria-label="Treemap public consumer">
+      <style>{`.treemap-consumer-opacity-initial { opacity: 0.45; } .treemap-consumer-opacity-changed { opacity: 0.8; }`}</style>
+      <button type="button" onClick={() => setChangedOpacity((value) => !value)}>
+        Class opacity
+      </button>
+      <button type="button" onClick={() => setInlineOpacity(0.7)}>
+        Inline opacity
+      </button>
       <input
         aria-label="Outside focus"
         onKeyDown={(event) => {
@@ -281,14 +290,27 @@ export function TreemapHost() {
             if (!held) setView(id);
           }}
           loading={loading}
+          animate={params.has("animate")}
+          className={
+            params.has("opacity")
+              ? changedOpacity
+                ? "treemap-consumer-opacity-changed"
+                : "treemap-consumer-opacity-initial"
+              : undefined
+          }
           aria-label="Allocation and signed change"
           style={
-            dark
+            dark || inlineOpacity !== undefined
               ? ({
-                  "--foreground": "#f8fafc",
-                  "--background": "#0f172a",
-                  "--popover": "#1e293b",
-                  "--popover-foreground": "#f8fafc",
+                  ...(inlineOpacity === undefined ? {} : { opacity: inlineOpacity }),
+                  ...(dark
+                    ? {
+                        "--foreground": "#f8fafc",
+                        "--background": "#0f172a",
+                        "--popover": "#1e293b",
+                        "--popover-foreground": "#f8fafc",
+                      }
+                    : {}),
                 } as import("react").CSSProperties)
               : undefined
           }

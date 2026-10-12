@@ -238,6 +238,25 @@ function TreemapPlot<T>({
   const root = useRef<HTMLDivElement | null>(null);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
   const focusedInside = useRef(false);
+  const lastFocusedMark = useRef<{
+    id: string;
+    path: readonly string[];
+    element: HTMLButtonElement;
+  } | null>(null);
+  const loadingFocus = useRef<typeof lastFocusedMark.current>(null);
+  useLayoutEffect(() => {
+    const focusin = (event: FocusEvent) => {
+      // Inert content can displace focus to the document without another focusin.
+      // A real focus destination outside the plot is an explicit new intent.
+      if (event.target === document.body || event.target === document.documentElement) return;
+      if (!(event.target instanceof Node) || !root.current?.contains(event.target)) {
+        lastFocusedMark.current = null;
+        loadingFocus.current = null;
+      }
+    };
+    document.addEventListener("focusin", focusin, true);
+    return () => document.removeEventListener("focusin", focusin, true);
+  }, []);
   const [size, setSize] = useState({
     width: typeof width === "number" ? width : 0,
     height: typeof height === "number" ? height : 280,
@@ -443,6 +462,32 @@ function TreemapPlot<T>({
   const focus = useCallback((id: string | null) => {
     if (id !== null) buttons.current.get(id)?.focus();
   }, []);
+  useLayoutEffect(() => {
+    const active = document.activeElement;
+    const displaced =
+      active === null || active === document.body || active === document.documentElement;
+    if (loading) {
+      const remembered = lastFocusedMark.current;
+      if (remembered && (displaced || active === remembered.element)) {
+        loadingFocus.current ??= remembered;
+      }
+      return;
+    }
+    const remembered = loadingFocus.current;
+    if (!remembered) return;
+    loadingFocus.current = null;
+    // Completion must not steal focus from an input, breadcrumb, or table control.
+    if (!displaced && active !== remembered.element) return;
+    const candidates = geometry.rectangles.filter((node) => {
+      const button = buttons.current.get(node.id);
+      return button !== undefined && !button.disabled;
+    });
+    const survivingId = [...remembered.path]
+      .reverse()
+      .find((id) => candidates.some((node) => node.id === id));
+    const target = survivingId ?? candidates[0]?.id ?? null;
+    if (target !== null) focus(target);
+  }, [loading, geometry, focus]);
   const corrections = useRef({ view: "", active: "", selected: "" });
   useLayoutEffect(() => {
     const previous = previousModel.current;
@@ -542,7 +587,9 @@ function TreemapPlot<T>({
     [consumerRef],
   );
   const latestOpacity = useRef(props.style?.opacity);
-  latestOpacity.current = props.style?.opacity;
+  useLayoutEffect(() => {
+    latestOpacity.current = props.style?.opacity;
+  }, [props.style?.opacity]);
   useEffect(() => {
     const element = root.current;
     if (!animate || reduced || loading || !element) return;
@@ -550,7 +597,10 @@ function TreemapPlot<T>({
     const declared = props.style?.opacity;
     const opacity = Number(getComputedStyle(element).opacity);
     const controls = animateMini(element, { opacity: [0, opacity] }, { duration: 0.25 });
-    return () => {
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true;
       controls.stop();
       element.style.opacity = Object.is(latestOpacity.current, declared)
         ? original
@@ -558,6 +608,10 @@ function TreemapPlot<T>({
           ? ""
           : String(latestOpacity.current);
     };
+    // Motion commits its final keyframe inline. Release that temporary style too,
+    // so later consumer classes keep controlling opacity after the entrance ends.
+    void controls.then(release);
+    return release;
   }, [animate, reduced, loading, props.style?.opacity]);
   const context: TreemapContextValue<TreemapRecords<T>> = {
     model,
@@ -610,6 +664,15 @@ function TreemapPlot<T>({
         onFocusCapture={(event) => {
           props.onFocusCapture?.(event);
           focusedInside.current = event.currentTarget.contains(event.target);
+          if (focusedInside.current) {
+            const entry = [...buttons.current].find(
+              ([, button]) => button === (event.target as EventTarget),
+            );
+            const node = entry ? model.byId.get(entry[0]) : undefined;
+            lastFocusedMark.current =
+              entry && node ? { id: node.id, path: node.path, element: entry[1] } : null;
+            if (!loading) loadingFocus.current = null;
+          }
         }}
         onBlurCapture={(event) => {
           props.onBlurCapture?.(event);
@@ -618,6 +681,16 @@ function TreemapPlot<T>({
             !event.currentTarget.contains(event.relatedTarget)
           ) {
             focusedInside.current = false;
+            const content = event.currentTarget.querySelector('[data-kind-ui="treemap-content"]');
+            const inertDisplacement =
+              content?.hasAttribute("inert") &&
+              (event.relatedTarget === null ||
+                event.relatedTarget === document.body ||
+                event.relatedTarget === document.documentElement);
+            if (!inertDisplacement) {
+              lastFocusedMark.current = null;
+              loadingFocus.current = null;
+            }
             setActive(null);
           }
         }}

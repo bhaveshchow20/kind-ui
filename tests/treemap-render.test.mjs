@@ -57,6 +57,40 @@ test("treemap native tile props preserve children unless an explicit renderer ov
   assert.doesNotMatch(explicit, /Native tile/);
   const empty = render(chart(h(TreemapChart.Tiles, { tileProps }, null)));
   assert.doesNotMatch(empty, /Native tile/);
+  for (const renderEmpty of [() => null, () => undefined]) {
+    const html = render(chart(h(TreemapChart.Tiles, { tileProps }, renderEmpty)));
+    assert.doesNotMatch(html, /Native tile/);
+    assert.equal((html.match(/data-kind-ui="treemap-tile"/g) ?? []).length, 3);
+  }
+});
+
+test("treemap native label props preserve children while explicit renderers retain empty results", () => {
+  const labelProps = (node) => ({
+    children: h("strong", null, `Native label ${node.id}`),
+    className: "consumer-label",
+  });
+  const props = { labelProps, minWidth: 0, minHeight: 0, padding: 0 };
+  const native = render(chart(h(TreemapChart.Labels, props)));
+  for (const id of ["a", "b", "c"]) assert.match(native, new RegExp(`Native label ${id}`));
+  assert.match(native, /consumer-label/);
+  const explicit = render(
+    chart(h(TreemapChart.Labels, props, (node) => `Rendered label ${node.id}`)),
+  );
+  assert.match(explicit, /Rendered label a/);
+  assert.doesNotMatch(explicit, /Native label/);
+  for (const child of [null, () => null, () => undefined]) {
+    const html = render(chart(h(TreemapChart.Labels, props, child)));
+    assert.doesNotMatch(html, /Native label|>Same<|>Outside</);
+    assert.equal((html.match(/data-kind-ui="treemap-label"/g) ?? []).length, 3);
+  }
+  const defaultLabels = render(
+    chart(h(TreemapChart.Labels, { ...props, labelProps: () => ({ children: undefined }) })),
+  );
+  assert.match(defaultLabels, />Same<|>Outside</);
+  const emptyNative = render(
+    chart(h(TreemapChart.Labels, { ...props, labelProps: () => ({ children: null }) })),
+  );
+  assert.doesNotMatch(emptyNative, />Same<|>Outside</);
 });
 
 test("treemap native header and group props preserve content without an explicit renderer", () => {
@@ -70,6 +104,10 @@ test("treemap native header and group props preserve content without an explicit
   const explicit = render(chart(h(TreemapChart.Groups, props, () => "Rendered group content")));
   assert.match(explicit, /Rendered group content/);
   assert.doesNotMatch(explicit, /Native (?:header|group) content/);
+  for (const renderEmpty of [() => null, () => undefined]) {
+    const html = render(chart(h(TreemapChart.Groups, props, renderEmpty)));
+    assert.doesNotMatch(html, /Native (?:header|group) content|>Group</);
+  }
 });
 
 test("treemap categorical legend retains six equal-display groups through reorder", () => {

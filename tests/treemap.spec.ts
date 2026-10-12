@@ -613,6 +613,8 @@ test("treemap uncontrolled loading clears active inspection with one original-re
   await update(page, "Colors");
   await update(page, "Resize");
   await expect(output(page, "Active requests")).toHaveText("2");
+  // Completing loading does not restore inspection after the user chooses an outside control.
+  await page.getByRole("textbox", { name: "Outside focus" }).focus();
   await update(page, "Loading");
   await expect(resolvedActive).toHaveText("none");
   await expect(output(page, "Active ID")).toHaveText("none");
@@ -655,4 +657,95 @@ test("treemap empty table group keyboard activation retains focus on its named d
   const table = page.getByRole("table", { name: "Allocation values and signed change" });
   await expect(table).toBeFocused();
   await expect(table.locator("tbody tr")).toHaveCount(0);
+});
+
+for (const mark of ["tile", "header"] as const) {
+  test(`treemap loading completion restores actual ${mark} keyboard focus`, async ({ page }) => {
+    await page.goto("/");
+    const target =
+      mark === "tile"
+        ? tile(page, "a")
+        : page.locator('[data-kind-ui="treemap-group-header"][data-node-id="technology"]');
+    await target.focus();
+    await expect(target).toBeFocused();
+    await update(page, "Loading");
+    await expect(page.locator('[data-kind-ui="treemap-content"]')).toHaveAttribute("inert", "");
+    await expect(target).not.toBeFocused();
+    await update(page, "Loading");
+    await expect(target).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator(":focus")).toHaveAttribute(
+      "data-kind-ui",
+      /treemap-tile|treemap-group-header/,
+    );
+  });
+}
+
+test("treemap loading completion respects the user's outside keyboard focus", async ({ page }) => {
+  await page.goto("/");
+  await tile(page, "a").focus();
+  await update(page, "Loading");
+  await expect(tile(page, "a")).not.toBeFocused();
+  const outside = page.getByRole("textbox", { name: "Outside focus" });
+  await outside.focus();
+  await expect(outside).toBeFocused();
+  await update(page, "Loading");
+  await expect(outside).toBeFocused();
+  await expect(page.locator('[data-kind-ui="treemap-content"]')).not.toHaveAttribute("inert", "");
+});
+
+test("treemap loading restores a removed tile's nearest surviving group focus", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await tile(page, "a").focus();
+  await update(page, "Loading");
+  await expect(tile(page, "a")).not.toBeFocused();
+  await update(page, "Remove platforms");
+  await expect(tile(page, "a")).toHaveCount(0);
+  await update(page, "Loading");
+  const ancestor = page.locator('[data-kind-ui="treemap-group-header"][data-node-id="technology"]');
+  await expect(ancestor).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(output(page, "Resolved view")).toHaveText("technology");
+});
+
+test("treemap loading restores a surviving mark after the focused subtree is removed", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await tile(page, "a").focus();
+  await update(page, "Loading");
+  await update(page, "Remove subtree");
+  await expect(tile(page, "a")).toHaveCount(0);
+  await update(page, "Loading");
+  await expect(page.locator(":focus")).toHaveAttribute("data-node-id", /^(energy|d|e)$/);
+  await expect(page.locator(":focus")).toBeEnabled();
+});
+
+test("treemap completed entrance releases opacity for subsequent consumer CSS changes", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/?animate&opacity");
+  const chart = page.locator('[data-kind-ui="treemap"]');
+  await expect(tile(page, "a")).toBeVisible();
+  await expect(chart).toHaveCSS("opacity", "0.45");
+  await update(page, "Class opacity");
+  await expect(chart).toHaveCSS("opacity", "0.8");
+  await update(page, "Class opacity");
+  await expect(chart).toHaveCSS("opacity", "0.45");
+});
+
+test("treemap loading interruption preserves explicit consumer opacity", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/?animate&opacity");
+  const chart = page.locator('[data-kind-ui="treemap"]');
+  await update(page, "Inline opacity");
+  await update(page, "Loading");
+  await expect(chart).toHaveCSS("opacity", "0.7");
+  await update(page, "Loading");
+  await expect(chart).toHaveCSS("opacity", "0.7");
+  await update(page, "Class opacity");
+  await expect(chart).toHaveCSS("opacity", "0.7");
 });
