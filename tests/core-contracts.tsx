@@ -9,7 +9,6 @@ import {
   type HistogramMeasure,
   LineChart,
   prepareSankeyData,
-  Root,
   type SankeyFlowData,
   type SeriesConfig,
   WaterfallChart,
@@ -85,19 +84,31 @@ void [stringEndpoint, numericNodeId, unvalidatedMetadata];
 
 const config = { value: { color: "red" } } satisfies SeriesConfig;
 const rows = [{ label: "A", value: 0 }];
-void (<LineChart config={config} data={rows} xDataKey="label" aria-label="Values" />);
+type Row = (typeof rows)[number];
+void (
+  <LineChart config={config} data={rows} aria-label="Values">
+    <LineChart.XAxis<Row> dataKey="label" />
+    <LineChart.Series<Row, number> dataKey="value" />
+  </LineChart>
+);
 void (
   <WaterfallChart config={config} data={waterfall} aria-label="Balances">
     <WaterfallChart.Series seriesKey="value" />
   </WaterfallChart>
 );
-// @ts-expect-error Configured generated composition requires a name.
-void (<LineChart config={config} data={rows} xDataKey="label" />);
-// @ts-expect-error Inferred rows constrain generated axis data keys.
-void (<LineChart config={config} data={rows} xDataKey="missing" aria-label="Values" />);
 void (
   (
-    // @ts-expect-error Explicit children cannot also request generated axes.
+    // @ts-expect-error Compound composition requires a name.
+    <LineChart config={config} data={rows}>
+      {null}
+    </LineChart>
+  )
+);
+// @ts-expect-error Typed compound axes constrain data keys to row fields.
+void (<LineChart.XAxis<Row> dataKey="missing" />);
+void (
+  (
+    // @ts-expect-error Generated axis shorthand is not part of compound composition.
     <LineChart config={config} data={rows} xDataKey="label" aria-label="Values">
       {null}
     </LineChart>
@@ -105,21 +116,38 @@ void (
 );
 // @ts-expect-error Waterfall owns its range data key; the compound part preserves that exclusion.
 void (<WaterfallChart.Series dataKey="value" />);
-// @ts-expect-error Visibility has exactly one owner.
-void (<Root config={config} visibleSeries={["value"]} defaultVisibleSeries={["value"]} />);
 void (
-  <Root
-    config={config}
-    // @ts-expect-error Controlled focus requires its selection callback.
-    interaction={{ kind: "series", selected: "value", eligibleKeys: ["value"] }}
-  />
+  (
+    // @ts-expect-error Visibility has exactly one owner.
+    <LineChart
+      config={config}
+      aria-label="Values"
+      visibleSeries={["value"]}
+      defaultVisibleSeries={["value"]}
+    >
+      {null}
+    </LineChart>
+  )
 );
 void (
-  <Root
+  <LineChart
     config={config}
+    aria-label="Values"
+    // @ts-expect-error Controlled focus requires its selection callback.
+    interaction={{ kind: "series", selected: "value", eligibleKeys: ["value"] }}
+  >
+    {null}
+  </LineChart>
+);
+void (
+  <LineChart
+    config={config}
+    aria-label="Values"
     // @ts-expect-error Node identities have focus semantics only.
     interaction={{ kind: "node", mode: "visibility", eligibleKeys: ["value"] }}
-  />
+  >
+    {null}
+  </LineChart>
 );
 // @ts-expect-error Both theme palettes are required.
 const incompleteTheme: SeriesConfig = { value: { color: { light: "red" } } };
