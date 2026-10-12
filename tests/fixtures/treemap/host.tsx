@@ -186,6 +186,7 @@ export function TreemapHost() {
         config={{}}
         width={width}
         height={400}
+        padding={params.has("padding") ? Number(params.get("padding")) : 2}
         {...(deep ? {} : { depth: 1 })}
         selectedId={selected}
         onSelectionChange={setSelected}

@@ -502,6 +502,13 @@ try {
     ["treemap-model-consumer.ts"],
     { strictOptionalTypes: true },
   );
+  await copyFile(join(root, "tests/treemap-consumer.tsx"), join(consumer, "treemap-consumer.tsx"));
+  await checkTypes(
+    consumer,
+    join(root, "node_modules/typescript/bin/tsc"),
+    ["treemap-consumer.tsx"],
+    { strictOptionalTypes: true },
+  );
   console.log("Core unsafe-input type regressions: packed NodeNext/Bundler consumers passed");
   const genericsConsumer = await readFile(join(root, "tests/series-generics-consumer.tsx"), "utf8");
   assertLineConsumerSource(genericsConsumer);

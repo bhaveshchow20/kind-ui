@@ -23,6 +23,7 @@ export type TreemapLayoutOptions = {
   layout?: "stable" | "squarify";
 };
 type LayoutDatum = { id: string; value: number; children?: LayoutDatum[] };
+const compareIds = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 /** A chart-local cache retains resquarify rows only while topology and view are unchanged. */
 export type TreemapLayoutCache = {
   signature: string;
@@ -61,13 +62,13 @@ export function layoutTreemap<T>(
     id: node.id,
     value: node.kind === "leaf" ? node.value : 0,
     ...(node.kind === "group"
-      ? { children: node.children.map(convert).sort((a, b) => a.id.localeCompare(b.id)) }
+      ? { children: node.children.map(convert).sort((a, b) => compareIds(a.id, b.id)) }
       : {}),
   });
   const data: LayoutDatum = {
     id: "",
     value: 0,
-    children: roots.map(convert).sort((a, b) => a.id.localeCompare(b.id)),
+    children: roots.map(convert).sort((a, b) => compareIds(a.id, b.id)),
   };
   const topology = (node: LayoutDatum): unknown => [node.id, node.children?.map(topology)];
   const signature = JSON.stringify([viewId, layout, topology(data)]);
@@ -75,7 +76,7 @@ export function layoutTreemap<T>(
     previous?.signature === signature
       ? previous.root
       : (hierarchy(data).sort((a, b) =>
-          a.data.id.localeCompare(b.data.id),
+          compareIds(a.data.id, b.data.id),
         ) as HierarchyRectangularNode<LayoutDatum>);
   const geometrySignature = JSON.stringify([
     signature,

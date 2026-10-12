@@ -287,8 +287,14 @@ alternative containing small and zero-valued items.
 `layout="stable"` (default) retains layout
 rows while hierarchy membership and subtree view remain unchanged; regrouping,
 membership changes or a new view invalidate that cache. `layout="squarify"`
-recomputes rows. Stable IDs preserve identity, not fixed coordinates. Core uses
-the narrow ISC-licensed `d3-hierarchy` layout dependency with React-owned marks
+recomputes rows. Stable IDs preserve identity, not fixed coordinates.
+
+At dense sizes, padding can collapse a positive leaf to zero drawable area; its
+record remains available in the table. Reduce padding or supply deeper groups to
+inspect crowded data. Browser fixtures exercise 500 and 2,000 leaves with zero
+padding; these counts are tested scenarios rather than a maximum capacity.
+
+The implementation uses the narrow ISC-licensed `d3-hierarchy` layout dependency with React-owned marks
 to retain ID-based focus and control grouped headers. Color-only updates do not
 recalculate geometry; area updates and resize can move tiles. `animate` is opt-in
 and respects reduced motion. Applications own loading, filtering and request

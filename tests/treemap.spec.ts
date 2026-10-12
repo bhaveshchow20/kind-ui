@@ -190,12 +190,14 @@ for (const count of [500, 2000])
     page,
   }, info) => {
     const started = Date.now();
-    await page.goto(`/?count=${count}`);
+    await page.goto(`/?count=${count}&padding=0`);
     await expect(page.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(count);
     await expect(page.locator("tbody tr")).toHaveCount(count + 1);
-    info.annotations.push({
-      type: "render-duration-ms",
-      description: String(Date.now() - started),
+    const initialRenderMs = Date.now() - started;
+    info.annotations.push({ type: "render-duration-ms", description: String(initialRenderMs) });
+    await info.attach("treemap-density", {
+      body: JSON.stringify({ count, padding: 0, initialRenderMs }),
+      contentType: "application/json",
     });
     await tile(page, "resource-0").focus();
     await page.keyboard.press("End");
@@ -403,4 +405,15 @@ test("treemap removes focused group refs with cleanup and restores focus to rend
   await expect(page.locator('[data-kind-ui="treemap-tile"][tabindex="0"]')).toHaveCount(1);
   expect(errors).toEqual([]);
   await retained.dispose();
+});
+
+test("treemap crowded padding retains every record in its semantic alternative", async ({
+  page,
+}) => {
+  await page.goto("/?count=2000&padding=6");
+  await expect(page.locator("tbody tr")).toHaveCount(2001);
+  const glyphs = await page.locator('[data-kind-ui="treemap-tile"]').count();
+  expect(glyphs).toBeGreaterThan(0);
+  expect(glyphs).toBeLessThan(2000);
+  await expect(page.locator('tbody tr[data-node-id="resource-0"]')).toBeVisible();
 });

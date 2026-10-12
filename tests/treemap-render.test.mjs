@@ -132,3 +132,24 @@ test("leaf labels fit only when the caller's minimum rectangle is available", ()
   const html = render(chart(h(TreemapChart.Labels, { minWidth: 500 })));
   assert.doesNotMatch(html, /data-kind-ui="treemap-label"/);
 });
+
+test("stable layout sorts IDs by code units independently of the host locale", () => {
+  const ordered = [];
+  render(
+    chart(
+      h(Capture, {
+        check(context) {
+          ordered.push(...context.rectangles.map((node) => node.id));
+        },
+      }),
+      {
+        data: [
+          { kind: "leaf", id: "é", label: "Accent", value: 1 },
+          { kind: "leaf", id: "a", label: "Lowercase", value: 1 },
+          { kind: "leaf", id: "Z", label: "Uppercase", value: 1 },
+        ],
+      },
+    ),
+  );
+  assert.deepEqual(ordered, ["Z", "a", "é"]);
+});
