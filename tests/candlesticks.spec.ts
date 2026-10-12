@@ -181,11 +181,17 @@ test("elapsed spacing, logarithmic geometry and fixed price clipping retain pane
         ),
       );
   const ordinal = await centers();
-  expect((ordinal[2]! - ordinal[1]!) / (ordinal[1]! - ordinal[0]!)).toBeCloseTo(2, 5);
+  const [firstOrdinal, secondOrdinal, thirdOrdinal] = ordinal;
+  if (firstOrdinal === undefined || secondOrdinal === undefined || thirdOrdinal === undefined)
+    throw new Error("Missing ordinal positions");
+  expect((thirdOrdinal - secondOrdinal) / (secondOrdinal - firstOrdinal)).toBeCloseTo(2, 5);
   await page.getByRole("button", { name: "Spacing", exact: true }).click();
   await expect(async () => {
     const elapsed = await centers();
-    expect((elapsed[2]! - elapsed[1]!) / (elapsed[1]! - elapsed[0]!)).toBeCloseTo(4, 5);
+    const [firstElapsed, secondElapsed, thirdElapsed] = elapsed;
+    if (firstElapsed === undefined || secondElapsed === undefined || thirdElapsed === undefined)
+      throw new Error("Missing elapsed positions");
+    expect((thirdElapsed - secondElapsed) / (secondElapsed - firstElapsed)).toBeCloseTo(4, 5);
   }).toPass();
   await page.getByRole("button", { name: "Log scale", exact: true }).click();
   await expect(async () => {
