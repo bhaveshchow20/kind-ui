@@ -312,9 +312,9 @@
     "candlestick": {
       "baseline": {
         "js": {
-          "raw": 825336,
-          "gzip": 248074,
-          "brotli": 208812
+          "raw": 825914,
+          "gzip": 248214,
+          "brotli": 209005
         },
         "css": {
           "raw": 34206,
@@ -324,9 +324,9 @@
       },
       "maximum": {
         "js": {
-          "raw": 907870,
-          "gzip": 272882,
-          "brotli": 229694
+          "raw": 908506,
+          "gzip": 273036,
+          "brotli": 229906
         },
         "css": {
           "raw": 37627,
