@@ -25,7 +25,7 @@ test("CLI and manual installation use each canonical editable composition", () =
     const markdown = installationMarkdown(bundle);
     assert.ok(markdown.includes(source.trimEnd()));
     assert.ok(markdown.includes(installation.command));
-    assert.match(markdown, /npm install @kind-ui\/charts@0\.5\.0 motion recharts/);
+    assert.match(markdown, /npm install @kind-ui\/charts motion recharts/);
     assert.doesNotMatch(
       markdown,
       /LICENSE|localhost|127\.0\.0\.1|\/charts\/docs\/r\/|add @kind-ui\/charts\//,

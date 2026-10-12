@@ -11,7 +11,7 @@ test("Installation keeps Core, Tailwind and CLI setup concise", () => {
     [...guide.matchAll(/^### (.+)$/gm)].map((match) => match[1]),
     ["Install the package", "Configure Tailwind CSS v4", "Add a chart"],
   );
-  assert.match(guide, /npm install @kind-ui\/charts@0\.5\.0 motion recharts/);
+  assert.match(guide, /npm install @kind-ui\/charts motion recharts/);
   assert.match(guide, /npx shadcn@latest add @kind-ui\/line-chart/);
   assert.match(guide, /npm install @kind-ui\/charts/);
   assert.match(guide, /@source "\.\.\/node_modules\/@kind-ui\/charts\/dist"/);

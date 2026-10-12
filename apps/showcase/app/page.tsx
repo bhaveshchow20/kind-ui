@@ -22,6 +22,7 @@ import { AdvancedChartCard, advancedRecipes } from "@/components/advanced-chart-
 import { CodeBlock } from "@/components/code-block";
 import { DemoControls } from "@/components/demo-controls";
 import { HeroHeadline } from "@/components/framework-pill";
+import { InstallChartPicker } from "@/components/install-chart-picker";
 import { KindLogo } from "@/components/kind-logo";
 import { NewChartCard } from "@/components/new-chart-card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ import {
 } from "@/lib/site-links";
 import { useCopyCode } from "@/lib/use-copy-code";
 import { demoEntry } from "@/lib/utils";
+import { chartItemName } from "../../../registry/names.mjs";
 import { chartSourceData } from "../../seo.mjs";
 
 type Material = "plain" | "clay" | "glow";
@@ -595,47 +597,29 @@ function DocumentationSearch() {
   );
 }
 
-const coreInstallCommands = {
-  npm: "npm install @kind-ui/charts@0.5.0",
-  pnpm: "pnpm add @kind-ui/charts@0.5.0",
-  yarn: "yarn add @kind-ui/charts@0.5.0",
-  bun: "bun add @kind-ui/charts@0.5.0",
+const installCommands = {
+  npm: "npm install @kind-ui/charts",
+  pnpm: "pnpm add @kind-ui/charts",
+  yarn: "yarn add @kind-ui/charts",
+  bun: "bun add @kind-ui/charts",
+  shadcn: "npx shadcn@latest add @kind-ui/line-chart",
 };
-const cliInstallCommands = {
-  npm: "npx shadcn@latest add @kind-ui/line-chart",
-  pnpm: "pnpm dlx shadcn@latest add @kind-ui/line-chart",
-  yarn: "yarn dlx shadcn@latest add @kind-ui/line-chart",
-  bun: "bunx --bun shadcn@latest add @kind-ui/line-chart",
-};
-type PackageManager = keyof typeof coreInstallCommands;
-type InstallMethod = "core" | "cli";
+const installChartNames = [
+  "line",
+  ...families
+    .filter((family) => family !== "Line")
+    .map((family) => family.toLowerCase().replaceAll(" ", "-"))
+    .sort(),
+  "radial-activity",
+].map(chartItemName);
+type InstallOption = keyof typeof installCommands;
 
 function InstallSection() {
-  const [method, setMethod] = useState<InstallMethod>("core");
-  return (
-    <section className="install-section" aria-label="Install Kind UI Charts">
-      <Tabs value={method} onValueChange={(value) => setMethod(value as InstallMethod)}>
-        <TabsList
-          className="install-manager-tabs install-method-tabs"
-          aria-label="Installation method"
-        >
-          <TabsTrigger value="core">Core</TabsTrigger>
-          <TabsTrigger value="cli">CLI</TabsTrigger>
-        </TabsList>
-        <TabsContent value="core">
-          <InstallCommands method="core" />
-        </TabsContent>
-        <TabsContent value="cli">
-          <InstallCommands method="cli" />
-        </TabsContent>
-      </Tabs>
-    </section>
-  );
-}
-
-function InstallCommands({ method }: { method: InstallMethod }) {
-  const installCommands = method === "core" ? coreInstallCommands : cliInstallCommands;
-  const [manager, setManager] = useState<PackageManager>("npm");
+  const [manager, setManager] = useState<InstallOption>("npm");
+  const [chart, setChart] = useState("line-chart");
+  const [copyHovered, setCopyHovered] = useState(false);
+  const [copyFocused, setCopyFocused] = useState(false);
+  const shadcnCommand = `npx shadcn@latest add @kind-ui/${chart}`;
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -650,7 +634,9 @@ function InstallCommands({ method }: { method: InstallMethod }) {
   async function copyCommand() {
     const request = ++copyRequest.current;
     try {
-      await navigator.clipboard.writeText(installCommands[manager]);
+      await navigator.clipboard.writeText(
+        manager === "shadcn" ? shadcnCommand : installCommands[manager],
+      );
       window.dispatchEvent(new CustomEvent("kind-ui-copy", { detail: "install" }));
       if (request !== copyRequest.current) return;
       setCopied(true);
@@ -662,21 +648,21 @@ function InstallCommands({ method }: { method: InstallMethod }) {
     }
   }
   return (
-    <>
+    <section className="install-section" aria-label="Install Kind UI Charts">
       <Tabs
         className="install-panel"
         value={manager}
         onValueChange={(value) => {
           copyRequest.current += 1;
           clearTimeout(copyTimer.current);
-          setManager(value as PackageManager);
+          setManager(value as InstallOption);
           setCopied(false);
           setCopyFailed(false);
         }}
       >
         <div className="install-panel-header">
-          <TabsList className="install-manager-tabs" aria-label="Package manager">
-            {(Object.keys(installCommands) as PackageManager[]).map((key) => (
+          <TabsList className="install-manager-tabs" aria-label="Installation option">
+            {(Object.keys(installCommands) as InstallOption[]).map((key) => (
               <TabsTrigger key={key} value={key}>
                 {key}
               </TabsTrigger>
@@ -687,22 +673,48 @@ function InstallCommands({ method }: { method: InstallMethod }) {
             size="icon-sm"
             className="install-copy"
             onClick={copyCommand}
+            onMouseEnter={() => setCopyHovered(true)}
+            onMouseLeave={() => setCopyHovered(false)}
+            onFocus={() => setCopyFocused(true)}
+            onBlur={() => setCopyFocused(false)}
             aria-label={copied ? "Install command copied" : "Copy install command"}
           >
             {copied ? <Check /> : <Copy />}
           </Button>
         </div>
-        {(Object.keys(installCommands) as PackageManager[]).map((key) => (
+        {(Object.keys(installCommands) as InstallOption[]).map((key) => (
           <TabsContent key={key} value={key} className="install-panel-content">
-            <code data-install={method}>
+            <code data-install={key}>
               <span className="install-prompt" aria-hidden="true">
                 ${" "}
               </span>
-              <span className="install-tool">{installCommands[key].split(" ")[0]}</span>{" "}
-              {installCommands[key].split(" ").slice(1, -1).join(" ")}{" "}
-              <span className="install-package">
-                {method === "core" ? "@kind-ui/charts@0.5.0" : "@kind-ui/line-chart"}
-              </span>
+              {key === "shadcn" ? (
+                <>
+                  <span className="install-tool">npx</span>
+                  {" shadcn@latest add "}
+                  <span className="install-registry-target">
+                    <span>@kind-ui/</span>
+                    <InstallChartPicker
+                      options={installChartNames}
+                      value={chart}
+                      paused={copyHovered || copyFocused}
+                      onValueChange={(name) => {
+                        copyRequest.current += 1;
+                        clearTimeout(copyTimer.current);
+                        setCopied(false);
+                        setCopyFailed(false);
+                        setChart(name);
+                      }}
+                    />
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="install-tool">{installCommands[key].split(" ")[0]}</span>{" "}
+                  {installCommands[key].split(" ").slice(1, -1).join(" ")}{" "}
+                  <span className="install-package">@kind-ui/charts</span>
+                </>
+              )}
             </code>
           </TabsContent>
         ))}
@@ -714,7 +726,7 @@ function InstallCommands({ method }: { method: InstallMethod }) {
             ? "Could not copy. Select the command to copy manually."
             : ""}
       </span>
-    </>
+    </section>
   );
 }
 

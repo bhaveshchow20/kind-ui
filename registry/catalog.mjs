@@ -1,4 +1,5 @@
 import { allExamples, examples } from "../apps/docs/examples/catalog.mjs";
+import { chartItemName } from "./names.mjs";
 
 // The docs catalog owns chart choices and compositions; this catalog owns install addresses.
 export const registryItems = [
@@ -8,7 +9,7 @@ export const registryItems = [
   if (!example) throw new Error("Missing canonical activity rings composition");
   return {
     exampleId: example.id,
-    name: example.id === "radial-activity" ? "activity-rings" : `${example.id}-chart`,
+    name: chartItemName(example.id),
     title: example.title,
     description: example.notes,
   };

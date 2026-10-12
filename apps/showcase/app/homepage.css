@@ -168,19 +168,43 @@ button:disabled {
   text-wrap: wrap;
 }
 .hero-install {
-  width: min(380px, 100%);
+  width: max-content;
+  max-width: 100%;
   margin: 32px auto 0;
 }
 .install-section {
   width: 100%;
 }
-.install-method-tabs {
-  margin-inline: auto;
-}
-.install-panel-content code[data-install="cli"] {
+.install-panel-content code[data-install="shadcn"] {
   font-size: 12px;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+.install-registry-target {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+.install-chart-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.install-chart-picker:focus-visible {
+  outline: 1px solid var(--foreground);
+  outline-offset: 3px;
+}
+.install-chart-name {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  pointer-events: none;
 }
 .install-panel {
   padding: 10px 16px 16px;
@@ -234,6 +258,8 @@ button:disabled {
 }
 .install-panel-content {
   padding: 0 6px;
+  min-width: 0;
+  overflow-x: auto;
 }
 .install-panel-content code {
   font:
@@ -780,6 +806,11 @@ html:not(.dark) .component-playground {
   }
   .playground-copy {
     padding: 6px;
+  }
+}
+@media (max-width: 380px) {
+  .install-manager-tabs [role="tab"] {
+    padding-inline: 5px;
   }
 }
 
