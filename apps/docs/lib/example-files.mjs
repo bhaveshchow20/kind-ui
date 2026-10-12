@@ -20,7 +20,7 @@ export function promptFor(bundle, _settings, variant = bundle.defaultVariant) {
     `Retrieve the standalone source: ${source}.`,
     `Read the family contract: ${markdown}. Setup: ${new URL("markdown/installation.md", deployedDocsUrl).href}. Example manifest: ${new URL(`examples/${bundle.id}/package.json`, deployedDocsUrl).href}.`,
     `Install @kind-ui/charts and its documented React, React DOM, Recharts and Motion peers. Build Tailwind v4 CSS with an @source path to node_modules/@kind-ui/charts/dist relative to your CSS file. Use public exports and the example's composition owner.`,
-    `Adapt the data to my task. Keep units, domains, stable identities and missing-value rules explicit; ask if they are unspecified. Include a meaningful chart name. ${bundle.family === "candlestick" ? "Preserve the explicit readout and data table parts included in the selected example." : "Keep the example graph-only; do not add hidden alternative tables."}`,
+    `Adapt the data to my task. Keep units, domains, stable identities and missing-value rules explicit; ask if they are unspecified. Include a meaningful chart name. ${bundle.id === "candlestick-updates" ? "Preserve the explicit readout and data table parts included in the selected example." : bundle.family === "candlestick" ? "Preserve the explicit readout part included in the selected example." : "Keep the example graph-only; do not add hidden alternative tables."}`,
     `Run strict TypeScript and a production build. Check mobile containment, keyboard access, loading and reduced motion; report the results.`,
   ].join("\n\n");
 }

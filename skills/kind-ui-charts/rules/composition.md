@@ -3,7 +3,7 @@
 | Question/data | Family | Host decision |
 | --- | --- | --- |
 | Trend over ordered observations | Line | Sort order, missing-value policy |
-| OHLC price intervals | Candlestick (Core 0.6.0 or later; source candidate) | Time mode, spacing, price/volume units, bounds and viewport ownership |
+| OHLC price intervals | Candlestick | Time mode, spacing, price/volume units, bounds and viewport ownership |
 | Magnitude over time | Area | Stack only commensurate measures with matching stackId |
 | Compare categories or rank | Bar | Orientation, baseline, signed units |
 | Mixed marks or different units | Combo | Series and explicit axis IDs/domains |

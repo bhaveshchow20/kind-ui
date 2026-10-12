@@ -97,12 +97,26 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
   expect(copiedSource).toContain("<CandlestickChart");
   expect(copiedSource).toContain("<CandlestickSeries");
   expect(copiedSource).toContain("<CandlestickVolume");
-  await asset.getByRole("button", { name: "Copy prompt", exact: true }).click();
-  const prompt = await page.evaluate(() => navigator.clipboard.readText());
-  expect(prompt).toContain("https://kindui.dev/charts/docs/");
-  expect(prompt).not.toMatch(
-    /Published Core|Public installation requires|candidate artifact|wait for|unreleased|0\.6\.0/i,
-  );
+  for (const [id, example] of [
+    ["candlestick", asset],
+    ["candlestick-binary", binary],
+    ["candlestick-updates", updates],
+  ] as const) {
+    await example.getByRole("button", { name: "Copy prompt", exact: true }).click();
+    const prompt = await page.evaluate(() => navigator.clipboard.readText());
+    const selectedSource =
+      id === "candlestick" ? "variants/ready/example.tsx" : `src/examples/${id}/example.tsx`;
+    expect(prompt).toContain(`https://kindui.dev/charts/docs/examples/${id}/${selectedSource}`);
+    if (id === "candlestick-updates")
+      expect(prompt).toContain("Preserve the explicit readout and data table parts");
+    else {
+      expect(prompt).toContain("Preserve the explicit readout part");
+      expect(prompt).not.toMatch(/data table|alternative tables/);
+    }
+    expect(prompt).not.toMatch(
+      /Published Core|Public installation requires|candidate artifact|wait for|unreleased|0\.6\.0/i,
+    );
+  }
   expect(errors).toEqual([]);
 });
 test("Candlestick installation and section copy controls fit narrow layouts with enlarged text", async ({

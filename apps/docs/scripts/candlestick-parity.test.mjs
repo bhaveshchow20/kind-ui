@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import ts from "typescript";
 import { itemNameFor, registryItems } from "../../../registry/catalog.mjs";
 import { allExamples, examples } from "../examples/catalog.mjs";
 import { installationFor, installationMarkdown } from "../lib/chart-installation.mjs";
@@ -59,17 +60,85 @@ test("installation reports missing registry and source contracts", () => {
   assert.throws(() => installationFor({ ...bundle, files: {} }), /Missing installation source/);
 });
 
-test("Candlestick copy prompts retain the source, data alternatives and deployed retrieval links", () => {
-  const validated = componentBundlesSchema.parse({ candlestick: bundle }).candlestick;
-  const prompt = promptFor(validated, {});
-  assert.match(prompt, /https:\/\/kindui\.dev\/charts\/docs\/components\/candlestick\//);
-  assert.match(prompt, /https:\/\/kindui\.dev\/charts\/docs\/examples\/candlestick/);
-  assert.match(prompt, /Preserve the explicit readout and data table/);
-  assert.doesNotMatch(
-    prompt,
-    /source candidate|wait for|unreleased|checksum|provenance|0\.6\.0|127\.0\.0\.1|localhost/i,
+test("Candlestick copy prompts preserve the parts actually included in each recipe", () => {
+  for (const example of allExamples.filter(({ family }) => family === "candlestick")) {
+    const recipeSource = readFileSync(
+      new URL(`../examples/${example.id}/example.tsx`, import.meta.url),
+      "utf8",
+    );
+    const recipeBundle = {
+      ...bundle,
+      id: example.id,
+      title: example.title,
+      files: { [`src/examples/${example.id}/example.tsx`]: recipeSource },
+    };
+    const validated = componentBundlesSchema.parse({ [example.id]: recipeBundle })[example.id];
+    const prompt = promptFor(validated, {});
+    assert.match(prompt, /https:\/\/kindui\.dev\/charts\/docs\/components\/candlestick\//);
+    assert.ok(
+      prompt.includes(
+        `https://kindui.dev/charts/docs/examples/${example.id}/src/examples/${example.id}/example.tsx`,
+      ),
+    );
+    assert.match(recipeSource, /<CandlestickContent/);
+    if (example.id === "candlestick-updates") {
+      assert.match(recipeSource, /<CandlestickDataTable/);
+      assert.match(prompt, /Preserve the explicit readout and data table parts/);
+    } else {
+      assert.doesNotMatch(recipeSource, /<CandlestickDataTable/);
+      assert.match(prompt, /Preserve the explicit readout part/);
+      assert.doesNotMatch(prompt, /data table|alternative tables/);
+    }
+    assert.doesNotMatch(
+      prompt,
+      /source candidate|wait for|unreleased|checksum|provenance|0\.6\.0|127\.0\.0\.1|localhost/i,
+    );
+    assert.deepEqual(filesFor(validated, {}), recipeBundle.files);
+  }
+});
+
+test("Candlestick Usage is a client module and consumer selection guidance has no obsolete release gate", () => {
+  const page = readFileSync(
+    new URL("../content/docs/components/candlestick.mdx", import.meta.url),
+    "utf8",
   );
-  assert.deepEqual(filesFor(validated, {}), bundle.files);
+  const usage = page.match(
+    /```tsx title="components\/candlestick-example\.tsx"\n([\s\S]*?)\n```/,
+  )?.[1];
+  assert.ok(usage, "Missing complete Candlestick Usage module");
+  const parsed = ts.createSourceFile(
+    "candlestick-example.tsx",
+    usage,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  const directive = parsed.statements[0];
+  assert.ok(
+    directive &&
+      ts.isExpressionStatement(directive) &&
+      ts.isStringLiteral(directive.expression) &&
+      directive.expression.text === "use client",
+    "Usage must declare its client boundary before importing compound chart parts",
+  );
+  assert.match(usage, /import \{ CandlestickChart \} from "@kind-ui\/charts"/);
+  const emitted = ts.transpileModule(usage, {
+    fileName: "candlestick-example.tsx",
+    reportDiagnostics: true,
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      jsx: ts.JsxEmit.ReactJSX,
+    },
+  });
+  assert.deepEqual(emitted.diagnostics ?? [], []);
+  const guidance = readFileSync(
+    new URL("../../../skills/kind-ui-charts/rules/composition.md", import.meta.url),
+    "utf8",
+  );
+  assert.match(guidance, /\| OHLC price intervals \| Candlestick \|/);
+  for (const text of [page, guidance])
+    assert.doesNotMatch(text, /source candidate|wait for|unreleased|Core 0\.6\.0/i);
 });
 
 test("generated Candlestick examples expose complete source and standard installation metadata", () => {
@@ -93,10 +162,14 @@ test("generated Candlestick examples expose complete source and standard install
       actual.files["README.md"],
       /source candidate|wait for|unreleased|provenance|0\.6\.0/i,
     );
-    assert.doesNotMatch(
-      promptFor(actual, {}),
-      /source candidate|wait for|unreleased|provenance|0\.6\.0/i,
+    const prompt = promptFor(actual, {});
+    const selectedSource = actual.defaultVariant
+      ? `variants/${actual.defaultVariant}/example.tsx`
+      : `src/examples/${example.id}/example.tsx`;
+    assert.ok(
+      prompt.includes(`https://kindui.dev/charts/docs/examples/${example.id}/${selectedSource}`),
     );
+    assert.doesNotMatch(prompt, /source candidate|wait for|unreleased|provenance|0\.6\.0/i);
   }
   assert.equal(bundles.candlestick.registryItemName, "candlestick-chart");
 });
