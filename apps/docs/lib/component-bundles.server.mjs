@@ -7,7 +7,6 @@ export const componentBundleSchema = z.looseObject({
   family: z.string(),
   files: z.record(z.string(), z.string()),
   packageStatus: z.string(),
-  candidateSha256: z.string().optional(),
   localPackage: z.boolean(),
   version: z.string(),
   registryItemName: z.string().optional(),

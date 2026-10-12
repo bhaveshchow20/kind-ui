@@ -1,28 +1,9 @@
-/** @typedef {{id: string, family?: string | undefined, version: string, packageStatus?: string | undefined, candidateSha256?: string | undefined, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
+/** @typedef {{id: string, family?: string | undefined, version: string, packageStatus?: string | undefined, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
 /** @typedef {{title: string, description: string, code: string, language: "sh" | "css" | "tsx", filename: string}} InstallationStep */
 
 /** @param {InstallationBundle} bundle */
 export function installationFor(bundle) {
   const itemName = bundle.registryItemName;
-  const isTreemap = bundle.id === "treemap" || bundle.family === "treemap";
-  const release = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(bundle.version);
-  const newerThanPublishedBase =
-    release !== null &&
-    (Number(release[1]) > 0 ||
-      Number(release[2]) > 5 ||
-      (Number(release[2]) === 5 && Number(release[3]) > 0));
-  const candidate =
-    bundle.candidateSha256 !== undefined || bundle.packageStatus === "Treemap candidate artifact";
-  if (isTreemap && (!itemName || candidate || !newerThanPublishedBase)) {
-    return {
-      available: false,
-      itemName: "treemap-chart",
-      command: "",
-      steps: [],
-      message:
-        "Treemap requires a Charts release containing this API. Published @kind-ui/charts@0.5.0 does not export it. The examples here are verified against a reviewed candidate archive; public CLI installation will activate after publication and a matching registry update.",
-    };
-  }
   if (!itemName) throw new Error(`No registry installation for example ${bundle.id}`);
   const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
   if (source === undefined) throw new Error(`Missing installation source: ${bundle.id}`);
@@ -72,7 +53,6 @@ export function installationFor(bundle) {
 /** @param {InstallationBundle} bundle */
 export function installationMarkdown(bundle) {
   const installation = installationFor(bundle);
-  if (!installation.available) return `${installation.message}\n`;
   const { command, steps } = installation;
   return (
     "### CLI\n\nRun this command in your initialized shadcn project:\n\n" +

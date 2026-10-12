@@ -129,7 +129,7 @@ test("position tooltip preserves signed short metadata without changing gross ar
   await expect(card.locator('tr[data-node-id="summit-short"]')).toContainText("Unknown");
 });
 
-test("treemap controls and clipboard code retain release boundaries and caller data", async ({
+test("treemap controls and clipboard code retain caller data and source parity", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -162,7 +162,7 @@ test("treemap controls and clipboard code retain release boundaries and caller d
   await dialog.getByRole("button", { name: "Copy code", exact: true }).click();
   const copied = await page.evaluate(() => sessionStorage.getItem("treemap-code"));
   expect(copied).toContain("signedPosition");
-  expect(copied).toContain("0.5.0 does not include it");
+  expect(copied).not.toMatch(/candidate|validated archive|does not include it/);
   await expect(dialog.getByRole("link", { name: "Go to Documentation" })).toHaveAttribute(
     "href",
     "https://kindui.dev/charts/docs/components/treemap/",

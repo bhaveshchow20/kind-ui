@@ -355,13 +355,26 @@ try {
   await expect(rootProps).toBeFocused();
   const installation = page.locator('[data-chart-installation="treemap"]');
   await expect(installation).toBeVisible();
-  await expect(installation).toContainText(/release|publish|candidate/i);
-  await expect(installation.getByRole("tab", { name: "CLI", exact: true })).toHaveCount(0);
-  assert.doesNotMatch(await installation.textContent(), /npx shadcn[^\n]*@kind-ui\/treemap/);
+  await expect(installation.getByRole("tab", { name: "CLI", exact: true })).toBeVisible();
+  await expect(installation).toContainText("npx shadcn@latest add @kind-ui/treemap-chart");
   assert.doesNotMatch(
-    await page.locator('[data-doc="components/treemap"]').textContent(),
-    /npx shadcn[^\n]*@kind-ui\/treemap/,
+    await installation.textContent(),
+    /candidate|publication|await.*release|checksum/i,
   );
+  await installation.getByRole("tab", { name: "Manual", exact: true }).click();
+  await expect(installation.locator("pre")).toHaveCount(4);
+  assert.equal(
+    (await installation.locator("pre").nth(2).textContent()).trimEnd(),
+    bundles.treemap.files["src/examples/treemap/example.tsx"].trimEnd(),
+  );
+  assert.deepEqual(await installation.locator("h3").allTextContents(), [
+    "Install Core",
+    "Configure Tailwind CSS v4",
+    "Create the composition",
+    "Render the chart",
+  ]);
+  assert.doesNotMatch(await installation.textContent(), /LICENSE|vendor\/|\.tgz|SHA-256/);
+  await installation.getByRole("tab", { name: "CLI", exact: true }).click();
   await page.screenshot({ path: `${artifactDirectory}/desktop.png`, fullPage: true });
 
   for (const width of [375, 320]) {
@@ -385,5 +398,5 @@ try {
   await browser.close();
 }
 console.log(
-  "Treemap docs preview/source/prompt parity, semantic data, keyboard, responsive themes and pending installation checks passed.",
+  "Treemap docs preview/source/prompt parity, semantic data, keyboard, responsive themes and installation parity checks passed.",
 );

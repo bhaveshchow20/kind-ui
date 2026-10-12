@@ -10,7 +10,6 @@ import {
 import { docsProvenanceSchema, parseJson } from "../../../scripts/tooling-schemas.mjs";
 import { canonicalDocURL, docsURL } from "../../indexing.mjs";
 import { basePath, canonicalDocSlugs, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
-import { assertPublicCandidateIdentity } from "./public-candidate-identity.mjs";
 import { assertPublicCopy } from "./public-copy.mjs";
 
 const routePrefix = basePath ? "" : "docs/";
@@ -92,7 +91,8 @@ assert.equal(
 for (const file of textExportFiles(root)) {
   const body = readFileSync(path.join(root, file), "utf8");
   assertPublicCopy(body, file);
-  assertPublicCandidateIdentity(body, file, provenance);
+  for (const receipt of [provenance.sourceCommit, provenance.sha256])
+    assert.ok(!body.includes(receipt), `Internal receipt exposed in ${file}`);
 }
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;

@@ -9,36 +9,35 @@ description: Explore nested allocation with independent area, color and subtree 
 
 ## Installation
 
-<Callout title="API availability">Treemap is included in the current documentation build. The published `@kind-ui/charts@0.5.0` package does not export it. Public installation and copied setup require a subsequent Charts release containing Treemap; this page does not establish that publication has occurred.</Callout>
-
 <ChartInstallation id="treemap" />
 
 ## Usage
 
-Area describes a nonnegative amount. Color describes a separate metric. In the primary example, choose Signed return or Activity to change color while capitalization area stays unchanged. The complete example also accepts `areaMetric="turnover"` when that is the intended weight.
+Size shows capitalization; color shows signed return or activity. Change the color metric without changing area.
 
 ```tsx title="Composition sketch"
 import { TreemapChart } from "@kind-ui/charts";
 
 <TreemapChart
-  data={data} accessors={accessors} encoding={encoding}
-  config={{}} aria-label="Allocation and independent change metric"
-  height={320} padding={3} groupHeaderHeight={22}
+  data={data}
+  accessors={accessors}
+  encoding={encoding}
+  config={{}}
+  aria-label="Allocation and independent change metric"
+  height={320}
 >
   <TreemapChart.Groups />
   <TreemapChart.Tiles />
-  <TreemapChart.Labels minWidth={46} minHeight={24} />
+  <TreemapChart.Labels />
   <TreemapChart.Tooltip />
   <TreemapChart.ColorLegend />
   <TreemapChart.Breadcrumbs />
 </TreemapChart>
 ```
 
-Examples contain the graph and its readouts; the documented plotted values below each example provide its data alternative. For an application, compose `TreemapChart.DataTable` with a caption or supply a navigable alternative in `Content`.
-
 ## Gross long-short exposure
 
-Use positive gross weights supplied by the application adapter. Preserve signed position values and P&L as original metadata. This example's denominator is $340k gross exposure, not NAV; Core neither takes absolute values nor calculates account equity.
+Area uses supplied gross USD exposure. Signed positions and P&L stay separate; shares use $340k gross exposure, not NAV.
 
 <ChartExample id="treemap-portfolio" />
 
@@ -46,7 +45,7 @@ Use positive gross weights supplied by the application adapter. Preserve signed 
 
 ## Event and market activity
 
-Topics contain events, and events contain markets. Each market's 24-hour USD turnover contributes once. Outcome records must not duplicate the parent market's full activity. Color here is probability change in percentage points, not percentage return.
+Area shows 24-hour USD turnover; color shows probability change in percentage points.
 
 <ChartExample id="treemap-events" />
 
@@ -54,53 +53,25 @@ Topics contain events, and events contain markets. Each market's 24-hour USD tur
 
 ## Storage allocation
 
-Typed accessors adapt `key`, `title`, `members` and GB measurements without changing the original records. The same hierarchy supports production groups, services and a separate archive. An empty planned group remains distinct from a zero-valued retired leaf.
+Area shows GB; typed accessors preserve service metadata and zero-valued records.
 
 <ChartExample id="treemap-storage" />
 
 <TreemapDataAlternative id="treemap-storage" />
 
-## Hierarchy, missing values and shares
-
-The standard `TreemapDatum` shape is `{ kind: "leaf", id, label, value }` or `{ kind: "group", id, label, children }`. Custom records use `TreemapAccessors<T>` for ID, label, children and leaf area. Undefined children identify a leaf; an explicit empty array identifies an empty group. The value accessor runs only for leaves. Groups derive their area from descendants and cannot supply a separate standard `value`.
-
-IDs must be globally unique, stable and nonempty. Labels must be nonempty and can repeat. Areas must be finite and nonnegative; missing area needs an explicit adapter policy. Invalid children, cycles, shared records and overflowing totals throw errors with hierarchy locations. Zero leaves stay in semantic data without visible area. Missing color is separate from numerical zero.
-
-Normalized nodes retain `datum`, `kind`, `parentId`, zero-based `depth`, an ID `path` and derived `value`. `rootShare` uses the entire supplied forest after application filtering. `parentShare` uses the parent total, or the forest total for roots. `viewShare` uses the current subtree total and is null outside that subtree. Zero denominators produce `null`. External market universes, NAV and other accounting denominators remain application metadata.
-
-## Navigation, selection and loading
-
-Group headers and frontier tiles are buttons. Enter/Space selects an item and opens groups; arrows and Home/End move among rendered controls. Hover or focus changes transient inspection without changing totals. Escape dismisses the tooltip. Breadcrumb buttons return to surviving ancestors or the full forest.
-
-Control subtree state with `viewId` and `onViewChange`, inspection with `activeId` and `onActiveChange`, and persistent selection with `selectedId` and `onSelectionChange`. Use `defaultViewId`, `defaultActiveId` or `defaultSelectedId` for uncontrolled initial state. When an item disappears, its nearest surviving ancestor is used, followed by the forest root (`null`). Callbacks receive original records with `rectangle` (or null when not rendered) and `viewShare`.
-
-`layout="stable"` retains layout rows across weight and size changes while subtree view and hierarchy membership remain unchanged. Membership changes, regrouping or a different view invalidate that cache. IDs preserve identity, not fixed positions. `layout="squarify"` recomputes rows. Tiny labels are omitted below `minWidth`/`minHeight` thresholds and clipped inside cells; small observations remain in the data alternative.
-
-`animate` is opt-in and respects reduced motion. Set `loading` while data is pending and provide `loadingLabel` for its status. Applications own fetch cancellation, retries and filtering.
-
 ## Loading State
 
-Set `loading` while data is pending. The primary example's boolean loading prop is independent of its area and color metric choices. Provide `loadingLabel` when a more specific accessible status is needed.
+Set `loading` while data is pending. `loadingLabel` supplies the status text.
 
 <ChartExample id="treemap" variant="loading" />
 
-## Color encoding
-
-`encoding` supports categorical, sequential, zero-centered diverging, threshold and custom modes. The resolved encoding supplies both tiles and `ColorLegend`; root config does not calculate color metrics. Omitting encoding uses categorical root-group colors.
-
-Continuous encodings use a fixed `domain` or infer one from available metrics in `domainScope="root"` (default) or `"view"`. Diverging inferred domains are symmetric around zero; explicit diverging domains must contain zero. Equal endpoints use the midpoint paint. Paint clamps outliers without altering readouts. Threshold boundaries enter the upper band. Use ascending finite thresholds and one more color than thresholds.
-
-`unknownColor` and `unknownLabel` describe missing/nonfinite metrics. Groups use `groupValue` or an explicit numeric `aggregate` callback; these policies are mutually exclusive. Core does not average leaf returns or invent group P&L. Caller formatters define units and distinguish percent from percentage points.
-
 ## API reference
-
-Treemap uses React-owned HTML marks and a narrow `d3-hierarchy` layout dependency. It takes the owning `TreemapChart` directly, with explicit parts. Native Treemap props and nested `.Root`/`.Plot` APIs do not apply.
 
 ### TreemapChart
 
 <ApiTable name="TreemapRootReference" />
 
-Pass a named chart, `config` and explicit children. Custom data requires `accessors`; standard data does not. Plot height defaults to 280px, `padding` to 2, `groupHeaderHeight` to 20, and `layout` to `"stable"`. `animate` and `loading` default to false; `empty` defaults to `"No positive values"`. Controlled state and its corresponding `default*Id` are mutually exclusive.
+Compose the owning chart with explicit parts. Supply a chart name, `config` and children; custom records also require `accessors`.
 
 ### Explicit parts
 
@@ -108,19 +79,71 @@ Pass a named chart, `config` and explicit children. Custom data requires `access
 
 | Part | Main props | Behavior |
 | --- | --- | --- |
-| `Groups` | `groupProps`, `headerProps`, `children` | Nested outlines and separate navigation buttons; callbacks receive rectangles. |
-| `Tiles` | `tileProps`, `children` | Frontier buttons with caller styling, refs, handlers and presentation. |
-| `Labels` | `minWidth`, `minHeight`, `padding`, `labelProps`, `children` | Noninteractive clipped labels; defaults `40`, `22`, `4`. |
-| `Tooltip` | `children` | Active-item readout; content callbacks receive `TreemapItem<T>`. |
-| `ColorLegend` | HTML div attributes | Shared encoding key and unknown swatch. |
-| `Breadcrumbs` | `rootLabel`, HTML nav attributes | Button navigation; default root label `"All"`. |
-| `Content` | `children` | Consumer HTML outside the measured plot with chart context. |
-| `DataTable` | `caption`, `scope`, `rowProps`, `children` | Navigable named alternative; `scope="view"` by default or `"root"`. |
+| `Groups` | `groupProps`, `headerProps`, `children` | Nested outlines and navigation buttons. |
+| `Tiles` | `tileProps`, `children` | Frontier buttons with consumer presentation, refs and handlers. |
+| `Labels` | `minWidth`, `minHeight`, `padding`, `labelProps`, `children` | Clipped labels; defaults `40`, `22`, `4`. |
+| `Tooltip` | `children` | Active `TreemapItem<T>` readout. |
+| `ColorLegend` | HTML div props | Resolved color key and unknown swatch. |
+| `Breadcrumbs` | `rootLabel`, HTML nav props | Ancestor navigation; default root label `"All"`. |
+| `Content` | `children` | Consumer HTML outside the measured plot, with chart context. |
+| `DataTable` | `caption`, `scope`, `rowProps`, `children` | Navigable data alternative; scope defaults to `"view"`, or use `"root"`. |
 
 </div>
 
-Keep custom tile/header presentation free of nested buttons. Parts retain `className`, `style`, native handlers and refs. Specify the custom record type on generic content callbacks when needed, such as `<TreemapChart.Tooltip<StorageRecord>>`.
+Use a generic record type for custom content, such as `<TreemapChart.Tooltip<StorageRecord>>`. Keep tile/header content free of nested buttons.
 
-### Pure model and color resolution
+### Data and shares
 
-`normalizeTreemap(data, accessors?)` returns roots, preorder nodes, `byId` and total; the no-accessor overload accepts only `TreemapDatum`. `resolveTreemapColors(nodes, viewNodes, encoding)` returns ID-keyed readouts and a legend. These helpers do not fetch data or calculate application financial metrics.
+| Contract | Meaning |
+| --- | --- |
+| Standard leaf | `{ kind: "leaf", id, label, value }`. Area must be finite and nonnegative. |
+| Standard group | `{ kind: "group", id, label, children }`. Area is derived from descendants; no independent `value`. |
+| `TreemapAccessors<T>` | Adapt ID, label, children and leaf area. Original records are retained; area accessors run only for leaves. |
+| Children | `undefined` identifies a leaf; `[]` identifies an empty group. |
+| IDs and labels | IDs are globally unique, stable and nonempty. Nonempty labels may repeat. |
+| Zero and missing | Zero-area leaves remain in semantic data. Missing area requires an adapter policy; missing color differs from zero. |
+| Validation | Invalid children, cycles, shared records and overflowing totals throw location-specific errors. |
+| Normalized node | Retains `datum`, `kind`, `parentId`, zero-based `depth`, ID `path` and derived `value`. |
+| `rootShare` | Share of the supplied forest after application filtering. |
+| `parentShare` | Share of the parent total, or forest total for roots. |
+| `viewShare` | Share of the current subtree; `null` outside it. Zero denominators yield `null`. |
+
+External denominators and accounting measures remain application metadata.
+
+### State and interaction
+
+| Contract | Behavior |
+| --- | --- |
+| `viewId`, `onViewChange` | Controlled subtree navigation. |
+| `activeId`, `onActiveChange` | Transient inspection through pointer or keyboard focus. |
+| `selectedId`, `onSelectionChange` | Persistent selection. |
+| `default*Id` | Uncontrolled initial state; mutually exclusive with the corresponding controlled prop. |
+| Removed IDs | Fall back to the nearest surviving ancestor, then forest root (`null`). |
+| Callback items | Original records, `rectangle` (or `null`) and `viewShare`. |
+| Keyboard | Enter/Space selects and opens groups; arrows and Home/End traverse controls; Escape dismisses inspection. |
+| `layout="stable"` | Retains rows across weights/resizing; membership, regrouping and view changes invalidate the cache. |
+| `layout="squarify"` | Recomputes rows. IDs preserve element identity, not fixed coordinates. |
+| Small cells | Fit thresholds omit labels; records remain in the data alternative. |
+| `animate` | Opt-in Motion with reduced-motion support. |
+| `loading` | Pending state, independent of area/color metrics. Applications own cancellation, retries and filtering. |
+
+### Color encoding
+
+| Contract | Behavior |
+| --- | --- |
+| Modes | Categorical, sequential, zero-centered diverging, threshold and custom. Default: categorical root-group colors. |
+| `domain` | Fixed endpoints or inferred from available metrics. |
+| `domainScope` | `"root"` by default, or `"view"`. |
+| Diverging domains | Inferred domains are symmetric; explicit domains must contain zero. |
+| Equal endpoints/outliers | Equal endpoints use midpoint paint; outliers clamp paint without changing readouts. |
+| Thresholds | Ascending finite boundaries with one more color than boundaries; boundaries enter the upper band. |
+| `unknownColor`, `unknownLabel` | Missing/nonfinite metric paint and readout. |
+| `groupValue`, `aggregate` | Explicit group metrics or numeric aggregation, mutually exclusive. No implicit averaging. |
+| Formatters | Consumer-owned units, including percent versus percentage points. |
+
+### Pure helpers
+
+| Helper | Output |
+| --- | --- |
+| `normalizeTreemap(data, accessors?)` | Roots, preorder nodes, `byId` and total. Accessor-free input uses `TreemapDatum`. |
+| `resolveTreemapColors(nodes, viewNodes, encoding)` | ID-keyed readouts and resolved legend, independent of area. |

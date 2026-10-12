@@ -1,5 +1,4 @@
 import { highlight } from "fumadocs-core/highlight";
-import { Callout } from "fumadocs-ui/components/callout";
 import { Pre } from "fumadocs-ui/components/codeblock";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import bundles from "@/generated/all-examples.json";
@@ -28,12 +27,6 @@ async function installationCode(step: Pick<InstallationStep, "code" | "filename"
 
 export async function ChartInstallation({ id }: { id: ComponentId }) {
   const installation = installationFor(componentBundleFor(validatedBundles, id));
-  if (!installation.available)
-    return (
-      <div data-chart-installation={id}>
-        <Callout title="Core publication required">{installation.message}</Callout>
-      </div>
-    );
   const { command, steps } = installation;
   const blocks = await Promise.all(steps.map(installationCode));
   return (

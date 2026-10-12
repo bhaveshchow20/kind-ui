@@ -44,7 +44,7 @@ const catalog = catalogSchema.parse(readJson(path.join(output, "registry.json"))
 test("official CLI output has a flat complete catalog and content-free discovery payload", () => {
   assert.equal(catalog.homepage, registryHomepage);
   assert.equal(registryEndpoint, "https://kindui.dev/r/");
-  assert.equal(catalog.items.length, 14);
+  assert.equal(catalog.items.length, 15);
   assert.deepEqual(
     catalog.items.map(({ name }) => name),
     registryItems.map(({ name }) => name),
@@ -119,6 +119,7 @@ test("directory submission entry has the production namespace, endpoint and revi
 
 test("lookup and policy reject missing examples, nested names and absent dependencies", () => {
   assert.equal(itemNameFor("line"), "line-chart");
+  assert.equal(itemNameFor("treemap"), "treemap-chart");
   assert.equal(itemNameFor("radial-activity"), "activity-rings");
   assert.throws(() => itemNameFor("line-smooth"), /No registry installation/);
   const first = catalog.items[0];

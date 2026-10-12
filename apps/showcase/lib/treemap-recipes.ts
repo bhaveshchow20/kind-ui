@@ -105,8 +105,6 @@ export function treemapData(id: string): readonly TreemapRecord[] {
   if (id === "treemap-exposure") return exposure;
   throw new Error(`Unknown treemap example: ${id}`);
 }
-export const treemapCandidateNote =
-  "Treemap uses the reviewed candidate API; published @kind-ui/charts 0.5.0 does not include it. Use a validated candidate package until a release includes TreemapChart.";
 export function treemapMetric(id: string, value: number | null | undefined): string {
   if (value === null || value === undefined) return "Unknown";
   const sign = value > 0 ? "+" : value < 0 ? "−" : "";
@@ -157,7 +155,6 @@ export function treemapCode(
 import { TreemapChart, type TreemapAccessors, type TreemapColorEncoding } from "@kind-ui/charts";
 import { useState } from "react";
 
-// ${treemapCandidateNote}
 // ${recipe.context}
 type Row = { id: string; label: string; area?: number; metric?: number | null; signedPosition?: number; children?: readonly Row[] };
 const data: readonly Row[] = ${JSON.stringify(treemapData(recipe.id), null, 2)};
@@ -200,5 +197,5 @@ export function treemapPrompt(
   animate: boolean,
   options: DemoOptions = {},
 ): string {
-  return `Build this ${recipe.tag.toLowerCase()} example using the compound TreemapChart API. ${treemapCandidateNote}\nKeep area and color independent, preserve the supplied stable IDs and hierarchy, and retain the navigable data table including unknown/zero records. Do not calculate signed-position accounting or group-average return in Core. Use the selected palette and the explicit fit-aware labels, group navigation and tooltip below. Reference: https://kindui.dev/charts/docs/components/treemap/.\n\n${treemapCode(recipe, material, colors, animate, options)}`;
+  return `Build this ${recipe.tag.toLowerCase()} example using the compound TreemapChart API.\nKeep area and color independent, preserve the supplied stable IDs and hierarchy, and retain the navigable data table including unknown/zero records. Do not calculate signed-position accounting or group-average return in Core. Use the selected palette and the explicit fit-aware labels, group navigation and tooltip below. Reference: https://kindui.dev/charts/docs/components/treemap/.\n\n${treemapCode(recipe, material, colors, animate, options)}`;
 }

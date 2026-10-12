@@ -170,7 +170,7 @@ try {
             assert.match(source, /accessors=\{accessors\}/);
             assert.match(source, /Missing supplied area for/);
             assert.doesNotMatch(source, /area\s*\?\?\s*0/);
-            assert.match(source, /published @kind-ui\/charts 0\.5\.0 does not include it/);
+            assert.doesNotMatch(source, /candidate|validated archive|does not include it/);
             assert.match(source, /value: row => row\.metric/);
             assert.match(source, /TreemapChart\.Breadcrumbs/);
             assert.match(source, /TreemapChart\.DataTable<Row>/);
@@ -182,7 +182,10 @@ try {
             );
             assert.ok(prompt.includes(source));
             assert.match(prompt, /https:\/\/kindui\.dev\/charts\/docs\/components\/treemap\//);
-            assert.doesNotMatch(prompt, /localhost|127\.0\.0\.1|npx shadcn.*treemap/);
+            assert.doesNotMatch(
+              prompt,
+              /localhost|127\.0\.0\.1|candidate|published.*0\.5\.0|validated archive/,
+            );
             if (recipe.id === "treemap-exposure") {
               assert.match(source, /signedPosition"?: -/);
               assert.match(source, /node\.kind === "group" \? "Group total"/);

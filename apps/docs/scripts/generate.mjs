@@ -144,18 +144,8 @@ for (const example of allExamples) {
       source: exampleSource.replace(literalDefault, `${loadingVariant.prop} = true`),
     };
   }
-  const exampleManifest =
-    example.family === "treemap"
-      ? {
-          ...manifest,
-          dependencies: {
-            ...manifest.dependencies,
-            "@kind-ui/charts": "file:vendor/kind-ui-charts-0.5.0.tgz",
-          },
-        }
-      : manifest;
   const files = {
-    "package.json": `${JSON.stringify(exampleManifest, null, 2)}\n`,
+    "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
     "index.html":
       '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kind UI chart example</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>\n',
     "tsconfig.json": `${JSON.stringify(
@@ -193,10 +183,6 @@ for (const example of allExamples) {
     LICENSE: read("../../LICENSE"),
   };
 
-  if (example.family === "treemap")
-    files["README.md"] =
-      `# ${example.title} — candidate consumer\n\nPublished @kind-ui/charts@0.5.0 does not contain Treemap. Obtain the reviewed archive matching SHA-256 ${provenance.sha256}, place it at vendor/kind-ui-charts-0.5.0.tgz, then install dependencies. Public installation requires a Charts release containing this API.\n\n` +
-      files["README.md"];
   for (const [file, source] of Object.entries(example.extraFiles ?? {})) {
     if (!file.startsWith(`src/examples/${example.id}/`) || Object.hasOwn(files, file))
       throw new Error(`Invalid additional example source: ${file}`);
@@ -223,8 +209,7 @@ for (const example of allExamples) {
         }
       : {}),
     files,
-    packageStatus: example.family === "treemap" ? "Treemap candidate artifact" : status,
-    ...(example.family === "treemap" ? { candidateSha256: provenance.sha256 } : {}),
+    packageStatus: status,
     localPackage: local,
     version: provenance.version,
   };
