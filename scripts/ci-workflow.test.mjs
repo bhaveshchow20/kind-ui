@@ -208,6 +208,7 @@ test("split CI covers all aggregate gates and sends shard args to every browser 
   assert.equal(download.with.path, "artifacts");
   for (const path of [
     "artifacts/package/",
+    "artifacts/bundle-measurements.json",
     "artifacts/packed-*/",
     "artifacts/line-integrations/",
     "artifacts/browser-fixtures/",
@@ -349,4 +350,27 @@ test("Docs verifies preview and public indexing without replacing browser fixtur
   assert.doesNotMatch(steps[production].run, /npm (?:ci|install)|check:consumers|check:browser/);
   for (const event of ["pull_request", "push"])
     assert.ok(docs.on[event].paths.includes("apps/indexing.mjs"));
+});
+
+test("pinned compatibility and bundle budgets reuse the packed pipeline and retain evidence", async () => {
+  const { scripts } = JSON.parse(await read("package.json"));
+  const packed = await read("scripts/check-package.mjs");
+  const integrations = await read("scripts/check-line-integrations.mjs");
+  assert.match(
+    packed,
+    /checkBundleContract\(\{ root, consumer, artifactSha256: sha256, buildOutput \}\)/,
+  );
+  assert.ok(scripts["check:ci"].includes("compatibility-matrix.test.mjs"));
+  assert.ok(packed.includes('"scripts/bundle-contract.test.mjs"'));
+  assert.doesNotMatch(integrations, /["']pack["']/);
+  for (const job of [ci.jobs.packed, release.jobs.validate]) {
+    const paths = job.steps
+      .filter((step) => step.uses?.startsWith("actions/upload-artifact@"))
+      .flatMap((step) => step.with.path.split("\n"));
+    assert.ok(paths.includes("artifacts/bundle-measurements.json"));
+    assert.ok(
+      paths.includes("artifacts/line-integrations/") ||
+        paths.includes("artifacts/line-integrations/compatibility-evidence.json"),
+    );
+  }
 });

@@ -19,6 +19,7 @@ import { publint } from "publint";
 import { formatMessage } from "publint/utils";
 import { build } from "vite";
 import { browserDirectives } from "./browser-directives.mjs";
+import { checkBundleContract } from "./bundle-contract.mjs";
 import { checkTypes } from "./check-types.mjs";
 import { assertDocumentationContract } from "./documentation-contract.mjs";
 import { writeFixtureEntry } from "./fixture-entry.mjs";
@@ -53,6 +54,16 @@ const rootManifest = workspaceManifestSchema.parse(
   parseJson(await readFile(join(root, "package.json"), "utf8")),
 );
 assert.equal(rootManifest.private, true, "Workspace must remain private");
+const pinnedConsumerVersions = Object.fromEntries(
+  peerNames.map((name) => [name, rootManifest.devDependencies[name]]),
+);
+// Match the checked-in root lock for Motion's ranged implementation dependencies.
+// Ordinary npm host resolution stays independent and deliberately unpinned.
+for (const name of ["framer-motion", "motion-dom", "motion-utils"]) {
+  pinnedConsumerVersions[name] = packageIdentitySchema.parse(
+    parseJson(await readFile(join(root, "node_modules", name, "package.json"), "utf8")),
+  ).version;
+}
 const scratch = await mkdtemp(join(tmpdir(), "kind-ui-package-"));
 const artifactDestination = join(root, "artifacts/package");
 if (process.argv.includes("--keep-artifact")) {
@@ -88,6 +99,7 @@ try {
     "scripts/package-contract.test.mjs",
     "scripts/documentation-contract.test.mjs",
     "scripts/line-consumer-contract.test.mjs",
+    "scripts/bundle-contract.test.mjs",
   ]);
   const workspacePath = await realpath(root);
   const scratchPath = await realpath(scratch);
@@ -260,7 +272,7 @@ try {
       "--package-lock=false",
       "--workspaces=false",
       join(scratch, packed.filename),
-      ...peerNames.map((name) => `${name}@${rootManifest.devDependencies[name]}`),
+      ...Object.entries(pinnedConsumerVersions).map(([name, version]) => `${name}@${version}`),
     ],
     consumer,
   );
@@ -445,85 +457,7 @@ try {
     "ActivityRings: packed component tests, strict NodeNext/Bundler and production build passed",
   );
 
-  // Compare the public surface with the same native-only consumer. A primitive
-  // import must not pull Kind interaction/Motion into the production bundle.
-  const bundleSizes = [];
-  for (const source of ["@kind-ui/charts", "recharts"]) {
-    await writeFile(
-      join(consumer, "primitive.tsx"),
-      `import { XAxis } from "${source}"; window.axis = XAxis;`,
-    );
-    const result = await buildOutput({
-      configFile: false,
-      root: consumer,
-      logLevel: "warn",
-      build: { write: false, rolldownOptions: { input: join(consumer, "primitive.tsx") } },
-    });
-    const chunks = result.output.filter((item) => item.type === "chunk");
-    bundleSizes.push(chunks.reduce((bytes, chunk) => bytes + Buffer.byteLength(chunk.code), 0));
-    for (const chunk of chunks) {
-      assert.ok(
-        !chunk.moduleIds.some((id) =>
-          /(?:motion|framer-motion|motion-dom|motion-utils)\//.test(id),
-        ),
-        "Primitive consumer must tree-shake Motion",
-      );
-      assert.ok(
-        !chunk.moduleIds.some((id) => /@kind-ui\/charts\/dist\/(?!index\.js)/.test(id)),
-        "Primitive consumer must tree-shake Kind runtime",
-      );
-    }
-  }
-  const [publicBytes, nativeBytes] = bundleSizes;
-  assert.ok(
-    publicBytes !== undefined && nativeBytes !== undefined,
-    "Expected both bundle measurements",
-  );
-  assert.ok(
-    Math.abs(publicBytes - nativeBytes) <= 100,
-    `Public/native primitive bundle difference must remain negligible: ${bundleSizes}`,
-  );
-  console.log(
-    `Primitive-only production tree-shaking: public/native bytes ${bundleSizes.join("/")}; no Kind interaction or Motion runtime`,
-  );
-
-  // A named LineChart import must not retain illustrations for other chart families,
-  // whether its loading prop is enabled or omitted. Exercise the installed tarball.
-  for (const loading of [false, true]) {
-    const entry = join(consumer, "line-loading-bundle.tsx");
-    await writeFile(
-      entry,
-      `import { createRoot } from "react-dom/client";
-import { LineChart } from "@kind-ui/charts";
-const rows = [{ month: "Jan", sales: 12 }, { month: "Feb", sales: 30 }];
-createRoot(document.createElement("div")).render(
-  <LineChart data={rows} config={{ sales: { label: "Sales", color: "#537f76" } }}
-    height={260} aria-label="Monthly sales"${loading ? " loading={true}" : ""}>
-    <LineChart.XAxis dataKey="month" /><LineChart.YAxis /><LineChart.Series dataKey="sales" />
-  </LineChart>
-);`,
-    );
-    const result = await buildOutput({
-      configFile: false,
-      root: consumer,
-      logLevel: "warn",
-      build: { write: false, rolldownOptions: { input: entry } },
-    });
-    const modules = result.output
-      .filter((item) => item.type === "chunk")
-      .flatMap((chunk) => chunk.moduleIds);
-    assert.ok(
-      !modules.some((id) => /loading-(?:cartesian|polar|standalone)-designs\.js$/.test(id)),
-      `Named LineChart must tree-shake other family designs (loading=${loading})`,
-    );
-    assert.ok(
-      modules.some((id) => /loading-skeleton\.js$/.test(id)),
-      "Named LineChart retains its own supported loading implementation",
-    );
-  }
-  console.log(
-    "Named LineChart production bundles: unrelated family designs tree-shaken with loading enabled and omitted",
-  );
+  await checkBundleContract({ root, consumer, artifactSha256: sha256, buildOutput });
 
   await copyFile(join(root, "tests/core-contracts.tsx"), join(consumer, "core-contracts.tsx"));
   await checkTypes(
@@ -843,9 +777,7 @@ createRoot(document.createElement("div")).render(
             typescript: rootManifest.devDependencies.typescript,
             vite: rootManifest.devDependencies.vite,
           },
-          consumerVersions: Object.fromEntries(
-            peerNames.map((name) => [name, rootManifest.devDependencies[name]]),
-          ),
+          consumerVersions: pinnedConsumerVersions,
           ordinaryConsumerVersions,
           validation: "installed tarball package gate; aggregate browser checks are separate",
         }),

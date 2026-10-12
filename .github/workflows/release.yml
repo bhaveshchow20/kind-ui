@@ -79,8 +79,11 @@ jobs:
           name: charts-release-${{ github.run_attempt }}-node-22
           path: |
             artifacts/package/
+            artifacts/bundle-measurements.json
+            artifacts/line-integrations/compatibility-evidence.json
             artifacts/line-integrations/evidence.json
             artifacts/line-integrations/next-build.log
+            artifacts/line-integrations/selected-build.log
           if-no-files-found: error
           retention-days: 14
       - name: Retain browser failure evidence
@@ -94,6 +97,7 @@ jobs:
             artifacts/chart-frame-tests/
             artifacts/line-integration-tests/
             artifacts/line-integrations/next-build.log
+            artifacts/line-integrations/selected-build.log
           if-no-files-found: warn
           retention-days: 14
   verify:

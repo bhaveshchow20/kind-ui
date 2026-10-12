@@ -17,9 +17,10 @@ No development tools are runtime dependencies.
 
 React and React DOM are host peers. Recharts and Motion remain required engine
 peers, preserving native composition identity. Disabling animation does not
-remove Motion imports. Current compatible ranges begin at the tested floors:
+remove Motion imports. Current declared ranges begin at the tested floors:
 React/DOM 19.3.0, Recharts 3.10.1 and Motion 13.4.6. The package gate pins those
-versions plus React-is 19.3.0, TypeScript 5.9.3 and React/DOM types 19.3.0. Matching
+versions plus React-is 19.3.0, TypeScript 5.9.3 and React/DOM types 19.3.0. The separate [compatibility matrix](compatibility.md) also checks the declared
+Tailwind 4.0.0 minimum and a selected newer stable row without widening peers. Matching
 React-is belongs to the host because Recharts requires it.
 
 An ordinary npm host installs Kind without separately declaring engines; the
@@ -33,11 +34,14 @@ installation. Yarn hosts must supply peers; strict Yarn PnP support is not claim
 package in isolated consumers, strict NodeNext/Bundler declarations and Chromium
 interaction contracts. Packed consumers verify ESM imports, Tailwind class generation, license, public
 exports, production builds and native composition. Primitive-only imports exclude
-Kind interaction/Motion runtime and stay within the existing native bundle budget.
+Kind interaction/Motion runtime and stay within the native bundle delta budget.
+[Production JS/CSS budgets](bundle-measurements.md) additionally measure compressed
+compound Cartesian, polar, Heatmap and Sankey consumers, retained modules and the
+utilities emitted by package-wide Tailwind source scanning.
 
-The existing integration gate checks a Next App Router production static export,
+Both pinned framework rows check Vite builds and Next App Router production static exports,
 SSR shell/content, Tailwind v4 overrides and named Lucide icons using the retained
-tarball. Browser checks cover hydration and legend interaction. These are bounded
+tarball. Browser checks cover hydration, themes and legend interaction for both rows. These are bounded
 consumer proofs, not blanket guarantees for every chart/router/framework. Next's
 standard application declaration settings are separate from the strict package
 declaration gate. CommonJS, React 18 and Motion 14 are not advertised support.
