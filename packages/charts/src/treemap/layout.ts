@@ -78,6 +78,10 @@ export function layoutTreemap<T>(
       : (hierarchy(data).sort((a, b) =>
           compareIds(a.data.id, b.data.id),
         ) as HierarchyRectangularNode<LayoutDatum>);
+  // Every alias of a retained tree shares its current geometry marker. An aborted
+  // render may mutate this working tree without committing its returned result.
+  const cache: TreemapLayoutCache =
+    previous?.signature === signature ? previous : { signature, geometrySignature: "", root };
   const geometrySignature = JSON.stringify([
     signature,
     width,
@@ -88,7 +92,8 @@ export function layoutTreemap<T>(
     model.nodes.map((node) => [node.id, node.value]),
   ]);
   const total = view?.value ?? model.total;
-  if (previous?.geometrySignature !== geometrySignature) {
+  if (cache.geometrySignature !== geometrySignature) {
+    cache.geometrySignature = "";
     root.each((node) => {
       const item = model.byId.get(node.data.id);
       node.data.value = item?.kind === "leaf" ? item.value : 0;
@@ -103,6 +108,7 @@ export function layoutTreemap<T>(
       .paddingTop((node) =>
         node.depth > 0 && node.children?.length ? groupHeaderHeight + padding : padding,
       )(root);
+    cache.geometrySignature = geometrySignature;
   }
   const rectangles: TreemapRectangle<T>[] = [];
   root.each((node) => {
@@ -118,7 +124,7 @@ export function layoutTreemap<T>(
       viewShare: total > 0 ? item.value / total : null,
     });
   });
-  return { rectangles, cache: { signature, geometrySignature, root }, total };
+  return { rectangles, cache, total };
 }
 
 export function nearestTreemapAncestor<T>(

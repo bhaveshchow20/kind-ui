@@ -202,19 +202,10 @@ function TreemapPlot<T>({
   const rawView = controlledView === undefined ? localView : controlledView;
   const retainedPaths = useRef(new Map<string, { id: string | null; path: readonly string[] }>());
   const resolveId = (slot: string, id: string | null) => {
-    if (id === null) {
-      retainedPaths.current.set(slot, { id, path: [] });
-      return null;
-    }
-    const existing = model.byId.get(id);
-    if (existing) {
-      retainedPaths.current.set(slot, { id, path: existing.path });
-      return id;
-    }
+    if (id === null) return null;
+    if (model.byId.has(id)) return id;
     const retained = retainedPaths.current.get(slot);
-    const path =
-      retained?.id === id ? retained.path : (previousModel.current?.byId.get(id)?.path ?? []);
-    retainedPaths.current.set(slot, { id, path });
+    const path = retained?.id === id ? retained.path : [];
     for (let index = path.length - 2; index >= 0; index--) {
       const ancestor = path[index];
       if (ancestor !== undefined && model.byId.has(ancestor)) return ancestor;
@@ -237,60 +228,6 @@ function TreemapPlot<T>({
   const [tooltipMounted, setTooltipMounted] = useState(false);
   const pointer = useRef<{ x: number; y: number } | null>(null);
 
-  const itemsRef = useRef<ReadonlyMap<string, TreemapItem<T>>>(new Map());
-  const readItem = useCallback(
-    (id: string | null) => (id === null ? null : (itemsRef.current.get(id) ?? null)),
-    [],
-  );
-  const setView = useCallback(
-    (id: string | null) => {
-      if (loading) return;
-      if (id !== null && model.byId.get(id)?.kind !== "group")
-        throw new Error("Treemap viewId must identify a group");
-      if (controlledView === undefined) updateView(id);
-      setDismissed(false);
-      onViewChange?.(id, readItem(id));
-    },
-    [loading, controlledView, model, onViewChange, readItem],
-  );
-  const setActive = useCallback(
-    (id: string | null) => {
-      if (loading) return;
-      setDismissed(false);
-      if (id === activeId) return;
-      if (controlledActive === undefined) updateActive(id);
-      onActiveChange?.(id, readItem(id));
-    },
-    [loading, controlledActive, onActiveChange, readItem, activeId],
-  );
-  const inspectPointer = useCallback(
-    (event: React.PointerEvent, id: string) => {
-      const stationary =
-        pointer.current?.x === event.clientX && pointer.current?.y === event.clientY;
-      pointer.current = { x: event.clientX, y: event.clientY };
-      if (tooltipDismissed && stationary) return;
-      setActive(id);
-    },
-    [tooltipDismissed, setActive],
-  );
-  const setSelected = useCallback(
-    (id: string | null) => {
-      if (loading) return;
-      if (controlledSelected === undefined) updateSelected(id);
-      onSelectionChange?.(id, readItem(id));
-    },
-    [loading, controlledSelected, onSelectionChange, readItem],
-  );
-  const activate = useCallback(
-    (node: TreemapNode<T>) => {
-      if (loading) return;
-      setSelected(node.id);
-      const item = itemsRef.current.get(node.id);
-      if (item) onActivate?.(item);
-      if (node.kind === "group") setView(node.id);
-    },
-    [loading, setSelected, setView, onActivate],
-  );
   const root = useRef<HTMLDivElement | null>(null);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
   const focusedInside = useRef(false);
@@ -387,7 +324,59 @@ function TreemapPlot<T>({
       }),
     );
   }, [model, geometry, viewNodes, viewId]);
-  itemsRef.current = items;
+  const readItem = useCallback(
+    (id: string | null) => (id === null ? null : (items.get(id) ?? null)),
+    [items],
+  );
+  const setView = useCallback(
+    (id: string | null) => {
+      if (loading) return;
+      if (id !== null && model.byId.get(id)?.kind !== "group")
+        throw new Error("Treemap viewId must identify a group");
+      if (controlledView === undefined) updateView(id);
+      setDismissed(false);
+      onViewChange?.(id, readItem(id));
+    },
+    [loading, controlledView, model, onViewChange, readItem],
+  );
+  const setActive = useCallback(
+    (id: string | null) => {
+      if (loading) return;
+      setDismissed(false);
+      if (id === activeId) return;
+      if (controlledActive === undefined) updateActive(id);
+      onActiveChange?.(id, readItem(id));
+    },
+    [loading, controlledActive, onActiveChange, readItem, activeId],
+  );
+  const inspectPointer = useCallback(
+    (event: React.PointerEvent, id: string) => {
+      const stationary =
+        pointer.current?.x === event.clientX && pointer.current?.y === event.clientY;
+      pointer.current = { x: event.clientX, y: event.clientY };
+      if (tooltipDismissed && stationary) return;
+      setActive(id);
+    },
+    [tooltipDismissed, setActive],
+  );
+  const setSelected = useCallback(
+    (id: string | null) => {
+      if (loading) return;
+      if (controlledSelected === undefined) updateSelected(id);
+      onSelectionChange?.(id, readItem(id));
+    },
+    [loading, controlledSelected, onSelectionChange, readItem],
+  );
+  const activate = useCallback(
+    (node: TreemapNode<T>) => {
+      if (loading) return;
+      setSelected(node.id);
+      const item = readItem(node.id);
+      if (item) onActivate?.(item);
+      if (node.kind === "group") setView(node.id);
+    },
+    [loading, setSelected, setView, onActivate, readItem],
+  );
   const reduced = useReducedMotion();
   const tooltipId = useId();
   const [registeredVersion, setRegisteredVersion] = useState(0);
@@ -477,6 +466,16 @@ function TreemapPlot<T>({
     if (rawView === viewId) corrections.current.view = "";
     if (rawActive === activeId) corrections.current.active = "";
     if (rawSelected === selectedId) corrections.current.selected = "";
+    for (const [slot, id] of [
+      ["view", rawView],
+      ["active", rawActive],
+      ["selected", rawSelected],
+    ] as const) {
+      const existing = id === null ? undefined : model.byId.get(id);
+      const retained = retainedPaths.current.get(slot);
+      const path = existing?.path ?? (retained?.id === id ? retained.path : []);
+      retainedPaths.current.set(slot, { id, path });
+    }
     previousModel.current = model;
   }, [
     model,

@@ -4,7 +4,7 @@ import {
   type TreemapColorEncoding,
   useTreemap,
 } from "@kind-ui/charts";
-import { useState } from "react";
+import { Suspense, startTransition, useState } from "react";
 
 type Record = {
   key: string;
@@ -65,6 +65,15 @@ function Inspector() {
     </TreemapChart.Content>
   );
 }
+const never = new Promise<void>(() => {});
+function SuspendRender({ pending }: { pending: boolean }) {
+  if (pending) {
+    // Test instrumentation proves React attempted the update before suspension.
+    document.body.dataset.suspendedRender = "true";
+    throw never;
+  }
+  return null;
+}
 export function TreemapHost() {
   const count = Number(new URLSearchParams(window.location.search).get("count") ?? 0);
   const initial = count
@@ -95,6 +104,8 @@ export function TreemapHost() {
   const [groups, setGroups] = useState(true);
   const [loading, setLoading] = useState(false);
   const [deep, setDeep] = useState(true);
+  const [pending, setPending] = useState(false);
+  const [activatedArea, setActivatedArea] = useState<number | null>(null);
   return (
     <section aria-label="Treemap public consumer">
       <button type="button" onClick={() => setWidth((v) => (v === 720 ? 540 : 720))}>
@@ -175,82 +186,109 @@ export function TreemapHost() {
       <button type="button" onClick={() => setGroups((v) => !v)}>
         Toggle groups
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          startTransition(() => {
+            setData((d) =>
+              mapRecords(d, (n) => (n.key === "a" ? { ...n, area: (n.area ?? 0) * 2 } : n)),
+            );
+            setPending(true);
+          })
+        }
+      >
+        Suspended weights
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setData(original);
+          setPending(false);
+        }}
+      >
+        Rollback transition
+      </button>
+      <output aria-label="Activated area">{activatedArea ?? "none"}</output>
       <output aria-label="View requests">{requests}</output>
       <output aria-label="Selected ID">{selected ?? "none"}</output>
       <output aria-label="Active ID">{active ?? "none"}</output>
       <output aria-label="View ID">{view ?? "root"}</output>
-      <TreemapChart<Record>
-        data={data}
-        accessors={accessors}
-        encoding={
-          params.get("domain") === "positive"
-            ? { ...encoding, domain: [0, 5] }
-            : params.get("domain") === "constant"
-              ? { ...encoding, type: "sequential", domain: [2, 2] }
-              : encoding
-        }
-        groupHeaderHeight={params.has("header") ? Number(params.get("header")) : 20}
-        config={{}}
-        width={width}
-        height={400}
-        padding={params.has("padding") ? Number(params.get("padding")) : 2}
-        {...(deep ? {} : { depth: 1 })}
-        selectedId={selected}
-        onSelectionChange={setSelected}
-        activeId={active}
-        onActiveChange={setActive}
-        viewId={view}
-        onViewChange={(id) => {
-          setRequests((v) => v + 1);
-          if (!held) setView(id);
-        }}
-        loading={loading}
-        aria-label="Allocation and signed change"
-        style={
-          dark
-            ? ({
-                "--foreground": "#f8fafc",
-                "--background": "#0f172a",
-                "--popover": "#1e293b",
-                "--popover-foreground": "#f8fafc",
-              } as import("react").CSSProperties)
-            : undefined
-        }
-      >
-        <TreemapChart.Breadcrumbs />
-        {parts !== "tiles" && groups && (
-          <TreemapChart.Groups
-            headerProps={() => ({
-              ref: (element) => {
-                if (element) {
-                  element.dataset.hostRef = "group";
-                  return () => {
-                    element.dataset.hostCleaned = "true";
-                  };
-                }
-              },
-            })}
+      <Suspense fallback={<p>Pending treemap</p>}>
+        <TreemapChart<Record>
+          data={data}
+          accessors={accessors}
+          encoding={
+            params.get("domain") === "positive"
+              ? { ...encoding, domain: [0, 5] }
+              : params.get("domain") === "constant"
+                ? { ...encoding, type: "sequential", domain: [2, 2] }
+                : encoding
+          }
+          groupHeaderHeight={params.has("header") ? Number(params.get("header")) : 20}
+          config={{}}
+          width={width}
+          height={400}
+          padding={params.has("padding") ? Number(params.get("padding")) : 2}
+          {...(deep ? {} : { depth: 1 })}
+          selectedId={selected}
+          onSelectionChange={setSelected}
+          onActivate={(item) => setActivatedArea(item.value)}
+          activeId={active}
+          onActiveChange={setActive}
+          viewId={view}
+          onViewChange={(id) => {
+            setRequests((v) => v + 1);
+            if (!held) setView(id);
+          }}
+          loading={loading}
+          aria-label="Allocation and signed change"
+          style={
+            dark
+              ? ({
+                  "--foreground": "#f8fafc",
+                  "--background": "#0f172a",
+                  "--popover": "#1e293b",
+                  "--popover-foreground": "#f8fafc",
+                } as import("react").CSSProperties)
+              : undefined
+          }
+        >
+          <SuspendRender pending={pending} />
+          <TreemapChart.Breadcrumbs />
+          {parts !== "tiles" && groups && (
+            <TreemapChart.Groups
+              headerProps={() => ({
+                ref: (element) => {
+                  if (element) {
+                    element.dataset.hostRef = "group";
+                    return () => {
+                      element.dataset.hostCleaned = "true";
+                    };
+                  }
+                },
+              })}
+            />
+          )}
+          {parts !== "groups" && (
+            <TreemapChart.Tiles<Record>
+              tileProps={(node) => ({
+                disabled: disabled && node.id === "d",
+                ref: (element) => {
+                  if (element) element.dataset.hostRef = "tile";
+                },
+              })}
+            />
+          )}
+          <TreemapChart.Labels />
+          <TreemapChart.Tooltip />
+          <TreemapChart.ColorLegend />
+          <TreemapChart.DataTable
+            caption="Allocation values and signed change"
+            scope={params.has("table-root") ? "root" : "view"}
           />
-        )}
-        {parts !== "groups" && (
-          <TreemapChart.Tiles<Record>
-            tileProps={(node) => ({
-              disabled: disabled && node.id === "d",
-              ref: (element) => {
-                if (element) element.dataset.hostRef = "tile";
-              },
-            })}
-          />
-        )}
-        <TreemapChart.Labels />
-        <TreemapChart.Tooltip />
-        <TreemapChart.ColorLegend />
-        <TreemapChart.DataTable
-          caption="Allocation values and signed change"
-          scope={params.has("table-root") ? "root" : "view"}
-        />
-        <Inspector />
-      </TreemapChart>
+          <Inspector />
+        </TreemapChart>
+      </Suspense>
     </section>
   );
 }

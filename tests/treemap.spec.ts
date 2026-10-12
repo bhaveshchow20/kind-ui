@@ -407,6 +407,38 @@ test("treemap removes focused group refs with cleanup and restores focus to rend
   await retained.dispose();
 });
 
+test("treemap preserves committed callback records and geometry after an abandoned transition", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const alpha = tile(page, "a");
+  await expect(alpha).toBeVisible();
+  await alpha.focus();
+  const retained = await alpha.elementHandle();
+  if (!retained) throw new Error("Missing committed Alpha tile");
+  const committed = await geometry(page);
+  await update(page, "Suspended weights");
+  await expect(page.locator("body")).toHaveAttribute("data-suspended-render", "true");
+  await expect(alpha).toBeFocused();
+  expect(await alpha.evaluate((element, original) => element === original, retained)).toBe(true);
+  // Invoke the still-committed handler without pointer/focus changes triggering another commit.
+  await retained.evaluate((element) => {
+    if (!(element instanceof HTMLButtonElement)) throw new Error("Expected committed button");
+    element.click();
+  });
+  await expect(output(page, "Activated area")).toHaveText("60");
+  await update(page, "Rollback transition");
+  await update(page, "Colors");
+  await expect(alpha).toBeFocused();
+  expect(await alpha.evaluate((element, original) => element === original, retained)).toBe(true);
+  expect(await geometry(page)).toEqual(committed);
+  await expect(page.locator('tbody tr[data-node-id="a"]').getByRole("cell").nth(1)).toHaveText(
+    "60",
+  );
+  await expect(alpha).toHaveAttribute("aria-label", /^Alpha: 60,/);
+  await retained.dispose();
+});
+
 test("treemap crowded padding retains every record in its semantic alternative", async ({
   page,
 }) => {
