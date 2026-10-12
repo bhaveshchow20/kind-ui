@@ -207,6 +207,9 @@ button:disabled {
 .playground-tab-row [role="tab"][data-state="inactive"] {
   color: var(--tab-muted-foreground);
 }
+.documentation-search-input button {
+  color: color-mix(in srgb, var(--muted-foreground) 96%, var(--foreground));
+}
 .install-manager-tabs [role="tab"][data-state="active"] {
   background: var(--background);
   box-shadow: 0 1px 4px #00000008;
