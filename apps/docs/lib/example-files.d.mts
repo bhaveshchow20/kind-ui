@@ -6,6 +6,7 @@ interface ExampleBundle {
   variants?: Record<string, { label: string; source: string }> | undefined;
   defaultVariant?: string | undefined;
   packageStatus?: string | undefined;
+  candidateSha256?: string | undefined;
   localPackage?: boolean | undefined;
   version?: string | undefined;
   acceptance?: string | undefined;

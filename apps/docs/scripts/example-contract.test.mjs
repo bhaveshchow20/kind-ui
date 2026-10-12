@@ -348,7 +348,7 @@ test("page Markdown keeps selected examples and readable presentation fallbacks"
     const markdown = readFileSync(`public/markdown/${key}.md`, "utf8");
     assert.doesNotMatch(
       markdown,
-      /<(?:Steps|Step|Tabs|Tab|Callout|ChartExample|ChartInstallation|ApiTable)\b/,
+      /<(?:Steps|Step|Tabs|Tab|Callout|ChartExample|ChartInstallation|TreemapDataAlternative|ApiTable)\b/,
       key,
     );
     for (const [, id, variant] of mdx.matchAll(

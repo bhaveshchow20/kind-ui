@@ -53,6 +53,16 @@ const basic = await evaluate(
 );
 const advanced = await evaluate(await readFile(join(app, "lib/advanced-chart-recipes.ts"), "utf8"));
 const recent = await evaluate(await readFile(join(app, "lib/new-chart-recipes.ts"), "utf8"));
+const treemap = await evaluate(await readFile(join(app, "lib/treemap-recipes.ts"), "utf8"));
+assert.deepEqual(
+  treemap.treemapRecipes.map((recipe) => recipe.id),
+  ["treemap-market", "treemap-exposure"],
+);
+assert.throws(
+  () => treemap.treemapAccessors.value({ id: "missing", label: "Missing" }),
+  /Missing supplied area for missing/,
+);
+assert.equal(treemap.treemapMetric("treemap-exposure", undefined), "Unknown");
 const activity = await evaluate(await readFile(join(app, "lib/activity-recipe.ts"), "utf8"));
 const temporary = await mkdtemp(join(app, ".snippet-check-"));
 try {
@@ -61,6 +71,7 @@ try {
     [basic.recipes, basic.snippet],
     [advanced.advancedRecipes, advanced.advancedCode],
     [recent.newRecipes, recent.newCode],
+    [treemap.treemapRecipes, treemap.treemapCode],
   ]) {
     for (const recipe of recipes) {
       for (const finish of ["plain", "clay", "glow"]) {
@@ -74,6 +85,29 @@ try {
             /visibleSeries=|onVisibleSeriesChange=|data\.filter\(/,
             `${recipe.id} copied focus must preserve the complete data`,
           );
+          if (recipe.family === "Treemap") {
+            assert.match(source, /TreemapChart<Row>/);
+            assert.match(source, /accessors=\{accessors\}/);
+            assert.match(source, /Missing supplied area for/);
+            assert.doesNotMatch(source, /area\s*\?\?\s*0/);
+            assert.match(source, /published @kind-ui\/charts 0\.5\.0 does not include it/);
+            assert.match(source, /value: row => row\.metric/);
+            assert.match(source, /TreemapChart\.Breadcrumbs/);
+            assert.match(source, /TreemapChart\.DataTable<Row>/);
+            const prompt = treemap.treemapPrompt(
+              recipe,
+              finish,
+              ["#733bff", "#119548", "#f22e79"],
+              animate,
+            );
+            assert.ok(prompt.includes(source));
+            assert.match(prompt, /https:\/\/kindui\.dev\/charts\/docs\/components\/treemap\//);
+            assert.doesNotMatch(prompt, /localhost|127\.0\.0\.1|npx shadcn.*treemap/);
+            if (recipe.id === "treemap-exposure") {
+              assert.match(source, /signedPosition"?: -/);
+              assert.match(source, /node\.kind === "group" \? "Group total"/);
+            }
+          }
           if (recipe.family === "Pie") {
             assert.match(source, /<PieChart\.Series/);
             assert.doesNotMatch(source, /interactionBinding=/);
@@ -86,7 +120,7 @@ try {
       }
     }
   }
-  assert.equal(files.length, 192, "Every recipe, finish and motion setting must be checked");
+  assert.equal(files.length, 204, "Every recipe, finish and motion setting must be checked");
   const changedOptions = {
     strokeWidth: 4,
     showGrid: false,
@@ -120,6 +154,7 @@ try {
     [basic.recipes, basic.snippet],
     [advanced.advancedRecipes, advanced.advancedCode],
     [recent.newRecipes, recent.newCode],
+    [treemap.treemapRecipes, treemap.treemapCode],
   ]) {
     for (const recipe of recipes) {
       const file = join(temporary, `${recipe.id}-controls.tsx`);
@@ -130,9 +165,18 @@ try {
         true,
         changedOptions,
       );
-      assert.doesNotMatch(source, /<\w+Chart\.Legend\b/, `${recipe.id} hides the explicit legend`);
+      assert.doesNotMatch(
+        source,
+        /<\w+Chart\.(?:Legend|ColorLegend)\b/,
+        `${recipe.id} hides the explicit legend`,
+      );
       if (recipe.family !== "Heatmap")
         assert.doesNotMatch(source, /<\w+Chart\.Grid\b/, `${recipe.id} omits the explicit grid`);
+      if (recipe.family === "Treemap") {
+        assert.doesNotMatch(source, /<TreemapChart\.(Labels|ColorLegend)\b/);
+        assert.match(source, /padding=\{8\}/);
+        assert.match(source, /borderRadius:12/);
+      }
       await writeFile(file, source);
       files.push(file);
     }

@@ -87,6 +87,11 @@ rmSync("generated", { recursive: true, force: true });
 const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
 const link = (path) => `${origin}${publicPath(path)}`;
 const bundles = {};
+const loadingVariants = new Map(
+  families
+    .filter((family) => family.loadingVariant)
+    .map((family) => [family.id, family.loadingVariant]),
+);
 const installationNames = new Map(registryItems.map(({ exampleId, name }) => [exampleId, name]));
 for (const example of allExamples) {
   if (!Object.hasOwn(dataLabels, example.id))
@@ -129,8 +134,28 @@ for (const example of allExamples) {
         ]),
       )
     : undefined;
+  const loadingVariant = loadingVariants.get(example.id);
+  if (loadingVariant) {
+    const literalDefault = `${loadingVariant.prop} = ${loadingVariant.default}`;
+    if (!variants || exampleSource.split(literalDefault).length !== 2)
+      throw new Error(`${example.id}: expected one independent loading default ${literalDefault}`);
+    variants.loading = {
+      label: loadingVariant.label,
+      source: exampleSource.replace(literalDefault, `${loadingVariant.prop} = true`),
+    };
+  }
+  const exampleManifest =
+    example.family === "treemap"
+      ? {
+          ...manifest,
+          dependencies: {
+            ...manifest.dependencies,
+            "@kind-ui/charts": "file:vendor/kind-ui-charts-0.5.0.tgz",
+          },
+        }
+      : manifest;
   const files = {
-    "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
+    "package.json": `${JSON.stringify(exampleManifest, null, 2)}\n`,
     "index.html":
       '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kind UI chart example</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>\n',
     "tsconfig.json": `${JSON.stringify(
@@ -168,6 +193,10 @@ for (const example of allExamples) {
     LICENSE: read("../../LICENSE"),
   };
 
+  if (example.family === "treemap")
+    files["README.md"] =
+      `# ${example.title} — candidate consumer\n\nPublished @kind-ui/charts@0.5.0 does not contain Treemap. Obtain the reviewed archive matching SHA-256 ${provenance.sha256}, place it at vendor/kind-ui-charts-0.5.0.tgz, then install dependencies. Public installation requires a Charts release containing this API.\n\n` +
+      files["README.md"];
   for (const [file, source] of Object.entries(example.extraFiles ?? {})) {
     if (!file.startsWith(`src/examples/${example.id}/`) || Object.hasOwn(files, file))
       throw new Error(`Invalid additional example source: ${file}`);
@@ -194,7 +223,8 @@ for (const example of allExamples) {
         }
       : {}),
     files,
-    packageStatus: status,
+    packageStatus: example.family === "treemap" ? "Treemap candidate artifact" : status,
+    ...(example.family === "treemap" ? { candidateSha256: provenance.sha256 } : {}),
     localPackage: local,
     version: provenance.version,
   };
@@ -324,6 +354,24 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
       );
     },
   );
+  body = body.replace(/<TreemapDataAlternative id="([\w-]+)"\s*\/>/g, (_, id) => {
+    const alternative = bundles[id]?.dataAlternative;
+    if (!alternative) throw new Error(`Missing Treemap data alternative ${id}`);
+    const escapeCell = (value) =>
+      String(value ?? "—")
+        .replaceAll("|", "\\|")
+        .replaceAll("\n", "<br>");
+    const keys = Object.keys(alternative.columns);
+    return (
+      `### ${alternative.caption}\n\n` +
+      `| ${keys.map((key) => escapeCell(alternative.columns[key])).join(" | ")} |\n` +
+      `| ${keys.map(() => "---").join(" | ")} |\n` +
+      alternative.rows
+        .map((row) => `| ${keys.map((key) => escapeCell(row[key])).join(" | ")} |`)
+        .join("\n") +
+      "\n"
+    );
+  });
   body = body.replace(/<ChartInstallation id="([\w-]+)"\s*\/>/g, (_, id) => {
     const bundle = bundles[id];
     if (!bundle) throw new Error(`Unknown installation example ${id}`);
@@ -333,7 +381,7 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
     tableMarkdown(name),
   );
   if (
-    /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|ChartInstallation|ApiTable)\b/.test(
+    /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|ChartInstallation|TreemapDataAlternative|ApiTable)\b/.test(
       body,
     )
   )

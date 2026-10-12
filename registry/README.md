@@ -63,3 +63,5 @@ this workspace's dependency tree. Its current transitive `braces` dependency has
 an upstream high-severity advisory (GHSA-vfj7-8cjw-p6xm) with no patched release;
 the repository's existing dependency audit gates remain intact. The CLI handles
 only this repository's authored catalog and controlled scratch consumers.
+
+Treemap examples remain outside the public install catalog while the registry pins published Charts 0.5.0, which lacks Treemap exports. Activate its canonical registry composition only after publishing a release containing the API, updating the registry version, and checking installation against that published archive. Documentation verifies these examples against the reviewed candidate archive and does not advertise a Treemap CLI command yet.

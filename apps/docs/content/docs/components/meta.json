@@ -13,6 +13,7 @@
     "waterfall",
     "sankey",
     "histogram",
-    "box-plot"
+    "box-plot",
+    "treemap"
   ]
 }

@@ -4,7 +4,7 @@ Original docs source and adaptations of Kind UI examples use this repository's M
 
 | Dependency | Pinned version | License |
 | --- | --- | --- |
-| @kind-ui/charts | 0.5.0, guarded 4eff029 artifact | MIT |
+| @kind-ui/charts | 0.5.0, reviewed 30c8b30 candidate artifact | MIT |
 | Fumadocs core and UI | 16.15.18 | MIT |
 | Fumadocs MDX | 15.4.6 | MIT |
 | Fumadocs TypeScript generator | 5.4.1 | MIT |
@@ -17,6 +17,8 @@ Original docs source and adaptations of Kind UI examples use this repository's M
 | React and React DOM | 19.3.0 | MIT |
 | Recharts | 3.10.1 | MIT |
 | Motion | 13.4.6 | MIT |
+| d3-hierarchy | 3.1.2 | ISC |
+| DefinitelyTyped d3-hierarchy declarations | 3.1.7 | MIT |
 | fflate | 0.8.3 | MIT |
 | Tailwind CSS and PostCSS adapter | 4.3.3 | MIT |
 | TypeScript | 5.9.3 | Apache-2.0 |
@@ -28,3 +30,5 @@ The font's OFL license ships with @fontsource-variable/geist. API and syntax wor
 Tabs and Button are adapted from the official shadcn/ui registry, with its complete MIT notice preserved. Other navigation controls compose installed Radix primitives. The Kind UI homepage shared selected-pill augmentation from PR53 (aa6ee84450c8e09947cfd14985510c48af7450ec) is reused with Motion. Chart colors follow Kind UI's showcase palette.
 
 Authoritative dependency sources: [Fumadocs](https://github.com/fuma-nama/fumadocs), [Next.js](https://github.com/vercel/next.js), [React](https://github.com/facebook/react), [Recharts](https://github.com/recharts/recharts), [Motion](https://github.com/motiondivision/motion), [fflate](https://github.com/101arrowz/fflate), [Tailwind](https://github.com/tailwindlabs/tailwindcss), [TypeScript](https://github.com/microsoft/TypeScript), [Fontsource](https://github.com/fontsource/font-files).
+
+Treemap layout uses the narrow d3-hierarchy dependency; its installed package retains the ISC license. Kind UI owns its HTML rendering and interactions. The Treemap examples use a checksum-verified candidate archive from Core commit `30c8b30`; published Charts 0.5.0 does not provide these exports. These original examples and their synthetic data do not copy reference-site implementation or assets.

@@ -18,6 +18,20 @@ const presentation = {
         "Initial uncontrolled visibility; mutually exclusive with visibleSeries. Use explicit visibility interaction for legend hide/show.",
     },
   },
+  TreemapRootReference: {
+    title: "Treemap chart",
+    defaults: {
+      height: "280",
+      empty: '"No positive values"',
+      depth: "Infinity",
+      padding: "2",
+      groupHeaderHeight: "20",
+      layout: '"stable"',
+      animate: "false",
+      loading: "false",
+      loadingLabel: '"Loading chart"',
+    },
+  },
   LoadingReference: {
     title: "Loading",
     defaults: { loading: "false", loadingLabel: '"Loading chart"' },

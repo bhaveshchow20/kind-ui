@@ -3,7 +3,8 @@ import { chartItemName } from "./names.mjs";
 
 // The docs catalog owns chart choices and compositions; this catalog owns install addresses.
 export const registryItems = [
-  ...examples,
+  // Treemap requires a future Core release before its public registry activation.
+  ...examples.filter(({ id }) => id !== "treemap"),
   allExamples.find(({ id }) => id === "radial-activity"),
 ].map((example) => {
   if (!example) throw new Error("Missing canonical activity rings composition");
