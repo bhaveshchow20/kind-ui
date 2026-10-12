@@ -46,6 +46,13 @@ export function CandlestickXAxis(props: CandlestickXAxisProps) {
         .map((point) => point.coordinate),
     [context.points, context.viewport],
   );
+  const defaultFormatter = useCallback(
+    (value: unknown) => {
+      const point = pointsByCoordinate.get(Number(value));
+      return point ? context.formatTime(point.time, point) : String(value);
+    },
+    [pointsByCoordinate, context.formatTime],
+  );
   return (
     <XAxis
       {...props}
@@ -55,13 +62,7 @@ export function CandlestickXAxis(props: CandlestickXAxisProps) {
       scale="linear"
       allowDataOverflow
       ticks={props.ticks ?? observationTicks}
-      tickFormatter={
-        props.tickFormatter ??
-        ((value) => {
-          const point = pointsByCoordinate.get(Number(value));
-          return point ? context.formatTime(point.time, point) : String(value);
-        })
-      }
+      tickFormatter={props.tickFormatter ?? defaultFormatter}
     />
   );
 }
@@ -72,14 +73,20 @@ export type CandlestickYAxisProps = Omit<
 export function CandlestickYAxis(props: CandlestickYAxisProps) {
   const context = useCandlestick();
   const area = usePlotArea();
+  const bottom = (area?.height ?? 0) * context.volumeRatio;
+  const padding = useMemo(() => ({ bottom }), [bottom]);
+  const defaultFormatter = useCallback(
+    (value: unknown) => context.formatPrice(Number(value)),
+    [context.formatPrice],
+  );
   return (
     <YAxis
       {...props}
       domain={context.priceDomain}
       scale={context.priceScale}
       allowDataOverflow
-      padding={{ bottom: (area?.height ?? 0) * context.volumeRatio }}
-      tickFormatter={props.tickFormatter ?? ((value) => context.formatPrice(Number(value)))}
+      padding={padding}
+      tickFormatter={props.tickFormatter ?? defaultFormatter}
     />
   );
 }

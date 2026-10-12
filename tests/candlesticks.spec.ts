@@ -491,7 +491,8 @@ test("shared series focus dims paint and supports keyboard activation in strict 
   const volume = page.getByRole("button", { name: "Highlight Volume", exact: true });
   await expect(price).toHaveCount(1);
   await expect(volume).toHaveCount(1);
-  await page.locator(marks).first().click();
+  await page.locator('[data-candle-part="body"]').first().click();
+  await expect(page.getByLabel("Selected time")).toHaveText("2026-03-05");
   await expect(price).toHaveAttribute("aria-pressed", "true");
   const opacity = (series: string) =>
     page
@@ -527,4 +528,14 @@ test("another pointer cannot end the primary drag", async ({ page }) => {
   await page.mouse.up();
   await expect(page.getByLabel("Reason")).toHaveText("pan");
   await expect(page.getByLabel("Window")).not.toHaveText("0.5,3.5");
+});
+
+test("consumer click veto runs before controlled tap selection", async ({ page }) => {
+  await page.goto(url);
+  await page.getByRole("button", { name: "Veto click", exact: true }).click();
+  await page.locator('[data-candle-part="body"]').first().click();
+  await expect(page.getByLabel("Selected time")).toHaveText("None");
+  await page.getByRole("button", { name: "Veto click", exact: true }).click();
+  await page.locator('[data-candle-part="body"]').first().click();
+  await expect(page.getByLabel("Selected time")).toHaveText("2026-03-05");
 });

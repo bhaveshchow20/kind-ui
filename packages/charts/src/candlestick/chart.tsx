@@ -376,6 +376,21 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     () => getCandlestickTimeDomain(points, range, spacing),
     [points, range, spacing],
   );
+  const timeFormatter = useCallback(
+    (time: CandlestickPoint["time"], point?: CandlestickPoint<object>) =>
+      formatTime?.(time, point as unknown as CandlestickPoint<Row>) ?? String(time),
+    [formatTime],
+  );
+  const priceFormatter = useCallback(
+    (value: number, point?: CandlestickPoint<object>) =>
+      formatPrice?.(value, point as unknown as CandlestickPoint<Row>) ?? String(value),
+    [formatPrice],
+  );
+  const volumeFormatter = useCallback(
+    (value: number, point?: CandlestickPoint<object>) =>
+      formatVolume?.(value, point as unknown as CandlestickPoint<Row>) ?? String(value),
+    [formatVolume],
+  );
   const context: Context = {
     points,
     rendered,
@@ -390,12 +405,9 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     inspect,
     select,
     changeViewport,
-    formatTime: (time, point) =>
-      formatTime?.(time, point as unknown as CandlestickPoint<Row>) ?? String(time),
-    formatPrice: (value, point) =>
-      formatPrice?.(value, point as unknown as CandlestickPoint<Row>) ?? String(value),
-    formatVolume: (value, point) =>
-      formatVolume?.(value, point as unknown as CandlestickPoint<Row>) ?? String(value),
+    formatTime: timeFormatter,
+    formatPrice: priceFormatter,
+    formatVolume: volumeFormatter,
     volumeRatio: volumes.size ? volumeRatio : 0,
     contents: contents.size,
     registerContent,
@@ -420,6 +432,13 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
       points.length,
     );
   };
+  const acceptedTap = useRef<{ time: CandlestickPoint["time"] | null } | null>(null);
+  useEffect(
+    () => () => {
+      acceptedTap.current = null;
+    },
+    [],
+  );
   const drag = useRef<{
     pointerId: number;
     x: number;
@@ -527,6 +546,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             )
               return;
             event.currentTarget.focus({ preventScroll: true });
+            acceptedTap.current = null;
             drag.current = { pointerId: event.pointerId, x: event.clientX, range, moved: false };
             inspect(geometry.current?.nearest(event.clientX)?.time ?? null);
           },
@@ -538,6 +558,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             if (current && geometry.current) {
               if (!current.moved && Math.abs(current.x - event.clientX) > 4) {
                 current.moved = true;
+                acceptedTap.current = null;
                 event.currentTarget.setPointerCapture(event.pointerId);
               }
               if (current.moved)
@@ -549,15 +570,31 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           onPointerUp: (event) => {
             frameProps?.onPointerUp?.(event);
             if (drag.current?.pointerId !== event.pointerId) return;
-            if (!event.defaultPrevented && drag.current && !drag.current.moved)
-              select(geometry.current?.nearest(event.clientX)?.time ?? null);
+            acceptedTap.current =
+              !event.defaultPrevented && !drag.current.moved
+                ? { time: geometry.current?.nearest(event.clientX)?.time ?? null }
+                : null;
             drag.current = null;
             if (event.currentTarget.hasPointerCapture(event.pointerId))
               event.currentTarget.releasePointerCapture(event.pointerId);
           },
+          onClick: (event) => {
+            frameProps?.onClick?.(event);
+            const tap = acceptedTap.current;
+            acceptedTap.current = null;
+            if (
+              tap &&
+              !event.defaultPrevented &&
+              event.button === 0 &&
+              event.target instanceof Element &&
+              event.target.closest("svg.recharts-surface")
+            )
+              select(tap.time);
+          },
           onPointerCancel: (event) => {
             frameProps?.onPointerCancel?.(event);
             if (drag.current?.pointerId !== event.pointerId) return;
+            acceptedTap.current = null;
             drag.current = null;
             if (event.currentTarget.hasPointerCapture(event.pointerId))
               event.currentTarget.releasePointerCapture(event.pointerId);
@@ -565,6 +602,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           },
           onPointerLeave: (event) => {
             frameProps?.onPointerLeave?.(event);
+            acceptedTap.current = null;
             if (!event.defaultPrevented) {
               if (drag.current && !drag.current.moved) drag.current = null;
               if (!drag.current) inspect(null);

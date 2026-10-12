@@ -59,6 +59,7 @@ export function CandlestickHost() {
   const [reason, setReason] = useState("initial");
   const [logarithmic, setLogarithmic] = useState(params.get("overlay-invalid") === "log");
   const [veto, setVeto] = useState(false);
+  const [vetoClick, setVetoClick] = useState(false);
   const ref = useCallback((node: SVGSVGElement | null) => {
     if (node) node.dataset.hostRef = "yes";
   }, []);
@@ -180,6 +181,9 @@ export function CandlestickHost() {
       <button type="button" onClick={() => setVeto(!veto)}>
         Veto pointer-up
       </button>
+      <button type="button" onClick={() => setVetoClick(!vetoClick)}>
+        Veto click
+      </button>
       <button
         type="button"
         onClick={() => {
@@ -217,6 +221,9 @@ export function CandlestickHost() {
         frameProps={{
           onPointerUp: (event) => {
             if (veto) event.preventDefault();
+          },
+          onClick: (event) => {
+            if (vetoClick) event.preventDefault();
           },
         }}
         config={{

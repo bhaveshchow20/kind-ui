@@ -6,8 +6,10 @@ import {
   createContext,
   type ReactNode,
   use,
+  useCallback,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
 } from "react";
 import {
@@ -196,15 +198,22 @@ export function CandlestickVolume({ seriesKey, axisProps, ...props }: Candlestic
     (value, point) => Math.max(value, point.volume ?? 0),
     0,
   );
+  const domain = useMemo<[number, number]>(() => [0, max || 1], [max]);
+  const top = (area?.height ?? 0) * (1 - context.volumeRatio) + 8;
+  const padding = useMemo(() => ({ top }), [top]);
+  const defaultFormatter = useCallback(
+    (value: unknown) => context.formatVolume(Number(value)),
+    [context.formatVolume],
+  );
   return (
     <>
       <YAxis
         {...axisProps}
         yAxisId="candlestick-volume"
-        domain={[0, max || 1]}
+        domain={domain}
         allowDataOverflow
-        padding={{ top: (area?.height ?? 0) * (1 - context.volumeRatio) + 8 }}
-        tickFormatter={axisProps?.tickFormatter ?? ((value) => context.formatVolume(Number(value)))}
+        padding={padding}
+        tickFormatter={axisProps?.tickFormatter ?? defaultFormatter}
       />
       <CandlestickBar
         {...props}
