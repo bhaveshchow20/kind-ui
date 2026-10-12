@@ -142,6 +142,14 @@ test("packed Motion retargets marks and tooltip, snaps off reactively, and cance
     .evaluate((node) => (node as HTMLButtonElement).click());
   await expect(clip).toHaveCount(0);
   await page.getByRole("button", { name: "Resize", exact: true }).click();
+  // Responsive measurement settles after the click; capture pointer targets from
+  // the restored plot, rather than the previous centered 160px SVG.
+  await expect
+    .poll(async () => {
+      await page.clock.runFor(32);
+      return page.getByRole("application").getAttribute("width");
+    })
+    .toBe("440");
   const coords = await points(page);
   const start = coords[0];
   const end = coords[3];
@@ -277,7 +285,7 @@ test("stateful packed tooltip content and refs survive mode, preference and geom
   expect(after).toEqual(before);
 });
 
-test("packed native hide preserves entrance progress, Root visibility and data", async ({
+test("packed native hide preserves entrance progress, chart visibility and data", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });

@@ -52,7 +52,7 @@ function Case({ family, native }: { family: string; native: boolean }) {
         Focus second
       </button>
       <output data-pointer>{pointer}</output>
-      <Chart.Root
+      <Engine
         config={config}
         interaction={{
           kind: "series",
@@ -61,54 +61,56 @@ function Case({ family, native }: { family: string; native: boolean }) {
           selected,
           onSelectionChange: setSelected,
         }}
-        {...(native ? {} : { visibleSeries: hidden ? ["second"] : ["first", "second"] })}
+        visibleSeries={native || !hidden ? ["first", "second"] : ["second"]}
+        aria-label="Chart fixture"
+        data={rows}
+        width={600}
+        height={280}
+        animate={new URLSearchParams(location.search).get("animate") !== "false"}
       >
-        <Engine
-          data={rows}
-          width={600}
-          height={280}
-          animate={new URLSearchParams(location.search).get("animate") !== "false"}
-        >
-          <Chart.XAxis
-            dataKey={family === "scatter" ? "x" : "category"}
-            type={family === "scatter" ? "number" : "category"}
-          />
-          <Chart.YAxis dataKey={family === "scatter" ? "y" : undefined} />
-          {(["first", "second"] as const).map((key) => (
-            <Series
-              key={key}
-              seriesKey={key}
-              id={`${family}-${native ? "native" : "root"}-${key}`}
-              dataKey={key}
-              label={{ pointerEvents: "none" }}
-              {...(family === "scatter"
-                ? { activeShape: query.get("active") === "true" }
-                : family.startsWith("bar")
-                  ? {
-                      activeBar: query.get("active") === "true",
-                      background: { zIndex: 54, fill: "#ddd" },
-                    }
-                  : { activeDot: false })}
-              onClick={(entry, index) =>
-                setPointer(
-                  JSON.stringify({
-                    series: key,
-                    row: entry.payload.category,
-                    value: entry.payload[key],
-                    originalDataIndex: entry.originalDataIndex ?? index,
-                  }),
-                )
-              }
-              hide={native && key === "first" && hidden}
-              {...(family === "area" || family === "bar-stacked" ? { stackId: "total" } : {})}
-              {...(family === "scatter" ? { data: scatterRows[key] } : {})}
-            >
-              <LabelList dataKey={key} pointerEvents="none" />
-            </Series>
-          ))}
-          <Chart.Tooltip />
-        </Engine>
-      </Chart.Root>
+        <Chart.XAxis
+          dataKey={family === "scatter" ? "x" : "category"}
+          type={family === "scatter" ? "number" : "category"}
+        />
+        <Chart.YAxis dataKey={family === "scatter" ? "y" : undefined} />
+        {(["first", "second"] as const).map((key) => (
+          <Series
+            key={key}
+            seriesKey={key}
+            id={`${family}-${native ? "native" : "root"}-${key}`}
+            dataKey={key}
+            label={{ pointerEvents: "none" }}
+            {...(family === "scatter"
+              ? { activeShape: query.get("active") === "true" }
+              : family.startsWith("bar")
+                ? {
+                    activeBar: query.get("active") === "true",
+                    background: { zIndex: 54, fill: "#ddd" },
+                  }
+                : { activeDot: false })}
+            onClick={(entry: unknown, index: unknown) => {
+              if (typeof entry !== "object" || entry === null || !("payload" in entry)) return;
+              if (typeof entry.payload !== "object" || entry.payload === null) return;
+              const payload = entry.payload as Record<string, unknown>;
+              setPointer(
+                JSON.stringify({
+                  series: key,
+                  row: payload.category,
+                  value: payload[key],
+                  originalDataIndex:
+                    "originalDataIndex" in entry ? (entry.originalDataIndex ?? index) : index,
+                }),
+              );
+            }}
+            hide={native && key === "first" && hidden}
+            {...(family === "area" || family === "bar-stacked" ? { stackId: "total" } : {})}
+            {...(family === "scatter" ? { data: scatterRows[key] } : {})}
+          >
+            <LabelList dataKey={key} pointerEvents="none" />
+          </Series>
+        ))}
+        <Chart.Tooltip />
+      </Engine>
     </section>
   );
 }

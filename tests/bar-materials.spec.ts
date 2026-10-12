@@ -137,7 +137,7 @@ test("existing bar recipes expose independent finish and palette controls", asyn
   await page.getByRole("button", { name: "Color", exact: true }).click();
   await expect(page.locator("main")).toHaveAttribute("data-material", "clay");
   await expect(
-    page.locator(".recharts-responsive-container").first().locator(".recharts-bar-rectangle path"),
+    page.locator(".recharts-wrapper").first().locator(".recharts-bar-rectangle path"),
   ).toHaveCount(3);
   await page.screenshot({ path: info.outputPath("recipes-clay-color-normal.png"), fullPage: true });
   await page.getByRole("checkbox", { name: "Motion", exact: true }).check();
@@ -145,7 +145,7 @@ test("existing bar recipes expose independent finish and palette controls", asyn
   await expect
     .poll(() =>
       page
-        .locator(".recharts-responsive-container")
+        .locator(".recharts-wrapper")
         .first()
         .evaluate((node) => {
           const svg = node.querySelector("svg.recharts-surface");
@@ -250,7 +250,7 @@ for (const material of ["clay"] as const) {
       await page.getByRole("button", { name: palette, exact: true }).click();
       for (const width of [1000, 360]) {
         await page.setViewportSize({ width, height: 900 });
-        const first = page.locator(".recharts-responsive-container").first();
+        const first = page.locator(".recharts-wrapper").first();
         await expect
           .poll(() =>
             first.evaluate((node) => {

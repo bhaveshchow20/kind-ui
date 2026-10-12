@@ -173,9 +173,7 @@ for (const example of allExamples) {
     "\n";
   bundles[example.id] = {
     ...example,
-    // Examples with their own complete table retain it in every copied consumer.
     ...(dataAlternative ? { dataAlternative } : {}),
-    ...(exampleSource.includes("data-chart-alternative") ? { dataAlternativeInSource: true } : {}),
     ...(variants
       ? {
           variants,
@@ -256,7 +254,7 @@ const api = Object.fromEntries(
     })),
   ]),
 );
-if (!api.Root?.length || !api.LineSeries?.length || !api.LineChart?.length)
+if (!api.ChartFrame?.length || !api.LineSeries?.length || !api.LineChart?.length)
   throw new Error("Public API generation returned incomplete tables");
 write("generated/api.json", `${JSON.stringify(api, null, 2)}\n`);
 const tableMarkdown = (name) => {

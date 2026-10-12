@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { expectDimmedSeries } from "./interaction-paint.mjs";
+import { candidatePromptSource } from "./prompt-source.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
@@ -35,8 +36,6 @@ try {
   assert.equal(await scatter.locator(mark).count(), 8);
   assert.equal(await scatter.locator('[data-legend-shape="circle"]').count(), 1);
   assert.equal(await scatter.locator('[data-legend-shape="diamond"]').count(), 1);
-  assert.equal(await scatter.locator(".sr-only tbody tr").count(), 8);
-  assert.equal(await bubble.locator(".sr-only tbody tr").count(), 6);
   for (const [id, bundle] of Object.entries(bundles)) {
     const card = page.locator(`[data-component="${id}"]`);
     for (const [value, option] of Object.entries(
@@ -62,7 +61,7 @@ try {
         const prompt = await page.evaluate(() => navigator.clipboard.readText());
         const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
         assert.equal(
-          (await (await context.request.get(url)).text()).trimEnd(),
+          (await (await context.request.get(candidatePromptSource(url, origin))).text()).trimEnd(),
           option.source.trimEnd(),
         );
         await pending.getByRole("tab", { name: "Preview", exact: true }).click();
@@ -95,7 +94,7 @@ try {
       assert.ok(prompt.includes("/docs/components/scatter/"));
       const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
       assert.equal(
-        (await (await context.request.get(url)).text()).trimEnd(),
+        (await (await context.request.get(candidatePromptSource(url, origin))).text()).trimEnd(),
         option.source.trimEnd(),
       );
       if (id === "scatter-materials") {

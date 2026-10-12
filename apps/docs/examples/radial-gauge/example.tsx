@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { Label, RadialBarChart, type SeriesConfig } from "@kind-ui/charts";
 import { useState } from "react";
 
 const data = [{ period: "Storage", used: 72 }];
@@ -9,7 +9,7 @@ const config = {
     color: "#008b83",
     formatValue: (value: unknown) => `${value} of 100 GB`,
   },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function StorageGaugeChart({
   direction = "clockwise",
@@ -18,7 +18,7 @@ export function StorageGaugeChart({
 }) {
   const [labels, setLabels] = useState(true);
   return (
-    <Chart.Root config={config}>
+    <>
       <label>
         <input
           type="checkbox"
@@ -27,8 +27,11 @@ export function StorageGaugeChart({
         />{" "}
         Labels
       </label>
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.RadialBarChart
+      <>
+        <RadialBarChart
+          config={config}
+          width="100%"
+          height={280}
           key={direction}
           data={data}
           animate={{ revealDurationMs: 1200 }}
@@ -41,10 +44,10 @@ export function StorageGaugeChart({
           barCategoryGap="10%"
           aria-label="Storage capacity: 72 of 100 GB used, 28 GB available"
         >
-          <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-          <Chart.PolarRadiusAxis type="category" dataKey="period" tick={false} axisLine={false}>
+          <RadialBarChart.AngleAxis type="number" domain={[0, 100]} tick={false} />
+          <RadialBarChart.RadiusAxis type="category" dataKey="period" tick={false} axisLine={false}>
             {labels && (
-              <Chart.Label
+              <Label
                 value={data[0].used}
                 content={({ viewBox }) => {
                   if (!viewBox || !("cx" in viewBox)) return null;
@@ -66,11 +69,11 @@ export function StorageGaugeChart({
                 }}
               />
             )}
-          </Chart.PolarRadiusAxis>
-          <Chart.RadialBarSeries dataKey="used" background={{ fill: "#dfeeea" }} cornerRadius={6} />
-          <Chart.Tooltip />
-        </Chart.RadialBarChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          </RadialBarChart.RadiusAxis>
+          <RadialBarChart.Series dataKey="used" background={{ fill: "#dfeeea" }} cornerRadius={6} />
+          <RadialBarChart.Tooltip />
+        </RadialBarChart>
+      </>
+    </>
   );
 }

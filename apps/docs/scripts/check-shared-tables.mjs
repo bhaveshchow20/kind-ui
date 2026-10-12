@@ -7,7 +7,7 @@ import { swipeUp } from "./touch-swipe.mjs";
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const api = JSON.parse(readFileSync("generated/api.json", "utf8"));
 const pages = {
-  root: ["Root", "LoadingReference"],
+  chart: ["ChartFrame", "LoadingReference"],
   legend: ["Legend"],
   tooltip: ["Tooltip", "TooltipContent"],
   "series-config": ["SeriesMetadata"],

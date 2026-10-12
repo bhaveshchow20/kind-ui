@@ -1,4 +1,3 @@
-// Host-only proof that both families coexist through packed public exports.
 import * as Chart from "@kind-ui/charts";
 import { XAxis, YAxis } from "@kind-ui/charts";
 import { useState } from "react";
@@ -26,7 +25,7 @@ function Family({ family }: { family: "area" | "bar" }) {
           </option>
         ))}
       </select>
-      <Chart.Root
+      <ChartComponent
         interaction={{
           kind: "series",
           mode: "visibility",
@@ -41,22 +40,19 @@ function Family({ family }: { family: "area" | "bar" }) {
         }}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
+        width={400}
+        height={220}
+        data={data}
+        animate={{ revealDurationMs: 5000 }}
+        aria-label={`${family} chart`}
       >
-        <Chart.Legend />
-        <ChartComponent
-          width={400}
-          height={220}
-          data={data}
-          animate={{ revealDurationMs: 5000 }}
-          aria-label={`${family} chart`}
-        >
-          <XAxis dataKey="category" />
-          <YAxis domain={[0, 16]} />
-          <Series dataKey="value" material={material} fillOpacity={0.65} />
-          <Series dataKey="other" material={material} fillOpacity={0.65} />
-          <Chart.Tooltip />
-        </ChartComponent>
-      </Chart.Root>
+        <XAxis dataKey="category" />
+        <YAxis domain={[0, 16]} />
+        <Series dataKey="value" material={material} fillOpacity={0.65} />
+        <Series dataKey="other" material={material} fillOpacity={0.65} />
+        <Chart.Tooltip />
+        <ChartComponent.Legend />
+      </ChartComponent>
     </section>
   );
 }

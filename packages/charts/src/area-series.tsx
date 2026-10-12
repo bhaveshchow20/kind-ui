@@ -27,7 +27,7 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   pattern?: FillPattern | false | undefined;
 };
 
-/** A registered Recharts Area with Root colors and controlled visibility. */
+/** A registered Recharts Area with chart colors and controlled visibility. */
 export function AreaSeries<DataPoint = unknown, Value = unknown>({
   seriesKey,
   pointStyle = "default",

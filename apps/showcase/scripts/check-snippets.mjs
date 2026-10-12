@@ -7,7 +7,10 @@ import ts from "typescript";
 const app = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 async function evaluate(source) {
   const { outputText } = ts.transpileModule(source, {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+    },
   });
   return import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
 }
@@ -33,13 +36,15 @@ try {
           const file = join(temporary, `${recipe.id}-${finish}-${animate}.tsx`);
           const source = generate(recipe, finish, ["#733bff", "#119548", "#f22e79"], animate);
           assert.doesNotMatch(source, /@kind-ui\/charts\/styles\.css/);
+          assert.doesNotMatch(source, /Chart\.Root|rootProps=|xDataKey=|xAxisProps=|yAxisProps=/);
           assert.doesNotMatch(
             source,
             /visibleSeries=|onVisibleSeriesChange=|data\.filter\(/,
             `${recipe.id} copied focus must preserve the complete data`,
           );
           if (recipe.family === "Pie") {
-            assert.match(source, /interactionBinding="root"/);
+            assert.match(source, /<PieChart\.Series/);
+            assert.doesNotMatch(source, /interactionBinding=/);
             assert.match(source, /categoryKey="id"/);
             assert.match(source, /kind:\s*"category"/);
           }
@@ -86,10 +91,17 @@ try {
   ]) {
     for (const recipe of recipes) {
       const file = join(temporary, `${recipe.id}-controls.tsx`);
-      await writeFile(
-        file,
-        generate(recipe, "plain", ["#733bff", "#119548", "#f22e79"], true, changedOptions),
+      const source = generate(
+        recipe,
+        "plain",
+        ["#733bff", "#119548", "#f22e79"],
+        true,
+        changedOptions,
       );
+      assert.doesNotMatch(source, /<\w+Chart\.Legend\b/, `${recipe.id} hides the explicit legend`);
+      if (recipe.family !== "Heatmap")
+        assert.doesNotMatch(source, /<\w+Chart\.Grid\b/, `${recipe.id} omits the explicit grid`);
+      await writeFile(file, source);
       files.push(file);
     }
   }
@@ -100,7 +112,10 @@ try {
   }
   const config = ts.readConfigFile(join(app, "tsconfig.json"), ts.sys.readFile);
   const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, app);
-  const program = ts.createProgram(files, { ...parsed.options, incremental: false });
+  const program = ts.createProgram(files, {
+    ...parsed.options,
+    incremental: false,
+  });
   const diagnostics = [...parsed.errors, ...ts.getPreEmitDiagnostics(program)];
   if (config.error) diagnostics.push(config.error);
   if (diagnostics.length) {

@@ -127,9 +127,10 @@ try {
     join(scratch, "app/layout.tsx"),
     'import "../styles.css"; export default function Layout({children}:{children:React.ReactNode}){return <html lang="en"><body>{children}</body></html>}',
   );
+  // Server components use named client boundaries; compound members remain in client hosts.
   await writeFile(
     join(scratch, "app/page.tsx"),
-    `import { LineChart } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost, ThemingHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} xDataKey="month" aria-label="Server boundary totals" /><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /><ThemingHost /></main>}`,
+    `import { LineChart, LineSeries, XAxis } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost, ThemingHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} aria-label="Server boundary totals"><XAxis dataKey="month" /><LineSeries dataKey="total" /></LineChart><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /><ThemingHost /></main>}`,
   );
   await writeFile(
     join(scratch, "postcss.config.mjs"),
@@ -182,10 +183,17 @@ try {
   assert.match(html, /data-kind-ui="chart"/, "SSR must include the package chart shell");
   assert.match(html, /data-kind-ui="chart-legend"/, "SSR must include package content");
   const patternIds = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
-  assert.equal(patternIds.length, 6, "SSR includes both charts' three pattern legend swatches");
-  assert.equal(new Set(patternIds).size, 6, "SSR pattern resources must be unique");
+  assert.equal(
+    patternIds.length,
+    0,
+    "Responsive SSR shells defer native plot patterns and portaled legends until hydration",
+  );
   // Native responsive SSR emits an empty wrapper; the client supplies SVG ARIA.
-  assert.match(html, /lucide-trending-up/);
+  assert.match(
+    html,
+    /id="compound-integration"/,
+    "SSR retains the compound frame before its legend mounts during hydration",
+  );
   const nextOutput = join(root, "artifacts/packed-line-next");
   await rm(nextOutput, { recursive: true, force: true });
   await cp(join(scratch, "out"), nextOutput, { recursive: true });

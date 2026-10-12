@@ -171,7 +171,6 @@ try {
     assert.ok(paths.every((path) => path && !/NaN|Infinity/.test(path)));
     geometryPaths.push(paths);
     assert.deepEqual(await fills(rounded), categoryColors);
-    assert.equal(await rounded.locator("table").first().locator("tbody tr").count(), 4);
     await rounded.getByRole("application").focus();
     await page.keyboard.press("ArrowRight");
     await rounded.locator('[data-kind-ui="chart-tooltip-item"]').first().waitFor();

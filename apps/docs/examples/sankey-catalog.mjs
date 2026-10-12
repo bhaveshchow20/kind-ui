@@ -4,14 +4,14 @@ export const sankeyExamples = [
     title: "Energy allocation",
     notes: "180 MWh across nine nodes, three stages and eighteen balanced flows.",
     acceptance:
-      "All eighteen routes retain their IDs; selection, tooltip units and hidden data alternative agree.",
+      "All eighteen routes retain their IDs; selection, tooltip units and plotted values agree.",
   },
   {
     id: "sankey-config",
     title: "Configured flows",
     notes: "One node-ID metadata map supplies default node/source-link colors and a static legend.",
     acceptance:
-      "Four named nodes and four flows share configured paint, tooltip values and the complete data alternative.",
+      "Four named nodes and four flows share configured paint, tooltip values and the plotted values.",
   },
   {
     id: "sankey-finishes",

@@ -29,7 +29,7 @@ export type LineSeriesProps<
   dashAnimation?: false | LineDashAnimation;
 };
 
-/** A registered Recharts Line with Root colors and controlled visibility. */
+/** A registered Recharts Line with chart colors and controlled visibility. */
 export function LineSeries<
   DataPoint = Parameters<DefaultLineDataKey>[0],
   Value = ReturnType<DefaultLineDataKey>,

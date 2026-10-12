@@ -24,15 +24,15 @@ export const pieExamples = [
     notes:
       "Native cornerRadius and paddingAngle produce rounded pies, rounded donuts and a petal donut without custom shapes.",
     acceptance:
-      "Geometry selection matches copied source; category identity and the 1,000-hour data alternative remain unchanged.",
+      "Geometry selection matches copied source; category identity and the 1,000-hour total remain unchanged.",
   },
   {
     id: "pie-interaction",
     title: "Category focus and initial inspection",
     notes:
-      "A Root-bound donut starts with Default paint and initially inspects Service. Choose Selective glow for its halo. Activate a slice or legend to focus; Escape clears focus.",
+      "A PieChart donut composed from explicit Series, Tooltip and Legend parts starts with Default paint and initially inspects Service. Choose Selective glow for its halo. Activate a slice or legend to focus; Escape clears focus.",
     acceptance:
-      "Original category IDs drive Root binding, shared focus, the initial tooltip and selective glow. Loading preserves layout.",
+      "Original category IDs drive chart-owned interaction, shared focus, the initial tooltip and selective glow. Loading preserves layout.",
   },
 ];
 export const pieDataLabels = Object.fromEntries(

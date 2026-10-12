@@ -17,7 +17,7 @@ try {
     await tables.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label"))),
     [
       "LineChart props",
-      "LineSeries props",
+      "LineChart.Series props",
       ...[
         "LinePresentationReference",
         "AreaPresentationReference",

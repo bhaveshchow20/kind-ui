@@ -1,4 +1,3 @@
-// Only host composition: all maintained behavior comes from the packed public exports.
 import * as Chart from "@kind-ui/charts";
 import {
   CartesianGrid,
@@ -178,58 +177,55 @@ export function ScatterHost() {
       <output aria-label="Events">
         {events.click}/{events.enter}/{events.move}/{events.leave}
       </output>
-      <Chart.Root
+      <Chart.ScatterChart
         interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
-        style={{ width: narrow ? 360 : "100%" }}
+        frameProps={{ style: { width: narrow ? 360 : "100%" } }}
+        responsive
+        style={{ width: "100%", height: 350 }}
+        aria-label="Packed scatter"
+        animate={animate}
+        ref={(node) => node?.setAttribute("data-ref", node.tagName)}
+        onMouseMove={() => setEvents((v) => ({ ...v, move: v.move + 1 }))}
       >
-        <Chart.Legend />
-        <Chart.ScatterChart
-          responsive
-          style={{ width: "100%", height: 350 }}
-          aria-label="Packed scatter"
-          animate={animate}
+        {axes}
+        <Chart.ScatterSeries {...seriesProps} seriesKey="alpha" id="alpha-native" hide={hide}>
+          {cells}
+        </Chart.ScatterSeries>
+        <Chart.ScatterSeries
+          seriesKey="beta"
+          id="beta-native"
+          data={other}
+          xAxisId="latency"
+          yAxisId="change"
+          zAxisId="volume"
+          shape={Shape}
+          activeShape={Shape}
+        />
+        <Chart.ScatterTooltip
+          axisId="latency"
+          filterNull={filterNull}
+          pointLabel={label}
+          zDimension={{ dataKey: functionZ ? volume : "z", name: "Volume", unit: " jobs" }}
           ref={(node) => node?.setAttribute("data-ref", node.tagName)}
-          onMouseMove={() => setEvents((v) => ({ ...v, move: v.move + 1 }))}
-        >
-          {axes}
-          <Chart.ScatterSeries {...seriesProps} seriesKey="alpha" id="alpha-native" hide={hide}>
-            {cells}
-          </Chart.ScatterSeries>
-          <Chart.ScatterSeries
-            seriesKey="beta"
-            id="beta-native"
-            data={other}
-            xAxisId="latency"
-            yAxisId="change"
-            zAxisId="volume"
-            shape={Shape}
-            activeShape={Shape}
-          />
-          <Chart.ScatterTooltip
-            axisId="latency"
-            filterNull={filterNull}
-            pointLabel={label}
-            zDimension={{ dataKey: functionZ ? volume : "z", name: "Volume", unit: " jobs" }}
-            ref={(node) => node?.setAttribute("data-ref", node.tagName)}
-            {...(custom
-              ? {
-                  content: (
-                    <Content
-                      active={false}
-                      payload={[]}
-                      activeIndex={undefined}
-                      coordinate={undefined}
-                      accessibilityLayer={false}
-                    />
-                  ),
-                }
-              : {})}
-          />
-        </Chart.ScatterChart>
-      </Chart.Root>
+          {...(custom
+            ? {
+                content: (
+                  <Content
+                    active={false}
+                    payload={[]}
+                    activeIndex={undefined}
+                    coordinate={undefined}
+                    accessibilityLayer={false}
+                  />
+                ),
+              }
+            : {})}
+        />
+        <Chart.ScatterChart.Legend />
+      </Chart.ScatterChart>
       <section aria-label="Native equivalence">
         <NativeChart width={900} height={350} aria-label="Native scatter">
           {axes}
@@ -430,79 +426,80 @@ export function ScatterMaterialHost() {
         Point clip
       </button>
       <output aria-label="Clicks">{clicks}</output>
-      <Chart.Root
+      <Chart.ScatterChart
         config={{ marks: { label: "Marks", color: paint } }}
-        style={{ width: narrow ? 280 : 700, maxWidth: "100%" }}
+        frameProps={{ style: { width: narrow ? 280 : 700, maxWidth: "100%" } }}
+        responsive
+        style={{ width: "100%", height: 260 }}
+        animate={animate}
+        aria-label="Finished symbols"
+        ref={(node) => node?.setAttribute("data-ref", node.tagName)}
       >
-        <Chart.Legend />
-        <Chart.ScatterChart
-          responsive
-          style={{ width: "100%", height: 260 }}
-          animate={animate}
-          aria-label="Finished symbols"
-          ref={(node) => node?.setAttribute("data-ref", node.tagName)}
+        {defs}
+        {axes}
+        <Chart.ScatterSeries
+          material={material}
+          data={values}
+          seriesKey="marks"
+          {...(nativeShape !== undefined ? { shape: nativeShape, activeShape: nativeShape } : {})}
+          {...(activeOwner === 1
+            ? { activeShape: Custom }
+            : activeOwner === 2
+              ? { activeShape: <Symbols type="square" data-custom="active-element" /> }
+              : activeOwner === 3
+                ? { activeShape: { fill: "red" } }
+                : {})}
+          onClick={() => setClicks((n) => n + 1)}
         >
-          {defs}
-          {axes}
-          <Chart.ScatterSeries
-            material={material}
-            data={values}
-            seriesKey="marks"
-            {...(nativeShape !== undefined ? { shape: nativeShape, activeShape: nativeShape } : {})}
-            {...(activeOwner === 1
-              ? { activeShape: Custom }
-              : activeOwner === 2
-                ? { activeShape: <Symbols type="square" data-custom="active-element" /> }
-                : activeOwner === 3
-                  ? { activeShape: { fill: "red" } }
-                  : {})}
-            onClick={() => setClicks((n) => n + 1)}
-          >
-            {cells}
-          </Chart.ScatterSeries>
-          {ownership && (
-            <>
-              <Chart.ScatterSeries
-                material={material}
-                data={[{ x: 30, y: 80 }]}
-                shape={Custom}
-                activeShape={Custom}
-              />
-              <Chart.ScatterSeries
-                material={material}
-                data={[{ x: 50, y: 80 }]}
-                shape={<Symbols type="star" data-custom="element" />}
-              />
-              <Chart.ScatterSeries
-                material={material}
-                data={[{ x: 70, y: 80 }]}
-                shape={{ fill: "red" }}
-              />
-              <Chart.ScatterSeries material={material} data={[{ x: 80, y: 80 }]}>
-                <Cell filter="none" />
-              </Chart.ScatterSeries>
-              <Chart.ScatterSeries material={material} data={[{ x: 90, y: 80 }]}>
-                <Cell style={{ filter: "none" }} />
-              </Chart.ScatterSeries>
-            </>
-          )}
-          <Chart.ScatterTooltip
-            pointLabel={(row) => String((row as { id: string }).id)}
-            zDimension={{ dataKey: "z", name: "Volume" }}
-          />
-        </Chart.ScatterChart>
-        <NativeChart responsive style={{ width: "100%", height: 260 }} aria-label="Native symbols">
-          {axes}
-          <Scatter
-            data={values}
-            fill={paint}
-            {...(nativeShape !== undefined ? { shape: nativeShape, activeShape: nativeShape } : {})}
-            isAnimationActive={false}
-          >
-            {cells}
-          </Scatter>
-        </NativeChart>
-      </Chart.Root>
+          {cells}
+        </Chart.ScatterSeries>
+        {ownership && (
+          <>
+            <Chart.ScatterSeries
+              material={material}
+              data={[{ x: 30, y: 80 }]}
+              shape={Custom}
+              activeShape={Custom}
+            />
+            <Chart.ScatterSeries
+              material={material}
+              data={[{ x: 50, y: 80 }]}
+              shape={<Symbols type="star" data-custom="element" />}
+            />
+            <Chart.ScatterSeries
+              material={material}
+              data={[{ x: 70, y: 80 }]}
+              shape={{ fill: "red" }}
+            />
+            <Chart.ScatterSeries material={material} data={[{ x: 80, y: 80 }]}>
+              <Cell filter="none" />
+            </Chart.ScatterSeries>
+            <Chart.ScatterSeries material={material} data={[{ x: 90, y: 80 }]}>
+              <Cell style={{ filter: "none" }} />
+            </Chart.ScatterSeries>
+          </>
+        )}
+        <Chart.ScatterTooltip
+          pointLabel={(row) => String((row as { id: string }).id)}
+          zDimension={{ dataKey: "z", name: "Volume" }}
+        />
+        <Chart.ScatterChart.Legend />
+      </Chart.ScatterChart>
+      <NativeChart
+        responsive
+        style={{ width: narrow ? 280 : 700, maxWidth: "100%", height: 260 }}
+        aria-label="Native symbols"
+      >
+        {axes}
+        <Scatter
+          data={values}
+          fill={paint}
+          {...(nativeShape !== undefined ? { shape: nativeShape, activeShape: nativeShape } : {})}
+          isAnimationActive={false}
+        >
+          {cells}
+        </Scatter>
+      </NativeChart>
     </main>
   );
 }

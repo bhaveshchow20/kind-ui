@@ -3,36 +3,34 @@ title: Radial Chart
 description: Show completion and capacity with concentric rings, gauges and stacked arcs.
 ---
 
-Track project completion on a fixed percentage scale.
-
 <ChartExample id="radial" />
 
 ## Usage
 
+`RadialBarChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+
 Use a fixed numeric domain, hide axis ticks and give each ring a stable category key. Labels start visible; use the chart’s Labels control to hide them.
 
 ```tsx title="Composition sketch"
-<Chart.Root config={config}>
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.RadialBarChart data={data} categoryKey="period" animate startAngle={90} endAngle={-270} innerRadius="18%" outerRadius="94%">
-      <Chart.PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-      <Chart.PolarRadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
-      <Chart.RadialBarSeries dataKey="progress" background={{ fill: "#e9e5f1" }} />
-      <Chart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
-    </Chart.RadialBarChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+import { RadialBarChart } from "@kind-ui/charts";
+
+<RadialBarChart config={config} height={280} aria-label="Radial values" data={data} categoryKey="period" animate startAngle={90} endAngle={-270} innerRadius="18%" outerRadius="94%">
+  <RadialBarChart.AngleAxis type="number" domain={[0, 100]} tick={false} />
+  <RadialBarChart.RadiusAxis type="category" dataKey="period" tick={false} axisLine={false} />
+  <RadialBarChart.Series dataKey="progress" background={{ fill: "#e9e5f1" }} />
+  <RadialBarChart.Tooltip itemKey={(entry) => String(entry.payload?.period ?? entry.name)} />
+</RadialBarChart>
 ```
 
-<Callout title="Note">Values remain available in the tooltip and accessible data table when labels are hidden.</Callout>
+<Callout title="Note">Values remain available in the tooltip when labels are hidden.</Callout>
 
 ## Activity rings
 
-Give each ring a config key, value and optional domain. `ActivityRings` includes tracks, tooltip and a legend.
+Give each ring a config key, value and optional domain. Compose `ActivityRings.Series`, `ActivityRings.Tooltip` and `ActivityRings.Legend` explicitly. The Series part includes tracks and normalized progress axes; its Labels child adds arc labels. Omitting a part omits it.
 
 <ChartExample id="radial-activity" />
 
-Rings run inner to outer in array order. Tooltips show original values; progress is clamped to each ring’s domain. This example uses category interaction in `rootProps` to toggle rings from the legend.
+Rings run inner to outer in array order. Tooltips show original values; progress is clamped to each ring’s domain. This example uses direct category `interaction` to toggle rings from the legend.
 
 ## Capacity gauge
 
@@ -50,13 +48,13 @@ Matching `stackId` values share one ring. Toggle the legend to compare committed
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="radial" variant="loading" />
 
 ## API reference
 
-Choose `ActivityRings` for a complete chart or compose custom plots with the radial components.
+Choose `ActivityRings` for normalized progress rings or `RadialBarChart` for custom radial geometry. Both use explicit parts.
 
 ### ActivityRings
 
@@ -64,6 +62,9 @@ Choose `ActivityRings` for a complete chart or compose custom plots with the rad
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `rings` | `readonly ActivityRing[]` | Required | `{ key: string; value: number; domain?: readonly [number, number]; cellProps?: ComponentProps<typeof Cell> }`; unique keys must exist in config. Empty arrays are valid. |
 | `config` | `SeriesConfig` | Required | Labels, colors, icons and original-value formatters. |
 | `aria-label` / `aria-labelledby` | `string` | One required | Names the chart; original-value descriptions are supplied automatically. |
@@ -71,14 +72,10 @@ Choose `ActivityRings` for a complete chart or compose custom plots with the rad
 | `responsive` / `height` | `boolean` / `number \| percentage` | `true` / `300` | Native responsive chart sizing; width defaults to 100%. |
 | `animate` | `boolean \| RadialBarAnimation` | `false` | Same entrance options as RadialBarChart; respects reduced motion. |
 | `loading` / `loadingLabel` | `boolean` / `string` | `false` / `"Loading chart"` | Explicit pending state; preserves layout and blocks inspection. |
-| `rootProps` | Root options | — | Root styling and category interaction. Set category `eligibleKeys` for ring focus. Add explicit `mode: "visibility"` and `defaultVisibleSeries` for hide/show buttons. |
-| `series` | Native RadialBarSeries options | Tracks and rounded ends | Override series paint, background or geometry; explicit fill wins over config. |
-| `labels` | `false \| LabelList options` | `false` | Optional arc labels; custom content retains control. |
-| `legend` / `tooltip` | `false` or component options | Static legend / original-value tooltip | Disable either independently or supply custom rendering options. |
 
 </div>
 
-<Callout title="Composition">`ActivityRings` supplies its own context; do not add another `Root`. Keep config colors aligned with custom ring paint.</Callout>
+<Callout title="Composition">Add `ActivityRings.Series` and optional `Labels`, `Tooltip` and `Legend` parts. Keep config colors aligned with custom ring paint.</Callout>
 
 ### RadialBarChart
 
@@ -94,7 +91,7 @@ Choose `ActivityRings` for a complete chart or compose custom plots with the rad
 | `innerRadius` / `outerRadius` | `number \| string` | `"0%"` / `"80%"` in Recharts | Pixels or percentages of the native maximum radius. |
 | `cx` / `cy` | `number \| string` | `"50%"` | Native center position; the gauge lowers `cy` for its semicircle. |
 | `barCategoryGap` | `number \| string` | `"10%"` in Recharts | Space between category bands. |
-| `aria-label` | `string` | — | Accessible plot name; include a separate data alternative. |
+| `aria-label` | `string` | — | Accessible plot name. |
 
 </div>
 
@@ -102,9 +99,11 @@ Changing direction does not replay a completed entrance; remount to replay.
 
 See [Recharts RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChart/).
 
-### RadialBarSeries
+<span id="radialbarseries" />
 
-<div className="line-props-scroll" role="region" aria-label="RadialBarSeries props" tabIndex={0}>
+### RadialBarChart.Series
+
+<div className="line-props-scroll" role="region" aria-label="RadialBarChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -115,7 +114,7 @@ See [Recharts RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChar
 | `cornerRadius` | `number \| string` | `0` in Recharts | Native rounded sector corners. |
 | `material` | `"clay" \| "glow"` | Omitted | Native mark finish; custom shapes, active shapes and filters retain rendering ownership. |
 | `fill` | `string` | Config color | Series paint; native Cells can override individual rows. |
-| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; Root visibility also applies. |
+| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; chart visibility also applies. |
 
 </div>
 
@@ -140,14 +139,15 @@ Use as `LabelList` content for sector-aware arc text. Center summaries use nativ
 
 ## Shared components
 
-Use these components for custom radial plots; ActivityRings already supplies its context and plot parts.
+Use these components for custom radial plots and compose ActivityRings parts explicitly.
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
 | [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
+
+Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

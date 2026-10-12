@@ -33,91 +33,103 @@ function Case({ family }: { family: string }) {
           width={400}
           height={300}
           animate={true}
-          labels={{}}
-          series={{
-            onMouseEnter: (entry, index) =>
-              setPointer({
-                series: entry.payload.key,
-                row: entry.payload.key,
-                value: entry.payload.rawValue,
-                index,
-              }),
-          }}
           aria-label="Rings"
-          rootProps={{
-            visibleSeries: visible,
-            onVisibleSeriesChange: setVisible,
-            ...(family === "activity-visibility"
-              ? {
-                  interaction: {
-                    kind: "category",
-                    mode: "visibility",
-                    eligibleKeys: ["first", "second"],
-                  },
-                }
-              : {}),
-          }}
-        />
+          visibleSeries={visible}
+          onVisibleSeriesChange={setVisible}
+          interaction={
+            family === "activity-visibility"
+              ? { kind: "category", mode: "visibility", eligibleKeys: ["first", "second"] }
+              : undefined
+          }
+        >
+          <Chart.ActivityRings.Series
+            {...{
+              onMouseEnter: (entry, index) =>
+                setPointer({
+                  series: entry.payload.key,
+                  row: entry.payload.key,
+                  value: entry.payload.rawValue,
+                  index,
+                }),
+            }}
+          >
+            <Chart.ActivityRings.Labels />
+          </Chart.ActivityRings.Series>
+          <Chart.ActivityRings.Tooltip />
+          <Chart.ActivityRings.Legend />
+        </Chart.ActivityRings>
+      ) : family === "radar" ? (
+        <Chart.RadarChart
+          config={config}
+          visibleSeries={visible}
+          onVisibleSeriesChange={setVisible}
+          aria-label="Chart fixture"
+          width={400}
+          height={300}
+          data={data}
+          animate={true}
+        >
+          <Chart.PolarAngleAxis dataKey="key" />
+          <Chart.PolarRadiusAxis />
+          <Chart.RadarSeries dataKey="first" dot label>
+            <Chart.LabelList dataKey="first" />
+          </Chart.RadarSeries>
+          <Chart.RadarSeries
+            dataKey="second"
+            dot
+            onMouseEnter={(entry) =>
+              setPointer({
+                series: "second",
+                rows: entry.points?.map((point) => ({
+                  row: point.payload.key,
+                  value: point.payload.second,
+                })),
+              })
+            }
+          >
+            <Chart.LabelList
+              dataKey="second"
+              content={(props) => (
+                <text x={"x" in props ? Number(props.x) : 0} y={"y" in props ? Number(props.y) : 0}>
+                  {props.value}
+                </text>
+              )}
+            />
+          </Chart.RadarSeries>
+          <Chart.RadarChart.Legend />
+        </Chart.RadarChart>
       ) : (
-        <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
-          {family === "radar" ? (
-            <Chart.RadarChart width={400} height={300} data={data} animate={true}>
-              <Chart.PolarAngleAxis dataKey="key" />
-              <Chart.PolarRadiusAxis />
-              <Chart.RadarSeries dataKey="first" dot label>
-                <Chart.LabelList dataKey="first" />
-              </Chart.RadarSeries>
-              <Chart.RadarSeries
-                dataKey="second"
-                dot
-                onMouseEnter={(entry) =>
-                  setPointer({
-                    series: "second",
-                    rows: entry.points?.map((point) => ({
-                      row: point.payload.key,
-                      value: point.payload.second,
-                    })),
-                  })
-                }
-              >
-                <Chart.LabelList
-                  dataKey="second"
-                  content={(props) => (
-                    <text
-                      x={"x" in props ? Number(props.x) : 0}
-                      y={"y" in props ? Number(props.y) : 0}
-                    >
-                      {props.value}
-                    </text>
-                  )}
-                />
-              </Chart.RadarSeries>
-            </Chart.RadarChart>
-          ) : (
-            <Chart.RadialBarChart width={400} height={300} data={data} animate={true}>
-              <Chart.PolarAngleAxis type="number" />
-              <Chart.PolarRadiusAxis type="category" dataKey="key" />
-              <Chart.RadialBarSeries dataKey="first" background label>
-                <Chart.LabelList dataKey="first" />
-              </Chart.RadialBarSeries>
-              <Chart.RadialBarSeries
-                dataKey="second"
-                background
-                onMouseEnter={(entry, index) =>
-                  setPointer({
-                    series: "second",
-                    row: entry.payload.key,
-                    value: entry.payload.second,
-                    index,
-                  })
-                }
-              >
-                <Chart.LabelList dataKey="second" />
-              </Chart.RadialBarSeries>
-            </Chart.RadialBarChart>
-          )}
-          <Chart.Legend />
-        </Chart.Root>
+        <Chart.RadialBarChart
+          config={config}
+          visibleSeries={visible}
+          onVisibleSeriesChange={setVisible}
+          aria-label="Chart fixture"
+          width={400}
+          height={300}
+          data={data}
+          animate={true}
+        >
+          <Chart.PolarAngleAxis type="number" />
+          <Chart.PolarRadiusAxis type="category" dataKey="key" />
+          <Chart.RadialBarSeries dataKey="first" background label>
+            <Chart.LabelList dataKey="first" />
+          </Chart.RadialBarSeries>
+          <Chart.RadialBarSeries
+            dataKey="second"
+            background
+            onMouseEnter={(entry, index) =>
+              setPointer({
+                series: "second",
+                row: entry.payload.key,
+                value: entry.payload.second,
+                index,
+              })
+            }
+          >
+            <Chart.LabelList dataKey="second" />
+          </Chart.RadialBarSeries>
+          <Chart.RadialBarChart.Legend />
+        </Chart.RadialBarChart>
       )}
       <output data-polar-pointer={JSON.stringify(pointer)} />
     </section>

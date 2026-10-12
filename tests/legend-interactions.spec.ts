@@ -311,9 +311,7 @@ test("touch activation uses the same owner and emits one change per tap", async 
   await context.close();
 });
 
-test("configured LineChart owns config and shares focus through existing rootProps", async ({
-  page,
-}) => {
+test("LineChart owns config and explicit interaction state", async ({ page }) => {
   await page.goto(
     `http://127.0.0.1:${4193 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}/?interactions`,
   );
@@ -448,7 +446,7 @@ for (const accessor of [false, true]) {
     await expect(second).toHaveAttribute("data-sector-span", "120");
   });
 }
-test("Root-derived Area hide retains restore control while last-visible protection remains", async ({
+test("Chart-derived Area hide retains restore control while last-visible protection remains", async ({
   page,
 }) => {
   await page.goto(

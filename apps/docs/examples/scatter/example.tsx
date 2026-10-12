@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { ScatterChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Search (weekday)", cohort: "weekday", latency: 28, acceptance: 84 },
@@ -16,65 +16,64 @@ const weekendShape = "diamond";
 const config = {
   weekday: { label: "Weekday", color: "#733bff", legendShape: weekdayShape },
   weekend: { label: "Weekend", color: "#07948b", legendShape: weekendShape },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function TaskScatterChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   return (
-    <Chart.Root
+    <ScatterChart
       config={config}
+      height={280}
+      legendPosition="top"
+      loading={state === "loading"}
+      animate
+      accessibilityLayer
+      margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
+      aria-label="Task latency in milliseconds and acceptance percentage by cohort"
       interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
     >
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.ScatterChart
-          loading={state === "loading"}
-          animate
-          accessibilityLayer
-          margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
-          aria-label="Task latency in milliseconds and acceptance percentage by cohort"
-        >
-          <Chart.CartesianGrid strokeDasharray="3 3" />
-          <Chart.XAxis
-            type="number"
-            dataKey="latency"
-            name="Latency (ms)"
-            domain={[0, 100]}
-            ticks={[0, 50, 100]}
-            axisLine={false}
-            tickLine={false}
-            tickMargin={10}
-            height={64}
-            interval="preserveStartEnd"
-            minTickGap={48}
-            label={{ value: "ms", position: "insideBottom", offset: 0 }}
-          />
-          <Chart.YAxis
-            type="number"
-            dataKey="acceptance"
-            name="Acceptance"
-            unit="%"
-            domain={[70, 100]}
-            ticks={[70, 80, 90, 100]}
-            axisLine={false}
-            tickLine={false}
-            tickMargin={10}
-            width={80}
-          />
-          <Chart.ScatterSeries
-            seriesKey="weekday"
-            name="Weekday"
-            data={data.filter((row) => row.cohort === "weekday")}
-            shape={weekdayShape}
-          />
-          <Chart.ScatterSeries
-            seriesKey="weekend"
-            name="Weekend"
-            data={data.filter((row) => row.cohort === "weekend")}
-            shape={weekendShape}
-          />
-          <Chart.ScatterTooltip<(typeof data)[number]> pointLabel={(row) => row.period} />
-        </Chart.ScatterChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+      <ScatterChart.Grid vertical stroke="#ccc" strokeDasharray="3 3" />
+      <ScatterChart.XAxis
+        tick={{ fill: "#666" }}
+        type="number"
+        dataKey="latency"
+        name="Latency (ms)"
+        domain={[0, 100]}
+        ticks={[0, 50, 100]}
+        axisLine={false}
+        tickLine={false}
+        tickMargin={10}
+        height={64}
+        interval="preserveStartEnd"
+        minTickGap={48}
+        label={{ value: "ms", position: "insideBottom", offset: 0 }}
+      />
+      <ScatterChart.YAxis
+        tick={{ fill: "#666" }}
+        type="number"
+        dataKey="acceptance"
+        name="Acceptance"
+        unit="%"
+        domain={[70, 100]}
+        ticks={[70, 80, 90, 100]}
+        axisLine={false}
+        tickLine={false}
+        tickMargin={10}
+        width={80}
+      />
+      <ScatterChart.Series
+        seriesKey="weekday"
+        name="Weekday"
+        data={data.filter((row) => row.cohort === "weekday")}
+        shape={weekdayShape}
+      />
+      <ScatterChart.Series
+        seriesKey="weekend"
+        name="Weekend"
+        data={data.filter((row) => row.cohort === "weekend")}
+        shape={weekendShape}
+      />
+      <ScatterChart.Tooltip<(typeof data)[number]> pointLabel={(row) => row.period} />
+      <ScatterChart.Legend />
+    </ScatterChart>
   );
 }

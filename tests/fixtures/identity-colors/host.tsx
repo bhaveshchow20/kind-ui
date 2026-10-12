@@ -1,7 +1,6 @@
 import * as Chart from "@kind-ui/charts";
 import {
   Cell,
-  Legend,
   LineChart,
   LineSeries,
   PieChart,
@@ -12,10 +11,8 @@ import {
   RadialBarChart,
   type RadialBarChartProps,
   RadialBarSeries,
-  Root,
   SankeyChart,
   type SankeyFlowData,
-  SankeyLegend,
   SankeyLink,
   type SankeyLinkProps,
   SankeyNode,
@@ -26,7 +23,7 @@ import {
   XAxis,
   YAxis,
 } from "@kind-ui/charts";
-import { type CSSProperties, useState } from "react";
+import { type CSSProperties, Fragment, useState } from "react";
 
 const initial = [
   { id: "alpha", value: 35 },
@@ -35,7 +32,7 @@ const initial = [
 type Row = (typeof initial)[number];
 const accessor = (row: Row) => row.id;
 const pieProps: PieSeriesProps<Row, number> = { dataKey: "value", categoryKey: accessor };
-const radialProps: RadialBarChartProps<Row> = { categoryKey: "id" };
+const radialProps: Pick<RadialBarChartProps<Row>, "categoryKey"> = { categoryKey: "id" };
 void pieProps;
 void radialProps;
 // @ts-expect-error Category accessors must return a config ID.
@@ -112,94 +109,102 @@ export function Host() {
       </button>
       <output aria-label="Cell clicks">{clicks}</output>
       <section aria-label="Pie">
-        <Root config={config}>
-          <PieChart width={320} height={240}>
-            <PieSeries
-              data={data}
-              dataKey="value"
-              nameKey="id"
-              categoryKey={accessor}
-              {...(custom
-                ? { fill: "#446677", shape: (props) => <Sector {...props} data-custom="pie" /> }
-                : {})}
-            >
-              {/* Exercise native Cell discovery through nested fragments. */}
-              {/* biome-ignore lint/complexity/noUselessFragments: Preserve fragment-wrapped Cell discovery regression coverage. */}
-              <>{data.map(cell)}</>
-            </PieSeries>
-          </PieChart>
-          <Legend>
+        <PieChart config={config} aria-label="Chart fixture" width={320} height={240}>
+          <PieSeries
+            data={data}
+            dataKey="value"
+            nameKey="id"
+            categoryKey={accessor}
+            {...(custom
+              ? { fill: "#446677", shape: (props) => <Sector {...props} data-custom="pie" /> }
+              : {})}
+          >
+            {/* Exercise native Cell discovery through nested fragments. */}
+            {/* biome-ignore lint/complexity/noUselessFragments: Preserve fragment-wrapped Cell discovery regression coverage. */}
+            <>{data.map(cell)}</>
+          </PieSeries>
+          <PieChart.Legend>
             {custom ? ({ key }) => <span data-custom-legend={key}>Owned {key}</span> : undefined}
-          </Legend>
-        </Root>
+          </PieChart.Legend>
+        </PieChart>
       </section>
       <section aria-label="Donut">
-        <Root config={config}>
-          <PieChart width={320} height={240}>
-            <PieSeries data={data} dataKey="value" nameKey="id" categoryKey="id" innerRadius={45} />
-          </PieChart>
-          <Legend />
-        </Root>
+        <PieChart config={config} aria-label="Chart fixture" width={320} height={240}>
+          <PieSeries data={data} dataKey="value" nameKey="id" categoryKey="id" innerRadius={45} />
+          <PieChart.Legend />
+        </PieChart>
       </section>
       <section aria-label="Radial">
-        <Root config={config}>
-          <RadialBarChart
-            width={320}
-            height={240}
-            data={data}
-            categoryKey="id"
-            innerRadius={30}
-            outerRadius={100}
-            startAngle={90}
-            endAngle={-270}
+        <RadialBarChart
+          config={config}
+          aria-label="Chart fixture"
+          width={320}
+          height={240}
+          data={data}
+          categoryKey="id"
+          innerRadius={30}
+          outerRadius={100}
+          startAngle={90}
+          endAngle={-270}
+        >
+          <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+          <PolarRadiusAxis type="category" dataKey="id" tick={false} />
+          <RadialBarSeries
+            dataKey="value"
+            {...(custom
+              ? { fill: "#446677", shape: (props) => <Sector {...props} data-custom="radial" /> }
+              : {})}
           >
-            <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-            <PolarRadiusAxis type="category" dataKey="id" tick={false} />
-            <RadialBarSeries
-              dataKey="value"
-              {...(custom
-                ? { fill: "#446677", shape: (props) => <Sector {...props} data-custom="radial" /> }
-                : {})}
-            >
-              {data.map(cell)}
-            </RadialBarSeries>
-          </RadialBarChart>
-          <Legend />
-        </Root>
+            {data.map(cell)}
+          </RadialBarSeries>
+          <RadialBarChart.Legend />
+        </RadialBarChart>
       </section>
       <section aria-label="Sankey">
         <SankeyChart
           width={320}
           height={240}
           data={flow}
-          nodeConfig={nodeConfig}
-          {...(gradient
-            ? { link: (props: SankeyLinkProps) => <SankeyLink {...props} material="gradient" /> }
-            : {})}
-          {...(custom ? { node: customNode, link: customLink } : {})}
-        />
-        <SankeyLegend config={nodeConfig}>
-          {custom ? ({ key }) => <span data-custom-node-legend={key}>Owned {key}</span> : undefined}
-        </SankeyLegend>
+          config={nodeConfig}
+          aria-label="Chart fixture"
+        >
+          {null}
+          {/* Explicit renderer ownership belongs to the family parts. */}
+          <SankeyChart.Nodes render={custom ? customNode : undefined} />
+          <SankeyChart.Links
+            render={
+              custom
+                ? customLink
+                : gradient
+                  ? (props: SankeyLinkProps) => <SankeyLink {...props} material="gradient" />
+                  : undefined
+            }
+          />
+          <SankeyChart.Legend>
+            {custom
+              ? ({ key }) => <span data-custom-node-legend={key}>Owned {key}</span>
+              : undefined}
+          </SankeyChart.Legend>
+        </SankeyChart>
       </section>
       <section aria-label="Series">
-        <Root config={config}>
-          <LineChart
-            width={320}
-            height={240}
-            data={[
-              { label: "One", alpha: 20, beta: 40 },
-              { label: "Two", alpha: 30, beta: 50 },
-            ]}
-          >
-            <XAxis dataKey="label" />
-            <YAxis />
-            {rows.map((row) => (
-              <LineSeries key={row.id} seriesKey={row.id} dataKey={row.id} />
-            ))}
-          </LineChart>
-          <Legend />
-        </Root>
+        <LineChart
+          config={config}
+          aria-label="Chart fixture"
+          width={320}
+          height={240}
+          data={[
+            { label: "One", alpha: 20, beta: 40 },
+            { label: "Two", alpha: 30, beta: 50 },
+          ]}
+        >
+          <XAxis dataKey="label" />
+          <YAxis />
+          {rows.map((row) => (
+            <LineSeries key={row.id} seriesKey={row.id} dataKey={row.id} />
+          ))}
+          <LineChart.Legend />
+        </LineChart>
       </section>
     </main>
   );
@@ -243,33 +248,37 @@ export function ThemeHost() {
         Solid
       </button>
       {[0, 1].map((index) => (
-        <Chart.Root
-          interaction={{
-            kind: "series",
-            mode: "visibility",
-            eligibleKeys: ["value"],
-          }}
-          key={index}
-          config={{ ...config, value: { ...config.value, color: solid ? "tomato" : color } }}
-          visibleSeries={visible}
-          onVisibleSeriesChange={setVisible}
-        >
-          <Chart.Legend hideIcon />
-          <Chart.Legend data-testid="symbols" />
-          <Chart.TooltipContent
-            indicator="dot"
-            tooltip={{
-              active: true,
-              payload: [
-                { dataKey: "value", name: "value", value: 8, graphicalItemId: "theme-value" },
-              ],
-              label: "A",
-              accessibilityLayer: false,
-              coordinate: { x: 0, y: 0 },
-              activeIndex: "0",
+        <Fragment key={index}>
+          <Chart.LineChart
+            interaction={{
+              kind: "series",
+              mode: "visibility",
+              eligibleKeys: ["value"],
             }}
-          />
-          <Chart.LineChart width={360} height={140} data={rows}>
+            key={index}
+            config={{ ...config, value: { ...config.value, color: solid ? "tomato" : color } }}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            aria-label="Chart fixture"
+            width={360}
+            height={140}
+            data={rows}
+          >
+            <Chart.LineChart.Content>
+              <Chart.TooltipContent
+                indicator="dot"
+                tooltip={{
+                  active: true,
+                  payload: [
+                    { dataKey: "value", name: "value", value: 8, graphicalItemId: "theme-value" },
+                  ],
+                  label: "A",
+                  accessibilityLayer: false,
+                  coordinate: { x: 0, y: 0 },
+                  activeIndex: "0",
+                }}
+              />
+            </Chart.LineChart.Content>
             <Chart.XAxis dataKey="id" />
             <Chart.YAxis />
             <Chart.LineSeries
@@ -277,13 +286,43 @@ export function ThemeHost() {
               dot={false}
               stroke={override ? "#00ff00" : undefined}
             />
+            <Chart.LineChart.Legend hideIcon />
+            <Chart.LineChart.Legend data-testid="symbols" />
           </Chart.LineChart>
-          <Chart.AreaChart width={360} height={140} data={rows}>
+          <Chart.AreaChart
+            interaction={{
+              kind: "series",
+              mode: "visibility",
+              eligibleKeys: ["value"],
+            }}
+            key={index}
+            config={{ ...config, value: { ...config.value, color: solid ? "tomato" : color } }}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            aria-label="Chart fixture"
+            width={360}
+            height={140}
+            data={rows}
+          >
             <Chart.XAxis dataKey="id" />
             <Chart.YAxis />
             <Chart.AreaSeries dataKey="value" fill={override ? "#00ff00" : undefined} />
           </Chart.AreaChart>
-          <Chart.BarChart width={360} height={140} data={rows}>
+          <Chart.BarChart
+            interaction={{
+              kind: "series",
+              mode: "visibility",
+              eligibleKeys: ["value"],
+            }}
+            key={index}
+            config={{ ...config, value: { ...config.value, color: solid ? "tomato" : color } }}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            aria-label="Chart fixture"
+            width={360}
+            height={140}
+            data={rows}
+          >
             <Chart.XAxis dataKey="id" />
             <Chart.YAxis />
             <Chart.BarSeries
@@ -292,12 +331,25 @@ export function ThemeHost() {
               pattern={pattern ? { kind: "hatch" } : false}
             />
           </Chart.BarChart>
-          <Chart.PieChart width={360} height={140}>
+          <Chart.PieChart
+            interaction={{
+              kind: "series",
+              mode: "visibility",
+              eligibleKeys: ["value"],
+            }}
+            key={index}
+            config={{ ...config, value: { ...config.value, color: solid ? "tomato" : color } }}
+            visibleSeries={visible}
+            onVisibleSeriesChange={setVisible}
+            aria-label="Chart fixture"
+            width={360}
+            height={140}
+          >
             <Chart.PieSeries data={rows} dataKey="value" categoryKey="id">
               <Chart.Cell fill={override ? "#00ff00" : undefined} />
             </Chart.PieSeries>
           </Chart.PieChart>
-        </Chart.Root>
+        </Fragment>
       ))}
     </main>
   );

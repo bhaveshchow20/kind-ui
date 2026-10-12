@@ -31,7 +31,7 @@ export function useSeriesInteraction<Args extends unknown[]>(
   const { visibleSeries } = useChart();
   const rootHidden =
     key !== undefined && visibleSeries !== undefined && !visibleSeries.includes(key);
-  // Some consumers mirror Root visibility into native hide. Their hidden IDs stay restorable.
+  // Some consumers mirror chart visibility into native hide. Their hidden IDs stay restorable.
   useInteractionAvailability(
     interaction.kind === "series" ? key : undefined,
     nativeHidden && !rootHidden,

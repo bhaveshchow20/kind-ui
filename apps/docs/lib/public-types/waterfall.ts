@@ -1,7 +1,15 @@
 import type * as Chart from "@kind-ui/charts";
 export type WaterfallChart = Pick<
   Chart.WaterfallChartProps,
-  "data" | "layout" | "animate" | "accessibilityLayer" | "barCategoryGap"
+  | "config"
+  | "children"
+  | "frameProps"
+  | "interaction"
+  | "data"
+  | "layout"
+  | "animate"
+  | "accessibilityLayer"
+  | "barCategoryGap"
 >;
 export type WaterfallSeries = Pick<
   Chart.WaterfallSeriesProps,

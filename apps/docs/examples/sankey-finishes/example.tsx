@@ -1,7 +1,14 @@
+// biome-ignore-all lint/a11y/noNoninteractiveTabindex: The named diagram scroll region needs keyboard focus.
 "use client";
-import * as Chart from "@kind-ui/charts";
+import {
+  SankeyChart,
+  type SankeyFlowData,
+  SankeyLink,
+  SankeyNode,
+  type SankeyNodeConfig,
+  useChartInteraction,
+} from "@kind-ui/charts";
 import { type ReactNode, useState } from "react";
-import { Tooltip } from "recharts";
 
 const data = {
   nodes: [
@@ -35,7 +42,7 @@ const data = {
     { id: "south-industry", source: "south", target: "industry", value: 15 },
     { id: "south-services", source: "south", target: "services", value: 25 },
   ],
-} satisfies Chart.SankeyFlowData;
+} satisfies SankeyFlowData;
 const nodeConfig = {
   solar: { label: "Solar", color: "#d29319" },
   wind: { label: "Wind", color: "#159c91" },
@@ -46,17 +53,13 @@ const nodeConfig = {
   homes: { label: "Homes", color: "#d29319" },
   industry: { label: "Industry", color: "#447fd1" },
   services: { label: "Services", color: "#159c91" },
-} satisfies Chart.SankeyNodeConfig;
+} satisfies SankeyNodeConfig;
 const names = new Map(data.nodes.map((node) => [node.id, node.name]));
 
 function FocusedFlow({ nodeIds, children }: { nodeIds: string[]; children: ReactNode }) {
-  const { selected } = Chart.useChartInteraction();
+  const { selected } = useChartInteraction();
   const dimmed = selected !== null && !nodeIds.includes(selected);
-  return (
-    <g data-focus={dimmed ? "dimmed" : "baseline"} style={{ opacity: dimmed ? 0.28 : 1 }}>
-      {children}
-    </g>
-  );
+  return <g data-focus={dimmed ? "dimmed" : "baseline"}>{children}</g>;
 }
 
 export function EnergyFlowFinishChart({
@@ -67,19 +70,10 @@ export function EnergyFlowFinishChart({
   const [active, setActive] = useState<string | null>(null);
   const selected = data.links.find((link) => link.id === active);
   return (
-    <Chart.Root
-      config={nodeConfig}
-      interaction={{
-        kind: "node",
-        mode: "focus",
-        eligibleKeys: data.nodes.map((node) => node.id),
-        markActivation: "matching-legend",
-      }}
-    >
-      <section aria-label="Illustrative energy allocation">
+    <>
+      <section aria-label="Illustrative energy allocation" style={{ containerType: "inline-size" }}>
         <section
           aria-label="Energy flow diagram; scroll horizontally on small screens"
-          // biome-ignore lint/a11y/noNoninteractiveTabindex: Horizontal chart scrolling is keyboard accessible.
           tabIndex={0}
           style={{ overflowX: "auto", overscrollBehaviorY: "auto" }}
         >
@@ -96,11 +90,19 @@ export function EnergyFlowFinishChart({
               <span>Balancing zones</span>
               <span>End use</span>
             </div>
-            <Chart.ResponsiveContainer width="100%" height={250}>
-              <Chart.SankeyChart
-                interactionBinding="root"
+            <>
+              <SankeyChart
+                config={nodeConfig}
+                interaction={{
+                  kind: "node",
+                  mode: "focus",
+                  eligibleKeys: data.nodes.map((node) => node.id),
+                  markActivation: "matching-legend",
+                }}
+                aria-label="Energy allocation: 180 MWh across three stages"
+                width="100%"
+                height={250}
                 data={data}
-                nodeConfig={nodeConfig}
                 animate={{ revealDurationMs: 900 }}
                 nodeWidth={10}
                 nodePadding={16}
@@ -108,60 +110,64 @@ export function EnergyFlowFinishChart({
                 margin={{ top: 28, right: 32, bottom: 8, left: 32 }}
                 title="Energy allocation: 180 MWh across three stages"
                 desc="Nine nodes and eighteen flows. Ribbon widths represent MWh. Select a flow with a click, Enter or Space; Escape clears selection."
-                node={(props) => (
-                  <FocusedFlow
-                    nodeIds={[
-                      props.payload.id,
-                      ...data.links
-                        .filter(
-                          (link) =>
-                            link.source === props.payload.id || link.target === props.payload.id,
-                        )
-                        .flatMap((link) => [link.source, link.target]),
-                    ]}
-                  >
-                    <Chart.SankeyNode
-                      {...props}
-                      finish={appearance === "default" ? undefined : appearance}
-                    />
-                    <text
-                      x={props.x + props.width / 2}
-                      y={props.y - 7}
-                      textAnchor="middle"
-                      fill="currentColor"
-                      fontSize={11}
-                    >
-                      {props.payload.name}
-                    </text>
-                  </FocusedFlow>
-                )}
-                link={(props) => (
-                  <FocusedFlow nodeIds={[props.payload.source.id, props.payload.target.id]}>
-                    <Chart.SankeyLink
-                      {...props}
-                      finish={appearance === "default" ? undefined : appearance}
-                      material="gradient"
-                      pathProps={{
-                        role: "button",
-                        tabIndex: 0,
-                        "aria-label": `${props.payload.source.name} to ${props.payload.target.name}: ${props.payload.value} MWh`,
-                        "aria-pressed": active === props.payload.id,
-                        opacity: active && active !== props.payload.id ? 0.12 : 0.55,
-                        onClick: () =>
-                          setActive(active === props.payload.id ? null : props.payload.id),
-                        onKeyDown: (event) => {
-                          if (event.key === "Escape") setActive(null);
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            setActive(active === props.payload.id ? null : props.payload.id);
-                          }
-                        },
-                      }}
-                    />
-                  </FocusedFlow>
-                )}
               >
-                <Tooltip
+                <SankeyChart.Links
+                  render={(props) => (
+                    <FocusedFlow nodeIds={[props.payload.source.id, props.payload.target.id]}>
+                      <SankeyLink
+                        {...props}
+                        finish={appearance === "default" ? undefined : appearance}
+                        material="gradient"
+                        pathProps={{
+                          role: "button",
+                          tabIndex: 0,
+                          "aria-label": `${props.payload.source.name} to ${props.payload.target.name}: ${props.payload.value} MWh`,
+                          "aria-pressed": active === props.payload.id,
+                          opacity: active && active !== props.payload.id ? 0.12 : 0.55,
+                          onClick: () =>
+                            setActive(active === props.payload.id ? null : props.payload.id),
+                          onKeyDown: (event) => {
+                            if (event.key === "Escape") setActive(null);
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setActive(active === props.payload.id ? null : props.payload.id);
+                            }
+                          },
+                        }}
+                      />
+                    </FocusedFlow>
+                  )}
+                />
+                <SankeyChart.Nodes
+                  render={(props) => (
+                    <FocusedFlow
+                      nodeIds={[
+                        props.payload.id,
+                        ...data.links
+                          .filter(
+                            (link) =>
+                              link.source === props.payload.id || link.target === props.payload.id,
+                          )
+                          .flatMap((link) => [link.source, link.target]),
+                      ]}
+                    >
+                      <SankeyNode
+                        {...props}
+                        finish={appearance === "default" ? undefined : appearance}
+                      />
+                      <text
+                        x={props.x + props.width / 2}
+                        y={props.y - 7}
+                        textAnchor="middle"
+                        fill="currentColor"
+                        fontSize={11}
+                      >
+                        {props.payload.name}
+                      </text>
+                    </FocusedFlow>
+                  )}
+                />
+                <SankeyChart.Tooltip
                   isAnimationActive={false}
                   formatter={(value) => `${value} MWh`}
                   contentStyle={{
@@ -175,32 +181,17 @@ export function EnergyFlowFinishChart({
                   }}
                   itemStyle={{ padding: 0, color: "inherit" }}
                 />
-              </Chart.SankeyChart>
-            </Chart.ResponsiveContainer>
+                <SankeyChart.Legend style={{ width: "100cqw", position: "sticky", left: 0 }} />
+              </SankeyChart>
+            </>
           </div>
         </section>
-        <Chart.SankeyLegend config={nodeConfig} interactionBinding="root" />
         <p role="status" style={{ fontSize: 12, margin: "8px 0 0" }}>
           {selected
             ? `${names.get(selected.source)} → ${names.get(selected.target)}: ${selected.value} MWh`
             : "180 MWh · Select a ribbon to inspect its route."}
         </p>
-        <Chart.SankeyTable
-          data={data}
-          caption="Illustrative allocation in MWh"
-          style={{
-            position: "absolute",
-            width: 1,
-            height: 1,
-            padding: 0,
-            margin: -1,
-            overflow: "hidden",
-            clipPath: "inset(50%)",
-            whiteSpace: "nowrap",
-            border: 0,
-          }}
-        />
       </section>
-    </Chart.Root>
+    </>
   );
 }

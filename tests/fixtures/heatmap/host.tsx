@@ -144,6 +144,8 @@ export function HeatmapRecipes() {
           missingLabel="No sample"
           className="heatmap-card"
           animate={motion}
+          config={{}}
+          aria-label="Chart fixture"
         >
           <HeatmapGrid
             material={material}
@@ -187,6 +189,8 @@ export function HeatmapRecipes() {
           animate={motion}
           formatValue={(value) => `${value} deployments`}
           missingLabel="Not yet observed"
+          config={{}}
+          aria-label="Chart fixture"
         >
           <HeatmapGrid
             material={material}
@@ -244,6 +248,8 @@ export function Edges() {
         data={[]}
         scale={skewed}
         style={{ maxWidth: 300 }}
+        config={{}}
+        aria-label="Chart fixture"
       >
         <HeatmapGrid caption="Long category grid" />
         <HeatmapLegend label="Skewed signed scale" />
@@ -263,6 +269,8 @@ export function Edges() {
           { row: "A", column: "Y", value: values ? 0 : null },
         ]}
         scale={edgeScale}
+        config={{}}
+        aria-label="Chart fixture"
       >
         <HeatmapGrid
           caption="Constant and missing grid"
@@ -282,7 +290,14 @@ export function Edges() {
         <HeatmapLegend label="Constant zero" />
         <HeatmapDataTable caption="Edge values" />
       </HeatmapChart>
-      <HeatmapChart rows={[]} columns={[]} data={[]} scale={edgeScale}>
+      <HeatmapChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={edgeScale}
+        config={{}}
+        aria-label="Chart fixture"
+      >
         <HeatmapGrid caption="Empty grid" />
         <HeatmapTooltip />
       </HeatmapChart>
@@ -346,7 +361,14 @@ export function CompactHeatmap() {
         Focus consumer ref
       </button>
       <output aria-label="Consumer events">{events}</output>
-      <HeatmapChart rows={rows} columns={columns} data={data} scale={scale}>
+      <HeatmapChart
+        rows={rows}
+        columns={columns}
+        data={data}
+        scale={scale}
+        config={{}}
+        aria-label="Chart fixture"
+      >
         <HeatmapGrid
           caption="Compact contributions"
           ref={tableRef}
@@ -372,6 +394,8 @@ export function CompactHeatmap() {
         columns={["X", "Y"]}
         data={[{ row: "A", column: "X", value: 1 }]}
         scale={scale}
+        config={{}}
+        aria-label="Chart fixture"
       >
         <HeatmapGrid
           caption="Explicit compact styles"
@@ -384,10 +408,24 @@ export function CompactHeatmap() {
         />
         <HeatmapTooltip />
       </HeatmapChart>
-      <HeatmapChart rows={["A"]} columns={["X"]} data={[]} scale={scale}>
+      <HeatmapChart
+        rows={["A"]}
+        columns={["X"]}
+        data={[]}
+        scale={scale}
+        config={{}}
+        aria-label="Chart fixture"
+      >
         <HeatmapGrid caption="Independent headers" layout={{ cellSize: 12, rowLabels: "hidden" }} />
       </HeatmapChart>
-      <HeatmapChart rows={["A"]} columns={["X"]} data={[]} scale={scale}>
+      <HeatmapChart
+        rows={["A"]}
+        columns={["X"]}
+        data={[]}
+        scale={scale}
+        config={{}}
+        aria-label="Chart fixture"
+      >
         <HeatmapGrid caption="Default dimensions" />
       </HeatmapChart>
     </section>
@@ -399,8 +437,18 @@ export const InvalidVisibility = <HeatmapGrid caption="Invalid" layout={{ rowLab
 // @ts-expect-error Cell lengths are CSS strings or pixel numbers.
 export const InvalidSize = <HeatmapGrid caption="Invalid" layout={{ cellSize: {} }} />;
 export const InvalidChartLayout = (
-  // @ts-expect-error Layout belongs to the grid, not its context provider.
-  <HeatmapChart rows={[]} columns={[]} data={[]} scale={scale} layout={{ cellSize: 12 }} />
+  <HeatmapChart
+    rows={[]}
+    columns={[]}
+    data={[]}
+    scale={scale}
+    // @ts-expect-error Layout belongs to the grid.
+    layout={{ cellSize: 12 }}
+    config={{}}
+    aria-label="Chart fixture"
+  >
+    {null}
+  </HeatmapChart>
 );
 
 export function DismissalHeatmaps() {
@@ -454,6 +502,8 @@ export function DismissalHeatmaps() {
           onKeyDownCapture={(event) => {
             if (prevented && event.key === "Escape") event.preventDefault();
           }}
+          config={{}}
+          aria-label="Chart fixture"
         >
           <HeatmapGrid
             caption={`${name} dismissal grid`}

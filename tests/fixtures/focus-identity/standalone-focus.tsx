@@ -31,7 +31,7 @@ export function StandaloneFocus() {
   return (
     <>
       <section id="standalone-sankey">
-        <Chart.Root
+        <Chart.SankeyChart
           config={config}
           interaction={{
             kind: "node",
@@ -39,37 +39,38 @@ export function StandaloneFocus() {
             eligibleKeys: Object.keys(config),
             markActivation: "matching-legend",
           }}
+          aria-label="Chart fixture"
+          data={flows}
+          width={600}
+          height={250}
+          animate={
+            motion
+              ? { revealDurationMs: 3000, hoverTransition: { duration: 0.4, ease: "linear" } }
+              : false
+          }
+          onMouseEnter={(item, type) => {
+            setPayload(
+              type === "node"
+                ? { node: (item as Chart.SankeyNodeProps).payload.id }
+                : {
+                    id: (item as Chart.SankeyLinkProps).payload.id,
+                    source: (item as Chart.SankeyLinkProps).payload.source.id,
+                    target: (item as Chart.SankeyLinkProps).payload.target.id,
+                    value: (item as Chart.SankeyLinkProps).payload.value,
+                  },
+            );
+          }}
         >
-          <Chart.SankeyChart
-            data={flows}
-            nodeConfig={config}
-            width={600}
-            height={250}
-            interactionBinding="root"
-            animate={
-              motion
-                ? { revealDurationMs: 3000, hoverTransition: { duration: 0.4, ease: "linear" } }
-                : false
-            }
-            onMouseEnter={(item, type) => {
-              setPayload(
-                type === "node"
-                  ? { node: (item as Chart.SankeyNodeProps).payload.id }
-                  : {
-                      id: (item as Chart.SankeyLinkProps).payload.id,
-                      source: (item as Chart.SankeyLinkProps).payload.source.id,
-                      target: (item as Chart.SankeyLinkProps).payload.target.id,
-                      value: (item as Chart.SankeyLinkProps).payload.value,
-                    },
-              );
-            }}
-          />
-          <Chart.SankeyLegend config={config} interactionBinding="root" />
-          <output data-standalone-payload={JSON.stringify(payload)} />
-          <button type="button" onClick={() => setMotion((value) => !value)}>
-            {motion ? "Disable motion" : "Enable motion"}
-          </button>
-        </Chart.Root>
+          {null}
+          {/* Explicit renderer ownership belongs to the family parts. */}
+          <Chart.SankeyChart.Nodes></Chart.SankeyChart.Nodes>
+          <Chart.SankeyChart.Links></Chart.SankeyChart.Links>
+          <Chart.SankeyChart.Legend />
+        </Chart.SankeyChart>
+        <output data-standalone-payload={JSON.stringify(payload)} />
+        <button type="button" onClick={() => setMotion((value) => !value)}>
+          {motion ? "Disable motion" : "Enable motion"}
+        </button>
       </section>
       <section id="standalone-heatmap">
         <Chart.HeatmapChart
@@ -78,6 +79,8 @@ export function StandaloneFocus() {
           data={cells}
           scale={scale}
           animate
+          config={config}
+          aria-label="Chart fixture"
         >
           <Chart.HeatmapGrid caption="Independent cells" />
           <Chart.HeatmapTooltip />

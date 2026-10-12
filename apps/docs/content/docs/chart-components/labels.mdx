@@ -14,12 +14,14 @@ This doughnut chart uses LabelList for shares of the original total and Cell for
 Nest `LabelList` inside a series. Choose the value with `dataKey` and its placement with `position` and `offset`.
 
 ```tsx
-<Chart.LineSeries dataKey="orders">
-  <Chart.LabelList dataKey="orders" position="top" offset={8} />
-</Chart.LineSeries>
+import { LabelList, LineChart } from "@kind-ui/charts";
+
+<LineChart.Series dataKey="orders">
+  <LabelList dataKey="orders" position="top" offset={8} />
+</LineChart.Series>
 ```
 
-In radial bars, use `content={<Chart.RadialBarLabel />}` for measured arc text. Keep percentage labels based on the full data when focusing or hiding; visibility does not reallocate the chart.
+In radial bars, use `content={<RadialBarChart.Label />}` for measured arc text. Keep percentage labels based on the full data when focusing or hiding; visibility does not reallocate the chart.
 
 See [Recharts LabelList](https://recharts.github.io/en-US/api/LabelList/).
 
@@ -34,9 +36,11 @@ See [Recharts Label](https://recharts.github.io/en-US/api/Label/).
 Nest `Cell` inside a supported series to set each item's color. Keep Cells in the same order as the series data, including after filtering.
 
 ```tsx
-<Chart.PieSeries data={data} dataKey="value" nameKey="category">
-  {data.map((row) => <Chart.Cell key={row.category} fill={row.color} />)}
-</Chart.PieSeries>
+import { PieChart } from "@kind-ui/charts";
+
+<PieChart.Series data={data} dataKey="value" nameKey="category">
+  {data.map((row) => <PieChart.Cell key={row.category} fill={row.color} />)}
+</PieChart.Series>
 ```
 
 See [Recharts Cell](https://recharts.github.io/en-US/api/Cell/) for supported props and the chart family's material guidance for custom paint.

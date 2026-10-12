@@ -111,18 +111,7 @@ function Preview() {
       {children}
     </Card>
   );
-  const rooted = (children: ReactNode, interactive = false) =>
-    interactive ? (
-      <Chart.Root
-        config={config}
-        visibleSeries={visibleBars}
-        onVisibleSeriesChange={setVisibleBars}
-      >
-        {children}
-      </Chart.Root>
-    ) : (
-      <Chart.Root config={config}>{children}</Chart.Root>
-    );
+  const rooted = (children: ReactNode, _interactive = false) => children;
   return (
     <main>
       <p className="eyebrow">Kind UI / all-family loading study</p>
@@ -211,22 +200,39 @@ function Preview() {
           <Chart.LineChart
             {...pending}
             config={config}
-            series={[{ dataKey: "sales", seriesKey: "sales" }]}
             data={rows}
-            xDataKey="month"
             aria-label="Monthly sales"
             height={260}
             animate={motion}
-          />,
+          >
+            <Chart.LineChart.Grid />
+            <Chart.LineChart.XAxis dataKey={"month"} />
+            <Chart.LineChart.YAxis />
+            {[{ dataKey: "sales", seriesKey: "sales" }].map((series) => (
+              <Chart.LineChart.Series
+                key={series.seriesKey ?? String(series.dataKey)}
+                {...series}
+              />
+            ))}
+            <Chart.LineChart.Tooltip />
+            <Chart.LineChart.Legend />
+            <Chart.LineChart.Content>
+              <p data-loading-content>Ready chart content</p>
+            </Chart.LineChart.Content>
+          </Chart.LineChart>,
         )}
         {card(
           "area",
           "Area",
           rooted(
-            <Chart.AreaChart {...native} data={rows} aria-label="Sales area">
+            <Chart.AreaChart {...native} data={rows} aria-label="Sales area" config={config}>
               {axes}
               <Chart.AreaSeries dataKey="sales" seriesKey="sales" />
               <Chart.Tooltip />
+              <Chart.AreaChart.Legend />
+              <Chart.AreaChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.AreaChart.Content>
             </Chart.AreaChart>,
           ),
         )}
@@ -236,16 +242,23 @@ function Preview() {
           rooted(
             <>
               <Chart.BarChart
+                visibleSeries={visibleBars}
+                onVisibleSeriesChange={setVisibleBars}
                 {...native}
                 data={rows}
                 aria-label="Sales bars"
                 onClick={() => setEvents((value) => value + 1)}
+                config={config}
               >
                 {axes}
                 <Chart.BarSeries dataKey="sales" seriesKey="sales" />
                 <Chart.Tooltip />
+                <Chart.BarChart.Legend />
+                <Chart.BarChart.Content>
+                  <input aria-label="Chart note" defaultValue="Keep me" />
+                </Chart.BarChart.Content>
               </Chart.BarChart>
-              <Chart.Legend />
+
               <p>
                 Consumer clicks: <output>{events}</output>
               </p>
@@ -257,11 +270,15 @@ function Preview() {
           "combo",
           "Combo",
           rooted(
-            <Chart.ComboChart {...native} data={rows} aria-label="Sales and target">
+            <Chart.ComboChart {...native} data={rows} aria-label="Sales and target" config={config}>
               {axes}
               <Chart.BarSeries dataKey="sales" seriesKey="sales" />
               <Chart.LineSeries dataKey="target" seriesKey="target" />
               <Chart.Tooltip />
+              <Chart.ComboChart.Legend />
+              <Chart.ComboChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.ComboChart.Content>
             </Chart.ComboChart>,
           ),
         )}
@@ -269,11 +286,15 @@ function Preview() {
           "scatter",
           "Scatter",
           rooted(
-            <Chart.ScatterChart {...native} aria-label="Sales distribution">
+            <Chart.ScatterChart {...native} aria-label="Sales distribution" config={config}>
               <Chart.XAxis type="number" dataKey="x" domain={[0, 80]} />
               <Chart.YAxis type="number" dataKey="y" domain={[0, 80]} />
               <Chart.ScatterSeries data={rows} seriesKey="sales" />
               <Chart.ScatterTooltip />
+              <Chart.ScatterChart.Legend />
+              <Chart.ScatterChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.ScatterChart.Content>
             </Chart.ScatterChart>,
           ),
         )}
@@ -285,12 +306,17 @@ function Preview() {
               {...native}
               data={empty ? [] : waterfall}
               aria-label="Sales balance"
+              config={config}
             >
               <Chart.XAxis dataKey="label" />
               <Chart.YAxis domain={[0, 80]} />
               <Chart.WaterfallSeries seriesKey="sales" />
               <Chart.WaterfallConnectors data={empty ? [] : waterfall} />
               <Chart.Tooltip />
+              <Chart.WaterfallChart.Legend />
+              <Chart.WaterfallChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.WaterfallChart.Content>
             </Chart.WaterfallChart>,
           ),
         )}
@@ -303,9 +329,14 @@ function Preview() {
               bins={empty ? [] : bins}
               measure="count"
               aria-label="Sales frequency"
+              config={config}
             >
               <Chart.HistogramSeries seriesKey="sales" />
               <Chart.Tooltip />
+              <Chart.HistogramChart.Legend />
+              <Chart.HistogramChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.HistogramChart.Content>
             </Chart.HistogramChart>,
           ),
         )}
@@ -313,10 +344,19 @@ function Preview() {
           "box-plot",
           "Box plot",
           rooted(
-            <Chart.BoxPlotChart {...native} data={empty ? [] : boxes} aria-label="Sales summaries">
+            <Chart.BoxPlotChart
+              {...native}
+              data={empty ? [] : boxes}
+              aria-label="Sales summaries"
+              config={config}
+            >
               {axes}
               <Chart.BoxPlotSeries dataKey="summary" seriesKey="spread" />
               <Chart.Tooltip />
+              <Chart.BoxPlotChart.Legend />
+              <Chart.BoxPlotChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.BoxPlotChart.Content>
             </Chart.BoxPlotChart>,
           ),
         )}
@@ -324,9 +364,13 @@ function Preview() {
           "pie",
           "Pie",
           rooted(
-            <Chart.PieChart {...native} aria-label="Sales allocation">
+            <Chart.PieChart {...native} aria-label="Sales allocation" config={config}>
               <Chart.PieSeries data={rows} dataKey="sales" nameKey="month" outerRadius="80%" />
               <Chart.Tooltip />
+              <Chart.PieChart.Legend />
+              <Chart.PieChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.PieChart.Content>
             </Chart.PieChart>,
           ),
         )}
@@ -334,12 +378,16 @@ function Preview() {
           "radar",
           "Radar",
           rooted(
-            <Chart.RadarChart {...native} data={rows} aria-label="Sales radar">
+            <Chart.RadarChart {...native} data={rows} aria-label="Sales radar" config={config}>
               <Chart.PolarGrid />
               <Chart.PolarAngleAxis dataKey="month" />
               <Chart.PolarRadiusAxis domain={[0, 80]} />
               <Chart.RadarSeries dataKey="sales" seriesKey="sales" />
               <Chart.Tooltip />
+              <Chart.RadarChart.Legend />
+              <Chart.RadarChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.RadarChart.Content>
             </Chart.RadarChart>,
           ),
         )}
@@ -353,10 +401,15 @@ function Preview() {
               aria-label="Sales rings"
               innerRadius="20%"
               outerRadius="85%"
+              config={config}
             >
               <Chart.PolarAngleAxis type="number" domain={[0, 80]} tick={false} />
               <Chart.RadialBarSeries dataKey="sales" seriesKey="sales" />
               <Chart.Tooltip />
+              <Chart.RadialBarChart.Legend />
+              <Chart.RadialBarChart.Content>
+                <p data-loading-content>Ready chart content</p>
+              </Chart.RadialBarChart.Content>
             </Chart.RadialBarChart>,
           ),
         )}
@@ -375,8 +428,16 @@ function Preview() {
                   ]
             }
             aria-label="Daily activity"
-            legend={false}
-          />,
+          >
+            <Chart.ActivityRings.Series>
+              <Chart.ActivityRings.Labels />
+            </Chart.ActivityRings.Series>
+            <Chart.ActivityRings.Tooltip />
+            <Chart.ActivityRings.Legend />
+            <Chart.ActivityRings.Content>
+              <p data-loading-content>Ready chart content</p>
+            </Chart.ActivityRings.Content>
+          </Chart.ActivityRings>,
         )}
         {card(
           "heatmap",
@@ -390,25 +451,42 @@ function Preview() {
             animate
             style={{ height: 260 }}
             aria-label="Weekly sales matrix"
+            config={config}
           >
             <Chart.HeatmapGrid caption="Weekly sales by region" />
             <Chart.HeatmapTooltip />
+            <Chart.HeatmapChart.Legend label="Sales intensity" />
+            <Chart.HeatmapChart.Content>
+              <p data-loading-content>Ready chart content</p>
+            </Chart.HeatmapChart.Content>
+            <Chart.HeatmapChart.DataTable caption="Heatmap values" />
           </Chart.HeatmapChart>,
         )}
         {card(
           "sankey",
           "Sankey",
-          <Chart.ResponsiveContainer width="100%" height={260}>
-            <Chart.SankeyChart
-              {...pending}
-              data={empty ? noFlow : flow}
-              animate={motion}
-              title="Sales flow"
-              nodePadding={24}
-              nodeWidth={12}
-              margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
-            />
-          </Chart.ResponsiveContainer>,
+          <Chart.SankeyChart
+            {...pending}
+            data={empty ? noFlow : flow}
+            animate={motion}
+            title="Sales flow"
+            height={260}
+            nodePadding={24}
+            nodeWidth={12}
+            margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
+            config={{
+              in: { label: "Supply", color: "#568577" },
+              work: { label: "Work", color: "#568577" },
+              out: { label: "Delivery", color: "#568577" },
+              loss: { label: "Loss", color: "#b68967" },
+            }}
+            aria-label="Chart fixture"
+          >
+            <Chart.SankeyChart.Legend />
+            <Chart.SankeyChart.Content>
+              <p data-loading-content>Ready chart content</p>
+            </Chart.SankeyChart.Content>
+          </Chart.SankeyChart>,
         )}
       </section>
       <details>
@@ -439,7 +517,7 @@ function Preview() {
       </details>
       <p>
         Replay can interrupt an entrance, resize keeps consumer dimensions, and empty input never
-        determines a loading silhouette. Legends stay available while chart inspection is suspended.
+        determines a loading silhouette. Only chart skeletons appear until loading completes.
       </p>
     </main>
   );

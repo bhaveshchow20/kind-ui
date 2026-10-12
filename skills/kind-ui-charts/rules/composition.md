@@ -13,45 +13,44 @@
 | Matrix, balances, directed flow | Heatmap, Waterfall, Sankey | Missing cells, explicit balances, valid links |
 | Compare multivariate profiles | Radar | Comparable scales; avoid unrelated units |
 
-## Configured Line
+## Explicit family parts
 
-`LineChart` with `config`, `data`, `xDataKey`, and `aria-label` (or
-`aria-labelledby`) owns Root and default parts. Use it for ordinary line trends;
-set `height`, axis options, `series`, tooltip, or legend options as needed.
-Do not wrap configured Line in Root or another ResponsiveContainer.
-See the [Line examples](https://kindui.dev/charts/docs/components/line/).
+Import the chart by name. Every family requires `config`, `aria-label` or
+`aria-labelledby`, and explicit children. Add the marks, axes, tooltip and legend
+you need; metadata does not generate parts. Set dimensions on the chart. Use
+`frameProps` for outer HTML attributes/ref and `Content` for contextual HTML
+controls or a data alternative.
 
-**Bad:** `<Root config={config}><LineChart config={config} ... /></Root>`.
-**Good:** one configured `<LineChart config={config} ... />`.
+```tsx
+import { LineChart } from "@kind-ui/charts";
 
-## Explicit composition
+<LineChart config={config} data={data} height={280} aria-label="Monthly revenue">
+  <LineChart.XAxis dataKey="month" />
+  <LineChart.YAxis />
+  <LineChart.Series dataKey="revenue" />
+  <LineChart.Tooltip />
+  <LineChart.Legend />
+</LineChart>
+```
 
-Use one `Root config={config}`, a sized `ResponsiveContainer`, the family chart,
-axes/grid/Tooltip and series; keep `Legend` inside Root outside the native chart.
-Area/Bar/Combo do not take configured Line's `config`/`xDataKey` shortcut.
-Composed Line (without `config`) follows the same explicit ownership pattern.
-Configured Line also accepts explicit children, but then omit generated-part
-props such as `xDataKey` and `series`; the modes are mutually exclusive.
+See the [Line examples](https://kindui.dev/charts/docs/components/line/) and
+[Combo examples](https://kindui.dev/charts/docs/components/combo/). Match
+`seriesKey` to config for function/numeric `dataKey`. Axis IDs must match their
+series. Preserve zero; use null for missing observations. Use
+`connectNulls={false}` when gaps carry meaning. Keep business aggregation and
+percentage denominators explicit.
 
-See the [Combo examples](https://kindui.dev/charts/docs/components/combo/) for explicit
-composition. Root config supplies metadata, not geometry or a universal
-schema. Match `seriesKey` to config; use explicit identity for function/numeric
-`dataKey`. Axis IDs must match their series. Preserve zero; represent a missing
-observation as null rather than fabricating zero. On lines, explicitly use
-`connectNulls={false}` when gaps carry meaning. Do not infer business aggregation
-or percent denominators from labels.
+## Family data contracts
 
-## Family-specific ownership
-
-HeatmapChart supplies its own context for HeatmapGrid/Tooltip/Legend/DataTable;
-use its explicit rows, columns, data, and scale instead of Root's series config.
+HeatmapChart uses explicit rows, columns, data and a quantitative scale; pass
+`config={{}}` and compose Grid, Legend, Tooltip and optional DataTable parts.
 See the [Heatmap examples](https://kindui.dev/charts/docs/components/heatmap/).
-SankeyChart owns flow layout and nodeConfig; custom SankeyNode/SankeyLink renderers
-receive native geometry. Validate supplied flows with `prepareSankeyData`, including
-zero-valued links: intermediate incoming/outgoing totals must balance. Represent
-losses or gains as explicit flows rather than dropping observations.
-ActivityRings owns its Root. These families are not
-Cartesian series dropped into Combo. Retrieve each family's example before use.
+SankeyChart requires flow data and node-ID `config`; add Nodes and Links explicitly.
+Custom render callbacks receive native geometry. Validate flows with
+`prepareSankeyData`, including zero-valued links: intermediate incoming/outgoing
+totals must balance. Represent losses or gains as explicit boundary flows.
+ActivityRings takes ring values/domains and category config, with explicit Series,
+Labels, Tooltip and Legend parts. Retrieve the family example before adapting it.
 
 ## Preserve custom projected bars
 

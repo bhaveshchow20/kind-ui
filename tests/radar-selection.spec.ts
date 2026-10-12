@@ -1,10 +1,10 @@
 import { expect, type Locator, test } from "./browser.js";
 
 const url = "http://127.0.0.1:4177";
-const control = "[data-kind-ui=radar-selection]";
-const dimmed = `${control}[data-selection=dimmed]`;
+const control = "[data-kind-ui=series-interaction][role=button]";
+const dimmed = `${control}[aria-pressed=false] > [data-kind-ui=series-interaction-paint][style*="0.28"]`;
 const radar = "[data-host=radar]";
-const selected = `${control}[data-selection=selected]`;
+const selected = `${control}[aria-pressed=true]`;
 
 async function polygonCenter(path: Locator) {
   return path.evaluate((node: SVGPathElement) => {
@@ -114,12 +114,12 @@ test("controlled selection requests updates and never overrides consumer visibil
   await actual.focus();
   await page.keyboard.press("Enter");
   await expect(actual).toHaveAttribute("aria-pressed", "true");
-  await host.getByRole("button", { name: "Actual", exact: true }).click();
+  await page.getByRole("button", { name: "Native hide", exact: true }).click();
   await expect(host.locator(control)).toHaveCount(1);
   await expect(host.locator(dimmed)).toHaveCount(0);
   await expect(page.locator("output")).toContainText("selected value");
   await expect(page.locator("output")).toContainText('requests ["value","value"]');
-  await host.getByRole("button", { name: "Actual", exact: true }).click();
+  await page.getByRole("button", { name: "Native hide", exact: true }).click();
   await expect(actual).toHaveAttribute("aria-pressed", "true");
   await target.focus();
   await page.keyboard.press("Escape");
@@ -135,9 +135,9 @@ test("uncontrolled visibility, empty data and opt-out clear selection without sy
   const actual = host.getByRole("button", { name: "Highlight Actual", exact: true });
   await actual.focus();
   await page.keyboard.press("Enter");
-  await host.getByRole("button", { name: "Actual", exact: true }).click();
+  await page.getByRole("button", { name: "Native hide", exact: true }).click();
   await expect(host.locator(dimmed)).toHaveCount(0);
-  await host.getByRole("button", { name: "Actual", exact: true }).click();
+  await page.getByRole("button", { name: "Native hide", exact: true }).click();
   await expect(actual).toHaveAttribute("aria-pressed", "false");
   await actual.focus();
   await page.keyboard.press("Enter");
@@ -175,12 +175,15 @@ test("native spoke inspection and portaled labels/active markers stay independen
   await expect(host.locator("[data-kind-ui=chart-tooltip]")).toBeVisible();
   await expect(host.locator("[data-kind-ui=chart-tooltip-item]")).toHaveCount(2);
   await expect(target).toHaveAttribute("aria-pressed", "true");
-  await expect(host.locator("[data-kind-ui=active-marker]")).toHaveCount(2);
+  // Unified focus keeps the active overlay on the selected series while axis inspection
+  // still reports both native values and leaves annotations independently portaled.
+  await expect(host.locator("[data-kind-ui=active-marker]")).toHaveCount(1);
+  await expect(host.locator("[data-kind-ui=active-marker]")).toHaveCSS("fill", "rgb(193, 106, 49)");
   expect(
     await host
       .locator(".recharts-label, [data-kind-ui=active-marker]")
       .evaluateAll((nodes) =>
-        nodes.every((node) => !node.closest("[data-kind-ui=radar-selection-paint]")),
+        nodes.every((node) => !node.closest("[data-kind-ui=series-interaction-paint]")),
       ),
   ).toBe(true);
   await host.locator(".recharts-label").first().click();
@@ -194,7 +197,7 @@ test("default charts remain unselected and consumer custom shapes/veto retain ow
   page,
 }) => {
   await page.goto(url);
-  await expect(page.locator(radar).locator(control)).toHaveCount(0);
+  await expect(page.locator(radar).getByRole("button", { name: /^Highlight / })).toHaveCount(0);
   await page.goto(`${url}?selection&radar-shape&veto`);
   const host = page.locator(radar);
   const actual = host.getByRole("button", { name: "Highlight Actual", exact: true });

@@ -3,20 +3,23 @@ title: Motion
 description: Enable chart entrances and adjust their timing.
 ---
 
-Set `animate` on the chart to reveal its marks when it appears. Configured Line
-animates by default; other compositions opt in.
+Set `animate` on the chart to reveal its marks when it appears. Line charts animate by default; other families require `animate` to enable animation.
 
 ## Enable an entrance
 
 Use `true` for the family defaults or `false` for a still chart.
 
 ```tsx
-<Chart.LineChart data={data} config={config} xDataKey="month" animate aria-label="Monthly visitors" />
+import { LineChart } from "@kind-ui/charts";
+
+<LineChart data={data} config={config} animate aria-label="Monthly visitors">
+  <LineChart.XAxis dataKey="month" />
+  <LineChart.Series dataKey="visitors" />
+  <LineChart.Tooltip />
+</LineChart>
 ```
 
-Use the same prop on explicit chart compositions. Keep their
-[Root](/docs/chart-components/root/) and
-[ResponsiveContainer](/docs/chart-components/responsive-container/) in place.
+Keep your explicit parts inside the same chart. See [Chart frame](/docs/chart-components/chart/) for sizing and shared controls.
 
 ## Family defaults
 
@@ -26,8 +29,7 @@ its entrance intentionally.
 
 | Family | Enabled by default | Entrance |
 | --- | --- | --- |
-| [Configured Line](/docs/components/line/) | Yes | Line reveal across the plot |
-| [Explicit Line](/docs/components/line/) | No | Line reveal across the plot |
+| [Line](/docs/components/line/) | Yes | Line reveal across the plot |
 | [Area](/docs/components/area/) | No | Area reveal across the plot |
 | [Bar](/docs/components/bar/) | No | Bars reveal from zero, clamped to the numeric domain |
 | [Histogram](/docs/components/histogram/) | No | Bar reveal |
@@ -46,14 +48,18 @@ its entrance intentionally.
 Tune entrance duration in milliseconds and inspection transitions in seconds.
 
 ```tsx
+import { type LineAnimation, LineChart } from "@kind-ui/charts";
+
 const animation = {
   revealDurationMs: 600,
   revealEasing: "easeOut",
   hoverTransition: { type: "tween", duration: 0.12 },
-} satisfies Chart.LineAnimation;
+} satisfies LineAnimation;
 
-<Chart.LineChart data={data} config={config} xDataKey="month" animate={animation}
-  aria-label="Monthly visitors" />
+<LineChart data={data} config={config} animate={animation} aria-label="Monthly visitors">
+  <LineChart.XAxis dataKey="month" />
+  <LineChart.Series dataKey="visitors" />
+</LineChart>
 ```
 
 Line, Area, Bar, Pie, Radar, Radial, and Scatter accept these fields through
@@ -85,5 +91,5 @@ is separate: omit `valueAnimation="shuffle"` when you want still values.
 
 For a scene sequence or chart crossfade, disable built-in animation and control
 the timing in your application. Custom shapes and tooltip content also own
-their motion. Provide a still result for reduced-motion users and retain an
-accessible [data alternative](/docs/guides/accessibility/).
+their motion. Provide a still result for reduced-motion users and retain a
+clear [chart name and descriptions](/docs/guides/accessibility/).

@@ -1,6 +1,5 @@
 "use client";
 
-import type { Transition } from "motion/react";
 import {
   type ComponentProps,
   type CSSProperties,
@@ -9,13 +8,13 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { ComposedChart as EngineComposedChart } from "recharts";
 import { type BaseAnimation, type LineAnimation, MotionContext } from "./animation.js";
 import { BarLifecycle, BarMotion } from "./bar-chart.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
+import { defaultHover, useReducedMotion } from "./motion-preference.js";
 import { RevealClip } from "./reveal-clip.js";
 import { cn } from "./utils.js";
 
@@ -32,15 +31,6 @@ export type ComboChartProps = ComponentProps<typeof EngineComposedChart> & {
   loading?: boolean | undefined;
   loadingLabel?: string | undefined;
 };
-const query = "(prefers-reduced-motion: reduce)";
-function subscribe(change: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const snapshot = () => window.matchMedia(query).matches;
-const serverSnapshot = () => true;
-const defaultHover: Transition = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 };
 
 // A changed native child can change domains, axes, stacks or custom geometry.
 // Conservatively end entrances rather than retain a clip in the old coordinate space.
@@ -63,7 +53,7 @@ export function ComboChart({
   ...props
 }: ComboChartProps) {
   const id = useId();
-  const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const reduced = useReducedMotion();
   const [finished, setFinished] = useState({ line: false, area: false, bar: false });
   const interrupt = useCallback(() => {
     if (!loading) setFinished({ line: true, area: true, bar: true });

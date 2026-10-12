@@ -3,24 +3,24 @@ title: Histogram
 description: Show response-time distributions with explicit numeric bins.
 ---
 
-See how checkout response times are distributed across numeric intervals.
-
 <ChartExample id="histogram" />
 
 ## Usage
 
-Use `binHistogram` to prepare numeric bins for `HistogramSeries`.
+`HistogramChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+
+Use `binHistogram` to prepare numeric bins for `HistogramChart.Series`.
 
 ```tsx title="Composition sketch"
-<Chart.Root config={config}>
-  <Chart.ResponsiveContainer width="100%" height={280}>
-    <Chart.HistogramChart bins={result.bins} measure="count" animate accessibilityLayer>
-      <Chart.CartesianGrid vertical={false} />
-      <Chart.HistogramSeries />
-      <Chart.Tooltip />
-    </Chart.HistogramChart>
-  </Chart.ResponsiveContainer>
-</Chart.Root>
+import { HistogramChart } from "@kind-ui/charts";
+
+<HistogramChart config={config} height={280} aria-label="Histogram values" bins={result.bins} measure="count" animate accessibilityLayer>
+  <HistogramChart.XAxis />
+  <HistogramChart.YAxis />
+  <HistogramChart.Grid vertical={false} />
+  <HistogramChart.Series />
+  <HistogramChart.Tooltip />
+</HistogramChart>
 ```
 
 Bar height shows count; width shows the interval. Bins include the lower edge, and the final bin includes the upper edge.
@@ -39,13 +39,13 @@ Choose Default, Clay or Glow.
 
 ## Loading State
 
-Set [`loading`](/docs/chart-components/root/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
 
 <ChartExample id="histogram" variant="loading" />
 
 ## API reference
 
-Use `xAxisProps` and `yAxisProps` to format ticks on the numeric scales.
+Use `HistogramChart.XAxis` and `HistogramChart.YAxis` to format ticks on the numeric scales.
 
 ### binHistogram
 
@@ -68,30 +68,49 @@ Pre-aggregated bins may have gaps. Bounds must be ordered, nonoverlapping and fi
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
+| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
+| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
 | `bins` | `readonly HistogramBin[]` | Required | Validated intervals; their first lower and final upper bounds define the horizontal domain. |
 | `measure` | `"count" \| "density"` | Required | Count height or normalized probability density. Numerically unrepresentable density throws. |
 | `animate` | `boolean \| BarAnimation` | `false` | Reuses chart-owned Bar entrance and reduced-motion handling. Options include `revealDurationMs`, `revealEasing` and `hoverTransition`. |
-| `xAxisProps` | Native XAxis presentation props | — | Ticks, tick formatting and spacing; numeric scale, domain, axis identity and bin midpoint are owned. |
-| `yAxisProps` | Native YAxis presentation props | — | Tick presentation; numeric domain is `[0, "dataMax"]`. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Arrow-key inspection; set explicitly in these components. |
 | `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Plot spacing. |
-| `children` | `ReactNode` | — | Explicit histogram series, grid and tooltip. |
 
 </div>
 
 Owns data, vertical layout, scales and spacing. See [XAxis](https://recharts.github.io/en-US/api/XAxis/), [YAxis](https://recharts.github.io/en-US/api/YAxis/) and [BarChart](https://recharts.github.io/en-US/api/BarChart/) for presentation options.
 
-### HistogramSeries
+### Histogram axes
 
-<div className="line-props-scroll" role="region" aria-label="HistogramSeries props" tabIndex={0}>
+Add axes explicitly. Their numeric scales and bin domain are chart-owned; tick formatting and presentation remain yours.
+
+| Prop | Applies to | Purpose |
+| --- | --- | --- |
+| `tickFormatter` | Both axes | Format each numeric tick, for example milliseconds or percentages. |
+| `ticks` / `tickCount` | Both axes | Supply explicit numeric ticks or request a tick count. |
+| `tick` / `tickLine` / `axisLine` | Both axes | Customize tick labels and axis strokes, or hide them with `false`. |
+| `label` | Both axes | Add an axis title using Recharts label options. |
+| `orientation` | Both axes | Place XAxis at `"top"` or `"bottom"`, and YAxis at `"left"` or `"right"`. |
+| `height` / `width` | XAxis / YAxis | Reserve space for tick labels and the axis title. |
+
+Both parts accept Recharts presentation props, including refs and handlers. See [XAxis props](https://recharts.github.io/en-US/api/XAxis/) and [YAxis props](https://recharts.github.io/en-US/api/YAxis/) for the full reference. `dataKey`, `type`, `domain`, `scale`, axis IDs, `allowDataOverflow` and `reversed` are chart-owned and cannot be overridden.
+
+<span id="histogramseries" />
+
+### HistogramChart.Series
+
+<div className="line-props-scroll" role="region" aria-label="HistogramChart.Series props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `seriesKey` | `string` | `"count"` | Root metadata and visibility identity; internal `dataKey` is owned. |
+| `seriesKey` | `string` | `"count"` | Chart metadata and visibility identity; internal `dataKey` is owned. |
 | `material` | `"clay" \| "glow"` | Omitted | Finish on corrected bin rectangles. |
 | `shape` | `(props: HistogramShapeProps) => ReactElement` | — | Native bar shape props with corrected numeric `x`, `width` and original `bin`; custom geometry becomes consumer-owned. |
 | `fill` / `stroke` | `string` | Config color / unset | Explicit paint overrides. |
-| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; Root visibility also applies. |
+| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; chart visibility also applies. |
 
 </div>
 
@@ -99,12 +118,13 @@ Use inside `HistogramChart`; stacking and custom bar sizing are unsupported. See
 
 ## Shared components
 
-Use Root for the measure’s color and Tooltip for bin values.
+Use chart config for the measure’s color and Tooltip for bin values.
 
 | Component | Purpose |
 | --- | --- |
-| [Root](/docs/chart-components/root/) | Share colors, formatting and series visibility. |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
 | [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
 | [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
 | [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-| [ResponsiveContainer](/docs/chart-components/responsive-container/) | Size composed charts to their container. |
+
+Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.

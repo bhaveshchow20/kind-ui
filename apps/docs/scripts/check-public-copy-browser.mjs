@@ -29,11 +29,10 @@ try {
     "/docs/installation/",
     "/docs/components/bar/",
     "/docs/components/combo/",
-    "/docs/chart-components/root/",
+    "/docs/chart-components/chart/",
     "/docs/chart-components/series-config/",
     "/docs/chart-components/legend/",
     "/docs/chart-components/tooltip/",
-    "/docs/chart-components/responsive-container/",
     "/docs/chart-components/axes-grid/",
     "/docs/chart-components/labels/",
   ];
@@ -53,7 +52,7 @@ try {
         assert.equal(
           await page
             .locator(".doc-body")
-            .getByRole("heading", { name: "Root", exact: true })
+            .getByRole("heading", { name: "Chart frame", exact: true })
             .count(),
           0,
         );
@@ -108,7 +107,7 @@ try {
     await page.screenshot({ path: `${output}/homepage-${width}.png` });
     checks.push({ route: homepage, width, status: "passed" });
   }
-  await page.goto(origin + publicPath("/docs/chart-components/root/"));
+  await page.goto(origin + publicPath("/docs/chart-components/chart/"));
   assert.match(await page.locator("body").innerText(), /Chart Components/);
   await page.setViewportSize({ width: 1440, height: 1000 });
   const sidebarConfig = page

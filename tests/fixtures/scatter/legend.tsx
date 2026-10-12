@@ -1,4 +1,3 @@
-// Host-only fixture: all chart behavior comes from the installed public tarball.
 import * as Chart from "@kind-ui/charts";
 import { type ScatterShapeProps, Symbols, XAxis, YAxis } from "@kind-ui/charts";
 import { StrictMode, useState } from "react";
@@ -47,7 +46,14 @@ function App() {
   };
   function plot(label: string) {
     return (
-      <Chart.ScatterChart width={500} height={140} aria-label={label}>
+      <Chart.ScatterChart
+        width={500}
+        height={140}
+        aria-label={label}
+        config={config}
+        visibleSeries={visible}
+        onVisibleSeriesChange={setVisible}
+      >
         <XAxis type="number" dataKey="x" domain={[0, 3]} />
         <YAxis type="number" dataKey="y" domain={[0, 4]} />
         {entries.map(([key, item], i) => (
@@ -80,7 +86,12 @@ function App() {
           </button>
         ))}
       </div>
-      <Chart.Root
+      <Chart.HeatmapChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+        aria-label="Metadata chart"
         interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         config={config}
         visibleSeries={visible}
@@ -109,20 +120,30 @@ function App() {
               )
             : undefined}
         </Chart.Legend>
-        {mounted ? (
-          <>
-            {plot("First scatter")}
-            {plot("Second scatter")}
-          </>
-        ) : null}
-      </Chart.Root>
-      <Chart.Root
+      </Chart.HeatmapChart>
+      {mounted ? (
+        <>
+          {plot("First scatter")}
+          {plot("Second scatter")}
+        </>
+      ) : null}
+      <Chart.HeatmapChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+        aria-label="Metadata chart"
         config={{ search: { label: "Independent Search", color: "#333", legendShape: "triangle" } }}
         id="independent"
       >
         <Chart.Legend />
-      </Chart.Root>
-      <Chart.Root
+      </Chart.HeatmapChart>
+      <Chart.HeatmapChart
+        rows={[]}
+        columns={[]}
+        data={[]}
+        scale={Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] })}
+        aria-label="Metadata chart"
         interaction={{
           kind: "series",
           mode: "visibility",
@@ -135,7 +156,7 @@ function App() {
         id="readonly"
       >
         <Chart.Legend />
-      </Chart.Root>
+      </Chart.HeatmapChart>
     </main>
   );
 }

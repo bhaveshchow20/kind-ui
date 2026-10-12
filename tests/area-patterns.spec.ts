@@ -115,7 +115,7 @@ test("area patterns use the theme gradient first stop while opt-out uses full lo
   await page.goto("http://127.0.0.1:4181/static.html?patterns");
   await page.getByRole("button", { name: "Gradient", exact: true }).click();
   const marks = page.locator(".recharts-area-area");
-  const tile = page.locator('pattern[data-pattern="dots"] > rect').last();
+  const tile = page.locator('.recharts-surface pattern[data-pattern="dots"] > rect').last();
   await expect(tile).toHaveAttribute("fill", "var(--color-first)");
   await expect(tile).toHaveCSS("fill", "rgb(255, 0, 0)");
   await page.getByRole("button", { name: "Theme", exact: true }).click();

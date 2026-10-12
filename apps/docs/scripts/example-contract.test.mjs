@@ -20,6 +20,8 @@ import { filesFor, promptFor } from "../lib/example-files.mjs";
 import { publicPath } from "../lib/routing.mjs";
 import { verificationFiles } from "./consumer-validation-files.mjs";
 import "./routing-contract.test.mjs";
+import "./review-comments-contract.test.mjs";
+import "./compound-teaching-contract.test.mjs";
 import "./composition-guide.test.mjs";
 import "./material-contract.test.mjs";
 
@@ -82,7 +84,7 @@ test("presentation options remain complete in copied and agent-retrieved consume
     "components/bar",
     "components/combo",
     "components/sankey",
-    "chart-components/root",
+    "chart-components/chart",
   ]
     .map((page) => readFileSync(`public/markdown/${page}.md`, "utf8"))
     .join("\n");
@@ -93,7 +95,7 @@ test("presentation options remain complete in copied and agent-retrieved consume
     "createPercentStack",
     "PointMarker",
     "LineDashAnimation",
-    "SankeyNodeLabel",
+    "SankeyChart.NodeLabel",
   ])
     assert.ok(reference.includes(type), `${type} reference missing`);
   assert.ok(!readFileSync("public/llms.txt", "utf8").includes("guides/customization.md"));
@@ -176,7 +178,7 @@ test("private package bytes match validation without public provenance or archiv
   assert.equal(existsSync("public/examples/package"), false);
 });
 
-test("Line snippets are standalone public consumers with a shared data alternative", () => {
+test("Line snippets are standalone public chart consumers", () => {
   const lines = JSON.parse(readFileSync("generated/line-examples.json", "utf8"));
   assert.equal(Object.keys(lines).length, 7);
   for (const bundle of Object.values(lines)) {
@@ -187,14 +189,10 @@ test("Line snippets are standalone public consumers with a shared data alternati
       `${bundle.id}: ${imports}`,
     );
     assert.ok(!Object.keys(bundle.files).some((file) => /settings\.ts|controls\.tsx/.test(file)));
-    assert.ok(
-      bundle.dataAlternative.rows.length >=
-        (["line-presentation", "line-start"].includes(bundle.id) ? 4 : 7),
-    );
     assert.deepEqual(filesFor(bundle, {}), bundle.files);
   }
   const basic = lines.line.files["src/examples/line/example.tsx"];
-  assert.equal([...basic.matchAll(/<Chart\.LineChart\b/g)].length, 1);
+  assert.equal([...basic.matchAll(/<LineChart(?=[\s>])/g)].length, 1);
   assert.ok(!/useId|Root|ResponsiveContainer/.test(basic));
 });
 
@@ -205,11 +203,7 @@ test("Line variant sources match selected public defaults without runtime compil
       const files = filesFor(bundle, {}, value);
       assert.equal(files[`src/examples/${bundle.id}/example.tsx`], variant.source);
       assert.ok(variant.source.includes(`${variantDefinitions[bundle.id].prop} = "${value}"`));
-      assert.ok(
-        promptFor(bundle, {}, "https://docs.example", value).includes(
-          `/variants/${value}/example.tsx`,
-        ),
-      );
+      assert.ok(promptFor(bundle, {}, value).includes(`/variants/${value}/example.tsx`));
     }
   }
 });
@@ -220,16 +214,16 @@ test("Area consumers preserve explicit composition and stacked series focus", ()
   for (const bundle of Object.values(areas)) {
     const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
     assert.match(source, /"use client"/);
-    assert.match(source, /satisfies Chart.SeriesConfig/);
-    assert.match(source, /<Chart.Root\s+config=\{config\}/);
-    assert.match(source, /<Chart.ResponsiveContainer width="100%" height=\{280\}>/);
-    assert.match(source, /<Chart.AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
-    assert.match(source, /<Chart.AreaSeries/);
+    assert.match(source, /satisfies SeriesConfig/);
+    assert.match(source, /<AreaChart\b[\s\S]*?config=\{config\}/);
+    assert.match(source, /height=\{280\}/);
+    assert.match(source, /<AreaChart\.Series/);
+    assert.match(source, /<AreaChart\.Legend/);
+    assert.doesNotMatch(source, /Chart\.Root|ResponsiveContainer/);
+    assert.match(source, /<AreaChart[\s\S]*?animate[\s\S]*?accessibilityLayer/);
     assert.equal(bundle.dataAlternative.rows.length, 12);
-    assert.ok(!/settings|controls|<Chart.AreaChart[^>]*config=/s.test(source));
-    assert.ok(
-      promptFor(bundle, {}, "https://docs.example").includes(publicPath("/docs/components/area/")),
-    );
+    assert.ok(!/settings|controls/.test(source));
+    assert.ok(promptFor(bundle, {}).includes(publicPath("/docs/components/area/")));
     for (const [value, variant] of Object.entries(bundle.variants ?? {})) {
       assert.equal(
         filesFor(bundle, {}, value)[`src/examples/${bundle.id}/example.tsx`],
@@ -244,23 +238,34 @@ test("Area consumers preserve explicit composition and stacked series focus", ()
   );
 });
 
-test("every family recipe is generated with its own prompt route and complete data alternative", () => {
+test("every family recipe is generated with its own prompt route", () => {
   const all = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
   assert.deepEqual(Object.keys(all).sort(), allExamples.map(({ id }) => id).sort());
   for (const example of allExamples) {
     const bundle = all[example.id];
     assert.equal(bundle.family, example.family);
-    assert.ok(
-      promptFor(bundle, {}, "https://docs.example").includes(
-        publicPath(`/docs/components/${example.family}/`),
-      ),
-    );
-    assert.ok(bundle.dataAlternative.rows.length > 0);
-    for (const row of bundle.dataAlternative.rows)
-      for (const column of Object.keys(bundle.dataAlternative.columns))
-        assert.ok(Object.hasOwn(row, column));
+    assert.ok(promptFor(bundle, {}).includes(publicPath(`/docs/components/${example.family}/`)));
     for (const [value, variant] of Object.entries(bundle.variants ?? {}))
       assert.notEqual(variant.source, "", `${example.id}:${value}`);
+  }
+});
+
+test("every copied prompt uses deployed retrieval URLs for all examples and variants", () => {
+  const all = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
+  for (const bundle of Object.values(all)) {
+    for (const variant of [undefined, ...Object.keys(bundle.variants ?? {})]) {
+      const prompt = promptFor(bundle, {}, variant);
+      const links = [...prompt.matchAll(/https?:\/\/[^\s]+/g)].map(
+        ([link]) => new URL(link.replace(/\.$/, "")),
+      );
+      assert.equal(links.length, 5, `${bundle.id}:${variant}`);
+      for (const link of links) {
+        assert.equal(link.origin, "https://kindui.dev");
+        assert.ok(link.pathname.startsWith("/charts/docs/"), link.href);
+      }
+      assert.ok(prompt.includes(`https://kindui.dev/charts/docs/components/${bundle.family}/`));
+      assert.doesNotMatch(prompt, /localhost|127\.0\.0\.1/);
+    }
   }
 });
 
@@ -277,7 +282,7 @@ test("public copy rejects stale release receipts and registry install claims", a
     assert.throws(() => assertPublicCopy(stale, "fixture"));
   assert.doesNotThrow(() => assertPublicCopy("npm install @kind-ui/charts", "fixture"));
   for (const [id, bundle] of Object.entries(completeBundles)) {
-    assertPublicCopy(promptFor(bundle, {}, "https://example.com"), `${id} prompt`);
+    assertPublicCopy(promptFor(bundle, {}), `${id} prompt`);
     for (const [name, body] of Object.entries(bundle.files))
       if (/\.(?:md|json)$/.test(name)) assertPublicCopy(body, `${id}/${name}`);
   }
@@ -369,20 +374,32 @@ test("page Markdown keeps selected examples and readable presentation fallbacks"
   assert.match(readFileSync("public/markdown/installation.md", "utf8"), /#### Next\.js/);
 });
 
-test("shared copied examples own complete data alternatives without preview duplication", () => {
-  for (const id of [
-    "bar-comparison",
-    "line-markers",
-    "line-comparison",
-    "bar-horizontal",
-    "pie-materials",
-  ]) {
+test("copied examples focus on chart rendering", () => {
+  for (const [id, bundle] of Object.entries(completeBundles)) {
     const source = readFileSync(`examples/${id}/example.tsx`, "utf8");
-    assert.ok(source.includes("data-chart-alternative"));
-    assert.ok(source.includes("data.map((row)"));
-    assert.ok(source.includes('scope="row"'));
-    assert.equal(completeBundles[id].dataAlternativeInSource, true);
-    assert.ok(completeBundles[id].dataAlternative.rows.length > 0);
-    assert.equal(completeBundles[id].files[`src/examples/${id}/example.tsx`], source);
+    assert.ok(
+      !/data-chart-alternative|<table\b|<\w+(?:Chart)?\.(?:Table|DataTable)\b/.test(source),
+      id,
+    );
+    assert.equal(bundle.files[`src/examples/${id}/example.tsx`], source);
   }
+});
+
+test("prompt retrieval checks compare the candidate export and reject non-deployed links", async () => {
+  const { candidatePromptSource } = await import("./prompt-source.mjs");
+  const origin = "http://127.0.0.1:6376";
+  assert.equal(
+    candidatePromptSource(
+      "https://kindui.dev/charts/docs/examples/line/variants/loading/example.tsx",
+      origin,
+    ),
+    new URL(publicPath("/examples/line/variants/loading/example.tsx"), origin).href,
+  );
+  for (const url of [
+    "http://127.0.0.1:6376/examples/line/example.tsx",
+    "https://foreign.example/charts/docs/examples/line/example.tsx",
+    "https://kindui.dev/examples/line/example.tsx",
+    "https://kindui.dev/charts/docs/markdown/installation.md",
+  ])
+    assert.throws(() => candidatePromptSource(url, origin));
 });

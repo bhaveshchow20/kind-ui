@@ -1,6 +1,5 @@
 import {
   prepareSankeyData,
-  ResponsiveContainer,
   SankeyChart,
   type SankeyFinish,
   type SankeyFlowData,
@@ -174,21 +173,32 @@ export function Host() {
           width={300}
           height={80}
           data={data}
-          node={(props) => (
-            <rect
-              {...{ x: props.x, y: props.y, width: props.width, height: props.height }}
-              aria-label="custom-node"
-            />
+          config={Object.fromEntries(
+            flow.nodes.map((node) => [node.id, { label: node.name, color: "#2563eb" }]),
           )}
-          link={(props) => (
-            <path
-              d={`M${props.sourceX},${props.sourceY}L${props.targetX},${props.targetY}`}
-              stroke="pink"
-              strokeWidth={props.linkWidth}
-              aria-label="custom-link"
-            />
-          )}
-        />
+          aria-label="Chart fixture"
+        >
+          {null}
+          {/* Explicit renderer ownership belongs to the family parts. */}
+          <SankeyChart.Nodes
+            render={(props) => (
+              <rect
+                {...{ x: props.x, y: props.y, width: props.width, height: props.height }}
+                aria-label="custom-node"
+              />
+            )}
+          />
+          <SankeyChart.Links
+            render={(props) => (
+              <path
+                d={`M${props.sourceX},${props.sourceY}L${props.targetX},${props.targetY}`}
+                stroke="pink"
+                strokeWidth={props.linkWidth}
+                aria-label="custom-link"
+              />
+            )}
+          />
+        </SankeyChart>
       )}
       <button type="button" onClick={() => setShown(!shown)}>
         Toggle chart
@@ -201,12 +211,27 @@ export function Host() {
       </button>
       <div style={{ width: narrow ? 5 : "100%", height: extreme === "padding" ? 41 : 250 }}>
         {shown && (
-          <ResponsiveContainer>
-            <SankeyChart
-              data={flow}
-              animate={{ revealDurationMs: 3000 }}
-              title="Packed Sankey"
-              node={(props) => (
+          <SankeyChart
+            data={flow}
+            height={extreme === "padding" ? 41 : 250}
+            animate={{ revealDurationMs: 3000 }}
+            title="Packed Sankey"
+            onClick={(item, type, event) => {
+              void item.index;
+              const id: string = item.payload.id;
+              void id;
+              void type;
+              void event.clientX;
+            }}
+            config={Object.fromEntries(
+              flow.nodes.map((node) => [node.id, { label: node.name, color: "#2563eb" }]),
+            )}
+            aria-label="Chart fixture"
+          >
+            <Tooltip />
+            {/* Explicit renderer ownership belongs to the family parts. */}
+            <SankeyChart.Nodes
+              render={(props) => (
                 <g>
                   <SankeyNode
                     finish="clay"
@@ -216,7 +241,9 @@ export function Host() {
                   <SankeyNodeLabel node={props} data={flow} showValues />
                 </g>
               )}
-              link={(props: SankeyLinkProps) => (
+            />
+            <SankeyChart.Links
+              render={(props: SankeyLinkProps) => (
                 <SankeyLink
                   {...props}
                   material={paint}
@@ -236,17 +263,8 @@ export function Host() {
                   }}
                 />
               )}
-              onClick={(item, type, event) => {
-                void item.index;
-                const id: string = item.payload.id;
-                void id;
-                void type;
-                void event.clientX;
-              }}
-            >
-              <Tooltip />
-            </SankeyChart>
-          </ResponsiveContainer>
+            />
+          </SankeyChart>
         )}
       </div>
       <SankeyTable

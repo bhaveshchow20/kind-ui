@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { AreaChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Jan", desktop: 310, mobile: 110 },
@@ -18,50 +18,59 @@ const data = [
 const config = {
   desktop: { label: "Desktop", color: "#733bff" },
   mobile: { label: "Mobile", color: "#14a39a" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function DeviceAreaChart() {
   return (
-    <Chart.Root
-      config={config}
-      interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
-    >
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.AreaChart
+    <>
+      <>
+        <AreaChart
+          legendPosition="top"
+          config={config}
+          interaction={{ kind: "series", mode: "focus", eligibleKeys: Object.keys(config) }}
+          width="100%"
+          height={280}
           data={data}
           animate
           accessibilityLayer
           margin={{ top: 20, right: 32, bottom: 8, left: 0 }}
           aria-label="Monthly visitors by device"
         >
-          <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-          <Chart.XAxis
+          <AreaChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
+          <AreaChart.XAxis
             dataKey="period"
             axisLine={false}
             tickLine={false}
             tickMargin={8}
             height={48}
             interval="preserveStartEnd"
+            tick={{ fill: "#666" }}
           />
-          <Chart.YAxis axisLine={false} tickLine={false} tickMargin={8} width={72} />
-          <Chart.AreaSeries
+          <AreaChart.YAxis
+            axisLine={false}
+            tickLine={false}
+            tickMargin={8}
+            width={72}
+            tick={{ fill: "#666" }}
+          />
+          <AreaChart.Series
             dataKey="desktop"
             stackId="visitors"
             type="monotone"
             strokeWidth={2}
             fillOpacity={0.35}
           />
-          <Chart.AreaSeries
+          <AreaChart.Series
             dataKey="mobile"
             stackId="visitors"
             type="monotone"
             strokeWidth={2}
             fillOpacity={0.35}
           />
-          <Chart.Tooltip />
-        </Chart.AreaChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          <AreaChart.Tooltip />
+          <AreaChart.Legend />
+        </AreaChart>
+      </>
+    </>
   );
 }

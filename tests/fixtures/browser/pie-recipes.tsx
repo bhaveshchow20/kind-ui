@@ -71,58 +71,54 @@ export function Allocation({
           </select>
         </label>
       )}
-      <Chart.Root
+      <Chart.PieChart
         config={config}
         interaction={{ kind: "category", mode: "focus", eligibleKeys: Object.keys(config) }}
+        defaultPinnedCategory={donut ? undefined : "delivery"}
+        responsive
+        style={{ width: "100%", height: 260 }}
+        animate={animate}
+        aria-label={donut ? "Team capacity donut" : "Weekly hours pie"}
       >
-        <Chart.PieChart
-          defaultPinnedCategory={donut ? undefined : "delivery"}
-          responsive
-          style={{ width: "100%", height: 260 }}
-          animate={animate}
-          aria-label={donut ? "Team capacity donut" : "Weekly hours pie"}
+        <Chart.PieSeries
+          categoryKey="id"
+          material={material}
+          data={data}
+          dataKey="hours"
+          nameKey="id"
+          innerRadius={donut ? "52%" : 0}
+          outerRadius="92%"
+          onClick={(sector) => setSelected(String(sector.payload.id))}
         >
-          <Chart.PieSeries
-            interactionBinding="root"
-            categoryKey="id"
-            material={material}
-            data={data}
-            dataKey="hours"
-            nameKey="id"
-            innerRadius={donut ? "52%" : 0}
-            outerRadius="92%"
-            onClick={(sector) => setSelected(String(sector.payload.id))}
-          >
-            {data.map((row) => (
-              <Cell key={row.id} fill={`var(--color-${row.id})`} />
-            ))}
-            {donut && <Label position="center" value={`${total} hours`} />}
-          </Chart.PieSeries>
-          <Chart.Tooltip itemKey={itemKey} />
-        </Chart.PieChart>
-        <Chart.Legend />
-        <p role="status">
-          {total === 0 ? "No allocated hours." : `${total} allocated hours.`}{" "}
-          {selected ? `Selected: ${config[selected]?.label}.` : "Select a slice to inspect it."}
-        </p>
-        <table>
-          <caption>Weekly hours</caption>
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Hours</th>
+          {data.map((row) => (
+            <Cell key={row.id} fill={`var(--color-${row.id})`} />
+          ))}
+          {donut && <Label position="center" value={`${total} hours`} />}
+        </Chart.PieSeries>
+        <Chart.Tooltip itemKey={itemKey} />
+        <Chart.PieChart.Legend />
+      </Chart.PieChart>
+      <p role="status">
+        {total === 0 ? "No allocated hours." : `${total} allocated hours.`}{" "}
+        {selected ? `Selected: ${config[selected]?.label}.` : "Select a slice to inspect it."}
+      </p>
+      <table>
+        <caption>Weekly hours</caption>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Hours</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id}>
+              <th>{config[row.id]?.label}</th>
+              <td>{row.hours}</td>
             </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                <th>{config[row.id]?.label}</th>
-                <td>{row.hours}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Chart.Root>
+          ))}
+        </tbody>
+      </table>
     </article>
   );
 }

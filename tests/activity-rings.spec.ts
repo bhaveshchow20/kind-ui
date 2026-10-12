@@ -113,3 +113,28 @@ test("tooltip identity/animation options and custom native payload semantics rem
   await hover();
   await expect(page.locator('[data-test="custom-ring-tooltip"]')).toHaveText("300/100/100/300");
 });
+
+test("packed activity labels follow ring visibility without changing geometry", async ({
+  page,
+}) => {
+  await page.goto(`${url}?visibility`);
+  const chart = page.locator("#defaults");
+  const marks = chart.locator(".recharts-radial-bar-sector");
+  await expect(marks).toHaveCount(3);
+  const geometry = await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+  const labels = chart.locator('[data-kind-ui="visibility-label"]');
+  await expect(labels).toHaveCount(3);
+  const move = chart.getByRole("button", { name: "Move", exact: true });
+  await move.click();
+  await expect(move).toHaveAttribute("aria-pressed", "false");
+  const hidden = chart.locator('[data-kind-ui="visibility-label"][aria-hidden="true"]');
+  await expect(hidden).toHaveCount(1);
+  await expect(hidden).toHaveAttribute("pointer-events", "none");
+  await expect(hidden.locator("g").first()).toHaveCSS("opacity", "0");
+  expect(await marks.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")))).toEqual(
+    geometry,
+  );
+  await move.click();
+  await expect(hidden).toHaveCount(0);
+  await expect(labels).toHaveCount(3);
+});

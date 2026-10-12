@@ -6,8 +6,10 @@ import {
   type ComponentType,
   type CSSProperties,
   createContext,
+  type RefObject,
   use,
   useCallback,
+  useEffect,
   useId,
   useLayoutEffect,
   useRef,
@@ -87,19 +89,40 @@ export function useChartKeyboard() {
 }
 
 // Geometry and data changes end entrance animation and discard stale pointer pixels.
-function Lifecycle({ data, invalidate }: { data: LineChartProps["data"]; invalidate: () => void }) {
+function Lifecycle({
+  data,
+  invalidate,
+  frame,
+}: {
+  data: LineChartProps["data"];
+  invalidate: () => void;
+  frame: RefObject<HTMLDivElement | null>;
+}) {
   const width = useChartWidth();
   const height = useChartHeight();
-  const previous = useRef({ width, height, data });
+  const previous = useRef({ width, height, data, measured: false });
+  const matchesBounds = useCallback(() => {
+    const bounds = frame.current?.firstElementChild?.getBoundingClientRect();
+    return Boolean(
+      bounds &&
+        width &&
+        height &&
+        width === Math.round(bounds.width) &&
+        height === Math.round(bounds.height),
+    );
+  }, [frame, width, height]);
   useLayoutEffect(() => {
     const old = previous.current;
-    if (
-      (old.width && old.height && (width !== old.width || height !== old.height)) ||
-      data !== old.data
-    )
+    if ((old.measured && (width !== old.width || height !== old.height)) || data !== old.data)
       invalidate();
-    previous.current = { width, height, data };
-  }, [width, height, data, invalidate]);
+    // Native responsiveness can initially parse "100%" as 100 before measuring.
+    // Establish the baseline only once engine dimensions match the actual wrapper.
+    previous.current = { width, height, data, measured: old.measured || matchesBounds() };
+  }, [width, height, data, invalidate, matchesBounds]);
+  useEffect(() => {
+    // Parent DOM refs may attach after child layout effects on a fixed-size mount.
+    if (matchesBounds()) previous.current.measured = true;
+  }, [matchesBounds]);
   return null;
 }
 
@@ -256,7 +279,7 @@ export function LineChartFrame<Props extends NativeChartProps & Attributes = Lin
         }}
       >
         <SeriesColorDefinitions viewport />
-        <Lifecycle data={props.data} invalidate={invalidate} />
+        <Lifecycle data={props.data} invalidate={invalidate} frame={frame} />
         {children}
         {loading && loadingSkeleton && (
           <ChartLoadingSkeleton

@@ -18,6 +18,6 @@ export type ChartContextValue = Visibility & {
 export const ChartContext = createContext<ChartContextValue | null>(null);
 export function useChart() {
   const chart = useContext(ChartContext);
-  if (!chart) throw new Error("Chart components must be inside Root");
+  if (!chart) throw new Error("Chart components must be inside chart");
   return chart;
 }

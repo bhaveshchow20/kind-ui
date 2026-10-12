@@ -45,7 +45,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       [
         "test:chart",
         "test:composition",
-        "test:configured-line",
+        "test:chart-frame",
         "test:line-integrations",
         "test:focus-identity",
         "test:cartesian-visibility",

@@ -1,6 +1,5 @@
 import {
   prepareSankeyData,
-  ResponsiveContainer,
   SankeyChart,
   type SankeyFinish,
   type SankeyFlowData,
@@ -132,20 +131,31 @@ export function SankeyNetwork() {
                 </span>
               ))}
             </div>
-            <ResponsiveContainer width="100%" height={800}>
-              <SankeyChart
-                data={networkData}
-                nodePadding={45}
-                nodeWidth={12}
-                sort={false}
-                margin={{ left: 90, right: 100, top: 48, bottom: 12 }}
-                title="Regional energy allocation: 180 MWh"
-                desc="Five stages connect 16 nodes through 39 flows. Gradient ribbons interpolate the source and destination colors; widths represent MWh. Use the table to inspect every route."
-                onClick={(item, kind) => {
-                  if (kind === "link")
-                    setActive((current) => (current === item.payload.id ? null : item.payload.id));
-                }}
-                node={(props) => (
+            <SankeyChart
+              height={800}
+              data={networkData}
+              nodePadding={45}
+              nodeWidth={12}
+              sort={false}
+              margin={{ left: 90, right: 100, top: 48, bottom: 12 }}
+              title="Regional energy allocation: 180 MWh"
+              desc="Five stages connect 16 nodes through 39 flows. Gradient ribbons interpolate the source and destination colors; widths represent MWh. Use the table to inspect every route."
+              onClick={(item, kind) => {
+                if (kind === "link")
+                  setActive((current) => (current === item.payload.id ? null : item.payload.id));
+              }}
+              config={Object.fromEntries(
+                networkData.nodes.map((node) => [
+                  node.id,
+                  { label: node.name, color: colors.get(node.id) ?? "#568577" },
+                ]),
+              )}
+              aria-label="Chart fixture"
+            >
+              {null}
+              {/* Explicit renderer ownership belongs to the family parts. */}
+              <SankeyChart.Nodes
+                render={(props) => (
                   <g>
                     <SankeyNode {...props} finish={finish} color={colors.get(props.payload.id)} />
                     <text
@@ -161,7 +171,9 @@ export function SankeyNetwork() {
                     </text>
                   </g>
                 )}
-                link={(props) => (
+              />
+              <SankeyChart.Links
+                render={(props) => (
                   <SankeyLink
                     {...props}
                     material="gradient"
@@ -178,7 +190,7 @@ export function SankeyNetwork() {
                   />
                 )}
               />
-            </ResponsiveContainer>
+            </SankeyChart>
           </div>
         </section>
         <p className="network-key">

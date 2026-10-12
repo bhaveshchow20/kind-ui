@@ -1,6 +1,10 @@
 import type * as Chart from "@kind-ui/charts";
 export type PieChartReference = Pick<
   Chart.PieChartProps,
+  | "config"
+  | "children"
+  | "frameProps"
+  | "interaction"
   | "animate"
   | "animationDirection"
   | "accessibilityLayer"
@@ -18,7 +22,6 @@ export type PieSeriesReference = Pick<
   | "outerRadius"
   | "material"
   | "emphasisKey"
-  | "interactionBinding"
   | "glowCategories"
 >;
 export type PieMotionReference = Chart.PieAnimation;

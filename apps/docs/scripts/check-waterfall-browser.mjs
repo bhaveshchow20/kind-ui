@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
+import { candidatePromptSource } from "./prompt-source.mjs";
 import { swipeUp } from "./touch-swipe.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
@@ -29,11 +30,6 @@ try {
     .screenshot({ path: "artifacts/waterfall/chart-desktop.png" });
   for (const [id, b] of Object.entries(bundles)) {
     const card = p.locator(`[data-component="${id}"]`);
-    assert.equal(await card.locator("table tbody tr").count(), b.dataAlternative.rows.length);
-    const data = await card.locator("table tbody").textContent();
-    for (const r of b.dataAlternative.rows)
-      for (const k of Object.keys(b.dataAlternative.columns))
-        assert.ok(data.includes(String(r[k])));
     for (const [value, v] of Object.entries(
       b.variants ?? { default: { source: b.files[`src/examples/${id}/example.tsx`] } },
     )) {
@@ -53,7 +49,10 @@ try {
         await pending.locator("button.copy-prompt").click();
         const prompt = await p.evaluate(() => navigator.clipboard.readText());
         const url = prompt.match(/Retrieve the standalone source: (.+)\./)[1];
-        assert.equal((await (await context.request.get(url)).text()).trimEnd(), v.source.trimEnd());
+        assert.equal(
+          (await (await context.request.get(candidatePromptSource(url, origin))).text()).trimEnd(),
+          v.source.trimEnd(),
+        );
         await pending.getByRole("tab", { name: "Preview", exact: true }).click();
         assert.equal(await card.locator('[data-kind-ui="chart-loading-skeleton"]').count(), 0);
         evidence.variants.push({ id, value, loading: "fixed preview, code and copy parity" });

@@ -25,7 +25,7 @@ export type ChartInteractionRequest = {
   event: ChartInteractionEvent;
 };
 export type ChartInteractionConfig = {
-  /** Explicit binding between this Root's legend and participating chart identities. */
+  /** Explicit binding between this chart's legend and participating chart identities. */
   markActivation?: "none" | "matching-legend";
   /** Settled data identities, including hidden items and zero values. */
   eligibleKeys: readonly string[];
@@ -88,7 +88,7 @@ const Context = createContext<Interaction | null>(null);
 /** The single state/action owner shared by native adapters and custom controls. */
 function useInteractionOwner() {
   const value = use(Context);
-  if (!value) throw new Error("useChartInteraction requires Root");
+  if (!value) throw new Error("useChartInteraction requires chart");
   return value;
 }
 
@@ -112,7 +112,7 @@ export function useOptionalChartInteraction() {
 
 export function useChartInteraction() {
   const value = useOptionalChartInteraction();
-  if (!value) throw new Error("useChartInteraction requires Root");
+  if (!value) throw new Error("useChartInteraction requires chart");
   const {
     register: _register,
     registerUnavailable: _registerUnavailable,
@@ -172,20 +172,20 @@ export function ChartInteractionProvider({
   if (options?.kind === "node" && mode !== "focus")
     throw new Error("Node interaction only supports focus");
   if (mode === "focus" && ownership.current !== (controlled !== undefined))
-    throw new Error("Root selection ownership cannot change during a mount");
+    throw new Error("chart selection ownership cannot change during a mount");
   if (controlled !== undefined && !onChange)
-    throw new Error("Controlled Root selection requires its change callback");
+    throw new Error("Controlled chart selection requires its change callback");
   if (controlled !== undefined && initial !== undefined)
-    throw new Error("Root selection cannot be both controlled and defaulted");
+    throw new Error("chart selection cannot be both controlled and defaulted");
   if (props.visibleSeries !== undefined && props.defaultVisibleSeries !== undefined)
-    throw new Error("Root visibility cannot be both controlled and defaulted");
+    throw new Error("chart visibility cannot be both controlled and defaulted");
   if (
     props.onVisibleSeriesChange &&
     props.visibleSeries === undefined &&
     props.defaultVisibleSeries === undefined
   )
     throw new Error(
-      "Root requires visibleSeries or defaultVisibleSeries with onVisibleSeriesChange",
+      "chart requires visibleSeries or defaultVisibleSeries with onVisibleSeriesChange",
     );
   const register = useCallback((owner: string, keys: readonly string[]) => {
     setRegistrations((old) => {

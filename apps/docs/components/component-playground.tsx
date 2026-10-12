@@ -20,12 +20,6 @@ export interface ComponentBundle {
   variants?: Record<string, { label: string; source: string }>;
   variantControl?: string;
   defaultVariant?: string;
-  dataAlternativeInSource?: boolean;
-  dataAlternative?: {
-    caption: string;
-    columns: Record<string, string>;
-    rows: Record<string, string | number>[];
-  };
 }
 export function ComponentPlayground({
   bundle,
@@ -47,7 +41,6 @@ export function ComponentPlayground({
   const [status, setStatus] = useState("");
   const [tab, setTab] = useState("preview");
   const Preview = previews[id];
-  const dataAlternative = bundle.dataAlternativeInSource ? undefined : bundle.dataAlternative;
   async function copy(text: string, label: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -117,7 +110,7 @@ export function ComponentPlayground({
             size="sm"
             className="copy-prompt"
             aria-label={status === "Prompt copied" ? "Copied" : "Copy prompt"}
-            onClick={() => copy(promptFor(bundle, {}, location.origin, variant), "Prompt")}
+            onClick={() => copy(promptFor(bundle, {}, variant), "Prompt")}
           >
             {status === "Prompt copied" ? <Check size={14} /> : <Copy size={14} />}
             <span>{status === "Prompt copied" ? "Copied" : "Copy prompt"}</span>
@@ -135,38 +128,6 @@ export function ComponentPlayground({
         <div className="chart-example not-prose">
           <Preview variant={variant} />
         </div>
-        {dataAlternative && (
-          <div className="sr-only">
-            <table aria-label={`${bundle.title} data`}>
-              <caption>{dataAlternative.caption}</caption>
-              <thead>
-                <tr>
-                  {Object.values(dataAlternative.columns).map((label) => (
-                    <th scope="col" key={label}>
-                      {label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {dataAlternative.rows.map((row, index) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: Build-time snapshot order is fixed; preserve duplicate observations.
-                  <tr key={index}>
-                    {Object.keys(dataAlternative.columns).map((key, index) =>
-                      index === 0 ? (
-                        <th scope="row" key={key}>
-                          {row[key]}
-                        </th>
-                      ) : (
-                        <td key={key}>{row[key]}</td>
-                      ),
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </TabsContent>
       <TabsContent value="code" forceMount hidden={tab !== "code"} className="code-files">
         {variant && variantCode ? variantCode[variant] : sourceCode}

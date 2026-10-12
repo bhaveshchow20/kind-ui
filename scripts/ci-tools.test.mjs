@@ -188,7 +188,7 @@ test("parallel browser runner forwards the shard to every suite", async () => {
     for (const suite of [
       "test:chart",
       "test:composition",
-      "test:configured-line",
+      "test:chart-frame",
       "test:line-integrations",
     ])
       assert.ok(stdout.includes(JSON.stringify(["run", suite, "--", "--shard=2/4"])));

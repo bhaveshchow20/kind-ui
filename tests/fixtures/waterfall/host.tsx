@@ -1,4 +1,3 @@
-// Host composition only: all Waterfall behavior comes from the installed tarball.
 import * as Chart from "@kind-ui/charts";
 import {
   Cell,
@@ -114,7 +113,7 @@ export function WaterfallHost() {
         </button>
       ))}
       <output aria-label="Clicks">{clicks}</output>
-      <Chart.Root
+      <Chart.WaterfallChart
         interaction={{
           kind: "series",
           mode: "visibility",
@@ -122,90 +121,87 @@ export function WaterfallHost() {
         }}
         config={{ bridge: { label: "Bridge", color: "#3478ae" } }}
         visibleSeries={visible ? ["bridge"] : []}
+        width={small ? 240 : 640}
+        height={300}
+        data={displayed}
+        animate={animate}
+        layout={horizontal ? "vertical" : "horizontal"}
+        aria-label="Packed Waterfall"
+        ref={(node) => {
+          if (node) node.dataset.nativeRef = "svg";
+        }}
       >
-        <Chart.WaterfallChart
-          width={small ? 240 : 640}
-          height={300}
+        <XAxis
+          xAxisId="x"
+          reversed={reversed}
+          {...(horizontal
+            ? { type: "number", domain: ["auto", "auto"] }
+            : { dataKey: "id", type: "category" })}
+        />
+        <YAxis
+          yAxisId="y"
+          {...(horizontal
+            ? { dataKey: "id", type: "category" }
+            : { type: "number", domain: ["auto", "auto"] })}
+        />
+        <Chart.WaterfallConnectors
           data={displayed}
-          animate={animate}
-          layout={horizontal ? "vertical" : "horizontal"}
-          aria-label="Packed Waterfall"
-          ref={(node) => {
-            if (node) node.dataset.nativeRef = "svg";
-          }}
+          seriesKey="bridge"
+          hide={hide}
+          xAxisId="x"
+          yAxisId="y"
+        />
+        <ReferenceLine
+          xAxisId="x"
+          yAxisId="y"
+          {...(horizontal ? { x: 0 } : { y: 0 })}
+          stroke="#777"
+        />
+        <Chart.WaterfallSeries
+          seriesKey="bridge"
+          hide={hide}
+          xAxisId="x"
+          yAxisId="y"
+          material={material}
+          onClick={() => setClicks((n) => n + 1)}
+          {...(custom
+            ? {
+                shape: (props) => (
+                  <Rectangle
+                    data-host-shape=""
+                    x={props.x}
+                    y={props.y}
+                    width={props.width}
+                    height={props.height}
+                    fill={props.fill}
+                    radius={0}
+                  />
+                ),
+              }
+            : {})}
         >
-          <XAxis
-            xAxisId="x"
-            reversed={reversed}
-            {...(horizontal
-              ? { type: "number", domain: ["auto", "auto"] }
-              : { dataKey: "id", type: "category" })}
-          />
-          <YAxis
-            yAxisId="y"
-            {...(horizontal
-              ? { dataKey: "id", type: "category" }
-              : { type: "number", domain: ["auto", "auto"] })}
-          />
-          <Chart.WaterfallConnectors
-            data={displayed}
-            seriesKey="bridge"
-            hide={hide}
-            xAxisId="x"
-            yAxisId="y"
-          />
-          <ReferenceLine
-            xAxisId="x"
-            yAxisId="y"
-            {...(horizontal ? { x: 0 } : { y: 0 })}
-            stroke="#777"
-          />
-          <Chart.WaterfallSeries
-            seriesKey="bridge"
-            hide={hide}
-            xAxisId="x"
-            yAxisId="y"
-            material={material}
-            onClick={() => setClicks((n) => n + 1)}
-            {...(custom
-              ? {
-                  shape: (props) => (
-                    <Rectangle
-                      data-host-shape=""
-                      x={props.x}
-                      y={props.y}
-                      width={props.width}
-                      height={props.height}
-                      fill={props.fill}
-                      radius={0}
-                    />
-                  ),
-                }
-              : {})}
-          >
-            {displayed.map((row) => (
-              <Cell
-                key={row.id}
-                fill={row.kind === "delta" && (row.value ?? 0) < 0 ? "#b54d46" : "#3478ae"}
-              />
-            ))}
-            {custom && <LabelList dataKey="value" position="top" />}
-          </Chart.WaterfallSeries>
-          <Probe data={displayed} horizontal={horizontal} />
-          <Chart.Tooltip
-            axisId={horizontal ? "y" : "x"}
-            filterNull={false}
-            content={(tip) => {
-              const row = displayed.find((row) => row.id === String(tip.label));
-              return tip.active && row && visible && !hide ? (
-                <div role="status">
-                  {row.label}: {row.value ?? "Unknown"}; balance {row.balance ?? "Unknown"}
-                </div>
-              ) : null;
-            }}
-          />
-        </Chart.WaterfallChart>
-      </Chart.Root>
+          {displayed.map((row) => (
+            <Cell
+              key={row.id}
+              fill={row.kind === "delta" && (row.value ?? 0) < 0 ? "#b54d46" : "#3478ae"}
+            />
+          ))}
+          {custom && <LabelList dataKey="value" position="top" />}
+        </Chart.WaterfallSeries>
+        <Probe data={displayed} horizontal={horizontal} />
+        <Chart.Tooltip
+          axisId={horizontal ? "y" : "x"}
+          filterNull={false}
+          content={(tip) => {
+            const row = displayed.find((row) => row.id === String(tip.label));
+            return tip.active && row && visible && !hide ? (
+              <div role="status">
+                {row.label}: {row.value ?? "Unknown"}; balance {row.balance ?? "Unknown"}
+              </div>
+            ) : null;
+          }}
+        />
+      </Chart.WaterfallChart>
     </section>
   );
 }

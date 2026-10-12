@@ -78,7 +78,7 @@ export function HistogramHost() {
         <style>{'[data-kind-ui="histogram-bin"] { stroke-width: 32px; }'}</style>
       )}
       <output aria-label="Clicked">{clicked}</output>
-      <Chart.Root
+      <Chart.HistogramChart
         interaction={{
           kind: "series",
           mode: "visibility",
@@ -100,103 +100,103 @@ export function HistogramHost() {
         }}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
+        ref={ref}
+        bins={bins}
+        measure={measure}
+        width={width}
+        height={260}
+        animate={{ revealDurationMs: 10000 }}
+        aria-label="Histogram proof"
       >
-        <Chart.Legend />
-        <Chart.HistogramChart
-          ref={ref}
-          bins={bins}
-          measure={measure}
-          width={width}
-          height={260}
-          animate={{ revealDurationMs: 10000 }}
-          aria-label="Histogram proof"
-          xAxisProps={{ label: { value: "Duration (ms)", position: "insideBottom", offset: -5 } }}
-        >
-          <defs>
-            <filter id="histogram-host-filter">
-              <feColorMatrix type="saturate" values="0.5" />
-            </filter>
-            <linearGradient id="histogram-host-gradient">
-              <stop stopColor="#187c79" stopOpacity={0.2} />
-              <stop offset="0.35" stopColor="#187c79" stopOpacity={0} />
-              <stop offset="0.65" stopColor="#be7150" stopOpacity={0} />
-              <stop offset="1" stopColor="#be7150" stopOpacity={0.8} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" />
-          <ReferenceLine x={0} stroke="red" />
-          <Chart.HistogramSeries
-            material={material}
-            filter={override === "series-filter" ? "url(#histogram-host-filter)" : undefined}
-            style={{
-              ...(override === "series-style" ? { filter: "url(#histogram-host-filter)" } : {}),
-              ...(strokeMode === "em" ? { fontSize: 16, strokeWidth: "2em" } : {}),
-              ...(strokeMode === "var"
-                ? { "--host-stroke": "32px", strokeWidth: "var(--host-stroke)" }
-                : {}),
-              ...(strokeMode === "percent" ? { strokeWidth: "5%" } : {}),
-            }}
-            fillOpacity={0.6}
-            stroke="#183a36"
-            strokeWidth={new URLSearchParams(window.location.search).has("wide-stroke") ? 24 : 1}
-            strokeDasharray="2 2"
-            onClick={() => setClicked((value) => value + 1)}
-            shape={
-              custom
-                ? (props) => (
-                    <g
-                      data-host-numeric=""
-                      data-value={props.value}
+        <Chart.HistogramChart.XAxis
+          {...{ label: { value: "Duration (ms)", position: "insideBottom", offset: -5 } }}
+        />
+        <Chart.HistogramChart.YAxis />
+        <defs>
+          <filter id="histogram-host-filter">
+            <feColorMatrix type="saturate" values="0.5" />
+          </filter>
+          <linearGradient id="histogram-host-gradient">
+            <stop stopColor="#187c79" stopOpacity={0.2} />
+            <stop offset="0.35" stopColor="#187c79" stopOpacity={0} />
+            <stop offset="0.65" stopColor="#be7150" stopOpacity={0} />
+            <stop offset="1" stopColor="#be7150" stopOpacity={0.8} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" />
+        <ReferenceLine x={0} stroke="red" />
+        <Chart.HistogramSeries
+          material={material}
+          filter={override === "series-filter" ? "url(#histogram-host-filter)" : undefined}
+          style={{
+            ...(override === "series-style" ? { filter: "url(#histogram-host-filter)" } : {}),
+            ...(strokeMode === "em" ? { fontSize: 16, strokeWidth: "2em" } : {}),
+            ...(strokeMode === "var"
+              ? { "--host-stroke": "32px", strokeWidth: "var(--host-stroke)" }
+              : {}),
+            ...(strokeMode === "percent" ? { strokeWidth: "5%" } : {}),
+          }}
+          fillOpacity={0.6}
+          stroke="#183a36"
+          strokeWidth={new URLSearchParams(window.location.search).has("wide-stroke") ? 24 : 1}
+          strokeDasharray="2 2"
+          onClick={() => setClicked((value) => value + 1)}
+          shape={
+            custom
+              ? (props) => (
+                  <g
+                    data-host-numeric=""
+                    data-value={props.value}
+                    data-lower={props.bin.lower}
+                    data-upper={props.bin.upper}
+                    data-count={props.bin.count}
+                  >
+                    <Rectangle
+                      x={props.x}
+                      y={props.y}
+                      width={props.width}
+                      height={props.height}
+                      fill={props.fill}
+                      data-host-shape="yes"
                       data-lower={props.bin.lower}
-                      data-upper={props.bin.upper}
-                      data-count={props.bin.count}
-                    >
-                      <Rectangle
-                        x={props.x}
-                        y={props.y}
-                        width={props.width}
-                        height={props.height}
-                        fill={props.fill}
-                        data-host-shape="yes"
-                        data-lower={props.bin.lower}
-                      />
-                    </g>
-                  )
-                : undefined
-            }
-          >
-            {bins.map((bin) => (
-              <Cell
-                key={bin.lower}
-                {...(override === "cell-filter" && bin.lower === 0
-                  ? { filter: "url(#histogram-host-filter)" }
-                  : {})}
-                {...(override === "cell-style" && bin.lower === 0
-                  ? { style: { filter: "url(#histogram-host-filter)" } }
-                  : {})}
-                fill={
-                  transparent
-                    ? "transparent"
-                    : gradient
-                      ? "url(#histogram-host-gradient)"
-                      : bin.lower === 0
-                        ? "#be7150"
-                        : "#187c79"
-                }
-                {...(transparent ? { stroke: "none" } : {})}
-                fillOpacity={bin.lower === 0 ? 0.3 : 0.6}
-              />
-            ))}
-          </Chart.HistogramSeries>
-          <Chart.Tooltip
-            shared={false}
-            labelFormatter={(_label, entries) => {
-              const bin = entries[0]?.payload as Chart.HistogramBin | undefined;
-              return bin ? `[${bin.lower}, ${bin.upper}${bin.upper === 7 ? "]" : ")"} ms` : "";
-            }}
-          />
-        </Chart.HistogramChart>
-      </Chart.Root>
+                    />
+                  </g>
+                )
+              : undefined
+          }
+        >
+          {bins.map((bin) => (
+            <Cell
+              key={bin.lower}
+              {...(override === "cell-filter" && bin.lower === 0
+                ? { filter: "url(#histogram-host-filter)" }
+                : {})}
+              {...(override === "cell-style" && bin.lower === 0
+                ? { style: { filter: "url(#histogram-host-filter)" } }
+                : {})}
+              fill={
+                transparent
+                  ? "transparent"
+                  : gradient
+                    ? "url(#histogram-host-gradient)"
+                    : bin.lower === 0
+                      ? "#be7150"
+                      : "#187c79"
+              }
+              {...(transparent ? { stroke: "none" } : {})}
+              fillOpacity={bin.lower === 0 ? 0.3 : 0.6}
+            />
+          ))}
+        </Chart.HistogramSeries>
+        <Chart.Tooltip
+          shared={false}
+          labelFormatter={(_label, entries) => {
+            const bin = entries[0]?.payload as Chart.HistogramBin | undefined;
+            return bin ? `[${bin.lower}, ${bin.upper}${bin.upper === 7 ? "]" : ")"} ms` : "";
+          }}
+        />
+        <Chart.HistogramChart.Legend />
+      </Chart.HistogramChart>
       <table>
         <caption>
           Histogram data (ms);{" "}
@@ -225,14 +225,30 @@ export function HistogramHost() {
     </section>
   );
 }
-const props: Chart.HistogramChartProps = { bins: [], measure: "density", width: 100, height: 100 };
+const props: Chart.HistogramChartProps = {
+  config: { count: { label: "Samples", color: "#187c79" } },
+  "aria-label": "Histogram",
+  children: null,
+  bins: [],
+  measure: "density",
+  width: 100,
+  height: 100,
+};
 void props;
 // @ts-expect-error Explicit measure is required even for unequal bins.
-const absentMeasure: Chart.HistogramChartProps = { bins: original };
+const absentMeasure: Chart.HistogramChartProps = {
+  config: props.config,
+  "aria-label": "Histogram",
+  children: null,
+  bins: original,
+};
 const categorical: Chart.HistogramChartProps = {
+  config: props.config,
+  "aria-label": "Histogram",
+  children: null,
   bins: original,
   measure: "count",
-  // @ts-expect-error Histogram geometry cannot use a categorical domain.
+  // @ts-expect-error Histogram axes are explicit parts, not root options.
   xAxisProps: { type: "category" },
 };
 // @ts-expect-error Stacking changes histogram meaning.

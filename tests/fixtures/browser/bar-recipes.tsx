@@ -8,7 +8,6 @@ import {
   type LabelProps,
   Rectangle,
   ReferenceLine,
-  ResponsiveContainer,
   useXAxisScale,
   useYAxisScale,
   XAxis,
@@ -66,49 +65,51 @@ function BarFrame<T extends { category: string }>({
 }) {
   const id = useId();
   return (
-    <Chart.Root config={config} className="recipe-chart">
-      {legend}
+    <>
       <p id={id} className="recipe-help">
         Use left and right arrow keys to explore. Escape dismisses the tooltip.
       </p>
-      <ResponsiveContainer width="100%" height={220}>
-        <Chart.BarChart
-          data={data}
-          layout={horizontal ? "vertical" : "horizontal"}
-          animate={options ?? false}
-          accessibilityLayer
-          aria-label={label}
-          aria-describedby={id}
-          margin={{ top: 24, right: 32, left: 0, bottom: 0 }}
-          barCategoryGap="28%"
-          barGap={4}
-        >
-          <CartesianGrid vertical={horizontal} horizontal={!horizontal} stroke="var(--border)" />
-          {children}
-          <Chart.Tooltip
-            cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
-            labelFormatter={(value) =>
-              formatCategory ? formatCategory(String(value)) : String(value)
-            }
-            {...(colorForCategory
-              ? {
-                  content: (tooltip) => (
-                    <Chart.TooltipContent
-                      tooltip={{
-                        ...tooltip,
-                        payload: tooltip.payload.map((entry) => {
-                          const color = colorForCategory(String(tooltip.label));
-                          return color ? { ...entry, color } : entry;
-                        }),
-                      }}
-                    />
-                  ),
-                }
-              : {})}
-          />
-        </Chart.BarChart>
-      </ResponsiveContainer>
-    </Chart.Root>
+      <Chart.BarChart
+        height={220}
+        config={config}
+        frameProps={{ className: "recipe-chart" }}
+        data={data}
+        layout={horizontal ? "vertical" : "horizontal"}
+        animate={options ?? false}
+        accessibilityLayer
+        aria-label={label}
+        aria-describedby={id}
+        margin={{ top: 24, right: 32, left: 0, bottom: 0 }}
+        barCategoryGap="28%"
+        barGap={4}
+      >
+        <CartesianGrid vertical={horizontal} horizontal={!horizontal} stroke="var(--border)" />
+        {children}
+        {legend}
+        <Chart.Tooltip
+          cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
+          labelFormatter={(value) =>
+            formatCategory ? formatCategory(String(value)) : String(value)
+          }
+          {...(colorForCategory
+            ? {
+                content: (tooltip) => (
+                  <Chart.TooltipContent
+                    itemKey={() => String(tooltip.label)}
+                    tooltip={{
+                      ...tooltip,
+                      payload: tooltip.payload.map((entry) => {
+                        const color = colorForCategory(String(tooltip.label));
+                        return color ? { ...entry, color } : entry;
+                      }),
+                    }}
+                  />
+                ),
+              }
+            : {})}
+        />
+      </Chart.BarChart>
+    </>
   );
 }
 const zeroDomain = ([min, max]: readonly [number, number]): [number, number] => [
@@ -192,7 +193,7 @@ export function HorizontalBars({ label, formatValue, ...props }: SingleProps) {
 }
 export function GroupedBars(props: PairProps) {
   return (
-    <BarFrame {...props} legend={<Chart.Legend />}>
+    <BarFrame {...props} legend={<Chart.BarChart.Legend />}>
       <VerticalAxes />
       <Chart.BarSeries
         material={props.material}
@@ -213,7 +214,7 @@ export function GroupedBars(props: PairProps) {
 }
 export function StackedBars(props: Omit<PairProps, "data"> & { data: StackedBarPoint[] }) {
   return (
-    <BarFrame {...props} legend={<Chart.Legend />}>
+    <BarFrame {...props} legend={<Chart.BarChart.Legend />}>
       <VerticalAxes />
       <BarStack radius={props.material === "clay" ? 8 : 0}>
         <Chart.BarSeries
@@ -345,7 +346,7 @@ export function CategoryBars({
       {...props}
       data={data}
       label={label}
-      config={{}}
+      config={singleConfig(label, formatValue)}
       horizontal
       colorForCategory={(category) => data.find((point) => point.category === category)?.color}
     >
@@ -416,7 +417,7 @@ export function SignedBars({ data, label, formatValue, ...props }: SingleProps) 
       {...props}
       data={data}
       label={label}
-      config={{}}
+      config={singleConfig(label, formatValue)}
       colorForCategory={(category) =>
         (data.find((point) => point.category === category)?.value ?? 0) < 0
           ? "var(--chart-2)"

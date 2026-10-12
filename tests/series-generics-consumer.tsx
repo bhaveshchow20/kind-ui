@@ -45,17 +45,19 @@ const barProps: Chart.BarSeriesProps<Row, number> = {
   },
 };
 void (
-  <Chart.Root config={{ value: { label: "Value", color: "red" } }}>
-    <Chart.ComboChart data={rows}>
-      <Chart.LineSeries<Row, number> {...lineProps}>
-        <LabelList dataKey="value" />
-      </Chart.LineSeries>
-      <Chart.BarSeries<Row, number> {...barProps}>
-        <Cell fill="blue" />
-        <LabelList dataKey="value" />
-      </Chart.BarSeries>
-    </Chart.ComboChart>
-  </Chart.Root>
+  <Chart.ComboChart
+    config={{ value: { label: "Value", color: "red" } }}
+    aria-label="Chart fixture"
+    data={rows}
+  >
+    <Chart.LineSeries<Row, number> {...lineProps}>
+      <LabelList dataKey="value" />
+    </Chart.LineSeries>
+    <Chart.BarSeries<Row, number> {...barProps}>
+      <Cell fill="blue" />
+      <LabelList dataKey="value" />
+    </Chart.BarSeries>
+  </Chart.ComboChart>
 );
 
 const nativeLineProps: Omit<NativeLine, "isAnimationActive"> = lineProps;
@@ -153,36 +155,34 @@ void (<Chart.LineSeries<Row, number> material="metal" />);
 // @ts-expect-error Existing material vocabulary stays bounded.
 void (<Chart.BarSeries<Row, number> material="metal" />);
 
-// Radar selection preserves typed native composition and makes controlled ownership explicit.
+// Chart interaction keeps typed series geometry and explicit focus ownership.
+const radarFocus = {
+  kind: "series",
+  mode: "focus",
+  eligibleKeys: ["value"],
+  selected: "value",
+  onSelectionChange: (next: string | null) => void next,
+} satisfies Chart.ChartInteractionConfig;
 void (
   <Chart.RadarChart<Row>
-    selection="series"
     data={rows}
-    selectedSeries="value"
-    onSelectedSeriesChange={(next: string | null) => void next}
+    config={{ value: { color: "red" } }}
+    aria-label="Values"
+    interaction={radarFocus}
   >
-    <Chart.RadarSeries<Row, number> dataKey="value" />
+    <Chart.RadarChart.Series<Row, number> dataKey="value" />
   </Chart.RadarChart>
 );
-void (
-  <Chart.RadarChart<Row>
-    selection="series"
-    data={rows}
-    onSelectedSeriesChange={(next: string | null) => void next}
-  />
-);
-const radarSelection: Chart.RadarSelectionProps = {
-  selection: "series",
-  selectedSeries: null,
-  onSelectedSeriesChange: (next) => void next,
+// @ts-expect-error Controlled focus requires its owner callback.
+const missingRadarOwner: Chart.ChartInteractionConfig = {
+  kind: "series",
+  mode: "focus",
+  eligibleKeys: ["value"],
+  selected: "value",
 };
-void radarSelection;
-// @ts-expect-error Controlled Radar selection requires its owner callback.
-void (<Chart.RadarChart selectedSeries="value" selection="series" />);
-// @ts-expect-error The selection target is a series key, never a row index.
-void (<Chart.RadarChart selectedSeries={1} onSelectedSeriesChange={() => {}} />);
-// @ts-expect-error No implicit spoke selection or universal emphasis mode is exposed.
-void (<Chart.RadarChart selection="category" />);
+// @ts-expect-error A focus identity is a string, never a row index.
+const invalidRadarIdentity: Chart.ChartInteractionConfig = { ...radarFocus, selected: 1 };
+void [missingRadarOwner, invalidRadarIdentity];
 
 const invalidProjection: Chart.BarProjection<Row> = {
   // @ts-expect-error selection returns a boolean, not a forecast value

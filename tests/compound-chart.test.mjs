@@ -1,0 +1,199 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import * as Chart from "@kind-ui/charts";
+import { createElement as h } from "react";
+import { renderToStaticMarkup as render } from "react-dom/server";
+
+test("removed providers and configured chart APIs are absent from public exports", () => {
+  assert.equal(Object.hasOwn(Chart, "Root"), false);
+  assert.equal(Object.hasOwn(Chart, "ChartProvider"), false);
+  assert.equal(
+    Object.keys(Chart).some((name) => /configured/i.test(name)),
+    false,
+  );
+});
+
+const config = { value: { label: "Value", color: "red" } };
+const families = [
+  Chart.AreaChart,
+  Chart.BarChart,
+  Chart.ComboChart,
+  Chart.PieChart,
+  Chart.RadarChart,
+  Chart.RadialBarChart,
+  Chart.ScatterChart,
+  Chart.WaterfallChart,
+  Chart.HistogramChart,
+  Chart.BoxPlotChart,
+];
+const propsFor = (Family) =>
+  Family === Chart.HistogramChart ? { bins: [], measure: "count" } : { data: [] };
+for (const Family of families) {
+  test(`${Family.name} owns exactly one frame and never creates a legend from metadata`, () => {
+    const html = render(h(Family, { ...propsFor(Family), config, "aria-label": "Values" }, null));
+    assert.equal((html.match(/data-kind-ui="chart"/g) ?? []).length, 1);
+    assert.doesNotMatch(html, /data-kind-ui="chart-legend"/);
+    assert.match(html, /data-kind-ui="chart-parts"/);
+  });
+  test(`${Family.name} rejects missing names, implicit content and nested frame ownership`, () => {
+    assert.throws(
+      () => render(h(Family, { ...propsFor(Family), "aria-label": "Values" }, null)),
+      /requires config/,
+    );
+    assert.throws(
+      () => render(h(Family, { ...propsFor(Family), config }, null)),
+      /requires aria-label/,
+    );
+    assert.throws(
+      () => render(h(Family, { ...propsFor(Family), config, "aria-label": " " }, null)),
+      /requires aria-label/,
+    );
+    assert.throws(
+      () => render(h(Family, { ...propsFor(Family), config, "aria-label": "Values" })),
+      /requires explicit children/,
+    );
+    assert.throws(
+      () =>
+        render(
+          metadataChart(
+            { config },
+            h(Family, { ...propsFor(Family), config, "aria-label": "Values" }, null),
+          ),
+        ),
+      /owns|nested/,
+    );
+  });
+}
+test("loading families hide chart-owned HTML parts without removing their host", () => {
+  const allFamilies = [
+    Chart.LineChart,
+    ...families,
+    Chart.ActivityRings,
+    Chart.HeatmapChart,
+    Chart.SankeyChart,
+  ];
+  for (const Family of allFamilies) {
+    const extra =
+      Family === Chart.ActivityRings
+        ? { rings: [] }
+        : Family === Chart.HeatmapChart
+          ? {
+              rows: [],
+              columns: [],
+              data: [],
+              scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#ff0000"] }),
+            }
+          : Family === Chart.SankeyChart
+            ? { data: { nodes: [], links: [] } }
+            : propsFor(Family);
+    for (const legendPosition of ["top", "bottom"]) {
+      const props = { ...extra, config, "aria-label": "Values", legendPosition };
+      const pending = render(h(Family, { ...props, loading: true }, null));
+      const ready = render(h(Family, { ...props, loading: false }, null));
+      assert.match(pending, /data-kind-ui="chart-parts"[^>]*hidden=""/, Family.name);
+      assert.doesNotMatch(ready, /data-kind-ui="chart-parts"[^>]*hidden=""/, Family.name);
+    }
+  }
+});
+
+function metadataChart(options, ...children) {
+  const {
+    config,
+    interaction,
+    emphasis,
+    nonce,
+    visibleSeries,
+    defaultVisibleSeries,
+    onVisibleSeriesChange,
+    ...frameProps
+  } = options;
+  return h(
+    Chart.HeatmapChart,
+    {
+      rows: [],
+      columns: [],
+      data: [],
+      scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
+      config,
+      "aria-label": "Metadata chart",
+      interaction,
+      emphasis,
+      nonce,
+      ...(visibleSeries !== undefined ? { visibleSeries } : {}),
+      ...(defaultVisibleSeries !== undefined ? { defaultVisibleSeries } : {}),
+      ...(onVisibleSeriesChange ? { onVisibleSeriesChange } : {}),
+      frameProps,
+    },
+    ...children,
+  );
+}
+
+test("every family exposes its parts, with mixed series explicit and named primitives retained", () => {
+  for (const [Family, members] of [
+    [Chart.LineChart, ["Series", "Grid", "XAxis", "YAxis", "Tooltip", "Legend"]],
+    [Chart.AreaChart, ["Series", "Grid", "XAxis", "YAxis", "Tooltip", "Legend"]],
+    [Chart.BarChart, ["Series", "Grid", "XAxis", "YAxis", "Tooltip", "Legend"]],
+    [
+      Chart.ComboChart,
+      ["Line", "Area", "Bar", "Scatter", "Grid", "XAxis", "YAxis", "Tooltip", "Legend"],
+    ],
+    [Chart.PieChart, ["Series", "Cell", "Labels", "Tooltip", "Legend"]],
+    [Chart.RadarChart, ["Series", "Grid", "AngleAxis", "RadiusAxis", "Tooltip", "Legend"]],
+    [Chart.RadialBarChart, ["Series", "Grid", "AngleAxis", "RadiusAxis", "Tooltip", "Legend"]],
+    [Chart.ScatterChart, ["Series", "Grid", "XAxis", "YAxis", "ZAxis", "Tooltip", "Legend"]],
+    [Chart.WaterfallChart, ["Series", "Connectors", "XAxis", "YAxis", "Tooltip", "Legend"]],
+    [Chart.HistogramChart, ["Series", "Grid", "XAxis", "YAxis", "Tooltip", "Legend"]],
+    [Chart.BoxPlotChart, ["Series", "Mark", "XAxis", "YAxis", "Tooltip", "Legend"]],
+    [Chart.HeatmapChart, ["Grid", "Tooltip", "Legend", "DataTable", "Cell"]],
+    [Chart.ActivityRings, ["Series", "Labels", "Tooltip", "Legend"]],
+    [
+      Chart.SankeyChart,
+      ["Nodes", "Links", "Node", "Link", "NodeLabel", "Tooltip", "Legend", "Table"],
+    ],
+  ])
+    for (const member of members) assert.equal(typeof Family[member], "function", member);
+  assert.equal(Chart.LineChart.Series, Chart.LineSeries);
+  assert.equal(Chart.ComboChart.Bar, Chart.BarSeries);
+  assert.equal(Chart.PieChart.Series, Chart.PieSeries);
+});
+test("explicit activity children retain the data alternative and omit unrequested parts", () => {
+  const props = { config, rings: [{ key: "value", value: 70 }], "aria-label": "Activity" };
+  assert.doesNotMatch(render(h(Chart.ActivityRings, props, null)), /chart-legend/);
+  assert.match(render(h(Chart.ActivityRings, props, null)), /<dt>Value<\/dt><dd>70<\/dd>/);
+});
+test("Sankey retains arbitrary node identities under its owned metadata and data root", () => {
+  const data = {
+    nodes: [
+      { id: "source one", name: "Source" },
+      { id: "target two", name: "Target" },
+    ],
+    links: [{ id: "route", source: "source one", target: "target two", value: 5 }],
+  };
+  const config = {
+    "source one": { label: "Source", color: "red" },
+    "target two": { label: "Target", color: "blue" },
+  };
+  assert.match(
+    render(h(Chart.SankeyChart, { config, data, "aria-label": "Flows" }, null)),
+    /data-kind-ui="chart"/,
+  );
+});
+test("compound HTML parts fail clearly outside owned family frames", () => {
+  assert.throws(
+    () => render(h(Chart.BarChart.Legend)),
+    /require a chart-family|chart context|chart-family frame/,
+  );
+  assert.throws(() => render(h(Chart.SankeyChart.Nodes)), /require SankeyChart with config/);
+});
+
+test("owned Sankey rejects competing native renderers and compound parts reject missing scopes", () => {
+  const data = { nodes: [], links: [] };
+  for (const option of [{ node: h("g") }, { link: h("g") }, { nodeConfig: {} }])
+    assert.throws(
+      () => render(h(Chart.SankeyChart, { config, data, "aria-label": "Flows", ...option }, null)),
+      /uses explicit Nodes and Links parts/,
+    );
+  assert.throws(() => render(h(Chart.SankeyChart.Nodes)), /require SankeyChart with config/);
+  assert.throws(() => render(h(Chart.ActivityRings.Series)), /requires ActivityRings/);
+  assert.throws(() => render(h(Chart.HistogramChart.XAxis)), /requires HistogramChart/);
+});

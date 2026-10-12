@@ -153,7 +153,8 @@ test("area defaults stay complete and missing gaps, zero, percentages, and contr
     ),
   );
   await interactive.getByRole("application").focus();
-  await expect(page.getByRole("status")).toContainText("Mobile");
+  await page.keyboard.press("ArrowRight");
+  await expect(interactive.getByRole("status")).toContainText("Mobile");
   await interactive.getByText("View data", { exact: true }).click();
   await expect(interactive.getByRole("row", { name: "Feb 305 visits" })).toBeVisible();
   await page.getByLabel("Empty data").check();

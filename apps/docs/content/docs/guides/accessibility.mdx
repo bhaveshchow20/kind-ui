@@ -3,32 +3,29 @@ title: Accessibility
 description: Name charts and provide readable values and keyboard access.
 ---
 
-Give every chart a meaningful name and a readable data alternative. Include
-units, zero values, and missing observations so people can understand the data
-without inspecting marks.
+Give every chart a meaningful name. Include units, zero values and missing observations in labels and tooltips. Documentation examples render the graph without alternative tables.
 
 ## Name and describe the chart
 
-Use `aria-label` or `aria-labelledby` for the chart name. Add a visible summary,
-list, or table containing the data you need readers to access.
+Use `aria-label` or `aria-labelledby` for the chart name.
 
 ```tsx
-<figure>
-  <Chart.LineChart
+import { LineChart } from "@kind-ui/charts";
+
+<LineChart
     data={[{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }]}
     config={{ visitors: { label: "Visitors", color: "#733bff" } }}
-    xDataKey="month"
     aria-label="Monthly visitors"
-  />
-  <figcaption>January: 42 visitors. February: 58 visitors.</figcaption>
-</figure>
+  >
+    <LineChart.XAxis dataKey="month" />
+    <LineChart.Series dataKey="visitors" />
+    <LineChart.Tooltip />
+</LineChart>
 ```
 
-Keep the alternative available before client rendering and while loading.
-Update it when data changes. Explain whether filters affect the values shown.
-[HeatmapDataTable](/docs/components/heatmap/#heatmapdatatable) and
-[SankeyTable](/docs/components/sankey/#sankeytable) provide family-specific data
-views.
+Applications can explicitly add family-specific data views with
+[HeatmapChart.DataTable](/docs/components/heatmap/#heatmapdatatable) or
+[SankeyChart.Table](/docs/components/sankey/#sankeycharttable) when needed. These optional parts are omitted from the examples.
 
 ## Keyboard access
 
@@ -38,11 +35,11 @@ its keyboard controls and descriptions together.
 | Chart or control | Access |
 | --- | --- |
 | [Legend](/docs/chart-components/legend/) | Enter or Space toggles eligible series or selects focus; Escape resets focus |
-| Cartesian charts and [Pie](/docs/components/pie/) | Native Recharts inspection with `accessibilityLayer`; retain a complete data alternative |
+| Cartesian charts and [Pie](/docs/components/pie/) | Native Recharts inspection with `accessibilityLayer`; use meaningful chart labels |
 | [Scatter](/docs/components/scatter/) | Native keyboard inspection covers the first series; expose all series in the alternative |
 | [Radar](/docs/components/radar/) | Series controls support selection; no arrow-key inspection between spokes |
 | [Heatmap](/docs/components/heatmap/) | Arrow keys move between cells; Home/End navigate the grid; Escape dismisses inspection |
-| [Sankey](/docs/components/sankey/) | Use link controls or a visible `SankeyTable` inspector for keyboard selection |
+| [Sankey](/docs/components/sankey/) | Use link controls or a visible `SankeyChart.Table` inspector for keyboard selection |
 | [ActivityRings](/docs/components/radial/) | Built-in descriptions retain original ring values; give the chart a name |
 
 <Callout type="info">
@@ -55,9 +52,9 @@ and use labels or patterns alongside colors when color conveys a distinction.
 Kind respects reduced-motion preferences. Custom renderers must handle their own
 motion. See [Motion](/docs/guides/motion/) for still-chart options.
 
-Set `loading` while a request is pending. Use `loadingLabel` to name that state;
+Set `loading` while a request is pending. Only the plot placeholder is visible; chart-owned legends, content and instructions return when ready without resetting selection. Use `loadingLabel` to name that state;
 show a separate message for empty results or errors. See
-[Root loading](/docs/chart-components/root/#loading).
+[Chart loading](/docs/chart-components/chart/#loading).
 
 ## Check the result
 

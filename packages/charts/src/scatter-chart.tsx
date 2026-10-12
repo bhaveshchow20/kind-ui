@@ -8,12 +8,12 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { ScatterChart as EngineScatterChart } from "recharts";
 import { type BaseAnimation, MotionContext } from "./animation.js";
 import { LineChartFrame } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
+import { defaultHover, useReducedMotion } from "./motion-preference.js";
 
 export type ScatterAnimation = BaseAnimation;
 export type ScatterChartProps = ComponentProps<typeof EngineScatterChart> & {
@@ -32,15 +32,6 @@ export const ScatterMotion = createContext<{
   finish: () => {},
   progress: null,
 });
-const query = "(prefers-reduced-motion: reduce)";
-function subscribe(change: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const snapshot = () => window.matchMedia(query).matches;
-const serverSnapshot = () => true;
-const defaultHover = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } as const;
 
 /** Native numeric geometry and item selection, with optional entrance fade and shared tooltip Motion. */
 export function ScatterChart({
@@ -50,7 +41,7 @@ export function ScatterChart({
   children,
   ...props
 }: ScatterChartProps) {
-  const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const reduced = useReducedMotion();
   const [interacted, setInteracted] = useState(false);
   const enabled = animate !== false && !reduced && !loading;
   const interact = useCallback(() => {

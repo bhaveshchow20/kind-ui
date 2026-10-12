@@ -17,7 +17,6 @@ import {
   useLayoutEffect,
   useMemo,
   useState,
-  useSyncExternalStore,
 } from "react";
 import {
   DefaultZIndexes,
@@ -35,6 +34,8 @@ import {
   LineSeries as StaticLineSeries,
   type LineSeriesProps as StaticLineSeriesProps,
 } from "./line-series.js";
+import { defaultHover, useReducedMotion } from "./motion-preference.js";
+import { usePieTooltipRegistration } from "./pie-composition-pin.js";
 import { registerPiePinComponent } from "./pie-pin-identity.js";
 import { markerPaint, type PointStyle } from "./point-marker.js";
 import { RevealClip, type RevealDirection } from "./reveal-clip.js";
@@ -57,7 +58,6 @@ export type LineSeriesProps<
 export type LineChartProps = StaticLineChartProps & {
   animate?: boolean | LineAnimation | undefined;
 };
-const defaultHover: Transition = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 };
 export const MotionContext = createContext({ enabled: false, transition: defaultHover });
 type InteractionMotion = { enabled: boolean; transition: Transition };
 const staticMotion: InteractionMotion = { enabled: false, transition: defaultHover };
@@ -97,15 +97,6 @@ export function RegisterInteractionMotion({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-const query = "(prefers-reduced-motion: reduce)";
-function subscribe(change: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const snapshot = () => window.matchMedia(query).matches;
-const serverSnapshot = () => true;
-
 /** Motion owns the shared entrance clip and default active marks. */
 export function LineChart({
   animate = false,
@@ -115,7 +106,7 @@ export function LineChart({
   ...props
 }: LineChartProps) {
   const id = useId();
-  const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const reduced = useReducedMotion();
   const [interacted, setInteracted] = useState(false);
   const options = typeof animate === "object" ? animate : {};
   const enabled = animate !== false && !reduced && !loading;
@@ -297,6 +288,7 @@ function MovingFrame({ x, y, maxX, maxY, ref, style, frameProps, children }: Too
   );
 }
 export function Tooltip(props: TooltipProps) {
+  usePieTooltipRegistration();
   return <TooltipBase {...props} Frame={MovingFrame} />;
 }
 registerPiePinComponent(Tooltip, "tooltip");

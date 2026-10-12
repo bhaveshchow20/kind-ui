@@ -15,8 +15,8 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
+import { type ChartName, type FamilyOptions, FamilyRoot, familyVisibility } from "./family-root.js";
 import {
   createHeatmapModel,
   type HeatmapCell,
@@ -26,11 +26,12 @@ import {
 } from "./heatmap-model.js";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
 import { StandaloneLoadingDesign } from "./loading-standalone-designs.js";
+import { useReducedMotion } from "./motion-preference.js";
 import type { TooltipContentProps } from "./tooltip-content.js";
 import { TooltipNumber } from "./tooltip-number.js";
 import { cn } from "./utils.js";
 
-export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
+type HeatmapPlotProps = ComponentPropsWithRef<"div"> &
   HeatmapModelOptions & {
     scale: HeatmapScale;
     formatValue?: (value: number) => string;
@@ -40,6 +41,10 @@ export type HeatmapChartProps = ComponentPropsWithRef<"div"> &
     loading?: boolean | undefined;
     loadingLabel?: string | undefined;
   };
+export type HeatmapChartProps = Omit<HeatmapPlotProps, "children" | keyof FamilyOptions> &
+  FamilyOptions &
+  ChartName & { children: Exclude<ReactNode, undefined> };
+
 type Context = {
   loadingSeed: number;
   loading: boolean | undefined;
@@ -62,14 +67,6 @@ function useHeatmap() {
   if (!value) throw new Error("Heatmap components require HeatmapChart");
   return value;
 }
-const reducedQuery = "(prefers-reduced-motion: reduce)";
-function subscribeReduced(change: () => void) {
-  const media = window.matchMedia(reducedQuery);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const reducedSnapshot = () => window.matchMedia(reducedQuery).matches;
-const reducedServerSnapshot = () => true;
 const number = (value: number) => String(value);
 const keyOf = (cell: HeatmapCell) => JSON.stringify([cell.row, cell.column]);
 type PointerPosition = Pick<PointerEvent, "pointerId" | "pointerType" | "clientX" | "clientY">;
@@ -88,8 +85,41 @@ const samePointer = (a: PointerPosition | null, b: PointerPosition) =>
 const labelOf = (cell: HeatmapCell, context: Context) =>
   `${cell.row}, ${cell.column}: ${cell.value === null ? context.missingLabel : context.formatValue(cell.value)}`;
 
-/** Native table layout owns categorical geometry. No numeric scatter approximation or SVG overlay. */
+/** Native table geometry with explicit cells, tooltip, legend and data alternative. */
 export function HeatmapChart({
+  config,
+  interaction,
+  emphasis,
+  nonce,
+  frameProps,
+  visibleSeries,
+  defaultVisibleSeries,
+  onVisibleSeriesChange,
+  legendPosition,
+  ...props
+}: HeatmapChartProps) {
+  if (props.children === undefined) throw new Error("HeatmapChart requires explicit children");
+  if (Object.hasOwn(props, "rootProps")) throw new Error("HeatmapChart does not accept rootProps");
+  return (
+    <FamilyRoot
+      family="HeatmapChart"
+      config={config}
+      name={props}
+      loading={props.loading}
+      {...(interaction !== undefined ? { interaction } : {})}
+      {...(emphasis !== undefined ? { emphasis } : {})}
+      {...(nonce !== undefined ? { nonce } : {})}
+      {...(frameProps !== undefined ? { frameProps } : {})}
+      {...familyVisibility({ visibleSeries, defaultVisibleSeries, onVisibleSeriesChange })}
+      {...(legendPosition ? { legendPosition } : {})}
+    >
+      <HeatmapPlot {...props} />
+    </FamilyRoot>
+  );
+}
+
+/** Native table layout owns categorical geometry. No numeric scatter approximation or SVG overlay. */
+function HeatmapPlot({
   rows,
   columns,
   data,
@@ -103,7 +133,7 @@ export function HeatmapChart({
   children,
   onPointerLeave,
   ...props
-}: HeatmapChartProps) {
+}: HeatmapPlotProps) {
   const loadingSeed = useLoadingSeed(loading);
   const model = useMemo(
     () => createHeatmapModel({ rows, columns, data, ...(duplicates ? { duplicates } : {}) }),
@@ -135,7 +165,7 @@ export function HeatmapChart({
   );
   const tooltipId = useId();
   const [tooltipMounted, setTooltipMounted] = useState(false);
-  const reduced = useSyncExternalStore(subscribeReduced, reducedSnapshot, reducedServerSnapshot);
+  const reduced = useReducedMotion();
   const [finished, setFinished] = useState(false);
   const previousLoading = useRef(loading);
   const completing = previousLoading.current === true && loading !== true;
@@ -775,7 +805,11 @@ export function HeatmapDataTable({ caption, ...props }: HeatmapDataTableProps) {
   const context = useHeatmap();
   const { model, formatValue, missingLabel } = context;
   return (
-    <div data-kind-ui="heatmap-scroll" className={scrollClasses}>
+    <div
+      data-kind-ui="heatmap-scroll"
+      className={cn(scrollClasses, "[&[hidden]]:hidden")}
+      hidden={context.loading || undefined}
+    >
       <table
         {...props}
         data-kind-ui="heatmap-data-table"

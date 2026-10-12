@@ -1,5 +1,5 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { type DotProps, LabelList, LineChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
   { period: "Mon", response: 140 },
@@ -16,9 +16,9 @@ const config = {
     color: "#733bff",
     formatValue: (value: unknown) => `${value} ms`,
   },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
-function Diamond({ cx, cy }: Pick<Chart.DotProps, "cx" | "cy">) {
+function Diamond({ cx, cy }: Pick<DotProps, "cx" | "cy">) {
   if (cx == null || cy == null) return <g />;
   return (
     <path
@@ -32,70 +32,41 @@ function Diamond({ cx, cy }: Pick<Chart.DotProps, "cx" | "cy">) {
 export function ResponseTimeChart() {
   return (
     <figure style={{ margin: 0 }}>
-      <Chart.LineChart
+      <LineChart
         data={data}
         config={config}
         aria-label="Response time in milliseconds"
-        legend={{}}
         margin={{ top: 36, right: 28, left: 0, bottom: 12 }}
       >
-        <Chart.CartesianGrid vertical={false} strokeDasharray="3 3" />
-        <Chart.XAxis
+        <LineChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
+        <LineChart.XAxis
           height={48}
           dataKey="period"
           axisLine={false}
           tickLine={false}
           tickMargin={8}
+          tick={{ fill: "#666" }}
         />
-        <Chart.YAxis
+        <LineChart.YAxis
           domain={[0, 200]}
           axisLine={false}
           tickLine={false}
           tickMargin={8}
           width={72}
+          tick={{ fill: "#666" }}
         />
-        <Chart.LineSeries dataKey="response" strokeWidth={2.5} dot={<Diamond />}>
-          <Chart.LabelList
+        <LineChart.Series dataKey="response" strokeWidth={2.5} dot={<Diamond />}>
+          <LabelList
             dataKey="response"
             position="top"
             offset={14}
             fill="var(--foreground, #111827)"
             fontSize={12}
           />
-        </Chart.LineSeries>
-        <Chart.Tooltip />
-      </Chart.LineChart>
-      <div
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-          border: 0,
-        }}
-      >
-        <table data-chart-alternative aria-label="Response time in milliseconds data">
-          <caption>Response time in milliseconds</caption>
-          <thead>
-            <tr>
-              <th scope="col">Day</th>
-              <th scope="col">Response time (ms)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.period}>
-                <th scope="row">{row.period}</th>
-                <td>{row.response}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        </LineChart.Series>
+        <LineChart.Tooltip />
+        <LineChart.Legend />
+      </LineChart>
     </figure>
   );
 }

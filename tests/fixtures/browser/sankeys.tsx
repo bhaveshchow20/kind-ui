@@ -1,5 +1,4 @@
 import {
-  ResponsiveContainer,
   SankeyChart,
   type SankeyFinish,
   type SankeyFlowData,
@@ -84,19 +83,25 @@ function Recipe({
         tabIndex={0}
       >
         <div className="diagram">
-          <ResponsiveContainer width="100%" height={320}>
-            <SankeyChart
-              data={flow}
-              animate={active === null}
-              nodePadding={45}
-              nodeWidth={material === "solid" ? 14 : 110}
-              margin={{ left: 90, right: 100, top: 25, bottom: 25 }}
-              title={`${material} energy flows`}
-              desc="Link widths are proportional to MWh. Inspect every flow using the table below."
-              onClick={(item, kind) => {
-                if (kind === "link") setActive(item.payload.id);
-              }}
-              node={(props) => (
+          <SankeyChart
+            height={320}
+            data={flow}
+            animate={active === null}
+            nodePadding={45}
+            nodeWidth={material === "solid" ? 14 : 110}
+            margin={{ left: 90, right: 100, top: 25, bottom: 25 }}
+            title={`${material} energy flows`}
+            desc="Link widths are proportional to MWh. Inspect every flow using the table below."
+            onClick={(item, kind) => {
+              if (kind === "link") setActive(item.payload.id);
+            }}
+            config={nodeConfig}
+            aria-label="Chart fixture"
+          >
+            <Tooltip />
+            {/* Explicit renderer ownership belongs to the family parts. */}
+            <SankeyChart.Nodes
+              render={(props) => (
                 <g>
                   <SankeyNode finish={finish} {...props} color="#4338ca" />
                   <SankeyNodeLabel
@@ -110,7 +115,9 @@ function Recipe({
                   />
                 </g>
               )}
-              link={(props) => (
+            />
+            <SankeyChart.Links
+              render={(props) => (
                 <SankeyLink
                   {...props}
                   material={material}
@@ -123,10 +130,8 @@ function Recipe({
                   }
                 />
               )}
-            >
-              <Tooltip />
-            </SankeyChart>
-          </ResponsiveContainer>
+            />
+          </SankeyChart>
         </div>
       </section>
       <p role="status">
@@ -170,7 +175,14 @@ function App() {
               : { nodes: data.nodes, links: data.links.filter((link) => link.id === "reserve") }
           }
           animate
-        />
+          config={nodeConfig}
+          aria-label="Chart fixture"
+        >
+          {null}
+          {/* Explicit renderer ownership belongs to the family parts. */}
+          <SankeyChart.Nodes></SankeyChart.Nodes>
+          <SankeyChart.Links></SankeyChart.Links>
+        </SankeyChart>
         <SankeyTable
           data={
             empty

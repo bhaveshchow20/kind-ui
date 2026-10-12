@@ -1,4 +1,3 @@
-// Host composition only; the installed tarball owns all chart behavior.
 import * as Chart from "@kind-ui/charts";
 import { Cell, Label, LabelList, type PieSectorShapeProps, Sector } from "@kind-ui/charts";
 import { useCallback, useMemo, useState } from "react";
@@ -35,11 +34,10 @@ export function PinnedPieHost({
   const [generation, setGeneration] = useState(0);
   const [override, setOverride] = useState(false);
   const [nativeIndex, setNativeIndex] = useState(false);
-  const [visible, setVisible] = useState<string[] | undefined>(
-    bound ? ["beta", "zero", "missing"] : undefined,
+  const [visible, setVisible] = useState<string[]>(
+    bound ? ["beta", "zero", "missing"] : Object.keys(config),
   );
-  const rootProps: Chart.RootProps =
-    visible === undefined ? { config } : { config, visibleSeries: visible };
+  const visibilityProps = { visibleSeries: visible };
   return (
     <main>
       <button type="button" onClick={() => setData((rows) => [...rows].reverse())}>
@@ -66,14 +64,14 @@ export function PinnedPieHost({
       <button type="button" onClick={() => setVisible(["alpha"])}>
         Filter pin
       </button>
-      <button type="button" onClick={() => setVisible(undefined)}>
+      <button type="button" onClick={() => setVisible(Object.keys(config))}>
         Show pin
       </button>
       <button type="button" onClick={() => setData([...original, { id: "beta", value: 5 }])}>
         Duplicate pin
       </button>
-      <Chart.Root
-        {...rootProps}
+      <Chart.PieChart
+        {...visibilityProps}
         {...(bound
           ? {
               interaction: {
@@ -82,29 +80,26 @@ export function PinnedPieHost({
               },
             }
           : {})}
+        key={generation}
+        width={320}
+        height={300}
+        defaultPinnedCategory={category}
+        aria-label="Initial pinned pie"
+        accessibilityLayer
+        config={config}
       >
-        <Chart.PieChart
-          key={generation}
-          width={320}
-          height={300}
-          defaultPinnedCategory={category}
-          aria-label="Initial pinned pie"
-          accessibilityLayer
-        >
-          <Chart.PieSeries
-            data={data}
-            categoryKey={accessor ? (row) => row.id : "id"}
-            dataKey="value"
-            nameKey="id"
-            interactionBinding={bound ? "root" : undefined}
-          />
-          <Chart.Tooltip
-            itemKey={identity}
-            {...(override ? { active: false } : {})}
-            {...(nativeIndex ? { defaultIndex: 0 } : {})}
-          />
-        </Chart.PieChart>
-      </Chart.Root>
+        <Chart.PieSeries
+          data={data}
+          categoryKey={accessor ? (row) => row.id : "id"}
+          dataKey="value"
+          nameKey="id"
+        />
+        <Chart.Tooltip
+          itemKey={identity}
+          {...(override ? { active: false } : {})}
+          {...(nativeIndex ? { defaultIndex: 0 } : {})}
+        />
+      </Chart.PieChart>
       <table>
         <caption>Pinned allocation</caption>
         <tbody>
@@ -280,87 +275,82 @@ export function PieHost() {
       <output aria-label="Events">
         {clicked}/{moved}
       </output>
-      <Chart.Root
+      <button
+        type="button"
+        onClick={() => setDirection(direction === "clockwise" ? "anticlockwise" : "clockwise")}
+      >
+        Direction
+      </button>
+      <style>{".owned-pie-transform { transform: translate(8px, 4px); }"}</style>
+      <Chart.PieChart
         interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
         config={config}
         visibleSeries={visible}
         onVisibleSeriesChange={setVisible}
+        animate={animate}
+        animationDirection={direction}
+        width={small ? 220 : 480}
+        height={300}
+        ref={ref}
+        aria-label="Packed pie chart"
+        layout="centric"
+        onMouseMove={() => setMoved((v) => v + 1)}
       >
-        <Chart.Legend />
-        <button
-          type="button"
-          onClick={() => setDirection(direction === "clockwise" ? "anticlockwise" : "clockwise")}
+        <Chart.PieSeries
+          material={material}
+          data={data}
+          dataKey="value"
+          nameKey="id"
+          innerRadius={donut ? "45%" : 0}
+          outerRadius="75%"
+          startAngle={new URLSearchParams(location.search).has("positive") ? 0 : angles ? 180 : 90}
+          endAngle={
+            new URLSearchParams(location.search).has("positive")
+              ? angles
+                ? 180
+                : 360
+              : angles
+                ? 0
+                : -270
+          }
+          paddingAngle={0}
+          cornerRadius={3}
+          hide={hidden}
+          {...(custom ? { shape: CustomShape } : {})}
+          onClick={(row) => setClicked(String(row.payload.id))}
         >
-          Direction
-        </button>
-        <style>{".owned-pie-transform { transform: translate(8px, 4px); }"}</style>
-        <Chart.PieChart
-          animate={animate}
-          animationDirection={direction}
-          width={small ? 220 : 480}
-          height={300}
-          ref={ref}
-          aria-label="Packed pie chart"
-          layout="centric"
-          onMouseMove={() => setMoved((v) => v + 1)}
-        >
-          <Chart.PieSeries
-            material={material}
-            data={data}
-            dataKey="value"
-            nameKey="id"
-            innerRadius={donut ? "45%" : 0}
-            outerRadius="75%"
-            startAngle={
-              new URLSearchParams(location.search).has("positive") ? 0 : angles ? 180 : 90
-            }
-            endAngle={
-              new URLSearchParams(location.search).has("positive")
-                ? angles
-                  ? 180
-                  : 360
-                : angles
-                  ? 0
-                  : -270
-            }
-            paddingAngle={0}
-            cornerRadius={3}
-            hide={hidden}
-            {...(custom ? { shape: CustomShape } : {})}
-            onClick={(row) => setClicked(String(row.payload.id))}
-          >
-            {data.map((row) => (
-              <Cell
-                key={row.id}
-                className={
-                  new URLSearchParams(location.search).has("css-transform")
-                    ? "owned-pie-transform"
-                    : undefined
-                }
-                fill={`var(--color-${row.id})`}
-              />
-            ))}
-            <LabelList dataKey="id" position="outside" />
-            {donut && <Label position="center" value="Seats" />}
-          </Chart.PieSeries>
-          <Chart.Tooltip
-            itemKey={identity}
-            ref={tooltipRef}
-            {...(customContent ? { content: <CustomContent /> } : {})}
-          />
-        </Chart.PieChart>
-        <table>
-          <caption>Category values</caption>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.id}>
-                <th>{row.id}</th>
-                <td>{row.value === null ? "No data" : row.value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Chart.Root>
+          {data.map((row) => (
+            <Cell
+              key={row.id}
+              className={
+                new URLSearchParams(location.search).has("css-transform")
+                  ? "owned-pie-transform"
+                  : undefined
+              }
+              fill={`var(--color-${row.id})`}
+            />
+          ))}
+          <LabelList dataKey="id" position="outside" />
+          {donut && <Label position="center" value="Seats" />}
+        </Chart.PieSeries>
+        <Chart.Tooltip
+          itemKey={identity}
+          ref={tooltipRef}
+          {...(customContent ? { content: <CustomContent /> } : {})}
+        />
+        <Chart.PieChart.Legend />
+      </Chart.PieChart>
+      <table>
+        <caption>Category values</caption>
+        <tbody>
+          {data.map((row) => (
+            <tr key={row.id}>
+              <th>{row.id}</th>
+              <td>{row.value === null ? "No data" : row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
       {new URLSearchParams(window.location.search).has("multi") && nativeComposition}
       {new URLSearchParams(window.location.search).has("cells") && <CellHost />}
       {new URLSearchParams(window.location.search).has("oracle") && <ContinuityHost />}
@@ -375,8 +365,9 @@ export const rejectedEngineTween: Chart.PieSeriesProps = {
 
 // Native extensions typecheck against the installed declarations, not a workspace source link.
 export const nativeComposition = (
-  <Chart.Root config={config}>
+  <>
     <Chart.PieChart
+      config={config}
       data={original}
       width={360}
       height={300}
@@ -402,7 +393,7 @@ export const nativeComposition = (
       </Chart.PieSeries>
       <Chart.Tooltip itemKey={identity} trigger="click" />
     </Chart.PieChart>
-  </Chart.Root>
+  </>
 );
 type AllocationRow = { id: string; value: number | null };
 export const typedPie: Chart.PieSeriesProps<AllocationRow, number | null> = {
@@ -424,23 +415,22 @@ function CellHost() {
       <button type="button" onClick={() => setCount(count + 1)}>
         Unchanged Cells {count}
       </button>
-      <Chart.Root config={config}>
-        <Chart.PieChart
-          width={360}
-          height={280}
-          animate={{ revealDurationMs: 2000 }}
-          aria-label="Cell data chart"
-        >
-          <Chart.PieSeries dataKey="value" nameKey="id" outerRadius={100}>
-            {/* biome-ignore lint/complexity/noUselessFragments: Preserve fragment-wrapped Cell discovery regression coverage. */}
-            <>
-              <Cell {...{ id: "alpha", value: updated ? 20 : 60 }} fill="var(--color-alpha)" />
-              <Cell {...{ id: "beta", value: 40 }} fill="var(--color-beta)" />
-            </>
-          </Chart.PieSeries>
-          <Chart.Tooltip itemKey={identity} />
-        </Chart.PieChart>
-      </Chart.Root>
+      <Chart.PieChart
+        config={config}
+        width={360}
+        height={280}
+        animate={{ revealDurationMs: 2000 }}
+        aria-label="Cell data chart"
+      >
+        <Chart.PieSeries dataKey="value" nameKey="id" outerRadius={100}>
+          {/* biome-ignore lint/complexity/noUselessFragments: Preserve fragment-wrapped Cell discovery regression coverage. */}
+          <>
+            <Cell {...{ id: "alpha", value: updated ? 20 : 60 }} fill="var(--color-alpha)" />
+            <Cell {...{ id: "beta", value: 40 }} fill="var(--color-beta)" />
+          </>
+        </Chart.PieSeries>
+        <Chart.Tooltip itemKey={identity} />
+      </Chart.PieChart>
     </section>
   );
 }
@@ -600,8 +590,8 @@ function ContinuityHost() {
       <output aria-label="Oracle state">
         {scenario}/{String(included)}/{String(donut)}/{String(gaps)}/{String(rings)}
       </output>
-      <Chart.Root config={config} style={{ position: "relative", width: 300, background: "white" }}>
-        <Chart.PieChart width={300} height={280} aria-label="Kind continuity">
+      <div data-pie-oracle-frame style={{ position: "relative", width: 300, background: "white" }}>
+        <Chart.PieChart config={config} width={300} height={280} aria-label="Kind continuity">
           <defs>
             <clipPath id="host-clip">
               <rect x={120} y={0} width={30} height={1000} />
@@ -650,7 +640,7 @@ function ContinuityHost() {
           )}
           <NativeTooltip isAnimationActive={false} />
         </NativePieChart>
-      </Chart.Root>
+      </div>
     </section>
   );
 }
@@ -674,8 +664,10 @@ export function MaterialGallery() {
                     {mono ? "Mono" : "Pink"} {donut ? "donut" : "pie"}
                   </h3>
                   {[300, 180].map((width) => (
-                    <Chart.Root key={width} config={{}}>
+                    <>
                       <Chart.PieChart
+                        key={width}
+                        config={{}}
                         width={width}
                         height={width}
                         animate={false}
@@ -696,7 +688,7 @@ export function MaterialGallery() {
                           ))}
                         </Chart.PieSeries>
                       </Chart.PieChart>
-                    </Chart.Root>
+                    </>
                   ))}
                 </article>
               )),
@@ -766,12 +758,11 @@ export function SelectiveGlowHost({ accessor = false }: { accessor?: boolean }) 
       </label>
       <output aria-label="Glow event">{clicked}</output>
       {[0, 1].map((chart) => (
-        <Chart.Root
-          key={chart}
-          config={selectiveConfig}
-          style={{ background: dark ? "#111827" : "white" }}
-        >
+        <>
           <Chart.PieChart
+            key={chart}
+            config={selectiveConfig}
+            frameProps={{ style: { background: dark ? "#111827" : "white" } }}
             width={320}
             height={300}
             animate={false}
@@ -806,7 +797,7 @@ export function SelectiveGlowHost({ accessor = false }: { accessor?: boolean }) 
             ))}
             <Chart.Tooltip itemKey={identity} />
           </Chart.PieChart>
-        </Chart.Root>
+        </>
       ))}
       <table>
         <caption>Glow allocation</caption>
@@ -844,7 +835,7 @@ export function CellIdentityPieHost({ accessor = false }: { accessor?: boolean }
       <output aria-label="Shared category">{selected ?? "none"}</output>
       <output aria-label="Native events">{nativeEvents}</output>
       <output aria-label="Native payload">{nativePayload}</output>
-      <Chart.Root
+      <Chart.PieChart
         config={config}
         visibleSeries={visible}
         interaction={{
@@ -855,33 +846,33 @@ export function CellIdentityPieHost({ accessor = false }: { accessor?: boolean }
           selected,
           onSelectionChange: setSelected,
         }}
+        width={320}
+        height={300}
+        aria-label="Cell identity pie"
       >
-        <Chart.PieChart width={320} height={300} aria-label="Cell identity pie">
-          <Chart.PieSeries
-            data={data}
-            categoryKey={accessor ? (row) => row.id : "id"}
-            dataKey="value"
-            nameKey="id"
-            interactionBinding="root"
-            glowCategories={["beta"]}
-            onClick={(sector) => setNativePayload(String(sector.payload.id))}
-          >
-            {data.map((row) => (
-              <Chart.Cell
-                key={row.id}
-                id="alpha"
-                fill="#e11d48"
-                data-original-category={row.id}
-                onClick={(event) => {
-                  setNativeEvents((count) => count + 1);
-                  if (veto) event.preventDefault();
-                }}
-              />
-            ))}
-          </Chart.PieSeries>
-        </Chart.PieChart>
-        <Chart.Legend />
-      </Chart.Root>
+        <Chart.PieSeries
+          data={data}
+          categoryKey={accessor ? (row) => row.id : "id"}
+          dataKey="value"
+          nameKey="id"
+          glowCategories={["beta"]}
+          onClick={(sector) => setNativePayload(String(sector.payload.id))}
+        >
+          {data.map((row) => (
+            <Chart.Cell
+              key={row.id}
+              id="alpha"
+              fill="#e11d48"
+              data-original-category={row.id}
+              onClick={(event) => {
+                setNativeEvents((count) => count + 1);
+                if (veto) event.preventDefault();
+              }}
+            />
+          ))}
+        </Chart.PieSeries>
+        <Chart.PieChart.Legend />
+      </Chart.PieChart>
     </main>
   );
 }

@@ -19,7 +19,7 @@ export function PieHideFixture() {
   return (
     <>
       <section id="pie-pin-hidden">
-        <Chart.Root
+        <Chart.PieChart
           config={config}
           visibleSeries={["second", "third"]}
           interaction={{
@@ -28,42 +28,34 @@ export function PieHideFixture() {
             markActivation: "matching-legend",
             eligibleKeys: Object.keys(config),
           }}
+          aria-label="Chart fixture"
+          width={400}
+          height={300}
+          defaultPinnedCategory="second"
         >
-          <Chart.PieChart width={400} height={300} defaultPinnedCategory="second">
-            <Chart.PieSeries
-              data={rows}
-              dataKey="value"
-              nameKey="name"
-              categoryKey="id"
-              interactionBinding="root"
-            />
-            <Chart.Tooltip
-              content={(tooltip) => (
-                <output data-native-index={tooltip.activeIndex}>
-                  {tooltip.payload.map((entry) => `${entry.payload.id}:${entry.value}`).join(",")}
-                </output>
-              )}
-            />
-          </Chart.PieChart>
-        </Chart.Root>
+          <Chart.PieSeries data={rows} dataKey="value" nameKey="name" categoryKey="id" />
+          <Chart.Tooltip
+            content={(tooltip) => (
+              <output data-native-index={tooltip.activeIndex}>
+                {tooltip.payload.map((entry) => `${entry.payload.id}:${entry.value}`).join(",")}
+              </output>
+            )}
+          />
+        </Chart.PieChart>
       </section>
       <section id="pie-pin-default">
-        <Chart.Root
+        <Chart.PieChart
           config={config}
           visibleSeries={["second", "third"]}
           interaction={{ kind: "category", mode: "visibility", eligibleKeys: Object.keys(config) }}
+          aria-label="Chart fixture"
+          width={400}
+          height={300}
+          defaultPinnedCategory="second"
         >
-          <Chart.PieChart width={400} height={300} defaultPinnedCategory="second">
-            <Chart.PieSeries
-              data={rows}
-              dataKey="value"
-              nameKey="name"
-              categoryKey="id"
-              interactionBinding="root"
-            />
-            <Chart.Tooltip />
-          </Chart.PieChart>
-        </Chart.Root>
+          <Chart.PieSeries data={rows} dataKey="value" nameKey="name" categoryKey="id" />
+          <Chart.Tooltip />
+        </Chart.PieChart>
       </section>
       <section id="pie-hide">
         <button type="button" onClick={() => setWholeHidden(true)}>
@@ -79,7 +71,7 @@ export function PieHideFixture() {
           Restore pie categories
         </button>
         <output>{payload}</output>
-        <Chart.Root
+        <Chart.PieChart
           config={config}
           visibleSeries={visible}
           onVisibleSeriesChange={setVisible}
@@ -89,28 +81,25 @@ export function PieHideFixture() {
             markActivation: "matching-legend",
             eligibleKeys: Object.keys(config),
           }}
+          aria-label="Chart fixture"
+          width={400}
+          height={300}
+          animate={{ revealDurationMs: 2000, hoverTransition: { duration: 1, ease: "linear" } }}
+          defaultPinnedCategory="second"
         >
-          <Chart.PieChart
-            width={400}
-            height={300}
-            animate={{ revealDurationMs: 2000, hoverTransition: { duration: 1, ease: "linear" } }}
-            defaultPinnedCategory="second"
-          >
-            <Chart.PieSeries
-              hide={wholeHidden}
-              label
-              data={rows}
-              dataKey="value"
-              nameKey="name"
-              categoryKey="id"
-              interactionBinding="root"
-              outerRadius={100}
-              innerRadius={30}
-              onMouseEnter={(sector) => setPayload(`${sector.payload.id}:${sector.value}`)}
-            />
-            <Chart.Tooltip />
-          </Chart.PieChart>
-        </Chart.Root>
+          <Chart.PieSeries
+            hide={wholeHidden}
+            label
+            data={rows}
+            dataKey="value"
+            nameKey="name"
+            categoryKey="id"
+            outerRadius={100}
+            innerRadius={30}
+            onMouseEnter={(sector) => setPayload(`${sector.payload.id}:${sector.value}`)}
+          />
+          <Chart.Tooltip />
+        </Chart.PieChart>
       </section>
     </>
   );

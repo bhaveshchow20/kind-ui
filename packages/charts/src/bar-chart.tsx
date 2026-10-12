@@ -7,13 +7,13 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { BarChart as EngineBarChart } from "recharts";
 import { type BaseAnimation, MotionContext } from "./animation.js";
 import { BarCategoryBoundary } from "./bar-category.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { CartesianLoadingDesign } from "./loading-cartesian-designs.js";
+import { defaultHover, useReducedMotion } from "./motion-preference.js";
 
 export type BarAnimation = BaseAnimation;
 export type BarChartProps = ComponentProps<typeof EngineBarChart> & {
@@ -32,15 +32,6 @@ export const BarMotion = createContext<{
   options: {},
   finish: () => {},
 });
-const query = "(prefers-reduced-motion: reduce)";
-function subscribe(change: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener("change", change);
-  return () => media.removeEventListener("change", change);
-}
-const snapshot = () => window.matchMedia(query).matches;
-const serverSnapshot = () => true;
-const defaultHover = { type: "spring", stiffness: 210, damping: 28, mass: 0.8 } as const;
 
 // Chart layout props may move bars without changing the plot or numeric zero.
 export function BarLifecycle({
@@ -77,7 +68,7 @@ export function BarChartImplementation({
     children,
     ...props
   } = chartProps;
-  const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const reduced = useReducedMotion();
   const [interacted, setInteracted] = useState(false);
   const finish = useCallback(() => {
     if (!loading) setInteracted(true);

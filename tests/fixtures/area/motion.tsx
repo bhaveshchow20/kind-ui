@@ -16,7 +16,7 @@ function App() {
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [defaults, setDefaults] = useState(false);
-  const props: Motion.AreaChartProps = {
+  const props: Pick<Motion.AreaChartProps, "animate" | "loading"> = {
     ...(loading ? { loading: true } : {}),
     animate: enabled
       ? defaults

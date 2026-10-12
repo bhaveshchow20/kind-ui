@@ -85,7 +85,11 @@ function Host() {
     tick: { fontFamily: params.has("webfont") ? "Entrance Font" : serif ? "serif" : "sans-serif" },
     tickFormatter: (value: unknown) => (long ? `${value} fulfilled orders` : String(value)),
   } as const;
-  const chartProps = { animate: animation, "aria-label": "Entrance proof" };
+  const chartProps = {
+    height: 240,
+    animate: animation,
+    "aria-label": "Entrance proof",
+  };
   const axes = (
     <>
       <Chart.XAxis
@@ -118,50 +122,79 @@ function Host() {
         </button>
       ))}
       <div style={{ width: collapsed ? 0 : "100%" }}>
-        {active && (
-          <Chart.Root
-            interaction={{ kind: "series", mode: "visibility", eligibleKeys: Object.keys(config) }}
-            key={replay}
-            config={config}
-            visibleSeries={shown ? visible : hidden}
-          >
-            <Chart.ResponsiveContainer width="100%" height={240}>
-              {family === "histogram" ? (
-                <Chart.HistogramChart
-                  {...chartProps}
-                  bins={histogramBins}
-                  measure="count"
-                  yAxisProps={yAxisProps}
-                >
-                  <Chart.HistogramSeries seriesKey="orders" />
-                  <GeometryProbe />
-                </Chart.HistogramChart>
-              ) : family === "box" ? (
-                <Chart.BoxPlotChart {...chartProps} data={data}>
-                  {axes}
-                  <Chart.BoxPlotSeries dataKey="summary" seriesKey="orders" />
-                  <GeometryProbe />
-                </Chart.BoxPlotChart>
-              ) : family === "waterfall" ? (
-                <Chart.WaterfallChart {...chartProps} data={bridge}>
-                  {axes}
-                  <Chart.WaterfallSeries seriesKey="orders" />
-                  <GeometryProbe />
-                </Chart.WaterfallChart>
-              ) : (
-                <Chart.BarChart
-                  {...chartProps}
-                  data={data}
-                  layout={horizontal ? "vertical" : "horizontal"}
-                >
-                  {axes}
-                  <Chart.BarSeries dataKey="orders" />
-                  <GeometryProbe />
-                </Chart.BarChart>
-              )}
-            </Chart.ResponsiveContainer>
-          </Chart.Root>
-        )}
+        {active &&
+          (family === "histogram" ? (
+            <Chart.HistogramChart
+              interaction={{
+                kind: "series",
+                mode: "visibility",
+                eligibleKeys: Object.keys(config),
+              }}
+              key={replay}
+              config={config}
+              visibleSeries={shown ? visible : hidden}
+              {...chartProps}
+              bins={histogramBins}
+              measure="count"
+            >
+              <Chart.HistogramChart.XAxis />
+              <Chart.HistogramChart.YAxis {...yAxisProps} />
+              <Chart.HistogramSeries seriesKey="orders" />
+              <GeometryProbe />
+            </Chart.HistogramChart>
+          ) : family === "box" ? (
+            <Chart.BoxPlotChart
+              interaction={{
+                kind: "series",
+                mode: "visibility",
+                eligibleKeys: Object.keys(config),
+              }}
+              key={replay}
+              config={config}
+              visibleSeries={shown ? visible : hidden}
+              {...chartProps}
+              data={data}
+            >
+              {axes}
+              <Chart.BoxPlotSeries dataKey="summary" seriesKey="orders" />
+              <GeometryProbe />
+            </Chart.BoxPlotChart>
+          ) : family === "waterfall" ? (
+            <Chart.WaterfallChart
+              interaction={{
+                kind: "series",
+                mode: "visibility",
+                eligibleKeys: Object.keys(config),
+              }}
+              key={replay}
+              config={config}
+              visibleSeries={shown ? visible : hidden}
+              {...chartProps}
+              data={bridge}
+            >
+              {axes}
+              <Chart.WaterfallSeries seriesKey="orders" />
+              <GeometryProbe />
+            </Chart.WaterfallChart>
+          ) : (
+            <Chart.BarChart
+              interaction={{
+                kind: "series",
+                mode: "visibility",
+                eligibleKeys: Object.keys(config),
+              }}
+              key={replay}
+              config={config}
+              visibleSeries={shown ? visible : hidden}
+              {...chartProps}
+              data={data}
+              layout={horizontal ? "vertical" : "horizontal"}
+            >
+              {axes}
+              <Chart.BarSeries dataKey="orders" />
+              <GeometryProbe />
+            </Chart.BarChart>
+          ))}
       </div>
     </main>
   );

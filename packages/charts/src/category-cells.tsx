@@ -32,7 +32,7 @@ export function categoryCells<Row>(
           ? row[categoryKey]
           : undefined;
     if (typeof key !== "string" || !Object.hasOwn(config, key))
-      throw new Error("categoryKey must resolve to a string key in Root.config for every row");
+      throw new Error("categoryKey must resolve to a string key in chart config for every row");
     const datumFill =
       row !== null && typeof row === "object" && "fill" in row ? row.fill : undefined;
     return fill === undefined && datumFill === undefined ? paints[key] : undefined;
@@ -77,12 +77,12 @@ export function filterCategoryRows<Row>(
           ? row[categoryKey]
           : undefined;
     if (typeof key !== "string" || !key)
-      throw new Error("Root interaction binding requires stable string category keys");
+      throw new Error("chart interaction binding requires stable string category keys");
     return key;
   };
   const keys = data.map(keyOf);
   if (new Set(keys).size !== keys.length)
-    throw new Error("Root interaction binding requires unique category keys");
+    throw new Error("chart interaction binding requires unique category keys");
   const keep = keys.map((key) => visible === undefined || visible.includes(key));
   let index = 0;
   function filter(parts: ReactNode): ReactNode {

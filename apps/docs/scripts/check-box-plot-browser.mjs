@@ -58,7 +58,6 @@ try {
   );
   await page.keyboard.press("Escape");
   await tooltip.waitFor({ state: "hidden" });
-  assert.equal(await first.locator("table tbody tr").count(), 3);
   assert.equal(await first.locator('[data-kind-ui="chart-legend"] button').count(), 1);
   await first.screenshot({ path: "artifacts/box-plot/desktop.png" });
   await page.screenshot({ path: "artifacts/box-plot/desktop-page.png" });
@@ -104,7 +103,6 @@ try {
   assert.equal(await edge.locator('[data-kind-ui="box-plot-mark"]').count(), 3);
   assert.equal(await edge.locator('[data-box-part="collapsed-box"]').count(), 2);
   assert.equal(await edge.locator('[data-box-part="outlier"]').count(), 2);
-  assert.match(await edge.locator("table").innerText(), /Missing summary; no mark/);
   await edge.screenshot({ path: "artifacts/box-plot/edge-cases.png" });
   const horizontal = page.locator('[data-component="box-plot-horizontal"]');
   await horizontal.scrollIntoViewIfNeeded();

@@ -60,8 +60,10 @@ test("all public families show decorative skeletons and suspend chart inspection
     await expect(skeleton).toHaveAttribute("data-loading-motion", motions[family] ?? "");
     await expect(skeleton).toHaveAttribute("aria-hidden", "true");
     await expect(skeleton).toBeVisible();
-    await expect(card.locator('[aria-busy="true"]')).toHaveCount(1);
-    await expect(card.locator("[inert]")).toHaveCount(1);
+    await expect(card.locator('[data-kind-ui="chart-parts"]')).toBeHidden();
+    await expect(card.locator("[data-loading-content]:visible")).toHaveCount(0);
+    await expect(card.locator('[aria-busy="true"]')).toHaveCount(family === "sankey" ? 2 : 1);
+    await expect(card.locator("[inert]")).toHaveCount(family === "sankey" ? 2 : 1);
     await expect(card.locator('[data-kind-ui="chart-loading-status"]')).toHaveCSS(
       "position",
       "absolute",
@@ -72,6 +74,7 @@ test("all public families show decorative skeletons and suspend chart inspection
     );
     expect((await skeleton.boundingBox())?.height).toBeGreaterThan(40);
   }
+  await expect(page.locator('[data-kind-ui="heatmap-data-table"]')).toBeHidden();
   await expect(page.getByRole("application")).toHaveCount(0);
   await expect(page.locator('[data-kind-ui="tooltip-frame"]:visible')).toHaveCount(0);
   await page.getByRole("button", { name: "Load data" }).click();
@@ -79,6 +82,12 @@ test("all public families show decorative skeletons and suspend chart inspection
   await expect(page.locator("[inert]")).toHaveCount(0);
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await expect(page.locator("[data-preview-status]")).toHaveText("Loaded: actual data");
+  for (const family of families) {
+    await expect(
+      page.locator(`[data-family-card="${family}"] [data-kind-ui="chart-parts"]`),
+    ).toBeVisible();
+  }
+  await expect(page.locator('[data-kind-ui="heatmap-data-table"]')).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -123,7 +132,9 @@ test("release, repeated interruptions and empty results preserve layout and cons
   await chart.evaluate((element) => element.setAttribute("data-preserved", "yes"));
   await page.getByRole("button", { name: "Load data" }).click();
   await expect(chart).toHaveAttribute("data-preserved", "yes");
-  expect(await chart.boundingBox()).toEqual(box);
+  const loadedBox = await chart.boundingBox();
+  expect(loadedBox?.width).toBe(box?.width);
+  expect(loadedBox?.height).toBe(box?.height);
   await chart.click({ position: { x: 150, y: 100 } });
   await expect(card.locator("output")).toHaveText("1");
   const legend = card.locator('[data-kind-ui="chart-legend-button"]').first();
@@ -132,12 +143,15 @@ test("release, repeated interruptions and empty results preserve layout and cons
   await expect(card.locator(".recharts-bar-rectangle path")).not.toHaveCount(0);
   await page.getByRole("checkbox", { name: "Visible sales bars" }).uncheck();
   await expect(legend).toHaveAttribute("aria-pressed", "false");
+  await card.getByRole("textbox", { name: "Chart note" }).fill("Consumer note");
   for (let i = 0; i < 3; i++) {
     await page.getByRole("button", { name: "Replay loading" }).click();
     await expect(page.locator(skeletonSelector)).toHaveCount(14);
-    await expect(legend).toHaveAttribute("aria-pressed", "false");
+    await expect(legend).toBeHidden();
     await page.getByRole("button", { name: "Load data" }).click();
     await expect(page.locator(skeletonSelector)).toHaveCount(0);
+    await expect(legend).toHaveAttribute("aria-pressed", "false");
+    await expect(card.getByRole("textbox", { name: "Chart note" })).toHaveValue("Consumer note");
   }
   await page.getByRole("checkbox", { name: "Empty input data" }).check();
   await expect(page.locator("article .empty-note")).toHaveCount(14);
@@ -236,15 +250,33 @@ test("Sankey and short Heatmap retain native bounds through loading and replay",
   expect(flowBounds?.height).toBe(260);
   expect(hostBounds?.height).toBe(flowBounds?.height);
   expect(placeholderBounds?.height).toBeLessThanOrEqual(gridBounds?.height ?? 0);
+  // Legends above these cards reappear on release, moving their page positions.
+  // Native geometry must retain its dimensions and position inside its own chart frame.
+  const relativeBounds = (locator: Locator) =>
+    locator.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const frame = element.closest('[data-kind-ui="chart"]')?.getBoundingClientRect();
+      if (!frame) throw new Error("Missing chart frame");
+      return {
+        width: bounds.width,
+        height: bounds.height,
+        x: bounds.x - frame.x,
+        y: bounds.y - frame.y,
+      };
+    });
+  const originalFlow = await relativeBounds(flow);
+  const originalHost = await relativeBounds(sankey);
+  const originalGrid = await relativeBounds(heatmap);
+  const originalSkeleton = await relativeBounds(heatSkeleton);
   await page.getByRole("button", { name: "Load data" }).click();
-  expect(await flow.boundingBox()).toEqual(flowBounds);
-  expect(await sankey.boundingBox()).toEqual(hostBounds);
-  expect(await heatmap.boundingBox()).toEqual(gridBounds);
+  expect(await relativeBounds(flow)).toEqual(originalFlow);
+  expect(await relativeBounds(sankey)).toEqual(originalHost);
+  expect(await relativeBounds(heatmap)).toEqual(originalGrid);
   await page.getByRole("button", { name: "Replay loading" }).click();
-  expect(await flow.boundingBox()).toEqual(flowBounds);
-  expect(await sankey.boundingBox()).toEqual(hostBounds);
-  expect(await heatmap.boundingBox()).toEqual(gridBounds);
-  expect(await heatSkeleton.boundingBox()).toEqual(placeholderBounds);
+  expect(await relativeBounds(flow)).toEqual(originalFlow);
+  expect(await relativeBounds(sankey)).toEqual(originalHost);
+  expect(await relativeBounds(heatmap)).toEqual(originalGrid);
+  expect(await relativeBounds(heatSkeleton)).toEqual(originalSkeleton);
 });
 
 test("three normal-speed pulses give pulse-based families visibly distinct geometry at invisible boundaries", async ({

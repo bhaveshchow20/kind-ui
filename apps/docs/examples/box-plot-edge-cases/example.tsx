@@ -1,7 +1,7 @@
 "use client";
-import * as Chart from "@kind-ui/charts";
+import { BoxPlotChart, type BoxPlotSummary, type SeriesConfig } from "@kind-ui/charts";
 
-type Row = { period: string; summary: Chart.BoxPlotSummary | null };
+type Row = { period: string; summary: BoxPlotSummary | null };
 const data: Row[] = [
   { period: "Stable", summary: { lowerWhisker: 5, q1: 5, median: 5, q3: 5, upperWhisker: 5 } },
   { period: "Zero", summary: { lowerWhisker: 0, q1: 0, median: 0, q3: 0, upperWhisker: 0 } },
@@ -13,21 +13,25 @@ const data: Row[] = [
 ];
 const config = {
   change: { label: "Change · percentage points", color: "#16756c" },
-} satisfies Chart.SeriesConfig;
+} satisfies SeriesConfig;
 
 export function EdgeCaseBoxPlot() {
   return (
-    <Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
-      <Chart.Legend />
-      <Chart.ResponsiveContainer width="100%" height={280}>
-        <Chart.BoxPlotChart
+    <>
+      <>
+        <BoxPlotChart
+          legendPosition="top"
+          config={config}
+          defaultVisibleSeries={Object.keys(config)}
+          width="100%"
+          height={280}
           data={data}
           animate
           accessibilityLayer
           aria-label="Collapsed, zero, missing and variable distributions"
           margin={{ top: 20, right: 24, bottom: 8, left: 0 }}
         >
-          <Chart.XAxis
+          <BoxPlotChart.XAxis
             dataKey="period"
             axisLine={false}
             tickLine={false}
@@ -36,21 +40,22 @@ export function EdgeCaseBoxPlot() {
             interval={0}
             tick={{ fontSize: 11 }}
           />
-          <Chart.YAxis
+          <BoxPlotChart.YAxis
             type="number"
             domain={[-25, 30]}
             axisLine={false}
             tickLine={false}
             tickMargin={8}
             width={72}
+            tick={{ fill: "#666" }}
           />
-          <Chart.BoxPlotSeries<Row>
+          <BoxPlotChart.Series<Row>
             dataKey="summary"
             seriesKey="change"
             barSize={28}
             strokeWidth={2.5}
           />
-          <Chart.Tooltip
+          <BoxPlotChart.Tooltip
             maxWidth={220}
             content={({ active, payload, label }) => {
               const row = payload?.[0]?.payload as Row | undefined;
@@ -152,8 +157,9 @@ export function EdgeCaseBoxPlot() {
               );
             }}
           />
-        </Chart.BoxPlotChart>
-      </Chart.ResponsiveContainer>
-    </Chart.Root>
+          <BoxPlotChart.Legend />
+        </BoxPlotChart>
+      </>
+    </>
   );
 }

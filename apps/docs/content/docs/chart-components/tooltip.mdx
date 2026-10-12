@@ -3,7 +3,7 @@ title: Tooltip
 description: Show labels and formatted values for the inspected chart item.
 ---
 
-`Tooltip` uses [series metadata](/docs/chart-components/series-config/) and stays within the plot bounds. Add it inside the chart, within [Root](/docs/chart-components/root/).
+Each family’s `Tooltip` part uses [series metadata](/docs/chart-components/series-config/) and stays within the plot bounds. Add it inside the chart, within [Chart frame](/docs/chart-components/chart/).
 
 Inspect a daily response time to see Tooltip display the configured label and milliseconds.
 
@@ -12,7 +12,9 @@ Inspect a daily response time to see Tooltip display the configured label and mi
 ## Usage
 
 ```tsx
-<Chart.Tooltip />
+import { LineChart } from "@kind-ui/charts";
+
+<LineChart.Tooltip />
 ```
 
 The tooltip keeps original labels, values and order when data is dimmed or hidden, and dims inactive entries. Hidden marks do not accept pointer inspection; inspecting active data retains the full native tooltip payload. Press Escape to dismiss inspection. Keyboard inspection support varies by chart family.
@@ -22,9 +24,11 @@ The tooltip keeps original labels, values and order when data is dimmed or hidde
 Use `TooltipContent` to keep Kind's labels and formatting in a custom content callback. Pass the complete callback payload through its `tooltip` prop.
 
 ```tsx
-<Chart.Tooltip
+import { LineChart, TooltipContent } from "@kind-ui/charts";
+
+<LineChart.Tooltip
   content={(tooltip) => (
-    <Chart.TooltipContent tooltip={tooltip} indicator="dot" hideLabel />
+    <TooltipContent tooltip={tooltip} indicator="dot" hideLabel />
   )}
 />
 ```
