@@ -27,6 +27,9 @@
     "docs/scripts/verify-pinned-package.mjs",
     "showcase/postcss.config.mjs",
     "docs/lib/component-bundles.server.mjs",
-    "docs/scripts/prepare-package.mjs"
+    "docs/scripts/prepare-package.mjs",
+    "docs/lib/chart-installation.mjs",
+    "showcase/scripts/domain-root.mjs",
+    "showcase/scripts/prepare-hosting.mjs"
   ]
 }

@@ -4,7 +4,7 @@ Original docs source and adaptations of Kind UI examples use this repository's M
 
 | Dependency | Pinned version | License |
 | --- | --- | --- |
-| @kind-ui/charts | 0.4.0, guarded 5c43b89 artifact | MIT |
+| @kind-ui/charts | 0.5.0, guarded 4eff029 artifact | MIT |
 | Fumadocs core and UI | 16.15.18 | MIT |
 | Fumadocs MDX | 15.4.6 | MIT |
 | Fumadocs TypeScript generator | 5.4.1 | MIT |

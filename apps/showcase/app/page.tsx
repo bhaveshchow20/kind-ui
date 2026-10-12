@@ -595,15 +595,46 @@ function DocumentationSearch() {
   );
 }
 
-const installCommands = {
-  npm: "npm install @kind-ui/charts",
-  pnpm: "pnpm add @kind-ui/charts",
-  yarn: "yarn add @kind-ui/charts",
-  bun: "bun add @kind-ui/charts",
+const coreInstallCommands = {
+  npm: "npm install @kind-ui/charts@0.5.0",
+  pnpm: "pnpm add @kind-ui/charts@0.5.0",
+  yarn: "yarn add @kind-ui/charts@0.5.0",
+  bun: "bun add @kind-ui/charts@0.5.0",
 };
-type PackageManager = keyof typeof installCommands;
+const cliInstallCommands = {
+  npm: "npx shadcn@latest add @kind-ui/line-chart",
+  pnpm: "pnpm dlx shadcn@latest add @kind-ui/line-chart",
+  yarn: "yarn dlx shadcn@latest add @kind-ui/line-chart",
+  bun: "bunx --bun shadcn@latest add @kind-ui/line-chart",
+};
+type PackageManager = keyof typeof coreInstallCommands;
+type InstallMethod = "core" | "cli";
 
 function InstallSection() {
+  const [method, setMethod] = useState<InstallMethod>("core");
+  return (
+    <section className="install-section" aria-label="Install Kind UI Charts">
+      <Tabs value={method} onValueChange={(value) => setMethod(value as InstallMethod)}>
+        <TabsList
+          className="install-manager-tabs install-method-tabs"
+          aria-label="Installation method"
+        >
+          <TabsTrigger value="core">Core</TabsTrigger>
+          <TabsTrigger value="cli">CLI</TabsTrigger>
+        </TabsList>
+        <TabsContent value="core">
+          <InstallCommands method="core" />
+        </TabsContent>
+        <TabsContent value="cli">
+          <InstallCommands method="cli" />
+        </TabsContent>
+      </Tabs>
+    </section>
+  );
+}
+
+function InstallCommands({ method }: { method: InstallMethod }) {
+  const installCommands = method === "core" ? coreInstallCommands : cliInstallCommands;
   const [manager, setManager] = useState<PackageManager>("npm");
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
@@ -631,7 +662,7 @@ function InstallSection() {
     }
   }
   return (
-    <section className="install-section" aria-label="Install Kind UI Charts">
+    <>
       <Tabs
         className="install-panel"
         value={manager}
@@ -663,13 +694,15 @@ function InstallSection() {
         </div>
         {(Object.keys(installCommands) as PackageManager[]).map((key) => (
           <TabsContent key={key} value={key} className="install-panel-content">
-            <code>
+            <code data-install={method}>
               <span className="install-prompt" aria-hidden="true">
                 ${" "}
               </span>
-              <span className="install-tool">{key}</span>
-              {key === "npm" ? " install " : " add "}
-              <span className="install-package">@kind-ui/charts</span>
+              <span className="install-tool">{installCommands[key].split(" ")[0]}</span>{" "}
+              {installCommands[key].split(" ").slice(1, -1).join(" ")}{" "}
+              <span className="install-package">
+                {method === "core" ? "@kind-ui/charts@0.5.0" : "@kind-ui/line-chart"}
+              </span>
             </code>
           </TabsContent>
         ))}
@@ -681,7 +714,7 @@ function InstallSection() {
             ? "Could not copy. Select the command to copy manually."
             : ""}
       </span>
-    </section>
+    </>
   );
 }
 

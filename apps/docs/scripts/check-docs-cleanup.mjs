@@ -113,10 +113,12 @@ try {
           .locator(id === "heatmap" ? "[role=grid]" : "svg.recharts-surface")
           .first()
           .waitFor();
+        const sections = page.locator(".doc-body > h2");
         assert.ok(
-          (await page.locator(".doc-body > h2").first().innerText()).startsWith("Usage"),
-          `${key} order`,
+          (await sections.nth(0).innerText()).startsWith("Installation"),
+          `${key} installation order`,
         );
+        assert.ok((await sections.nth(1).innerText()).startsWith("Usage"), `${key} usage order`);
         const loading = bundles[id].variants.loading;
         assert.ok(loading, `${id} loading source`);
         const pending = page.locator(`[data-component="${id}-loading"]`);

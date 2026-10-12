@@ -182,6 +182,8 @@ test("split CI covers all aggregate gates and sends shard args to every browser 
     "tsc -p tests/fixtures/browser",
     "check-browser-fixtures.mjs",
     "check:line-integrations",
+    "build:registry",
+    "check:registry-consumers",
   ])
     assert.ok(scripts["check:packed"].includes(gate), `Missing gate: ${gate}`);
   assert.deepEqual(ci.jobs.playwright.needs, ["changes", "packed"]);
@@ -196,6 +198,7 @@ test("split CI covers all aggregate gates and sends shard args to every browser 
     "test:composition",
     "test:chart-frame",
     "test:line-integrations",
+    "test:registry",
   ])
     assert.ok(runner.includes(`"${suite}"`));
   assert.match(runner, /process\.argv\.slice\(3\)/);

@@ -18,9 +18,9 @@ export const sourcePaths = [
   "tsconfig.json",
 ];
 
-// Promote retained hosted package-gate bytes without creating a second tarball.
+// Read checksum-verified package-gate bytes without creating a second tarball.
 /** @param {string} root @param {string} directory @param {unknown} inputManifest */
-export function readValidatedArtifact(root, directory, inputManifest) {
+export function readLocalCandidate(root, directory, inputManifest) {
   const manifest = packageIdentitySchema.parse(inputManifest);
   const metadata = artifactReceiptSchema.parse(
     parseJson(readFileSync(path.join(directory, "validated-artifact.json"), "utf8")),
@@ -32,11 +32,8 @@ export function readValidatedArtifact(root, directory, inputManifest) {
     `kind-ui-charts-${manifest.version}.tgz`,
     "Validated package filename differs",
   );
-  assert.equal(metadata.source?.dirty, false, "Validated source must be clean");
   assert.match(metadata.source?.checkoutCommit ?? "", /^[a-f0-9]{40}$/);
   assert.match(metadata.tools?.node ?? "", /^v?22\./, "Use the hosted Node 22 package gate");
-  assert.ok(Number(metadata.workflow?.runId) > 0, "Validated workflow receipt is missing");
-  assert.ok(Number(metadata.workflow?.runAttempt) > 0, "Validated workflow attempt is missing");
   const artifact = path.join(directory, metadata.filename);
   const bytes = readFileSync(artifact);
   assert.equal(
@@ -55,4 +52,17 @@ export function readValidatedArtifact(root, directory, inputManifest) {
     { cwd: root, stdio: "ignore" },
   );
   return { metadata, artifact };
+}
+
+// Local candidates retain their local provenance; they never acquire a hosted workflow receipt.
+/** @param {string} root @param {string} directory @param {unknown} inputManifest */
+export function readValidatedArtifact(root, directory, inputManifest) {
+  const checked = readLocalCandidate(root, directory, inputManifest);
+  assert.equal(checked.metadata.source.dirty, false, "Validated source must be clean");
+  assert.ok(Number(checked.metadata.workflow.runId) > 0, "Validated workflow receipt is missing");
+  assert.ok(
+    Number(checked.metadata.workflow.runAttempt) > 0,
+    "Validated workflow attempt is missing",
+  );
+  return checked;
 }

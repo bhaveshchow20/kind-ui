@@ -1,10 +1,10 @@
 name: Docs
 on:
   pull_request:
-    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
+    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "apps/showcase/**", "registry/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
   push:
     branches: [main]
-    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
+    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "apps/showcase/**", "registry/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
 permissions:
   contents: read
 concurrency:
@@ -26,6 +26,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             apps/docs/package-lock.json
+            apps/showcase/package-lock.json
       - run: npm install --global npm@11.9.0
       - run: npm ci
       - run: npm audit --audit-level=high --include=dev
@@ -76,6 +77,28 @@ jobs:
           path: apps/docs/artifacts/production-indexing/
           if-no-files-found: error
           retention-days: ${{ job.status != 'success' && 3 || 1 }}
+      - name: Prepare the root registry and combined hosting assets
+        run: |
+          npm run build:registry
+          node apps/showcase/scripts/prepare-hosting.mjs
+          npm ci --prefix apps/showcase
+      - name: Build the existing domain-root host
+        run: npm run build
+        working-directory: apps/showcase
+        env:
+          KIND_UI_DOMAIN_ROOT: "1"
+          KIND_UI_DEPLOYMENT_ENV: production
+          NEXT_PUBLIC_SHOWCASE_BASE_PATH: /charts
+          NEXT_PUBLIC_DOCS_URL: /charts/docs/
+      - run: npm exec playwright install -- --with-deps chromium
+      - name: Verify root registry, Docs mounts and homepage assets
+        run: npm run test:browser -- tests/registry-hosting.spec.ts --project=chromium
+        working-directory: apps/showcase
+        env:
+          KIND_UI_DOMAIN_ROOT: "1"
+          KIND_UI_DEPLOYMENT_ENV: production
+          NEXT_PUBLIC_SHOWCASE_BASE_PATH: /charts
+          NEXT_PUBLIC_DOCS_URL: /charts/docs/
   consumers:
     name: "Copied examples · shard ${{ matrix.shard }}/4"
     runs-on: ubuntu-latest

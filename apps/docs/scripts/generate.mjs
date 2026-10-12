@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import path from "node:path";
 import { createGenerator, createProject } from "fumadocs-typescript";
 import ts from "typescript";
+import { registryItems } from "../../../registry/catalog.mjs";
 import { docsProvenanceSchema, parseJson } from "../../../scripts/tooling-schemas.mjs";
 import {
   allExamples,
@@ -12,6 +13,7 @@ import {
   variantDefinitions,
 } from "../examples/catalog.mjs";
 import { referenceRows, referenceTitle } from "../lib/api-reference.mjs";
+import { installationMarkdown } from "../lib/chart-installation.mjs";
 import { canonicalDocSlugs, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
 
 const read = (file) => readFileSync(file, "utf8");
@@ -26,7 +28,7 @@ if (installed.version !== provenance.version)
     "Installed chart package differs from pinned tarball. Run npm install after prepare:package.",
   );
 const tarballHash = createHash("sha256")
-  .update(readFileSync("vendor/kind-ui-charts-0.4.0.tgz"))
+  .update(readFileSync("vendor/kind-ui-charts-0.5.0.tgz"))
   .digest("hex");
 if (tarballHash !== provenance.sha256) throw new Error("Package tarball does not match provenance");
 const appLock = JSON.parse(read("package-lock.json"));
@@ -85,6 +87,7 @@ rmSync("generated", { recursive: true, force: true });
 const origin = process.env.KIND_DOCS_ORIGIN?.replace(/\/$/, "") || "";
 const link = (path) => `${origin}${publicPath(path)}`;
 const bundles = {};
+const installationNames = new Map(registryItems.map(({ exampleId, name }) => [exampleId, name]));
 for (const example of allExamples) {
   if (!Object.hasOwn(dataLabels, example.id))
     throw new Error(`Unknown component example: ${example.id}`);
@@ -178,8 +181,10 @@ for (const example of allExamples) {
       .map((file) => `- [${file}](${link(`/examples/${example.id}/${file}`)})`)
       .join("\n") +
     "\n";
+  const registryItemName = installationNames.get(example.id);
   bundles[example.id] = {
     ...example,
+    ...(registryItemName === undefined ? {} : { registryItemName }),
     ...(dataAlternative ? { dataAlternative } : {}),
     ...(variants
       ? {
@@ -319,10 +324,19 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
       );
     },
   );
+  body = body.replace(/<ChartInstallation id="([\w-]+)"\s*\/>/g, (_, id) => {
+    const bundle = bundles[id];
+    if (!bundle) throw new Error(`Unknown installation example ${id}`);
+    return installationMarkdown(bundle);
+  });
   body = body.replace(/<ApiTable name="([\w]+)"(?:\s+compact)?\s*\/>/g, (_, name) =>
     tableMarkdown(name),
   );
-  if (/<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|ApiTable)\b/.test(body))
+  if (
+    /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|ChartInstallation|ApiTable)\b/.test(
+      body,
+    )
+  )
     throw new Error(`Unresolved MDX in ${key}`);
   body = body
     .replace(/<Callout(?:\s+(?:title|type)="[^"]*")*>/g, "\n> **Note:** ")

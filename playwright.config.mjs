@@ -14,6 +14,7 @@ export default defineConfig({
     "pie-hide.spec.ts",
     "standalone-focus.spec.ts",
     "cartesian-visibility.spec.ts",
+    "registry.spec.ts",
   ],
   outputDir: process.env.KIND_UI_ARTIFACT_DIR ?? "artifacts/chart-tests",
   use: {

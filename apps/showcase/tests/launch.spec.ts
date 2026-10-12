@@ -12,7 +12,7 @@ test("navigation, code modal and installation are keyboard accessible", async ({
   await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName(
     "Interactive charts for React.js and Next.js, built on Recharts and Motion and ready for Codex, Claude, Gemini, Grok and your agents.",
   );
-  await expect(page.locator(".install-section")).toContainText("npm install @kind-ui/charts");
+  await expect(page.locator(".install-section")).toContainText("npm install @kind-ui/charts@0.5.0");
   await page.keyboard.press("Control+k");
   await expect(page.getByRole("textbox", { name: "Search components" })).toBeFocused();
   await page.getByRole("textbox", { name: "Search components" }).fill("no-such-chart");
@@ -150,9 +150,9 @@ for (const width of [375, 1280]) {
     await page.goto("./", { waitUntil: "networkidle" });
     const install = page.getByRole("region", { name: "Install Kind UI Charts" });
     for (const manager of ["npm", "pnpm", "yarn", "bun"]) {
-      const command = `${manager} ${manager === "npm" ? "install" : "add"} @kind-ui/charts`;
+      const command = `${manager} ${manager === "npm" ? "install" : "add"} @kind-ui/charts@0.5.0`;
       await install.getByRole("tab", { name: manager, exact: true }).click();
-      await expect(install.getByRole("tabpanel")).toContainText(command);
+      await expect(install.locator(".install-panel-content")).toContainText(command);
       await install.getByRole("button", { name: "Copy install command", exact: true }).click();
       await expect(install.getByRole("button", { name: "Install command copied" })).toBeVisible();
       expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(command);
@@ -167,6 +167,28 @@ for (const width of [375, 1280]) {
     );
     await page.keyboard.press("End");
     await expect(install.getByRole("tab", { name: "bun", exact: true })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await install.getByRole("tab", { name: "CLI", exact: true }).click();
+    const cliCommands = {
+      npm: "npx shadcn@latest add @kind-ui/line-chart",
+      pnpm: "pnpm dlx shadcn@latest add @kind-ui/line-chart",
+      yarn: "yarn dlx shadcn@latest add @kind-ui/line-chart",
+      bun: "bunx --bun shadcn@latest add @kind-ui/line-chart",
+    };
+    for (const [manager, command] of Object.entries(cliCommands)) {
+      await install.getByRole("tab", { name: manager, exact: true }).click();
+      await expect(install.locator(".install-panel-content")).toContainText(command);
+      await install.getByRole("button", { name: "Copy install command", exact: true }).click();
+      await expect(install.getByRole("button", { name: "Install command copied" })).toBeVisible();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(command);
+      const commandBounds = await install.locator(".install-panel-content").boundingBox();
+      expect((commandBounds?.x ?? 0) + (commandBounds?.width ?? 0)).toBeLessThanOrEqual(width);
+    }
+    await install.getByRole("tab", { name: "CLI", exact: true }).focus();
+    await page.keyboard.press("ArrowLeft");
+    await expect(install.getByRole("tab", { name: "Core", exact: true })).toHaveAttribute(
       "aria-selected",
       "true",
     );

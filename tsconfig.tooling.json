@@ -33,6 +33,8 @@
     "scripts/browser-directives.mjs",
     "scripts/check-types.mjs",
     "scripts/ci-paths.mjs",
-    "scripts/run-checks.mjs"
+    "scripts/run-checks.mjs",
+    "scripts/build-registry.mjs",
+    "scripts/check-registry-consumers.mjs"
   ]
 }

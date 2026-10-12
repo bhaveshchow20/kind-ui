@@ -40,7 +40,7 @@ export async function runChecks(scripts, args = []) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.argv[2] === "preflight") {
-    await runChecks(["check:ci", "check:release", "lint"]);
+    await runChecks(["check:ci", "check:release", "lint", "check:registry"]);
   } else if (process.argv[2] === "consumers") {
     // Prepared once before this phase; suites own separate ports/output paths.
     await runChecks(
@@ -51,6 +51,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         "test:line-integrations",
         "test:focus-identity",
         "test:cartesian-visibility",
+        "test:registry",
       ],
       process.argv.slice(3),
     );

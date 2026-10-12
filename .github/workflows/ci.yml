@@ -77,6 +77,7 @@ jobs:
             artifacts/bundle-measurements.json
             artifacts/packed-*/
             artifacts/line-integrations/
+            artifacts/registry/consumer-evidence.json
             artifacts/browser-fixtures/
           if-no-files-found: error
           retention-days: 1

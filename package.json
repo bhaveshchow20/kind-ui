@@ -35,7 +35,7 @@
     "check:framework": "npm run check:line-integrations && npm run test:line-integrations",
     "test:unit": "node --test tests/chart.test.mjs tests/chart-frame.test.mjs tests/activity-rings.test.mjs tests/tailwind-classes.test.mjs tests/compound-chart.test.mjs",
     "check:fast": "node scripts/run-checks.mjs preflight && npm run typecheck && npm run test:unit",
-    "check:packed": "npm run pack:artifact && tsc -p tests/fixtures/browser && node scripts/check-browser-fixtures.mjs && npm run check:line-integrations",
+    "check:packed": "npm run pack:artifact && tsc -p tests/fixtures/browser && node scripts/check-browser-fixtures.mjs && npm run check:line-integrations && npm run build:registry && npm run check:registry-consumers",
     "check:preflight": "node scripts/run-checks.mjs preflight",
     "check:browsers": "node scripts/run-checks.mjs consumers",
     "test:focus-identity": "playwright test --config playwright.focus-identity.config.mjs",
@@ -43,7 +43,12 @@
     "dev:docs": "npm --prefix apps/docs run dev",
     "check:tooling": "tsc -p tsconfig.tooling.json",
     "check:types": "tsc -p tsconfig.tests.json",
-    "check:apps-tooling": "tsc -p apps/tsconfig.tools.json"
+    "check:apps-tooling": "tsc -p apps/tsconfig.tools.json",
+    "build:registry": "node scripts/build-registry.mjs",
+    "check:registry": "npm run build:registry && node --test scripts/registry-contract.test.mjs apps/showcase/scripts/hosting.test.mjs",
+    "check:registry-consumers": "node scripts/check-registry-consumers.mjs",
+    "test:registry": "playwright test --config playwright.registry.config.mjs",
+    "prepare:site": "npm run build:registry && node apps/showcase/scripts/prepare-hosting.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",

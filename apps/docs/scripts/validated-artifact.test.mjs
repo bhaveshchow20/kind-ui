@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { readValidatedArtifact } from "./validated-artifact.mjs";
+import { readLocalCandidate, readValidatedArtifact } from "./validated-artifact.mjs";
 
 function fixture(t) {
   const root = mkdtempSync(path.join(os.tmpdir(), "kind-docs-retained-"));
@@ -65,6 +65,33 @@ test("retained artifact accepts matching hosted bytes and unchanged package sour
   const result = f.read();
   assert.equal(result.metadata.source.checkoutCommit, f.metadata.source.checkoutCommit);
   assert.equal(readFileSync(result.artifact, "utf8"), "retained validated bytes");
+});
+
+test("local candidate preserves local provenance and rejects changed package source", (t) => {
+  const f = fixture(t);
+  f.metadata.source.dirty = true;
+  f.metadata.workflow = { event: null, runId: null, runAttempt: null, runUrl: null };
+  f.save();
+  const result = readLocalCandidate(f.root, f.directory, f.manifest);
+  assert.equal(result.metadata.workflow.runId, null);
+  assert.equal(result.metadata.source.dirty, true);
+  assert.throws(f.read, /must be clean/);
+  writeFileSync(
+    path.join(f.root, "package.json"),
+    JSON.stringify({ ...f.manifest, changed: true }),
+  );
+  assert.throws(() => readLocalCandidate(f.root, f.directory, f.manifest));
+});
+
+test("local candidate rejects stale identity and corrupt artifact bytes", (t) => {
+  const f = fixture(t);
+  f.metadata.package = { ...f.manifest, version: "0.1.1" };
+  f.save();
+  assert.throws(() => readLocalCandidate(f.root, f.directory, f.manifest), /version differs/);
+  f.metadata.package = f.manifest;
+  f.save();
+  writeFileSync(path.join(f.directory, f.metadata.filename), "tampered");
+  assert.throws(() => readLocalCandidate(f.root, f.directory, f.manifest), /checksum differs/);
 });
 
 test("retained artifact rejects a different package version and unsafe filename", (t) => {
