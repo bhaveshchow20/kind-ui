@@ -81,7 +81,7 @@ export function UpdatedCandlestickChart() {
   const replaceCurrent = () => {
     setObservations((rows) =>
       rows.map((row) =>
-        row.time === 1791295200000
+        !row.gap && row.time === 1791295200000
           ? { ...row, high: 80, close: 79, state: "partial replacement" }
           : row,
       ),
@@ -91,7 +91,7 @@ export function UpdatedCandlestickChart() {
   const correctOlder = () => {
     setObservations((rows) =>
       rows.map((row) =>
-        row.time === 1791280800000 ? { ...row, low: 70, state: "corrected" } : row,
+        !row.gap && row.time === 1791280800000 ? { ...row, low: 70, state: "corrected" } : row,
       ),
     );
     setCorrected(true);

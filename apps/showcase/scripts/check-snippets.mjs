@@ -77,7 +77,18 @@ try {
           if (recipe.family === "Candlestick") {
             assert.match(source, /<CandlestickChart.Volume seriesKey="volume"/);
             assert.match(source, /<CandlestickChart.Tooltip/);
-            assert.match(source, /<CandlestickChart.DataTable<Row>/);
+            assert.match(
+              source,
+              /<div className="sr-only">\s*<table data-kind-ui="candlestick-data-alternative"/,
+            );
+            assert.match(
+              source,
+              /data\.map\(row => <tr key=\{row\.time\} data-selected=\{row\.time === selection/,
+            );
+            assert.match(source, /selection=\{selection\} onSelectionChange=/);
+            assert.doesNotMatch(source, /<CandlestickChart.DataTable/);
+            assert.match(source, /var\(--chart-grid, #e5e7eb\)/);
+            assert.match(source, /var\(--chart-axis, #64748b\)/);
             assert.match(source, /timeMode="business-date"/);
             assert.match(source, /Synthetic executions/);
             assert.doesNotMatch(source, /responsive|\.Root|\.Plot/);

@@ -1,6 +1,5 @@
 export const family = {
   id: "candlestick",
-  minimumCoreVersion: "0.6.0",
   examples: [
     {
       id: "candlestick",

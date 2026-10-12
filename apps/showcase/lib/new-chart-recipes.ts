@@ -13,7 +13,7 @@ export const newRecipes = [
     family: "Candlestick",
     tag: "Session price action",
     context:
-      "Twenty illustrative sessions from synthetic executions. Prices are USD per share; aligned volume is shares. Requires the upcoming Core release.",
+      "Twenty illustrative sessions from synthetic executions. Prices are USD per share; aligned volume is shares.",
   },
   {
     id: "line-trials",
@@ -329,7 +329,8 @@ export function newCode(
     r.family === "Sankey"
       ? `function paletteColor(index: number): string {\n  const color = colors[index];\n  if (color === undefined) throw new Error("Missing palette color");\n  return color;\n}\n`
       : "";
-  const intro = `"use client";\n\nimport { ${imports} } from "@kind-ui/charts";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)} as const;\nconst animate = ${animate};\n${paletteLookup}`;
+  const reactImports = r.family === "Candlestick" ? 'import { useState } from "react";\n' : "";
+  const intro = `"use client";\n\nimport { ${imports} } from "@kind-ui/charts";\n${reactImports}\n// ${r.context}\nconst colors = ${JSON.stringify(colors)} as const;\nconst animate = ${animate};\n${paletteLookup}`;
   if (r.family === "Candlestick") {
     return (
       intro +
@@ -337,17 +338,27 @@ export function newCode(
 const data: Row[] = ${JSON.stringify(candlestickRows, null, 2)};
 const config = {price:{label:"Synthetic executions · USD/share",color:colors[0]},volume:{label:"Volume · shares",color:colors[2]}};
 export function Example(){
- return <CandlestickChart data={data} timeMode="business-date" spacing="ordinal" config={config} style={{width:"100%",height:240}} animate={animate} aria-label="Synthetic session trade OHLC in USD per share, volume in shares" margin={{top:12,right:12,left:0,bottom:8}} formatTime={time => String(time).slice(5)} formatPrice={value => "$" + value.toFixed(2)} formatVolume={value => value.toLocaleString("en-US") + " shares"}>
-  ${options.showGrid === false ? "" : '<CandlestickChart.Grid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />'}
+ const [selection, setSelection] = useState<Row["time"] | null>(null);
+ return <><CandlestickChart data={data} timeMode="business-date" spacing="ordinal" config={config} selection={selection} onSelectionChange={point => setSelection(point?.time ?? null)} style={{width:"100%",height:240}} animate={animate} aria-label="Synthetic session trade OHLC in USD per share, volume in shares" margin={{top:12,right:12,left:0,bottom:8}} formatTime={time => String(time).slice(5)} formatPrice={value => "$" + value.toFixed(2)} formatVolume={value => value.toLocaleString("en-US") + " shares"}>
+  ${options.showGrid === false ? "" : '<CandlestickChart.Grid vertical={false} stroke="var(--chart-grid, #e5e7eb)" strokeDasharray="3 5" />'}
   <CandlestickChart.XAxis tickLine={false} axisLine={false} tickCount={5} tick={${options.showLabels === false ? "false" : "{fontSize:11}"}} />
   <CandlestickChart.YAxis width="auto" tickLine={false} axisLine={false} tick={${options.showLabels === false ? "false" : "{fontSize:11}"}} tickFormatter={value => "$" + Number(value).toFixed(0)} />
   <CandlestickChart.Series seriesKey="price" rising={colors[0]} falling={colors[1]} unchanged={colors[2]} maxBarSize={${options.width ?? 14}} markProps={{strokeWidth:${options.strokeWidth ?? 1.5}}} />
-  <CandlestickChart.Volume seriesKey="volume" maxBarSize={${options.width ?? 14}} fillOpacity={0.4} axisProps={{hide:true}} />
-  <CandlestickChart.Crosshair stroke="var(--chart-axis)" />
+  <CandlestickChart.Volume seriesKey="volume" maxBarSize={${options.width ?? 14}} fillOpacity={1} axisProps={{hide:true}} />
+  <CandlestickChart.Crosshair stroke="var(--chart-axis, #64748b)" />
   <CandlestickChart.Tooltip />
   <CandlestickChart.Content className="sr-only" />
-  <CandlestickChart.DataTable<Row> caption="Synthetic executions: daily OHLC in USD per share and volume in shares" className="sr-only block" renderMetadata={point => point.original.source} />
- </CandlestickChart>;
+ </CandlestickChart>
+ <div className="sr-only">
+ <table data-kind-ui="candlestick-data-alternative">
+  <caption>Synthetic executions: daily OHLC in USD per share and volume in shares</caption>
+  <thead><tr>{["Session", "Open", "High", "Low", "Close", "Volume", "Source"].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
+  <tbody>{data.map(row => <tr key={row.time} data-selected={row.time === selection || undefined}>
+   <th scope="row">{String(row.time).slice(5)}</th>
+   {(["open", "high", "low", "close"] as const).map(field => <td key={field}>{row[field] === undefined ? "—" : "$" + row[field].toFixed(2)}</td>)}
+   <td>{row.volume === undefined ? "—" : row.volume.toLocaleString("en-US") + " shares"}</td><td>{row.source}</td>
+  </tr>)}</tbody>
+ </table></div></>;
 }
 `
     );

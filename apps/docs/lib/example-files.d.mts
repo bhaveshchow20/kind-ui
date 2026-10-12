@@ -8,8 +8,6 @@ interface ExampleBundle {
   packageStatus?: string | undefined;
   localPackage?: boolean | undefined;
   version?: string | undefined;
-  releasePending?: boolean | undefined;
-  minimumCoreVersion?: string | undefined;
   acceptance?: string | undefined;
 }
 export function filesFor(

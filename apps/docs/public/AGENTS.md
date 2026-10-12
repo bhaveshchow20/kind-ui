@@ -13,11 +13,6 @@ node_modules/@kind-ui/charts/dist relative to your CSS file. Inspect the
 installed package version and peers before adapting code. Motion is required.
 Use public exports; there is no @kind-ui/charts/motion entry.
 
-The Candlestick guide is a source candidate. Published Core 0.5.0 lacks its
-exports; public npm and registry installation require Core 0.6.0 or later.
-Follow the selected prompt and manifest release prerequisite, or verify with
-the approved candidate artifact and its checksum/provenance.
-
 Import chart families directly by name. Each chart requires config, an accessible
 name and explicit children. Compose the family’s Series, axes, Tooltip and Legend
 parts; omitted parts stay absent. Set interaction directly on the chart and use

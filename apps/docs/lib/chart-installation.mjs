@@ -1,16 +1,8 @@
-/** @typedef {{id: string, version: string, registryItemName?: string | undefined, releasePending?: boolean | undefined, minimumCoreVersion?: string | undefined, files: Record<string, string>}} InstallationBundle */
+/** @typedef {{id: string, version: string, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
 /** @typedef {{title: string, description: string, code: string, language: "sh" | "css" | "tsx", filename: string}} InstallationStep */
 
 /** @param {InstallationBundle} bundle */
-export function pendingInstallationMessage(bundle) {
-  if (!bundle.releasePending || !bundle.minimumCoreVersion)
-    throw new Error(`Missing pending release requirement for example ${bundle.id}`);
-  return `This example uses a validated source candidate of Core ${bundle.version}. Published Core ${bundle.version} does not include these APIs. Public npm and registry installation require Core ${bundle.minimumCoreVersion} or later. Verify with the approved candidate artifact, or wait for that release before installing the public example.`;
-}
-
-/** @param {InstallationBundle} bundle */
 export function installationFor(bundle) {
-  if (bundle.releasePending) throw new Error(pendingInstallationMessage(bundle));
   const itemName = bundle.registryItemName;
   if (!itemName) throw new Error(`No registry installation for example ${bundle.id}`);
   const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
@@ -55,7 +47,6 @@ export function installationFor(bundle) {
 
 /** @param {InstallationBundle} bundle */
 export function installationMarkdown(bundle) {
-  if (bundle.releasePending) return `${pendingInstallationMessage(bundle)}\n`;
   const { command, steps } = installationFor(bundle);
   return (
     "### CLI\n\nRun this command in your initialized shadcn project:\n\n" +

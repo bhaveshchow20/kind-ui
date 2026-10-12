@@ -89,12 +89,7 @@ export function AssetCandlestickChart({ state = "ready" }: { state?: "ready" | "
           unchanged="#733bff"
           maxBarSize={18}
         />
-        <CandlestickVolume
-          seriesKey="volume"
-          fill="#733bff"
-          fillOpacity={0.25}
-          axisProps={{ hide: true }}
-        />
+        <CandlestickVolume seriesKey="volume" fill="#733bff" axisProps={{ hide: true }} />
         <CandlestickCrosshair strokeOpacity={0.5} />
         <CandlestickContent
           frameProps={{ style: { minHeight: 36, fontSize: 12, paddingTop: 12 } }}

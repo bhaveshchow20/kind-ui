@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import path from "node:path";
 import { createGenerator, createProject } from "fumadocs-typescript";
 import ts from "typescript";
-import { isCoreVersionAvailable, registryItems } from "../../../registry/catalog.mjs";
+import { registryItems } from "../../../registry/catalog.mjs";
 import { docsProvenanceSchema, parseJson } from "../../../scripts/tooling-schemas.mjs";
 import {
   allExamples,
@@ -91,22 +91,6 @@ const installationNames = new Map(registryItems.map(({ exampleId, name }) => [ex
 for (const example of allExamples) {
   if (!Object.hasOwn(dataLabels, example.id))
     throw new Error(`Unknown component example: ${example.id}`);
-  const releasePending = !isCoreVersionAvailable(example.minimumCoreVersion);
-  if (releasePending && !local)
-    throw new Error(`${example.id}: pending APIs require the guarded local candidate artifact`);
-  if (!releasePending && !isCoreVersionAvailable(example.minimumCoreVersion, provenance.version))
-    throw new Error(
-      `${example.id}: update the guarded package to Core ${example.minimumCoreVersion} or later before generating released installation guidance`,
-    );
-  const exampleManifest = releasePending
-    ? {
-        ...manifest,
-        dependencies: {
-          ...manifest.dependencies,
-          "@kind-ui/charts": `^${example.minimumCoreVersion}`,
-        },
-      }
-    : manifest;
   const exampleSource = read(`examples/${example.id}/example.tsx`);
   const componentName = exampleSource.match(/export function (\w+)/)?.[1] ?? "Example";
   const parsed = ts.createSourceFile("example.tsx", exampleSource, ts.ScriptTarget.Latest, true);
@@ -146,7 +130,7 @@ for (const example of allExamples) {
       )
     : undefined;
   const files = {
-    "package.json": `${JSON.stringify(exampleManifest, null, 2)}\n`,
+    "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
     "index.html":
       '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kind UI chart example</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>\n',
     "tsconfig.json": `${JSON.stringify(
@@ -180,7 +164,7 @@ for (const example of allExamples) {
       '@import "tailwindcss";\n@source "../node_modules/@kind-ui/charts/dist";\n\n' +
       read("examples/shared/example.css"),
     [`src/examples/${example.id}/example.tsx`]: exampleSource,
-    "README.md": `# ${example.title} — complete consumer\n\n${releasePending ? `Source candidate: this example requires Core ${example.minimumCoreVersion} or later for public installation. Published Core ${provenance.version} lacks these APIs. The manifest targets the required future release; wait for its publication before npm install, or verify internally with the exact approved candidate artifact and its checksum/provenance. The maintained private consumer checks install that guarded artifact.` : "Install dependencies with npm install, then run npm run dev or npm run build."}\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports. Preserve the documented family composition and visibility ownership. Build the included Tailwind v4 CSS, which scans the installed chart package with @source. In an existing app, add an @source path to node_modules/@kind-ui/charts/dist relative to your CSS file.\n`,
+    "README.md": `# ${example.title} — complete consumer\n\nInstall dependencies with npm install, then run npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports. Preserve the documented family composition and visibility ownership. Build the included Tailwind v4 CSS, which scans the installed chart package with @source. In an existing app, add an @source path to node_modules/@kind-ui/charts/dist relative to your CSS file.\n`,
     LICENSE: read("../../LICENSE"),
   };
 
@@ -210,7 +194,6 @@ for (const example of allExamples) {
         }
       : {}),
     files,
-    ...(releasePending ? { releasePending: true } : {}),
     packageStatus: status,
     localPackage: local,
     version: provenance.version,

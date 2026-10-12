@@ -98,3 +98,32 @@ test("installed combo legend and activity rings retain explicit values on a narr
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   expect(errors).toEqual([]);
 });
+
+test("installed Candlestick composition preserves price, volume and controlled session ranges", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 375, height: 850 });
+  await page.goto("/");
+  await page
+    .getByRole("combobox", { name: "Chart", exact: true })
+    .selectOption("candlestick-chart");
+  const composition = page.getByRole("region", { name: "Installed composition" });
+  await expect(composition.locator('[data-kind-ui="candlestick-mark"]')).toHaveCount(12);
+  await expect(composition.locator('[data-kind-ui="candlestick-volume-mark"]')).toHaveCount(12);
+  await expect(composition.locator('[data-candle-part="doji"]')).toHaveCount(1);
+  await composition.getByRole("button", { name: "6 sessions", exact: true }).click();
+  await expect(composition.locator('[data-kind-ui="candlestick-mark"]')).toHaveCount(7);
+  await composition.getByRole("button", { name: "All sessions", exact: true }).click();
+  await composition.locator('[data-kind-ui="chart"]').focus();
+  await page.keyboard.press("Home");
+  await expect(composition.locator('[data-kind-ui="candlestick-content"]')).toContainText(
+    "$121.60",
+  );
+  await expect(composition.locator('[data-kind-ui="candlestick-content"]')).toContainText(
+    "18,400 shares",
+  );
+  expect(errors).toEqual([]);
+});
