@@ -83,7 +83,7 @@ function TabsTrigger({
         <motion.span
           aria-hidden="true"
           className="tab-selection"
-          layoutId={reduced ? undefined : `tab-selection-${id}`}
+          {...(!reduced ? { layoutId: `tab-selection-${id}` } : {})}
           transition={{ type: "spring", stiffness: 430, damping: 36 }}
         />
       )}

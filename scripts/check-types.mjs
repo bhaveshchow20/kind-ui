@@ -2,7 +2,18 @@ import { spawn } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export async function checkTypes(consumer, compiler, files, { stdio = "inherit" } = {}) {
+/**
+ * @param {string} consumer
+ * @param {string} compiler
+ * @param {string[]} files
+ * @param {{stdio?: import("node:child_process").StdioOptions, strictOptionalTypes?: boolean}} [options]
+ */
+export async function checkTypes(
+  consumer,
+  compiler,
+  files,
+  { stdio = "inherit", strictOptionalTypes = false } = {},
+) {
   // Independent resolution modes share only immutable installed dependencies.
   // Separate configs prevent one process from reading the other mode's options.
   const results = await Promise.allSettled(
@@ -18,26 +29,35 @@ export async function checkTypes(consumer, compiler, files, { stdio = "inherit" 
             module: mode === "Bundler" ? "ESNext" : mode,
             moduleResolution: mode,
             strict: true,
-            skipLibCheck: false,
+            noUncheckedIndexedAccess: true,
+            // Redux Toolkit's TaskAbortError.code/asyncThunk declarations fail
+            // exact optional checking. Baseline modes check all declarations;
+            // focused strict fixtures check consumer source with that flag.
+            exactOptionalPropertyTypes: strictOptionalTypes,
+            isolatedModules: true,
+            noImplicitOverride: true,
+            skipLibCheck: strictOptionalTypes,
             noEmit: true,
             typeRoots: [join(consumer, "node_modules", "@types")],
           },
           files,
         }),
       );
-      await new Promise((resolve, reject) => {
-        const child = spawn(process.execPath, [compiler, "-p", config], {
-          cwd: consumer,
-          stdio,
-          env: { ...process.env, NODE_PATH: "" },
-        });
-        child.on("error", reject);
-        child.on("exit", (code, signal) =>
-          code === 0
-            ? resolve()
-            : reject(new Error(`${mode} consumer types failed (${signal ?? code})`)),
-        );
-      });
+      await new Promise(
+        /** @param {(value?: void) => void} resolve */ (resolve, reject) => {
+          const child = spawn(process.execPath, [compiler, "-p", config], {
+            cwd: consumer,
+            stdio,
+            env: { ...process.env, NODE_PATH: "" },
+          });
+          child.on("error", reject);
+          child.on("exit", (code, signal) =>
+            code === 0
+              ? resolve()
+              : reject(new Error(`${mode} consumer types failed (${signal ?? code})`)),
+          );
+        },
+      );
     }),
   );
   for (const result of results) if (result.status === "rejected") throw result.reason;

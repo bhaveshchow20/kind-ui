@@ -21,24 +21,31 @@ export function computeWaterfallData(
   entries: readonly WaterfallEntry[],
   initialBalance: number | null = 0,
 ): WaterfallDatum[] {
+  if (!Array.isArray(entries)) throw new Error("Waterfall entries must be an array");
   const valid = (value: unknown): value is number | null =>
     value === null || (typeof value === "number" && Number.isFinite(value));
   if (!valid(initialBalance)) throw new Error("Waterfall initialBalance must be finite or null");
   let balance = initialBalance;
   const ids = new Set<string>();
-  return entries.map((entry) => {
-    if (!entry.id || ids.has(entry.id)) throw new Error("Waterfall requires unique nonempty ids");
+  return Array.from(entries, (entry, index) => {
+    const path = `Waterfall entries[${index}]`;
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry))
+      throw new Error(`${path} must be an entry object`);
+    if (typeof entry.id !== "string" || !entry.id.trim() || ids.has(entry.id))
+      throw new Error(`${path}.id requires unique nonempty string ids`);
     ids.add(entry.id);
+    if (typeof entry.label !== "string") throw new Error(`${path}.label must be a string`);
     if (!["start", "total", "end", "delta", "subtotal"].includes(entry.kind))
-      throw new Error("Unknown Waterfall kind");
+      throw new Error(`${path}.kind is an unknown Waterfall kind`);
     if (entry.kind === "subtotal" ? entry.value !== undefined : !valid(entry.value))
-      throw new Error("Waterfall values must be finite or null; subtotals have no supplied value");
+      throw new Error(`${path}.value must be finite or null; subtotals have no supplied value`);
     let start: number | null;
     let end: number | null;
     if (entry.kind === "delta") {
       start = balance;
       end = balance === null || entry.value === null ? null : balance + entry.value;
-      if (end !== null && !Number.isFinite(end)) throw new Error("Waterfall balance overflow");
+      if (end !== null && !Number.isFinite(end))
+        throw new Error(`${path}.value causes balance overflow`);
       balance = end;
     } else if (entry.kind === "subtotal") {
       start = balance === null ? null : 0;

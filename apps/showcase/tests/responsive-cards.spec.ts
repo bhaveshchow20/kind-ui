@@ -1,4 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
+
+async function bounds(locator: Locator) {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error(`Missing visible element: ${locator}`);
+  return box;
+}
 
 for (const width of [320, 375, 390, 414]) {
   test(`chart cards grow around their contents at ${width}px`, async ({ page }) => {
@@ -9,14 +15,12 @@ for (const width of [320, 375, 390, 414]) {
     const trials = page
       .locator(".demo-grid .chart-card")
       .filter({ hasText: "Trials & subscriptions" });
-    const originalHeight = (await trials.boundingBox())!.height;
+    const originalHeight = (await bounds(trials)).height;
     // Exercise wrapped legends and larger text, including mobile text scaling.
     await page.addStyleTag({
       content: '.chart-root [data-kind-ui="chart-legend-button"] { font-size: 28px; }',
     });
-    await expect
-      .poll(async () => (await trials.boundingBox())!.height)
-      .toBeGreaterThan(originalHeight);
+    await expect.poll(async () => (await bounds(trials)).height).toBeGreaterThan(originalHeight);
     for (const family of [
       "Bar",
       "Line",
@@ -65,19 +69,15 @@ for (const width of [320, 375, 390, 414]) {
     const card = page.locator(".playground-preview .chart-card");
     const main = page.locator(".playground-main");
     const sidebar = page.locator(".playground-sidebar");
-    const cardBounds = (await card.boundingBox())!;
-    const mainBounds = (await main.boundingBox())!;
+    const cardBounds = await bounds(card);
+    const mainBounds = await bounds(main);
     expect(cardBounds.y + cardBounds.height).toBeLessThanOrEqual(mainBounds.y + mainBounds.height);
-    expect((await sidebar.boundingBox())!.y).toBeGreaterThanOrEqual(
-      cardBounds.y + cardBounds.height,
-    );
-    const legendBounds = (await card.locator('[data-kind-ui="chart-legend"]').boundingBox())!;
+    expect((await bounds(sidebar)).y).toBeGreaterThanOrEqual(cardBounds.y + cardBounds.height);
+    const legendBounds = await bounds(card.locator('[data-kind-ui="chart-legend"]'));
     expect(legendBounds.y + legendBounds.height).toBeLessThanOrEqual(
       cardBounds.y + cardBounds.height,
     );
     await page.getByRole("tab", { name: "Code", exact: true }).click();
-    expect((await page.locator(".playground-source").boundingBox())!.height).toBeLessThanOrEqual(
-      360,
-    );
+    expect((await bounds(page.locator(".playground-source"))).height).toBeLessThanOrEqual(360);
   });
 }

@@ -4,8 +4,10 @@ import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 
+/** @param {string[]} scripts @param {string[]} [args] */
 export async function runChecks(scripts, args = []) {
-  assert.ok(process.env.npm_execpath, "Run checks through npm scripts");
+  const npm = process.env.npm_execpath;
+  assert.ok(npm, "Run checks through npm scripts");
   const results = await Promise.all(
     scripts.map(
       (script) =>
@@ -14,7 +16,7 @@ export async function runChecks(scripts, args = []) {
           console.log(`[check] ${script} started ${new Date().toISOString()}`);
           const child = spawn(
             process.execPath,
-            [process.env.npm_execpath, "run", script, ...(args.length ? ["--", ...args] : [])],
+            [npm, "run", script, ...(args.length ? ["--", ...args] : [])],
             {
               stdio: "inherit",
               env: process.env,

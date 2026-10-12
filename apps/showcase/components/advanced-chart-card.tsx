@@ -15,6 +15,7 @@ import { motion, useInView, useReducedMotion } from "motion/react";
 import { useMemo, useRef } from "react";
 import { type AdvancedRecipe, advancedData, type Finish } from "@/lib/advanced-chart-recipes";
 import type { DemoOptions } from "@/lib/demo-options";
+import { demoEntry } from "@/lib/utils";
 
 export { advancedRecipes } from "@/lib/advanced-chart-recipes";
 
@@ -116,7 +117,7 @@ function useChartExample({
           dot={options.dots ?? false}
           strokeWidth={options.strokeWidth ?? 2.5}
         />
-        <ComboChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+        <ComboChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
         {options.showLegend !== false && (
           <ComboChart.Legend aria-label={`Focus series for ${r.tag}`} />
         )}
@@ -151,7 +152,7 @@ function useChartExample({
         />
         <PieChart.Tooltip
           itemKey={(entry) => String(entry.payload.id)}
-          valueAnimation={animate ? "shuffle" : undefined}
+          {...(animate ? { valueAnimation: "shuffle" as const } : {})}
         />
         {options.showLegend !== false && (
           <PieChart.Legend aria-label={`Focus series for ${r.tag}`} />
@@ -199,7 +200,7 @@ function useChartExample({
               fillOpacity={options.fillOpacity ?? (r.id === "radar-outline" ? 0 : 0.18)}
               dot={{
                 r: 3,
-                fill: config.a.color,
+                fill: demoEntry(Object.values(config), 0).color,
                 stroke: "var(--background)",
                 strokeWidth: 1.5,
               }}
@@ -211,11 +212,11 @@ function useChartExample({
               strokeDasharray="4 4"
               dot={(props) => (
                 <Symbols
-                  cx={props.cx}
-                  cy={props.cy}
+                  {...(props.cx === undefined ? {} : { cx: props.cx })}
+                  {...(props.cy === undefined ? {} : { cy: props.cy })}
                   type="diamond"
                   size={70}
-                  fill={config.b.color}
+                  fill={demoEntry(Object.values(config), 1).color}
                   stroke="var(--background)"
                   strokeWidth={1.5}
                 />
@@ -223,7 +224,7 @@ function useChartExample({
             />
           </>
         )}
-        <RadarChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+        <RadarChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
         {options.showLegend !== false && (
           <RadarChart.Legend aria-label={`Focus series for ${r.tag}`} />
         )}
@@ -270,7 +271,7 @@ function useChartExample({
           dataKey="a"
           background
           cornerRadius={options.radius ?? 4}
-          stackId={r.id === "radial-stacked" ? "work" : undefined}
+          {...(r.id === "radial-stacked" ? { stackId: "work" } : {})}
         >
           {r.id !== "gauge" && options.showLabels && (
             <LabelList dataKey="category" fill="white" content={<RadialBarLabel fontSize={10} />} />
@@ -281,10 +282,10 @@ function useChartExample({
             dataKey="b"
             fillOpacity={0.5}
             cornerRadius={options.radius ?? 4}
-            stackId={r.id === "radial-stacked" ? "work" : undefined}
+            {...(r.id === "radial-stacked" ? { stackId: "work" } : {})}
           />
         )}
-        <RadialBarChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+        <RadialBarChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
         {options.showLegend !== false && (
           <RadialBarChart.Legend aria-label={`Focus series for ${r.tag}`} />
         )}
@@ -339,15 +340,15 @@ function useChartExample({
         seriesKey="a"
         shape={(props) => (
           <Symbols
-            cx={props.cx}
-            cy={props.cy}
+            {...(props.cx === undefined ? {} : { cx: props.cx })}
+            {...(props.cy === undefined ? {} : { cy: props.cy })}
             type={options.pointShape ?? "circle"}
             size={
               r.id === "bubble"
                 ? (Number(props.size ?? 60) * (options.width ?? 60)) / 60
                 : (options.width ?? 60)
             }
-            fill={config.a.color}
+            fill={demoEntry(Object.values(config), 0).color}
           />
         )}
       />
@@ -357,18 +358,18 @@ function useChartExample({
           seriesKey="b"
           shape={(props) => (
             <Symbols
-              cx={props.cx}
-              cy={props.cy}
+              {...(props.cx === undefined ? {} : { cx: props.cx })}
+              {...(props.cy === undefined ? {} : { cy: props.cy })}
               type={options.pointShape ?? "diamond"}
               size={options.width ?? 60}
-              fill={config.b.color}
+              fill={demoEntry(Object.values(config), 1).color}
             />
           )}
         />
       )}
       <ScatterChart.Tooltip
-        zDimension={r.id === "bubble" ? { dataKey: "z", name: "Requests" } : undefined}
-        valueAnimation={animate ? "shuffle" : undefined}
+        {...(r.id === "bubble" ? { zDimension: { dataKey: "z", name: "Requests" } } : {})}
+        {...(animate ? { valueAnimation: "shuffle" as const } : {})}
       />
       {options.showLegend !== false && (
         <ScatterChart.Legend aria-label={`Focus series for ${r.tag}`} />
@@ -405,8 +406,8 @@ export function AdvancedChartCard({
         recipe.keys.map((k, i) => [
           k,
           {
-            label: recipe.labels[i],
-            color: colors[i],
+            label: demoEntry(recipe.labels, i),
+            color: demoEntry(colors, i),
             formatValue: (value: unknown) => formatAdvancedValue(recipe.id, value),
             ...(recipe.id === "scatter" ||
             (recipe.family === "Radar" && recipe.id !== "radar-range")

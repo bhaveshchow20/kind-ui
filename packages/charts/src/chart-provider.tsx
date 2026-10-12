@@ -61,6 +61,7 @@ export function ChartProvider({
         `Chart series key "${key}" must start with a letter and contain only letters, numbers, underscores or hyphens`,
       );
     const resolved = resolveSeriesColor(item.color, key);
+    // biome-ignore lint/style/noNonNullAssertion: resolveSeriesColor validates nonempty stops and always includes offset zero.
     colors[colorBaseToken(key)] = resolved.colors[0]!;
     for (const [index, color] of resolved.colors.entries())
       colors[colorStopToken(key, index)] = color;

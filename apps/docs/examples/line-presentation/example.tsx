@@ -33,9 +33,9 @@ export function LinePresentationChart({
         type="monotone"
         dot={{ r: 2.5 }}
         strokeWidth={2}
-        pointStyle={presentation === "markers" ? "colored-border" : undefined}
+        {...(presentation === "markers" ? { pointStyle: "colored-border" as const } : {})}
         activePointStyle="border"
-        strokeDasharray={presentation === "dashes" ? "6 4" : undefined}
+        {...(presentation === "dashes" ? { strokeDasharray: "6 4" } : {})}
         dashAnimation={presentation === "dashes" ? { durationMs: 1000 } : false}
       />
       <LineChart.Tooltip />

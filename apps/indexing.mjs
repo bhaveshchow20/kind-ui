@@ -22,9 +22,11 @@ export function robotsPolicy(env = process.env) {
     : { rules: { userAgent: "*", disallow: "/" } };
 }
 /** Canonical URLs stay on the public domain even when building an unprefixed preview. */
+/** @param {readonly string[]} [slugs] */
 export function canonicalDocURL(slugs = []) {
   return `${docsURL}${slugs.length ? `${slugs.map(encodeURIComponent).join("/")}/` : ""}`;
 }
+/** @param {readonly string[]} urls @param {NodeJS.ProcessEnv} [env] */
 export function sitemapEntries(urls, env = process.env) {
   return isIndexable(env) ? [...new Set(urls)].map((url) => ({ url })) : [];
 }

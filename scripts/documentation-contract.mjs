@@ -4,8 +4,12 @@ import { existsSync } from "node:fs";
 export const repositorySourcePrefix = "https://github.com/bhaveshchow20/kind-ui/";
 export const documentationSource = "https://kindui.dev/charts/docs/";
 
+/** @param {string} readme @param {string[]} packedFiles */
 export function assertDocumentationContract(readme, packedFiles) {
-  const links = [...readme.matchAll(/\]\(([^)]+)\)/g)].map(([, target]) => target);
+  const links = [...readme.matchAll(/\]\(([^)]+)\)/g)].map(([, target]) => {
+    assert.ok(target, "Expected a Markdown link target");
+    return target;
+  });
   assert.ok(links.includes(documentationSource), "README must link the canonical documentation");
   assert.match(readme, /@import\s+["']tailwindcss["']/, "Missing Tailwind CSS import");
   assert.match(
@@ -21,7 +25,7 @@ export function assertDocumentationContract(readme, packedFiles) {
   assert.match(readme, /from\s+["']@kind-ui\/charts["']/, "Missing public package import");
   for (const target of links) {
     if (target.startsWith(repositorySourcePrefix)) {
-      const route = target.slice(repositorySourcePrefix.length).split("#")[0];
+      const route = target.slice(repositorySourcePrefix.length).split("#", 1).join("");
       if (!route) continue;
       assert.match(route, /^(blob|tree)\/main\//, `Unsupported repository source route: ${target}`);
       const file = route.replace(/^(blob|tree)\/main\//, "");
@@ -30,7 +34,10 @@ export function assertDocumentationContract(readme, packedFiles) {
         `Missing repository source: ${file}`,
       );
     } else if (!/^(https?:|#)/.test(target)) {
-      assert.ok(packedFiles.includes(target.split("#")[0]), `Link leaves the package: ${target}`);
+      assert.ok(
+        packedFiles.includes(target.split("#", 1).join("")),
+        `Link leaves the package: ${target}`,
+      );
     }
   }
 }

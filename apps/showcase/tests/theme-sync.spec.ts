@@ -10,7 +10,7 @@ for (const preference of ["light", "dark", "system"]) {
     await page.goto("./");
     await expect(
       page.getByRole("radio", {
-        name: preference[0].toUpperCase() + preference.slice(1),
+        name: preference.charAt(0).toUpperCase() + preference.slice(1),
         exact: true,
       }),
     ).toBeChecked();

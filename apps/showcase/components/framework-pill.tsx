@@ -28,6 +28,8 @@ function BrandPill({
   const focused = useRef(false);
   const reduceMotion = useReducedMotion();
   const names = labels[group];
+  const name = names[index];
+  if (name === undefined) throw new Error(`Invalid ${group} pill index: ${index}`);
   const measureRef = useRef<HTMLSpanElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [width, setWidth] = useState<number>();
@@ -91,20 +93,20 @@ function BrandPill({
         }}
       >
         <span ref={measureRef} className="brand-pill-sizer" aria-hidden="true">
-          <BrandIcon name={names[index]} />
-          {names[index]}
+          <BrandIcon name={name} />
+          {name}
         </span>
         <AnimatePresence initial={false} mode="popLayout">
           <motion.span
-            key={names[index]}
+            key={name}
             className="brand-pill-face"
             initial={reduceMotion ? false : { y: "55%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { y: "-55%", opacity: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            <BrandIcon name={names[index]} />
-            {names[index]}
+            <BrandIcon name={name} />
+            {name}
           </motion.span>
         </AnimatePresence>
       </motion.button>
@@ -145,6 +147,7 @@ export function HeroHeadline() {
           );
           if (!document.hidden && available.length) {
             const group = available[Math.floor(Math.random() * available.length)];
+            if (group === undefined) return schedule();
             previous.current = group;
             setIndices((current) => ({
               ...current,

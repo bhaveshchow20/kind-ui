@@ -2,6 +2,7 @@
 import type * as PageTree from "fumadocs-core/page-tree";
 import { SidebarTrigger, useSidebar as useDrawer } from "fumadocs-ui/components/sidebar/base";
 import { SidebarTabsDropdown } from "fumadocs-ui/components/sidebar/tabs/dropdown";
+import { useSearchContext } from "fumadocs-ui/contexts/search";
 import { GlassLayout, type GlassLayoutProps, useGlassLayout } from "fumadocs-ui/layouts/glass";
 import {
   Sidebar,
@@ -9,12 +10,42 @@ import {
   SidebarProvider,
   useSidebar,
 } from "fumadocs-ui/layouts/glass/slots/sidebar";
+import { resolveLinkItems } from "fumadocs-ui/layouts/shared";
+import {
+  FullSearchTrigger,
+  type FullSearchTriggerProps,
+  SearchTrigger,
+} from "fumadocs-ui/layouts/shared/slots/search-trigger";
 import { PanelLeft } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef } from "react";
+import { cloneElement, isValidElement, type SVGProps, useCallback, useEffect, useRef } from "react";
 
 import { DocsThemeSwitch } from "@/components/theme-switch";
 import { docRoute, legacyDocSlugs } from "@/lib/routing.mjs";
+
+function AccessibleSearchTrigger(props: FullSearchTriggerProps) {
+  const { open } = useSearchContext();
+  const trigger = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
+  useEffect(() => {
+    if (open || !restoreFocus.current) return;
+    restoreFocus.current = false;
+    const frame = window.requestAnimationFrame(() =>
+      trigger.current?.focus({ preventScroll: true }),
+    );
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
+  return (
+    <FullSearchTrigger
+      {...props}
+      ref={trigger}
+      onClickCapture={(event) => {
+        props.onClickCapture?.(event);
+        restoreFocus.current = !event.defaultPrevented;
+      }}
+    />
+  );
+}
 
 function NavigationTitle() {
   const { slots, props } = useGlassLayout();
@@ -108,7 +139,17 @@ export function MobileDocsNavigation() {
     </SidebarTrigger>
   );
 }
-export function GlassDocsLayout({ children, tree, ...props }: GlassLayoutProps) {
+export function GlassDocsLayout({ children, tree, githubUrl, links, ...props }: GlassLayoutProps) {
+  const accessibleLinks = resolveLinkItems({
+    ...(githubUrl === undefined ? {} : { githubUrl }),
+    ...(links === undefined ? {} : { links }),
+  }).map((item) =>
+    item.type === "icon" &&
+    item.url === githubUrl &&
+    isValidElement<SVGProps<SVGSVGElement>>(item.icon)
+      ? { ...item, icon: cloneElement(item.icon, { role: "presentation", "aria-hidden": true }) }
+      : item,
+  );
   const tabs = tree.children.flatMap((section) => {
     if (section.type !== "folder") return [];
     const urls = pageUrls(section.children);
@@ -124,10 +165,12 @@ export function GlassDocsLayout({ children, tree, ...props }: GlassLayoutProps) 
   return (
     <GlassLayout
       {...props}
+      links={accessibleLinks}
       tree={tree}
       sidebar={{ collapsible: false }}
       tabs={tabs}
       slots={{
+        searchTrigger: { sm: SearchTrigger, full: AccessibleSearchTrigger },
         themeSwitch: DocsThemeSwitch,
         header: () => null,
         navTitle: NavigationTitle,

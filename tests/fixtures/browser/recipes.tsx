@@ -11,7 +11,7 @@ import {
   TargetLine,
   TrendLine,
   type TrendPoint,
-} from "./line-recipes";
+} from "./line-recipes.js";
 import { useReducedMotionPreference } from "./use-reduced-motion.js";
 import "./style.css";
 import "./recipes.css";

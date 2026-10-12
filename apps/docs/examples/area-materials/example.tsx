@@ -61,7 +61,7 @@ export function MaterialAreaChart({
             type="monotone"
             strokeWidth={2}
             fillOpacity={0.32}
-            material={appearance === "default" ? undefined : appearance}
+            {...(appearance !== "default" ? { material: appearance } : {})}
           />
           <AreaChart.Tooltip />
           <AreaChart.Legend />

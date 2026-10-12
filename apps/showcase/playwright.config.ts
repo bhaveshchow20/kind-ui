@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const port = Number(process.env.KIND_SHOWCASE_PORT ?? 7273);
 const basePath = process.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH ?? "";
 
 export default defineConfig({
@@ -7,7 +8,7 @@ export default defineConfig({
   timeout: 30_000,
   fullyParallel: false,
   workers: 1,
-  use: { baseURL: `http://127.0.0.1:7273${basePath}/`, trace: "retain-on-failure" },
+  use: { baseURL: `http://127.0.0.1:${port}${basePath}/`, trace: "retain-on-failure" },
   projects: [
     {
       name: "chromium",
@@ -36,8 +37,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run start -- --hostname 127.0.0.1 --port 7273",
-    url: "http://127.0.0.1:7273",
+    command: `npm run start -- --hostname 127.0.0.1 --port ${port}`,
+    url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
     timeout: 60_000,
   },

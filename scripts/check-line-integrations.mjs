@@ -8,12 +8,13 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { build } from "vite";
 import { browserDirectives } from "./browser-directives.mjs";
+import { artifactReceiptSchema, parseJson, workspaceManifestSchema } from "./tooling-schemas.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const npm = process.env.npm_execpath;
 assert.ok(npm, "Run npm run check:line-integrations after npm run pack:artifact");
-const evidence = JSON.parse(
-  await readFile(join(root, "artifacts/package/validated-artifact.json"), "utf8"),
+const evidence = artifactReceiptSchema.parse(
+  parseJson(await readFile(join(root, "artifacts/package/validated-artifact.json"), "utf8")),
 );
 const tarball = join(root, "artifacts/package", evidence.filename);
 assert.equal(
@@ -22,7 +23,9 @@ assert.equal(
     .digest("hex"),
   evidence.sha256,
 );
-const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
+const manifest = workspaceManifestSchema.parse(
+  parseJson(await readFile(join(root, "package.json"), "utf8")),
+);
 const scratch = await mkdtemp(join(tmpdir(), "kind-line-integrations-"));
 const run = (command, args, cwd = scratch) =>
   execFileSync(command, args, {

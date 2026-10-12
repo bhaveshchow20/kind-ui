@@ -116,7 +116,7 @@ export function EnergyFlowFinishChart({
                     <FocusedFlow nodeIds={[props.payload.source.id, props.payload.target.id]}>
                       <SankeyLink
                         {...props}
-                        finish={appearance === "default" ? undefined : appearance}
+                        {...(appearance !== "default" ? { finish: appearance } : {})}
                         material="gradient"
                         pathProps={{
                           role: "button",
@@ -153,7 +153,7 @@ export function EnergyFlowFinishChart({
                     >
                       <SankeyNode
                         {...props}
-                        finish={appearance === "default" ? undefined : appearance}
+                        {...(appearance !== "default" ? { finish: appearance } : {})}
                       />
                       <text
                         x={props.x + props.width / 2}

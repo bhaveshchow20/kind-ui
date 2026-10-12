@@ -95,7 +95,7 @@ export function MaterialHistogram({
             tickFormatter={(value) => `${value} ms`}
           />
           <HistogramChart.Grid vertical={false} strokeDasharray="3 3" stroke="#ccc" />
-          <HistogramChart.Series material={appearance === "default" ? undefined : appearance} />
+          <HistogramChart.Series {...(appearance !== "default" ? { material: appearance } : {})} />
           <HistogramChart.Tooltip
             labelFormatter={(_label, payload) => {
               const bin = payload[0]?.payload as HistogramBin | undefined;

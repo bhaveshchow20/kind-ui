@@ -8,13 +8,19 @@ import { showcaseURL } from "../../indexing.mjs";
 import { documentationCharts, footerLinkGroups, siteLinks } from "../lib/site-links";
 
 const basePath = process.env.NEXT_PUBLIC_SHOWCASE_BASE_PATH ?? "";
+function previewOrigin(baseURL: string | undefined): string {
+  if (baseURL === undefined) throw new Error("Homepage route checks require a configured baseURL");
+  return new URL(baseURL).origin;
+}
 
 test("agent reference aliases resolve directly to the generated Docs reference", async ({
   request,
+  baseURL,
 }) => {
+  const serverOrigin = previewOrigin(baseURL);
   for (const prefix of new Set(["", basePath])) {
     for (const file of ["llms.txt", "llms-full.txt"]) {
-      const response = await request.get(`http://127.0.0.1:7273${prefix}/${file}`, {
+      const response = await request.get(`${serverOrigin}${prefix}/${file}`, {
         maxRedirects: 0,
       });
       expect(response.status()).toBe(308);
@@ -26,13 +32,15 @@ test("agent reference aliases resolve directly to the generated Docs reference",
 test("home redirects only in prefixed mode and direct refresh loads assets", async ({
   page,
   request,
+  baseURL,
 }) => {
-  const root = await request.get("http://127.0.0.1:7273/", { maxRedirects: 0 });
+  const serverOrigin = previewOrigin(baseURL);
+  const root = await request.get(`${serverOrigin}/`, { maxRedirects: 0 });
   expect(root.status()).toBe(basePath ? 307 : 200);
   if (basePath) expect(root.headers().location).toBe(basePath);
   const missing: string[] = [];
   page.on("response", (response) => {
-    if (response.url().startsWith("http://127.0.0.1:7273/") && response.status() >= 400)
+    if (response.url().startsWith(`${serverOrigin}/`) && response.status() >= 400)
       missing.push(response.url());
   });
   await page.goto("./");
@@ -47,7 +55,7 @@ test("home redirects only in prefixed mode and direct refresh loads assets", asy
     "kind-bloom.ico",
     "kind-bloom-apple.png",
   ]) {
-    expect((await request.get(`http://127.0.0.1:7273${basePath}/${asset}`)).status()).toBe(200);
+    expect((await request.get(`${serverOrigin}${basePath}/${asset}`)).status()).toBe(200);
   }
   await expect(page.locator("head link[rel='icon']").first()).toHaveAttribute(
     "href",
@@ -125,7 +133,7 @@ test("footer directory keeps chart and resource links visible on desktop and nar
   for (const name of ["Charts", "Guides", "Resources"]) {
     await expect(directory.getByRole("heading", { name, exact: true })).toBeVisible();
   }
-  for (const href of footerLinkGroups[0].links.slice(0, 6).map((chart) => chart.href)) {
+  for (const href of (footerLinkGroups.at(0)?.links ?? []).slice(0, 6).map((chart) => chart.href)) {
     await expect(directory.locator(`a[href="${href}"]`)).toHaveCount(1);
   }
   await expect(directory.getByRole("link", { name: /^View all/ })).toHaveAttribute(
@@ -152,8 +160,10 @@ test("footer directory keeps chart and resource links visible on desktop and nar
 
 test("initial homepage HTML and metadata routes match deployment indexing intent", async ({
   request,
+  baseURL,
 }) => {
-  const origin = `http://127.0.0.1:7273${basePath}`;
+  const serverOrigin = previewOrigin(baseURL);
+  const origin = `${serverOrigin}${basePath}`;
   const page = await request.get(`${origin}/`);
   expect(page.status()).toBe(200);
   const html = await page.text();
@@ -165,14 +175,16 @@ test("initial homepage HTML and metadata routes match deployment indexing intent
   expect(html).toContain(`href="${siteLinks.docs}"`);
   // Links must exist before JS, rather than appearing only inside the search dialog.
   const initialHTML = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
-  for (const href of footerLinkGroups[0].links.map((chart) => chart.href)) {
+  for (const href of (footerLinkGroups.at(0)?.links ?? []).map((chart) => chart.href)) {
     expect(initialHTML).toContain(`href="${href}"`);
   }
   const structuredData = [
     ...html.matchAll(/<script type="application\/ld\+json">([^<]+)<\/script>/g),
   ];
   expect(structuredData).toHaveLength(1);
-  const source = JSON.parse(structuredData[0][1]);
+  const json = structuredData[0]?.[1];
+  if (json === undefined) throw new Error("Missing source JSON-LD");
+  const source = JSON.parse(json);
   expect(source["@type"]).toBe("SoftwareSourceCode");
   expect(source.name).toBe("@kind-ui/charts");
   expect(source.url).toBe("https://kindui.dev/charts");

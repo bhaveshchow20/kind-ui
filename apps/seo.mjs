@@ -20,6 +20,7 @@ export const socialImages = {
 };
 
 /** Public static images work for social crawlers without executing JavaScript. */
+/** @param {string} title @param {string | undefined} description @param {string} url @param {typeof socialImages.homepage} [image] */
 export function socialMetadata(title, description, url, image = socialImages.homepage) {
   return {
     openGraph: {

@@ -1,16 +1,25 @@
+import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { appendFile, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertReviewedVersion, chartsVersionPlan } from "./release-plan.mjs";
+import {
+  changesetStatusSchema,
+  packageIdentitySchema,
+  parseJson,
+  reviewedVersionSchema,
+} from "./tooling-schemas.mjs";
 
+/** @param {string} root */
 export async function pendingChangesets(root) {
   return (await readdir(join(root, ".changeset")))
     .filter((name) => name.endsWith(".md") && name !== "README.md")
     .sort();
 }
 
+/** @param {string} root @param {string} cli */
 export async function changesetStatus(root, cli) {
   const scratch = await mkdtemp(join(tmpdir(), "kind-version-status-"));
   try {
@@ -20,20 +29,26 @@ export async function changesetStatus(root, cli) {
       encoding: "utf8",
       stdio: "pipe",
     });
-    return JSON.parse(await readFile(output));
+    return changesetStatusSchema.parse(parseJson(await readFile(output, "utf8")));
   } finally {
     await rm(scratch, { recursive: true, force: true });
   }
 }
 
+/** @param {string} root @param {{cli: string, npm: string | undefined}} options */
 export async function prepareChartsVersion(root, { cli, npm }) {
   if (!(await pendingChangesets(root)).length) return null;
   const status = await changesetStatus(root, cli);
   if (!status.releases.length) return null;
-  const manifest = JSON.parse(await readFile(join(root, "packages/charts/package.json")));
-  const policy = JSON.parse(await readFile(join(root, ".changeset/release-version.json")));
+  const manifest = packageIdentitySchema.parse(
+    parseJson(await readFile(join(root, "packages/charts/package.json"), "utf8")),
+  );
+  const policy = reviewedVersionSchema.parse(
+    parseJson(await readFile(join(root, ".changeset/release-version.json"), "utf8")),
+  );
   assertReviewedVersion(policy, manifest);
   const next = chartsVersionPlan(status, manifest);
+  assert.ok(npm, "Run version preparation through npm");
   execFileSync(process.execPath, [cli, "version"], { cwd: root, stdio: "inherit" });
   execFileSync(
     process.execPath,

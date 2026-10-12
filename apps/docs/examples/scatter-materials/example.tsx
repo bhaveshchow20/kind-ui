@@ -72,7 +72,7 @@ export function MaterialBubbleChart({
             seriesKey="tasks"
             data={data}
             shape="circle"
-            material={appearance === "default" ? undefined : appearance}
+            {...(appearance !== "default" ? { material: appearance } : {})}
             fillOpacity={0.72}
           />
           <ScatterChart.Tooltip<(typeof data)[number]>

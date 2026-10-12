@@ -15,6 +15,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
+import { publint } from "publint";
+import { formatMessage } from "publint/utils";
 import { build } from "vite";
 import { browserDirectives } from "./browser-directives.mjs";
 import { checkTypes } from "./check-types.mjs";
@@ -25,6 +27,14 @@ import {
   assertLineConsumerSource,
 } from "./line-consumer-contract.mjs";
 import { assertPackageContract } from "./package-contract.mjs";
+import {
+  artifactReceiptSchema,
+  npmPackSchema,
+  packageIdentitySchema,
+  packageManifestSchema,
+  parseJson,
+  workspaceManifestSchema,
+} from "./tooling-schemas.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const npm = process.env.npm_execpath;
@@ -39,7 +49,9 @@ const peerNames = [
   "@types/react",
   "@types/react-dom",
 ];
-const rootManifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
+const rootManifest = workspaceManifestSchema.parse(
+  parseJson(await readFile(join(root, "package.json"), "utf8")),
+);
 assert.equal(rootManifest.private, true, "Workspace must remain private");
 const scratch = await mkdtemp(join(tmpdir(), "kind-ui-package-"));
 const artifactDestination = join(root, "artifacts/package");
@@ -47,6 +59,12 @@ if (process.argv.includes("--keep-artifact")) {
   // A failed rerun must not leave an earlier artifact marked as validated.
   await rm(artifactDestination, { recursive: true, force: true });
 }
+/**
+ * @param {string} command
+ * @param {string[]} args
+ * @param {string} [cwd]
+ * @param {"pipe" | "inherit"} [output]
+ */
 function run(command, args, cwd = root, output = "pipe") {
   return execFileSync(command, args, {
     cwd,
@@ -57,6 +75,12 @@ function run(command, args, cwd = root, output = "pipe") {
     },
     stdio: ["ignore", output, "inherit"],
   });
+}
+/** @param {import("vite").InlineConfig} config */
+async function buildOutput(config) {
+  const result = await build(config);
+  assert.ok(!Array.isArray(result) && "output" in result, "Expected a single completed Vite build");
+  return result;
 }
 try {
   run(process.execPath, [
@@ -71,17 +95,20 @@ try {
     scratchPath !== workspacePath && !scratchPath.startsWith(workspacePath + sep),
     "Temporary consumer must be outside the workspace",
   );
-  const [packed] = JSON.parse(
-    run(process.execPath, [
-      npm,
-      "pack",
-      "--workspace",
-      "@kind-ui/charts",
-      "--json",
-      "--pack-destination",
-      scratch,
-    ]),
+  const [packed] = npmPackSchema.parse(
+    parseJson(
+      run(process.execPath, [
+        npm,
+        "pack",
+        "--workspace",
+        "@kind-ui/charts",
+        "--json",
+        "--pack-destination",
+        scratch,
+      ]),
+    ),
   );
+  assert.ok(packed, "Expected one npm pack result");
   assert.equal(packed.filename, basename(packed.filename), "Unexpected tarball path");
   const tarball = join(scratch, packed.filename);
   const tarballBytes = await readFile(tarball);
@@ -91,6 +118,35 @@ try {
     packed.integrity,
     "Tarball must match npm pack integrity before installation",
   );
+  const packageLint = await publint({
+    pack: {
+      tarball: tarballBytes.buffer.slice(
+        tarballBytes.byteOffset,
+        tarballBytes.byteOffset + tarballBytes.byteLength,
+      ),
+    },
+    strict: true,
+    level: "error",
+  });
+  assert.equal(
+    packageLint.messages.length,
+    0,
+    packageLint.messages.map((message) => formatMessage(message, packageLint.pkg)).join("\n"),
+  );
+  // The package declares ESM imports only. ATTW still checks every exported
+  // entrypoint in supported ESM/Bundler modes without adding a CJS promise.
+  run(
+    process.execPath,
+    [
+      join(root, "node_modules/@arethetypeswrong/cli/dist/index.js"),
+      tarball,
+      "--profile",
+      "esm-only",
+    ],
+    root,
+    "inherit",
+  );
+  console.log("Exact packed artifact: strict publint and ATTW ESM profile passed");
   // Ordinary React host: installing Kind alone must resolve its required engine
   // peers. Keep this distinct from the fully pinned reproducibility consumer.
   const ordinary = join(scratch, "ordinary-host");
@@ -124,10 +180,11 @@ try {
     ordinary,
   );
   run(process.execPath, [npm, "ls", "--all", "--json"], ordinary);
+  /** @type {Record<string, string>} */
   const ordinaryConsumerVersions = {};
   for (const name of ["react", "react-dom", "react-is", "recharts", "motion"]) {
-    ordinaryConsumerVersions[name] = JSON.parse(
-      await readFile(join(ordinary, "node_modules", name, "package.json"), "utf8"),
+    ordinaryConsumerVersions[name] = packageIdentitySchema.parse(
+      parseJson(await readFile(join(ordinary, "node_modules", name, "package.json"), "utf8")),
     ).version;
   }
   for (const file of [
@@ -163,6 +220,13 @@ try {
           module: mode === "Bundler" ? "ESNext" : mode,
           moduleResolution: mode,
           strict: true,
+          noUncheckedIndexedAccess: true,
+          // Recharts' Redux Toolkit declarations do not support exact optional
+          // properties with declaration checking. Owned sources and the focused
+          // packed negative consumer check this flag separately.
+          exactOptionalPropertyTypes: false,
+          noImplicitOverride: true,
+          isolatedModules: true,
           skipLibCheck: false,
           noEmit: true,
           typeRoots: [join(ordinary, "node_modules/@types")],
@@ -215,7 +279,9 @@ try {
     join(await realpath(consumer), "node_modules", "@kind-ui/charts"),
     "Consumer must use the tarball, not a workspace link",
   );
-  const manifest = JSON.parse(await readFile(join(installed, "package.json"), "utf8"));
+  const manifest = packageManifestSchema.parse(
+    parseJson(await readFile(join(installed, "package.json"), "utf8")),
+  );
   assertPackageContract(
     manifest,
     packed.files.map((file) => file.path),
@@ -242,7 +308,7 @@ try {
     '@import "tailwindcss/theme" layer(theme);\n@import "tailwindcss/utilities" layer(utilities);\n@source "./node_modules/@kind-ui/charts/dist";',
   );
   await writeFile(join(consumer, "missing-source.css"), '@import "tailwindcss" source(none);');
-  const missingSourceBuild = await build({
+  const missingSourceBuild = await buildOutput({
     configFile: false,
     root: consumer,
     logLevel: "silent",
@@ -250,14 +316,16 @@ try {
     build: { write: false, rolldownOptions: { input: join(consumer, "missing-source.css") } },
   });
   const missingSourceCss = missingSourceBuild.output
-    .filter((item) => item.type === "asset" && item.fileName.endsWith(".css"))
-    .map((item) => String(item.source))
+    .flatMap((item) =>
+      item.type === "asset" && item.fileName.endsWith(".css") ? [String(item.source)] : [],
+    )
     .join("\n");
   assert.doesNotMatch(
     missingSourceCss,
     /--popover,Canvas/,
     "Without source registration Tailwind must not secretly include chart styles",
   );
+  /** @param {string} folder @param {string} file @param {string} [target] */
   async function copyFixture(folder, file, target = file) {
     const source = await readFile(join(root, "tests/fixtures", folder, file), "utf8");
     if (
@@ -286,12 +354,14 @@ try {
       assertLineConsumerSource(source);
     await writeFile(join(consumer, target), source);
   }
+  /** @param {string[]} files */
   async function typecheck(files) {
     await checkTypes(consumer, join(root, "node_modules/typescript/bin/tsc"), files);
   }
+  /** @param {string} entry @param {string} outDir @param {boolean} [developmentReact] */
   async function production(entry, outDir, developmentReact = false) {
     const diagnostics = browserDirectives(consumer, [join(consumer, "host.tsx")]);
-    const productionOutput = await build({
+    const productionOutput = await buildOutput({
       plugins: [
         tailwindcss(),
         diagnostics.plugin,
@@ -325,8 +395,9 @@ try {
       },
     });
     const generatedCss = productionOutput.output
-      .filter((item) => item.type === "asset" && item.fileName.endsWith(".css"))
-      .map((item) => String(item.source))
+      .flatMap((item) =>
+        item.type === "asset" && item.fileName.endsWith(".css") ? [String(item.source)] : [],
+      )
       .join("\n");
     assert.match(
       generatedCss,
@@ -382,7 +453,7 @@ try {
       join(consumer, "primitive.tsx"),
       `import { XAxis } from "${source}"; window.axis = XAxis;`,
     );
-    const result = await build({
+    const result = await buildOutput({
       configFile: false,
       root: consumer,
       logLevel: "warn",
@@ -403,8 +474,13 @@ try {
       );
     }
   }
+  const [publicBytes, nativeBytes] = bundleSizes;
   assert.ok(
-    Math.abs(bundleSizes[0] - bundleSizes[1]) <= 100,
+    publicBytes !== undefined && nativeBytes !== undefined,
+    "Expected both bundle measurements",
+  );
+  assert.ok(
+    Math.abs(publicBytes - nativeBytes) <= 100,
     `Public/native primitive bundle difference must remain negligible: ${bundleSizes}`,
   );
   console.log(
@@ -427,7 +503,7 @@ createRoot(document.createElement("div")).render(
   </LineChart>
 );`,
     );
-    const result = await build({
+    const result = await buildOutput({
       configFile: false,
       root: consumer,
       logLevel: "warn",
@@ -449,6 +525,14 @@ createRoot(document.createElement("div")).render(
     "Named LineChart production bundles: unrelated family designs tree-shaken with loading enabled and omitted",
   );
 
+  await copyFile(join(root, "tests/core-contracts.tsx"), join(consumer, "core-contracts.tsx"));
+  await checkTypes(
+    consumer,
+    join(root, "node_modules/typescript/bin/tsc"),
+    ["core-contracts.tsx"],
+    { strictOptionalTypes: true },
+  );
+  console.log("Core unsafe-input type regressions: packed NodeNext/Bundler consumers passed");
   const genericsConsumer = await readFile(join(root, "tests/series-generics-consumer.tsx"), "utf8");
   assertLineConsumerSource(genericsConsumer);
   await writeFile(join(consumer, "series-generics-consumer.tsx"), genericsConsumer);
@@ -734,7 +818,7 @@ createRoot(document.createElement("div")).render(
     await writeFile(
       join(destination, "validated-artifact.json"),
       `${JSON.stringify(
-        {
+        artifactReceiptSchema.parse({
           filename: packed.filename,
           sha256,
           integrity: packed.integrity,
@@ -764,7 +848,7 @@ createRoot(document.createElement("div")).render(
           ),
           ordinaryConsumerVersions,
           validation: "installed tarball package gate; aggregate browser checks are separate",
-        },
+        }),
         null,
         2,
       )}\n`,

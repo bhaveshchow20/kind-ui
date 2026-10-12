@@ -47,13 +47,13 @@ export function MaterialRadarChart({
             dataKey="studio"
             strokeWidth={2}
             fillOpacity={0.18}
-            material={appearance === "default" ? undefined : appearance}
+            {...(appearance !== "default" ? { material: appearance } : {})}
           />
           <RadarChart.Series
             dataKey="field"
             strokeWidth={2}
             fillOpacity={0.18}
-            material={appearance === "default" ? undefined : appearance}
+            {...(appearance !== "default" ? { material: appearance } : {})}
           />
           <RadarChart.Tooltip />
           <RadarChart.Legend />

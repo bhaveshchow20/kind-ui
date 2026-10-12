@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { verificationFiles } from "./consumer-validation-files.mjs";
+import { declarationCompilerOptions, verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = Object.fromEntries(
   Object.entries(JSON.parse(readFileSync("generated/all-examples.json", "utf8"))).filter(
@@ -54,12 +54,7 @@ for (const bundle of consumers) {
     path.join(root, "tsconfig.nodenext.json"),
     JSON.stringify({
       extends: "./tsconfig.json",
-      compilerOptions: {
-        module: "NodeNext",
-        moduleResolution: "NodeNext",
-        skipLibCheck: false,
-        types: ["react", "react-dom"],
-      },
+      compilerOptions: declarationCompilerOptions,
       include: ["src/examples/**/*.tsx"],
     }),
   );

@@ -93,7 +93,7 @@ export function MaterialCashFlowChart({
             strokeOpacity={0.35}
           />
           <WaterfallChart.Series
-            material={appearance === "default" ? undefined : appearance}
+            {...(appearance !== "default" ? { material: appearance } : {})}
             radius={3}
           >
             {data.map((row) => (

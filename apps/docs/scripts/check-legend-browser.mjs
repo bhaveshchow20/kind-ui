@@ -5,7 +5,7 @@ import path from "node:path";
 import { stripVTControlCharacters } from "node:util";
 import { chromium, expect } from "@playwright/test";
 import { families, variantDefinitions } from "../examples/catalog.mjs";
-import { verificationFiles } from "./consumer-validation-files.mjs";
+import { declarationCompilerOptions, verificationFiles } from "./consumer-validation-files.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
@@ -356,7 +356,9 @@ async function startConsumer() {
       control.options.some((option) => option.value === "loading"),
       `${id} native loading variant`,
     );
-    imports.push(`import { ${name} as Example${imports.length} } from "./examples/${id}/example";`);
+    imports.push(
+      `import { ${name} as Example${imports.length} } from "./examples/${id}/example.js";`,
+    );
     examples.push(
       `{ id: ${JSON.stringify(id)}, render: (pending: boolean) => <Example${imports.length - 1} ${control.prop}={pending ? "loading" : ${JSON.stringify(control.default)}} /> }`,
     );
@@ -371,13 +373,25 @@ const examples = [${examples.join(",\n")}];
 function App() {
  const [index, setIndex] = useState(0);
  const [pending, setPending] = useState(false);
- return <><label>Example <select value={examples[index].id} onChange={(event) => { setPending(false); setIndex(examples.findIndex((example) => example.id === event.target.value)); }}>{examples.map((example) => <option key={example.id}>{example.id}</option>)}</select></label><button type="button" onClick={() => setPending((old) => !old)}>Toggle pending</button><main data-testid="consumer-example" style={{width: 900, maxWidth: "100%"}}>{examples[index].render(pending)}</main></>;
+ const example = examples[index];
+ if (!example) throw new Error("Unknown legend consumer example index " + index);
+ return <><label>Example <select value={example.id} onChange={(event) => {
+   const nextIndex = examples.findIndex((entry) => entry.id === event.target.value);
+   if (nextIndex < 0) throw new Error("Unknown legend consumer example " + event.target.value);
+   setPending(false);
+   setIndex(nextIndex);
+ }}>{examples.map((example) => <option key={example.id}>{example.id}</option>)}</select></label><button type="button" onClick={() => setPending((old) => !old)}>Toggle pending</button><main data-testid="consumer-example" style={{width: 900, maxWidth: "100%"}}>{example.render(pending)}</main></>;
 }
-createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictMode>);
+const mount = document.getElementById("root");
+if (!mount) throw new Error("Legend consumer mount element is missing");
+createRoot(mount).render(<StrictMode><App /></StrictMode>);
 `,
   );
   const config = JSON.parse(readFileSync(path.join(root, "tsconfig.json"), "utf8"));
-  config.compilerOptions.skipLibCheck = false;
+  // Owned fixture source retains strict optional checks; dependency bodies are
+  // checked separately with the same baseline as the copied-consumer gates.
+  config.compilerOptions.exactOptionalPropertyTypes = true;
+  config.compilerOptions.skipLibCheck = true;
   config.compilerOptions.types = ["react", "react-dom"];
   write("tsconfig.json", JSON.stringify(config));
   execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
@@ -389,6 +403,34 @@ createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictM
     first.version,
   );
   execFileSync("npm", ["run", "build"], { cwd: root, stdio: "inherit" });
+  write(
+    "tsconfig.declarations.json",
+    JSON.stringify({
+      extends: "./tsconfig.json",
+      compilerOptions: declarationCompilerOptions,
+      include: ["src"],
+    }),
+  );
+  for (const [module, resolution] of [
+    ["NodeNext", "NodeNext"],
+    ["ESNext", "Bundler"],
+  ]) {
+    execFileSync(
+      "npm",
+      [
+        "exec",
+        "tsc",
+        "--",
+        "-p",
+        "tsconfig.declarations.json",
+        "--module",
+        module,
+        "--moduleResolution",
+        resolution,
+      ],
+      { cwd: root, stdio: "inherit" },
+    );
+  }
   const port = Number(process.env.KIND_DOCS_LEGEND_CONSUMER_PORT || 6376);
   const preview = spawn(
     process.execPath,

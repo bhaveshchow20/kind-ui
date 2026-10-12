@@ -1,4 +1,5 @@
 import type { BoxPlotSummary, HistogramBin, SankeyFlowData, WaterfallEntry } from "@kind-ui/charts";
+import { demoEntry } from "@/lib/utils";
 import type { DemoOptions } from "./demo-options";
 export const newRecipes = [
   {
@@ -102,7 +103,7 @@ export function heatmapData(id: string) {
     rows,
     columns,
     data: rows.flatMap((row, r) =>
-      columns.map((column, c) => ({ row, column, value: values[r][c] })),
+      columns.map((column, c) => ({ row, column, value: demoEntry(demoEntry(values, r), c) })),
     ),
     max: retention ? 100 : 45,
   };
@@ -260,7 +261,20 @@ export function newCode(
   animate: boolean,
   options: DemoOptions = {},
 ) {
-  const intro = `"use client";\n\nimport { BoxPlotChart, type BoxPlotSummary, Cell, HeatmapChart, type HistogramBin, HistogramChart, LineChart, ReferenceLine, SankeyChart, type SankeyFlowData, WaterfallChart, type WaterfallDatum, type WaterfallEntry, computeWaterfallData, createHeatmapScale } from "@kind-ui/charts";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)};\nconst animate = ${animate};\n`;
+  const imports = {
+    Line: "LineChart",
+    Histogram: "HistogramChart, type HistogramBin",
+    "Box Plot": "BoxPlotChart, type BoxPlotSummary, ReferenceLine",
+    Heatmap: "HeatmapChart, createHeatmapScale",
+    Waterfall:
+      "WaterfallChart, type WaterfallEntry, type WaterfallDatum, Cell, ReferenceLine, computeWaterfallData",
+    Sankey: "SankeyChart, type SankeyFlowData",
+  }[r.family];
+  const paletteLookup =
+    r.family === "Sankey"
+      ? `function paletteColor(index: number): string {\n  const color = colors[index];\n  if (color === undefined) throw new Error(\"Missing palette color\");\n  return color;\n}\n`
+      : "";
+  const intro = `"use client";\n\nimport { ${imports} } from "@kind-ui/charts";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)} as const;\nconst animate = ${animate};\n${paletteLookup}`;
   if (r.family === "Line") {
     return (
       intro +
@@ -273,7 +287,7 @@ export function Example(){
   <LineChart.YAxis width="auto" tick={{fontSize:11}} />
   <LineChart.Series dataKey="trials" seriesKey="trials" material="${material}" type="${options.curve ?? "monotone"}" dot={${options.dots ?? false}} strokeWidth={${options.strokeWidth ?? 3}} />
   <LineChart.Series dataKey="paid" seriesKey="paid" material="${material}" type="${options.curve ?? "monotone"}" dot={${options.dots ?? false}} strokeWidth={${options.strokeWidth ?? 3}} />
-  <LineChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+  <LineChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
   ${options.showLegend === false ? "" : "<LineChart.Legend />"}
  </LineChart>;
 }
@@ -293,7 +307,7 @@ export function Example(){
   <HistogramChart.YAxis width="auto" tickLine={false} axisLine={false} tick={{fontSize:11}}${density ? " tickFormatter={value => Number(value).toFixed(3)}" : ""} />
   ${options.showGrid === false ? "" : '<HistogramChart.Grid horizontal vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />'}
   <HistogramChart.Series material="${material}" stroke="${options.binBorders === false ? "none" : "var(--background)"}" strokeWidth={1.5} />
-  <HistogramChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} labelFormatter={(_label,entries) => {const bin=entries[0]?.payload as HistogramBin | undefined;return bin ? bin.lower + "–" + bin.upper + "${latency ? " ms" : " USD"}" : "";}} formatter={value => [${density ? "Number(value).toFixed(4)" : "String(value)"},"${density ? (latency ? "Density per ms" : "Density per dollar") : latency ? "Requests" : "Orders"}"]} />
+  <HistogramChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} labelFormatter={(_label,entries) => {const bin=entries[0]?.payload as HistogramBin | undefined;return bin ? bin.lower + "–" + bin.upper + "${latency ? " ms" : " USD"}" : "";}} formatter={value => [${density ? "Number(value).toFixed(4)" : "String(value)"},"${density ? (latency ? "Density per ms" : "Density per dollar") : latency ? "Requests" : "Orders"}"]} />
   ${options.showLegend === false ? "" : "<HistogramChart.Legend />"}
  </HistogramChart>;
 }
@@ -314,7 +328,7 @@ export function Example(){
   <BoxPlotChart.YAxis width="auto" type="${horizontal ? "category" : "number"}" ${horizontal ? 'dataKey="category"' : 'domain={[0,"dataMax"]} tickFormatter={value => `${value} ms`}'} tickLine={false} axisLine={false} tick={{fontSize:11}} />
   <ReferenceLine ${horizontal ? "x" : "y"}={0} />
   <BoxPlotChart.Series<Row> strokeWidth={${options.strokeWidth ?? 3}} dataKey="summary" seriesKey="spread" barSize={${options.width ?? 32}} outlierRadius={${options.outlierRadius ?? 3}} material="${material}" fillOpacity={0.65} />
-  <BoxPlotChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} formatter={(_value,_name,item) => [String((item.payload as Row).summary.median) + " ${horizontal ? "pp" : "ms"}","Median"]} />
+  <BoxPlotChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} formatter={(_value,_name,item) => [String((item.payload as Row).summary.median) + " ${horizontal ? "pp" : "ms"}","Median"]} />
   ${options.showLegend === false ? "" : "<BoxPlotChart.Legend />"}
  </BoxPlotChart>;
 }
@@ -333,7 +347,7 @@ export function Example(){
  return <HeatmapChart config={{}} aria-label="${r.tag}" rows={rows} columns={columns} data={data} scale={scale} animate={animate}${r.id === "heatmap-retention" ? " formatValue={value => `${value}%`}" : ""}>
   <HeatmapChart.Grid caption="${r.tag}" material="${material}" layout={{gap:${options.gap ?? 4},rowLabels:"${options.showLabels === false ? "hidden" : "visible"}",columnLabels:"${options.showLabels === false ? "hidden" : "visible"}"}} cellProps={() => ({style:{borderRadius:${options.radius ?? 5}}})}${(options.showValues ?? r.id === "heatmap-retention") ? "" : " Cell={() => null}"} />
   ${options.showLegend === false ? "" : `<HeatmapChart.Legend label="${r.id === "heatmap-retention" ? "Active users" : "Tickets"}" />`}
-  <HeatmapChart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
+  <HeatmapChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
  </HeatmapChart>;
 }
 `
@@ -364,11 +378,11 @@ export function Example(){
   return (
     intro +
     `const data: SankeyFlowData = ${JSON.stringify(sankeyData(r.id), null, 2)};
-const config = Object.fromEntries(data.nodes.map((node,index) => [node.id,{label:node.name,color:colors[index%colors.length]}]));
+const config = Object.fromEntries(data.nodes.map((node,index) => [node.id,{label:node.name,color:paletteColor(index%colors.length)}]));
 export function Example(){
  return <SankeyChart config={config} aria-label="${r.tag}" data={data} style={{width:"100%",height:240}} animate={animate} nodeWidth={${options.nodeWidth ?? 12}} nodePadding={${options.nodePadding ?? 24}} margin={{top:12,bottom:12,left:65,right:85}}>
-  <SankeyChart.Nodes render={props => <g><SankeyChart.Node {...props} color={colors[props.index%colors.length]} />${(options.showLabels ?? true) ? '<text x={props.x<100?props.x-8:props.x+props.width+8} y={props.y+props.height/2} textAnchor={props.x<100?"end":"start"} dominantBaseline="middle" fill="currentColor" fontSize={11}>{props.payload.name}</text>' : ""}</g>} />
-  <SankeyChart.Links render={props => <SankeyChart.Link {...props} material="gradient" color={colors[data.nodes.findIndex(node => node.id===props.payload.source.id)%colors.length]} targetColor={colors[data.nodes.findIndex(node => node.id===props.payload.target.id)%colors.length]} pathProps={{opacity:${options.linkOpacity ?? 0.45}}} />} />
+  <SankeyChart.Nodes render={props => <g><SankeyChart.Node {...props} color={paletteColor(props.index%colors.length)} />${(options.showLabels ?? true) ? '<text x={props.x<100?props.x-8:props.x+props.width+8} y={props.y+props.height/2} textAnchor={props.x<100?"end":"start"} dominantBaseline="middle" fill="currentColor" fontSize={11}>{props.payload.name}</text>' : ""}</g>} />
+  <SankeyChart.Links render={props => <SankeyChart.Link {...props} material="gradient" color={paletteColor(data.nodes.findIndex(node => node.id===props.payload.source.id)%colors.length)} targetColor={paletteColor(data.nodes.findIndex(node => node.id===props.payload.target.id)%colors.length)} pathProps={{opacity:${options.linkOpacity ?? 0.45}}} />} />
  </SankeyChart>;
 }
 `

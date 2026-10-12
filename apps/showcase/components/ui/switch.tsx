@@ -9,7 +9,7 @@ export function Switch({ className, ...props }: React.ComponentProps<typeof Anim
       <SwitchThumb
         className="soft-switch-thumb"
         transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 32 }}
-        pressedAnimation={reduced ? undefined : { width: 22 }}
+        {...(!reduced ? { pressedAnimation: { width: 22 } } : {})}
       />
     </AnimatedSwitch>
   );

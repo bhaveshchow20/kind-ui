@@ -82,7 +82,35 @@ test("parallel modes retain strict checking and independent configs on failure",
       const config = JSON.parse(await readFile(join(consumer, `tsconfig.${mode}.json`), "utf8"));
       assert.equal(config.compilerOptions.moduleResolution, mode);
       assert.equal(config.compilerOptions.strict, true);
+      assert.equal(config.compilerOptions.noUncheckedIndexedAccess, true);
+      assert.equal(config.compilerOptions.exactOptionalPropertyTypes, false);
+      assert.equal(config.compilerOptions.isolatedModules, true);
+      assert.equal(config.compilerOptions.noImplicitOverride, true);
       assert.equal(config.compilerOptions.skipLibCheck, false);
+      assert.deepEqual(config.files, ["invalid.ts"]);
+    }
+    await writeFile(join(consumer, "invalid.ts"), "export const value: number = [1][0];");
+    await assert.rejects(
+      checkTypes(consumer, compiler, ["invalid.ts"], { stdio: "ignore" }),
+      /consumer types failed/,
+    );
+    await checkTypes(consumer, compiler, ["valid.ts"], { strictOptionalTypes: true });
+    await writeFile(
+      join(consumer, "invalid.ts"),
+      "type Optional = { name?: string }; export const value: Optional = { name: undefined };",
+    );
+    await assert.rejects(
+      checkTypes(consumer, compiler, ["invalid.ts"], {
+        stdio: "ignore",
+        strictOptionalTypes: true,
+      }),
+      /consumer types failed/,
+    );
+    for (const mode of ["NodeNext", "Bundler"]) {
+      const config = JSON.parse(await readFile(join(consumer, `tsconfig.${mode}.json`), "utf8"));
+      assert.equal(config.compilerOptions.moduleResolution, mode);
+      assert.equal(config.compilerOptions.exactOptionalPropertyTypes, true);
+      assert.equal(config.compilerOptions.skipLibCheck, true);
       assert.deepEqual(config.files, ["invalid.ts"]);
     }
   } finally {

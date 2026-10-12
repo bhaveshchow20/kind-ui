@@ -22,21 +22,25 @@ export type HeatmapModelOptions = {
 };
 
 /** Explicit ordered domains; absent and null records are missing, never coerced to zero. */
-export function createHeatmapModel({
-  rows,
-  columns,
-  data,
-  duplicates = "error",
-}: HeatmapModelOptions): HeatmapModel {
+export function createHeatmapModel(options: HeatmapModelOptions): HeatmapModel {
+  if (options === null || typeof options !== "object" || Array.isArray(options))
+    throw new Error("Heatmap options must be an object");
+  const { rows, columns, data, duplicates = "error" } = options;
   if (!["error", "first", "last", "sum"].includes(duplicates))
     throw new Error("Invalid heatmap duplicate policy");
   for (const [name, domain] of [
     ["row", rows],
     ["column", columns],
   ] as const) {
-    if (domain.some((key) => typeof key !== "string") || new Set(domain).size !== domain.length)
+    if (!Array.isArray(domain)) throw new Error(`Heatmap ${name} domain must be an array`);
+    for (const [index, key] of domain.entries()) {
+      if (typeof key !== "string")
+        throw new Error(`Heatmap ${name} domain[${index}] must be a string`);
+    }
+    if (new Set(domain).size !== domain.length)
       throw new Error(`Heatmap ${name} domain must contain unique strings`);
   }
+  if (!Array.isArray(data)) throw new Error("Heatmap data must be an array");
   const rowMap = new Map(rows.map((key, index) => [key, index]));
   const columnMap = new Map(columns.map((key, index) => [key, index]));
   const cells = rows.map((row, rowIndex) =>
@@ -49,24 +53,29 @@ export function createHeatmapModel({
       sources: [] as HeatmapDatum[],
     })),
   );
-  for (const datum of data) {
+  for (const [index, datum] of data.entries()) {
+    const path = `Heatmap data[${index}]`;
+    if (datum === null || typeof datum !== "object" || Array.isArray(datum))
+      throw new Error(`${path} must be a datum object`);
+    if (typeof datum.row !== "string") throw new Error(`${path}.row must be a string`);
+    if (typeof datum.column !== "string") throw new Error(`${path}.column must be a string`);
     const r = rowMap.get(datum.row);
     const c = columnMap.get(datum.column);
     if (r === undefined || c === undefined)
-      throw new Error("Heatmap datum is outside its explicit domains");
+      throw new Error(`${path}.row/column is outside its explicit domains`);
     if (datum.value !== null && !Number.isFinite(datum.value))
-      throw new Error("Heatmap values must be finite numbers or null");
+      throw new Error(`${path}.value must be a finite number or null`);
     const cell = cells[r]?.[c];
     if (!cell) throw new Error("Invalid heatmap coordinate");
     if (cell.sources.length && duplicates === "error")
-      throw new Error(`Duplicate heatmap cell: ${datum.row}, ${datum.column}`);
+      throw new Error(`${path}: Duplicate heatmap cell: ${datum.row}, ${datum.column}`);
     const first = cell.sources.length === 0;
     cell.sources.push(datum);
     if (first || duplicates === "last") cell.value = datum.value;
     else if (duplicates === "sum" && datum.value !== null)
       cell.value = (cell.value ?? 0) + datum.value;
     if (cell.value !== null && !Number.isFinite(cell.value))
-      throw new Error("Heatmap sum must remain finite");
+      throw new Error(`${path}.value causes the sum to exceed finite numeric range`);
   }
   return { rows: [...rows], columns: [...columns], cells };
 }
@@ -78,12 +87,21 @@ export type HeatmapScaleOptions = {
   colors: readonly string[];
 };
 export type HeatmapScale = HeatmapScaleOptions & { color: (value: number) => string };
-export function createHeatmapScale({ domain, colors }: HeatmapScaleOptions): HeatmapScale {
+export function createHeatmapScale(options: HeatmapScaleOptions): HeatmapScale {
+  if (options === null || typeof options !== "object" || Array.isArray(options))
+    throw new Error("Heatmap scale options must be an object");
+  const { domain, colors } = options;
+  if (!Array.isArray(domain) || domain.length !== 2)
+    throw new Error("Heatmap scale domain must be an array with exactly two endpoints");
   const [min, max] = domain;
   if (!Number.isFinite(min) || !Number.isFinite(max) || min > max || !Number.isFinite(max - min))
     throw new Error("Heatmap scale requires a finite ascending domain");
-  if (colors.length < 2 || colors.some((color) => !/^#[0-9a-f]{6}$/i.test(color)))
+  if (!Array.isArray(colors) || colors.length < 2)
     throw new Error("Heatmap scale requires at least two opaque #rrggbb colors");
+  for (const [index, color] of colors.entries()) {
+    if (typeof color !== "string" || !/^#[0-9a-f]{6}$/i.test(color))
+      throw new Error(`Heatmap scale colors[${index}] must be an opaque #rrggbb color`);
+  }
   const palette = [...colors];
   const channels = palette.map((color) =>
     [1, 3, 5].map((i) => Number.parseInt(color.slice(i, i + 2), 16)),

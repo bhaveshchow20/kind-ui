@@ -29,7 +29,7 @@ function Switch({ onCheckedChange, ...props }: SwitchProps) {
   const [isPressed, setIsPressed] = React.useState(false);
   const [isChecked, setIsChecked] = useControlledState({
     value: props.checked,
-    defaultValue: props.defaultChecked,
+    defaultValue: props.defaultChecked ?? false,
     onChange: onCheckedChange,
   });
 
@@ -69,7 +69,7 @@ function SwitchThumb({
         whileTap="tab"
         layout
         transition={transition}
-        animate={isPressed ? pressedAnimation : undefined}
+        {...(isPressed && pressedAnimation !== undefined ? { animate: pressedAnimation } : {})}
         {...props}
       />
     </SwitchPrimitives.Thumb>

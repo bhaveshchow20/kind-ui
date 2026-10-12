@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { assertReviewedVersion } from "./release-plan.mjs";
+import { packageManifestSchema, parseJson, reviewedVersionSchema } from "./tooling-schemas.mjs";
 
-const reviewedVersion = JSON.parse(
-  readFileSync(new URL("../.changeset/release-version.json", import.meta.url)),
+const reviewedVersion = reviewedVersionSchema.parse(
+  parseJson(readFileSync(new URL("../.changeset/release-version.json", import.meta.url), "utf8")),
 );
 
-export function assertPackageContract(manifest, files, sources = []) {
+/** @param {unknown} inputManifest @param {string[]} files @param {string[]} [sources] */
+export function assertPackageContract(inputManifest, files, sources = []) {
+  const manifest = packageManifestSchema.parse(inputManifest);
   assert.equal(manifest.private, undefined, "Reviewed public candidate must omit the private flag");
   assertReviewedVersion(reviewedVersion, manifest);
   assert.ok(manifest.description?.trim(), "Package must describe its purpose");
@@ -35,6 +38,7 @@ export function assertPackageContract(manifest, files, sources = []) {
       ["import", ".js"],
       ["types", ".d.ts"],
     ]) {
+      assert.ok(condition && suffix, "Expected an export condition and suffix");
       const target = exported[condition];
       assert.ok(
         typeof target === "string" && target.startsWith("./dist/") && target.endsWith(suffix),

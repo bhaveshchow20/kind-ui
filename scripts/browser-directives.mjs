@@ -2,16 +2,21 @@ import { relative, resolve } from "node:path";
 
 // Use only for browser application fixtures. The packed entry and Next build
 // independently verify RSC boundaries; this must never be applied to that build.
+/** @type {Set<string>} */
 const seen = new Set();
+/** @param {string} root @param {string[]} [clientModules] */
 export function browserDirectives(root, clientModules = []) {
   const fixtures = new Set(clientModules.map((id) => resolve(id)));
   let duplicates = 0;
   return {
+    /** @param {import("rolldown").RolldownLog} warning @param {(warning: import("rolldown").RolldownLog) => void} defaultHandler */
     onwarn(warning, defaultHandler) {
-      const id = warning.id && relative(root, warning.id).replaceAll("\\", "/");
+      const moduleId = warning.id;
+      const id = moduleId && relative(root, moduleId).replaceAll("\\", "/");
       const known =
+        moduleId &&
         id &&
-        (fixtures.has(resolve(warning.id)) ||
+        (fixtures.has(resolve(moduleId)) ||
           /^packages\/charts\/dist\/.*\.js$/.test(id) ||
           /(?:^|\/)node_modules\/(?:framer-motion\/dist\/(?:es|esm)|@kind-ui\/charts\/dist)\/.*\.m?js$/.test(
             id,
@@ -19,12 +24,13 @@ export function browserDirectives(root, clientModules = []) {
       if (
         warning.code !== "MODULE_LEVEL_DIRECTIVE" ||
         !warning.message.includes('directive "use client"') ||
-        !known
+        !known ||
+        !moduleId
       ) {
         defaultHandler(warning);
         return;
       }
-      const key = resolve(warning.id);
+      const key = resolve(moduleId);
       if (seen.has(key)) duplicates++;
       else {
         seen.add(key);

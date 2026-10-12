@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { gt, inc, valid } from "semver";
+import {
+  changesetStatusSchema,
+  packageIdentitySchema,
+  registryMetadataSchema,
+  reviewedVersionSchema,
+} from "./tooling-schemas.mjs";
 
-export function assertReviewedVersion(policy, manifest) {
+/** @param {unknown} inputPolicy @param {unknown} inputManifest */
+export function assertReviewedVersion(inputPolicy, inputManifest) {
+  const policy = reviewedVersionSchema.parse(inputPolicy);
+  const manifest = packageIdentitySchema.parse(inputManifest);
   assert.equal(policy.package, "@kind-ui/charts", "Unexpected reviewed package");
   assert.equal(valid(policy.version), policy.version, "Expected a canonical version");
   assert.match(policy.version, /^\d+\.\d+\.\d+$/, "Expected a stable reviewed version");
@@ -13,12 +22,17 @@ export function assertReviewedVersion(policy, manifest) {
   );
 }
 
-export function chartsVersionPlan(status, manifest) {
+/** @param {unknown} inputStatus @param {unknown} inputManifest */
+export function chartsVersionPlan(inputStatus, inputManifest) {
+  const status = changesetStatusSchema.parse(inputStatus);
+  const manifest = packageIdentitySchema.parse(inputManifest);
   assert.equal(status.releases.length, 1, "Version only the charts package");
   const release = status.releases[0];
+  assert.ok(release, "Version plan must contain a release");
   assert.equal(release.name, "@kind-ui/charts");
   assert.equal(release.oldVersion, manifest.version, "Plan must start from the current version");
   assert.ok(["patch", "minor", "major"].includes(release.type));
+  assert.ok(release.type !== "none", "A release must advance the version");
   assert.equal(release.newVersion, inc(manifest.version, release.type));
   assert.ok(release.changesets?.length > 0, "A release needs a package changeset");
   assert.equal(new Set(release.changesets).size, release.changesets.length);
@@ -30,14 +44,18 @@ export function chartsVersionPlan(status, manifest) {
   };
 }
 
+/** @param {{policy: unknown, manifest: unknown, previous: unknown, status: unknown, pending: string[], changelog: string}} transition */
 export function assertReleaseTransition({
-  policy,
-  manifest,
-  previous,
+  policy: inputPolicy,
+  manifest: inputManifest,
+  previous: inputPrevious,
   status,
   pending,
   changelog,
 }) {
+  const policy = reviewedVersionSchema.parse(inputPolicy);
+  const manifest = packageIdentitySchema.parse(inputManifest);
+  const previous = packageIdentitySchema.parse(inputPrevious);
   assertReviewedVersion(policy, manifest);
   assert.equal(manifest.private, undefined, "Public charts must omit the private flag");
   assert.ok(gt(manifest.version, previous.version), "Release must advance the version");
@@ -50,6 +68,7 @@ export function assertReleaseTransition({
   assert.ok(changelog.startsWith(`# @kind-ui/charts\n\n## ${policy.version}\n`));
 }
 
+/** @param {{repository?: string | undefined, ref?: string | undefined, event?: string | undefined}} context */
 export function assertReleaseContext(context) {
   assert.equal(
     context.repository,
@@ -57,11 +76,16 @@ export function assertReleaseContext(context) {
     "Release only the canonical repository",
   );
   assert.equal(context.ref, "refs/heads/main", "Release only main");
-  assert.ok(["push", "workflow_dispatch"].includes(context.event), "Unexpected release event");
+  assert.ok(
+    ["push", "workflow_dispatch"].includes(context.event ?? ""),
+    "Unexpected release event",
+  );
 }
 
-export function publishedReleaseDecision(metadata, version, integrity) {
-  if (metadata === null) return "publish";
+/** @param {unknown} inputMetadata @param {string} version @param {string} [integrity] */
+export function publishedReleaseDecision(inputMetadata, version, integrity) {
+  if (inputMetadata === null) return "publish";
+  const metadata = registryMetadataSchema.parse(inputMetadata);
   const published = metadata.versions?.[version];
   if (published) {
     if (integrity)

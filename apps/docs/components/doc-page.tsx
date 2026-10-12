@@ -8,17 +8,16 @@ import defaultComponents from "fumadocs-ui/mdx";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import bundles from "@/generated/all-examples.json";
+import { componentBundleFor, componentBundlesSchema } from "@/lib/component-bundles.server.mjs";
 import { docRoute, publicPath } from "@/lib/routing.mjs";
 import { source } from "@/lib/source";
 import { ApiTable } from "./api-table";
-import {
-  type ComponentBundle,
-  type ComponentId,
-  ComponentPlayground,
-} from "./component-playground";
+import { type ComponentId, ComponentPlayground } from "./component-playground";
 import { CopyMarkdown } from "./copy-markdown";
 import { MobileDocsNavigation } from "./glass-docs-layout";
 import { TrackedCodeBlock } from "./tracked-code-block";
+
+const validatedBundles = componentBundlesSchema.parse(bundles);
 
 async function LineExample({
   id,
@@ -29,7 +28,7 @@ async function LineExample({
   variant?: string;
   instance?: string;
 }) {
-  const bundle = (bundles as unknown as Record<ComponentId, ComponentBundle>)[id];
+  const bundle = componentBundleFor(validatedBundles, id);
   async function codeBlock(code: string) {
     return highlight(code, {
       lang: "tsx",
@@ -51,7 +50,9 @@ async function LineExample({
       },
     });
   }
-  const sourceCode = await codeBlock(bundle.files[`src/examples/${id}/example.tsx`]);
+  const example = bundle.files[`src/examples/${id}/example.tsx`];
+  if (example === undefined) throw new Error(`Missing example source: ${id}`);
+  const sourceCode = await codeBlock(example);
   const variantCode = bundle.variants
     ? Object.fromEntries(
         await Promise.all(
@@ -65,11 +66,11 @@ async function LineExample({
   return (
     <ComponentPlayground
       key={`${id}-${variant ?? "ready"}`}
-      fixedVariant={variant}
-      instance={instance}
+      {...(variant === undefined ? {} : { fixedVariant: variant })}
+      {...(instance === undefined ? {} : { instance })}
       bundle={bundle}
       sourceCode={sourceCode}
-      variantCode={variantCode}
+      {...(variantCode === undefined ? {} : { variantCode })}
     />
   );
 }

@@ -1,26 +1,15 @@
 "use client";
 import * as Select from "@radix-ui/react-select";
 import { Check, ChevronDown, Copy } from "lucide-react";
-import { type ReactNode, useId, useState } from "react";
+import { type ReactNode, useCallback, useId, useState } from "react";
+import type { ComponentBundleData } from "@/lib/component-bundles.server.mjs";
 import { promptFor } from "@/lib/example-files.mjs";
 import { previews } from "./previews";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 export type ComponentId = keyof typeof previews;
-export interface ComponentBundle {
-  id: ComponentId;
-  title: string;
-  family: string;
-  files: Record<string, string>;
-  packageStatus: string;
-  localPackage: boolean;
-  version: string;
-  acceptance: string;
-  variants?: Record<string, { label: string; source: string }>;
-  variantControl?: string;
-  defaultVariant?: string;
-}
+export type ComponentBundle = ComponentBundleData & { id: ComponentId };
 export function ComponentPlayground({
   bundle,
   sourceCode,
@@ -41,6 +30,23 @@ export function ComponentPlayground({
   const [status, setStatus] = useState("");
   const [tab, setTab] = useState("preview");
   const Preview = previews[id];
+  const inertSelectBackground = useCallback((content: HTMLDivElement | null) => {
+    if (!content || !document.body.contains(content)) return;
+    const siblings: Array<{ node: HTMLElement; inert: boolean }> = [];
+    let current: HTMLElement = content;
+    while (current.parentElement) {
+      for (const sibling of current.parentElement.children) {
+        if (sibling === current || !(sibling instanceof HTMLElement)) continue;
+        siblings.push({ node: sibling, inert: sibling.inert });
+        sibling.inert = true;
+      }
+      current = current.parentElement;
+      if (current === document.body) break;
+    }
+    return () => {
+      for (const { node, inert } of siblings) node.inert = inert;
+    };
+  }, []);
   async function copy(text: string, label: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -77,7 +83,10 @@ export function ComponentPlayground({
           <TabsTrigger value="code">Code</TabsTrigger>
         </TabsList>
         {!fixedVariant && options.length > 1 && (
-          <Select.Root value={variant} onValueChange={setVariant}>
+          <Select.Root
+            {...(variant === undefined ? {} : { value: variant })}
+            onValueChange={setVariant}
+          >
             <Select.Trigger
               id={controlId}
               aria-label={bundle.variantControl}
@@ -89,7 +98,12 @@ export function ComponentPlayground({
               </Select.Icon>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content position="popper" sideOffset={6} className="select-content">
+              <Select.Content
+                ref={inertSelectBackground}
+                position="popper"
+                sideOffset={6}
+                className="select-content"
+              >
                 <Select.Viewport>
                   {options.map(([value, option]) => (
                     <Select.Item key={value} value={value} className="select-item">
@@ -126,7 +140,7 @@ export function ComponentPlayground({
         className="preview-panel"
       >
         <div className="chart-example not-prose">
-          <Preview variant={variant} />
+          <Preview {...(variant === undefined ? {} : { variant })} />
         </div>
       </TabsContent>
       <TabsContent value="code" forceMount hidden={tab !== "code"} className="code-files">

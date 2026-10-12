@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-const provenance = JSON.parse(readFileSync(new URL("../vendor/provenance.json", import.meta.url)));
+import { docsProvenanceSchema, parseJson } from "../../../scripts/tooling-schemas.mjs";
+
+const provenance = docsProvenanceSchema.parse(
+  parseJson(readFileSync(new URL("../vendor/provenance.json", import.meta.url), "utf8")),
+);
 const bytes = readFileSync(new URL("../vendor/kind-ui-charts-0.4.0.tgz", import.meta.url));
 assert.equal(createHash("sha256").update(bytes).digest("hex"), provenance.sha256);
 assert.equal(`sha512-${createHash("sha512").update(bytes).digest("base64")}`, provenance.integrity);

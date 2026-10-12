@@ -43,6 +43,102 @@ function metadataChart(options, ...children) {
     ...children,
   );
 }
+test("waterfall boundary rejects malformed and sparse entries with item and field errors", () => {
+  const entry = { id: "a", label: "A", kind: "delta", value: 0 };
+  for (const entries of [null, undefined, {}, "entries"])
+    assert.throws(() => Chart.computeWaterfallData(entries), /Waterfall entries must be an array/);
+  for (const entry of [null, undefined, [], 1])
+    assert.throws(
+      () => Chart.computeWaterfallData([entry]),
+      /entries\[0\] must be an entry object/,
+    );
+  assert.throws(() => Chart.computeWaterfallData(new Array(1)), /entries\[0\]/);
+  for (const id of [1, " ", null])
+    assert.throws(() => Chart.computeWaterfallData([{ ...entry, id }]), /entries\[0\]\.id/);
+  assert.throws(() => Chart.computeWaterfallData([{ ...entry, label: 1 }]), /entries\[0\]\.label/);
+  assert.throws(
+    () => Chart.computeWaterfallData([{ ...entry, value: undefined }]),
+    /entries\[0\]\.value/,
+  );
+  assert.doesNotThrow(() => Chart.computeWaterfallData([{ ...entry, label: "" }]));
+});
+
+test("histogram boundary validates containers, sparse edges and individual pre-binned records", () => {
+  assert.throws(() => Chart.binHistogram(null, [0, 1]), /Histogram samples must be an array/);
+  for (const edges of [null, {}, "01"])
+    assert.throws(() => Chart.binHistogram([], edges), /Histogram edges must be an array/);
+  assert.throws(() => Chart.binHistogram([], new Array(2)), /edges\[0\]/);
+  assert.throws(() => Chart.binHistogram([], [0, "1"]), /edges\[1\]/);
+  for (const bins of [null, undefined, {}, "bins"])
+    assert.throws(() => histogramMarkup(bins), /Histogram bins must be an array/);
+  for (const bins of [[null], [undefined], [[]], new Array(1)])
+    assert.throws(() => histogramMarkup(bins), /bins\[0\] must be a bin object/);
+  assert.throws(() => histogramMarkup([{ lower: 0, upper: 1, count: null }]), /bins\[0\]\.count/);
+  // Sparse samples retain the established explicit-missing accounting.
+  assert.equal(Chart.binHistogram(new Array(2), [0, 1]).missing, 2);
+});
+
+test("heatmap boundary rejects malformed containers, sparse domains and data fields", () => {
+  const options = { rows: ["A"], columns: ["X"], data: [] };
+  for (const value of [null, undefined, []])
+    assert.throws(() => Chart.createHeatmapModel(value), /Heatmap options must be an object/);
+  for (const key of ["rows", "columns", "data"])
+    assert.throws(() => Chart.createHeatmapModel({ ...options, [key]: null }), /must be an array/);
+  assert.throws(
+    () => Chart.createHeatmapModel({ ...options, rows: new Array(1) }),
+    /row domain\[0\]/,
+  );
+  for (const data of [[null], [undefined], [[]], new Array(1)])
+    assert.throws(
+      () => Chart.createHeatmapModel({ ...options, data }),
+      /data\[0\] must be a datum object/,
+    );
+  for (const field of ["row", "column", "value"]) {
+    const datum = { row: "A", column: "X", value: 0, [field]: undefined };
+    assert.throws(
+      () => Chart.createHeatmapModel({ ...options, data: [datum] }),
+      new RegExp(`data\\[0\\]\\.${field}`),
+    );
+  }
+});
+
+test("heatmap scale rejects malformed tuples and palettes before interpolation", () => {
+  const options = { domain: [0, 1], colors: ["#000000", "#ffffff"] };
+  for (const value of [null, undefined, []])
+    assert.throws(() => Chart.createHeatmapScale(value), /scale options must be an object/);
+  for (const domain of [null, [0], [0, 1, 2], new Array(2)])
+    assert.throws(() => Chart.createHeatmapScale({ ...options, domain }), /domain/);
+  assert.throws(() => Chart.createHeatmapScale({ ...options, colors: null }), /colors/);
+  for (const colors of [new Array(2), ["#000000", { toString: () => "#ffffff" }]])
+    assert.throws(() => Chart.createHeatmapScale({ ...options, colors }), /colors\[\d\]/);
+});
+
+test("Sankey boundary rejects malformed and sparse graph items with endpoint paths", () => {
+  const data = { nodes: [{ id: "a", name: "A" }], links: [] };
+  for (const value of [null, undefined, []])
+    assert.throws(() => Chart.prepareSankeyData(value), /Sankey data must be an object/);
+  for (const kind of ["nodes", "links"]) {
+    assert.throws(
+      () => Chart.prepareSankeyData({ ...data, [kind]: null }),
+      new RegExp(`data\\.${kind} must be an array`),
+    );
+    for (const items of [[null], [undefined], [[]], new Array(1)])
+      assert.throws(
+        () => Chart.prepareSankeyData({ ...data, [kind]: items }),
+        new RegExp(`data\\.${kind}\\[0\\] must be a`),
+      );
+  }
+  assert.throws(
+    () => Chart.prepareSankeyData({ ...data, nodes: [{ id: "a", name: 1 }] }),
+    /nodes\[0\]\.name/,
+  );
+  const link = { id: "a-a", source: "a", target: "a", value: 0 };
+  for (const endpoint of ["source", "target"])
+    assert.throws(
+      () => Chart.prepareSankeyData({ ...data, links: [{ ...link, [endpoint]: "unknown" }] }),
+      new RegExp(`links\\[0\\]\\.${endpoint}.*endpoint`),
+    );
+});
 
 test("Tailwind classes leave SSR markup identical across environments without DOM access", () => {
   const previous = process.env.NODE_ENV;
@@ -706,6 +802,34 @@ test("box summaries validate finite ordered values without selecting conventions
   for (const outliers of [[0], [-5], [8], [NaN], [Infinity], [null], "invalid"]) {
     assert.throws(() => Chart.validateBoxPlotSummary({ ...summary, outliers }), /outliers/);
   }
+});
+test("box boundaries reject array summaries, missing extents and invalid indexed outliers", () => {
+  const arraySummary = Object.assign([], summary);
+  assert.throws(
+    () => Chart.validateBoxPlotSummary(arraySummary),
+    /BoxPlot summary must be an object/,
+  );
+  assert.throws(() => Chart.boxPlotExtent(arraySummary), /BoxPlot summary must be an object/);
+  for (const missing of [null, undefined]) {
+    assert.equal(Chart.validateBoxPlotSummary(missing), null);
+    assert.throws(
+      () => Chart.boxPlotExtent(missing),
+      /BoxPlot extent requires a nonmissing summary object/,
+    );
+  }
+  for (const invalid of [undefined, null, NaN, Infinity, "20"])
+    assert.throws(
+      () => Chart.validateBoxPlotSummary({ ...summary, outliers: [-10, invalid] }),
+      /outliers\[1\] must be a finite number/,
+    );
+  assert.throws(
+    () => Chart.validateBoxPlotSummary({ ...summary, outliers: [-10, 0] }),
+    /outliers\[1\] must lie strictly outside/,
+  );
+  assert.throws(
+    () => Chart.validateBoxPlotSummary({ ...summary, outliers: new Array(1) }),
+    /outliers\[0\] must be a finite number/,
+  );
 });
 test("box SVG primitive preserves numeric geometry, zero IQR and native attributes", () => {
   const svg = renderSvg(

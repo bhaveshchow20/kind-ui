@@ -52,7 +52,7 @@ export function AllocationMaterialChart({
               nameKey="key"
               categoryKey="key"
               innerRadius={58}
-              material={appearance === "default" ? undefined : appearance}
+              {...(appearance !== "default" ? { material: appearance } : {})}
               outerRadius={108}
               paddingAngle={0}
             >

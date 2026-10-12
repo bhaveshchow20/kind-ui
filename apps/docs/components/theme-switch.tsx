@@ -55,7 +55,7 @@ function updateTheme(update: () => void, superseded: () => boolean) {
 }
 
 /** Own theme transition promises while preserving the native Glass toggle's controls and styling. */
-export function DocsThemeSwitch({ className = "" }: { className?: string }) {
+export function DocsThemeSwitch({ className = "" }: { className?: string | undefined }) {
   const { resolvedTheme, setTheme } = useTheme();
   const requested = useRef<string | undefined>(undefined);
   const revision = useRef(0);

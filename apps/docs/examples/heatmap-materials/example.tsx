@@ -53,7 +53,7 @@ export function MaterialHeatmap({
         caption="Support requests by day and hour"
         style={{ borderCollapse: "separate", borderSpacing: 3 }}
         cellProps={() => ({ style: { height: "2rem" } })}
-        material={appearance === "default" ? undefined : appearance}
+        {...(appearance !== "default" ? { material: appearance } : {})}
       />
       <HeatmapChart.Legend label="Requests per two-hour interval" />
       <HeatmapChart.Tooltip valueAnimation="shuffle" />
