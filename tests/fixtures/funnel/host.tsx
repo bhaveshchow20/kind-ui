@@ -128,7 +128,7 @@ export function Host() {
           denominator="first"
           ratioLabel="Share of first stage"
           loading={loading}
-          animate={{ revealDurationMs: 2500 }}
+          animate={params.has("static") ? false : { revealDurationMs: 2500 }}
           interaction={{ selected, onSelectionChange: setSelected }}
           activeId={active}
           onActiveIdChange={(id) => {

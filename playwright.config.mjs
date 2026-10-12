@@ -28,6 +28,10 @@ export default defineConfig({
   },
   webServer: [
     {
+      command: `npm exec vite preview -- --outDir artifacts/packed-funnel-development --host 127.0.0.1 --port ${port(4204)} --strictPort`,
+      url: `http://127.0.0.1:${port(4204)}`,
+    },
+    {
       command: `npm exec vite preview -- --outDir artifacts/packed-funnel --host 127.0.0.1 --port ${port(4197)} --strictPort`,
       url: `http://127.0.0.1:${port(4197)}`,
     },

@@ -232,3 +232,24 @@ test("unrepresentable positive screen geometry fails visibly instead of painting
   await expect(page.getByRole("alert")).toContainText(/rescal|represent/i);
   await expect(page.locator('[data-kind-ui="funnel-mark"]')).toHaveCount(0);
 });
+
+for (const animated of [false, true]) {
+  test(`development React strict LazyMotion preserves ${animated ? "animated" : "static"} Funnel marks and inspection`, async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    const development = `http://127.0.0.1:${4204 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
+    await page.goto(`${development}?lazy${animated ? "" : "&static"}`);
+    const chart = page.getByRole("region", { name: "Stage snapshot" });
+    await expect(chart.locator('[data-kind-ui="funnel-mark"]')).toHaveCount(3);
+    await stage(chart, "review").focus();
+    await expect(chart.getByRole("tooltip")).toContainText("Review");
+    await expect(chart.getByRole("tooltip")).toContainText("50%");
+    await expect(chart.getByRole("table")).toContainText("75%");
+    expect(errors).toEqual([]);
+  });
+}

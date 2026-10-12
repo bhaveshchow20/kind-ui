@@ -468,6 +468,7 @@ try {
     { strictOptionalTypes: true },
   );
   await production("index.html", "packed-funnel");
+  await production("index.html", "packed-funnel-development", true);
   for (const file of ["funnel-model.test.mjs", "funnel-render.test.mjs"])
     await copyFile(join(root, "tests", file), join(consumer, file));
   run(
