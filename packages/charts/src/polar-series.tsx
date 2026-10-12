@@ -1,7 +1,6 @@
 "use client";
 
-import { animate, useMotionValue } from "motion/react";
-import * as motion from "motion/react-m";
+import { animate, motion, useMotionValue } from "motion/react";
 import {
   type ComponentProps,
   cloneElement,

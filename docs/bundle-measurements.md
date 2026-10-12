@@ -11,9 +11,9 @@ every application.
 
 ## Method and baseline
 
-Baseline measured on October 11, 2026 with Node 22.16.0 and
+Baseline measured on October 12, 2026 with Node 22.16.0 and
 `@kind-ui/charts` 0.5.0, from tarball SHA-256
-`71d40c65e362d2732f6c1883cc9b965319bf25bab9df95a3df1235be6e7b9154`.
+`89598c15af0fea6a669c599d05b9ef3e6c2e189fc17acaf610a36797045db440`.
 Vite 8.3.1/Rolldown 1.2.12 builds minified ES2022 browser applications without
 source maps. Tailwind v4.3.3 compiles and minifies the consumer stylesheet. The
 budget file records all tested direct runtime versions, the Motion subruntime
@@ -32,13 +32,13 @@ application; they do not describe the npm tarball size or only Kind's source cod
 | Native XAxis primitive | 189,605 | 60,459 | 52,241 |
 | Kind XAxis primitive | 189,605 | 60,459 | 52,241 |
 | Native Line composition | 579,275 | 170,166 | 142,701 |
-| Compound Line composition | 765,289 | 230,764 | 194,084 |
-| Compound Line with loading | 765,300 | 230,770 | 194,253 |
+| Compound Line composition | 812,128 | 244,263 | 205,313 |
+| Compound Line with loading | 812,139 | 244,269 | 205,437 |
 | Native Radar composition | 558,196 | 163,758 | 137,949 |
-| Compound Radar composition | 723,384 | 219,958 | 185,825 |
-| Compound Heatmap composition | 601,148 | 188,606 | 160,910 |
+| Compound Radar composition | 770,206 | 233,168 | 197,147 |
+| Compound Heatmap composition | 647,959 | 201,963 | 172,442 |
 | Native Sankey composition | 450,652 | 139,535 | 118,589 |
-| Compound Sankey composition | 673,620 | 209,658 | 177,887 |
+| Compound Sankey composition | 720,440 | 223,123 | 188,821 |
 
 Line and Radar applications have the same data, dimensions, axes/grid, series,
 tooltip and legend in both forms. Sankey applications have two nodes and one
@@ -50,45 +50,25 @@ comparison is the empty React application because Recharts has no equivalent
 native grid in this fixture set. The primitive fixtures retain XAxis on `window`
 and do not mount React DOM, so compare them only with each other.
 
-The measured JavaScript increase over each native application is 186,014 raw /
-60,598 gzip / 51,383 Brotli bytes for Line, 165,188 / 56,200 / 47,876 for Radar,
-and 222,968 / 70,123 / 59,298 for Sankey. Heatmap adds 381,590 / 120,924 /
-102,542 over the React application baseline. These are substantial application
+The measured JavaScript increase over each native application is 232,853 raw /
+74,097 gzip / 62,612 Brotli bytes for Line, 212,010 / 69,410 / 59,198 for Radar,
+and 269,788 / 83,588 / 70,232 for Sankey. Heatmap adds 428,401 / 134,281 /
+114,074 over the React application baseline. These are substantial application
 costs and should be considered when choosing chart composition and interactions.
 
-## Focused performance pass
+The focused pass retains presentation context during interaction-only updates
+and skips repeated Heatmap identities. Against clean main
+`076cb6c5f9821ba7b358031fb0790fff9d6b62ca` (0.5.0 tarball SHA-256
+`cf30c5d94915576139fa5bcd5fab5e104407463dd7d6a90fd3cba5fd68674ba6`),
+compound gzip JavaScript increases by 54–108 bytes; native/primitive JavaScript
+and generated CSS are unchanged. Original main ceilings are retained.
 
-The clean main build at `076cb6c5f9821ba7b358031fb0790fff9d6b62ca` reproduced
-the previous recorded matrix exactly using the same pins. Its 0.5.0 tarball
-SHA-256 was `cf30c5d94915576139fa5bcd5fab5e104407463dd7d6a90fd3cba5fd68674ba6`.
-The candidate above preserves the public compositions and supported features.
-
-| Compound fixture | Main gzip JS | Candidate gzip JS | Reduction |
-| --- | ---: | ---: | ---: |
-| Line | 244,199 | 230,764 | 13,435 (5.5%) |
-| Line with loading | 244,205 | 230,770 | 13,435 (5.5%) |
-| Radar | 233,114 | 219,958 | 13,156 (5.6%) |
-| Heatmap | 201,855 | 188,606 | 13,249 (6.6%) |
-| Sankey | 223,069 | 209,658 | 13,411 (6.0%) |
-
-Emitted-module inspection identified full Motion component feature retention.
-Each compound retained five unused drag/pan modules (24,997 rendered bytes before
-final minification), two layout-feature modules and 22 projection modules. Using
-Motion's documented `motion/react-m` components with synchronous
-`LazyMotion features={domAnimation}` in the existing chart scope removes the
-drag/pan and layout features plus 16 projection modules. Six shared projection
-utilities remain. Overall, 34 Motion modules are eliminated per compound. These
-module counts and pre-minification lengths attribute retention; the compressed
-application totals above measure the actual saving. Generic animation, springs,
-loading and tooltip animations remain supported. Consumer full Motion components
-and outer MotionConfig settings retain their behavior; no consumer setup or
-asynchronous loading is introduced. See Motion's
-[documented synchronous feature setup](https://motion.dev/docs/react-reduce-bundle-size).
-
-Native and primitive JavaScript and all generated CSS sizes are unchanged.
-Ceilings use the same allowances below and decrease with the measured compound
-baselines. Emitted-module guards additionally reject drag/pan, layout features
-and the projection-node engine while allowing shared projection utilities.
+Motion's full feature retention remains. The attempted smaller feature scope
+was withdrawn during review because a nested LazyMotion provider resets the
+consumer's strict context, and Motion exposes no public way to inherit it.
+Removing that boundary preserves existing consumer behavior. Packed development
+tests cover strict rejection, minimal consumer components, explicit opt-out and
+non-strict content; they do not promise strict-mode support for every chart part.
 
 ## Runtime samples
 
@@ -110,11 +90,11 @@ zero. The table reports sample medians in milliseconds.
 
 | Operation | Dense main | Dense candidate | Large main | Large candidate |
 | --- | ---: | ---: | ---: | ---: |
-| Initial mount | 151.0 | 140.4 | 108.3 | 109.8 |
-| Inspect different Heatmap cells | 6.4 | 5.8 | 6.3 | 3.9 |
-| Inspect the same Heatmap cell | 7.4 | 0.3 | 7.6 | 0.1 |
-| Toggle Line legend focus | 10.5 | 4.7 | 7.6 | 0.7 |
-| Parent data update | 31.7 | 30.9 | 17.7 | 18.0 |
+| Initial mount | 151.0 | 146.8 | 108.3 | 111.2 |
+| Inspect different Heatmap cells | 6.4 | 5.0 | 6.3 | 4.1 |
+| Inspect the same Heatmap cell | 7.4 | 0.2 | 7.6 | 0.1 |
+| Toggle Line legend focus | 10.5 | 3.9 | 7.6 | 0.9 |
+| Parent data update | 31.7 | 31.6 | 17.7 | 19.2 |
 
 Semantic equality of active Heatmap identities eliminates 11,520 color and
 cell-prop calculations over 15 repeated inspections, while consumer handlers

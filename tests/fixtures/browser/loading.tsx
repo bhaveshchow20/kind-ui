@@ -1,6 +1,7 @@
 import * as Chart from "@kind-ui/charts";
-import { motion as consumerMotion, MotionConfig } from "motion/react";
-import { type ReactNode, useState } from "react";
+import { motion as consumerMotion, domAnimation, LazyMotion, MotionConfig } from "motion/react";
+import * as minimalMotion from "motion/react-m";
+import { Component, type ReactNode, useState } from "react";
 import "./loading.css";
 
 const config = {
@@ -56,6 +57,47 @@ const flow: Chart.SankeyFlowData = {
 };
 const noFlow: Chart.SankeyFlowData = { nodes: [], links: [] };
 const motion = { revealDurationMs: 1100 };
+class ConsumerMotionBoundary extends Component<
+  { children: ReactNode },
+  { message: string | null }
+> {
+  override state = { message: null as string | null };
+  static getDerivedStateFromError(error: unknown) {
+    return { message: error instanceof Error ? error.message : String(error) };
+  }
+  override render() {
+    return this.state.message ? <p role="alert">{this.state.message}</p> : this.props.children;
+  }
+}
+function ConsumerStrictPreview({ mode }: { mode: string }) {
+  return (
+    <ConsumerMotionBoundary>
+      <LazyMotion features={domAnimation} strict={mode !== "non-strict"}>
+        <Chart.HeatmapChart
+          rows={["Row"]}
+          columns={["Column"]}
+          data={[{ row: "Row", column: "Column", value: 1 }]}
+          scale={heatScale}
+          config={{}}
+          aria-label="Consumer strict chart"
+        >
+          <Chart.HeatmapChart.Grid caption="Consumer strict grid" />
+          <Chart.HeatmapChart.Content>
+            {mode === "minimal" ? (
+              <minimalMotion.span data-consumer-strict-probe animate={{ opacity: 0.5 }}>
+                Consumer minimal motion
+              </minimalMotion.span>
+            ) : (
+              <consumerMotion.span data-consumer-strict-probe ignoreStrict={mode === "opt-out"}>
+                Consumer full motion
+              </consumerMotion.span>
+            )}
+          </Chart.HeatmapChart.Content>
+        </Chart.HeatmapChart>
+      </LazyMotion>
+    </ConsumerMotionBoundary>
+  );
+}
 function ConsumerMotionProbe() {
   const [shifted, setShifted] = useState(false);
   return (
@@ -543,9 +585,10 @@ function Preview({ motionInterop = false }: { motionInterop?: boolean }) {
   );
 }
 export default function LoadingPreview() {
-  const [motionInterop] = useState(() =>
-    new URLSearchParams(window.location.search).has("motion-interop"),
-  );
+  const [query] = useState(() => new URLSearchParams(window.location.search));
+  const strictMode = query.get("strict-mode");
+  if (strictMode) return <ConsumerStrictPreview mode={strictMode} />;
+  const motionInterop = query.has("motion-interop");
   return motionInterop ? (
     <MotionConfig reducedMotion="always">
       <Preview motionInterop />

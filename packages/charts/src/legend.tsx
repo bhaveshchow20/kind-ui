@@ -1,6 +1,6 @@
 "use client";
 
-import * as motion from "motion/react-m";
+import { motion } from "motion/react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Symbols } from "recharts";
 import { useInteractionOpacity } from "./animation.js";

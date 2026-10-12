@@ -1,6 +1,6 @@
 "use client";
 
-import * as motion from "motion/react-m";
+import { motion } from "motion/react";
 import { type ComponentPropsWithRef, type ReactNode, use } from "react";
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
 import { useInteractionOpacity } from "./animation.js";

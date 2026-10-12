@@ -1,7 +1,6 @@
 "use client";
 
-import type { Transition } from "motion/react";
-import * as motion from "motion/react-m";
+import { motion, type Transition } from "motion/react";
 
 export type RevealDirection = "left-to-right" | "right-to-left" | "center-out" | "edges-in";
 type Options = {

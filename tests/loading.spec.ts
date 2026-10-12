@@ -46,6 +46,30 @@ const design = (card: Locator) =>
     return copy.innerHTML;
   });
 
+for (const mode of ["full", "minimal", "opt-out", "non-strict"]) {
+  test(`consumer LazyMotion strict contract: ${mode}`, async ({ page }) => {
+    // Motion also guards development diagnostics on process being available.
+    await page.addInitScript(() => {
+      Object.defineProperty(globalThis, "process", {
+        value: { env: { NODE_ENV: "development" } },
+        configurable: true,
+      });
+    });
+    await page.goto(`http://127.0.0.1:${4203 + offset}/loading.html?strict-mode=${mode}`);
+    if (mode === "full") {
+      await expect(page.getByRole("alert")).toContainText(
+        "You have rendered a `motion` component within a `LazyMotion` component",
+      );
+      await expect(page.locator("[data-consumer-strict-probe]")).toHaveCount(0);
+    } else {
+      await expect(page.getByRole("alert")).toHaveCount(0);
+      await expect(page.locator("[data-consumer-strict-probe]")).toBeVisible();
+      if (mode === "minimal")
+        await expect(page.locator("[data-consumer-strict-probe]")).toHaveCSS("opacity", "0.5");
+    }
+  });
+}
+
 test("chart animation scope preserves consumer MotionConfig and full Motion drag/layout", async ({
   page,
 }) => {

@@ -1,7 +1,6 @@
 "use client";
 
-import { animate, useMotionValue, useTransform } from "motion/react";
-import * as motion from "motion/react-m";
+import { animate, motion, useMotionValue, useTransform } from "motion/react";
 import { useLayoutEffect, useRef } from "react";
 
 import { useReducedMotion } from "./motion-preference.js";

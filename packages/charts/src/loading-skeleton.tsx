@@ -1,7 +1,6 @@
 "use client";
 
-import { useTransform } from "motion/react";
-import * as motion from "motion/react-m";
+import { motion, useTransform } from "motion/react";
 import { type CSSProperties, type ReactNode, useContext, useId, useState } from "react";
 import { usePlotArea } from "recharts";
 import { ChartContext } from "./chart-context.js";

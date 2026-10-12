@@ -3,11 +3,11 @@
 import {
   animate,
   type MotionValue,
+  motion,
   type Transition,
   useMotionValue,
   useTransform,
 } from "motion/react";
-import * as motion from "motion/react-m";
 import { createContext, type ReactNode, use, useId, useLayoutEffect, useRef } from "react";
 import { useReducedMotion } from "./motion-preference.js";
 
