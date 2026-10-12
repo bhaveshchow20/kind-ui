@@ -200,17 +200,19 @@ export function TreemapGroups<T = TreemapDatum>({
               )}
               style={{ ...rectangleStyle(node), ...attributes?.style }}
             >
-              <Mark
-                node={{ ...node, x: 0, y: 0 }}
-                context={context}
-                kind="treemap-group-header"
-                height={Math.min(node.height, context.groupHeaderHeight)}
-                {...(headerProps ? { buttonProps: headerProps(node) } : {})}
-              >
-                <span className="block truncate px-1 text-xs font-medium bg-[var(--background,#fff)] text-[var(--foreground,#172033)]">
-                  {typeof children === "function" ? children(node) : (children ?? node.label)}
-                </span>
-              </Mark>
+              {context.groupHeaderHeight > 0 && (
+                <Mark
+                  node={{ ...node, x: 0, y: 0 }}
+                  context={context}
+                  kind="treemap-group-header"
+                  height={Math.min(node.height, context.groupHeaderHeight)}
+                  {...(headerProps ? { buttonProps: headerProps(node) } : {})}
+                >
+                  <span className="block truncate px-1 text-xs font-medium bg-[var(--background,#fff)] text-[var(--foreground,#172033)]">
+                    {typeof children === "function" ? children(node) : (children ?? node.label)}
+                  </span>
+                </Mark>
+              )}
             </div>
           );
         })}
@@ -466,9 +468,20 @@ export function TreemapColorLegend(props: TreemapColorLegendProps) {
                 background: `linear-gradient(to right, ${legend.stops.map((stop) => `${stop.color} ${stop.offset * 100}%`).join(", ")})`,
               }}
             />
-            <div className="flex justify-between gap-2">
+            <div className="relative h-4">
               {legend.ticks.map((tick) => (
-                <span key={tick.offset}>{tick.label}</span>
+                <span
+                  key={tick.offset}
+                  data-kind-ui="treemap-legend-tick"
+                  data-value={tick.value}
+                  className="absolute whitespace-nowrap"
+                  style={{
+                    left: `${tick.offset * 100}%`,
+                    transform: `translateX(${tick.offset === 0 ? 0 : tick.offset === 1 ? -100 : -50}%)`,
+                  }}
+                >
+                  {tick.label}
+                </span>
               ))}
             </div>
           </fieldset>

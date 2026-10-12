@@ -182,7 +182,14 @@ export function TreemapHost() {
       <TreemapChart<Record>
         data={data}
         accessors={accessors}
-        encoding={encoding}
+        encoding={
+          params.get("domain") === "positive"
+            ? { ...encoding, domain: [0, 5] }
+            : params.get("domain") === "constant"
+              ? { ...encoding, type: "sequential", domain: [2, 2] }
+              : encoding
+        }
+        groupHeaderHeight={params.has("header") ? Number(params.get("header")) : 20}
         config={{}}
         width={width}
         height={400}

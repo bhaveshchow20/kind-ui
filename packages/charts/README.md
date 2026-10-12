@@ -220,7 +220,10 @@ const accessors: TreemapAccessors<Resource> = {
   id: (datum) => datum.id,
   label: (datum) => datum.name,
   children: (datum) => datum.children,
-  value: (datum) => datum.storageGb ?? 0, // Explicit missing-area policy.
+  value: (datum) => {
+    if (datum.storageGb === undefined) throw new Error(`Missing storage area for ${datum.id}`);
+    return datum.storageGb;
+  },
 };
 const encoding: TreemapColorEncoding<Resource> = {
   type: "diverging",
@@ -282,7 +285,14 @@ buttons. Tile navigation uses one tab stop with arrows and Home/End; Enter/Space
 activates, and Escape dismisses the tooltip. Include `DataTable` for a navigable
 alternative containing small and zero-valued items.
 
-`depth`, `padding` and `groupHeaderHeight` control nested density. Labels use
+Replace data, accessors and encodings when their input changes; do not mutate the
+supplied hierarchy in place. Numeric `domainScope="view"` infers from descendants
+of the viewed group, including descendants hidden by `depth`; the unpainted view
+root does not contribute a color metric. Its positive-total `viewShare` is still
+one. Zero-total views have null shares.
+
+`depth`, `padding` and `groupHeaderHeight` control nested density. A zero header
+height keeps group boundaries and omits their header buttons. Labels use
 `minWidth`, `minHeight` and label `padding` thresholds and clip overflowing text.
 `layout="stable"` (default) retains layout
 rows while hierarchy membership and subtree view remain unchanged; regrouping,

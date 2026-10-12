@@ -417,3 +417,49 @@ test("treemap crowded padding retains every record in its semantic alternative",
   expect(glyphs).toBeLessThan(2000);
   await expect(page.locator('tbody tr[data-node-id="resource-0"]')).toBeVisible();
 });
+
+test("treemap viewed root keeps its own semantic share without a rectangle", async ({ page }) => {
+  await page.goto("/?table-root");
+  await update(page, "View technology");
+  await expect(page.locator('tbody tr[data-node-id="technology"] td').nth(4)).toHaveText("100.00%");
+});
+test("treemap zero-height headers preserve boundaries without invisible keyboard targets", async ({
+  page,
+}) => {
+  await page.goto("/?header=0");
+  await expect(page.locator('[data-kind-ui="treemap-group"]')).not.toHaveCount(0);
+  await expect(page.locator('[data-kind-ui="treemap-group-header"]')).toHaveCount(0);
+  const stop = page.locator('[data-kind-ui="treemap-tile"][tabindex="0"]');
+  await expect(stop).toHaveCount(1);
+  await stop.focus();
+  await page.keyboard.press("Home");
+  await expect(page.locator(":focus")).toHaveAttribute("data-kind-ui", "treemap-tile");
+});
+for (const domain of ["positive", "constant"]) {
+  test(`treemap ${domain} legend positions match its shared scale`, async ({ page }) => {
+    await page.goto(`/?domain=${domain}`);
+    const fieldset = page.locator('[data-kind-ui="treemap-color-legend"] fieldset');
+    const bar = await fieldset.locator(":scope > div").first().boundingBox();
+    if (!bar) throw new Error("Missing numeric legend bar");
+    const ticks = await fieldset
+      .locator('[data-kind-ui="treemap-legend-tick"]')
+      .evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const r = node.getBoundingClientRect();
+          return { x: r.x, width: r.width };
+        }),
+      );
+    if (domain === "constant") {
+      expect(ticks).toHaveLength(1);
+      const tick = ticks[0];
+      if (!tick) throw new Error("Missing constant tick");
+      expect(Math.abs(tick.x + tick.width / 2 - bar.x - bar.width / 2)).toBeLessThan(1);
+    } else {
+      expect(ticks).toHaveLength(2);
+      expect(Math.abs((ticks[0]?.x ?? 0) - bar.x)).toBeLessThan(1);
+      const end = ticks[1];
+      if (!end) throw new Error("Missing end tick");
+      expect(Math.abs(end.x + end.width - bar.x - bar.width)).toBeLessThan(1);
+    }
+  });
+}

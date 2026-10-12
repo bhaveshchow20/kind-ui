@@ -109,6 +109,7 @@ function finite(value: number | null | undefined): number | null {
 
 function offset(value: number, domain: readonly [number, number], diverging: boolean): number {
   const [min, max] = domain;
+  value = Math.max(min, Math.min(max, value));
   if (min === max) return 0.5;
   if (diverging && value === 0) return 0.5;
   if (value <= min) return 0;
@@ -306,6 +307,17 @@ export function resolveTreemapColors<T>(
     });
     const diverging = encoding.type === "diverging";
     color = (value) => interpolate(stops, offset(value, domain, diverging));
+    const start = offset(domain[0], domain, diverging);
+    const end = offset(domain[1], domain, diverging);
+    const legendOffset = (position: number) =>
+      start === end ? 0.5 : (position - start) / (end - start);
+    const legendStops: TreemapColorStop[] = [
+      { offset: 0, color: interpolate(stops, start) },
+      ...stops
+        .filter((stop) => stop.offset > start && stop.offset < end)
+        .map((stop) => ({ offset: legendOffset(stop.offset), color: stop.color })),
+      { offset: 1, color: interpolate(stops, end) },
+    ];
     const ticks =
       domain[0] === domain[1]
         ? [domain[0]]
@@ -316,11 +328,11 @@ export function resolveTreemapColors<T>(
       ...base,
       type: encoding.type,
       domain: [domain[0], domain[1]],
-      stops: stops.map((stop) => ({ ...stop })),
+      stops: legendStops,
       ticks: ticks.map((value) => ({
         value,
         label: format(value),
-        offset: offset(value, domain, diverging),
+        offset: legendOffset(offset(value, domain, diverging)),
       })),
     };
   }

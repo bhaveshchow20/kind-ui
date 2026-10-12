@@ -367,7 +367,8 @@ function TreemapPlot<T>({
     );
   }, [geometry]);
   const items = useMemo(() => {
-    const visibleIds = new Set(viewNodes.map((node) => node.id));
+    const subtreeIds = new Set(viewNodes.map((node) => node.id));
+    if (viewId !== null) subtreeIds.add(viewId);
     const rectangles = new Map(geometry.rectangles.map((node) => [node.id, node]));
     return new Map(
       model.nodes.map((node) => {
@@ -380,12 +381,12 @@ function TreemapPlot<T>({
               ? { x: rectangle.x, y: rectangle.y, width: rectangle.width, height: rectangle.height }
               : null,
             viewShare:
-              geometry.total > 0 && visibleIds.has(node.id) ? node.value / geometry.total : null,
+              geometry.total > 0 && subtreeIds.has(node.id) ? node.value / geometry.total : null,
           },
         ] as const;
       }),
     );
-  }, [model, geometry, viewNodes]);
+  }, [model, geometry, viewNodes, viewId]);
   itemsRef.current = items;
   const reduced = useReducedMotion();
   const tooltipId = useId();

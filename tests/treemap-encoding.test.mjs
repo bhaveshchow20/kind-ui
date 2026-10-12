@@ -299,6 +299,58 @@ test("treemap finite extreme domains do not overflow interpolation arithmetic", 
     domain: [0, 20],
     stops,
   });
-  assert.equal(oneSided.colors.get("negative").color, "red");
+  assert.equal(oneSided.colors.get("negative").color, "white");
   assert.equal(oneSided.colors.get("zero").color, "white");
+});
+
+test("treemap one-sided diverging paint clamps metrics and slices its legend to the same range", () => {
+  for (const domain of [
+    [0, 20],
+    [-10, 0],
+  ]) {
+    const result = resolveTreemapColors(nodes, leaves, {
+      type: "diverging",
+      value,
+      domain,
+      stops,
+      formatValue: (metric) => `${metric}%`,
+    });
+    const positive = domain[0] === 0;
+    const clamped = result.colors.get(positive ? "negative" : "positive");
+    assert.equal(clamped.color, "white");
+    assert.equal(clamped.value, positive ? -10 : 20);
+    assert.equal(clamped.formattedValue, positive ? "-10%" : "20%");
+    assert.deepEqual(
+      result.legend.stops,
+      positive
+        ? [
+            { offset: 0, color: "white" },
+            { offset: 1, color: "green" },
+          ]
+        : [
+            { offset: 0, color: "red" },
+            { offset: 1, color: "white" },
+          ],
+    );
+    assert.deepEqual(
+      result.legend.ticks,
+      domain.map((metric, index) => ({ value: metric, label: `${metric}%`, offset: index })),
+    );
+    assert.equal(result.legend.stops[positive ? 0 : 1].color, result.colors.get("zero").color);
+  }
+});
+
+test("treemap collapsed continuous domains show their solid midpoint paint in the legend", () => {
+  for (const type of ["sequential", "diverging"]) {
+    const result = resolveTreemapColors(nodes, leaves, { type, value, domain: [0, 0], stops });
+    assert.deepEqual(result.legend.stops, [
+      { offset: 0, color: "white" },
+      { offset: 1, color: "white" },
+    ]);
+    assert.deepEqual(result.legend.ticks, [{ value: 0, label: "0", offset: 0.5 }]);
+    for (const id of ["negative", "zero", "positive"])
+      assert.equal(result.colors.get(id).color, "white");
+    assert.equal(result.colors.get("negative").value, -10);
+    assert.equal(result.colors.get("positive").value, 20);
+  }
 });

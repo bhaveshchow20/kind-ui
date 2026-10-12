@@ -86,11 +86,37 @@ test("view changes use subtree area while root and parent shares preserve suppli
           assert.equal(context.items.get("a").viewShare, 6 / 9);
           assert.equal(context.items.get("a").rootShare, 0.6);
           assert.equal(context.items.get("a").parentShare, 6 / 9);
+          assert.equal(context.items.get("g").viewShare, 1);
+          assert.equal(context.items.get("g").rectangle, null);
+          assert.equal(context.items.get("ancestor").viewShare, null);
+          assert.equal(context.items.get("ancestor").rectangle, null);
           assert.equal(context.items.get("c").viewShare, null);
           assert.equal(context.items.get("c").rectangle, null);
         },
       }),
-      { viewId: "g" },
+      {
+        viewId: "g",
+        data: [{ id: "ancestor", kind: "group", label: "Ancestor", children: [data[0]] }, data[1]],
+      },
+    ),
+  );
+  render(
+    chart(
+      h(Capture, {
+        check(context) {
+          assert.equal(context.items.get("g").value, 0);
+          assert.equal(context.items.get("g").viewShare, null);
+          assert.equal(context.items.get("g").rectangle, null);
+          assert.equal(context.items.get("zero").viewShare, null);
+        },
+      }),
+      {
+        viewId: "g",
+        data: [
+          { id: "g", kind: "group", label: "Zero group", children: [data[0].children[2]] },
+          data[1],
+        ],
+      },
     ),
   );
 });
