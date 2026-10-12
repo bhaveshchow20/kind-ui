@@ -328,7 +328,8 @@ export function CandlestickDataTable<Row extends object = CandlestickDatum>({
   const context = useCandlestick();
   return (
     <OutsidePlot>
-      <div className="overflow-x-auto min-w-0">
+      {/* biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard focus enables native scrolling to off-screen table columns. */}
+      <section className="overflow-x-auto min-w-0" aria-label={caption} tabIndex={0}>
         <table data-kind-ui="candlestick-table" {...props}>
           <caption>{caption}</caption>
           <thead>
@@ -374,7 +375,7 @@ export function CandlestickDataTable<Row extends object = CandlestickDatum>({
             ))}
           </tbody>
         </table>
-      </div>
+      </section>
     </OutsidePlot>
   );
 }
