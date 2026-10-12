@@ -9,6 +9,9 @@ import { motion } from "motion/react";
 import { type MouseEvent, useCallback, useState } from "react";
 
 type Row = CandlestickDatum & { source: string };
+function CustomVolumeElement({ width = 900 }: { width?: number }) {
+  return <rect data-custom-volume="element" x={0} y={0} width={width} height={900} fill="orange" />;
+}
 const initial: Row[] = [
   {
     time: "2026-03-05",
@@ -293,14 +296,7 @@ export function CandlestickHost() {
             ? {
                 shape:
                   params.get("custom-volume") === "element" ? (
-                    <rect
-                      data-custom-volume="element"
-                      x={0}
-                      y={0}
-                      width={900}
-                      height={900}
-                      fill="orange"
-                    />
+                    <CustomVolumeElement width={900} />
                   ) : params.get("custom-volume") === "object" ? (
                     {
                       x: 0,
