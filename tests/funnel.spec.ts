@@ -316,3 +316,155 @@ test("inline accessors and denominator callbacks retain native DOM while origina
   await stage(chart, "review").click();
   await expect(page.getByLabel("Clicked stage days")).toHaveText("13");
 });
+
+test("a new controlled active ID reopens inspection after the owner ignores Escape null", async ({
+  page,
+}) => {
+  await page.goto(`${packed}?ignore-null`);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  await stage(chart, "entry").focus();
+  await expect(chart.getByRole("tooltip")).toContainText("Entry");
+  await page.keyboard.press("Escape");
+  await expect(chart.getByRole("tooltip")).toHaveCount(0);
+  await page.getByRole("button", { name: "External inspection", exact: true }).click();
+  await expect(chart.getByRole("tooltip")).toContainText("Growth");
+  await expect(chart.getByRole("tooltip")).toContainText("75%");
+});
+
+test("equivalent inline animation options preserve reveal progress during frequent parent renders", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(`${packed}?animation-ticks`, { waitUntil: "commit" });
+  await expect(
+    page
+      .getByRole("region", { name: "Stage snapshot" })
+      .locator('[data-kind-ui="funnel-stage-paint"]'),
+  ).toHaveCount(3);
+  const samples = await page.evaluate(async () => {
+    const values: number[] = [];
+    const start = performance.now();
+    return await new Promise<number[]>((resolve) => {
+      const read = () => {
+        const paint = document.querySelector(
+          '[aria-label="Stage snapshot"] [data-kind-ui="funnel-stage-paint"]',
+        );
+        if (paint) values.push(Number(getComputedStyle(paint).opacity));
+        if (performance.now() - start >= 900) resolve(values);
+        else requestAnimationFrame(read);
+      };
+      read();
+    });
+  });
+  expect(Number(await page.getByLabel("Parent ticks").textContent())).toBeGreaterThanOrEqual(8);
+  expect(samples.length).toBeGreaterThan(10);
+  expect(samples.at(-1)).toBeCloseTo(1, 4);
+  for (let index = 1; index < samples.length; index += 1) {
+    expect((samples[index] ?? 0) + 0.03).toBeGreaterThanOrEqual(samples[index - 1] ?? 0);
+  }
+});
+
+test("held Enter and Space keys do not repeatedly toggle selection or write owner callbacks", async ({
+  page,
+}) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const first = stage(chart, "entry");
+  await first.focus();
+  await first.press("Enter");
+  await expect(page.getByLabel("Stage selection")).toHaveText("entry");
+  await expect(page.getByLabel("Selection writes")).toHaveText("1");
+  await first.dispatchEvent("keydown", { key: "Enter", repeat: true });
+  await expect(page.getByLabel("Stage selection")).toHaveText("entry");
+  await expect(page.getByLabel("Selection writes")).toHaveText("1");
+  await first.press("Space");
+  await expect(page.getByLabel("Stage selection")).toHaveText("none");
+  await expect(page.getByLabel("Selection writes")).toHaveText("2");
+  await first.dispatchEvent("keydown", { key: " ", repeat: true });
+  await expect(page.getByLabel("Stage selection")).toHaveText("none");
+  await expect(page.getByLabel("Selection writes")).toHaveText("2");
+});
+
+test("consumer reset veto preserves the complete Escape inspection and selection operation", async ({
+  page,
+}) => {
+  await page.goto(`${packed}?reset-veto`);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const first = stage(chart, "entry");
+  await first.focus();
+  await first.press("Enter");
+  await expect(page.getByLabel("Stage selection")).toHaveText("entry");
+  await expect(chart.getByRole("tooltip")).toContainText("Entry");
+  const activeWrites = await page.getByLabel("Inspection writes").textContent();
+  const selectionWrites = await page.getByLabel("Selection writes").textContent();
+  await first.press("Escape");
+  await expect(chart.getByRole("tooltip")).toContainText("Entry");
+  await expect(page.getByLabel("Stage selection")).toHaveText("entry");
+  await expect(page.getByLabel("Inspection writes")).toHaveText(activeWrites ?? "");
+  await expect(page.getByLabel("Selection writes")).toHaveText(selectionWrites ?? "");
+});
+
+test("disabled mark activation retains inspection without pressed state or toggle instructions", async ({
+  page,
+}) => {
+  await page.goto(`${packed}?none`);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const first = stage(chart, "entry");
+  await first.focus();
+  await expect(chart.getByRole("tooltip")).toContainText("Entry");
+  expect(await first.getAttribute("aria-pressed")).toBeNull();
+  await first.press("Enter");
+  await first.press("Space");
+  await expect(page.getByLabel("Stage selection")).toHaveText("none");
+  await expect(page.getByLabel("Selection writes")).toHaveText("0");
+  await expect(chart).not.toContainText("highlights a stage");
+});
+
+test("color-only legend configuration uses original stage labels and keeps explicit overrides", async ({
+  page,
+}) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Legend labels" });
+  const legend = chart.locator('[data-kind-ui="chart-legend"]');
+  await expect(legend.getByRole("button", { name: "Reached payment", exact: true })).toHaveCount(1);
+  await expect(legend.getByRole("button", { name: "Display address", exact: true })).toHaveCount(1);
+});
+
+for (const [region, ratio] of [
+  ["Previous unavailable", "Share of previous"],
+  ["Callback unavailable", "Share of baseline"],
+] as const) {
+  test(`an explicit denominator policy keeps stable unavailable table columns: ${region}`, async ({
+    page,
+  }) => {
+    await page.goto(packed);
+    const table = page.getByRole("region", { name: region }).getByRole("table");
+    await expect(table.getByRole("columnheader", { name: "Denominator", exact: true })).toHaveCount(
+      1,
+    );
+    await expect(table.getByRole("columnheader", { name: ratio, exact: true })).toHaveCount(1);
+    await expect(table.locator("tbody tr td").filter({ hasText: "Unknown" })).toHaveCount(2);
+  });
+}
+
+test("native accessible description IDs preserve every consumer token alongside chart instructions", async ({
+  page,
+}) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const svg = chart.locator("svg.recharts-surface");
+  await expect(svg).toHaveCount(1);
+  const ids = ((await svg.getAttribute("aria-describedby")) ?? "").trim().split(/\s+/);
+  expect(ids).toContain("p-2");
+  expect(ids).toContain("p-4");
+  expect(ids).toHaveLength(3);
+  const generated = ids.find((id) => id !== "p-2" && id !== "p-4");
+  expect(generated).toBeTruthy();
+  const descriptions = await page.evaluate(
+    (tokens) => tokens.map((id) => document.getElementById(id)?.textContent ?? null),
+    ids,
+  );
+  expect(descriptions[0]).toContain("Inventory measured");
+  expect(descriptions[1]).toContain("independent workflow stage snapshots");
+  expect(descriptions[2]).toContain("Use arrow keys");
+});

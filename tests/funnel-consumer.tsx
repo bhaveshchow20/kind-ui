@@ -110,3 +110,8 @@ void (
     <FunnelChart.DataTable caption="Empty stages" />
   </FunnelChart>
 );
+
+// @ts-expect-error The Tooltip owns its ID and stage description linkage.
+void (<FunnelChart.Tooltip id="consumer-tooltip" />);
+// @ts-expect-error The Tooltip owns its semantic role.
+void (<FunnelChart.Tooltip role="status" />);

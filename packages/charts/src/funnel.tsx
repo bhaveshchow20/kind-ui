@@ -113,6 +113,7 @@ export type FunnelChartProps<T = FunnelDatum> = NativeOptions &
 
 type Context<T> = {
   model: FunnelModel<T>;
+  ratioRequested: boolean;
   orientation: "vertical" | "horizontal";
   loading: boolean;
   activeId: string | null;
@@ -181,6 +182,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
       ("mode" in interaction && interaction.mode !== "focus"))
   )
     throw new Error("FunnelChart interaction requires category focus");
+  const animationEnabled = animate !== false;
   const duration = typeof animate === "object" ? (animate.revealDurationMs ?? 700) : 700;
   if (!Number.isFinite(duration) || duration < 0)
     throw new Error("Funnel animation duration must be finite and nonnegative");
@@ -211,12 +213,27 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
     if (!Object.hasOwn(config, stage.id))
       throw new Error(`FunnelChart config requires stage "${stage.id}"`);
   }
+  const stageConfig = useMemo(() => {
+    const labels = new Map(model.stages.map((stage) => [stage.id, stage.label]));
+    return Object.fromEntries(
+      Object.entries(config).map(([id, item]) => {
+        if (item === null || typeof item !== "object") return [id, item];
+        const label = item.label === undefined ? labels.get(id) : item.label;
+        return [id, label === undefined ? item : { ...item, color: item.color, label }];
+      }),
+    );
+  }, [config, model]);
   const keys = useMemo(() => model.stages.map((stage) => stage.id), [model]);
   const [internal, setInternal] = useState(defaultActiveId ?? null);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissedId, setDismissedId] = useState<string | null>(null);
   const requested = controlled === undefined ? internal : controlled;
   const activeId =
-    !loading && !dismissed && requested !== null && keys.includes(requested) ? requested : null;
+    !loading && requested !== dismissedId && requested !== null && keys.includes(requested)
+      ? requested
+      : null;
+  useEffect(() => {
+    if (dismissedId !== null && requested !== dismissedId) setDismissedId(null);
+  }, [dismissedId, requested]);
   const reduced = useReducedMotion();
   const [finished, setFinished] = useState(false);
   const opacity = useMotionValue(1);
@@ -232,7 +249,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
     previous.current = { model, orientation, loading };
   }, [model, orientation, loading, interrupt]);
   useLayoutEffect(() => {
-    if (!animate || reduced || loading || finished || duration === 0) {
+    if (!animationEnabled || reduced || loading || finished || duration === 0) {
       opacity.set(1);
       return;
     }
@@ -243,12 +260,12 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
       onComplete: () => setFinished(true),
     });
     return () => controls.stop();
-  }, [animate, reduced, loading, finished, duration, opacity]);
+  }, [animationEnabled, reduced, loading, finished, duration, opacity]);
   const inspect = useCallback(
     (id: string | null) => {
       if (loading) return;
       interrupt();
-      setDismissed(false);
+      setDismissedId(null);
       if (controlled === undefined) setInternal(id);
       if (requested !== id) onActiveIdChange?.(id);
     },
@@ -256,7 +273,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
   );
   const dismiss = useCallback(() => {
     interrupt();
-    setDismissed(true);
+    setDismissedId(requested);
     if (controlled === undefined) setInternal(null);
     if (requested !== null) onActiveIdChange?.(null);
   }, [interrupt, controlled, requested, onActiveIdChange]);
@@ -268,6 +285,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
   const chartProps = native as ComponentPropsWithRef<typeof NativeFunnelChart>;
   const context: Context<T> = {
     model,
+    ratioRequested: denominator !== undefined,
     orientation,
     loading,
     activeId,
@@ -287,7 +305,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
   return (
     <FamilyRoot
       family="FunnelChart"
-      config={config}
+      config={stageConfig}
       name={props}
       loading={loading}
       interaction={{ ...interaction, kind: "category", mode: "focus", eligibleKeys: keys }}
@@ -297,7 +315,10 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
       {...(legendPosition ? { legendPosition } : {})}
       instructions={{
         id: instructionsId,
-        text: "Use arrow keys, Home and End to inspect stages. Enter or Space highlights a stage. Escape dismisses the readout and clears highlighting.",
+        text:
+          interaction?.markActivation === "none"
+            ? "Use arrow keys, Home and End to inspect stages. Enter or Space opens the readout. Escape dismisses the readout and clears highlighting."
+            : "Use arrow keys, Home and End to inspect stages. Enter or Space highlights a stage. Escape dismisses the readout and clears highlighting.",
       }}
     >
       <FunnelContext value={context as Context<unknown>}>
@@ -306,7 +327,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
           {...familyFrame(chartProps)}
           responsive={chartProps.responsive ?? true}
           accessibilityLayer={false}
-          aria-describedby={cn(props["aria-describedby"], instructionsId)}
+          aria-describedby={[props["aria-describedby"], instructionsId].filter(Boolean).join(" ")}
           className={cn(familyFrame(chartProps).className, "kind-ui-funnel-chart")}
           data-kind-ui="funnel-chart"
           aria-busy={loading || undefined}
@@ -522,7 +543,8 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
   const activate = (event: React.SyntheticEvent<SVGGElement>) => {
     if (!event.defaultPrevented && !context.loading) {
       context.inspect(stage.id);
-      interaction.activate({ kind: "category", key: stage.id }, "mark", event);
+      if (interaction.markActivation)
+        interaction.activate({ kind: "category", key: stage.id }, "mark", event);
     }
   };
   return (
@@ -551,7 +573,7 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
       role="button"
       tabIndex={context.loading ? -1 : 0}
       aria-label={label}
-      aria-pressed={selected}
+      aria-pressed={interaction.markActivation ? selected : undefined}
       aria-disabled={context.loading || undefined}
       aria-describedby={active && context.tooltipMounted ? context.tooltipId : undefined}
       data-kind-ui="funnel-stage"
@@ -577,13 +599,12 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
         props.onKeyDown?.(event);
         if (event.defaultPrevented || context.loading) return;
         if (event.key === "Escape") {
-          context.dismiss();
-          interaction.reset(event);
+          if (interaction.reset(event)) context.dismiss();
           event.preventDefault();
           return;
         }
         if (event.key === "Enter" || event.key === " ") {
-          activate(event);
+          if (!event.repeat) activate(event);
           event.preventDefault();
           return;
         }
@@ -715,7 +736,10 @@ export interface FunnelTooltipContentProps<T = FunnelDatum> {
   formattedRatio: string | null;
   ratioLabel: string;
 }
-export type FunnelTooltipProps<T = FunnelDatum> = Omit<ComponentPropsWithRef<"div">, "children"> & {
+export type FunnelTooltipProps<T = FunnelDatum> = Omit<
+  ComponentPropsWithRef<"div">,
+  "children" | "id" | "role"
+> & {
   Content?: ComponentType<FunnelTooltipContentProps<T>>;
   valueAnimation?: TooltipContentProps["valueAnimation"];
 };
@@ -786,7 +810,7 @@ export function FunnelDataTable<T = FunnelDatum>({
   ...props
 }: FunnelDataTableProps<T>) {
   const context = useFunnel<T>();
-  const ratios = context.model.stages.some((stage) => stage.denominator !== null);
+  const ratios = context.ratioRequested;
   return (
     <OutsidePlot>
       <div

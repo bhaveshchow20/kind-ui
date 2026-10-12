@@ -111,3 +111,29 @@ test("FunnelChart exposes its explicit parts in the public compound contract", (
   assert.equal(FunnelChart.Root, undefined);
   assert.equal(FunnelChart.Plot, undefined);
 });
+
+test("funnel inspection-only marks omit highlight key instructions", () => {
+  const html = render(
+    h(FunnelChart, { ...defaults, interaction: { markActivation: "none" } }, null),
+  );
+  assert.match(html, /Use arrow keys, Home and End to inspect stages/);
+  assert.doesNotMatch(html, /Enter or Space highlights a stage/);
+});
+
+test("funnel label fallback preserves structural color getters", () => {
+  class StageColor {
+    get color() {
+      return "#123456";
+    }
+  }
+  const colors = Object.fromEntries(data.map((row) => [row.id, new StageColor()]));
+  const html = render(h(FunnelChart, { ...defaults, config: colors }, null));
+  assert.match(html, /#123456/);
+});
+test("funnel label fallback preserves nonenumerable color metadata", () => {
+  const colors = Object.fromEntries(
+    data.map((row) => [row.id, Object.defineProperty({}, "color", { value: "#abcdef" })]),
+  );
+  const html = render(h(FunnelChart, { ...defaults, config: colors }, null));
+  assert.match(html, /#abcdef/);
+});

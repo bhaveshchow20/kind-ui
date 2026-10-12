@@ -1,5 +1,5 @@
 import { type FunnelAccessors, FunnelChart } from "@kind-ui/charts";
-import { Component, type ReactNode, useRef, useState } from "react";
+import { Component, type ReactNode, useEffect, useRef, useState } from "react";
 
 interface Row {
   key: string;
@@ -51,6 +51,14 @@ export function Host() {
   const [clicks, setClicks] = useState(0);
   const [clickedDays, setClickedDays] = useState<number | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectionWrites, setSelectionWrites] = useState(0);
+  const [ticks, setTicks] = useState(0);
+  const tickAnimation = params.has("animation-ticks");
+  useEffect(() => {
+    if (!tickAnimation) return;
+    const timer = setInterval(() => setTicks((count) => count + 1), 80);
+    return () => clearInterval(timer);
+  }, [tickAnimation]);
   const cleanupCount = useRef(0);
   const [cleanupRead, setCleanupRead] = useState(0);
   const [metadata, setMetadata] = useState(false);
@@ -81,6 +89,12 @@ export function Host() {
   return (
     <main>
       <h1>Packed funnel contracts</h1>
+      <p id="p-2" className="sr-only">
+        Inventory measured at the end of the selected period.
+      </p>
+      <p id="p-4" className="sr-only">
+        Counts represent independent workflow stage snapshots.
+      </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         <button type="button" onClick={() => setHorizontal(!horizontal)}>
           Orientation
@@ -107,6 +121,9 @@ export function Host() {
           Veto clicks
         </button>
       </div>
+      <button type="button" onClick={() => setActive("growth")}>
+        External inspection
+      </button>
       <button type="button" onClick={() => setMetadata(!metadata)}>
         Refresh metadata
       </button>
@@ -118,6 +135,8 @@ export function Host() {
       <output aria-label="Consumer clicks">{clicks}</output>
       <output aria-label="Clicked stage days">{clickedDays ?? "none"}</output>
       <output aria-label="Stage selection">{selected ?? "none"}</output>
+      <output aria-label="Selection writes">{selectionWrites}</output>
+      <output aria-label="Parent ticks">{ticks}</output>
       <section
         aria-label="Stage snapshot"
         style={{
@@ -139,7 +158,9 @@ export function Host() {
           }
           config={config}
           aria-label="Inventory by stage"
+          aria-describedby="p-2 p-4"
           height={360}
+          {...(tickAnimation ? { width: 640 } : {})}
           orientation={horizontal ? "horizontal" : "vertical"}
           scaleMax={100}
           denominator={
@@ -147,11 +168,21 @@ export function Host() {
           }
           ratioLabel="Share of first stage"
           loading={loading}
-          animate={params.has("static") ? false : { revealDurationMs: 2500 }}
-          interaction={{ selected, onSelectionChange: setSelected }}
+          animate={params.has("static") ? false : { revealDurationMs: tickAnimation ? 700 : 2500 }}
+          interaction={{
+            selected,
+            onSelectionChange: (id) => {
+              setSelected(id);
+              setSelectionWrites((count) => count + 1);
+            },
+            markActivation: params.has("none") ? "none" : "matching-legend",
+            ...(params.has("reset-veto")
+              ? { onBeforeInteraction: (request: { source: string }) => request.source !== "reset" }
+              : {}),
+          }}
           activeId={active}
           onActiveIdChange={(id) => {
-            setActive(id);
+            if (id !== null || !params.has("ignore-null")) setActive(id);
             setActiveWrites((count) => count + 1);
           }}
           frameProps={{ id: "funnel-frame" }}
@@ -232,6 +263,49 @@ export function Host() {
         <FunnelChart data={[]} config={{}} aria-label="Empty stages" height={140}>
           <FunnelChart.Stages />
           <FunnelChart.DataTable caption="Empty supplied stages" />
+        </FunnelChart>
+      </section>
+      <section aria-label="Legend labels">
+        <FunnelChart
+          data={[
+            { id: "payment", label: "Reached payment", value: 10 },
+            { id: "address", label: "Reached address", value: 5 },
+          ]}
+          config={{
+            payment: { color: "blue" },
+            address: { color: "green", label: "Display address" },
+          }}
+          aria-label="Stage labels"
+          height={140}
+        >
+          <FunnelChart.Stages />
+          <FunnelChart.Legend />
+        </FunnelChart>
+      </section>
+      <section aria-label="Previous unavailable">
+        <FunnelChart
+          data={[{ id: "only", label: "First supplied", value: 10 }]}
+          config={{ only: { color: "blue" } }}
+          aria-label="Previous denominator unavailable"
+          height={140}
+          denominator="previous"
+          ratioLabel="Share of previous"
+        >
+          <FunnelChart.Stages />
+          <FunnelChart.DataTable caption="Previous stage unknown" />
+        </FunnelChart>
+      </section>
+      <section aria-label="Callback unavailable">
+        <FunnelChart
+          data={[{ id: "only", label: "Known count", value: 10 }]}
+          config={{ only: { color: "blue" } }}
+          aria-label="Callback denominator unavailable"
+          height={140}
+          denominator={() => null}
+          ratioLabel="Share of baseline"
+        >
+          <FunnelChart.Stages />
+          <FunnelChart.DataTable caption="Baseline unknown" />
         </FunnelChart>
       </section>
       <section aria-label="Explicit parts">
