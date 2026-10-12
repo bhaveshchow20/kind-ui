@@ -1,4 +1,5 @@
 import * as Chart from "@kind-ui/charts";
+import { motion as consumerMotion, MotionConfig } from "motion/react";
 import { type ReactNode, useState } from "react";
 import "./loading.css";
 
@@ -55,6 +56,24 @@ const flow: Chart.SankeyFlowData = {
 };
 const noFlow: Chart.SankeyFlowData = { nodes: [], links: [] };
 const motion = { revealDurationMs: 1100 };
+function ConsumerMotionProbe() {
+  const [shifted, setShifted] = useState(false);
+  return (
+    <consumerMotion.button
+      type="button"
+      data-consumer-motion
+      initial={false}
+      animate={{ x: shifted ? 48 : 0 }}
+      transition={{ duration: 10 }}
+      layout
+      drag="x"
+      dragMomentum={false}
+      onClick={() => setShifted(true)}
+    >
+      Move consumer motion
+    </consumerMotion.button>
+  );
+}
 function Card({
   family,
   title,
@@ -83,7 +102,7 @@ function Card({
     </article>
   );
 }
-function Preview() {
+function Preview({ motionInterop = false }: { motionInterop?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [empty, setEmpty] = useState(true);
   const [wide, setWide] = useState(true);
@@ -218,6 +237,7 @@ function Preview() {
             <Chart.LineChart.Legend />
             <Chart.LineChart.Content>
               <p data-loading-content>Ready chart content</p>
+              {motionInterop && <ConsumerMotionProbe />}
             </Chart.LineChart.Content>
           </Chart.LineChart>,
         )}
@@ -522,4 +542,15 @@ function Preview() {
     </main>
   );
 }
-export default Preview;
+export default function LoadingPreview() {
+  const [motionInterop] = useState(() =>
+    new URLSearchParams(window.location.search).has("motion-interop"),
+  );
+  return motionInterop ? (
+    <MotionConfig reducedMotion="always">
+      <Preview motionInterop />
+    </MotionConfig>
+  ) : (
+    <Preview />
+  );
+}

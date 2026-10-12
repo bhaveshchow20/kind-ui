@@ -236,10 +236,13 @@ export function ChartInteractionProvider({
   }, [controlled, internal, selected]);
   const announce = (text: string) =>
     setAnnouncement((old) => ({ text, sequence: old.sequence + 1 }));
-  const changeVisibility = (next: string[]) => {
-    if (props.visibleSeries === undefined) setInternalVisible(next);
-    props.onVisibleSeriesChange?.(next);
-  };
+  const changeVisibility = useCallback(
+    (next: string[]) => {
+      if (props.visibleSeries === undefined) setInternalVisible(next);
+      props.onVisibleSeriesChange?.(next);
+    },
+    [props.visibleSeries, props.onVisibleSeriesChange],
+  );
   const interactive =
     mode === "focus" ||
     props.onVisibleSeriesChange !== undefined ||

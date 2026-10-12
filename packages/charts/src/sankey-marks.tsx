@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useMotionValue, useTransform } from "motion/react";
+import { useMotionValue, useTransform } from "motion/react";
+import * as motion from "motion/react-m";
 import { type SVGProps, use, useId, useLayoutEffect, useRef, useState } from "react";
 import type {
   SankeyLinkProps as NativeLinkProps,

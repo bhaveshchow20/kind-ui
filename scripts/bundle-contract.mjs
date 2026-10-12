@@ -92,6 +92,16 @@ export function measureBundle(result) {
 
 /** @param {string} fixture @param {string[]} modules */
 export function assertBundleRetention(fixture, modules) {
+  if (["app", "cartesian", "line-loading", "polar", "heatmap", "sankey"].includes(fixture)) {
+    assert.ok(
+      !modules.some((id) =>
+        /(?:framer-motion\/dist\/es\/(?:motion\/features\/layout(?:\.mjs|\/)|projection\/|gestures\/(?:drag|pan)\/)|motion-dom\/dist\/es\/projection\/node\/)/.test(
+          id,
+        ),
+      ),
+      `${fixture}: chart animations must tree-shake unused Motion layout, drag and pan features`,
+    );
+  }
   if (fixture.startsWith("primitive-")) {
     assert.ok(
       !modules.some((id) => /(?:motion|framer-motion|motion-dom|motion-utils)\//.test(id)),

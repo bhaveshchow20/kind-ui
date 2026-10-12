@@ -46,6 +46,30 @@ const design = (card: Locator) =>
     return copy.innerHTML;
   });
 
+test("chart animation scope preserves consumer MotionConfig and full Motion drag/layout", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/loading.html?motion-interop");
+  await page.getByRole("button", { name: "Load data", exact: true }).click();
+  const probe = page.getByRole("button", { name: "Move consumer motion", exact: true });
+  const x = () =>
+    probe.evaluate((element) => new DOMMatrixReadOnly(getComputedStyle(element).transform).m41);
+  await probe.click();
+  // The outer MotionConfig skips the ten-second transform animation immediately.
+  await expect.poll(x).toBe(48);
+  const box = await probe.boundingBox();
+  if (!box) throw new Error("Consumer Motion probe must be visible");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2, { steps: 8 });
+  await expect.poll(x).toBeGreaterThan(90);
+  await page.mouse.up();
+  expect(errors).toEqual([]);
+});
+
 test("all public families show decorative skeletons and suspend chart inspection", async ({
   page,
 }) => {

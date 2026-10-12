@@ -81,6 +81,44 @@ test("primitive consumers reject Kind runtime and Motion retention", () => {
   }
 });
 
+test("chart consumers retain animation features but reject unused Motion layout and drag", () => {
+  const animation = "/node_modules/framer-motion/dist/es/motion/features/animation/index.mjs";
+  const loading = "/node_modules/@kind-ui/charts/dist/loading-skeleton.js";
+  for (const fixture of ["app", "cartesian", "line-loading", "polar", "heatmap", "sankey"]) {
+    assertBundleRetention(fixture, [
+      animation,
+      loading,
+      "/node_modules/motion-dom/dist/es/projection/utils/has-transform.mjs",
+    ]);
+    for (const feature of [
+      "projection/node/create-projection-node.mjs",
+      "motion/features/layout.mjs",
+      "motion/features/layout/MeasureLayout.mjs",
+      "gestures/drag/VisualElementDragControls.mjs",
+      "gestures/pan/PanSession.mjs",
+    ]) {
+      assert.throws(
+        () =>
+          assertBundleRetention(fixture, [
+            animation,
+            loading,
+            `/node_modules/framer-motion/dist/es/${feature}`,
+          ]),
+        /must tree-shake unused Motion layout, drag and pan features/,
+      );
+    }
+    assert.throws(
+      () =>
+        assertBundleRetention(fixture, [
+          animation,
+          loading,
+          "/node_modules/motion-dom/dist/es/projection/node/create-projection-node.mjs",
+        ]),
+      /must tree-shake unused Motion layout, drag and pan features/,
+    );
+  }
+});
+
 test("single-family consumers reject unrelated compositions, standalone roots and loading designs", () => {
   const ownLoading = "/node_modules/@kind-ui/charts/dist/loading-skeleton.js";
   for (const fixture of ["cartesian", "line-loading", "polar"]) {

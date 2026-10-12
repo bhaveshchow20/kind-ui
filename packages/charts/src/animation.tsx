@@ -2,11 +2,13 @@
 
 import {
   animate as animateValue,
+  domAnimation,
+  LazyMotion,
   type MotionValue,
-  motion,
   type Transition,
   useMotionValue,
 } from "motion/react";
+import * as motion from "motion/react-m";
 import {
   createContext,
   type ReactElement,
@@ -83,9 +85,11 @@ export function InteractionMotionRoot({ children }: { children: ReactNode }) {
   const actions = useMemo(() => ({ register }), [register]);
   const settings = [...charts.values()].find((chart) => chart.enabled) ?? staticMotion;
   return (
-    <MotionRegistration value={actions}>
-      <MotionContext value={settings}>{children}</MotionContext>
-    </MotionRegistration>
+    <LazyMotion features={domAnimation}>
+      <MotionRegistration value={actions}>
+        <MotionContext value={settings}>{children}</MotionContext>
+      </MotionRegistration>
+    </LazyMotion>
   );
 }
 export function RegisterInteractionMotion({ enabled }: { enabled: boolean }) {

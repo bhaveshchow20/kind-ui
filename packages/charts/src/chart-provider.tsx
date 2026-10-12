@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithRef, useId, useRef } from "react";
+import { type ComponentPropsWithRef, type ReactNode, useId, useMemo, useRef } from "react";
 import { InteractionMotionRoot } from "./animation.js";
 import type { ChartContextValue } from "./chart-context.js";
 import { ChartContext } from "./chart-context.js";
@@ -82,6 +82,27 @@ export function ChartProvider({
     ...(visibleSeries ? { visibleSeries } : {}),
     ...(onVisibleSeriesChange ? { onVisibleSeriesChange } : {}),
   };
+  const presentation = (
+    <InteractionMotionRoot>
+      <EmphasisProvider enabled={emphasis === "auto"}>
+        <ChartFrame {...props} style={{ ...colors, ...style }}>
+          {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
+            <svg
+              aria-hidden="true"
+              focusable="false"
+              width={0}
+              height={0}
+              className="absolute"
+              data-kind-ui="color-resources"
+            >
+              <SeriesColorDefinitions />
+            </svg>
+          )}
+          {children}
+        </ChartFrame>
+      </EmphasisProvider>
+    </InteractionMotionRoot>
+  );
   return (
     <ChartInteractionProvider
       config={value.config}
@@ -93,36 +114,36 @@ export function ChartProvider({
           : {})}
     >
       {(visible, change) => (
-        <ChartContext
-          value={{
-            ...value,
-            ...(visible !== undefined ? { visibleSeries: visible } : {}),
-            ...(change ? { onVisibleSeriesChange: change } : {}),
-          }}
-        >
-          <InteractionMotionRoot>
-            <EmphasisProvider enabled={emphasis === "auto"}>
-              <ChartFrame {...props} style={{ ...colors, ...style }}>
-                {Object.values(colorStops).some((stops) => stops.colors.length > 1) && (
-                  <svg
-                    aria-hidden="true"
-                    focusable="false"
-                    width={0}
-                    height={0}
-                    className="absolute"
-                    data-kind-ui="color-resources"
-                  >
-                    <SeriesColorDefinitions />
-                  </svg>
-                )}
-                {children}
-              </ChartFrame>
-            </EmphasisProvider>
-          </InteractionMotionRoot>
-        </ChartContext>
+        <ChartPresentation value={value} visible={visible} change={change}>
+          {presentation}
+        </ChartPresentation>
       )}
     </ChartInteractionProvider>
   );
+}
+
+// Interaction state can change without changing metadata or visibility. Retain
+// the presentation subtree and context while the interaction owner updates.
+function ChartPresentation({
+  value,
+  visible,
+  change,
+  children,
+}: {
+  value: ChartContextValue;
+  visible: readonly string[] | undefined;
+  change: ((next: string[]) => void) | undefined;
+  children: ReactNode;
+}) {
+  const context = useMemo(
+    () => ({
+      ...value,
+      ...(visible !== undefined ? { visibleSeries: visible } : {}),
+      ...(change ? { onVisibleSeriesChange: change } : {}),
+    }),
+    [value, visible, change],
+  );
+  return <ChartContext value={context}>{children}</ChartContext>;
 }
 
 function ChartFrame({ children, ...props }: ComponentPropsWithRef<"div">) {
