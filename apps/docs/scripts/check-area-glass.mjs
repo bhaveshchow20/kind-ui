@@ -30,6 +30,7 @@ try {
   assert.equal(await p.getByRole("heading", { name: "Basic", exact: true }).count(), 0);
   assert.equal(await p.locator("[data-area-reveal]").count(), 0);
   await assertToc(p, [
+    "Installation",
     "Usage",
     "Curve types",
     "Stacked series",
