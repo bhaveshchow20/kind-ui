@@ -91,7 +91,9 @@ test("sector navigation and data selection retain the independent signed metric"
   await expect(missing).toContainText("Unknown");
   // Outside-view nodes retain root/parent shares while the view-share cell is empty.
   await expect(missing.locator("td").nth(4)).toHaveText("—");
-  await table.locator('tr[data-node-id="orbit"]').getByRole("button").click();
+  const orbit = table.locator('tr[data-node-id="orbit"]').getByRole("button");
+  await orbit.focus();
+  await orbit.click();
   await expect(card.locator('[data-kind-ui="treemap-tile"][data-node-id="orbit"]')).toHaveAttribute(
     "aria-pressed",
     "true",

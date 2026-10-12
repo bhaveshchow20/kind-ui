@@ -87,11 +87,13 @@ export function TreemapChartCard({
           })}
         />
         {options.showLabels !== false && (
-          <TreemapChart.Labels<TreemapRecord> minWidth={45} minHeight={18} padding={6}>
+          <TreemapChart.Labels<TreemapRecord> minWidth={26} minHeight={18} padding={3}>
             {(node) => (
               <>
-                <strong className="block truncate">{node.label}</strong>
-                {options.showValues !== false && node.height >= 44 && (
+                <strong className="block truncate">
+                  {node.width >= 58 ? node.label : node.label.slice(0, 3)}
+                </strong>
+                {options.showValues !== false && node.height >= 44 && node.width >= 58 && (
                   <span className="block tabular-nums">{metric(node.datum.metric)}</span>
                 )}
               </>
