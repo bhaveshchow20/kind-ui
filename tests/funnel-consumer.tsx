@@ -102,3 +102,11 @@ void (
 );
 // @ts-expect-error Only boundary-width taper and rectangles are promised.
 void (<FunnelChart.Stages geometry="area" />);
+
+// Empty data is a valid supplied dataset without generic accessors.
+void (
+  <FunnelChart data={[]} config={{}} aria-label="Empty stages">
+    <FunnelChart.Stages />
+    <FunnelChart.DataTable caption="Empty stages" />
+  </FunnelChart>
+);

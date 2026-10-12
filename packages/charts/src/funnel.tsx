@@ -106,7 +106,7 @@ export type FunnelChartProps<T = FunnelDatum> = NativeOptions &
     empty?: ReactNode;
     children: Exclude<ReactNode, undefined>;
     ref?: React.Ref<SVGSVGElement>;
-  } & (T extends FunnelDatum
+  } & ([T] extends [FunnelDatum]
     ? { accessors?: FunnelAccessors<T> }
     : { accessors: FunnelAccessors<T> });
 
