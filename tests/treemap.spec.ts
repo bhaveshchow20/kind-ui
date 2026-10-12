@@ -597,14 +597,15 @@ test("treemap uncontrolled loading clears active inspection with one original-re
   page,
 }) => {
   await page.goto("/?uncontrolled-active");
+  const resolvedActive = page.locator('output[aria-label="Resolved active"]');
   await tile(page, "a").focus();
   await expect(output(page, "Active ID")).toHaveText("a");
-  await expect(output(page, "Resolved active")).toHaveText("a");
+  await expect(resolvedActive).toHaveText("a");
   await expect(output(page, "Active requests")).toHaveText("1");
   await expect(output(page, "Active request log")).toHaveText('[{"id":"a","metric":-2}]');
   await update(page, "Loading");
   await expect(output(page, "Active ID")).toHaveText("none");
-  await expect(output(page, "Resolved active")).toHaveText("none");
+  await expect(resolvedActive).toHaveText("none");
   await expect(output(page, "Active requests")).toHaveText("2");
   await expect(output(page, "Active request log")).toHaveText(
     '[{"id":"a","metric":-2},{"id":null,"metric":null}]',
@@ -613,7 +614,7 @@ test("treemap uncontrolled loading clears active inspection with one original-re
   await update(page, "Resize");
   await expect(output(page, "Active requests")).toHaveText("2");
   await update(page, "Loading");
-  await expect(output(page, "Resolved active")).toHaveText("none");
+  await expect(resolvedActive).toHaveText("none");
   await expect(output(page, "Active ID")).toHaveText("none");
   await expect(output(page, "Active requests")).toHaveText("2");
   await expect(page.getByRole("tooltip")).toHaveCount(0);
