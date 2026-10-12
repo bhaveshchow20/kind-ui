@@ -178,11 +178,12 @@ async function checkBounds(page, width, theme) {
         ),
       true,
     );
-    assert.equal(
-      await chart(card).evaluate((node) => node.getAnimations().length),
-      0,
-      "Reduced-motion examples should not animate",
-    );
+    // The reduced-motion theme transition settles on the next rendering frame.
+    await expect
+      .poll(() => chart(card).evaluate((node) => node.getAnimations().length), {
+        message: "Reduced-motion examples should not animate",
+      })
+      .toBe(0);
   }
   evidence.layouts.push({
     width,
