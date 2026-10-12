@@ -31,6 +31,7 @@ export const documentationCharts = [
   ["Sankey", "sankey"],
   ["Histogram", "histogram"],
   ["Box Plot", "box-plot"],
+  ["Candlestick", "candlestick"],
 ].map(([name, slug]) => ({ name, href: `${siteLinks.docs}components/${slug}/` }));
 
 const chartGuides = documentationCharts

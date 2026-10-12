@@ -11,3 +11,8 @@ export const registryHomepage: string;
 export const registryEndpoint: string;
 export const sourcePaths: string[];
 export const registryCss: Record<string, Record<string, never>>;
+
+export function isCoreVersionAvailable(
+  minimumCoreVersion: string | undefined,
+  version?: string,
+): boolean;

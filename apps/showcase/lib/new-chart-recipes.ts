@@ -1,7 +1,20 @@
-import type { BoxPlotSummary, HistogramBin, SankeyFlowData, WaterfallEntry } from "@kind-ui/charts";
+import type {
+  BoxPlotSummary,
+  CandlestickDatum,
+  HistogramBin,
+  SankeyFlowData,
+  WaterfallEntry,
+} from "@kind-ui/charts";
 import { demoEntry } from "@/lib/utils";
 import type { DemoOptions } from "./demo-options";
 export const newRecipes = [
+  {
+    id: "candlestick-sessions",
+    family: "Candlestick",
+    tag: "Session price action",
+    context:
+      "Twenty illustrative sessions from synthetic executions. Prices are USD per share; aligned volume is shares. Requires the upcoming Core release.",
+  },
   {
     id: "line-trials",
     family: "Line",
@@ -254,6 +267,47 @@ export function boxRows(id: string): BoxRow[] {
         },
       ];
 }
+export type CandlestickSample = CandlestickDatum & {
+  source: "Synthetic executions";
+  priceUnit: "USD/share";
+  volumeUnit: "shares";
+};
+const sessionObservations = [
+  ["2026-09-14", 184.2, 188.6, 182.4, 187.3, 420000],
+  ["2026-09-15", 187.3, 190.1, 185.8, 189.4, 365000],
+  ["2026-09-16", 189.4, 191.2, 186.7, 188.1, 298000],
+  ["2026-09-17", 188.1, 194.2, 187.2, 192.8, 530000],
+  ["2026-09-18", 192.8, 195.3, 190.2, 191.6, 340000],
+  ["2026-09-21", 191.6, 196.4, 189.9, 195.2, 480000],
+  ["2026-09-22", 195.2, 199.2, 193.4, 197.6, 610000],
+  ["2026-09-23", 197.6, 200.8, 195.7, 198.4, 445000],
+  ["2026-09-24", 198.4, 200.1, 196.3, 198.4, 280000],
+  ["2026-09-25", 198.4, 199.6, 193.8, 195.1, 390000],
+  ["2026-09-28", 195.1, 198.9, 194.2, 197.2, 350000],
+  ["2026-09-29", 197.2, 202.3, 196.6, 201.4, 560000],
+  ["2026-09-30", 201.4, 204.6, 199.8, 203.7, 625000],
+  ["2026-10-01", 203.7, 205.9, 200.6, 202.1, 410000],
+  ["2026-10-02", 202.1, 203.8, 198.4, 200.2, 455000],
+  ["2026-10-05", 200.2, 205.1, 199.7, 204.6, 540000],
+  ["2026-10-06", 204.6, 208.2, 203.5, 207.3, 670000],
+  ["2026-10-07", 207.3, 209.8, 205.9, 208.4, 590000],
+  ["2026-10-08", 208.4, 210.1, 204.8, 205.7, 465000],
+  ["2026-10-09", 205.7, 208.8, 204.6, 206.4, 510000],
+] as const;
+export const candlestickRows: CandlestickSample[] = sessionObservations.map(
+  ([time, open, high, low, close, volume]) => ({
+    time,
+    open,
+    high,
+    low,
+    close,
+    volume,
+    source: "Synthetic executions",
+    priceUnit: "USD/share",
+    volumeUnit: "shares",
+  }),
+);
+
 export function newCode(
   r: NewRecipe,
   material: string,
@@ -263,6 +317,7 @@ export function newCode(
 ) {
   const imports = {
     Line: "LineChart",
+    Candlestick: "CandlestickChart, type CandlestickDatum",
     Histogram: "HistogramChart, type HistogramBin",
     "Box Plot": "BoxPlotChart, type BoxPlotSummary, ReferenceLine",
     Heatmap: "HeatmapChart, createHeatmapScale",
@@ -272,9 +327,31 @@ export function newCode(
   }[r.family];
   const paletteLookup =
     r.family === "Sankey"
-      ? `function paletteColor(index: number): string {\n  const color = colors[index];\n  if (color === undefined) throw new Error(\"Missing palette color\");\n  return color;\n}\n`
+      ? `function paletteColor(index: number): string {\n  const color = colors[index];\n  if (color === undefined) throw new Error("Missing palette color");\n  return color;\n}\n`
       : "";
   const intro = `"use client";\n\nimport { ${imports} } from "@kind-ui/charts";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)} as const;\nconst animate = ${animate};\n${paletteLookup}`;
+  if (r.family === "Candlestick") {
+    return (
+      intro +
+      `type Row = CandlestickDatum & { source: string; priceUnit: string; volumeUnit: string };
+const data: Row[] = ${JSON.stringify(candlestickRows, null, 2)};
+const config = {price:{label:"Synthetic executions · USD/share",color:colors[0]},volume:{label:"Volume · shares",color:colors[2]}};
+export function Example(){
+ return <CandlestickChart data={data} timeMode="business-date" spacing="ordinal" config={config} style={{width:"100%",height:240}} animate={animate} aria-label="Synthetic session trade OHLC in USD per share, volume in shares" margin={{top:12,right:12,left:0,bottom:8}} formatTime={time => String(time).slice(5)} formatPrice={value => "$" + value.toFixed(2)} formatVolume={value => value.toLocaleString("en-US") + " shares"}>
+  ${options.showGrid === false ? "" : '<CandlestickChart.Grid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />'}
+  <CandlestickChart.XAxis tickLine={false} axisLine={false} tickCount={5} tick={${options.showLabels === false ? "false" : "{fontSize:11}"}} />
+  <CandlestickChart.YAxis width="auto" tickLine={false} axisLine={false} tick={${options.showLabels === false ? "false" : "{fontSize:11}"}} tickFormatter={value => "$" + Number(value).toFixed(0)} />
+  <CandlestickChart.Series seriesKey="price" rising={colors[0]} falling={colors[1]} unchanged={colors[2]} maxBarSize={${options.width ?? 14}} markProps={{strokeWidth:${options.strokeWidth ?? 1.5}}} />
+  <CandlestickChart.Volume seriesKey="volume" maxBarSize={${options.width ?? 14}} fillOpacity={0.4} axisProps={{hide:true}} />
+  <CandlestickChart.Crosshair stroke="var(--chart-axis)" />
+  <CandlestickChart.Tooltip />
+  <CandlestickChart.Content className="sr-only" />
+  <CandlestickChart.DataTable<Row> caption="Synthetic executions: daily OHLC in USD per share and volume in shares" className="sr-only block" renderMetadata={point => point.original.source} />
+ </CandlestickChart>;
+}
+`
+    );
+  }
   if (r.family === "Line") {
     return (
       intro +

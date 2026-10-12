@@ -2,7 +2,11 @@ import { highlight } from "fumadocs-core/highlight";
 import { Pre } from "fumadocs-ui/components/codeblock";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import bundles from "@/generated/all-examples.json";
-import { type InstallationStep, installationFor } from "@/lib/chart-installation.mjs";
+import {
+  type InstallationStep,
+  installationFor,
+  pendingInstallationMessage,
+} from "@/lib/chart-installation.mjs";
 import { componentBundleFor, componentBundlesSchema } from "@/lib/component-bundles.server.mjs";
 import type { ComponentId } from "./component-playground";
 import { InstallationTabs } from "./installation-tabs";
@@ -26,7 +30,14 @@ async function installationCode(step: Pick<InstallationStep, "code" | "filename"
 }
 
 export async function ChartInstallation({ id }: { id: ComponentId }) {
-  const { command, steps } = installationFor(componentBundleFor(validatedBundles, id));
+  const bundle = componentBundleFor(validatedBundles, id);
+  if (bundle.releasePending)
+    return (
+      <div role="note" data-release-pending={bundle.minimumCoreVersion}>
+        <p>{pendingInstallationMessage(bundle)}</p>
+      </div>
+    );
+  const { command, steps } = installationFor(bundle);
   const blocks = await Promise.all(steps.map(installationCode));
   return (
     <InstallationTabs

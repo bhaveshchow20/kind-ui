@@ -1,6 +1,8 @@
 interface InstallationBundle {
   id: string;
   version: string;
+  releasePending?: boolean | undefined;
+  minimumCoreVersion?: string | undefined;
   registryItemName?: string | undefined;
   files: Record<string, string>;
 }
@@ -17,3 +19,5 @@ export function installationFor(bundle: InstallationBundle): {
   steps: InstallationStep[];
 };
 export function installationMarkdown(bundle: InstallationBundle): string;
+
+export function pendingInstallationMessage(bundle: InstallationBundle): string;

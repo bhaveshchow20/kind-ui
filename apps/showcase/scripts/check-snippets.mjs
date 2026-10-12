@@ -74,6 +74,14 @@ try {
             /visibleSeries=|onVisibleSeriesChange=|data\.filter\(/,
             `${recipe.id} copied focus must preserve the complete data`,
           );
+          if (recipe.family === "Candlestick") {
+            assert.match(source, /<CandlestickChart.Volume seriesKey="volume"/);
+            assert.match(source, /<CandlestickChart.Tooltip/);
+            assert.match(source, /<CandlestickChart.DataTable<Row>/);
+            assert.match(source, /timeMode="business-date"/);
+            assert.match(source, /Synthetic executions/);
+            assert.doesNotMatch(source, /responsive|\.Root|\.Plot/);
+          }
           if (recipe.family === "Pie") {
             assert.match(source, /<PieChart\.Series/);
             assert.doesNotMatch(source, /interactionBinding=/);
@@ -86,7 +94,7 @@ try {
       }
     }
   }
-  assert.equal(files.length, 192, "Every recipe, finish and motion setting must be checked");
+  assert.equal(files.length, 198, "Every recipe, finish and motion setting must be checked");
   const changedOptions = {
     strokeWidth: 4,
     showGrid: false,
@@ -133,6 +141,11 @@ try {
       assert.doesNotMatch(source, /<\w+Chart\.Legend\b/, `${recipe.id} hides the explicit legend`);
       if (recipe.family !== "Heatmap")
         assert.doesNotMatch(source, /<\w+Chart\.Grid\b/, `${recipe.id} omits the explicit grid`);
+      if (recipe.family === "Candlestick") {
+        assert.match(source, /maxBarSize=\{40\}/);
+        assert.match(source, /strokeWidth:4/);
+        assert.match(source, /tick=\{false\}/);
+      }
       await writeFile(file, source);
       files.push(file);
     }

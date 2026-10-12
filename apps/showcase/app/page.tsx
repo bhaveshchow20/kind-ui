@@ -66,6 +66,7 @@ const families = [
   "Sankey",
   "Histogram",
   "Box Plot",
+  "Candlestick",
 ] as const;
 type Family = (typeof families)[number];
 const repo = siteLinks.repository;
@@ -607,7 +608,7 @@ const installCommands = {
 const installChartNames = [
   "line",
   ...families
-    .filter((family) => family !== "Line")
+    .filter((family) => family !== "Line" && family !== "Candlestick")
     .map((family) => family.toLowerCase().replaceAll(" ", "-"))
     .sort(),
   "radial-activity",
@@ -785,6 +786,7 @@ const exampleColors: Record<string, string[]> = {
   "histogram-latency": ["#48a2f9", "#a2d3fc", "#dcf0ff"],
   "box-latency": ["#a475ed", "#cda9ff", "#eee1ff"],
   "box-regions": ["#24b493", "#85dfc4", "#cbf4e6"],
+  "candlestick-sessions": ["#22b99f", "#f57888", "#94a3b8"],
 };
 function colorsFor(entry: GalleryEntry) {
   return exampleColors[entry.id] ?? ["#8d77cb", "#bfaee4", "#e4dcf4"];

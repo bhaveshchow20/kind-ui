@@ -12,6 +12,8 @@ for (const family of families) {
   if (!family || !/^[a-z][a-z-]*$/.test(family.id)) throw new Error("Invalid component catalog");
   if (!family.examples?.length || family.examples[0].id !== family.id)
     throw new Error(`${family.id}: first example must be the primary component`);
+  if (family.minimumCoreVersion !== undefined && typeof family.minimumCoreVersion !== "string")
+    throw new Error(`${family.id}: minimumCoreVersion must be a version string`);
   for (const example of family.examples) {
     if (ids.has(example.id)) throw new Error(`Duplicate example ${example.id}`);
     if (example.id !== family.id && !example.id.startsWith(`${family.id}-`))
@@ -20,9 +22,16 @@ for (const family of families) {
     ids.add(example.id);
   }
 }
-export const examples = families.map((family) => family.examples[0]);
+export const examples = families.map((family) => ({
+  ...family.examples[0],
+  ...(family.minimumCoreVersion ? { minimumCoreVersion: family.minimumCoreVersion } : {}),
+}));
 export const allExamples = families.flatMap((family) =>
-  family.examples.map((example) => ({ ...example, family: family.id })),
+  family.examples.map((example) => ({
+    ...example,
+    family: family.id,
+    ...(family.minimumCoreVersion ? { minimumCoreVersion: family.minimumCoreVersion } : {}),
+  })),
 );
 export const dataLabels = Object.assign({}, ...families.map((family) => family.dataLabels));
 export const variantDefinitions = Object.assign({}, ...families.map((family) => family.variants));

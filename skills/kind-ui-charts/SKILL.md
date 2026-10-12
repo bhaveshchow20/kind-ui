@@ -9,6 +9,12 @@ Deliver working consumer code using public `@kind-ui/charts` exports. Keep data,
 units, domains, aggregation, request state, and accessible alternatives host-owned.
 Inspect the consumer’s installed version before adapting a documented example. Do not substitute repository source imports for npm imports.
 
+The [Candlestick guide](https://kindui.dev/charts/docs/components/candlestick/)
+is a source candidate requiring Core 0.6.0 or later for public npm and registry
+installation. Published Core 0.5.0 lacks these exports. Follow its selected prompt
+and manifest release prerequisite; candidate verification uses the exact approved
+artifact with its checksum and provenance.
+
 ## Decide, then read only what applies
 
 1. Choose the family from the question, units, and data using the selection table
@@ -27,7 +33,9 @@ Use the maintained docs examples for [Combo](https://kindui.dev/charts/docs/comp
 [Heatmap](https://kindui.dev/charts/docs/components/heatmap/),
 and [Line](https://kindui.dev/charts/docs/components/line/).
 Retrieve complete consumer source from the documentation. Examples render only
-the graph; the host application owns any accessible data alternative. Use the
+the graph and its explicit parts; the Candlestick live-update example includes
+its chart-owned current observations table. The host owns other accessible data
+alternatives. Use the
 family table to route other chart requests.
 
 ## Retrieve a family contract when needed
