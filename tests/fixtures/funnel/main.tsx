@@ -1,7 +1,6 @@
 import { domAnimation, LazyMotion } from "motion/react";
 import { createRoot } from "react-dom/client";
 import { Host } from "./host.js";
-import "@kind-ui/charts/styles.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
