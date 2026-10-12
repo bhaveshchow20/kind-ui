@@ -461,6 +461,9 @@ test("default time ticks identify actual observations and preserve explicit tick
   const ticks = page.locator(".recharts-xAxis .recharts-cartesian-axis-tick-value");
   await expect(ticks).toHaveCount(1);
   await expect(ticks).toHaveText("2026-03-05");
+  await page.getByRole("button", { name: "Spacing", exact: true }).click();
+  await expect(ticks).toHaveCount(1);
+  await expect(ticks).toHaveText("2026-03-05");
   await page.goto(`${url}/?explicit-ticks`);
   await expect(ticks).toHaveText(["1.5", "3.5"]);
 });
@@ -504,4 +507,24 @@ test("shared series focus dims paint and supports keyboard activation in strict 
   await expect(page.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(1);
   await expect(price).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test("another pointer cannot end the primary drag", async ({ page }) => {
+  await page.goto(url);
+  await page.getByRole("button", { name: "History window" }).click();
+  const plot = page.locator("svg.recharts-surface");
+  const grid = await page.locator(".recharts-cartesian-grid").boundingBox();
+  if (!grid) throw new Error("Missing plot");
+  await page.mouse.move(grid.x + grid.width / 2, grid.y + 40);
+  await page.mouse.down();
+  await plot.dispatchEvent("pointerup", {
+    pointerId: 99,
+    pointerType: "touch",
+    isPrimary: false,
+    bubbles: true,
+  });
+  await page.mouse.move(grid.x + grid.width / 3, grid.y + 40);
+  await page.mouse.up();
+  await expect(page.getByLabel("Reason")).toHaveText("pan");
+  await expect(page.getByLabel("Window")).not.toHaveText("0.5,3.5");
 });
