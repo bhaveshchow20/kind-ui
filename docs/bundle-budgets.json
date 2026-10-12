@@ -104,9 +104,9 @@
     "cartesian": {
       "baseline": {
         "js": {
-          "raw": 812128,
-          "gzip": 244263,
-          "brotli": 205313
+          "raw": 811913,
+          "gzip": 244199,
+          "brotli": 205208
         },
         "css": {
           "raw": 33903,
@@ -130,9 +130,9 @@
     "line-loading": {
       "baseline": {
         "js": {
-          "raw": 812139,
-          "gzip": 244269,
-          "brotli": 205437
+          "raw": 811924,
+          "gzip": 244205,
+          "brotli": 205203
         },
         "css": {
           "raw": 33903,
@@ -182,9 +182,9 @@
     "polar": {
       "baseline": {
         "js": {
-          "raw": 770206,
-          "gzip": 233168,
-          "brotli": 197147
+          "raw": 769991,
+          "gzip": 233114,
+          "brotli": 197114
         },
         "css": {
           "raw": 33903,
@@ -234,9 +234,9 @@
     "heatmap": {
       "baseline": {
         "js": {
-          "raw": 647959,
-          "gzip": 201963,
-          "brotli": 172442
+          "raw": 647675,
+          "gzip": 201855,
+          "brotli": 172404
         },
         "css": {
           "raw": 33903,
@@ -260,9 +260,9 @@
     "sankey": {
       "baseline": {
         "js": {
-          "raw": 720440,
-          "gzip": 223123,
-          "brotli": 188821
+          "raw": 720225,
+          "gzip": 223069,
+          "brotli": 188971
         },
         "css": {
           "raw": 33903,
