@@ -28,12 +28,12 @@ const config = {
   other: { label: "Other", color: "#0d9488" },
 };
 class Boundary extends Component<{ children: ReactNode }, { error: string }> {
-  state = { error: "" };
+  override state = { error: "" };
   static getDerivedStateFromError(error: Error) {
     return { error: error.message };
   }
-  componentDidCatch(_error: Error, _info: ErrorInfo) {}
-  render() {
+  override componentDidCatch(_error: Error, _info: ErrorInfo) {}
+  override render() {
     return this.state.error ? <p role="alert">{this.state.error}</p> : this.props.children;
   }
 }
