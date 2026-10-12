@@ -12,6 +12,7 @@ export type Context = {
   timeDomain: [number, number];
   priceDomain: [number, number];
   priceScale: "linear" | "log";
+  priceBounds?: readonly [number, number];
   autoscale: "visible" | "all";
   active: NativePoint | null;
   selected: NativePoint | null;

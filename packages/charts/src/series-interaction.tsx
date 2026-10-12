@@ -75,10 +75,13 @@ export function SeriesInteractionLayer({
   hidden,
   children,
   onKeyDown,
+  paint: Paint = InteractionPaint,
 }: {
   seriesKey: string | undefined;
   hidden: boolean;
   onKeyDown?: KeyboardEventHandler<SVGElement> | undefined;
+  /** Internal paint seam for renderers that preserve a consumer strict LazyMotion boundary. */
+  paint?: typeof InteractionPaint;
   children: ReactNode;
 }) {
   const interaction = useChartInteraction();
@@ -163,9 +166,9 @@ export function SeriesInteractionLayer({
         }
       }}
     >
-      <InteractionPaint data-kind-ui="series-interaction-paint" opacity={hidden ? 0 : factor}>
+      <Paint data-kind-ui="series-interaction-paint" opacity={hidden ? 0 : factor}>
         {children}
-      </InteractionPaint>
+      </Paint>
     </g>
   );
 }

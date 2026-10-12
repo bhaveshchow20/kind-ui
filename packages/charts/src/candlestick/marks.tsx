@@ -8,20 +8,25 @@ import {
   use,
   useId,
   useLayoutEffect,
+  useRef,
 } from "react";
 import {
   Bar,
   type BarShapeProps,
+  DefaultZIndexes,
   usePlotArea,
   useXAxisScale,
   useYAxisScale,
   YAxis,
+  ZIndexLayer,
 } from "recharts";
+import { type InteractionPaint, useInteractionOpacity } from "../animation.js";
 import { useChart } from "../chart-context.js";
 import { useLineInteraction } from "../line-chart.js";
-import { useSeriesInteraction } from "../series-interaction.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "../series-interaction.js";
 import { type NativePoint, useCandlestick } from "./context.js";
 import type { CandlestickDatum, CandlestickPoint } from "./model.js";
+import { getCandlestickVisiblePoints } from "./viewport.js";
 export type CandlestickMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> & {
   center: number;
   width: number;
@@ -187,7 +192,10 @@ export function CandlestickVolume({ seriesKey, axisProps, ...props }: Candlestic
   const area = usePlotArea();
   const id = useId();
   useLayoutEffect(() => context.registerVolume(id), [context.registerVolume, id]);
-  const max = context.rendered.reduce((value, point) => Math.max(value, point.volume ?? 0), 0);
+  const max = getCandlestickVisiblePoints(context.points, context.viewport).reduce(
+    (value, point) => Math.max(value, point.volume ?? 0),
+    0,
+  );
   return (
     <>
       <YAxis
@@ -255,13 +263,43 @@ function CandlestickBar({
   useLayoutEffect(() => registerSeries(id, seriesKey), [registerSeries, id, seriesKey]);
   const interaction = useSeriesInteraction(seriesKey, hidden, hide === true, undefined, onClick);
   return (
-    <Bar
-      {...props}
-      id={id}
-      hide={hidden}
-      fill={fill ?? chart.paints[seriesKey] ?? "currentColor"}
-      isAnimationActive={false}
-      {...(interaction.onClick ? { onClick: interaction.onClick } : {})}
-    />
+    <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
+      <SeriesInteractionLayer seriesKey={seriesKey} hidden={hidden} paint={CandlestickSeriesPaint}>
+        <Bar
+          {...props}
+          zIndex={0}
+          id={id}
+          hide={hidden}
+          fill={fill ?? chart.paints[seriesKey] ?? "currentColor"}
+          isAnimationActive={false}
+          {...(interaction.onClick ? { onClick: interaction.onClick } : {})}
+        />
+      </SeriesInteractionLayer>
+    </ZIndexLayer>
+  );
+}
+
+/** Plain SVG subscribes to shared Motion opacity without mounting a full motion component. */
+function CandlestickSeriesPaint({
+  opacity: factor,
+  identity,
+  children,
+  "data-kind-ui": kind,
+  className,
+}: Parameters<typeof InteractionPaint>[0]) {
+  const opacity = useInteractionOpacity(factor, identity);
+  const paint = useRef<SVGGElement>(null);
+  useLayoutEffect(() => {
+    const node = paint.current;
+    if (!node) return;
+    node.style.opacity = String(opacity.get());
+    return opacity.on("change", (value) => {
+      node.style.opacity = String(value);
+    });
+  }, [opacity]);
+  return (
+    <g ref={paint} data-kind-ui={kind} className={className} style={{ opacity: opacity.get() }}>
+      {children}
+    </g>
   );
 }

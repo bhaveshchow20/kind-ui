@@ -218,3 +218,39 @@ test("candlestick price domains reject every explicitly supplied malformed tuple
     assert.throws(() => Chart.getCandlestickPriceDomain(points, { bounds }), /price bounds/);
   }
 });
+
+test("candlestick included overlay validation is independent of fixed and visible domain selection", () => {
+  const viewport = { from: 1.5, to: 2.5 };
+  for (const domain of [undefined, [1, 100]]) {
+    const fixed = domain === undefined ? {} : { domain };
+    assert.throws(
+      () =>
+        Chart.getCandlestickPriceDomain(points, {
+          viewport,
+          ...fixed,
+          overlayValues: [Number.NaN],
+        }),
+      /overlayValues\[0\].*finite/,
+    );
+    assert.throws(
+      () =>
+        Chart.getCandlestickPriceDomain(points, {
+          viewport,
+          ...fixed,
+          scale: "log",
+          overlayValues: [0],
+        }),
+      /overlayValues\[0\].*positive/,
+    );
+    assert.throws(
+      () =>
+        Chart.getCandlestickPriceDomain(points, {
+          viewport,
+          ...fixed,
+          bounds: [1, 100],
+          overlayValues: [101],
+        }),
+      /overlayValues\[0\].*bounds/,
+    );
+  }
+});

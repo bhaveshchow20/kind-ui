@@ -2,17 +2,28 @@
 export type CandlestickTime = number | string;
 export type CandlestickTimeMode = "epoch-ms" | "business-date";
 
-/** A gap explicitly represents an interval without an observed candle. */
-export interface CandlestickDatum {
+/** Complete observed OHLC or an explicit gap with no fabricated prices or volume. */
+export type CandlestickDatum = {
   time: CandlestickTime;
-  open?: number;
-  high?: number;
-  low?: number;
-  close?: number;
-  volume?: number;
-  gap?: boolean;
   state?: string;
-}
+} & (
+  | {
+      gap?: false;
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+      volume?: number;
+    }
+  | {
+      gap: true;
+      open?: never;
+      high?: never;
+      low?: never;
+      close?: never;
+      volume?: never;
+    }
+);
 
 type CandlestickAccessor<Row, Value> =
   | { [Key in keyof Row]-?: Row[Key] extends Value ? Key : never }[keyof Row]

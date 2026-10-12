@@ -134,6 +134,7 @@ export function CandlestickLoading() {
         height="100%"
         preserveAspectRatio="none"
         role="presentation"
+        data-kind-ui="chart-loading-skeleton"
       >
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((index) => {
           const center = 35 + index * 48;

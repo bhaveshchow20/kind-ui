@@ -383,6 +383,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     timeDomain,
     priceDomain: domain,
     priceScale,
+    ...(priceBounds !== undefined ? { priceBounds } : {}),
     autoscale,
     active,
     selected,
@@ -419,7 +420,12 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
       points.length,
     );
   };
-  const drag = useRef<{ x: number; range: CandlestickViewport; moved: boolean } | null>(null);
+  const drag = useRef<{
+    pointerId: number;
+    x: number;
+    range: CandlestickViewport;
+    moved: boolean;
+  } | null>(null);
   return (
     <CandleContext value={context}>
       <FamilyRoot
@@ -512,13 +518,16 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             frameProps?.onPointerDown?.(event);
             if (
               event.defaultPrevented ||
+              !event.isPrimary ||
+              (event.pointerType !== "touch" && event.button !== 0) ||
+              drag.current !== null ||
               !event.target ||
               !(event.target instanceof Element) ||
               !event.target.closest("svg.recharts-surface")
             )
               return;
             event.currentTarget.focus({ preventScroll: true });
-            drag.current = { x: event.clientX, range, moved: false };
+            drag.current = { pointerId: event.pointerId, x: event.clientX, range, moved: false };
             event.currentTarget.setPointerCapture(event.pointerId);
             inspect(geometry.current?.nearest(event.clientX)?.time ?? null);
           },
@@ -526,6 +535,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             frameProps?.onPointerMove?.(event);
             if (event.defaultPrevented) return;
             const current = drag.current;
+            if (!event.isPrimary || (current && current.pointerId !== event.pointerId)) return;
             if (current && geometry.current) {
               if (Math.abs(current.x - event.clientX) > 4) current.moved = true;
               if (current.moved)
@@ -536,6 +546,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           },
           onPointerUp: (event) => {
             frameProps?.onPointerUp?.(event);
+            if (drag.current?.pointerId !== event.pointerId) return;
             if (!event.defaultPrevented && drag.current && !drag.current.moved)
               select(geometry.current?.nearest(event.clientX)?.time ?? null);
             drag.current = null;
@@ -544,6 +555,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           },
           onPointerCancel: (event) => {
             frameProps?.onPointerCancel?.(event);
+            if (drag.current?.pointerId !== event.pointerId) return;
             drag.current = null;
             if (event.currentTarget.hasPointerCapture(event.pointerId))
               event.currentTarget.releasePointerCapture(event.pointerId);

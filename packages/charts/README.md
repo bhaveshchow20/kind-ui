@@ -368,6 +368,10 @@ values; only computed padding is clipped to bounds. Fixed domains must fit the
 bounds, and log domains/bounds must be positive. Only explicitly supplied
 overlay values contribute to autoscaling.
 
+The default `CandlestickDatum` type requires complete OHLC fields or an explicit
+`gap: true` record without price/volume fields. Custom row types remain supported
+through the existing accessors.
+
 ### Composition and chart props
 
 The owning chart renders only the parts you include. Every part also has a named
@@ -459,7 +463,10 @@ minimum height.
 or `(originalRow) => number | null | undefined`. It requires `seriesKey`, accepts
 native Line presentation props, defaults `dot` and animation to false, and never
 computes indicators. Missing values remain gaps. `includeInDomain` defaults to
-false; enable it to include overlay prices in the chosen autoscale scope.
+false; enable it to include overlay prices in the chosen autoscale scope. Every
+provided overlay value is validated before viewport filtering; included values
+also obey caller bounds. Default X-axis ticks use visible observation coordinates
+and skip explicit gaps. Caller-provided ticks and formatters retain control.
 
 `Crosshair` accepts SVG group props and spans both panes. `Content` renders an
 accessible readout, with optional `children(point, selection)`, `className`, and

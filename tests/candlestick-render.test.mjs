@@ -190,6 +190,8 @@ test("loading exposes one consumer-labelled status and hides stale plot inspecti
   assert.match(html, /aria-busy="true"/);
   assert.match(html, /aria-hidden="true" inert=""/);
   assert.match(html, /Loading observed intervals/);
+  assert.match(html, /data-kind-ui="candlestick-loading"/);
+  assert.match(html, /data-kind-ui="chart-loading-skeleton"/);
   assert.equal((html.match(/role="status"/g) ?? []).length, 1);
   assert.doesNotMatch(html, /candlestick-(?:table|content|crosshair)/);
 });

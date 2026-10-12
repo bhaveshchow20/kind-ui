@@ -427,3 +427,81 @@ test("an explicit controlled window survives initial empty data while observatio
   await expect(page.locator(marks)).toHaveCount(4);
   await expect(page.getByLabel("Window")).toHaveText("0.5,3.5");
 });
+
+test("secondary mouse buttons do not select or pan the controlled viewport", async ({ page }) => {
+  await page.goto(url);
+  await page.getByRole("button", { name: "History window" }).click();
+  const grid = await page.locator(".recharts-cartesian-grid").boundingBox();
+  if (!grid) throw new Error("Missing plot");
+  await page.mouse.click(grid.x + grid.width / 2, grid.y + 40, { button: "right" });
+  await expect(page.getByLabel("Selected time")).toHaveText("None");
+  await page.mouse.move(grid.x + grid.width / 2, grid.y + 40);
+  await page.mouse.down({ button: "middle" });
+  await page.mouse.move(grid.x + grid.width / 3, grid.y + 40);
+  await page.mouse.up({ button: "middle" });
+  await expect(page.getByLabel("Window")).toHaveText("0.5,3.5");
+  await expect(page.getByLabel("Selected time")).toHaveText("None");
+});
+
+test("offscreen overscan volume does not flatten visible bars", async ({ page }) => {
+  await page.goto(`${url}/?overscan-volume`);
+  const volumes = page.locator('[data-kind-ui="candlestick-volume-mark"]');
+  await expect(volumes).toHaveCount(4);
+  const overscanHeight = Number(await volumes.nth(1).getAttribute("height"));
+  expect(overscanHeight).toBeGreaterThan(25);
+  await page.goto(`${url}/?overscan-volume&no-overscan`);
+  await expect(volumes).toHaveCount(2);
+  expect(Number(await volumes.first().getAttribute("height"))).toBeCloseTo(overscanHeight, 5);
+});
+
+test("default time ticks identify actual observations and preserve explicit ticks", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?one-candle`);
+  const ticks = page.locator(".recharts-xAxis .recharts-cartesian-axis-tick-value");
+  await expect(ticks).toHaveCount(1);
+  await expect(ticks).toHaveText("2026-03-05");
+  await page.goto(`${url}/?explicit-ticks`);
+  await expect(ticks).toHaveText(["1.5", "3.5"]);
+});
+
+for (const invalid of ["finite", "log", "bounds"]) {
+  test(`offscreen overlay ${invalid} fails before it enters the viewport`, async ({ page }) => {
+    await page.goto(`${url}/?overlay-invalid=${invalid}`);
+    await expect(page.getByRole("alert")).toBeVisible();
+  });
+}
+
+test("excluded overlay values retain bounds clipping", async ({ page }) => {
+  await page.goto(`${url}/?overlay-invalid=bounds&clip-overlay`);
+  await expect(page.locator(marks)).toHaveCount(4);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("shared series focus dims paint and supports keyboard activation in strict Motion", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(`${devUrl}/?focus`);
+  const price = page.getByRole("button", { name: "Highlight Price", exact: true });
+  const volume = page.getByRole("button", { name: "Highlight Volume", exact: true });
+  await expect(price).toHaveCount(1);
+  await expect(volume).toHaveCount(1);
+  await page.locator(marks).first().click();
+  await expect(price).toHaveAttribute("aria-pressed", "true");
+  const opacity = (series: string) =>
+    page
+      .locator(`[data-series="${series}"] > [data-kind-ui="series-interaction-paint"]`)
+      .evaluate((node) => Number(getComputedStyle(node).opacity));
+  await expect.poll(() => opacity("volume")).toBeCloseTo(0.28, 2);
+  await volume.focus();
+  await page.keyboard.press("Enter");
+  await expect(volume).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => opacity("price")).toBeCloseTo(0.28, 2);
+  await page.getByRole("button", { name: "Loading", exact: true }).click();
+  await expect(page.locator('[data-kind-ui="candlestick-loading"]')).toHaveCount(1);
+  await expect(page.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(1);
+  await expect(price).toHaveCount(0);
+  expect(errors).toEqual([]);
+});

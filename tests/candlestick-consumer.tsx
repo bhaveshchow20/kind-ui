@@ -48,3 +48,50 @@ void unsupportedVolume;
 <CandlestickChart.ReferenceLine y={10} ifOverflow="visible" />;
 // @ts-expect-error Reference annotations cannot mutate the root's fixed price domain.
 <CandlestickChart.ReferenceLine y={10} ifOverflow="extendDomain" />;
+
+import type { CandlestickDatum } from "@kind-ui/charts";
+
+const completeObservation: CandlestickDatum = { time: 1, open: 10, high: 12, low: 9, close: 11 };
+const explicitObservation: CandlestickDatum = {
+  time: 2,
+  gap: false,
+  open: 11,
+  high: 13,
+  low: 10,
+  close: 12,
+  volume: 0,
+};
+const explicitGap: CandlestickDatum = { time: 3, gap: true, state: "Feed unavailable" };
+const defaultRows: CandlestickDatum[] = [completeObservation, explicitObservation, explicitGap];
+normalizeCandlestickData(defaultRows, { timeMode: "epoch-ms" });
+normalizeCandlestickData<CandlestickDatum>([], {
+  timeMode: "epoch-ms",
+  accessors: {
+    time: "time",
+    open: "open",
+    high: "high",
+    low: "low",
+    close: "close",
+    gap: "gap",
+    state: "state",
+  },
+});
+// @ts-expect-error A nongap observation requires every OHLC value.
+const missingOHLC: CandlestickDatum = { time: 4, open: 10 };
+// @ts-expect-error Missing prices require an explicit gap: true discriminant.
+const missingGapFlag: CandlestickDatum = { time: 4 };
+// @ts-expect-error An explicit nongap row still requires complete OHLC.
+const incompleteNongap: CandlestickDatum = { time: 4, gap: false, close: 11 };
+// @ts-expect-error A gap cannot carry invented OHLC observations.
+const gapWithPrice: CandlestickDatum = { time: 4, gap: true, open: 10 };
+// @ts-expect-error A gap cannot carry observed volume, including zero.
+const gapWithVolume: CandlestickDatum = { time: 4, gap: true, volume: 0 };
+void [missingOHLC, missingGapFlag, incompleteNongap, gapWithPrice, gapWithVolume];
+
+const numericRows = [{ 0: 1, 1: 10, 2: 12, 3: 9, 4: 11, source: "trade" }];
+const numericPoints = normalizeCandlestickData(numericRows, {
+  timeMode: "epoch-ms",
+  accessors: { time: 0, open: 1, high: 2, low: 3, close: 4 },
+});
+const numericSource: string | undefined = numericPoints[0]?.original.source;
+void numericSource;

@@ -35,6 +35,17 @@ export type CandlestickXAxisProps = Omit<
 >;
 export function CandlestickXAxis(props: CandlestickXAxisProps) {
   const context = useCandlestick();
+  const pointsByCoordinate = useMemo(
+    () => new Map(context.points.map((point) => [point.coordinate, point])),
+    [context.points],
+  );
+  const observationTicks = useMemo(
+    () =>
+      getCandlestickVisiblePoints(context.points, context.viewport)
+        .filter((point) => !point.gap)
+        .map((point) => point.coordinate),
+    [context.points, context.viewport],
+  );
   return (
     <XAxis
       {...props}
@@ -43,17 +54,11 @@ export function CandlestickXAxis(props: CandlestickXAxisProps) {
       domain={context.timeDomain}
       scale="linear"
       allowDataOverflow
+      ticks={props.ticks ?? observationTicks}
       tickFormatter={
         props.tickFormatter ??
         ((value) => {
-          const point = context.points.reduce<NativePoint | null>(
-            (old, next) =>
-              !old ||
-              Math.abs(next.coordinate - Number(value)) < Math.abs(old.coordinate - Number(value))
-                ? next
-                : old,
-            null,
-          );
+          const point = pointsByCoordinate.get(Number(value));
           return point ? context.formatTime(point.time, point) : String(value);
         })
       }
@@ -96,28 +101,57 @@ export function CandlestickOverlay<Row extends object = CandlestickDatum>({
   const context = useCandlestick();
   const { visibleSeries, paints } = useChart();
   const id = useId();
+  const observations = useMemo(
+    () =>
+      context.points.map((point, index) => {
+        const original = point.original as Row;
+        let value: unknown;
+        try {
+          value = typeof dataKey === "function" ? dataKey(original) : original[dataKey];
+        } catch (cause) {
+          throw new Error(`Candlestick overlay data[${index}]: accessor failed`, { cause });
+        }
+        if (value == null) return { point, value: null };
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+          throw new Error(`Candlestick overlay data[${index}]: value must be finite or missing`);
+        }
+        return { point, value };
+      }),
+    [context.points, dataKey],
+  );
+  const validated = useMemo(() => {
+    for (const [index, { value }] of observations.entries()) {
+      if (value === null) continue;
+      if (context.priceScale === "log" && value <= 0) {
+        throw new Error(`Candlestick overlay data[${index}]: logarithmic values must be positive`);
+      }
+      if (
+        includeInDomain &&
+        context.priceBounds !== undefined &&
+        (value < context.priceBounds[0] || value > context.priceBounds[1])
+      ) {
+        throw new Error(`Candlestick overlay data[${index}]: value is outside price bounds`);
+      }
+    }
+    return observations;
+  }, [observations, context.priceScale, context.priceBounds, includeInDomain]);
+  const cachedValues = useMemo(
+    () => new Map(validated.map(({ point, value }) => [point.identity, value])),
+    [validated],
+  );
   const read = useCallback(
-    (point: NativePoint) => {
-      const original = point.original as Row;
-      const value = typeof dataKey === "function" ? dataKey(original) : original[dataKey];
-      if (value == null) return null;
-      if (typeof value !== "number" || !Number.isFinite(value))
-        throw new Error("Candlestick overlay values must be finite numbers or missing");
-      if (context.priceScale === "log" && value <= 0)
-        throw new Error("Candlestick logarithmic overlay requires positive values");
-      return value;
-    },
-    [dataKey, context.priceScale],
+    (point: NativePoint) => cachedValues.get(point.identity) ?? null,
+    [cachedValues],
   );
   const values = useMemo(
     () =>
-      (context.autoscale === "all"
-        ? context.points
-        : getCandlestickVisiblePoints(context.points, context.viewport)
-      )
-        .map(read)
-        .filter((value): value is number => value !== null),
-    [context.points, context.autoscale, context.viewport, read],
+      validated.flatMap(({ value }, index) => {
+        const visible =
+          context.autoscale === "all" ||
+          (index >= Math.ceil(context.viewport.from) && index <= Math.floor(context.viewport.to));
+        return visible && value !== null ? [value] : [];
+      }),
+    [validated, context.autoscale, context.viewport.from, context.viewport.to],
   );
   useLayoutEffect(
     () => (includeInDomain ? context.registerOverlay(id, values) : undefined),

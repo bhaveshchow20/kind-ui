@@ -33,9 +33,13 @@ const initial: Row[] = [
     source: "Trade OHLC",
   },
 ];
+const params = new URLSearchParams(location.search);
+const volumeRows: Row[] = initial.map((row, index) =>
+  row.gap ? row : { ...row, volume: index === 0 || index === 4 ? 1e9 : index === 1 ? 200 : 100 },
+);
 export function CandlestickHost() {
   const [rows, setRows] = useState<Row[]>(
-    new URLSearchParams(location.search).has("initial-empty") ? [] : initial,
+    params.has("initial-empty") ? [] : params.has("overscan-volume") ? volumeRows : initial,
   );
   const [spacing, setSpacing] = useState<CandlestickSpacing>("ordinal");
   const [small, setSmall] = useState(false);
@@ -45,11 +49,15 @@ export function CandlestickHost() {
   const [viewport, setViewport] = useState<CandlestickViewport>(
     new URLSearchParams(location.search).has("initial-empty")
       ? { from: 0.5, to: 3.5 }
-      : { from: -0.5, to: 4.5 },
+      : params.has("one-candle")
+        ? { from: -0.5, to: 0.5 }
+        : params.has("overscan-volume") || params.has("overlay-invalid")
+          ? { from: 0.5, to: 3.5 }
+          : { from: -0.5, to: 4.5 },
   );
   const [selected, setSelected] = useState<CandlestickTime | null>(null);
   const [reason, setReason] = useState("initial");
-  const [logarithmic, setLogarithmic] = useState(false);
+  const [logarithmic, setLogarithmic] = useState(params.get("overlay-invalid") === "log");
   const [veto, setVeto] = useState(false);
   const ref = useCallback((node: SVGSVGElement | null) => {
     if (node) node.dataset.hostRef = "yes";
@@ -80,7 +88,9 @@ export function CandlestickHost() {
         onClick={() =>
           setRows(
             rows.map((row) =>
-              row.time === "2026-03-11" ? { ...row, close: 113, high: 119, state: "final" } : row,
+              !row.gap && row.time === "2026-03-11"
+                ? { ...row, close: 113, high: 119, state: "final" }
+                : row,
             ),
           )
         }
@@ -90,7 +100,9 @@ export function CandlestickHost() {
       <button
         type="button"
         onClick={() =>
-          setRows(rows.map((row) => (row.time === "2026-03-05" ? { ...row, low: 88 } : row)))
+          setRows(
+            rows.map((row) => (!row.gap && row.time === "2026-03-05" ? { ...row, low: 88 } : row)),
+          )
         }
       >
         Correct
@@ -180,6 +192,9 @@ export function CandlestickHost() {
       >
         Atomic prepend
       </button>
+      <button type="button" onClick={() => setViewport({ from: 2.5, to: 3.5 })}>
+        One record window
+      </button>
       <output aria-label="Observation count">{rows.length}</output>
       <button type="button" onClick={() => setRows(initial)}>
         Load observations
@@ -209,6 +224,17 @@ export function CandlestickHost() {
           volume: { label: "Volume", color: "#849c96" },
         }}
         data={rows}
+        overscan={params.has("no-overscan") ? 0 : 1}
+        {...(params.has("focus")
+          ? {
+              interaction: {
+                kind: "series" as const,
+                mode: "focus" as const,
+                eligibleKeys: ["price", "volume"],
+              },
+            }
+          : {})}
+        {...(params.get("overlay-invalid") === "bounds" ? { priceBounds: [90, 125] as const } : {})}
         timeMode="business-date"
         spacing={spacing}
         priceScale={logarithmic ? "log" : "linear"}
@@ -233,7 +259,9 @@ export function CandlestickHost() {
         formatVolume={(volume) => `${volume} contracts`}
       >
         <CandlestickChart.Grid />
-        <CandlestickChart.XAxis />
+        <CandlestickChart.XAxis
+          {...(params.has("explicit-ticks") ? { ticks: [1.5, 3.5], interval: 0 } : {})}
+        />
         <CandlestickChart.YAxis />
         <CandlestickChart.Series seriesKey="price" />
         <CandlestickChart.Volume seriesKey="volume" />
@@ -249,7 +277,18 @@ export function CandlestickHost() {
         ))}
         <CandlestickChart.Overlay<Row>
           seriesKey="price"
-          dataKey={(row) => (row.gap ? null : row.close)}
+          dataKey={(row) => {
+            if (row.gap) return null;
+            if (params.has("overlay-invalid") && row.time === "2026-03-05") {
+              return params.get("overlay-invalid") === "log"
+                ? 0
+                : params.get("overlay-invalid") === "bounds"
+                  ? 140
+                  : NaN;
+            }
+            return row.close;
+          }}
+          includeInDomain={params.has("overlay-invalid") && !params.has("clip-overlay")}
           stroke="#a67738"
         />
         <CandlestickChart.Crosshair />
