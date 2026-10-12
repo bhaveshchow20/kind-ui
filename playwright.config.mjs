@@ -27,6 +27,10 @@ export default defineConfig({
   },
   webServer: [
     {
+      command: `npm exec vite preview -- --outDir artifacts/packed-treemap --host 127.0.0.1 --port ${port(4210)} --strictPort`,
+      url: `http://127.0.0.1:${port(4210)}`,
+    },
+    {
       command: `npm exec vite preview -- --outDir artifacts/packed-tailwind-development --host 127.0.0.1 --port ${port(4200)} --strictPort`,
       url: `http://127.0.0.1:${port(4200)}`,
     },

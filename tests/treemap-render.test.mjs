@@ -1,0 +1,134 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { TreemapChart, useTreemap } from "@kind-ui/charts";
+import { createElement as h } from "react";
+import { renderToStaticMarkup as render } from "react-dom/server";
+
+const data = [
+  {
+    id: "g",
+    kind: "group",
+    label: "Group",
+    children: [
+      { id: "a", kind: "leaf", label: "Same", value: 6 },
+      { id: "b", kind: "leaf", label: "Same", value: 3 },
+      { id: "zero", kind: "leaf", label: "Zero", value: 0 },
+    ],
+  },
+  { id: "c", kind: "leaf", label: "Outside", value: 1 },
+];
+const base = { data, config: {}, "aria-label": "Allocation", width: 400, height: 300 };
+const chart = (children, props = {}) => h(TreemapChart, { ...base, ...props }, children);
+
+test("TreemapChart owns its frame and renders only explicit parts", () => {
+  const html = render(chart(null));
+  assert.equal((html.match(/data-kind-ui="chart"/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /treemap-tile|treemap-label|treemap-color-legend/);
+  assert.throws(() => render(h(TreemapChart, base)), /explicit children/);
+  assert.throws(() => render(chart(null, { config: undefined })), /requires config/);
+  assert.throws(() => render(chart(null, { "aria-label": " " })), /aria-label/);
+  assert.throws(() => render(h(TreemapChart.Tiles)), /require TreemapChart/);
+});
+
+test("treemap glyphs exclude zero area, retain stable IDs and include group headers", () => {
+  const html = render(
+    chart([
+      h(TreemapChart.Groups, { key: "groups" }),
+      h(TreemapChart.Tiles, { key: "tiles" }),
+      h(TreemapChart.Labels, { key: "labels" }),
+    ]),
+  );
+  assert.equal((html.match(/data-kind-ui="treemap-tile"/g) ?? []).length, 3);
+  assert.match(html, /data-kind-ui="treemap-group-header"/);
+  assert.doesNotMatch(html, /data-node-id="zero"/);
+  assert.equal((html.match(/data-kind-ui="treemap-label"/g) ?? []).length, 2);
+  assert.match(html, /data-node-id="a"/);
+  assert.match(html, /Same: 6/);
+});
+
+function Capture({ check }) {
+  check(useTreemap());
+  return null;
+}
+
+test("typed context keeps all records and bounded nested geometry with explicit shares", () => {
+  render(
+    chart(
+      h(Capture, {
+        check(context) {
+          assert.equal(context.model.byId.get("zero").datum, data[0].children[2]);
+          assert.equal(context.items.get("zero").rectangle, null);
+          assert.equal(context.items.get("a").viewShare, 0.6);
+          const parent = context.rectangles.find((node) => node.id === "g");
+          for (const node of context.rectangles) {
+            assert.ok(node.x >= 0 && node.y >= 0);
+            assert.ok(node.x + node.width <= 400.001);
+            assert.ok(node.y + node.height <= 300.001);
+            if (node.parentId === "g") {
+              assert.ok(node.x >= parent.x);
+              assert.ok(node.y >= parent.y + 20);
+              assert.ok(node.x + node.width <= parent.x + parent.width + 0.001);
+              assert.ok(node.y + node.height <= parent.y + parent.height + 0.001);
+            }
+          }
+        },
+      }),
+    ),
+  );
+});
+
+test("view changes use subtree area while root and parent shares preserve supplied denominators", () => {
+  render(
+    chart(
+      h(Capture, {
+        check(context) {
+          assert.equal(context.viewId, "g");
+          assert.equal(context.items.get("a").viewShare, 6 / 9);
+          assert.equal(context.items.get("a").rootShare, 0.6);
+          assert.equal(context.items.get("a").parentShare, 6 / 9);
+          assert.equal(context.items.get("c").viewShare, null);
+          assert.equal(context.items.get("c").rectangle, null);
+        },
+      }),
+      { viewId: "g" },
+    ),
+  );
+});
+
+test("visible depth produces actionable group tiles without drawing descendants", () => {
+  const html = render(chart(h(TreemapChart.Tiles), { depth: 1 }));
+  assert.match(html, /data-node-id="g"/);
+  assert.match(html, /open group/);
+  assert.doesNotMatch(html, /data-node-id="a"/);
+});
+
+test("layout padding, depth and label fit inputs reject malformed values", () => {
+  for (const props of [
+    { padding: -1 },
+    { groupHeaderHeight: Infinity },
+    { depth: 0 },
+    { depth: 1.5 },
+  ]) {
+    assert.throws(() => render(chart(null, props)), /finite|positive integer/);
+  }
+  assert.throws(() => render(chart(h(TreemapChart.Labels, { minWidth: -1 }))), /finite/);
+});
+
+test("loading hides real marks, supplies shared status and empty input supplies a meaningful state", () => {
+  const loading = render(
+    chart(h(TreemapChart.Tiles), { loading: true, loadingLabel: "Loading allocation" }),
+  );
+  assert.match(loading, /aria-busy="true"/);
+  assert.match(loading, /chart-loading-skeleton/);
+  assert.match(loading, /Loading allocation/);
+  assert.match(loading, /inert=""/);
+  assert.match(
+    render(chart(h(TreemapChart.Tiles), { data: [], empty: "No allocation" })),
+    /No allocation/,
+  );
+});
+
+test("leaf labels fit only when the caller's minimum rectangle is available", () => {
+  const html = render(chart(h(TreemapChart.Labels, { minWidth: 500 })));
+  assert.doesNotMatch(html, /data-kind-ui="treemap-label"/);
+});

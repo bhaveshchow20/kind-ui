@@ -26,6 +26,7 @@ export type LoadingFamily =
   | "radar"
   | "radial-bar"
   | "activity-rings"
+  | "treemap"
   | "heatmap"
   | "sankey";
 

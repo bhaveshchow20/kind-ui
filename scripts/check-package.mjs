@@ -203,6 +203,9 @@ try {
     "chart.test.mjs",
     "chart-frame.test.mjs",
     "compound-chart.test.mjs",
+    "treemap-model.test.mjs",
+    "treemap-encoding.test.mjs",
+    "treemap-render.test.mjs",
     "tailwind-classes.test.mjs",
     "consumer.tsx",
   ]) {
@@ -216,6 +219,9 @@ try {
       "chart.test.mjs",
       "chart-frame.test.mjs",
       "compound-chart.test.mjs",
+      "treemap-model.test.mjs",
+      "treemap-encoding.test.mjs",
+      "treemap-render.test.mjs",
       "tailwind-classes.test.mjs",
     ],
     ordinary,
@@ -457,6 +463,26 @@ try {
     "ActivityRings: packed component tests, strict NodeNext/Bundler and production build passed",
   );
 
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("treemap", file);
+  await typecheck(["host.tsx", "main.tsx"]);
+  await production("index.html", "packed-treemap");
+  for (const file of [
+    "treemap-model.test.mjs",
+    "treemap-encoding.test.mjs",
+    "treemap-render.test.mjs",
+  ]) {
+    await copyFile(join(root, "tests", file), join(consumer, file));
+  }
+  run(
+    process.execPath,
+    ["--test", "treemap-model.test.mjs", "treemap-encoding.test.mjs", "treemap-render.test.mjs"],
+    consumer,
+    "inherit",
+  );
+  console.log(
+    "Treemap: packed model/encoding/render tests, strict NodeNext/Bundler and Vite production passed",
+  );
+
   await checkBundleContract({ root, consumer, artifactSha256: sha256, buildOutput });
 
   await copyFile(join(root, "tests/core-contracts.tsx"), join(consumer, "core-contracts.tsx"));
@@ -464,6 +490,16 @@ try {
     consumer,
     join(root, "node_modules/typescript/bin/tsc"),
     ["core-contracts.tsx"],
+    { strictOptionalTypes: true },
+  );
+  await copyFile(
+    join(root, "tests/treemap-model-consumer.ts"),
+    join(consumer, "treemap-model-consumer.ts"),
+  );
+  await checkTypes(
+    consumer,
+    join(root, "node_modules/typescript/bin/tsc"),
+    ["treemap-model-consumer.ts"],
     { strictOptionalTypes: true },
   );
   console.log("Core unsafe-input type regressions: packed NodeNext/Bundler consumers passed");
@@ -499,6 +535,9 @@ try {
       "chart.test.mjs",
       "chart-frame.test.mjs",
       "compound-chart.test.mjs",
+      "treemap-model.test.mjs",
+      "treemap-encoding.test.mjs",
+      "treemap-render.test.mjs",
       "tailwind-classes.test.mjs",
     ],
     consumer,

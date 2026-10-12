@@ -177,6 +177,123 @@ ActivityRings takes `rings` with stable keys, values and optional finite domains
 
 Applications own aggregation, filtering, dates, units, domains and request state.
 
+### Treemap hierarchy and independent color
+
+`TreemapChart` explores hierarchical nonnegative area measures. Storage, traffic,
+revenue, holding values and market activity use the same contract; applications
+provide their units, reporting period and accounting meaning. This API belongs to
+the current release candidate. The published `0.5.0` package does not export
+Treemap; installation from npm requires a subsequent release containing it.
+
+Standard records use `TreemapDatum`: `{ kind: "leaf", id, label, value }` or
+`{ kind: "group", id, label, children }`. Groups derive their area from descendant
+leaves and cannot supply an independent `value`. Custom records use typed
+`accessors` for `id`, `label`, `children` and leaf `value`; the value accessor runs
+only for leaves. Undefined children mean leaf; an explicit empty array means
+empty group. Every ID must be globally unique and nonempty, labels must be
+nonempty but may repeat, and leaf areas and derived totals must be finite and
+nonnegative. Cycles, shared records and invalid children throw errors identifying
+their hierarchy location. Missing area requires a caller policy; Core never
+silently converts it to zero or takes the absolute value of negative input.
+
+```tsx
+import {
+  TreemapChart,
+  type TreemapAccessors,
+  type TreemapColorEncoding,
+} from "@kind-ui/charts";
+
+type Resource = {
+  id: string;
+  name: string;
+  storageGb?: number;
+  changePercent?: number | null;
+  children?: readonly Resource[];
+};
+const data: readonly Resource[] = [{
+  id: "services", name: "Services", children: [
+    { id: "archive", name: "Archive", storageGb: 80, changePercent: -3 },
+    { id: "search", name: "Search", storageGb: 20, changePercent: 5 },
+  ],
+}];
+const accessors: TreemapAccessors<Resource> = {
+  id: (datum) => datum.id,
+  label: (datum) => datum.name,
+  children: (datum) => datum.children,
+  value: (datum) => datum.storageGb ?? 0, // Explicit missing-area policy.
+};
+const encoding: TreemapColorEncoding<Resource> = {
+  type: "diverging",
+  value: (datum) => datum.changePercent,
+  domain: [-10, 10],
+  label: "Storage change over the last month",
+  formatValue: (value) => `${value}%`,
+  unknownLabel: "Change unavailable",
+};
+
+<TreemapChart
+  data={data}
+  accessors={accessors}
+  encoding={encoding}
+  config={{}}
+  aria-label="Storage allocation in GB"
+  formatValue={(value) => `${value} GB`}
+>
+  <TreemapChart.Groups />
+  <TreemapChart.Tiles />
+  <TreemapChart.Labels />
+  <TreemapChart.Tooltip />
+  <TreemapChart.ColorLegend />
+  <TreemapChart.Breadcrumbs />
+  <TreemapChart.DataTable caption="Storage allocation and monthly change" />
+</TreemapChart>
+```
+
+Compose parts explicitly; omitted parts stay omitted. `Content` accepts custom
+controls or readouts. The data alternative retains zero leaves and empty groups,
+while zero-area nodes have no visible glyph. Normalized nodes retain `datum`,
+`kind`, `parentId`, root-to-node ID `path`, `depth` and derived `value`.
+`normalizeTreemap` exposes the same model without rendering: roots, preorder
+nodes, `byId` and total. `rootShare` divides by the supplied forest total,
+`parentShare` by the parent total (the forest for roots), and rectangle
+`viewShare` by the current subtree total. Zero denominators produce `null`.
+Filtering replaces the input and changes these denominators; root share is not
+automatically percentage of NAV or an external universe.
+
+Color is independent of area. `encoding` supports `categorical`, `sequential`,
+zero-centered `diverging`, `threshold` and `custom` modes; the same resolved
+encoding drives tiles and the color legend. Fixed domains preserve comparisons;
+omitted continuous domains are inferred from available node metrics in `domainScope="root"`
+(default) or `"view"`. Equal domain endpoints use the middle paint. Continuous
+paint clamps outliers without changing readouts; threshold boundaries belong to
+the upper band. Missing/nonfinite color metrics use `unknownColor` and
+`unknownLabel`, separately from numerical zero. Group colors require `groupValue`
+or an explicit numeric `aggregate` callback; Core does not invent group returns
+by averaging leaves. Format percentages and percentage points in caller
+formatters with their actual units.
+
+`viewId` / `onViewChange`, `activeId` / `onActiveChange`, and `selectedId` /
+`onSelectionChange` provide controlled subtree, transient inspection and
+persistent selection. Their `default*Id` counterparts initialize uncontrolled
+state. Activation selects the node, calls `onActivate`, and enters groups;
+inspection alone preserves geometry. If a node disappears, state falls back to
+its nearest surviving ancestor, then the forest root (`null`). Breadcrumbs are
+buttons. Tile navigation uses one tab stop with arrows and Home/End; Enter/Space
+activates, and Escape dismisses the tooltip. Include `DataTable` for a navigable
+alternative containing small and zero-valued items.
+
+`depth`, `padding` and `groupHeaderHeight` control nested density. Labels use
+`minWidth`, `minHeight` and label `padding` thresholds and clip overflowing text.
+`layout="stable"` (default) retains layout
+rows while hierarchy membership and subtree view remain unchanged; regrouping,
+membership changes or a new view invalidate that cache. `layout="squarify"`
+recomputes rows. Stable IDs preserve identity, not fixed coordinates. Core uses
+the narrow ISC-licensed `d3-hierarchy` layout dependency with React-owned marks
+to retain ID-based focus and control grouped headers. Color-only updates do not
+recalculate geometry; area updates and resize can move tiles. `animate` is opt-in
+and respects reduced motion. Applications own loading, filtering and request
+state through the existing frame contracts.
+
 ## Visibility and interaction
 
 Use `visibleSeries` with `onVisibleSeriesChange` for controlled visibility, or

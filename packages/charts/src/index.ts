@@ -243,6 +243,37 @@ export {
   type ScatterTooltipProps,
 } from "./scatter-tooltip.js";
 export { TooltipContent, type TooltipContentProps } from "./tooltip-content.js";
+export {
+  resolveTreemapColors,
+  type TreemapColorEncoding,
+  type TreemapColorLegend,
+  type TreemapColorReadout,
+  type TreemapColorStop,
+  type TreemapResolvedColors,
+} from "./treemap/encoding.js";
+export {
+  type TreemapBreadcrumbsProps,
+  TreemapChart,
+  type TreemapChartProps,
+  type TreemapColorLegendProps,
+  type TreemapContextValue,
+  type TreemapDataTableProps,
+  type TreemapGroupsProps,
+  type TreemapItem,
+  type TreemapLabelsProps,
+  type TreemapLayoutOptions,
+  type TreemapRectangle,
+  type TreemapTilesProps,
+  type TreemapTooltipProps,
+  useTreemap,
+} from "./treemap/index.js";
+export {
+  normalizeTreemap,
+  type TreemapAccessors,
+  type TreemapDatum,
+  type TreemapModel,
+  type TreemapNode,
+} from "./treemap/model.js";
 export type { SeriesColor, SeriesConfig } from "./types.js";
 export {
   computeWaterfallData,
