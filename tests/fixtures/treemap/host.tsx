@@ -226,7 +226,11 @@ export function TreemapHost() {
           }
           groupHeaderHeight={params.has("header") ? Number(params.get("header")) : 20}
           config={{}}
-          width={width}
+          {...(params.has("fixed-width")
+            ? { width: Number(params.get("fixed-width")) }
+            : params.has("responsive")
+              ? {}
+              : { width })}
           height={400}
           padding={params.has("padding") ? Number(params.get("padding")) : 2}
           {...(deep ? {} : { depth: 1 })}

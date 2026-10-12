@@ -46,6 +46,26 @@ test("treemap keeps real element identity and focus through independent updates"
   await original.dispose();
 });
 
+test("treemap initial responsive measurement matches a fresh positive-width layout", async ({
+  page,
+}) => {
+  // The unstyled fixture's two 8px body margins leave exactly 720px of chart width.
+  await page.setViewportSize({ width: 736, height: 900 });
+  await page.goto("/?responsive&fixed-width=720");
+  await expect(tile(page, "a")).toBeVisible();
+  await expect(page.locator('[data-kind-ui="treemap"]')).toHaveCSS("width", "720px");
+  const explicit = await geometry(page);
+  await page.goto("/?responsive");
+  await expect(tile(page, "a")).toBeVisible();
+  await expect(page.locator('[data-kind-ui="treemap"]')).toHaveCSS("width", "720px");
+  const responsive = await geometry(page);
+  expect(responsive).toEqual(explicit);
+  // A zero-width resquarify seed otherwise retains long, thin vertical strips.
+  const alpha = responsive.find((item) => item.id === "a");
+  if (!alpha) throw new Error("Missing dominant responsive tile");
+  expect(Math.max(alpha.width / alpha.height, alpha.height / alpha.width)).toBeLessThan(3);
+});
+
 test("treemap keyboard traversal, inspection dismissal, selection and table agree", async ({
   page,
 }) => {

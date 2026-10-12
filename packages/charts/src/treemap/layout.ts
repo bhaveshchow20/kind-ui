@@ -92,6 +92,10 @@ export function layoutTreemap<T>(
     model.nodes.map((node) => [node.id, node.value]),
   ]);
   const total = view?.value ?? model.total;
+  // Do not seed retained rows before the plot has drawable dimensions and area.
+  // A later positive measurement must create its first layout at that real size.
+  if (width === 0 || height === 0 || total === 0)
+    return { rectangles: [] as TreemapRectangle<T>[], cache, total };
   if (cache.geometrySignature !== geometrySignature) {
     cache.geometrySignature = "";
     root.each((node) => {
