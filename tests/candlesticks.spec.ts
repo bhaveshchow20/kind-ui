@@ -539,3 +539,141 @@ test("consumer click veto runs before controlled tap selection", async ({ page }
   await page.locator('[data-candle-part="body"]').first().click();
   await expect(page.getByLabel("Selected time")).toHaveText("2026-03-05");
 });
+
+for (const axis of ["reversed-x", "padded-x", "reversed-x&padded-x"]) {
+  test(`native ${axis} wheel zoom preserves the rendered observation anchor`, async ({ page }) => {
+    await page.goto(`${url}/?${axis}`);
+    await page.getByRole("button", { name: "History window" }).click();
+    const frame = page.getByRole("group", { name: "Session trade OHLC", exact: true });
+    await frame.focus();
+    const center = (date = "2026-03-06") =>
+      page
+        .locator(`${marks}[aria-label^="${date}:"] [data-candle-part="wick"]`)
+        .evaluate((node) => {
+          const svg = node instanceof SVGElement ? node.ownerSVGElement : null;
+          const matrix = svg?.getScreenCTM();
+          if (!matrix) throw new Error("Missing SVG screen transform");
+          const point = new DOMPoint(
+            Number(node.getAttribute("x1")),
+            Number(node.getAttribute("y1")),
+          ).matrixTransform(matrix);
+          return { x: point.x, y: point.y };
+        });
+    const before = await center();
+    await page.mouse.move(before.x, before.y + 12);
+    await page.mouse.wheel(0, -100);
+    await expect(page.getByLabel("Reason")).toHaveText("zoom");
+    // Native wheel events round fractional client pixels; preserve the candle within that subpixel error.
+    await expect.poll(async () => Math.abs((await center()).x - before.x)).toBeLessThan(0.2);
+    await page.getByRole("button", { name: "History window" }).click();
+    await frame.focus();
+    const reset = await center();
+    const other = await center("2026-03-10");
+    const delta = (other.x - reset.x) / 10;
+    await page.mouse.move(reset.x, reset.y + 12);
+    await page.mouse.wheel(delta, 0);
+    await expect(page.getByLabel("Reason")).toHaveText("pan");
+    const wheelPan = (await page.getByLabel("Window").textContent())?.split(",").map(Number);
+    expect(wheelPan?.[0]).toBeCloseTo(0.7, 2);
+    expect(wheelPan?.[1]).toBeCloseTo(3.7, 2);
+    await page.getByRole("button", { name: "History window" }).click();
+    await page.mouse.move(reset.x, reset.y + 12);
+    await page.mouse.down();
+    await page.mouse.move(reset.x + delta, reset.y + 12);
+    await page.mouse.up();
+    const dragPan = (await page.getByLabel("Window").textContent())?.split(",").map(Number);
+    expect(dragPan?.[0]).toBeCloseTo(0.3, 2);
+    expect(dragPan?.[1]).toBeCloseTo(3.3, 2);
+  });
+}
+
+test("axis and SVG margin gestures preserve selection and the history viewport", async ({
+  page,
+}) => {
+  await page.goto(url);
+  await page.getByRole("button", { name: "History window" }).click();
+  await page.locator(`${marks}[aria-label^="2026-03-06:"] [data-candle-part="body"]`).click();
+  await expect(page.getByLabel("Selected time")).toHaveText("2026-03-06");
+  const svg = await page.locator("svg.recharts-surface").boundingBox();
+  const plot = await page.locator(".recharts-cartesian-grid").boundingBox();
+  const xTick = await page
+    .locator(".recharts-xAxis-tick-labels .recharts-cartesian-axis-tick-value")
+    .first()
+    .boundingBox();
+  const yTick = await page
+    .locator(".recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value")
+    .first()
+    .boundingBox();
+  if (!svg || !plot || !xTick || !yTick) throw new Error("Missing plot or axis geometry");
+  const before = await page.getByLabel("Window").textContent();
+  for (const point of [
+    { x: xTick.x + xTick.width / 2, y: xTick.y + xTick.height / 2 },
+    { x: yTick.x + yTick.width / 2, y: yTick.y + yTick.height / 2 },
+    { x: svg.x + 2, y: svg.y + 2 },
+  ]) {
+    await page.mouse.click(point.x, point.y);
+    await expect(page.getByLabel("Selected time")).toHaveText("2026-03-06");
+    await page.mouse.move(point.x, point.y);
+    await page.mouse.down();
+    await page.mouse.move(plot.x + plot.width / 2, plot.y + plot.height / 3);
+    await page.mouse.up();
+    await expect(page.getByLabel("Window")).toHaveText(before ?? "");
+    await expect(page.getByLabel("Selected time")).toHaveText("2026-03-06");
+  }
+  await page.getByRole("group", { name: "Session trade OHLC", exact: true }).focus();
+  await page.mouse.move(xTick.x + xTick.width / 2, xTick.y + xTick.height / 2);
+  await page.mouse.wheel(0, -100);
+  await expect(page.getByLabel("Window")).toHaveText(before ?? "");
+  await page.mouse.move(plot.x + plot.width / 2, plot.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(plot.x - 20, plot.y + 40);
+  await page.mouse.up();
+  await expect(page.getByLabel("Reason")).toHaveText("pan");
+  await expect(page.getByLabel("Window")).not.toHaveText(before ?? "");
+  await expect(page.getByLabel("Selected time")).toHaveText("2026-03-06");
+});
+
+test("native mirrored tick labels inside the plot do not start inspection or gestures", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?mirror-x`);
+  await page.getByRole("button", { name: "History window" }).click();
+  await page.locator(`${marks}[aria-label^="2026-03-06:"] [data-candle-part="body"]`).click();
+  const plot = await page.locator(".recharts-cartesian-grid").boundingBox();
+  const tick = await page
+    .locator(".recharts-xAxis-tick-labels .recharts-cartesian-axis-tick-value")
+    .first()
+    .boundingBox();
+  if (!plot || !tick) throw new Error("Missing mirrored axis geometry");
+  const x = tick.x + tick.width / 2;
+  const y = tick.y + tick.height / 2;
+  expect(x).toBeGreaterThan(plot.x);
+  expect(x).toBeLessThan(plot.x + plot.width);
+  expect(y).toBeGreaterThan(plot.y);
+  expect(y).toBeLessThan(plot.y + plot.height);
+  const before = await page.getByLabel("Window").textContent();
+  await page.mouse.click(x, y);
+  await expect(page.getByLabel("Selected time")).toHaveText("2026-03-06");
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 70, y - 30);
+  await page.mouse.up();
+  await expect(page.getByLabel("Window")).toHaveText(before ?? "");
+  await page.getByRole("group", { name: "Session trade OHLC", exact: true }).focus();
+  await page.mouse.move(x, y);
+  await page.mouse.wheel(0, -100);
+  await expect(page.getByLabel("Window")).toHaveText(before ?? "");
+  await expect(page.getByLabel("Selected time")).toHaveText("2026-03-06");
+});
+
+test("empty uncontrolled history consumes its captured default only on the first populated load", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?initial-empty&pending-default`);
+  await page.getByRole("button", { name: "Change default window", exact: true }).click();
+  await page.getByRole("button", { name: "Load observations", exact: true }).click();
+  await expect(page.getByLabel("Window")).toHaveText("0.5,3.5");
+  await page.getByRole("button", { name: "Empty", exact: true }).click();
+  await page.getByRole("button", { name: "Load observations", exact: true }).click();
+  await expect(page.getByLabel("Window")).toHaveText("-0.5,4.5");
+});

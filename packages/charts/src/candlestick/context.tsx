@@ -33,8 +33,9 @@ export type Context = {
   interrupt: { current: () => void };
   geometry: {
     current: {
-      nearest: (clientX: number) => NativePoint | null;
-      coordinate: (clientX: number) => number;
+      contains: (clientX: number, clientY: number) => boolean;
+      nearest: (clientX: number, clientY: number) => NativePoint | null;
+      coordinate: (clientX: number, clientY: number) => number | null;
       width: number;
     } | null;
   };

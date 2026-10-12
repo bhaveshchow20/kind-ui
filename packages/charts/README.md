@@ -280,11 +280,6 @@ are scoped to their chart. Consumer controls own their focus, labels and semanti
 
 ## Candlestick
 
-Candlestick support is new in this candidate. Published Core 0.5.0 does not
-contain these exports; use the validated candidate package for development until
-an authorized Core release includes the family. See the
-[documentation](https://kindui.dev/charts/docs/) for the deployed package guidance.
-
 ### Records and financial meaning
 
 `CandlestickChart` accepts ordered immutable records, an explicit `timeMode`, and
@@ -419,7 +414,7 @@ const observations: CandlestickDatum[] = [
 | --- | --- |
 | `data`, `timeMode`, `config`, accessible name, `children` | Required. `accessors` defaults to standard field names. |
 | `spacing` | `"ordinal"`; `"elapsed"` preserves real time distances. |
-| `viewport`, `defaultViewport` | Controlled or initially uncontrolled logical window; otherwise fits initial history. Do not supply both or change controlled mode during a mount. |
+| `viewport`, `defaultViewport` | Controlled or initially uncontrolled logical window; otherwise fits initial history. An initial default survives empty loading data until the first observations arrive. Do not supply both or change controlled mode during a mount. |
 | `onViewportChange(range, details)` | Details include `reason` (`pan`, `zoom`, `reset`, `data`, `keyboard`) and actual visible `first`/`last` time identities, or null for no visible records. The application owns pagination. |
 | `followLatest` | `false`; appends follow only when enabled and already viewing the latest edge. |
 | `overscan` | `1` extra record on each side for rendering; no aggregation. |
@@ -447,7 +442,7 @@ Immutable replacements, corrections, prepends, viewport changes and resizing
 interrupt and finish the entrance without replaying historical marks.
 
 `XAxis` and `YAxis` retain native presentation props while the family owns their
-numeric domains and scales. `Grid` and `ReferenceLine` expose native Recharts
+numeric domains and scales. Native reversed/padded X scales also govern pointer zoom and pan; gestures start inside the plot, excluding axes and margins. `Grid` and `ReferenceLine` expose native Recharts
 props. Compose `ReferenceLine y={value}` for labelled reference/settlement levels;
 reference annotations do not automatically expand the price domain.
 
@@ -457,7 +452,7 @@ crosshair as price. Missing volume produces no observation; zero remains zero. V
 come from the validated root records. Separate `data`, `minPointSize`, alternate
 X axes, stacks, and fabricated background bars are excluded from this part's
 contract, so volume cannot silently diverge from its candle or gain a false
-minimum height.
+minimum height. Excluded Bar and axis geometry controls are rejected at runtime, including explicitly undefined keys; styling, shapes, events and axis tick presentation remain supported.
 
 `Overlay` draws caller-computed values from `dataKey`, either an original-row key
 or `(originalRow) => number | null | undefined`. It requires `seriesKey`, accepts

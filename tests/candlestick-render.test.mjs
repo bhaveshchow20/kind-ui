@@ -195,3 +195,54 @@ test("loading exposes one consumer-labelled status and hides stale plot inspecti
   assert.equal((html.match(/role="status"/g) ?? []).length, 1);
   assert.doesNotMatch(html, /candlestick-(?:table|content|crosshair)/);
 });
+
+for (const key of [
+  "dataKey",
+  "yAxisId",
+  "isAnimationActive",
+  "xAxisId",
+  "stackId",
+  "data",
+  "minPointSize",
+  "background",
+  "layout",
+]) {
+  test(`untyped Volume consumers cannot set owned ${key}`, () => {
+    for (const value of [undefined, true]) {
+      assert.throws(
+        () => render(h(CandlestickChart.Volume, { seriesKey: "volume", [key]: value })),
+        new RegExp(`cannot set ${key}`),
+      );
+    }
+  });
+}
+for (const key of ["yAxisId", "domain", "padding", "scale", "type", "dataKey"]) {
+  test(`untyped Volume axis consumers cannot set owned ${key}`, () => {
+    assert.throws(
+      () =>
+        render(
+          h(CandlestickChart.Volume, { seriesKey: "volume", axisProps: { [key]: undefined } }),
+        ),
+      new RegExp(`axisProps cannot set ${key}`),
+    );
+  });
+}
+test("Volume supported presentation and event props pass validation to the owning-family check", () => {
+  assert.throws(
+    () =>
+      render(
+        h(CandlestickChart.Volume, {
+          seriesKey: "volume",
+          fill: "purple",
+          stroke: "navy",
+          fillOpacity: 0.4,
+          maxBarSize: 12,
+          style: { opacity: 0.8 },
+          shape: () => null,
+          onClick: () => {},
+          axisProps: { hide: true, orientation: "right", tickFormatter: String, tickLine: false },
+        }),
+      ),
+    /Candlestick parts require CandlestickChart/,
+  );
+});

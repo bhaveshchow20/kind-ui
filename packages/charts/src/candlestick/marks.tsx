@@ -186,10 +186,30 @@ export type CandlestickVolumeProps = Omit<
   >;
 };
 export function CandlestickVolume({ seriesKey, axisProps, ...props }: CandlestickVolumeProps) {
-  if (Object.hasOwn(props, "data") || Object.hasOwn(props, "minPointSize"))
-    throw new Error(
-      "Candlestick Volume uses validated root observations and truthful volume heights",
-    );
+  for (const key of [
+    "dataKey",
+    "yAxisId",
+    "isAnimationActive",
+    "xAxisId",
+    "stackId",
+    "data",
+    "minPointSize",
+    "background",
+    "layout",
+  ] as const) {
+    if (Object.hasOwn(props, key))
+      throw new Error(
+        `Candlestick Volume cannot set ${key}; geometry uses validated root observations and truthful volume heights`,
+      );
+  }
+  if (axisProps !== undefined) {
+    for (const key of ["yAxisId", "domain", "padding", "scale", "type", "dataKey"] as const) {
+      if (Object.hasOwn(axisProps, key))
+        throw new Error(
+          `Candlestick Volume axisProps cannot set ${key}; the aligned volume axis owns its geometry`,
+        );
+    }
+  }
   const context = useCandlestick();
   const area = usePlotArea();
   const id = useId();

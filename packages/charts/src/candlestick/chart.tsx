@@ -223,9 +223,19 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
       })),
     [normalized, spacing],
   );
+  const [initialDefaultViewport] = useState(() => {
+    if (defaultViewport === undefined) return undefined;
+    // Validate immediately, but retain the consumer's unclamped initial window
+    // until asynchronous observations provide the actual history extent.
+    normalizeCandlestickViewport(defaultViewport, points.length);
+    return { from: defaultViewport.from, to: defaultViewport.to };
+  });
+  const pendingDefaultViewport = useRef(
+    viewport === undefined && points.length === 0 && initialDefaultViewport !== undefined,
+  );
   const [localRange, setLocalRange] = useState(() =>
     normalizeCandlestickViewport(
-      defaultViewport ?? fitCandlestickViewport(points.length),
+      initialDefaultViewport ?? fitCandlestickViewport(points.length),
       points.length,
     ),
   );
@@ -253,9 +263,11 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   const reconciled =
     viewport && (controlledRangeChanged || previous.current.length === 0)
       ? normalizeCandlestickViewport(viewport, points.length)
-      : reconcileCandlestickViewport(previous.current, points, viewport ?? localRange, {
-          followLatest,
-        });
+      : pendingDefaultViewport.current && initialDefaultViewport && points.length > 0
+        ? normalizeCandlestickViewport(initialDefaultViewport, points.length)
+        : reconcileCandlestickViewport(previous.current, points, viewport ?? localRange, {
+            followLatest,
+          });
   const rangeFrom = viewport?.from ?? reconciled.from;
   const rangeTo = viewport?.to ?? reconciled.to;
   const range = useMemo(
@@ -318,6 +330,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   );
   useLayoutEffect(() => {
     if (previous.current !== points) {
+      if (points.length > 0) pendingDefaultViewport.current = false;
       if (viewport === undefined) setLocalRange(reconciled);
       const oldRange = viewport ?? localRange;
       if (reconciled.from !== oldRange.from || reconciled.to !== oldRange.to)
@@ -421,9 +434,8 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   };
   const instructions = useId();
   const reduced = useReducedMotion();
-  const panPixels = (initial: CandlestickViewport, pixels: number) => {
+  const panCoordinates = (initial: CandlestickViewport, delta: number) => {
     const domain = getCandlestickTimeDomain(points, initial, spacing);
-    const delta = (pixels / (geometry.current?.width ?? 1)) * (domain[1] - domain[0]);
     return normalizeCandlestickViewport(
       {
         from: getCandlestickLogicalCoordinate(points, domain[0] + delta, spacing),
@@ -442,6 +454,8 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   const drag = useRef<{
     pointerId: number;
     x: number;
+    anchor: number;
+    coordinate: (clientX: number, clientY: number) => number | null;
     range: CandlestickViewport;
     moved: boolean;
   } | null>(null);
@@ -540,15 +554,23 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
               !event.isPrimary ||
               (event.pointerType !== "touch" && event.button !== 0) ||
               drag.current !== null ||
-              !event.target ||
-              !(event.target instanceof Element) ||
-              !event.target.closest("svg.recharts-surface")
+              !isPlotSurface(event.target) ||
+              !geometry.current?.contains(event.clientX, event.clientY)
             )
               return;
+            const anchor = geometry.current.coordinate(event.clientX, event.clientY);
+            if (anchor === null) return;
             event.currentTarget.focus({ preventScroll: true });
             acceptedTap.current = null;
-            drag.current = { pointerId: event.pointerId, x: event.clientX, range, moved: false };
-            inspect(geometry.current?.nearest(event.clientX)?.time ?? null);
+            drag.current = {
+              pointerId: event.pointerId,
+              x: event.clientX,
+              anchor,
+              coordinate: geometry.current.coordinate,
+              range,
+              moved: false,
+            };
+            inspect(geometry.current.nearest(event.clientX, event.clientY)?.time ?? null);
           },
           onPointerMove: (event) => {
             frameProps?.onPointerMove?.(event);
@@ -561,18 +583,29 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
                 acceptedTap.current = null;
                 event.currentTarget.setPointerCapture(event.pointerId);
               }
-              if (current.moved)
-                changeViewport(panPixels(current.range, current.x - event.clientX), "pan");
+              const coordinate = current.coordinate(event.clientX, event.clientY);
+              if (current.moved && coordinate !== null)
+                changeViewport(panCoordinates(current.range, current.anchor - coordinate), "pan");
             }
-            if (event.target instanceof Element && event.target.closest("svg.recharts-surface"))
-              inspect(geometry.current?.nearest(event.clientX)?.time ?? null);
+            if (
+              current ||
+              (event.target instanceof Element && event.target.closest("svg.recharts-surface"))
+            )
+              inspect(
+                current || isPlotSurface(event.target)
+                  ? (geometry.current?.nearest(event.clientX, event.clientY)?.time ?? null)
+                  : null,
+              );
           },
           onPointerUp: (event) => {
             frameProps?.onPointerUp?.(event);
             if (drag.current?.pointerId !== event.pointerId) return;
             acceptedTap.current =
-              !event.defaultPrevented && !drag.current.moved
-                ? { time: geometry.current?.nearest(event.clientX)?.time ?? null }
+              !event.defaultPrevented &&
+              !drag.current.moved &&
+              isPlotSurface(event.target) &&
+              geometry.current?.contains(event.clientX, event.clientY)
+                ? { time: geometry.current.nearest(event.clientX, event.clientY)?.time ?? null }
                 : null;
             drag.current = null;
             if (event.currentTarget.hasPointerCapture(event.pointerId))
@@ -586,8 +619,8 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
               tap &&
               !event.defaultPrevented &&
               event.button === 0 &&
-              event.target instanceof Element &&
-              event.target.closest("svg.recharts-surface")
+              isPlotSurface(event.target) &&
+              geometry.current?.contains(event.clientX, event.clientY)
             )
               select(tap.time);
           },
@@ -613,18 +646,23 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             if (
               event.defaultPrevented ||
               document.activeElement !== event.currentTarget ||
-              !(event.target instanceof Element) ||
-              !event.target.closest("svg.recharts-surface")
+              !isPlotSurface(event.target) ||
+              !geometry.current?.contains(event.clientX, event.clientY)
             )
               return;
+            const anchor = geometry.current.coordinate(event.clientX, event.clientY);
+            if (anchor === null) return;
             pendingWheel.current = event.nativeEvent;
             if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-              changeViewport(panPixels(range, event.deltaX), "pan");
+              const destination = geometry.current.coordinate(
+                event.clientX + event.deltaX,
+                event.clientY,
+              );
+              if (destination !== null)
+                changeViewport(panCoordinates(range, destination - anchor), "pan");
               return;
             }
             const domain = getCandlestickTimeDomain(points, range, spacing);
-            const anchor =
-              geometry.current?.coordinate(event.clientX) ?? (domain[0] + domain[1]) / 2;
             const factor = event.deltaY > 0 ? 0.9 : 1.1;
             const proposed = {
               from: getCandlestickLogicalCoordinate(
@@ -691,6 +729,14 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     </CandleContext>
   );
 }
+function isPlotSurface(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    target.closest("svg.recharts-surface") !== null &&
+    target.closest(".recharts-cartesian-axis, .recharts-cartesian-axis-tick-labels") === null
+  );
+}
+
 function Geometry() {
   const context = useCandlestick();
   const scale = useXAxisScale();
@@ -699,23 +745,40 @@ function Geometry() {
   useLayoutEffect(() => {
     const svg = ref.current?.ownerSVGElement;
     if (!scale || !area || !svg) return;
+    const [from, to] = context.timeDomain;
+    const start = scale(from);
+    const end = scale(to);
+    if (
+      typeof start !== "number" ||
+      typeof end !== "number" ||
+      !Number.isFinite(start) ||
+      !Number.isFinite(end) ||
+      start === end
+    )
+      return;
+    const localPoint = (clientX: number, clientY: number) => {
+      const matrix = svg.getScreenCTM();
+      if (!matrix) return null;
+      const point = new DOMPoint(clientX, clientY).matrixTransform(matrix.inverse());
+      return Number.isFinite(point.x) && Number.isFinite(point.y) ? point : null;
+    };
+    const contains = (point: DOMPoint | null) =>
+      point !== null &&
+      point.x >= area.x &&
+      point.x <= area.x + area.width &&
+      point.y >= area.y &&
+      point.y <= area.y + area.height;
     context.geometry.current = {
       width: area.width,
-      coordinate: (clientX) => {
-        const bounds = svg.getBoundingClientRect();
-        const x =
-          ((clientX - bounds.left) * (svg.viewBox.baseVal.width || bounds.width)) / bounds.width;
-        return (
-          context.timeDomain[0] +
-          Math.max(0, Math.min(1, (x - area.x) / area.width)) *
-            (context.timeDomain[1] - context.timeDomain[0])
-        );
+      contains: (clientX, clientY) => contains(localPoint(clientX, clientY)),
+      coordinate: (clientX, clientY) => {
+        const point = localPoint(clientX, clientY);
+        // Rendered linear-scale endpoints retain native reversal and padding.
+        return point ? from + ((point.x - start) / (end - start)) * (to - from) : null;
       },
-      nearest: (clientX) => {
-        const bounds = svg.getBoundingClientRect();
-        const x =
-          ((clientX - bounds.left) * (svg.viewBox.baseVal.width || bounds.width)) / bounds.width;
-        if (x < area.x || x > area.x + area.width) return null;
+      nearest: (clientX, clientY) => {
+        const local = localPoint(clientX, clientY);
+        if (!local || !contains(local)) return null;
         return getCandlestickVisiblePoints(
           context.points,
           context.viewport,
@@ -723,7 +786,9 @@ function Geometry() {
           const px = scale(point.coordinate);
           const old = closest ? scale(closest.coordinate) : undefined;
           return typeof px === "number" &&
-            (!closest || typeof old !== "number" || Math.abs(px - x) < Math.abs(old - x))
+            (!closest ||
+              typeof old !== "number" ||
+              Math.abs(px - local.x) < Math.abs(old - local.x))
             ? point
             : closest;
         }, null);

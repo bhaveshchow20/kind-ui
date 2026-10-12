@@ -46,6 +46,7 @@ export function CandlestickHost() {
   const [loading, setLoading] = useState(false);
   const [bounded, setBounded] = useState(false);
   const [follow, setFollow] = useState(false);
+  const [defaultRange, setDefaultRange] = useState<CandlestickViewport>({ from: 0.5, to: 3.5 });
   const [viewport, setViewport] = useState<CandlestickViewport>(
     new URLSearchParams(location.search).has("initial-empty")
       ? { from: 0.5, to: 3.5 }
@@ -206,6 +207,11 @@ export function CandlestickHost() {
       <button type="button" onClick={() => setRows([])}>
         Empty
       </button>
+      {params.has("pending-default") && (
+        <button type="button" onClick={() => setDefaultRange({ from: 2.5, to: 3.5 })}>
+          Change default window
+        </button>
+      )}
       <button type="button" onClick={() => setViewport({ from: 0.5, to: 3.5 })}>
         History window
       </button>
@@ -246,7 +252,7 @@ export function CandlestickHost() {
         spacing={spacing}
         priceScale={logarithmic ? "log" : "linear"}
         followLatest={follow}
-        viewport={viewport}
+        {...(params.has("pending-default") ? { defaultViewport: defaultRange } : { viewport })}
         onViewportChange={(range, details) => {
           setViewport(range);
           setReason(details.reason);
@@ -267,6 +273,9 @@ export function CandlestickHost() {
       >
         <CandlestickChart.Grid />
         <CandlestickChart.XAxis
+          {...(params.has("mirror-x") ? { mirror: true } : {})}
+          {...(params.has("reversed-x") ? { reversed: true } : {})}
+          {...(params.has("padded-x") ? { padding: { left: 72, right: 40 } } : {})}
           {...(params.has("explicit-ticks") ? { ticks: [1.5, 3.5], interval: 0 } : {})}
         />
         <CandlestickChart.YAxis />
