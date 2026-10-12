@@ -610,7 +610,8 @@ const installCommands = {
 const installChartNames = [
   "line",
   ...families
-    .filter((family) => family !== "Line")
+    // Treemap remains a candidate until its Core release and registry activation.
+    .filter((family) => family !== "Line" && family !== "Treemap")
     .map((family) => family.toLowerCase().replaceAll(" ", "-"))
     .sort(),
   "radial-activity",

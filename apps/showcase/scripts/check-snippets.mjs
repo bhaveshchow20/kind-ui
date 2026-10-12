@@ -63,6 +63,86 @@ assert.throws(
   /Missing supplied area for missing/,
 );
 assert.equal(treemap.treemapMetric("treemap-exposure", undefined), "Unknown");
+// Use the actual gallery defaults and evaluate the copied encoding declarations
+// so swapped palette endpoints cannot pass through preview/source parity checks.
+const pageSource = ts.createSourceFile(
+  "page.tsx",
+  page,
+  ts.ScriptTarget.Latest,
+  true,
+  ts.ScriptKind.TSX,
+);
+const paletteDeclaration = pageSource.statements
+  .flatMap((statement) =>
+    ts.isVariableStatement(statement) ? [...statement.declarationList.declarations] : [],
+  )
+  .find(
+    (declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === "exampleColors",
+  );
+assert.ok(
+  paletteDeclaration?.initializer && ts.isObjectLiteralExpression(paletteDeclaration.initializer),
+);
+for (const recipe of treemap.treemapRecipes) {
+  const property = paletteDeclaration.initializer.properties.find(
+    (property) =>
+      ts.isPropertyAssignment(property) &&
+      (ts.isStringLiteral(property.name) || ts.isIdentifier(property.name)) &&
+      property.name.text === recipe.id,
+  );
+  assert.ok(
+    property && ts.isPropertyAssignment(property),
+    `${recipe.id} needs an explicit gallery palette`,
+  );
+  const defaultColors = (
+    await evaluate(`export const colors = ${property.initializer.getText(pageSource)};`)
+  ).colors;
+  for (const colors of [defaultColors, ["#123456", "#abcdef", "#fedcba", "#654321"], []]) {
+    const preview = treemap.treemapEncoding(recipe, colors);
+    assert.equal(
+      preview.stops[0].color,
+      colors[0] ?? "#ee668b",
+      `${recipe.id} negative endpoint uses the first palette color`,
+    );
+    assert.equal(
+      preview.stops[2].color,
+      colors.at(-1) ?? "#20b898",
+      `${recipe.id} positive endpoint uses the last palette color`,
+    );
+    const generated = treemap.treemapCode(recipe, "plain", colors, false);
+    const generatedSource = ts.createSourceFile(
+      "example.tsx",
+      generated,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    );
+    const encodingDeclarations = generatedSource.statements.filter(
+      (statement) =>
+        ts.isVariableStatement(statement) &&
+        statement.declarationList.declarations.some(
+          (declaration) =>
+            ts.isIdentifier(declaration.name) &&
+            ["colors", "metric", "encoding"].includes(declaration.name.text),
+        ),
+    );
+    const copied = (
+      await evaluate(
+        encodingDeclarations.map((statement) => statement.getText(generatedSource)).join("\n") +
+          "\nexport { encoding };",
+      )
+    ).encoding;
+    assert.deepEqual(
+      copied.stops,
+      preview.stops,
+      `${recipe.id} copied encoding matches the preview and legend`,
+    );
+    assert.deepEqual(copied.domain, preview.domain);
+    for (const metric of [-preview.domain[1], 0, preview.domain[1]]) {
+      assert.equal(copied.value({ metric }), preview.value({ metric }));
+      assert.equal(copied.formatValue(metric), preview.formatValue(metric));
+    }
+  }
+}
 const activity = await evaluate(await readFile(join(app, "lib/activity-recipe.ts"), "utf8"));
 const temporary = await mkdtemp(join(app, ".snippet-check-"));
 try {

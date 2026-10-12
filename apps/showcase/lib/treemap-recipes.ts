@@ -129,9 +129,9 @@ export function treemapEncoding(
     value: (datum) => datum.metric,
     domain: recipe.id === "treemap-market" ? [-3, 3] : [-2000, 2000],
     stops: [
-      { offset: 0, color: colors[2] ?? "#ee668b" },
+      { offset: 0, color: colors[0] ?? "#ee668b" },
       { offset: 0.5, color: "var(--muted, #e5e7eb)" },
-      { offset: 1, color: colors[0] ?? "#20b898" },
+      { offset: 1, color: colors.at(-1) ?? "#20b898" },
     ],
     unknownColor: "var(--border, #d1d5db)",
     unknownLabel: "Unknown / unaggregated",
@@ -175,7 +175,7 @@ const area = (value: number) => ${holdings ? '"$" + (value / 1000).toLocaleStrin
 const encoding: TreemapColorEncoding<Row> = {
   type: "diverging", label: "${recipe.colorLabel}", value: row => row.metric,
   domain: [${holdings ? "-2000, 2000" : "-3, 3"}],
-  stops: [{offset:0,color:colors[2] ?? "#ee668b"},{offset:0.5,color:"var(--muted, #e5e7eb)"},{offset:1,color:colors[0] ?? "#20b898"}],
+  stops: [{offset:0,color:colors[0] ?? "#ee668b"},{offset:0.5,color:"var(--muted, #e5e7eb)"},{offset:1,color:colors.at(-1) ?? "#20b898"}],
   unknownColor: "var(--border, #d1d5db)", unknownLabel: "Unknown / unaggregated", formatValue: metric,
 };
 export function Example() {
