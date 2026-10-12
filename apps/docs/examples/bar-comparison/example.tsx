@@ -55,8 +55,16 @@ export function LibraryLoansChart({
               width={72}
               tick={{ fill: "#666" }}
             />
-            <BarChart.Series dataKey="print" {...(stackId === undefined ? {} : { stackId })} maxBarSize={32} />
-            <BarChart.Series dataKey="digital" {...(stackId === undefined ? {} : { stackId })} maxBarSize={32} />
+            <BarChart.Series
+              dataKey="print"
+              {...(stackId === undefined ? {} : { stackId })}
+              maxBarSize={32}
+            />
+            <BarChart.Series
+              dataKey="digital"
+              {...(stackId === undefined ? {} : { stackId })}
+              maxBarSize={32}
+            />
             <BarChart.Tooltip />
             <BarChart.Legend />
           </BarChart>

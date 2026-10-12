@@ -1,7 +1,7 @@
 "use client";
 import * as Select from "@radix-ui/react-select";
 import { Check, ChevronDown, Copy } from "lucide-react";
-import { type ReactNode, useId, useState } from "react";
+import { type ReactNode, useCallback, useId, useState } from "react";
 import type { ComponentBundleData } from "@/lib/component-bundles.server.mjs";
 import { promptFor } from "@/lib/example-files.mjs";
 import { previews } from "./previews";
@@ -30,6 +30,23 @@ export function ComponentPlayground({
   const [status, setStatus] = useState("");
   const [tab, setTab] = useState("preview");
   const Preview = previews[id];
+  const inertSelectBackground = useCallback((content: HTMLDivElement | null) => {
+    if (!content || !document.body.contains(content)) return;
+    const siblings: Array<{ node: HTMLElement; inert: boolean }> = [];
+    let current: HTMLElement = content;
+    while (current.parentElement) {
+      for (const sibling of current.parentElement.children) {
+        if (sibling === current || !(sibling instanceof HTMLElement)) continue;
+        siblings.push({ node: sibling, inert: sibling.inert });
+        sibling.inert = true;
+      }
+      current = current.parentElement;
+      if (current === document.body) break;
+    }
+    return () => {
+      for (const { node, inert } of siblings) node.inert = inert;
+    };
+  }, []);
   async function copy(text: string, label: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -81,7 +98,12 @@ export function ComponentPlayground({
               </Select.Icon>
             </Select.Trigger>
             <Select.Portal>
-              <Select.Content position="popper" sideOffset={6} className="select-content">
+              <Select.Content
+                ref={inertSelectBackground}
+                position="popper"
+                sideOffset={6}
+                className="select-content"
+              >
                 <Select.Viewport>
                   {options.map(([value, option]) => (
                     <Select.Item key={value} value={value} className="select-item">

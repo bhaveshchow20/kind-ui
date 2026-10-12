@@ -39,8 +39,11 @@ for (const scheme of ["light", "dark"] as const) {
     const example = page.locator('[data-component="line-smooth"]');
     await example.getByRole("combobox", { name: "Curve", exact: true }).click();
     await expect(page.getByRole("option", { name: "Step after", exact: true })).toBeVisible();
+    await expect(page.locator(".skip-link")).toHaveAttribute("inert", "");
     expect.soft((await audit()).violations).toEqual([]);
     await page.keyboard.press("Escape");
+    await expect(page.locator(".skip-link")).not.toHaveAttribute("inert", "");
+    await expect(example.getByRole("combobox", { name: "Curve", exact: true })).toBeFocused();
     await example.getByRole("tab", { name: "Code", exact: true }).click();
     expect.soft((await audit()).violations).toEqual([]);
   });
