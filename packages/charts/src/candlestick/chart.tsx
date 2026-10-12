@@ -528,7 +528,6 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
               return;
             event.currentTarget.focus({ preventScroll: true });
             drag.current = { pointerId: event.pointerId, x: event.clientX, range, moved: false };
-            event.currentTarget.setPointerCapture(event.pointerId);
             inspect(geometry.current?.nearest(event.clientX)?.time ?? null);
           },
           onPointerMove: (event) => {
@@ -537,7 +536,10 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             const current = drag.current;
             if (!event.isPrimary || (current && current.pointerId !== event.pointerId)) return;
             if (current && geometry.current) {
-              if (Math.abs(current.x - event.clientX) > 4) current.moved = true;
+              if (!current.moved && Math.abs(current.x - event.clientX) > 4) {
+                current.moved = true;
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }
               if (current.moved)
                 changeViewport(panPixels(current.range, current.x - event.clientX), "pan");
             }
@@ -563,7 +565,10 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           },
           onPointerLeave: (event) => {
             frameProps?.onPointerLeave?.(event);
-            if (!event.defaultPrevented && !drag.current) inspect(null);
+            if (!event.defaultPrevented) {
+              if (drag.current && !drag.current.moved) drag.current = null;
+              if (!drag.current) inspect(null);
+            }
           },
           onWheel: (event) => {
             frameProps?.onWheel?.(event);

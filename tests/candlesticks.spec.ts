@@ -458,7 +458,7 @@ test("default time ticks identify actual observations and preserve explicit tick
   page,
 }) => {
   await page.goto(`${url}/?one-candle`);
-  const ticks = page.locator(".recharts-xAxis .recharts-cartesian-axis-tick-value");
+  const ticks = page.locator(".recharts-xAxis-tick-labels .recharts-cartesian-axis-tick-value");
   await expect(ticks).toHaveCount(1);
   await expect(ticks).toHaveText("2026-03-05");
   await page.getByRole("button", { name: "Spacing", exact: true }).click();
