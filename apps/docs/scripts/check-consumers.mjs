@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { consumerShard, expandConsumers } from "./consumer-shards.mjs";
-import { verificationFiles } from "./consumer-validation-files.mjs";
+import { declarationCompilerOptions, verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const root = path.resolve(process.env.KIND_DOCS_CONSUMER_ROOT || "artifacts/consumer");
@@ -41,16 +41,7 @@ for (const bundle of consumers) {
     path.join(root, "tsconfig.nodenext.json"),
     JSON.stringify({
       extends: "./tsconfig.json",
-      compilerOptions: {
-        module: "NodeNext",
-        moduleResolution: "NodeNext",
-        // Public peer declarations (Recharts/Redux) are also checked, but currently
-        // fail exact optional properties. The build above checks our copied source
-        // with exactOptionalPropertyTypes:true and skipLibCheck:true instead.
-        exactOptionalPropertyTypes: false,
-        skipLibCheck: false,
-        types: ["react", "react-dom"],
-      },
+      compilerOptions: declarationCompilerOptions,
       include: ["src/examples/**/*.tsx"],
     }),
   );

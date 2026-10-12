@@ -20,7 +20,11 @@ export const legacyDocSlugs = [
 ];
 /** @param {string[] | null | undefined} slug */
 export function canonicalDocSlugs(slug) {
-  if (["chart-components/root", "chart-components/responsive-container"].includes(slug?.join("/") ?? ""))
+  if (
+    ["chart-components/root", "chart-components/responsive-container"].includes(
+      slug?.join("/") ?? "",
+    )
+  )
     return ["chart-components", "chart"];
   if (["quickstart", "start/quickstart", "concepts/composition"].includes(slug?.join("/") ?? ""))
     return ["installation"];

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { verificationFiles } from "./consumer-validation-files.mjs";
+import { declarationCompilerOptions, verificationFiles } from "./consumer-validation-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/waterfall-examples.json", "utf8"));
 const root = path.resolve("artifacts/waterfall-consumer");
@@ -37,12 +37,7 @@ for (const b of variants) {
     path.join(root, "tsconfig.strict.json"),
     JSON.stringify({
       extends: "./tsconfig.json",
-      compilerOptions: {
-        module: "NodeNext",
-        moduleResolution: "NodeNext",
-        skipLibCheck: false,
-        types: ["react", "react-dom"],
-      },
+      compilerOptions: declarationCompilerOptions,
       include: ["src/examples/**/*.tsx"],
     }),
   );

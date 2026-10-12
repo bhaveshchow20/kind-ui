@@ -1,5 +1,16 @@
 import { readFileSync } from "node:fs";
 
+// Recharts' Redux Toolkit declarations fail exact optional checking
+// (TaskAbortError.code and async-thunk constraints). The source/build gate
+// retains exact optional properties; these modes still check all declarations.
+export const declarationCompilerOptions = {
+  module: "NodeNext",
+  moduleResolution: "NodeNext",
+  exactOptionalPropertyTypes: false,
+  skipLibCheck: false,
+  types: ["react", "react-dom"],
+};
+
 // Public downloads use npm; internal checks use the independently installed fixture.
 export function verificationFiles(bundle, publicFiles = bundle.files) {
   const files = { ...publicFiles };
