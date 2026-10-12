@@ -46,14 +46,14 @@ const accessors: TreemapAccessors<Record> = {
   children: (d) => d.nodes,
   value: (d) => d.area as number,
 };
-const encoding: TreemapColorEncoding<Record> = {
+const encoding = {
   type: "diverging",
   label: "Change (%)",
   value: (d) => d.change,
   domain: [-5, 5],
   unknownColor: "#64748b",
   formatValue: (value) => `${value > 0 ? "+" : ""}${value}%`,
-};
+} satisfies TreemapColorEncoding<Record>;
 function mapRecords(data: readonly Record[], f: (d: Record) => Record): readonly Record[] {
   return data.map((d) => f(d.nodes ? { ...d, nodes: mapRecords(d.nodes, f) } : d));
 }
