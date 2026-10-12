@@ -197,3 +197,25 @@ for (const host of ["vite", "next"] as const) {
     await expect(box(tokens)).toHaveCSS("background-color", "rgb(240, 220, 250)");
   });
 }
+
+test("candlestick public compound hydrates at both pinned peer combinations", async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  await page.goto(String(info.project.metadata.nextURL));
+  const host = page.locator("[data-candlestick-hydration]");
+  await expect(host.locator('[data-kind-ui="candlestick-mark"]')).toHaveCount(2);
+  await expect(host.getByRole("table")).toContainText("55.0 probability points");
+  await host.getByRole("button", { name: "Correct candle" }).click();
+  await expect(host.getByRole("table")).toContainText("65.0 probability points");
+  await host.locator('[data-kind-ui="chart"]').focus();
+  await page.keyboard.press("Home");
+  await expect(host.locator('[data-kind-ui="candlestick-content"]')).toContainText(
+    "65.0 probability points",
+  );
+  expect(errors).toEqual([]);
+});

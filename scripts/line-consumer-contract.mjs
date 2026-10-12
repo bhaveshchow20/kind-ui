@@ -5,6 +5,7 @@ export function assertLineConsumerSource(source) {
   const allowed = new Set([
     "@kind-ui/charts",
     "react",
+    "motion/react",
     "react-dom/client",
     "react-dom",
     "recharts",

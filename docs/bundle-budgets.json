@@ -308,6 +308,32 @@
           "brotli": 1523
         }
       }
+    },
+    "candlestick": {
+      "baseline": {
+        "js": {
+          "raw": 818547,
+          "gzip": 246182,
+          "brotli": 207355
+        },
+        "css": {
+          "raw": 34206,
+          "gzip": 6694,
+          "brotli": 5895
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 900402,
+          "gzip": 270801,
+          "brotli": 228091
+        },
+        "css": {
+          "raw": 37627,
+          "gzip": 7364,
+          "brotli": 6485
+        }
+      }
     }
   }
 }

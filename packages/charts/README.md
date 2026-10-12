@@ -14,7 +14,7 @@ and optional animation. Compose a chart from styled family parts, then customize
 
 | Family | Charts |
 | --- | --- |
-| Cartesian | Line, Area, Bar, Combo |
+| Cartesian | Line, Area, Bar, Combo, Candlestick |
 | Polar | Pie/Donut, Radar, Radial/ActivityRings |
 | Relationships | Scatter/Bubble, Heatmap |
 | Distributions | Histogram, BoxPlot |
@@ -277,6 +277,213 @@ accessibility layer, and include a named data alternative. A tooltip alone is no
 a data alternative. Keep units, missing values, zeroes and projected status
 explicit in tables and custom tooltips. Chart loading and interaction announcements
 are scoped to their chart. Consumer controls own their focus, labels and semantics.
+
+## Candlestick
+
+Candlestick support is new in this candidate. Published Core 0.5.0 does not
+contain these exports; use the validated candidate package for development until
+an authorized Core release includes the family. See the
+[documentation](https://kindui.dev/charts/docs/) for the deployed package guidance.
+
+### Records and financial meaning
+
+`CandlestickChart` accepts ordered immutable records, an explicit `timeMode`, and
+optional typed `accessors`. Standard records contain `time`, `open`, `high`, `low`,
+`close`, and optional `volume`, `gap`, and `state`. Accessors accept a row key or
+`(row, index) => value` for each field, so provider records stay caller-owned.
+`normalizeCandlestickData(data, { timeMode, accessors, priceScale, priceBounds })`
+is also available separately. Every normalized point retains `original`, `time`,
+`timeValue`, and a stable mode-prefixed `identity`.
+
+Choose `timeMode="epoch-ms"` for safe integer millisecond instants within the Date
+range, or `timeMode="business-date"` for strictly valid `YYYY-MM-DD` session dates.
+Business dates use UTC midnight only as their scale coordinate; format session
+labels as business dates rather than converting them to a local instant. Data
+must have unique ascending time identities. Invalid/sparse records, failed
+accessors, nonfinite values, incomplete OHLC, and malformed dates fail with field
+paths. The library never sorts, deduplicates, guesses timestamp units, or fills
+missing intervals.
+
+Observed candles require `low <= min(open, close) <= max(open, close) <= high`.
+Linear scales accept negative prices. Log scales require strictly positive
+prices. Supplied volume must be finite and nonnegative; omitted volume remains
+missing, and zero remains zero. `{ time, gap: true }` retains a time slot but must
+omit OHLC and volume. `state` is arbitrary caller metadata such as `partial` or
+`final`, and never changes the prices.
+
+Use explicit source and unit labels in the readout and table. Trade, bid, ask,
+sample-derived, and settlement observations have different meanings. Sampled
+prices cannot establish true trade extrema or volume. The library does not
+convert units, clamp probability prices, complement separately traded outcomes,
+reconstruct trades, adjust corporate actions, compute indicators, or manage
+feeds, authentication, exchange calendars, pagination, cancellation, and retries.
+Those remain application/adapter responsibilities.
+
+### Domains and history windows
+
+`CandlestickViewport` is `{ from, to }` in fractional inclusive logical indexes.
+Index zero identifies the first record, including explicit gaps. Fitting `n`
+records produces `{ from: -0.5, to: n - 0.5 }`, leaving half a slot on each edge;
+empty history has the neutral `[-0.5, 0.5]` window. A valid window has finite
+`from < to`. Windows clamp to history while retaining their span where possible.
+
+- `fitCandlestickViewport(count)` fits history; `normalizeCandlestickViewport`
+  accepts `(viewport, count)` to clamp it.
+- `panCandlestickViewport(viewport, delta, count)` uses logical-slot deltas.
+  `zoomCandlestickViewport(viewport, factor, anchor, count)` keeps the supplied
+  logical anchor in place; factors above one zoom in, with a minimum one-slot
+  span. Reset uses the fit helper.
+- `reconcileCandlestickViewport(previousPoints, nextPoints, viewport,
+  { followLatest })` preserves the first surviving visible identity during
+  prepend, replace, correction, and append updates. If no visible identity
+  survives, it clamps the old logical window. Empty-to-populated history fits
+  the new history. Follow-latest is opt-in and applies only when the previous
+  window was already at the latest edge.
+- `getCandlestickVisiblePoints(points, viewport, overscan = 0)` returns actual
+  records without aggregation or mutation. Overscan is a nonnegative integer
+  count of extra records at both edges; gaps retain their positions.
+
+`spacing="ordinal"` uses logical indexes and compresses omitted intervals;
+`spacing="elapsed"` uses actual time distances. Neither infers trading sessions.
+`getCandlestickTimeCoordinate(point, index, spacing)` and
+`getCandlestickTimeDomain(points, viewport, spacing)` supply native numeric X
+coordinates. Elapsed domains interpolate fractional positions and extrapolate
+edge slots using the first/last observed interval. A single point uses a
+one-millisecond neutral slot.
+`getCandlestickLogicalCoordinate(points, coordinate, spacing)` inverts those
+coordinates, including interpolation and edge extrapolation, for custom pointer
+and elapsed-time viewport controls.
+
+`getCandlestickPriceDomain(points, options)` supports `viewport`,
+`autoscale: "visible" | "all"`, `domain: [minimum, maximum]`, `padding`,
+`scale: "linear" | "log"`, `bounds`, and explicit `overlayValues`.
+By default it uses visible records when a viewport is supplied, otherwise all
+records, and adds 5% padding on each side. Extents use full low/high wicks and
+never force zero. Padding is a fraction of the linear span or logarithmic span.
+A constant-price candle receives a small nonzero domain even with zero padding;
+an empty unconstrained domain is `[0, 1]` for linear or `[1, 10]` for log.
+An explicit fixed domain controls clipping and bypasses padding. Caller bounds
+validate every observation, including offscreen data and included overlay
+values; only computed padding is clipped to bounds. Fixed domains must fit the
+bounds, and log domains/bounds must be positive. Only explicitly supplied
+overlay values contribute to autoscaling.
+
+### Composition and chart props
+
+The owning chart renders only the parts you include. Every part also has a named
+export, such as `CandlestickSeries` or `CandlestickDataTable`. Use explicit axes
+alongside a Series; there is no separate Root or Plot wrapper.
+
+```tsx
+import { CandlestickChart, type CandlestickDatum } from "@kind-ui/charts";
+
+const observations: CandlestickDatum[] = [
+  { time: "2026-10-01", open: 40, high: 44, low: 38, close: 43, volume: 120 },
+  { time: "2026-10-02", open: 43, high: 45, low: 39, close: 41, volume: 95 },
+  { time: "2026-10-05", gap: true },
+];
+
+<CandlestickChart
+  data={observations}
+  timeMode="business-date"
+  config={{
+    price: { label: "Illustrative trade prices", color: "#3b82f6" },
+    volume: { label: "Volume in units", color: "#94a3b8" },
+  }}
+  aria-label="Illustrative daily trade OHLC, USD per unit"
+  height={320}
+  formatPrice={(value) => `$${value.toFixed(2)}`}
+  formatVolume={(value) => `${value.toLocaleString()} units`}
+>
+  <CandlestickChart.Grid vertical={false} />
+  <CandlestickChart.XAxis />
+  <CandlestickChart.YAxis />
+  <CandlestickChart.Series
+    seriesKey="price"
+    rising="#10b981"
+    falling="#f43f5e"
+    unchanged="#94a3b8"
+  />
+  <CandlestickChart.Volume seriesKey="volume" axisProps={{ hide: true }} />
+  <CandlestickChart.Crosshair />
+  <CandlestickChart.Content />
+  <CandlestickChart.DataTable caption="Illustrative trade OHLC in USD and volume in units" />
+</CandlestickChart>;
+```
+
+| Root prop | Behavior/default |
+| --- | --- |
+| `data`, `timeMode`, `config`, accessible name, `children` | Required. `accessors` defaults to standard field names. |
+| `spacing` | `"ordinal"`; `"elapsed"` preserves real time distances. |
+| `viewport`, `defaultViewport` | Controlled or initially uncontrolled logical window; otherwise fits initial history. Do not supply both or change controlled mode during a mount. |
+| `onViewportChange(range, details)` | Details include `reason` (`pan`, `zoom`, `reset`, `data`, `keyboard`) and actual visible `first`/`last` time identities, or null for no visible records. The application owns pagination. |
+| `followLatest` | `false`; appends follow only when enabled and already viewing the latest edge. |
+| `overscan` | `1` extra record on each side for rendering; no aggregation. |
+| `priceScale`, `autoscale` | `"linear"`, `"visible"`; log validates positive prices, all-data autoscale uses every candle. |
+| `priceDomain`, `priceBounds`, `pricePadding` | Fixed domain, validated inclusive bounds, and per-side padding fraction (default `0.05`); see domain semantics above. |
+| `volumeRatio` | `0.22`, greater than zero and less than `0.5`; reserves plot space only when Volume is composed. |
+| `selection`, `defaultSelection` | Time identity or null; persistent selection is separate from transient inspection. Default is null; choose one control mode. |
+| `onSelectionChange`, `onInspect` | Receives the normalized point with `original`, or null when cleared. |
+| `formatTime`, `formatPrice`, `formatVolume` | `(value, point?) => string`; default `String(value)`. Axis ticks may omit the point; readouts retain it. Supply currency, decimals, timezone, source, and volume units explicitly. |
+| `loading`, `loadingLabel`, `empty` | Loading follows the existing family contract; empty defaults to `"No candle observations"`. Errors, retry and cancellation belong to the application. |
+| `animate` | `false` by default; accepts the Bar-family animation option type, including `revealDurationMs` and `revealEasing`, for the shared SVG entrance reveal. Reduced motion renders static marks. |
+| Sizing, native chart props, `frameProps` | Existing family sizing and native Recharts chart options; `frameProps` controls outer HTML attributes/ref/handlers. Native handlers run first and may veto by preventing default. |
+
+`Series` requires `seriesKey` for config, paint and visibility. It draws full
+low/high wicks and an open/close body; equal open/close draws a visible doji line
+without inventing a price range. `rising`, `falling`, and `unchanged` override the
+series color independently; these directions do not imply a favorable outcome.
+`barSize`, `maxBarSize` (default 24 pixels), and `markProps` customize presentation.
+`shape` receives pixel-valued `CandlestickMarkProps`, the original-row point,
+and native Recharts shape props. `Mark` is separately exported for custom SVG
+composition. Price and volume have separate pane clips, and fixed domains clip
+marks within their own pane. Entrance animation updates one shared SVG clip
+through imperative Motion, preserving a consumer's strict `LazyMotion` boundary.
+Immutable replacements, corrections, prepends, viewport changes and resizing
+interrupt and finish the entrance without replaying historical marks.
+
+`XAxis` and `YAxis` retain native presentation props while the family owns their
+numeric domains and scales. `Grid` and `ReferenceLine` expose native Recharts
+props. Compose `ReferenceLine y={value}` for labelled reference/settlement levels;
+reference annotations do not automatically expand the price domain.
+
+`Volume` requires `seriesKey`, retains native Bar presentation props, and accepts
+`axisProps` for its independent nonnegative Y axis. It uses the same X scale and
+crosshair as price. Missing volume produces no observation; zero remains zero. Volume observations
+come from the validated root records. Separate `data`, `minPointSize`, alternate
+X axes, stacks, and fabricated background bars are excluded from this part's
+contract, so volume cannot silently diverge from its candle or gain a false
+minimum height.
+
+`Overlay` draws caller-computed values from `dataKey`, either an original-row key
+or `(originalRow) => number | null | undefined`. It requires `seriesKey`, accepts
+native Line presentation props, defaults `dot` and animation to false, and never
+computes indicators. Missing values remain gaps. `includeInDomain` defaults to
+false; enable it to include overlay prices in the chosen autoscale scope.
+
+`Crosshair` accepts SVG group props and spans both panes. `Content` renders an
+accessible readout, with optional `children(point, selection)`, `className`, and
+HTML `frameProps`. `Tooltip` uses the same fields/custom renderer while a point
+is inspected or selected, with the shared themed tooltip frame, `role="tooltip"`,
+and `maxWidth` (default 260 pixels). A Tooltip alone announces politely; when
+Content is composed, Tooltip announcements turn off and Content owns the polite
+status announcement. `DataTable` requires a `caption` and retains native table
+props/ref. It shows the full series, explicit gaps, missing values, state and
+selection. Add `renderMetadata(point)` and optional `metadataLabel` (default
+`"Metadata"`) to expose source, interval, currency, adjustment policy, or quality
+from `point.original`.
+
+Focus the chart frame to inspect with Left/Right, Home/End; gap glyphs are skipped.
+Shift with Left/Right pans, plus/minus zoom, and zero resets/fit. Enter/Space
+selects, Escape clears inspection and selection. Pointer hover inspects, tap
+selects, and dragging pans; scrolling a focused plot zooms. Identity-based
+inspection survives replacements, prepends and resizing. Removing an inspected
+identity produces a null readout; the chart frame retains keyboard focus.
+Controlled consumers own the displayed window. If data changes while the supplied
+viewport stays unchanged, the chart proposes an identity-preserving window through
+`onViewportChange` with reason `data`; accepting the callback updates the display.
+If the application changes data and the viewport atomically, the explicitly
+supplied new viewport is honored without a second anchor adjustment.
 
 ## License
 

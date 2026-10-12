@@ -56,6 +56,50 @@ and 269,573 / 83,534 / 70,382 for Sankey. Heatmap adds 428,117 / 134,173 /
 114,036 over the React application baseline. These are substantial application
 costs and should be considered when choosing chart composition and interactions.
 
+## Candlestick candidate measurement
+
+The Candlestick fixture imports only the public `CandlestickChart` root and
+composes explicit X/Y axes, grid, candle marks, aligned volume, crosshair and
+readout. It renders two original illustrative OHLC records. It uses the same
+production/minification/compression method and pinned React/Recharts/Motion
+versions as the other fixtures. Its bytes are measured from the installed
+candidate tarball, not an npm-published family or workspace source alias.
+
+Measured October 12, 2026 with Node 22.16.0 from candidate tarball SHA-256
+`73f25e94e5f98e78a15048f7d5e9f272b48fb4189efa1a980df01623e6002883`.
+This candidate contains new exports absent from published Core 0.5.0. Its
+JavaScript includes the mounted React application, Recharts, Motion and shared
+Kind helpers; it is not a standalone library-only size or a new rendering engine.
+Candles and volume use native Recharts geometry and shared axes, with Motion
+updating the SVG entrance clip.
+
+| Candlestick fixture | raw | gzip | Brotli |
+| --- | ---: | ---: | ---: |
+| JavaScript baseline | 818,547 | 246,182 | 207,355 |
+| JavaScript ceiling | 900,402 | 270,801 | 228,091 |
+| Generated Tailwind CSS baseline | 34,206 | 6,694 | 5,895 |
+| Generated Tailwind CSS ceiling | 37,627 | 7,364 | 6,485 |
+
+The new fixture has 10% headroom for each asset/encoding, rounded upward to the
+next byte. Existing fixtures retain their recorded baselines and JavaScript/CSS
+ceilings, and all twelve measured fixtures fit their budgets. Primitive Kind and
+native JavaScript remain identical. No other fixture retains Candlestick runtime.
+The package-wide Tailwind scan grows by 303 raw / 20 gzip / 13 Brotli bytes versus
+the recorded CSS baseline, within the unchanged existing ceilings. This CSS
+increase also appears in other Kind fixtures because the scan includes the full
+installed package independently of JavaScript tree shaking.
+
+The family gate requires its own implementation and SVG Motion/loading module to
+remain retained, and rejects unrelated chart roots and loading-design groups.
+The measured Candlestick consumer retains its eight family modules (model,
+context, motion, viewport, scales, marks, parts and chart), shared loading
+helpers, and no unrelated loading-design module.
+Candlestick shares the existing chart frame and tooltip helpers while its
+imperative SVG reveal preserves consumer strict LazyMotion boundaries. Every other fixture rejects emitted Candlestick modules.
+This checks that adding the family does not retain its runtime in existing named
+imports. CSS still scans the complete package and therefore has a separate
+package-wide contribution.
+
 ## Generated CSS is a separate contract
 
 | Consumer stylesheet | CSS raw | gzip | Brotli |
@@ -80,11 +124,12 @@ the package.
 ## Regression policy
 
 Each fixture has independent raw, gzip and Brotli ceilings for JavaScript and
-CSS. JavaScript permits 8% growth plus 4 KiB raw or 1 KiB compressed; CSS permits
+CSS. The preexisting fixtures permit 8% JavaScript growth plus 4 KiB raw or 1 KiB compressed; CSS permits
 8% plus 1 KiB raw or 256 bytes compressed. The modest fixed allowances cover
 small build/compression differences while percentage headroom accommodates
 deliberate changes to these measured applications. This is a regression ceiling,
-not a target to consume. A failure identifies the fixture, asset, encoding,
+not a target to consume. The new Candlestick fixture uses the 10% ceilings stated
+above. A failure identifies the fixture, asset, encoding,
 actual bytes and limit; inspect retained modules before proposing a baseline
 change. Update the baseline, ceilings, tool pins and this document together with
 the reason and new tarball evidence. Do not raise a ceiling merely to pass CI.
