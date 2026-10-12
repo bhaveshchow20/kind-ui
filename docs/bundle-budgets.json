@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 1,
+  "compression": {
+    "gzipLevel": 9,
+    "brotliQuality": 11
+  },
+  "tools": {
+    "vite": "8.3.1",
+    "rolldown": "1.2.12",
+    "@tailwindcss/vite": "4.3.3",
+    "@tailwindcss/node": "4.3.3",
+    "@tailwindcss/oxide": "4.3.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-is": "19.3.0",
+    "recharts": "3.10.1",
+    "motion": "13.4.6",
+    "framer-motion": "13.4.6",
+    "motion-dom": "13.4.5",
+    "motion-utils": "13.3.0",
+    "tailwindcss": "4.3.3",
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.6.0"
+  },
+  "fixtures": {
+    "app": {
+      "baseline": {
+        "js": {
+          "raw": 219558,
+          "gzip": 67682,
+          "brotli": 58368
+        },
+        "css": {
+          "raw": 4254,
+          "gzip": 1403,
+          "brotli": 1173
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 241219,
+          "gzip": 74121,
+          "brotli": 64062
+        },
+        "css": {
+          "raw": 5619,
+          "gzip": 1772,
+          "brotli": 1523
+        }
+      }
+    },
+    "primitive-kind": {
+      "baseline": {
+        "js": {
+          "raw": 189605,
+          "gzip": 60459,
+          "brotli": 52241
+        },
+        "css": {
+          "raw": 33903,
+          "gzip": 6674,
+          "brotli": 5882
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 208870,
+          "gzip": 66320,
+          "brotli": 57445
+        },
+        "css": {
+          "raw": 37640,
+          "gzip": 7464,
+          "brotli": 6609
+        }
+      }
+    },
+    "primitive-native": {
+      "baseline": {
+        "js": {
+          "raw": 189605,
+          "gzip": 60459,
+          "brotli": 52241
+        },
+        "css": {
+          "raw": 4254,
+          "gzip": 1403,
+          "brotli": 1173
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 208870,
+          "gzip": 66320,
+          "brotli": 57445
+        },
+        "css": {
+          "raw": 5619,
+          "gzip": 1772,
+          "brotli": 1523
+        }
+      }
+    },
+    "cartesian": {
+      "baseline": {
+        "js": {
+          "raw": 811913,
+          "gzip": 244199,
+          "brotli": 205208
+        },
+        "css": {
+          "raw": 33903,
+          "gzip": 6674,
+          "brotli": 5882
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 880963,
+          "gzip": 264759,
+          "brotli": 222649
+        },
+        "css": {
+          "raw": 37640,
+          "gzip": 7464,
+          "brotli": 6609
+        }
+      }
+    },
+    "line-loading": {
+      "baseline": {
+        "js": {
+          "raw": 811924,
+          "gzip": 244205,
+          "brotli": 205203
+        },
+        "css": {
+          "raw": 33903,
+          "gzip": 6674,
+          "brotli": 5882
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 880974,
+          "gzip": 264766,
+          "brotli": 222644
+        },
+        "css": {
+          "raw": 37640,
+          "gzip": 7464,
+          "brotli": 6609
+        }
+      }
+    },
+    "cartesian-native": {
+      "baseline": {
+        "js": {
+          "raw": 579275,
+          "gzip": 170166,
+          "brotli": 142701
+        },
+        "css": {
+          "raw": 4254,
+          "gzip": 1403,
+          "brotli": 1173
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 629713,
+          "gzip": 184804,
+          "brotli": 155142
+        },
+        "css": {
+          "raw": 5619,
+          "gzip": 1772,
+          "brotli": 1523
+        }
+      }
+    },
+    "polar": {
+      "baseline": {
+        "js": {
+          "raw": 769991,
+          "gzip": 233114,
+          "brotli": 197114
+        },
+        "css": {
+          "raw": 33903,
+          "gzip": 6674,
+          "brotli": 5882
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 835687,
+          "gzip": 252788,
+          "brotli": 213908
+        },
+        "css": {
+          "raw": 37640,
+          "gzip": 7464,
+          "brotli": 6609
+        }
+      }
+    },
+    "polar-native": {
+      "baseline": {
+        "js": {
+          "raw": 558196,
+          "gzip": 163758,
+          "brotli": 137949
+        },
+        "css": {
+          "raw": 4254,
+          "gzip": 1403,
+          "brotli": 1173
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 606948,
+          "gzip": 177883,
+          "brotli": 150009
+        },
+        "css": {
+          "raw": 5619,
+          "gzip": 1772,
+          "brotli": 1523
+        }
+      }
+    },
+    "heatmap": {
+      "baseline": {
+        "js": {
+          "raw": 647675,
+          "gzip": 201855,
+          "brotli": 172404
+        },
+        "css": {
+          "raw": 33903,
+          "gzip": 6674,
+          "brotli": 5882
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 703585,
+          "gzip": 219028,
+          "brotli": 187221
+        },
+        "css": {
+          "raw": 37640,
+          "gzip": 7464,
+          "brotli": 6609
+        }
+      }
+    },
+    "sankey": {
+      "baseline": {
+        "js": {
+          "raw": 720225,
+          "gzip": 223069,
+          "brotli": 188971
+        },
+        "css": {
+          "raw": 33903,
+          "gzip": 6674,
+          "brotli": 5882
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 781939,
+          "gzip": 241939,
+          "brotli": 205113
+        },
+        "css": {
+          "raw": 37640,
+          "gzip": 7464,
+          "brotli": 6609
+        }
+      }
+    },
+    "sankey-native": {
+      "baseline": {
+        "js": {
+          "raw": 450652,
+          "gzip": 139535,
+          "brotli": 118589
+        },
+        "css": {
+          "raw": 4254,
+          "gzip": 1403,
+          "brotli": 1173
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 490801,
+          "gzip": 151722,
+          "brotli": 129101
+        },
+        "css": {
+          "raw": 5619,
+          "gzip": 1772,
+          "brotli": 1523
+        }
+      }
+    }
+  }
+}

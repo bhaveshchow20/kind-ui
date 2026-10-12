@@ -22,6 +22,22 @@ Evaluate reuse before selecting a renderer or adding geometry, state, theming, o
 
 Future wrappers must preserve the relevant DOM props, accessibility attributes, refs, and handlers. Keep consumer ownership of markup, styling, state, and animation where the chosen integration requires it. Test representative host-library combinations when they are introduced.
 
+## Compatibility and production bundle checks
+
+`npm run check` prepares one retained tarball and runs the package, framework and
+browser stages against its checksum. The [compatibility matrix](compatibility.md)
+pins representative minimum and selected stable dependency combinations;
+ordinary npm peer resolution remains an independent install check. Update pins
+deliberately after checking npm metadata and running the affected consumers.
+
+The [bundle record](bundle-measurements.md) covers minimal production consumers,
+compressed JavaScript, generated Tailwind CSS and retained chart modules. Budget
+baselines and ceilings live in `docs/bundle-budgets.json`. Investigate a failure
+before updating a ceiling; compare the same pinned tools, dependency versions and
+fixture compositions. Full-package Tailwind source scanning and JavaScript
+module elimination are separate costs. Generated reports remain in ignored
+`artifacts/` and do not replace the checked baseline record.
+
 ## Scale only as needed
 
 Use npm workspaces and explicit package exports. Add packages only for genuinely independent responsibilities. Do not invent a universal core, plugin framework, multiple adapters, or a custom builder in anticipation of hypothetical features.

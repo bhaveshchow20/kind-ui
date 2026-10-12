@@ -35,13 +35,13 @@ test("Tailwind v4 utilities override Kind defaults and named Lucide icons use th
 
 test("Next App Router package client boundary hydrates serializable server props and client callbacks/icons", async ({
   page,
-}) => {
+}, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
-  await page.goto("http://127.0.0.1:6901");
+  await page.goto(String(testInfo.project.metadata.nextURL));
   await expect(page.getByRole("application", { name: "Server boundary totals" })).toBeVisible();
   const chart = page.getByRole("application", { name: "Monthly icon totals" });
   await expect(chart).toBeVisible();
@@ -56,17 +56,17 @@ test("Next App Router package client boundary hydrates serializable server props
 
 test("Next pattern resources hydrate from responsive shells and native bars stay scoped", async ({
   page,
-}) => {
+}, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
-  const response = await page.request.get("http://127.0.0.1:6901");
+  const response = await page.request.get(String(testInfo.project.metadata.nextURL));
   const html = await response.text();
   const serverIds = [...html.matchAll(/<pattern id="([^"]+)"/g)].map((match) => match[1]);
   expect(serverIds).toHaveLength(0);
-  await page.goto("http://127.0.0.1:6901");
+  await page.goto(String(testInfo.project.metadata.nextURL));
   const proof = page.locator("[data-pattern-hydration]");
   const swatches = proof.locator("[data-fill-pattern] pattern");
   await expect(swatches).toHaveCount(6);
@@ -97,20 +97,20 @@ test("Next pattern resources hydrate from responsive shells and native bars stay
 
 test("Next color resources retain server IDs through hydration and theme changes", async ({
   page,
-}) => {
+}, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
-  const response = await page.request.get("http://127.0.0.1:6901");
+  const response = await page.request.get(String(testInfo.project.metadata.nextURL));
   const html = await response.text();
   const serverIds = [...html.matchAll(/<linearGradient[^>]*id="(kind-ui-color-[^"]+)"/g)].map(
     (match) => match[1],
   );
   expect(serverIds).toHaveLength(2);
   expect(new Set(serverIds).size).toBe(2);
-  await page.goto("http://127.0.0.1:6901");
+  await page.goto(String(testInfo.project.metadata.nextURL));
   const proof = page.locator("[data-color-hydration]");
   const resources = proof.locator('[data-kind-ui="color-resources"] linearGradient');
   await expect(resources).toHaveCount(2);
@@ -133,8 +133,8 @@ test("Next color resources retain server IDs through hydration and theme changes
 for (const host of ["vite", "next"] as const) {
   test(`${host}: semantic themes inherit, locally scoped themes apply and utility/inline overrides remain predictable`, async ({
     page,
-  }) => {
-    await page.goto(host === "next" ? "http://127.0.0.1:6901" : "/");
+  }, testInfo) => {
+    await page.goto(host === "next" ? String(testInfo.project.metadata.nextURL) : "/");
     const proof = page.locator("[data-theme-proof]");
     const semantic = proof.locator('[data-theme-case="semantic"]');
     const tokens = proof.locator('[data-theme-case="tokens"]');
