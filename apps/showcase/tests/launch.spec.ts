@@ -143,7 +143,7 @@ test("animated tooltip final digits fit their value container", async ({ page })
     .toBe(true);
 });
 
-for (const width of [375, 1280]) {
+for (const width of [320, 375, 1280]) {
   test(`package manager tabs copy their commands at ${width}px`, async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.setViewportSize({ width, height: 900 });
@@ -152,7 +152,7 @@ for (const width of [375, 1280]) {
     for (const manager of ["npm", "pnpm", "yarn", "bun"]) {
       const command = `${manager} ${manager === "npm" ? "install" : "add"} @kind-ui/charts`;
       await install.getByRole("tab", { name: manager, exact: true }).click();
-      await expect(install.getByRole("tabpanel")).toContainText(command);
+      await expect(install.locator(".install-panel-content")).toContainText(command);
       await install.getByRole("button", { name: "Copy install command", exact: true }).click();
       await expect(install.getByRole("button", { name: "Install command copied" })).toBeVisible();
       expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(command);
@@ -166,6 +166,18 @@ for (const width of [375, 1280]) {
       "true",
     );
     await page.keyboard.press("End");
+    await expect(install.getByRole("tab", { name: "shadcn", exact: true })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    const command = "npx shadcn@latest add @kind-ui/line-chart";
+    await expect(install.locator(".install-panel-content")).toContainText(command);
+    await expect(install.getByRole("tab")).toHaveCount(5);
+    await expect(install.getByRole("tab", { name: /^(Core|CLI)$/ })).toHaveCount(0);
+    await install.getByRole("button", { name: "Copy install command", exact: true }).click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(command);
+    await install.getByRole("tab", { name: "shadcn", exact: true }).focus();
+    await page.keyboard.press("ArrowLeft");
     await expect(install.getByRole("tab", { name: "bun", exact: true })).toHaveAttribute(
       "aria-selected",
       "true",
@@ -239,5 +251,91 @@ for (const width of [375, 1280]) {
         );
       expect(overflowing, `${family} legend containment`).toBe(0);
     }
+  });
+}
+
+for (const reducedMotion of ["reduce", "no-preference"] as const) {
+  test(`shadcn chart name cycles, pauses and copies its selection (${reducedMotion})`, async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.emulateMedia({ reducedMotion });
+    await page.setViewportSize({ width: 375, height: 900 });
+    await page.clock.install();
+    await page.goto("./", { waitUntil: "networkidle" });
+    const install = page.getByRole("region", { name: "Install Kind UI Charts" });
+    await install.getByRole("tab", { name: "shadcn", exact: true }).click();
+    const name = install.getByRole("button", { name: /^Switch chart type:/ });
+    const copy = install.getByRole("button", { name: "Copy install command", exact: true });
+    await expect(name).toHaveText("line-chart");
+    await expect(install.getByRole("slider")).toHaveCount(0);
+    await expect(install.getByRole("button", { name: /^(Previous|Next) chart type$/ })).toHaveCount(
+      0,
+    );
+    await page.clock.fastForward(2600);
+    const current = reducedMotion === "reduce" ? "line-chart" : "area-chart";
+    await expect(name).toHaveAccessibleName(`Switch chart type: ${current}`);
+    await name.hover();
+    await page.clock.fastForward(8000);
+    await expect(name).toHaveAccessibleName(`Switch chart type: ${current}`);
+    await name.click();
+    const next = reducedMotion === "reduce" ? "area-chart" : "bar-chart";
+    await expect(name).toHaveAccessibleName(`Switch chart type: ${next}`);
+    await page.mouse.move(0, 0);
+    await page.clock.fastForward(2600);
+    const resumed = reducedMotion === "reduce" ? "area-chart" : "box-plot-chart";
+    await expect(name).toHaveAccessibleName(`Switch chart type: ${resumed}`);
+    await copy.focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    await expect(name).toBeFocused();
+    await page.clock.fastForward(8000);
+    await expect(name).toHaveAccessibleName(`Switch chart type: ${resumed}`);
+    await copy.focus();
+    await page.clock.fastForward(8000);
+    await expect(name).toHaveAccessibleName(`Switch chart type: ${resumed}`);
+    await install.getByRole("tab", { name: "shadcn", exact: true }).focus();
+    await copy.hover();
+    await page.clock.fastForward(8000);
+    await expect(name).toHaveAccessibleName(`Switch chart type: ${resumed}`);
+    await copy.click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      `npx shadcn@latest add @kind-ui/${resumed}`,
+    );
+    await install.getByRole("tab", { name: "shadcn", exact: true }).focus();
+    await page.mouse.move(0, 0);
+    await page.clock.fastForward(2600);
+    await expect(name).toHaveAccessibleName(
+      `Switch chart type: ${reducedMotion === "reduce" ? "area-chart" : "combo-chart"}`,
+    );
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      375,
+    );
+  });
+}
+
+for (const width of [320, 548, 1280]) {
+  test(`install panel grows for chart names without wrapping at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("./", { waitUntil: "networkidle" });
+    const install = page.getByRole("region", { name: "Install Kind UI Charts" });
+    await install.getByRole("tab", { name: "shadcn", exact: true }).click();
+    const name = install.getByRole("button", { name: /^Switch chart type:/ });
+    const initial = await install.boundingBox();
+    for (let i = 0; i < 6; i++) await name.click();
+    await expect(name).toHaveAccessibleName("Switch chart type: histogram-chart");
+    const expanded = await install.boundingBox();
+    if (!initial || !expanded) throw new Error("Missing install panel bounds");
+    if (width > 380) expect(expanded.width).toBeGreaterThan(initial.width);
+    expect(expanded.x).toBeGreaterThanOrEqual(0);
+    expect(expanded.x + expanded.width).toBeLessThanOrEqual(width);
+    const prefix = await install.locator(".install-tool").boundingBox();
+    const suffix = await name.boundingBox();
+    expect(Math.abs((prefix?.y ?? 0) - (suffix?.y ?? 100))).toBeLessThan(3);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width,
+    );
   });
 }

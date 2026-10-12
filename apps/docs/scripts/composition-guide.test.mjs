@@ -6,15 +6,19 @@ import test from "node:test";
 
 const root = resolve(import.meta.dirname, "../../..");
 const guide = await readFile(join(root, "apps/docs/content/docs/installation.mdx"), "utf8");
-test("Installation contains only dependency, package, and Tailwind setup steps", () => {
+test("Installation keeps Core, Tailwind and CLI setup concise", () => {
   assert.deepEqual(
     [...guide.matchAll(/^### (.+)$/gm)].map((match) => match[1]),
-    ["Install Motion and Recharts", "Install the package", "Configure Tailwind CSS v4"],
+    ["Install the package", "Configure Tailwind CSS v4", "Add a chart"],
   );
-  assert.match(guide, /npm install motion recharts/);
+  assert.match(guide, /npm install @kind-ui\/charts motion recharts/);
+  assert.match(guide, /npx shadcn@latest add @kind-ui\/line-chart/);
   assert.match(guide, /npm install @kind-ui\/charts/);
   assert.match(guide, /@source "\.\.\/node_modules\/@kind-ui\/charts\/dist"/);
-  assert.match(guide, /`\.\.\/\.\.\/node_modules\/\.\.\.` from `src\/app\/globals\.css`/);
+  assert.match(
+    guide,
+    /`\.\.\/\.\.\/node_modules\/@kind-ui\/charts\/dist` from `src\/app\/globals\.css`/,
+  );
   assert.doesNotMatch(
     guide,
     /ChartExample|Build your first chart|MonthlyVisitorsChart|Use your own data|## Composition/,

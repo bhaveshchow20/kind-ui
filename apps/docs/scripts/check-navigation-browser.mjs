@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { canonicalDocURL } from "../../indexing.mjs";
 import { publicPath } from "../lib/routing.mjs";
@@ -127,6 +128,48 @@ try {
     assert.equal((await page.goto(`${origin}${publicPath(legacy)}`)).status(), 200);
     await page.waitForURL(`**${publicPath(destination)}`);
     assert.equal(await page.locator("h1").innerText(), "Installation");
+  }
+  for (const { family, id, name } of [
+    { family: "line", id: "line", name: "line-chart" },
+    { family: "radial", id: "radial-activity", name: "activity-rings" },
+  ]) {
+    await page.goto(`${origin}${publicPath(`/docs/components/${family}/`)}`);
+    const installation = page.locator(`[data-chart-installation="${id}"]`);
+    const chart = page.locator(".chart-example").first();
+    await chart.locator("svg").first().waitFor();
+    const before = await chart.boundingBox();
+    const source = readFileSync(new URL(`../examples/${id}/example.tsx`, import.meta.url), "utf8");
+    assert.ok((await installation.innerText()).includes(`npx shadcn@latest add @kind-ui/${name}`));
+    const cli = installation.getByRole("tab", { name: "CLI", exact: true });
+    await cli.focus();
+    await page.keyboard.press("ArrowRight");
+    await installation
+      .locator('[role="tab"][aria-selected="true"]')
+      .filter({ hasText: /^Manual$/ })
+      .waitFor();
+    assert.equal(
+      await installation
+        .getByRole("tab", { name: "Manual", exact: true })
+        .getAttribute("aria-selected"),
+      "true",
+    );
+    assert.ok((await installation.innerText()).includes(`components/${name}.tsx`));
+    assert.ok(
+      (await installation.locator("pre").allTextContents()).some(
+        (code) => code.trimEnd() === source.trimEnd(),
+      ),
+    );
+    const after = await chart.boundingBox();
+    assert.equal(after?.width, before?.width);
+    assert.equal(after?.height, before?.height);
+    await installation.getByRole("tab", { name: "Manual", exact: true }).focus();
+    await page.keyboard.press("ArrowLeft");
+    await installation
+      .locator('[role="tab"][aria-selected="true"]')
+      .filter({ hasText: /^CLI$/ })
+      .waitFor();
+    assert.equal(await cli.getAttribute("aria-selected"), "true");
+    assert.ok(!(await installation.innerText()).includes("Create the composition"));
   }
   assert.deepEqual(errors, []);
   console.log(

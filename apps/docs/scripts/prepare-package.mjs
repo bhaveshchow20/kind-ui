@@ -9,22 +9,23 @@ import {
   packageIdentitySchema,
   parseJson,
 } from "../../../scripts/tooling-schemas.mjs";
-import { readValidatedArtifact, sourcePaths } from "./validated-artifact.mjs";
+import { readLocalCandidate, readValidatedArtifact, sourcePaths } from "./validated-artifact.mjs";
 
 const root = path.resolve("../..");
 const release = process.env.KIND_DOCS_RELEASE_VERSION;
 const args = process.argv.slice(2);
 const reuse = args.includes("--reuse-validated");
+const candidate = args.includes("--use-local-candidate");
 const retainedIndex = args.indexOf("--validated-dir");
 const retained = retainedIndex < 0 ? undefined : args[retainedIndex + 1];
 if (retainedIndex >= 0 && (!retained || !path.isAbsolute(retained)))
   throw new Error("--validated-dir requires an absolute retained package-artifact directory");
-if ((retained && (reuse || release)) || (release && reuse))
+if ([Boolean(retained), Boolean(release), reuse, candidate].filter(Boolean).length > 1)
   throw new Error("Choose one of registry, reuse, or retained-artifact preparation");
 if (
   args.some(
     (arg, index) =>
-      !["--reuse-validated", "--validated-dir"].includes(arg) &&
+      !["--reuse-validated", "--validated-dir", "--use-local-candidate"].includes(arg) &&
       !(retainedIndex >= 0 && index === retainedIndex + 1),
   )
 )
@@ -70,9 +71,13 @@ if (release) {
   if (packed.filename !== path.basename(canonical))
     renameSync(`vendor/${packed.filename}`, canonical);
 } else {
-  if (!reuse && !retained)
+  if (!reuse && !retained && !candidate)
     execFileSync("npm", ["run", "pack:artifact"], { cwd: root, stdio: "inherit" });
-  const checked = retained ? readValidatedArtifact(root, retained, packageManifest) : undefined;
+  const checked = retained
+    ? readValidatedArtifact(root, retained, packageManifest)
+    : candidate
+      ? readLocalCandidate(root, path.join(root, "artifacts/package"), packageManifest)
+      : undefined;
   const metadata =
     checked?.metadata ??
     artifactReceiptSchema.parse(
@@ -82,9 +87,14 @@ if (release) {
   const actual = createHash("sha256").update(readFileSync(artifact)).digest("hex");
   if (actual !== metadata.sha256)
     throw new Error("Validated package artifact checksum differs from its metadata");
+  if (
+    `sha512-${createHash("sha512").update(readFileSync(artifact)).digest("base64")}` !==
+    metadata.integrity
+  )
+    throw new Error("Validated package artifact integrity differs from its metadata");
   if (checked) {
     commit = metadata.source.checkoutCommit;
-    validation = { ...metadata.workflow, tools: metadata.tools };
+    if (retained) validation = { ...metadata.workflow, tools: metadata.tools };
   }
   if (reuse) {
     const previous = docsProvenanceSchema.parse(

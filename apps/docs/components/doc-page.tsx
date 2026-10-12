@@ -12,6 +12,7 @@ import { componentBundleFor, componentBundlesSchema } from "@/lib/component-bund
 import { docRoute, publicPath } from "@/lib/routing.mjs";
 import { source } from "@/lib/source";
 import { ApiTable } from "./api-table";
+import { ChartInstallation } from "./chart-installation";
 import { type ComponentId, ComponentPlayground } from "./component-playground";
 import { CopyMarkdown } from "./copy-markdown";
 import { MobileDocsNavigation } from "./glass-docs-layout";
@@ -108,6 +109,7 @@ export function renderDoc(slug?: string[]) {
               ChartExample: LineExample,
               AreaExample: LineExample,
               ApiTable,
+              ChartInstallation,
               Callout,
               Steps,
               Step,

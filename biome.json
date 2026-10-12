@@ -10,6 +10,8 @@
       "!**/.next",
       "!**/playwright-report",
       "!**/test-results",
+      "!apps/showcase/public/charts/docs",
+      "!apps/showcase/public/r",
       "!.agents/skills/composition-patterns",
       "!.agents/skills/react-best-practices",
       "!.agents/skills/codebase-design",

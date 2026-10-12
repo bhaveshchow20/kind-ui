@@ -8,3 +8,7 @@ test-results/
 # Locally supplied Timeless fonts prohibit public repository distribution.
 /public/fonts/timeless-*.woff2
 /public/fonts/Timeless-*
+
+# Generated assets for the existing domain-root host.
+/public/r/
+/public/charts/docs/

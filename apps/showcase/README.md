@@ -42,3 +42,30 @@ KIND_UI_DEPLOYMENT_ENV=production NEXT_PUBLIC_SHOWCASE_BASE_PATH=/charts NEXT_PU
 ```
 
 Docs is a separate app mounted at `/charts/docs`; navigation destinations live in `lib/site-links.ts`. See [production indexing](../../docs/production-indexing.md) for canonical metadata, preview protection, root robots, sitemaps and hosting verification. Building or testing locally does not deploy either app.
+
+## Domain-root hosting preparation
+
+The existing homepage can host the generated registry at
+[https://kindui.dev/r/](https://kindui.dev/r/) and the Docs export at
+[https://kindui.dev/charts/docs/](https://kindui.dev/charts/docs/). First build Docs
+with `KIND_UI_DEPLOYMENT_ENV=production`,
+`NEXT_PUBLIC_KIND_DOCS_BASE_PATH=/charts/docs`, and
+`KIND_DOCS_ORIGIN=https://kindui.dev`. Then, from the repository root:
+
+```sh
+npm run build:registry
+node apps/showcase/scripts/prepare-hosting.mjs
+KIND_UI_DOMAIN_ROOT=1 KIND_UI_DEPLOYMENT_ENV=production NEXT_PUBLIC_SHOWCASE_BASE_PATH=/charts NEXT_PUBLIC_DOCS_URL=/charts/docs/ npm --prefix apps/showcase run build
+```
+
+This keeps the homepage at `/charts`, stages JSON directly at `/r`, and
+maps exported Docs pages to their existing paths. Assets are generated outputs;
+edit their catalog or documentation sources, then prepare again. The command
+only prepares local hosting source; the deployment owner must build and deploy
+that prepared source through the existing hosting integration.
+
+After this build, verify the combined host with:
+
+```sh
+KIND_UI_DOMAIN_ROOT=1 KIND_UI_DEPLOYMENT_ENV=production NEXT_PUBLIC_SHOWCASE_BASE_PATH=/charts NEXT_PUBLIC_DOCS_URL=/charts/docs/ npm run test:browser -- tests/registry-hosting.spec.ts --project=chromium
+```
