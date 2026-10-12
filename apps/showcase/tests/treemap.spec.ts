@@ -153,7 +153,7 @@ test("treemap controls and clipboard code retain caller data and source parity",
   await dialog.getByRole("tab", { name: "Code", exact: true }).click();
   const code = dialog.getByRole("region", { name: "Chart example code" });
   await expect(code).toContainText("TreemapChart<Row>");
-  await expect(code).toContainText("0.5.0 does not include it");
+  await expect(code).not.toContainText("0.5.0 does not include it");
   await expect(code).toContainText("signedPosition");
   await expect(code).toContainText("Missing supplied area for");
   await expect(code).not.toContainText("<TreemapChart.Labels");

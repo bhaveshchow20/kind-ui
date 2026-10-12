@@ -370,6 +370,12 @@ try {
         hostImports.push(
           `import { ${exportName} } from "${alias}/${components.replace(/^src\//, "")}/${name}";`,
         );
+        if (name === "treemap-chart") {
+          renders.push(
+            `{name:"${name}",render:(loading:boolean)=><${exportName} loading={loading}/>} `,
+          );
+          continue;
+        }
         const prop = name === "pie-chart" ? "shape" : name === "radial-chart" ? "labels" : "state";
         const ready = name === "pie-chart" ? "pie" : name === "radial-chart" ? "visible" : "ready";
         renders.push(

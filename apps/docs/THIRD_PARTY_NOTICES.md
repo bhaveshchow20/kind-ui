@@ -4,7 +4,7 @@ Original docs source and adaptations of Kind UI examples use this repository's M
 
 | Dependency | Pinned version | License |
 | --- | --- | --- |
-| @kind-ui/charts | 0.5.0, reviewed 56ad64f candidate artifact | MIT |
+| @kind-ui/charts | 0.5.0, reviewed 7cac08c candidate artifact | MIT |
 | Fumadocs core and UI | 16.15.18 | MIT |
 | Fumadocs MDX | 15.4.6 | MIT |
 | Fumadocs TypeScript generator | 5.4.1 | MIT |
@@ -31,4 +31,4 @@ Tabs and Button are adapted from the official shadcn/ui registry, with its compl
 
 Authoritative dependency sources: [Fumadocs](https://github.com/fuma-nama/fumadocs), [Next.js](https://github.com/vercel/next.js), [React](https://github.com/facebook/react), [Recharts](https://github.com/recharts/recharts), [Motion](https://github.com/motiondivision/motion), [fflate](https://github.com/101arrowz/fflate), [Tailwind](https://github.com/tailwindlabs/tailwindcss), [TypeScript](https://github.com/microsoft/TypeScript), [Fontsource](https://github.com/fontsource/font-files).
 
-Treemap layout uses the narrow d3-hierarchy dependency; its installed package retains the ISC license. Kind UI owns its HTML rendering and interactions. The Treemap examples use a checksum-verified candidate archive from Core commit `56ad64f`; published Charts 0.5.0 does not provide these exports. These original examples and their synthetic data do not copy reference-site implementation or assets.
+Treemap layout uses the narrow d3-hierarchy dependency; its installed package retains the ISC license. Kind UI owns its HTML rendering and interactions. The Treemap examples use a checksum-verified candidate archive from Core commit `7cac08c`. These original examples and their synthetic data do not copy reference-site implementation or assets.
