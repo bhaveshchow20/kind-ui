@@ -251,7 +251,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     (viewport.from !== previousControlledRange.current.from ||
       viewport.to !== previousControlledRange.current.to);
   const reconciled =
-    controlledRangeChanged && viewport
+    viewport && (controlledRangeChanged || previous.current.length === 0)
       ? normalizeCandlestickViewport(viewport, points.length)
       : reconcileCandlestickViewport(previous.current, points, viewport ?? localRange, {
           followLatest,

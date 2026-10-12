@@ -417,3 +417,13 @@ test("loading blocks stale keyboard defaults and each explicit completion rearms
   await expect.poll(fraction).toBeGreaterThan(0);
   await expect.poll(fraction).toBeLessThan(0.7);
 });
+
+test("an explicit controlled window survives initial empty data while observations load", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?initial-empty`);
+  await expect(page.getByLabel("Window")).toHaveText("0.5,3.5");
+  await page.getByRole("button", { name: "Load observations" }).click();
+  await expect(page.locator(marks)).toHaveCount(4);
+  await expect(page.getByLabel("Window")).toHaveText("0.5,3.5");
+});

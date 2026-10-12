@@ -34,13 +34,19 @@ const initial: Row[] = [
   },
 ];
 export function CandlestickHost() {
-  const [rows, setRows] = useState(initial);
+  const [rows, setRows] = useState<Row[]>(
+    new URLSearchParams(location.search).has("initial-empty") ? [] : initial,
+  );
   const [spacing, setSpacing] = useState<CandlestickSpacing>("ordinal");
   const [small, setSmall] = useState(false);
   const [loading, setLoading] = useState(false);
   const [bounded, setBounded] = useState(false);
   const [follow, setFollow] = useState(false);
-  const [viewport, setViewport] = useState<CandlestickViewport>({ from: -0.5, to: 4.5 });
+  const [viewport, setViewport] = useState<CandlestickViewport>(
+    new URLSearchParams(location.search).has("initial-empty")
+      ? { from: 0.5, to: 3.5 }
+      : { from: -0.5, to: 4.5 },
+  );
   const [selected, setSelected] = useState<CandlestickTime | null>(null);
   const [reason, setReason] = useState("initial");
   const [logarithmic, setLogarithmic] = useState(false);
@@ -175,6 +181,9 @@ export function CandlestickHost() {
         Atomic prepend
       </button>
       <output aria-label="Observation count">{rows.length}</output>
+      <button type="button" onClick={() => setRows(initial)}>
+        Load observations
+      </button>
       <button type="button" onClick={() => setRows([])}>
         Empty
       </button>
