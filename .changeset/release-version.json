@@ -1,6 +1,10 @@
 {
   "package": "@kind-ui/charts",
-  "version": "0.4.0",
-  "previousVersion": "0.3.0",
-  "changesets": ["focus-preserves-chart-data", "quiet-digits-fit", "search-discovery"]
+  "version": "0.5.0",
+  "previousVersion": "0.4.0",
+  "changesets": [
+    "charts-tailwind-theme",
+    "compound-chart-composition",
+    "quiet-chart-boundaries"
+  ]
 }

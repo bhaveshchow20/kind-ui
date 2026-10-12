@@ -1,5 +1,22 @@
 # @kind-ui/charts
 
+## 0.5.0
+
+### Minor Changes
+
+- 6bf2e99: Require Tailwind v4 source registration and replace the standalone stylesheet with component utilities. Use host semantic theme variables and standard clsx/tailwind-merge class composition. Remove chart-specific styling aliases; use className, style, or locally scoped host variables to customize presentation.
+- 91c8269: Replace separate chart providers and configured recipes with one explicit compound API across every chart family. Chart components own their metadata, sizing and shared behavior; child parts determine what renders. Remove public Root/RootProps and configured/composed alternatives. This is a breaking change in the pre-1.0 API. Retain family-specific data and geometry contracts, controlled state, native customization and reduced-motion behavior.
+  
+  While loading, show only the plot placeholder. Hide chart-owned legends and content until data is ready, preserving their state across loading interruptions.
+  
+  Keep explicit activity ring labels in sync with controlled visibility while retaining their native label content and geometry.
+  
+  Preserve category emphasis by data identity across native mark remounts and reordering, and clear it on removal or actual pointer exit.
+
+### Patch Changes
+
+- 1889a2a: Validate malformed containers and sparse records at the existing waterfall, histogram, heatmap, Sankey and BoxPlot data boundaries. Report item and field paths for invalid inputs while preserving numeric, missing-value and consumer-owned geometry contracts. BoxPlot extent calculation reports an actionable error for a missing summary, while summary validation continues to treat null and undefined as missing.
+
 ## 0.4.0
 
 ### Minor Changes
