@@ -55,7 +55,7 @@ Browse 14 documented chart families, with complete examples and code in the docu
 | Use case | Chart guides |
 | --- | --- |
 | Trends and comparisons | [Line](https://kindui.dev/charts/docs/components/line/) · [Area](https://kindui.dev/charts/docs/components/area/) · [Bar](https://kindui.dev/charts/docs/components/bar/) · [Combo](https://kindui.dev/charts/docs/components/combo/) |
-| Price intervals | [Candlestick](https://kindui.dev/charts/docs/components/candlestick/) — source candidate; public installation requires Core 0.6.0 or later. |
+| Price intervals | [Candlestick](https://kindui.dev/charts/docs/components/candlestick/) |
 | Parts and progress | [Pie / Donut](https://kindui.dev/charts/docs/components/pie/) · [Radar](https://kindui.dev/charts/docs/components/radar/) · [Radial / Activity rings](https://kindui.dev/charts/docs/components/radial/) |
 | Relationships and distributions | [Scatter / Bubble](https://kindui.dev/charts/docs/components/scatter/) · [Heatmap](https://kindui.dev/charts/docs/components/heatmap/) · [Histogram](https://kindui.dev/charts/docs/components/histogram/) · [Box plot](https://kindui.dev/charts/docs/components/box-plot/) |
 | Flow and change | [Sankey](https://kindui.dev/charts/docs/components/sankey/) · [Waterfall](https://kindui.dev/charts/docs/components/waterfall/) |
