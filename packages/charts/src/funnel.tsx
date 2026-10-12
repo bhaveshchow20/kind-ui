@@ -5,6 +5,7 @@ import {
   type ComponentPropsWithRef,
   type ComponentType,
   createContext,
+  memo,
   type ReactNode,
   use,
   useCallback,
@@ -126,6 +127,7 @@ type Context<T> = {
   tooltipId: string;
   tooltipMounted: boolean;
   setTooltipMounted: (value: boolean) => void;
+  restoredFocus: React.RefObject<string | null>;
 };
 const FunnelContext = createContext<Context<unknown> | null>(null);
 function useFunnel<T>() {
@@ -262,6 +264,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
   const instructionsId = useId();
   const loadingSeed = useLoadingSeed(loading);
   const [tooltipMounted, setTooltipMounted] = useState(false);
+  const restoredFocus = useRef<string | null>(null);
   const chartProps = native as ComponentPropsWithRef<typeof NativeFunnelChart>;
   const context: Context<T> = {
     model,
@@ -279,6 +282,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
     tooltipId,
     tooltipMounted,
     setTooltipMounted,
+    restoredFocus,
   };
   return (
     <FamilyRoot
@@ -301,7 +305,6 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
           {...chartProps}
           {...familyFrame(chartProps)}
           responsive={chartProps.responsive ?? true}
-          data={model.stages}
           accessibilityLayer={false}
           aria-describedby={cn(props["aria-describedby"], instructionsId)}
           className={cn(familyFrame(chartProps).className, "kind-ui-funnel-chart")}
@@ -374,49 +377,60 @@ export type FunnelStagesProps<T = FunnelDatum> = {
   Shape?: ComponentType<FunnelShapeProps<T>>;
   stageProps?: (stage: FunnelStage<T>) => ComponentPropsWithRef<"g">;
 };
-/** Explicit marks; unknown and zero stages retain independent inspection hit targets. */
-export function FunnelStages<T = FunnelDatum>({
-  geometry = "rectangle",
-  Shape,
-  stageProps,
-}: FunnelStagesProps<T>) {
-  const context = useFunnel<T>();
-  if (geometry !== "rectangle" && geometry !== "trapezoid")
-    throw new Error("FunnelStages geometry must be rectangle or trapezoid");
+const FunnelStageOptions = createContext<FunnelStagesProps<unknown> | null>(null);
+type NativeStageData = { id: string; index: number; value: number };
+const nativeStageShape = (native: FunnelTrapezoidItem) => <FunnelStageMark native={native} />;
+
+// Native Funnel keys its marks by its computed array even with animation disabled.
+// Keep that renderer stable while inspection and consumer handlers update through context.
+const FunnelNativeStages = memo(function FunnelNativeStages({
+  stages,
+  loading,
+}: {
+  stages: readonly NativeStageData[];
+  loading: boolean;
+}) {
   return (
     <SeriesPaintBoundary>
       <SeriesColorDefinitions />
       <NativeFunnel
-        data={context.model.stages}
-        dataKey={(stage: FunnelStage<T>) => stage.value ?? 0}
-        nameKey="label"
+        data={stages}
+        dataKey="value"
+        nameKey="id"
         isAnimationActive={false}
         lastShapeType="rectangle"
         activeShape={false}
-        hide={context.loading}
-        shape={(native: FunnelTrapezoidItem) => (
-          <FunnelStageMark<T>
-            native={native}
-            mode={geometry}
-            {...(Shape ? { Shape } : {})}
-            {...(stageProps ? { stageProps } : {})}
-          />
-        )}
+        hide={loading}
+        shape={nativeStageShape}
       />
     </SeriesPaintBoundary>
   );
+});
+
+/** Explicit marks; unknown and zero stages retain independent inspection hit targets. */
+export function FunnelStages<T = FunnelDatum>(props: FunnelStagesProps<T>) {
+  const context = useFunnel<T>();
+  const encoded = JSON.stringify(
+    context.model.stages.map((stage) => ({
+      id: stage.id,
+      index: stage.index,
+      value: stage.value ?? 0,
+    })),
+  );
+  const nativeStages = useMemo(() => JSON.parse(encoded) as NativeStageData[], [encoded]);
+  const geometry = props.geometry ?? "rectangle";
+  if (geometry !== "rectangle" && geometry !== "trapezoid")
+    throw new Error("FunnelStages geometry must be rectangle or trapezoid");
+  return (
+    <FunnelStageOptions value={props as FunnelStagesProps<unknown>}>
+      <FunnelNativeStages stages={nativeStages} loading={context.loading} />
+    </FunnelStageOptions>
+  );
 }
-function FunnelStageMark<T>({
-  native,
-  mode,
-  Shape,
-  stageProps,
-}: {
-  native: FunnelTrapezoidItem;
-  mode: "rectangle" | "trapezoid";
-  Shape?: ComponentType<FunnelShapeProps<T>>;
-  stageProps?: (stage: FunnelStage<T>) => ComponentPropsWithRef<"g">;
-}) {
+function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
+  const options = use(FunnelStageOptions) as FunnelStagesProps<T> | null;
+  if (!options) throw new Error("Funnel stage requires FunnelChart.Stages");
+  const { geometry: mode = "rectangle", Shape, stageProps } = options;
   const context = useFunnel<T>();
   const interaction = useChartInteraction();
   const { paints } = useChart();
@@ -521,7 +535,14 @@ function FunnelStageMark<T>({
         if (props.ref && typeof props.ref !== "function") props.ref.current = node;
         if (node)
           return () => {
+            const restoring = node === document.activeElement;
+            if (restoring) context.restoredFocus.current = stage.id;
             focusRef(null);
+            if (restoring)
+              queueMicrotask(() => {
+                if (context.restoredFocus.current === stage.id)
+                  context.restoredFocus.current = null;
+              });
             if (typeof cleanup === "function") cleanup();
             else if (typeof props.ref === "function") props.ref(null);
             else if (props.ref) props.ref.current = null;
@@ -545,7 +566,8 @@ function FunnelStageMark<T>({
       }}
       onFocus={(event) => {
         props.onFocus?.(event);
-        if (!event.defaultPrevented) context.inspect(stage.id);
+        if (!event.defaultPrevented && context.restoredFocus.current !== stage.id)
+          context.inspect(stage.id);
       }}
       onClick={(event) => {
         props.onClick?.(event);
@@ -584,9 +606,12 @@ function FunnelStageMark<T>({
           const target = context.model.stages[targetIndex];
           if (!target) return;
           const svg = event.currentTarget.ownerSVGElement;
-          Array.from(svg?.querySelectorAll<SVGGElement>('[data-kind-ui="funnel-stage"]') ?? [])
-            .find((node) => node.dataset.stageId === target.id)
-            ?.focus();
+          const node = Array.from(
+            svg?.querySelectorAll<SVGGElement>('[data-kind-ui="funnel-stage"]') ?? [],
+          ).find((node) => node.dataset.stageId === target.id);
+          // Focus emits no event at a clamped endpoint or Home on the current stage.
+          if (node === document.activeElement) context.inspect(target.id);
+          else node?.focus();
         }
       }}
     >

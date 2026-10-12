@@ -49,13 +49,32 @@ for (const horizontal of [false, true]) {
     await expect(chart.getByRole("table")).toContainText("Unknown");
     await expect(chart.getByRole("table")).toContainText("50%");
     await expect(chart.getByRole("table")).toContainText("75%");
-    await page.getByRole("button", { name: "Resize", exact: true }).click();
-    const resized = await polygonArea(
-      stage(chart, "review").locator('[data-kind-ui="funnel-mark"]'),
-    );
-    const resizedBase = await polygonArea(
+    const originalArea = await polygonArea(
       stage(chart, "entry").locator('[data-kind-ui="funnel-mark"]'),
     );
+    await page.getByRole("button", { name: "Resize", exact: true }).click();
+    await expect
+      .poll(() => polygonArea(stage(chart, "entry").locator('[data-kind-ui="funnel-mark"]')))
+      .toBeLessThan(originalArea);
+    // Read paired geometry in one browser turn after the native resize has committed.
+    const resizedAreas = await marks.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const pairs = (node.getAttribute("points") ?? "")
+          .trim()
+          .split(/\s+/)
+          .map((pair) => pair.split(",").map(Number));
+        return (
+          Math.abs(
+            pairs.reduce((sum, point, index) => {
+              const next = pairs[(index + 1) % pairs.length];
+              return sum + (point[0] ?? 0) * (next?.[1] ?? 0) - (next?.[0] ?? 0) * (point[1] ?? 0);
+            }, 0),
+          ) / 2
+        );
+      }),
+    );
+    const resized = resizedAreas[1] ?? 0;
+    const resizedBase = resizedAreas[0] ?? 1;
     expect(resized / resizedBase).toBeCloseTo(0.5, 6);
     await page.getByRole("button", { name: "Theme", exact: true }).click();
     expect(
@@ -86,6 +105,7 @@ test("keyboard inspection, original record readouts, refs and consumer veto surv
   await page.goto(packed);
   const chart = page.getByRole("region", { name: "Stage snapshot" });
   const first = stage(chart, "entry");
+  const originalNode = await first.elementHandle();
   await expect(first).toHaveAttribute("data-consumer-ref", "attached");
   await first.focus();
   await expect(first).toBeFocused();
@@ -95,6 +115,21 @@ test("keyboard inspection, original record readouts, refs and consumer veto surv
   await expect(stage(chart, "unknown")).toBeFocused();
   await page.keyboard.press("Home");
   await expect(first).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(chart.getByRole("tooltip")).toHaveCount(0);
+  await expect(first).toBeFocused();
+  expect(await first.evaluate((node, original) => node === original, originalNode)).toBe(true);
+  await page.keyboard.press("Home");
+  await expect(chart.getByRole("tooltip")).toContainText("Entry");
+  await page.keyboard.press("Escape");
+  await expect(chart.getByRole("tooltip")).toHaveCount(0);
+  await page.keyboard.press("ArrowLeft");
+  await expect(chart.getByRole("tooltip")).toContainText("Entry");
+  await page.keyboard.press("Escape");
+  await expect(chart.getByRole("tooltip")).toHaveCount(0);
+  await page.keyboard.press("ArrowDown");
+  await expect(stage(chart, "review")).toBeFocused();
+  await expect(chart.getByRole("tooltip")).toContainText("Review");
   await page.keyboard.press("Escape");
   await expect(chart.getByRole("tooltip")).toHaveCount(0);
   await page.getByRole("button", { name: "Veto clicks", exact: true }).click();
@@ -160,6 +195,9 @@ test("stage activation uses controlled selection and does not remove other numer
   await expect(page.getByLabel("Stage selection")).toHaveText("none");
   await stage(chart, "zero").click();
   await expect(page.getByLabel("Stage selection")).toHaveText("zero");
+  await stage(chart, "unknown").click();
+  await expect(page.getByLabel("Stage selection")).toHaveText("unknown");
+  await expect(chart.getByRole("tooltip")).toContainText("Unknown");
 });
 
 test("comparison panels use the explicit common scale and do not normalize to their own maximum", async ({
@@ -253,3 +291,28 @@ for (const animated of [false, true]) {
     expect(errors).toEqual([]);
   });
 }
+
+test("inline accessors and denominator callbacks retain native DOM while original metadata refreshes", async ({
+  page,
+}) => {
+  await page.goto(`${packed}?inline`);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const first = stage(chart, "entry");
+  const originalNode = await first.elementHandle();
+  await first.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(chart.getByRole("tooltip")).toContainText("50%");
+  await page.keyboard.press("Escape");
+  await expect(chart.getByRole("tooltip")).toHaveCount(0);
+  expect(await first.evaluate((node, original) => node === original, originalNode)).toBe(true);
+  await stage(chart, "zero").click();
+  await expect(page.getByLabel("Stage selection")).toHaveText("zero");
+  await page.getByRole("button", { name: "Refresh metadata", exact: true }).click();
+  await expect(chart).toContainText("13 days");
+  expect(await first.evaluate((node, original) => node === original, originalNode)).toBe(true);
+  await stage(chart, "review").focus();
+  await expect(chart.getByRole("tooltip")).toContainText("50%");
+  await expect(chart).toContainText("Review updated: 50; 13 days");
+  await stage(chart, "review").click();
+  await expect(page.getByLabel("Clicked stage days")).toHaveText("13");
+});

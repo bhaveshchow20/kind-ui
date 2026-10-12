@@ -49,10 +49,15 @@ export function Host() {
   const [activeWrites, setActiveWrites] = useState(0);
   const [veto, setVeto] = useState(false);
   const [clicks, setClicks] = useState(0);
+  const [clickedDays, setClickedDays] = useState<number | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const cleanupCount = useRef(0);
   const [cleanupRead, setCleanupRead] = useState(0);
-  const data = replace ? rows.slice(1) : rows;
+  const [metadata, setMetadata] = useState(false);
+  const baseData = replace ? rows.slice(1) : rows;
+  const data = metadata
+    ? baseData.map((row) => ({ ...row, name: `${row.name} updated`, days: row.days + 10 }))
+    : baseData;
   if (params.has("extreme"))
     return (
       <main>
@@ -102,12 +107,16 @@ export function Host() {
           Veto clicks
         </button>
       </div>
+      <button type="button" onClick={() => setMetadata(!metadata)}>
+        Refresh metadata
+      </button>
       <button type="button" onClick={() => setCleanupRead(cleanupCount.current)}>
         Read ref cleanup
       </button>
       <output aria-label="Ref cleanup count">{cleanupRead}</output>
       <output aria-label="Inspection writes">{activeWrites}</output>
       <output aria-label="Consumer clicks">{clicks}</output>
+      <output aria-label="Clicked stage days">{clickedDays ?? "none"}</output>
       <output aria-label="Stage selection">{selected ?? "none"}</output>
       <section
         aria-label="Stage snapshot"
@@ -119,13 +128,23 @@ export function Host() {
       >
         <FunnelChart
           data={data}
-          accessors={accessors}
+          accessors={
+            params.has("inline")
+              ? {
+                  id: (row: Row) => row.key,
+                  label: (row: Row) => row.name,
+                  value: (row: Row) => row.amount,
+                }
+              : accessors
+          }
           config={config}
           aria-label="Inventory by stage"
           height={360}
           orientation={horizontal ? "horizontal" : "vertical"}
           scaleMax={100}
-          denominator="first"
+          denominator={
+            params.has("inline") ? (_stage, _index, stages) => stages[0]?.value : "first"
+          }
           ratioLabel="Share of first stage"
           loading={loading}
           animate={params.has("static") ? false : { revealDurationMs: 2500 }}
@@ -149,6 +168,7 @@ export function Host() {
               },
               onClick: (event) => {
                 setClicks((count) => count + 1);
+                setClickedDays(stage.datum.days);
                 if (veto) event.preventDefault();
               },
             })}
