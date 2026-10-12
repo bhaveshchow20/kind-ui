@@ -106,9 +106,14 @@ for (const row of compatibilityMatrix) {
     );
     const source = await readFile(join(root, "tests/fixtures/line-integrations/host.tsx"), "utf8");
     await writeFile(join(scratch, "host.tsx"), source);
+    const funnelSource = await readFile(
+      join(root, "tests/fixtures/line-integrations/funnel-host.tsx"),
+      "utf8",
+    );
+    await writeFile(join(scratch, "funnel-host.tsx"), funnelSource);
     await writeFile(
       join(scratch, "main.tsx"),
-      'import { createRoot } from "react-dom/client"; import { IntegrationHost, ThemingHost } from "./host.js"; import "./styles.css"; const root=document.getElementById("root"); if(!root)throw new Error("Missing root"); createRoot(root).render(<><IntegrationHost /><ThemingHost /></>);',
+      'import { createRoot } from "react-dom/client"; import { IntegrationHost, ThemingHost } from "./host.js"; import { FunnelIntegrationHost } from "./funnel-host.js"; import "./styles.css"; const root=document.getElementById("root"); if(!root)throw new Error("Missing root"); createRoot(root).render(<><IntegrationHost /><ThemingHost /><FunnelIntegrationHost /></>);',
     );
     await writeFile(
       join(scratch, "styles.css"),
@@ -133,7 +138,7 @@ for (const row of compatibilityMatrix) {
             exactOptionalPropertyTypes: false,
             noEmit: true,
           },
-          files: ["host.tsx", "main.tsx"],
+          files: ["host.tsx", "funnel-host.tsx", "main.tsx"],
         }),
       );
       run(process.execPath, [
@@ -191,10 +196,11 @@ await writeFile("icons.json", JSON.stringify([...bundledIcons].map((id) => id.sl
       join(scratch, "app/layout.tsx"),
       'import "../styles.css"; export default function Layout({children}:{children:React.ReactNode}){return <html lang="en"><body>{children}</body></html>}',
     );
+    await writeFile(join(scratch, "app/funnel-host.tsx"), `"use client";\n${funnelSource}`);
     // Server components use named client boundaries; compound members remain in client hosts.
     await writeFile(
       join(scratch, "app/page.tsx"),
-      `import { LineChart, LineSeries, XAxis } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost, ThemingHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} aria-label="Server boundary totals"><XAxis dataKey="month" /><LineSeries dataKey="total" /></LineChart><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /><ThemingHost /></main>}`,
+      `import { LineChart, LineSeries, XAxis } from "@kind-ui/charts"; import { FunnelIntegrationHost } from "./funnel-host"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost, ThemingHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} aria-label="Server boundary totals"><XAxis dataKey="month" /><LineSeries dataKey="total" /></LineChart><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /><ThemingHost /><FunnelIntegrationHost /></main>}`,
     );
     await writeFile(
       join(scratch, "postcss.config.mjs"),

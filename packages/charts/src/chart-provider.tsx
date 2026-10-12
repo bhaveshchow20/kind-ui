@@ -53,10 +53,14 @@ export function ChartProvider({
     throw new Error("Chart visibility cannot be both controlled and defaulted");
   const id = useId();
   const colors: Record<string, string> = {};
-  const paints: Record<string, string> = {};
-  const colorStops: Record<string, ColorStops> = {};
+  const paints: Record<string, string> = Object.create(null);
+  const colorStops: Record<string, ColorStops> = Object.create(null);
   for (const [key, item] of Object.entries(config)) {
-    if (!/^[a-zA-Z][\w-]*$/.test(key) && interaction?.kind !== "node")
+    if (
+      !/^[a-zA-Z][\w-]*$/.test(key) &&
+      interaction?.kind !== "node" &&
+      interaction?.kind !== "category"
+    )
       throw new Error(
         `Chart series key "${key}" must start with a letter and contain only letters, numbers, underscores or hyphens`,
       );

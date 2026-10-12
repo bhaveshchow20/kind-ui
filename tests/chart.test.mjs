@@ -225,6 +225,13 @@ test("direct and namespace imports expose the same public components", () => {
     "EmphasisMark",
     "ErrorBar",
     "FillPatternSwatch",
+    "FunnelChart",
+    "FunnelContent",
+    "FunnelDataTable",
+    "FunnelLabels",
+    "FunnelLegend",
+    "FunnelStages",
+    "FunnelTooltip",
     "HeatmapCellContent",
     "HeatmapChart",
     "HeatmapDataTable",
@@ -279,6 +286,7 @@ test("direct and namespace imports expose the same public components", () => {
     "binHistogram",
     "boxPlotExtent",
     "computeWaterfallData",
+    "createFunnelModel",
     "createHeatmapModel",
     "createHeatmapScale",
     "createPercentStack",
@@ -2846,4 +2854,23 @@ test("normalized tooltip preserves raw formatting, explicit formatter precedence
   assert.doesNotMatch(renderPercent({}, NaN), /NaN|% \(/);
   assert.doesNotMatch(renderPercent({}, undefined), /% \(/);
   assert.match(renderPercent({}, -0.5), /-50% \(1 tasks\)/);
+});
+
+test("category identities use encoded color tokens for arbitrary stage IDs", () => {
+  const ids = ["0", "review / approved", "__proto__"];
+  const config = Object.fromEntries(ids.map((id) => [id, { label: id, color: "#123456" }]));
+  const html = render(
+    h(
+      Chart.LineChart,
+      {
+        config,
+        data: [],
+        "aria-label": "Stage identities",
+        interaction: { kind: "category", mode: "focus", eligibleKeys: ids },
+      },
+      null,
+    ),
+  );
+  assert.match(html, /--kind-ui-series-30-0/);
+  assert.match(html, /--kind-ui-series-5f-5f-70-72-6f-74-6f-5f-5f-0/);
 });

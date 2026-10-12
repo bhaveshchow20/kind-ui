@@ -9,6 +9,7 @@ export default defineConfig({
     "composition.spec.ts",
     "chart-frame.spec.ts",
     "line-integrations.spec.ts",
+    "funnel-integrations.spec.ts",
     "focus-identity.spec.ts",
     "polar-hide.spec.ts",
     "pie-hide.spec.ts",
@@ -26,6 +27,10 @@ export default defineConfig({
       : {}),
   },
   webServer: [
+    {
+      command: `npm exec vite preview -- --outDir artifacts/packed-funnel --host 127.0.0.1 --port ${port(4197)} --strictPort`,
+      url: `http://127.0.0.1:${port(4197)}`,
+    },
     {
       command: `npm exec vite preview -- --outDir artifacts/packed-tailwind-development --host 127.0.0.1 --port ${port(4200)} --strictPort`,
       url: `http://127.0.0.1:${port(4200)}`,

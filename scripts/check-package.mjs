@@ -357,6 +357,7 @@ try {
         "sankey",
         "histogram",
         "box-plot",
+        "funnel",
         "number-shuffle",
         "activity-rings",
         "tailwind-setup",
@@ -455,6 +456,28 @@ try {
   run(process.execPath, ["--test", "activity-rings.test.mjs"], consumer);
   console.log(
     "ActivityRings: packed component tests, strict NodeNext/Bundler and production build passed",
+  );
+
+  for (const file of ["host.tsx", "main.tsx", "index.html"]) await copyFixture("funnel", file);
+  await copyFile(join(root, "tests/funnel-consumer.tsx"), join(consumer, "funnel-consumer.tsx"));
+  await typecheck(["host.tsx", "main.tsx"]);
+  await checkTypes(
+    consumer,
+    join(root, "node_modules/typescript/bin/tsc"),
+    ["funnel-consumer.tsx"],
+    { strictOptionalTypes: true },
+  );
+  await production("index.html", "packed-funnel");
+  for (const file of ["funnel-model.test.mjs", "funnel-render.test.mjs"])
+    await copyFile(join(root, "tests", file), join(consumer, file));
+  run(
+    process.execPath,
+    ["--test", "funnel-model.test.mjs", "funnel-render.test.mjs"],
+    consumer,
+    "inherit",
+  );
+  console.log(
+    "Funnel tarball: original records, negative types, unit tests and strict NodeNext/Bundler production consumer passed",
   );
 
   await checkBundleContract({ root, consumer, artifactSha256: sha256, buildOutput });

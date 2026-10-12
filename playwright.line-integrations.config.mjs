@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 import { compatibilityMatrix } from "./scripts/compatibility-matrix.mjs";
 export default defineConfig({
   testDir: "tests",
-  testMatch: "line-integrations.spec.ts",
+  testMatch: ["line-integrations.spec.ts", "funnel-integrations.spec.ts"],
   workers: 1,
   outputDir: "artifacts/line-integration-tests",
   use: {
