@@ -13,6 +13,13 @@ for (const scheme of ["light", "dark"] as const) {
     if (scheme === "dark") await expect(page.locator("html")).toHaveClass(/dark/);
     else await expect(page.locator("html")).not.toHaveClass(/dark/);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const familyPanel = page.getByRole("tabpanel", { name: "Bar", exact: true });
+    await expect(familyPanel).toBeVisible();
+    await expect(familyPanel).toHaveClass(/demo-grid/);
+    await expect(page.getByRole("tab", { name: "Bar", exact: true })).toHaveAttribute(
+      "aria-controls",
+      (await familyPanel.getAttribute("id")) ?? "",
+    );
     // Viewport-triggered card entrances must settle before a full-page contrast audit.
     const cards = await page.locator(".chart-card").all();
     for (const card of cards) {
@@ -33,6 +40,7 @@ for (const scheme of ["light", "dark"] as const) {
       page.getByRole("button", { name: "Search documentation", exact: true }),
     ).toBeFocused();
     await page.getByRole("tab", { name: "Line", exact: true }).click();
+    await expect(page.getByRole("tabpanel", { name: "Line", exact: true })).toBeVisible();
     const trigger = page.locator(".tile-open").first();
     await trigger.focus();
     await page.keyboard.press("Enter");

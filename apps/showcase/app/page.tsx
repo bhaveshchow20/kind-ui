@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
+import { Tabs as TabsPrimitive } from "radix-ui";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ActivityDemo } from "@/components/activity-demo";
 import { AdvancedChartCard, advancedRecipes } from "@/components/advanced-chart-card";
@@ -903,6 +904,7 @@ export default function Page() {
         </section>
         <section id="showcase" className="kind-gallery" tabIndex={-1} aria-label="Chart examples">
           <Tabs
+            className="gap-0"
             value={family}
             onValueChange={(value) => {
               setFamily(value as Family);
@@ -916,36 +918,38 @@ export default function Page() {
                 </TabsTrigger>
               ))}
             </TabsList>
-          </Tabs>
-          <div className={`demo-grid examples-${shown.length}`}>
-            {shown.map((entry) => (
-              // biome-ignore lint/a11y/noStaticElementInteractions: Pointer shortcut; the expand button provides keyboard access.
-              // biome-ignore lint/a11y/useKeyWithClickEvents: The adjacent expand button is the keyboard equivalent.
-              <div
-                className={`example-shell example-${entry.id}`}
-                key={entry.id}
-                onClick={(event) => {
-                  if (!(event.target as Element).closest('button,a,input,[role="gridcell"]')) {
-                    triggerRef.current = event.currentTarget.querySelector(".tile-open");
-                    explore(entry);
-                  }
-                }}
-              >
-                {renderEntry(entry, demoDefaults(entry.id), true)}
-                <button
-                  className="tile-open"
-                  type="button"
-                  aria-label={`Expand ${entry.tag}`}
-                  onClick={(event) => {
-                    triggerRef.current = event.currentTarget;
-                    explore(entry);
-                  }}
-                >
-                  <Maximize2 size={15} />
-                </button>
+            <TabsPrimitive.Content asChild value={family}>
+              <div className={`demo-grid examples-${shown.length}`}>
+                {shown.map((entry) => (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: Pointer shortcut; the expand button provides keyboard access.
+                  // biome-ignore lint/a11y/useKeyWithClickEvents: The adjacent expand button is the keyboard equivalent.
+                  <div
+                    className={`example-shell example-${entry.id}`}
+                    key={entry.id}
+                    onClick={(event) => {
+                      if (!(event.target as Element).closest('button,a,input,[role="gridcell"]')) {
+                        triggerRef.current = event.currentTarget.querySelector(".tile-open");
+                        explore(entry);
+                      }
+                    }}
+                  >
+                    {renderEntry(entry, demoDefaults(entry.id), true)}
+                    <button
+                      className="tile-open"
+                      type="button"
+                      aria-label={`Expand ${entry.tag}`}
+                      onClick={(event) => {
+                        triggerRef.current = event.currentTarget;
+                        explore(entry);
+                      }}
+                    >
+                      <Maximize2 size={15} />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </TabsPrimitive.Content>
+          </Tabs>
           <Dialog open={open} onOpenChange={setOpen}>
             {selected && (
               <DialogContent
