@@ -602,7 +602,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           },
           onPointerLeave: (event) => {
             frameProps?.onPointerLeave?.(event);
-            acceptedTap.current = null;
+            if (drag.current) acceptedTap.current = null;
             if (!event.defaultPrevented) {
               if (drag.current && !drag.current.moved) drag.current = null;
               if (!drag.current) inspect(null);
