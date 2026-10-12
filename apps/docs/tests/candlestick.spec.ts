@@ -82,3 +82,61 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
   }
   expect(errors).toEqual([]);
 });
+test("Candlestick section links and copy actions fit narrow layouts with enlarged text", async ({
+  page,
+}) => {
+  await page.goto(`.${docRoute("/docs/components/candlestick/")}`);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const fontFamily of ["", "Arial, sans-serif"]) {
+      for (const fontSize of ["", "200%"]) {
+        await page.evaluate(
+          ({ fontFamily, fontSize }) => {
+            document.body.style.fontFamily = fontFamily;
+            document.documentElement.style.fontSize = fontSize;
+          },
+          { fontFamily, fontSize },
+        );
+        const layout = await page.locator(".doc-body > h2").evaluateAll((headings) => ({
+          pageWidth: document.documentElement.scrollWidth,
+          viewport: innerWidth,
+          headings: headings.map((heading) => {
+            const bounds = heading.getBoundingClientRect();
+            return {
+              title: heading.textContent,
+              left: bounds.left,
+              right: bounds.right,
+              children: [...heading.children].map((child) => {
+                const bounds = child.getBoundingClientRect();
+                return { left: bounds.left, right: bounds.right };
+              }),
+            };
+          }),
+        }));
+        expect(
+          layout.pageWidth,
+          JSON.stringify({ width, fontFamily, fontSize, layout }),
+        ).toBeLessThanOrEqual(layout.viewport + 1);
+        const inspectedHeading = page.locator("#inspection-and-accessibility");
+        await expect(inspectedHeading.locator(":scope > a")).toBeVisible();
+        const copyAction = inspectedHeading.getByRole("button", {
+          name: "Copy Anchor Link",
+          exact: true,
+        });
+        await expect(copyAction).toBeVisible();
+        await copyAction.focus();
+        await expect(copyAction).toBeFocused();
+        for (const heading of layout.headings) {
+          for (const child of heading.children) {
+            expect(child.left, heading.title ?? "Section link").toBeGreaterThanOrEqual(
+              heading.left - 1,
+            );
+            expect(child.right, heading.title ?? "Section copy action").toBeLessThanOrEqual(
+              heading.right + 1,
+            );
+          }
+        }
+      }
+    }
+  }
+});

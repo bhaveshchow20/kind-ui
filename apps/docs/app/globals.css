@@ -860,6 +860,11 @@ input:focus-visible {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+/* Keep section titles shrinkable beside their copy actions at enlarged text sizes. */
+.doc-article[data-doc="components/candlestick"] .doc-body > h2 > a {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 
 /* Native Fumadocs code blocks share the Line plot frame. */
 .line-workbench .line-code-block {
