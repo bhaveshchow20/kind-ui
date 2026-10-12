@@ -193,6 +193,10 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     ...nativeProps
   } = props;
   if (children === undefined) throw new Error("CandlestickChart requires explicit children");
+  for (const key of ["layout", "stackOffset", "reverseStackOrder"] as const) {
+    if (Object.hasOwn(props, key))
+      throw new Error(`CandlestickChart owns time-X and price-Y geometry; cannot set ${key}`);
+  }
   if (viewport !== undefined && defaultViewport !== undefined)
     throw new Error("Candlestick viewport cannot be controlled and defaulted");
   if (selection !== undefined && props.defaultSelection !== undefined)

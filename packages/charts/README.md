@@ -426,7 +426,7 @@ const observations: CandlestickDatum[] = [
 | `formatTime`, `formatPrice`, `formatVolume` | `(value, point?) => string`; default `String(value)`. Axis ticks may omit the point; readouts retain it. Supply currency, decimals, timezone, source, and volume units explicitly. |
 | `loading`, `loadingLabel`, `empty` | Loading follows the existing family contract; empty defaults to `"No candle observations"`. Errors, retry and cancellation belong to the application. |
 | `animate` | `false` by default; accepts the Bar-family animation option type, including `revealDurationMs` and `revealEasing`, for the shared SVG entrance reveal. Reduced motion renders static marks. |
-| Sizing, native chart props, `frameProps` | Existing family sizing and native Recharts chart options; `frameProps` controls outer HTML attributes/ref/handlers. Native handlers run first and may veto by preventing default. |
+| Sizing, native chart props, `frameProps` | Existing family sizing and native Recharts chart options; root `layout`, `stackOffset` and `reverseStackOrder` are excluded and rejected at runtime. `frameProps` controls outer HTML attributes/ref/handlers. Native handlers run first and may veto by preventing default. |
 
 `Series` requires `seriesKey` for config, paint and visibility. It draws full
 low/high wicks and an open/close body; equal open/close draws a visible doji line
@@ -452,12 +452,12 @@ crosshair as price. Missing volume produces no observation; zero remains zero. V
 come from the validated root records. Separate `data`, `minPointSize`, alternate
 X axes, stacks, and fabricated background bars are excluded from this part's
 contract, so volume cannot silently diverge from its candle or gain a false
-minimum height. Excluded Bar and axis geometry controls are rejected at runtime, including explicitly undefined keys; styling, shapes, events and axis tick presentation remain supported.
+minimum height. Excluded Bar and axis geometry controls are rejected at runtime, including explicitly undefined keys; styling, shapes, events and axis tick presentation remain supported. Custom volume shapes retain native markup within the volume pane and shared entrance clips.
 
 `Overlay` draws caller-computed values from `dataKey`, either an original-row key
 or `(originalRow) => number | null | undefined`. It requires `seriesKey`, accepts
-native Line presentation props, defaults `dot` and animation to false, and never
-computes indicators. Missing values remain gaps. `includeInDomain` defaults to
+native Line presentation props, defaults `dot` and animation to false, and shares
+series keyboard activation and focus emphasis. It never computes indicators. Missing values remain gaps. `includeInDomain` defaults to
 false; enable it to include overlay prices in the chosen autoscale scope. Every
 provided overlay value is validated before viewport filtering; included values
 also obey caller bounds. Default X-axis ticks use visible observation coordinates

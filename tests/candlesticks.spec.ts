@@ -487,7 +487,7 @@ test("shared series focus dims paint and supports keyboard activation in strict 
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`${devUrl}/?focus`);
-  const price = page.getByRole("button", { name: "Highlight Price", exact: true });
+  const price = page.getByRole("button", { name: "Highlight Price", exact: true }).first();
   const volume = page.getByRole("button", { name: "Highlight Volume", exact: true });
   await expect(price).toHaveCount(1);
   await expect(volume).toHaveCount(1);
@@ -497,6 +497,7 @@ test("shared series focus dims paint and supports keyboard activation in strict 
   const opacity = (series: string) =>
     page
       .locator(`[data-series="${series}"] > [data-kind-ui="series-interaction-paint"]`)
+      .first()
       .evaluate((node) => Number(getComputedStyle(node).opacity));
   await expect.poll(() => opacity("volume")).toBeCloseTo(0.28, 2);
   await volume.focus();
@@ -508,6 +509,60 @@ test("shared series focus dims paint and supports keyboard activation in strict 
   await expect(page.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(1);
   await expect(price).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test("overlay series shares keyboard focus, inactive paint and native activation callbacks in strict Motion", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(`${devUrl}/?focus&overlay-focus`);
+  const overlay = page.getByRole("button", { name: "Highlight Close overlay", exact: true });
+  const price = page.getByRole("button", { name: "Highlight Price", exact: true }).first();
+  await expect(overlay).toHaveCount(1);
+  const opacity = (series: string) =>
+    page
+      .locator(`[data-series="${series}"] > [data-kind-ui="series-interaction-paint"]`)
+      .first()
+      .evaluate((node) => Number(getComputedStyle(node).opacity));
+  await overlay.focus();
+  await page.keyboard.press("Enter");
+  await expect(overlay).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => opacity("price")).toBeCloseTo(0.28, 2);
+  await expect.poll(() => opacity("overlay")).toBeCloseTo(1, 2);
+  await expect(page.getByLabel("Overlay click")).toHaveText("None");
+  await price.focus();
+  await page.keyboard.press(" ");
+  await expect(price).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => opacity("overlay")).toBeCloseTo(0.28, 2);
+  await page.mouse.move(0, 0);
+  await overlay.locator(".recharts-line-curve").dispatchEvent("click", { button: 0 });
+  await expect(page.getByLabel("Overlay click")).toHaveText("2:click:0");
+  await expect(overlay).toHaveAttribute("aria-pressed", "true");
+  expect(errors).toEqual([]);
+});
+
+test("overlay native callback can veto shared series activation", async ({ page }) => {
+  await page.goto(`${devUrl}/?focus&overlay-focus&overlay-veto`);
+  const price = page.getByRole("button", { name: "Highlight Price", exact: true });
+  const overlay = page.getByRole("button", { name: "Highlight Close overlay", exact: true });
+  await price.focus();
+  await page.keyboard.press("Enter");
+  await overlay.locator(".recharts-line-curve").dispatchEvent("click", { button: 0 });
+  await expect(page.getByLabel("Overlay click")).toHaveText("2:click:0");
+  await expect(price).toHaveAttribute("aria-pressed", "true");
+  await expect(overlay).toHaveAttribute("aria-pressed", "false");
+});
+
+test("hidden overlay preserves native hide and leaves no series keyboard target", async ({
+  page,
+}) => {
+  await page.goto(`${devUrl}/?focus&overlay-focus&overlay-hidden`);
+  await expect(
+    page.getByRole("button", { name: "Highlight Close overlay", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator(".recharts-line-curve")).toHaveCount(0);
+  await expect(page.locator(marks)).toHaveCount(4);
 });
 
 test("another pointer cannot end the primary drag", async ({ page }) => {
@@ -677,3 +732,51 @@ test("empty uncontrolled history consumes its captured default only on the first
   await page.getByRole("button", { name: "Load observations", exact: true }).click();
   await expect(page.getByLabel("Window")).toHaveText("-0.5,4.5");
 });
+
+for (const shape of ["function", "element", "object", "false"]) {
+  test(`custom Volume ${shape} retains pane and entrance clipping`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(`${devUrl}/?animate&custom-volume=${shape}`);
+    const volume = page.locator('[data-series="volume"]');
+    const drawing = volume.locator(".recharts-bar-rectangles").locator("rect,path").first();
+    await expect(drawing).toBeVisible();
+    const clips = await drawing.evaluate((node) => {
+      const paths: string[] = [];
+      for (let ancestor: Element | null = node; ancestor; ancestor = ancestor.parentElement) {
+        const clip = ancestor.getAttribute("clip-path");
+        if (clip) paths.push(clip);
+      }
+      const reveal = document.querySelector('[data-kind-ui="candlestick-reveal"]');
+      return { paths, reveal: `url(#${reveal?.parentElement?.id})` };
+    });
+    expect(clips.paths.some((clip) => clip.endsWith("-volume)"))).toBe(true);
+    expect(clips.paths).toContain(clips.reveal);
+    if (shape === "function" || shape === "element") {
+      await expect(volume.locator(`[data-custom-volume="${shape}"]`).first()).toHaveAttribute(
+        "width",
+        "900",
+      );
+    }
+    const priceHit = await page.locator(".recharts-cartesian-grid").evaluate((grid) => {
+      const bounds = grid.getBoundingClientRect();
+      return document
+        .elementFromPoint(bounds.x + 10, bounds.y + 10)
+        ?.closest("[data-series]")
+        ?.getAttribute("data-series");
+    });
+    expect(priceHit).not.toBe("volume");
+    const reveal = page.locator('[data-kind-ui="candlestick-reveal"]');
+    await expect
+      .poll(() => reveal.evaluate((rect) => Number(rect.getAttribute("width"))))
+      .toBeGreaterThan(0);
+    await page.getByRole("button", { name: "Replace", exact: true }).click();
+    await expect
+      .poll(() =>
+        reveal.evaluate((rect) => {
+          const svg = rect instanceof SVGElement ? rect.ownerSVGElement : null;
+          return Number(rect.getAttribute("width")) / (svg?.viewBox.baseVal.width ?? 1);
+        }),
+      )
+      .toBeGreaterThan(0.7);
+  });
+}

@@ -23,10 +23,13 @@ import {
 } from "recharts";
 import { useChart } from "../chart-context.js";
 import { OutsidePlot } from "../family-root.js";
+import { useLineInteraction } from "../line-chart.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "../series-interaction.js";
 import { StaticTooltipFrame, TooltipBase, type TooltipFrameProps } from "../tooltip.js";
 import { tooltipClassName } from "../tooltip-content.js";
 import { cn } from "../utils.js";
 import { type NativePoint, useCandlestick } from "./context.js";
+import { CandlestickSeriesPaint } from "./marks.js";
 import type { CandlestickDatum, CandlestickPoint } from "./model.js";
 import { getCandlestickVisiblePoints } from "./viewport.js";
 export type CandlestickXAxisProps = Omit<
@@ -107,7 +110,19 @@ export function CandlestickOverlay<Row extends object = CandlestickDatum>({
 }: CandlestickOverlayProps<Row>) {
   const context = useCandlestick();
   const { visibleSeries, paints } = useChart();
-  const id = useId();
+  const { registerSeries } = useLineInteraction();
+  const generatedId = useId();
+  const id = props.id ?? generatedId;
+  const hidden =
+    props.hide === true || (visibleSeries !== undefined && !visibleSeries.includes(seriesKey));
+  useLayoutEffect(() => registerSeries(id, seriesKey), [registerSeries, id, seriesKey]);
+  const interaction = useSeriesInteraction(
+    seriesKey,
+    hidden,
+    props.hide === true,
+    undefined,
+    props.onClick,
+  );
   const observations = useMemo(
     () =>
       context.points.map((point, index) => {
@@ -166,17 +181,21 @@ export function CandlestickOverlay<Row extends object = CandlestickDatum>({
   );
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
-      <g clipPath={`url(#${context.priceClipId})`}>
-        <Line
-          {...props}
-          zIndex={0}
-          hide={props.hide || (visibleSeries !== undefined && !visibleSeries.includes(seriesKey))}
-          dataKey={read}
-          stroke={props.stroke ?? paints[seriesKey] ?? "currentColor"}
-          isAnimationActive={false}
-          dot={props.dot ?? false}
-        />
-      </g>
+      <SeriesInteractionLayer seriesKey={seriesKey} hidden={hidden} paint={CandlestickSeriesPaint}>
+        <g clipPath={`url(#${context.priceClipId})`}>
+          <Line
+            {...props}
+            {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
+            zIndex={0}
+            id={id}
+            hide={hidden}
+            dataKey={read}
+            stroke={props.stroke ?? paints[seriesKey] ?? "currentColor"}
+            isAnimationActive={false}
+            dot={props.dot ?? false}
+          />
+        </g>
+      </SeriesInteractionLayer>
     </ZIndexLayer>
   );
 }

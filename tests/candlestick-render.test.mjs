@@ -228,21 +228,44 @@ for (const key of ["yAxisId", "domain", "padding", "scale", "type", "dataKey"]) 
   });
 }
 test("Volume supported presentation and event props pass validation to the owning-family check", () => {
-  assert.throws(
-    () =>
-      render(
-        h(CandlestickChart.Volume, {
-          seriesKey: "volume",
-          fill: "purple",
-          stroke: "navy",
-          fillOpacity: 0.4,
-          maxBarSize: 12,
-          style: { opacity: 0.8 },
-          shape: () => null,
-          onClick: () => {},
-          axisProps: { hide: true, orientation: "right", tickFormatter: String, tickLine: false },
-        }),
-      ),
-    /Candlestick parts require CandlestickChart/,
-  );
+  for (const shape of [() => null, h("rect", { fill: "orange" }), { fill: "orange" }, false]) {
+    assert.throws(
+      () =>
+        render(
+          h(CandlestickChart.Volume, {
+            seriesKey: "volume",
+            fill: "purple",
+            stroke: "navy",
+            fillOpacity: 0.4,
+            maxBarSize: 12,
+            style: { opacity: 0.8 },
+            shape,
+            onClick: () => {},
+            axisProps: { hide: true, orientation: "right", tickFormatter: String, tickLine: false },
+          }),
+        ),
+      /Candlestick parts require CandlestickChart/,
+    );
+  }
 });
+
+for (const key of ["layout", "stackOffset", "reverseStackOrder"]) {
+  test(`untyped Candlestick roots cannot set owned ${key} geometry`, () => {
+    for (const value of [
+      undefined,
+      key === "layout" ? "vertical" : key === "stackOffset" ? "expand" : true,
+    ]) {
+      assert.throws(
+        () =>
+          render(
+            h(
+              CandlestickChart,
+              { ...props, [key]: value },
+              h(CandlestickChart.Series, { seriesKey: "price" }),
+            ),
+          ),
+        new RegExp(`CandlestickChart.*cannot set ${key}`),
+      );
+    }
+  });
+}

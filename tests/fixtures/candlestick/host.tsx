@@ -6,7 +6,7 @@ import {
   type CandlestickViewport,
 } from "@kind-ui/charts";
 import { motion } from "motion/react";
-import { useCallback, useState } from "react";
+import { type MouseEvent, useCallback, useState } from "react";
 
 type Row = CandlestickDatum & { source: string };
 const initial: Row[] = [
@@ -58,6 +58,7 @@ export function CandlestickHost() {
   );
   const [selected, setSelected] = useState<CandlestickTime | null>(null);
   const [reason, setReason] = useState("initial");
+  const [overlayClick, setOverlayClick] = useState("None");
   const [logarithmic, setLogarithmic] = useState(params.get("overlay-invalid") === "log");
   const [veto, setVeto] = useState(false);
   const [vetoClick, setVetoClick] = useState(false);
@@ -222,6 +223,7 @@ export function CandlestickHost() {
         {viewport.from},{viewport.to}
       </output>
       <output aria-label="Reason">{reason}</output>
+      {params.has("overlay-focus") && <output aria-label="Overlay click">{overlayClick}</output>}
       <output aria-label="Selected time">{selected ?? "None"}</output>
       <CandlestickChart
         frameProps={{
@@ -235,6 +237,9 @@ export function CandlestickHost() {
         config={{
           price: { label: "Price", color: "#427b67" },
           volume: { label: "Volume", color: "#849c96" },
+          ...(params.has("overlay-focus")
+            ? { overlay: { label: "Close overlay", color: "#a67738" } }
+            : {}),
         }}
         data={rows}
         overscan={params.has("no-overscan") ? 0 : 1}
@@ -243,7 +248,9 @@ export function CandlestickHost() {
               interaction: {
                 kind: "series" as const,
                 mode: "focus" as const,
-                eligibleKeys: ["price", "volume"],
+                eligibleKeys: params.has("overlay-focus")
+                  ? ["price", "volume", "overlay"]
+                  : ["price", "volume"],
               },
             }
           : {})}
@@ -280,7 +287,46 @@ export function CandlestickHost() {
         />
         <CandlestickChart.YAxis />
         <CandlestickChart.Series seriesKey="price" />
-        <CandlestickChart.Volume seriesKey="volume" />
+        <CandlestickChart.Volume
+          seriesKey="volume"
+          {...(params.has("custom-volume")
+            ? {
+                shape:
+                  params.get("custom-volume") === "element" ? (
+                    <rect
+                      data-custom-volume="element"
+                      x={0}
+                      y={0}
+                      width={900}
+                      height={900}
+                      fill="orange"
+                    />
+                  ) : params.get("custom-volume") === "object" ? (
+                    {
+                      x: 0,
+                      y: 0,
+                      width: 900,
+                      height: 900,
+                      fill: "orange",
+                      className: "custom-volume-object",
+                    }
+                  ) : params.get("custom-volume") === "false" ? (
+                    false
+                  ) : (
+                    () => (
+                      <rect
+                        data-custom-volume="function"
+                        x={0}
+                        y={0}
+                        width={900}
+                        height={900}
+                        fill="orange"
+                      />
+                    )
+                  ),
+              }
+            : {})}
+        />
         {[94, 116, 100, 108].map((value) => (
           <CandlestickChart.ReferenceLine
             key={value}
@@ -292,7 +338,18 @@ export function CandlestickHost() {
           />
         ))}
         <CandlestickChart.Overlay<Row>
-          seriesKey="price"
+          seriesKey={params.has("overlay-focus") ? "overlay" : "price"}
+          hide={params.has("overlay-hidden")}
+          {...(params.has("overlay-focus")
+            ? {
+                onClick: (...args) => {
+                  // Native Curve supplies (props, event), despite Line's item-event declaration.
+                  const event = args.at(-1) as MouseEvent<SVGElement>;
+                  setOverlayClick(`${args.length}:${event.type}:${event.button}`);
+                  if (params.has("overlay-veto")) event.preventDefault();
+                },
+              }
+            : {})}
           dataKey={(row) => {
             if (row.gap) return null;
             if (params.has("overlay-invalid") && row.time === "2026-03-05") {

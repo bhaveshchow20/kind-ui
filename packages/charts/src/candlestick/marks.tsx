@@ -238,6 +238,7 @@ export function CandlestickVolume({ seriesKey, axisProps, ...props }: Candlestic
       <CandlestickBar
         {...props}
         seriesKey={seriesKey}
+        regionClip={{ pane: context.volumeClipId, reveal: context.revealClipId }}
         dataKey="volume"
         yAxisId="candlestick-volume"
         activeBar={false}
@@ -280,8 +281,12 @@ function CandlestickBar({
   fill,
   hide,
   onClick,
+  regionClip,
   ...props
-}: Omit<ComponentProps<typeof Bar>, "isAnimationActive"> & { seriesKey: string }) {
+}: Omit<ComponentProps<typeof Bar>, "isAnimationActive"> & {
+  seriesKey: string;
+  regionClip?: { pane: string; reveal: string };
+}) {
   const chart = useChart();
   const { registerSeries } = useLineInteraction();
   const generated = useId();
@@ -291,25 +296,34 @@ function CandlestickBar({
     (chart.visibleSeries !== undefined && !chart.visibleSeries.includes(seriesKey));
   useLayoutEffect(() => registerSeries(id, seriesKey), [registerSeries, id, seriesKey]);
   const interaction = useSeriesInteraction(seriesKey, hidden, hide === true, undefined, onClick);
+  const bar = (
+    <Bar
+      {...props}
+      zIndex={0}
+      id={id}
+      hide={hidden}
+      fill={fill ?? chart.paints[seriesKey] ?? "currentColor"}
+      isAnimationActive={false}
+      {...(interaction.onClick ? { onClick: interaction.onClick } : {})}
+    />
+  );
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
       <SeriesInteractionLayer seriesKey={seriesKey} hidden={hidden} paint={CandlestickSeriesPaint}>
-        <Bar
-          {...props}
-          zIndex={0}
-          id={id}
-          hide={hidden}
-          fill={fill ?? chart.paints[seriesKey] ?? "currentColor"}
-          isAnimationActive={false}
-          {...(interaction.onClick ? { onClick: interaction.onClick } : {})}
-        />
+        {regionClip ? (
+          <g clipPath={`url(#${regionClip.pane})`}>
+            <g clipPath={`url(#${regionClip.reveal})`}>{bar}</g>
+          </g>
+        ) : (
+          bar
+        )}
       </SeriesInteractionLayer>
     </ZIndexLayer>
   );
 }
 
 /** Plain SVG subscribes to shared Motion opacity without mounting a full motion component. */
-function CandlestickSeriesPaint({
+export function CandlestickSeriesPaint({
   opacity: factor,
   identity,
   children,
