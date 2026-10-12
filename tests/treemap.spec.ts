@@ -41,6 +41,13 @@ test("treemap keeps real element identity and focus through independent updates"
     await update(page, name);
     await expect(alpha).toBeFocused();
     expect(await alpha.evaluate((element, retained) => element === retained, original)).toBe(true);
+    if (name === "Resize") {
+      const previousAlpha = before.find((rectangle) => rectangle.id === "a");
+      if (!previousAlpha) throw new Error("Missing alpha rectangle before resize");
+      await expect
+        .poll(async () => (await geometry(page)).find((rectangle) => rectangle.id === "a")?.width)
+        .toBeLessThan(previousAlpha.width);
+    }
     if (name === "Colors") expect(await geometry(page)).toEqual(before);
   }
   await original.dispose();
