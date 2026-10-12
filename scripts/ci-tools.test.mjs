@@ -8,6 +8,30 @@ import { fileURLToPath } from "node:url";
 import { browserDirectives } from "./browser-directives.mjs";
 import { checkTypes } from "./check-types.mjs";
 
+test("generated browser output is ignored without excluding source images", () => {
+  const generated = [
+    "artifacts/chart-tests/desktop.png",
+    "apps/docs/artifacts/screenshots/line-desktop.png",
+    "test-results/chart/trace.zip",
+    "apps/docs/test-results/chart/screenshot.png",
+    "playwright-report/index.html",
+    "apps/docs/playwright-report/data/screenshot.png",
+    "blob-report/report.zip",
+    "apps/showcase/blob-report/report.zip",
+  ];
+  const sources = [
+    "apps/docs/public/cherry-blossom.png",
+    "apps/showcase/public/social/homepage-v1.png",
+    "tests/chart.spec.ts-snapshots/desktop.png",
+  ];
+  const ignored = execFileSync("git", ["check-ignore", "--no-index", "--stdin"], {
+    cwd: fileURLToPath(new URL("../", import.meta.url)),
+    input: [...generated, ...sources].join("\n"),
+    encoding: "utf8",
+  });
+  assert.deepEqual(ignored.trim().split("\n"), generated);
+});
+
 test("browser diagnostic deduplication forwards every unexpected diagnostic", () => {
   const root = "/tmp/client-fixture";
   const diagnostics = browserDirectives(root);
