@@ -148,7 +148,18 @@ export function TreemapHost() {
       />
       <output aria-label="Prevented escapes">{preventedEscapes}</output>
       <output aria-label="Active requests">{activeRequests.length}</output>
-      <output aria-label="Active request log">{JSON.stringify(activeRequests)}</output>
+      <output
+        aria-label="Active request log"
+        style={{
+          display: "block",
+          height: 20,
+          lineHeight: "20px",
+          overflow: "auto",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {JSON.stringify(activeRequests)}
+      </output>
       <button type="button" onClick={() => setWidth((v) => (v === 720 ? 540 : 720))}>
         Resize
       </button>
