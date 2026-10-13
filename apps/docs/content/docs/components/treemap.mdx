@@ -117,7 +117,7 @@ External denominators and accounting measures remain application metadata.
 | `viewId`, `onViewChange` | Controlled subtree navigation. |
 | `activeId`, `onActiveChange` | Transient inspection through pointer or keyboard focus. |
 | `selectedId`, `onSelectionChange` | Persistent selection. |
-| `default*Id` | Uncontrolled initial state; mutually exclusive with the corresponding controlled prop. |
+| `default*Id` | Uncontrolled initial state; mutually exclusive with the corresponding controlled prop. Ownership stays fixed while mounted. |
 | Removed IDs | Fall back to the nearest surviving ancestor, then forest root (`null`). |
 | Callback items | Original records, `rectangle` (or `null`) and `viewShare`. |
 | Keyboard | Enter/Space selects and opens groups; arrows and Home/End traverse controls; Escape dismisses inspection. |
