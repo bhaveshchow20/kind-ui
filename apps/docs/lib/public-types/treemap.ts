@@ -10,6 +10,11 @@ export type TreemapRootReference = Pick<
   | "accessors"
   | "encoding"
   | "config"
+  | "interaction"
+  | "visibleSeries"
+  | "defaultVisibleSeries"
+  | "onVisibleSeriesChange"
+  | "legendPosition"
   | "children"
   | "frameProps"
   | "formatValue"
@@ -45,7 +50,10 @@ export type TreemapLabelsReference = Pick<
   Chart.TreemapLabelsProps,
   "minWidth" | "minHeight" | "padding" | "labelProps" | "children"
 >;
-export type TreemapTooltipReference = Pick<Chart.TreemapTooltipProps, "children">;
+export type TreemapTooltipReference = Pick<
+  Chart.TreemapTooltipProps,
+  "children" | "valueAnimation"
+>;
 export type TreemapBreadcrumbsReference = Pick<Chart.TreemapBreadcrumbsProps, "rootLabel">;
 export type TreemapTableReference = Pick<
   Chart.TreemapDataTableProps,
