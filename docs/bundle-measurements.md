@@ -65,8 +65,8 @@ production/minification/compression method and pinned React/Recharts/Motion
 versions as the other fixtures. Its bytes are measured from the installed
 candidate tarball, not an npm-published family or workspace source alias.
 
-Measured October 12, 2026 with Node 22.16.0 from candidate tarball SHA-256
-`b9a8f9ed5b28bad367f6ea6f82eae102b40b5e0d0f3ecc28bde0794445b819c5`.
+Measured October 13, 2026 with Node 22.16.0 from candidate tarball SHA-256
+`ee776fb4049b3063e5ff3f7730822a37340c4c076450fd4c862f0bcde4151a0b`.
 This candidate contains new exports absent from published Core 0.5.0. Its
 JavaScript includes the mounted React application, Recharts, Motion and shared
 Kind helpers; it is not a standalone library-only size or a new rendering engine.
@@ -75,8 +75,8 @@ updating the SVG entrance clip.
 
 | Candlestick fixture | raw | gzip | Brotli |
 | --- | ---: | ---: | ---: |
-| JavaScript baseline | 825,914 | 248,214 | 209,005 |
-| JavaScript ceiling | 908,506 | 273,036 | 229,906 |
+| JavaScript baseline | 827,261 | 248,554 | 209,392 |
+| JavaScript ceiling | 909,988 | 273,410 | 230,332 |
 | Generated Tailwind CSS baseline | 34,206 | 6,694 | 5,895 |
 | Generated Tailwind CSS ceiling | 37,627 | 7,364 | 6,485 |
 
