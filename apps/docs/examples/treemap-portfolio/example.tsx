@@ -1,5 +1,10 @@
 "use client";
-import { type TreemapAccessors, TreemapChart, type TreemapColorEncoding } from "@kind-ui/charts";
+import {
+  normalizeTreemap,
+  type TreemapAccessors,
+  TreemapChart,
+  type TreemapColorEncoding,
+} from "@kind-ui/charts";
 
 type PositionNode = {
   id: string;
@@ -57,6 +62,7 @@ const accessors: TreemapAccessors<PositionNode> = {
   },
 };
 const dollars = (value: number) => `${value > 0 ? "+" : ""}$${value.toFixed(1)}k`;
+const hierarchy = normalizeTreemap(data, accessors);
 const encoding: TreemapColorEncoding<PositionNode> = {
   type: "diverging",
   value: (datum) => datum.pnlUsdK,
@@ -83,8 +89,17 @@ export function GrossExposureTreemap() {
       <TreemapChart.Tooltip<PositionNode>>
         {(item) => (
           <>
-            <strong>{item.label}</strong>
-            <div>Gross area: ${item.value}k</div>
+            {item.path.length > 1 && (
+              <strong>
+                {item.path
+                  .slice(0, -1)
+                  .map((id) => hierarchy.byId.get(id)?.label)
+                  .join(" / ")}
+              </strong>
+            )}
+            <div>
+              {item.label}: ${item.value}k gross
+            </div>
             {item.kind === "leaf" && (
               <>
                 <div>

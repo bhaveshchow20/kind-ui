@@ -89,13 +89,13 @@ test("cloud spend shares, hierarchy and category selection preserve useful value
     await dataLegend.click();
   }
   await api.focus();
-  await expect(card.getByRole("tooltip")).toContainText("Compute / API");
+  await expect(card.getByRole("tooltip")).toHaveAttribute("aria-label", "Compute / API");
   await expect(card.getByRole("tooltip")).toContainText("$18.4k");
   await expect(card.getByRole("tooltip")).toContainText("24.1%");
   await expect(
     card.locator('[data-kind-ui="treemap-group-header"], [data-kind-ui="treemap-group"]'),
   ).toHaveCount(0);
-  await expect(card.getByRole("tooltip")).toContainText("Compute / API");
+  await expect(card.getByRole("tooltip")).toHaveAttribute("aria-label", "Compute / API");
   await expect(card.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(10);
   await expect(card.getByRole("button", { name: "View data" })).toHaveCount(0);
   await expect(card.getByRole("table").locator("tbody tr")).toHaveCount(10);
@@ -115,7 +115,7 @@ test("portfolio tooltip shows holding value and sector share without changing al
     "aria-pressed",
     "true",
   );
-  await expect(card.getByRole("tooltip")).toContainText("Technology / AAPL");
+  await expect(card.getByRole("tooltip")).toHaveAttribute("aria-label", "Technology / AAPL");
   await expect(card.getByRole("tooltip")).toContainText("$42k");
   await expect(card.getByRole("tooltip")).toContainText("21.3%");
   await expect(card.getByRole("table").locator("tbody tr")).toHaveCount(9);

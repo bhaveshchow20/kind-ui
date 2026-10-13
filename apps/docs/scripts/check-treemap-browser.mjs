@@ -307,7 +307,7 @@ try {
   ).toHaveCount(0);
   await expect(primary.locator(tileSelector)).toHaveCount(10);
   await tile(primary, "api").focus();
-  await expect(primary.getByRole("tooltip")).toContainText("Compute / API");
+  await expect(primary.getByRole("tooltip")).toHaveAttribute("aria-label", "Compute / API");
   const compute = primary.locator(
     '[data-kind-ui="chart-legend-button"][data-legend-key="compute"]',
   );
