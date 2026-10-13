@@ -13,9 +13,24 @@ import {
   useRef,
   useState,
 } from "react";
-import { type ChartName, type FamilyOptions, FamilyRoot, familyFrame } from "../family-root.js";
+import { MotionContext, RegisterInteractionMotion } from "../animation.js";
+import { useChart } from "../chart-context.js";
+import {
+  type ChartInteractionEvent,
+  useChartInteraction,
+  useInteractionRegistration,
+} from "../chart-interaction.js";
+import { useEmphasis } from "../emphasis.js";
+import {
+  type ChartName,
+  type FamilyOptions,
+  FamilyRoot,
+  familyFrame,
+  familyVisibility,
+} from "../family-root.js";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "../loading-skeleton.js";
-import { useReducedMotion } from "../motion-preference.js";
+import { defaultHover, useReducedMotion } from "../motion-preference.js";
+import { colorStopToken } from "../series-color.js";
 import { cn } from "../utils.js";
 import { resolveTreemapColors, type TreemapColorEncoding } from "./encoding.js";
 import {
@@ -47,10 +62,7 @@ type TreemapDescendants<T, Seen = T> =
         : TreemapDescendants<Child, Seen | Child>
       : never);
 type TreemapRecords<T> = [T] extends [TreemapDatum] ? TreemapDescendants<T> : T;
-type TreemapFamilyOptions = Omit<
-  FamilyOptions,
-  "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange"
->;
+type TreemapFamilyOptions = FamilyOptions;
 type StateOptions<T> = {
   viewId?: string | null;
   defaultViewId?: string | null;
@@ -86,6 +98,10 @@ export type TreemapChartProps<T = TreemapDatum> = Omit<
     : { accessors: TreemapAccessors<T> });
 export type TreemapContextValue<T> = {
   model: TreemapModel<T>;
+  pointer: { x: number; y: number } | null;
+  size: { width: number; height: number };
+  isHidden: (node: TreemapNode<T>) => boolean;
+  isInactive: (node: TreemapNode<T>) => boolean;
   rectangles: readonly TreemapRectangle<T>[];
   viewNodes: readonly TreemapNode<T>[];
   items: ReadonlyMap<string, TreemapItem<T>>;
@@ -98,7 +114,7 @@ export type TreemapContextValue<T> = {
   setView: (id: string | null) => void;
   setActive: (id: string | null) => void;
   setSelected: (id: string | null) => void;
-  activate: (node: TreemapNode<T>) => void;
+  activate: (node: TreemapNode<T>, event?: ChartInteractionEvent) => void;
   tooltipMounted: boolean;
   setTooltipMounted: (mounted: boolean) => void;
   inspectPointer: (event: React.PointerEvent, id: string) => void;
@@ -136,17 +152,18 @@ export function TreemapChartRoot<const T = TreemapDatum>({
   nonce,
   frameProps,
   legendPosition,
+  visibleSeries,
+  defaultVisibleSeries,
+  onVisibleSeriesChange,
   ...props
 }: TreemapChartProps<T>) {
   if (Object.hasOwn(props, "rootProps")) throw new Error("TreemapChart does not accept rootProps");
-  for (const name of ["visibleSeries", "defaultVisibleSeries", "onVisibleSeriesChange"]) {
-    if (Object.hasOwn(props, name)) throw new Error(`TreemapChart does not accept ${name}`);
-  }
   if (props.children === undefined) throw new Error("TreemapChart requires explicit children");
   return (
     <FamilyRoot
       family="TreemapChart"
       config={config}
+      {...familyVisibility({ visibleSeries, defaultVisibleSeries, onVisibleSeriesChange })}
       name={props}
       loading={props.loading}
       {...(interaction !== undefined ? { interaction } : {})}
@@ -243,6 +260,25 @@ function TreemapPlot<T>({
     controlledSelected === undefined ? localSelected : controlledSelected,
   );
   const loadingSeed = useLoadingSeed(loading);
+  const chart = useChart();
+  const interaction = useChartInteraction();
+  useInteractionRegistration(
+    (interaction.kind === "node" ? model.nodes : model.roots).map((node) => node.id),
+  );
+  // Read the same transient inspection state as the legend and participating marks.
+  // This observer does not register a competing target.
+  const inspection = useEmphasis({ kind: "series", key: "", scope: "treemap" }, false, false);
+  const inspectedRoot =
+    inspection.active?.kind === "series"
+      ? (inspection.active.seriesKey ?? inspection.active.key)
+      : null;
+  const isHidden = (node: TreemapNode<TreemapRecords<T>>) =>
+    chart.visibleSeries !== undefined && !chart.visibleSeries.includes(node.path[0] ?? node.id);
+  const isInactive = (node: TreemapNode<TreemapRecords<T>>) =>
+    isHidden(node) ||
+    (interaction.selected !== null && !node.path.includes(interaction.selected)) ||
+    (interaction.selected === null && inspectedRoot !== null && !node.path.includes(inspectedRoot));
+  const [tooltipPointer, setTooltipPointer] = useState<{ x: number; y: number } | null>(null);
   const [tooltipMounted, setTooltipMounted] = useState(false);
   const pointer = useRef<{ x: number; y: number } | null>(null);
 
@@ -322,10 +358,12 @@ function TreemapPlot<T>({
       categories: model.roots.map((node, index) => ({
         value: node.id,
         label: node.label,
-        color: `var(--chart-${(index % 5) + 1}, #6b7280)`,
+        color: Object.hasOwn(chart.config, node.id)
+          ? `var(${colorStopToken(node.id, "gradient")})`
+          : `var(--chart-${(index % 5) + 1}, #6b7280)`,
       })),
     }),
-    [model],
+    [model, chart.config],
   );
   const colors = useMemo(
     () => resolveTreemapColors(model.nodes, viewNodes, encoding ?? fallbackEncoding),
@@ -396,6 +434,9 @@ function TreemapPlot<T>({
       const stationary =
         pointer.current?.x === event.clientX && pointer.current?.y === event.clientY;
       pointer.current = { x: event.clientX, y: event.clientY };
+      const bounds = root.current?.getBoundingClientRect();
+      if (bounds)
+        setTooltipPointer({ x: event.clientX - bounds.left, y: event.clientY - bounds.top });
       if (tooltipDismissed && stationary) return;
       setActive(id);
     },
@@ -410,14 +451,21 @@ function TreemapPlot<T>({
     [loading, controlledSelected, onSelectionChange, readItem],
   );
   const activate = useCallback(
-    (node: TreemapNode<TreemapRecords<T>>) => {
-      if (loading) return;
+    (node: TreemapNode<TreemapRecords<T>>, event: ChartInteractionEvent = null) => {
+      if (loading || event?.defaultPrevented) return;
+      const key = interaction.kind === "node" ? node.id : (node.path[0] ?? node.id);
+      if (
+        interaction.markActivation &&
+        interaction.eligible.includes(key) &&
+        !interaction.activate({ kind: interaction.kind, key }, "mark", event)
+      )
+        return;
       setSelected(node.id);
       const item = readItem(node.id);
       if (item) onActivate?.(item);
       if (node.kind === "group") setView(node.id);
     },
-    [loading, setSelected, setView, onActivate, readItem],
+    [loading, setSelected, setView, onActivate, readItem, interaction],
   );
   const reduced = useReducedMotion();
   const tooltipId = useId();
@@ -639,7 +687,7 @@ function TreemapPlot<T>({
     const element = root.current;
     if (!animate || reduced || loading || !element) return;
     const original = element.style.opacity;
-    const declared = props.style?.opacity;
+    const declared = latestOpacity.current;
     const opacity = Number(getComputedStyle(element).opacity);
     const controls = animateMini(element, { opacity: [0, opacity] }, { duration: 0.25 });
     let released = false;
@@ -657,9 +705,13 @@ function TreemapPlot<T>({
     // so later consumer classes keep controlling opacity after the entrance ends.
     void controls.then(release);
     return release;
-  }, [animate, reduced, loading, props.style?.opacity]);
+  }, [animate, reduced, loading]);
   const context: TreemapContextValue<TreemapRecords<T>> = {
     model,
+    pointer: tooltipPointer,
+    size,
+    isHidden,
+    isInactive,
     items,
     frontierIds,
     tooltipMounted,
@@ -680,7 +732,10 @@ function TreemapPlot<T>({
     setSelected,
     activate,
     focusedId,
-    setFocused,
+    setFocused: (id) => {
+      setTooltipPointer(null);
+      setFocused(id);
+    },
     dismiss: () => setDismissed(true),
     tooltipDismissed,
     tooltipId,
@@ -692,101 +747,104 @@ function TreemapPlot<T>({
     focus,
   };
   return (
-    <Context value={context as unknown as TreemapContextValue<unknown>}>
-      {/* biome-ignore lint/a11y/useSemanticElements: Chart controls are not form fields. */}
-      <div
-        {...props}
-        ref={ref}
-        data-kind-ui="treemap"
-        role="group"
-        {...familyFrame({
-          width,
-          height,
-          style: props.style,
-          className: cn("relative text-[color:var(--foreground,inherit)]", props.className),
-        })}
-        aria-busy={loading || undefined}
-        onFocusCapture={(event) => {
-          props.onFocusCapture?.(event);
-          focusedInside.current = event.currentTarget.contains(event.target);
-          if (event.target instanceof HTMLElement) {
-            const entry = [...buttons.current].find(
-              ([, button]) => button === (event.target as EventTarget),
-            );
-            const node = entry ? model.byId.get(entry[0]) : undefined;
-            // React portal events retain chart ownership even outside the plot DOM.
-            lastFocusedControl.current = { element: event.target, path: node?.path ?? null };
-            if (!loading) loadingFocus.current = null;
-          }
-        }}
-        onBlurCapture={(event) => {
-          props.onBlurCapture?.(event);
-          if (
-            !(event.relatedTarget instanceof Node) ||
-            !event.currentTarget.contains(event.relatedTarget)
-          ) {
-            focusedInside.current = false;
-            const content = event.currentTarget.querySelector('[data-kind-ui="treemap-content"]');
-            const inertDisplacement =
-              (loading ||
-                content?.hasAttribute("inert") ||
-                (event.target instanceof Element &&
-                  event.target.closest("[hidden], [inert]") !== null)) &&
-              (event.relatedTarget === null ||
-                event.relatedTarget === document.body ||
-                event.relatedTarget === document.documentElement);
-            if (!inertDisplacement) {
-              lastFocusedControl.current = null;
-              loadingFocus.current = null;
-            }
-            setActive(null);
-          }
-        }}
-        onKeyDown={(event) => {
-          props.onKeyDown?.(event);
-          if (
-            !event.defaultPrevented &&
-            event.key === "Escape" &&
-            !loading &&
-            activeId !== null &&
-            tooltipMounted &&
-            !tooltipDismissed
-          ) {
-            event.preventDefault();
-            setDismissed(true);
-          }
-        }}
-      >
+    <MotionContext value={{ enabled: context.animate, transition: defaultHover }}>
+      <RegisterInteractionMotion enabled={context.animate} />
+      <Context value={context as unknown as TreemapContextValue<unknown>}>
+        {/* biome-ignore lint/a11y/useSemanticElements: Chart controls are not form fields. */}
         <div
-          data-kind-ui="treemap-content"
-          aria-hidden={loading || undefined}
-          inert={loading || undefined}
-          className={cn("absolute inset-0", loading && "invisible")}
+          {...props}
+          ref={ref}
+          data-kind-ui="treemap"
+          role="group"
+          {...familyFrame({
+            width,
+            height,
+            style: props.style,
+            className: cn("relative text-[color:var(--foreground,inherit)]", props.className),
+          })}
+          aria-busy={loading || undefined}
+          onFocusCapture={(event) => {
+            props.onFocusCapture?.(event);
+            focusedInside.current = event.currentTarget.contains(event.target);
+            if (event.target instanceof HTMLElement) {
+              const entry = [...buttons.current].find(
+                ([, button]) => button === (event.target as EventTarget),
+              );
+              const node = entry ? model.byId.get(entry[0]) : undefined;
+              // React portal events retain chart ownership even outside the plot DOM.
+              lastFocusedControl.current = { element: event.target, path: node?.path ?? null };
+              if (!loading) loadingFocus.current = null;
+            }
+          }}
+          onBlurCapture={(event) => {
+            props.onBlurCapture?.(event);
+            if (
+              !(event.relatedTarget instanceof Node) ||
+              !event.currentTarget.contains(event.relatedTarget)
+            ) {
+              focusedInside.current = false;
+              const content = event.currentTarget.querySelector('[data-kind-ui="treemap-content"]');
+              const inertDisplacement =
+                (loading ||
+                  content?.hasAttribute("inert") ||
+                  (event.target instanceof Element &&
+                    event.target.closest("[hidden], [inert]") !== null)) &&
+                (event.relatedTarget === null ||
+                  event.relatedTarget === document.body ||
+                  event.relatedTarget === document.documentElement);
+              if (!inertDisplacement) {
+                lastFocusedControl.current = null;
+                loadingFocus.current = null;
+              }
+              setActive(null);
+            }
+          }}
+          onKeyDown={(event) => {
+            props.onKeyDown?.(event);
+            if (
+              !event.defaultPrevented &&
+              event.key === "Escape" &&
+              !loading &&
+              activeId !== null &&
+              tooltipMounted &&
+              !tooltipDismissed
+            ) {
+              event.preventDefault();
+              setDismissed(true);
+            }
+          }}
         >
-          {children}
-        </div>
-        {loading ? (
-          <LoadingSkeletonSurface
-            family="treemap"
-            seed={loadingSeed}
-            width="100%"
-            height="100%"
-            design={() => (
-              <g>
-                <rect x="8" y="8" width="360" height="220" rx="4" />
-                <rect x="376" y="8" width="256" height="104" rx="4" />
-                <rect x="376" y="120" width="124" height="108" rx="4" />
-                <rect x="508" y="120" width="124" height="108" rx="4" />
-              </g>
-            )}
-          />
-        ) : geometry.total <= 0 ? (
-          <div role="status" className="absolute inset-0 flex items-center justify-center">
-            {empty}
+          <div
+            data-kind-ui="treemap-content"
+            aria-hidden={loading || undefined}
+            inert={loading || undefined}
+            className={cn("absolute inset-0", loading && "invisible")}
+          >
+            {children}
           </div>
-        ) : null}
-        <LoadingStatus loading={loading} label={loadingLabel} />
-      </div>
-    </Context>
+          {loading ? (
+            <LoadingSkeletonSurface
+              family="treemap"
+              seed={loadingSeed}
+              width="100%"
+              height="100%"
+              design={() => (
+                <g>
+                  <rect x="8" y="8" width="360" height="220" rx="4" />
+                  <rect x="376" y="8" width="256" height="104" rx="4" />
+                  <rect x="376" y="120" width="124" height="108" rx="4" />
+                  <rect x="508" y="120" width="124" height="108" rx="4" />
+                </g>
+              )}
+            />
+          ) : geometry.total <= 0 ? (
+            <div role="status" className="absolute inset-0 flex items-center justify-center">
+              {empty}
+            </div>
+          ) : null}
+          <LoadingStatus loading={loading} label={loadingLabel} />
+        </div>
+      </Context>
+    </MotionContext>
   );
 }

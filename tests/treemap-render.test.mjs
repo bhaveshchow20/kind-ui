@@ -272,15 +272,14 @@ test("stable layout sorts IDs by code units independently of the host locale", (
   assert.deepEqual(ordered, ["Z", "a", "é"]);
 });
 
-test("Treemap rejects unsupported series visibility instead of silently ignoring it", () => {
-  for (const [name, value] of [
-    ["visibleSeries", []],
-    ["defaultVisibleSeries", []],
-    ["onVisibleSeriesChange", () => {}],
-  ]) {
-    assert.throws(
-      () => render(chart(null, { [name]: value })),
-      new RegExp(`does not accept ${name}`),
-    );
-  }
+test("Treemap visibility preserves data geometry and hides only matching configured roots", () => {
+  const html = render(
+    chart(h(TreemapChart.Tiles), {
+      config: { g: { color: "red" }, c: { color: "blue" } },
+      defaultVisibleSeries: ["g"],
+    }),
+  );
+  assert.match(html, /hidden=""[^>]*data-inactive="true"|data-inactive="true"[^>]*hidden=""/);
+  assert.match(html, /data-node-id="c"/);
+  assert.match(html, /data-node-id="a"/);
 });

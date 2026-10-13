@@ -944,3 +944,105 @@ for (const native of ["hidden", "inert"]) {
     ).toBe(true);
   });
 }
+
+test("shared treemap legend dims and hides without reallocating area, and guards the last root", async ({
+  page,
+}) => {
+  for (const hide of [false, true]) {
+    await page.goto(`/?shared-legend${hide ? "&hide" : ""}`);
+    const alpha = tile(page, "a");
+    const before = await alpha.boundingBox();
+    const energy = page.locator('button[data-legend-key="energy"]');
+    const technology = page.locator('button[data-legend-key="technology"]');
+    for (let repeat = 0; repeat < 3; repeat++) {
+      await energy.click();
+      if (hide) {
+        await expect(tile(page, "d")).toBeHidden();
+        await expect(alpha).toBeVisible();
+        await technology.click();
+        await expect(alpha).toBeVisible();
+      } else {
+        await expect(alpha).toHaveAttribute("data-inactive", "true");
+        await alpha.hover();
+        await expect(page.locator('[data-kind-ui="chart-tooltip-item"]')).toHaveAttribute(
+          "data-inactive",
+          "true",
+        );
+      }
+      expect(await alpha.boundingBox()).toEqual(before);
+      await energy.click();
+      await page.mouse.move(950, 5);
+      await expect(tile(page, "d")).toBeVisible();
+      await expect(alpha).not.toHaveAttribute("data-inactive", "true");
+    }
+  }
+});
+
+test("treemap tooltip follows motion within the same tile and clamps on resize", async ({
+  page,
+}) => {
+  await page.goto("/?animate&shared-legend");
+  const alpha = tile(page, "a");
+  const box = await alpha.boundingBox();
+  if (!box) throw new Error("Missing tile");
+  await page.mouse.move(box.x + 10, box.y + 20);
+  const first = await page.getByRole("tooltip").boundingBox();
+  await page.mouse.move(box.x + 45, box.y + 40);
+  const second = await page.getByRole("tooltip").boundingBox();
+  if (!first || !second) throw new Error("Missing cursor tooltip");
+  expect(second.x).toBeGreaterThan(first.x);
+  expect(second.y).toBeGreaterThan(first.y);
+  await update(page, "Resize");
+  await alpha.hover();
+  const tooltip = await page.getByRole("tooltip").boundingBox();
+  const chart = await page.locator('[data-kind-ui="treemap"]').boundingBox();
+  if (!tooltip || !chart) throw new Error("Missing measured bounds");
+  expect(tooltip.x + tooltip.width).toBeLessThanOrEqual(chart.x + chart.width + 1);
+  expect(tooltip.y + tooltip.height).toBeLessThanOrEqual(chart.y + chart.height + 1);
+});
+
+test("animated cursor inspection retargets continuously and clamps during resize", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/?animate&shared-legend");
+  const alpha = tile(page, "a");
+  const box = await alpha.boundingBox();
+  if (!box) throw new Error("Missing tile");
+  await page.mouse.move(box.x + 12, box.y + 15);
+  await expect(page.getByRole("tooltip")).toBeVisible();
+  await page.mouse.move(box.x + 70, box.y + 70);
+  const samples = await page.locator('[data-kind-ui="tooltip-motion"]').evaluate(
+    (element) =>
+      new Promise<string[]>((resolve) => {
+        const values: string[] = [];
+        const sample = () => {
+          values.push(getComputedStyle(element).transform);
+          if (values.length < 8) requestAnimationFrame(sample);
+          else resolve(values);
+        };
+        requestAnimationFrame(sample);
+      }),
+  );
+  expect(new Set(samples).size).toBeGreaterThan(1);
+  await update(page, "Weights");
+  await expect(page.locator('[data-kind-ui="tooltip-number"]')).toBeVisible();
+  await update(page, "Resize");
+  const overflow = await page.getByRole("tooltip").evaluate((element) => {
+    const chart = element.closest('[data-kind-ui="treemap"]');
+    if (!chart) throw new Error("Missing plot");
+    return new Promise<boolean>((resolve) => {
+      let count = 0;
+      let bounded = true;
+      const sample = () => {
+        const a = element.getBoundingClientRect();
+        const b = chart.getBoundingClientRect();
+        bounded &&= a.left >= b.left - 1 && a.right <= b.right + 1 && a.bottom <= b.bottom + 1;
+        if (++count < 10) requestAnimationFrame(sample);
+        else resolve(bounded);
+      };
+      requestAnimationFrame(sample);
+    });
+  });
+  expect(overflow).toBe(true);
+});

@@ -104,7 +104,7 @@ test("treemap model rejects malformed and ambiguous standard records", () => {
     () => normalizeTreemap([{ ...leaf("bad", 1), children: [] }]),
     /bad.*leaf.*children/i,
   );
-  assert.throws(() => normalizeTreemap([{ id: "bad", label: "Bad", value: 1 }]), /bad.*kind/i);
+  assert.equal(normalizeTreemap([{ id: "simple", label: "Simple", value: 1 }]).total, 1);
   assert.throws(() => normalizeTreemap([null]), /data\[0\].*record/i);
   assert.throws(() => normalizeTreemap({}), /data.*array/i);
 });

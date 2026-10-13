@@ -1,4 +1,5 @@
 "use client";
+import { motion } from "motion/react";
 import {
   type ComponentPropsWithRef,
   type CSSProperties,
@@ -8,8 +9,14 @@ import {
   useId,
   useLayoutEffect,
   useRef,
+  useState,
 } from "react";
-import { OutsidePlot } from "../family-root.js";
+import { AnimatedTooltipFrame, useInteractionOpacity } from "../animation.js";
+import { useChartInteraction } from "../chart-interaction.js";
+import { useEmphasis } from "../emphasis.js";
+import { FamilyLegend, OutsidePlot } from "../family-root.js";
+import { TooltipItem, tooltipClassName } from "../tooltip-content.js";
+import { TooltipNumber } from "../tooltip-number.js";
 import { cn } from "../utils.js";
 import { type TreemapContextValue, type TreemapItem, useTreemap } from "./chart.js";
 import type { TreemapRectangle } from "./layout.js";
@@ -56,79 +63,117 @@ function Mark<T>({
     },
     [context.register, node.id, consumerRef],
   );
+  const interaction = useChartInteraction();
+  const rootKey = node.path[0] ?? node.id;
+  const identityKey = interaction.kind === "node" ? node.id : rootKey;
+  const sharedSelection = interaction.eligible.includes(identityKey);
+  const selected = sharedSelection
+    ? interaction.mode === "focus" && interaction.selected === identityKey
+    : context.selectedId === node.id;
+  const emphasis = useEmphasis(
+    { kind: "series", key: rootKey, scope: "treemap", seriesKey: rootKey },
+    !context.loading && !context.isHidden(node),
+  );
+  const hidden = context.isHidden(node);
+  const inactive = context.isInactive(node);
+  const opacity = useInteractionOpacity(inactive ? 0.28 : 1, node.id);
   const target = context.focusedId ?? context.defaultFocusId;
   const color = context.colors.colors.get(node.id);
   return (
-    <button
-      {...buttonProps}
-      ref={ref}
-      type="button"
-      data-kind-ui={kind}
-      data-node-id={node.id}
-      data-selected={context.selectedId === node.id || undefined}
-      data-active={context.activeId === node.id || undefined}
-      data-unknown={color?.unknown || undefined}
-      tabIndex={context.loading ? -1 : target === node.id ? 0 : -1}
-      aria-pressed={context.selectedId === node.id}
-      aria-label={
-        buttonProps["aria-label"] ??
-        `${node.label}: ${context.formatValue(node.value, node)}${color ? `, ${color.formattedValue}` : ""}${node.kind === "group" ? ", open group" : ""}`
-      }
-      aria-describedby={
-        context.tooltipMounted && context.activeId === node.id && !context.tooltipDismissed
-          ? context.tooltipId
-          : undefined
-      }
-      className={cn(
-        "absolute m-0 overflow-hidden rounded-[2px] border border-[var(--background,#fff)] p-0 text-left text-[color:var(--foreground,inherit)] outline-offset-[-3px] focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[var(--foreground,#172033)] data-selected:ring-2 data-selected:ring-[var(--foreground,#172033)] data-selected:ring-inset",
-        buttonProps.className,
-      )}
-      style={{
-        ...rectangleStyle(node),
-        ...(height === undefined ? {} : { height }),
-        background: color?.color ?? "var(--chart-1,#6b7280)",
-        ...buttonProps.style,
-      }}
-      onFocus={(event) => {
-        buttonProps.onFocus?.(event);
-        if (!event.defaultPrevented) {
-          context.setFocused(node.id);
-          context.setActive(node.id);
-        }
-      }}
-      onPointerEnter={(event) => {
-        buttonProps.onPointerEnter?.(event);
-        if (!event.defaultPrevented) context.inspectPointer(event, node.id);
-      }}
-      onPointerMove={(event) => {
-        buttonProps.onPointerMove?.(event);
-        if (!event.defaultPrevented) context.inspectPointer(event, node.id);
-      }}
-      onPointerLeave={(event) => {
-        buttonProps.onPointerLeave?.(event);
-        if (!event.defaultPrevented && document.activeElement !== event.currentTarget)
-          context.setActive(null);
-      }}
-      onClick={(event) => {
-        buttonProps.onClick?.(event);
-        if (!event.defaultPrevented) {
-          context.setActive(node.id);
-          context.activate(node);
-        }
-      }}
-      onKeyDown={(event) => {
-        buttonProps.onKeyDown?.(event);
-        if (event.defaultPrevented) return;
-        if (
-          ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)
-        ) {
-          event.preventDefault();
-          context.moveFocus(node.id, event.key);
-        }
-      }}
+    <motion.div
+      initial={false}
+      className="absolute inset-0 pointer-events-none"
+      style={{ opacity }}
     >
-      {children === undefined ? buttonProps.children : children}
-    </button>
+      <button
+        {...buttonProps}
+        ref={ref}
+        type="button"
+        data-kind-ui={kind}
+        data-node-id={node.id}
+        hidden={hidden || buttonProps.hidden}
+        data-inactive={inactive || undefined}
+        data-selected={selected || undefined}
+        data-active={context.activeId === node.id || undefined}
+        data-unknown={color?.unknown || undefined}
+        tabIndex={context.loading ? -1 : target === node.id ? 0 : -1}
+        aria-pressed={selected}
+        aria-label={
+          buttonProps["aria-label"] ??
+          `${node.label}: ${context.formatValue(node.value, node)}${color ? `, ${color.formattedValue}` : ""}${node.kind === "group" ? ", open group" : ""}`
+        }
+        aria-describedby={
+          context.tooltipMounted && context.activeId === node.id && !context.tooltipDismissed
+            ? context.tooltipId
+            : undefined
+        }
+        className={cn(
+          "pointer-events-auto absolute m-0 overflow-hidden rounded-[2px] border border-[var(--background,#fff)] p-0 text-left text-[color:var(--foreground,inherit)] outline-offset-[-3px] focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[var(--foreground,#172033)] data-selected:ring-2 data-selected:ring-[var(--foreground,#172033)] data-selected:ring-inset",
+          buttonProps.className,
+        )}
+        style={{
+          ...rectangleStyle(node),
+          ...(height === undefined ? {} : { height }),
+          background: color?.color ?? "var(--chart-1,#6b7280)",
+          ...buttonProps.style,
+        }}
+        onFocus={(event) => {
+          buttonProps.onFocus?.(event);
+          if (!event.defaultPrevented) {
+            context.setFocused(node.id);
+            context.setActive(node.id);
+            if (event.currentTarget.matches(":focus-visible")) emphasis.enter("keyboard");
+          }
+        }}
+        onBlur={(event) => {
+          buttonProps.onBlur?.(event);
+          emphasis.leave("keyboard");
+        }}
+        onPointerEnter={(event) => {
+          buttonProps.onPointerEnter?.(event);
+          if (!event.defaultPrevented) {
+            if (event.pointerType !== "touch") emphasis.enter("pointer");
+            context.inspectPointer(event, node.id);
+          }
+        }}
+        onPointerMove={(event) => {
+          buttonProps.onPointerMove?.(event);
+          if (!event.defaultPrevented) {
+            if (event.pointerType !== "touch") emphasis.enter("pointer");
+            context.inspectPointer(event, node.id);
+          }
+        }}
+        onPointerLeave={(event) => {
+          buttonProps.onPointerLeave?.(event);
+          emphasis.leave("pointer");
+          if (!event.defaultPrevented && document.activeElement !== event.currentTarget)
+            context.setActive(null);
+        }}
+        onPointerCancel={(event) => {
+          buttonProps.onPointerCancel?.(event);
+          emphasis.leave("pointer");
+        }}
+        onClick={(event) => {
+          buttonProps.onClick?.(event);
+          if (!event.defaultPrevented) {
+            context.setActive(node.id);
+            context.activate(node, event);
+          }
+        }}
+        onKeyDown={(event) => {
+          buttonProps.onKeyDown?.(event);
+          if (event.defaultPrevented) return;
+          if (
+            ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)
+          ) {
+            event.preventDefault();
+            context.moveFocus(node.id, event.key);
+          }
+        }}
+      >
+        {children === undefined ? buttonProps.children : children}
+      </button>
+    </motion.div>
   );
 }
 export function TreemapTiles<T = TreemapDatum>({
@@ -195,6 +240,7 @@ export function TreemapGroups<T = TreemapDatum>({
             <div
               {...attributes}
               key={node.id}
+              hidden={context.isHidden(node) || attributes?.hidden}
               data-kind-ui="treemap-group"
               data-node-id={node.id}
               className={cn(
@@ -211,7 +257,7 @@ export function TreemapGroups<T = TreemapDatum>({
                   height={Math.min(node.height, context.groupHeaderHeight)}
                   {...(header ? { buttonProps: header } : {})}
                 >
-                  <span className="block truncate px-1 text-xs font-medium bg-[var(--background,#fff)] text-[var(--foreground,#172033)]">
+                  <span className="block truncate px-2 text-[11px] font-medium text-[var(--foreground,#172033)]">
                     {typeof children === "function"
                       ? children(node)
                       : children !== undefined
@@ -265,6 +311,7 @@ export function TreemapLabels<T = TreemapDatum>({
       {context.rectangles
         .filter(
           (node) =>
+            !context.isHidden(node) &&
             context.frontierIds.has(node.id) &&
             node.width >= minWidth + padding * 2 &&
             node.height >= minHeight + padding * 2,
@@ -272,70 +319,169 @@ export function TreemapLabels<T = TreemapDatum>({
         .map((node) => {
           const attributes = labelProps?.(node);
           return (
-            <span
-              {...attributes}
-              key={node.id}
-              data-kind-ui="treemap-label"
-              data-node-id={node.id}
-              className={cn(
-                "absolute block truncate rounded bg-[var(--background,#fff)] text-[var(--foreground,#172033)] text-xs leading-tight",
-                attributes?.className,
-              )}
-              style={{
-                left: node.x + padding,
-                top: node.y + padding,
-                width: Math.max(0, node.width - padding * 2),
-                maxHeight: Math.max(0, node.height - padding * 2),
-                overflow: "hidden",
-                ...attributes?.style,
-              }}
-            >
-              {typeof children === "function"
-                ? children(node)
-                : children !== undefined
-                  ? children
-                  : attributes?.children !== undefined
-                    ? attributes.children
-                    : node.label}
-            </span>
+            <LabelPaint key={node.id} inactive={context.isInactive(node)}>
+              <span
+                {...attributes}
+                key={node.id}
+                data-kind-ui="treemap-label"
+                data-node-id={node.id}
+                className={cn(
+                  "absolute block truncate text-[var(--foreground,#172033)] text-xs font-medium leading-tight",
+                  attributes?.className,
+                )}
+                style={{
+                  left: node.x + padding,
+                  top: node.y + padding,
+                  width: Math.max(0, node.width - padding * 2),
+                  maxHeight: Math.max(0, node.height - padding * 2),
+                  overflow: "hidden",
+                  ...attributes?.style,
+                }}
+              >
+                {typeof children === "function"
+                  ? children(node)
+                  : children !== undefined
+                    ? children
+                    : attributes?.children !== undefined
+                      ? attributes.children
+                      : node.label}
+              </span>
+            </LabelPaint>
           );
         })}
     </div>
   );
 }
+function LabelPaint({ inactive, children }: { inactive: boolean; children: ReactNode }) {
+  const opacity = useInteractionOpacity(inactive ? 0.28 : 1);
+  return (
+    <motion.div
+      initial={false}
+      className="absolute inset-0 pointer-events-none"
+      style={{ opacity }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 export type TreemapTooltipProps<T = TreemapDatum> = Omit<
   ComponentPropsWithRef<"div">,
   "children"
-> & { children?: ReactNode | ((node: TreemapItem<T>) => ReactNode) };
-export function TreemapTooltip<T = TreemapDatum>({ children, ...props }: TreemapTooltipProps<T>) {
+> & {
+  children?: ReactNode | ((node: TreemapItem<T>) => ReactNode);
+  valueAnimation?: "shuffle";
+};
+/** The same measured cursor frame and row presentation used by Kind's native charts. */
+export function TreemapTooltip<T = TreemapDatum>({
+  children,
+  valueAnimation,
+  ...props
+}: TreemapTooltipProps<T>) {
   const context = useTreemap<T>();
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const consumerRef = props.ref;
+  const ref = useCallback(
+    (node: HTMLDivElement | null) => {
+      setElement(node);
+      if (typeof consumerRef === "function") return consumerRef(node);
+      if (consumerRef) consumerRef.current = node;
+    },
+    [consumerRef],
+  );
   useEffect(() => {
     context.setTooltipMounted(true);
     return () => context.setTooltipMounted(false);
   }, [context.setTooltipMounted]);
+  useLayoutEffect(() => {
+    if (!element) return;
+    const measure = () =>
+      setSize((previous) => {
+        const next = { width: element.offsetWidth, height: element.offsetHeight };
+        return previous.width === next.width && previous.height === next.height ? previous : next;
+      });
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element]);
   const node = context.items.get(context.activeId ?? "");
-  if (!node || context.loading || context.tooltipDismissed) return null;
+  if (!node || context.loading || context.tooltipDismissed || context.isHidden(node)) return null;
   const color = context.colors.colors.get(node.id);
+  const anchor = context.pointer ?? {
+    x: (node.rectangle?.x ?? 0) + (node.rectangle?.width ?? 0) / 2,
+    y: (node.rectangle?.y ?? 0) + 20,
+  };
+  const maxX = Math.max(0, context.size.width - size.width);
+  const maxY = Math.max(0, context.size.height - size.height);
+  const formatted = context.formatValue(node.value, node);
   return (
-    <div
-      {...props}
-      id={context.tooltipId}
-      role="tooltip"
-      data-kind-ui="treemap-tooltip"
-      className={cn(
-        "pointer-events-none absolute right-2 bottom-2 z-20 rounded border border-[var(--border,#d1d5db)] bg-[var(--popover,#fff)] p-2 text-xs text-[var(--popover-foreground,#172033)] shadow-md",
-        props.className,
-      )}
-    >
-      {typeof children === "function"
-        ? children(node)
-        : (children ?? (
-            <>
-              <strong>{node.label}</strong>
-              <div>{context.formatValue(node.value, node)}</div>
-              {color && <div>{color.formattedValue}</div>}
-            </>
-          ))}
+    <div className="pointer-events-none absolute inset-0 z-20">
+      <AnimatedTooltipFrame
+        motionEnabled={context.animate}
+        x={Math.max(0, Math.min(anchor.x + 12, maxX))}
+        y={Math.max(0, Math.min(anchor.y + 12, maxY))}
+        maxX={maxX}
+        maxY={maxY}
+        frameProps={undefined}
+        style={{
+          width: "max-content",
+          maxWidth: context.size.width,
+          maxHeight: context.size.height,
+          overflow: "auto",
+        }}
+      >
+        <div
+          {...props}
+          ref={ref}
+          id={context.tooltipId}
+          role="tooltip"
+          data-kind-ui="treemap-tooltip"
+          className={cn(tooltipClassName, props.className)}
+        >
+          {typeof children === "function"
+            ? children(node)
+            : (children ?? (
+                <>
+                  <strong className="font-medium">
+                    {node.path.map((id) => context.model.byId.get(id)?.label).join(" / ")}
+                  </strong>
+                  <ul className="list-none p-0 mx-0 mb-0 mt-[2px]">
+                    <TooltipItem
+                      inactive={context.isInactive(node)}
+                      data-kind-ui="chart-tooltip-item"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="inline-block shrink-0 w-[3px] h-3 rounded-[1px]"
+                        style={{ background: color?.color }}
+                      />
+                      <span>{node.label}</span>
+                      <strong data-kind-ui="chart-tooltip-value">
+                        {valueAnimation === "shuffle" ? (
+                          <TooltipNumber value={formatted} />
+                        ) : (
+                          formatted
+                        )}
+                      </strong>
+                    </TooltipItem>
+                    {color && context.colors.legend.type !== "categorical" && (
+                      <TooltipItem inactive={context.isInactive(node)}>
+                        <span>{context.colors.legend.label}</span>
+                        <strong data-kind-ui="chart-tooltip-value">{color.formattedValue}</strong>
+                      </TooltipItem>
+                    )}
+                    <TooltipItem inactive={context.isInactive(node)}>
+                      <span>Share of total</span>
+                      <strong data-kind-ui="chart-tooltip-value">
+                        {((node.rootShare ?? 0) * 100).toFixed(1)}%
+                      </strong>
+                    </TooltipItem>
+                  </ul>
+                </>
+              ))}
+        </div>
+      </AnimatedTooltipFrame>
     </div>
   );
 }
@@ -397,6 +543,7 @@ export function TreemapDataTable<T = TreemapDatum>({
   ...props
 }: TreemapDataTableProps<T>) {
   const context = useTreemap<T>();
+  const interaction = useChartInteraction();
   const nodes = scope === "root" ? context.model.nodes : context.viewNodes;
   const table = useRef<HTMLTableElement | null>(null);
   const pendingFocus = useRef<{ viewId: string; owner: HTMLButtonElement } | null>(null);
@@ -463,6 +610,10 @@ export function TreemapDataTable<T = TreemapDatum>({
           <tbody>
             {nodes.map((node) => {
               const attributes = rowProps?.(node);
+              const identityKey = interaction.kind === "node" ? node.id : (node.path[0] ?? node.id);
+              const selected = interaction.eligible.includes(identityKey)
+                ? interaction.mode === "focus" && interaction.selected === identityKey
+                : context.selectedId === node.id;
               const share = (value: number | null) =>
                 value === null ? "—" : `${(value * 100).toFixed(2)}%`;
               return (
@@ -470,7 +621,7 @@ export function TreemapDataTable<T = TreemapDatum>({
                   {...attributes}
                   key={node.id}
                   data-node-id={node.id}
-                  data-selected={context.selectedId === node.id || undefined}
+                  data-selected={selected || undefined}
                   data-active={context.activeId === node.id || undefined}
                 >
                   {children ? (
@@ -482,7 +633,7 @@ export function TreemapDataTable<T = TreemapDatum>({
                       <th scope="row">
                         <button
                           type="button"
-                          aria-pressed={context.selectedId === node.id}
+                          aria-pressed={selected}
                           onFocus={(event) => {
                             if (!event.defaultPrevented) context.setActive(node.id);
                           }}
@@ -500,7 +651,7 @@ export function TreemapDataTable<T = TreemapDatum>({
                                   viewId: node.id,
                                   owner: event.currentTarget,
                                 };
-                              context.activate(node);
+                              context.activate(node, event);
                             }
                           }}
                         >
@@ -594,3 +745,5 @@ export function TreemapColorLegend(props: TreemapColorLegendProps) {
   );
 }
 export const TreemapContent = OutsidePlot;
+
+export const TreemapLegend = FamilyLegend;
