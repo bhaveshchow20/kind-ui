@@ -281,7 +281,7 @@ export function AnimatedTooltipFrame({
     <motion.div
       data-kind-ui="tooltip-motion"
       initial={false}
-      style={{ x: movingX, y: movingY }}
+      style={{ width: "max-content", maxWidth: "100%", x: movingX, y: movingY }}
       transformTemplate={({ x = 0, y = 0 }) =>
         `translate(clamp(0px, ${typeof x === "number" ? `${x}px` : x}, ${maxX}px), clamp(0px, ${typeof y === "number" ? `${y}px` : y}, ${maxY}px))`
       }
