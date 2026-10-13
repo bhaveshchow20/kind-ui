@@ -765,7 +765,9 @@ for (const part of ["table", "breadcrumb", "content"] as const) {
     if (!retained) throw new Error("Missing portaled focus owner");
     await update(page, "Loading");
     await expect(control).not.toBeVisible();
-    await expect(control).not.toBeFocused();
+    await expect
+      .poll(() => retained.evaluate((element) => element === document.activeElement))
+      .toBe(false);
     await update(page, "Loading");
     await expect(control).toBeFocused();
     expect(await control.evaluate((element, previous) => element === previous, retained)).toBe(
@@ -784,13 +786,18 @@ for (const part of ["table", "breadcrumb", "content"] as const) {
           ? page.getByRole("navigation").getByRole("button", { name: "All", exact: true })
           : page.getByRole("button", { name: "Portal action", exact: true });
     await control.focus();
+    const retained = await control.elementHandle();
+    if (!retained) throw new Error("Missing portaled focus owner");
     await update(page, "Loading");
-    await expect(control).not.toBeFocused();
+    await expect
+      .poll(() => retained.evaluate((element) => element === document.activeElement))
+      .toBe(false);
     const outside = page.getByRole("textbox", { name: "Outside focus" });
     await outside.focus();
     await update(page, "Loading");
     await expect(outside).toBeFocused();
     await expect(control).toBeVisible();
+    await retained.dispose();
   });
 }
 
