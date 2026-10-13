@@ -33,7 +33,6 @@ import { defaultHover, useReducedMotion } from "../motion-preference.js";
 import { colorStopToken } from "../series-color.js";
 import { cn } from "../utils.js";
 import { resolveTreemapColors, type TreemapColorEncoding } from "./encoding.js";
-import { TreemapLoadingDesign } from "./loading.js";
 import {
   layoutTreemap,
   type TreemapLayoutCache,
@@ -41,6 +40,7 @@ import {
   type TreemapRectangle,
   treemapNeighbor,
 } from "./layout.js";
+import { TreemapLoadingDesign } from "./loading.js";
 import {
   normalizeTreemap,
   type TreemapAccessors,
