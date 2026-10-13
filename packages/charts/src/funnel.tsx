@@ -448,6 +448,7 @@ export interface FunnelShapeProps<T = FunnelDatum> {
 }
 type OwnedStageAttribute =
   | "children"
+  | "dangerouslySetInnerHTML"
   | "role"
   | "tabIndex"
   | "aria-label"
@@ -666,9 +667,11 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
   const active = context.activeId === stage.id;
   const activate = (event: React.SyntheticEvent<SVGGElement>) => {
     if (!event.defaultPrevented && !context.loading) {
-      context.inspect(stage.id);
-      if (interaction.markActivation)
-        interaction.activate({ kind: "category", key: stage.id }, "mark", event);
+      if (
+        !interaction.markActivation ||
+        interaction.activate({ kind: "category", key: stage.id }, "mark", event)
+      )
+        context.inspect(stage.id);
     }
   };
   return (
@@ -846,7 +849,11 @@ function FunnelPaint({ opacity, children }: { opacity: MotionValue<number>; chil
   );
 }
 
-export type FunnelLabelsProps<T = FunnelDatum> = Omit<ComponentPropsWithRef<"ul">, "children"> & {
+export type FunnelLabelsProps<T = FunnelDatum> = Omit<
+  ComponentPropsWithRef<"ul">,
+  "children" | "dangerouslySetInnerHTML"
+> & {
+  dangerouslySetInnerHTML?: never;
   render?: (stage: FunnelStage<T>) => ReactNode;
 };
 export function FunnelLabels<T = FunnelDatum>({ render, ...props }: FunnelLabelsProps<T>) {
@@ -889,8 +896,9 @@ export interface FunnelTooltipContentProps<T = FunnelDatum> {
 }
 export type FunnelTooltipProps<T = FunnelDatum> = Omit<
   ComponentPropsWithRef<"div">,
-  "children" | "id" | "role"
+  "children" | "id" | "role" | "dangerouslySetInnerHTML"
 > & {
+  dangerouslySetInnerHTML?: never;
   Content?: ComponentType<FunnelTooltipContentProps<T>>;
   valueAnimation?: TooltipContentProps["valueAnimation"];
 };
@@ -953,8 +961,8 @@ export interface FunnelDataColumn<T = FunnelDatum> {
 }
 export type FunnelDataTableProps<T = FunnelDatum> = Omit<
   ComponentPropsWithRef<"table">,
-  "children"
-> & { caption: string; columns?: readonly FunnelDataColumn<T>[] };
+  "children" | "dangerouslySetInnerHTML"
+> & { dangerouslySetInnerHTML?: never; caption: string; columns?: readonly FunnelDataColumn<T>[] };
 export function FunnelDataTable<T = FunnelDatum>({
   caption,
   columns = [],
@@ -1026,7 +1034,12 @@ export function FunnelDataTable<T = FunnelDatum>({
     </OutsidePlot>
   );
 }
-export function FunnelLegend(props: Omit<LegendProps, "itemKeys"> & { itemKeys?: never }) {
+export function FunnelLegend(
+  props: Omit<LegendProps, "itemKeys" | "dangerouslySetInnerHTML"> & {
+    itemKeys?: never;
+    dangerouslySetInnerHTML?: never;
+  },
+) {
   const context = useFunnel();
   return (
     <OutsidePlot>

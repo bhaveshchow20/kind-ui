@@ -224,8 +224,11 @@ export function Host() {
               setSelectionWrites((count) => count + 1);
             },
             markActivation: params.has("none") ? "none" : "matching-legend",
-            ...(params.has("reset-veto")
-              ? { onBeforeInteraction: (request: { source: string }) => request.source !== "reset" }
+            ...(params.has("reset-veto") || params.has("mark-veto")
+              ? {
+                  onBeforeInteraction: (request: { source: string }) =>
+                    request.source !== (params.has("mark-veto") ? "mark" : "reset"),
+                }
               : {}),
           }}
           activeId={active}
@@ -254,6 +257,12 @@ export function Host() {
                       cleanupCount.current += 1;
                     };
                   },
+              onPointerEnter: (event) => {
+                if (params.has("prevent-inspection")) event.preventDefault();
+              },
+              onFocus: (event) => {
+                if (params.has("prevent-inspection")) event.preventDefault();
+              },
               onKeyDown: (event) => {
                 if (
                   params.has("prevent-activation") &&
