@@ -1,7 +1,6 @@
 "use client";
 import {
   BoxPlotChart,
-  CandlestickChart,
   Cell,
   computeWaterfallData,
   createHeatmapScale,
@@ -15,14 +14,12 @@ import {
   type WaterfallDatum,
 } from "@kind-ui/charts";
 import { motion, useInView, useReducedMotion } from "motion/react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import type { Finish } from "@/lib/advanced-chart-recipes";
 import type { DemoOptions } from "@/lib/demo-options";
 import {
   type BoxRow,
   boxRows,
-  type CandlestickSample,
-  candlestickRows,
   conversionData,
   heatmapData,
   histogramBins,
@@ -31,6 +28,7 @@ import {
   waterfallEntries,
 } from "@/lib/new-chart-recipes";
 import { demoEntry } from "@/lib/utils";
+import { MarketCandlestickChart } from "./market-candlestick-chart";
 
 function NewChart({
   recipe: r,
@@ -47,7 +45,6 @@ function NewChart({
   entranceKey: string;
   options?: DemoOptions;
 }) {
-  const [candleSelection, setCandleSelection] = useState<CandlestickSample["time"] | null>(null);
   const bins = useMemo(() => histogramBins(r.id), [r.id]);
   const rows = useMemo(() => boxRows(r.id), [r.id]);
   const heat = useMemo(() => heatmapData(r.id), [r.id]);
@@ -59,100 +56,12 @@ function NewChart({
   );
   if (r.family === "Candlestick") {
     return (
-      <>
-        <CandlestickChart
-          key={entranceKey}
-          data={candlestickRows}
-          selection={candleSelection}
-          onSelectionChange={(point) => setCandleSelection(point?.time ?? null)}
-          timeMode="business-date"
-          spacing="ordinal"
-          config={{
-            price: { label: "Synthetic executions · USD/share", color: demoEntry(colors, 0) },
-            volume: { label: "Volume · shares", color: demoEntry(colors, 2) },
-          }}
-          frameProps={{ className: "chart-root" }}
-          style={{ width: "100%", height: 240 }}
-          animate={animate}
-          aria-label="Synthetic session trade OHLC in USD per share, volume in shares"
-          margin={{ top: 12, right: 12, left: 0, bottom: 8 }}
-          formatTime={(time) => String(time).slice(5)}
-          formatPrice={(value) => `$${value.toFixed(2)}`}
-          formatVolume={(value) => `${value.toLocaleString("en-US")} shares`}
-        >
-          {options.showGrid !== false && (
-            <CandlestickChart.Grid
-              vertical={false}
-              stroke="var(--chart-grid, #e5e7eb)"
-              strokeDasharray="3 5"
-            />
-          )}
-          <CandlestickChart.XAxis
-            tickLine={false}
-            axisLine={false}
-            tickCount={5}
-            tick={options.showLabels === false ? false : { fontSize: 11 }}
-          />
-          <CandlestickChart.YAxis
-            width="auto"
-            tickLine={false}
-            axisLine={false}
-            tick={options.showLabels === false ? false : { fontSize: 11 }}
-            tickFormatter={(value) => `$${Number(value).toFixed(0)}`}
-          />
-          <CandlestickChart.Series
-            seriesKey="price"
-            rising={demoEntry(colors, 0)}
-            falling={demoEntry(colors, 1)}
-            unchanged={demoEntry(colors, 2)}
-            maxBarSize={options.width ?? 14}
-            markProps={{ strokeWidth: options.strokeWidth ?? 1.5 }}
-          />
-          <CandlestickChart.Volume
-            seriesKey="volume"
-            maxBarSize={options.width ?? 14}
-            fillOpacity={1}
-            axisProps={{ hide: true }}
-          />
-          <CandlestickChart.Crosshair stroke="var(--chart-axis, #64748b)" />
-          <CandlestickChart.Tooltip />
-          <CandlestickChart.Content className="sr-only" />
-        </CandlestickChart>
-        <div className="sr-only">
-          <table data-kind-ui="candlestick-data-alternative">
-            <caption>
-              Synthetic executions: daily OHLC in USD per share and volume in shares
-            </caption>
-            <thead>
-              <tr>
-                {["Session", "Open", "High", "Low", "Close", "Volume", "Source"].map((label) => (
-                  <th key={label} scope="col">
-                    {label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {candlestickRows.map((row) => (
-                <tr key={row.time} data-selected={row.time === candleSelection || undefined}>
-                  <th scope="row">{String(row.time).slice(5)}</th>
-                  {(["open", "high", "low", "close"] as const).map((field) => (
-                    <td key={field}>
-                      {row[field] === undefined ? "—" : `$${row[field].toFixed(2)}`}
-                    </td>
-                  ))}
-                  <td>
-                    {row.volume === undefined
-                      ? "—"
-                      : `${row.volume.toLocaleString("en-US")} shares`}
-                  </td>
-                  <td>{row.source}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </>
+      <MarketCandlestickChart
+        key={entranceKey}
+        colors={colors}
+        animate={animate}
+        options={options}
+      />
     );
   }
   if (r.family === "Line") {
@@ -522,12 +431,6 @@ export function NewChartCard({
       <div className="card-top">
         <h3 className="chart-tag">{recipe.tag}</h3>
       </div>
-      {recipe.family === "Candlestick" && (
-        <div className="chart-summary">
-          <strong>$206.40</strong>
-          <span>USD/share · synthetic executions</span>
-        </div>
-      )}
       <NewChart
         entranceKey={`${replay}-${chartAnimate}`}
         recipe={recipe}

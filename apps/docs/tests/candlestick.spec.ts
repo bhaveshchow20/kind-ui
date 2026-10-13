@@ -16,18 +16,22 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
     page.getByRole("heading", { name: "Candlestick Chart", exact: true, level: 1 }),
   ).toBeVisible();
   const asset = page.locator('[data-component="candlestick"]');
-  await expect(asset.locator(marks)).toHaveCount(12);
-  await expect(asset.locator('[data-kind-ui="candlestick-volume-mark"]')).toHaveCount(12);
-  await expect(asset.locator('[data-candle-part="doji"]')).toHaveCount(1);
-  await asset.getByRole("button", { name: "6 sessions", exact: true }).click();
-  // Six visible intervals plus one explicit overscan record retain their original extrema.
-  await expect(asset.locator(marks)).toHaveCount(7);
-  await asset.getByRole("button", { name: "All sessions", exact: true }).click();
-  await expect(asset.locator(marks)).toHaveCount(12);
+  await expect(asset.getByText("SIMULATED", { exact: true })).toBeVisible();
+  await asset.getByRole("button", { name: "Pause", exact: true }).click();
+  const count = await asset.locator(marks).count();
+  expect(count).toBeGreaterThanOrEqual(48);
+  expect(count).toBeLessThan(55);
+  await expect(asset.locator('[data-kind-ui="candlestick-volume-mark"]')).toHaveCount(count);
+  const readout = asset.locator('[data-kind-ui="candle-readout"]');
+  const paused = await readout.textContent();
+  await asset.getByRole("button", { name: "Step", exact: true }).click();
+  await expect(readout).not.toHaveText(paused ?? "");
+  await expect(asset.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+  await expect(asset.locator('[data-kind-ui="candlestick-current-price"]')).toBeVisible();
+  await expect(asset.locator('[data-kind-ui="candlestick-history-navigator"]')).toBeVisible();
   await asset.locator('[data-kind-ui="chart"]').focus();
   await page.keyboard.press("Home");
-  await expect(asset.locator('[data-kind-ui="candlestick-content"]')).toContainText("09-21");
-  await expect(asset.locator('[data-kind-ui="candlestick-content"]')).toContainText("$121.60");
+  await expect(asset.locator('[data-kind-ui="candlestick-content"]')).toContainText("08:00");
 
   const binary = page.locator('[data-component="candlestick-binary"]');
   await expect(binary.locator(marks)).toHaveCount(6);
@@ -38,30 +42,17 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
   await expect(binary.locator('[data-kind-ui="candlestick-content"]')).toContainText("partial");
   await expect(binary.locator('[data-kind-ui="candlestick-content"]')).toContainText("$0.59");
 
-  const updates = page.locator('[data-component="candlestick-updates"]');
-  const table = updates.getByRole("table", { name: "Current observations", exact: true });
-  await expect(table.locator("tbody tr")).toHaveCount(5);
-  await expect(updates.locator(marks)).toHaveCount(4);
-  await expect(table).toContainText("Gap");
-  const volumeCells = table.locator("tbody tr td:nth-child(6)");
-  await expect(volumeCells).toHaveText(["—", "—", "—", "—", "—"]);
-  await updates.locator('[data-kind-ui="chart"]').focus();
-  await page.keyboard.press("End");
-  await page.keyboard.press("Enter");
-  await expect(table.locator('tr[data-selected="true"]')).toContainText("$78.00");
-  await updates.getByRole("button", { name: "Replace current", exact: true }).click();
-  await expect(table.locator('tr[data-selected="true"]')).toContainText("$79.00");
-  await expect(table.locator('tr[data-selected="true"]')).toContainText("partial replacement");
-  await updates.getByRole("button", { name: "Correct older", exact: true }).click();
-  await expect(table.locator("tbody tr").first()).toContainText("$70.00");
-  await expect(table.locator("tbody tr").first()).toContainText("corrected");
-  await updates.getByRole("button", { name: "Append", exact: true }).click();
-  await expect(table.locator("tbody tr")).toHaveCount(6);
-  await expect(table.locator('tr[data-selected="true"]')).toContainText("final");
-  await updates.getByRole("button", { name: "Prepend", exact: true }).click();
-  await expect(table.locator("tbody tr")).toHaveCount(7);
-  await expect(table.locator('tr[data-selected="true"]')).toContainText("$79.00");
-  await expect(table).toContainText("Explicit gap");
+  await expect(page.getByRole("heading", { name: "Live updates", exact: true })).toHaveCount(0);
+  const panels = await page
+    .locator('[data-component^="candlestick"] .preview-panel')
+    .evaluateAll((nodes) =>
+      nodes.map((panel) => {
+        const frame = panel.getBoundingClientRect();
+        const example = panel.querySelector(".chart-example")?.getBoundingClientRect();
+        return { bottom: frame.bottom, contentBottom: example?.bottom ?? frame.bottom };
+      }),
+    );
+  for (const panel of panels) expect(panel.contentBottom).toBeLessThanOrEqual(panel.bottom + 1);
 
   const installation = page.locator('[data-chart-installation="candlestick"]');
   await expect(installation.getByRole("tab", { name: "CLI", exact: true })).toHaveAttribute(
@@ -100,21 +91,18 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
   for (const [id, example] of [
     ["candlestick", asset],
     ["candlestick-binary", binary],
-    ["candlestick-updates", updates],
   ] as const) {
     await example.getByRole("button", { name: "Copy prompt", exact: true }).click();
     const prompt = await page.evaluate(() => navigator.clipboard.readText());
     const selectedSource =
       id === "candlestick" ? "variants/ready/example.tsx" : `src/examples/${id}/example.tsx`;
     expect(prompt).toContain(`https://kindui.dev/charts/docs/examples/${id}/${selectedSource}`);
-    if (id === "candlestick-updates")
-      expect(prompt).toContain("Preserve the explicit readout and data table parts");
-    else {
-      expect(prompt).toContain("Preserve the explicit readout part");
-      expect(prompt).not.toMatch(/data table|alternative tables/);
-    }
+    expect(prompt).toContain("Reference package: @kind-ui/charts@0.6.0.");
+    expect(prompt).toContain("Install @kind-ui/charts@^0.6.0 and its documented");
+    expect(prompt).toContain("Preserve the explicit readout part");
+    expect(prompt).not.toMatch(/data table|alternative tables/);
     expect(prompt).not.toMatch(
-      /Published Core|Public installation requires|candidate artifact|wait for|unreleased|0\.6\.0/i,
+      /Published Core|Public installation requires|candidate artifact|wait for|unreleased/i,
     );
   }
   expect(errors).toEqual([]);
@@ -218,3 +206,89 @@ test("Candlestick installation and section copy controls fit narrow layouts with
     }
   }
 });
+
+test("Candlestick streaming pauses and resumes while zoom, pan and navigator share historical state", async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(`.${docRoute("/docs/components/candlestick/")}`);
+  const container = page.locator('[data-component="candlestick"]').first();
+  await container.getByRole("button", { name: "Pause", exact: true }).click();
+  const readout = container.locator('[data-kind-ui="candle-readout"]');
+  const paused = await readout.textContent();
+  await page.waitForTimeout(900);
+  await expect(readout).toHaveText(paused ?? "");
+  const count = await container.locator('[data-kind-ui="candlestick-mark"]').count();
+  await container.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await expect
+    .poll(() => container.locator('[data-kind-ui="candlestick-mark"]').count())
+    .toBeLessThan(count);
+  const start = container.getByRole("slider", { name: "Historical window start", exact: true });
+  const beforePan = Number(await start.getAttribute("aria-valuenow"));
+  const frame = container.locator('[data-kind-ui="chart"]').first();
+  await frame.focus();
+  await frame.press("Shift+ArrowLeft");
+  await expect
+    .poll(async () => Number(await start.getAttribute("aria-valuenow")))
+    .toBeLessThan(beforePan);
+  const beforeNavigator = Number(await start.getAttribute("aria-valuenow"));
+  await start.focus();
+  await start.press("ArrowLeft");
+  await expect
+    .poll(async () => Number(await start.getAttribute("aria-valuenow")))
+    .toBeLessThan(beforeNavigator);
+  const browsing = await start.getAttribute("aria-valuenow");
+  await container.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(readout).not.toHaveText(paused ?? "");
+  await expect(start).toHaveAttribute("aria-valuenow", browsing ?? "");
+  await container.getByRole("button", { name: "Pause", exact: true }).click();
+  await container.getByRole("button", { name: "Reset view", exact: true }).click();
+  await expect
+    .poll(() => container.locator('[data-kind-ui="candlestick-mark"]').count())
+    .toBeGreaterThanOrEqual(240);
+  await container.screenshot({
+    path: info.outputPath("streaming-history.png"),
+    animations: "disabled",
+  });
+  await info.attach("streaming-history", {
+    path: info.outputPath("streaming-history.png"),
+    contentType: "image/png",
+  });
+});
+
+for (const theme of ["light", "dark"]) {
+  test(`Candlestick primary and bounded examples keep controls and readouts contained in ${theme}`, async ({
+    page,
+  }, info) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(`.${docRoute("/docs/components/candlestick/")}`);
+    await page.evaluate(
+      (theme) => document.documentElement.classList.toggle("dark", theme === "dark"),
+      theme,
+    );
+    const asset = page.locator('[data-component="candlestick"]').first();
+    await asset.getByRole("button", { name: "Pause", exact: true }).click();
+    for (const id of ["candlestick", "candlestick-binary"]) {
+      const container = page.locator(`[data-component="${id}"]`).first();
+      const frame = container.locator('[data-kind-ui="chart"]').first();
+      await frame.focus();
+      await frame.press("End");
+      await expect(container.locator('[data-kind-ui="candlestick-content"]')).not.toBeEmpty();
+      const layout = await container.locator(".preview-panel").evaluate((panel) => {
+        const bounds = panel.getBoundingClientRect();
+        const composition = panel.querySelector(".chart-example")?.getBoundingClientRect();
+        return {
+          bottom: bounds.bottom,
+          contentBottom: composition?.bottom,
+          width: bounds.width,
+          scrollWidth: panel.scrollWidth,
+        };
+      });
+      expect(layout.contentBottom).toBeLessThanOrEqual(layout.bottom + 1);
+      expect(layout.scrollWidth).toBeLessThanOrEqual(layout.width + 1);
+      const file = info.outputPath(`${id}-${theme}.png`);
+      await container.screenshot({ path: file, animations: "disabled" });
+      await info.attach(`${id}-${theme}`, { path: file, contentType: "image/png" });
+    }
+  });
+}

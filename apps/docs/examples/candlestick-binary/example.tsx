@@ -84,7 +84,7 @@ const time = (value: number | string) =>
 
 export function BinaryBidCandlestickChart() {
   return (
-    <div>
+    <div style={{ minWidth: 0 }}>
       <p style={{ marginBottom: 16, fontSize: 12 }}>
         Simulated bid quotes · USD per contract · USD 1 payout · UTC
       </p>
@@ -131,9 +131,9 @@ export function BinaryBidCandlestickChart() {
         />
         <CandlestickSeries<Quote>
           seriesKey="bid"
-          rising="#733bff"
-          falling="#a78bfa"
-          unchanged="#666"
+          rising="var(--candlestick-rising, #087f68)"
+          falling="var(--candlestick-falling, #c43d54)"
+          unchanged="var(--candlestick-neutral, #53657b)"
           maxBarSize={22}
         />
         <CandlestickCrosshair strokeOpacity={0.5} />

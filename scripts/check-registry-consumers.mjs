@@ -24,6 +24,21 @@ const receipt = artifactReceiptSchema.parse(
 assert.equal(receipt.package.version, coreVersion);
 const tarball = await readFile(path.join(root, "artifacts/package", receipt.filename));
 assert.equal(createHash("sha256").update(tarball).digest("hex"), receipt.sha256);
+if (published) {
+  for (const item of registryItems) {
+    if (!item.minimumCoreVersion) continue;
+    const actual = coreVersion.split(".").map(Number);
+    const minimum = item.minimumCoreVersion.split(".").map(Number);
+    const firstDifference = actual.findIndex((part, index) => part !== minimum[index]);
+    const actualPart = actual[firstDifference];
+    const minimumPart = minimum[firstDifference];
+    assert.ok(
+      firstDifference === -1 ||
+        (actualPart !== undefined && minimumPart !== undefined && actualPart > minimumPart),
+      `Published consumer verification for ${item.name} requires Core ${item.minimumCoreVersion} or later; validated artifact is ${coreVersion}. Use candidate verification for this artifact.`,
+    );
+  }
+}
 const publishedMetadata = published ? await verifyPublishedArchive() : undefined;
 const output = path.join(root, "artifacts/registry/r");
 const evidencePath = path.join(
@@ -82,7 +97,7 @@ const server = createServer((request, response) => {
     JSON.stringify({
       ...item,
       dependencies: item.dependencies.map((dependency) =>
-        dependency === `@kind-ui/charts@${coreVersion}` ? `${endpoint}/candidate.tgz` : dependency,
+        dependency.startsWith("@kind-ui/charts@") ? `${endpoint}/candidate.tgz` : dependency,
       ),
     }),
   );

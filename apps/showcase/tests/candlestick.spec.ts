@@ -20,15 +20,24 @@ test("Candlestick card preserves source-labelled inspection, copied code and ins
   await page.getByRole("tab", { name: "Candlestick", exact: true }).click();
   const card = page.locator(".demo-grid .chart-card");
   await expect(card).toHaveCount(1);
-  await expect(card.locator(".chart-summary")).toContainText("USD/share · synthetic executions");
-  await expect(card.locator('[data-kind-ui="candlestick-mark"]')).toHaveCount(20);
+  await expect(card.getByText("SIMULATED", { exact: true })).toBeVisible();
+  await card.getByRole("button", { name: "Pause", exact: true }).click();
+  const markCount = await card.locator('[data-kind-ui="candlestick-mark"]').count();
+  expect(markCount).toBeGreaterThanOrEqual(48);
+  expect(markCount).toBeLessThan(55);
   const table = card.getByRole("table", {
-    name: "Synthetic executions: daily OHLC in USD per share and volume in shares",
+    name: "Simulated ETH / USD one-minute candles",
     exact: true,
   });
-  await expect(table.getByRole("row")).toHaveCount(21);
+  expect(await table.getByRole("row").count()).toBeGreaterThanOrEqual(241);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
-  await expect(table.getByRole("row").nth(1)).toContainText("Synthetic executions");
+  const readout = card.locator('[data-kind-ui="candle-readout"]');
+  const paused = await readout.textContent();
+  await card.getByRole("button", { name: "Step", exact: true }).click();
+  await expect(readout).not.toHaveText(paused ?? "");
+  await expect(card.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+  await expect(card.locator('[data-kind-ui="candlestick-current-price"]')).toBeVisible();
+  await expect(card.locator('[data-kind-ui="candlestick-history-navigator"]')).toBeVisible();
   const frame = card.locator('[data-kind-ui="chart"]').first();
   expect(
     await table.evaluate((table) => {
@@ -36,55 +45,26 @@ test("Candlestick card preserves source-labelled inspection, copied code and ins
         let parent = table.parentElement;
         parent && !parent.classList.contains("chart-card");
         parent = parent.parentElement
-      ) {
+      )
         if (parent.tabIndex >= 0) return true;
-      }
       return false;
     }),
   ).toBe(false);
   await frame.focus();
-  await page.keyboard.press("Tab");
-  await expect(
-    card.getByRole("button", { name: "Highlight Synthetic executions · USD/share", exact: true }),
-  ).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(
-    card.getByRole("button", { name: "Highlight Volume · shares", exact: true }),
-  ).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(
-    page.getByRole("button", { name: "Expand Session price action", exact: true }),
-  ).toBeFocused();
-  const readout = card.locator('[data-kind-ui="candlestick-content"][role="status"]');
-  await frame.focus();
   await frame.press("Home");
-  await expect(readout).toContainText("09-14");
-  await expect(readout).toContainText("$187.30");
-  await expect(readout).toContainText("420,000 shares");
-  await page.evaluate(() => {
-    document.documentElement.style.setProperty("--chart-grid", "initial");
-    document.documentElement.style.setProperty("--chart-axis", "initial");
-  });
-  await expect(card.locator(".recharts-cartesian-grid-horizontal line").first()).toHaveCSS(
-    "stroke",
-    "rgb(229, 231, 235)",
-  );
-  await expect(card.locator('[data-kind-ui="candlestick-crosshair"]')).toHaveCSS(
-    "stroke",
-    "rgb(100, 116, 139)",
-  );
-  await page.evaluate(() => {
-    document.documentElement.style.removeProperty("--chart-grid");
-    document.documentElement.style.removeProperty("--chart-axis");
-  });
-  await frame.press("End");
-  await expect(readout).toContainText("10-09");
-  await expect(readout).toContainText("$206.40");
+  await expect(card.locator('[data-kind-ui="candlestick-content"]')).toContainText("08:00");
   await frame.press("Enter");
-  await expect(table.locator('tr[data-selected="true"]')).toContainText("10-09");
+  await expect(table.locator('tr[data-selected="true"]')).toContainText("08:00");
   await frame.press("Escape");
-  await expect(readout).toBeEmpty();
   await expect(table.locator('tr[data-selected="true"]')).toHaveCount(0);
+  await card.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await expect
+    .poll(() => card.locator('[data-kind-ui="candlestick-mark"]').count())
+    .toBeLessThan(markCount);
+  await card.getByRole("button", { name: "Reset view", exact: true }).click();
+  await expect
+    .poll(() => card.locator('[data-kind-ui="candlestick-mark"]').count())
+    .toBeGreaterThanOrEqual(240);
 
   await page.getByRole("button", { name: "Expand Session price action", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -101,13 +81,17 @@ test("Candlestick card preserves source-labelled inspection, copied code and ins
   await expect(dialog.locator('.playground-footer [role="status"]')).toHaveText("Code copied");
   const copied = await page.evaluate(() => sessionStorage.getItem("candlestick-code"));
   expect(copied).toContain('from "@kind-ui/charts"');
-  expect(copied).toContain("<CandlestickChart.Volume");
+  expect(copied).toContain("<CandlestickVolume");
+  expect(copied).toContain("<CandlestickCurrentPrice");
+  expect(copied).toContain("<CandlestickControls");
+  expect(copied).toContain("<CandlestickHistoryNavigator");
   expect(copied).toContain('data-kind-ui="candlestick-data-alternative"');
   expect(copied).not.toContain("<CandlestickChart.DataTable");
   expect(copied).toContain('stroke="var(--chart-grid, #e5e7eb)"');
   expect(copied).toContain('stroke="var(--chart-axis, #64748b)"');
   expect(copied).toContain("selection={selection}");
-  expect(copied).toContain("Synthetic executions");
+  expect(copied).toContain("SIMULATED");
+  expect(copied).toContain("setInterval(step, 700)");
   expect(copied).not.toMatch(/responsive|localhost|127\.0\.0\.1/);
   await page.keyboard.press("Escape");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
@@ -146,7 +130,9 @@ for (const theme of ["light", "dark"] as const) {
     await page.getByRole("tab", { name: "Candlestick", exact: true }).click();
     const verify = async (selector: string) => {
       const card = page.locator(selector);
-      await expect(card.locator('[data-kind-ui="candlestick-mark"]')).toHaveCount(20);
+      const count = await card.locator('[data-kind-ui="candlestick-mark"]').count();
+      expect(count).toBeGreaterThanOrEqual(48);
+      expect(count).toBeLessThan(55);
       if (selector.includes("playground"))
         await expect(page.getByRole("dialog")).toHaveCSS("opacity", "1");
       const samples = await card.evaluate((card) => {
@@ -222,7 +208,9 @@ for (const width of [320, 375, 390, 414]) {
     await page.getByRole("tab", { name: "Candlestick", exact: true }).click();
     const verify = async (selector: string) => {
       const card = page.locator(selector);
-      await expect(card.locator('[data-kind-ui="candlestick-mark"]')).toHaveCount(20);
+      const count = await card.locator('[data-kind-ui="candlestick-mark"]').count();
+      expect(count).toBeGreaterThanOrEqual(48);
+      expect(count).toBeLessThan(55);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
       );
@@ -251,3 +239,53 @@ for (const width of [320, 375, 390, 414]) {
     expect(card.y + card.height).toBeLessThanOrEqual(main.y + main.height);
   });
 }
+
+test("Candlestick streaming pauses and resumes while zoom, pan and navigator share historical state", async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("./");
+  await page.getByRole("tab", { name: "Candlestick", exact: true }).click();
+  const container = page.locator(".demo-grid .chart-card");
+  await container.getByRole("button", { name: "Pause", exact: true }).click();
+  const readout = container.locator('[data-kind-ui="candle-readout"]');
+  const paused = await readout.textContent();
+  await page.waitForTimeout(900);
+  await expect(readout).toHaveText(paused ?? "");
+  const count = await container.locator('[data-kind-ui="candlestick-mark"]').count();
+  await container.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await expect
+    .poll(() => container.locator('[data-kind-ui="candlestick-mark"]').count())
+    .toBeLessThan(count);
+  const start = container.getByRole("slider", { name: "Historical window start", exact: true });
+  const beforePan = Number(await start.getAttribute("aria-valuenow"));
+  const frame = container.locator('[data-kind-ui="chart"]').first();
+  await frame.focus();
+  await frame.press("Shift+ArrowLeft");
+  await expect
+    .poll(async () => Number(await start.getAttribute("aria-valuenow")))
+    .toBeLessThan(beforePan);
+  const beforeNavigator = Number(await start.getAttribute("aria-valuenow"));
+  await start.focus();
+  await start.press("ArrowLeft");
+  await expect
+    .poll(async () => Number(await start.getAttribute("aria-valuenow")))
+    .toBeLessThan(beforeNavigator);
+  const browsing = await start.getAttribute("aria-valuenow");
+  await container.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(readout).not.toHaveText(paused ?? "");
+  await expect(start).toHaveAttribute("aria-valuenow", browsing ?? "");
+  await container.getByRole("button", { name: "Pause", exact: true }).click();
+  await container.getByRole("button", { name: "Reset view", exact: true }).click();
+  await expect
+    .poll(() => container.locator('[data-kind-ui="candlestick-mark"]').count())
+    .toBeGreaterThanOrEqual(240);
+  await container.screenshot({
+    path: info.outputPath("streaming-history.png"),
+    animations: "disabled",
+  });
+  await info.attach("streaming-history", {
+    path: info.outputPath("streaming-history.png"),
+    contentType: "image/png",
+  });
+});

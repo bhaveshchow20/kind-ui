@@ -20,9 +20,16 @@ for (const family of families) {
     ids.add(example.id);
   }
 }
-export const examples = families.map((family) => family.examples[0]);
+export const examples = families.map((family) => ({
+  ...family.examples[0],
+  ...(family.minimumCoreVersion ? { minimumCoreVersion: family.minimumCoreVersion } : {}),
+}));
 export const allExamples = families.flatMap((family) =>
-  family.examples.map((example) => ({ ...example, family: family.id })),
+  family.examples.map((example) => ({
+    ...example,
+    family: family.id,
+    ...(family.minimumCoreVersion ? { minimumCoreVersion: family.minimumCoreVersion } : {}),
+  })),
 );
 export const dataLabels = Object.assign({}, ...families.map((family) => family.dataLabels));
 export const variantDefinitions = Object.assign({}, ...families.map((family) => family.variants));

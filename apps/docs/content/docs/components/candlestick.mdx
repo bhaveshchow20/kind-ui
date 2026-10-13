@@ -53,12 +53,6 @@ Bid OHLC in USD per contract. Bounds and source labels are explicit.
 
 <ChartExample id="candlestick-binary" />
 
-## Live updates
-
-Replace, correct, append or prepend observations. The table follows current data.
-
-<ChartExample id="candlestick-updates" />
-
 ## Loading State
 
 Set `loading` and a source-specific `loadingLabel` while observations are pending.
@@ -111,10 +105,13 @@ Set `loading` and a source-specific `loadingLabel` while observations are pendin
 | `CandlestickXAxis` | Visible nongap observation ticks by default; chart-owned time coordinates/domain. Consumer ticks, formatters and reversed/padded geometry remain explicit; gestures follow the rendered scale. |
 | `CandlestickYAxis` | Chart-owned price domain/scale and volume separation; native tick formatting and presentation. |
 | `CandlestickGrid` | Native CartesianGrid presentation. |
-| `CandlestickVolume` | Required `seriesKey`; independent volume axis via `axisProps`; visible observations set its extent, excluding overscan. Native bar styles, shape and events. Data, data key and axes stay with the family; separate native `data`, `minPointSize`, `background`, `layout` and stacking overrides are rejected at runtime, as are other owned Bar/axis geometry keys. |
+| `CandlestickVolume` | Required `seriesKey`; optional `rising`, `falling`, `unchanged` direction paints and native `fill` / `fillOpacity`; independent volume axis via `axisProps`; visible observations set its extent, excluding overscan. Native bar styles, shape and events. Data, data key and axes stay with the family; separate native `data`, `minPointSize`, `background`, `layout` and stacking overrides are rejected at runtime, as are other owned Bar/axis geometry keys. |
 | `CandlestickOverlay<Row>` | Required `seriesKey`, `dataKey` (row key or `(row) => number \| null \| undefined`); optional `includeInDomain` (default `false`); native line presentation and `connectNulls`. Every value is validated before viewport filtering; included values also obey price bounds. |
 | `CandlestickReferenceLine` | Native reference-line presentation with explicit time/price coordinates and labels; clipped to the price region, `ifOverflow="hidden"` by default, no `"extendDomain"` or alternate axes. |
-| `CandlestickCrosshair` | SVG group props; one active-time line shared across the price and volume regions, plus an observed-close price line. |
+| `CandlestickCrosshair` | SVG group props; `mode` (`"free"` by default, or `"snap"`), `showLabels` (default `true`) and native text `labelProps`. Pointer X/Y drive independent time/price guides and formatted axis labels; nearest-candle inspection supplies OHLC. Keyboard inspection anchors to the candle close. |
+| `CandlestickCurrentPrice<Row>` | Latest close line and price-axis pill, independent of inspection. Optional `seriesKey`, `orientation` (default `"right"`), `rising`, `falling`, `unchanged`, `lineVisible` and `axisLabelVisible` (both default `true`). Native `lineProps` and SVG-group `labelProps` retain refs and handlers; `labelTextColor` defaults to `"white"`. Optional child `(point, label) => ReactNode` replaces the axis label. |
+| `CandlestickControls` | Accessible zoom-in, zoom-out and reset buttons; `zoomFactor` (default `1.5`, finite and greater than `1`), `disabled`, native fieldset attributes, and `zoomInProps` / `zoomOutProps` / `resetProps` retain button markup, refs and handlers. |
+| `CandlestickHistoryNavigator` | Separate full-history close overview with a draggable range; controls the same viewport as pointer and keyboard panning. `height` defaults to `56`; `brushProps` and `overviewProps` expose native presentation, refs and handlers while the family retains data, axes and viewport ownership. |
 | `CandlestickContent<Row>` | Optional child `(point, selection) => ReactNode`, `className` and HTML `frameProps`; default OHLC/volume/state status readout outside the plot. |
 | `CandlestickTooltip<Row>` | Same child/readout contract, plus `maxWidth` (default `260`); measured floating tooltip and positioned frame ref through `frameProps.ref`. Polite announcements default off when Content is composed; `frameProps` retains consumer override. |
 | `CandlestickDataTable<Row>` | Required `caption`; optional `renderMetadata(point)`, `metadataLabel` (default `"Metadata"`) and native table attributes/ref. Missing values show a dash; its named focusable scroll region exposes off-screen columns. |
@@ -149,6 +146,8 @@ Set `loading` and a source-specific `loadingLabel` while observations are pendin
 | Meaning | Consumers supply trade/bid/ask source, price/volume units, tick rules, calculations and calendars. No inferred probability, payout or opposite outcome. |
 
 ### History and immutable updates
+
+For streaming, keep observations in caller state and pass a new ordered array for each update. Replace the forming row with the same `time`; append a new row when its interval starts. Corrections and prepends use the same typed `data` contract. Own feed loading, errors, retry and cancellation; stop timers or subscriptions when the component unmounts. The example runs a local simulation with Pause, Resume and Step.
 
 | Contract | Rule |
 | --- | --- |

@@ -14,6 +14,7 @@ export const registryItems = [
     name: chartItemName(example.id),
     title: example.title,
     description: example.notes,
+    ...(example.minimumCoreVersion ? { minimumCoreVersion: example.minimumCoreVersion } : {}),
   };
 });
 

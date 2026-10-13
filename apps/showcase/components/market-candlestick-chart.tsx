@@ -1,0 +1,305 @@
+"use client";
+import {
+  CandlestickChart,
+  CandlestickContent,
+  CandlestickControls,
+  CandlestickCrosshair,
+  CandlestickCurrentPrice,
+  CandlestickGrid,
+  CandlestickHistoryNavigator,
+  type CandlestickPoint,
+  CandlestickSeries,
+  CandlestickVolume,
+  CandlestickXAxis,
+  CandlestickYAxis,
+  type SeriesConfig,
+} from "@kind-ui/charts";
+import { useEffect, useReducer, useState } from "react";
+import type { DemoOptions } from "@/lib/demo-options";
+
+type Candle = {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  state: "final" | "partial";
+};
+const buttonStyle = {
+  border: "1px solid var(--chart-grid, #dfe2e8)",
+  borderRadius: 8,
+  padding: "5px 10px",
+  font: "inherit",
+  fontSize: 12,
+  background: "transparent",
+  color: "inherit",
+};
+const round = (value: number) => Math.round(value * 100) / 100;
+const start = Date.UTC(2026, 9, 13, 8);
+function history(): Candle[] {
+  let close = 2360;
+  let seed = 721;
+  const random = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+  return Array.from({ length: 240 }, (_, index) => {
+    const open = close;
+    const move = (random() - 0.48) * 3.8 + Math.sin(index * 0.063) * 0.6;
+    close = round(open + move);
+    return {
+      time: start + index * 60_000,
+      open,
+      high: round(Math.max(open, close) + 0.3 + random() * 1.8),
+      low: round(Math.min(open, close) - 0.3 - random() * 1.6),
+      close,
+      volume: round(40 + Math.abs(move) * 24 + random() * 85),
+      state: index === 239 ? "partial" : "final",
+    };
+  });
+}
+type Feed = { rows: Candle[]; tick: number };
+function advance(feed: Feed): Feed {
+  const latest = feed.rows.at(-1);
+  if (!latest) return feed;
+  const tick = feed.tick + 1;
+  const close = round(latest.close + Math.sin(tick * 1.41) * 0.56 + Math.cos(tick * 0.37) * 0.31);
+  if (tick % 8 === 0)
+    return {
+      tick,
+      rows: [
+        ...feed.rows.slice(0, -1),
+        { ...latest, state: "final" },
+        {
+          time: latest.time + 60_000,
+          open: latest.close,
+          high: Math.max(latest.close, close),
+          low: Math.min(latest.close, close),
+          close,
+          volume: 8.4,
+          state: "partial",
+        },
+      ],
+    };
+  return {
+    tick,
+    rows: [
+      ...feed.rows.slice(0, -1),
+      {
+        ...latest,
+        close,
+        high: Math.max(latest.high, close),
+        low: Math.min(latest.low, close),
+        volume: round(latest.volume + 4 + Math.abs(Math.sin(tick * 2.17)) * 19),
+      },
+    ],
+  };
+}
+const config = {
+  price: { label: "ETH / USD", color: "#15803d" },
+  volume: { label: "Volume (ETH)", color: "#64748b" },
+} satisfies SeriesConfig;
+const priceFormatter = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const timeFormatter = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "UTC",
+});
+const money = (value: number) => priceFormatter.format(value);
+const time = (value: number | string) => timeFormatter.format(new Date(Number(value)));
+
+export function MarketCandlestickChart({
+  colors,
+  animate,
+  options = {},
+}: {
+  colors: string[];
+  animate: boolean;
+  options?: DemoOptions;
+}) {
+  const rising = colors[0] ?? "#15803d";
+  const falling = colors[1] ?? "#be123c";
+  const unchanged = colors[2] ?? "#64748b";
+  const [selection, setSelection] = useState<number | string | null>(null);
+  const [feed, step] = useReducer(advance, undefined, () => ({ rows: history(), tick: 0 }));
+  const [running, setRunning] = useState(true);
+  const [inspected, setInspected] = useState<CandlestickPoint<Candle> | null>(null);
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(step, 700);
+    return () => clearInterval(interval);
+  }, [running]);
+  const candle =
+    (inspected ? feed.rows.find((row) => row.time === inspected.time) : null) ?? feed.rows.at(-1);
+  const change = candle ? ((candle.close - candle.open) / candle.open) * 100 : 0;
+  const direction = change > 0 ? rising : change < 0 ? falling : unchanged;
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          alignItems: "center",
+          flexWrap: "wrap",
+          marginBottom: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <strong style={{ fontSize: 14 }}>ETH / USD · 1m</strong>
+          <span
+            style={{
+              border: "1px solid var(--border, #dfe2e8)",
+              borderRadius: 5,
+              padding: "2px 6px",
+              fontSize: 10,
+              color: "var(--muted-foreground)",
+            }}
+          >
+            SIMULATED
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button style={buttonStyle} type="button" onClick={() => setRunning(!running)}>
+            {running ? "Pause" : "Resume"}
+          </button>
+          <button
+            style={buttonStyle}
+            type="button"
+            onClick={() => {
+              setRunning(false);
+              step();
+            }}
+          >
+            Step
+          </button>
+        </div>
+      </div>
+      <div
+        data-kind-ui="candle-readout"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "4px 12px",
+          fontSize: 12,
+          fontVariantNumeric: "tabular-nums",
+          marginBottom: 12,
+          minHeight: 20,
+        }}
+      >
+        {candle && (
+          <>
+            <span>{time(candle.time)} UTC</span>
+            {(["open", "high", "low", "close"] as const).map((key) => (
+              <span key={key}>
+                {key[0]?.toUpperCase()}{" "}
+                <span style={{ color: direction }}>{money(candle[key])}</span>
+              </span>
+            ))}
+            <span>Vol {candle.volume.toFixed(1)}</span>
+            <span style={{ color: direction }}>
+              {change >= 0 ? "+" : ""}
+              {change.toFixed(2)}%
+            </span>
+          </>
+        )}
+      </div>
+      <CandlestickChart<Candle>
+        config={config}
+        data={feed.rows}
+        selection={selection}
+        onSelectionChange={(point) => setSelection(point?.time ?? null)}
+        timeMode="epoch-ms"
+        spacing="ordinal"
+        defaultViewport={{ from: 189.5, to: 239.5 }}
+        followLatest
+        onInspect={setInspected}
+        height={280}
+        aria-label="Simulated ETH / USD one minute candles with volume and historical navigator"
+        formatTime={time}
+        formatPrice={money}
+        formatVolume={(value) => `${value.toFixed(1)} ETH`}
+        animate={animate}
+        margin={{ top: 12, right: 8, bottom: 4, left: 0 }}
+      >
+        {options.showGrid !== false && (
+          <CandlestickGrid
+            vertical={false}
+            strokeDasharray="3 5"
+            stroke="var(--chart-grid, #e5e7eb)"
+          />
+        )}
+        <CandlestickXAxis
+          tick={options.showLabels === false ? false : { fontSize: 11 }}
+          axisLine={false}
+          tickLine={false}
+          tickMargin={10}
+          minTickGap={32}
+        />
+        <CandlestickYAxis
+          tick={options.showLabels === false ? false : { fontSize: 11 }}
+          orientation="right"
+          axisLine={false}
+          tickLine={false}
+          width={76}
+        />
+        <CandlestickSeries
+          seriesKey="price"
+          rising={rising}
+          falling={falling}
+          unchanged={unchanged}
+          maxBarSize={options.width ?? 12}
+          markProps={{ strokeWidth: options.strokeWidth ?? 1.5 }}
+        />
+        <CandlestickVolume
+          seriesKey="volume"
+          rising={rising}
+          falling={falling}
+          unchanged={unchanged}
+          fillOpacity={0.78}
+          axisProps={{ hide: true }}
+        />
+        <CandlestickCurrentPrice
+          labelTextColor="var(--candlestick-label-text, #fff)"
+          seriesKey="price"
+          rising={rising}
+          falling={falling}
+          unchanged={unchanged}
+        />
+        <CandlestickCrosshair stroke="var(--chart-axis, #64748b)" strokeOpacity={0.5} />
+        <CandlestickContent className="sr-only" />
+        <CandlestickControls />
+        <CandlestickHistoryNavigator />
+      </CandlestickChart>
+      <div className="sr-only">
+        <table data-kind-ui="candlestick-data-alternative">
+          <caption>Simulated ETH / USD one-minute candles</caption>
+          <thead>
+            <tr>
+              {["Time", "Open", "High", "Low", "Close", "Volume"].map((label) => (
+                <th key={label} scope="col">
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {feed.rows.map((row) => (
+              <tr key={row.time} data-selected={row.time === selection || undefined}>
+                <th scope="row">{time(row.time)}</th>
+                {(["open", "high", "low", "close"] as const).map((field) => (
+                  <td key={field}>{money(row[field])}</td>
+                ))}
+                <td>{row.volume.toFixed(1)} ETH</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

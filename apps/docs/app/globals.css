@@ -4,6 +4,7 @@
 @import "fumadocs-ui/css/preset.css";
 @import "../examples/shared/example.css";
 @source "../node_modules/@kind-ui/charts/dist";
+@source "../examples";
 .line-code-block pre {
   margin: 0;
   max-height: none;
@@ -803,6 +804,26 @@ input:focus-visible {
 .line-workbench .preview-panel {
   overflow: visible;
   overscroll-behavior: auto;
+}
+/* Candle compositions include controls, readouts and history below the plot. */
+.line-workbench[data-component^="candlestick"] .preview-panel {
+  height: auto;
+  min-height: var(--line-panel-height);
+}
+.line-workbench[data-component^="candlestick"] .chart-example {
+  min-width: 0;
+}
+.line-workbench[data-component^="candlestick"] button:not([data-slot]) {
+  border: 1px solid var(--color-fd-border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  background: var(--color-fd-background);
+  color: var(--color-fd-foreground);
+  font: inherit;
+  font-size: 12px;
+}
+.line-workbench[data-component^="candlestick"] button:disabled {
+  opacity: 0.5;
 }
 .line-workbench .code-files {
   display: flex;

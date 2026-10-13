@@ -1,4 +1,8 @@
 .chart-example {
+  --candlestick-rising: #087f68;
+  --candlestick-falling: #c43d54;
+  --candlestick-neutral: #53657b;
+  --candlestick-label-text: #fff;
   --foreground: #25252b;
   --background: #fff;
   --card: #fff;
@@ -21,6 +25,10 @@
   border-radius: 0.5rem;
 }
 .dark .chart-example {
+  --candlestick-rising: #22b99f;
+  --candlestick-falling: #f57888;
+  --candlestick-neutral: #94a3b8;
+  --candlestick-label-text: #000;
   --foreground: #e9e9f0;
   --background: #1c1c24;
   --card: #252530;

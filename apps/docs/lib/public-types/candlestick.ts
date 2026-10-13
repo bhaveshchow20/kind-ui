@@ -48,7 +48,7 @@ export type CandlestickMarkReference = Pick<
 >;
 export type CandlestickVolumeReference = Pick<
   Chart.CandlestickVolumeProps,
-  "seriesKey" | "axisProps" | "fill" | "fillOpacity"
+  "seriesKey" | "axisProps" | "fill" | "fillOpacity" | "rising" | "falling" | "unchanged"
 >;
 export type CandlestickOverlayReference = Pick<
   Chart.CandlestickOverlayProps,
@@ -64,4 +64,37 @@ export type CandlestickDataTableReference = Pick<
 export type CandlestickReferenceLineReference = Pick<
   Chart.CandlestickReferenceLineProps,
   "x" | "y" | "ifOverflow" | "label" | "stroke"
+>;
+
+export type CandlestickCrosshairReference = Pick<
+  Chart.CandlestickCrosshairProps,
+  "mode" | "showLabels" | "labelProps" | "stroke" | "strokeWidth" | "strokeOpacity"
+>;
+export type CandlestickCurrentPriceReference = Pick<
+  Chart.CandlestickCurrentPriceProps,
+  | "seriesKey"
+  | "orientation"
+  | "lineVisible"
+  | "axisLabelVisible"
+  | "rising"
+  | "falling"
+  | "unchanged"
+  | "lineProps"
+  | "labelProps"
+  | "labelTextColor"
+  | "children"
+>;
+export type CandlestickControlsReference = Pick<
+  Chart.CandlestickControlsProps,
+  | "zoomFactor"
+  | "disabled"
+  | "zoomInProps"
+  | "zoomOutProps"
+  | "resetProps"
+  | "children"
+  | "className"
+>;
+export type CandlestickHistoryNavigatorReference = Pick<
+  Chart.CandlestickHistoryNavigatorProps,
+  "height" | "brushProps" | "overviewProps" | "className"
 >;

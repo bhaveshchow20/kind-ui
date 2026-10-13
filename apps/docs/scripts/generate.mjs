@@ -130,7 +130,7 @@ for (const example of allExamples) {
       )
     : undefined;
   const files = {
-    "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
+    "package.json": `${JSON.stringify({ ...manifest, dependencies: { ...manifest.dependencies, "@kind-ui/charts": `^${example.minimumCoreVersion ?? provenance.version}` } }, null, 2)}\n`,
     "index.html":
       '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kind UI chart example</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>\n',
     "tsconfig.json": `${JSON.stringify(

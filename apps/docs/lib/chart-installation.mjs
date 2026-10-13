@@ -1,4 +1,4 @@
-/** @typedef {{id: string, version: string, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
+/** @typedef {{id: string, version: string, minimumCoreVersion?: string | undefined, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
 /** @typedef {{title: string, description: string, code: string, language: "sh" | "css" | "tsx", filename: string}} InstallationStep */
 
 /** @param {InstallationBundle} bundle */
@@ -14,7 +14,7 @@ export function installationFor(bundle) {
     {
       title: "Install Core",
       description: "Add the package and its peers to your React 19.3 project.",
-      code: "npm install @kind-ui/charts motion recharts",
+      code: `npm install @kind-ui/charts${bundle.minimumCoreVersion ? `@^${bundle.minimumCoreVersion}` : ""} motion recharts`,
       language: "sh",
       filename: "Terminal",
     },

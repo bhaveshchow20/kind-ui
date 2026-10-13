@@ -599,10 +599,10 @@ function DocumentationSearch() {
 }
 
 const installCommands = {
-  npm: "npm install @kind-ui/charts",
-  pnpm: "pnpm add @kind-ui/charts",
-  yarn: "yarn add @kind-ui/charts",
-  bun: "bun add @kind-ui/charts",
+  npm: "npm install @kind-ui/charts@^0.6.0",
+  pnpm: "pnpm add @kind-ui/charts@^0.6.0",
+  yarn: "yarn add @kind-ui/charts@^0.6.0",
+  bun: "bun add @kind-ui/charts@^0.6.0",
   shadcn: "npx shadcn@latest add @kind-ui/line-chart",
 };
 const installChartNames = [
@@ -713,7 +713,7 @@ function InstallSection() {
                 <>
                   <span className="install-tool">{installCommands[key].split(" ")[0]}</span>{" "}
                   {installCommands[key].split(" ").slice(1, -1).join(" ")}{" "}
-                  <span className="install-package">@kind-ui/charts</span>
+                  <span className="install-package">{installCommands[key].split(" ").at(-1)}</span>
                 </>
               )}
             </code>

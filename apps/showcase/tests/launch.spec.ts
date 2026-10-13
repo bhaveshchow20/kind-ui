@@ -150,7 +150,7 @@ for (const width of [320, 375, 1280]) {
     await page.goto("./", { waitUntil: "networkidle" });
     const install = page.getByRole("region", { name: "Install Kind UI Charts" });
     for (const manager of ["npm", "pnpm", "yarn", "bun"]) {
-      const command = `${manager} ${manager === "npm" ? "install" : "add"} @kind-ui/charts`;
+      const command = `${manager} ${manager === "npm" ? "install" : "add"} @kind-ui/charts@^0.6.0`;
       await install.getByRole("tab", { name: manager, exact: true }).click();
       await expect(install.locator(".install-panel-content")).toContainText(command);
       await install.getByRole("button", { name: "Copy install command", exact: true }).click();

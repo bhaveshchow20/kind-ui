@@ -25,7 +25,7 @@ const dependencies = [
   "recharts@^3.10.1",
   "motion@^13.4.6",
 ];
-const items = registryItems.map(({ exampleId, name, title, description }) => {
+const items = registryItems.map(({ exampleId, name, title, description, minimumCoreVersion }) => {
   const sourcePath = `src/examples/${exampleId}/example.tsx`;
   const files = filesFor(
     {
@@ -49,7 +49,9 @@ const items = registryItems.map(({ exampleId, name, title, description }) => {
     type: "registry:component",
     title,
     description,
-    dependencies,
+    dependencies: minimumCoreVersion
+      ? [`@kind-ui/charts@^${minimumCoreVersion}`, ...dependencies.slice(1)]
+      : dependencies,
     devDependencies: ["tailwindcss@^4.0.0"],
     css: registryCss,
     files: [{ path: relative, type: "registry:component", target: `@components/${name}.tsx` }],

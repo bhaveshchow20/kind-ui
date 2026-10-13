@@ -2,42 +2,133 @@
 import {
   CandlestickChart,
   CandlestickContent,
+  CandlestickControls,
   CandlestickCrosshair,
+  CandlestickCurrentPrice,
   CandlestickGrid,
+  CandlestickHistoryNavigator,
+  type CandlestickPoint,
   CandlestickSeries,
-  type CandlestickViewport,
   CandlestickVolume,
   CandlestickXAxis,
   CandlestickYAxis,
   type SeriesConfig,
 } from "@kind-ui/charts";
-import { useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 
-// Original simulated daily trade OHLC; prices are USD and volume is shares.
-const data = [
-  { time: "2026-09-21", open: 118.2, high: 121.6, low: 117.4, close: 120.8, volume: 18400 },
-  { time: "2026-09-22", open: 120.8, high: 123.1, low: 119.9, close: 122.4, volume: 21900 },
-  { time: "2026-09-23", open: 122.4, high: 123.7, low: 120.5, close: 121.1, volume: 16700 },
-  { time: "2026-09-24", open: 121.1, high: 124.8, low: 120.7, close: 124.2, volume: 25300 },
-  { time: "2026-09-25", open: 124.2, high: 125.6, low: 122.1, close: 123.5, volume: 20800 },
-  { time: "2026-09-28", open: 123.5, high: 126.9, low: 122.8, close: 126.1, volume: 28600 },
-  { time: "2026-09-29", open: 126.1, high: 127.4, low: 123.9, close: 125.2, volume: 19300 },
-  { time: "2026-09-30", open: 125.2, high: 126.2, low: 123.4, close: 125.2, volume: 17600 },
-  { time: "2026-10-01", open: 125.2, high: 129.3, low: 124.6, close: 128.4, volume: 31200 },
-  { time: "2026-10-02", open: 128.4, high: 130.8, low: 127.7, close: 130.1, volume: 27900 },
-  { time: "2026-10-05", open: 130.1, high: 131.4, low: 128.2, close: 129.3, volume: 23400 },
-  { time: "2026-10-06", open: 129.3, high: 132.2, low: 128.8, close: 131.5, volume: 29800 },
-];
+type Candle = {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  state: "final" | "partial";
+};
+const buttonStyle = {
+  border: "1px solid var(--border, #dfe2e8)",
+  borderRadius: 8,
+  padding: "5px 10px",
+  font: "inherit",
+  fontSize: 12,
+  background: "transparent",
+  color: "inherit",
+};
+const rising = "var(--candlestick-rising, #087f68)";
+const falling = "var(--candlestick-falling, #c43d54)";
+const unchanged = "var(--candlestick-neutral, #53657b)";
+const round = (value: number) => Math.round(value * 100) / 100;
+const start = Date.UTC(2026, 9, 13, 8);
+function history(): Candle[] {
+  let close = 2360;
+  let seed = 721;
+  const random = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+  return Array.from({ length: 240 }, (_, index) => {
+    const open = close;
+    const move = (random() - 0.48) * 3.8 + Math.sin(index * 0.063) * 0.6;
+    close = round(open + move);
+    return {
+      time: start + index * 60_000,
+      open,
+      high: round(Math.max(open, close) + 0.3 + random() * 1.8),
+      low: round(Math.min(open, close) - 0.3 - random() * 1.6),
+      close,
+      volume: round(40 + Math.abs(move) * 24 + random() * 85),
+      state: index === 239 ? "partial" : "final",
+    };
+  });
+}
+type Feed = { rows: Candle[]; tick: number };
+function advance(feed: Feed): Feed {
+  const latest = feed.rows.at(-1);
+  if (!latest) return feed;
+  const tick = feed.tick + 1;
+  const close = round(latest.close + Math.sin(tick * 1.41) * 0.56 + Math.cos(tick * 0.37) * 0.31);
+  if (tick % 8 === 0)
+    return {
+      tick,
+      rows: [
+        ...feed.rows.slice(0, -1),
+        { ...latest, state: "final" },
+        {
+          time: latest.time + 60_000,
+          open: latest.close,
+          high: Math.max(latest.close, close),
+          low: Math.min(latest.close, close),
+          close,
+          volume: 8.4,
+          state: "partial",
+        },
+      ],
+    };
+  return {
+    tick,
+    rows: [
+      ...feed.rows.slice(0, -1),
+      {
+        ...latest,
+        close,
+        high: Math.max(latest.high, close),
+        low: Math.min(latest.low, close),
+        volume: round(latest.volume + 4 + Math.abs(Math.sin(tick * 2.17)) * 19),
+      },
+    ],
+  };
+}
 const config = {
-  price: { label: "Trade OHLC (USD)", color: "#733bff" },
-  volume: { label: "Volume (shares)", color: "#733bff" },
+  price: { label: "ETH / USD", color: "#15803d" },
+  volume: { label: "Volume (ETH)", color: "#64748b" },
 } satisfies SeriesConfig;
-const money = (value: number) => `$${value.toFixed(2)}`;
+const priceFormatter = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const timeFormatter = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "UTC",
+});
+const money = (value: number) => priceFormatter.format(value);
+const time = (value: number | string) => timeFormatter.format(new Date(Number(value)));
 
 export function AssetCandlestickChart({ state = "ready" }: { state?: "ready" | "loading" }) {
-  const [viewport, setViewport] = useState<CandlestickViewport>({ from: -0.5, to: 11.5 });
+  const [feed, step] = useReducer(advance, undefined, () => ({ rows: history(), tick: 0 }));
+  const [running, setRunning] = useState(true);
+  const [inspected, setInspected] = useState<CandlestickPoint<Candle> | null>(null);
+  useEffect(() => {
+    if (!running || state === "loading") return;
+    const interval = setInterval(step, 700);
+    return () => clearInterval(interval);
+  }, [running, state]);
+  const candle =
+    (inspected ? feed.rows.find((row) => row.time === inspected.time) : null) ?? feed.rows.at(-1);
+  const change = candle ? ((candle.close - candle.open) / candle.open) * 100 : 0;
+  const direction = change > 0 ? rising : change < 0 ? falling : unchanged;
   return (
-    <div>
+    <div style={{ minWidth: 0 }}>
       <div
         style={{
           display: "flex",
@@ -45,55 +136,126 @@ export function AssetCandlestickChart({ state = "ready" }: { state?: "ready" | "
           gap: 12,
           alignItems: "center",
           flexWrap: "wrap",
-          marginBottom: 16,
+          marginBottom: 12,
         }}
       >
-        <span style={{ fontSize: 12 }}>Simulated asset · Daily trade OHLC · USD / shares</span>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => setViewport({ from: 5.5, to: 11.5 })}>
-            6 sessions
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <strong style={{ fontSize: 14 }}>ETH / USD · 1m</strong>
+          <span
+            style={{
+              border: "1px solid var(--border, #dfe2e8)",
+              borderRadius: 5,
+              padding: "2px 6px",
+              fontSize: 10,
+              color: "var(--muted-foreground)",
+            }}
+          >
+            SIMULATED
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            style={buttonStyle}
+            type="button"
+            disabled={state === "loading"}
+            onClick={() => setRunning(!running)}
+          >
+            {running ? "Pause" : "Resume"}
           </button>
-          <button type="button" onClick={() => setViewport({ from: -0.5, to: 11.5 })}>
-            All sessions
+          <button
+            style={buttonStyle}
+            type="button"
+            disabled={state === "loading"}
+            onClick={() => {
+              setRunning(false);
+              step();
+            }}
+          >
+            Step
           </button>
         </div>
       </div>
-      <CandlestickChart
+      <div
+        data-kind-ui="candle-readout"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "4px 12px",
+          fontSize: 12,
+          fontVariantNumeric: "tabular-nums",
+          marginBottom: 12,
+          minHeight: 20,
+        }}
+      >
+        {candle && (
+          <>
+            <span>{time(candle.time)} UTC</span>
+            {(["open", "high", "low", "close"] as const).map((key) => (
+              <span key={key}>
+                {key[0]?.toUpperCase()}{" "}
+                <span style={{ color: direction }}>{money(candle[key])}</span>
+              </span>
+            ))}
+            <span>Vol {candle.volume.toFixed(1)}</span>
+            <span style={{ color: direction }}>
+              {change >= 0 ? "+" : ""}
+              {change.toFixed(2)}%
+            </span>
+          </>
+        )}
+      </div>
+      <CandlestickChart<Candle>
         config={config}
-        data={data}
-        timeMode="business-date"
+        data={feed.rows}
+        timeMode="epoch-ms"
         spacing="ordinal"
-        viewport={viewport}
-        onViewportChange={setViewport}
-        height={320}
+        defaultViewport={{ from: 189.5, to: 239.5 }}
+        followLatest
+        onInspect={setInspected}
+        height={340}
         loading={state === "loading"}
-        loadingLabel="Loading simulated asset observations"
-        aria-label="Simulated daily trade OHLC in US dollars with share volume"
-        formatTime={(time) => String(time).slice(5)}
+        loadingLabel="Loading simulated ETH / USD history"
+        aria-label="Simulated ETH / USD one minute candles with volume and historical navigator"
+        formatTime={time}
         formatPrice={money}
-        formatVolume={(value) => `${value.toLocaleString("en-US")} shares`}
+        formatVolume={(value) => `${value.toFixed(1)} ETH`}
+        animate
         margin={{ top: 12, right: 8, bottom: 4, left: 0 }}
       >
         <CandlestickGrid
           vertical={false}
           strokeDasharray="3 3"
           stroke="currentColor"
-          strokeOpacity={0.12}
+          strokeOpacity={0.1}
         />
-        <CandlestickXAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={24} />
-        <CandlestickYAxis orientation="right" axisLine={false} tickLine={false} width={72} />
+        <CandlestickXAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={32} />
+        <CandlestickYAxis orientation="right" axisLine={false} tickLine={false} width={76} />
         <CandlestickSeries
           seriesKey="price"
-          rising="#15803d"
-          falling="#be123c"
-          unchanged="#733bff"
-          maxBarSize={18}
+          rising={rising}
+          falling={falling}
+          unchanged={unchanged}
+          maxBarSize={12}
         />
-        <CandlestickVolume seriesKey="volume" fill="#733bff" axisProps={{ hide: true }} />
+        <CandlestickVolume
+          seriesKey="volume"
+          rising={rising}
+          falling={falling}
+          unchanged={unchanged}
+          fillOpacity={0.78}
+          axisProps={{ hide: true }}
+        />
+        <CandlestickCurrentPrice
+          labelTextColor="var(--candlestick-label-text, #fff)"
+          seriesKey="price"
+          rising={rising}
+          falling={falling}
+          unchanged={unchanged}
+        />
         <CandlestickCrosshair strokeOpacity={0.5} />
-        <CandlestickContent
-          frameProps={{ style: { minHeight: 36, fontSize: 12, paddingTop: 12 } }}
-        />
+        <CandlestickContent className="sr-only" />
+        <CandlestickControls />
+        <CandlestickHistoryNavigator />
       </CandlestickChart>
     </div>
   );

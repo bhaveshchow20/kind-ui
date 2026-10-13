@@ -14,6 +14,16 @@ import {
 } from "@kind-ui/charts";
 import { useState } from "react";
 
+const buttonStyle = {
+  border: "1px solid var(--border, #dfe2e8)",
+  borderRadius: 8,
+  padding: "5px 10px",
+  font: "inherit",
+  fontSize: 12,
+  background: "transparent",
+  color: "inherit",
+};
+
 type Observation = CandlestickDatum & { source: string; reference?: number };
 // Original simulated trade observations; UTC intervals, USD prices, no volume feed.
 const data: Observation[] = [
@@ -129,21 +139,26 @@ export function UpdatedCandlestickChart() {
     setPrepended(true);
   };
   return (
-    <div>
+    <div style={{ minWidth: 0 }}>
       <p style={{ marginBottom: 16, fontSize: 12 }}>
         Simulated trade feed · USD · UTC · Missing volume stays missing
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-        <button type="button" disabled={replaced || appended} onClick={replaceCurrent}>
+        <button
+          style={buttonStyle}
+          type="button"
+          disabled={replaced || appended}
+          onClick={replaceCurrent}
+        >
           Replace current
         </button>
-        <button type="button" disabled={corrected} onClick={correctOlder}>
+        <button style={buttonStyle} type="button" disabled={corrected} onClick={correctOlder}>
           Correct older
         </button>
-        <button type="button" disabled={appended} onClick={append}>
+        <button style={buttonStyle} type="button" disabled={appended} onClick={append}>
           Append
         </button>
-        <button type="button" disabled={prepended} onClick={prepend}>
+        <button style={buttonStyle} type="button" disabled={prepended} onClick={prepend}>
           Prepend
         </button>
       </div>
@@ -170,9 +185,9 @@ export function UpdatedCandlestickChart() {
         <CandlestickYAxis orientation="right" axisLine={false} tickLine={false} width={72} />
         <CandlestickSeries<Observation>
           seriesKey="price"
-          rising="#15803d"
-          falling="#be123c"
-          unchanged="#733bff"
+          rising="var(--candlestick-rising, #087f68)"
+          falling="var(--candlestick-falling, #c43d54)"
+          unchanged="var(--candlestick-neutral, #53657b)"
           maxBarSize={22}
         />
         <CandlestickOverlay<Observation>
