@@ -94,7 +94,7 @@ for (const reduced of [false, true]) {
       await document.fonts.ready;
       for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame);
     });
-    await page.clock.pauseAt(new Date());
+    await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now() + 1000)));
     await page.evaluate(() => {
       const samples: { price: string | null; candle: string | null; historical: string | null }[] =
         [];

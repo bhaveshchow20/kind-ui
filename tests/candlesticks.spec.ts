@@ -577,7 +577,7 @@ test("overlay joins the shared entrance reveal and finishes on history replaceme
   const plotWidth = Number(await page.locator('clipPath[id$="-price"] rect').getAttribute("width"));
   expect(plotWidth).toBeGreaterThan(0);
   await expect(reveal).toHaveAttribute("width", String(plotWidth));
-  await page.clock.pauseAt(new Date());
+  await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now() + 1000)));
   await page.getByRole("button", { name: "Start reveal", exact: true }).dispatchEvent("click");
   await page.clock.runFor(128);
   const partial = Number(await reveal.getAttribute("width"));
