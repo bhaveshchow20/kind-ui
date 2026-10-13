@@ -108,7 +108,7 @@ function Mark<T>({
             : undefined
         }
         className={cn(
-          "pointer-events-auto absolute m-0 overflow-hidden rounded-[2px] border border-[var(--background,#fff)] p-0 text-left text-[color:var(--foreground,inherit)] outline-offset-[-3px] focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[var(--foreground,#172033)] data-selected:ring-2 data-selected:ring-[var(--foreground,#172033)] data-selected:ring-inset",
+          "pointer-events-auto absolute m-0 overflow-hidden rounded-none p-0 text-left text-[color:var(--foreground,inherit)] outline-offset-[-3px] focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[var(--ring,#4c78c4)]",
           kind === "treemap-group-header" && "text-[#172033]",
           buttonProps.className,
         )}
@@ -244,10 +244,7 @@ export function TreemapGroups<T = TreemapDatum>({
               hidden={context.isHidden(node) || attributes?.hidden}
               data-kind-ui="treemap-group"
               data-node-id={node.id}
-              className={cn(
-                "absolute rounded border border-[var(--border,#d1d5db)]",
-                attributes?.className,
-              )}
+              className={cn("absolute", attributes?.className)}
               style={{ ...rectangleStyle(node), ...attributes?.style }}
             >
               {context.groupHeaderHeight > 0 && (
@@ -287,8 +284,8 @@ export type TreemapLabelsProps<T = TreemapDatum> = Omit<
   labelProps?: (node: TreemapRectangle<T>) => ComponentPropsWithRef<"span">;
 };
 export function TreemapLabels<T = TreemapDatum>({
-  minWidth = 40,
-  minHeight = 22,
+  minWidth = 18,
+  minHeight = 14,
   padding = 4,
   children,
   labelProps,
@@ -319,6 +316,12 @@ export function TreemapLabels<T = TreemapDatum>({
         )
         .map((node) => {
           const attributes = labelProps?.(node);
+          const availableWidth = node.width - padding * 2;
+          const availableHeight = node.height - padding * 2;
+          const value = context.formatValue(node.value, node);
+          const fontSize = availableWidth < 70 ? 10 : 12;
+          const showValue =
+            availableHeight >= fontSize * 2.6 && availableWidth >= value.length * fontSize * 0.62;
           return (
             <LabelPaint key={node.id} inactive={context.isInactive(node)}>
               <span
@@ -326,8 +329,9 @@ export function TreemapLabels<T = TreemapDatum>({
                 key={node.id}
                 data-kind-ui="treemap-label"
                 data-node-id={node.id}
+                data-unknown={context.colors.colors.get(node.id)?.unknown || undefined}
                 className={cn(
-                  "absolute block truncate text-[#172033] text-xs font-medium leading-tight",
+                  "absolute block truncate text-[#172033] data-[unknown=true]:text-[var(--foreground,#172033)] text-xs font-medium leading-tight",
                   attributes?.className,
                 )}
                 style={{
@@ -336,16 +340,28 @@ export function TreemapLabels<T = TreemapDatum>({
                   width: Math.max(0, node.width - padding * 2),
                   maxHeight: Math.max(0, node.height - padding * 2),
                   overflow: "hidden",
+                  fontSize,
                   ...attributes?.style,
                 }}
               >
-                {typeof children === "function"
-                  ? children(node)
-                  : children !== undefined
-                    ? children
-                    : attributes?.children !== undefined
-                      ? attributes.children
-                      : node.label}
+                {typeof children === "function" ? (
+                  children(node)
+                ) : children !== undefined ? (
+                  children
+                ) : attributes?.children !== undefined ? (
+                  attributes.children
+                ) : (
+                  <>
+                    <span className="block truncate" title={node.label}>
+                      {node.label}
+                    </span>
+                    {showValue && (
+                      <span className="mt-0.5 block whitespace-nowrap font-normal tabular-nums">
+                        {value}
+                      </span>
+                    )}
+                  </>
+                )}
               </span>
             </LabelPaint>
           );
