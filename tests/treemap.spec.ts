@@ -1028,7 +1028,7 @@ test("animated cursor inspection retargets continuously and clamps during resize
   await update(page, "Weights");
   await expect(page.locator('[data-kind-ui="tooltip-number"]')).toBeVisible();
   await update(page, "Resize");
-  const overflow = await page.getByRole("tooltip").evaluate((element) => {
+  const overflow = await page.locator('[data-kind-ui="tooltip-motion"]').evaluate((element) => {
     const chart = element.closest('[data-kind-ui="treemap"]');
     if (!chart) throw new Error("Missing plot");
     return new Promise<boolean>((resolve) => {
