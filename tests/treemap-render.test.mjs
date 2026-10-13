@@ -27,6 +27,18 @@ const base = {
 };
 const chart = (children, props = {}) => h(TreemapChart, { ...base, ...props }, children);
 
+test("tooltip headings show ancestors once, while flat data starts with its value row", () => {
+  const grouped = render(chart(h(TreemapChart.Tooltip), { defaultActiveId: "a" }));
+  assert.match(grouped, /aria-label="Group \/ Same"/);
+  assert.match(grouped, /<strong class="font-medium">Group<\/strong>/);
+  assert.equal((grouped.match(/<span>Same<\/span>/g) ?? []).length, 1);
+  assert.doesNotMatch(grouped, /<strong class="font-medium">Group \/ Same/);
+  const flat = render(chart(h(TreemapChart.Tooltip), { defaultActiveId: "c" }));
+  assert.match(flat, /aria-label="Outside"/);
+  assert.equal((flat.match(/<span>Outside<\/span>/g) ?? []).length, 1);
+  assert.doesNotMatch(flat, /<strong class="font-medium">/);
+});
+
 test("TreemapChart owns its frame and renders only explicit parts", () => {
   const html = render(chart(null));
   assert.equal((html.match(/data-kind-ui="chart"/g) ?? []).length, 1);
