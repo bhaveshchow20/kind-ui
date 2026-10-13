@@ -748,3 +748,32 @@ test("keyboard activation honors both consumer click cancellation and keydown pr
     }
   }
 });
+
+test("a mark activation veto preserves closed inspection and all controlled owner state", async ({
+  page,
+}) => {
+  for (const input of ["pointer", "Enter", "Space"] as const) {
+    await page.goto(`${packed}?mark-veto&prevent-inspection`);
+    const chart = page.getByRole("region", { name: "Stage snapshot" });
+    const target = stage(chart, "review");
+    await target.focus();
+    await expect(chart.getByRole("tooltip")).toHaveCount(0);
+    const writes = await page.getByLabel("Inspection writes").textContent();
+    if (input === "pointer") await target.click();
+    else await target.press(input);
+    await expect(page.getByLabel("Consumer clicks")).toHaveText("1");
+    await expect(page.getByLabel("Clicked stage days")).toHaveText("3");
+    await expect(page.getByLabel("Stage selection")).toHaveText("none");
+    await expect(page.getByLabel("Selection writes")).toHaveText("0");
+    await expect(page.getByLabel("Inspection writes")).toHaveText(writes ?? "");
+    await expect(chart.getByRole("tooltip")).toHaveCount(0);
+  }
+  await page.goto(`${packed}?mark-veto&none&prevent-inspection`);
+  const inspectionOnly = page.getByRole("region", { name: "Stage snapshot" });
+  await stage(inspectionOnly, "review").focus();
+  await expect(inspectionOnly.getByRole("tooltip")).toHaveCount(0);
+  await stage(inspectionOnly, "review").press("Enter");
+  await expect(inspectionOnly.getByRole("tooltip")).toContainText("Review");
+  await expect(page.getByLabel("Stage selection")).toHaveText("none");
+  await expect(page.getByLabel("Selection writes")).toHaveText("0");
+});

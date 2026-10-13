@@ -155,3 +155,19 @@ void (<FunnelChart.Stages stageProps={() => ownedFocusKey} />);
 
 // @ts-expect-error Funnel legend order and stage membership remain data-owned.
 void (<FunnelChart.Legend itemKeys={["stale"]} />);
+
+const ownedInnerHTML = {
+  className: "consumer",
+  dangerouslySetInnerHTML: { __html: "<title>Replaced stage</title>" },
+};
+// @ts-expect-error The Shape owns stage markup, including structurally inferred attribute objects.
+void (<FunnelChart.Stages stageProps={() => ownedInnerHTML} />);
+
+// @ts-expect-error Labels own their list markup; consumer HTML cannot replace it through a structural spread.
+void (<FunnelChart.Labels {...ownedInnerHTML} />);
+// @ts-expect-error Tooltip owns the markup produced by its typed Content renderer.
+void (<FunnelChart.Tooltip {...ownedInnerHTML} />);
+// @ts-expect-error DataTable owns caption, header and row markup.
+void (<FunnelChart.DataTable {...ownedInnerHTML} caption="Stage data" />);
+// @ts-expect-error Legend owns its list markup while preserving its item render callback.
+void (<FunnelChart.Legend {...ownedInnerHTML} />);
