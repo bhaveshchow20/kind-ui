@@ -52,6 +52,8 @@ const initial: Row[] = [
   },
 ];
 const params = new URLSearchParams(location.search);
+const entranceOptions = { revealDurationMs: 10000 };
+const viewportOptions = { revealDurationMs: 0 };
 const volumeRows: Row[] = initial.map((row, index) =>
   row.gap ? row : { ...row, volume: index === 0 || index === 4 ? 1e9 : index === 1 ? 200 : 100 },
 );
@@ -80,6 +82,8 @@ export function CandlestickHost() {
   const [selected, setSelected] = useState<CandlestickTime | null>(null);
   const [reason, setReason] = useState("initial");
   const [overlayClick, setOverlayClick] = useState("None");
+  const [inspection, setInspection] = useState<CandlestickTime | null>(null);
+  const [windowChanges, setWindowChanges] = useState(0);
   const [logarithmic, setLogarithmic] = useState(params.get("overlay-invalid") === "log");
   const [veto, setVeto] = useState(false);
   const [vetoClick, setVetoClick] = useState(false);
@@ -89,6 +93,29 @@ export function CandlestickHost() {
   return (
     <main style={{ maxWidth: small ? 300 : 700 }}>
       <h1>OHLC public contract</h1>
+      {params.has("current-price") &&
+        ["Up", "Down", "Neutral"].map((movement) => (
+          <button
+            type="button"
+            key={movement}
+            onClick={() =>
+              setRows((current) =>
+                current.map((row, index) =>
+                  !row.gap && index === current.length - 1
+                    ? {
+                        ...row,
+                        close: movement === "Up" ? 113 : movement === "Down" ? 100 : 102,
+                        high: 119,
+                        low: 94,
+                      }
+                    : row,
+                ),
+              )
+            }
+          >
+            Latest {movement}
+          </button>
+        ))}
       {params.has("deferred-animate") && (
         <button type="button" onClick={() => setRevealEnabled(true)}>
           Start reveal
@@ -251,6 +278,12 @@ export function CandlestickHost() {
       <output aria-label="Reason">{reason}</output>
       {params.has("overlay-focus") && <output aria-label="Overlay click">{overlayClick}</output>}
       <output aria-label="Selected time">{selected ?? "None"}</output>
+      {params.has("navigation") && (
+        <>
+          <output aria-label="Inspection">{inspection ?? "None"}</output>
+          <output aria-label="Window changes">{windowChanges}</output>
+        </>
+      )}
       <CandlestickChart
         frameProps={{
           onPointerUp: (event) => {
@@ -268,6 +301,7 @@ export function CandlestickHost() {
             : {}),
         }}
         data={rows}
+        {...(params.has("legend-top") ? { legendPosition: "top" } : {})}
         overscan={params.has("no-overscan") ? 0 : 1}
         {...(params.has("focus")
           ? {
@@ -287,14 +321,24 @@ export function CandlestickHost() {
         followLatest={follow}
         {...(params.has("pending-default") ? { defaultViewport: defaultRange } : { viewport })}
         onViewportChange={(range, details) => {
+          if (params.has("navigation")) setWindowChanges((count) => count + 1);
           setViewport(range);
           setReason(details.reason);
         }}
+        {...(params.has("navigation")
+          ? { onInspect: (point) => setInspection(point?.time ?? null) }
+          : {})}
         selection={selected}
         onSelectionChange={(point) => setSelected(point?.time ?? null)}
-        {...(bounded ? { priceDomain: [95, 110] as const } : {})}
+        {...(params.has("current-price") && !bounded
+          ? { priceDomain: [90, 130] as const }
+          : bounded
+            ? { priceDomain: [95, 110] as const }
+            : {})}
         loading={loading}
-        animate={revealEnabled ? { revealDurationMs: 10000 } : false}
+        animate={
+          params.has("viewport-motion") ? viewportOptions : revealEnabled ? entranceOptions : false
+        }
         height={360}
         ref={ref}
         aria-label="Session trade OHLC"
@@ -302,6 +346,16 @@ export function CandlestickHost() {
         formatPrice={(price) => `${price.toFixed(2)} USD`}
         formatVolume={(volume) => `${volume} contracts`}
       >
+        {params.has("navigation") && (
+          <CandlestickChart.Controls
+            zoomInProps={{
+              onClick: (event) => {
+                if (params.has("controls-veto")) event.preventDefault();
+              },
+            }}
+          />
+        )}
+        {params.has("navigation") && <CandlestickChart.HistoryNavigator />}
         <CandlestickChart.Grid />
         <CandlestickChart.XAxis
           {...(params.has("mirror-x") ? { mirror: true } : {})}
@@ -309,10 +363,13 @@ export function CandlestickHost() {
           {...(params.has("padded-x") ? { padding: { left: 72, right: 40 } } : {})}
           {...(params.has("explicit-ticks") ? { ticks: [1.5, 3.5], interval: 0 } : {})}
         />
-        <CandlestickChart.YAxis />
+        <CandlestickChart.YAxis
+          {...(params.has("current-price") ? { orientation: "right", width: 96 } : {})}
+        />
         <CandlestickChart.Series seriesKey="price" />
         <CandlestickChart.Volume
           seriesKey="volume"
+          {...(params.has("volume-paint") ? { fill: "purple", fillOpacity: 0.7 } : {})}
           {...(params.has("centered-volume")
             ? {
                 shape:
@@ -359,6 +416,7 @@ export function CandlestickHost() {
                 }
               : {})}
         />
+        {params.has("current-price") && <CandlestickChart.CurrentPrice seriesKey="price" />}
         {[94, 116, 100, 108].map((value) => (
           <CandlestickChart.ReferenceLine
             key={value}

@@ -133,6 +133,15 @@ export {
   CandlestickYAxis,
   type CandlestickYAxisProps,
 } from "./candlestick/chart.js";
+export { CandlestickControls, type CandlestickControlsProps } from "./candlestick/controls.js";
+export {
+  CandlestickCurrentPrice,
+  type CandlestickCurrentPriceProps,
+} from "./candlestick/current-price.js";
+export {
+  CandlestickHistoryNavigator,
+  type CandlestickHistoryNavigatorProps,
+} from "./candlestick/history-navigator.js";
 export {
   type CandlestickAccessors,
   type CandlestickDataOptions,
@@ -142,6 +151,7 @@ export {
   type CandlestickTimeMode,
   normalizeCandlestickData,
 } from "./candlestick/model.js";
+export type { CandlestickCrosshairProps } from "./candlestick/parts.js";
 export {
   type CandlestickPriceDomainOptions,
   type CandlestickPriceScale,

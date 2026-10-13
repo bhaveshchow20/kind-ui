@@ -95,3 +95,55 @@ const numericPoints = normalizeCandlestickData(numericRows, {
 });
 const numericSource: string | undefined = numericPoints[0]?.original.source;
 void numericSource;
+
+import {
+  CandlestickControls,
+  type CandlestickControlsProps,
+  CandlestickCrosshair,
+  type CandlestickCrosshairProps,
+  CandlestickCurrentPrice,
+  type CandlestickCurrentPriceProps,
+  CandlestickHistoryNavigator,
+  type CandlestickHistoryNavigatorProps,
+} from "@kind-ui/charts";
+
+const freeCursor: CandlestickCrosshairProps = {
+  mode: "free",
+  showLabels: true,
+  labelProps: { fill: "black" },
+};
+<CandlestickCrosshair {...freeCursor} />;
+<CandlestickChart.Crosshair mode="snap" />;
+// @ts-expect-error Crosshair mode has an explicit finite contract.
+<CandlestickCrosshair mode="automatic" />;
+const controls: CandlestickControlsProps = {
+  zoomFactor: 2,
+  zoomInProps: { onClick: (event) => event.preventDefault(), children: "Closer" },
+  resetProps: { "aria-label": "Fit supplied observations" },
+};
+<CandlestickControls {...controls} />;
+<CandlestickChart.Controls disabled />;
+const navigator: CandlestickHistoryNavigatorProps = {
+  height: 64,
+  brushProps: { stroke: "gray", travellerWidth: 8 },
+  overviewProps: { stroke: "purple", strokeWidth: 1.5 },
+};
+<CandlestickHistoryNavigator {...navigator} />;
+<CandlestickChart.HistoryNavigator aria-label="Historical range" />;
+const forbiddenNavigator: CandlestickHistoryNavigatorProps = {
+  // @ts-expect-error The root owns the brush's observations and range.
+  brushProps: { data: [{ time: 1 }] },
+};
+void forbiddenNavigator;
+const latest: CandlestickCurrentPriceProps<(typeof rows)[number]> = {
+  orientation: "right",
+  labelTextColor: "black",
+  children: (point, label) => (
+    <text>
+      {point.original.label}
+      {label}
+    </text>
+  ),
+};
+<CandlestickCurrentPrice {...latest} />;
+<CandlestickChart.CurrentPrice seriesKey="price" lineVisible={false} />;

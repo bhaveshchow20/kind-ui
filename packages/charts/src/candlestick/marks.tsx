@@ -30,6 +30,8 @@ import { useChart } from "../chart-context.js";
 import { useLineInteraction } from "../line-chart.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "../series-interaction.js";
 import { type NativePoint, useCandlestick, useCandlestickSeriesTarget } from "./context.js";
+import { candlestickDirectionColors } from "./current-price.js";
+import { useLatestCandlestickGeometry } from "./latest-motion.js";
 import type { CandlestickDatum, CandlestickPoint } from "./model.js";
 import { getCandlestickVisiblePoints } from "./viewport.js";
 export type CandlestickMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> & {
@@ -92,7 +94,9 @@ export type CandlestickSeriesProps<Row extends object = CandlestickDatum> = {
     props: CandlestickMarkProps & { point: CandlestickPoint<Row>; native: BarShapeProps },
   ) => ReactNode;
 };
-const ShapeContext = createContext<CandlestickSeriesProps | null>(null);
+const ShapeContext = createContext<(CandlestickSeriesProps & { latestIdentity?: string }) | null>(
+  null,
+);
 function CandleShape(native: BarShapeProps) {
   const options = use(ShapeContext);
   const context = useCandlestick();
@@ -129,7 +133,7 @@ function CandleShape(native: BarShapeProps) {
     low,
     close,
     direction,
-    color: options.markProps?.color ?? options[direction] ?? native.fill ?? "currentColor",
+    color: options.markProps?.color ?? options[direction] ?? candlestickDirectionColors[direction],
     role: options.markProps?.role ?? "img",
     strokeWidth: options.markProps?.strokeWidth ?? 1.5,
     "aria-label":
@@ -142,9 +146,68 @@ function CandleShape(native: BarShapeProps) {
         {options.shape ? (
           options.shape({ ...props, point: point as CandlestickPoint<CandlestickDatum>, native })
         ) : (
-          <CandlestickMark {...props} />
+          <LatestCandlestickMark
+            {...props}
+            point={point}
+            seriesKey={options.seriesKey}
+            latest={options.latestIdentity === point.identity}
+          />
         )}
       </g>
+    </g>
+  );
+}
+function LatestCandlestickMark({
+  point,
+  seriesKey,
+  latest,
+  ...props
+}: CandlestickMarkProps & { point: NativePoint; seriesKey: string; latest: boolean }) {
+  const area = usePlotArea();
+  const mark = useRef<SVGGElement>(null);
+  const frame = `${area?.x},${area?.y},${area?.width},${area?.height}`;
+  useLatestCandlestickGeometry(
+    `candle:${seriesKey}`,
+    point.identity,
+    frame,
+    `${point.open},${point.high},${point.low},${point.close}`,
+    [props.center, props.width, props.open, props.high, props.low, props.close],
+    latest,
+    false,
+    ([
+      center = props.center,
+      width = props.width,
+      open = props.open,
+      high = props.high,
+      low = props.low,
+      close = props.close,
+    ]) => {
+      const node = mark.current;
+      if (!node) return;
+      const wick = node.querySelector('[data-candle-part="wick"]');
+      for (const [key, value] of Object.entries({ x1: center, x2: center, y1: high, y2: low }))
+        wick?.setAttribute(key, String(value));
+      const body = node.querySelector('[data-candle-part="body"]');
+      for (const [key, value] of Object.entries({
+        x: center - width / 2,
+        y: Math.min(open, close),
+        width,
+        height: Math.abs(open - close),
+      }))
+        body?.setAttribute(key, String(value));
+      const doji = node.querySelector('[data-candle-part="doji"]');
+      for (const [key, value] of Object.entries({
+        x1: center - width / 2,
+        x2: center + width / 2,
+        y1: close,
+        y2: close,
+      }))
+        doji?.setAttribute(key, String(value));
+    },
+  );
+  return (
+    <g ref={mark}>
+      <CandlestickMark {...props} />
     </g>
   );
 }
@@ -156,9 +219,21 @@ const candleExtent = (value: unknown) => {
 export function CandlestickSeries<Row extends object = CandlestickDatum>(
   props: CandlestickSeriesProps<Row>,
 ) {
-  useCandlestick();
+  const context = useCandlestick();
+  const latestIdentity = useMemo(() => {
+    for (let index = context.points.length - 1; index >= 0; index--) {
+      const point = context.points[index];
+      if (point && !point.gap) return point.identity;
+    }
+    return undefined;
+  }, [context.points]);
   return (
-    <ShapeContext value={props as CandlestickSeriesProps}>
+    <ShapeContext
+      value={{
+        ...(props as CandlestickSeriesProps),
+        ...(latestIdentity ? { latestIdentity } : {}),
+      }}
+    >
       <CandlestickBar
         seriesKey={props.seriesKey}
         dataKey={candleExtent}
@@ -183,13 +258,29 @@ export type CandlestickVolumeProps = Omit<
   | "layout"
 > & {
   seriesKey: string;
+  rising?: string;
+  falling?: string;
+  unchanged?: string;
   axisProps?: Omit<
     ComponentProps<typeof YAxis>,
     "yAxisId" | "domain" | "padding" | "scale" | "type" | "dataKey"
   >;
 };
-const VolumeShapeContext = createContext<CandlestickVolumeProps["shape"]>(undefined);
-export function CandlestickVolume({ seriesKey, axisProps, ...props }: CandlestickVolumeProps) {
+const VolumeShapeContext = createContext<{
+  shape?: CandlestickVolumeProps["shape"];
+  fill?: string | undefined;
+  rising?: string | undefined;
+  falling?: string | undefined;
+  unchanged?: string | undefined;
+}>({});
+export function CandlestickVolume({
+  seriesKey,
+  axisProps,
+  rising,
+  falling,
+  unchanged,
+  ...props
+}: CandlestickVolumeProps) {
   for (const key of [
     "dataKey",
     "yAxisId",
@@ -239,7 +330,9 @@ export function CandlestickVolume({ seriesKey, axisProps, ...props }: Candlestic
         padding={padding}
         tickFormatter={axisProps?.tickFormatter ?? defaultFormatter}
       />
-      <VolumeShapeContext value={props.shape}>
+      <VolumeShapeContext
+        value={{ shape: props.shape, fill: props.fill, rising, falling, unchanged }}
+      >
         <CandlestickBar
           {...props}
           seriesKey={seriesKey}
@@ -254,13 +347,28 @@ export function CandlestickVolume({ seriesKey, axisProps, ...props }: Candlestic
   );
 }
 function VolumeShape(native: BarShapeProps) {
-  const option = use(VolumeShapeContext);
+  const options = use(VolumeShapeContext);
+  const option = options.shape;
   const x = useXAxisScale();
   const context = useCandlestick();
   const point = native.payload as NativePoint;
   const center = x?.(point.coordinate);
-  if (typeof center !== "number" || point.volume === undefined || point.gap) return null;
-  const centered = { ...native, x: center - native.width / 2 };
+  if (
+    typeof center !== "number" ||
+    point.volume === undefined ||
+    point.gap ||
+    point.close === undefined ||
+    point.open === undefined
+  )
+    return null;
+  const direction =
+    point.close > point.open ? "rising" : point.close < point.open ? "falling" : "unchanged";
+  const centered = {
+    ...native,
+    x: center - native.width / 2,
+    fill: options.fill ?? options[direction] ?? candlestickDirectionColors[direction],
+    fillOpacity: native.fillOpacity ?? 0.35,
+  };
   // Preserve native shape dispatch and explicit consumer props after supplying the owned X geometry.
   if (isValidElement<BarShapeProps>(option))
     return cloneElement(option, { ...centered, ...option.props });
@@ -277,14 +385,15 @@ function VolumeShape(native: BarShapeProps) {
       <rect
         clipPath={`url(#${context.revealClipId})`}
         data-kind-ui="candlestick-volume-mark"
+        data-direction={direction}
         x={center - native.width / 2}
         y={native.y}
         width={native.width}
         height={native.height}
-        fill={native.fill}
+        fill={centered.fill}
         stroke={native.stroke}
         strokeWidth={native.strokeWidth}
-        fillOpacity={native.fillOpacity}
+        fillOpacity={centered.fillOpacity}
         opacity={native.opacity}
         className={native.className}
         style={native.style}

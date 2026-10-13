@@ -14,15 +14,53 @@ import type { CandlestickPoint } from "./model.js";
 import type { CandlestickViewport, CandlestickViewportReason } from "./viewport.js";
 
 export type NativePoint = CandlestickPoint<object> & { coordinate: number };
+type PointerPosition = Readonly<{ clientX: number; clientY: number }>;
+/** Private per-frame cursor updates do not change the React observation context. */
+export function createCandlestickPointerStore() {
+  let current: PointerPosition | null = null;
+  let frame: number | undefined;
+  const listeners = new Set<() => void>();
+  const cancel = () => {
+    if (frame !== undefined) cancelAnimationFrame(frame);
+    frame = undefined;
+  };
+  return {
+    get: () => current,
+    set: (next: PointerPosition | null) => {
+      current = next;
+      if (frame !== undefined || listeners.size === 0) return;
+      frame = requestAnimationFrame(() => {
+        frame = undefined;
+        for (const listener of listeners) listener();
+      });
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+        if (listeners.size === 0) cancel();
+      };
+    },
+    dispose: () => {
+      cancel();
+      current = null;
+    },
+  };
+}
 export type Context = {
   points: NativePoint[];
   rendered: NativePoint[];
   viewport: CandlestickViewport;
+  targetViewport: CandlestickViewport;
+  loading: boolean;
   timeDomain: [number, number];
   priceDomain: [number, number];
   priceScale: "linear" | "log";
   priceBounds?: readonly [number, number];
   autoscale: "visible" | "all";
+  spacing: "ordinal" | "elapsed";
+  timeMode: "epoch-ms" | "business-date";
+  pointer: ReturnType<typeof createCandlestickPointerStore>;
   active: NativePoint | null;
   selected: NativePoint | null;
   inspect: (time: CandlestickPoint["time"] | null) => void;
@@ -40,8 +78,10 @@ export type Context = {
   priceClipId: string;
   volumeClipId: string;
   interrupt: { current: () => void };
+  finishViewport: () => void;
   geometry: {
     current: {
+      local: (clientX: number, clientY: number) => Readonly<{ x: number; y: number }> | null;
       contains: (clientX: number, clientY: number) => boolean;
       nearest: (clientX: number, clientY: number) => NativePoint | null;
       coordinate: (clientX: number, clientY: number) => number | null;

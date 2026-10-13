@@ -11,7 +11,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { BarChart as EngineBarChart, usePlotArea, useXAxisScale } from "recharts";
+import {
+  BarChart as EngineBarChart,
+  usePlotArea,
+  useXAxisInverseScale,
+  useXAxisScale,
+} from "recharts";
 import { MotionContext } from "../animation.js";
 import type { BarChartProps } from "../bar-chart.js";
 import {
@@ -24,6 +29,10 @@ import {
 } from "../family-root.js";
 import { LineChartFrame } from "../line-chart.js";
 import { defaultHover, useReducedMotion } from "../motion-preference.js";
+import { CandlestickControls } from "./controls.js";
+import { CandlestickCurrentPrice } from "./current-price.js";
+import { CandlestickHistoryNavigator } from "./history-navigator.js";
+import { CandlestickLatestMotion } from "./latest-motion.js";
 import {
   type CandlestickAccessors,
   type CandlestickDatum,
@@ -48,6 +57,7 @@ import {
   reconcileCandlestickViewport,
   zoomCandlestickViewport,
 } from "./viewport.js";
+import { useCandlestickViewportMotion } from "./viewport-motion.js";
 
 export type CandlestickViewportChange = {
   reason: CandlestickViewportReason;
@@ -112,6 +122,7 @@ import {
   CandleContext,
   CandlestickSeriesTargets,
   type Context,
+  createCandlestickPointerStore,
   type NativePoint,
   useCandlestick,
 } from "./context.js";
@@ -281,10 +292,18 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           });
   const rangeFrom = viewport?.from ?? reconciled.from;
   const rangeTo = viewport?.to ?? reconciled.to;
-  const range = useMemo(
+  const targetRange = useMemo(
     () => normalizeCandlestickViewport({ from: rangeFrom, to: rangeTo }, points.length),
     [rangeFrom, rangeTo, points.length],
   );
+  const reduced = useReducedMotion();
+  const motionEnabled = animate !== undefined && animate !== false && !reduced && !loading;
+  const viewportReason = useRef<CandlestickViewportReason>("data");
+  const { viewport: range, finish: finishViewport } = useCandlestickViewportMotion(targetRange, {
+    enabled: motionEnabled,
+    reason: viewportReason.current,
+    identity: points,
+  });
   const [activeTime, setActiveTime] = useState<CandlestickPoint["time"] | null>(null);
   const [localSelection, setSelection] = useState(defaultSelection);
   const pendingDefaultSelection = useRef(
@@ -327,10 +346,13 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
       });
   }, []);
   const geometry = useRef<Context["geometry"]["current"]>(null);
+  const [pointer] = useState(createCandlestickPointerStore);
+  useEffect(() => () => pointer.dispose(), [pointer]);
   const revealClipId = `candlestick-reveal-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const interrupt = useRef(() => {});
   const changeViewport = useCallback(
     (next: CandlestickViewport, reason: CandlestickViewportReason) => {
+      viewportReason.current = reason;
       const actual = normalizeCandlestickViewport(next, points.length);
       if (viewport === undefined) setLocalRange(actual);
       const visible = getCandlestickVisiblePoints(points, actual);
@@ -427,11 +449,16 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     points,
     rendered,
     viewport: range,
+    targetViewport: targetRange,
+    loading: loading === true,
     timeDomain,
     priceDomain: domain,
     priceScale,
     ...(priceBounds !== undefined ? { priceBounds } : {}),
     autoscale,
+    spacing,
+    timeMode,
+    pointer,
     active,
     selected,
     inspect,
@@ -450,10 +477,9 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     priceClipId: `${revealClipId}-price`,
     volumeClipId: `${revealClipId}-volume`,
     interrupt,
+    finishViewport,
   };
   const instructions = useId();
-  const reduced = useReducedMotion();
-  const motionEnabled = animate !== undefined && animate !== false && !reduced && !loading;
   const hoverTransition =
     typeof animate === "object" ? (animate.hoverTransition ?? defaultHover) : defaultHover;
   const panCoordinates = (initial: CandlestickViewport, delta: number) => {
@@ -481,6 +507,17 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     range: CandlestickViewport;
     moved: boolean;
   } | null>(null);
+  useLayoutEffect(() => {
+    if (loading || points.length === 0) {
+      pointer.set(null);
+      drag.current = null;
+      acceptedTap.current = null;
+      if (activeTime !== null) {
+        setActiveTime(null);
+        onInspect?.(null);
+      }
+    }
+  }, [loading, points.length, pointer, activeTime, onInspect]);
   return (
     <CandleContext value={context}>
       <FamilyRoot
@@ -509,6 +546,22 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           onKeyDown: (event) => {
             frameProps?.onKeyDown?.(event);
             if (event.defaultPrevented || event.target !== event.currentTarget || loading) return;
+            if (
+              [
+                "ArrowLeft",
+                "ArrowRight",
+                "Home",
+                "End",
+                "Enter",
+                " ",
+                "Escape",
+                "+",
+                "=",
+                "-",
+                "0",
+              ].includes(event.key)
+            )
+              pointer.set(null);
             const candles = points.filter((point) => !point.gap);
             const index = candles.findIndex((point) => point.time === activeTime);
             const directional = active
@@ -574,6 +627,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             frameProps?.onPointerDown?.(event);
             if (
               event.defaultPrevented ||
+              loading ||
               !event.isPrimary ||
               (event.pointerType !== "touch" && event.button !== 0) ||
               drag.current !== null ||
@@ -594,10 +648,11 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
               moved: false,
             };
             inspect(geometry.current.nearest(event.clientX, event.clientY)?.time ?? null);
+            pointer.set({ clientX: event.clientX, clientY: event.clientY });
           },
           onPointerMove: (event) => {
             frameProps?.onPointerMove?.(event);
-            if (event.defaultPrevented) return;
+            if (event.defaultPrevented || loading) return;
             const current = drag.current;
             if (!event.isPrimary || (current && current.pointerId !== event.pointerId)) return;
             if (current && geometry.current) {
@@ -613,12 +668,22 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             if (
               current ||
               (event.target instanceof Element && event.target.closest("svg.recharts-surface"))
-            )
+            ) {
+              pointer.set(
+                isPlotSurface(event.target) &&
+                  geometry.current?.contains(event.clientX, event.clientY)
+                  ? { clientX: event.clientX, clientY: event.clientY }
+                  : null,
+              );
               inspect(
                 current || isPlotSurface(event.target)
                   ? (geometry.current?.nearest(event.clientX, event.clientY)?.time ?? null)
                   : null,
               );
+            } else {
+              pointer.set(null);
+              inspect(null);
+            }
           },
           onPointerUp: (event) => {
             frameProps?.onPointerUp?.(event);
@@ -652,6 +717,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             if (drag.current?.pointerId !== event.pointerId) return;
             acceptedTap.current = null;
             drag.current = null;
+            pointer.set(null);
             if (event.currentTarget.hasPointerCapture(event.pointerId))
               event.currentTarget.releasePointerCapture(event.pointerId);
             if (!event.defaultPrevented) inspect(null);
@@ -662,12 +728,14 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
             if (!event.defaultPrevented) {
               if (drag.current && !drag.current.moved) drag.current = null;
               if (!drag.current) inspect(null);
+              if (!drag.current) pointer.set(null);
             }
           },
           onWheel: (event) => {
             frameProps?.onWheel?.(event);
             if (
               event.defaultPrevented ||
+              loading ||
               document.activeElement !== event.currentTarget ||
               !isPlotSurface(event.target) ||
               !geometry.current?.contains(event.clientX, event.clientY)
@@ -715,41 +783,43 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
       >
         <MotionContext value={{ enabled: motionEnabled, transition: hoverTransition }}>
           <CandlestickSeriesTargets>
-            <div className="relative">
-              <LineChartFrame
-                engine={EngineBarChart}
-                motionEnabled={motionEnabled}
-                loading={loading}
-                loadingLabel={loadingLabel}
-                interrupt={() => interrupt.current()}
-                chartProps={{
-                  ...nativeProps,
-                  data: rendered,
-                  responsive: true,
-                  accessibilityLayer: false,
-                  ...familyFrame({
-                    ...(width !== undefined ? { width } : {}),
-                    ...(height !== undefined ? { height } : {}),
-                    ...(className ? { className } : {}),
-                    style: { touchAction: "pan-y", ...style },
-                  }),
+            <CandlestickLatestMotion>
+              <div className="relative">
+                <LineChartFrame
+                  engine={EngineBarChart}
+                  motionEnabled={motionEnabled}
+                  loading={loading}
+                  loadingLabel={loadingLabel}
+                  interrupt={() => interrupt.current()}
+                  chartProps={{
+                    ...nativeProps,
+                    data: rendered,
+                    responsive: true,
+                    accessibilityLayer: false,
+                    ...familyFrame({
+                      ...(width !== undefined ? { width } : {}),
+                      ...(height !== undefined ? { height } : {}),
+                      ...(className ? { className } : {}),
+                      style: { touchAction: "pan-y", ...style },
+                    }),
 
-                  children: (
-                    <>
-                      <Geometry />
-                      <CandlestickReveal animate={animate} loading={loading} />
-                      {children}
-                    </>
-                  ),
-                }}
-              />
-              {loading && <CandlestickLoading />}
-            </div>
-            {!loading && points.length === 0 && (
-              <OutsidePlot>
-                <div data-kind-ui="candlestick-empty">{empty}</div>
-              </OutsidePlot>
-            )}
+                    children: (
+                      <>
+                        <Geometry />
+                        <CandlestickReveal animate={animate} loading={loading} />
+                        {children}
+                      </>
+                    ),
+                  }}
+                />
+                {loading && <CandlestickLoading />}
+              </div>
+              {!loading && points.length === 0 && (
+                <OutsidePlot>
+                  <div data-kind-ui="candlestick-empty">{empty}</div>
+                </OutsidePlot>
+              )}
+            </CandlestickLatestMotion>
           </CandlestickSeriesTargets>
         </MotionContext>
       </FamilyRoot>
@@ -767,11 +837,19 @@ function isPlotSurface(target: EventTarget | null): boolean {
 function Geometry() {
   const context = useCandlestick();
   const scale = useXAxisScale();
+  const inverse = useXAxisInverseScale();
   const area = usePlotArea();
   const ref = useRef<SVGGElement>(null);
+  const previousSize = useRef<{ width: number; height: number } | null>(null);
   useLayoutEffect(() => {
     const svg = ref.current?.ownerSVGElement;
-    if (!scale || !area || !svg) return;
+    if (!scale || !inverse || !area || !svg) return;
+    if (
+      previousSize.current &&
+      (previousSize.current.width !== area.width || previousSize.current.height !== area.height)
+    )
+      context.finishViewport();
+    previousSize.current = { width: area.width, height: area.height };
     const [from, to] = context.timeDomain;
     const start = scale(from);
     const end = scale(to);
@@ -796,12 +874,17 @@ function Geometry() {
       point.y >= area.y &&
       point.y <= area.y + area.height;
     context.geometry.current = {
+      local: (clientX, clientY) => {
+        const point = localPoint(clientX, clientY);
+        return contains(point) ? point : null;
+      },
       width: area.width,
       contains: (clientX, clientY) => contains(localPoint(clientX, clientY)),
       coordinate: (clientX, clientY) => {
         const point = localPoint(clientX, clientY);
         // Rendered linear-scale endpoints retain native reversal and padding.
-        return point ? from + ((point.x - start) / (end - start)) * (to - from) : null;
+        const coordinate = point ? inverse(point.x) : undefined;
+        return typeof coordinate === "number" && Number.isFinite(coordinate) ? coordinate : null;
       },
       nearest: (clientX, clientY) => {
         const local = localPoint(clientX, clientY);
@@ -824,7 +907,16 @@ function Geometry() {
     return () => {
       context.geometry.current = null;
     };
-  }, [context.geometry, context.points, context.viewport, context.timeDomain, scale, area]);
+  }, [
+    context.geometry,
+    context.points,
+    context.viewport,
+    context.timeDomain,
+    context.finishViewport,
+    scale,
+    inverse,
+    area,
+  ]);
   return <g ref={ref} data-kind-ui="candlestick-geometry" />;
 }
 
@@ -838,6 +930,9 @@ export const CandlestickChart = /* @__PURE__ */ Object.assign(CandlestickFamily,
   Overlay: CandlestickOverlay,
   ReferenceLine: CandlestickReferenceLine,
   Crosshair: CandlestickCrosshair,
+  CurrentPrice: CandlestickCurrentPrice,
+  Controls: CandlestickControls,
+  HistoryNavigator: CandlestickHistoryNavigator,
   Tooltip: CandlestickTooltip,
   Content: CandlestickContent,
   DataTable: CandlestickDataTable,

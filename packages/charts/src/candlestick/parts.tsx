@@ -4,18 +4,26 @@ import {
   type ComponentProps,
   type ComponentPropsWithRef,
   type ReactNode,
+  type Ref,
+  type RefCallback,
+  type RefObject,
   useCallback,
   useId,
   useLayoutEffect,
   useMemo,
+  useRef,
 } from "react";
 import {
   CartesianGrid,
   DefaultZIndexes,
   Line,
   ReferenceLine,
+  useChartHeight,
+  useChartWidth,
   usePlotArea,
+  useXAxisInverseScale,
   useXAxisScale,
+  useYAxisInverseScale,
   useYAxisScale,
   XAxis,
   YAxis,
@@ -227,38 +235,224 @@ export function CandlestickReferenceLine(props: CandlestickReferenceLineProps) {
     </ZIndexLayer>
   );
 }
-export function CandlestickCrosshair(props: ComponentPropsWithRef<"g">) {
+export type CandlestickCrosshairProps = ComponentPropsWithRef<"g"> & {
+  mode?: "free" | "snap";
+  showLabels?: boolean;
+  labelProps?: Omit<ComponentPropsWithRef<"text">, "children">;
+};
+function composeCrosshairLabelRef(
+  internal: RefObject<SVGTextElement | null>,
+  consumer: Ref<SVGTextElement> | undefined,
+): RefCallback<SVGTextElement> {
+  return (node) => {
+    internal.current = node;
+    const cleanup = typeof consumer === "function" ? consumer(node) : undefined;
+    if (consumer && typeof consumer !== "function") consumer.current = node;
+    if (!node) return;
+    return () => {
+      internal.current = null;
+      if (typeof cleanup === "function") cleanup();
+      else if (typeof consumer === "function") consumer(null);
+      else if (consumer) consumer.current = null;
+    };
+  };
+}
+export function CandlestickCrosshair({
+  mode = "free",
+  showLabels = true,
+  labelProps,
+  ...props
+}: CandlestickCrosshairProps) {
+  if (mode !== "free" && mode !== "snap")
+    throw new Error("Candlestick Crosshair mode must be free or snap");
   const context = useCandlestick();
   const x = useXAxisScale();
   const y = useYAxisScale();
+  const timeAt = useXAxisInverseScale();
+  const priceAt = useYAxisInverseScale();
+  const volumeAt = useYAxisInverseScale("candlestick-volume");
   const area = usePlotArea();
   const id = useId();
-  if (!context.active || !x || !y || !area) return null;
-  const px = x(context.active.coordinate);
-  const py = context.active.close === undefined ? undefined : y(context.active.close);
-  if (typeof px !== "number") return null;
+  const frame = useRef<SVGGElement>(null);
+  const chartWidth = useChartWidth() ?? 0;
+  const chartHeight = useChartHeight() ?? 0;
+  const vertical = useRef<SVGLineElement>(null);
+  const horizontal = useRef<SVGLineElement>(null);
+  const timeLabel = useRef<SVGTextElement>(null);
+  const priceLabel = useRef<SVGTextElement>(null);
+  const timeLabelRef = useMemo(
+    () => composeCrosshairLabelRef(timeLabel, labelProps?.ref),
+    [labelProps?.ref],
+  );
+  const priceLabelRef = useMemo(
+    () => composeCrosshairLabelRef(priceLabel, labelProps?.ref),
+    [labelProps?.ref],
+  );
+  const timePill = useRef<SVGRectElement>(null);
+  const pricePill = useRef<SVGRectElement>(null);
+  const timeMarker = useRef<SVGGElement>(null);
+  const priceMarker = useRef<SVGGElement>(null);
+  useLayoutEffect(() => {
+    let lastTime = "";
+    let timeWidth = 0;
+    let lastPrice = "";
+    let priceWidth = 0;
+    const update = () => {
+      const node = frame.current;
+      if (!node) return;
+      if (!x || !y || !area || !context.points.length) {
+        node.style.display = "none";
+        return;
+      }
+      const cursor = mode === "free" ? context.pointer.get() : null;
+      const local = cursor ? context.geometry.current?.local(cursor.clientX, cursor.clientY) : null;
+      if (cursor && !local) {
+        node.style.display = "none";
+        return;
+      }
+      const px = local?.x ?? (context.active ? x(context.active.coordinate) : undefined);
+      const py =
+        local?.y ?? (context.active?.close === undefined ? undefined : y(context.active.close));
+      if (
+        typeof px !== "number" ||
+        !Number.isFinite(px) ||
+        px < area.x ||
+        px > area.x + area.width
+      ) {
+        node.style.display = "none";
+        return;
+      }
+      node.style.display = "";
+      vertical.current?.setAttribute("x1", String(px));
+      vertical.current?.setAttribute("x2", String(px));
+      const horizontalVisible =
+        typeof py === "number" && Number.isFinite(py) && py >= area.y && py <= area.y + area.height;
+      if (horizontal.current) {
+        horizontal.current.style.display = horizontalVisible ? "" : "none";
+        if (horizontalVisible) {
+          horizontal.current.setAttribute("y1", String(py));
+          horizontal.current.setAttribute("y2", String(py));
+        }
+      }
+      if (!showLabels) return;
+      let time = context.active?.time;
+      if (local && context.spacing === "elapsed") {
+        const value = timeAt?.(px);
+        if (typeof value === "number" && Number.isFinite(value)) {
+          time =
+            context.timeMode === "business-date" && Math.abs(value) <= 8.64e15
+              ? new Date(value).toISOString().slice(0, 10)
+              : value;
+        }
+      }
+      if (timeLabel.current) {
+        const text = time === undefined ? "" : context.formatTime(time);
+        if (text !== lastTime) {
+          lastTime = text;
+          timeLabel.current.textContent = text;
+          timeWidth = timeLabel.current.getComputedTextLength() + 12;
+          timeLabel.current.setAttribute("x", String(timeWidth / 2));
+          timePill.current?.setAttribute("width", String(timeWidth));
+        }
+        const left = Math.max(0, Math.min(px - timeWidth / 2, chartWidth - timeWidth));
+        const top =
+          area.y + area.height + 24 <= chartHeight
+            ? area.y + area.height + 3
+            : area.y + area.height - 22;
+        timeMarker.current?.setAttribute("transform", `translate(${left},${top})`);
+      }
+      if (priceLabel.current) {
+        const inVolume =
+          local &&
+          py !== undefined &&
+          context.volumeRatio > 0 &&
+          py >= area.y + area.height * (1 - context.volumeRatio);
+        const value =
+          local && py !== undefined ? (inVolume ? volumeAt : priceAt)?.(py) : context.active?.close;
+        const text =
+          typeof value === "number" && Number.isFinite(value) && horizontalVisible
+            ? inVolume
+              ? context.formatVolume(value)
+              : context.formatPrice(value)
+            : "";
+        if (text !== lastPrice) {
+          lastPrice = text;
+          priceLabel.current.textContent = text;
+          priceWidth = priceLabel.current.getComputedTextLength() + 12;
+          priceLabel.current.setAttribute("x", String(priceWidth / 2));
+          pricePill.current?.setAttribute("width", String(priceWidth));
+        }
+        priceLabel.current.setAttribute("data-axis", inVolume ? "volume" : "price");
+        if (priceMarker.current) {
+          priceMarker.current.style.display = text ? "" : "none";
+          const right = area.x + area.width;
+          const left =
+            right + priceWidth + 4 <= chartWidth ? right + 4 : Math.max(0, right - priceWidth - 4);
+          const top = Math.max(area.y, Math.min((py ?? area.y) - 10, chartHeight - 22));
+          priceMarker.current.setAttribute("transform", `translate(${left},${top})`);
+        }
+      }
+    };
+    update();
+    return context.pointer.subscribe(update);
+  });
+  if (!x || !y || !area) return null;
   return (
-    <g
-      data-kind-ui="candlestick-crosshair"
-      stroke="currentColor"
-      strokeDasharray="3 3"
-      pointerEvents="none"
-      {...props}
-    >
-      <defs>
-        <clipPath id={id}>
-          <rect x={area.x} y={area.y} width={area.width} height={area.height} />
-        </clipPath>
-      </defs>
-      <g clipPath={`url(#${id})`}>
-        <line x1={px} x2={px} y1={area.y} y2={area.y + area.height} />
-        {typeof py === "number" &&
-          py >= area.y &&
-          py <= area.y + area.height * (1 - context.volumeRatio) && (
-            <line x1={area.x} x2={area.x + area.width} y1={py} y2={py} />
+    <ZIndexLayer zIndex={DefaultZIndexes.cursorLine}>
+      <g stroke="currentColor" strokeDasharray="3 3" pointerEvents="none" {...props}>
+        <defs>
+          <clipPath id={id}>
+            <rect x={area.x} y={area.y} width={area.width} height={area.height} />
+          </clipPath>
+        </defs>
+        <g ref={frame} data-kind-ui="candlestick-crosshair" style={{ display: "none" }}>
+          <g clipPath={`url(#${id})`}>
+            <line ref={vertical} y1={area.y} y2={area.y + area.height} />
+            <line ref={horizontal} x1={area.x} x2={area.x + area.width} />
+          </g>
+          {showLabels && (
+            <g stroke="none" fill="currentColor" fontSize={12} strokeDasharray="none">
+              <g ref={timeMarker}>
+                <rect
+                  ref={timePill}
+                  height={20}
+                  rx={3}
+                  fill="var(--background, Canvas)"
+                  stroke="var(--border, currentColor)"
+                  strokeWidth={0.5}
+                />
+                <text
+                  data-kind-ui="candlestick-crosshair-time"
+                  textAnchor="middle"
+                  y={10}
+                  dominantBaseline="middle"
+                  {...labelProps}
+                  ref={timeLabelRef}
+                />
+              </g>
+              <g ref={priceMarker}>
+                <rect
+                  ref={pricePill}
+                  height={20}
+                  rx={3}
+                  fill="var(--background, Canvas)"
+                  stroke="var(--border, currentColor)"
+                  strokeWidth={0.5}
+                />
+                <text
+                  data-kind-ui="candlestick-crosshair-price"
+                  textAnchor="middle"
+                  y={10}
+                  dominantBaseline="middle"
+                  {...labelProps}
+                  ref={priceLabelRef}
+                />
+              </g>
+            </g>
           )}
+        </g>
       </g>
-    </g>
+    </ZIndexLayer>
   );
 }
 export type CandlestickContentProps<Row extends object = CandlestickDatum> = {

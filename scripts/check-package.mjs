@@ -206,6 +206,8 @@ try {
     "candlestick-model.test.mjs",
     "candlestick-viewport.test.mjs",
     "candlestick-render.test.mjs",
+    "candlestick-current-price.test.mjs",
+    "candlestick-navigation.test.mjs",
     "tailwind-classes.test.mjs",
     "consumer.tsx",
   ]) {
@@ -222,6 +224,8 @@ try {
       "candlestick-model.test.mjs",
       "candlestick-viewport.test.mjs",
       "candlestick-render.test.mjs",
+      "candlestick-current-price.test.mjs",
+      "candlestick-navigation.test.mjs",
       "tailwind-classes.test.mjs",
     ],
     ordinary,
@@ -503,6 +507,8 @@ try {
     "candlestick-model.test.mjs",
     "candlestick-viewport.test.mjs",
     "candlestick-render.test.mjs",
+    "candlestick-current-price.test.mjs",
+    "candlestick-navigation.test.mjs",
   ]) {
     await copyFile(join(root, "tests", file), join(consumer, file));
   }
@@ -516,6 +522,8 @@ try {
       "candlestick-model.test.mjs",
       "candlestick-viewport.test.mjs",
       "candlestick-render.test.mjs",
+      "candlestick-current-price.test.mjs",
+      "candlestick-navigation.test.mjs",
       "tailwind-classes.test.mjs",
     ],
     consumer,

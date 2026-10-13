@@ -425,7 +425,7 @@ const observations: CandlestickDatum[] = [
 | `onSelectionChange`, `onInspect` | Receives the normalized point with `original`, or null when cleared. |
 | `formatTime`, `formatPrice`, `formatVolume` | `(value, point?) => string`; default `String(value)`. Axis ticks may omit the point; readouts retain it. Supply currency, decimals, timezone, source, and volume units explicitly. |
 | `loading`, `loadingLabel`, `empty` | Loading follows the existing family contract; empty defaults to `"No candle observations"`. Errors, retry and cancellation belong to the application. |
-| `animate` | `false` by default; accepts the Bar-family animation option type, including `revealDurationMs` and `revealEasing`, for the shared SVG entrance reveal. Reduced motion renders static marks. |
+| `animate` | `false` by default; accepts the Bar-family animation option type, including `revealDurationMs` and `revealEasing`, for the shared SVG entrance reveal. Latest-candle corrections and the current-price marker move for 120 ms; discrete zoom/reset windows move for 200 ms. Dragging, data reconciliation and reduced motion use the exact target geometry immediately. |
 | Sizing, native chart props, `frameProps` | Existing family sizing and native Recharts chart options; root `layout`, `stackOffset` and `reverseStackOrder` are excluded and rejected at runtime. `frameProps` controls outer HTML attributes/ref/handlers. Native handlers run first and may veto by preventing default. |
 
 `Series` requires `seriesKey` for config, paint and visibility. It draws full
@@ -446,9 +446,13 @@ numeric domains and scales. Native reversed/padded X scales also govern pointer 
 props. Compose `ReferenceLine y={value}` for labelled reference/settlement levels;
 reference annotations do not automatically expand the price domain.
 
+`CurrentPrice` draws the latest supplied close as a horizontal price line and an axis pill, separately from hover inspection. `orientation` defaults to `"right"`; compose a matching price axis. `lineVisible`, `axisLabelVisible`, `lineProps`, `labelProps`, `labelTextColor`, native group props/ref, and a `(point, formattedPrice) => ReactNode` label renderer remain consumer-owned. The line uses the price pane clip; prices outside a fixed displayed domain produce no false edge label. `rising`, `falling`, `unchanged` and explicit `color` control movement colors.
+
+`Controls` supplies labelled Zoom in, Zoom out and Reset view buttons. `zoomFactor` defaults to `1.5`; `zoomInProps`, `zoomOutProps` and `resetProps` retain native button handlers, refs and children. Preventing default vetoes the built-in change. Reset fits supplied history. `HistoryNavigator` supplies a separate full-history close overview below the chart, with a draggable range and keyboard start/end handles. `height` defaults to `56`; native fieldset props/ref/styles and `brushProps`/`overviewProps` retain presentation. The root owns data, axes, brush range and geometry. Both parts propose the same viewport callbacks as chart gestures.
+
 `Volume` requires `seriesKey`, retains native Bar presentation props, and accepts
 `axisProps` for its independent nonnegative Y axis. It uses the same X scale and
-crosshair as price. Missing volume produces no observation; zero remains zero. Volume observations
+crosshair as price. Its default rise/fall/unchanged colors match the candle direction with muted opacity; optional `rising`, `falling`, `unchanged`, native `fill` and `fillOpacity` preserve explicit consumer control. Missing volume produces no observation; zero remains zero. Volume observations
 come from the validated root records. Separate `data`, `minPointSize`, alternate
 X axes, stacks, and fabricated background bars are excluded from this part's
 contract, so volume cannot silently diverge from its candle or gain a false
@@ -463,7 +467,7 @@ provided overlay value is validated before viewport filtering; included values
 also obey caller bounds. Default X-axis ticks use visible observation coordinates
 and skip explicit gaps. Caller-provided ticks and formatters retain control.
 
-`Crosshair` accepts SVG group props and spans both panes. `Content` renders an
+`Crosshair` accepts SVG group props and spans both panes. Its default `mode="free"` follows pointer X/Y while `onInspect` independently reports the nearest original candle. `mode="snap"` follows the inspected candle center and close. Keyboard inspection anchors to the candle close in either mode. `showLabels` defaults to true; `labelProps` customizes time/price text. Free elapsed-time labels use the rendered native inverse scale; ordinal labels identify the nearest supplied observation. `Content` renders an
 accessible readout, with optional `children(point, selection)`, `className`, and
 HTML `frameProps`. `Tooltip` uses the same fields/custom renderer while a point
 is inspected or selected, with the shared themed tooltip frame, `role="tooltip"`,
@@ -481,6 +485,8 @@ selects, Escape clears inspection and selection. Pointer hover inspects, tap
 selects, and dragging pans; scrolling a focused plot zooms. Identity-based
 inspection survives replacements, prepends and resizing. Removing an inspected
 identity produces a null readout; the chart frame retains keyboard focus.
+For streaming, replace the forming row with its existing time identity in a new array; append a row when a new interval starts. The same typed `data` contract handles corrections and prepends. Applications own feed loading, errors, retries and cancellation; clean up timers and subscriptions on unmount.
+
 Controlled consumers own the displayed window. If data changes while the supplied
 viewport stays unchanged, the chart proposes an identity-preserving window through
 `onViewportChange` with reason `data`; accepting the callback updates the display.
