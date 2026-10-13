@@ -27,7 +27,8 @@ export type LoadingFamily =
   | "radial-bar"
   | "activity-rings"
   | "heatmap"
-  | "sankey";
+  | "sankey"
+  | "funnel";
 
 /** Internal composition keeps unused family illustrations out of single-chart bundles. */
 export type LoadingDesign = (seed: number) => ReactNode;

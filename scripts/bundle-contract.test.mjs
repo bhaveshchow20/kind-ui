@@ -144,3 +144,25 @@ test("measurement ignores a zero-code module instead of mistaking a traversed ba
   assert.equal(measured.css.raw, 15);
   assertBundleRetention("cartesian", measured.modules);
 });
+
+test("Funnel keeps its own runtime while unrelated chart implementations stay absent", () => {
+  const own = [
+    "/node_modules/@kind-ui/charts/dist/funnel.js",
+    "/node_modules/@kind-ui/charts/dist/funnel-model.js",
+    "/node_modules/@kind-ui/charts/dist/loading-skeleton.js",
+  ];
+  assertBundleRetention("funnel", own);
+  for (const name of [
+    "heatmap",
+    "sankey-chart",
+    "composition/line",
+    "loading-standalone-designs",
+  ]) {
+    assert.throws(
+      () =>
+        assertBundleRetention("funnel", [...own, `/node_modules/@kind-ui/charts/dist/${name}.js`]),
+      /unrelated/,
+    );
+  }
+  assert.throws(() => assertBundleRetention("cartesian", [own[2], own[0]]), /unrelated/);
+});

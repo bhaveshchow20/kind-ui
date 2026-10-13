@@ -103,3 +103,25 @@ typechecks precede measurement. No family subpaths or runtime/API changes are
 introduced by this gate. The budgets prove the measured named imports and current
 CSS registration behavior; they do not justify a claim that optional chart
 features have no bundle cost.
+
+## Funnel fixture baseline
+
+The ordered-stage fixture uses two positive stages with explicit `Stages`,
+600 × 260 sizing and stage metadata. The native fixture uses the same values
+and dimensions. The compound includes frame, selection, generic data
+validation, loading and optional Motion support; the native fixture has no
+Kind frame or stage controls. These are application totals, not identical
+functionality or module-only costs.
+
+| Fixture | JS raw | gzip | Brotli | CSS raw | gzip | Brotli |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Compound Funnel | 750,668 | 228,970 | 193,485 | 34,141 | 6,722 | 5,950 |
+| Native Funnel | 482,717 | 146,369 | 124,060 | 4,254 | 1,403 | 1,173 |
+
+Measured from an installed local candidate tarball with the existing pinned
+tools and peers. Only the two new fixture budgets use these baselines and
+the existing 8% plus fixed-allowance policy. Existing budgets remain unchanged.
+Funnel retention rejects unrelated families and loading designs. Package-wide
+Tailwind scanning still includes all family utilities; the added utilities
+stay within the existing CSS ceilings. Final package and browser gates remain
+separate from this initial measurement.

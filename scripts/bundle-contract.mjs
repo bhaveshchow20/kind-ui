@@ -20,6 +20,8 @@ export const bundleFixtures = [
   "heatmap",
   "sankey",
   "sankey-native",
+  "funnel",
+  "funnel-native",
 ];
 const sizesSchema = z.strictObject({
   raw: z.number().int().nonnegative(),
@@ -108,12 +110,14 @@ export function assertBundleRetention(fixture, modules) {
     ["polar", "radar"],
     ["heatmap", "heatmap"],
     ["sankey", "sankey"],
+    ["funnel", "funnel"],
   ]).get(fixture);
   if (!family) return;
   for (const id of modules) {
-    const standalone = /@kind-ui\/charts\/dist\/(heatmap(?:-[^/]+)?|sankey(?:-[^/]+)?)\.js$/.exec(
-      id,
-    )?.[1];
+    const standalone =
+      /@kind-ui\/charts\/dist\/(heatmap(?:-[^/]+)?|sankey(?:-[^/]+)?|funnel(?:-[^/]+)?)\.js$/.exec(
+        id,
+      )?.[1];
     assert.ok(
       !standalone || standalone.startsWith(family),
       `${fixture}: unrelated standalone family retained: ${id}`,
@@ -125,7 +129,11 @@ export function assertBundleRetention(fixture, modules) {
     );
     const design = /loading-(cartesian|polar|standalone)-designs\.js$/.exec(id)?.[1];
     const allowedDesign =
-      family === "radar" ? "polar" : family === "line" ? undefined : "standalone";
+      family === "radar"
+        ? "polar"
+        : family === "line" || family === "funnel"
+          ? undefined
+          : "standalone";
     assert.ok(
       !design || design === allowedDesign,
       `${fixture}: unrelated loading design retained: ${id}`,
@@ -233,7 +241,13 @@ export async function checkBundleContract({ root, consumer, artifactSha256, buil
   for (const fixture of bundleFixtures) {
     const source = await readFile(join(root, "tests/fixtures/bundle", `${fixture}.tsx`), "utf8");
     if (
-      !["primitive-native", "cartesian-native", "polar-native", "sankey-native"].includes(fixture)
+      ![
+        "primitive-native",
+        "cartesian-native",
+        "polar-native",
+        "sankey-native",
+        "funnel-native",
+      ].includes(fixture)
     )
       assertCompositionConsumerSource(source);
     await writeFile(join(destination, `${fixture}.tsx`), source);
@@ -255,6 +269,7 @@ export async function checkBundleContract({ root, consumer, artifactSha256, buil
       "polar",
       "heatmap",
       "sankey",
+      "funnel",
     ].includes(fixture);
     await writeFile(
       join(destination, "index.html"),

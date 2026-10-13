@@ -308,6 +308,58 @@
           "brotli": 1523
         }
       }
+    },
+    "funnel": {
+      "baseline": {
+        "js": {
+          "raw": 750668,
+          "gzip": 228970,
+          "brotli": 193485
+        },
+        "css": {
+          "raw": 34141,
+          "gzip": 6722,
+          "brotli": 5950
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 814818,
+          "gzip": 248312,
+          "brotli": 209988
+        },
+        "css": {
+          "raw": 37897,
+          "gzip": 7516,
+          "brotli": 6682
+        }
+      }
+    },
+    "funnel-native": {
+      "baseline": {
+        "js": {
+          "raw": 482717,
+          "gzip": 146369,
+          "brotli": 124060
+        },
+        "css": {
+          "raw": 4254,
+          "gzip": 1403,
+          "brotli": 1173
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 525431,
+          "gzip": 159103,
+          "brotli": 135009
+        },
+        "css": {
+          "raw": 5619,
+          "gzip": 1772,
+          "brotli": 1523
+        }
+      }
     }
   }
 }
