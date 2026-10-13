@@ -1,5 +1,16 @@
 /** @typedef {{id: string, version: string, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
 /** @typedef {{title: string, description: string, code: string, language: "sh" | "css" | "tsx", filename: string}} InstallationStep */
+/** @typedef {"npm" | "pnpm" | "yarn" | "bun"} PackageManager */
+/** @typedef {{manager: PackageManager, command: string}} PackageInstallCommand */
+
+const coreInstallCommand = "npm install @kind-ui/charts motion recharts";
+/** @type {readonly PackageInstallCommand[]} */
+export const coreInstallCommands = [
+  { manager: "npm", command: coreInstallCommand },
+  { manager: "pnpm", command: "pnpm add @kind-ui/charts motion recharts" },
+  { manager: "yarn", command: "yarn add @kind-ui/charts motion recharts" },
+  { manager: "bun", command: "bun add @kind-ui/charts motion recharts" },
+];
 
 /** @param {InstallationBundle} bundle */
 export function installationFor(bundle) {
@@ -14,7 +25,7 @@ export function installationFor(bundle) {
     {
       title: "Install Core",
       description: "Add the package and its peers to your React 19.3 project.",
-      code: "npm install @kind-ui/charts motion recharts",
+      code: coreInstallCommand,
       language: "sh",
       filename: "Terminal",
     },
@@ -42,20 +53,42 @@ export function installationFor(bundle) {
       filename: "App.tsx",
     },
   ];
-  return { itemName, command: `npx shadcn@latest add @kind-ui/${itemName}`, steps };
+  const command = `npx shadcn@latest add @kind-ui/${itemName}`;
+  /** @type {readonly PackageInstallCommand[]} */
+  const cliCommands = [
+    { manager: "npm", command },
+    { manager: "pnpm", command: `pnpm dlx shadcn@latest add @kind-ui/${itemName}` },
+    { manager: "yarn", command: `yarn dlx shadcn@latest add @kind-ui/${itemName}` },
+    { manager: "bun", command: `bunx shadcn@latest add @kind-ui/${itemName}` },
+  ];
+  return { itemName, command, cliCommands, coreInstallCommands, steps };
+}
+
+/** @param {readonly PackageInstallCommand[]} commands @param {number} level */
+function commandMarkdown(commands, level) {
+  return commands
+    .map(
+      ({ manager, command }) =>
+        `${"#".repeat(level)} ${manager}\n\n\`\`\`sh title="Terminal"\n${command}\n\`\`\`\n`,
+    )
+    .join("\n");
 }
 
 /** @param {InstallationBundle} bundle */
 export function installationMarkdown(bundle) {
-  const { command, steps } = installationFor(bundle);
+  const { cliCommands, steps } = installationFor(bundle);
   return (
     "### CLI\n\nRun this command in your initialized shadcn project:\n\n" +
-    `\`\`\`sh\n${command}\n\`\`\`\n\n` +
+    commandMarkdown(cliCommands, 4) +
+    "\n" +
     "### Manual\n\n" +
     steps
       .map(
-        (step) =>
-          `#### ${step.title}\n\n${step.description}\n\n\`\`\`${step.language} title="${step.filename}"\n${step.code.trimEnd()}\n\`\`\`\n`,
+        (step, index) =>
+          `#### ${step.title}\n\n${step.description}\n\n` +
+          (index === 0
+            ? commandMarkdown(coreInstallCommands, 5)
+            : `\`\`\`${step.language} title="${step.filename}"\n${step.code.trimEnd()}\n\`\`\`\n`),
       )
       .join("\n")
   );

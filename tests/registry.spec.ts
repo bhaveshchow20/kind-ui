@@ -1,6 +1,40 @@
 import { expect, test } from "@playwright/test";
 import { expectDimmedPaint } from "./interaction-paint";
 
+test("installed Funnel preserves checkout values, inspection and loading recovery", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.setViewportSize({ width: 375, height: 850 });
+  await page.goto("/");
+  await page.getByRole("combobox", { name: "Chart", exact: true }).selectOption("funnel-chart");
+  const composition = page.getByRole("region", { name: "Installed composition" });
+  const stages = composition.locator('[data-kind-ui="funnel-stage"]');
+  await expect(stages).toHaveCount(5);
+  await expect(composition.locator('[data-kind-ui="funnel-mark"]')).toHaveCount(5);
+  await expect(composition.locator('[data-kind-ui="funnel-labels"]')).toContainText("2,400");
+  const payment = composition.locator('[data-kind-ui="funnel-stage"][data-stage-id="payment"]');
+  await payment.focus();
+  await expect(composition.getByRole("tooltip")).toContainText("1,080");
+  await expect(composition.getByRole("tooltip")).toContainText("45%");
+  await page.keyboard.press("Home");
+  await expect(composition.getByRole("tooltip")).toContainText("2,400");
+  await expect(composition.getByRole("tooltip")).toContainText("100%");
+  await page.keyboard.press("Escape");
+  await expect(composition.getByRole("tooltip")).toHaveCount(0);
+  await page.getByRole("button", { name: "Loading", exact: true }).click();
+  await expect(composition.locator('[data-kind-ui="chart-loading-status"]')).toHaveText(
+    "Loading checkout cohort",
+  );
+  await expect(composition.locator('[data-kind-ui="funnel-labels"]')).not.toBeVisible();
+  await page.getByRole("button", { name: "Loading", exact: true }).click();
+  await expect(composition.locator('[data-kind-ui="funnel-mark"]')).toHaveCount(5);
+  await expect(composition.locator('[data-kind-ui="funnel-labels"]')).toContainText("900");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  expect(errors).toEqual([]);
+});
+
 test("installed line composition retains native keyboard tooltip, host theme and loading recovery", async ({
   page,
 }) => {

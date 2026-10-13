@@ -6,6 +6,7 @@ import { type InstallationStep, installationFor } from "@/lib/chart-installation
 import { componentBundleFor, componentBundlesSchema } from "@/lib/component-bundles.server.mjs";
 import type { ComponentId } from "./component-playground";
 import { InstallationTabs } from "./installation-tabs";
+import { PackageInstall } from "./package-install";
 import { TrackedCodeBlock } from "./tracked-code-block";
 
 const validatedBundles = componentBundlesSchema.parse(bundles);
@@ -26,15 +27,17 @@ async function installationCode(step: Pick<InstallationStep, "code" | "filename"
 }
 
 export async function ChartInstallation({ id }: { id: ComponentId }) {
-  const { command, steps } = installationFor(componentBundleFor(validatedBundles, id));
-  const blocks = await Promise.all(steps.map(installationCode));
+  const { cliCommands, coreInstallCommands, steps } = installationFor(
+    componentBundleFor(validatedBundles, id),
+  );
+  const blocks = await Promise.all(steps.slice(1).map(installationCode));
   return (
     <InstallationTabs
       id={id}
       cli={
         <>
           <p>Run this command in your initialized shadcn project:</p>
-          {await installationCode({ code: command, filename: "Terminal", language: "sh" })}
+          <PackageInstall commands={cliCommands} />
         </>
       }
       manual={
@@ -43,7 +46,7 @@ export async function ChartInstallation({ id }: { id: ComponentId }) {
             <Step key={step.title}>
               <h3>{step.title}</h3>
               <p>{step.description}</p>
-              {blocks[index]}
+              {index === 0 ? <PackageInstall commands={coreInstallCommands} /> : blocks[index - 1]}
             </Step>
           ))}
         </Steps>

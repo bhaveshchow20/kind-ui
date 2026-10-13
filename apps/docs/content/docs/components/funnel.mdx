@@ -1,0 +1,209 @@
+---
+title: Funnel Chart
+description: Compare supplied values across ordered stages, with explicit ratios and shared comparison scales.
+---
+
+<ChartExample id="funnel" />
+
+## Installation
+
+<ChartInstallation id="funnel" />
+
+## Usage
+
+Supply ordered stage values and a color for every stage ID. Add each part explicitly.
+
+```tsx title="Composition sketch"
+import { FunnelChart } from "@kind-ui/charts";
+
+<FunnelChart
+  data={data} config={config} height={280}
+  aria-label="Checkout sessions by stage"
+  denominator="first" ratioLabel="Share of starting sessions"
+>
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+  <FunnelChart.Tooltip />
+</FunnelChart>
+```
+
+## Weighted pipeline snapshot
+
+Values may increase between stages. This snapshot shows supplied weighted amounts and duration metadata, including an unknown amount and a measured zero.
+
+<ChartExample id="funnel-pipeline" />
+
+## Compare cohorts
+
+Use one `scaleMax` for both panels. Each panel’s ratio still uses its own starting cohort.
+
+<ChartExample id="funnel-comparison" />
+
+## Application progression
+
+Switch orientation while preserving stage order. Tapered boundaries encode the current and next values; their area does not encode a stage value.
+
+<ChartExample id="funnel-orientation" />
+
+## Loading state
+
+Set `loading` and name the pending data with `loadingLabel`.
+
+<ChartExample id="funnel" variant="loading" />
+
+## API reference
+
+### FunnelChart
+
+<div className="line-props-scroll" role="region" aria-label="FunnelChart props" tabIndex={0}>
+
+| Prop | Type | Default | Contract |
+| --- | --- | --- | --- |
+| `data` | `readonly T[]` | Required | Supplied stage aggregates in display order; records remain available as `stage.datum`. |
+| `accessors` | `FunnelAccessors<T>` | Standard fields | Required for custom records; reads `id`, `label` and `value` from each original record and index. |
+| `config` | `SeriesConfig` | Required | Color metadata for every stage ID. Legend labels and highlight announcements use the stage label unless config supplies an explicit label; icons and theme-aware colors remain supported. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `aria-describedby` | `string` | — | Additional description IDs, alongside keyboard instructions. |
+| `children` | `ReactNode` | Required | Explicit `Stages`, `Labels`, `Tooltip`, `DataTable`, `Legend` and `Content`; omitted parts stay absent. |
+| `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | Stage progression direction; horizontal marks project the native band geometry. |
+| `scaleMax` | `number` | Largest known value, or `1` | Finite positive common scale, at least the largest known stage value. |
+| `denominator` | `FunnelDenominator<T>` | Omitted | Opts into a ratio using the policy below; omission produces no ratio. |
+| `formatValue` | `(value: number) => string` | `String` | Shared formatting for inspection, labels and table values. |
+| `formatRatio` | `(ratio: number) => string` | Intl percent, up to one decimal | Receives a fraction: `0.25` means 25%. |
+| `ratioLabel` | `string` | `"Ratio"` | Names the supplied ratio meaning; does not imply conversion. |
+| `missingLabel` | `string` | `"Unknown"` | Readout for unknown values and unavailable table metrics. |
+| `animate` | `boolean \| FunnelAnimation` | `false` | Settled-shape opacity entrance; `true` uses 700ms. |
+| `loading` / `loadingLabel` | `boolean` / `string` | `false` / `"Loading chart"` | Decorative pending state and accessible status; stage inspection and stale readouts are unavailable. A focused stage returns after loading if its ID survives, with no intervening focus or pointer interaction elsewhere. |
+| `empty` | `ReactNode` | `"No stages"` | Empty-array content; all-zero data retains its stages. |
+| `activeId` | `string \| null` | Uncontrolled | Controlled inspection; requires `onActiveIdChange`. A changed owner request releases a dismissed readout. |
+| `defaultActiveId` | `string \| null` | `null` | Initial uncontrolled inspection; cannot accompany `activeId`. |
+| `onActiveIdChange` | `(next: string \| null) => void` | — | Inspection request; ownership stays fixed during a mount. Removed controlled IDs remain inert without an owner write. |
+| `interaction` | `FunnelInteraction` | Category focus | Shared stage/legend highlighting; selection remains separate from inspection. |
+| `width` / `height` / `style` / `className` | Native sizing and presentation | Full width, 280px height | Consumer dimensions and styles take precedence over sizing defaults. |
+| `responsive` | `boolean` | `true` | Native responsive container sizing. |
+| `margin` | Native chart margin | Native default | Available plot bounds for stage geometry. |
+| `frameProps` | HTML frame attributes and ref | — | Attributes, styles and handlers for the outer frame. |
+| `legendPosition` | `"top" \| "bottom"` | `"bottom"` | Position of explicit HTML parts outside the SVG plot. |
+| `emphasis` | `"auto" \| "none"` | `"auto"` | Temporary pointer and keyboard emphasis from stages and legend items; persistent selection takes precedence. |
+| `nonce` | `string` | — | Nonce for chart-owned presentation resources. |
+| `ref` | `Ref<SVGSVGElement>` | — | Native chart SVG ref; use `frameProps.ref` for the HTML frame. |
+| Native chart-container handlers | Recharts chart props | — | Native container events remain available; stage handlers belong on `Stages.stageProps`. |
+
+</div>
+
+Native container props: [Recharts FunnelChart](https://recharts.github.io/en-US/api/FunnelChart/).
+
+### Data and denominator contracts
+
+<div className="line-props-scroll" role="region" aria-label="Funnel data and denominator contracts" tabIndex={0}>
+
+| Input | Behavior |
+| --- | --- |
+| Standard record | `{ id: string; label: string; value: number \| null \| undefined }`. IDs are nonempty and unique; labels are strings. |
+| Known value | Finite, nonnegative number; decimals, increases, re-entry aggregates and weighted amounts are accepted. Values are never sorted or summed. |
+| `null` / `undefined` | Unknown, with a separate dashed band and no quantitative fill. Both normalize to `stage.value: null`. |
+| Zero | Known zero; no positive area is painted. Its stage remains inspectable and in the table. |
+| `denominator="first"` | Uses the first supplied stage, including when that value is unknown or zero. |
+| `denominator="previous"` | Uses the immediately preceding supplied stage; the first stage has no denominator. Unknown stages are not skipped. |
+| Numeric denominator | Finite nonnegative number applied to every stage. |
+| Callback denominator | `(stage, index, stages) => number \| null \| undefined`; receives all validated stages before their denominator and ratio fields are populated. |
+| Unknown numerator or denominator | Ratio is `null`. A known denominator is retained even when the numerator is unknown. |
+| Zero denominator | Stored as `0`, with ratio `null`; never fabricated as 0% or 100%. |
+| Zero numerator, positive denominator | Ratio is `0`. |
+| Increasing values | Ratios above `1` are retained and format above 100%. No drop-off calculation or cohort claim is inferred. |
+| Invalid numeric range | Negative/nonfinite inputs, ratio overflow or positive underflow throw. Positive geometry that collapses at the actual viewport also throws with a rescale instruction. |
+| Analytics semantics | Consumer owns units, cohort/period alignment, event order, entry rules, conversion windows, weighting, privacy suppression, durations and alternative paths. |
+
+</div>
+
+### createFunnelModel
+
+The same validated model is available independently through `createFunnelModel({ data, accessors?, denominator?, scaleMax? })`.
+
+<ApiTable name="FunnelModelOutputReference" />
+
+### FunnelStage and accessors
+
+<ApiTable name="FunnelStageRecordReference" />
+
+<ApiTable name="FunnelDatumAccessorsReference" />
+
+Use an explicit generic on parts with custom-record callbacks, for example `<FunnelChart.Labels<Deal> render={(stage) => stage.datum.medianDays} />`.
+
+<span id="funnelstages" />
+
+### FunnelChart.Stages
+
+<ApiTable name="FunnelStagePartsReference" />
+
+<div className="line-props-scroll" role="region" aria-label="Funnel geometry and stage customization" tabIndex={0}>
+
+| Option | Default | Contract |
+| --- | --- | --- |
+| `geometry="rectangle"` | Default | Equal progression extents; cross-section width and band area are proportional to the stage value. |
+| `geometry="trapezoid"` | Opt-in | Entry cross-section represents the current value; exit cross-section represents the next known value. Final stage is rectangular. |
+| Unknown next value | — | Current positive stage ends at its own width; no taper into an unknown stage is inferred. |
+| `Shape` | Quantitative polygon | Receives `stage`, `geometry`, `fill`, `selected` and `active` for positive known stages. Preserve the supplied quantitative geometry. |
+| `stageProps(stage)` | — | SVG group attributes, styles, refs and event handlers. Excludes owned `children`, `role`, `tabIndex`, `aria-label`, `aria-pressed`, `aria-disabled` and stage identity data attributes. Additional `aria-describedby` IDs merge with the readout ID; consumer handlers run first and `preventDefault()` vetoes the corresponding action. |
+| Inspection and activation | — | Hover/focus inspects; click/touch, Enter or Space highlights. Arrows navigate supplied order; Home/End reach endpoints; Escape dismisses inspection and requests highlight reset. |
+| Motion | Off | Opacity reveals final geometry. Reduced motion settles immediately; data, orientation, size changes and interaction interrupt entrance. Duration must be finite and nonnegative. |
+
+</div>
+
+### Custom shape geometry
+
+`upperWidth` and `lowerWidth` are cross-section dimensions: widths vertically, heights horizontally. `points` supplies the ordered polygon vertices.
+
+<ApiTable name="FunnelShapeContextReference" />
+
+<ApiTable name="FunnelProjectedGeometryReference" />
+
+<span id="funnellabels" />
+
+### FunnelChart.Labels
+
+<ApiTable name="FunnelLabelPartsReference" />
+
+The default list shares root formatting and includes available ratios. `render(stage)` retains the original record for additional metadata.
+
+<span id="funneltooltip" />
+
+### FunnelChart.Tooltip
+
+<ApiTable name="FunnelReadoutPartsReference" />
+
+<ApiTable name="FunnelReadoutContextReference" />
+
+The in-flow readout follows inspection without native SVG tooltip coordinates. Its generated `id` and `role` are owned by the chart. `Content` owns its presentation; `valueAnimation="shuffle"` animates only the built-in known-value digits and respects reduced motion.
+
+<span id="funneldatatable" />
+
+### FunnelChart.DataTable
+
+<ApiTable name="FunnelTablePartsReference" />
+
+<ApiTable name="FunnelTableColumnReference" />
+
+The table retains zero and unknown stages. Supplying a denominator policy adds stable denominator and ratio columns, including when every result is unavailable; unavailable cells use `missingLabel`.
+
+<span id="funnellegend" />
+
+### FunnelChart.Legend and Content
+
+`Legend` uses the [shared legend API](https://kindui.dev/charts/docs/chart-components/legend/) and stage config to highlight without removing or rescaling stages. With `emphasis="auto"`, hovering or keyboard-focusing a legend item dims other stage paint; selection retains its existing styling. `Content` mounts explicit children outside the plot. HTML parts mount in the browser alongside the native chart.
+
+### Funnel interaction
+
+<div className="line-props-scroll" role="region" aria-label="Funnel selection props" tabIndex={0}>
+
+| Prop | Default | Contract |
+| --- | --- | --- |
+| `selected` | Uncontrolled | Controlled `string \| null`; requires `onSelectionChange`. |
+| `defaultSelected` | `null` | Initial uncontrolled selection; cannot accompany `selected`. |
+| `onSelectionChange(next)` | — | Receives the selected ID or `null`; repeated activation toggles selection. |
+| `markActivation` | Matching legend | `"none"` keeps click, Enter and Space as inspection actions without toggle semantics; `"matching-legend"` enables stage selection. |
+| `onBeforeInteraction(request)` | — | Return `false` to veto selection or the complete Escape reset/dismissal; receives identity, source, mode and event. |
+
+</div>
+
+Selection does not filter stages or change denominators. Controlled and uncontrolled ownership cannot switch during a mount.

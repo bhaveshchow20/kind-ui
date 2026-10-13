@@ -44,7 +44,8 @@ const catalog = catalogSchema.parse(readJson(path.join(output, "registry.json"))
 test("official CLI output has a flat complete catalog and content-free discovery payload", () => {
   assert.equal(catalog.homepage, registryHomepage);
   assert.equal(registryEndpoint, "https://kindui.dev/r/");
-  assert.equal(catalog.items.length, 14);
+  assert.equal(catalog.items.length, 15);
+  assert.ok(catalog.items.some(({ name }) => name === "funnel-chart"));
   assert.deepEqual(
     catalog.items.map(({ name }) => name),
     registryItems.map(({ name }) => name),
