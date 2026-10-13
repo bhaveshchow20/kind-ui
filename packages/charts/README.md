@@ -130,6 +130,8 @@ data, domains and business state.
 
 Every chart takes `config`, an accessible name, and explicit children. Config
 provides labels and colors; it never creates series, axes, legends or tooltips.
+
+Shared `Legend` accepts optional `itemKeys` to render an explicit ordered subset of configured identities. `FunnelChart.Legend` owns this list from the current stages, preserving input order even for integer-like IDs and excluding stale config entries.
 Omitting a part omits it. Fragments and wrapped components are supported.
 
 | Chart | Parts |

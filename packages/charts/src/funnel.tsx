@@ -304,6 +304,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
       document.removeEventListener("pointerdown", cancel, true);
     };
   }, []);
+  const escapeHandler = useRef<((event: React.KeyboardEvent<HTMLDivElement>) => void) | null>(null);
   const chartProps = native as ComponentPropsWithRef<typeof NativeFunnelChart>;
   const context: Context<T> = {
     model,
@@ -333,7 +334,13 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
       name={props}
       loading={loading}
       interaction={{ ...interaction, kind: "category", mode: "focus", eligibleKeys: keys }}
-      {...(frameProps !== undefined ? { frameProps } : {})}
+      frameProps={{
+        ...frameProps,
+        onKeyDown: (event) => {
+          frameProps?.onKeyDown?.(event);
+          escapeHandler.current?.(event);
+        },
+      }}
       {...(emphasis !== undefined ? { emphasis } : {})}
       {...(nonce !== undefined ? { nonce } : {})}
       {...(legendPosition ? { legendPosition } : {})}
@@ -346,6 +353,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
       }}
     >
       <FunnelContext value={context as Context<unknown>}>
+        <FunnelEscapeHandler handlerRef={escapeHandler} />
         <NativeFunnelChart
           {...chartProps}
           {...familyFrame(chartProps)}
@@ -382,6 +390,27 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
       </FunnelContext>
     </FamilyRoot>
   );
+}
+function FunnelEscapeHandler({
+  handlerRef,
+}: {
+  handlerRef: React.RefObject<((event: React.KeyboardEvent<HTMLDivElement>) => void) | null>;
+}) {
+  const context = useFunnel();
+  const interaction = useChartInteraction();
+  useLayoutEffect(() => {
+    const handler = (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      if (interaction.reset(event)) context.dismiss();
+      // The shared frame must not repeat the same reset request after this family handles it.
+      event.preventDefault();
+    };
+    handlerRef.current = handler;
+    return () => {
+      if (handlerRef.current === handler) handlerRef.current = null;
+    };
+  }, [handlerRef, interaction, context.dismiss]);
+  return null;
 }
 function FunnelLifecycle() {
   const { interrupt } = useFunnel();
@@ -502,8 +531,59 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
     !context.loading && stage !== undefined && interaction.selected === null,
     false,
   );
+  const props = stage ? (stageProps?.(stage) ?? {}) : {};
+  const consumerRef = props.ref;
+  const stageId = stage?.id;
+  const { loadingState, loadingFocus, restoredFocus } = context;
+  const mergedRef = useCallback(
+    (node: SVGGElement | null) => {
+      focusRef(node);
+      const cleanup = typeof consumerRef === "function" ? consumerRef(node) : undefined;
+      if (consumerRef && typeof consumerRef !== "function") consumerRef.current = node;
+      if (
+        node &&
+        stageId !== undefined &&
+        !loadingState.current &&
+        loadingFocus.current?.id === stageId
+      ) {
+        const pending = loadingFocus.current;
+        queueMicrotask(() => {
+          if (loadingState.current || loadingFocus.current !== pending) return;
+          loadingFocus.current = null;
+          if (
+            !node.isConnected ||
+            !pending.root.isConnected ||
+            document.activeElement !== document.body
+          )
+            return;
+          restoredFocus.current = stageId;
+          node.focus({ preventScroll: true });
+          queueMicrotask(() => {
+            if (restoredFocus.current === stageId) restoredFocus.current = null;
+          });
+        });
+      }
+      if (node)
+        return () => {
+          const restoring = node === document.activeElement;
+          if (restoring && stageId !== undefined) {
+            restoredFocus.current = stageId;
+            const root = node.closest('[data-kind-ui="chart"]');
+            if (loadingState.current && root) loadingFocus.current = { id: stageId, root };
+          }
+          focusRef(null);
+          if (restoring)
+            queueMicrotask(() => {
+              if (restoredFocus.current === stageId) restoredFocus.current = null;
+            });
+          if (typeof cleanup === "function") cleanup();
+          else if (typeof consumerRef === "function") consumerRef(null);
+          else if (consumerRef) consumerRef.current = null;
+        };
+    },
+    [focusRef, consumerRef, stageId, loadingState, loadingFocus, restoredFocus],
+  );
   if (!stage) return null;
-  const props = stageProps?.(stage) ?? {};
   const parent = native.parentViewBox;
   const ratio = context.model.maximum / context.model.scaleMax;
   const crossScale = context.orientation === "vertical" ? 1 : parent.height / parent.width;
@@ -595,52 +675,7 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
     // biome-ignore lint/a11y/useSemanticElements: SVG stage groups provide a single keyboard target and retain SVG consumer refs.
     <g
       {...props}
-      ref={(node) => {
-        focusRef(node);
-        const cleanup = typeof props.ref === "function" ? props.ref(node) : undefined;
-        if (props.ref && typeof props.ref !== "function") props.ref.current = node;
-        if (
-          node &&
-          !context.loadingState.current &&
-          context.loadingFocus.current?.id === stage.id
-        ) {
-          const pending = context.loadingFocus.current;
-          queueMicrotask(() => {
-            if (context.loadingState.current || context.loadingFocus.current !== pending) return;
-            context.loadingFocus.current = null;
-            if (
-              !node.isConnected ||
-              !pending.root.isConnected ||
-              document.activeElement !== document.body
-            )
-              return;
-            context.restoredFocus.current = stage.id;
-            node.focus({ preventScroll: true });
-            queueMicrotask(() => {
-              if (context.restoredFocus.current === stage.id) context.restoredFocus.current = null;
-            });
-          });
-        }
-        if (node)
-          return () => {
-            const restoring = node === document.activeElement;
-            if (restoring) {
-              context.restoredFocus.current = stage.id;
-              const root = node.closest('[data-kind-ui="chart"]');
-              if (context.loadingState.current && root)
-                context.loadingFocus.current = { id: stage.id, root };
-            }
-            focusRef(null);
-            if (restoring)
-              queueMicrotask(() => {
-                if (context.restoredFocus.current === stage.id)
-                  context.restoredFocus.current = null;
-              });
-            if (typeof cleanup === "function") cleanup();
-            else if (typeof props.ref === "function") props.ref(null);
-            else if (props.ref) props.ref.current = null;
-          };
-      }}
+      ref={mergedRef}
       role="button"
       tabIndex={context.loading ? -1 : 0}
       aria-label={label}
@@ -697,11 +732,7 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
       onKeyDown={(event) => {
         props.onKeyDown?.(event);
         if (event.defaultPrevented || context.loading) return;
-        if (event.key === "Escape") {
-          if (interaction.reset(event)) context.dismiss();
-          event.preventDefault();
-          return;
-        }
+        if (event.key === "Escape") return;
         if (event.key === "Enter" || event.key === " ") {
           if (!event.repeat) activate(event);
           event.preventDefault();
@@ -981,11 +1012,11 @@ export function FunnelDataTable<T = FunnelDatum>({
     </OutsidePlot>
   );
 }
-export function FunnelLegend(props: LegendProps) {
-  useFunnel();
+export function FunnelLegend(props: Omit<LegendProps, "itemKeys"> & { itemKeys?: never }) {
+  const context = useFunnel();
   return (
     <OutsidePlot>
-      <Legend {...props} />
+      <Legend {...props} itemKeys={context.model.stages.map((stage) => stage.id)} />
     </OutsidePlot>
   );
 }

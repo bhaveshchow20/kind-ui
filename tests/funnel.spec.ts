@@ -608,3 +608,88 @@ test("stage descriptions retain consumer IDs and join the active tooltip descrip
     tooltipId,
   ]);
 });
+
+test("stable React callback refs retain one lifecycle through inspection selection and emphasis", async ({
+  page,
+}) => {
+  await page.goto(`${packed}?stable-ref`);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  await expect(chart.locator('[data-kind-ui="funnel-stage"]')).toHaveCount(5);
+  const read = page.getByRole("button", { name: "Read stable ref counts", exact: true });
+  await read.click();
+  const mounts = await page.getByLabel("Stable ref mounts").textContent();
+  const cleanups = await page.getByLabel("Stable ref cleanups").textContent();
+  expect(Number(mounts)).toBeGreaterThanOrEqual(5);
+  await stage(chart, "entry").focus();
+  await stage(chart, "review").focus();
+  await stage(chart, "review").press("Enter");
+  await stage(chart, "review").press("Space");
+  const legend = chart
+    .locator('[data-kind-ui="chart-legend"]')
+    .getByRole("button", { name: "Growth", exact: true });
+  await legend.hover();
+  await page.mouse.move(0, 0);
+  await legend.focus();
+  await read.click();
+  await expect(page.getByLabel("Stable ref mounts")).toHaveText(mounts ?? "");
+  await expect(page.getByLabel("Stable ref cleanups")).toHaveText(cleanups ?? "");
+  await page.getByRole("button", { name: "Loading", exact: true }).click();
+  await expect(chart.locator('[data-kind-ui="funnel-stage"]')).toHaveCount(0);
+  await read.click();
+  await expect(page.getByLabel("Stable ref cleanups")).toHaveText(String(Number(cleanups) + 5));
+});
+
+for (const target of ["legend", "content"] as const) {
+  test(`Escape dismisses an active readout after focus moves to ${target}`, async ({ page }) => {
+    await page.goto(`${packed}?stable-ref`);
+    const chart = page.getByRole("region", { name: "Stage snapshot" });
+    await stage(chart, "review").focus();
+    await stage(chart, "review").press("Enter");
+    await expect(chart.getByRole("tooltip")).toContainText("Review");
+    const control =
+      target === "legend"
+        ? chart
+            .locator('[data-kind-ui="chart-legend"]')
+            .getByRole("button", { name: "Growth", exact: true })
+        : chart.getByRole("button", { name: "In-chart control", exact: true });
+    await control.focus();
+    await control.press("Escape");
+    await expect(chart.getByRole("tooltip")).toHaveCount(0);
+    await expect(page.getByLabel("Stage selection")).toHaveText("none");
+  });
+}
+
+for (const policy of ["reset-veto", "prevent-escape", "frame-prevent-escape"] as const) {
+  test(`Content Escape honors ${policy} without partial inspection state changes`, async ({
+    page,
+  }) => {
+    await page.goto(`${packed}?${policy}`);
+    const chart = page.getByRole("region", { name: "Stage snapshot" });
+    await stage(chart, "review").focus();
+    await stage(chart, "review").press("Enter");
+    const writes = await page.getByLabel("Inspection writes").textContent();
+    const selections = await page.getByLabel("Selection writes").textContent();
+    await chart.getByRole("button", { name: "In-chart control", exact: true }).focus();
+    await page.keyboard.press("Escape");
+    await expect(chart.getByRole("tooltip")).toContainText("Review");
+    await expect(page.getByLabel("Stage selection")).toHaveText("review");
+    await expect(page.getByLabel("Inspection writes")).toHaveText(writes ?? "");
+    await expect(page.getByLabel("Selection writes")).toHaveText(selections ?? "");
+  });
+}
+
+test("legend order follows current stages for integer-like IDs reversed config and stale keys", async ({
+  page,
+}) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Ordered legend" });
+  const buttons = chart.locator('[data-kind-ui="chart-legend"] button');
+  const expected = ["First stage", "Second stage", "Final stage"];
+  await expect(buttons).toHaveCount(3);
+  expect(await buttons.allTextContents()).toEqual(expected);
+  await expect(chart.locator('[data-kind-ui="funnel-stage"]')).toHaveCount(3);
+  await page.getByRole("button", { name: "Reorder legend config", exact: true }).click();
+  expect(await buttons.allTextContents()).toEqual(expected);
+  await expect(chart.getByRole("button", { name: "Stale entry", exact: true })).toHaveCount(0);
+  await expect(chart.locator('[data-kind-ui="chart-legend"]')).not.toContainText("Stale entry");
+});

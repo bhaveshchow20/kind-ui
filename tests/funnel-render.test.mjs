@@ -137,3 +137,11 @@ test("funnel label fallback preserves nonenumerable color metadata", () => {
   const html = render(h(FunnelChart, { ...defaults, config: colors }, null));
   assert.match(html, /#abcdef/);
 });
+
+test("funnel validates unused config colors", () => {
+  assert.throws(
+    () =>
+      render(h(FunnelChart, { ...defaults, config: { ...config, stale: { color: [] } } }, null)),
+    /color|nonempty|empty/i,
+  );
+});

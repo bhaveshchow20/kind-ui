@@ -152,3 +152,6 @@ void (<FunnelChart.Stages stageProps={() => ownedStageIndex} />);
 void (<FunnelChart.Stages stageProps={() => ownedValueState} />);
 // @ts-expect-error Interaction focus keys remain chart-owned.
 void (<FunnelChart.Stages stageProps={() => ownedFocusKey} />);
+
+// @ts-expect-error Funnel legend order and stage membership remain data-owned.
+void (<FunnelChart.Legend itemKeys={["stale"]} />);
