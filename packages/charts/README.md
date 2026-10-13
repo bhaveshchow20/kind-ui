@@ -452,12 +452,12 @@ crosshair as price. Missing volume produces no observation; zero remains zero. V
 come from the validated root records. Separate `data`, `minPointSize`, alternate
 X axes, stacks, and fabricated background bars are excluded from this part's
 contract, so volume cannot silently diverge from its candle or gain a false
-minimum height. Excluded Bar and axis geometry controls are rejected at runtime, including explicitly undefined keys; styling, shapes, events and axis tick presentation remain supported. Custom volume shapes retain native markup within the volume pane and shared entrance clips.
+minimum height. Excluded Bar and axis geometry controls are rejected at runtime, including explicitly undefined keys; styling, shapes, events and axis tick presentation remain supported. Custom volume shapes receive centered time-X geometry and retain native markup within the volume pane and shared entrance clips.
 
 `Overlay` draws caller-computed values from `dataKey`, either an original-row key
 or `(originalRow) => number | null | undefined`. It requires `seriesKey`, accepts
 native Line presentation props, defaults `dot` and animation to false, and shares
-series keyboard activation and focus emphasis. It never computes indicators. Missing values remain gaps. `includeInDomain` defaults to
+series keyboard activation and focus emphasis, with one keyboard target per logical key. Overlays use the shared entrance clip and reject separate native data or axis IDs. It never computes indicators. Missing values remain gaps. `includeInDomain` defaults to
 false; enable it to include overlay prices in the chosen autoscale scope. Every
 provided overlay value is validated before viewport filtering; included values
 also obey caller bounds. Default X-axis ticks use visible observation coordinates

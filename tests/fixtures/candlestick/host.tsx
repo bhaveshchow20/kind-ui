@@ -12,6 +12,21 @@ type Row = CandlestickDatum & { source: string };
 function CustomVolumeElement({ width = 900 }: { width?: number }) {
   return <rect data-custom-volume="element" x={0} y={0} width={width} height={900} fill="orange" />;
 }
+function CenteredVolumeElement({
+  x,
+  y,
+  width,
+  height,
+}: {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+}) {
+  return (
+    <rect data-custom-volume="centered" x={x} y={y} width={width} height={height} fill="orange" />
+  );
+}
 const initial: Row[] = [
   {
     time: "2026-03-05",
@@ -292,36 +307,51 @@ export function CandlestickHost() {
         <CandlestickChart.Series seriesKey="price" />
         <CandlestickChart.Volume
           seriesKey="volume"
-          {...(params.has("custom-volume")
+          {...(params.has("centered-volume")
             ? {
                 shape:
-                  params.get("custom-volume") === "element" ? (
-                    <CustomVolumeElement width={900} />
-                  ) : params.get("custom-volume") === "object" ? (
-                    {
-                      x: 0,
-                      y: 0,
-                      width: 900,
-                      height: 900,
-                      fill: "orange",
-                      className: "custom-volume-object",
-                    }
-                  ) : params.get("custom-volume") === "false" ? (
+                  params.get("centered-volume") === "element" ? (
+                    <CenteredVolumeElement />
+                  ) : params.get("centered-volume") === "object" ? (
+                    { fill: "orange" }
+                  ) : params.get("centered-volume") === "false" ? (
                     false
                   ) : (
-                    () => (
-                      <rect
-                        data-custom-volume="function"
-                        x={0}
-                        y={0}
-                        width={900}
-                        height={900}
-                        fill="orange"
-                      />
+                    (native: { x: number; y: number; width: number; height: number }) => (
+                      <CenteredVolumeElement {...native} />
                     )
                   ),
               }
-            : {})}
+            : params.has("custom-volume")
+              ? {
+                  shape:
+                    params.get("custom-volume") === "element" ? (
+                      <CustomVolumeElement width={900} />
+                    ) : params.get("custom-volume") === "object" ? (
+                      {
+                        x: 0,
+                        y: 0,
+                        width: 900,
+                        height: 900,
+                        fill: "orange",
+                        className: "custom-volume-object",
+                      }
+                    ) : params.get("custom-volume") === "false" ? (
+                      false
+                    ) : (
+                      () => (
+                        <rect
+                          data-custom-volume="function"
+                          x={0}
+                          y={0}
+                          width={900}
+                          height={900}
+                          fill="orange"
+                        />
+                      )
+                    ),
+                }
+              : {})}
         />
         {[94, 116, 100, 108].map((value) => (
           <CandlestickChart.ReferenceLine

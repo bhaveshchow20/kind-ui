@@ -155,6 +155,24 @@ test("state ownership and pane geometry fail with actionable errors", () => {
   );
 });
 
+test("Overlay rejects excluded data and axis controls by own property presence", () => {
+  for (const [key, value] of [
+    ["data", []],
+    ["xAxisId", "alternate"],
+    ["yAxisId", 1],
+  ]) {
+    for (const supplied of [value, undefined]) {
+      assert.throws(
+        () =>
+          render(
+            h(CandlestickChart.Overlay, { seriesKey: "price", dataKey: "close", [key]: supplied }),
+          ),
+        new RegExp(`Overlay.*${key}`),
+      );
+    }
+  }
+});
+
 test("standalone compounds require the owning family", () => {
   for (const Part of [
     CandlestickChart.Series,

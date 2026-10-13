@@ -487,28 +487,91 @@ test("shared series focus dims paint and supports keyboard activation in strict 
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`${devUrl}/?focus`);
-  const price = page.getByRole("button", { name: "Highlight Price", exact: true }).first();
+  const price = page.getByRole("button", { name: "Highlight Price", exact: true });
   const volume = page.getByRole("button", { name: "Highlight Volume", exact: true });
   await expect(price).toHaveCount(1);
   await expect(volume).toHaveCount(1);
   await page.locator('[data-candle-part="body"]').first().click();
   await expect(page.getByLabel("Selected time")).toHaveText("2026-03-05");
   await expect(price).toHaveAttribute("aria-pressed", "true");
-  const opacity = (series: string) =>
-    page
-      .locator(`[data-series="${series}"] > [data-kind-ui="series-interaction-paint"]`)
-      .first()
+  const volumeOpacity = () =>
+    volume
+      .locator('[data-kind-ui="series-interaction-paint"]')
       .evaluate((node) => Number(getComputedStyle(node).opacity));
-  await expect.poll(() => opacity("volume")).toBeCloseTo(0.28, 2);
+  await expect.poll(volumeOpacity).toBeCloseTo(0.28, 2);
   await volume.focus();
   await page.keyboard.press("Enter");
   await expect(volume).toHaveAttribute("aria-pressed", "true");
-  await expect.poll(() => opacity("price")).toBeCloseTo(0.28, 2);
+  const pricePaints = page.locator(
+    '[data-series="price"] > [data-kind-ui="series-interaction-paint"]',
+  );
+  await expect(pricePaints).toHaveCount(2);
+  await expect
+    .poll(() =>
+      pricePaints.evaluateAll((nodes) =>
+        nodes.map((node) => Number(getComputedStyle(node).opacity)),
+      ),
+    )
+    .toEqual([0.28, 0.28]);
+  await page
+    .locator('[data-series="price"] .recharts-line-curve')
+    .dispatchEvent("click", { button: 0 });
+  await expect(price).toHaveAttribute("aria-pressed", "true");
+  await expect
+    .poll(() =>
+      pricePaints.evaluateAll((nodes) =>
+        nodes.map((node) => Number(getComputedStyle(node).opacity)),
+      ),
+    )
+    .toEqual([1, 1]);
+  await page
+    .locator('[data-series="price"] .recharts-line-curve')
+    .dispatchEvent("click", { button: 0 });
+  await expect(price).toHaveAttribute("aria-pressed", "false");
+  await page
+    .locator('[data-series="price"] .recharts-line-curve')
+    .dispatchEvent("pointermove", { pointerType: "mouse", isPrimary: true });
+  await expect.poll(volumeOpacity).toBeCloseTo(0.28, 2);
+  await expect
+    .poll(() =>
+      pricePaints.evaluateAll((nodes) =>
+        nodes.map((node) => Number(getComputedStyle(node).opacity)),
+      ),
+    )
+    .toEqual([1, 1]);
   await page.getByRole("button", { name: "Loading", exact: true }).click();
   await expect(page.locator('[data-kind-ui="candlestick-loading"]')).toHaveCount(1);
   await expect(page.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(1);
   await expect(price).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test("overlay joins the shared entrance reveal and finishes on history replacement", async ({
+  page,
+}) => {
+  await page.goto(`${devUrl}/?animate`);
+  const curve = page.locator(".recharts-line-curve");
+  const clips = await curve.evaluate((node) => {
+    const values: string[] = [];
+    for (let parent = node.parentElement; parent; parent = parent.parentElement) {
+      if (parent.hasAttribute("clip-path")) values.push(parent.getAttribute("clip-path") ?? "");
+    }
+    return values;
+  });
+  expect(clips.some((value) => /candlestick-reveal-.*-price/.test(value))).toBe(true);
+  expect(
+    clips.some((value) => /candlestick-reveal-.*\)"?$/.test(value) && !value.includes("-price")),
+  ).toBe(true);
+  const reveal = page.locator(
+    'clipPath[id^="candlestick-reveal-"]:not([id$="-price"]):not([id$="-volume"]) rect',
+  );
+  const plotWidth = Number(await page.locator('clipPath[id$="-price"] rect').getAttribute("width"));
+  expect(plotWidth).toBeGreaterThan(0);
+  expect(Number(await reveal.getAttribute("width"))).toBeLessThan(plotWidth);
+  await page.getByRole("button", { name: "Replace" }).click();
+  await expect
+    .poll(async () => Number(await reveal.getAttribute("width")))
+    .toBeCloseTo(plotWidth, 1);
 });
 
 test("overlay series shares keyboard focus, inactive paint and native activation callbacks in strict Motion", async ({

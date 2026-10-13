@@ -2,6 +2,7 @@ import { domAnimation, LazyMotion } from "motion/react";
 import { Component, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { CandlestickHost } from "./host.js";
+import { CandlestickSelectionHost } from "./selection-host.js";
 
 class Boundary extends Component<{ children: ReactNode }, { error: string }> {
   override state = { error: "" };
@@ -17,7 +18,11 @@ if (!root) throw new Error("Missing root");
 createRoot(root).render(
   <LazyMotion features={domAnimation} strict>
     <Boundary>
-      <CandlestickHost />
+      {new URLSearchParams(location.search).has("selection-contract") ? (
+        <CandlestickSelectionHost />
+      ) : (
+        <CandlestickHost />
+      )}
     </Boundary>
   </LazyMotion>,
 );

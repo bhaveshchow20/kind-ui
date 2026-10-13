@@ -3,7 +3,9 @@
 import {
   type ComponentProps,
   type ComponentPropsWithRef,
+  cloneElement,
   createContext,
+  isValidElement,
   type ReactNode,
   use,
   useCallback,
@@ -16,6 +18,7 @@ import {
   Bar,
   type BarShapeProps,
   DefaultZIndexes,
+  Rectangle,
   usePlotArea,
   useXAxisScale,
   useYAxisScale,
@@ -26,7 +29,7 @@ import { type InteractionPaint, useInteractionOpacity } from "../animation.js";
 import { useChart } from "../chart-context.js";
 import { useLineInteraction } from "../line-chart.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "../series-interaction.js";
-import { type NativePoint, useCandlestick } from "./context.js";
+import { type NativePoint, useCandlestick, useCandlestickSeriesTarget } from "./context.js";
 import type { CandlestickDatum, CandlestickPoint } from "./model.js";
 import { getCandlestickVisiblePoints } from "./viewport.js";
 export type CandlestickMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> & {
@@ -185,6 +188,7 @@ export type CandlestickVolumeProps = Omit<
     "yAxisId" | "domain" | "padding" | "scale" | "type" | "dataKey"
   >;
 };
+const VolumeShapeContext = createContext<CandlestickVolumeProps["shape"]>(undefined);
 export function CandlestickVolume({ seriesKey, axisProps, ...props }: CandlestickVolumeProps) {
   for (const key of [
     "dataKey",
@@ -235,24 +239,39 @@ export function CandlestickVolume({ seriesKey, axisProps, ...props }: Candlestic
         padding={padding}
         tickFormatter={axisProps?.tickFormatter ?? defaultFormatter}
       />
-      <CandlestickBar
-        {...props}
-        seriesKey={seriesKey}
-        regionClip={{ pane: context.volumeClipId, reveal: context.revealClipId }}
-        dataKey="volume"
-        yAxisId="candlestick-volume"
-        activeBar={false}
-        shape={props.shape ?? renderVolume}
-      />
+      <VolumeShapeContext value={props.shape}>
+        <CandlestickBar
+          {...props}
+          seriesKey={seriesKey}
+          regionClip={{ pane: context.volumeClipId, reveal: context.revealClipId }}
+          dataKey="volume"
+          yAxisId="candlestick-volume"
+          activeBar={false}
+          shape={renderVolume}
+        />
+      </VolumeShapeContext>
     </>
   );
 }
 function VolumeShape(native: BarShapeProps) {
+  const option = use(VolumeShapeContext);
   const x = useXAxisScale();
   const context = useCandlestick();
   const point = native.payload as NativePoint;
   const center = x?.(point.coordinate);
   if (typeof center !== "number" || point.volume === undefined || point.gap) return null;
+  const centered = { ...native, x: center - native.width / 2 };
+  // Preserve native shape dispatch and explicit consumer props after supplying the owned X geometry.
+  if (isValidElement<BarShapeProps>(option))
+    return cloneElement(option, { ...centered, ...option.props });
+  if (typeof option === "function") return option(centered);
+  if (option !== undefined)
+    return (
+      <Rectangle
+        {...centered}
+        {...(typeof option === "object" && !isValidElement(option) ? option : {})}
+      />
+    );
   return (
     <g clipPath={`url(#${context.volumeClipId})`}>
       <rect
@@ -294,6 +313,7 @@ function CandlestickBar({
   const hidden =
     hide === true ||
     (chart.visibleSeries !== undefined && !chart.visibleSeries.includes(seriesKey));
+  const keyboardTarget = useCandlestickSeriesTarget(seriesKey, hidden);
   useLayoutEffect(() => registerSeries(id, seriesKey), [registerSeries, id, seriesKey]);
   const interaction = useSeriesInteraction(seriesKey, hidden, hide === true, undefined, onClick);
   const bar = (
@@ -309,7 +329,12 @@ function CandlestickBar({
   );
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
-      <SeriesInteractionLayer seriesKey={seriesKey} hidden={hidden} paint={CandlestickSeriesPaint}>
+      <SeriesInteractionLayer
+        seriesKey={seriesKey}
+        hidden={hidden}
+        paint={CandlestickSeriesPaint}
+        keyboardTarget={keyboardTarget}
+      >
         {regionClip ? (
           <g clipPath={`url(#${regionClip.pane})`}>
             <g clipPath={`url(#${regionClip.reveal})`}>{bar}</g>

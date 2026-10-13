@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { BarChart as EngineBarChart, usePlotArea, useXAxisScale } from "recharts";
+import { MotionContext } from "../animation.js";
 import type { BarChartProps } from "../bar-chart.js";
 import {
   type ChartName,
@@ -22,7 +23,7 @@ import {
   OutsidePlot,
 } from "../family-root.js";
 import { LineChartFrame } from "../line-chart.js";
-import { useReducedMotion } from "../motion-preference.js";
+import { defaultHover, useReducedMotion } from "../motion-preference.js";
 import {
   type CandlestickAccessors,
   type CandlestickDatum,
@@ -107,7 +108,13 @@ export type CandlestickChartProps<Row extends object = CandlestickDatum> = Famil
     children: ReactNode;
   };
 
-import { CandleContext, type Context, type NativePoint, useCandlestick } from "./context.js";
+import {
+  CandleContext,
+  CandlestickSeriesTargets,
+  type Context,
+  type NativePoint,
+  useCandlestick,
+} from "./context.js";
 import { CandlestickMark, CandlestickSeries, CandlestickVolume } from "./marks.js";
 import {
   CandlestickContent,
@@ -280,6 +287,9 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   );
   const [activeTime, setActiveTime] = useState<CandlestickPoint["time"] | null>(null);
   const [localSelection, setSelection] = useState(defaultSelection);
+  const pendingDefaultSelection = useRef(
+    selection === undefined && points.length === 0 && defaultSelection !== null,
+  );
   const selectedTime = selection === undefined ? localSelection : selection;
   const selected = points.find((point) => point.time === selectedTime) ?? null;
   const active = points.find((point) => point.time === activeTime) ?? null;
@@ -350,6 +360,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     );
   };
   const select = (time: CandlestickPoint["time"] | null) => {
+    pendingDefaultSelection.current = false;
     if (selection === undefined) setSelection(time);
     onSelectionChange?.(
       (points.find((point) => point.time === time) ?? null) as CandlestickPoint<Row> | null,
@@ -357,6 +368,10 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   };
   const removedSelection = useRef<CandlestickPoint["time"] | null>(null);
   useLayoutEffect(() => {
+    if (pendingDefaultSelection.current) {
+      if (points.length === 0) return;
+      pendingDefaultSelection.current = false;
+    }
     if (activeTime !== null && !points.some((point) => point.time === activeTime)) {
       setActiveTime(null);
       onInspect?.(null);
@@ -438,6 +453,9 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   };
   const instructions = useId();
   const reduced = useReducedMotion();
+  const motionEnabled = animate !== undefined && animate !== false && !reduced && !loading;
+  const hoverTransition =
+    typeof animate === "object" ? (animate.hoverTransition ?? defaultHover) : defaultHover;
   const panCoordinates = (initial: CandlestickViewport, delta: number) => {
     const domain = getCandlestickTimeDomain(points, initial, spacing);
     return normalizeCandlestickViewport(
@@ -532,8 +550,9 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
                     "keyboard",
                   );
               }
-            } else if (event.key === "Enter" || event.key === " ") select(active?.time ?? null);
-            else if (event.key === "Escape") {
+            } else if (event.key === "Enter" || event.key === " ") {
+              if (active) select(active.time);
+            } else if (event.key === "Escape") {
               inspect(null);
               select(null);
             } else if (event.key === "+" || event.key === "=" || event.key === "-")
@@ -694,41 +713,45 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           },
         }}
       >
-        <div className="relative">
-          <LineChartFrame
-            engine={EngineBarChart}
-            motionEnabled={animate !== undefined && animate !== false && !reduced}
-            loading={loading}
-            loadingLabel={loadingLabel}
-            interrupt={() => interrupt.current()}
-            chartProps={{
-              ...nativeProps,
-              data: rendered,
-              responsive: true,
-              accessibilityLayer: false,
-              ...familyFrame({
-                ...(width !== undefined ? { width } : {}),
-                ...(height !== undefined ? { height } : {}),
-                ...(className ? { className } : {}),
-                style: { touchAction: "pan-y", ...style },
-              }),
+        <MotionContext value={{ enabled: motionEnabled, transition: hoverTransition }}>
+          <CandlestickSeriesTargets>
+            <div className="relative">
+              <LineChartFrame
+                engine={EngineBarChart}
+                motionEnabled={motionEnabled}
+                loading={loading}
+                loadingLabel={loadingLabel}
+                interrupt={() => interrupt.current()}
+                chartProps={{
+                  ...nativeProps,
+                  data: rendered,
+                  responsive: true,
+                  accessibilityLayer: false,
+                  ...familyFrame({
+                    ...(width !== undefined ? { width } : {}),
+                    ...(height !== undefined ? { height } : {}),
+                    ...(className ? { className } : {}),
+                    style: { touchAction: "pan-y", ...style },
+                  }),
 
-              children: (
-                <>
-                  <Geometry />
-                  <CandlestickReveal animate={animate} loading={loading} />
-                  {children}
-                </>
-              ),
-            }}
-          />
-          {loading && <CandlestickLoading />}
-        </div>
-        {!loading && points.length === 0 && (
-          <OutsidePlot>
-            <div data-kind-ui="candlestick-empty">{empty}</div>
-          </OutsidePlot>
-        )}
+                  children: (
+                    <>
+                      <Geometry />
+                      <CandlestickReveal animate={animate} loading={loading} />
+                      {children}
+                    </>
+                  ),
+                }}
+              />
+              {loading && <CandlestickLoading />}
+            </div>
+            {!loading && points.length === 0 && (
+              <OutsidePlot>
+                <div data-kind-ui="candlestick-empty">{empty}</div>
+              </OutsidePlot>
+            )}
+          </CandlestickSeriesTargets>
+        </MotionContext>
       </FamilyRoot>
     </CandleContext>
   );

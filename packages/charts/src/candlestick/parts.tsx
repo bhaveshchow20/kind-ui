@@ -28,7 +28,7 @@ import { SeriesInteractionLayer, useSeriesInteraction } from "../series-interact
 import { StaticTooltipFrame, TooltipBase, type TooltipFrameProps } from "../tooltip.js";
 import { tooltipClassName } from "../tooltip-content.js";
 import { cn } from "../utils.js";
-import { type NativePoint, useCandlestick } from "./context.js";
+import { type NativePoint, useCandlestick, useCandlestickSeriesTarget } from "./context.js";
 import { CandlestickSeriesPaint } from "./marks.js";
 import type { CandlestickDatum, CandlestickPoint } from "./model.js";
 import { getCandlestickVisiblePoints } from "./viewport.js";
@@ -108,6 +108,10 @@ export function CandlestickOverlay<Row extends object = CandlestickDatum>({
   includeInDomain = false,
   ...props
 }: CandlestickOverlayProps<Row>) {
+  for (const key of ["data", "xAxisId", "yAxisId"] as const) {
+    if (Object.hasOwn(props, key))
+      throw new Error(`Candlestick Overlay owns ${key}; omit this prop`);
+  }
   const context = useCandlestick();
   const { visibleSeries, paints } = useChart();
   const { registerSeries } = useLineInteraction();
@@ -115,6 +119,7 @@ export function CandlestickOverlay<Row extends object = CandlestickDatum>({
   const id = props.id ?? generatedId;
   const hidden =
     props.hide === true || (visibleSeries !== undefined && !visibleSeries.includes(seriesKey));
+  const keyboardTarget = useCandlestickSeriesTarget(seriesKey, hidden);
   useLayoutEffect(() => registerSeries(id, seriesKey), [registerSeries, id, seriesKey]);
   const interaction = useSeriesInteraction(
     seriesKey,
@@ -181,19 +186,26 @@ export function CandlestickOverlay<Row extends object = CandlestickDatum>({
   );
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.line}>
-      <SeriesInteractionLayer seriesKey={seriesKey} hidden={hidden} paint={CandlestickSeriesPaint}>
+      <SeriesInteractionLayer
+        seriesKey={seriesKey}
+        hidden={hidden}
+        keyboardTarget={keyboardTarget}
+        paint={CandlestickSeriesPaint}
+      >
         <g clipPath={`url(#${context.priceClipId})`}>
-          <Line
-            {...props}
-            {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
-            zIndex={0}
-            id={id}
-            hide={hidden}
-            dataKey={read}
-            stroke={props.stroke ?? paints[seriesKey] ?? "currentColor"}
-            isAnimationActive={false}
-            dot={props.dot ?? false}
-          />
+          <g clipPath={`url(#${context.revealClipId})`}>
+            <Line
+              {...props}
+              {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
+              zIndex={0}
+              id={id}
+              hide={hidden}
+              dataKey={read}
+              stroke={props.stroke ?? paints[seriesKey] ?? "currentColor"}
+              isAnimationActive={false}
+              dot={props.dot ?? false}
+            />
+          </g>
         </g>
       </SeriesInteractionLayer>
     </ZIndexLayer>
