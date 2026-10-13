@@ -93,7 +93,7 @@ test("shared legend browser checks visit current compound documentation pages", 
 
 test("chart pages begin with their example instead of a dataset scenario", async () => {
   const files = (await readdir("content/docs/components")).filter((file) => file.endsWith(".mdx"));
-  assert.equal(files.length, 13);
+  assert.equal(files.length, 14);
   for (const file of files) {
     const source = await text(`content/docs/components/${file}`);
     const body = source.replace(/^---[\s\S]*?---\s*/, "");

@@ -50,14 +50,14 @@ Copy a [complete line chart example](https://kindui.dev/charts/docs/components/l
 
 ## Explore charts
 
-Browse 13 chart families, with complete examples and code in the documentation:
+Browse 14 chart families, with complete examples and code in the documentation:
 
 | Use case | Chart guides |
 | --- | --- |
 | Trends and comparisons | [Line](https://kindui.dev/charts/docs/components/line/) · [Area](https://kindui.dev/charts/docs/components/area/) · [Bar](https://kindui.dev/charts/docs/components/bar/) · [Combo](https://kindui.dev/charts/docs/components/combo/) |
 | Parts and progress | [Pie / Donut](https://kindui.dev/charts/docs/components/pie/) · [Radar](https://kindui.dev/charts/docs/components/radar/) · [Radial / Activity rings](https://kindui.dev/charts/docs/components/radial/) |
 | Relationships and distributions | [Scatter / Bubble](https://kindui.dev/charts/docs/components/scatter/) · [Heatmap](https://kindui.dev/charts/docs/components/heatmap/) · [Histogram](https://kindui.dev/charts/docs/components/histogram/) · [Box plot](https://kindui.dev/charts/docs/components/box-plot/) |
-| Flow and change | [Sankey](https://kindui.dev/charts/docs/components/sankey/) · [Waterfall](https://kindui.dev/charts/docs/components/waterfall/) |
+| Flow and change | [Sankey](https://kindui.dev/charts/docs/components/sankey/) · [Waterfall](https://kindui.dev/charts/docs/components/waterfall/) · [Funnel](https://kindui.dev/charts/docs/components/funnel/) |
 
 Explore [materials](https://kindui.dev/charts/docs/guides/materials/), [motion](https://kindui.dev/charts/docs/guides/motion/) and [accessibility](https://kindui.dev/charts/docs/guides/accessibility/) when adapting an example.
 

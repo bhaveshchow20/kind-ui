@@ -1,6 +1,8 @@
 import { allExamples, examples } from "../apps/docs/examples/catalog.mjs";
 import { chartItemName } from "./names.mjs";
 
+export const coreVersion = "0.5.0";
+
 // The docs catalog owns chart choices and compositions; this catalog owns install addresses.
 export const registryItems = [
   ...examples,
@@ -12,6 +14,7 @@ export const registryItems = [
     name: chartItemName(example.id),
     title: example.title,
     description: example.notes,
+    coreRequirement: coreRequirementFor(example.id),
   };
 });
 
@@ -21,7 +24,14 @@ export function itemNameFor(exampleId) {
   return item.name;
 }
 
-export const coreVersion = "0.5.0";
+/** All maintained compositions share the same compatible Core requirement.
+ * @param {string} exampleId
+ */
+export function coreRequirementFor(exampleId) {
+  const example = allExamples.find(({ id }) => id === exampleId);
+  if (!example) throw new Error(`No Core requirement for example ${exampleId}`);
+  return "^0.6.0";
+}
 export const registryHomepage = "https://kindui.dev/charts/";
 export const registryEndpoint = "https://kindui.dev/r/";
 export const sourcePaths = [

@@ -3,6 +3,7 @@ import { previews as area } from "./area";
 import { previews as bar } from "./bar";
 import { previews as boxPlot } from "./box-plot";
 import { previews as combo } from "./combo";
+import { previews as funnel } from "./funnel";
 import { previews as heatmap } from "./heatmap";
 import { previews as histogram } from "./histogram";
 import { previews as line } from "./line";
@@ -26,4 +27,5 @@ export const previews = {
   ...sankey,
   ...histogram,
   ...boxPlot,
+  ...funnel,
 };

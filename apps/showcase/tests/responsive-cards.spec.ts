@@ -33,6 +33,7 @@ for (const width of [320, 375, 390, 414]) {
       "Heatmap",
       "Waterfall",
       "Sankey",
+      "Funnel",
       "Histogram",
       "Box Plot",
     ]) {

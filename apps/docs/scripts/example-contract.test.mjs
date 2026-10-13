@@ -155,7 +155,7 @@ test("each registered family has a complete public consumer", () => {
   assert.equal(manifest.private, true);
   assert.equal(manifest.devDependencies.tailwindcss, "4.3.3");
   assert.equal(manifest.devDependencies["@tailwindcss/vite"], "4.3.3");
-  assert.equal(manifest.dependencies["@kind-ui/charts"], `^${provenance.version}`);
+  assert.equal(manifest.dependencies["@kind-ui/charts"], "^0.6.0");
   assert.ok(!Object.hasOwn(bundle.files, "package-lock.json"));
   for (const file of [
     "package.json",
@@ -168,6 +168,15 @@ test("each registered family has a complete public consumer", () => {
       bundle.files["README.md"].includes(`/examples/line/${file}`),
       `Setup link missing: ${file}`,
     );
+});
+test("all copied examples require the same compatible Core release", () => {
+  for (const bundle of Object.values(completeBundles)) {
+    assert.equal(bundle.version, provenance.version);
+    assert.equal(bundle.coreRequirement, "^0.6.0");
+    const manifest = JSON.parse(bundle.files["package.json"]);
+    assert.equal(manifest.dependencies["@kind-ui/charts"], "^0.6.0");
+    assert.match(promptFor(bundle), /@kind-ui\/charts@\^0\.6\.0/);
+  }
 });
 test("private package bytes match validation without public provenance or archives", () => {
   const digest = createHash("sha256")

@@ -3,10 +3,13 @@ export interface RegistryComposition {
   name: string;
   title: string;
   description: string;
+  coreRequirement: string;
 }
 export const registryItems: RegistryComposition[];
 export function itemNameFor(exampleId: string): string;
 export const coreVersion: string;
+/** Compatible Core requirement shared by all maintained compositions. */
+export function coreRequirementFor(exampleId: string): string;
 export const registryHomepage: string;
 export const registryEndpoint: string;
 export const sourcePaths: string[];

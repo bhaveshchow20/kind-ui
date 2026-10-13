@@ -271,7 +271,7 @@ test("Docs separates copied consumers without dropping any browser or build gate
       s.run !== "npm ci" &&
       s.run !== "npm audit --audit-level=high --include=dev",
   );
-  assert.equal(browserChecks.length, 16);
+  assert.equal(browserChecks.length, 17);
   assert.ok(
     browserChecks.some(
       (step) =>
@@ -309,6 +309,7 @@ test("Docs separates copied consumers without dropping any browser or build gate
   for (const family of [
     "line",
     "area",
+    "funnel",
     "pie",
     "radar",
     "sankey",

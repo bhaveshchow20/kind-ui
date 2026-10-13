@@ -8,6 +8,7 @@ interface ExampleBundle {
   packageStatus?: string | undefined;
   localPackage?: boolean | undefined;
   version?: string | undefined;
+  coreRequirement?: string | undefined;
   acceptance?: string | undefined;
 }
 export function filesFor(

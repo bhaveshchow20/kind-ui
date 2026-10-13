@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import path from "node:path";
 import { createGenerator, createProject } from "fumadocs-typescript";
 import ts from "typescript";
-import { registryItems } from "../../../registry/catalog.mjs";
+import { coreRequirementFor, registryItems } from "../../../registry/catalog.mjs";
 import { docsProvenanceSchema, parseJson } from "../../../scripts/tooling-schemas.mjs";
 import {
   allExamples,
@@ -89,6 +89,7 @@ const link = (path) => `${origin}${publicPath(path)}`;
 const bundles = {};
 const installationNames = new Map(registryItems.map(({ exampleId, name }) => [exampleId, name]));
 for (const example of allExamples) {
+  const coreRequirement = coreRequirementFor(example.id);
   if (!Object.hasOwn(dataLabels, example.id))
     throw new Error(`Unknown component example: ${example.id}`);
   const exampleSource = read(`examples/${example.id}/example.tsx`);
@@ -130,7 +131,18 @@ for (const example of allExamples) {
       )
     : undefined;
   const files = {
-    "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
+    "package.json": `${JSON.stringify(
+      {
+        ...manifest,
+        dependencies: {
+          ...manifest.dependencies,
+          "@kind-ui/charts":
+            coreRequirement === provenance.version ? `^${provenance.version}` : coreRequirement,
+        },
+      },
+      null,
+      2,
+    )}\n`,
     "index.html":
       '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kind UI chart example</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>\n',
     "tsconfig.json": `${JSON.stringify(
@@ -197,6 +209,7 @@ for (const example of allExamples) {
     packageStatus: status,
     localPackage: local,
     version: provenance.version,
+    ...(coreRequirement === provenance.version ? {} : { coreRequirement }),
   };
   if (variants)
     for (const [value, variant] of Object.entries(variants))

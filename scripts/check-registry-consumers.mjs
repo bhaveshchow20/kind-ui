@@ -56,6 +56,15 @@ const originalHashes = new Map(
     createHash("sha256").update(body).digest("hex"),
   ]),
 );
+for (const item of registryItems) {
+  assert.deepEqual(
+    payloads
+      .get(item.name)
+      ?.dependencies.filter((dependency) => dependency.startsWith("@kind-ui/charts@")),
+    [`@kind-ui/charts@${item.coreRequirement}`],
+    `${item.name}: public Core requirement differs from its catalog`,
+  );
+}
 let artifactRequests = 0;
 const server = createServer((request, response) => {
   const url = request.url ?? "";
@@ -82,7 +91,10 @@ const server = createServer((request, response) => {
     JSON.stringify({
       ...item,
       dependencies: item.dependencies.map((dependency) =>
-        dependency === `@kind-ui/charts@${coreVersion}` ? `${endpoint}/candidate.tgz` : dependency,
+        dependency ===
+        `@kind-ui/charts@${registryItems.find((item) => item.name === name)?.coreRequirement}`
+          ? `${endpoint}/candidate.tgz`
+          : dependency,
       ),
     }),
   );
@@ -456,7 +468,7 @@ try {
         integrity: receipt.integrity,
         versions: resolvedVersions,
         checks: [
-          "actual namespace CLI installation of all 14 items",
+          `actual namespace CLI installation of all ${registryItems.length} items`,
           "custom components aliases",
           published
             ? "official npm tarball resolution and integrity"
@@ -518,5 +530,5 @@ await write(
   )}\n`,
 );
 console.log(
-  `Vite and Next installed all 14 ${published ? "published" : "candidate"} registry compositions with strict types and production builds.`,
+  `Vite and Next installed all ${registryItems.length} ${published ? "published" : "candidate"} registry compositions with strict types and production builds.`,
 );

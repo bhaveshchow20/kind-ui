@@ -4,8 +4,9 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import { allExamples } from "../apps/docs/examples/catalog.mjs";
 import {
-  coreVersion,
+  coreRequirementFor,
   itemNameFor,
   registryCss,
   registryEndpoint,
@@ -44,7 +45,8 @@ const catalog = catalogSchema.parse(readJson(path.join(output, "registry.json"))
 test("official CLI output has a flat complete catalog and content-free discovery payload", () => {
   assert.equal(catalog.homepage, registryHomepage);
   assert.equal(registryEndpoint, "https://kindui.dev/r/");
-  assert.equal(catalog.items.length, 14);
+  assert.equal(catalog.items.length, 15);
+  assert.ok(catalog.items.some(({ name }) => name === "funnel-chart"));
   assert.deepEqual(
     catalog.items.map(({ name }) => name),
     registryItems.map(({ name }) => name),
@@ -56,7 +58,7 @@ test("official CLI output has a flat complete catalog and content-free discovery
   for (const item of catalog.items) {
     assert.ok(item.files.every((file) => !Object.hasOwn(file, "content")));
     assert.deepEqual(item.dependencies, [
-      `@kind-ui/charts@${coreVersion}`,
+      `@kind-ui/charts@${registryItems.find(({ name }) => name === item.name)?.coreRequirement}`,
       "react@^19.3.0",
       "react-dom@^19.3.0",
       "recharts@^3.10.1",
@@ -126,4 +128,18 @@ test("lookup and policy reject missing examples, nested names and absent depende
   assert.equal(itemSchema.safeParse({ ...first, name: "charts/line-chart" }).success, false);
   assert.equal(itemSchema.safeParse({ ...first, dependencies: undefined }).success, false);
   assert.equal(itemSchema.safeParse({ ...first, files: [] }).success, false);
+});
+
+test("all chart installs share a compatible Core range and cannot request a downgrade", () => {
+  for (const example of allExamples) assert.equal(coreRequirementFor(example.id), "^0.6.0");
+  for (const definition of registryItems) {
+    assert.equal(definition.coreRequirement, "^0.6.0");
+    const item = itemSchema.parse(readJson(path.join(output, `${definition.name}.json`)));
+    assert.deepEqual(
+      item.dependencies.filter((dependency) => dependency.startsWith("@kind-ui/charts@")),
+      ["@kind-ui/charts@^0.6.0"],
+      definition.name,
+    );
+  }
+  assert.throws(() => coreRequirementFor("unknown"), /No Core requirement/);
 });

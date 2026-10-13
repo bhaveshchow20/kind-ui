@@ -18,14 +18,8 @@ const packageJson = /** @type {unknown} */ (
 const manifest = z.object({ version: z.string() }).parse(packageJson);
 if (manifest.version !== coreVersion)
   throw new Error(`Registry targets Core ${coreVersion}, source package is ${manifest.version}`);
-const dependencies = [
-  `@kind-ui/charts@${coreVersion}`,
-  "react@^19.3.0",
-  "react-dom@^19.3.0",
-  "recharts@^3.10.1",
-  "motion@^13.4.6",
-];
-const items = registryItems.map(({ exampleId, name, title, description }) => {
+const dependencies = ["react@^19.3.0", "react-dom@^19.3.0", "recharts@^3.10.1", "motion@^13.4.6"];
+const items = registryItems.map(({ exampleId, name, title, description, coreRequirement }) => {
   const sourcePath = `src/examples/${exampleId}/example.tsx`;
   const files = filesFor(
     {
@@ -49,7 +43,7 @@ const items = registryItems.map(({ exampleId, name, title, description }) => {
     type: "registry:component",
     title,
     description,
-    dependencies,
+    dependencies: [`@kind-ui/charts@${coreRequirement}`, ...dependencies],
     devDependencies: ["tailwindcss@^4.0.0"],
     css: registryCss,
     files: [{ path: relative, type: "registry:component", target: `@components/${name}.tsx` }],

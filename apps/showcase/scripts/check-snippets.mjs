@@ -53,6 +53,7 @@ const basic = await evaluate(
 );
 const advanced = await evaluate(await readFile(join(app, "lib/advanced-chart-recipes.ts"), "utf8"));
 const recent = await evaluate(await readFile(join(app, "lib/new-chart-recipes.ts"), "utf8"));
+const funnel = await evaluate(await readFile(join(app, "lib/funnel-recipes.ts"), "utf8"));
 const activity = await evaluate(await readFile(join(app, "lib/activity-recipe.ts"), "utf8"));
 const temporary = await mkdtemp(join(app, ".snippet-check-"));
 try {
@@ -61,6 +62,7 @@ try {
     [basic.recipes, basic.snippet],
     [advanced.advancedRecipes, advanced.advancedCode],
     [recent.newRecipes, recent.newCode],
+    [funnel.funnelRecipes, funnel.funnelCode],
   ]) {
     for (const recipe of recipes) {
       for (const finish of ["plain", "clay", "glow"]) {
@@ -86,7 +88,7 @@ try {
       }
     }
   }
-  assert.equal(files.length, 192, "Every recipe, finish and motion setting must be checked");
+  assert.equal(files.length, 198, "Every recipe, finish and motion setting must be checked");
   const changedOptions = {
     strokeWidth: 4,
     showGrid: false,
@@ -120,6 +122,7 @@ try {
     [basic.recipes, basic.snippet],
     [advanced.advancedRecipes, advanced.advancedCode],
     [recent.newRecipes, recent.newCode],
+    [funnel.funnelRecipes, funnel.funnelCode],
   ]) {
     for (const recipe of recipes) {
       const file = join(temporary, `${recipe.id}-controls.tsx`);
