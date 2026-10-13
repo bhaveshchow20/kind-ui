@@ -191,7 +191,6 @@ const data = [{ id: "storage", label: "Storage", children: [
 
 <TreemapChart data={data} config={{ storage: { color: "var(--chart-1)" } }}
   aria-label="Storage allocation" formatValue={value => `${value} GB`} animate>
-  <TreemapChart.Groups />
   <TreemapChart.Tiles />
   <TreemapChart.Labels />
   <TreemapChart.Tooltip valueAnimation="shuffle" />
@@ -200,8 +199,8 @@ const data = [{ id: "storage", label: "Storage", children: [
 </TreemapChart>
 ```
 
-Compose only the parts you need. `Labels` renders text directly on tiles and clips
-labels below its fit thresholds; customize text/color through `children` and
+Compose only the parts you need. The default is a leaf-only mosaic; hierarchy still owns layout, color and tooltip paths. Group headers are opt-in with `Groups` and a positive `groupHeaderHeight`.
+`Labels` renders names and complete formatted values when they fit, shortening narrow names visually and suppressing text below its fit thresholds; customize text/color through `children` and
 `labelProps` (set a contrasting text color when supplying dark tile paints). `Tiles` and `Groups` preserve native props, refs and handlers.
 `Tooltip` follows the pointer, clamps to the chart, and uses the shared tooltip
 rows and optional number animation. Keyboard inspection anchors it to the tile;

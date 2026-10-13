@@ -17,7 +17,14 @@ const data = [
   },
   { id: "c", kind: "leaf", label: "Outside", value: 1 },
 ];
-const base = { data, config: {}, "aria-label": "Allocation", width: 400, height: 300 };
+const base = {
+  data,
+  groupHeaderHeight: 20,
+  config: {},
+  "aria-label": "Allocation",
+  width: 400,
+  height: 300,
+};
 const chart = (children, props = {}) => h(TreemapChart, { ...base, ...props }, children);
 
 test("TreemapChart owns its frame and renders only explicit parts", () => {
@@ -41,7 +48,7 @@ test("treemap glyphs exclude zero area, retain stable IDs and include group head
   assert.equal((html.match(/data-kind-ui="treemap-tile"/g) ?? []).length, 3);
   assert.match(html, /data-kind-ui="treemap-group-header"/);
   assert.doesNotMatch(html, /data-node-id="zero"/);
-  assert.equal((html.match(/data-kind-ui="treemap-label"/g) ?? []).length, 2);
+  assert.equal((html.match(/data-kind-ui="treemap-label"/g) ?? []).length, 3);
   assert.match(html, /data-node-id="a"/);
   assert.match(html, /Same: 6/);
 });
@@ -282,4 +289,51 @@ test("Treemap visibility preserves data geometry and hides only matching configu
   assert.match(html, /hidden=""[^>]*data-inactive="true"|data-inactive="true"[^>]*hidden=""/);
   assert.match(html, /data-node-id="c"/);
   assert.match(html, /data-node-id="a"/);
+});
+
+test("the default leaf mosaic reserves no header band and exposes supplied values", () => {
+  const html = render(
+    chart([h(TreemapChart.Tiles, { key: "tiles" }), h(TreemapChart.Labels, { key: "labels" })], {
+      groupHeaderHeight: 0,
+    }),
+  );
+  assert.doesNotMatch(html, /data-kind-ui="treemap-group-header"|data-kind-ui="treemap-group"/);
+  assert.match(html, /Same: 6/);
+  assert.match(html, /Same: 3/);
+  assert.match(html, /Outside: 1/);
+  assert.match(html, /tabular-nums[^>]*>6</);
+});
+
+test("mosaic seeds larger leaves first and conserves supplied area without separators", () => {
+  render(
+    chart(
+      h(Capture, {
+        check(context) {
+          const leaves = context.rectangles.filter((node) => node.kind === "leaf");
+          assert.deepEqual(
+            leaves.map((node) => node.id),
+            ["z", "a"],
+          );
+          const area = leaves.reduce((sum, node) => sum + node.width * node.height, 0);
+          assert.equal(area, 400 * 300);
+          assert.ok(Math.abs((leaves[0].width * leaves[0].height) / area - 0.9) < 1e-12);
+          assert.ok(Math.abs((leaves[1].width * leaves[1].height) / area - 0.1) < 1e-12);
+        },
+      }),
+      {
+        groupHeaderHeight: 0,
+        padding: 0,
+        data: [
+          {
+            id: "g",
+            label: "Category",
+            children: [
+              { id: "a", label: "Small", value: 1 },
+              { id: "z", label: "Large", value: 9 },
+            ],
+          },
+        ],
+      },
+    ),
+  );
 });

@@ -40,8 +40,8 @@ export function layoutTreemap<T>(
     width,
     height,
     depth = Infinity,
-    padding = 2,
-    groupHeaderHeight = 20,
+    padding = 1.5,
+    groupHeaderHeight = 0,
     layout = "stable",
   } = options;
   for (const [name, value] of [
@@ -103,12 +103,16 @@ export function layoutTreemap<T>(
       node.data.value = item?.kind === "leaf" ? item.value : 0;
     });
     // Normalize input units before d3's area arithmetic to avoid value × rectangle overflow.
+    const initialLayout = root.value === undefined;
     root.sum((node) => (total > 0 ? node.value / total : 0));
+    // Seed squarify with largest areas first; retained rows keep that order on updates.
+    if (initialLayout)
+      root.sort((a, b) => (b.value ?? 0) - (a.value ?? 0) || compareIds(a.data.id, b.data.id));
     treemap<LayoutDatum>()
       .tile(layout === "stable" ? treemapResquarify : treemapSquarify)
       .size([width, height])
       .paddingInner(padding)
-      .paddingOuter(padding)
+      .paddingOuter((node) => (node.depth === 0 ? 0 : padding))
       .paddingTop((node) =>
         node.depth > 0 && node.children?.length ? groupHeaderHeight + padding : padding,
       )(root);
