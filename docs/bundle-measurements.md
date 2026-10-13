@@ -66,33 +66,36 @@ versions as the other fixtures. Its bytes are measured from the installed
 candidate tarball, not an npm-published family or workspace source alias.
 
 Measured October 13, 2026 with Node 22.16.0 from candidate tarball SHA-256
-`ee776fb4049b3063e5ff3f7730822a37340c4c076450fd4c862f0bcde4151a0b`.
+`6d0187371bc63f71d09494d8485d613627fb8b729b340ea546b050a5897df15b`.
 This candidate contains new exports absent from published Core 0.5.0. Its
 JavaScript includes the mounted React application, Recharts, Motion and shared
 Kind helpers; it is not a standalone library-only size or a new rendering engine.
 Candles and volume use native Recharts geometry and shared axes, with Motion
-updating the SVG entrance clip.
+updating the SVG entrance clip, latest-candle geometry, current-price marker and discrete viewport transitions. The family also composes the native history range selector.
 
 | Candlestick fixture | raw | gzip | Brotli |
 | --- | ---: | ---: | ---: |
-| JavaScript baseline | 827,261 | 248,554 | 209,392 |
+| JavaScript recorded baseline | 827,261 | 248,554 | 209,392 |
+| JavaScript current | 863,996 | 258,849 | 217,634 |
 | JavaScript ceiling | 909,988 | 273,410 | 230,332 |
-| Generated Tailwind CSS baseline | 34,206 | 6,694 | 5,895 |
+| Generated Tailwind CSS recorded baseline | 34,206 | 6,694 | 5,895 |
+| Generated Tailwind CSS current | 35,471 | 6,908 | 6,093 |
 | Generated Tailwind CSS ceiling | 37,627 | 7,364 | 6,485 |
 
 The new fixture has 10% headroom for each asset/encoding, rounded upward to the
 next byte. Existing fixtures retain their recorded baselines and JavaScript/CSS
 ceilings, and all twelve measured fixtures fit their budgets. Primitive Kind and
 native JavaScript remain identical. No other fixture retains Candlestick runtime.
-The package-wide Tailwind scan grows by 303 raw / 20 gzip / 13 Brotli bytes versus
+The package-wide Tailwind scan grows by 1,568 raw / 234 gzip / 211 Brotli bytes versus
 the recorded CSS baseline, within the unchanged existing ceilings. This CSS
 increase also appears in other Kind fixtures because the scan includes the full
 installed package independently of JavaScript tree shaking.
 
 The family gate requires its own implementation and SVG Motion/loading module to
 remain retained, and rejects unrelated chart roots and loading-design groups.
-The measured Candlestick consumer retains its eight family modules (model,
-context, motion, viewport, scales, marks, parts and chart), shared loading
+The measured Candlestick consumer retains its thirteen family modules (model,
+context, motion, viewport, scales, marks, parts, chart, controls, current-price,
+history-navigator, latest-motion and viewport-motion), shared loading
 helpers, and no unrelated loading-design module.
 Candlestick shares the existing chart frame and tooltip helpers while its
 imperative SVG reveal preserves consumer strict LazyMotion boundaries. Every other fixture rejects emitted Candlestick modules.
