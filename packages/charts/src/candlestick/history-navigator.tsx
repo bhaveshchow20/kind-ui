@@ -81,27 +81,98 @@ export function CandlestickHistoryNavigator({
       })),
     };
   }
-  const history = geometry.current.data;
-  const readClose = useCallback((time: HistoryTime) => points[time.logical]?.close, [points]);
+  const gesture = useRef<HistoryTime[] | null>(null);
+  const [heldHistory, setHeldHistory] = useState<HistoryTime[] | null>(null);
+  const history = heldHistory ?? geometry.current.data;
+  const currentByIdentity = useMemo(
+    () => new Map(points.map((point, index) => [point.identity, { point, index }])),
+    [points],
+  );
+  const historyByIdentity = useMemo(
+    () => new Map(history.map((point, index) => [point.identity, index])),
+    [history],
+  );
+  const readClose = useCallback(
+    (time: HistoryTime) => currentByIdentity.get(time.identity)?.point.close,
+    [currentByIdentity],
+  );
   const surface = useRef<HTMLDivElement>(null);
   const restoreFocus = useRef<{ index: number; node: Element } | null>(null);
   const [historyRevision, setHistoryRevision] = useState(0);
-  useLayoutEffect(() => {
-    if (history.length < 2) return;
-    // Native Brush rebuilds its scale before restored controlled indices arrive
-    // after a data update. Recreate only that part once reconciliation has settled.
-    const frame = requestAnimationFrame(() => {
+  const refreshFrame = useRef<number | null>(null);
+  const pendingRefresh = useRef(false);
+  const scheduleRefresh = useCallback(() => {
+    if (refreshFrame.current !== null) cancelAnimationFrame(refreshFrame.current);
+    refreshFrame.current = requestAnimationFrame(() => {
+      refreshFrame.current = null;
+      if (gesture.current !== null) {
+        pendingRefresh.current = true;
+        return;
+      }
+      pendingRefresh.current = false;
       const handles = Array.from(surface.current?.querySelectorAll('[role="slider"]') ?? []);
       const active = document.activeElement;
       const focused = active ? handles.indexOf(active) : -1;
       restoreFocus.current = focused < 0 || !active ? null : { index: focused, node: active };
       setHistoryRevision((revision) => revision + 1);
     });
-    return () => cancelAnimationFrame(frame);
-  }, [history]);
-  const last = points.length - 1;
-  const startIndex = Math.max(0, Math.min(last, Math.ceil(viewport.from)));
-  const endIndex = Math.max(startIndex, Math.min(last, Math.floor(viewport.to)));
+  }, []);
+  useLayoutEffect(() => {
+    if (history.length < 2) return;
+    // Native Brush rebuilds its scale before restored controlled indices arrive
+    // after a data update. Recreate only that part once reconciliation has settled.
+    scheduleRefresh();
+    return () => {
+      if (refreshFrame.current !== null) cancelAnimationFrame(refreshFrame.current);
+      refreshFrame.current = null;
+    };
+  }, [history, scheduleRefresh]);
+  const beginGesture = (target: EventTarget | null) => {
+    if (
+      unavailable ||
+      !(target instanceof Element) ||
+      !target.closest(".recharts-brush-slide, .recharts-brush-traveller")
+    )
+      return;
+    // Both the native data reference and its indices must remain stable while
+    // Brush owns a drag. New observations are reconciled when that drag ends.
+    gesture.current = history;
+    setHeldHistory(history);
+  };
+  const finishGesture = useCallback(() => {
+    const previous = gesture.current;
+    gesture.current = null;
+    setHeldHistory(null);
+    if (pendingRefresh.current || (previous !== null && previous !== geometry.current?.data))
+      scheduleRefresh();
+  }, [scheduleRefresh]);
+  useLayoutEffect(() => {
+    const accepted = gesture.current;
+    if (accepted === null) return;
+    if (
+      unavailable ||
+      points.length < 2 ||
+      accepted.some((point) => !currentByIdentity.has(point.identity))
+    ) {
+      // Empty/loading can remove Brush before its native drag-end callback.
+      // Removed observations also invalidate the accepted timeline. Cancel its
+      // moving state, then let the next available history reconcile normally.
+      finishGesture();
+      scheduleRefresh();
+    }
+  }, [unavailable, points.length, currentByIdentity, finishGesture, scheduleRefresh]);
+  const last = history.length - 1;
+  const currentLast = points.length - 1;
+  const currentStart = Math.max(0, Math.min(currentLast, Math.ceil(viewport.from)));
+  const currentEnd = Math.max(currentStart, Math.min(currentLast, Math.floor(viewport.to)));
+  const startIndex = Math.max(
+    0,
+    Math.min(last, historyByIdentity.get(points[currentStart]?.identity ?? "") ?? currentStart),
+  );
+  const endIndex = Math.max(
+    startIndex,
+    Math.min(last, historyByIdentity.get(points[currentEnd]?.identity ?? "") ?? currentEnd),
+  );
   const label = brushProps.ariaLabel ?? "Historical window";
   useLayoutEffect(() => {
     const host = surface.current;
@@ -112,7 +183,7 @@ export function CandlestickHistoryNavigator({
       const handles = host.querySelectorAll('[role="slider"]');
       handles.forEach((handle, index) => {
         const value = index === 0 ? startIndex : endIndex;
-        const point = points[value];
+        const point = currentByIdentity.get(history[value]?.identity ?? "")?.point;
         for (const [key, text] of Object.entries({
           "aria-label": `${label} ${index === 0 ? "start" : "end"}`,
           "aria-valuemin": "0",
@@ -140,7 +211,7 @@ export function CandlestickHistoryNavigator({
     });
     sync();
     return () => observer.disconnect();
-  }, [startIndex, endIndex, points, formatTime, last, label]);
+  }, [startIndex, endIndex, history, currentByIdentity, formatTime, last, label]);
   return (
     <OutsidePlot placement="bottom">
       <fieldset
@@ -156,7 +227,16 @@ export function CandlestickHistoryNavigator({
             {points.length ? "One observation" : "No history available"}
           </p>
         ) : (
-          <div ref={surface} className="touch-pan-y" style={{ height }}>
+          <div
+            ref={surface}
+            className="touch-pan-y"
+            style={{ height }}
+            onMouseDownCapture={(event) => {
+              if (event.button === 0) beginGesture(event.target);
+            }}
+            onTouchStartCapture={(event) => beginGesture(event.target)}
+            onTouchCancelCapture={finishGesture}
+          >
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <LineChart
                 data={history}
@@ -181,20 +261,34 @@ export function CandlestickHistoryNavigator({
                   tickFormatter={
                     brushProps.tickFormatter ??
                     ((_, index) => {
-                      const point = points[index];
+                      const point = currentByIdentity.get(history[index]?.identity ?? "")?.point;
                       return point ? formatTime(point.time, point) : "";
                     })
                   }
                   onChange={(range) => {
                     if (unavailable) return;
                     brushProps.onChange?.(range);
+                    const from = currentByIdentity.get(
+                      history[range.startIndex]?.identity ?? "",
+                    )?.index;
+                    const to = currentByIdentity.get(
+                      history[range.endIndex]?.identity ?? "",
+                    )?.index;
+                    if (from === undefined || to === undefined) return;
                     changeViewport(
                       normalizeCandlestickViewport(
-                        { from: range.startIndex - 0.5, to: range.endIndex + 0.5 },
+                        { from: from - 0.5, to: to + 0.5 },
                         points.length,
                       ),
                       "pan",
                     );
+                  }}
+                  onDragEnd={(range) => {
+                    try {
+                      brushProps.onDragEnd?.(range);
+                    } finally {
+                      finishGesture();
+                    }
                   }}
                 >
                   <LineChart data={history} accessibilityLayer={false}>

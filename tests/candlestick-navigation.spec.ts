@@ -179,3 +179,110 @@ test("forming-row corrections update the overview without resetting focused hand
   await page.mouse.up();
   await expect(page.getByLabel("Window", { exact: true })).toHaveText("-0.5,2.5");
 });
+
+for (const interruption of ["empty", "loading"]) {
+  test(`history drag interrupted by ${interruption} reconciles the current timeline before resuming`, async ({
+    page,
+  }) => {
+    await page.goto(`${url}/?navigation`);
+    await page.getByRole("button", { name: "Append next observation", exact: true }).click();
+    await page.getByRole("button", { name: "History window", exact: true }).click();
+    const nav = page.locator('[data-kind-ui="candlestick-history-navigator"]');
+    const end = nav.getByRole("slider", { name: "Historical window end", exact: true });
+    const slide = await nav.locator(".recharts-brush-slide").boundingBox();
+    if (!slide) throw new Error("Missing native drag geometry");
+    await page.mouse.move(slide.x + slide.width / 2, slide.y + slide.height / 2);
+    await page.mouse.down();
+    await page
+      .getByRole("button", { name: interruption === "empty" ? "Empty" : "Loading", exact: true })
+      .dispatchEvent("click");
+    if (interruption === "empty") {
+      await expect(nav).toContainText("No history available");
+      await page
+        .getByRole("button", { name: "Load observations", exact: true })
+        .dispatchEvent("click");
+    } else {
+      await expect(nav).toHaveAttribute("inert", "");
+      await page.getByRole("button", { name: "Prepend", exact: true }).dispatchEvent("click");
+      await page.getByRole("button", { name: "Loading", exact: true }).dispatchEvent("click");
+    }
+    await page.mouse.up();
+    await expect(end).toHaveAttribute("aria-valuemax", interruption === "empty" ? "4" : "6");
+    await page.getByRole("button", { name: "History window", exact: true }).click();
+    const before = ((await page.getByLabel("Window", { exact: true }).textContent()) ?? "")
+      .split(",")
+      .map(Number);
+    const callbacks = Number(
+      await page.getByLabel("Window changes", { exact: true }).textContent(),
+    );
+    await end.focus();
+    await page.keyboard.press("ArrowLeft");
+    await expect(page.getByLabel("Window", { exact: true })).toHaveText(
+      `${before[0]},${(before[1] ?? 0) - 1}`,
+    );
+    await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(
+      String(callbacks + 1),
+    );
+    await expect(end).toBeFocused();
+  });
+}
+
+for (const update of ["Append next observation", "Prepend"]) {
+  for (const drag of ["slide", "handle"]) {
+    test(`${update} during a native history drag (${drag}) preserves the gesture and maps its next move by identity`, async ({
+      page,
+    }) => {
+      await page.goto(`${url}/?navigation`);
+      await page.getByRole("button", { name: "History window", exact: true }).click();
+      const nav = page.locator('[data-kind-ui="candlestick-history-navigator"]');
+      const start = nav.getByRole("slider", { name: "Historical window start", exact: true });
+      const end = nav.getByRole("slider", { name: "Historical window end", exact: true });
+      await end.focus();
+      const handle = await start.elementHandle();
+      const a = await start.boundingBox();
+      const b = await end.boundingBox();
+      const slide = await nav.locator(".recharts-brush-slide").boundingBox();
+      if (!a || !b || !slide || !handle) throw new Error("Missing native drag geometry");
+      const x = drag === "slide" ? slide.x + slide.width / 2 : b.x + b.width / 2;
+      const y = slide.y + slide.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      // Pointer activation of the slide does not itself retain keyboard focus.
+      // Keep an endpoint focused to verify the deferred geometry refresh restores it.
+      await end.focus();
+      const overview = nav.locator(".recharts-line-curve");
+      const pricesBeforeUpdate = await overview.getAttribute("d");
+      if (!pricesBeforeUpdate) throw new Error("Missing historical close overview");
+      await page.getByRole("button", { name: update, exact: true }).dispatchEvent("click");
+      await page.evaluate(async () => {
+        for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
+      });
+      expect(await handle.evaluate((node) => node.isConnected)).toBe(true);
+      // The frozen timeline still resolves the same observations after a prepend.
+      await expect(overview).toHaveAttribute("d", pricesBeforeUpdate);
+      const callbacks = Number(
+        await page.getByLabel("Window changes", { exact: true }).textContent(),
+      );
+      // Native travellers floor to the preceding observation; stay just above
+      // that boundary, while the slide crosses it to move its whole window.
+      await page.mouse.move(x - (b.x - a.x) / 2 + (drag === "handle" ? 2 : -2), y);
+      const from = drag === "slide" ? -0.5 : 0.5;
+      const shift = update === "Prepend" ? 1 : 0;
+      const expected = `${from + shift},${2.5 + shift}`;
+      await expect(page.getByLabel("Window", { exact: true })).toHaveText(expected);
+      await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(
+        String(callbacks + 1),
+      );
+      await page.mouse.up();
+      await expect(page.getByLabel("Window", { exact: true })).toHaveText(expected);
+      await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(
+        String(callbacks + 1),
+      );
+      await expect(end).toBeFocused();
+      await page.keyboard.press("ArrowRight");
+      await expect(page.getByLabel("Window", { exact: true })).toHaveText(
+        `${from + shift},${3.5 + shift}`,
+      );
+    });
+  }
+}
