@@ -432,6 +432,8 @@ export function TreemapTooltip<T = TreemapDatum>({
   const maxX = Math.max(0, context.size.width - size.width);
   const maxY = Math.max(0, context.size.height - size.height);
   const formatted = context.formatValue(node.value, node);
+  const path = node.path.map((id) => context.model.byId.get(id)?.label ?? id);
+  const ancestors = path.slice(0, -1);
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       <AnimatedTooltipFrame
@@ -453,6 +455,7 @@ export function TreemapTooltip<T = TreemapDatum>({
           ref={ref}
           id={context.tooltipId}
           role="tooltip"
+          aria-label={props["aria-label"] ?? path.join(" / ")}
           data-kind-ui="treemap-tooltip"
           className={cn(tooltipClassName, props.className)}
         >
@@ -460,9 +463,9 @@ export function TreemapTooltip<T = TreemapDatum>({
             ? children(node)
             : (children ?? (
                 <>
-                  <strong className="font-medium">
-                    {node.path.map((id) => context.model.byId.get(id)?.label).join(" / ")}
-                  </strong>
+                  {ancestors.length > 0 && (
+                    <strong className="font-medium">{ancestors.join(" / ")}</strong>
+                  )}
                   <ul className="list-none p-0 mx-0 mb-0 mt-[2px]">
                     <TooltipItem
                       inactive={context.isInactive(node)}
