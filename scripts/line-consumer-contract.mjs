@@ -10,6 +10,7 @@ export function assertLineConsumerSource(source) {
     "react-dom",
     "recharts",
     "./host.js",
+    "./selection-host.js",
     "./presentation.js",
     "./use-reduced-motion.js",
     "./presentation.css",

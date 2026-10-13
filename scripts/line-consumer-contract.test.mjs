@@ -14,6 +14,7 @@ test("line proof accepts public package and host dependencies", () => {
 for (const specifier of [
   "@kind-ui/charts/motion",
   "./line-recipes.js",
+  "./selection-host-private.js",
   "../../packages/charts/src/line-chart.tsx",
   "@kind-ui/charts/dist/index.js",
   "@/charts",
@@ -73,3 +74,11 @@ test("area pattern fixture wiring stays inside the public host import guard", ()
 });
 
 import "./line-dash-source.test.mjs";
+
+test("candlestick fixtures retain public-only imports including the selection host", () => {
+  for (const file of ["main.tsx", "host.tsx", "selection-host.tsx"]) {
+    assertCompositionConsumerSource(
+      readFileSync(new URL(`../tests/fixtures/candlestick/${file}`, import.meta.url), "utf8"),
+    );
+  }
+});
