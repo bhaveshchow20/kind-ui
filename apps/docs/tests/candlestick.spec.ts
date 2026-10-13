@@ -16,7 +16,9 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
     page.getByRole("heading", { name: "Candlestick Chart", exact: true, level: 1 }),
   ).toBeVisible();
   const asset = page.locator('[data-component="candlestick"]');
-  await expect(asset.getByText("SIMULATED", { exact: true })).toBeVisible();
+  await expect(
+    asset.locator(".preview-panel").getByText("SIMULATED", { exact: true }),
+  ).toBeVisible();
   await asset.getByRole("button", { name: "Pause", exact: true }).click();
   const count = await asset.locator(marks).count();
   expect(count).toBeGreaterThanOrEqual(48);
@@ -218,6 +220,24 @@ test("Candlestick streaming pauses and resumes while zoom, pan and navigator sha
   const paused = await readout.textContent();
   await page.waitForTimeout(900);
   await expect(readout).toHaveText(paused ?? "");
+  const latestPrice = container.locator('[data-current-price-part="label"]');
+  const latestLabel = await latestPrice.getAttribute("aria-label");
+  const body = container.locator('[data-candle-part="body"]').nth(20);
+  await body.scrollIntoViewIfNeeded();
+  const candleBounds = await body.boundingBox();
+  if (!candleBounds) throw new Error("Missing visible candle for free cursor inspection");
+  const cursorX = candleBounds.x + candleBounds.width / 2;
+  const cursorY = candleBounds.y + candleBounds.height / 2;
+  await page.mouse.move(cursorX, cursorY);
+  const priceLabel = container.locator('[data-kind-ui="candlestick-crosshair-price"]');
+  await expect(priceLabel).not.toBeEmpty();
+  const firstPrice = await priceLabel.textContent();
+  const inspected = await readout.textContent();
+  await page.mouse.move(cursorX, cursorY + 20);
+  await expect(priceLabel).not.toHaveText(firstPrice ?? "");
+  await expect(readout).toHaveText(inspected ?? "");
+  await expect(latestPrice).toHaveAttribute("aria-label", latestLabel ?? "");
+  await page.mouse.move(0, 0);
   const count = await container.locator('[data-kind-ui="candlestick-mark"]').count();
   await container.getByRole("button", { name: "Zoom in", exact: true }).click();
   await expect

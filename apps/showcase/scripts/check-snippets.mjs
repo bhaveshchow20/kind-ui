@@ -85,13 +85,13 @@ try {
             `${recipe.id} copied focus must preserve the complete data`,
           );
           if (recipe.family === "Candlestick") {
-            assert.match(source, /<CandlestickVolume seriesKey="volume"/);
+            assert.match(source, /<CandlestickVolume\s+seriesKey="volume"/);
             assert.match(source, /<CandlestickCurrentPrice/);
             assert.match(source, /<CandlestickControls/);
             assert.match(source, /<CandlestickHistoryNavigator/);
             assert.match(source, /data-kind-ui="candlestick-data-alternative"/);
             assert.match(source, /feed\.rows\.map/);
-            assert.match(source, /selection=\{selection\} onSelectionChange=/);
+            assert.match(source, /selection=\{selection\}\s+onSelectionChange=/);
             assert.doesNotMatch(source, /<CandlestickDataTable/);
             assert.match(source, /var\(--chart-grid, #e5e7eb\)/);
             assert.match(source, /var\(--chart-axis, #64748b\)/);

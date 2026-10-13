@@ -130,15 +130,39 @@ for (const theme of ["light", "dark"] as const) {
     await page.getByRole("tab", { name: "Candlestick", exact: true }).click();
     const verify = async (selector: string) => {
       const card = page.locator(selector);
+      const pause = card.getByRole("button", { name: "Pause", exact: true });
+      if (await pause.count()) await pause.click();
       const count = await card.locator('[data-kind-ui="candlestick-mark"]').count();
       expect(count).toBeGreaterThanOrEqual(48);
       expect(count).toBeLessThan(55);
       if (selector.includes("playground"))
         await expect(page.getByRole("dialog")).toHaveCSS("opacity", "1");
       const samples = await card.evaluate((card) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 1;
+        const painter = canvas.getContext("2d", { willReadFrequently: true });
+        if (!painter) throw new Error("Missing sRGB color conversion context");
+        const cache = new Map<string, readonly [number, number, number, number]>();
         const parse = (value: string) => {
-          const [r = 0, g = 0, b = 0, a = 1] = (value.match(/[\d.]+/g) ?? []).map(Number);
-          return [r, g, b, a] as const;
+          const cached = cache.get(value);
+          if (cached) return cached;
+          painter.clearRect(0, 0, 1, 1);
+          painter.fillStyle = "#010203";
+          painter.fillStyle = value;
+          const accepted = painter.fillStyle;
+          painter.fillStyle = "#040506";
+          painter.fillStyle = value;
+          if (painter.fillStyle !== accepted) throw new Error(`Invalid computed color: ${value}`);
+          painter.fillRect(0, 0, 1, 1);
+          const data = painter.getImageData(0, 0, 1, 1).data;
+          const result = [
+            data[0] ?? 0,
+            data[1] ?? 0,
+            data[2] ?? 0,
+            (data[3] ?? 255) / 255,
+          ] as const;
+          cache.set(value, result);
+          return result;
         };
         const composite = (
           color: readonly [number, number, number, number],
@@ -149,6 +173,7 @@ for (const theme of ["light", "dark"] as const) {
             .map((value, index) => value * color[3] + (background[index] ?? 0) * (1 - color[3]));
         const luminance = (color: readonly number[]) =>
           color
+            .slice(0, 3)
             .map((value) => {
               const channel = value / 255;
               return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
@@ -161,7 +186,7 @@ for (const theme of ["light", "dark"] as const) {
           (color, node) => composite(parse(getComputedStyle(node).backgroundColor), color),
           [255, 255, 255],
         );
-        return [
+        const graphical = [
           ...card.querySelectorAll('[data-candle-part], [data-kind-ui="candlestick-volume-mark"]'),
         ].map((node) => {
           const style = getComputedStyle(node);
@@ -183,16 +208,49 @@ for (const theme of ["light", "dark"] as const) {
               (Math.min(foregroundLuminance, backgroundLuminance) + 0.05),
           };
         });
+        const contrast = (color: readonly number[], backdrop: readonly number[]) =>
+          (Math.max(luminance(color), luminance(backdrop)) + 0.05) /
+          (Math.min(luminance(color), luminance(backdrop)) + 0.05);
+        const text = [...card.querySelectorAll('[data-kind-ui="candle-readout"] span')]
+          .filter((node) => node.children.length === 0)
+          .map((node) => ({
+            text: node.textContent,
+            contrast: contrast(
+              composite(parse(getComputedStyle(node).color), background),
+              background,
+            ),
+          }));
+        const pill = card.querySelector('[data-current-price-part="label"]');
+        const label = pill?.querySelector("text");
+        const rectangle = pill?.querySelector("rect");
+        if (label && rectangle)
+          text.push({
+            text: "Current-price pill",
+            contrast: contrast(
+              parse(getComputedStyle(label).fill),
+              parse(getComputedStyle(rectangle).fill),
+            ),
+          });
+        return { graphical, text };
       });
-      expect(samples.some(({ part }) => part === "body")).toBe(true);
-      expect(samples.some(({ part }) => part === "wick")).toBe(true);
-      expect(samples.some(({ part }) => part === "volume")).toBe(true);
+      expect(samples.graphical.some(({ part }) => part === "body")).toBe(true);
+      expect(samples.graphical.some(({ part }) => part === "wick")).toBe(true);
+      expect(samples.graphical.some(({ part }) => part === "volume")).toBe(true);
       const evidenceName = `candlestick-${theme}-${selector.includes("playground") ? "dialog" : "card"}-contrast`;
       const evidencePath = info.outputPath(`${evidenceName}.json`);
       await writeFile(evidencePath, JSON.stringify({ theme, selector, samples }));
       await info.attach(evidenceName, { path: evidencePath, contentType: "application/json" });
-      for (const sample of samples)
+      const screenshotPath = info.outputPath(`${evidenceName}.png`);
+      await card.screenshot({ path: screenshotPath, animations: "disabled" });
+      await info.attach(`${evidenceName}-preview`, {
+        path: screenshotPath,
+        contentType: "image/png",
+      });
+      for (const sample of samples.graphical)
         expect(sample.contrast, `${theme} ${sample.part}`).toBeGreaterThanOrEqual(3);
+      expect(samples.text.length).toBeGreaterThan(0);
+      for (const sample of samples.text)
+        expect(sample.contrast, `${theme} ${sample.text}`).toBeGreaterThanOrEqual(4.5);
     };
     await verify(".demo-grid .chart-card");
     await page.getByRole("button", { name: "Expand Session price action", exact: true }).click();
@@ -252,6 +310,24 @@ test("Candlestick streaming pauses and resumes while zoom, pan and navigator sha
   const paused = await readout.textContent();
   await page.waitForTimeout(900);
   await expect(readout).toHaveText(paused ?? "");
+  const latestPrice = container.locator('[data-current-price-part="label"]');
+  const latestLabel = await latestPrice.getAttribute("aria-label");
+  const body = container.locator('[data-candle-part="body"]').nth(20);
+  await body.scrollIntoViewIfNeeded();
+  const candleBounds = await body.boundingBox();
+  if (!candleBounds) throw new Error("Missing visible candle for free cursor inspection");
+  const cursorX = candleBounds.x + candleBounds.width / 2;
+  const cursorY = candleBounds.y + candleBounds.height / 2;
+  await page.mouse.move(cursorX, cursorY);
+  const priceLabel = container.locator('[data-kind-ui="candlestick-crosshair-price"]');
+  await expect(priceLabel).not.toBeEmpty();
+  const firstPrice = await priceLabel.textContent();
+  const inspected = await readout.textContent();
+  await page.mouse.move(cursorX, cursorY + 20);
+  await expect(priceLabel).not.toHaveText(firstPrice ?? "");
+  await expect(readout).toHaveText(inspected ?? "");
+  await expect(latestPrice).toHaveAttribute("aria-label", latestLabel ?? "");
+  await page.mouse.move(0, 0);
   const count = await container.locator('[data-kind-ui="candlestick-mark"]').count();
   await container.getByRole("button", { name: "Zoom in", exact: true }).click();
   await expect
