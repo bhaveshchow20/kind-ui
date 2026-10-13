@@ -172,7 +172,7 @@ import { TreemapChart, type TreemapDatum } from "@kind-ui/charts";
 // ${recipe.areaLabel}. Synthetic example; areas and shares use supplied positive values.
 const data: readonly TreemapDatum[] = ${JSON.stringify(treemapData(recipe.id), null, 2)};
 const config = ${JSON.stringify(treemapConfig(treemapData(recipe.id), colors), null, 2)};
-const textColors: Record<string, string> = ${JSON.stringify(treemapTextColors(treemapData(recipe.id), colors), null, 2)};
+${options.showLabels === false ? "" : `const textColors: Record<string, string> = ${JSON.stringify(treemapTextColors(treemapData(recipe.id), colors), null, 2)};`}
 const formatValue = (value: number) => "$" + (value / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "k";
 export function Example() {
   return <TreemapChart data={data} config={config} aria-label="${recipe.tag}" height={260} padding={${options.gap ?? 1.5}} animate={${animate}} formatValue={formatValue}
@@ -193,5 +193,5 @@ export function treemapPrompt(
   animate: boolean,
   options: DemoOptions = {},
 ): string {
-  return `Build this ${recipe.tag.toLowerCase()} with the compound TreemapChart API. Keep stable IDs, supplied values and hierarchy. Use shared Legend and Tooltip, direct labels, and explicit group navigation. Legend focus must preserve geometry and values. Provide a screen-reader data table in the host application. Reference: https://kindui.dev/charts/docs/components/treemap/.\n\n${treemapCode(recipe, material, colors, animate, options)}`;
+  return `Build this ${recipe.tag.toLowerCase()} with the compound TreemapChart API. Keep stable IDs, supplied values and hierarchy in a leaf mosaic. Use shared Legend and Tooltip, fitted labels, and ancestor context in tooltip headings. Legend focus must preserve geometry and values. Provide a screen-reader data table in the host application. Reference: https://kindui.dev/charts/docs/components/treemap/.\n\n${treemapCode(recipe, material, colors, animate, options)}`;
 }
