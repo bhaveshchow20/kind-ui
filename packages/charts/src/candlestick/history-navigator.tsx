@@ -9,7 +9,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { flushSync } from "react-dom";
 import { Brush, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { OutsidePlot } from "../family-root.js";
 import { cn } from "../utils.js";
@@ -102,6 +101,10 @@ export function CandlestickHistoryNavigator({
   const [historyRevision, setHistoryRevision] = useState(0);
   const refreshFrame = useRef<number | null>(null);
   const pendingRefresh = useRef(false);
+  const cancelledRevision = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (cancelledRevision.current !== historyRevision) cancelledRevision.current = null;
+  }, [historyRevision]);
   const refreshNow = useCallback(() => {
     const handles = Array.from(surface.current?.querySelectorAll('[role="slider"]') ?? []);
     const active = document.activeElement;
@@ -225,6 +228,18 @@ export function CandlestickHistoryNavigator({
         disabled={unavailable}
         inert={unavailable || undefined}
         data-kind-ui="candlestick-history-navigator"
+        onTouchCancelCapture={(event) => {
+          // Mark cancellation before consumer capture can stop propagation.
+          // Queue the native reset without detaching callback targets during
+          // dispatch; stale native changes are ignored until that reset commits.
+          cancelledRevision.current = historyRevision;
+          finishGesture();
+          if (refreshFrame.current !== null) cancelAnimationFrame(refreshFrame.current);
+          refreshFrame.current = null;
+          pendingRefresh.current = false;
+          refreshNow();
+          props.onTouchCancelCapture?.(event);
+        }}
       >
         {points.length < 2 ? (
           <p className="text-xs opacity-60">
@@ -239,19 +254,6 @@ export function CandlestickHistoryNavigator({
               if (event.button === 0) beginGesture(event.target);
             }}
             onTouchStartCapture={(event) => beginGesture(event.target)}
-            onTouchCancel={() => {
-              // Native Brush listens for touchend, but not touchcancel. Recreate
-              // its moving state before another event can reach the cancelled
-              // gesture. Bubble listeners are already queued, so remounting here
-              // preserves native consumer callbacks on the traveller/fieldset.
-              flushSync(() => {
-                finishGesture();
-                if (refreshFrame.current !== null) cancelAnimationFrame(refreshFrame.current);
-                refreshFrame.current = null;
-                pendingRefresh.current = false;
-                refreshNow();
-              });
-            }}
           >
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <LineChart
@@ -282,7 +284,7 @@ export function CandlestickHistoryNavigator({
                     })
                   }
                   onChange={(range) => {
-                    if (unavailable) return;
+                    if (unavailable || cancelledRevision.current !== null) return;
                     brushProps.onChange?.(range);
                     const from = currentByIdentity.get(
                       history[range.startIndex]?.identity ?? "",

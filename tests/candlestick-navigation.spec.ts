@@ -180,7 +180,15 @@ test("forming-row corrections update the overview without resetting focused hand
   await expect(page.getByLabel("Window", { exact: true })).toHaveText("-0.5,2.5");
 });
 
-for (const mode of ["normal", "prevent", "stop", "capture-stop", "throw"]) {
+for (const mode of [
+  "normal",
+  "prevent",
+  "stop",
+  "capture-stop",
+  "traveller-capture-stop",
+  "capture-throw",
+  "throw",
+]) {
   test(`history cancellation preserves native consumer capture/bubble ordering (${mode})`, async ({
     page,
   }) => {
@@ -230,40 +238,43 @@ for (const mode of ["normal", "prevent", "stop", "capture-stop", "throw"]) {
           touches: [],
         }),
       );
+      // No synthetic touchend and no task/frame boundary: a cancelled gesture
+      // must not publish even if either consumer capture/bubble stops propagation.
+      const nextTarget = document.querySelector("[data-cancel-traveller]");
+      if (!nextTarget) throw new Error("Missing subsequent consumer traveller");
+      const nextTouch = new Touch({
+        identifier: 2,
+        target: nextTarget,
+        clientX: rect.x - 200,
+        clientY: rect.y + 10,
+        pageX: rect.x - 200,
+        pageY: rect.y + 10,
+      });
+      document.body.dispatchEvent(
+        new TouchEvent("touchstart", {
+          bubbles: true,
+          changedTouches: [nextTouch],
+          touches: [nextTouch],
+        }),
+      );
+      nextTarget.dispatchEvent(
+        new TouchEvent("touchmove", {
+          bubbles: true,
+          changedTouches: [nextTouch],
+          touches: [nextTouch],
+        }),
+      );
     });
     await expect(page.getByLabel("Navigator cancel events", { exact: true })).toHaveText(
       mode === "capture-stop"
         ? "fieldset capture"
-        : mode === "stop"
-          ? "fieldset capture,traveller capture,traveller bubble"
-          : "fieldset capture,traveller capture,traveller bubble,fieldset bubble",
+        : mode === "traveller-capture-stop"
+          ? "fieldset capture,traveller capture"
+          : mode === "stop"
+            ? "fieldset capture,traveller capture,traveller bubble"
+            : "fieldset capture,traveller capture,traveller bubble,fieldset bubble",
     );
-    expect(errors).toEqual(mode === "throw" ? ["Consumer touchcancel error"] : []);
-    await page.evaluate(
-      (stopped) => {
-        // A consumer stopping propagation owns the veto. Native touchend still
-        // releases its gesture; otherwise even a thrown callback must allow reset.
-        const target = stopped ? document.body : document.querySelector("[data-cancel-traveller]");
-        if (!target) throw new Error("Missing subsequent touch target");
-        const rect = target.getBoundingClientRect();
-        const touch = new Touch({
-          identifier: 2,
-          target,
-          clientX: rect.x - 200,
-          clientY: rect.y + 10,
-          pageX: rect.x - 200,
-          pageY: rect.y + 10,
-        });
-        target.dispatchEvent(
-          new TouchEvent(stopped ? "touchend" : "touchmove", {
-            bubbles: true,
-            changedTouches: [touch],
-            touches: stopped ? [] : [touch],
-          }),
-        );
-      },
-      mode === "stop" || mode === "capture-stop",
-    );
+    expect(errors).toEqual(mode.endsWith("throw") ? ["Consumer touchcancel error"] : []);
     await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(String(callbacks));
     const end = page
       .locator('[data-kind-ui="candlestick-history-navigator"]')
@@ -271,6 +282,33 @@ for (const mode of ["normal", "prevent", "stop", "capture-stop", "throw"]) {
     await end.focus();
     await page.keyboard.press("ArrowRight");
     await expect(page.getByLabel("Window", { exact: true })).toHaveText("0.5,4.5");
+    for (const type of ["touchstart", "touchmove", "touchend"]) {
+      await page.evaluate((type) => {
+        const target = document.querySelector("[data-cancel-traveller]");
+        if (!target) throw new Error("Missing next legitimate traveller");
+        const rect = target.getBoundingClientRect();
+        const x = type === "touchstart" ? rect.x + 2 : rect.x - 200;
+        const touch = new Touch({
+          identifier: 3,
+          target,
+          clientX: x,
+          clientY: rect.y + 10,
+          pageX: x,
+          pageY: rect.y + 10,
+        });
+        target.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            changedTouches: [touch],
+            touches: type === "touchend" ? [] : [touch],
+          }),
+        );
+      }, type);
+    }
+    await expect(page.getByLabel("Window", { exact: true })).toHaveText("-0.5,4.5");
+    await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(
+      String(callbacks + 2),
+    );
   });
 }
 

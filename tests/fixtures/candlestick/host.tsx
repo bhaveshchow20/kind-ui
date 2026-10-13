@@ -391,6 +391,8 @@ export function CandlestickHost() {
                   onTouchCancelCapture: (event) => {
                     setCancelEvents((events) => [...events, "fieldset capture"]);
                     if (params.has("cancel-capture-stop")) event.stopPropagation();
+                    if (params.has("cancel-capture-throw"))
+                      throw new Error("Consumer touchcancel error");
                   },
                   onTouchCancel: () => setCancelEvents((events) => [...events, "fieldset bubble"]),
                   brushProps: {
@@ -398,9 +400,10 @@ export function CandlestickHost() {
                       <rect
                         {...geometry}
                         data-cancel-traveller=""
-                        onTouchCancelCapture={() =>
-                          setCancelEvents((events) => [...events, "traveller capture"])
-                        }
+                        onTouchCancelCapture={(event) => {
+                          setCancelEvents((events) => [...events, "traveller capture"]);
+                          if (params.has("cancel-traveller-capture-stop")) event.stopPropagation();
+                        }}
                         onTouchCancel={(event) => {
                           setCancelEvents((events) => [...events, "traveller bubble"]);
                           if (params.has("cancel-prevent")) event.preventDefault();
