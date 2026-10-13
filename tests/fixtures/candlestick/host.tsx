@@ -62,6 +62,9 @@ export function CandlestickHost() {
   const [spacing, setSpacing] = useState<CandlestickSpacing>("ordinal");
   const [small, setSmall] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [revealEnabled, setRevealEnabled] = useState(
+    params.has("animate") && !params.has("deferred-animate"),
+  );
   const [bounded, setBounded] = useState(false);
   const [follow, setFollow] = useState(false);
   const [defaultRange, setDefaultRange] = useState<CandlestickViewport>({ from: 0.5, to: 3.5 });
@@ -86,6 +89,11 @@ export function CandlestickHost() {
   return (
     <main style={{ maxWidth: small ? 300 : 700 }}>
       <h1>OHLC public contract</h1>
+      {params.has("deferred-animate") && (
+        <button type="button" onClick={() => setRevealEnabled(true)}>
+          Start reveal
+        </button>
+      )}
       <button
         type="button"
         onClick={() => setSpacing(spacing === "ordinal" ? "elapsed" : "ordinal")}
@@ -286,9 +294,7 @@ export function CandlestickHost() {
         onSelectionChange={(point) => setSelected(point?.time ?? null)}
         {...(bounded ? { priceDomain: [95, 110] as const } : {})}
         loading={loading}
-        animate={
-          new URLSearchParams(location.search).has("animate") ? { revealDurationMs: 10000 } : false
-        }
+        animate={revealEnabled ? { revealDurationMs: 10000 } : false}
         height={360}
         ref={ref}
         aria-label="Session trade OHLC"
