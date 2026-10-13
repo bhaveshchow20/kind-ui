@@ -549,6 +549,9 @@ test("shared series focus dims paint and supports keyboard activation in strict 
 test("overlay joins the shared entrance reveal and finishes on history replacement", async ({
   page,
 }) => {
+  // Install before imports so Motion and the test use the same RAF clock.
+  await page.clock.install();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto(`${devUrl}/?deferred-animate`);
   const curve = page.locator(".recharts-line-curve");
   await curve.waitFor();
@@ -574,20 +577,9 @@ test("overlay joins the shared entrance reveal and finishes on history replaceme
   const plotWidth = Number(await page.locator('clipPath[id$="-price"] rect').getAttribute("width"));
   expect(plotWidth).toBeGreaterThan(0);
   await expect(reveal).toHaveAttribute("width", String(plotWidth));
-  await page.clock.install();
   await page.clock.pauseAt(new Date());
   await page.getByRole("button", { name: "Start reveal", exact: true }).dispatchEvent("click");
-  // Motion captures native RAF at import; advance duration in controlled steps while
-  // allowing that existing scheduler to deliver its batch between observations.
-  await expect
-    .poll(
-      async () => {
-        await page.clock.runFor(64);
-        return Number(await reveal.getAttribute("width"));
-      },
-      { intervals: [50], timeout: 3000 },
-    )
-    .toBeGreaterThan(0);
+  await page.clock.runFor(128);
   const partial = Number(await reveal.getAttribute("width"));
   expect(partial).toBeGreaterThan(0);
   expect(partial).toBeLessThan(plotWidth);
