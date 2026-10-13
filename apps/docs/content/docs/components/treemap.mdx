@@ -12,7 +12,7 @@ description: See where resources go, from categories to individual services.
 
 ## Usage
 
-Each service occupies its share of the monthly bill. Color identifies its category. Compare September and October, inspect a tile, or open a category to see its services.
+Each service occupies its share of the monthly bill. Color identifies its category. Compare August and September, inspect a tile, or open a category to see its services.
 
 ```tsx title="Composition sketch"
 import { TreemapChart } from "@kind-ui/charts";
@@ -70,6 +70,6 @@ Keep the chart mounted and set `loading` while data is pending. `loadingLabel` n
 | `Breadcrumbs` | Open an ancestor; `rootLabel` names the complete dataset. |
 | `Content`, `DataTable` | Optional application content and accessible tabular data outside the plot. |
 
-Arrows and Home/End move between tiles and group headers. Enter/Space activates them; Escape dismisses inspection. `viewId`, `activeId` and `selectedId` support controlled state with their matching callbacks. `rootShare`, `parentShare` and `viewShare` describe the supplied dataset, parent and current subtree respectively; zero denominators yield `null`.
+Arrows and Home/End move between tiles and group headers. Enter/Space activates them; Escape dismisses inspection. `viewId` and `activeId` control navigation and inspection. `interaction` owns legend selection; `selectedId` remains available for legacy application actions. `rootShare`, `parentShare` and `viewShare` describe the supplied dataset, parent and current subtree respectively; zero denominators yield `null`.
 
 `layout="stable"` retains rows across value and size updates. Changing hierarchy or view creates a new layout. Use `encoding` for a separate color metric with explicit units, domain and missing-value policy. Formatters and application filtering stay under your control.
