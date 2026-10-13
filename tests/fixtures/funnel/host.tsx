@@ -63,9 +63,11 @@ export function Host() {
   const [replace, setReplace] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [activeWrites, setActiveWrites] = useState(0);
-  const [veto, setVeto] = useState(false);
+  const [veto, setVeto] = useState(params.has("activation-veto"));
   const [clicks, setClicks] = useState(0);
   const [clickedDays, setClickedDays] = useState<number | null>(null);
+  const [clickDetail, setClickDetail] = useState<number | null>(null);
+  const [clickModifiers, setClickModifiers] = useState("none");
   const [selected, setSelected] = useState<string | null>(null);
   const [selectionWrites, setSelectionWrites] = useState(0);
   const [ticks, setTicks] = useState(0);
@@ -178,6 +180,8 @@ export function Host() {
       <output aria-label="Inspection writes">{activeWrites}</output>
       <output aria-label="Consumer clicks">{clicks}</output>
       <output aria-label="Clicked stage days">{clickedDays ?? "none"}</output>
+      <output aria-label="Consumer click detail">{clickDetail ?? "none"}</output>
+      <output aria-label="Consumer click modifiers">{clickModifiers}</output>
       <output aria-label="Stage selection">{selected ?? "none"}</output>
       <output aria-label="Selection writes">{selectionWrites}</output>
       <output aria-label="Parent ticks">{ticks}</output>
@@ -250,7 +254,25 @@ export function Host() {
                       cleanupCount.current += 1;
                     };
                   },
+              onKeyDown: (event) => {
+                if (
+                  params.has("prevent-activation") &&
+                  (event.key === "Enter" || event.key === " ")
+                )
+                  event.preventDefault();
+              },
               onClick: (event) => {
+                setClickDetail(event.detail);
+                setClickModifiers(
+                  [
+                    event.altKey ? "alt" : "",
+                    event.ctrlKey ? "ctrl" : "",
+                    event.metaKey ? "meta" : "",
+                    event.shiftKey ? "shift" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ") || "none",
+                );
                 setClicks((count) => count + 1);
                 setClickedDays(stage.datum.days);
                 if (veto) event.preventDefault();

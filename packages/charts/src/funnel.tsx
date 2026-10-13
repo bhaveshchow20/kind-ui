@@ -734,7 +734,21 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
         if (event.defaultPrevented || context.loading) return;
         if (event.key === "Escape") return;
         if (event.key === "Enter" || event.key === " ") {
-          if (!event.repeat) activate(event);
+          if (event.target !== event.currentTarget) return;
+          const view = event.currentTarget.ownerDocument.defaultView;
+          if (!event.repeat && view)
+            event.currentTarget.dispatchEvent(
+              new view.MouseEvent("click", {
+                bubbles: true,
+                cancelable: true,
+                detail: 0,
+                altKey: event.altKey,
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
+                shiftKey: event.shiftKey,
+                view,
+              }),
+            );
           event.preventDefault();
           return;
         }
