@@ -180,76 +180,101 @@ test("forming-row corrections update the overview without resetting focused hand
   await expect(page.getByLabel("Window", { exact: true })).toHaveText("-0.5,2.5");
 });
 
-test("cancelled native history touch gestures cannot drag from later unrelated touch moves", async ({
-  page,
-}) => {
-  await page.goto(`${url}/?navigation`);
-  await page.getByRole("button", { name: "History window", exact: true }).click();
-  const nav = page.locator('[data-kind-ui="candlestick-history-navigator"]');
-  const start = await nav
-    .getByRole("slider", { name: "Historical window start", exact: true })
-    .boundingBox();
-  const end = await nav
-    .getByRole("slider", { name: "Historical window end", exact: true })
-    .boundingBox();
-  const slide = await nav.locator(".recharts-brush-slide").boundingBox();
-  if (!start || !end || !slide) throw new Error("Missing native touch geometry");
-  await page.evaluate(async () => {
-    for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
-  });
-  const x = slide.x + slide.width / 2;
-  const y = slide.y + slide.height / 2;
-  const movedX = x - (end.x - start.x) / 2 - 2;
-  const dispatchTouch = async (type: string, target: "slide" | "body", pageX: number) => {
-    await page.evaluate(
-      ({ type, target, pageX, y }) => {
-        const element =
-          target === "slide"
-            ? document.querySelector(
-                '[data-kind-ui="candlestick-history-navigator"] .recharts-brush-slide',
-              )
-            : document.body;
-        if (!element) throw new Error("Missing touch target");
-        const touch = new Touch({
-          identifier: 1,
-          target: element,
-          clientX: pageX,
-          clientY: y,
-          pageX,
-          pageY: y,
-        });
-        element.dispatchEvent(
-          new TouchEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            changedTouches: [touch],
-            touches: type === "touchend" || type === "touchcancel" ? [] : [touch],
-          }),
-        );
-      },
-      { type, target, pageX, y },
+for (const immediate of [false, true]) {
+  test(`cancelled native history touch gestures cannot drag from ${immediate ? "immediate" : "later"} unrelated touch moves`, async ({
+    page,
+  }) => {
+    await page.goto(`${url}/?navigation`);
+    await page.getByRole("button", { name: "History window", exact: true }).click();
+    const nav = page.locator('[data-kind-ui="candlestick-history-navigator"]');
+    const start = await nav
+      .getByRole("slider", { name: "Historical window start", exact: true })
+      .boundingBox();
+    const end = await nav
+      .getByRole("slider", { name: "Historical window end", exact: true })
+      .boundingBox();
+    const slide = await nav.locator(".recharts-brush-slide").boundingBox();
+    if (!start || !end || !slide) throw new Error("Missing native touch geometry");
+    await page.evaluate(async () => {
+      for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
+    });
+    const x = slide.x + slide.width / 2;
+    const y = slide.y + slide.height / 2;
+    const movedX = x - (end.x - start.x) / 2 - 2;
+    const dispatchTouch = async (
+      type: string,
+      target: "slide" | "body",
+      pageX: number,
+      nextEvents: { type: string; target: "slide" | "body"; pageX: number }[] = [],
+    ) => {
+      await page.evaluate(
+        ({ type, target, pageX, y, nextEvents }) => {
+          for (const event of [{ type, target, pageX }, ...nextEvents]) {
+            const { type, target, pageX } = event;
+            const element =
+              target === "slide"
+                ? document.querySelector(
+                    '[data-kind-ui="candlestick-history-navigator"] .recharts-brush-slide',
+                  )
+                : document.body;
+            if (!element) throw new Error("Missing touch target");
+            const touch = new Touch({
+              identifier: 1,
+              target: element,
+              clientX: pageX,
+              clientY: y,
+              pageX,
+              pageY: y,
+            });
+            element.dispatchEvent(
+              new TouchEvent(type, {
+                bubbles: true,
+                cancelable: true,
+                changedTouches: [touch],
+                touches: type === "touchend" || type === "touchcancel" ? [] : [touch],
+              }),
+            );
+          }
+        },
+        { type, target, pageX, y, nextEvents },
+      );
+    };
+    const callbacks = Number(
+      await page.getByLabel("Window changes", { exact: true }).textContent(),
     );
-  };
-  const callbacks = Number(await page.getByLabel("Window changes", { exact: true }).textContent());
-  await dispatchTouch("touchstart", "slide", x);
-  await dispatchTouch("touchcancel", "slide", x);
-  await page.evaluate(async () => {
-    for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
+    const focusTarget = immediate
+      ? nav.getByRole("slider", { name: "Historical window end", exact: true })
+      : page.getByRole("button", { name: "History window", exact: true });
+    await focusTarget.focus();
+    await dispatchTouch("touchstart", "slide", x);
+    // A new touch starts outside Brush, then moves over its overview. Native
+    // touchmove is local to Brush. Dispatch all three in one browser task so no
+    // animation frame or deferred React commit can hide cancelled moving state.
+    if (immediate) {
+      await dispatchTouch("touchcancel", "slide", x, [
+        { type: "touchstart", target: "body", pageX: x },
+        { type: "touchmove", target: "slide", pageX: movedX },
+      ]);
+    } else {
+      await dispatchTouch("touchcancel", "slide", x);
+      await page.evaluate(async () => {
+        for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
+      });
+      await dispatchTouch("touchstart", "body", x);
+      await dispatchTouch("touchmove", "slide", movedX);
+    }
+    await expect(page.getByLabel("Window", { exact: true })).toHaveText("0.5,3.5");
+    await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(String(callbacks));
+    await expect(focusTarget).toBeFocused();
+    await dispatchTouch("touchstart", "slide", x);
+    await dispatchTouch("touchmove", "slide", movedX);
+    await dispatchTouch("touchend", "slide", movedX);
+    await expect(page.getByLabel("Window", { exact: true })).toHaveText("-0.5,2.5");
+    await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(
+      String(callbacks + 1),
+    );
   });
-  // A new touch starts outside Brush, then moves over its overview. Native
-  // touchmove is local to Brush; its cancelled moving state must already be gone.
-  await dispatchTouch("touchstart", "body", x);
-  await dispatchTouch("touchmove", "slide", movedX);
-  await expect(page.getByLabel("Window", { exact: true })).toHaveText("0.5,3.5");
-  await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(String(callbacks));
-  await dispatchTouch("touchstart", "slide", x);
-  await dispatchTouch("touchmove", "slide", movedX);
-  await dispatchTouch("touchend", "slide", movedX);
-  await expect(page.getByLabel("Window", { exact: true })).toHaveText("-0.5,2.5");
-  await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(
-    String(callbacks + 1),
-  );
-});
+}
 
 for (const interruption of ["empty", "loading"]) {
   test(`history drag interrupted by ${interruption} reconciles the current timeline before resuming`, async ({

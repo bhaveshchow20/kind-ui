@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 import { Brush, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { OutsidePlot } from "../family-root.js";
 import { cn } from "../utils.js";
@@ -101,6 +102,13 @@ export function CandlestickHistoryNavigator({
   const [historyRevision, setHistoryRevision] = useState(0);
   const refreshFrame = useRef<number | null>(null);
   const pendingRefresh = useRef(false);
+  const refreshNow = useCallback(() => {
+    const handles = Array.from(surface.current?.querySelectorAll('[role="slider"]') ?? []);
+    const active = document.activeElement;
+    const focused = active ? handles.indexOf(active) : -1;
+    restoreFocus.current = focused < 0 || !active ? null : { index: focused, node: active };
+    setHistoryRevision((revision) => revision + 1);
+  }, []);
   const scheduleRefresh = useCallback(() => {
     if (refreshFrame.current !== null) cancelAnimationFrame(refreshFrame.current);
     refreshFrame.current = requestAnimationFrame(() => {
@@ -110,13 +118,9 @@ export function CandlestickHistoryNavigator({
         return;
       }
       pendingRefresh.current = false;
-      const handles = Array.from(surface.current?.querySelectorAll('[role="slider"]') ?? []);
-      const active = document.activeElement;
-      const focused = active ? handles.indexOf(active) : -1;
-      restoreFocus.current = focused < 0 || !active ? null : { index: focused, node: active };
-      setHistoryRevision((revision) => revision + 1);
+      refreshNow();
     });
-  }, []);
+  }, [refreshNow]);
   useLayoutEffect(() => {
     if (history.length < 2) return;
     // Native Brush rebuilds its scale before restored controlled indices arrive
@@ -236,10 +240,16 @@ export function CandlestickHistoryNavigator({
             }}
             onTouchStartCapture={(event) => beginGesture(event.target)}
             onTouchCancelCapture={() => {
-              finishGesture();
               // Native Brush listens for touchend, but not touchcancel. Recreate
-              // its moving state even when the accepted timeline is unchanged.
-              scheduleRefresh();
+              // its moving state before another event can reach the cancelled
+              // gesture, even when the accepted timeline is unchanged.
+              flushSync(() => {
+                finishGesture();
+                if (refreshFrame.current !== null) cancelAnimationFrame(refreshFrame.current);
+                refreshFrame.current = null;
+                pendingRefresh.current = false;
+                refreshNow();
+              });
             }}
           >
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
