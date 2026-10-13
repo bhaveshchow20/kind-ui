@@ -84,6 +84,7 @@ export function CandlestickHost() {
   const [overlayClick, setOverlayClick] = useState("None");
   const [inspection, setInspection] = useState<CandlestickTime | null>(null);
   const [windowChanges, setWindowChanges] = useState(0);
+  const [cancelEvents, setCancelEvents] = useState<string[]>([]);
   const [logarithmic, setLogarithmic] = useState(params.get("overlay-invalid") === "log");
   const [veto, setVeto] = useState(false);
   const [vetoClick, setVetoClick] = useState(false);
@@ -307,6 +308,9 @@ export function CandlestickHost() {
         <>
           <output aria-label="Inspection">{inspection ?? "None"}</output>
           <output aria-label="Window changes">{windowChanges}</output>
+          {params.has("navigation-cancel") && (
+            <output aria-label="Navigator cancel events">{cancelEvents.join(",")}</output>
+          )}
         </>
       )}
       <CandlestickChart
@@ -380,7 +384,37 @@ export function CandlestickHost() {
             }}
           />
         )}
-        {params.has("navigation") && <CandlestickChart.HistoryNavigator />}
+        {params.has("navigation") && (
+          <CandlestickChart.HistoryNavigator
+            {...(params.has("navigation-cancel")
+              ? {
+                  onTouchCancelCapture: (event) => {
+                    setCancelEvents((events) => [...events, "fieldset capture"]);
+                    if (params.has("cancel-capture-stop")) event.stopPropagation();
+                  },
+                  onTouchCancel: () => setCancelEvents((events) => [...events, "fieldset bubble"]),
+                  brushProps: {
+                    traveller: (geometry) => (
+                      <rect
+                        {...geometry}
+                        data-cancel-traveller=""
+                        onTouchCancelCapture={() =>
+                          setCancelEvents((events) => [...events, "traveller capture"])
+                        }
+                        onTouchCancel={(event) => {
+                          setCancelEvents((events) => [...events, "traveller bubble"]);
+                          if (params.has("cancel-prevent")) event.preventDefault();
+                          if (params.has("cancel-stop")) event.stopPropagation();
+                          if (params.has("cancel-throw"))
+                            throw new Error("Consumer touchcancel error");
+                        }}
+                      />
+                    ),
+                  },
+                }
+              : {})}
+          />
+        )}
         <CandlestickChart.Grid />
         <CandlestickChart.XAxis
           {...(params.has("mirror-x") ? { mirror: true } : {})}

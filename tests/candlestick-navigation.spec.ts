@@ -180,6 +180,100 @@ test("forming-row corrections update the overview without resetting focused hand
   await expect(page.getByLabel("Window", { exact: true })).toHaveText("-0.5,2.5");
 });
 
+for (const mode of ["normal", "prevent", "stop", "capture-stop", "throw"]) {
+  test(`history cancellation preserves native consumer capture/bubble ordering (${mode})`, async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(`${url}/?navigation&navigation-cancel&cancel-${mode}`);
+    await page.getByRole("button", { name: "History window", exact: true }).click();
+    await page.evaluate(async () => {
+      for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
+    });
+    const callbacks = Number(
+      await page.getByLabel("Window changes", { exact: true }).textContent(),
+    );
+    await page.evaluate(() => {
+      const target = document.querySelector("[data-cancel-traveller]");
+      if (!target) throw new Error("Missing consumer traveller");
+      const rect = target.getBoundingClientRect();
+      const touch = new Touch({
+        identifier: 1,
+        target,
+        clientX: rect.x + 2,
+        clientY: rect.y + 10,
+        pageX: rect.x + 2,
+        pageY: rect.y + 10,
+      });
+      target.dispatchEvent(
+        new TouchEvent("touchstart", { bubbles: true, changedTouches: [touch], touches: [touch] }),
+      );
+    });
+    await page.evaluate(() => {
+      const target = document.querySelector("[data-cancel-traveller]");
+      if (!target) throw new Error("Missing consumer traveller");
+      const rect = target.getBoundingClientRect();
+      const touch = new Touch({
+        identifier: 1,
+        target,
+        clientX: rect.x + 2,
+        clientY: rect.y + 10,
+        pageX: rect.x + 2,
+        pageY: rect.y + 10,
+      });
+      target.dispatchEvent(
+        new TouchEvent("touchcancel", {
+          bubbles: true,
+          cancelable: true,
+          changedTouches: [touch],
+          touches: [],
+        }),
+      );
+    });
+    await expect(page.getByLabel("Navigator cancel events", { exact: true })).toHaveText(
+      mode === "capture-stop"
+        ? "fieldset capture"
+        : mode === "stop"
+          ? "fieldset capture,traveller capture,traveller bubble"
+          : "fieldset capture,traveller capture,traveller bubble,fieldset bubble",
+    );
+    expect(errors).toEqual(mode === "throw" ? ["Consumer touchcancel error"] : []);
+    await page.evaluate(
+      (stopped) => {
+        // A consumer stopping propagation owns the veto. Native touchend still
+        // releases its gesture; otherwise even a thrown callback must allow reset.
+        const target = stopped ? document.body : document.querySelector("[data-cancel-traveller]");
+        if (!target) throw new Error("Missing subsequent touch target");
+        const rect = target.getBoundingClientRect();
+        const touch = new Touch({
+          identifier: 2,
+          target,
+          clientX: rect.x - 200,
+          clientY: rect.y + 10,
+          pageX: rect.x - 200,
+          pageY: rect.y + 10,
+        });
+        target.dispatchEvent(
+          new TouchEvent(stopped ? "touchend" : "touchmove", {
+            bubbles: true,
+            changedTouches: [touch],
+            touches: stopped ? [] : [touch],
+          }),
+        );
+      },
+      mode === "stop" || mode === "capture-stop",
+    );
+    await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(String(callbacks));
+    const end = page
+      .locator('[data-kind-ui="candlestick-history-navigator"]')
+      .getByRole("slider", { name: "Historical window end", exact: true });
+    await end.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.getByLabel("Window", { exact: true })).toHaveText("0.5,4.5");
+  });
+}
+
 for (const immediate of [false, true]) {
   test(`cancelled native history touch gestures cannot drag from ${immediate ? "immediate" : "later"} unrelated touch moves`, async ({
     page,

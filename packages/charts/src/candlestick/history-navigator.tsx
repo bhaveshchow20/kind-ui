@@ -239,10 +239,11 @@ export function CandlestickHistoryNavigator({
               if (event.button === 0) beginGesture(event.target);
             }}
             onTouchStartCapture={(event) => beginGesture(event.target)}
-            onTouchCancelCapture={() => {
+            onTouchCancel={() => {
               // Native Brush listens for touchend, but not touchcancel. Recreate
               // its moving state before another event can reach the cancelled
-              // gesture, even when the accepted timeline is unchanged.
+              // gesture. Bubble listeners are already queued, so remounting here
+              // preserves native consumer callbacks on the traveller/fieldset.
               flushSync(() => {
                 finishGesture();
                 if (refreshFrame.current !== null) cancelAnimationFrame(refreshFrame.current);
