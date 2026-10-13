@@ -202,7 +202,7 @@ const data = [{ id: "storage", label: "Storage", children: [
 
 Compose only the parts you need. `Labels` renders text directly on tiles and clips
 labels below its fit thresholds; customize text/color through `children` and
-`labelProps`. `Tiles` and `Groups` preserve native props, refs and handlers.
+`labelProps` (set a contrasting text color when supplying dark tile paints). `Tiles` and `Groups` preserve native props, refs and handlers.
 `Tooltip` follows the pointer, clamps to the chart, and uses the shared tooltip
 rows and optional number animation. Keyboard inspection anchors it to the tile;
 Escape dismisses it. Arrows and Home/End navigate one tile tab stop.

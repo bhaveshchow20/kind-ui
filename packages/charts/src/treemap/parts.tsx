@@ -109,6 +109,7 @@ function Mark<T>({
         }
         className={cn(
           "pointer-events-auto absolute m-0 overflow-hidden rounded-[2px] border border-[var(--background,#fff)] p-0 text-left text-[color:var(--foreground,inherit)] outline-offset-[-3px] focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[var(--foreground,#172033)] data-selected:ring-2 data-selected:ring-[var(--foreground,#172033)] data-selected:ring-inset",
+          kind === "treemap-group-header" && "text-[#172033]",
           buttonProps.className,
         )}
         style={{
@@ -257,7 +258,7 @@ export function TreemapGroups<T = TreemapDatum>({
                   height={Math.min(node.height, context.groupHeaderHeight)}
                   {...(header ? { buttonProps: header } : {})}
                 >
-                  <span className="block truncate px-2 text-[11px] font-medium text-[var(--foreground,#172033)]">
+                  <span className="block truncate px-2 text-[11px] font-medium text-inherit">
                     {typeof children === "function"
                       ? children(node)
                       : children !== undefined
@@ -326,7 +327,7 @@ export function TreemapLabels<T = TreemapDatum>({
                 data-kind-ui="treemap-label"
                 data-node-id={node.id}
                 className={cn(
-                  "absolute block truncate text-[var(--foreground,#172033)] text-xs font-medium leading-tight",
+                  "absolute block truncate text-[#172033] text-xs font-medium leading-tight",
                   attributes?.className,
                 )}
                 style={{
