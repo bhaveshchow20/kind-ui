@@ -1,14 +1,14 @@
 /** Standard hierarchy records. Group area is always derived from descendants. */
 export type TreemapDatum =
   | {
-      readonly kind: "leaf";
+      readonly kind?: "leaf";
       readonly id: string;
       readonly label: string;
       readonly value: number;
       readonly children?: never;
     }
   | {
-      readonly kind: "group";
+      readonly kind?: "group";
       readonly id: string;
       readonly label: string;
       readonly children: readonly TreemapDatum[];
@@ -121,10 +121,11 @@ export function normalizeTreemap<T>(
     }
     if (!accessors) {
       const record = standardRecord(datum);
-      if (record.kind !== "leaf" && record.kind !== "group") {
+      const kind = record.kind ?? (children === undefined ? "leaf" : "group");
+      if (kind !== "leaf" && kind !== "group") {
         fail(location, 'kind must be "leaf" or "group"');
       }
-      if (record.kind === "group") {
+      if (kind === "group") {
         if (children === undefined) fail(location, "group children must be an array");
         if ("value" in record) fail(location, "group cannot supply independent value");
       } else if (children !== undefined) {

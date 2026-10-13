@@ -234,19 +234,18 @@ void (
   </TreemapChart>
 );
 
+// @ts-expect-error A spread default-mode contract cannot also own controlled visibility.
 const wrongVisibility: TreemapChartProps<MetadataRecord> = {
   ...props,
-  // @ts-expect-error Treemap does not support series visibility.
   visibleSeries: [],
 };
 const wrongDefaultVisibility: TreemapChartProps<MetadataRecord> = {
   ...props,
-  // @ts-expect-error Treemap does not support default series visibility.
   defaultVisibleSeries: [],
 };
+// @ts-expect-error A visibility callback needs an explicit visibleSeries/defaultVisibleSeries owner.
 const wrongVisibilityCallback: TreemapChartProps<MetadataRecord> = {
   ...props,
-  // @ts-expect-error Treemap does not support series visibility callbacks.
   onVisibleSeriesChange: () => {},
 };
 void [wrongVisibility, wrongDefaultVisibility, wrongVisibilityCallback];

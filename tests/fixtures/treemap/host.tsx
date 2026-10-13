@@ -1,4 +1,5 @@
 import {
+  type ChartInteractionConfig,
   type TreemapAccessors,
   TreemapChart,
   type TreemapColorEncoding,
@@ -87,6 +88,23 @@ class ConsumerBoundary extends Component<{ children: ReactNode }, { error: strin
 export function TreemapHost() {
   const params = new URLSearchParams(window.location.search);
   const count = Number(params.get("count") ?? 0);
+  const visibility: { defaultVisibleSeries: readonly string[] } | { defaultVisibleSeries?: never } =
+    params.has("shared-legend") && params.has("hide")
+      ? { defaultVisibleSeries: ["technology", "energy"] }
+      : {};
+  const interaction: ChartInteractionConfig = params.has("hide")
+    ? {
+        kind: "category",
+        mode: "visibility",
+        eligibleKeys: ["technology", "energy"],
+        markActivation: "matching-legend",
+      }
+    : {
+        kind: "category",
+        mode: "focus",
+        eligibleKeys: ["technology", "energy"],
+        markActivation: "matching-legend",
+      };
   const duplicateLegend = params.has("duplicate-legend");
   const initial = params.has("empty-group")
     ? [{ key: "empty-group", title: "Empty group", nodes: [] }]
@@ -317,7 +335,16 @@ export function TreemapHost() {
             accessors={accessors}
             {...(duplicateLegend ? {} : { encoding: selectedEncoding })}
             groupHeaderHeight={params.has("header") ? Number(params.get("header")) : 20}
-            config={{}}
+            config={
+              params.has("shared-legend")
+                ? {
+                    technology: { label: "Technology", color: "#93c5fd" },
+                    energy: { label: "Energy", color: "#86efac" },
+                  }
+                : {}
+            }
+            {...visibility}
+            {...(params.has("shared-legend") ? { interaction } : {})}
             frameProps={{
               onKeyDown: (event) => {
                 if (event.key === "Escape")
@@ -418,8 +445,8 @@ export function TreemapHost() {
               />
             )}
             <TreemapChart.Labels />
-            {!params.has("omit-tooltip") && <TreemapChart.Tooltip />}
-            <TreemapChart.ColorLegend />
+            {!params.has("omit-tooltip") && <TreemapChart.Tooltip valueAnimation="shuffle" />}
+            {params.has("shared-legend") ? <TreemapChart.Legend /> : <TreemapChart.ColorLegend />}
             <TreemapChart.DataTable
               rowProps={(node) =>
                 node.id === "platforms"

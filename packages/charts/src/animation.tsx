@@ -261,10 +261,20 @@ export function LineSeries<
     </ZIndexLayer>
   );
 }
-function MovingFrame({ x, y, maxX, maxY, ref, style, frameProps, children }: TooltipFrameProps) {
+/** Shared bounded motion frame for native and React-owned chart inspection. */
+export function AnimatedTooltipFrame({
+  x,
+  y,
+  maxX,
+  maxY,
+  ref,
+  style,
+  frameProps,
+  children,
+  motionEnabled,
+}: TooltipFrameProps & { motionEnabled?: boolean }) {
   const { enabled, transition } = use(MotionContext);
-  const { motionReady } = useLineInteraction();
-  const animate = enabled && motionReady;
+  const animate = motionEnabled ?? enabled;
   const movingX = useAnimatedCoordinate(x, animate, transition);
   const movingY = useAnimatedCoordinate(y, animate, transition);
   return (
@@ -286,6 +296,11 @@ function MovingFrame({ x, y, maxX, maxY, ref, style, frameProps, children }: Too
       </div>
     </motion.div>
   );
+}
+function MovingFrame(props: TooltipFrameProps) {
+  const { enabled } = use(MotionContext);
+  const { motionReady } = useLineInteraction();
+  return <AnimatedTooltipFrame {...props} motionEnabled={enabled && motionReady} />;
 }
 export function Tooltip(props: TooltipProps) {
   usePieTooltipRegistration();
