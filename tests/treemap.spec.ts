@@ -386,6 +386,8 @@ test("treemap excludes disabled initial marks and tolerates fresh consumer callb
     '[data-kind-ui="treemap-tile"][tabindex="0"]:enabled, [data-kind-ui="treemap-group-header"][tabindex="0"]:enabled',
   );
   await expect(stops).toHaveCount(1);
+  // Exercise disabling an owned mark without assuming the layout's initial order.
+  await tile(page, "d").focus();
   await expect(tile(page, "d")).toHaveAttribute("tabindex", "0");
   await update(page, "Disabled");
   await expect(tile(page, "d")).toBeDisabled();
