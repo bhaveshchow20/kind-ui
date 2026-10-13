@@ -17,7 +17,7 @@ export function promptFor(bundle, _settings, variant = bundle.defaultVariant) {
   return [
     `Build or adapt the Kind UI ${bundle.title} example from ${base}.`,
     bundle.family === "treemap"
-      ? `Reference package: @kind-ui/charts. Selected example: ${bundle.id}${variant ? ` (${variant})` : ""}.`
+      ? `Reference package: @kind-ui/charts@^${bundle.minimumCoreVersion}. Selected example: ${bundle.id}${variant ? ` (${variant})` : ""}.`
       : `Reference package: @kind-ui/charts@${bundle.version}. Check the app's installed version before using these APIs. Selected example: ${bundle.id}${variant ? ` (${variant})` : ""}.`,
     `Retrieve the standalone source: ${source}.`,
     `Read the family contract: ${markdown}. Setup: ${new URL("markdown/installation.md", deployedDocsUrl).href}. Example manifest: ${new URL(`examples/${bundle.id}/package.json`, deployedDocsUrl).href}.`,

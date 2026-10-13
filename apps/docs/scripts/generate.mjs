@@ -92,6 +92,11 @@ const loadingVariants = new Map(
     .filter((family) => family.loadingVariant)
     .map((family) => [family.id, family.loadingVariant]),
 );
+const minimumCoreVersions = new Map(
+  registryItems
+    .filter((item) => item.minimumCoreVersion)
+    .map((item) => [item.exampleId, item.minimumCoreVersion]),
+);
 const installationNames = new Map(registryItems.map(({ exampleId, name }) => [exampleId, name]));
 for (const example of allExamples) {
   if (!Object.hasOwn(dataLabels, example.id))
@@ -144,8 +149,15 @@ for (const example of allExamples) {
       source: exampleSource.replace(literalDefault, `${loadingVariant.prop} = true`),
     };
   }
+  const minimumCoreVersion = minimumCoreVersions.get(example.family);
+  const exampleManifest = minimumCoreVersion
+    ? {
+        ...manifest,
+        dependencies: { ...manifest.dependencies, "@kind-ui/charts": `^${minimumCoreVersion}` },
+      }
+    : manifest;
   const files = {
-    "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
+    "package.json": `${JSON.stringify(exampleManifest, null, 2)}\n`,
     "index.html":
       '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kind UI chart example</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>\n',
     "tsconfig.json": `${JSON.stringify(
@@ -199,6 +211,7 @@ for (const example of allExamples) {
   const registryItemName = installationNames.get(example.id);
   bundles[example.id] = {
     ...example,
+    ...(minimumCoreVersion ? { minimumCoreVersion } : {}),
     ...(registryItemName === undefined ? {} : { registryItemName }),
     ...(dataAlternative ? { dataAlternative } : {}),
     ...(variants

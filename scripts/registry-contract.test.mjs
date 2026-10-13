@@ -55,8 +55,12 @@ test("official CLI output has a flat complete catalog and content-free discovery
   );
   for (const item of catalog.items) {
     assert.ok(item.files.every((file) => !Object.hasOwn(file, "content")));
+    const definition = registryItems.find(({ name }) => name === item.name);
+    assert.ok(definition);
     assert.deepEqual(item.dependencies, [
-      `@kind-ui/charts@${coreVersion}`,
+      definition.minimumCoreVersion
+        ? `@kind-ui/charts@^${definition.minimumCoreVersion}`
+        : `@kind-ui/charts@${coreVersion}`,
       "react@^19.3.0",
       "react-dom@^19.3.0",
       "recharts@^3.10.1",

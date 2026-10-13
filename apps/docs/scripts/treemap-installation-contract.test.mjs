@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import { satisfies } from "semver";
 import { itemNameFor, registryItems } from "../../../registry/catalog.mjs";
 import { family } from "../examples/treemap-catalog.mjs";
 import { installationFor, installationMarkdown } from "../lib/chart-installation.mjs";
@@ -29,6 +30,7 @@ test("Treemap CLI and manual installation use the canonical composition", () => 
   assert.ok(registryItems.some((item) => item.name === "treemap-chart"));
   const result = installationFor(bundle);
   assert.equal(result.available, true);
+  assert.match(result.steps[0].code, /@kind-ui\/charts@\^0\.6\.0/);
   assert.equal(result.command, "npx shadcn@latest add @kind-ui/treemap-chart");
   assert.deepEqual(
     result.steps.map((step) => step.title),
@@ -58,7 +60,9 @@ test("Treemap setup files stay public while validation installs the exact local 
     assert.equal(bundle.candidateSha256, undefined);
     assert.equal(bundle.packageStatus, "@kind-ui/charts");
     const manifest = JSON.parse(bundle.files["package.json"]);
-    assert.equal(manifest.dependencies["@kind-ui/charts"], `^${provenance.version}`);
+    assert.equal(manifest.dependencies["@kind-ui/charts"], "^0.6.0");
+    assert.equal(satisfies("0.6.0", manifest.dependencies["@kind-ui/charts"]), true);
+    assert.equal(satisfies("0.5.99", manifest.dependencies["@kind-ui/charts"]), false);
     publicCopy(bundle.files["README.md"], `${example.id} README`);
     assert.ok(!Object.keys(bundle.files).some((file) => /\.tgz$|provenance/.test(file)));
     const verified = verificationFiles(bundle);

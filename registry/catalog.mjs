@@ -12,6 +12,7 @@ export const registryItems = [
     name: chartItemName(example.id),
     title: example.title,
     description: example.notes,
+    ...(example.id === "treemap" ? { minimumCoreVersion: "0.6.0" } : {}),
   };
 });
 

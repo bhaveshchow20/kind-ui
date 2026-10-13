@@ -56,6 +56,15 @@ const originalHashes = new Map(
     createHash("sha256").update(body).digest("hex"),
   ]),
 );
+for (const item of registryItems) {
+  const dependency = item.minimumCoreVersion
+    ? `@kind-ui/charts@^${item.minimumCoreVersion}`
+    : `@kind-ui/charts@${coreVersion}`;
+  assert.deepEqual(
+    payloads.get(item.name)?.dependencies.filter((value) => value.startsWith("@kind-ui/charts@")),
+    [dependency],
+  );
+}
 let artifactRequests = 0;
 const server = createServer((request, response) => {
   const url = request.url ?? "";
@@ -82,7 +91,7 @@ const server = createServer((request, response) => {
     JSON.stringify({
       ...item,
       dependencies: item.dependencies.map((dependency) =>
-        dependency === `@kind-ui/charts@${coreVersion}` ? `${endpoint}/candidate.tgz` : dependency,
+        dependency.startsWith("@kind-ui/charts@") ? `${endpoint}/candidate.tgz` : dependency,
       ),
     }),
   );

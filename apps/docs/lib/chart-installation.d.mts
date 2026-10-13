@@ -3,6 +3,7 @@ interface InstallationBundle {
   family?: string | undefined;
   packageStatus?: string | undefined;
   version: string;
+  minimumCoreVersion?: string | undefined;
   registryItemName?: string | undefined;
   files: Record<string, string>;
 }
