@@ -374,15 +374,19 @@ test("held Enter and Space keys do not repeatedly toggle selection or write owne
   await first.press("Enter");
   await expect(page.getByLabel("Stage selection")).toHaveText("entry");
   await expect(page.getByLabel("Selection writes")).toHaveText("1");
+  await expect(page.getByLabel("Consumer clicks")).toHaveText("1");
   await first.dispatchEvent("keydown", { key: "Enter", repeat: true });
   await expect(page.getByLabel("Stage selection")).toHaveText("entry");
   await expect(page.getByLabel("Selection writes")).toHaveText("1");
+  await expect(page.getByLabel("Consumer clicks")).toHaveText("1");
   await first.press("Space");
   await expect(page.getByLabel("Stage selection")).toHaveText("none");
   await expect(page.getByLabel("Selection writes")).toHaveText("2");
+  await expect(page.getByLabel("Consumer clicks")).toHaveText("2");
   await first.dispatchEvent("keydown", { key: " ", repeat: true });
   await expect(page.getByLabel("Stage selection")).toHaveText("none");
   await expect(page.getByLabel("Selection writes")).toHaveText("2");
+  await expect(page.getByLabel("Consumer clicks")).toHaveText("2");
 });
 
 test("consumer reset veto preserves the complete Escape inspection and selection operation", async ({
@@ -692,4 +696,55 @@ test("legend order follows current stages for integer-like IDs reversed config a
   expect(await buttons.allTextContents()).toEqual(expected);
   await expect(chart.getByRole("button", { name: "Stale entry", exact: true })).toHaveCount(0);
   await expect(chart.locator('[data-kind-ui="chart-legend"]')).not.toContainText("Stale entry");
+});
+
+test("pointer Enter and Space invoke one shared consumer action with original stage metadata", async ({
+  page,
+}) => {
+  for (const input of ["pointer", "Enter", "Space", "Shift+Enter"] as const) {
+    await page.goto(packed);
+    const chart = page.getByRole("region", { name: "Stage snapshot" });
+    const target = stage(chart, "review");
+    await target.focus();
+    if (input === "pointer") await target.click();
+    else await target.press(input);
+    await expect(page.getByLabel("Consumer clicks")).toHaveText("1");
+    await expect(page.getByLabel("Clicked stage days")).toHaveText("3");
+    await expect(page.getByLabel("Consumer click detail")).toHaveText(
+      input === "pointer" ? "1" : "0",
+    );
+    await expect(page.getByLabel("Stage selection")).toHaveText("review");
+    await expect(page.getByLabel("Selection writes")).toHaveText("1");
+    await expect(page.getByLabel("Consumer click modifiers")).toHaveText(
+      input === "Shift+Enter" ? "shift" : "none",
+    );
+  }
+});
+
+test("keyboard activation honors both consumer click cancellation and keydown prevention", async ({
+  page,
+}) => {
+  for (const policy of ["activation-veto", "prevent-activation"] as const) {
+    for (const key of ["Enter", "Space"] as const) {
+      await page.goto(`${packed}?${policy}`);
+      const chart = page.getByRole("region", { name: "Stage snapshot" });
+      const target = stage(chart, "review");
+      await target.focus();
+      await target.press("Escape");
+      await expect(chart.getByRole("tooltip")).toHaveCount(0);
+      const writes = await page.getByLabel("Inspection writes").textContent();
+      await target.press(key);
+      await expect(page.getByLabel("Consumer clicks")).toHaveText(
+        policy === "activation-veto" ? "1" : "0",
+      );
+      await expect(page.getByLabel("Stage selection")).toHaveText("none");
+      await expect(page.getByLabel("Selection writes")).toHaveText("0");
+      await expect(page.getByLabel("Inspection writes")).toHaveText(writes ?? "");
+      await expect(chart.getByRole("tooltip")).toHaveCount(0);
+      if (policy === "activation-veto") {
+        await expect(page.getByLabel("Clicked stage days")).toHaveText("3");
+        await expect(page.getByLabel("Consumer click detail")).toHaveText("0");
+      }
+    }
+  }
 });
