@@ -133,7 +133,7 @@ export const family = {
     },
     "treemap-portfolio": {
       caption:
-        "Illustrative positions, September 9, 2026: gross and signed position value (USD thousands), one-session P&L (USD thousands); shares use $340k gross, not NAV",
+        "Illustrative positions, October 9, 2026: gross and signed position value (USD thousands), one-session P&L (USD thousands); shares use $340k gross, not NAV",
       columns: {
         id: "ID",
         path: "Hierarchy path",
@@ -227,7 +227,7 @@ export const family = {
     },
     "treemap-events": {
       caption:
-        "Illustrative event markets: 24 hours ending September 9, 2026; market-level turnover (USD thousands) and probability change (percentage points)",
+        "Illustrative event markets: 24 hours ending October 9, 2026; market-level turnover (USD thousands) and probability change (percentage points)",
       columns: {
         id: "ID",
         path: "Hierarchy path",
@@ -317,7 +317,7 @@ export const family = {
     },
     "treemap-storage": {
       caption:
-        "Illustrative storage inventory, September 9, 2026: stored GB and August-to-September change in GB; supplied total 940 GB",
+        "Illustrative storage inventory, October 9, 2026: stored GB and September-to-October change in GB; supplied total 940 GB",
       columns: {
         id: "ID",
         path: "Hierarchy path",
