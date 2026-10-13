@@ -91,6 +91,7 @@ test("generated installation metadata agrees with the catalog and source files",
     const bundle = bundles[exampleId];
     assert.equal(bundle.registryItemName, name);
     assert.equal(bundle.version, coreVersion);
+    assert.equal(bundle.coreRequirement, "^0.6.0");
     const installation = installationFor(bundle);
     assert.equal(
       installation.steps.find(({ title }) => title === "Create the composition")?.code,

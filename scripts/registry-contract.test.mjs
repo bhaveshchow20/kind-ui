@@ -4,7 +4,9 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import { allExamples } from "../apps/docs/examples/catalog.mjs";
 import {
+  coreRequirementFor,
   itemNameFor,
   registryCss,
   registryEndpoint,
@@ -128,8 +130,16 @@ test("lookup and policy reject missing examples, nested names and absent depende
   assert.equal(itemSchema.safeParse({ ...first, files: [] }).success, false);
 });
 
-test("Funnel registry requires the first compatible Core minor", () => {
-  const item = JSON.parse(readFileSync(path.join(output, "funnel-chart.json"), "utf8"));
-  assert.ok(item.dependencies.includes("@kind-ui/charts@^0.6.0"));
-  assert.ok(!item.dependencies.includes("@kind-ui/charts@0.5.0"));
+test("all chart installs share a compatible Core range and cannot request a downgrade", () => {
+  for (const example of allExamples) assert.equal(coreRequirementFor(example.id), "^0.6.0");
+  for (const definition of registryItems) {
+    assert.equal(definition.coreRequirement, "^0.6.0");
+    const item = itemSchema.parse(readJson(path.join(output, `${definition.name}.json`)));
+    assert.deepEqual(
+      item.dependencies.filter((dependency) => dependency.startsWith("@kind-ui/charts@")),
+      ["@kind-ui/charts@^0.6.0"],
+      definition.name,
+    );
+  }
+  assert.throws(() => coreRequirementFor("unknown"), /No Core requirement/);
 });

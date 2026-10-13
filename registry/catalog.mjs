@@ -24,11 +24,13 @@ export function itemNameFor(exampleId) {
   return item.name;
 }
 
-/** @param {string} exampleId */
+/** All maintained compositions share the same compatible Core requirement.
+ * @param {string} exampleId
+ */
 export function coreRequirementFor(exampleId) {
   const example = allExamples.find(({ id }) => id === exampleId);
   if (!example) throw new Error(`No Core requirement for example ${exampleId}`);
-  return example.family === "funnel" ? "^0.6.0" : coreVersion;
+  return "^0.6.0";
 }
 export const registryHomepage = "https://kindui.dev/charts/";
 export const registryEndpoint = "https://kindui.dev/r/";
