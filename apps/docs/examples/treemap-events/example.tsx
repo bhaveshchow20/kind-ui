@@ -110,12 +110,10 @@ export function EventActivityTreemap() {
       animate
       height={320}
       padding={3}
-      groupHeaderHeight={22}
       formatValue={(value) => `$${value}k turnover`}
     >
-      <TreemapChart.Groups />
       <TreemapChart.Tiles />
-      <TreemapChart.Labels minWidth={62} minHeight={24} />
+      <TreemapChart.Labels minWidth={18} minHeight={14} padding={5} />
       <TreemapChart.Tooltip valueAnimation="shuffle" />
       <TreemapChart.ColorLegend />
       <TreemapChart.Breadcrumbs rootLabel="All topics" />

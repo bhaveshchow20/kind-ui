@@ -75,22 +75,17 @@ for (const scheme of ["light", "dark"] as const) {
     await expect(api).toHaveAttribute("aria-describedby", /.+/);
     await page.keyboard.press("Escape");
     await expect(primary.getByRole("tooltip")).toHaveCount(0);
-    await primary.locator('[data-kind-ui="treemap-group-header"][data-node-id="compute"]').focus();
-    await page.keyboard.press("Enter");
-    await expect(primary.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(3);
-    const navigation = primary.getByRole("navigation", { name: "Treemap navigation" });
-    await expect(navigation.getByRole("button", { name: "Compute", exact: true })).toHaveAttribute(
-      "aria-current",
-      "location",
-    );
-    await navigation.getByRole("button", { name: "All services", exact: true }).focus();
-    await page.keyboard.press("Enter");
-    await expect(primary.getByRole("button", { name: /^PostgreSQL:/ })).toBeVisible();
+    await expect(
+      primary.locator('[data-kind-ui="treemap-group"], [data-kind-ui="treemap-group-header"]'),
+    ).toHaveCount(0);
+    await expect(primary.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(10);
     const computeLegend = primary.locator(
       '[data-kind-ui="chart-legend-button"][data-legend-key="compute"]',
     );
+    await computeLegend.focus();
+    await page.keyboard.press("Enter");
     await expect(computeLegend).toHaveAttribute("aria-pressed", "true");
-    await computeLegend.click();
+    await page.keyboard.press("Escape");
     await expect(computeLegend).toHaveAttribute("aria-pressed", "false");
     await page.mouse.move(5, 5);
     await primary.getByRole("combobox", { name: "Billing period", exact: true }).focus();

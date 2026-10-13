@@ -209,8 +209,8 @@ try {
     await card.scrollIntoViewIfNeeded();
     await expect(chart(card)).toBeVisible();
     await expect(card.locator('[data-kind-ui="treemap-tiles"]')).toHaveCount(1);
-    await expect(card.locator('[data-kind-ui="treemap-groups"]')).toHaveCount(1);
-    await expect(card.locator('[data-kind-ui="treemap-group-header"]').first()).toBeVisible();
+    await expect(card.locator('[data-kind-ui="treemap-groups"]')).toHaveCount(0);
+    await expect(card.locator('[data-kind-ui="treemap-group-header"]')).toHaveCount(0);
     await expect(
       card.locator(
         id === "treemap"
@@ -302,19 +302,21 @@ try {
   });
 
   await primary.scrollIntoViewIfNeeded();
-  const compute = primary.locator('[data-kind-ui="treemap-group-header"][data-node-id="compute"]');
-  await compute.focus();
-  await page.keyboard.press("Enter");
-  await expect(tile(primary, "api")).toBeVisible();
-  await expect(primary.locator(tileSelector)).toHaveCount(3);
-  const breadcrumbs = primary.getByRole("navigation", { name: "Treemap navigation" });
-  await expect(breadcrumbs.getByRole("button", { name: "Compute", exact: true })).toHaveAttribute(
-    "aria-current",
-    "location",
+  await expect(
+    primary.locator('[data-kind-ui="treemap-group"], [data-kind-ui="treemap-group-header"]'),
+  ).toHaveCount(0);
+  await expect(primary.locator(tileSelector)).toHaveCount(10);
+  await tile(primary, "api").focus();
+  await expect(primary.getByRole("tooltip")).toContainText("Compute / API");
+  const compute = primary.locator(
+    '[data-kind-ui="chart-legend-button"][data-legend-key="compute"]',
   );
-  await breadcrumbs.getByRole("button", { name: "All services", exact: true }).focus();
-  await page.keyboard.press("Enter");
-  await expect(tile(primary, "postgresql")).toBeVisible();
+  await compute.click();
+  await expect(compute).toHaveAttribute("aria-pressed", "true");
+  assert.deepEqual(await geometry(primary), before, "Category focus preserves the complete mosaic");
+  await compute.focus();
+  await page.keyboard.press("Escape");
+  await expect(compute).toHaveAttribute("aria-pressed", "false");
   let moved = false;
   for (const key of ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"]) {
     await tile(primary, "api").focus();

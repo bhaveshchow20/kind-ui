@@ -92,12 +92,10 @@ test("cloud spend shares, hierarchy and category selection preserve useful value
   await expect(card.getByRole("tooltip")).toContainText("Compute / API");
   await expect(card.getByRole("tooltip")).toContainText("$18.4k");
   await expect(card.getByRole("tooltip")).toContainText("24.1%");
-  await card.locator('[data-kind-ui="treemap-group-header"][data-node-id="compute"]').click();
-  await expect(card.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(3);
-  await card
-    .getByRole("navigation", { name: "Treemap navigation" })
-    .getByRole("button", { name: "All services" })
-    .click();
+  await expect(
+    card.locator('[data-kind-ui="treemap-group-header"], [data-kind-ui="treemap-group"]'),
+  ).toHaveCount(0);
+  await expect(card.getByRole("tooltip")).toContainText("Compute / API");
   await expect(card.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(10);
   await expect(card.getByRole("button", { name: "View data" })).toHaveCount(0);
   await expect(card.getByRole("table").locator("tbody tr")).toHaveCount(10);

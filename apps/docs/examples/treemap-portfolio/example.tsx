@@ -76,12 +76,10 @@ export function GrossExposureTreemap() {
       animate
       height={320}
       padding={3}
-      groupHeaderHeight={22}
       formatValue={(value) => `$${value}k gross`}
     >
-      <TreemapChart.Groups />
       <TreemapChart.Tiles />
-      <TreemapChart.Labels minWidth={46} minHeight={24} />
+      <TreemapChart.Labels minWidth={18} minHeight={14} padding={5} />
       <TreemapChart.Tooltip<PositionNode>>
         {(item) => (
           <>

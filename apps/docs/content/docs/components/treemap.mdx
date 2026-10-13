@@ -12,13 +12,12 @@ description: See where resources go, from categories to individual services.
 
 ## Usage
 
-Each service occupies its share of the monthly bill. Color identifies its category. Compare August and September, inspect a tile, or open a category to see its services.
+Each service occupies its share of the monthly bill. Color identifies its category. Compare August and September, inspect a tile, and read its category path in the tooltip.
 
 ```tsx title="Composition sketch"
 import { TreemapChart } from "@kind-ui/charts";
 
 <TreemapChart data={data} config={config} aria-label="Monthly cloud spend" animate>
-  <TreemapChart.Groups />
   <TreemapChart.Tiles />
   <TreemapChart.Labels />
   <TreemapChart.Tooltip valueAnimation="shuffle" />
@@ -62,7 +61,8 @@ Keep the chart mounted and set `loading` while data is pending. `loadingLabel` n
 
 | Part | Purpose |
 | --- | --- |
-| `Groups`, `Tiles` | Group headers and service controls; `headerProps` and `tileProps` retain native refs and handlers. |
+| `Tiles` | Leaf mosaic with native refs and handlers through `tileProps`. |
+| `Groups` | Optional group controls when you explicitly set `groupHeaderHeight`; no header space is reserved by default. |
 | `Labels` | Text directly in tiles; `minWidth`, `minHeight` and `padding` control fit. Custom content supplies units or a second line. |
 | `Tooltip` | Shared floating readout, or typed custom `children`; `valueAnimation="shuffle"` animates default formatted values. |
 | `Legend` | Shared category selection and visibility controls from `config`. |

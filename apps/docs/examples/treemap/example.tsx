@@ -100,34 +100,23 @@ export function CloudSpendTreemap({
         animate
         loading={loading}
         loadingLabel="Loading cloud spend"
-        padding={4}
-        groupHeaderHeight={26}
+        padding={1.5}
         formatValue={(value) => currency.format(value)}
       >
-        <TreemapChart.Groups headerProps={() => ({ className: "text-[#173047]" })} />
         <TreemapChart.Tiles />
         <TreemapChart.Labels
-          minWidth={72}
-          minHeight={44}
-          padding={10}
+          minWidth={18}
+          minHeight={14}
+          padding={5}
           labelProps={() => ({ className: "text-[#173047]" })}
-        >
-          {(node) => (
-            <>
-              <span className="block truncate">{node.label}</span>
-              <span className="mt-1 block text-[11px] font-normal tabular-nums">
-                {currency.format(node.value)}
-              </span>
-            </>
-          )}
-        </TreemapChart.Labels>
+        />
         <TreemapChart.Tooltip valueAnimation="shuffle" />
         <TreemapChart.Legend />
         <TreemapChart.Breadcrumbs rootLabel="All services" />
       </TreemapChart>
       <p className="m-0 text-xs text-muted-foreground">
         Illustrative monthly billing. Area represents spend; color identifies a cost category.
-        Select a category to inspect it, or open a group to see its services.
+        Select a category to focus it; inspect any service for its value and full category path.
       </p>
     </section>
   );

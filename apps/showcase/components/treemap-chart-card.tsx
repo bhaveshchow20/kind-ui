@@ -60,8 +60,7 @@ export function TreemapChartCard({
         config={config}
         aria-label={recipe.tag}
         data={data}
-        padding={options.gap ?? 3}
-        groupHeaderHeight={24}
+        padding={options.gap ?? 1.5}
         animate={animate && entered && !reduced}
         formatValue={formatValue}
         interaction={{
@@ -71,13 +70,10 @@ export function TreemapChartCard({
           markActivation: "matching-legend",
         }}
       >
-        <TreemapChart.Groups
-          headerProps={(node) => ({ style: { color: textColors[node.path[0] ?? node.id] } })}
-        />
         <TreemapChart.Tiles
           tileProps={() => ({
             style: {
-              borderRadius: options.radius ?? 4,
+              borderRadius: options.radius ?? 0,
               ...(material === "clay"
                 ? { boxShadow: "inset 0 1px 0 #ffffff60, inset 0 -2px 3px #00000012" }
                 : material === "glow"
@@ -88,20 +84,12 @@ export function TreemapChartCard({
         />
         {options.showLabels !== false && (
           <TreemapChart.Labels
-            minWidth={40}
-            padding={7}
+            minWidth={18}
+            minHeight={14}
+            padding={5}
             labelProps={(node) => ({ style: { color: textColors[node.path[0] ?? node.id] } })}
           >
-            {(node) => (
-              <>
-                <span className="block truncate">{node.label}</span>
-                {options.showValues !== false && node.height >= 48 && (
-                  <span className="block mt-1 tabular-nums font-normal">
-                    {formatValue(node.value)}
-                  </span>
-                )}
-              </>
-            )}
+            {options.showValues === false ? (node) => node.label : undefined}
           </TreemapChart.Labels>
         )}
         <TreemapChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />

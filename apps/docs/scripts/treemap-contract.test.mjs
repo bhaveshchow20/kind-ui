@@ -127,7 +127,6 @@ for (const example of family.examples) {
     if (spec.metrics.length)
       assert.ok(rows.some((row) => spec.metrics.some((metric) => row[metric] === "Unavailable")));
     for (const part of [
-      "Groups",
       "Tiles",
       "Labels",
       "Tooltip",

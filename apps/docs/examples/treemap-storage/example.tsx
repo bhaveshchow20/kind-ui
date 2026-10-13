@@ -74,12 +74,10 @@ export function StorageAllocationTreemap() {
       animate
       height={320}
       padding={3}
-      groupHeaderHeight={22}
       formatValue={(value) => `${value} GB`}
     >
-      <TreemapChart.Groups />
       <TreemapChart.Tiles />
-      <TreemapChart.Labels minWidth={46} minHeight={24} />
+      <TreemapChart.Labels minWidth={18} minHeight={14} padding={5} />
       <TreemapChart.Tooltip valueAnimation="shuffle" />
       <TreemapChart.ColorLegend />
       <TreemapChart.Breadcrumbs rootLabel="All storage" />

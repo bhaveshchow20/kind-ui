@@ -175,11 +175,10 @@ const config = ${JSON.stringify(treemapConfig(treemapData(recipe.id), colors), n
 const textColors: Record<string, string> = ${JSON.stringify(treemapTextColors(treemapData(recipe.id), colors), null, 2)};
 const formatValue = (value: number) => "$" + (value / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "k";
 export function Example() {
-  return <TreemapChart data={data} config={config} aria-label="${recipe.tag}" height={260} padding={${options.gap ?? 3}} groupHeaderHeight={24} animate={${animate}} formatValue={formatValue}
+  return <TreemapChart data={data} config={config} aria-label="${recipe.tag}" height={260} padding={${options.gap ?? 1.5}} animate={${animate}} formatValue={formatValue}
     interaction={{ kind: "category", mode: "focus", eligibleKeys: data.map(node => node.id), markActivation: "matching-legend" }}>
-    <TreemapChart.Groups headerProps={node => ({ style: { color: textColors[node.path[0] ?? node.id] } })} />
-    <TreemapChart.Tiles tileProps={() => ({ style: { borderRadius: ${options.radius ?? 4}${finish} } })} />
-    ${options.showLabels === false ? "" : `<TreemapChart.Labels minWidth={40} padding={7} labelProps={node => ({ style: { color: textColors[node.path[0] ?? node.id] } })}>{node => <><span className="block truncate">{node.label}</span>${options.showValues === false ? "" : '<span className="block mt-1 tabular-nums font-normal">{node.height >= 48 ? formatValue(node.value) : null}</span>'}</>}</TreemapChart.Labels>`}
+    <TreemapChart.Tiles tileProps={() => ({ style: { borderRadius: ${options.radius ?? 0}${finish} } })} />
+    ${options.showLabels === false ? "" : `<TreemapChart.Labels minWidth={18} minHeight={14} padding={5} labelProps={node => ({ style: { color: textColors[node.path[0] ?? node.id] } })}>${options.showValues === false ? "{node => node.label}" : ""}</TreemapChart.Labels>`}
     <TreemapChart.Tooltip${animate ? ' valueAnimation="shuffle"' : ""} />
     ${options.showLegend === false ? "" : "<TreemapChart.Legend />"}
     <TreemapChart.Breadcrumbs rootLabel="All ${recipe.id === "treemap-market" ? "services" : "holdings"}" />
