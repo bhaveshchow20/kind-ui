@@ -1046,3 +1046,46 @@ test("animated cursor inspection retargets continuously and clamps during resize
   });
   expect(overflow).toBe(true);
 });
+
+test("treemap loading uses changing contained decorative partitions and a static reduced-motion state", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  await update(page, "Loading");
+  const skeleton = page.locator('[data-kind-ui="chart-loading-skeleton"][data-family="treemap"]');
+  await expect(skeleton).toHaveAttribute("data-loading-motion", "wave");
+  const profile = skeleton.locator("[data-profile]");
+  const initial = await profile.getAttribute("data-profile");
+  await expect.poll(() => profile.getAttribute("data-profile")).not.toBe(initial);
+  expect(
+    await skeleton.locator("rect").evaluateAll((rects) =>
+      rects.every((rect) => {
+        const x = Number(rect.getAttribute("x")),
+          y = Number(rect.getAttribute("y"));
+        return (
+          x >= 0 &&
+          y >= 0 &&
+          x + Number(rect.getAttribute("width")) <= 640 &&
+          y + Number(rect.getAttribute("height")) <= 240
+        );
+      }),
+    ),
+  ).toBe(true);
+  await update(page, "Resize");
+  await expect(skeleton).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const staticProfile = await profile.getAttribute("data-profile");
+  await expect
+    .poll(() => skeleton.evaluate((el) => getComputedStyle(el).animationName))
+    .toBe("none");
+  await page.waitForTimeout(1900);
+  expect(await profile.getAttribute("data-profile")).toBe(staticProfile);
+  await update(page, "Loading");
+  await expect(skeleton).toHaveCount(0);
+  await expect(tile(page, "a")).toBeVisible();
+  await update(page, "Loading");
+  await expect(skeleton).toBeVisible();
+  await update(page, "Loading");
+  await expect(tile(page, "a")).toBeVisible();
+});

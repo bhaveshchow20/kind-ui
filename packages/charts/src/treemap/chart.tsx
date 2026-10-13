@@ -33,6 +33,7 @@ import { defaultHover, useReducedMotion } from "../motion-preference.js";
 import { colorStopToken } from "../series-color.js";
 import { cn } from "../utils.js";
 import { resolveTreemapColors, type TreemapColorEncoding } from "./encoding.js";
+import { TreemapLoadingDesign } from "./loading.js";
 import {
   layoutTreemap,
   type TreemapLayoutCache,
@@ -828,14 +829,7 @@ function TreemapPlot<T>({
               seed={loadingSeed}
               width="100%"
               height="100%"
-              design={() => (
-                <g>
-                  <rect x="8" y="8" width="360" height="220" rx="4" />
-                  <rect x="376" y="8" width="256" height="104" rx="4" />
-                  <rect x="376" y="120" width="124" height="108" rx="4" />
-                  <rect x="508" y="120" width="124" height="108" rx="4" />
-                </g>
-              )}
+              design={(seed) => <TreemapLoadingDesign seed={seed} />}
             />
           ) : geometry.total <= 0 ? (
             <div role="status" className="absolute inset-0 flex items-center justify-center">
