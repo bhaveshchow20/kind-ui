@@ -85,9 +85,16 @@ for (const reduced of [false, true]) {
   test(`latest geometry ${reduced ? "snaps with reduced motion" : "moves smoothly inside strict LazyMotion"}`, async ({
     page,
   }) => {
+    // Capture the same RAF clock as Motion before the package imports.
+    await page.clock.install();
     await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
     await page.goto(`${url}/?current-price&animate`);
     await expect(page.locator(currentPrice)).toBeVisible();
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+      for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame);
+    });
+    await page.clock.pauseAt(new Date());
     await page.evaluate(() => {
       const samples: { price: string | null; candle: string | null; historical: string | null }[] =
         [];
@@ -111,7 +118,8 @@ for (const reduced of [false, true]) {
           button.addEventListener("click", capture, { once: true });
       });
     });
-    await page.getByRole("button", { name: "Latest Down", exact: true }).click();
+    await page.getByRole("button", { name: "Latest Down", exact: true }).dispatchEvent("click");
+    await page.clock.runFor(512);
     await expect
       .poll(() =>
         page.evaluate(

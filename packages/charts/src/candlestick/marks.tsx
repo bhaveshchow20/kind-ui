@@ -272,6 +272,7 @@ const VolumeShapeContext = createContext<{
   rising?: string | undefined;
   falling?: string | undefined;
   unchanged?: string | undefined;
+  preserveWidth?: boolean;
 }>({});
 export function CandlestickVolume({
   seriesKey,
@@ -331,7 +332,14 @@ export function CandlestickVolume({
         tickFormatter={axisProps?.tickFormatter ?? defaultFormatter}
       />
       <VolumeShapeContext
-        value={{ shape: props.shape, fill: props.fill, rising, falling, unchanged }}
+        value={{
+          shape: props.shape,
+          fill: props.fill,
+          rising,
+          falling,
+          unchanged,
+          preserveWidth: props.barSize !== undefined || props.maxBarSize !== undefined,
+        }}
       >
         <CandlestickBar
           {...props}
@@ -380,15 +388,17 @@ function VolumeShape(native: BarShapeProps) {
         {...(typeof option === "object" && !isValidElement(option) ? option : {})}
       />
     );
+  // Native grouping can make dense default bars subpixel; match the candle's legible minimum.
+  const width = options.preserveWidth ? native.width : Math.max(1, native.width);
   return (
     <g clipPath={`url(#${context.volumeClipId})`}>
       <rect
         clipPath={`url(#${context.revealClipId})`}
         data-kind-ui="candlestick-volume-mark"
         data-direction={direction}
-        x={center - native.width / 2}
+        x={center - width / 2}
         y={native.y}
-        width={native.width}
+        width={width}
         height={native.height}
         fill={centered.fill}
         stroke={native.stroke}

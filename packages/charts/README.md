@@ -452,7 +452,7 @@ reference annotations do not automatically expand the price domain.
 
 `Volume` requires `seriesKey`, retains native Bar presentation props, and accepts
 `axisProps` for its independent nonnegative Y axis. It uses the same X scale and
-crosshair as price. Its default rise/fall/unchanged colors match the candle direction with muted opacity; optional `rising`, `falling`, `unchanged`, native `fill` and `fillOpacity` preserve explicit consumer control. Missing volume produces no observation; zero remains zero. Volume observations
+crosshair as price. Its default rise/fall/unchanged colors match the candle direction with muted opacity; optional `rising`, `falling`, `unchanged`, native `fill` and `fillOpacity` preserve explicit consumer control. Default bars without explicit `barSize` or `maxBarSize` use a one-pixel width minimum, matching candle visibility in dense windows; native custom shapes retain their supplied width. Missing volume produces no observation; zero remains zero. Volume observations
 come from the validated root records. Separate `data`, `minPointSize`, alternate
 X axes, stacks, and fabricated background bars are excluded from this part's
 contract, so volume cannot silently diverge from its candle or gain a false

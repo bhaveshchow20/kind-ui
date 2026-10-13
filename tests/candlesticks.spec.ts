@@ -859,3 +859,40 @@ for (const shape of ["function", "element", "object", "false"]) {
       .toBeGreaterThan(0.7);
   });
 }
+
+test("narrow dense windows keep default volume bars visible and centered without fabricating height", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.goto(url);
+  await page.getByRole("button", { name: "Dense history", exact: true }).click();
+  const frame = page.getByRole("group", { name: "Session trade OHLC", exact: true });
+  await frame.focus();
+  for (let step = 0; step < 16; step++) await page.keyboard.press("-");
+  const volumes = page.locator('[data-kind-ui="candlestick-volume-mark"]');
+  expect(await volumes.count()).toBeGreaterThan(150);
+  const geometry = await volumes.evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      x: Number(node.getAttribute("x")),
+      width: Number(node.getAttribute("width")),
+      height: Number(node.getAttribute("height")),
+    })),
+  );
+  const centers = await page
+    .locator('[data-candle-part="wick"]')
+    .evaluateAll((nodes) => nodes.map((node) => Number(node.getAttribute("x1"))));
+  expect(geometry).toHaveLength(centers.length);
+  for (const [index, volume] of geometry.entries()) {
+    expect(volume.width).toBeGreaterThanOrEqual(1);
+    expect(volume.x + volume.width / 2).toBeCloseTo(centers[index] ?? Number.NaN, 5);
+    expect(volume.height).toBeGreaterThanOrEqual(0);
+  }
+  expect(geometry[0]?.height).toBe(0);
+  await page.goto(`${url}/?subpixel-volume`);
+  for (const width of await volumes.evaluateAll((nodes) =>
+    nodes.map((node) => Number(node.getAttribute("width"))),
+  )) {
+    expect(width).toBeGreaterThan(0);
+    expect(width).toBeLessThanOrEqual(0.5);
+  }
+});

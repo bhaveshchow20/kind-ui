@@ -395,6 +395,7 @@ export function CandlestickHost() {
         <CandlestickChart.Volume
           seriesKey="volume"
           {...(params.has("volume-paint") ? { fill: "purple", fillOpacity: 0.7 } : {})}
+          {...(params.has("subpixel-volume") ? { maxBarSize: 0.5 } : {})}
           {...(params.has("centered-volume")
             ? {
                 shape:
