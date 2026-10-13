@@ -110,6 +110,14 @@ for (const example of family.examples) {
               ? descendantTotal(node.datum, spec.children, metric)
               : "Not aggregated"
             : (node.datum[metric] ?? "Unavailable");
+      if (example.id === "treemap") {
+        const previous = sourceData(source, "previousValues");
+        const sumPrevious = (entry) =>
+          entry.kind === "leaf"
+            ? previous[entry.id]
+            : entry.children.reduce((total, child) => total + sumPrevious(child), 0);
+        row.previousValue = sumPrevious(node);
+      }
       return row;
     });
     assert.deepEqual(family.dataLabels[example.id].rows, rows);
@@ -139,7 +147,10 @@ for (const example of family.examples) {
       );
     }
     assert.match(source, /Illustrative/);
-    assert.match(family.dataLabels[example.id].caption, /September(?: 9,)? 2026/);
+    assert.match(
+      family.dataLabels[example.id].caption,
+      example.id === "treemap" ? /August and September 2026/ : /October 9, 2026/,
+    );
   });
 }
 test("primary period selection and preview adapter agree with the literal default", () => {

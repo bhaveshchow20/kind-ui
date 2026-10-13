@@ -1,6 +1,10 @@
 export const family = {
   id: "treemap",
-  loadingVariant: { prop: "loading", default: false, label: "Loading" },
+  loadingVariant: {
+    prop: "loading",
+    default: false,
+    label: "Loading",
+  },
   examples: [
     {
       id: "treemap",
@@ -37,12 +41,13 @@ export const family = {
   dataLabels: {
     treemap: {
       caption:
-        "Illustrative cloud billing, September 2026: monthly spend in USD; supplied total $76,300",
+        "Illustrative cloud bills, August and September 2026: monthly spend in USD; supplied totals $69,600 and $76,300",
       columns: {
         id: "ID",
         path: "Hierarchy path",
         kind: "Node kind",
-        value: "Monthly spend (USD)",
+        value: "September spend (USD)",
+        previousValue: "August spend (USD)",
       },
       rows: [
         {
@@ -50,84 +55,98 @@ export const family = {
           path: "Compute",
           kind: "Group total",
           value: 34400,
+          previousValue: 30900,
         },
         {
           id: "api",
           path: "Compute / API",
           kind: "Leaf",
           value: 18400,
+          previousValue: 16200,
         },
         {
           id: "workers",
           path: "Compute / Workers",
           kind: "Leaf",
           value: 11800,
+          previousValue: 10900,
         },
         {
           id: "functions",
           path: "Compute / Functions",
           kind: "Leaf",
           value: 4200,
+          previousValue: 3800,
         },
         {
           id: "data",
           path: "Data",
           kind: "Group total",
           value: 26600,
+          previousValue: 24600,
         },
         {
           id: "postgresql",
           path: "Data / PostgreSQL",
           kind: "Leaf",
           value: 14600,
+          previousValue: 13800,
         },
         {
           id: "warehouse",
           path: "Data / Warehouse",
           kind: "Leaf",
           value: 8900,
+          previousValue: 7900,
         },
         {
           id: "cache",
           path: "Data / Cache",
           kind: "Leaf",
           value: 3100,
+          previousValue: 2900,
         },
         {
           id: "storage",
           path: "Storage",
           kind: "Group total",
           value: 7900,
+          previousValue: 7300,
         },
         {
           id: "object",
           path: "Storage / Object storage",
           kind: "Leaf",
           value: 5700,
+          previousValue: 5200,
         },
         {
           id: "backups",
           path: "Storage / Backups",
           kind: "Leaf",
           value: 2200,
+          previousValue: 2100,
         },
         {
           id: "network",
           path: "Network",
           kind: "Group total",
           value: 7400,
+          previousValue: 6800,
         },
         {
           id: "egress",
           path: "Network / Egress",
           kind: "Leaf",
           value: 4800,
+          previousValue: 4400,
         },
         {
           id: "cdn",
           path: "Network / CDN",
           kind: "Leaf",
           value: 2600,
+          previousValue: 2400,
         },
       ],
     },
@@ -412,8 +431,14 @@ export const family = {
       prop: "period",
       default: "current",
       options: [
-        { value: "current", label: "September 2026" },
-        { value: "previous", label: "August 2026" },
+        {
+          value: "current",
+          label: "September 2026",
+        },
+        {
+          value: "previous",
+          label: "August 2026",
+        },
       ],
     },
   },

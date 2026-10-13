@@ -119,6 +119,29 @@ export function treemapConfig(
     ]),
   );
 }
+/** Keep direct text readable when the gallery palette changes. */
+export function treemapTextColors(
+  data: readonly TreemapDatum[],
+  colors: readonly string[],
+): Record<string, string> {
+  return Object.fromEntries(
+    data.map((node, index) => {
+      const color = colors[index % colors.length];
+      if (!color || !/^#[0-9a-f]{6}$/i.test(color)) return [node.id, "#172033"];
+      const channels = [1, 3, 5].map((offset) => {
+        const value = Number.parseInt(color.slice(offset, offset + 2), 16) / 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      });
+      const luminance =
+        (channels[0] ?? 0) * 0.2126 + (channels[1] ?? 0) * 0.7152 + (channels[2] ?? 0) * 0.0722;
+      // Choose between black and white using WCAG relative luminance contrast.
+      return [
+        node.id,
+        (luminance + 0.05) / 0.05 >= 1.05 / (luminance + 0.05) ? "#000000" : "#ffffff",
+      ];
+    }),
+  );
+}
 export function treemapRows(
   data: readonly TreemapDatum[],
   parent = "",
@@ -149,14 +172,15 @@ import { TreemapChart, type TreemapDatum } from "@kind-ui/charts";
 // ${recipe.areaLabel}. Synthetic example; areas and shares use supplied positive values.
 const data: readonly TreemapDatum[] = ${JSON.stringify(treemapData(recipe.id), null, 2)};
 const config = ${JSON.stringify(treemapConfig(treemapData(recipe.id), colors), null, 2)};
+const textColors: Record<string, string> = ${JSON.stringify(treemapTextColors(treemapData(recipe.id), colors), null, 2)};
 const formatValue = (value: number) => "$" + (value / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "k";
 export function Example() {
   return <TreemapChart data={data} config={config} aria-label="${recipe.tag}" height={260} padding={${options.gap ?? 3}} groupHeaderHeight={24} animate={${animate}} formatValue={formatValue}
     interaction={{ kind: "category", mode: "focus", eligibleKeys: data.map(node => node.id), markActivation: "matching-legend" }}>
-    <TreemapChart.Groups />
+    <TreemapChart.Groups headerProps={node => ({ style: { color: textColors[node.path[0] ?? node.id] } })} />
     <TreemapChart.Tiles tileProps={() => ({ style: { borderRadius: ${options.radius ?? 4}${finish} } })} />
-    ${options.showLabels === false ? "" : `<TreemapChart.Labels minWidth={40} padding={7}>{node => <><span className="block truncate">{node.label}</span>${options.showValues === false ? "" : '<span className="block mt-1 tabular-nums font-normal">{node.height >= 48 ? formatValue(node.value) : null}</span>'}</>}</TreemapChart.Labels>`}
-    <TreemapChart.Tooltip valueAnimation="shuffle" />
+    ${options.showLabels === false ? "" : `<TreemapChart.Labels minWidth={40} padding={7} labelProps={node => ({ style: { color: textColors[node.path[0] ?? node.id] } })}>{node => <><span className="block truncate">{node.label}</span>${options.showValues === false ? "" : '<span className="block mt-1 tabular-nums font-normal">{node.height >= 48 ? formatValue(node.value) : null}</span>'}</>}</TreemapChart.Labels>`}
+    <TreemapChart.Tooltip${animate ? ' valueAnimation="shuffle"' : ""} />
     ${options.showLegend === false ? "" : "<TreemapChart.Legend />"}
     <TreemapChart.Breadcrumbs rootLabel="All ${recipe.id === "treemap-market" ? "services" : "holdings"}" />
   </TreemapChart>;
