@@ -144,7 +144,7 @@ Use an explicit generic on parts with custom-record callbacks, for example `<Fun
 | `geometry="trapezoid"` | Opt-in | Entry cross-section represents the current value; exit cross-section represents the next known value. Final stage is rectangular. |
 | Unknown next value | — | Current positive stage ends at its own width; no taper into an unknown stage is inferred. |
 | `Shape` | Quantitative polygon | Receives `stage`, `geometry`, `fill`, `selected` and `active` for positive known stages. Preserve the supplied quantitative geometry. |
-| `stageProps(stage)` | — | SVG group attributes, styles, refs and event handlers. Excludes owned `children`, `role`, `tabIndex`, `aria-label`, `aria-pressed`, `aria-disabled` and stage identity data attributes. Additional `aria-describedby` IDs merge with the readout ID; consumer handlers run first and `preventDefault()` vetoes the corresponding action. |
+| `stageProps(stage)` | — | SVG group attributes, styles, refs and event handlers. Excludes owned `children`, `dangerouslySetInnerHTML`, `role`, `tabIndex`, `aria-label`, `aria-pressed`, `aria-disabled` and stage identity data attributes. Additional `aria-describedby` IDs merge with the readout ID; consumer handlers run first and `preventDefault()` vetoes the corresponding action. |
 | Inspection and activation | — | Hover/focus inspects; click/touch, Enter or Space highlights. Arrows navigate supplied order; Home/End reach endpoints; Escape dismisses inspection and requests highlight reset. |
 | Motion | Off | Opacity reveals final geometry. Reduced motion settles immediately; data, orientation, size changes and interaction interrupt entrance. Duration must be finite and nonnegative. |
 
