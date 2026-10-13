@@ -283,7 +283,7 @@ try {
 
   const portfolio = page.locator('[data-component="treemap-portfolio"]');
   await tile(portfolio, "ridge").focus();
-  await expect(portfolio.getByRole("tooltip")).toContainText("Gross area: $100k");
+  await expect(portfolio.getByRole("tooltip")).toContainText("Ridge: $100k gross");
   await expect(portfolio.getByRole("tooltip")).toContainText("Signed position: $-100.0k");
   await tile(portfolio, "field").focus();
   await expect(portfolio.getByRole("tooltip")).toContainText("P&L: Unavailable");
