@@ -1059,7 +1059,7 @@ test("treemap loading uses changing contained decorative partitions and a static
   const initial = await profile.getAttribute("data-profile");
   await expect.poll(() => profile.getAttribute("data-profile")).not.toBe(initial);
   expect(
-    await skeleton.locator("rect").evaluateAll((rects) =>
+    await profile.locator("rect").evaluateAll((rects) =>
       rects.every((rect) => {
         const x = Number(rect.getAttribute("x")),
           y = Number(rect.getAttribute("y"));
