@@ -324,8 +324,8 @@ const config = {
 | Numeric limits | Unrepresentable positive normalized widths or ratios throw with a rescaling message. Negative/nonfinite values, duplicate IDs and invalid settings throw. |
 | Inspection | Pointer, focus and touch inspect stages. `activeId` plus `onActiveIdChange` controls inspection; `defaultActiveId` initializes local ownership. Stale IDs display no tooltip without writing controlled state. Changing a controlled ID opens that stage after dismissal. |
 | Selection | `interaction` accepts shared category focus options and `selected`/`defaultSelected` state. Click, Enter and Space activate; arrows/Home/End navigate; Escape dismisses/reset according to consumer veto. `interaction.markActivation` set to `"none"` keeps inspection without mark toggle semantics. Selection never removes stages or changes ratios. |
-| Customization | Typed `Stages.Shape`, `stageProps`, `Labels.render`, `Tooltip.Content` and table columns retain original records. Consumer handlers, refs and styles remain available. |
-| Loading and motion | `loading` makes content inert and hides stale readouts; `loadingLabel` names pending data. Optional Motion entrance preserves final geometry; reduced motion settles immediately and interaction/input changes interrupt entrance. |
+| Customization | Typed `Stages.Shape`, `stageProps`, `Labels.render`, `Tooltip.Content` and table columns retain original records. Consumer handlers, refs and styles remain available. `stageProps` excludes owned children, role, navigation, semantic ARIA and stage identity attributes; consumer description IDs compose with the tooltip ID. |
+| Loading and motion | `loading` makes content inert and hides stale readouts; `loadingLabel` names pending data. A focused stage recovers after loading if its identity survives and focus has not moved elsewhere. Optional Motion entrance preserves final geometry; reduced motion settles immediately and interaction/input changes interrupt entrance. |
 
 Compose only the parts needed: `Stages`, `Labels`, `Tooltip`, `DataTable`,
 `Legend` and `Content`. Generic parts require their record type explicitly when

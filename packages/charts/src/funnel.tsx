@@ -28,6 +28,7 @@ import {
   useChartInteraction,
   useInteractionFocus,
 } from "./chart-interaction.js";
+import { emphasisPaintClassName, useEmphasis } from "./emphasis.js";
 import {
   type ChartName,
   type FamilyOptions,
@@ -114,6 +115,8 @@ export type FunnelChartProps<T = FunnelDatum> = NativeOptions &
 type Context<T> = {
   model: FunnelModel<T>;
   ratioRequested: boolean;
+  loadingState: React.RefObject<boolean>;
+  loadingFocus: React.RefObject<{ id: string; root: Element } | null>;
   orientation: "vertical" | "horizontal";
   loading: boolean;
   activeId: string | null;
@@ -282,10 +285,31 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
   const loadingSeed = useLoadingSeed(loading);
   const [tooltipMounted, setTooltipMounted] = useState(false);
   const restoredFocus = useRef<string | null>(null);
+  const loadingState = useRef(loading);
+  loadingState.current = loading;
+  const loadingFocus = useRef<{ id: string; root: Element } | null>(null);
+  useEffect(() => {
+    if (!loading && loadingFocus.current && !keys.includes(loadingFocus.current.id))
+      loadingFocus.current = null;
+  }, [loading, keys]);
+  useEffect(() => {
+    const cancel = (event: Event) => {
+      if (loadingFocus.current && (event.type === "pointerdown" || event.target !== document.body))
+        loadingFocus.current = null;
+    };
+    document.addEventListener("focusin", cancel, true);
+    document.addEventListener("pointerdown", cancel, true);
+    return () => {
+      document.removeEventListener("focusin", cancel, true);
+      document.removeEventListener("pointerdown", cancel, true);
+    };
+  }, []);
   const chartProps = native as ComponentPropsWithRef<typeof NativeFunnelChart>;
   const context: Context<T> = {
     model,
     ratioRequested: denominator !== undefined,
+    loadingState,
+    loadingFocus,
     orientation,
     loading,
     activeId,
@@ -393,10 +417,25 @@ export interface FunnelShapeProps<T = FunnelDatum> {
   selected: boolean;
   active: boolean;
 }
+type OwnedStageAttribute =
+  | "children"
+  | "role"
+  | "tabIndex"
+  | "aria-label"
+  | "aria-pressed"
+  | "aria-disabled"
+  | "data-kind-ui"
+  | "data-stage-id"
+  | "data-stage-index"
+  | "data-value-state"
+  | "data-interaction-focus-key";
+type StageAttributes = Omit<ComponentPropsWithRef<"g">, OwnedStageAttribute> & {
+  [Key in OwnedStageAttribute]?: never;
+} & { [key: `data-${string}`]: unknown };
 export type FunnelStagesProps<T = FunnelDatum> = {
   geometry?: "rectangle" | "trapezoid";
   Shape?: ComponentType<FunnelShapeProps<T>>;
-  stageProps?: (stage: FunnelStage<T>) => ComponentPropsWithRef<"g">;
+  stageProps?: (stage: FunnelStage<T>) => StageAttributes;
 };
 const FunnelStageOptions = createContext<FunnelStagesProps<unknown> | null>(null);
 type NativeStageData = { id: string; index: number; value: number };
@@ -458,6 +497,11 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
   const index = (native.payload as { index?: number } | undefined)?.index;
   const stage = index === undefined ? undefined : context.model.stages[index];
   const focusRef = useInteractionFocus(stage?.id, !context.loading);
+  const emphasis = useEmphasis(
+    { kind: "category", key: stage?.id ?? "", scope: context.tooltipId, seriesKey: stage?.id },
+    !context.loading && stage !== undefined && interaction.selected === null,
+    false,
+  );
   if (!stage) return null;
   const props = stageProps?.(stage) ?? {};
   const parent = native.parentViewBox;
@@ -555,10 +599,37 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
         focusRef(node);
         const cleanup = typeof props.ref === "function" ? props.ref(node) : undefined;
         if (props.ref && typeof props.ref !== "function") props.ref.current = node;
+        if (
+          node &&
+          !context.loadingState.current &&
+          context.loadingFocus.current?.id === stage.id
+        ) {
+          const pending = context.loadingFocus.current;
+          queueMicrotask(() => {
+            if (context.loadingState.current || context.loadingFocus.current !== pending) return;
+            context.loadingFocus.current = null;
+            if (
+              !node.isConnected ||
+              !pending.root.isConnected ||
+              document.activeElement !== document.body
+            )
+              return;
+            context.restoredFocus.current = stage.id;
+            node.focus({ preventScroll: true });
+            queueMicrotask(() => {
+              if (context.restoredFocus.current === stage.id) context.restoredFocus.current = null;
+            });
+          });
+        }
         if (node)
           return () => {
             const restoring = node === document.activeElement;
-            if (restoring) context.restoredFocus.current = stage.id;
+            if (restoring) {
+              context.restoredFocus.current = stage.id;
+              const root = node.closest('[data-kind-ui="chart"]');
+              if (context.loadingState.current && root)
+                context.loadingFocus.current = { id: stage.id, root };
+            }
             focusRef(null);
             if (restoring)
               queueMicrotask(() => {
@@ -575,7 +646,14 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
       aria-label={label}
       aria-pressed={interaction.markActivation ? selected : undefined}
       aria-disabled={context.loading || undefined}
-      aria-describedby={active && context.tooltipMounted ? context.tooltipId : undefined}
+      aria-describedby={
+        [
+          props["aria-describedby"],
+          active && context.tooltipMounted ? context.tooltipId : undefined,
+        ]
+          .filter(Boolean)
+          .join(" ") || undefined
+      }
       data-kind-ui="funnel-stage"
       data-stage-id={stage.id}
       data-stage-index={stage.index}
@@ -584,12 +662,33 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
       className={cn("outline-none [&:focus-visible>rect]:stroke-current", props.className)}
       onPointerEnter={(event) => {
         props.onPointerEnter?.(event);
-        if (!event.defaultPrevented) context.inspect(stage.id);
+        if (!event.defaultPrevented) {
+          context.inspect(stage.id);
+          if (event.pointerType !== "touch") emphasis.enter("pointer");
+        }
+      }}
+      onPointerMove={(event) => {
+        props.onPointerMove?.(event);
+        if (!event.defaultPrevented && event.pointerType !== "touch") emphasis.enter("pointer");
+      }}
+      onPointerLeave={(event) => {
+        props.onPointerLeave?.(event);
+        if (!event.defaultPrevented) emphasis.leave("pointer");
+      }}
+      onPointerCancel={(event) => {
+        props.onPointerCancel?.(event);
+        if (!event.defaultPrevented) emphasis.leave("pointer");
       }}
       onFocus={(event) => {
         props.onFocus?.(event);
-        if (!event.defaultPrevented && context.restoredFocus.current !== stage.id)
+        if (!event.defaultPrevented && context.restoredFocus.current !== stage.id) {
           context.inspect(stage.id);
+          if (event.currentTarget.matches(":focus-visible")) emphasis.enter("keyboard");
+        }
+      }}
+      onBlur={(event) => {
+        props.onBlur?.(event);
+        if (!event.defaultPrevented) emphasis.leave("keyboard");
       }}
       onClick={(event) => {
         props.onClick?.(event);
@@ -651,28 +750,35 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
       {!context.loading && stage.value !== null && stage.value > 0 ? (
         <FunnelPaint opacity={context.opacity}>
           <g
-            data-inactive={(interaction.selected !== null && !selected) || undefined}
-            className="data-[inactive=true]:opacity-40"
+            data-kind-ui="emphasis-paint"
+            data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}
+            className={emphasisPaintClassName}
+            style={{ opacity: emphasis.factor }}
           >
-            {Shape ? (
-              <Shape
-                stage={stage}
-                geometry={geometry}
-                fill={paints[stage.id] ?? "currentColor"}
-                selected={selected}
-                active={active}
-              />
-            ) : (
-              <polygon
-                data-kind-ui="funnel-mark"
-                data-upper-width={upperWidth}
-                data-lower-width={lowerWidth}
-                points={points.map((point) => point.join(",")).join(" ")}
-                fill={paints[stage.id] ?? "currentColor"}
-                stroke="var(--background,white)"
-                strokeWidth="1"
-              />
-            )}
+            <g
+              data-inactive={(interaction.selected !== null && !selected) || undefined}
+              className="data-[inactive=true]:opacity-40"
+            >
+              {Shape ? (
+                <Shape
+                  stage={stage}
+                  geometry={geometry}
+                  fill={paints[stage.id] ?? "currentColor"}
+                  selected={selected}
+                  active={active}
+                />
+              ) : (
+                <polygon
+                  data-kind-ui="funnel-mark"
+                  data-upper-width={upperWidth}
+                  data-lower-width={lowerWidth}
+                  points={points.map((point) => point.join(",")).join(" ")}
+                  fill={paints[stage.id] ?? "currentColor"}
+                  stroke="var(--background,white)"
+                  strokeWidth="1"
+                />
+              )}
+            </g>
           </g>
         </FunnelPaint>
       ) : null}

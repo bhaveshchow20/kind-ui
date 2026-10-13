@@ -42,6 +42,14 @@ export function Host() {
   const [horizontal, setHorizontal] = useState(params.has("horizontal"));
   const [taper, setTaper] = useState(params.has("taper"));
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const refresh = (event: Event) => {
+      const detail: unknown = event instanceof CustomEvent ? event.detail : undefined;
+      if (typeof detail === "boolean") setLoading(detail);
+    };
+    window.addEventListener("funnel-background-loading", refresh);
+    return () => window.removeEventListener("funnel-background-loading", refresh);
+  }, []);
   const [narrow, setNarrow] = useState(false);
   const [dark, setDark] = useState(false);
   const [replace, setReplace] = useState(false);
@@ -191,6 +199,7 @@ export function Host() {
             geometry={taper ? "trapezoid" : "rectangle"}
             stageProps={(stage) => ({
               "data-owned-stage": stage.id,
+              "aria-describedby": "p-2 p-4",
               ref: (node) => {
                 if (node) node.dataset.consumerRef = "attached";
                 return () => {
@@ -276,6 +285,7 @@ export function Host() {
             address: { color: "green", label: "Display address" },
           }}
           aria-label="Stage labels"
+          emphasis={params.has("emphasis-none") ? "none" : "auto"}
           height={140}
         >
           <FunnelChart.Stages />

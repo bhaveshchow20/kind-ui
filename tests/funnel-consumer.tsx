@@ -115,3 +115,40 @@ void (
 void (<FunnelChart.Tooltip id="consumer-tooltip" />);
 // @ts-expect-error The Tooltip owns its semantic role.
 void (<FunnelChart.Tooltip role="status" />);
+
+const ownedRole = { className: "consumer", role: "status" };
+const ownedChildren = { className: "consumer", children: "Ignored markup" };
+const ownedTabIndex = { className: "consumer", tabIndex: -1 };
+const ownedName = { className: "consumer", "aria-label": "Ignored name" };
+const ownedPressed = { className: "consumer", "aria-pressed": true };
+const ownedDisabled = { className: "consumer", "aria-disabled": true };
+const ownedDescription = { className: "consumer", "aria-describedby": "Ignored description" };
+// @ts-expect-error Stage role is owned, including structurally inferred callback objects.
+void (<FunnelChart.Stages stageProps={() => ownedRole} />);
+// @ts-expect-error Shape owns stage children; custom markup belongs in Shape.
+void (<FunnelChart.Stages stageProps={() => ownedChildren} />);
+// @ts-expect-error Keyboard stage tabindex is chart-owned.
+void (<FunnelChart.Stages stageProps={() => ownedTabIndex} />);
+// @ts-expect-error Accessible name is derived from the typed stage.
+void (<FunnelChart.Stages stageProps={() => ownedName} />);
+// @ts-expect-error Pressed semantics follow the chart selection contract.
+void (<FunnelChart.Stages stageProps={() => ownedPressed} />);
+// @ts-expect-error Disabled semantics follow loading state.
+void (<FunnelChart.Stages stageProps={() => ownedDisabled} />);
+void (<FunnelChart.Stages stageProps={() => ownedDescription} />);
+
+const ownedKind = { className: "consumer", "data-kind-ui": "replaced" };
+const ownedStageId = { className: "consumer", "data-stage-id": "replaced" };
+const ownedStageIndex = { className: "consumer", "data-stage-index": 42 };
+const ownedValueState = { className: "consumer", "data-value-state": "replaced" };
+const ownedFocusKey = { className: "consumer", "data-interaction-focus-key": "replaced" };
+// @ts-expect-error Structural return objects cannot replace chart-owned DOM identifiers.
+void (<FunnelChart.Stages stageProps={() => ownedKind} />);
+// @ts-expect-error Stage DOM identity remains the modeled identity.
+void (<FunnelChart.Stages stageProps={() => ownedStageId} />);
+// @ts-expect-error Stage index remains supplied ordered position.
+void (<FunnelChart.Stages stageProps={() => ownedStageIndex} />);
+// @ts-expect-error Value state reflects zero/unknown/known data.
+void (<FunnelChart.Stages stageProps={() => ownedValueState} />);
+// @ts-expect-error Interaction focus keys remain chart-owned.
+void (<FunnelChart.Stages stageProps={() => ownedFocusKey} />);

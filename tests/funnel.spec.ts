@@ -468,3 +468,143 @@ test("native accessible description IDs preserve every consumer token alongside 
   expect(descriptions[1]).toContain("independent workflow stage snapshots");
   expect(descriptions[2]).toContain("Use arrow keys");
 });
+
+async function effectiveOpacity(mark: Locator) {
+  return mark.evaluate((node) => {
+    let value = 1;
+    let element: Element | null = node;
+    while (element && element.tagName.toLowerCase() !== "svg") {
+      value *= Number(getComputedStyle(element).opacity);
+      element = element.parentElement;
+    }
+    return value;
+  });
+}
+
+test("a background loading refresh restores the focused stage identity without writing inspection again", async ({
+  page,
+}) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  await stage(chart, "review").focus();
+  await expect(stage(chart, "review")).toBeFocused();
+  const writes = await page.getByLabel("Inspection writes").textContent();
+  await page.evaluate(() =>
+    window.dispatchEvent(new CustomEvent("funnel-background-loading", { detail: true })),
+  );
+  await expect(chart.locator('[data-kind-ui="funnel-stage"]')).toHaveCount(0);
+  await page.evaluate(() =>
+    window.dispatchEvent(new CustomEvent("funnel-background-loading", { detail: false })),
+  );
+  await expect(stage(chart, "review")).toBeFocused();
+  await expect(chart.getByRole("tooltip")).toContainText("Review");
+  await expect(page.getByLabel("Inspection writes")).toHaveText(writes ?? "");
+});
+
+test("loading completion keeps focus on a newly chosen external control", async ({ page }) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  await stage(chart, "entry").focus();
+  await page.evaluate(() =>
+    window.dispatchEvent(new CustomEvent("funnel-background-loading", { detail: true })),
+  );
+  await expect(chart.locator('[data-kind-ui="funnel-stage"]')).toHaveCount(0);
+  const external = page.getByRole("button", { name: "External inspection", exact: true });
+  await external.focus();
+  await page.evaluate(() =>
+    window.dispatchEvent(new CustomEvent("funnel-background-loading", { detail: false })),
+  );
+  await expect(chart.locator('[data-kind-ui="funnel-stage"]')).toHaveCount(5);
+  await expect(external).toBeFocused();
+});
+
+test("legend pointer and keyboard emphasis dim other stage paint without changing proportions", async ({
+  page,
+}) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Legend labels" });
+  const payment = stage(chart, "payment").locator('[data-kind-ui="funnel-mark"]');
+  const address = stage(chart, "address").locator('[data-kind-ui="funnel-mark"]');
+  const geometry = await payment.getAttribute("points");
+  const paymentLegend = chart
+    .locator('[data-kind-ui="chart-legend"]')
+    .getByRole("button", { name: "Reached payment", exact: true });
+  const addressLegend = chart
+    .locator('[data-kind-ui="chart-legend"]')
+    .getByRole("button", { name: "Display address", exact: true });
+  await paymentLegend.hover();
+  await expect.poll(() => effectiveOpacity(address)).toBeCloseTo(0.28, 4);
+  await expect.poll(() => effectiveOpacity(payment)).toBeCloseTo(1, 4);
+  await page.mouse.move(0, 0);
+  await expect.poll(() => effectiveOpacity(address)).toBeCloseTo(1, 4);
+  await addressLegend.focus();
+  await expect.poll(() => effectiveOpacity(payment)).toBeCloseTo(0.28, 4);
+  await expect.poll(() => effectiveOpacity(address)).toBeCloseTo(1, 4);
+  await expect(payment).toHaveAttribute("points", geometry ?? "");
+});
+
+test("disabled transient emphasis keeps legend hover and keyboard paint at baseline", async ({
+  page,
+}) => {
+  await page.goto(`${packed}?emphasis-none`);
+  const chart = page.getByRole("region", { name: "Legend labels" });
+  const payment = stage(chart, "payment").locator('[data-kind-ui="funnel-mark"]');
+  const address = stage(chart, "address").locator('[data-kind-ui="funnel-mark"]');
+  const legend = chart
+    .locator('[data-kind-ui="chart-legend"]')
+    .getByRole("button", { name: "Reached payment", exact: true });
+  await legend.hover();
+  expect(await effectiveOpacity(address)).toBeCloseTo(1, 4);
+  await page.mouse.move(0, 0);
+  await legend.focus();
+  expect(await effectiveOpacity(address)).toBeCloseTo(1, 4);
+  expect(await effectiveOpacity(payment)).toBeCloseTo(1, 4);
+});
+
+test("persistent selection retains priority and transient legend emphasis resumes when cleared", async ({
+  page,
+}) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Legend labels" });
+  const payment = stage(chart, "payment").locator('[data-kind-ui="funnel-mark"]');
+  const address = stage(chart, "address").locator('[data-kind-ui="funnel-mark"]');
+  const legend = chart.locator('[data-kind-ui="chart-legend"]');
+  await legend.getByRole("button", { name: "Reached payment", exact: true }).click();
+  await page.getByRole("button", { name: "External inspection", exact: true }).focus();
+  await page.mouse.move(0, 0);
+  await expect(stage(chart, "payment")).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => effectiveOpacity(address)).toBeCloseTo(0.4, 4);
+  await legend.getByRole("button", { name: "Display address", exact: true }).hover();
+  await expect.poll(() => effectiveOpacity(payment)).toBeCloseTo(1, 4);
+  await expect.poll(() => effectiveOpacity(address)).toBeCloseTo(0.4, 4);
+  await page.mouse.move(0, 0);
+  await expect.poll(() => effectiveOpacity(payment)).toBeCloseTo(1, 4);
+  await expect.poll(() => effectiveOpacity(address)).toBeCloseTo(0.4, 4);
+  await legend.getByRole("button", { name: "Reached payment", exact: true }).click();
+  await expect(stage(chart, "payment")).toHaveAttribute("aria-pressed", "false");
+  await legend.getByRole("button", { name: "Display address", exact: true }).hover();
+  await expect.poll(() => effectiveOpacity(payment)).toBeCloseTo(0.28, 4);
+  await expect.poll(() => effectiveOpacity(address)).toBeCloseTo(1, 4);
+});
+
+test("stage descriptions retain consumer IDs and join the active tooltip description", async ({
+  page,
+}) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const first = stage(chart, "entry");
+  expect(((await first.getAttribute("aria-describedby")) ?? "").trim().split(/\s+/)).toEqual([
+    "p-2",
+    "p-4",
+  ]);
+  await first.focus();
+  const tooltip = chart.getByRole("tooltip");
+  await expect(tooltip).toContainText("Entry");
+  const tooltipId = await tooltip.getAttribute("id");
+  expect(tooltipId).toBeTruthy();
+  expect(((await first.getAttribute("aria-describedby")) ?? "").trim().split(/\s+/)).toEqual([
+    "p-2",
+    "p-4",
+    tooltipId,
+  ]);
+});
