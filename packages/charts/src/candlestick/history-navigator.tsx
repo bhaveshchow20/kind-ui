@@ -235,7 +235,12 @@ export function CandlestickHistoryNavigator({
               if (event.button === 0) beginGesture(event.target);
             }}
             onTouchStartCapture={(event) => beginGesture(event.target)}
-            onTouchCancelCapture={finishGesture}
+            onTouchCancelCapture={() => {
+              finishGesture();
+              // Native Brush listens for touchend, but not touchcancel. Recreate
+              // its moving state even when the accepted timeline is unchanged.
+              scheduleRefresh();
+            }}
           >
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <LineChart
