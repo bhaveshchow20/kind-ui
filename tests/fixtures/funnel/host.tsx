@@ -1,5 +1,13 @@
 import { type FunnelAccessors, FunnelChart } from "@kind-ui/charts";
-import { Component, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  Component,
+  type ReactNode,
+  type RefCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 interface Row {
   key: string;
@@ -67,6 +75,26 @@ export function Host() {
     const timer = setInterval(() => setTicks((count) => count + 1), 80);
     return () => clearInterval(timer);
   }, [tickAnimation]);
+  const stableLifecycle = useRef({ mounts: 0, cleanups: 0 });
+  const stableRefs = useMemo(
+    () =>
+      new Map<string, RefCallback<SVGGElement>>(
+        rows.map((row) => [
+          row.key,
+          (node: SVGGElement | null) => {
+            if (!node) return;
+            stableLifecycle.current.mounts += 1;
+            node.dataset.consumerRef = "attached";
+            return () => {
+              stableLifecycle.current.cleanups += 1;
+            };
+          },
+        ]),
+      ),
+    [],
+  );
+  const [stableRead, setStableRead] = useState({ mounts: 0, cleanups: 0 });
+  const [reverseLegendConfig, setReverseLegendConfig] = useState(false);
   const cleanupCount = useRef(0);
   const [cleanupRead, setCleanupRead] = useState(0);
   const [metadata, setMetadata] = useState(false);
@@ -129,6 +157,14 @@ export function Host() {
           Veto clicks
         </button>
       </div>
+      <button type="button" onClick={() => setStableRead({ ...stableLifecycle.current })}>
+        Read stable ref counts
+      </button>
+      <button type="button" onClick={() => setReverseLegendConfig(!reverseLegendConfig)}>
+        Reorder legend config
+      </button>
+      <output aria-label="Stable ref mounts">{stableRead.mounts}</output>
+      <output aria-label="Stable ref cleanups">{stableRead.cleanups}</output>
       <button type="button" onClick={() => setActive("growth")}>
         External inspection
       </button>
@@ -193,19 +229,27 @@ export function Host() {
             if (id !== null || !params.has("ignore-null")) setActive(id);
             setActiveWrites((count) => count + 1);
           }}
-          frameProps={{ id: "funnel-frame" }}
+          frameProps={{
+            id: "funnel-frame",
+            onKeyDown: (event) => {
+              if (params.has("frame-prevent-escape") && event.key === "Escape")
+                event.preventDefault();
+            },
+          }}
         >
           <FunnelChart.Stages<Row>
             geometry={taper ? "trapezoid" : "rectangle"}
             stageProps={(stage) => ({
               "data-owned-stage": stage.id,
               "aria-describedby": "p-2 p-4",
-              ref: (node) => {
-                if (node) node.dataset.consumerRef = "attached";
-                return () => {
-                  cleanupCount.current += 1;
-                };
-              },
+              ref: params.has("stable-ref")
+                ? stableRefs.get(stage.id)
+                : (node) => {
+                    if (node) node.dataset.consumerRef = "attached";
+                    return () => {
+                      cleanupCount.current += 1;
+                    };
+                  },
               onClick: (event) => {
                 setClicks((count) => count + 1);
                 setClickedDays(stage.datum.days);
@@ -221,6 +265,17 @@ export function Host() {
             )}
           />
           <FunnelChart.Tooltip<Row> />
+          {params.has("stable-ref") && <FunnelChart.Legend />}
+          <FunnelChart.Content>
+            <button
+              type="button"
+              onKeyDown={(event) => {
+                if (params.has("prevent-escape") && event.key === "Escape") event.preventDefault();
+              }}
+            >
+              In-chart control
+            </button>
+          </FunnelChart.Content>
           <FunnelChart.DataTable<Row> caption="Snapshot inventory, first stage denominator" />
         </FunnelChart>
       </section>
@@ -316,6 +371,35 @@ export function Host() {
         >
           <FunnelChart.Stages />
           <FunnelChart.DataTable caption="Baseline unknown" />
+        </FunnelChart>
+      </section>
+      <section aria-label="Ordered legend">
+        <FunnelChart
+          data={[
+            { id: "10", label: "First stage", value: 100 },
+            { id: "2", label: "Second stage", value: 60 },
+            { id: "1", label: "Final stage", value: 40 },
+          ]}
+          config={
+            reverseLegendConfig
+              ? {
+                  "10": { color: "red" },
+                  stale: { color: "black", label: "Stale entry" },
+                  "2": { color: "green" },
+                  "1": { color: "blue" },
+                }
+              : {
+                  "1": { color: "blue" },
+                  "2": { color: "green" },
+                  "10": { color: "red" },
+                  stale: { color: "black", label: "Stale entry" },
+                }
+          }
+          aria-label="Integer ID stages"
+          height={180}
+        >
+          <FunnelChart.Stages />
+          <FunnelChart.Legend />
         </FunnelChart>
       </section>
       <section aria-label="Explicit parts">
