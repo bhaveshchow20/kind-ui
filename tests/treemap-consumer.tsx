@@ -3,6 +3,7 @@ import {
   TreemapChart,
   type TreemapChartProps,
   type TreemapColorEncoding,
+  type TreemapDataTableProps,
   type TreemapDatum,
   type TreemapItem,
   useTreemap,
@@ -249,6 +250,31 @@ const wrongVisibilityCallback: TreemapChartProps<MetadataRecord> = {
   onVisibleSeriesChange: () => {},
 };
 void [wrongVisibility, wrongDefaultVisibility, wrongVisibilityCallback];
+
+const tablePresentation: TreemapDataTableProps<MetadataRecord> = {
+  caption: "Resource metadata",
+  rowProps: (node) => ({
+    className: node.datum.metadata.unit,
+    ref: createRef<HTMLTableRowElement>(),
+    onClick: (event) => {
+      const row: HTMLTableRowElement = event.currentTarget;
+      void row;
+    },
+  }),
+  children: (item) => {
+    inspect(item);
+    const unit: string = item.datum.metadata.unit;
+    return <td>{unit}</td>;
+  },
+};
+void (<TreemapChart.DataTable<MetadataRecord> {...tablePresentation} />);
+
+const conflictingRowCells: TreemapDataTableProps<MetadataRecord> = {
+  caption: "Conflicting row presentation",
+  // @ts-expect-error Row prop bags cannot supply cells; use the table's typed children renderer.
+  rowProps: () => ({ className: "consumer-row", children: "Discarded cells" }),
+};
+void conflictingRowCells;
 
 // Accessor-owned records can use children for unrelated metadata.
 interface CustomChildrenRecord {

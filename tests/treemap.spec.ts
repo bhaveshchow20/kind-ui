@@ -749,3 +749,191 @@ test("treemap loading interruption preserves explicit consumer opacity", async (
   await update(page, "Class opacity");
   await expect(chart).toHaveCSS("opacity", "0.7");
 });
+
+for (const part of ["table", "breadcrumb", "content"] as const) {
+  test(`treemap loading restores exact portaled ${part} focus`, async ({ page }) => {
+    await page.goto(part === "content" ? "/?content-control" : "/");
+    const control =
+      part === "table"
+        ? page.locator('tbody tr[data-node-id="b"]').getByRole("button")
+        : part === "breadcrumb"
+          ? page.getByRole("navigation").getByRole("button", { name: "All", exact: true })
+          : page.getByRole("button", { name: "Portal action", exact: true });
+    await control.focus();
+    await expect(control).toBeFocused();
+    const retained = await control.elementHandle();
+    if (!retained) throw new Error("Missing portaled focus owner");
+    await update(page, "Loading");
+    await expect(control).not.toBeVisible();
+    await expect(control).not.toBeFocused();
+    await update(page, "Loading");
+    await expect(control).toBeFocused();
+    expect(await control.evaluate((element, previous) => element === previous, retained)).toBe(
+      true,
+    );
+    await retained.dispose();
+  });
+  test(`treemap portaled ${part} loading restoration respects deliberate outside focus`, async ({
+    page,
+  }) => {
+    await page.goto(part === "content" ? "/?content-control" : "/");
+    const control =
+      part === "table"
+        ? page.locator('tbody tr[data-node-id="b"]').getByRole("button")
+        : part === "breadcrumb"
+          ? page.getByRole("navigation").getByRole("button", { name: "All", exact: true })
+          : page.getByRole("button", { name: "Portal action", exact: true });
+    await control.focus();
+    await update(page, "Loading");
+    await expect(control).not.toBeFocused();
+    const outside = page.getByRole("textbox", { name: "Outside focus" });
+    await outside.focus();
+    await update(page, "Loading");
+    await expect(outside).toBeFocused();
+    await expect(control).toBeVisible();
+  });
+}
+
+for (const mode of ["omit-tooltip", "no-active"]) {
+  test(`treemap Escape bubbles unprevented with ${mode}`, async ({ page }) => {
+    await page.goto(`/?content-control${mode === "omit-tooltip" ? "&omit-tooltip" : ""}`);
+    await page.getByRole("button", { name: "Portal action", exact: true }).focus();
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(output(page, "Escape propagation")).toHaveText("[false]");
+  });
+}
+
+test("treemap active dismissal consumes one Escape and allows already-dismissed Escape to bubble", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await tile(page, "a").focus();
+  await expect(page.getByRole("tooltip")).toContainText("Alpha");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  await expect(output(page, "Escape propagation")).toHaveText("[true]");
+  await expect(output(page, "Active ID")).toHaveText("a");
+  await page.keyboard.press("Escape");
+  await expect(output(page, "Escape propagation")).toHaveText("[true,false]");
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+});
+
+for (const native of ["hidden", "inert"]) {
+  for (const target of ["tile", "header", "ancestor"]) {
+    test(`treemap excludes ${native} ${target} from native entry, arrows and loading restoration`, async ({
+      page,
+    }) => {
+      await page.goto(
+        `/?native=${native}&target=${target}${target === "tile" ? "" : "&parts=groups"}`,
+      );
+      const stops = page.locator(
+        '[data-kind-ui="treemap-tile"][tabindex="0"], [data-kind-ui="treemap-group-header"][tabindex="0"]',
+      );
+      await expect(stops).toHaveCount(1);
+      await expect(stops).toBeVisible();
+      expect(
+        await stops.evaluate(
+          (element) => !element.closest("[hidden],[inert]") && !element.matches(":disabled"),
+        ),
+      ).toBe(true);
+      await page.getByRole("button", { name: "Before chart entry", exact: true }).focus();
+      await page.keyboard.press("Tab");
+      await expect(page.locator(":focus")).toHaveAttribute(
+        "data-kind-ui",
+        /treemap-tile|treemap-group-header/,
+      );
+      const forbidden = target === "tile" ? "d" : "energy";
+      for (const key of ["Home", "End", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]) {
+        await page.keyboard.press(key);
+        await expect(page.locator(":focus")).not.toHaveAttribute("data-node-id", forbidden);
+        expect(
+          await page
+            .locator(":focus")
+            .evaluate(
+              (element) => !element.closest("[hidden],[inert]") && !element.matches(":disabled"),
+            ),
+        ).toBe(true);
+      }
+      const remembered = await page.locator(":focus").elementHandle();
+      if (!remembered) throw new Error("Missing visible keyboard owner");
+      await update(page, "Loading");
+      await update(page, "Loading");
+      expect(await remembered.evaluate((element) => element === document.activeElement)).toBe(true);
+      await expect(page.locator(":focus")).not.toHaveAttribute("data-node-id", forbidden);
+      await remembered.dispose();
+      // Native availability changes must update the sole tab stop after the DOM commit.
+      await update(page, "Native availability");
+      const formerlyBlocked =
+        target === "tile"
+          ? tile(page, "d")
+          : page.locator('[data-kind-ui="treemap-group-header"][data-node-id="energy"]');
+      await formerlyBlocked.focus();
+      await expect(formerlyBlocked).toBeFocused();
+      await update(page, "Native availability");
+      await expect(formerlyBlocked).not.toBeFocused();
+      await expect(stops).toHaveCount(1);
+      expect(
+        await stops.evaluate(
+          (element) => !element.closest("[hidden],[inert]") && !element.matches(":disabled"),
+        ),
+      ).toBe(true);
+      await page.getByRole("button", { name: "Before chart entry", exact: true }).focus();
+      await page.keyboard.press("Tab");
+      await expect(page.locator(":focus")).toHaveAttribute(
+        "data-kind-ui",
+        /treemap-tile|treemap-group-header/,
+      );
+      await expect(page.locator(":focus")).not.toHaveAttribute("data-node-id", forbidden);
+    });
+  }
+}
+
+test("treemap depth reduction restores the focused leaf's own rendered ancestor", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await tile(page, "a").focus();
+  await update(page, "Depth");
+  await expect(tile(page, "a")).toHaveCount(0);
+  await expect(tile(page, "technology")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(output(page, "Resolved view")).toHaveText("technology");
+});
+
+for (const field of ["view", "active", "selected"]) {
+  for (const direction of ["to-controlled", "to-uncontrolled"]) {
+    test(`treemap rejects ${field} ownership switching ${direction} on a real rerender`, async ({
+      page,
+    }) => {
+      await page.goto(`/?ownership=${field}&direction=${direction}`);
+      await expect(tile(page, "a")).toBeVisible();
+      await expect(page.getByRole("alert")).toHaveCount(0);
+      await expect(output(page, "Ownership mode")).toHaveText(
+        direction === "to-controlled" ? "uncontrolled" : "controlled",
+      );
+      await update(page, "Switch ownership");
+      const alert = page.getByRole("alert");
+      await expect(alert).toContainText(new RegExp(`${field}Id`, "i"));
+      await expect(alert).toContainText(/controlled|ownership/i);
+      await expect(page.locator('[data-kind-ui="treemap"]')).toHaveCount(0);
+    });
+  }
+}
+
+for (const native of ["hidden", "inert"]) {
+  test(`treemap table drilldown skips a ${native} first descendant row`, async ({ page }) => {
+    await page.goto(`/?table-native=${native}`);
+    const action = page.locator('tbody tr[data-node-id="technology"]').getByRole("button");
+    await action.focus();
+    await action.press("Enter");
+    await expect(output(page, "Resolved view")).toHaveText("technology");
+    const alpha = page.locator('tbody tr[data-node-id="a"]').getByRole("button");
+    await expect(alpha).toBeFocused();
+    expect(
+      await alpha.evaluate(
+        (element) => !element.closest("[hidden],[inert]") && !element.matches(":disabled"),
+      ),
+    ).toBe(true);
+  });
+}

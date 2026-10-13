@@ -20,7 +20,6 @@ import { cn } from "../utils.js";
 import { resolveTreemapColors, type TreemapColorEncoding } from "./encoding.js";
 import {
   layoutTreemap,
-  nearestTreemapAncestor,
   type TreemapLayoutCache,
   type TreemapLayoutOptions,
   type TreemapRectangle,
@@ -125,6 +124,11 @@ export function useTreemap<T = TreemapDatum>(): TreemapContextValue<T> {
   return context as unknown as TreemapContextValue<T>;
 }
 const defaultFormat = (value: number) => String(value);
+const isAvailableControl = (element: HTMLElement | null | undefined): element is HTMLElement =>
+  !!element &&
+  element.isConnected &&
+  !element.matches(":disabled") &&
+  element.closest("[hidden], [inert]") === null;
 export function TreemapChartRoot<const T = TreemapDatum>({
   config,
   interaction,
@@ -183,11 +187,18 @@ function TreemapPlot<T>({
   children,
   ...props
 }: Omit<TreemapChartProps<T>, keyof TreemapFamilyOptions>) {
+  const [controlledModes] = useState(() => ({
+    viewId: controlledView !== undefined,
+    activeId: controlledActive !== undefined,
+    selectedId: controlledSelected !== undefined,
+  }));
   for (const [name, controlled, initial] of [
     ["viewId", controlledView, defaultViewId],
     ["activeId", controlledActive, defaultActiveId],
     ["selectedId", controlledSelected, defaultSelectedId],
   ] as const) {
+    if ((controlled !== undefined) !== controlledModes[name])
+      throw new Error(`Treemap ${name} cannot switch controlled mode during a mount`);
     if (controlled !== undefined && initial !== null)
       throw new Error(`Treemap ${name} cannot be both controlled and defaulted`);
   }
@@ -238,19 +249,18 @@ function TreemapPlot<T>({
   const root = useRef<HTMLDivElement | null>(null);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
   const focusedInside = useRef(false);
-  const lastFocusedMark = useRef<{
-    id: string;
-    path: readonly string[];
-    element: HTMLButtonElement;
+  const lastFocusedControl = useRef<{
+    path: readonly string[] | null;
+    element: HTMLElement;
   } | null>(null);
-  const loadingFocus = useRef<typeof lastFocusedMark.current>(null);
+  const loadingFocus = useRef<typeof lastFocusedControl.current>(null);
   useLayoutEffect(() => {
     const focusin = (event: FocusEvent) => {
       // Inert content can displace focus to the document without another focusin.
       // A real focus destination outside the plot is an explicit new intent.
       if (event.target === document.body || event.target === document.documentElement) return;
       if (!(event.target instanceof Node) || !root.current?.contains(event.target)) {
-        lastFocusedMark.current = null;
+        lastFocusedControl.current = null;
         loadingFocus.current = null;
       }
     };
@@ -425,7 +435,7 @@ function TreemapPlot<T>({
       pendingRegistry.current = false;
       const signature = JSON.stringify(
         [...buttons.current.entries()]
-          .map(([id, button]) => [id, button.disabled])
+          .map(([id, button]) => [id, isAvailableControl(button)])
           .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
       );
       if (signature === registrySignature.current) return;
@@ -436,38 +446,62 @@ function TreemapPlot<T>({
   useLayoutEffect(() => {
     const signature = JSON.stringify(
       [...buttons.current.entries()]
-        .map(([id, button]) => [id, button.disabled])
+        .map(([id, button]) => [id, isAvailableControl(button)])
         .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
     );
     if (signature === registrySignature.current) return;
     registrySignature.current = signature;
     setRegisteredVersion((version) => version + 1);
   });
+  useLayoutEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    const observer = new MutationObserver(() => {
+      const signature = JSON.stringify(
+        [...buttons.current.entries()]
+          .map(([id, button]) => [id, isAvailableControl(button)])
+          .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+      );
+      if (signature === registrySignature.current) return;
+      registrySignature.current = signature;
+      setRegisteredVersion((version) => version + 1);
+    });
+    const attributeFilter = ["disabled", "hidden", "inert"];
+    observer.observe(element, { subtree: true, attributes: true, attributeFilter });
+    for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+      observer.observe(ancestor, { attributes: true, attributeFilter });
+    }
+    return () => observer.disconnect();
+  }, []);
   void registeredVersion;
   const navigation = geometry.rectangles.filter((node) => {
     const button = buttons.current.get(node.id);
-    return button !== undefined && !button.disabled;
+    return isAvailableControl(button);
   });
   const moveFocus = useCallback(
     (id: string | null, key: string) => {
       const targets = geometry.rectangles.filter((node) => {
         const button = buttons.current.get(node.id);
-        return button !== undefined && !button.disabled;
+        return isAvailableControl(button);
       });
       const next = treemapNeighbor(targets, id, key);
-      if (next !== null) buttons.current.get(next)?.focus();
+      if (next !== null) {
+        const button = buttons.current.get(next);
+        if (isAvailableControl(button)) button.focus();
+      }
     },
     [geometry],
   );
   const focus = useCallback((id: string | null) => {
-    if (id !== null) buttons.current.get(id)?.focus();
+    const button = id === null ? undefined : buttons.current.get(id);
+    if (isAvailableControl(button)) button.focus();
   }, []);
   useLayoutEffect(() => {
     const active = document.activeElement;
     const displaced =
       active === null || active === document.body || active === document.documentElement;
     if (loading) {
-      const remembered = lastFocusedMark.current;
+      const remembered = lastFocusedControl.current;
       if (remembered && (displaced || active === remembered.element)) {
         loadingFocus.current ??= remembered;
       }
@@ -478,9 +512,13 @@ function TreemapPlot<T>({
     loadingFocus.current = null;
     // Completion must not steal focus from an input, breadcrumb, or table control.
     if (!displaced && active !== remembered.element) return;
+    if (remembered.path === null) {
+      if (isAvailableControl(remembered.element)) remembered.element.focus();
+      return;
+    }
     const candidates = geometry.rectangles.filter((node) => {
       const button = buttons.current.get(node.id);
-      return button !== undefined && !button.disabled;
+      return isAvailableControl(button);
     });
     const survivingId = [...remembered.path]
       .reverse()
@@ -511,7 +549,11 @@ function TreemapPlot<T>({
       if (controlledSelected === undefined) updateSelected(selectedId);
       onSelectionChange?.(selectedId, readItem(selectedId));
     }
-    const next = nearestTreemapAncestor(focusedId, model, previous);
+    const focusedPath =
+      focusedId === null
+        ? []
+        : (model.byId.get(focusedId)?.path ?? previous?.byId.get(focusedId)?.path ?? []);
+    const next = [...focusedPath].reverse().find((id) => navigation.some((node) => node.id === id));
     if (
       focusedId !== null &&
       navigation.length > 0 &&
@@ -564,13 +606,16 @@ function TreemapPlot<T>({
     }
   }, [loading, controlledActive, setActive]);
   useEffect(() => {
-    if (loading || activeId === null || !tooltipMounted) return;
+    if (loading || activeId === null || !tooltipMounted || tooltipDismissed) return;
     const keydown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.defaultPrevented) setDismissed(true);
+      if (event.key === "Escape" && !event.defaultPrevented) {
+        event.preventDefault();
+        setDismissed(true);
+      }
     };
     document.addEventListener("keydown", keydown);
     return () => document.removeEventListener("keydown", keydown);
-  }, [loading, activeId, tooltipMounted]);
+  }, [loading, activeId, tooltipMounted, tooltipDismissed]);
   const consumerRef = props.ref;
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
@@ -664,13 +709,13 @@ function TreemapPlot<T>({
         onFocusCapture={(event) => {
           props.onFocusCapture?.(event);
           focusedInside.current = event.currentTarget.contains(event.target);
-          if (focusedInside.current) {
+          if (event.target instanceof HTMLElement) {
             const entry = [...buttons.current].find(
               ([, button]) => button === (event.target as EventTarget),
             );
             const node = entry ? model.byId.get(entry[0]) : undefined;
-            lastFocusedMark.current =
-              entry && node ? { id: node.id, path: node.path, element: entry[1] } : null;
+            // React portal events retain chart ownership even outside the plot DOM.
+            lastFocusedControl.current = { element: event.target, path: node?.path ?? null };
             if (!loading) loadingFocus.current = null;
           }
         }}
@@ -683,12 +728,15 @@ function TreemapPlot<T>({
             focusedInside.current = false;
             const content = event.currentTarget.querySelector('[data-kind-ui="treemap-content"]');
             const inertDisplacement =
-              content?.hasAttribute("inert") &&
+              (loading ||
+                content?.hasAttribute("inert") ||
+                (event.target instanceof Element &&
+                  event.target.closest("[hidden], [inert]") !== null)) &&
               (event.relatedTarget === null ||
                 event.relatedTarget === document.body ||
                 event.relatedTarget === document.documentElement);
             if (!inertDisplacement) {
-              lastFocusedMark.current = null;
+              lastFocusedControl.current = null;
               loadingFocus.current = null;
             }
             setActive(null);
@@ -696,7 +744,14 @@ function TreemapPlot<T>({
         }}
         onKeyDown={(event) => {
           props.onKeyDown?.(event);
-          if (!event.defaultPrevented && event.key === "Escape") {
+          if (
+            !event.defaultPrevented &&
+            event.key === "Escape" &&
+            !loading &&
+            activeId !== null &&
+            tooltipMounted &&
+            !tooltipDismissed
+          ) {
             event.preventDefault();
             setDismissed(true);
           }

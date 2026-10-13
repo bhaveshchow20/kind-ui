@@ -384,7 +384,10 @@ export type TreemapDataTableProps<T = TreemapDatum> = Omit<
   caption: string;
   scope?: "root" | "view";
   children?: (node: TreemapItem<T>) => ReactNode;
-  rowProps?: (node: TreemapNode<T>) => ComponentPropsWithRef<"tr">;
+  /** Row attributes and handlers; the table's children renderer owns its cells. */
+  rowProps?: (
+    node: TreemapNode<T>,
+  ) => Omit<ComponentPropsWithRef<"tr">, "children"> & { children?: never };
 };
 export function TreemapDataTable<T = TreemapDatum>({
   caption,
@@ -426,11 +429,14 @@ export function TreemapDataTable<T = TreemapDatum>({
       (document.activeElement !== document.body && document.activeElement !== intent.owner)
     )
       return;
+    const eligible = (element: HTMLElement) => !element.closest("[hidden], [inert]");
     const next = nodes.length
-      ? table.current?.querySelector<HTMLButtonElement>("tbody button:not(:disabled)")
+      ? Array.from(
+          table.current?.querySelectorAll<HTMLButtonElement>("tbody button:not(:disabled)") ?? [],
+        ).find(eligible)
       : undefined;
     if (next) next.focus();
-    else table.current?.focus();
+    else if (table.current && eligible(table.current)) table.current.focus();
   }, [context.viewId, nodes]);
   return (
     <OutsidePlot>
