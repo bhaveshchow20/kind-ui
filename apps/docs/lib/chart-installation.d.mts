@@ -1,6 +1,7 @@
 interface InstallationBundle {
   id: string;
   version: string;
+  coreRequirement?: string | undefined;
   registryItemName?: string | undefined;
   files: Record<string, string>;
 }

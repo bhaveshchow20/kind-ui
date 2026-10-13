@@ -29,6 +29,7 @@ export const documentationCharts = [
   ["Heatmap", "heatmap"],
   ["Waterfall", "waterfall"],
   ["Sankey", "sankey"],
+  ["Funnel", "funnel"],
   ["Histogram", "histogram"],
   ["Box Plot", "box-plot"],
 ].map(([name, slug]) => ({ name, href: `${siteLinks.docs}components/${slug}/` }));

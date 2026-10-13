@@ -5,7 +5,6 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import {
-  coreVersion,
   itemNameFor,
   registryCss,
   registryEndpoint,
@@ -57,7 +56,7 @@ test("official CLI output has a flat complete catalog and content-free discovery
   for (const item of catalog.items) {
     assert.ok(item.files.every((file) => !Object.hasOwn(file, "content")));
     assert.deepEqual(item.dependencies, [
-      `@kind-ui/charts@${coreVersion}`,
+      `@kind-ui/charts@${registryItems.find(({ name }) => name === item.name)?.coreRequirement}`,
       "react@^19.3.0",
       "react-dom@^19.3.0",
       "recharts@^3.10.1",
@@ -127,4 +126,10 @@ test("lookup and policy reject missing examples, nested names and absent depende
   assert.equal(itemSchema.safeParse({ ...first, name: "charts/line-chart" }).success, false);
   assert.equal(itemSchema.safeParse({ ...first, dependencies: undefined }).success, false);
   assert.equal(itemSchema.safeParse({ ...first, files: [] }).success, false);
+});
+
+test("Funnel registry requires the first compatible Core minor", () => {
+  const item = JSON.parse(readFileSync(path.join(output, "funnel-chart.json"), "utf8"));
+  assert.ok(item.dependencies.includes("@kind-ui/charts@^0.6.0"));
+  assert.ok(!item.dependencies.includes("@kind-ui/charts@0.5.0"));
 });

@@ -134,3 +134,19 @@ for (const example of family.examples) {
     }
   });
 }
+
+test("Funnel install metadata requires compatible exports without changing candidate identity", () => {
+  const bundles = JSON.parse(
+    readFileSync(new URL("../generated/funnel-examples.json", import.meta.url), "utf8"),
+  );
+  for (const bundle of Object.values(bundles)) {
+    assert.equal(bundle.coreRequirement, "^0.6.0");
+    assert.equal(
+      JSON.parse(bundle.files["package.json"]).dependencies["@kind-ui/charts"],
+      "^0.6.0",
+    );
+    assert.match(promptFor(bundle, {}), /Reference package: @kind-ui\/charts@\^0\.6\.0/);
+    assert.match(promptFor(bundle, {}), /Install @kind-ui\/charts@\^0\.6\.0/);
+    assert.doesNotMatch(promptFor(bundle, {}), /Reference package: @kind-ui\/charts@0\.5\.0/);
+  }
+});

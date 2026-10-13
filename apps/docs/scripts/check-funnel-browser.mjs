@@ -263,13 +263,13 @@ try {
     installation.locator("[data-package-install]").getByRole("tab", { name: "bun", exact: true }),
   ).toHaveAttribute("data-state", "active");
   await expect(installation.locator("pre").first()).toHaveText(
-    "bun add @kind-ui/charts motion recharts",
+    "bun add @kind-ui/charts@^0.6.0 motion recharts",
   );
   for (const [manager, command] of [
-    ["npm", "npm install @kind-ui/charts motion recharts"],
-    ["pnpm", "pnpm add @kind-ui/charts motion recharts"],
-    ["yarn", "yarn add @kind-ui/charts motion recharts"],
-    ["bun", "bun add @kind-ui/charts motion recharts"],
+    ["npm", "npm install @kind-ui/charts@^0.6.0 motion recharts"],
+    ["pnpm", "pnpm add @kind-ui/charts@^0.6.0 motion recharts"],
+    ["yarn", "yarn add @kind-ui/charts@^0.6.0 motion recharts"],
+    ["bun", "bun add @kind-ui/charts@^0.6.0 motion recharts"],
   ]) {
     await installation
       .locator("[data-package-install]")

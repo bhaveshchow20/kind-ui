@@ -1,4 +1,4 @@
-/** @typedef {{id: string, version: string, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
+/** @typedef {{id: string, version: string, coreRequirement?: string | undefined, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
 /** @typedef {{title: string, description: string, code: string, language: "sh" | "css" | "tsx", filename: string}} InstallationStep */
 /** @typedef {"npm" | "pnpm" | "yarn" | "bun"} PackageManager */
 /** @typedef {{manager: PackageManager, command: string}} PackageInstallCommand */
@@ -20,12 +20,18 @@ export function installationFor(bundle) {
   if (source === undefined) throw new Error(`Missing installation source: ${bundle.id}`);
   const componentName = source.match(/export function (\w+)/)?.[1];
   if (!componentName) throw new Error(`Missing composition export: ${bundle.id}`);
+  const installCommands = bundle.coreRequirement
+    ? coreInstallCommands.map(({ manager, command }) => ({
+        manager,
+        command: command.replace("@kind-ui/charts", `@kind-ui/charts@${bundle.coreRequirement}`),
+      }))
+    : coreInstallCommands;
   /** @type {InstallationStep[]} */
   const steps = [
     {
       title: "Install Core",
       description: "Add the package and its peers to your React 19.3 project.",
-      code: coreInstallCommand,
+      code: installCommands[0]?.command ?? coreInstallCommand,
       language: "sh",
       filename: "Terminal",
     },
@@ -61,7 +67,7 @@ export function installationFor(bundle) {
     { manager: "yarn", command: `yarn dlx shadcn@latest add @kind-ui/${itemName}` },
     { manager: "bun", command: `bunx shadcn@latest add @kind-ui/${itemName}` },
   ];
-  return { itemName, command, cliCommands, coreInstallCommands, steps };
+  return { itemName, command, cliCommands, coreInstallCommands: installCommands, steps };
 }
 
 /** @param {readonly PackageInstallCommand[]} commands @param {number} level */
@@ -76,7 +82,7 @@ function commandMarkdown(commands, level) {
 
 /** @param {InstallationBundle} bundle */
 export function installationMarkdown(bundle) {
-  const { cliCommands, steps } = installationFor(bundle);
+  const { cliCommands, coreInstallCommands, steps } = installationFor(bundle);
   return (
     "### CLI\n\nRun this command in your initialized shadcn project:\n\n" +
     commandMarkdown(cliCommands, 4) +

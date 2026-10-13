@@ -1,4 +1,26 @@
 import { expect, test } from "@playwright/test";
+import { siteLinks } from "../lib/site-links";
+
+test("Funnel documentation is discoverable through header and keyboard search", async ({
+  page,
+}) => {
+  await page.goto("./");
+  for (const trigger of ["header", "Control+k", "Meta+k"]) {
+    if (trigger === "header")
+      await page.getByRole("button", { name: "Search documentation", exact: true }).click();
+    else await page.keyboard.press(trigger);
+    const search = page.getByRole("textbox", { name: "Search components", exact: true });
+    await expect(search).toBeFocused();
+    await search.fill("Funnel");
+    const result = page
+      .locator(".documentation-search-results")
+      .getByRole("link", { name: "Funnel Chart", exact: true });
+    await expect(result).toBeVisible();
+    await expect(result).toHaveAttribute("href", `${siteLinks.docs}components/funnel/`);
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  }
+});
 
 test("Funnel checkout gallery and expanded example retain stage values and denominator", async ({
   page,

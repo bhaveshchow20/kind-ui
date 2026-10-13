@@ -140,3 +140,19 @@ test("installation rejects missing source, missing exports and unknown items", (
     /No registry installation/,
   );
 });
+
+test("Funnel Manual installs require compatible Core across all package managers", () => {
+  const bundles = JSON.parse(read("generated/all-examples.json"));
+  const installation = installationFor(bundles.funnel);
+  assert.deepEqual(
+    installation.coreInstallCommands.map(({ command }) => command),
+    [
+      "npm install @kind-ui/charts@^0.6.0 motion recharts",
+      "pnpm add @kind-ui/charts@^0.6.0 motion recharts",
+      "yarn add @kind-ui/charts@^0.6.0 motion recharts",
+      "bun add @kind-ui/charts@^0.6.0 motion recharts",
+    ],
+  );
+  assert.equal(installation.steps[0].code, installation.coreInstallCommands[0].command);
+  assert.match(installationMarkdown(bundles.funnel), /@kind-ui\/charts@\^0\.6\.0/);
+});
