@@ -73,6 +73,7 @@ export function GrossExposureTreemap() {
       encoding={encoding}
       config={{}}
       aria-label="Illustrative gross long-short exposure and one-session P&L"
+      animate
       height={320}
       padding={3}
       groupHeaderHeight={22}

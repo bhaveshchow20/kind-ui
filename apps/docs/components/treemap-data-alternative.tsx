@@ -7,8 +7,7 @@ export function TreemapDataAlternative({ id }: { id: keyof typeof bundles }) {
   if (!data) throw new Error(`Missing plotted data for ${id}`);
   const keys = Object.keys(data.columns);
   return (
-    <details className="treemap-data-alternative not-prose my-4 text-sm" data-example={id}>
-      <summary className="cursor-pointer font-medium">View plotted data</summary>
+    <section className="treemap-data-alternative sr-only" data-example={id}>
       <div className="max-w-full overflow-x-auto">
         <table className="w-full text-left text-xs">
           <caption className="py-2 text-left">{data.caption}</caption>
@@ -40,6 +39,6 @@ export function TreemapDataAlternative({ id }: { id: keyof typeof bundles }) {
           </tbody>
         </table>
       </div>
-    </details>
+    </section>
   );
 }

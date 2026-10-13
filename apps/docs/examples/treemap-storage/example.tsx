@@ -71,6 +71,7 @@ export function StorageAllocationTreemap() {
       encoding={encoding}
       config={{}}
       aria-label="Illustrative storage allocation and monthly change in GB"
+      animate
       height={320}
       padding={3}
       groupHeaderHeight={22}
@@ -79,26 +80,7 @@ export function StorageAllocationTreemap() {
       <TreemapChart.Groups />
       <TreemapChart.Tiles />
       <TreemapChart.Labels minWidth={46} minHeight={24} />
-      <TreemapChart.Tooltip<StorageRecord>>
-        {(item) => (
-          <>
-            <strong>{item.label}</strong>
-            <div>Stored: {item.value} GB</div>
-            {item.kind === "leaf" && (
-              <div>
-                Monthly change:{" "}
-                {item.datum.monthlyGrowthGb == null
-                  ? "Unavailable"
-                  : `${item.datum.monthlyGrowthGb > 0 ? "+" : ""}${item.datum.monthlyGrowthGb} GB`}
-              </div>
-            )}
-            <div>
-              Parent share:{" "}
-              {item.parentShare === null ? "—" : `${(item.parentShare * 100).toFixed(1)}%`}
-            </div>
-          </>
-        )}
-      </TreemapChart.Tooltip>
+      <TreemapChart.Tooltip valueAnimation="shuffle" />
       <TreemapChart.ColorLegend />
       <TreemapChart.Breadcrumbs rootLabel="All storage" />
       <TreemapChart.Content>

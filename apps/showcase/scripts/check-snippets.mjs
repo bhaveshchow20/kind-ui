@@ -58,11 +58,18 @@ assert.deepEqual(
   treemap.treemapRecipes.map((recipe) => recipe.id),
   ["treemap-market", "treemap-exposure"],
 );
-assert.throws(
-  () => treemap.treemapAccessors.value({ id: "missing", label: "Missing" }),
-  /Missing supplied area for missing/,
+assert.equal(
+  treemap
+    .treemapRows(treemap.treemapData("treemap-market"))
+    .reduce((sum, row) => sum + row.value, 0),
+  76300,
 );
-assert.equal(treemap.treemapMetric("treemap-exposure", undefined), "Unknown");
+assert.equal(
+  treemap
+    .treemapRows(treemap.treemapData("treemap-exposure"))
+    .reduce((sum, row) => sum + row.value, 0),
+  197000,
+);
 // Use the actual gallery defaults and evaluate the copied encoding declarations
 // so swapped palette endpoints cannot pass through preview/source parity checks.
 const pageSource = ts.createSourceFile(
@@ -97,17 +104,7 @@ for (const recipe of treemap.treemapRecipes) {
     await evaluate(`export const colors = ${property.initializer.getText(pageSource)};`)
   ).colors;
   for (const colors of [defaultColors, ["#123456", "#abcdef", "#fedcba", "#654321"], []]) {
-    const preview = treemap.treemapEncoding(recipe, colors);
-    assert.equal(
-      preview.stops[0].color,
-      colors[0] ?? "#ee668b",
-      `${recipe.id} negative endpoint uses the first palette color`,
-    );
-    assert.equal(
-      preview.stops[2].color,
-      colors.at(-1) ?? "#20b898",
-      `${recipe.id} positive endpoint uses the last palette color`,
-    );
+    const preview = treemap.treemapConfig(treemap.treemapData(recipe.id), colors);
     const generated = treemap.treemapCode(recipe, "plain", colors, false);
     const generatedSource = ts.createSourceFile(
       "example.tsx",
@@ -116,31 +113,24 @@ for (const recipe of treemap.treemapRecipes) {
       true,
       ts.ScriptKind.TSX,
     );
-    const encodingDeclarations = generatedSource.statements.filter(
+    const declarations = generatedSource.statements.filter(
       (statement) =>
         ts.isVariableStatement(statement) &&
         statement.declarationList.declarations.some(
-          (declaration) =>
-            ts.isIdentifier(declaration.name) &&
-            ["colors", "metric", "encoding"].includes(declaration.name.text),
+          (declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === "config",
         ),
     );
     const copied = (
       await evaluate(
-        encodingDeclarations.map((statement) => statement.getText(generatedSource)).join("\n") +
-          "\nexport { encoding };",
+        declarations.map((statement) => statement.getText(generatedSource)).join("\n") +
+          "\nexport { config };",
       )
-    ).encoding;
+    ).config;
     assert.deepEqual(
-      copied.stops,
-      preview.stops,
-      `${recipe.id} copied encoding matches the preview and legend`,
+      copied,
+      preview,
+      `${recipe.id} copied category config matches the preview and legend`,
     );
-    assert.deepEqual(copied.domain, preview.domain);
-    for (const metric of [-preview.domain[1], 0, preview.domain[1]]) {
-      assert.equal(copied.value({ metric }), preview.value({ metric }));
-      assert.equal(copied.formatValue(metric), preview.formatValue(metric));
-    }
   }
 }
 const activity = await evaluate(await readFile(join(app, "lib/activity-recipe.ts"), "utf8"));
@@ -166,14 +156,12 @@ try {
             `${recipe.id} copied focus must preserve the complete data`,
           );
           if (recipe.family === "Treemap") {
-            assert.match(source, /TreemapChart<Row>/);
-            assert.match(source, /accessors=\{accessors\}/);
-            assert.match(source, /Missing supplied area for/);
-            assert.doesNotMatch(source, /area\s*\?\?\s*0/);
+            assert.match(source, /readonly TreemapDatum\[\]/);
+            assert.doesNotMatch(source, /accessors=|encoding=|View data|signedPosition/);
             assert.doesNotMatch(source, /candidate|validated archive|does not include it/);
-            assert.match(source, /value: row => row\.metric/);
             assert.match(source, /TreemapChart\.Breadcrumbs/);
-            assert.match(source, /TreemapChart\.DataTable<Row>/);
+            assert.match(source, /TreemapChart\.Legend/);
+            assert.match(source, /valueAnimation="shuffle"/);
             const prompt = treemap.treemapPrompt(
               recipe,
               finish,
@@ -186,10 +174,6 @@ try {
               prompt,
               /localhost|127\.0\.0\.1|candidate|published.*0\.5\.0|validated archive/,
             );
-            if (recipe.id === "treemap-exposure") {
-              assert.match(source, /signedPosition"?: -/);
-              assert.match(source, /node\.kind === "group" \? "Group total"/);
-            }
           }
           if (recipe.family === "Pie") {
             assert.match(source, /<PieChart\.Series/);
@@ -258,7 +242,7 @@ try {
       if (recipe.family === "Treemap") {
         assert.doesNotMatch(source, /<TreemapChart\.(Labels|ColorLegend)\b/);
         assert.match(source, /padding=\{8\}/);
-        assert.match(source, /borderRadius:12/);
+        assert.match(source, /borderRadius:\s*12/);
       }
       await writeFile(file, source);
       files.push(file);

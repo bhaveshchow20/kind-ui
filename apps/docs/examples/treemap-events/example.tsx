@@ -107,6 +107,7 @@ export function EventActivityTreemap() {
       encoding={encoding}
       config={{}}
       aria-label="Illustrative 24-hour market turnover and probability-point change"
+      animate
       height={320}
       padding={3}
       groupHeaderHeight={22}
@@ -115,23 +116,7 @@ export function EventActivityTreemap() {
       <TreemapChart.Groups />
       <TreemapChart.Tiles />
       <TreemapChart.Labels minWidth={62} minHeight={24} />
-      <TreemapChart.Tooltip<ActivityNode>>
-        {(item) => (
-          <>
-            <strong>{item.label}</strong>
-            <div>24-hour turnover: ${item.value}k</div>
-            {item.kind === "leaf" && (
-              <div>
-                Probability change:{" "}
-                {item.datum.probabilityChangePp == null
-                  ? "Unavailable"
-                  : `${item.datum.probabilityChangePp > 0 ? "+" : ""}${item.datum.probabilityChangePp} pp`}
-              </div>
-            )}
-            <div>Path: {item.path.join(" / ")}</div>
-          </>
-        )}
-      </TreemapChart.Tooltip>
+      <TreemapChart.Tooltip valueAnimation="shuffle" />
       <TreemapChart.ColorLegend />
       <TreemapChart.Breadcrumbs rootLabel="All topics" />
       <TreemapChart.Content>

@@ -8,8 +8,8 @@ const loading = () => (
     Loading chart…
   </p>
 );
-const Market = dynamic(
-  () => import("@/examples/treemap/example").then((module) => memo(module.MarketTreemap)),
+const CloudSpend = dynamic(
+  () => import("@/examples/treemap/example").then((module) => memo(module.CloudSpendTreemap)),
   { loading, ssr: false },
 );
 const Portfolio = dynamic(
@@ -34,8 +34,8 @@ const Storage = dynamic(
 
 export const previews = {
   treemap: ({ variant }: PreviewProps) => (
-    <Market
-      metric={variant === "activity" ? "activity" : "return"}
+    <CloudSpend
+      period={variant === "previous" ? "previous" : "current"}
       loading={variant === "loading"}
     />
   ),

@@ -12,10 +12,10 @@ const specifications = {
     id: "id",
     label: "label",
     children: "children",
-    area: "capitalizationUsdM",
-    metrics: ["turnoverUsdM", "returnPercent"],
-    summed: ["turnoverUsdM"],
-    total: 800,
+    area: "value",
+    metrics: [],
+    summed: [],
+    total: 76300,
   },
   "treemap-portfolio": {
     id: "id",
@@ -61,7 +61,7 @@ function literal(node) {
   if (node.kind === ts.SyntaxKind.NullKeyword) return null;
   throw new Error(`Unsupported data literal: ${node.getText()}`);
 }
-function sourceData(source) {
+function sourceData(source, variable = "data") {
   const syntax = ts.createSourceFile(
     "example.tsx",
     source,
@@ -71,12 +71,12 @@ function sourceData(source) {
   );
   let found;
   const visit = (node) => {
-    if (ts.isVariableDeclaration(node) && node.name.getText(syntax) === "data")
+    if (ts.isVariableDeclaration(node) && node.name.getText(syntax) === variable)
       found = node.initializer;
     ts.forEachChild(node, visit);
   };
   visit(syntax);
-  assert.ok(found, "Every complete source must declare literal const data");
+  assert.ok(found, `Every complete source must declare literal const ${variable}`);
   return literal(found);
 }
 function descendantTotal(node, children, field) {
@@ -114,47 +114,73 @@ for (const example of family.examples) {
     });
     assert.deepEqual(family.dataLabels[example.id].rows, rows);
     assert.equal(new Set(rows.map((row) => row.id)).size, rows.length);
-    assert.ok(rows.some((row) => row.kind === "Leaf" && row[spec.area] === 0));
-    assert.ok(rows.some((row) => spec.metrics.some((metric) => row[metric] === "Unavailable")));
-    for (const part of ["Groups", "Tiles", "Labels", "Tooltip", "ColorLegend", "Breadcrumbs"])
+    if (example.id !== "treemap")
+      assert.ok(rows.some((row) => row.kind === "Leaf" && row[spec.area] === 0));
+    if (spec.metrics.length)
+      assert.ok(rows.some((row) => spec.metrics.some((metric) => row[metric] === "Unavailable")));
+    for (const part of [
+      "Groups",
+      "Tiles",
+      "Labels",
+      "Tooltip",
+      example.id === "treemap" ? "Legend" : "ColorLegend",
+      "Breadcrumbs",
+    ])
       assert.ok(source.includes(`<TreemapChart.${part}`), `Missing explicit ${part}`);
     assert.doesNotMatch(source, /<TreemapChart\.(?:Root|Plot|DataTable)|<table\b/);
     assert.doesNotMatch(source, /from ["']\.\.?\//);
     assert.doesNotMatch(source, /\?\?\s*0/, "Missing leaf area must never silently become zero");
-    assert.match(source, /if \(value === undefined\)/);
-    assert.match(source, /throw new Error\(\s*`/);
-    assert.ok(
-      source.includes(`Treemap leaf \${datum.${spec.id}} is missing`),
-      "Missing-area errors must identify the original record",
-    );
+    if (example.id !== "treemap") {
+      assert.match(source, /if \(value === undefined\)/);
+      assert.match(source, /throw new Error\(\s*`/);
+      assert.ok(
+        source.includes(`Treemap leaf \${datum.${spec.id}} is missing`),
+        "Missing-area errors must identify the original record",
+      );
+    }
     assert.match(source, /Illustrative/);
-    assert.match(family.dataLabels[example.id].caption, /October 9, 2026/);
+    assert.match(family.dataLabels[example.id].caption, /September(?: 9,)? 2026/);
   });
 }
-test("primary color selection and preview adapter agree with the literal default", () => {
+test("primary period selection and preview adapter agree with the literal default", () => {
   const source = readFileSync(new URL("examples/treemap/example.tsx", docs), "utf8");
   const preview = readFileSync(new URL("components/previews/treemap.tsx", docs), "utf8");
   assert.equal(family.examples[0].id, "treemap");
   assert.deepEqual(family.variants.treemap, {
-    control: "Color metric",
-    prop: "metric",
-    default: "return",
+    control: "Billing period",
+    prop: "period",
+    default: "current",
     options: [
-      { value: "return", label: "Signed return" },
-      { value: "activity", label: "Activity" },
+      { value: "current", label: "September 2026" },
+      { value: "previous", label: "August 2026" },
     ],
   });
-  assert.match(source, /metric = "return"/);
-  assert.match(source, /areaMetric = "capitalization"/);
+  assert.match(source, /period = "current"/);
+  assert.match(source, /export function CloudSpendTreemap/);
   assert.match(source, /loading = false/);
   assert.match(source, /loading=\{loading\}/);
+  assert.match(source, /valueAnimation="shuffle"/);
   assert.deepEqual(family.loadingVariant, { prop: "loading", default: false, label: "Loading" });
   assert.match(preview, /loading=\{variant === "loading"\}/);
-  assert.match(source, /\[areaMetric\]/);
-  assert.match(source, /\[metric\]/);
-  assert.match(preview, /variant === "activity" \? "activity" : "return"/);
+  assert.match(preview, /variant === "previous" \? "previous" : "current"/);
   for (const example of family.examples)
     assert.ok(preview.includes(`@/examples/${example.id}/example`));
+});
+test("monthly billing periods preserve every identity and match their supplied totals", () => {
+  const source = readFileSync(new URL("examples/treemap/example.tsx", docs), "utf8");
+  const current = normalizeTreemap(sourceData(source));
+  const previousValues = sourceData(source, "previousValues");
+  const leaves = current.nodes.filter((node) => node.kind === "leaf");
+  assert.deepEqual(Object.keys(previousValues).sort(), leaves.map((node) => node.id).sort());
+  assert.equal(
+    Object.values(previousValues).reduce((sum, value) => sum + value, 0),
+    69600,
+  );
+  assert.equal(current.total, 76300);
+  assert.equal(leaves.length, 10);
+  assert.match(source, /children: previousPeriod\(node.children\)/);
+  assert.match(source, /value: previousValues\[node.id\]/);
+  assert.doesNotMatch(source, /View (?:plotted )?[Dd]ata|DataTable/);
 });
 test("signed exposure is precomputed and market activity is not duplicated per outcome", () => {
   const portfolio = sourceData(
@@ -193,12 +219,12 @@ test("generated consumers and selected metric sources match their canonical exam
       if (variant === "loading") {
         assert.equal(example.id, "treemap");
         assert.ok(selection.source.includes("loading = true"));
-        assert.ok(selection.source.includes('metric = "return"'));
+        assert.ok(selection.source.includes('period = "current"'));
       } else {
         assert.ok(selection.source.includes(`${family.variants[example.id].prop} = "${variant}"`));
         if (example.id === "treemap") assert.ok(selection.source.includes("loading = false"));
       }
     }
   }
-  assert.deepEqual(Object.keys(bundles.treemap.variants), ["return", "activity", "loading"]);
+  assert.deepEqual(Object.keys(bundles.treemap.variants), ["current", "previous", "loading"]);
 });

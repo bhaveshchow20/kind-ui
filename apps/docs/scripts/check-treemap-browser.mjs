@@ -74,16 +74,13 @@ async function checkSource(page, context, card, id, variant) {
   assert.equal(response.status(), 200);
   assert.equal((await response.text()).trimEnd(), source.trimEnd());
   if (id === "treemap") {
-    assert.match(source, /areaMetric = "capitalization"/);
-    assert.match(source, /areaMetric\?: "capitalization" \| "turnover"/);
-    assert.match(source, /\[areaMetric\]/);
-    assert.match(source, /\[metric\]/);
+    assert.match(source, /period\?: "current" \| "previous"/);
     if (variant === "loading") {
       assert.ok(source.includes("loading = true"));
-      assert.ok(source.includes('metric = "return"'));
+      assert.ok(source.includes('period = "current"'));
     } else {
       assert.ok(source.includes("loading = false"));
-      assert.ok(source.includes(`metric = "${variant}"`));
+      assert.ok(source.includes(`period = "${variant}"`));
     }
   }
   await card.getByRole("tab", { name: "Preview", exact: true }).click();
@@ -97,11 +94,9 @@ async function checkAlternatives(page) {
     assert.ok(alternative?.rows.length, `${id}: generated plotted values are required`);
     const external = page.locator(`.treemap-data-alternative[data-example="${id}"]`);
     await expect(external).toHaveCount(1);
-    const summary = external.locator("summary");
-    await expect(summary).toHaveText("View plotted data");
-    if (!(await summary.evaluate((node) => node.closest("details").open))) await summary.click();
+    await expect(external.locator("summary")).toHaveCount(0);
     const table = external.getByRole("table", { name: alternative.caption, exact: true });
-    await expect(table).toBeVisible();
+    await expect(table).toHaveCount(1);
     assert.equal(
       await table.evaluate((node) => node.closest('[data-kind-ui="treemap"]') === null),
       true,
@@ -119,7 +114,6 @@ async function checkAlternatives(page) {
     }
   }
   for (const [id, zeroID, zeroLabel] of [
-    ["treemap", "inactive", "Inactive allocation"],
     ["treemap-portfolio", "closed", "Closed position"],
     ["treemap-events", "solar-paused", "Paused market"],
     ["treemap-storage", "retired", "Retired storage"],
@@ -217,7 +211,13 @@ try {
     await expect(card.locator('[data-kind-ui="treemap-tiles"]')).toHaveCount(1);
     await expect(card.locator('[data-kind-ui="treemap-groups"]')).toHaveCount(1);
     await expect(card.locator('[data-kind-ui="treemap-group-header"]').first()).toBeVisible();
-    await expect(card.locator('[data-kind-ui="treemap-color-legend"]')).toBeVisible();
+    await expect(
+      card.locator(
+        id === "treemap"
+          ? '[data-kind-ui="chart-legend"]'
+          : '[data-kind-ui="treemap-color-legend"]',
+      ),
+    ).toBeVisible();
     await expect(card.locator('[data-kind-ui="treemap-data-table"]')).toHaveCount(0);
     if (id !== "treemap") await checkSource(page, context, card, id);
     evidence.previews.push({ id, graphOnly: true, explicitParts: "passed" });
@@ -233,47 +233,51 @@ try {
 
   const primary = page.locator('[data-component="treemap"]');
   await primary.scrollIntoViewIfNeeded();
-  await checkSource(page, context, primary, "treemap", "return");
+  await checkSource(page, context, primary, "treemap", "current");
   const before = await geometry(primary);
   const beforeColors = await colors(primary);
+  await tile(primary, "api").focus();
+  await expect(primary.getByRole("tooltip")).toContainText("$18,400");
   await primary
     .getByRole("combobox", { name: bundles.treemap.variantControl, exact: true })
     .click();
   await page
-    .getByRole("option", { name: bundles.treemap.variants.activity.label, exact: true })
+    .getByRole("option", { name: bundles.treemap.variants.previous.label, exact: true })
     .click();
   await expect(
     primary.getByRole("combobox", { name: bundles.treemap.variantControl, exact: true }),
-  ).toContainText(bundles.treemap.variants.activity.label);
+  ).toContainText(bundles.treemap.variants.previous.label);
   assert.deepEqual(
-    await geometry(primary),
-    before,
-    "Changing only color must preserve capitalization geometry",
+    (await geometry(primary)).map((item) => item.id),
+    before.map((item) => item.id),
+    "A period change retains service IDs",
   );
   assert.notDeepEqual(
+    await geometry(primary),
+    before,
+    "A period change reflects actual billing values",
+  );
+  assert.deepEqual(
     await colors(primary),
     beforeColors,
-    "Activity selection must change color paint",
+    "Categories retain their colors across periods",
   );
-  await tile(primary, "northstar").focus();
-  await expect(primary.getByRole("tooltip")).toContainText("$42m session turnover");
-  await checkSource(page, context, primary, "treemap", "activity");
+  await tile(primary, "api").focus();
+  await expect(primary.getByRole("tooltip")).toContainText("$16,200");
+  await checkSource(page, context, primary, "treemap", "previous");
   await primary
     .getByRole("combobox", { name: bundles.treemap.variantControl, exact: true })
     .click();
   await page
-    .getByRole("option", { name: bundles.treemap.variants.return.label, exact: true })
+    .getByRole("option", { name: bundles.treemap.variants.current.label, exact: true })
     .click();
-  await tile(primary, "orbit").focus();
-  await expect(primary.getByRole("tooltip")).toContainText("-1.8%");
-  await tile(primary, "signal").focus();
-  await expect(primary.getByRole("tooltip")).toContainText("Return unavailable");
+  await tile(primary, "api").focus();
+  await expect(primary.getByRole("tooltip")).toContainText("$18,400");
   await page.keyboard.press("Escape");
   await expect(primary.getByRole("tooltip")).toBeHidden();
   evidence.inspection.push({
     id: "treemap",
-    independentColorReadout: "passed",
-    signedAndMissing: "passed",
+    currencyAndStablePeriodIdentity: "passed",
     escape: "passed",
   });
 
@@ -289,38 +293,33 @@ try {
   await expect(events.getByRole("tooltip")).toContainText("$18k");
   const storage = page.locator('[data-component="treemap-storage"]');
   await tile(storage, "logs").focus();
-  await expect(storage.getByRole("tooltip")).toContainText("Monthly change: -8 GB");
+  await expect(storage.getByRole("tooltip")).toContainText("-8 GB");
   await tile(storage, "backups").focus();
-  await expect(storage.getByRole("tooltip")).toContainText("Monthly change: Unavailable");
+  await expect(storage.getByRole("tooltip")).toContainText("Change unavailable");
   evidence.inspection.push({
     id: "portfolio/events/storage",
     originalSignedMetadataAndUnits: "passed",
   });
 
   await primary.scrollIntoViewIfNeeded();
-  const platforms = primary.locator(
-    '[data-kind-ui="treemap-group-header"][data-node-id="platforms"]',
-  );
-  await platforms.focus();
+  const compute = primary.locator('[data-kind-ui="treemap-group-header"][data-node-id="compute"]');
+  await compute.focus();
   await page.keyboard.press("Enter");
-  await expect(tile(primary, "northstar")).toBeVisible();
-  await expect(primary.locator(tileSelector)).toHaveCount(2);
+  await expect(tile(primary, "api")).toBeVisible();
+  await expect(primary.locator(tileSelector)).toHaveCount(3);
   const breadcrumbs = primary.getByRole("navigation", { name: "Treemap navigation" });
-  await expect(breadcrumbs.getByRole("button", { name: "Platforms", exact: true })).toHaveAttribute(
+  await expect(breadcrumbs.getByRole("button", { name: "Compute", exact: true })).toHaveAttribute(
     "aria-current",
     "location",
   );
-  await breadcrumbs.getByRole("button", { name: "Technology", exact: true }).focus();
-  await page.keyboard.press("Space");
-  await expect(tile(primary, "cedar")).toBeVisible();
-  await breadcrumbs.getByRole("button", { name: "All categories", exact: true }).focus();
+  await breadcrumbs.getByRole("button", { name: "All services", exact: true }).focus();
   await page.keyboard.press("Enter");
-  await expect(tile(primary, "harbor")).toBeVisible();
+  await expect(tile(primary, "postgresql")).toBeVisible();
   let moved = false;
   for (const key of ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"]) {
-    await tile(primary, "northstar").focus();
+    await tile(primary, "api").focus();
     await page.keyboard.press(key);
-    if ((await page.locator(":focus").getAttribute("data-node-id")) !== "northstar") {
+    if ((await page.locator(":focus").getAttribute("data-node-id")) !== "api") {
       moved = true;
       break;
     }

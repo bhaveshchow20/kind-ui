@@ -15,7 +15,7 @@ async function assertContained(card: Locator) {
     const bounds = element.getBoundingClientRect();
     return [
       ...element.querySelectorAll(
-        '[data-kind-ui="treemap"], [data-kind-ui="treemap-color-legend"], [data-kind-ui="treemap-tooltip"]',
+        '[data-kind-ui="treemap"], [data-kind-ui="chart-legend"], [data-kind-ui="treemap-tooltip"]',
       ),
     ].filter((part) => {
       const rect = part.getBoundingClientRect();
@@ -47,8 +47,8 @@ for (const scheme of ["light", "dark"] as const) {
       await page.getByRole("tab", { name: "Treemap", exact: true }).click();
       const cards = page.locator(".demo-grid .chart-card");
       await expect(cards).toHaveCount(2);
-      await expect(cards.nth(0)).toContainText("Sector concentration");
-      await expect(cards.nth(1)).toContainText("Gross position exposure");
+      await expect(cards.nth(0)).toContainText("Monthly cloud spend");
+      await expect(cards.nth(1)).toContainText("Portfolio allocation");
       for (const card of [cards.nth(0), cards.nth(1)]) {
         await assertContained(card);
         const tile = card.locator('[data-kind-ui="treemap-tile"]').first();
@@ -71,62 +71,55 @@ for (const scheme of ["light", "dark"] as const) {
   }
 }
 
-test("sector navigation and data selection retain the independent signed metric", async ({
+test("cloud spend shares, hierarchy and category selection preserve useful values", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
-  const card = await openExample(page, "Sector concentration");
-  await card.locator('[data-kind-ui="treemap-group-header"][data-node-id="technology"]').click();
+  const card = await openExample(page, "Monthly cloud spend");
+  await expect(card).toContainText("$76.3k");
+  const api = card.locator('[data-kind-ui="treemap-tile"][data-node-id="api"]');
+  const before = await api.boundingBox();
+  const dataLegend = card.locator('button[data-legend-key="data"]');
+  for (let repeat = 0; repeat < 3; repeat++) {
+    await dataLegend.click();
+    await expect(api).toHaveAttribute("data-inactive", "true");
+    expect(await api.boundingBox()).toEqual(before);
+    await dataLegend.click();
+  }
+  await api.focus();
+  await expect(card.getByRole("tooltip")).toContainText("Compute / API");
+  await expect(card.getByRole("tooltip")).toContainText("$18.4k");
+  await expect(card.getByRole("tooltip")).toContainText("24.1%");
+  await card.locator('[data-kind-ui="treemap-group-header"][data-node-id="compute"]').click();
   await expect(card.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(3);
-  await expect(
-    card
-      .getByRole("navigation", { name: "Treemap navigation" })
-      .getByRole("button", { name: "Technology", exact: true }),
-  ).toHaveAttribute("aria-current", "location");
-  await card.getByRole("button", { name: "View data", exact: true }).click();
-  const table = card.locator('[data-kind-ui="treemap-data-table"]');
-  await expect(table).toBeVisible();
-  const missing = table.locator('tbody tr[data-node-id="current"]');
-  await expect(missing).toContainText("Unknown");
-  // Outside-view nodes retain root/parent shares while the view-share cell is empty.
-  await expect(missing.locator("td").nth(4)).toHaveText("—");
-  const orbit = table.locator('tr[data-node-id="orbit"]').getByRole("button");
-  await orbit.click();
-  await expect(card.locator('[data-kind-ui="treemap-tile"][data-node-id="orbit"]')).toHaveAttribute(
+  await card
+    .getByRole("navigation", { name: "Treemap navigation" })
+    .getByRole("button", { name: "All services" })
+    .click();
+  await expect(card.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(10);
+  await expect(card.getByRole("button", { name: "View data" })).toHaveCount(0);
+  await expect(card.locator("table.sr-only tbody tr")).toHaveCount(10);
+});
+
+test("portfolio tooltip shows holding value and sector share without changing allocation", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("./");
+  const card = await openExample(page, "Portfolio allocation");
+  await expect(card).toContainText("$197k");
+  const aapl = card.locator('[data-kind-ui="treemap-tile"][data-node-id="aapl"]');
+  await aapl.click();
+  await expect(aapl).toHaveAttribute("aria-pressed", "true");
+  await expect(card.locator('button[data-legend-key="technology"]')).toHaveAttribute(
     "aria-pressed",
     "true",
   );
-  // Selection and keyboard inspection are separate; Safari pointer clicks do not retain focus.
-  await orbit.focus();
-  await expect(card.getByRole("tooltip")).toContainText("−1.2%");
-  await card
-    .getByRole("navigation", { name: "Treemap navigation" })
-    .getByRole("button", { name: "All sectors", exact: true })
-    .click();
-  await expect(card.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(9);
-  await card.getByRole("button", { name: "Hide data", exact: true }).click();
-  await expect(table).toHaveCount(0);
-});
-
-test("position tooltip preserves signed short metadata without changing gross area", async ({
-  page,
-}) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("./");
-  const card = await openExample(page, "Gross position exposure");
-  await expect(card).toContainText("$60k net");
-  await expect(card).toContainText("Share of gross positions, not NAV");
-  const short = card.locator('[data-kind-ui="treemap-tile"][data-node-id="orbit-short"]');
-  await short.click();
-  await expect(short).toHaveAttribute("aria-pressed", "true");
-  const tooltip = card.getByRole("tooltip");
-  await expect(tooltip).toContainText("$70k");
-  await expect(tooltip).toContainText("Signed position: −$70,000");
-  await expect(tooltip).toContainText("+$1,120");
-  await expect(tooltip).toContainText("21.9% of supplied gross positions");
-  await card.getByRole("button", { name: "View data", exact: true }).click();
-  await expect(card.locator('tr[data-node-id="summit-short"]')).toContainText("Unknown");
+  await expect(card.getByRole("tooltip")).toContainText("Technology / AAPL");
+  await expect(card.getByRole("tooltip")).toContainText("$42k");
+  await expect(card.getByRole("tooltip")).toContainText("21.3%");
+  await expect(card.locator("table.sr-only tbody tr")).toHaveCount(9);
 });
 
 test("treemap controls and clipboard code retain caller data and source parity", async ({
@@ -143,25 +136,24 @@ test("treemap controls and clipboard code retain caller data and source parity",
     });
   });
   await page.goto("./");
-  const card = await openExample(page, "Gross position exposure");
+  const card = await openExample(page, "Portfolio allocation");
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("switch", { name: "Labels", exact: true }).uncheck();
   await expect(card.locator('[data-kind-ui="treemap-label"]')).toHaveCount(0);
   await dialog.getByRole("switch", { name: "Legend", exact: true }).uncheck();
-  await expect(card.locator('[data-kind-ui="treemap-color-legend"]')).toHaveCount(0);
+  await expect(card.locator('[data-kind-ui="chart-legend"]')).toHaveCount(0);
   await dialog.getByRole("slider", { name: "Tile spacing", exact: true }).press("End");
   await dialog.getByRole("tab", { name: "Code", exact: true }).click();
   const code = dialog.getByRole("region", { name: "Chart example code" });
-  await expect(code).toContainText("TreemapChart<Row>");
+  await expect(code).toContainText("readonly TreemapDatum[]");
   await expect(code).not.toContainText("0.5.0 does not include it");
-  await expect(code).toContainText("signedPosition");
-  await expect(code).toContainText("Missing supplied area for");
+  await expect(code).toContainText("aapl");
   await expect(code).not.toContainText("<TreemapChart.Labels");
-  await expect(code).not.toContainText("<TreemapChart.ColorLegend");
+  await expect(code).not.toContainText("<TreemapChart.Legend");
   await expect(code).not.toContainText("npx shadcn");
   await dialog.getByRole("button", { name: "Copy code", exact: true }).click();
   const copied = await page.evaluate(() => sessionStorage.getItem("treemap-code"));
-  expect(copied).toContain("signedPosition");
+  expect(copied).toContain("aapl");
   expect(copied).not.toMatch(/candidate|validated archive|does not include it/);
   await expect(dialog.getByRole("link", { name: "Go to Documentation" })).toHaveAttribute(
     "href",

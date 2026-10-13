@@ -40,7 +40,7 @@ test("Treemap CLI and manual installation use the canonical composition", () => 
   assert.equal(result.steps[2].code, read("examples/treemap/example.tsx"));
   assert.match(
     result.steps[3].code,
-    /import \{ MarketTreemap \} from "@\/components\/treemap-chart"/,
+    /import \{ CloudSpendTreemap \} from "@\/components\/treemap-chart"/,
   );
   const markdown = installationMarkdown(bundle);
   publicCopy(markdown, "Treemap installation");
@@ -101,7 +101,7 @@ test("Treemap selected source and prompts preserve deployed link parity without 
       );
       if (variant === "loading") {
         assert.match(source, /loading = true/);
-        assert.match(source, /metric = "return"/);
+        assert.match(source, /period = "current"/);
       }
     }
     assert.equal(JSON.stringify(bundle), before);
