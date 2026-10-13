@@ -126,6 +126,11 @@ test("Candlestick installation and section copy controls fit narrow layouts with
           },
           { fontFamily, fontSize },
         );
+        const widths = await page
+          .locator('[data-component="candlestick"] [data-kind-ui="candlestick-volume-mark"]')
+          .evaluateAll((nodes) => nodes.map((node) => Number(node.getAttribute("width"))));
+        expect(widths.length).toBeGreaterThan(0);
+        expect(Math.min(...widths)).toBeGreaterThanOrEqual(1);
         const installation = page.locator('[data-chart-installation="candlestick"]');
         await installation.getByRole("tab", { name: "Manual", exact: true }).click();
         await expect(installation.getByRole("heading", { level: 3 })).toHaveCount(4);

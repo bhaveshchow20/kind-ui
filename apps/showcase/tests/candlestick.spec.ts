@@ -269,6 +269,11 @@ for (const width of [320, 375, 390, 414]) {
       const count = await card.locator('[data-kind-ui="candlestick-mark"]').count();
       expect(count).toBeGreaterThanOrEqual(48);
       expect(count).toBeLessThan(55);
+      const widths = await card
+        .locator('[data-kind-ui="candlestick-volume-mark"]')
+        .evaluateAll((nodes) => nodes.map((node) => Number(node.getAttribute("width"))));
+      expect(widths.length).toBeGreaterThan(0);
+      expect(Math.min(...widths)).toBeGreaterThanOrEqual(1);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
       );

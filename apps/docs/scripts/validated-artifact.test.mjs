@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -145,5 +145,78 @@ for (const [field, invalid] of [
     f.metadata[field] = invalid;
     f.save();
     assert.throws(f.read, /invalid_type/);
+  });
+}
+
+for (const mode of ["changed", "unchanged", "rejected"]) {
+  test(`package preparation ${mode} bytes only invalidate the owned Webpack cache after validation`, (t) => {
+    const f = fixture(t);
+    const packageDirectory = path.join(f.root, "packages/charts");
+    mkdirSync(packageDirectory, { recursive: true });
+    writeFileSync(path.join(packageDirectory, "package.json"), JSON.stringify(f.manifest));
+    execFileSync("git", ["add", "packages/charts/package.json"], { cwd: f.root });
+    execFileSync(
+      "git",
+      [
+        "-c",
+        "user.name=Docs fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "commit",
+        "-m",
+        "Package manifest",
+      ],
+      { cwd: f.root, stdio: "ignore" },
+    );
+    f.metadata.source.checkoutCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: f.root,
+      encoding: "utf8",
+    }).trim();
+    f.save();
+    const docs = path.join(f.root, "apps/docs");
+    const cache = path.join(docs, ".next/cache/webpack/client-production/old.pack");
+    const imageCache = path.join(docs, ".next/cache/images/retained.png");
+    const build = path.join(docs, ".next/server/retained.js");
+    const sibling = path.join(f.root, "apps/showcase/.next/cache/webpack/retained.pack");
+    for (const file of [cache, imageCache, build, sibling]) {
+      mkdirSync(path.dirname(file), { recursive: true });
+      writeFileSync(file, "retained");
+    }
+    const canonical = path.join(docs, "vendor", f.metadata.filename);
+    mkdirSync(path.dirname(canonical), { recursive: true });
+    writeFileSync(
+      canonical,
+      mode === "unchanged" ? "retained validated bytes" : "previous archive bytes",
+    );
+    if (mode === "rejected") {
+      f.metadata.sha256 = "a".repeat(64);
+      f.save();
+    }
+    const prepare = () =>
+      execFileSync(
+        process.execPath,
+        [
+          new URL("./prepare-package.mjs", import.meta.url).pathname,
+          "--validated-dir",
+          f.directory,
+        ],
+        { cwd: docs, stdio: "pipe" },
+      );
+    if (mode === "rejected") {
+      assert.throws(prepare, /checksum differs/);
+      assert.equal(readFileSync(canonical, "utf8"), "previous archive bytes");
+      assert.equal(existsSync(path.join(docs, "vendor/provenance.json")), false);
+    } else {
+      prepare();
+      assert.equal(readFileSync(canonical, "utf8"), "retained validated bytes");
+      const provenance = JSON.parse(
+        readFileSync(path.join(docs, "vendor/provenance.json"), "utf8"),
+      );
+      assert.equal(provenance.sha256, f.metadata.sha256);
+      assert.equal(provenance.version, f.manifest.version);
+    }
+    assert.equal(existsSync(cache), mode !== "changed");
+    for (const file of [imageCache, build, sibling])
+      assert.equal(readFileSync(file, "utf8"), "retained");
   });
 }
