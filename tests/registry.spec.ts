@@ -108,10 +108,10 @@ test("installed treemap keeps selection and geometry through native boolean load
   await page.getByRole("combobox", { name: "Chart", exact: true }).selectOption("treemap-chart");
   const composition = page.getByRole("region", { name: "Installed composition" });
   const tiles = composition.locator('[data-kind-ui="treemap-tile"]');
-  const target = composition.locator('[data-kind-ui="treemap-tile"][data-node-id="northstar"]');
+  const target = composition.locator('[data-kind-ui="treemap-tile"][data-node-id="api"]');
   await expect(target).toBeVisible();
   await target.focus();
-  await expect(composition.getByRole("tooltip")).toContainText("Northstar");
+  await expect(composition.getByRole("tooltip")).toContainText("API");
   await target.press("Enter");
   await expect(target).toHaveAttribute("aria-pressed", "true");
   const geometry = () =>
@@ -130,7 +130,7 @@ test("installed treemap keeps selection and geometry through native boolean load
   const before = await geometry();
   await page.getByRole("button", { name: "Loading", exact: true }).click();
   await expect(composition.locator('[data-kind-ui="chart-loading-status"]')).toHaveText(
-    "Loading chart",
+    "Loading cloud spend",
   );
   await expect(composition.locator('[data-kind-ui="treemap-content"]')).toHaveAttribute(
     "inert",
@@ -140,6 +140,6 @@ test("installed treemap keeps selection and geometry through native boolean load
   await expect(target).toBeVisible();
   await expect(target).toHaveAttribute("aria-pressed", "true");
   expect(await geometry()).toEqual(before);
-  await expect(composition.locator('[data-kind-ui="treemap-color-legend"]')).toBeVisible();
+  await expect(composition.locator('[data-kind-ui="chart-legend"]')).toBeVisible();
   expect(errors).toEqual([]);
 });

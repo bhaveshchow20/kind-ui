@@ -112,6 +112,10 @@ try {
     }
     const tiles = card.locator('[data-kind-ui="treemap-tile"]');
     if (family === "treemap") {
+      // The tile and its root legend share one selection owner.
+      await expect(tiles.first()).toHaveAttribute("aria-pressed", "true");
+      await tiles.first().click();
+      await expect(tiles.first()).toHaveAttribute("aria-pressed", "false");
       await tiles.first().click();
       await expect(tiles.first()).toHaveAttribute("aria-pressed", "true");
     }
@@ -212,24 +216,48 @@ async function exerciseLegend(page, card, family, source, id) {
             [
               node,
               ...node.querySelectorAll("path, rect, circle, polygon, polyline, line, ellipse"),
-            ].map((shape) =>
-              ["d", "points", "x", "y", "width", "height", "cx", "cy", "transform"].map((key) =>
+            ].map((shape) => [
+              ...["d", "points", "x", "y", "width", "height", "cx", "cy", "transform"].map((key) =>
                 shape.getAttribute(key),
               ),
-            ),
+              ...(shape instanceof HTMLElement
+                ? [
+                    shape.dataset.nodeId,
+                    shape.style.left,
+                    shape.style.top,
+                    shape.style.width,
+                    shape.style.height,
+                  ]
+                : []),
+            ]),
           ),
         );
     const originalGeometry = await geometry();
     const plotCount = await card.locator(marks[family]).count();
     assert.ok(plotCount > 0, `${id} focus preserves plotted marks`);
     const dimmedPaint = () =>
-      card
-        .locator(
-          '[data-emphasis="dimmed"] [data-kind-ui="emphasis-paint"], [data-kind-ui="sankey-focus-mark"] > g, [data-kind-ui="series-interaction-paint"], [data-focus="dimmed"]',
-        )
-        .evaluateAll(
-          (nodes) => nodes.filter((node) => Number(getComputedStyle(node).opacity) < 1).length,
-        );
+      family === "treemap"
+        ? card.locator(marks.treemap).evaluateAll(
+            (nodes) =>
+              nodes.filter((node) => {
+                let opacity = 1;
+                for (
+                  let ancestor = node;
+                  ancestor && !ancestor.matches("[data-component], [data-testid=consumer-example]");
+                  ancestor = ancestor.parentElement
+                ) {
+                  opacity *= Number(getComputedStyle(ancestor).opacity);
+                }
+                return opacity < 1;
+              }).length,
+          )
+        : card
+            .locator(
+              '[data-emphasis="dimmed"] [data-kind-ui="emphasis-paint"], [data-kind-ui="sankey-focus-mark"] > g, [data-kind-ui="series-interaction-paint"], [data-focus="dimmed"]',
+            )
+            .evaluateAll(
+              (nodes) => nodes.filter((node) => Number(getComputedStyle(node).opacity) < 1).length,
+            );
     await buttons.first().focus();
     await page.keyboard.press("Escape");
     await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(0);
