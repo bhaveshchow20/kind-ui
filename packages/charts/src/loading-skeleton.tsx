@@ -106,7 +106,13 @@ export function LoadingSkeletonSurface({
   const duration = Math.max(
     0,
     animation?.revealDurationMs ??
-      (family === "scatter" ? 700 : family === "heatmap" ? 800 : family === "sankey" ? 450 : 1000),
+      (family === "scatter"
+        ? 700
+        : ["heatmap", "treemap"].includes(family)
+          ? 800
+          : family === "sankey"
+            ? 450
+            : 1000),
   );
   const easing = animation?.revealEasing ?? (isCartesian ? cartesianEase : "easeOut");
   const part = (kind: "lineReveal" | "areaReveal" | "barReveal") => {
@@ -171,7 +177,7 @@ export function LoadingSkeletonSurface({
             ? "morph"
             : polar
               ? "angular"
-              : family === "heatmap"
+              : family === "heatmap" || family === "treemap"
                 ? "wave"
                 : family === "sankey"
                   ? "flow"
