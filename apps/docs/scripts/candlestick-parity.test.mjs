@@ -3,13 +3,13 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
-import { verificationFiles } from "./consumer-validation-files.mjs";
 import ts from "typescript";
 import { itemNameFor, registryItems } from "../../../registry/catalog.mjs";
 import { allExamples, examples } from "../examples/catalog.mjs";
 import { installationFor, installationMarkdown } from "../lib/chart-installation.mjs";
 import { componentBundlesSchema } from "../lib/component-bundles.server.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
+import { verificationFiles } from "./consumer-validation-files.mjs";
 
 const source = readFileSync(
   new URL("../examples/candlestick/example.tsx", import.meta.url),
