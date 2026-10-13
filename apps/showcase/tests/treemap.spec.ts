@@ -64,9 +64,10 @@ for (const scheme of ["light", "dark"] as const) {
           ),
         ).toHaveCount(1);
       }
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-        width,
-      );
+      // Wait for the retargeted keyboard tooltip layout to settle.
+      await expect
+        .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+        .toBeLessThanOrEqual(width);
     });
   }
 }
@@ -99,7 +100,7 @@ test("cloud spend shares, hierarchy and category selection preserve useful value
     .click();
   await expect(card.locator('[data-kind-ui="treemap-tile"]')).toHaveCount(10);
   await expect(card.getByRole("button", { name: "View data" })).toHaveCount(0);
-  await expect(card.locator("table.sr-only tbody tr")).toHaveCount(10);
+  await expect(card.getByRole("table").locator("tbody tr")).toHaveCount(10);
 });
 
 test("portfolio tooltip shows holding value and sector share without changing allocation", async ({
@@ -119,7 +120,7 @@ test("portfolio tooltip shows holding value and sector share without changing al
   await expect(card.getByRole("tooltip")).toContainText("Technology / AAPL");
   await expect(card.getByRole("tooltip")).toContainText("$42k");
   await expect(card.getByRole("tooltip")).toContainText("21.3%");
-  await expect(card.locator("table.sr-only tbody tr")).toHaveCount(9);
+  await expect(card.getByRole("table").locator("tbody tr")).toHaveCount(9);
 });
 
 test("treemap controls and clipboard code retain caller data and source parity", async ({

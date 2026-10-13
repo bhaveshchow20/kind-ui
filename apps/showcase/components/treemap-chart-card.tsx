@@ -110,25 +110,27 @@ export function TreemapChartCard({
           rootLabel={`All ${recipe.id === "treemap-market" ? "services" : "holdings"}`}
         />
       </TreemapChart>
-      <table className="sr-only">
-        <caption>
-          {recipe.tag} · {recipe.areaLabel} · Synthetic example
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Item</th>
-            <th scope="col">Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id}>
-              <th scope="row">{row.path}</th>
-              <td>{formatValue(row.value)}</td>
+      <div className="sr-only">
+        <table>
+          <caption>
+            {recipe.tag} · {recipe.areaLabel} · Synthetic example
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col">Value</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id}>
+                <th scope="row">{row.path}</th>
+                <td>{formatValue(row.value)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <p className="chart-context">{recipe.context}</p>
     </motion.article>
   );
