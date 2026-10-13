@@ -471,7 +471,7 @@ try {
         integrity: receipt.integrity,
         versions: resolvedVersions,
         checks: [
-          "actual namespace CLI installation of all 14 items",
+          `actual namespace CLI installation of all ${registryItems.length} items`,
           "custom components aliases",
           published
             ? "official npm tarball resolution and integrity"
@@ -533,5 +533,5 @@ await write(
   )}\n`,
 );
 console.log(
-  `Vite and Next installed all 14 ${published ? "published" : "candidate"} registry compositions with strict types and production builds.`,
+  `Vite and Next installed all ${registryItems.length} ${published ? "published" : "candidate"} registry compositions with strict types and production builds.`,
 );
