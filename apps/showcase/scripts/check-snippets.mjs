@@ -161,7 +161,8 @@ try {
             assert.doesNotMatch(source, /candidate|validated archive|does not include it/);
             assert.match(source, /TreemapChart\.Breadcrumbs/);
             assert.match(source, /TreemapChart\.Legend/);
-            assert.match(source, /valueAnimation="shuffle"/);
+            if (animate) assert.match(source, /valueAnimation="shuffle"/);
+            else assert.doesNotMatch(source, /valueAnimation="shuffle"/);
             const prompt = treemap.treemapPrompt(
               recipe,
               finish,
