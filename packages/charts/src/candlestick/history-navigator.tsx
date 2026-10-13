@@ -3,9 +3,11 @@
 import {
   type ComponentProps,
   type ComponentPropsWithRef,
+  useCallback,
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { Brush, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { OutsidePlot } from "../family-root.js";
@@ -24,6 +26,7 @@ type OwnedBrush =
   | "width"
   | "height";
 type OwnedOverview = "data" | "dataKey" | "xAxisId" | "yAxisId" | "isAnimationActive";
+type HistoryTime = { identity: string; time: number | string; logical: number };
 export type CandlestickHistoryNavigatorProps = Omit<
   ComponentPropsWithRef<"fieldset">,
   "children"
@@ -66,22 +69,48 @@ export function CandlestickHistoryNavigator({
   const { points, changeViewport, formatTime } = context;
   const viewport = context.targetViewport ?? context.viewport;
   const unavailable = disabled || context.loading;
-  const history = useMemo(
-    () => points.map((point, index) => ({ ...point, logical: index })),
-    [points],
-  );
+  const signature = useMemo(() => JSON.stringify(points.map((point) => point.identity)), [points]);
+  const geometry = useRef<{ signature: string; data: HistoryTime[] } | null>(null);
+  if (geometry.current === null || geometry.current.signature !== signature) {
+    geometry.current = {
+      signature,
+      data: points.map((point, logical) => ({
+        identity: point.identity,
+        time: point.time,
+        logical,
+      })),
+    };
+  }
+  const history = geometry.current.data;
+  const readClose = useCallback((time: HistoryTime) => points[time.logical]?.close, [points]);
+  const surface = useRef<HTMLDivElement>(null);
+  const restoreFocus = useRef<{ index: number; node: Element } | null>(null);
+  const [historyRevision, setHistoryRevision] = useState(0);
+  useLayoutEffect(() => {
+    if (history.length < 2) return;
+    // Native Brush rebuilds its scale before restored controlled indices arrive
+    // after a data update. Recreate only that part once reconciliation has settled.
+    const frame = requestAnimationFrame(() => {
+      const handles = Array.from(surface.current?.querySelectorAll('[role="slider"]') ?? []);
+      const active = document.activeElement;
+      const focused = active ? handles.indexOf(active) : -1;
+      restoreFocus.current = focused < 0 || !active ? null : { index: focused, node: active };
+      setHistoryRevision((revision) => revision + 1);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [history]);
   const last = points.length - 1;
   const startIndex = Math.max(0, Math.min(last, Math.ceil(viewport.from)));
   const endIndex = Math.max(startIndex, Math.min(last, Math.floor(viewport.to)));
-  const surface = useRef<HTMLDivElement>(null);
   const label = brushProps.ariaLabel ?? "Historical window";
   useLayoutEffect(() => {
     const host = surface.current;
     if (!host) return;
     // Native Brush retains pointer, touch and keyboard behavior. Its labels use logical
     // observation indices, rather than the engine's pixel-valued slider defaults.
-    const sync = () =>
-      host.querySelectorAll('[role="slider"]').forEach((handle, index) => {
+    const sync = () => {
+      const handles = host.querySelectorAll('[role="slider"]');
+      handles.forEach((handle, index) => {
         const value = index === 0 ? startIndex : endIndex;
         const point = points[value];
         for (const [key, text] of Object.entries({
@@ -94,6 +123,14 @@ export function CandlestickHistoryNavigator({
           if (handle.getAttribute(key) !== text) handle.setAttribute(key, text);
         }
       });
+      if (restoreFocus.current !== null && handles.length === 2) {
+        const handle = handles[restoreFocus.current.index];
+        if (handle === restoreFocus.current.node) return;
+        if (document.activeElement === document.body && handle instanceof SVGElement)
+          handle.focus({ preventScroll: true });
+        restoreFocus.current = null;
+      }
+    };
     const observer = new MutationObserver(sync);
     observer.observe(host, {
       childList: true,
@@ -119,7 +156,7 @@ export function CandlestickHistoryNavigator({
             {points.length ? "One observation" : "No history available"}
           </p>
         ) : (
-          <div ref={surface} style={{ height }}>
+          <div ref={surface} className="touch-pan-y" style={{ height }}>
             <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <LineChart
                 data={history}
@@ -129,6 +166,7 @@ export function CandlestickHistoryNavigator({
                 margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
               >
                 <Brush
+                  key={historyRevision}
                   {...brushProps}
                   x={0}
                   y={0}
@@ -164,7 +202,7 @@ export function CandlestickHistoryNavigator({
                     <YAxis hide domain={["dataMin", "dataMax"]} />
                     <Line
                       {...overviewProps}
-                      dataKey="close"
+                      dataKey={readClose}
                       stroke={overviewProps.stroke ?? "currentColor"}
                       strokeWidth={overviewProps.strokeWidth ?? 1}
                       dot={overviewProps.dot ?? false}

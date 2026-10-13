@@ -212,6 +212,31 @@ export function CandlestickHost() {
       <button type="button" onClick={() => setLogarithmic(!logarithmic)}>
         Log scale
       </button>
+      {params.has("navigation") && (
+        <button
+          type="button"
+          onClick={() =>
+            setRows((current) => {
+              const date = new Date(String(current.at(-1)?.time ?? "2026-03-11"));
+              date.setUTCDate(date.getUTCDate() + 1);
+              return [
+                ...current,
+                {
+                  time: date.toISOString().slice(0, 10),
+                  open: 119,
+                  low: 115,
+                  high: 125,
+                  close: 122,
+                  volume: 12,
+                  source: "Trade OHLC",
+                },
+              ];
+            })
+          }
+        >
+          Append next observation
+        </button>
+      )}
       <button
         type="button"
         onClick={() =>

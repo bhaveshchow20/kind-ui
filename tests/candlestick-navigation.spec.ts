@@ -124,8 +124,14 @@ test("historical overview stays below price and volume and native handles contro
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
   await expect(page.getByLabel("Window", { exact: true })).toHaveText("0.5,5.5");
-  await page.getByRole("button", { name: "Append", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Append next observation", exact: true })
+    .dispatchEvent("click");
   await expect(page.getByLabel("Window", { exact: true })).toHaveText("1.5,6.5");
+  await expect(end).toBeFocused();
+  await page.getByRole("button", { name: "Prepend", exact: true }).dispatchEvent("click");
+  await expect(page.getByLabel("Window", { exact: true })).toHaveText("2.5,7.5");
+  await expect(end).toBeFocused();
   const axe = await new AxeBuilder({ page })
     .include('[data-kind-ui="candlestick-history-navigator"]')
     .analyze();
@@ -137,4 +143,39 @@ test("historical overview stays below price and volume and native handles contro
   await expect
     .poll(() => nav.evaluate((node) => node.scrollWidth - node.clientWidth))
     .toBeLessThanOrEqual(1);
+});
+
+test("forming-row corrections update the overview without resetting focused handles or cancelling a drag", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?navigation`);
+  await page.getByRole("button", { name: "History window", exact: true }).click();
+  const nav = page.locator('[data-kind-ui="candlestick-history-navigator"]');
+  const start = nav.getByRole("slider", { name: "Historical window start", exact: true });
+  const end = nav.getByRole("slider", { name: "Historical window end", exact: true });
+  const curve = nav.locator(".recharts-line-curve");
+  const beforeCurve = await curve.getAttribute("d");
+  await end.focus();
+  await page.getByRole("button", { name: "Replace", exact: true }).dispatchEvent("click");
+  await expect(end).toBeFocused();
+  await expect(curve).not.toHaveAttribute("d", beforeCurve ?? "");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByLabel("Window", { exact: true })).toHaveText("0.5,4.5");
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.getByLabel("Window", { exact: true })).toHaveText("0.5,3.5");
+  const a = await start.boundingBox();
+  const b = await end.boundingBox();
+  const slide = await nav.locator(".recharts-brush-slide").boundingBox();
+  if (!a || !b || !slide) throw new Error("Missing native brush geometry");
+  const handle = await start.elementHandle();
+  await page.mouse.move(slide.x + slide.width / 2, slide.y + slide.height / 2);
+  await page.mouse.down();
+  await page.getByRole("button", { name: "Replace", exact: true }).dispatchEvent("click");
+  await expect.poll(() => handle?.evaluate((node) => node.isConnected) ?? false).toBe(true);
+  await page.mouse.move(
+    slide.x + slide.width / 2 - (b.x - a.x) / 2 - 2,
+    slide.y + slide.height / 2,
+  );
+  await page.mouse.up();
+  await expect(page.getByLabel("Window", { exact: true })).toHaveText("-0.5,2.5");
 });
