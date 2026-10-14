@@ -94,9 +94,6 @@ export function TreemapChartCard({
         )}
         <TreemapChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
         {options.showLegend !== false && <TreemapChart.Legend />}
-        <TreemapChart.Breadcrumbs
-          rootLabel={`All ${recipe.id === "treemap-market" ? "services" : "holdings"}`}
-        />
       </TreemapChart>
       <div className="sr-only">
         <table>

@@ -181,7 +181,6 @@ export function Example() {
     ${options.showLabels === false ? "" : `<TreemapChart.Labels minWidth={18} minHeight={14} padding={5} labelProps={node => ({ style: { color: textColors[node.path[0] ?? node.id] } })}>${options.showValues === false ? "{node => node.label}" : ""}</TreemapChart.Labels>`}
     <TreemapChart.Tooltip${animate ? ' valueAnimation="shuffle"' : ""} />
     ${options.showLegend === false ? "" : "<TreemapChart.Legend />"}
-    <TreemapChart.Breadcrumbs rootLabel="All ${recipe.id === "treemap-market" ? "services" : "holdings"}" />
   </TreemapChart>;
 }
 `;

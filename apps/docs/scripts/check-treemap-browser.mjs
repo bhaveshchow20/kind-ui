@@ -296,7 +296,7 @@ try {
     ),
   ).toHaveCount(1);
   evidence.navigation.push({
-    keyboardDrillAndBreadcrumbs: "passed",
+    keyboardLegendSelection: "passed",
     arrowsHomeEnd: "passed",
     onePlotTabStop: "passed",
   });

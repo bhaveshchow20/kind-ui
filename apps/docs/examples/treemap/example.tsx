@@ -112,7 +112,6 @@ export function CloudSpendTreemap({
         />
         <TreemapChart.Tooltip valueAnimation="shuffle" />
         <TreemapChart.Legend />
-        <TreemapChart.Breadcrumbs rootLabel="All services" />
       </TreemapChart>
       <p className="m-0 text-xs text-muted-foreground">
         Illustrative monthly billing · Select a category or inspect a service.
