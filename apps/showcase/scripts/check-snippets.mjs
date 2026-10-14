@@ -85,15 +85,15 @@ try {
             `${recipe.id} copied focus must preserve the complete data`,
           );
           if (recipe.family === "Candlestick") {
-            assert.match(source, /<CandlestickVolume\s+seriesKey="volume"/);
-            assert.match(source, /<CandlestickCurrentPrice/);
-            assert.match(source, /<CandlestickControls/);
-            assert.match(source, /<CandlestickHistoryNavigator/);
+            assert.match(source, /<CandlestickChart\.Volume\s+seriesKey="volume"/);
+            assert.match(source, /<CandlestickChart\.CurrentPrice/);
+            assert.match(source, /<CandlestickChart\.Controls/);
+            assert.match(source, /<CandlestickChart\.HistoryNavigator/);
             assert.match(source, /data-kind-ui="candlestick-data-alternative"/);
             assert.match(source, /rows=\{feed.rows\}/);
             assert.match(source, /rows\.map\(\(row\)/);
             assert.match(source, /selection=\{selection\}\s+onSelectionChange=/);
-            assert.doesNotMatch(source, /<CandlestickDataTable/);
+            assert.doesNotMatch(source, /<CandlestickChart\.DataTable/);
             assert.match(source, /var\(--chart-grid, #e5e7eb\)/);
             assert.match(source, /var\(--chart-axis, #64748b\)/);
             assert.match(source, /timeMode="epoch-ms"/);
@@ -158,8 +158,11 @@ try {
         changedOptions,
       );
       assert.doesNotMatch(source, /<\w+Chart\.Legend\b/, `${recipe.id} hides the explicit legend`);
-      if (recipe.family !== "Heatmap")
+      if (recipe.family === "Candlestick") {
+        assert.match(source, /showGrid !== false &&/, "Streaming component gates its shared grid");
+      } else if (recipe.family !== "Heatmap") {
         assert.doesNotMatch(source, /<\w+Chart\.Grid\b/, `${recipe.id} omits the explicit grid`);
+      }
       if (recipe.family === "Candlestick") {
         assert.match(source, /"width":40/);
         assert.match(source, /width=\{options.width \?\? 12\}/);

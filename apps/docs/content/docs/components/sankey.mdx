@@ -25,7 +25,7 @@ import { SankeyChart } from "@kind-ui/charts";
 </SankeyChart>
 ```
 
-Sankey requires `config`, an accessible name and explicit children. Map every node ID to a label and color. Include `Nodes` and `Links`; omitted renderer parts stay absent, including through fragments and wrapper components. `Legend` and `Table` inherit config/data and mount outside the plot in the browser. Set shared actions on `interaction` and outer HTML attributes on `frameProps`.
+Sankey requires `config`, an accessible name and explicit children. Map every node ID to a label and color. Compose `SankeyChart.Nodes` and `SankeyChart.Links` to register the diagram renderers; customize their callbacks with `SankeyChart.Node`, `SankeyChart.Link`, and `SankeyChart.NodeLabel`. Include `Nodes` and `Links`; omitted renderer parts stay absent, including through fragments and wrapper components. `Legend` and `Table` inherit config/data and mount outside the plot in the browser. Set shared actions on `interaction` and outer HTML attributes on `frameProps`.
 
 Nodes use their own color; solid links use the source color. `SankeyChart.Tooltip` keeps native tooltip props and themed defaults.
 
@@ -193,6 +193,8 @@ Use these building blocks to customize this chart. Each reference includes its f
 | Component | Purpose |
 | --- | --- |
 | [Chart frame](/docs/chart-components/chart/) | Coordinate node focus between the legend and diagram. |
+
+The node legend reuses the shared `LegendItem` and legend styles, with node identity and adjacency focus supplied by Sankey. `Content` uses the shared outside-plot slot. Cartesian axes and series are not flow-diagram parts.
 
 Native Recharts Tooltip handles hover inspection; path handlers and status text provide keyboard selection.
 

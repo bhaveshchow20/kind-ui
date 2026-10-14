@@ -1,15 +1,5 @@
 "use client";
-import {
-  CandlestickChart,
-  CandlestickContent,
-  CandlestickCrosshair,
-  CandlestickGrid,
-  CandlestickReferenceLine,
-  CandlestickSeries,
-  CandlestickXAxis,
-  CandlestickYAxis,
-  type SeriesConfig,
-} from "@kind-ui/charts";
+import { CandlestickChart, type SeriesConfig } from "@kind-ui/charts";
 
 // Original simulated bid quotes for a contract with a USD 1 payout.
 // These extrema describe the bid book; they do not describe executed trades.
@@ -109,35 +99,35 @@ export function BinaryBidCandlestickChart() {
         formatPrice={quote}
         margin={{ top: 12, right: 8, bottom: 4, left: 0 }}
       >
-        <CandlestickGrid
+        <CandlestickChart.Grid
           vertical={false}
           strokeDasharray="3 3"
           stroke="currentColor"
           strokeOpacity={0.12}
         />
-        <CandlestickXAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={24} />
-        <CandlestickYAxis
+        <CandlestickChart.XAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={24} />
+        <CandlestickChart.YAxis
           orientation="right"
           axisLine={false}
           tickLine={false}
           width={64}
           ticks={[0, 0.25, 0.5, 0.75, 1]}
         />
-        <CandlestickReferenceLine
+        <CandlestickChart.ReferenceLine
           y={0.5}
           stroke="currentColor"
           strokeOpacity={0.3}
           strokeDasharray="4 4"
         />
-        <CandlestickSeries<Quote>
+        <CandlestickChart.Series<Quote>
           seriesKey="bid"
           rising="var(--candlestick-rising, #087f68)"
           falling="var(--candlestick-falling, #c43d54)"
           unchanged="var(--candlestick-neutral, #53657b)"
           maxBarSize={22}
         />
-        <CandlestickCrosshair strokeOpacity={0.5} />
-        <CandlestickContent<Quote>
+        <CandlestickChart.Crosshair strokeOpacity={0.5} />
+        <CandlestickChart.Content<Quote>
           frameProps={{ style: { minHeight: 36, fontSize: 12, paddingTop: 12 } }}
         >
           {(point) =>
@@ -145,7 +135,7 @@ export function BinaryBidCandlestickChart() {
               ? `${time(point.time)} UTC · ${point.original.source} · O ${quote(point.open ?? 0)} / H ${quote(point.high ?? 0)} / L ${quote(point.low ?? 0)} / C ${quote(point.close ?? 0)} · ${point.state}`
               : "Inspect a quote interval. The dashed line is a USD 0.50 reference."
           }
-        </CandlestickContent>
+        </CandlestickChart.Content>
       </CandlestickChart>
     </div>
   );

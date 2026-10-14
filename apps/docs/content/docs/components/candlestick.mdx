@@ -94,29 +94,83 @@ Set `loading` and a source-specific `loadingLabel` while observations are pendin
 
 </div>
 
-### Parts
+### Shared components
 
-<div className="line-props-scroll" role="region" aria-label="Candlestick parts" tabIndex={0}>
+Compose explicit children just like the other chart families. `CandlestickChart.Grid`, `.Legend`, and `.Background` reuse the shared components. The time and price axes apply the shared presentation defaults while retaining candle coordinates, price domains, and volume separation. Standalone Candlestick exports remain available.
 
-| Part | Contract |
-| --- | --- |
-| `CandlestickSeries<Row>` | Required `seriesKey`; optional `rising`, `falling`, `unchanged`, `barSize`, `maxBarSize` (default `24`), `markProps` and `shape`. Direction describes `close` versus `open`, without a profit/loss meaning. |
-| `CandlestickMark` | SVG group with pixel `center`, `width`, `open`, `high`, `low`, `close` and `direction`. Wicks show extrema; equal open/close renders a visible doji line. Custom `shape` also receives `point` and native bar props. |
-| `CandlestickXAxis` | Visible nongap observation ticks by default; chart-owned time coordinates/domain. Consumer ticks, formatters and reversed/padded geometry remain explicit; gestures follow the rendered scale. |
-| `CandlestickYAxis` | Chart-owned price domain/scale and volume separation; native tick formatting and presentation. |
-| `CandlestickGrid` | Native CartesianGrid presentation. |
-| `CandlestickVolume` | Required `seriesKey`; optional `rising`, `falling`, `unchanged` direction paints and native `fill` / `fillOpacity`; independent volume axis via `axisProps`; visible observations set its extent, excluding overscan. Native bar styles, shape and events. Data, data key and axes stay with the family; separate native `data`, `minPointSize`, `background`, `layout` and stacking overrides are rejected at runtime, as are other owned Bar/axis geometry keys. |
-| `CandlestickOverlay<Row>` | Required `seriesKey`, `dataKey` (row key or `(row) => number \| null \| undefined`); optional `includeInDomain` (default `false`); native line presentation and `connectNulls`. Every value is validated before viewport filtering; included values also obey price bounds. |
-| `CandlestickReferenceLine` | Native reference-line presentation with explicit time/price coordinates and labels; clipped to the price region, `ifOverflow="hidden"` by default, no `"extendDomain"` or alternate axes. |
-| `CandlestickCrosshair` | SVG group props; `mode` (`"free"` by default, or `"snap"`), `showLabels` (default `true`) and native text `labelProps`. Pointer X/Y drive independent time/price guides and formatted axis labels; nearest-candle inspection supplies OHLC. Keyboard inspection anchors to the candle close. |
-| `CandlestickCurrentPrice<Row>` | Latest close line and price-axis pill, independent of inspection. Optional `seriesKey`, `orientation` (default `"right"`), `rising`, `falling`, `unchanged`, `lineVisible` and `axisLabelVisible` (both default `true`). Native `lineProps` and SVG-group `labelProps` retain refs and handlers; `labelTextColor` defaults to `"white"`. Optional child `(point, label) => ReactNode` replaces the axis label. |
-| `CandlestickControls` | Accessible zoom-in, zoom-out and reset buttons; `zoomFactor` (default `1.5`, finite and greater than `1`), `disabled`, native fieldset attributes, and `zoomInProps` / `zoomOutProps` / `resetProps` retain button markup, refs and handlers. |
-| `CandlestickHistoryNavigator` | Separate full-history close overview with a draggable range; controls the same viewport as pointer and keyboard panning. `height` defaults to `56`; `brushProps` and `overviewProps` expose native presentation, refs and handlers while the family retains data, axes and viewport ownership. |
-| `CandlestickContent<Row>` | Optional child `(point, selection) => ReactNode`, `className` and HTML `frameProps`; default OHLC/volume/state status readout outside the plot. |
-| `CandlestickTooltip<Row>` | Same child/readout contract, plus `maxWidth` (default `260`); measured floating tooltip and positioned frame ref through `frameProps.ref`. Polite announcements default off when Content is composed; `frameProps` retains consumer override. |
-| `CandlestickDataTable<Row>` | Required `caption`; optional `renderMetadata(point)`, `metadataLabel` (default `"Metadata"`) and native table attributes/ref. Missing values show a dash; its named focusable scroll region exposes off-screen columns. |
+See [Chart frame](/docs/chart-components/chart/), [Axes and grid](/docs/chart-components/axes-grid/), [Legend](/docs/chart-components/legend/), and [Series configuration](/docs/chart-components/series-config/).
 
-</div>
+### CandlestickChart.Series
+
+Required `seriesKey`; optional `rising`, `falling`, `unchanged`, `barSize`, `maxBarSize` (default `24`), `markProps` and `shape`. Direction describes `close` versus `open`, without a profit/loss meaning.
+
+### CandlestickChart.Mark
+
+SVG group with pixel `center`, `width`, `open`, `high`, `low`, `close` and `direction`. Wicks show extrema; equal open/close renders a visible doji line. Custom `shape` also receives `point` and native bar props.
+
+### CandlestickChart.XAxis
+
+Visible nongap observation ticks by default; chart-owned time coordinates/domain. Consumer ticks, formatters and reversed/padded geometry remain explicit; gestures follow the rendered scale.
+
+### CandlestickChart.YAxis
+
+Chart-owned price domain/scale and volume separation; native tick formatting and presentation.
+
+### CandlestickChart.Grid
+
+Shared grid component with horizontal grid lines, border-token stroke and dashed lines by default. Native grid props override presentation.
+
+### CandlestickChart.Volume
+
+Required `seriesKey`; optional `rising`, `falling`, `unchanged` direction paints and native `fill` / `fillOpacity`; independent volume axis via `axisProps`; visible observations set its extent, excluding overscan. Native bar styles, shape and events. Data, data key and axes stay with the family; separate native `data`, `minPointSize`, `background`, `layout` and stacking overrides are rejected at runtime, as are other owned Bar/axis geometry keys.
+
+### CandlestickChart.Overlay
+
+Required `seriesKey`, `dataKey` (row key or `(row) => number \| null \| undefined`); optional `includeInDomain` (default `false`); native line presentation and `connectNulls`. Every value is validated before viewport filtering; included values also obey price bounds.
+
+### CandlestickChart.ReferenceLine
+
+Native reference-line presentation with explicit time/price coordinates and labels; clipped to the price region, `ifOverflow="hidden"` by default, no `"extendDomain"` or alternate axes.
+
+### CandlestickChart.Crosshair
+
+SVG group props; `mode` (`"free"` by default, or `"snap"`), `showLabels` (default `true`) and native text `labelProps`. Pointer X/Y drive independent time/price guides and formatted axis labels; nearest-candle inspection supplies OHLC. Keyboard inspection anchors to the candle close.
+
+### CandlestickChart.CurrentPrice
+
+Latest close line and price-axis pill, independent of inspection. Optional `seriesKey`, `orientation` (default `"right"`), `rising`, `falling`, `unchanged`, `lineVisible` and `axisLabelVisible` (both default `true`). Native `lineProps` and SVG-group `labelProps` retain refs and handlers; `labelTextColor` defaults to `"white"`. Optional child `(point, label) => ReactNode` replaces the axis label.
+
+### CandlestickChart.Controls
+
+Accessible zoom-in, zoom-out and reset buttons; `zoomFactor` (default `1.5`, finite and greater than `1`), `disabled`, native fieldset attributes, and `zoomInProps` / `zoomOutProps` / `resetProps` retain button markup, refs and handlers.
+
+### CandlestickChart.HistoryNavigator
+
+Separate full-history close overview with a draggable range; controls the same viewport as pointer and keyboard panning. `height` defaults to `56`; `brushProps` and `overviewProps` expose native presentation, refs and handlers while the family retains data, axes and viewport ownership.
+
+### CandlestickChart.Content
+
+Optional child `(point, selection) => ReactNode`, `className` and HTML `frameProps`; default OHLC/volume/state status readout outside the plot.
+
+### CandlestickChart.Tooltip
+
+Same child/readout contract, plus `maxWidth` (default `260`); measured floating tooltip and positioned frame ref through `frameProps.ref`. Polite announcements default off when Content is composed; `frameProps` retains consumer override.
+
+### CandlestickChart.DataTable
+
+Required `caption`; optional `renderMetadata(point)`, `metadataLabel` (default `"Metadata"`) and native table attributes/ref. Missing values show a dash; its named focusable scroll region exposes off-screen columns.
+
+### CandlestickChart.Legend
+
+Shared interactive legend, rendered outside the plot. It uses the same series configuration, visibility and focus controls as the other chart families.
+
+### CandlestickChart.Background
+
+Shared plot background pattern. Consumer-owned `pattern`, `color`, `opacity`, and `size` match the other chart families.
+
+### CandlestickChart.Table
+
+Alias of `CandlestickChart.DataTable`; both retain the same typed candle rows, caption, native table props and ref.
 
 ### Observations and time
 

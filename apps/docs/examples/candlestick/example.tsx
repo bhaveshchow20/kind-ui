@@ -1,19 +1,5 @@
 "use client";
-import {
-  CandlestickChart,
-  CandlestickContent,
-  CandlestickControls,
-  CandlestickCrosshair,
-  CandlestickCurrentPrice,
-  CandlestickGrid,
-  CandlestickHistoryNavigator,
-  type CandlestickPoint,
-  CandlestickSeries,
-  CandlestickVolume,
-  CandlestickXAxis,
-  CandlestickYAxis,
-  type SeriesConfig,
-} from "@kind-ui/charts";
+import { CandlestickChart, type CandlestickPoint, type SeriesConfig } from "@kind-ui/charts";
 import { memo, useCallback, useEffect, useReducer, useState } from "react";
 
 type Candle = {
@@ -145,22 +131,22 @@ const MarketPlot = memo(function MarketPlot({
       animate
       margin={{ top: 12, right: 8, bottom: 4, left: 0 }}
     >
-      <CandlestickGrid
+      <CandlestickChart.Grid
         vertical={false}
         strokeDasharray="3 3"
         stroke="currentColor"
         strokeOpacity={0.1}
       />
-      <CandlestickXAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={32} />
-      <CandlestickYAxis orientation="right" axisLine={false} tickLine={false} width={76} />
-      <CandlestickSeries
+      <CandlestickChart.XAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={32} />
+      <CandlestickChart.YAxis orientation="right" axisLine={false} tickLine={false} width={76} />
+      <CandlestickChart.Series
         seriesKey="price"
         rising={rising}
         falling={falling}
         unchanged={unchanged}
         maxBarSize={12}
       />
-      <CandlestickVolume
+      <CandlestickChart.Volume
         seriesKey="volume"
         rising={rising}
         falling={falling}
@@ -168,17 +154,17 @@ const MarketPlot = memo(function MarketPlot({
         fillOpacity={0.78}
         axisProps={{ hide: true }}
       />
-      <CandlestickCurrentPrice
+      <CandlestickChart.CurrentPrice
         labelTextColor="var(--candlestick-label-text, #fff)"
         seriesKey="price"
         rising={rising}
         falling={falling}
         unchanged={unchanged}
       />
-      <CandlestickCrosshair strokeOpacity={0.5} />
-      <CandlestickContent className="sr-only" />
-      <CandlestickControls />
-      <CandlestickHistoryNavigator />
+      <CandlestickChart.Crosshair strokeOpacity={0.5} />
+      <CandlestickChart.Content className="sr-only" />
+      <CandlestickChart.Controls />
+      <CandlestickChart.HistoryNavigator />
     </CandlestickChart>
   );
 });

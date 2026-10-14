@@ -88,12 +88,12 @@ test("Candlestick copy prompts preserve the parts actually included in each reci
         `https://kindui.dev/charts/docs/examples/${example.id}/src/examples/${example.id}/example.tsx`,
       ),
     );
-    assert.match(recipeSource, /<CandlestickContent/);
+    assert.match(recipeSource, /<CandlestickChart\.Content/);
     if (example.id === "candlestick-updates") {
-      assert.match(recipeSource, /<CandlestickDataTable/);
+      assert.match(recipeSource, /<CandlestickChart\.DataTable/);
       assert.match(prompt, /Preserve the explicit readout and data table parts/);
     } else {
-      assert.doesNotMatch(recipeSource, /<CandlestickDataTable/);
+      assert.doesNotMatch(recipeSource, /<CandlestickChart\.DataTable/);
       assert.match(prompt, /Preserve the explicit readout part/);
       assert.doesNotMatch(prompt, /data table|alternative tables/);
     }

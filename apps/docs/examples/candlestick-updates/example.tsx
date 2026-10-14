@@ -1,17 +1,5 @@
 "use client";
-import {
-  CandlestickChart,
-  CandlestickContent,
-  CandlestickCrosshair,
-  CandlestickDataTable,
-  type CandlestickDatum,
-  CandlestickGrid,
-  CandlestickOverlay,
-  CandlestickSeries,
-  CandlestickXAxis,
-  CandlestickYAxis,
-  type SeriesConfig,
-} from "@kind-ui/charts";
+import { CandlestickChart, type CandlestickDatum, type SeriesConfig } from "@kind-ui/charts";
 import { useState } from "react";
 
 const buttonStyle = {
@@ -175,30 +163,30 @@ export function UpdatedCandlestickChart() {
         followLatest
         margin={{ top: 12, right: 8, bottom: 4, left: 0 }}
       >
-        <CandlestickGrid
+        <CandlestickChart.Grid
           vertical={false}
           strokeDasharray="3 3"
           stroke="currentColor"
           strokeOpacity={0.12}
         />
-        <CandlestickXAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={24} />
-        <CandlestickYAxis orientation="right" axisLine={false} tickLine={false} width={72} />
-        <CandlestickSeries<Observation>
+        <CandlestickChart.XAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={24} />
+        <CandlestickChart.YAxis orientation="right" axisLine={false} tickLine={false} width={72} />
+        <CandlestickChart.Series<Observation>
           seriesKey="price"
           rising="var(--candlestick-rising, #087f68)"
           falling="var(--candlestick-falling, #c43d54)"
           unchanged="var(--candlestick-neutral, #53657b)"
           maxBarSize={22}
         />
-        <CandlestickOverlay<Observation>
+        <CandlestickChart.Overlay<Observation>
           seriesKey="reference"
           dataKey="reference"
           strokeDasharray="4 4"
           includeInDomain
           connectNulls={false}
         />
-        <CandlestickCrosshair strokeOpacity={0.5} />
-        <CandlestickContent<Observation>
+        <CandlestickChart.Crosshair strokeOpacity={0.5} />
+        <CandlestickChart.Content<Observation>
           frameProps={{ style: { minHeight: 36, fontSize: 12, paddingTop: 12 } }}
         >
           {(point, selected) =>
@@ -206,8 +194,8 @@ export function UpdatedCandlestickChart() {
               ? `${time(point.time)} UTC · ${point.original.source} · ${point.state}${point.gap ? "" : ` · Close ${money(point.close ?? 0)}`}${selected?.identity === point.identity ? " · Selected" : ""}`
               : "Inspect the corrected interval, the feed gap or the partial latest candle; Enter selects."
           }
-        </CandlestickContent>
-        <CandlestickDataTable<Observation>
+        </CandlestickChart.Content>
+        <CandlestickChart.DataTable<Observation>
           caption="Current observations"
           renderMetadata={(point) => point.original.source}
           metadataLabel="Source"
