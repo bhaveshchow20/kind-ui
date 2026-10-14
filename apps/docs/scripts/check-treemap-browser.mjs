@@ -143,6 +143,15 @@ async function checkBounds(page, width, theme) {
       });
     });
     assert.deepEqual(violations, [], `${id}: marks escape the ${width}px ${theme} plot`);
+    const clippedContent = await card.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      return [
+        ...element.querySelectorAll(
+          '.preview-panel [data-kind-ui="chart"], .preview-panel [data-kind-ui="chart-legend"], .chart-example section > p',
+        ),
+      ].filter((part) => part.getBoundingClientRect().bottom > bounds.bottom + 1).length;
+    });
+    assert.equal(clippedContent, 0, `${id}: chart, legend and caption must fit the preview`);
     assert.equal(
       await card
         .locator('[data-kind-ui="treemap-label"]')

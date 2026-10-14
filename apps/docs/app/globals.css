@@ -811,6 +811,9 @@ html:not(.dark)
   overflow: visible;
   overscroll-behavior: auto;
 }
+.line-workbench[data-component^="treemap"] .preview-panel {
+  height: auto;
+}
 .line-workbench .code-files {
   display: flex;
   flex-direction: column;
