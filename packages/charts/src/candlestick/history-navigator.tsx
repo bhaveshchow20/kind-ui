@@ -417,7 +417,7 @@ const HistoryNavigatorView = memo(function HistoryNavigatorView({
           <>
             <div
               ref={surface}
-              className="touch-pan-y overflow-hidden rounded-xl border border-[var(--border,#e2e8f0)]"
+              className="relative touch-pan-y overflow-hidden rounded-xl border border-[var(--border,#e2e8f0)]"
               style={{ height }}
               onMouseDownCapture={(event) => {
                 if (event.button === 0) beginGesture(event.target);
@@ -514,6 +514,18 @@ const HistoryNavigatorView = memo(function HistoryNavigatorView({
                   </Brush>
                 </ComposedChart>
               </ResponsiveContainer>
+              <div
+                aria-hidden="true"
+                data-kind-ui="candlestick-history-outside-start"
+                className="pointer-events-none absolute inset-y-0 left-0 bg-[color-mix(in_srgb,var(--muted,#e2e8f0)_45%,transparent)] backdrop-blur-[1.5px]"
+                style={{ width: `calc((100% - ${travellerWidth}px) * ${startIndex / last})` }}
+              />
+              <div
+                aria-hidden="true"
+                data-kind-ui="candlestick-history-outside-end"
+                className="pointer-events-none absolute inset-y-0 right-0 bg-[color-mix(in_srgb,var(--muted,#e2e8f0)_45%,transparent)] backdrop-blur-[1.5px]"
+                style={{ width: `calc((100% - ${travellerWidth}px) * ${1 - endIndex / last})` }}
+              />
             </div>
             <HistoryRangeTags
               start={formatLabel(startIndex)}
