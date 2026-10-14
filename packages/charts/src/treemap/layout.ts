@@ -5,9 +5,9 @@ import {
   treemapResquarify,
   treemapSquarify,
 } from "d3-hierarchy";
-import type { TreemapModel, TreemapNode } from "./model.js";
+import type { TreemapHierarchyNode, TreemapModel } from "./model.js";
 
-export type TreemapRectangle<T> = TreemapNode<T> & {
+export type TreemapRectangle<T> = TreemapHierarchyNode<T> & {
   x: number;
   y: number;
   width: number;
@@ -58,7 +58,7 @@ export function layoutTreemap<T>(
     throw new Error("Treemap depth must be a positive integer");
   const view = viewId === null ? undefined : model.byId.get(viewId);
   const roots = view?.children ?? model.roots;
-  const convert = (node: TreemapNode<T>): LayoutDatum => ({
+  const convert = (node: TreemapHierarchyNode<T>): LayoutDatum => ({
     id: node.id,
     value: node.kind === "leaf" ? node.value : 0,
     ...(node.kind === "group"

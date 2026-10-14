@@ -4,8 +4,8 @@ import {
   type TreemapChartProps,
   type TreemapColorEncoding,
   type TreemapDataTableProps,
-  type TreemapDatum,
   type TreemapItem,
+  type TreemapNode,
   useTreemap,
 } from "@kind-ui/charts";
 import { createRef } from "react";
@@ -154,7 +154,7 @@ const wrongCallback: TreemapChartProps<MetadataRecord> = {
 void wrongCallback;
 
 // @ts-expect-error Standard groups cannot supply independent area values.
-const ambiguousGroup: TreemapDatum = {
+const ambiguousGroup: TreemapNode = {
   kind: "group",
   id: "group",
   label: "Group",

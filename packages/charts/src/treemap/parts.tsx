@@ -21,7 +21,7 @@ import { TooltipNumber } from "../tooltip-number.js";
 import { cn } from "../utils.js";
 import { type TreemapContextValue, type TreemapItem, useTreemap } from "./chart.js";
 import type { TreemapRectangle } from "./layout.js";
-import type { TreemapDatum, TreemapNode } from "./model.js";
+import type { TreemapHierarchyNode, TreemapNode } from "./model.js";
 
 type ButtonProps = ComponentPropsWithRef<"button">;
 const rectangleStyle = <T,>(node: TreemapRectangle<T>): CSSProperties => ({
@@ -30,17 +30,17 @@ const rectangleStyle = <T,>(node: TreemapRectangle<T>): CSSProperties => ({
   width: node.width,
   height: node.height,
 });
-export type TreemapTilesProps<T = TreemapDatum> = Omit<ComponentPropsWithRef<"div">, "children"> & {
+export type TreemapTilesProps<T = TreemapNode> = Omit<ComponentPropsWithRef<"div">, "children"> & {
   tileProps?: (node: TreemapRectangle<T>) => ButtonProps;
   /** Replace the individual renderer while retaining the supplied layout and native props. */
   render?: (props: TreemapTileProps<T>) => ReactNode;
   children?: ReactNode | ((node: TreemapRectangle<T>) => ReactNode);
 };
-export type TreemapTileProps<T = TreemapDatum> = ButtonProps & {
+export type TreemapTileProps<T = TreemapNode> = ButtonProps & {
   node: TreemapRectangle<T>;
 };
 /** One positioned tile, using the family's shared selection, emphasis and inspection state. */
-export function TreemapTile<T = TreemapDatum>({ node, ...buttonProps }: TreemapTileProps<T>) {
+export function TreemapTile<T = TreemapNode>({ node, ...buttonProps }: TreemapTileProps<T>) {
   const context = useTreemap<T>();
   return <Mark node={node} context={context} kind="treemap-tile" buttonProps={buttonProps} />;
 }
@@ -188,7 +188,7 @@ function Mark<T>({
     </motion.div>
   );
 }
-export function TreemapTiles<T = TreemapDatum>({
+export function TreemapTiles<T = TreemapNode>({
   tileProps,
   render,
   children,
@@ -223,15 +223,12 @@ export function TreemapTiles<T = TreemapDatum>({
     </div>
   );
 }
-export type TreemapGroupsProps<T = TreemapDatum> = Omit<
-  ComponentPropsWithRef<"div">,
-  "children"
-> & {
+export type TreemapGroupsProps<T = TreemapNode> = Omit<ComponentPropsWithRef<"div">, "children"> & {
   groupProps?: (node: TreemapRectangle<T>) => ComponentPropsWithRef<"div">;
   headerProps?: (node: TreemapRectangle<T>) => ButtonProps;
   children?: ReactNode | ((node: TreemapRectangle<T>) => ReactNode);
 };
-export function TreemapGroups<T = TreemapDatum>({
+export function TreemapGroups<T = TreemapNode>({
   groupProps,
   headerProps,
   children,
@@ -288,17 +285,14 @@ export function TreemapGroups<T = TreemapDatum>({
     </div>
   );
 }
-export type TreemapLabelsProps<T = TreemapDatum> = Omit<
-  ComponentPropsWithRef<"div">,
-  "children"
-> & {
+export type TreemapLabelsProps<T = TreemapNode> = Omit<ComponentPropsWithRef<"div">, "children"> & {
   minWidth?: number;
   minHeight?: number;
   padding?: number;
   children?: ReactNode | ((node: TreemapRectangle<T>) => ReactNode);
   labelProps?: (node: TreemapRectangle<T>) => ComponentPropsWithRef<"span">;
 };
-export function TreemapLabels<T = TreemapDatum>({
+export function TreemapLabels<T = TreemapNode>({
   minWidth = 18,
   minHeight = 14,
   padding = 4,
@@ -396,7 +390,7 @@ function LabelPaint({ inactive, children }: { inactive: boolean; children: React
     </motion.div>
   );
 }
-export type TreemapTooltipProps<T = TreemapDatum> = Omit<
+export type TreemapTooltipProps<T = TreemapNode> = Omit<
   ComponentPropsWithRef<"div">,
   "children"
 > & {
@@ -404,7 +398,7 @@ export type TreemapTooltipProps<T = TreemapDatum> = Omit<
   valueAnimation?: "shuffle";
 };
 /** The same measured cursor frame and row presentation used by Kind's native charts. */
-export function TreemapTooltip<T = TreemapDatum>({
+export function TreemapTooltip<T = TreemapNode>({
   children,
   valueAnimation,
   ...props
@@ -558,7 +552,7 @@ export function TreemapBreadcrumbs({ rootLabel = "All", ...props }: TreemapBread
     </OutsidePlot>
   );
 }
-export type TreemapDataTableProps<T = TreemapDatum> = Omit<
+export type TreemapDataTableProps<T = TreemapNode> = Omit<
   ComponentPropsWithRef<"table">,
   "children"
 > & {
@@ -567,10 +561,10 @@ export type TreemapDataTableProps<T = TreemapDatum> = Omit<
   children?: (node: TreemapItem<T>) => ReactNode;
   /** Row attributes and handlers; the table's children renderer owns its cells. */
   rowProps?: (
-    node: TreemapNode<T>,
+    node: TreemapHierarchyNode<T>,
   ) => Omit<ComponentPropsWithRef<"tr">, "children"> & { children?: never };
 };
-export function TreemapDataTable<T = TreemapDatum>({
+export function TreemapDataTable<T = TreemapNode>({
   caption,
   scope = "view",
   children,

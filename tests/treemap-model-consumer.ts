@@ -1,11 +1,11 @@
 import {
   normalizeTreemap,
   type TreemapAccessors,
-  type TreemapDatum,
   type TreemapModel,
+  type TreemapNode,
 } from "@kind-ui/charts";
 
-const standard: readonly TreemapDatum[] = [
+const standard: readonly TreemapNode[] = [
   {
     kind: "group",
     id: "root",
@@ -13,7 +13,7 @@ const standard: readonly TreemapDatum[] = [
     children: [{ kind: "leaf", id: "child", label: "Child", value: 0 }],
   },
 ];
-const standardModel: TreemapModel<TreemapDatum> = normalizeTreemap(standard);
+const standardModel: TreemapModel<TreemapNode> = normalizeTreemap(standard);
 void standardModel;
 
 interface RecordDatum {
@@ -37,7 +37,7 @@ void unit;
 // @ts-expect-error Custom record fields require explicit typed accessors.
 normalizeTreemap(records);
 // @ts-expect-error Group area derives from children and cannot be supplied independently.
-const invalidGroup: TreemapDatum = {
+const invalidGroup: TreemapNode = {
   kind: "group",
   id: "group",
   label: "Group",
@@ -46,7 +46,7 @@ const invalidGroup: TreemapDatum = {
 };
 void invalidGroup;
 // @ts-expect-error Leaves cannot also supply children.
-const invalidLeaf: TreemapDatum = {
+const invalidLeaf: TreemapNode = {
   kind: "leaf",
   id: "leaf",
   label: "Leaf",
