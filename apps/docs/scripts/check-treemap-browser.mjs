@@ -191,7 +191,7 @@ try {
   assert.equal(response?.status(), 200);
   await page.evaluate(() => document.fonts.ready);
   await expect(page.locator(`[data-component="treemap"] ${tileSelector}`).first()).toBeVisible();
-  await expect(page.locator(".line-workbench")).toHaveCount(5);
+  await expect(page.locator(".line-workbench")).toHaveCount(2);
   for (const id of Object.keys(bundles)) {
     const card = page.locator(`[data-component="${id}"]`);
     await card.scrollIntoViewIfNeeded();
