@@ -108,7 +108,7 @@ function Mark<T>({
             : undefined
         }
         className={cn(
-          "pointer-events-auto absolute m-0 overflow-hidden rounded-[4px] p-0 text-left text-[color:var(--foreground,inherit)] outline-offset-[-3px] focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[var(--ring,#4c78c4)]",
+          "pointer-events-auto absolute m-0 overflow-hidden rounded-[4px] border-0 p-0 text-left text-[color:var(--foreground,inherit)] outline-offset-[-3px] focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[var(--ring,#4c78c4)]",
           kind === "treemap-group-header" && "text-[#172033]",
           buttonProps.className,
         )}
