@@ -2,9 +2,9 @@
   "mode": "local",
   "version": "0.5.0",
   "package": "@kind-ui/charts",
-  "integrity": "sha512-Fry0KInMty+h6j3ifQNyXH+iL2yZ3n73Ob9dzDd43Mqf/RD1hIw/R0UB2Ixbuu5uEbH1Xv9ECO64dSuwXBxP/g==",
-  "sha256": "d6a9daa182cd6c171b255810f921d69b9ffeacaabbf255054fb299dedcc2a64d",
-  "sourceCommit": "e7c0a76150a6951f8ef7f47e8b3f79f17dcdf8a2",
+  "integrity": "sha512-m5Uc9uBGbD38tlm4Fjq4T1mfu/UMBRdvE8JIFAt6cI5JG59+DU5aM/fJ+3UTdHuyEUy7HC7jPu+2BC8Q2U136A==",
+  "sha256": "f3f500759eb9d1a924cccc22b85ab807bb3b6930a5e271f92884edd172dc7b87",
+  "sourceCommit": "74e86f503344bb4b840fa51af5cd2d0a062d3ae5",
   "publicExportsOnly": true,
   "guardedArtifact": true
 }
