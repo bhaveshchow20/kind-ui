@@ -5,12 +5,13 @@ import {
   type ComponentPropsWithRef,
   memo,
   useCallback,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import { Brush, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Area, Brush, ComposedChart, Line, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { OutsidePlot } from "../family-root.js";
 import { cn } from "../utils.js";
 import { type Context, useCandlestick } from "./context.js";
@@ -43,6 +44,114 @@ type NavigatorViewProps = CandlestickHistoryNavigatorProps &
     from: number;
     to: number;
   };
+
+function HistoryTraveller({
+  x,
+  y,
+  width,
+  height,
+  stroke,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  stroke?: string | undefined;
+}) {
+  const gripHeight = Math.min(30, height - 8);
+  const center = x + width / 2;
+  const top = y + (height - gripHeight) / 2;
+  return (
+    <g>
+      <rect x={x - 4} y={y} width={width + 8} height={height} fill="transparent" />
+      <rect
+        x={x}
+        y={top}
+        width={width}
+        height={gripHeight}
+        rx={width / 2}
+        fill="var(--background,Canvas)"
+        stroke={stroke}
+      />
+      {[-4, 0, 4].map((offset) => (
+        <circle
+          key={offset}
+          cx={center}
+          cy={y + height / 2 + offset}
+          r={1}
+          fill="var(--muted-foreground,#64748b)"
+        />
+      ))}
+    </g>
+  );
+}
+
+function HistoryRangeTags({
+  start,
+  end,
+  from,
+  to,
+  last,
+  travellerWidth,
+}: {
+  start: string;
+  end: string;
+  from: number;
+  to: number;
+  last: number;
+  travellerWidth: number;
+}) {
+  const host = useRef<HTMLDivElement>(null);
+  const startTag = useRef<HTMLSpanElement>(null);
+  const endTag = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const frame = host.current;
+    const first = startTag.current;
+    const second = endTag.current;
+    if (!frame || !first || !second) return;
+    const position = () => {
+      const width = frame.clientWidth;
+      const a = first.getBoundingClientRect().width;
+      const b = second.getBoundingClientRect().width;
+      const gap = 6;
+      const anchor = (index: number) =>
+        (index / last) * (width - travellerWidth) + travellerWidth / 2;
+      const clamp = (value: number, maximum: number) => Math.max(0, Math.min(maximum, value));
+      let left = clamp(anchor(from) - a / 2, width - a);
+      let right = clamp(anchor(to) - b / 2, width - b);
+      // Keep tags near their handles; spread them as a pair when the selected window is narrow.
+      if (left + a + gap > right) {
+        left = clamp((anchor(from) + anchor(to) - a - b - gap) / 2, width - a - b - gap);
+        right = left + a + gap;
+      }
+      first.style.transform = `translateX(${left}px)`;
+      second.style.transform = `translateX(${right}px)`;
+    };
+    position();
+    const observer = new ResizeObserver(position);
+    observer.observe(frame);
+    observer.observe(first);
+    observer.observe(second);
+    return () => observer.disconnect();
+  }, [from, to, last, travellerWidth]);
+  const tagClass =
+    "absolute left-0 top-1 max-w-[calc((100%_-_6px)/2)] truncate rounded-md border border-[var(--border,#e2e8f0)] bg-[var(--background,Canvas)] px-2 py-0.5 text-[11px] font-medium leading-4 text-[var(--foreground,CanvasText)] tabular-nums shadow-sm";
+  return (
+    <div
+      ref={host}
+      aria-hidden="true"
+      data-kind-ui="candlestick-history-tags"
+      className="pointer-events-none relative h-7 w-full opacity-0 transition-opacity group-has-[.recharts-brush-texts]/kind-history:opacity-100 motion-reduce:transition-none"
+    >
+      <span ref={startTag} className={tagClass} title={start}>
+        {start}
+      </span>
+      <span ref={endTag} className={tagClass} title={end}>
+        {end}
+      </span>
+    </div>
+  );
+}
 
 /** Full, evenly spaced observation history; gaps remain missing close values. */
 export function CandlestickHistoryNavigator({
@@ -109,6 +218,7 @@ const HistoryNavigatorView = memo(function HistoryNavigatorView({
   formatTime,
   ...props
 }: NavigatorViewProps) {
+  const overviewId = `candlestick-history-${useId().replace(/:/g, "")}`;
   const unavailable = disabled || loading;
   const signature = useMemo(() => JSON.stringify(points.map((point) => point.identity)), [points]);
   const geometry = useRef<{ signature: string; data: HistoryTime[] } | null>(null);
@@ -222,6 +332,20 @@ const HistoryNavigatorView = memo(function HistoryNavigatorView({
     Math.min(last, historyByIdentity.get(points[currentEnd]?.identity ?? "") ?? currentEnd),
   );
   const label = brushProps.ariaLabel ?? "Historical window";
+  const travellerWidth = brushProps.travellerWidth ?? 12;
+  const overviewStroke =
+    overviewProps.style?.stroke ?? overviewProps.stroke ?? "var(--muted-foreground,#64748b)";
+  const formatLabel = (index: number) => {
+    const entry = history[index];
+    const point = currentByIdentity.get(entry?.identity ?? "")?.point;
+    return String(
+      brushProps.tickFormatter && entry
+        ? brushProps.tickFormatter(entry.time, index)
+        : point
+          ? formatTime(point.time, point)
+          : "",
+    );
+  };
   useLayoutEffect(() => {
     const host = surface.current;
     if (!host) return;
@@ -265,7 +389,10 @@ const HistoryNavigatorView = memo(function HistoryNavigatorView({
       <fieldset
         aria-label="Historical price navigator"
         {...props}
-        className={cn("m-0 mt-3 min-w-0 w-full border-0 p-0 text-current", className)}
+        className={cn(
+          "group/kind-history m-0 mt-3 min-w-0 w-full border-0 p-0 text-current",
+          className,
+        )}
         disabled={unavailable}
         inert={unavailable || undefined}
         data-kind-ui="candlestick-history-navigator"
@@ -287,87 +414,116 @@ const HistoryNavigatorView = memo(function HistoryNavigatorView({
             {points.length ? "One observation" : "No history available"}
           </p>
         ) : (
-          <div
-            ref={surface}
-            className="touch-pan-y"
-            style={{ height }}
-            onMouseDownCapture={(event) => {
-              if (event.button === 0) beginGesture(event.target);
-            }}
-            onTouchStartCapture={(event) => beginGesture(event.target)}
-          >
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-              <LineChart
-                data={history}
-                accessibilityLayer={false}
-                role="group"
-                aria-label="Historical close overview"
-                margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-              >
-                <Brush
-                  key={historyRevision}
-                  {...brushProps}
-                  x={0}
-                  y={0}
-                  height={height}
-                  dataKey="time"
-                  startIndex={startIndex}
-                  endIndex={endIndex}
-                  ariaLabel={label}
-                  travellerWidth={brushProps.travellerWidth ?? 8}
-                  fill={brushProps.fill ?? "var(--background,Canvas)"}
-                  stroke={brushProps.stroke ?? "currentColor"}
-                  tickFormatter={
-                    brushProps.tickFormatter ??
-                    ((_, index) => {
-                      const point = currentByIdentity.get(history[index]?.identity ?? "")?.point;
-                      return point ? formatTime(point.time, point) : "";
-                    })
-                  }
-                  onChange={(range) => {
-                    if (unavailable || cancelledRevision.current !== null) return;
-                    brushProps.onChange?.(range);
-                    const from = currentByIdentity.get(
-                      history[range.startIndex]?.identity ?? "",
-                    )?.index;
-                    const to = currentByIdentity.get(
-                      history[range.endIndex]?.identity ?? "",
-                    )?.index;
-                    if (from === undefined || to === undefined) return;
-                    changeViewport(
-                      normalizeCandlestickViewport(
-                        { from: from - 0.5, to: to + 0.5 },
-                        points.length,
-                      ),
-                      "pan",
-                    );
-                  }}
-                  onDragEnd={(range) => {
-                    try {
-                      brushProps.onDragEnd?.(range);
-                    } finally {
-                      finishGesture();
-                    }
-                  }}
+          <>
+            <div
+              ref={surface}
+              className="touch-pan-y overflow-hidden rounded-xl border border-[var(--border,#e2e8f0)]"
+              style={{ height }}
+              onMouseDownCapture={(event) => {
+                if (event.button === 0) beginGesture(event.target);
+              }}
+              onTouchStartCapture={(event) => beginGesture(event.target)}
+            >
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ComposedChart
+                  data={history}
+                  accessibilityLayer={false}
+                  role="group"
+                  aria-label="Historical close overview"
+                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
                 >
-                  <LineChart data={history} accessibilityLayer={false}>
-                    <XAxis hide type="number" dataKey="logical" domain={[0, last]} />
-                    <YAxis hide domain={["dataMin", "dataMax"]} />
-                    <Line
-                      {...overviewProps}
-                      dataKey={readClose}
-                      stroke={overviewProps.stroke ?? "currentColor"}
-                      strokeWidth={overviewProps.strokeWidth ?? 1}
-                      dot={overviewProps.dot ?? false}
-                      activeDot={false}
-                      connectNulls={false}
-                      isAnimationActive={false}
-                    />
-                  </LineChart>
-                </Brush>
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+                  <Brush
+                    key={historyRevision}
+                    {...brushProps}
+                    x={0}
+                    y={0}
+                    height={height}
+                    dataKey="time"
+                    startIndex={startIndex}
+                    endIndex={endIndex}
+                    ariaLabel={label}
+                    travellerWidth={travellerWidth}
+                    traveller={brushProps.traveller ?? HistoryTraveller}
+                    fill={brushProps.fill ?? "var(--background,Canvas)"}
+                    stroke={brushProps.stroke ?? "var(--border,#e2e8f0)"}
+                    // Native text still owns hover/focus visibility; formatted tags render below the plot.
+                    tickFormatter={() => ""}
+                    onChange={(range) => {
+                      if (unavailable || cancelledRevision.current !== null) return;
+                      brushProps.onChange?.(range);
+                      const from = currentByIdentity.get(
+                        history[range.startIndex]?.identity ?? "",
+                      )?.index;
+                      const to = currentByIdentity.get(
+                        history[range.endIndex]?.identity ?? "",
+                      )?.index;
+                      if (from === undefined || to === undefined) return;
+                      changeViewport(
+                        normalizeCandlestickViewport(
+                          { from: from - 0.5, to: to + 0.5 },
+                          points.length,
+                        ),
+                        "pan",
+                      );
+                    }}
+                    onDragEnd={(range) => {
+                      try {
+                        brushProps.onDragEnd?.(range);
+                      } finally {
+                        finishGesture();
+                      }
+                    }}
+                  >
+                    <ComposedChart data={history} accessibilityLayer={false}>
+                      <XAxis hide type="number" dataKey="logical" domain={[0, last]} />
+                      <YAxis hide domain={["dataMin", "dataMax"]} />
+                      <defs>
+                        <linearGradient id={overviewId} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={overviewStroke} stopOpacity={0.24} />
+                          <stop offset="100%" stopColor={overviewStroke} stopOpacity={0.025} />
+                        </linearGradient>
+                      </defs>
+                      <Area
+                        dataKey={readClose}
+                        type={overviewProps.type ?? "monotone"}
+                        fill={overviewProps.fill ?? `url(#${overviewId})`}
+                        stroke="none"
+                        fillOpacity={1}
+                        opacity={overviewProps.opacity}
+                        style={{ ...overviewProps.style, pointerEvents: "none" }}
+                        legendType="none"
+                        tooltipType="none"
+                        {...(overviewProps.hide !== undefined ? { hide: overviewProps.hide } : {})}
+                        connectNulls={false}
+                        dot={false}
+                        activeDot={false}
+                        isAnimationActive={false}
+                      />
+                      <Line
+                        {...overviewProps}
+                        dataKey={readClose}
+                        stroke={overviewStroke}
+                        strokeWidth={overviewProps.strokeWidth ?? 1.5}
+                        type={overviewProps.type ?? "monotone"}
+                        dot={overviewProps.dot ?? false}
+                        activeDot={false}
+                        connectNulls={false}
+                        isAnimationActive={false}
+                      />
+                    </ComposedChart>
+                  </Brush>
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+            <HistoryRangeTags
+              start={formatLabel(startIndex)}
+              end={formatLabel(endIndex)}
+              from={startIndex}
+              to={endIndex}
+              last={last}
+              travellerWidth={travellerWidth}
+            />
+          </>
         )}
       </fieldset>
     </OutsidePlot>

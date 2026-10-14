@@ -15,7 +15,7 @@ export type CandlestickControlsProps = ComponentPropsWithRef<"fieldset"> & {
   resetProps?: ButtonProps;
 };
 const buttonClass =
-  "inline-flex h-7 min-w-7 items-center justify-center rounded border border-current/20 px-2 text-xs font-medium hover:bg-current/10 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex h-8 min-w-8 items-center justify-center rounded-lg border border-[var(--border,#e2e8f0)] bg-[var(--background,Canvas)] px-2.5 text-xs font-medium text-[var(--foreground,CanvasText)] shadow-sm transition-colors hover:bg-[var(--muted,#f1f5f9)] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transition-none";
 
 /** Explicit buttons propose the same controlled logical windows as plot gestures. */
 export function CandlestickControls({

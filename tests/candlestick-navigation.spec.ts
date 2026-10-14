@@ -162,6 +162,32 @@ test("historical overview stays below price and volume and native handles contro
   await expect
     .poll(() => nav.evaluate((node) => node.scrollWidth - node.clientWidth))
     .toBeLessThanOrEqual(1);
+  const tags = nav.locator('[data-kind-ui="candlestick-history-tags"] span');
+  await expect(tags).toHaveCount(2);
+  await expect(tags.first()).toHaveText((await start.getAttribute("aria-valuetext")) ?? "");
+  await expect(tags.last()).toHaveText((await end.getAttribute("aria-valuetext")) ?? "");
+  await expect
+    .poll(() =>
+      nav.evaluate((node) => {
+        const labels = Array.from(
+          node.querySelectorAll('[data-kind-ui="candlestick-history-tags"] span'),
+        );
+        const first = labels[0]?.getBoundingClientRect();
+        const second = labels[1]?.getBoundingClientRect();
+        const plot = node.querySelector("svg.recharts-surface")?.getBoundingClientRect();
+        const frame = node.getBoundingClientRect();
+        return (
+          first !== undefined &&
+          second !== undefined &&
+          plot !== undefined &&
+          first.right + 5 <= second.left &&
+          first.left >= frame.left &&
+          second.right <= frame.right + 1 &&
+          first.top >= plot.bottom
+        );
+      }),
+    )
+    .toBe(true);
 });
 
 test("forming-row corrections update the overview without resetting focused handles or cancelling a drag", async ({
