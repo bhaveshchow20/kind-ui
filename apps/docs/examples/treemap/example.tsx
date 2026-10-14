@@ -76,12 +76,7 @@ export function CloudSpendTreemap({ state = "ready" }: { state?: "ready" | "load
         formatValue={(value) => currency.format(value)}
       >
         <TreemapChart.Tiles />
-        <TreemapChart.Labels
-          minWidth={18}
-          minHeight={14}
-          padding={5}
-          labelProps={() => ({ className: "text-[#173047]" })}
-        />
+
         <TreemapChart.Tooltip valueAnimation="shuffle" />
         <TreemapChart.Legend />
       </TreemapChart>

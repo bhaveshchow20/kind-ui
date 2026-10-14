@@ -70,11 +70,6 @@ export function TreemapChartCard({
       >
         <TreemapChart.Tiles
           labels={options.showLabels !== false}
-          children={
-            options.showLabels !== false && options.showValues === false
-              ? (node) => <span className="block truncate p-[5px] text-xs">{node.label}</span>
-              : undefined
-          }
           tileProps={() => ({
             style: {
               borderRadius: options.radius ?? 4,
@@ -85,7 +80,11 @@ export function TreemapChartCard({
                   : {}),
             },
           })}
-        />
+        >
+          {options.showLabels !== false && options.showValues === false
+            ? (node) => <span className="block truncate p-[5px] text-xs">{node.label}</span>
+            : undefined}
+        </TreemapChart.Tiles>
         <TreemapChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
         {options.showLegend !== false && <TreemapChart.Legend />}
       </TreemapChart>
