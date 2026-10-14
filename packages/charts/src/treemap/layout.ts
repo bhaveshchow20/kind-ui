@@ -40,7 +40,7 @@ export function layoutTreemap<T>(
     width,
     height,
     depth = Infinity,
-    padding = 1.5,
+    padding = 6,
     groupHeaderHeight = 0,
     layout = "stable",
   } = options;
@@ -109,12 +109,14 @@ export function layoutTreemap<T>(
     if (initialLayout)
       root.sort((a, b) => (b.value ?? 0) - (a.value ?? 0) || compareIds(a.data.id, b.data.id));
     treemap<LayoutDatum>()
-      .tile(layout === "stable" ? treemapResquarify : treemapSquarify)
+      .tile(layout === "stable" ? treemapResquarify.ratio(1) : treemapSquarify.ratio(1))
       .size([width, height])
       .paddingInner(padding)
-      .paddingOuter((node) => (node.depth === 0 ? 0 : padding))
+      .paddingOuter(0)
       .paddingTop((node) =>
-        node.depth > 0 && node.children?.length ? groupHeaderHeight + padding : padding,
+        node.depth > 0 && node.children?.length && groupHeaderHeight > 0
+          ? groupHeaderHeight + padding
+          : 0,
       )(root);
     cache.geometrySignature = geometrySignature;
   }
