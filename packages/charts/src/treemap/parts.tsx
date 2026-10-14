@@ -31,6 +31,8 @@ const rectangleStyle = <T,>(node: TreemapRectangle<T>): CSSProperties => ({
   height: node.height,
 });
 export type TreemapTilesProps<T = TreemapNode> = Omit<ComponentPropsWithRef<"div">, "children"> & {
+  /** Fitted name and value are included by default. */
+  labels?: boolean;
   tileProps?: (node: TreemapRectangle<T>) => ButtonProps;
   /** Replace the individual renderer while retaining the supplied layout and native props. */
   render?: (props: TreemapTileProps<T>) => ReactNode;
@@ -38,11 +40,24 @@ export type TreemapTilesProps<T = TreemapNode> = Omit<ComponentPropsWithRef<"div
 };
 export type TreemapTileProps<T = TreemapNode> = ButtonProps & {
   node: TreemapRectangle<T>;
+  labels?: boolean;
 };
 /** One positioned tile, using the family's shared selection, emphasis and inspection state. */
-export function TreemapTile<T = TreemapNode>({ node, ...buttonProps }: TreemapTileProps<T>) {
+export function TreemapTile<T = TreemapNode>({
+  node,
+  labels = true,
+  ...buttonProps
+}: TreemapTileProps<T>) {
   const context = useTreemap<T>();
-  return <Mark node={node} context={context} kind="treemap-tile" buttonProps={buttonProps} />;
+  return (
+    <Mark node={node} context={context} kind="treemap-tile" buttonProps={buttonProps}>
+      {buttonProps.children === undefined && labels ? (
+        <TileLabel node={node} context={context} />
+      ) : (
+        buttonProps.children
+      )}
+    </Mark>
+  );
 }
 function Mark<T>({
   node,
@@ -127,6 +142,7 @@ function Mark<T>({
           ...rectangleStyle(node),
           ...(height === undefined ? {} : { height }),
           background: color?.color ?? "var(--chart-1,#6b7280)",
+          color: tileTextColor(color?.color),
           ...buttonProps.style,
         }}
         onFocus={(event) => {
@@ -189,6 +205,7 @@ function Mark<T>({
   );
 }
 export function TreemapTiles<T = TreemapNode>({
+  labels = true,
   tileProps,
   render,
   children,
@@ -210,6 +227,7 @@ export function TreemapTiles<T = TreemapNode>({
           const attributes: TreemapTileProps<T> = {
             ...tileProps?.(node),
             node,
+            labels,
             ...(children === undefined
               ? {}
               : { children: typeof children === "function" ? (children(node) ?? null) : children }),
@@ -285,109 +303,46 @@ export function TreemapGroups<T = TreemapNode>({
     </div>
   );
 }
-export type TreemapLabelsProps<T = TreemapNode> = Omit<ComponentPropsWithRef<"div">, "children"> & {
-  minWidth?: number;
-  minHeight?: number;
-  padding?: number;
-  children?: ReactNode | ((node: TreemapRectangle<T>) => ReactNode);
-  labelProps?: (node: TreemapRectangle<T>) => ComponentPropsWithRef<"span">;
-};
-export function TreemapLabels<T = TreemapNode>({
-  minWidth = 18,
-  minHeight = 14,
-  padding = 4,
-  children,
-  labelProps,
-  ...props
-}: TreemapLabelsProps<T>) {
-  const context = useTreemap<T>();
-  for (const [name, value] of [
-    ["minWidth", minWidth],
-    ["minHeight", minHeight],
-    ["padding", padding],
-  ] as const)
-    if (!Number.isFinite(value) || value < 0)
-      throw new Error(`TreemapLabels ${name} must be finite and nonnegative`);
-  return (
-    <div
-      {...props}
-      data-kind-ui="treemap-labels"
-      aria-hidden="true"
-      className={cn("absolute inset-0 pointer-events-none", props.className)}
-    >
-      {context.rectangles
-        .filter(
-          (node) =>
-            !context.isHidden(node) &&
-            context.frontierIds.has(node.id) &&
-            node.width >= minWidth + padding * 2 &&
-            node.height >= minHeight + padding * 2,
-        )
-        .map((node) => {
-          const attributes = labelProps?.(node);
-          const availableWidth = node.width - padding * 2;
-          const availableHeight = node.height - padding * 2;
-          const value = context.formatValue(node.value, node);
-          const fontSize = availableWidth < 70 ? 10 : 12;
-          const showValue =
-            availableHeight >= fontSize * 2.6 && availableWidth >= value.length * fontSize * 0.62;
-          return (
-            <LabelPaint key={node.id} inactive={context.isInactive(node)}>
-              <span
-                {...attributes}
-                key={node.id}
-                data-kind-ui="treemap-label"
-                data-node-id={node.id}
-                data-unknown={context.colors.colors.get(node.id)?.unknown || undefined}
-                className={cn(
-                  "absolute block truncate text-[#172033] data-[unknown=true]:text-[var(--foreground,#172033)] text-xs font-medium leading-tight",
-                  attributes?.className,
-                )}
-                style={{
-                  left: node.x + padding,
-                  top: node.y + padding,
-                  width: Math.max(0, node.width - padding * 2),
-                  maxHeight: Math.max(0, node.height - padding * 2),
-                  overflow: "hidden",
-                  fontSize,
-                  ...attributes?.style,
-                }}
-              >
-                {typeof children === "function" ? (
-                  children(node)
-                ) : children !== undefined ? (
-                  children
-                ) : attributes?.children !== undefined ? (
-                  attributes.children
-                ) : (
-                  <>
-                    <span className="block truncate" title={node.label}>
-                      {node.label}
-                    </span>
-                    {showValue && (
-                      <span className="mt-0.5 block whitespace-nowrap font-normal tabular-nums">
-                        {value}
-                      </span>
-                    )}
-                  </>
-                )}
-              </span>
-            </LabelPaint>
-          );
-        })}
-    </div>
-  );
+// Match Heatmap's luminance-based label paint for explicit fills; theme tokens inherit foreground.
+function tileTextColor(fill?: string): string {
+  if (!fill || !/^#[0-9a-f]{6}$/i.test(fill)) return "var(--foreground,#172033)";
+  const channels = [1, 3, 5].map((i) => {
+    const value = Number.parseInt(fill.slice(i, i + 2), 16) / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  const luminance =
+    (channels[0] ?? 1) * 0.2126 + (channels[1] ?? 1) * 0.7152 + (channels[2] ?? 1) * 0.0722;
+  return luminance > 0.179 ? "#000000" : "#ffffff";
 }
-function LabelPaint({ inactive, children }: { inactive: boolean; children: ReactNode }) {
-  const opacity = useInteractionOpacity(inactive ? 0.28 : 1);
+function TileLabel<T>({
+  node,
+  context,
+}: {
+  node: TreemapRectangle<T>;
+  context: TreemapContextValue<T>;
+}) {
+  const padding = 5;
+  const width = node.width - padding * 2;
+  const height = node.height - padding * 2;
+  if (context.loading || width < 18 || height < 14) return null;
+  const value = context.formatValue(node.value, node);
+  const fontSize = width < 70 ? 10 : 12;
+  const showValue = height >= fontSize * 2.6 && width >= value.length * fontSize * 0.62;
   return (
-    <motion.div
-      initial={false}
-      className="absolute inset-0 pointer-events-none"
-      style={{ opacity }}
+    <span
+      data-kind-ui="treemap-label"
+      data-node-id={node.id}
+      aria-hidden="true"
+      className="pointer-events-none absolute block overflow-hidden text-xs font-medium leading-tight"
+      style={{ inset: padding, fontSize }}
     >
-      {children}
-    </motion.div>
+      <span className="block truncate" title={node.label}>
+        {node.label}
+      </span>
+      {showValue && (
+        <span className="mt-0.5 block whitespace-nowrap font-normal tabular-nums">{value}</span>
+      )}
+    </span>
   );
 }
 export type TreemapTooltipProps<T = TreemapNode> = Omit<

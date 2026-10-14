@@ -281,7 +281,6 @@ export function TreemapIntegrationHost() {
       >
         <Chart.TreemapChart.Groups />
         <Chart.TreemapChart.Tiles className="rounded-md" />
-        <Chart.TreemapChart.Labels />
         <Chart.TreemapChart.Tooltip />
         <Chart.TreemapChart.DataTable caption="Allocation values" />
       </Chart.TreemapChart>

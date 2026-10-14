@@ -260,7 +260,6 @@ export {
   type TreemapDataTableProps,
   type TreemapGroupsProps,
   type TreemapItem,
-  type TreemapLabelsProps,
   type TreemapLayoutOptions,
   type TreemapRectangle,
   type TreemapTileProps,

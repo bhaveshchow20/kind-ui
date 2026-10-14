@@ -444,9 +444,7 @@ export function TreemapHost() {
                 })}
               />
             )}
-            <TreemapChart.Labels
-              labelProps={(node) => ({ style: { color: node.id === "d" ? "#fff" : "#172033" } })}
-            />
+
             {!params.has("omit-tooltip") && <TreemapChart.Tooltip valueAnimation="shuffle" />}
             {params.has("shared-legend") ? <TreemapChart.Legend /> : <TreemapChart.ColorLegend />}
             <TreemapChart.DataTable
