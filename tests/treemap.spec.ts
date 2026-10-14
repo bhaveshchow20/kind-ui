@@ -124,6 +124,14 @@ test("treemap zero-area records remain in its table and missing color differs fr
   await expect(page.getByRole("tooltip")).toContainText("-20%");
 });
 
+test("treemap leaves the theme surface visible between rounded tiles", async ({ page }) => {
+  await page.goto("/");
+  const plot = page.locator('[data-kind-ui="treemap"]');
+  await expect(plot).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(tile(page, "a")).toHaveCSS("border-radius", "4px");
+  await expect(tile(page, "a")).toHaveCSS("border-top-width", "0px");
+});
+
 test("treemap controlled drilldown and real breadcrumbs recover removed subtrees", async ({
   page,
 }) => {

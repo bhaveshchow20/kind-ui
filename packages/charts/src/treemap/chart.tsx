@@ -761,11 +761,7 @@ function TreemapPlot<T>({
             width,
             height,
             style: props.style,
-            className: cn(
-              "relative text-[color:var(--foreground,inherit)]",
-              geometry.rectangles.length > 0 && !loading && "bg-white",
-              props.className,
-            ),
+            className: cn("relative text-[color:var(--foreground,inherit)]", props.className),
           })}
           aria-busy={loading || undefined}
           onFocusCapture={(event) => {
