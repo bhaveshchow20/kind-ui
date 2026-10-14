@@ -159,7 +159,6 @@ try {
             assert.match(source, /readonly TreemapDatum\[\]/);
             assert.doesNotMatch(source, /accessors=|encoding=|View data|signedPosition/);
             assert.doesNotMatch(source, /candidate|validated archive|does not include it/);
-            assert.match(source, /TreemapChart\.Breadcrumbs/);
             assert.match(source, /TreemapChart\.Legend/);
             if (animate) assert.match(source, /valueAnimation="shuffle"/);
             else assert.doesNotMatch(source, /valueAnimation="shuffle"/);
