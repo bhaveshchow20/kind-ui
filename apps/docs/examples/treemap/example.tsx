@@ -83,19 +83,23 @@ export function CloudSpendTreemap({
           <p className="text-xs text-muted-foreground">Cloud infrastructure</p>
           <h3 className="m-0 text-base font-medium">Monthly spend</h3>
         </div>
-        <div className="text-right">
-          <p className="m-0 text-xl font-semibold tabular-nums">
-            {currency.format(current ? 76300 : 69600)}
+        <div className="w-36 shrink-0 text-right">
+          <p aria-hidden={loading || undefined} className="m-0 text-xl font-semibold tabular-nums">
+            {loading ? "—" : currency.format(current ? 76300 : 69600)}
           </p>
           <p className="m-0 text-xs text-muted-foreground">
-            {current ? "September" : "August"} 2026 · USD
+            {loading ? "Loading…" : `${current ? "September" : "August"} 2026 · USD`}
           </p>
         </div>
       </div>
       <TreemapChart
         data={current ? data : previousData}
         config={config}
-        aria-label={`Illustrative ${current ? "September" : "August"} cloud spend by service`}
+        aria-label={
+          loading
+            ? "Monthly cloud spend"
+            : `Illustrative ${current ? "September" : "August"} cloud spend by service`
+        }
         height={340}
         animate
         loading={loading}
