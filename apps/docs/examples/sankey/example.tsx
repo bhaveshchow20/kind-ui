@@ -3,6 +3,8 @@
 import {
   SankeyChart,
   type SankeyFlowData,
+  SankeyLink,
+  SankeyNode,
   type SankeyNodeConfig,
   useChartInteraction,
 } from "@kind-ui/charts";
@@ -109,7 +111,7 @@ export function EnergyFlowChart({ state = "ready" }: { state?: "ready" | "loadin
                 <SankeyChart.Links
                   render={(props) => (
                     <FocusedFlow nodeIds={[props.payload.source.id, props.payload.target.id]}>
-                      <SankeyChart.Link
+                      <SankeyLink
                         {...props}
                         material="gradient"
                         pathProps={{
@@ -145,7 +147,7 @@ export function EnergyFlowChart({ state = "ready" }: { state?: "ready" | "loadin
                           .flatMap((link) => [link.source, link.target]),
                       ]}
                     >
-                      <SankeyChart.Node {...props} />
+                      <SankeyNode {...props} />
                       <text
                         x={props.x + props.width / 2}
                         y={props.y - 7}

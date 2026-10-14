@@ -25,7 +25,7 @@ import { SankeyChart } from "@kind-ui/charts";
 </SankeyChart>
 ```
 
-Sankey requires `config`, an accessible name and explicit children. Map every node ID to a label and color. Compose `SankeyChart.Nodes` and `SankeyChart.Links` to register the diagram renderers; customize their callbacks with `SankeyChart.Node`, `SankeyChart.Link`, and `SankeyChart.NodeLabel`. Include `Nodes` and `Links`; omitted renderer parts stay absent, including through fragments and wrapper components. `Legend` and `Table` inherit config/data and mount outside the plot in the browser. Set shared actions on `interaction` and outer HTML attributes on `frameProps`.
+Sankey requires `config`, an accessible name and explicit children. Map every node ID to a label and color. Include `Nodes` and `Links`; omitted renderer parts stay absent, including through fragments and wrapper components. `Legend` and `Table` inherit config/data and mount outside the plot in the browser. Set shared actions on `interaction` and outer HTML attributes on `frameProps`.
 
 Nodes use their own color; solid links use the source color. `SankeyChart.Tooltip` keeps native tooltip props and themed defaults.
 
@@ -97,31 +97,6 @@ Customize the diagram with these props.
 </div>
 
 Equal-value positive parallel links are rejected; distinct values are supported. Rescale extreme numeric ranges before native layout. See [Recharts Sankey](https://recharts.github.io/en-US/api/Sankey/).
-
-### SankeyChart.Nodes
-
-Registers the native node renderer. With no props it uses `SankeyChart.Node`.
-`render?: (props: SankeyNodeProps) => ReactNode` receives computed node geometry
-and payload; return your own composition of `SankeyChart.Node`,
-`SankeyChart.NodeLabel`, and SVG children. One Nodes part is supported per root.
-
-### SankeyChart.Links
-
-Registers the native link renderer. With no props it uses `SankeyChart.Link`.
-`render?: (props: SankeyLinkProps) => ReactElement` receives computed ribbon
-geometry and payload; compose `SankeyChart.Link` inside your own SVG wrapper.
-One Links part is supported per root.
-
-### SankeyChart.Content
-
-Shared outside-plot content slot. Compose caller-owned HTML children here;
-formatting, state, handlers and markup stay with the consumer.
-
-### SankeyChart.Tooltip
-
-Forwards native Recharts tooltip props with the family’s themed defaults.
-Consumer `content`, `formatter`, styles and native tooltip settings override the
-defaults. Compose this part explicitly inside the root.
 
 <span id="sankeynode" />
 
@@ -207,7 +182,7 @@ Native attributes/refs remain available. These graph-only examples omit the tabl
 
 Zero links remain in the table but leave plotted geometry; isolated nodes also leave the plot.
 
-### SankeyChart.NodeLabel
+### Sankey node labels
 
 <ApiTable name="SankeyLabelReference" />
 
@@ -218,9 +193,6 @@ Use these building blocks to customize this chart. Each reference includes its f
 | Component | Purpose |
 | --- | --- |
 | [Chart frame](/docs/chart-components/chart/) | Coordinate node focus between the legend and diagram. |
-| [Legend](/docs/chart-components/legend/) | Shared legend item markup, button behavior and styles; Sankey binds them to node identities. |
-
-The node legend reuses the shared `LegendItem` and legend styles, with node identity and adjacency focus supplied by Sankey. `Content` uses the shared outside-plot slot. Cartesian axes and series are not flow-diagram parts.
 
 Native Recharts Tooltip handles hover inspection; path handlers and status text provide keyboard selection.
 
