@@ -60,13 +60,13 @@ costs and should be considered when choosing chart composition and interactions.
 
 The Candlestick fixture imports only the public `CandlestickChart` root and
 composes explicit X/Y axes, grid, candle marks, aligned volume, crosshair and
-readout. It renders two original illustrative OHLC records. It uses the same
+readout. Its base view renders two original illustrative OHLC records; the same fixture includes the 240-observation performance host. It uses the same
 production/minification/compression method and pinned React/Recharts/Motion
 versions as the other fixtures. Its bytes are measured from the installed
 candidate tarball, not an npm-published family or workspace source alias.
 
 Measured October 13, 2026 with Node 22.16.0 from candidate tarball SHA-256
-`d6a9daa182cd6c171b255810f921d69b9ffeacaabbf255054fb299dedcc2a64d`.
+`f3f500759eb9d1a924cccc22b85ab807bb3b6930a5e271f92884edd172dc7b87`.
 This candidate contains new exports absent from published Core 0.5.0. Its
 JavaScript includes the mounted React application, Recharts, Motion and shared
 Kind helpers; it is not a standalone library-only size or a new rendering engine.
@@ -76,17 +76,17 @@ updating the SVG entrance clip, latest-candle geometry, current-price marker and
 | Candlestick fixture | raw | gzip | Brotli |
 | --- | ---: | ---: | ---: |
 | JavaScript recorded baseline | 827,261 | 248,554 | 209,392 |
-| JavaScript current | 865,652 | 259,361 | 218,140 |
+| JavaScript current | 871,906 | 261,297 | 219,336 |
 | JavaScript ceiling | 909,988 | 273,410 | 230,332 |
 | Generated Tailwind CSS recorded baseline | 34,206 | 6,694 | 5,895 |
-| Generated Tailwind CSS current | 35,471 | 6,908 | 6,093 |
+| Generated Tailwind CSS current | 35,501 | 6,916 | 6,098 |
 | Generated Tailwind CSS ceiling | 37,627 | 7,364 | 6,485 |
 
 The new fixture has 10% headroom for each asset/encoding, rounded upward to the
 next byte. Existing fixtures retain their recorded baselines and JavaScript/CSS
 ceilings, and all twelve measured fixtures fit their budgets. Primitive Kind and
 native JavaScript remain identical. No other fixture retains Candlestick runtime.
-The package-wide Tailwind scan grows by 1,568 raw / 234 gzip / 211 Brotli bytes versus
+The package-wide Tailwind scan grows by 1,598 raw / 242 gzip / 216 Brotli bytes versus
 the recorded CSS baseline, within the unchanged existing ceilings. This CSS
 increase also appears in other Kind fixtures because the scan includes the full
 installed package independently of JavaScript tree shaking.
