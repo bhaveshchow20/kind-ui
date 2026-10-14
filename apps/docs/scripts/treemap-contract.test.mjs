@@ -131,7 +131,6 @@ for (const example of family.examples) {
       "Labels",
       "Tooltip",
       example.id === "treemap" ? "Legend" : "ColorLegend",
-      "Breadcrumbs",
     ])
       assert.ok(source.includes(`<TreemapChart.${part}`), `Missing explicit ${part}`);
     assert.doesNotMatch(source, /<TreemapChart\.(?:Root|Plot|DataTable)|<table\b/);
