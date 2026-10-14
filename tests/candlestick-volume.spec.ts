@@ -9,7 +9,11 @@ for (const shape of ["function", "element", "object", "false", "default"]) {
     await page.goto(`${url}/?${shape === "default" ? "" : `centered-volume=${shape}`}&padded-x`);
     const wick = page.locator('[data-candle-part="wick"]').first();
     const drawing = page
-      .locator('[data-series="volume"] .recharts-bar-rectangles rect,path')
+      .locator(
+        shape === "default"
+          ? '[data-series="volume"] [data-kind-ui="candlestick-volume-mark"]'
+          : '[data-series="volume"] .recharts-bar-rectangles rect,path',
+      )
       .first();
     await expect(drawing).toBeVisible();
     const checkCenter = async () => {
