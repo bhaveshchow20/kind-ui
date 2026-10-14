@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import {
   type ComponentPropsWithRef,
   type CSSProperties,
+  Fragment,
   type ReactNode,
   useCallback,
   useEffect,
@@ -31,8 +32,18 @@ const rectangleStyle = <T,>(node: TreemapRectangle<T>): CSSProperties => ({
 });
 export type TreemapTilesProps<T = TreemapDatum> = Omit<ComponentPropsWithRef<"div">, "children"> & {
   tileProps?: (node: TreemapRectangle<T>) => ButtonProps;
+  /** Replace the individual renderer while retaining the supplied layout and native props. */
+  render?: (props: TreemapTileProps<T>) => ReactNode;
   children?: ReactNode | ((node: TreemapRectangle<T>) => ReactNode);
 };
+export type TreemapTileProps<T = TreemapDatum> = ButtonProps & {
+  node: TreemapRectangle<T>;
+};
+/** One positioned tile, using the family's shared selection, emphasis and inspection state. */
+export function TreemapTile<T = TreemapDatum>({ node, ...buttonProps }: TreemapTileProps<T>) {
+  const context = useTreemap<T>();
+  return <Mark node={node} context={context} kind="treemap-tile" buttonProps={buttonProps} />;
+}
 function Mark<T>({
   node,
   context,
@@ -179,6 +190,7 @@ function Mark<T>({
 }
 export function TreemapTiles<T = TreemapDatum>({
   tileProps,
+  render,
   children,
   ...props
 }: TreemapTilesProps<T>) {
@@ -194,17 +206,20 @@ export function TreemapTiles<T = TreemapDatum>({
     >
       {context.rectangles
         .filter((node) => context.frontierIds.has(node.id))
-        .map((node) => (
-          <Mark
-            key={node.id}
-            node={node}
-            context={context}
-            kind="treemap-tile"
-            {...(tileProps ? { buttonProps: tileProps(node) } : {})}
-          >
-            {typeof children === "function" ? (children(node) ?? null) : children}
-          </Mark>
-        ))}
+        .map((node) => {
+          const attributes: TreemapTileProps<T> = {
+            ...tileProps?.(node),
+            node,
+            ...(children === undefined
+              ? {}
+              : { children: typeof children === "function" ? (children(node) ?? null) : children }),
+          };
+          return render ? (
+            <Fragment key={node.id}>{render(attributes)}</Fragment>
+          ) : (
+            <TreemapTile key={node.id} {...attributes} />
+          );
+        })}
     </div>
   );
 }

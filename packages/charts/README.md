@@ -199,7 +199,7 @@ const data = [{ id: "storage", label: "Storage", children: [
 </TreemapChart>
 ```
 
-Compose only the parts you need. The default is a leaf-only mosaic; hierarchy still owns layout, color and tooltip paths. Group headers are opt-in with `Groups` and a positive `groupHeaderHeight`.
+Compose only the parts you need. `Tiles` draws the layout; `Tile` owns each positioned native button and shared interaction. Use `Tiles.render` with `<TreemapChart.Tile {...props} />` to customize the renderer, or `tileProps` for native props. The default is a leaf-only mosaic; hierarchy still owns layout, color and tooltip paths. Group headers are opt-in with `Groups` and a positive `groupHeaderHeight`.
 `Labels` renders names and complete formatted values when they fit, shortening narrow names visually and suppressing text below its fit thresholds; customize text/color through `children` and
 `labelProps` (set a contrasting text color when supplying dark tile paints). `Tiles` and `Groups` preserve native props, refs and handlers.
 `Tooltip` follows the pointer, clamps to the chart, and uses the shared tooltip

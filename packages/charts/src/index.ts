@@ -263,6 +263,7 @@ export {
   type TreemapLabelsProps,
   type TreemapLayoutOptions,
   type TreemapRectangle,
+  type TreemapTileProps,
   type TreemapTilesProps,
   type TreemapTooltipProps,
   useTreemap,

@@ -8,11 +8,13 @@ import {
   TreemapGroups,
   TreemapLabels,
   TreemapLegend,
+  TreemapTile,
   TreemapTiles,
   TreemapTooltip,
 } from "./parts.js";
 export const TreemapChart = /* @__PURE__ */ Object.assign(TreemapChartRoot, {
   Tiles: TreemapTiles,
+  Tile: TreemapTile,
   Groups: TreemapGroups,
   Labels: TreemapLabels,
   Tooltip: TreemapTooltip,
@@ -31,6 +33,7 @@ export type {
   TreemapDataTableProps,
   TreemapGroupsProps,
   TreemapLabelsProps,
+  TreemapTileProps,
   TreemapTilesProps,
   TreemapTooltipProps,
 } from "./parts.js";
