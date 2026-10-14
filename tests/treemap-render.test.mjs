@@ -51,11 +51,7 @@ test("TreemapChart owns its frame and renders only explicit parts", () => {
 
 test("treemap glyphs exclude zero area, retain stable IDs and include group headers", () => {
   const html = render(
-    chart([
-      h(TreemapChart.Groups, { key: "groups" }),
-      h(TreemapChart.Tiles, { key: "tiles" }),
-      h(TreemapChart.Labels, { key: "labels" }),
-    ]),
+    chart([h(TreemapChart.Groups, { key: "groups" }), h(TreemapChart.Tiles, { key: "tiles" })]),
   );
   assert.equal((html.match(/data-kind-ui="treemap-tile"/g) ?? []).length, 3);
   assert.match(html, /data-kind-ui="treemap-group-header"/);
@@ -83,33 +79,19 @@ test("treemap native tile props preserve children unless an explicit renderer ov
   }
 });
 
-test("treemap native label props preserve children while explicit renderers retain empty results", () => {
-  const labelProps = (node) => ({
-    children: h("strong", null, `Native label ${node.id}`),
-    className: "consumer-label",
-  });
-  const props = { labelProps, minWidth: 0, minHeight: 0, padding: 0 };
-  const native = render(chart(h(TreemapChart.Labels, props)));
-  for (const id of ["a", "b", "c"]) assert.match(native, new RegExp(`Native label ${id}`));
-  assert.match(native, /consumer-label/);
-  const explicit = render(
-    chart(h(TreemapChart.Labels, props, (node) => `Rendered label ${node.id}`)),
+test("Tiles includes fitted text by default and supports label opt-out and custom content", () => {
+  assert.equal(TreemapChart.Labels, undefined);
+  const html = render(chart(h(TreemapChart.Tiles)));
+  assert.equal((html.match(/data-kind-ui="treemap-label"/g) ?? []).length, 3);
+  assert.match(html, /tabular-nums[^>]*>6</);
+  assert.doesNotMatch(
+    render(chart(h(TreemapChart.Tiles, { labels: false }))),
+    /data-kind-ui="treemap-label"/,
   );
-  assert.match(explicit, /Rendered label a/);
-  assert.doesNotMatch(explicit, /Native label/);
-  for (const child of [null, () => null, () => undefined]) {
-    const html = render(chart(h(TreemapChart.Labels, props, child)));
-    assert.doesNotMatch(html, /Native label|>Same<|>Outside</);
-    assert.equal((html.match(/data-kind-ui="treemap-label"/g) ?? []).length, 3);
-  }
-  const defaultLabels = render(
-    chart(h(TreemapChart.Labels, { ...props, labelProps: () => ({ children: undefined }) })),
+  assert.doesNotMatch(
+    render(chart(h(TreemapChart.Tiles, null, () => "Custom"))),
+    /data-kind-ui="treemap-label"/,
   );
-  assert.match(defaultLabels, />Same<|>Outside</);
-  const emptyNative = render(
-    chart(h(TreemapChart.Labels, { ...props, labelProps: () => ({ children: null }) })),
-  );
-  assert.doesNotMatch(emptyNative, />Same<|>Outside</);
 });
 
 test("treemap native header and group props preserve content without an explicit renderer", () => {
@@ -248,7 +230,6 @@ test("layout padding, depth and label fit inputs reject malformed values", () =>
   ]) {
     assert.throws(() => render(chart(null, props)), /finite|positive integer/);
   }
-  assert.throws(() => render(chart(h(TreemapChart.Labels, { minWidth: -1 }))), /finite/);
 });
 
 test("loading hides real marks, supplies shared status and empty input supplies a meaningful state", () => {
@@ -265,8 +246,8 @@ test("loading hides real marks, supplies shared status and empty input supplies 
   );
 });
 
-test("leaf labels fit only when the caller's minimum rectangle is available", () => {
-  const html = render(chart(h(TreemapChart.Labels, { minWidth: 500 })));
+test("leaf labels are suppressed in tiny rectangles", () => {
+  const html = render(chart(h(TreemapChart.Tiles), { width: 20, height: 20 }));
   assert.doesNotMatch(html, /data-kind-ui="treemap-label"/);
 });
 
@@ -305,7 +286,7 @@ test("Treemap visibility preserves data geometry and hides only matching configu
 
 test("the default leaf mosaic reserves no header band and exposes supplied values", () => {
   const html = render(
-    chart([h(TreemapChart.Tiles, { key: "tiles" }), h(TreemapChart.Labels, { key: "labels" })], {
+    chart(h(TreemapChart.Tiles), {
       groupHeaderHeight: 0,
     }),
   );

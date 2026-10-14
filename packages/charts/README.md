@@ -192,7 +192,6 @@ const data = [{ id: "storage", label: "Storage", children: [
 <TreemapChart data={data} config={{ storage: { color: "var(--chart-1)" } }}
   aria-label="Storage allocation" formatValue={value => `${value} GB`} animate>
   <TreemapChart.Tiles />
-  <TreemapChart.Labels />
   <TreemapChart.Tooltip valueAnimation="shuffle" />
   <TreemapChart.Legend />
   <TreemapChart.Breadcrumbs />
@@ -200,8 +199,7 @@ const data = [{ id: "storage", label: "Storage", children: [
 ```
 
 Compose only the parts you need. `Tiles` draws the layout; `Tile` owns each positioned native button and shared interaction. Use `Tiles.render` with `<TreemapChart.Tile {...props} />` to customize the renderer, or `tileProps` for native props. The default is a leaf-only mosaic; hierarchy still owns layout, color and tooltip paths. Group headers are opt-in with `Groups` and a positive `groupHeaderHeight`.
-`Labels` renders names and complete formatted values when they fit, shortening narrow names visually and suppressing text below its fit thresholds; customize text/color through `children` and
-`labelProps` (set a contrasting text color when supplying dark tile paints). `Tiles` and `Groups` preserve native props, refs and handlers.
+`Tiles` includes fitted names and formatted values by default. Use `labels={false}` to omit text, or supply tile `children` for custom content. Native tile styles own the label color. `Tiles` and `Groups` preserve native props, refs and handlers.
 `Tooltip` follows the pointer, clamps to the chart, and uses the shared tooltip
 rows and optional number animation. Keyboard inspection anchors it to the tile;
 Escape dismisses it. Arrows and Home/End navigate one tile tab stop.
@@ -233,7 +231,7 @@ parts. `normalizeTreemap` returns the model without rendering. `rootShare`,
 `parentShare` and `viewShare` use their respective supplied totals and return
 `null` for zero denominators. `DataTable` is an optional accessible alternative,
 including zero-area items; applications choose where to place it through `Content`.
-`depth`, `padding`, `groupHeaderHeight` and label fit thresholds control density.
+`depth`, `padding`, `groupHeaderHeight` control density.
 
 ## Visibility and interaction
 
