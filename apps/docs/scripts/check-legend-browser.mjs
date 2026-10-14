@@ -41,7 +41,12 @@ try {
   for (const family of families) {
     await page.goto(`${origin}/docs/components/${family.id}/`);
     await page.waitForFunction(() => document.querySelectorAll(".component-loading").length === 0);
-    for (const example of family.examples) {
+    // Advanced Treemap adapters remain copied-consumer fixtures; its page teaches one example.
+    const pageExamples =
+      family.id === "treemap"
+        ? family.examples.filter((example) => example.id === "treemap")
+        : family.examples;
+    for (const example of pageExamples) {
       const bundle = bundles[example.id];
       const card = page.locator(`[data-component="${example.id}"]`);
       const variants = bundle.variants ?? { default: { source: sourceFor(bundle) } };
