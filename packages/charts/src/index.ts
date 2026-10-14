@@ -271,7 +271,7 @@ export {
 export {
   normalizeTreemap,
   type TreemapAccessors,
-  type TreemapDatum,
+  type TreemapHierarchyNode,
   type TreemapModel,
   type TreemapNode,
 } from "./treemap/model.js";

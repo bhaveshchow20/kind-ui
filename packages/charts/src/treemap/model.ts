@@ -1,5 +1,5 @@
 /** Standard hierarchy records. Group area is always derived from descendants. */
-export type TreemapDatum =
+export type TreemapNode =
   | {
       readonly kind?: "leaf";
       readonly id: string;
@@ -11,7 +11,7 @@ export type TreemapDatum =
       readonly kind?: "group";
       readonly id: string;
       readonly label: string;
-      readonly children: readonly TreemapDatum[];
+      readonly children: readonly TreemapNode[];
       readonly value?: never;
     };
 
@@ -24,7 +24,7 @@ export interface TreemapAccessors<T> {
   value: (datum: T) => number;
 }
 
-export interface TreemapNode<T> {
+export interface TreemapHierarchyNode<T> {
   readonly id: string;
   readonly label: string;
   readonly kind: "leaf" | "group";
@@ -35,7 +35,7 @@ export interface TreemapNode<T> {
   readonly path: readonly string[];
   readonly datum: T;
   readonly value: number;
-  readonly children: readonly TreemapNode<T>[];
+  readonly children: readonly TreemapHierarchyNode<T>[];
   /** Share of the supplied forest; null when its total is zero. */
   readonly rootShare: number | null;
   /** Share of the parent, or forest for roots; null when that total is zero. */
@@ -43,15 +43,15 @@ export interface TreemapNode<T> {
 }
 
 export interface TreemapModel<T> {
-  readonly roots: readonly TreemapNode<T>[];
+  readonly roots: readonly TreemapHierarchyNode<T>[];
   /** All nodes in caller order, with parents preceding their descendants. */
-  readonly nodes: readonly TreemapNode<T>[];
-  readonly byId: ReadonlyMap<string, TreemapNode<T>>;
+  readonly nodes: readonly TreemapHierarchyNode<T>[];
+  readonly byId: ReadonlyMap<string, TreemapHierarchyNode<T>>;
   readonly total: number;
 }
 
 type MutableNode<T> = {
-  -readonly [K in keyof TreemapNode<T>]: TreemapNode<T>[K];
+  -readonly [K in keyof TreemapHierarchyNode<T>]: TreemapHierarchyNode<T>[K];
 };
 
 function fail(location: string, reason: string): never {
@@ -70,7 +70,7 @@ const standardAccessors: TreemapAccessors<unknown> = {
   value: (datum) => standardRecord(datum).value as number,
 };
 
-export function normalizeTreemap(data: readonly TreemapDatum[]): TreemapModel<TreemapDatum>;
+export function normalizeTreemap(data: readonly TreemapNode[]): TreemapModel<TreemapNode>;
 export function normalizeTreemap<T>(
   data: readonly T[],
   accessors: TreemapAccessors<T>,
@@ -80,14 +80,14 @@ export function normalizeTreemap<T>(
   accessors?: TreemapAccessors<T>,
 ): TreemapModel<T> {
   if (!Array.isArray(data)) fail("data", "expected an array of records");
-  // The no-accessor overload accepts only TreemapDatum; its fields are validated below.
+  // The no-accessor overload accepts only TreemapNode; its fields are validated below.
   const read = accessors ?? (standardAccessors as TreemapAccessors<T>);
   const byId = new Map<string, MutableNode<T>>();
   const nodes: MutableNode<T>[] = [];
   const seen = new Map<object, string>();
   const ancestors = new Set<object>();
 
-  function sum(children: readonly TreemapNode<T>[], location: string): number {
+  function sum(children: readonly TreemapHierarchyNode<T>[], location: string): number {
     let total = 0;
     for (const child of children) {
       total += child.value;

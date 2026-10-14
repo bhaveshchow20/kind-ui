@@ -1,4 +1,4 @@
-import type { TreemapNode } from "./model.js";
+import type { TreemapHierarchyNode } from "./model.js";
 
 export interface TreemapColorStop {
   offset: number;
@@ -12,12 +12,12 @@ interface ColorOptions {
 }
 
 interface NumericOptions<T> extends ColorOptions {
-  value: (datum: T, node: TreemapNode<T>) => number | null | undefined;
-  groupValue?: (datum: T, node: TreemapNode<T>) => number | null | undefined;
+  value: (datum: T, node: TreemapHierarchyNode<T>) => number | null | undefined;
+  groupValue?: (datum: T, node: TreemapHierarchyNode<T>) => number | null | undefined;
   /** Opt-in aggregation of descendant leaf metrics, including missing values. */
   aggregate?: (
     values: readonly (number | null)[],
-    node: TreemapNode<T>,
+    node: TreemapHierarchyNode<T>,
   ) => number | null | undefined;
   formatValue?: (value: number) => string;
 }
@@ -34,8 +34,8 @@ interface ContinuousOptions<T> extends NumericOptions<T> {
 export type TreemapColorEncoding<T> =
   | (ColorOptions & {
       type: "categorical";
-      value: (datum: T, node: TreemapNode<T>) => string | null | undefined;
-      groupValue?: (datum: T, node: TreemapNode<T>) => string | null | undefined;
+      value: (datum: T, node: TreemapHierarchyNode<T>) => string | null | undefined;
+      groupValue?: (datum: T, node: TreemapHierarchyNode<T>) => string | null | undefined;
       categories: readonly { value: string; color: string; label?: string }[];
     })
   | (ContinuousOptions<T> & { type: "sequential" | "diverging" })
@@ -46,7 +46,7 @@ export type TreemapColorEncoding<T> =
     })
   | (NumericOptions<T> & {
       type: "custom";
-      color: (value: number, node: TreemapNode<T>) => string;
+      color: (value: number, node: TreemapHierarchyNode<T>) => string;
       legend?: readonly { label: string; color: string }[];
     });
 
@@ -150,8 +150,8 @@ function interpolate(stops: readonly TreemapColorStop[], position: number): stri
  * Threshold equality enters the upper interval. Missing/nonfinite metrics are unknown.
  */
 export function resolveTreemapColors<T>(
-  nodes: readonly TreemapNode<T>[],
-  viewNodes: readonly TreemapNode<T>[],
+  nodes: readonly TreemapHierarchyNode<T>[],
+  viewNodes: readonly TreemapHierarchyNode<T>[],
   encoding: TreemapColorEncoding<T>,
 ): TreemapResolvedColors {
   const unknownColor = paint(encoding.unknownColor ?? "#9ca3af");
@@ -198,7 +198,7 @@ export function resolveTreemapColors<T>(
   for (const node of nodes) {
     if (node.kind === "leaf") values.set(node.id, finite(encoding.value(node.datum, node)));
   }
-  const descendantValues = (node: TreemapNode<T>): (number | null)[] =>
+  const descendantValues = (node: TreemapHierarchyNode<T>): (number | null)[] =>
     node.kind === "leaf" ? [values.get(node.id) ?? null] : node.children.flatMap(descendantValues);
   for (const node of nodes) {
     if (node.kind === "group")
@@ -212,7 +212,7 @@ export function resolveTreemapColors<T>(
   }
   const format = encoding.formatValue ?? String;
   let legend: TreemapColorLegend;
-  let color: (value: number, node: TreemapNode<T>) => string;
+  let color: (value: number, node: TreemapHierarchyNode<T>) => string;
   if (encoding.type === "threshold") {
     if (encoding.colors.length !== encoding.thresholds.length + 1)
       throw new Error("Treemap thresholds require one more color than boundaries.");

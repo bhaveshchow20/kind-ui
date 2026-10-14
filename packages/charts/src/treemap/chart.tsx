@@ -44,12 +44,12 @@ import { TreemapLoadingDesign } from "./loading.js";
 import {
   normalizeTreemap,
   type TreemapAccessors,
-  type TreemapDatum,
+  type TreemapHierarchyNode,
   type TreemapModel,
   type TreemapNode,
 } from "./model.js";
 
-export type TreemapItem<T> = TreemapNode<T> & {
+export type TreemapItem<T> = TreemapHierarchyNode<T> & {
   rectangle: { x: number; y: number; width: number; height: number } | null;
   viewShare: number | null;
 };
@@ -62,7 +62,7 @@ type TreemapDescendants<T, Seen = T> =
         ? never
         : TreemapDescendants<Child, Seen | Child>
       : never);
-type TreemapRecords<T> = [T] extends [TreemapDatum] ? TreemapDescendants<T> : T;
+type TreemapRecords<T> = [T] extends [TreemapNode] ? TreemapDescendants<T> : T;
 type TreemapFamilyOptions = FamilyOptions;
 type StateOptions<T> = {
   viewId?: string | null;
@@ -76,7 +76,7 @@ type StateOptions<T> = {
   onSelectionChange?: (id: string | null, node: TreemapItem<T> | null) => void;
   onActivate?: (node: TreemapItem<T>) => void;
 };
-export type TreemapChartProps<T = TreemapDatum> = Omit<
+export type TreemapChartProps<T = TreemapNode> = Omit<
   ComponentPropsWithRef<"div">,
   "children" | keyof FamilyOptions
 > &
@@ -92,19 +92,19 @@ export type TreemapChartProps<T = TreemapDatum> = Omit<
     loading?: boolean;
     loadingLabel?: string;
     empty?: ReactNode;
-    formatValue?: (value: number, node: TreemapNode<TreemapRecords<T>>) => string;
+    formatValue?: (value: number, node: TreemapHierarchyNode<TreemapRecords<T>>) => string;
     children: Exclude<ReactNode, undefined>;
-  } & ([T] extends [TreemapDatum]
+  } & ([T] extends [TreemapNode]
     ? { accessors?: TreemapAccessors<T> }
     : { accessors: TreemapAccessors<T> });
 export type TreemapContextValue<T> = {
   model: TreemapModel<T>;
   pointer: { x: number; y: number } | null;
   size: { width: number; height: number };
-  isHidden: (node: TreemapNode<T>) => boolean;
-  isInactive: (node: TreemapNode<T>) => boolean;
+  isHidden: (node: TreemapHierarchyNode<T>) => boolean;
+  isInactive: (node: TreemapHierarchyNode<T>) => boolean;
   rectangles: readonly TreemapRectangle<T>[];
-  viewNodes: readonly TreemapNode<T>[];
+  viewNodes: readonly TreemapHierarchyNode<T>[];
   items: ReadonlyMap<string, TreemapItem<T>>;
   frontierIds: ReadonlySet<string>;
   navigation: readonly TreemapRectangle<T>[];
@@ -115,7 +115,7 @@ export type TreemapContextValue<T> = {
   setView: (id: string | null) => void;
   setActive: (id: string | null) => void;
   setSelected: (id: string | null) => void;
-  activate: (node: TreemapNode<T>, event?: ChartInteractionEvent) => void;
+  activate: (node: TreemapHierarchyNode<T>, event?: ChartInteractionEvent) => void;
   tooltipMounted: boolean;
   setTooltipMounted: (mounted: boolean) => void;
   inspectPointer: (event: React.PointerEvent, id: string) => void;
@@ -129,13 +129,13 @@ export type TreemapContextValue<T> = {
   loading: boolean;
   animate: boolean;
   groupHeaderHeight: number;
-  formatValue: (value: number, node: TreemapNode<T>) => string;
+  formatValue: (value: number, node: TreemapHierarchyNode<T>) => string;
   register: (id: string, node: HTMLButtonElement | null) => void;
   focus: (id: string | null) => void;
 };
 const Context = createContext<TreemapContextValue<unknown> | null>(null);
 /** The type argument describes the caller-owned record; the chart retains that record unchanged. */
-export function useTreemap<T = TreemapDatum>(): TreemapContextValue<T> {
+export function useTreemap<T = TreemapNode>(): TreemapContextValue<T> {
   const context = use(Context);
   if (!context) throw new Error("Treemap components require TreemapChart");
   return context as unknown as TreemapContextValue<T>;
@@ -146,7 +146,7 @@ const isAvailableControl = (element: HTMLElement | null | undefined): element is
   element.isConnected &&
   !element.matches(":disabled") &&
   element.closest("[hidden], [inert]") === null;
-export function TreemapChartRoot<const T = TreemapDatum>({
+export function TreemapChartRoot<const T = TreemapNode>({
   config,
   interaction,
   emphasis,
@@ -224,7 +224,7 @@ function TreemapPlot<T>({
     () =>
       accessors
         ? (normalizeTreemap(data, accessors) as TreemapModel<TreemapRecords<T>>)
-        : (normalizeTreemap(data as unknown as readonly TreemapDatum[]) as unknown as TreemapModel<
+        : (normalizeTreemap(data as unknown as readonly TreemapNode[]) as unknown as TreemapModel<
             TreemapRecords<T>
           >),
     [data, accessors],
@@ -273,9 +273,9 @@ function TreemapPlot<T>({
     inspection.active?.kind === "series"
       ? (inspection.active.seriesKey ?? inspection.active.key)
       : null;
-  const isHidden = (node: TreemapNode<TreemapRecords<T>>) =>
+  const isHidden = (node: TreemapHierarchyNode<TreemapRecords<T>>) =>
     chart.visibleSeries !== undefined && !chart.visibleSeries.includes(node.path[0] ?? node.id);
-  const isInactive = (node: TreemapNode<TreemapRecords<T>>) =>
+  const isInactive = (node: TreemapHierarchyNode<TreemapRecords<T>>) =>
     isHidden(node) ||
     (interaction.selected !== null && !node.path.includes(interaction.selected)) ||
     (interaction.selected === null && inspectedRoot !== null && !node.path.includes(inspectedRoot));
@@ -452,7 +452,7 @@ function TreemapPlot<T>({
     [loading, controlledSelected, onSelectionChange, readItem],
   );
   const activate = useCallback(
-    (node: TreemapNode<TreemapRecords<T>>, event: ChartInteractionEvent = null) => {
+    (node: TreemapHierarchyNode<TreemapRecords<T>>, event: ChartInteractionEvent = null) => {
       if (loading || event?.defaultPrevented) return;
       const key = interaction.kind === "node" ? node.id : (node.path[0] ?? node.id);
       if (
