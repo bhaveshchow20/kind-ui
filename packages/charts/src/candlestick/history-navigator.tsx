@@ -517,13 +517,13 @@ const HistoryNavigatorView = memo(function HistoryNavigatorView({
               <div
                 aria-hidden="true"
                 data-kind-ui="candlestick-history-outside-start"
-                className="pointer-events-none absolute inset-y-0 left-0 bg-[color-mix(in_srgb,var(--muted,#e2e8f0)_45%,transparent)] backdrop-blur-[1.5px]"
+                className="pointer-events-none absolute inset-y-0 left-0 bg-[color-mix(in_srgb,var(--muted,#e2e8f0)_45%,transparent)] [backdrop-filter:blur(1.5px)]"
                 style={{ width: `calc((100% - ${travellerWidth}px) * ${startIndex / last})` }}
               />
               <div
                 aria-hidden="true"
                 data-kind-ui="candlestick-history-outside-end"
-                className="pointer-events-none absolute inset-y-0 right-0 bg-[color-mix(in_srgb,var(--muted,#e2e8f0)_45%,transparent)] backdrop-blur-[1.5px]"
+                className="pointer-events-none absolute inset-y-0 right-0 bg-[color-mix(in_srgb,var(--muted,#e2e8f0)_45%,transparent)] [backdrop-filter:blur(1.5px)]"
                 style={{ width: `calc((100% - ${travellerWidth}px) * ${1 - endIndex / last})` }}
               />
             </div>
