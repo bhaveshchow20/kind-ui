@@ -144,7 +144,7 @@ test("treemap controls and clipboard code retain caller data and source parity",
   await dialog.getByRole("slider", { name: "Tile spacing", exact: true }).press("End");
   await dialog.getByRole("tab", { name: "Code", exact: true }).click();
   const code = dialog.getByRole("region", { name: "Chart example code" });
-  await expect(code).toContainText("readonly TreemapDatum[]");
+  await expect(code).toContainText("readonly TreemapNode[]");
   await expect(code).not.toContainText("0.5.0 does not include it");
   await expect(code).toContainText("aapl");
   await expect(code).not.toContainText("<TreemapChart.Labels");

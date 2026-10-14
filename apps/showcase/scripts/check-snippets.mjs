@@ -156,7 +156,7 @@ try {
             `${recipe.id} copied focus must preserve the complete data`,
           );
           if (recipe.family === "Treemap") {
-            assert.match(source, /readonly TreemapDatum\[\]/);
+            assert.match(source, /readonly TreemapNode\[\]/);
             assert.doesNotMatch(source, /accessors=|encoding=|View data|signedPosition/);
             assert.doesNotMatch(source, /candidate|validated archive|does not include it/);
             assert.match(source, /TreemapChart\.Legend/);

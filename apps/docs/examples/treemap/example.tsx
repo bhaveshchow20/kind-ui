@@ -1,7 +1,7 @@
 "use client";
-import { TreemapChart, type TreemapDatum } from "@kind-ui/charts";
+import { TreemapChart, type TreemapNode } from "@kind-ui/charts";
 
-const data: readonly TreemapDatum[] = [
+const data: readonly TreemapNode[] = [
   {
     id: "compute",
     label: "Compute",

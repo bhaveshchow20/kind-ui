@@ -25,7 +25,7 @@ import { TreemapChart } from "@kind-ui/charts";
 </TreemapChart>
 ```
 
-Use `{ id, label, value }` for a leaf and `{ id, label, children }` for a group. IDs stay unique and stable across updates; group totals come from their descendants. Area values must be finite and nonnegative. Zero values remain in the data even when they have no drawable area.
+`TreemapNode` is the input type. Use `{ id, label, value }` for a leaf and `{ id, label, children }` for a group. IDs stay unique and stable across updates; group totals come from their descendants. Area values must be finite and nonnegative. Zero values remain in the data even when they have no drawable area.
 
 The shared legend emphasizes categories without reallocating area. `animate` enables shared motion; `valueAnimation="shuffle"` rolls tooltip digits. Reduced motion is respected.
 

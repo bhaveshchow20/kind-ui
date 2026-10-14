@@ -1,4 +1,4 @@
-import type { SeriesConfig, TreemapDatum } from "@kind-ui/charts";
+import type { SeriesConfig, TreemapNode } from "@kind-ui/charts";
 import type { Finish } from "./advanced-chart-recipes";
 import type { DemoOptions } from "./demo-options";
 
@@ -27,7 +27,7 @@ export const treemapRecipes = [
   },
 ] as const;
 export type TreemapRecipe = (typeof treemapRecipes)[number];
-const cloud: readonly TreemapDatum[] = [
+const cloud: readonly TreemapNode[] = [
   {
     id: "compute",
     label: "Compute",
@@ -63,7 +63,7 @@ const cloud: readonly TreemapDatum[] = [
     ],
   },
 ];
-const portfolio: readonly TreemapDatum[] = [
+const portfolio: readonly TreemapNode[] = [
   {
     id: "technology",
     label: "Technology",
@@ -98,7 +98,7 @@ const portfolio: readonly TreemapDatum[] = [
     ],
   },
 ];
-export function treemapData(id: string): readonly TreemapDatum[] {
+export function treemapData(id: string): readonly TreemapNode[] {
   if (id === "treemap-market") return cloud;
   if (id === "treemap-exposure") return portfolio;
   throw new Error(`Unknown treemap example: ${id}`);
@@ -106,7 +106,7 @@ export function treemapData(id: string): readonly TreemapDatum[] {
 export const treemapArea = (_id: string, value: number) =>
   `$${(value / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })}k`;
 export function treemapConfig(
-  data: readonly TreemapDatum[],
+  data: readonly TreemapNode[],
   colors: readonly string[],
 ): SeriesConfig {
   return Object.fromEntries(
@@ -121,7 +121,7 @@ export function treemapConfig(
 }
 /** Keep direct text readable when the gallery palette changes. */
 export function treemapTextColors(
-  data: readonly TreemapDatum[],
+  data: readonly TreemapNode[],
   colors: readonly string[],
 ): Record<string, string> {
   return Object.fromEntries(
@@ -143,7 +143,7 @@ export function treemapTextColors(
   );
 }
 export function treemapRows(
-  data: readonly TreemapDatum[],
+  data: readonly TreemapNode[],
   parent = "",
 ): { id: string; path: string; value: number }[] {
   return data.flatMap((node) => {
@@ -167,10 +167,10 @@ export function treemapCode(
         ? ', boxShadow: "inset 0 0 0 1px #ffffff40"'
         : "";
   return `"use client";
-import { TreemapChart, type TreemapDatum } from "@kind-ui/charts";
+import { TreemapChart, type TreemapNode } from "@kind-ui/charts";
 
 // ${recipe.areaLabel}. Synthetic example; areas and shares use supplied positive values.
-const data: readonly TreemapDatum[] = ${JSON.stringify(treemapData(recipe.id), null, 2)};
+const data: readonly TreemapNode[] = ${JSON.stringify(treemapData(recipe.id), null, 2)};
 const config = ${JSON.stringify(treemapConfig(treemapData(recipe.id), colors), null, 2)};
 ${options.showLabels === false ? "" : `const textColors: Record<string, string> = ${JSON.stringify(treemapTextColors(treemapData(recipe.id), colors), null, 2)};`}
 const formatValue = (value: number) => "$" + (value / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "k";

@@ -14,11 +14,11 @@ export type TreemapRootReference = Pick<
   | "loading"
   | "loadingLabel"
 >;
-export type TreemapStandardDatumReference = Chart.TreemapDatum;
-export type TreemapAccessorsReference = Chart.TreemapAccessors<Chart.TreemapDatum>;
-export type TreemapNodeReference = Chart.TreemapNode<Chart.TreemapDatum>;
-export type TreemapItemReference = Chart.TreemapItem<Chart.TreemapDatum>;
-export type TreemapColorEncodingReference = Chart.TreemapColorEncoding<Chart.TreemapDatum>;
+export type TreemapNodeReference = Chart.TreemapNode;
+export type TreemapAccessorsReference = Chart.TreemapAccessors<Chart.TreemapNode>;
+export type TreemapHierarchyNodeReference = Chart.TreemapHierarchyNode<Chart.TreemapNode>;
+export type TreemapItemReference = Chart.TreemapItem<Chart.TreemapNode>;
+export type TreemapColorEncodingReference = Chart.TreemapColorEncoding<Chart.TreemapNode>;
 export type TreemapTilesReference = Pick<Chart.TreemapTilesProps, "tileProps" | "children">;
 export type TreemapGroupsReference = Pick<
   Chart.TreemapGroupsProps,
