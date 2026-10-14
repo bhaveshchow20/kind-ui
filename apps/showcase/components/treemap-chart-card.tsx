@@ -10,7 +10,6 @@ import {
   treemapConfig,
   treemapData,
   treemapRows,
-  treemapTextColors,
 } from "@/lib/treemap-recipes";
 
 export function TreemapChartCard({
@@ -33,7 +32,6 @@ export function TreemapChartCard({
   const reduced = useReducedMotion();
   const data = useMemo(() => treemapData(recipe.id), [recipe.id]);
   const config = useMemo(() => treemapConfig(data, colors), [data, colors]);
-  const textColors = useMemo(() => treemapTextColors(data, colors), [data, colors]);
   const rows = useMemo(() => treemapRows(data), [data]);
   const formatValue = (value: number) => treemapArea(recipe.id, value);
   return (
@@ -71,6 +69,12 @@ export function TreemapChartCard({
         }}
       >
         <TreemapChart.Tiles
+          labels={options.showLabels !== false}
+          children={
+            options.showLabels !== false && options.showValues === false
+              ? (node) => <span className="block truncate p-[5px] text-xs">{node.label}</span>
+              : undefined
+          }
           tileProps={() => ({
             style: {
               borderRadius: options.radius ?? 4,
@@ -82,16 +86,6 @@ export function TreemapChartCard({
             },
           })}
         />
-        {options.showLabels !== false && (
-          <TreemapChart.Labels
-            minWidth={18}
-            minHeight={14}
-            padding={5}
-            labelProps={(node) => ({ style: { color: textColors[node.path[0] ?? node.id] } })}
-          >
-            {options.showValues === false ? (node) => node.label : undefined}
-          </TreemapChart.Labels>
-        )}
         <TreemapChart.Tooltip {...(animate ? { valueAnimation: "shuffle" as const } : {})} />
         {options.showLegend !== false && <TreemapChart.Legend />}
       </TreemapChart>

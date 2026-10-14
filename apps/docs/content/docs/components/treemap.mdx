@@ -19,7 +19,6 @@ import { TreemapChart } from "@kind-ui/charts";
 
 <TreemapChart data={data} config={config} aria-label="Monthly cloud spend" animate>
   <TreemapChart.Tiles />
-  <TreemapChart.Labels />
   <TreemapChart.Tooltip valueAnimation="shuffle" />
   <TreemapChart.Legend />
 </TreemapChart>
@@ -51,26 +50,20 @@ Use **Show chart** to transition from the placeholder to data, or **Show loading
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `labels` | `boolean` | `true` | Include fitted names and values inside tiles. |
 | `tileProps` | `(node) => button props` | — | Native styles, handlers, attributes and ref for each tile. |
 | `render` | `(props) => ReactNode` | `Tile` | Full renderer receiving the computed rectangle and native props. |
-| `children` | `ReactNode` or `(node) => ReactNode` | None | Content inside the default tile. |
+| `children` | `ReactNode` or `(node) => ReactNode` | Fitted name and value | Custom content replaces the default label. |
 
 ### TreemapChart.Tile
+
+Each tile includes fitted text. Use `labels={false}` to omit it; native styles and `children` customize its presentation.
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `node` | `TreemapRectangle<T>` | Required | Supplied geometry, identity, original datum and values from `Tiles.render`. |
 | Native button props / ref | HTML button props | — | Consumer presentation and handlers; family inspection, emphasis and keyboard behavior remain bound. |
-| `children` | `ReactNode` | None | Tile content; use `Labels` for fitted text. |
-
-### TreemapChart.Labels
-
-| Prop | Default | Purpose |
-| --- | --- | --- |
-| `minWidth` / `minHeight` | `18` / `14` | Minimum content area before drawing text. |
-| `padding` | `4` | Text inset in pixels. |
-| `children(node)` | Fitted name and value | Custom label content. |
-| `labelProps(node)` | — | Native span styles, attributes and ref. |
+| `children` | `ReactNode` | Fitted name and value | Custom content replaces the default label. |
 
 ### TreemapChart.Tooltip
 

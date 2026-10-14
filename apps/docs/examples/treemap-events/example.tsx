@@ -113,7 +113,6 @@ export function EventActivityTreemap() {
       formatValue={(value) => `$${value}k turnover`}
     >
       <TreemapChart.Tiles />
-      <TreemapChart.Labels minWidth={18} minHeight={14} padding={5} />
       <TreemapChart.Tooltip valueAnimation="shuffle" />
       <TreemapChart.ColorLegend />
       <TreemapChart.Breadcrumbs rootLabel="All topics" />
