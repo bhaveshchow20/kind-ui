@@ -46,7 +46,7 @@ jobs:
           KIND_UI_DEPLOYMENT_ENV: preview
           NEXT_PUBLIC_KIND_DOCS_BASE_PATH: ""
       - name: Retain the built docs site and generated browser fixtures
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: docs-browser-fixtures
           path: |
@@ -71,7 +71,7 @@ jobs:
           NEXT_PUBLIC_KIND_DOCS_BASE_PATH: /charts/docs
           KIND_DOCS_ORIGIN: https://kindui.dev
       - name: Retain production indexing output
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: docs-production-indexing
           path: apps/docs/artifacts/production-indexing/
@@ -138,7 +138,7 @@ jobs:
           fi
         working-directory: apps/docs
       - name: Retain strict consumer evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: docs-consumer-evidence-shard-${{ matrix.shard }}
@@ -275,7 +275,7 @@ jobs:
           node scripts/check-heatmap-consumers.mjs
           node scripts/start-heatmap-checks.mjs
         working-directory: apps/docs
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: docs-browser-verification-${{ matrix.group }}
