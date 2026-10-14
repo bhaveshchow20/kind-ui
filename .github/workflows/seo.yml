@@ -51,7 +51,7 @@ jobs:
       - run: npm run test:browser -- tests/routes.spec.ts tests/accessibility.spec.ts
         working-directory: apps/showcase
       - name: Check hero flow, fonts, and reduced motion
-        run: npm run test:browser -- tests/headline-layout.spec.ts tests/headline-font.spec.ts --project=chromium
+        run: npm run test:browser -- tests/hero-loading.spec.ts tests/headline-layout.spec.ts tests/headline-font.spec.ts --project=chromium
         working-directory: apps/showcase
       - name: Retain continuous hero motion evidence
         if: always()

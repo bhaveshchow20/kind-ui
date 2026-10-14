@@ -935,17 +935,12 @@ export default function Page() {
         </header>
 
         <section className="kind-hero hero" aria-labelledby="hero-title">
-          <motion.div
-            className="kind-hero-copy"
-            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-          >
+          <div className="kind-hero-copy">
             <HeroHeadline />
             <div className="hero-install">
               <InstallSection />
             </div>
-          </motion.div>
+          </div>
         </section>
         <section id="showcase" className="kind-gallery" tabIndex={-1} aria-label="Chart examples">
           <Tabs
