@@ -61,6 +61,9 @@ export function CloudSpendTreemap({ state = "ready" }: { state?: "ready" | "load
           <p aria-hidden={loading || undefined} className="m-0 text-xl font-semibold tabular-nums">
             {loading ? "—" : currency.format(76300)}
           </p>
+          <p className="m-0 text-xs text-muted-foreground">
+            {loading ? "Loading…" : "September 2026 · USD"}
+          </p>
         </div>
       </div>
       <TreemapChart
@@ -84,9 +87,6 @@ export function CloudSpendTreemap({ state = "ready" }: { state?: "ready" | "load
         <TreemapChart.Tooltip valueAnimation="shuffle" />
         <TreemapChart.Legend />
       </TreemapChart>
-      <p className="m-0 text-xs text-muted-foreground">
-        Illustrative monthly billing · Select a category or inspect a service.
-      </p>
     </section>
   );
 }
