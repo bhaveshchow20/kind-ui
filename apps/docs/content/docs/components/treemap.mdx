@@ -95,7 +95,14 @@ The family supplies ancestor context, the original leaf value and its share to t
 
 ## Shared components
 
-Treemap uses the same [chart frame and loading](/docs/chart-components/chart/), [config](/docs/chart-components/series-config/), [legend](/docs/chart-components/legend/) and [tooltip presentation](/docs/chart-components/tooltip/) as the other families. Its own parts supply hierarchical layout, tile paint, fitted labels and node inspection.
+Keep category colors, legend actions and tooltip presentation aligned with these components.
+
+| Component | Purpose |
+| --- | --- |
+| [Chart frame](/docs/chart-components/chart/) | Share colors, visibility, interaction and loading state. |
+| [SeriesConfig](/docs/chart-components/series-config/) | Name categories and define their colors. |
+| [Legend](/docs/chart-components/legend/) | Identify categories and focus by dimming other tiles. |
+| [Tooltip](/docs/chart-components/tooltip/) | Style the floating readout for the inspected tile. |
 
 Arrows and Home/End move between tiles and group headers. Enter/Space activates them; Escape dismisses inspection. `viewId` and `activeId` control navigation and inspection. `interaction` owns legend selection; `selectedId` remains available for legacy application actions. `rootShare`, `parentShare` and `viewShare` describe the supplied dataset, parent and current subtree respectively; zero denominators yield `null`.
 
