@@ -4,7 +4,7 @@ Original docs source and adaptations of Kind UI examples use this repository's M
 
 | Dependency | Pinned version | License |
 | --- | --- | --- |
-| @kind-ui/charts | 0.5.0, validated 74e86f5 artifact | MIT |
+| @kind-ui/charts | 0.5.0, validated 858a985 artifact | MIT |
 | Fumadocs core and UI | 16.15.18 | MIT |
 | Fumadocs MDX | 15.4.6 | MIT |
 | Fumadocs TypeScript generator | 5.4.1 | MIT |
@@ -23,7 +23,7 @@ Original docs source and adaptations of Kind UI examples use this repository's M
 | Geist variable font through Fontsource | 5.3.0 package | OFL-1.1 |
 | DefinitelyTyped React/DOM/Node/MDX types | package-lock versions | MIT |
 
-The vendored Kind UI candidate records source revision `74e86f503344bb4b840fa51af5cd2d0a062d3ae5` and SHA-256 `f3f500759eb9d1a924cccc22b85ab807bb3b6930a5e271f92884edd172dc7b87` in `vendor/provenance.json`.
+The vendored Kind UI candidate records source revision `858a985e4c25815ef2d5fa2456a00515c4125fbc` and SHA-256 `5c3d70eab563076a9cdfd7420feffe8e4cc65001d4d8de4f40f5aa606edb97d9` in `vendor/provenance.json`.
 
 The font's OFL license ships with @fontsource-variable/geist. API and syntax work runs at build time; no TypeScript compiler or Shiki runtime is added to client examples. Consumer build tooling uses Vite 8.3.1 (MIT), pinned in the generated example manifest/lock.
 
