@@ -11,7 +11,7 @@ description: Time-based OHLC, aligned volume and controlled history.
 
 ## Usage
 
-Compose the parts you need. Open **Code** for the complete example.
+Start with axes, a grid and one candle series. Add volume, inspection or history controls as needed. Open **Code** above for the complete interactive example.
 
 ```tsx title="components/candlestick-example.tsx"
 "use client";
@@ -47,6 +47,23 @@ export function CandlestickExample() {
 }
 ```
 
+## Navigate history
+
+Drag the overview handles to choose a range. Zoom, reset and pan share the same window.
+
+```tsx title="History controls"
+<CandlestickChart.Controls />
+<CandlestickChart.HistoryNavigator />
+```
+
+Add these parts inside `CandlestickChart`. The selected overview stays clear; history outside the handles is dimmed and blurred. Time tags appear on hover, drag or keyboard focus.
+
+## Streaming updates
+
+Replace the current candle to update it, or append a new candle with a later time. Try **Pause**, **Resume** and **Step** in the example.
+
+<ChartExample id="candlestick-updates" />
+
 ## Bounded quotes
 
 Bid OHLC in USD per contract. Bounds and source labels are explicit.
@@ -55,7 +72,7 @@ Bid OHLC in USD per contract. Bounds and source labels are explicit.
 
 ## Loading State
 
-Set `loading` and a source-specific `loadingLabel` while observations are pending.
+Set `loading` while observations are pending and use `loadingLabel` to describe them. Randomized candles sweep from left to right; market values, volume and the overview appear once data is ready.
 
 <ChartExample id="candlestick" variant="loading" />
 
@@ -63,116 +80,321 @@ Set `loading` and a source-specific `loadingLabel` while observations are pendin
 
 ### CandlestickChart
 
-<div className="line-props-scroll" role="region" aria-label="CandlestickChart props" tabIndex={0}>
+Use defaults for appearance; add only the parts and options your chart needs.
+
+#### Start here
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart start here props" tabIndex={0}>
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `data` | `readonly Row[]` | Required | Ordered original observations; no mutation or implicit aggregation. |
-| `timeMode` | `"epoch-ms" \| "business-date"` | Required | Explicit instant or session-date identity. |
+| `data` | `readonly Row[]` | Required | Ordered observations with unique times. |
+| `timeMode` | `"epoch-ms" \| "business-date"` | Required | Use milliseconds or calendar dates. |
+| `config` | `SeriesConfig` | Required | Labels and colors for each series. |
+| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
+| `children` | `ReactNode` | Required | The chart parts you want to render. |
+| `width` / `height` / `style` / `className` | Root sizing and presentation | Shared frame | Size the chart independently of its HTML parts. |
+| `loading` / `loadingLabel` / `empty` | `boolean` / `string` / `ReactNode` | `false` / shared label / `"No candle observations"` | Pending and empty presentations. |
+| `animate` | `boolean \| BarAnimation` | `false` | Animate candles; respects reduced motion. |
+
+</div>
+
+#### Formatting and prices
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart formatting and prices props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
 | `accessors` | `CandlestickAccessors<Row>` | Standard keys | Typed keys/functions for time, OHLC, volume, gap and state. |
-| `config` / accessible name / `children` | Shared family contract | Required | Series metadata, `aria-label` or `aria-labelledby`, and explicit parts. |
-| `interaction` | Shared chart interaction | Shared defaults | Series focus, keyboard activation and emphasis. |
-| `visibleSeries` / `defaultVisibleSeries` / `onVisibleSeriesChange` | Shared visibility contract | All configured series | Controlled or initial series visibility and change callback. |
 | `spacing` | `"ordinal" \| "elapsed"` | `"ordinal"` | Supplied-interval slots or actual time distances. |
-| `viewport` / `defaultViewport` | `CandlestickViewport` | Fit | Controlled range or initial uncontrolled range; an initial default survives empty loading data. |
-| `onViewportChange` | `(range, details) => void` | — | Reason plus first/last visible times. |
-| `followLatest` | `boolean` | `false` | Follow appends only from the latest edge. |
-| `overscan` | `number` | `1` | Extra integer records rendered beyond the visible range; no decimation. |
-| `selection` / `defaultSelection` | `CandlestickTime \| null` | `null` | Controlled or initial persistent identity. |
-| `onSelectionChange` / `onInspect` | `(point: CandlestickPoint<Row> \| null) => void` | — | Original-row callbacks for persistent selection or transient inspection. |
-| `priceScale` | `"linear" \| "log"` | `"linear"` | Generic linear or positive-only logarithmic prices. |
+| `priceScale` | `"linear" \| "log"` | `"linear"` | Linear prices or a positive-only logarithmic scale. |
 | `autoscale` | `"visible" \| "all"` | `"visible"` | Low/high observations included in computed domain. |
 | `priceDomain` / `priceBounds` | `readonly [number, number]` | — | Fixed display range / validated observation bounds. |
 | `pricePadding` | `number` | `0.05` | Nonnegative domain-span fraction on each side. |
 | `volumeRatio` | `number` | `0.22` | Reserved plot-height fraction when Volume is present; must be greater than `0` and less than `0.5`. |
 | `formatTime` | `(time, point?) => string` | `String` | Caller timezone/session presentation and original metadata. |
 | `formatPrice` / `formatVolume` | `(value, point?) => string` | `String` | Explicit units, precision and source-aware readouts; ticks may omit `point`. |
-| `width` / `height` / `style` / `className` | Root sizing and presentation | Shared frame | Size the chart independently of its HTML parts. |
+
+</div>
+
+#### History and inspection
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart history and inspection props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `viewport` / `defaultViewport` | `CandlestickViewport` | Fit | Controlled range or initial uncontrolled range; an initial default survives empty loading data. |
+| `onViewportChange` | `(range, details) => void` | — | Reason plus first/last visible times. |
+| `followLatest` | `boolean` | `false` | Follow appends only from the latest edge. |
+| `overscan` | `number` | `1` | Extra records drawn beyond the visible window. |
+| `selection` / `defaultSelection` | `CandlestickTime \| null` | `null` | Controlled or initial persistent identity. |
+| `onSelectionChange` / `onInspect` | `(point: CandlestickPoint<Row> \| null) => void` | — | Original-row callbacks for persistent selection or transient inspection. |
+
+</div>
+
+#### Shared interaction
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart shared interaction props" tabIndex={0}>
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `interaction` | Shared chart interaction | Shared defaults | Series focus, keyboard activation and emphasis. |
+| `visibleSeries` / `defaultVisibleSeries` / `onVisibleSeriesChange` | Shared visibility contract | All configured series | Controlled or initial series visibility and change callback. |
 | `frameProps` | Outer HTML attributes, handlers and ref | — | Consumer handlers run before built-in interaction and may prevent it. |
-| `loading` / `loadingLabel` / `empty` | `boolean` / `string` / `ReactNode` | `false` / shared label / `"No candle observations"` | Pending and empty presentations. |
-| `animate` | `boolean \| BarAnimation` | `false` | Existing Motion/reduced-motion policy. |
 
 </div>
 
 ### Shared components
 
-Compose explicit children just like the other chart families. `CandlestickChart.Grid`, `.Legend`, and `.Background` reuse the shared components. The time and price axes apply the shared presentation defaults while retaining candle coordinates, price domains, and volume separation. Standalone Candlestick exports remain available.
+Compose `Grid`, `Legend` and `Background` like other chart families. Time and price axes share their presentation defaults.
 
 See [Chart frame](/docs/chart-components/chart/), [Axes and grid](/docs/chart-components/axes-grid/), [Legend](/docs/chart-components/legend/), and [Series configuration](/docs/chart-components/series-config/).
 
 ### CandlestickChart.Series
 
-Required `seriesKey`; optional `rising`, `falling`, `unchanged`, `barSize`, `maxBarSize` (default `24`), `markProps` and `shape`. Direction describes `close` versus `open`, without a profit/loss meaning.
+Draw the OHLC candles.
 
-### CandlestickChart.Mark
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Series props" tabIndex={0}>
 
-SVG group with pixel `center`, `width`, `open`, `high`, `low`, `close` and `direction`. Wicks show extrema; equal open/close renders a visible doji line. Custom `shape` also receives `point` and native bar props.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `seriesKey` | Required | Configured price series. |
+| `rising` / `falling` / `unchanged` | Theme colors | Colors for close versus open. |
+| `barSize` / `maxBarSize` | Automatic / `24` | Candle width and maximum width. |
+| `markProps` / `shape` | — | Custom SVG presentation or candle renderer. |
+
+</div>
 
 ### CandlestickChart.XAxis
 
-Visible nongap observation ticks by default; chart-owned time coordinates/domain. Consumer ticks, formatters and reversed/padded geometry remain explicit; gestures follow the rendered scale.
+Format and style the time axis. Time coordinates follow the chart.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.XAxis props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `ticks` / `tickFormatter` | Visible observation ticks | Choose tick positions and display text. |
+| Native axis presentation | Shared defaults | Labels, tick styles, padding and reversal. |
+
+</div>
 
 ### CandlestickChart.YAxis
 
-Chart-owned price domain/scale and volume separation; native tick formatting and presentation.
+Format and style the price axis. Use root props for the price range.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.YAxis props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `orientation` | `"left"` | Choose the axis side. |
+| `tickFormatter` / native presentation | Shared defaults | Price labels and axis styling. |
+
+</div>
 
 ### CandlestickChart.Grid
 
-Shared grid component with horizontal grid lines, border-token stroke and dashed lines by default. Native grid props override presentation.
+Shared grid component.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Grid props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `vertical` | `false` | Show vertical grid lines. |
+| `stroke` / `strokeDasharray` | Border color / dashed | Override grid styling. |
+
+</div>
 
 ### CandlestickChart.Volume
 
-Required `seriesKey`; optional `rising`, `falling`, `unchanged` direction paints and native `fill` / `fillOpacity`; independent volume axis via `axisProps`; visible observations set its extent, excluding overscan. Native bar styles, shape and events. Data, data key and axes stay with the family; separate native `data`, `minPointSize`, `background`, `layout` and stacking overrides are rejected at runtime, as are other owned Bar/axis geometry keys.
+Add volume below the price plot.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Volume props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `seriesKey` | Required | Configured volume series. |
+| `rising` / `falling` / `unchanged` | Theme colors | Match candle directions. |
+| `fill` / `fillOpacity` | Default paint | Override bar appearance. |
+| `axisProps` | Independent volume axis | Volume tick and axis presentation. |
+| Native bar presentation / `shape` | — | Styles, events and custom bars; data and geometry stay with the chart. |
+
+</div>
+
+Set `volumeRatio` on the root to change the space reserved for volume.
 
 ### CandlestickChart.Overlay
 
-Required `seriesKey`, `dataKey` (row key or `(row) => number \| null \| undefined`); optional `includeInDomain` (default `false`); native line presentation and `connectNulls`. Every value is validated before viewport filtering; included values also obey price bounds.
+Draw a caller-computed indicator on the price plot.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Overlay props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `seriesKey` | Required | Configured indicator series. |
+| `dataKey` | Required | Row key or value accessor; missing values create gaps. |
+| `includeInDomain` | `false` | Include indicator values when autoscaling. |
+| Native line presentation | — | Color, width, curve and `connectNulls`. |
+
+</div>
 
 ### CandlestickChart.ReferenceLine
 
-Native reference-line presentation with explicit time/price coordinates and labels; clipped to the price region, `ifOverflow="hidden"` by default, no `"extendDomain"` or alternate axes.
+Add a price or time marker.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.ReferenceLine props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| Native coordinates / label / presentation | — | X uses logical indexes for ordinal spacing, numeric time for elapsed spacing. |
+| `ifOverflow` | `"hidden"` | Clip to the price region; references do not extend the price domain. |
+
+</div>
 
 ### CandlestickChart.Crosshair
 
-SVG group props; `mode` (`"free"` by default, or `"snap"`), `showLabels` (default `true`) and native text `labelProps`. Pointer X/Y drive independent time/price guides and formatted axis labels; nearest-candle inspection supplies OHLC. Keyboard inspection anchors to the candle close.
+Show guides and inspect the nearest candle.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Crosshair props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `mode` | `"free"` | Free pointer guides or `"snap"` to the candle. |
+| `showLabels` | `true` | Show time and price labels. |
+| `labelProps` / SVG group props | — | Label styling, handlers and ref. |
+
+</div>
 
 ### CandlestickChart.CurrentPrice
 
-Latest close line and price-axis pill, independent of inspection. Optional `seriesKey`, `orientation` (default `"right"`), `rising`, `falling`, `unchanged`, `lineVisible` and `axisLabelVisible` (both default `true`). Native `lineProps` and SVG-group `labelProps` retain refs and handlers; `labelTextColor` defaults to `"white"`. Optional child `(point, label) => ReactNode` replaces the axis label.
+Show the latest close as a line and price tag.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.CurrentPrice props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `seriesKey` | — | Optional series identity. |
+| `orientation` | `"right"` | Price-tag side. |
+| `lineVisible` / `axisLabelVisible` | `true` | Show the line or tag. |
+| `rising` / `falling` / `unchanged` | Theme colors | Direction colors. |
+| `labelTextColor` | `"white"` | Tag text color. |
+| `lineProps` / `labelProps` | — | Line and tag presentation, handlers and refs. |
+| `children` | Default tag | Render `(point, label) => ReactNode`. |
+
+</div>
 
 ### CandlestickChart.Controls
 
-Accessible zoom-in, zoom-out and reset buttons; `zoomFactor` (default `1.5`, finite and greater than `1`), `disabled`, native fieldset attributes, and `zoomInProps` / `zoomOutProps` / `resetProps` retain button markup, refs and handlers.
+Zoom in, zoom out and reset the window.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Controls props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `zoomFactor` | `1.5` | Finite zoom step greater than `1`. |
+| `disabled` | `false` | Disable all buttons. |
+| `zoomInProps` / `zoomOutProps` / `resetProps` | Styled buttons | Button content, presentation, handlers and refs. |
+| Native fieldset props | — | Container attributes and ref. |
+
+</div>
 
 ### CandlestickChart.HistoryNavigator
 
-Separate full-history close overview with a draggable range; controls the same viewport as pointer and keyboard panning. The rounded frame, soft gradient overview and compact grips follow the chart theme. History outside the selected handles is dimmed and lightly blurred. Time tags sit below the plot without overlapping; they follow native hover, drag, focus and `alwaysShowText` visibility, with formatting through `brushProps.tickFormatter`. `height` defaults to `56` for the plot, plus a reserved `28`-pixel tag row; `brushProps` and `overviewProps` expose native presentation, refs and handlers while the family retains data, axes and viewport ownership.
+Select a window using the full-history close overview.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.HistoryNavigator props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `height` | `56` | Plot height in pixels; a separate `28`-pixel row reserves space for time tags. |
+| `overviewProps` | Smooth line and soft fill | Overview color, curve and native line presentation. |
+| `brushProps` | Compact handles | Native range presentation, refs and callbacks. |
+| `brushProps.tickFormatter` | Chart time formatter | Format the two time tags. |
+| `brushProps.alwaysShowText` | `false` | Keep tags visible outside hover, drag and focus. |
+| Native fieldset props | — | Container attributes, handlers and ref. |
+
+</div>
 
 ### CandlestickChart.Content
 
-Optional child `(point, selection) => ReactNode`, `className` and HTML `frameProps`; default OHLC/volume/state status readout outside the plot.
+Show the inspected candle’s OHLC, volume and state below the plot.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Content props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `children` | Default readout | Render `(point, selection) => ReactNode`. |
+| `className` / `frameProps` | — | Readout styling, HTML attributes and ref. |
+
+</div>
 
 ### CandlestickChart.Tooltip
 
-Same child/readout contract, plus `maxWidth` (default `260`); measured floating tooltip and positioned frame ref through `frameProps.ref`. Polite announcements default off when Content is composed; `frameProps` retains consumer override.
+Show a floating readout beside the inspected candle.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Tooltip props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `children` | Default readout | Render `(point, selection) => ReactNode`. |
+| `maxWidth` | `260` | Maximum tooltip width in pixels. |
+| `className` / `frameProps` | — | Styling, HTML attributes and positioned ref. |
+
+</div>
+
+When Content is present, the tooltip does not also announce changes. Keep one announcing readout.
 
 ### CandlestickChart.DataTable
 
-Required `caption`; optional `renderMetadata(point)`, `metadataLabel` (default `"Metadata"`) and native table attributes/ref. Missing values show a dash; its named focusable scroll region exposes off-screen columns.
+Add an accessible table of current observations.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.DataTable props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `caption` | Required | Accessible table name. |
+| `renderMetadata` | — | Render additional original-row metadata. |
+| `metadataLabel` | `"Metadata"` | Metadata column heading. |
+| Native table props | — | Presentation, attributes and ref. |
+
+</div>
 
 ### CandlestickChart.Legend
 
-Shared interactive legend, rendered outside the plot. It uses the same series configuration, visibility and focus controls as the other chart families.
+Shared interactive legend outside the plot. Series labels, colors and actions come from `config` and the shared interaction props.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Legend props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| Shared legend props | Shared defaults | Customize legend markup and presentation. |
+
+</div>
 
 ### CandlestickChart.Background
 
-Shared plot background pattern. Consumer-owned `pattern`, `color`, `opacity`, and `size` match the other chart families.
+Shared decorative background behind the plot.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Background props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `pattern` / `color` / `opacity` / `size` | Shared defaults | Choose and style a background pattern. |
+
+</div>
 
 ### CandlestickChart.Table
 
-Alias of `CandlestickChart.DataTable`; both retain the same typed candle rows, caption, native table props and ref.
+Alias of `CandlestickChart.DataTable` with the same props.
 
-### Observations and time
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Table props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| DataTable props | Same as DataTable | Caption, metadata and native table attributes. |
+
+</div>
+
+## Data and time
 
 | Contract | Rule |
 | --- | --- |
@@ -186,7 +408,7 @@ Alias of `CandlestickChart.DataTable`; both retain the same typed candle rows, c
 | Volume | Finite and nonnegative; missing stays missing, zero stays zero. Price and volume share time coordinates. |
 | Gaps | Preserve supplied time slots and table rows; no candle glyph. Keyboard traversal skips them; pointer inspection can expose them. |
 
-### Price scales and bounds
+## Price scales and bounds
 
 | Contract | Rule |
 | --- | --- |
@@ -199,9 +421,9 @@ Alias of `CandlestickChart.DataTable`; both retain the same typed candle rows, c
 | References | Clipped to price region. X uses logical indexes in ordinal mode and numeric time coordinates in elapsed mode; references do not extend the domain. |
 | Meaning | Consumers supply trade/bid/ask source, price/volume units, tick rules, calculations and calendars. No inferred probability, payout or opposite outcome. |
 
-### History and immutable updates
+## Controlled history
 
-For streaming, keep observations in caller state and pass a new ordered array for each update. Replace the forming row with the same `time`; append a new row when its interval starts. Corrections and prepends use the same typed `data` contract. Own feed loading, errors, retry and cancellation; stop timers or subscriptions when the component unmounts. The example runs a local simulation with Pause, Resume and Step.
+Keep feed data in your state and pass a new ordered array for each update. Use `viewport` and `onViewportChange` to control the window; otherwise use `defaultViewport`. Handle feed errors, retries and cleanup in your application.
 
 | Contract | Rule |
 | --- | --- |
@@ -212,7 +434,7 @@ For streaming, keep observations in caller state and pass a new ordered array fo
 | Append | Historical browsing stays anchored. `followLatest` follows only from the previous latest edge. |
 | Selection/removal | Inspection and persistent selection are separate; clearing hover retains selection. Replacements/prepends retain identity. Removing an identity clears it and reports `null`; controlled owners apply that result. |
 
-### Inspection and accessibility
+## Keyboard and accessibility
 
 | Action | Input |
 | --- | --- |
@@ -225,9 +447,26 @@ For streaming, keep observations in caller state and pass a new ordered array fo
 
 Content provides a polite readout. Tooltip defaults to `aria-live="off"` when Content is present; use one announcing readout. DataTable shows current observations and optional original metadata.
 
-### Pure helpers and normalized points
+## Advanced customization
 
-`normalizeCandlestickData<Row>(data, { timeMode, accessors?, priceScale?, priceBounds? })` uses the root’s validation. `CandlestickPoint<Row>` retains `original`, `time`, numeric `timeValue`, mode-prefixed `identity`, `gap`, and supplied OHLC/volume/state. Epoch and business-date identities remain distinct.
+### CandlestickChart.Mark
+
+Use inside a custom Series shape; the default mark already draws wicks and dojis.
+
+<div className="line-props-scroll" role="region" aria-label="CandlestickChart.Mark props" tabIndex={0}>
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `center` / `width` | Required | Horizontal pixel position and width. |
+| `open` / `high` / `low` / `close` | Required | Price positions in pixels. |
+| `direction` | Required | Rising, falling or unchanged candle. |
+| SVG group props | — | Presentation, handlers and ref. |
+
+</div>
+
+### Data and viewport helpers
+
+Most applications only need the chart parts above. For custom data or window controls, these helpers use the same validation as the chart. Callbacks retain your original row in `point.original`.
 
 | Helper | Purpose |
 | --- | --- |
