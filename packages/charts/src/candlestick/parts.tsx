@@ -15,7 +15,6 @@ import {
   useRef,
 } from "react";
 import {
-  CartesianGrid,
   DefaultZIndexes,
   Line,
   ReferenceLine,
@@ -26,10 +25,11 @@ import {
   useXAxisScale,
   useYAxisInverseScale,
   useYAxisScale,
-  XAxis,
-  YAxis,
+  type XAxis,
+  type YAxis,
   ZIndexLayer,
 } from "recharts";
+import { axisTick, Grid, XAxis as SharedXAxis, YAxis as SharedYAxis } from "../cartesian-parts.js";
 import { useChart } from "../chart-context.js";
 import { OutsidePlot } from "../family-root.js";
 import { useLineInteraction } from "../line-chart.js";
@@ -71,7 +71,7 @@ export function CandlestickXAxis(props: CandlestickXAxisProps) {
     [pointsByCoordinate, context.formatTime],
   );
   return (
-    <XAxis
+    <SharedXAxis
       {...props}
       dataKey="coordinate"
       type="number"
@@ -91,6 +91,7 @@ export function CandlestickYAxis(props: CandlestickYAxisProps) {
   const context = useCandlestick();
   const area = usePlotArea();
   const id = `candlestick-price-ticks-${useId().replace(/:/g, "")}`;
+  useLayoutEffect(() => context.registerPriceAxis(id), [context.registerPriceAxis, id]);
   const ordinary =
     props.tick !== false && typeof props.tick !== "function" && !isValidElement(props.tick);
   useLayoutEffect(() => {
@@ -122,6 +123,7 @@ export function CandlestickYAxis(props: CandlestickYAxisProps) {
     () =>
       ordinary
         ? {
+            ...axisTick,
             ...(typeof props.tick === "object" ? props.tick : {}),
             className: cn(
               typeof props.tick === "object" && props.tick && "className" in props.tick
@@ -134,7 +136,7 @@ export function CandlestickYAxis(props: CandlestickYAxisProps) {
     [ordinary, props.tick, id],
   );
   return (
-    <YAxis
+    <SharedYAxis
       {...props}
       {...(tick !== undefined ? { tick } : {})}
       domain={context.priceDomain}
@@ -145,7 +147,7 @@ export function CandlestickYAxis(props: CandlestickYAxisProps) {
     />
   );
 }
-export const CandlestickGrid = CartesianGrid;
+export const CandlestickGrid = Grid;
 export type CandlestickOverlayProps<Row extends object = CandlestickDatum> = Omit<
   ComponentProps<typeof Line>,
   "dataKey" | "data" | "isAnimationActive" | "xAxisId" | "yAxisId"

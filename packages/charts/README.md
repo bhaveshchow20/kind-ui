@@ -280,6 +280,17 @@ are scoped to their chart. Consumer controls own their focus, labels and semanti
 
 ## Candlestick
 
+### Composition
+
+Use explicit `CandlestickChart` children, following the other chart families:
+`.Series`, `.Volume`, `.Overlay`, `.Mark`, `.XAxis`, `.YAxis`, `.Grid`, `.Legend`,
+`.Background`, `.ReferenceLine`, `.Crosshair`, `.CurrentPrice`, `.Tooltip`,
+`.Content`, `.Controls`, `.HistoryNavigator`, and `.DataTable` (`.Table` alias).
+Grid, Legend and Background reuse the shared components; candle axes reuse the
+shared presentation defaults and retain their time/price geometry. Consumer
+presentation props override those defaults. Standalone Candlestick exports remain
+available. Content retains the candle-specific `(point, selection)` readout.
+
 ### Records and financial meaning
 
 `CandlestickChart` accepts ordered immutable records, an explicit `timeMode`, and

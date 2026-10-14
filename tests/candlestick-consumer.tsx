@@ -36,6 +36,10 @@ import { CandlestickChart, type CandlestickVolumeProps } from "@kind-ui/charts";
   // @ts-expect-error Financial candles have a time X axis and a price Y axis.
   layout="vertical"
 >
+  <CandlestickChart.Grid stroke="purple" />
+  <CandlestickChart.Legend />
+  <CandlestickChart.Background pattern="pinpoints" opacity={0.1} />
+  <CandlestickChart.Table caption="Original observations" />
   <CandlestickChart.Series seriesKey="price" />
 </CandlestickChart>;
 const unsupportedVolume: CandlestickVolumeProps = {

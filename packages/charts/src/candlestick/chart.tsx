@@ -19,8 +19,10 @@ import {
 } from "recharts";
 import { MotionContext } from "../animation.js";
 import type { BarChartProps } from "../bar-chart.js";
+import { ChartBackgroundPattern } from "../chart-background-pattern.js";
 import {
   type ChartName,
+  FamilyLegend,
   type FamilyOptions,
   FamilyRoot,
   familyFrame,
@@ -314,6 +316,16 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   const selectedTime = selection === undefined ? localSelection : selection;
   const selected = points.find((point) => point.time === selectedTime) ?? null;
   const [volumes, setVolumes] = useState<Set<string>>(() => new Set());
+  const [priceAxes, setPriceAxes] = useState<Set<string>>(() => new Set());
+  const registerPriceAxis = useCallback((key: string) => {
+    setPriceAxes((old) => new Set(old).add(key));
+    return () =>
+      setPriceAxes((old) => {
+        const next = new Set(old);
+        next.delete(key);
+        return next;
+      });
+  }, []);
   const [contents, setContents] = useState<Set<string>>(() => new Set());
   const registerContent = useCallback((key: string) => {
     setContents((old) => new Set(old).add(key));
@@ -481,6 +493,8 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     contents: contents.size,
     registerContent,
     registerVolume,
+    hasPriceAxis: priceAxes.size > 0,
+    registerPriceAxis,
     registerOverlay,
     geometry,
     revealClipId,
@@ -935,6 +949,8 @@ export const CandlestickChart = /* @__PURE__ */ Object.assign(CandlestickFamily,
   XAxis: CandlestickXAxis,
   YAxis: CandlestickYAxis,
   Grid: CandlestickGrid,
+  Legend: FamilyLegend,
+  Background: ChartBackgroundPattern,
   Volume: CandlestickVolume,
   Overlay: CandlestickOverlay,
   ReferenceLine: CandlestickReferenceLine,
@@ -945,4 +961,5 @@ export const CandlestickChart = /* @__PURE__ */ Object.assign(CandlestickFamily,
   Tooltip: CandlestickTooltip,
   Content: CandlestickContent,
   DataTable: CandlestickDataTable,
+  Table: CandlestickDataTable,
 });

@@ -15,6 +15,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import {
   Bar,
@@ -240,11 +241,6 @@ function LatestCandlestickMark({
   );
 }
 const renderCandle = (native: BarShapeProps) => <CandleShape {...native} />;
-const emptyCandle = () => null;
-function DefaultCandleCarrier(native: Partial<BarShapeProps>) {
-  if (native.index !== 0 || typeof native.width !== "number") return null;
-  return <DefaultCandleLayer native={native as BarShapeProps} />;
-}
 function DefaultCandleLayer({ native }: { native: BarShapeProps }) {
   const options = use(ShapeContext);
   if (!options) return null;
@@ -264,9 +260,7 @@ function DefaultCandleLayer({ native }: { native: BarShapeProps }) {
     </g>
   );
 }
-// Recharts reads background zIndex on the option object, rather than its element props.
-// Keep the native background carrier in the series' opacity and clipping layer.
-const defaultCandleLayer = { ...(<DefaultCandleCarrier />), zIndex: 0 };
+
 const candleExtent = (value: unknown) => {
   const point = value as NativePoint;
   return point.gap ? null : [point.low, point.high];
@@ -277,6 +271,12 @@ export function CandlestickSeries<Row extends object = CandlestickDatum>(
   const context = useCandlestick();
   const xScale = useXAxisScale();
   const yScale = useYAxisScale();
+  // Keep mounted marks during the layout-only handoff between owned and implicit native axes.
+  const committedScales = useRef({ x: xScale, y: yScale });
+  useLayoutEffect(() => {
+    if (xScale) committedScales.current.x = xScale;
+    if (yScale) committedScales.current.y = yScale;
+  }, [xScale, yScale]);
   const area = usePlotArea();
   const frame = `${area?.x},${area?.y},${area?.width},${area?.height}`;
   // biome-ignore lint/correctness/useExhaustiveDependencies: Formatter identity invalidates cached accessible labels.
@@ -295,8 +295,8 @@ export function CandlestickSeries<Row extends object = CandlestickDatum>(
     <ShapeContext
       value={{
         ...(props as CandlestickSeriesProps),
-        xScale,
-        yScale,
+        xScale: props.shape ? xScale : (xScale ?? committedScales.current.x),
+        yScale: props.shape ? yScale : (yScale ?? committedScales.current.y),
         frame,
         points: context.rendered,
         labels,
@@ -310,8 +310,8 @@ export function CandlestickSeries<Row extends object = CandlestickDatum>(
       <CandlestickBar
         seriesKey={props.seriesKey}
         dataKey={candleExtent}
-        shape={props.shape ? renderCandle : emptyCandle}
-        {...(!props.shape ? { background: defaultCandleLayer } : {})}
+        shape={props.shape ? renderCandle : renderWidthProbe}
+        {...(!props.shape ? { defaultLayer: "candle" as const } : {})}
         activeBar={false}
         {...(props.barSize !== undefined ? { barSize: props.barSize } : {})}
         maxBarSize={props.maxBarSize ?? 24}
@@ -445,8 +445,8 @@ export function CandlestickVolume({
           dataKey="volume"
           yAxisId="candlestick-volume"
           activeBar={false}
-          shape={denseDefault ? emptyCandle : renderVolume}
-          {...(denseDefault ? { background: defaultVolumeLayer } : {})}
+          shape={denseDefault ? renderWidthProbe : renderVolume}
+          {...(denseDefault ? { defaultLayer: "volume" as const } : {})}
         />
       </VolumeShapeContext>
     </>
@@ -510,10 +510,6 @@ function VolumeShape(native: BarShapeProps) {
 }
 const renderVolume = (native: BarShapeProps) => <VolumeShape {...native} />;
 
-function DefaultVolumeCarrier(native: Partial<BarShapeProps>) {
-  if (native.index !== 0 || typeof native.width !== "number") return null;
-  return <DefaultVolumeLayer native={native as BarShapeProps} />;
-}
 function DefaultVolumeLayer({ native }: { native: BarShapeProps }) {
   const options = use(VolumeShapeContext);
   const y = useYAxisScale("candlestick-volume");
@@ -540,8 +536,43 @@ function DefaultVolumeLayer({ native }: { native: BarShapeProps }) {
     </g>
   );
 }
-const defaultVolumeLayer = { ...(<DefaultVolumeCarrier />), zIndex: 0 };
+const WidthContext = createContext<((width: number) => void) | null>(null);
+function WidthProbe({ width }: { width: number }) {
+  const report = use(WidthContext);
+  useLayoutEffect(() => {
+    report?.(width);
+  }, [report, width]);
+  return null;
+}
+// Native shape indexes enumerate surviving rectangles, including after leading gaps.
+const renderWidthProbe = (native: BarShapeProps) =>
+  native.index === 0 && typeof native.width === "number" ? (
+    <WidthProbe width={native.width} />
+  ) : null;
 
+// The invisible native carrier retains real data keys/tooltip payloads, but needs only one
+// grouped width. Undefined scale results skip unrelated native rectangles before prop adaptation.
+function carrierScale(
+  accepted: readonly number[],
+  domain: number[] = [0, 1],
+  range: number[] = [0, 1],
+) {
+  const scale = (value: number) =>
+    accepted.includes(value) ? range[value === accepted[0] ? 0 : range.length - 1] : undefined;
+  scale.domain = (next?: number[]) => {
+    if (next === undefined) return domain.slice();
+    domain = next.slice();
+    return scale;
+  };
+  scale.range = (next?: number[]) => {
+    if (next === undefined) return range.slice();
+    range = next.slice();
+    return scale;
+  };
+  scale.copy = () => carrierScale(accepted, domain, range);
+  return scale;
+}
+const RegisteredBar = memo(Bar);
 /** Native registered Bars avoid a full Motion component inside strict LazyMotion. */
 function CandlestickBar({
   seriesKey,
@@ -549,11 +580,35 @@ function CandlestickBar({
   hide,
   onClick,
   regionClip,
+  defaultLayer,
   ...props
 }: Omit<ComponentProps<typeof Bar>, "isAnimationActive"> & {
   seriesKey: string;
   regionClip?: { pane: string; reveal: string };
+  defaultLayer?: "candle" | "volume";
 }) {
+  const [width, setWidth] = useState(0);
+  const reportWidth = useCallback(
+    (next: number) => setWidth((previous) => (previous === next ? previous : next)),
+    [],
+  );
+  const context = useCandlestick();
+  const first = context.rendered.find(
+    (point) =>
+      !point.gap &&
+      (defaultLayer === "volume"
+        ? point.volume !== undefined
+        : point.low !== undefined && point.high !== undefined),
+  );
+  const low = defaultLayer === "volume" ? 0 : first?.low;
+  const high = defaultLayer === "volume" ? first?.volume : first?.high;
+  const privateAxis = useId();
+  const optimizedCarrier =
+    defaultLayer === "volume" || (defaultLayer === "candle" && context.hasPriceAxis);
+  const carrier = useMemo(
+    () => carrierScale(low === undefined || high === undefined ? [] : [low, high]),
+    [low, high],
+  );
   const chart = useChart();
   const { registerSeries } = useLineInteraction();
   const generated = useId();
@@ -565,15 +620,40 @@ function CandlestickBar({
   useLayoutEffect(() => registerSeries(id, seriesKey), [registerSeries, id, seriesKey]);
   const interaction = useSeriesInteraction(seriesKey, hidden, hide === true, undefined, onClick);
   const bar = (
-    <Bar
+    <RegisteredBar
       {...props}
       zIndex={0}
+      {...(optimizedCarrier ? { yAxisId: privateAxis } : {})}
       id={id}
       hide={hidden}
       fill={fill ?? chart.paints[seriesKey] ?? "currentColor"}
       isAnimationActive={false}
-      {...(interaction.onClick ? { onClick: interaction.onClick } : {})}
+      {...(!defaultLayer && interaction.onClick ? { onClick: interaction.onClick } : {})}
     />
+  );
+  const native = { width, onClick: interaction.onClick } as unknown as BarShapeProps;
+  const sibling =
+    hidden || width <= 0 ? null : defaultLayer === "candle" ? (
+      <DefaultCandleLayer native={native} />
+    ) : defaultLayer === "volume" ? (
+      <DefaultVolumeLayer native={native} />
+    ) : null;
+  const content = (
+    <WidthContext value={reportWidth}>
+      {optimizedCarrier ? (
+        <YAxis
+          yAxisId={privateAxis}
+          hide
+          width={0}
+          type="number"
+          domain={[0, 1]}
+          allowDataOverflow
+          scale={carrier as NonNullable<ComponentProps<typeof YAxis>["scale"]>}
+        />
+      ) : null}
+      {bar}
+      {sibling}
+    </WidthContext>
   );
   return (
     <ZIndexLayer zIndex={props.zIndex ?? DefaultZIndexes.bar}>
@@ -585,10 +665,10 @@ function CandlestickBar({
       >
         {regionClip ? (
           <g clipPath={`url(#${regionClip.pane})`}>
-            <g clipPath={`url(#${regionClip.reveal})`}>{bar}</g>
+            <g clipPath={`url(#${regionClip.reveal})`}>{content}</g>
           </g>
         ) : (
-          bar
+          content
         )}
       </SeriesInteractionLayer>
     </ZIndexLayer>

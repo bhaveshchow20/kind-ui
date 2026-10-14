@@ -36,4 +36,7 @@ test("viewport changes retain the logical default candle nodes", async ({ page }
   await page.getByRole("button", { name: "Reset view", exact: true }).click();
   await expect(page.locator('[data-kind-ui="candlestick-mark"]')).toHaveCount(240);
   expect(await mark.evaluate((node) => node.isConnected)).toBe(true);
+  // Native Bars supply grouping/tooltip registration without per-candle background work.
+  await expect(page.locator(".recharts-bar-background-rectangle")).toHaveCount(0);
+  expect(await page.locator(".recharts-bar-rectangle").count()).toBeLessThan(8);
 });

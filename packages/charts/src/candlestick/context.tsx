@@ -177,6 +177,8 @@ export type Context = {
   contents: number;
   registerContent: (key: string) => () => void;
   registerVolume: (key: string) => () => void;
+  hasPriceAxis: boolean;
+  registerPriceAxis: (key: string) => () => void;
   registerOverlay: (key: string, values: readonly number[]) => () => void;
   revealClipId: string;
   priceClipId: string;
