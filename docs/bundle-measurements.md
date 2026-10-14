@@ -65,8 +65,8 @@ production/minification/compression method and pinned React/Recharts/Motion
 versions as the other fixtures. Its bytes are measured from the installed
 candidate tarball, not an npm-published family or workspace source alias.
 
-Measured October 13, 2026 with Node 22.16.0 from candidate tarball SHA-256
-`6533fec3215a39b7783d3841245192969c4e131cf7dba16eec3e84b2ff448012`.
+Measured October 14, 2026 with Node 22.16.0 from candidate tarball SHA-256
+`5065f40e09488be42f8d089d6a66f62a910c51463789eeb260db3ac30e390a70`.
 This candidate contains new exports absent from published Core 0.5.0. Its
 JavaScript includes the mounted React application, Recharts, Motion and shared
 Kind helpers; it is not a standalone library-only size or a new rendering engine.
@@ -90,10 +90,10 @@ to the fixture and machine, rather than a frame-rate guarantee.
 | Candlestick fixture | raw | gzip | Brotli |
 | --- | ---: | ---: | ---: |
 | JavaScript recorded baseline | 827,261 | 248,554 | 209,392 |
-| JavaScript current | 900,249 | 268,580 | 225,194 |
+| JavaScript current | 900,842 | 268,711 | 225,398 |
 | JavaScript ceiling | 909,988 | 273,410 | 230,332 |
 | Generated Tailwind CSS recorded baseline | 34,206 | 6,694 | 5,895 |
-| Generated Tailwind CSS current | 36,377 | 7,106 | 6,269 |
+| Generated Tailwind CSS current | 36,824 | 7,202 | 6,355 |
 | Generated Tailwind CSS ceiling | 37,627 | 7,364 | 6,485 |
 
 The new fixture has 10% headroom for each asset/encoding, rounded upward to the
