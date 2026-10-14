@@ -33,12 +33,7 @@ const Storage = dynamic(
 );
 
 export const previews = {
-  treemap: ({ variant }: PreviewProps) => (
-    <CloudSpend
-      period={variant === "previous" ? "previous" : "current"}
-      loading={variant === "loading"}
-    />
-  ),
+  treemap: ({ variant }: PreviewProps) => <CloudSpend state={variant as "ready" | "loading"} />,
   "treemap-portfolio": Portfolio,
   "treemap-events": Events,
   "treemap-storage": Storage,

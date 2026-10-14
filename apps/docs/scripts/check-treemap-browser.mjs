@@ -39,16 +39,6 @@ const geometry = (card) =>
       }))
       .sort((a, b) => (a.id ?? "").localeCompare(b.id ?? "")),
   );
-const colors = (card) =>
-  card.locator(tileSelector).evaluateAll((nodes) =>
-    nodes
-      .map((node) => ({
-        id: node.getAttribute("data-node-id"),
-        paint: getComputedStyle(node).backgroundColor,
-      }))
-      .sort((a, b) => (a.id ?? "").localeCompare(b.id ?? "")),
-  );
-
 async function checkSource(page, context, card, id, variant) {
   const bundle = bundles[id];
   const source = variant
@@ -75,16 +65,7 @@ async function checkSource(page, context, card, id, variant) {
   const response = await context.request.get(candidatePromptSource(sourceURL, origin));
   assert.equal(response.status(), 200);
   assert.equal((await response.text()).trimEnd(), source.trimEnd());
-  if (id === "treemap") {
-    assert.match(source, /period\?: "current" \| "previous"/);
-    if (variant === "loading") {
-      assert.ok(source.includes("loading = true"));
-      assert.ok(source.includes('period = "current"'));
-    } else {
-      assert.ok(source.includes("loading = false"));
-      assert.ok(source.includes(`period = "${variant}"`));
-    }
-  }
+  if (id === "treemap") assert.ok(source.includes(`state = "${variant ?? "ready"}"`));
   await card.getByRole("tab", { name: "Preview", exact: true }).click();
   await expect(chart(card)).toBeVisible();
   evidence.variants.push({ id, variant: variant ?? "default", codeCopyPromptSource: "passed" });
@@ -221,60 +202,19 @@ try {
 
   const primary = page.locator('[data-component="treemap"]');
   await primary.scrollIntoViewIfNeeded();
-  await checkSource(page, context, primary, "treemap", "current");
+  await checkSource(page, context, primary, "treemap", "ready");
+  await expect(primary.getByRole("combobox")).toHaveCount(0);
   const before = await geometry(primary);
-  const beforeColors = await colors(primary);
-  await tile(primary, "api").focus();
-  await expect(primary.getByRole("tooltip")).toContainText("$18,400");
-  await primary
-    .getByRole("combobox", { name: bundles.treemap.variantControl, exact: true })
-    .click();
-  await page
-    .getByRole("option", { name: bundles.treemap.variants.previous.label, exact: true })
-    .click();
-  await expect(
-    primary.getByRole("combobox", { name: bundles.treemap.variantControl, exact: true }),
-  ).toContainText(bundles.treemap.variants.previous.label);
-  assert.deepEqual(
-    (await geometry(primary)).map((item) => item.id),
-    before.map((item) => item.id),
-    "A period change retains service IDs",
-  );
-  assert.notDeepEqual(
-    await geometry(primary),
-    before,
-    "A period change reflects actual billing values",
-  );
-  assert.deepEqual(
-    await colors(primary),
-    beforeColors,
-    "Categories retain their colors across periods",
-  );
-  await tile(primary, "api").focus();
-  await expect(primary.getByRole("tooltip")).toContainText("$16,200");
-  await checkSource(page, context, primary, "treemap", "previous");
-  await primary
-    .getByRole("combobox", { name: bundles.treemap.variantControl, exact: true })
-    .click();
-  await page
-    .getByRole("option", { name: bundles.treemap.variants.current.label, exact: true })
-    .click();
   await tile(primary, "api").focus();
   await expect(primary.getByRole("tooltip")).toContainText("$18,400");
   await page.keyboard.press("Escape");
   await expect(primary.getByRole("tooltip")).toBeHidden();
-  evidence.inspection.push({
-    id: "treemap",
-    currencyAndStablePeriodIdentity: "passed",
-    escape: "passed",
-  });
-
   await primary.scrollIntoViewIfNeeded();
   await expect(
     primary.locator('[data-kind-ui="treemap-group"], [data-kind-ui="treemap-group-header"]'),
   ).toHaveCount(0);
   await expect(primary.locator(tileSelector)).toHaveCount(10);
-  await primary.getByRole("combobox", { name: "Billing period", exact: true }).focus();
+  await primary.getByRole("button", { name: "Copy prompt", exact: true }).focus();
   await tile(primary, "api").focus();
   await expect(primary.getByRole("tooltip")).toHaveAttribute("aria-label", "Compute / API");
   const compute = primary.locator(
@@ -323,28 +263,10 @@ try {
   );
   await rootProps.focus();
   await expect(rootProps).toBeFocused();
-  const installation = page.locator('[data-chart-installation="treemap"]');
-  await expect(installation).toBeVisible();
-  await expect(installation.getByRole("tab", { name: "CLI", exact: true })).toBeVisible();
-  await expect(installation).toContainText("npx shadcn@latest add @kind-ui/treemap-chart");
-  assert.doesNotMatch(
-    await installation.textContent(),
-    /candidate|publication|await.*release|checksum/i,
-  );
-  await installation.getByRole("tab", { name: "Manual", exact: true }).click();
-  await expect(installation.locator("pre")).toHaveCount(4);
-  assert.equal(
-    (await installation.locator("pre").nth(2).textContent()).trimEnd(),
-    bundles.treemap.files["src/examples/treemap/example.tsx"].trimEnd(),
-  );
-  assert.deepEqual(await installation.locator("h3").allTextContents(), [
-    "Install Core",
-    "Configure Tailwind CSS v4",
-    "Create the composition",
-    "Render the chart",
-  ]);
-  assert.doesNotMatch(await installation.textContent(), /LICENSE|vendor\/|\.tgz|SHA-256/);
-  await installation.getByRole("tab", { name: "CLI", exact: true }).click();
+  await expect(page.locator("#installation")).toBeVisible();
+  await expect(
+    page.getByText("Treemap is pending the next Core release.", { exact: false }).first(),
+  ).toBeVisible();
   await page.screenshot({ path: `${artifactDirectory}/desktop.png`, fullPage: true });
 
   for (const width of [375, 320]) {

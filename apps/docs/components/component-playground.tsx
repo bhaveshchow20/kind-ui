@@ -66,7 +66,7 @@ export function ComponentPlayground({
       data-component={
         instance ? `${id}-${instance}` : fixedVariant === "loading" ? `${id}-loading` : id
       }
-      data-state={fixedVariant === "loading" ? "loading" : "ready"}
+      data-state={variant === "loading" ? "loading" : "ready"}
       id={
         instance
           ? `example-${id}-${instance}`
@@ -119,6 +119,17 @@ export function ComponentPlayground({
           </Select.Root>
         )}
         <div className="playground-actions">
+          {fixedVariant === "loading" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setVariant(variant === "loading" ? (bundle.defaultVariant ?? "ready") : "loading")
+              }
+            >
+              {variant === "loading" ? "Show chart" : "Show loading"}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"

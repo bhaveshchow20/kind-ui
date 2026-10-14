@@ -18,6 +18,7 @@ test("CLI and manual installation use each canonical editable composition", () =
       files: { [`src/examples/${exampleId}/example.tsx`]: source },
     };
     const installation = installationFor(bundle);
+    if (!installation.available) continue;
     assert.equal(installation.command, `npx shadcn@latest add @kind-ui/${name}`);
     const composition = installation.steps.find(({ title }) => title === "Create the composition");
     assert.equal(composition?.code, source);
@@ -26,7 +27,8 @@ test("CLI and manual installation use each canonical editable composition", () =
     const markdown = installationMarkdown(bundle);
     assert.ok(markdown.includes(source.trimEnd()));
     assert.ok(markdown.includes(installation.command));
-    assert.match(markdown, /npm install @kind-ui\/charts(?:@\^0\.6\.0)? motion recharts/);
+    if (installation.available)
+      assert.match(markdown, /npm install @kind-ui\/charts motion recharts/);
     assert.doesNotMatch(
       markdown,
       /LICENSE|localhost|127\.0\.0\.1|\/charts\/docs\/r\/|add @kind-ui\/charts\//,
@@ -40,11 +42,12 @@ test("generated installation metadata agrees with the catalog and source files",
     Object.values(bundles).filter((bundle) => bundle.registryItemName).length,
     registryItems.length,
   );
-  for (const { exampleId, name, minimumCoreVersion } of registryItems) {
+  for (const { exampleId, name } of registryItems) {
     const bundle = bundles[exampleId];
     assert.equal(bundle.registryItemName, name);
     assert.equal(bundle.version, coreVersion);
     const installation = installationFor(bundle);
+    if (!installation.available) continue;
     assert.equal(
       installation.steps.find(({ title }) => title === "Create the composition")?.code,
       read(`examples/${exampleId}/example.tsx`),

@@ -12,7 +12,7 @@ description: See where resources go, from categories to individual services.
 
 ## Usage
 
-Each service occupies its share of the monthly bill. Color identifies its category. Compare August and September, inspect a tile, and read its category path in the tooltip.
+Each service occupies its share of one monthly bill. Color identifies its category. Inspect a tile for its service value and ancestor context.
 
 ```tsx title="Composition sketch"
 import { TreemapChart } from "@kind-ui/charts";
@@ -31,7 +31,7 @@ The shared legend emphasizes categories without reallocating area. `animate` ena
 
 ## Loading State
 
-Keep the chart mounted and set `loading` while data is pending. `loadingLabel` names the status.
+Use **Show chart** to transition from the placeholder to data, or **Show loading** to return. The chart stays mounted; `animate` enables its entrance, and `loadingLabel` names the pending state.
 
 <ChartExample id="treemap" variant="loading" />
 
@@ -39,16 +39,63 @@ Keep the chart mounted and set `loading` while data is pending. `loadingLabel` n
 
 <ApiTable name="TreemapRootReference" />
 
+### TreemapChart.Tiles
+
+`Tiles` iterates the computed rectangles. Its default `Tile` paints one positioned button and binds shared emphasis, selection, cursor inspection and keyboard navigation. Customize an individual renderer without building another interaction layer:
+
+```tsx
+<TreemapChart.Tiles render={(props) => (
+  <TreemapChart.Tile {...props} style={{ borderRadius: 8 }} />
+)} />
+```
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tileProps` | `(node) => button props` | — | Native styles, handlers, attributes and ref for each tile. |
+| `render` | `(props) => ReactNode` | `Tile` | Full renderer receiving the computed rectangle and native props. |
+| `children` | `ReactNode` or `(node) => ReactNode` | None | Content inside the default tile. |
+
+### TreemapChart.Tile
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `node` | `TreemapRectangle<T>` | Required | Supplied geometry, identity, original datum and values from `Tiles.render`. |
+| Native button props / ref | HTML button props | — | Consumer presentation and handlers; family inspection, emphasis and keyboard behavior remain bound. |
+| `children` | `ReactNode` | None | Tile content; use `Labels` for fitted text. |
+
+### TreemapChart.Labels
+
+| Prop | Default | Purpose |
+| --- | --- | --- |
+| `minWidth` / `minHeight` | `18` / `14` | Minimum content area before drawing text. |
+| `padding` | `4` | Text inset in pixels. |
+| `children(node)` | Fitted name and value | Custom label content. |
+| `labelProps(node)` | — | Native span styles, attributes and ref. |
+
+### TreemapChart.Tooltip
+
+The family supplies ancestor context, the original leaf value and its share to the shared floating tooltip frame and row styling.
+
+| Prop | Default | Purpose |
+| --- | --- | --- |
+| `valueAnimation` | None | `"shuffle"` uses the shared rolling number. |
+| `children(item)` | Family readout | Custom content using the original datum and supplied values. |
+| Native div props / ref | — | Consumer presentation and semantics. |
+
+### TreemapChart.Legend and optional parts
+
+`Legend` is the shared legend mounted outside the plot. Its [props and interaction modes](/docs/chart-components/legend/) apply unchanged.
+
 | Part | Purpose |
 | --- | --- |
-| `Tiles` | Leaf mosaic with native refs and handlers through `tileProps`. |
-| `Groups` | Optional group controls when you explicitly set `groupHeaderHeight`; no header space is reserved by default. |
-| `Labels` | Text directly in tiles; `minWidth`, `minHeight` and `padding` control fit. Custom content supplies units or a second line. |
-| `Tooltip` | Shared floating readout, or typed custom `children`; `valueAnimation="shuffle"` animates default formatted values. |
-| `Legend` | Shared category selection and visibility controls from `config`. |
-| `ColorLegend` | Independent numeric or categorical color key, including unknown values. |
-| `Breadcrumbs` | Open an ancestor; `rootLabel` names the complete dataset. |
-| `Content`, `DataTable` | Optional application content and accessible tabular data outside the plot. |
+| `Groups` | Optional group headers through `groupProps` / `headerProps`, with a positive `groupHeaderHeight`. |
+| `ColorLegend` | Numeric or categorical independent encoding, including unknown values. |
+| `Breadcrumbs` | Controlled hierarchy navigation; `rootLabel` names the dataset. |
+| `Content` / `DataTable` | Application content or an accessible table outside the plot. |
+
+## Shared components
+
+Treemap uses the same [chart frame and loading](/docs/chart-components/chart/), [config](/docs/chart-components/series-config/), [legend](/docs/chart-components/legend/) and [tooltip presentation](/docs/chart-components/tooltip/) as the other families. Its own parts supply hierarchical layout, tile paint, fitted labels and node inspection.
 
 Arrows and Home/End move between tiles and group headers. Enter/Space activates them; Escape dismisses inspection. `viewId` and `activeId` control navigation and inspection. `interaction` owns legend selection; `selectedId` remains available for legacy application actions. `rootShare`, `parentShare` and `viewShare` describe the supplied dataset, parent and current subtree respectively; zero denominators yield `null`.
 

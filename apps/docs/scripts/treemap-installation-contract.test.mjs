@@ -29,25 +29,11 @@ test("Treemap CLI and manual installation use the canonical composition", () => 
   assert.equal(itemNameFor("treemap"), "treemap-chart");
   assert.ok(registryItems.some((item) => item.name === "treemap-chart"));
   const result = installationFor(bundle);
-  assert.equal(result.available, true);
-  assert.match(result.steps[0].code, /@kind-ui\/charts@\^0\.6\.0/);
-  assert.equal(result.command, "npx shadcn@latest add @kind-ui/treemap-chart");
-  assert.deepEqual(
-    result.steps.map((step) => step.title),
-    ["Install Core", "Configure Tailwind CSS v4", "Create the composition", "Render the chart"],
-  );
-  assert.equal(result.steps[2].filename, "components/treemap-chart.tsx");
-  assert.equal(result.steps[2].code, read("examples/treemap/example.tsx"));
-  assert.match(
-    result.steps[3].code,
-    /import \{ CloudSpendTreemap \} from "@\/components\/treemap-chart"/,
-  );
-  const markdown = installationMarkdown(bundle);
-  publicCopy(markdown, "Treemap installation");
-  assert.match(markdown, /### CLI/);
-  assert.match(markdown, /### Manual/);
-  assert.ok(markdown.includes(result.command));
-  assert.ok(markdown.includes(result.steps[2].code.trimEnd()));
+  assert.equal(result.available, false);
+  assert.equal(result.command, "");
+  assert.equal(result.steps.length, 0);
+  assert.match(installationMarkdown(bundle), /pending the next Core release/);
+  assert.doesNotMatch(installationMarkdown(bundle), /@\^0\.6\.0/);
   const page = read("content/docs/components/treemap.mdx");
   assert.ok(page.includes('## Installation\n\n<ChartInstallation id="treemap" />'));
   assert.ok(page.includes("## Usage"));
@@ -60,8 +46,8 @@ test("Treemap setup files stay public while validation installs the exact local 
     assert.equal(bundle.candidateSha256, undefined);
     assert.equal(bundle.packageStatus, "@kind-ui/charts");
     const manifest = JSON.parse(bundle.files["package.json"]);
-    assert.equal(manifest.dependencies["@kind-ui/charts"], "^0.6.0");
-    assert.equal(satisfies("0.6.0", manifest.dependencies["@kind-ui/charts"]), true);
+    assert.equal(manifest.dependencies["@kind-ui/charts"], "^0.5.0");
+    assert.equal(satisfies("0.5.0", manifest.dependencies["@kind-ui/charts"]), true);
     assert.equal(satisfies("0.5.99", manifest.dependencies["@kind-ui/charts"]), false);
     publicCopy(bundle.files["README.md"], `${example.id} README`);
     assert.ok(!Object.keys(bundle.files).some((file) => /\.tgz$|provenance/.test(file)));
@@ -100,8 +86,7 @@ test("Treemap selected source and prompts preserve deployed link parity without 
           : bundle.files[`src/examples/${example.id}/example.tsx`],
       );
       if (variant === "loading") {
-        assert.match(source, /loading = true/);
-        assert.match(source, /period = "current"/);
+        assert.match(source, /state = "loading"/);
       }
     }
     assert.equal(JSON.stringify(bundle), before);

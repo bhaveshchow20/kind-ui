@@ -10,6 +10,7 @@ export const componentBundleSchema = z.looseObject({
   localPackage: z.boolean(),
   version: z.string(),
   minimumCoreVersion: z.string().optional(),
+  coreAvailable: z.boolean().optional(),
   registryItemName: z.string().optional(),
   acceptance: z.string(),
   variants: z.record(z.string(), z.object({ label: z.string(), source: z.string() })).optional(),

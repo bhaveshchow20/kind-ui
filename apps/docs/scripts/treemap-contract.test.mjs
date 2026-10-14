@@ -147,49 +147,40 @@ for (const example of family.examples) {
     assert.match(source, /Illustrative/);
     assert.match(
       family.dataLabels[example.id].caption,
-      example.id === "treemap" ? /August and September 2026/ : /October 9, 2026/,
+      example.id === "treemap" ? /September 2026/ : /October 9, 2026/,
     );
   });
 }
-test("primary period selection and preview adapter agree with the literal default", () => {
+test("primary ready/loading state and preview adapter agree with the literal default", () => {
   const source = readFileSync(new URL("examples/treemap/example.tsx", docs), "utf8");
   const preview = readFileSync(new URL("components/previews/treemap.tsx", docs), "utf8");
   assert.equal(family.examples[0].id, "treemap");
   assert.deepEqual(family.variants.treemap, {
-    control: "Billing period",
-    prop: "period",
-    default: "current",
+    control: "State",
+    prop: "state",
+    default: "ready",
     options: [
-      { value: "current", label: "September 2026" },
-      { value: "previous", label: "August 2026" },
+      { value: "ready", label: "Ready" },
+      { value: "loading", label: "Loading" },
     ],
   });
-  assert.match(source, /period = "current"/);
+  assert.match(source, /state = "ready"/);
   assert.match(source, /export function CloudSpendTreemap/);
-  assert.match(source, /loading = false/);
   assert.match(source, /loading=\{loading\}/);
   assert.match(source, /valueAnimation="shuffle"/);
-  assert.deepEqual(family.loadingVariant, { prop: "loading", default: false, label: "Loading" });
-  assert.match(preview, /loading=\{variant === "loading"\}/);
-  assert.match(preview, /variant === "previous" \? "previous" : "current"/);
+  assert.match(preview, /state=\{variant as "ready" \| "loading"\}/);
   for (const example of family.examples)
     assert.ok(preview.includes(`@/examples/${example.id}/example`));
 });
-test("monthly billing periods preserve every identity and match their supplied totals", () => {
+test("one monthly bill preserves supplied identities and totals", () => {
   const source = readFileSync(new URL("examples/treemap/example.tsx", docs), "utf8");
-  const current = normalizeTreemap(sourceData(source));
-  const previousValues = sourceData(source, "previousValues");
-  const leaves = current.nodes.filter((node) => node.kind === "leaf");
-  assert.deepEqual(Object.keys(previousValues).sort(), leaves.map((node) => node.id).sort());
-  assert.equal(
-    Object.values(previousValues).reduce((sum, value) => sum + value, 0),
-    69600,
+  const model = normalizeTreemap(sourceData(source));
+  assert.equal(model.total, 76300);
+  assert.equal(model.nodes.filter((node) => node.kind === "leaf").length, 10);
+  assert.doesNotMatch(
+    source,
+    /previousPeriod|previousValues|period\?:|View (?:plotted )?[Dd]ata|DataTable/,
   );
-  assert.equal(current.total, 76300);
-  assert.equal(leaves.length, 10);
-  assert.match(source, /children: previousPeriod\(node.children\)/);
-  assert.match(source, /value: previousValues\[node.id\]/);
-  assert.doesNotMatch(source, /View (?:plotted )?[Dd]ata|DataTable/);
 });
 test("signed exposure is precomputed and market activity is not duplicated per outcome", () => {
   const portfolio = sourceData(

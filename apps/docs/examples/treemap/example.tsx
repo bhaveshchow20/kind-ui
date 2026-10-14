@@ -37,26 +37,6 @@ const data: readonly TreemapDatum[] = [
     ],
   },
 ];
-const previousValues: Record<string, number> = {
-  api: 16200,
-  workers: 10900,
-  functions: 3800,
-  postgresql: 13800,
-  warehouse: 7900,
-  cache: 2900,
-  object: 5200,
-  backups: 2100,
-  egress: 4400,
-  cdn: 2400,
-};
-function previousPeriod(nodes: readonly TreemapDatum[]): TreemapDatum[] {
-  return nodes.map((node) =>
-    node.children
-      ? { ...node, children: previousPeriod(node.children) }
-      : { ...node, value: previousValues[node.id] ?? node.value },
-  );
-}
-const previousData = previousPeriod(data);
 const config = {
   compute: { label: "Compute", color: "#bed8ff" },
   data: { label: "Data", color: "#c9c5fb" },
@@ -68,14 +48,8 @@ const currency = new Intl.NumberFormat("en-US", {
   currency: "USD",
   maximumFractionDigits: 0,
 });
-export function CloudSpendTreemap({
-  period = "current",
-  loading = false,
-}: {
-  period?: "current" | "previous";
-  loading?: boolean;
-}) {
-  const current = period === "current";
+export function CloudSpendTreemap({ state = "ready" }: { state?: "ready" | "loading" }) {
+  const loading = state === "loading";
   return (
     <section className="space-y-4">
       <div className="flex items-end justify-between gap-4">
@@ -85,21 +59,14 @@ export function CloudSpendTreemap({
         </div>
         <div className="w-36 shrink-0 text-right">
           <p aria-hidden={loading || undefined} className="m-0 text-xl font-semibold tabular-nums">
-            {loading ? "—" : currency.format(current ? 76300 : 69600)}
-          </p>
-          <p className="m-0 text-xs text-muted-foreground">
-            {loading ? "Loading…" : `${current ? "September" : "August"} 2026 · USD`}
+            {loading ? "—" : currency.format(76300)}
           </p>
         </div>
       </div>
       <TreemapChart
-        data={current ? data : previousData}
+        data={data}
         config={config}
-        aria-label={
-          loading
-            ? "Monthly cloud spend"
-            : `Illustrative ${current ? "September" : "August"} cloud spend by service`
-        }
+        aria-label="Monthly cloud spend by service"
         height={340}
         animate
         loading={loading}

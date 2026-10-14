@@ -88,21 +88,16 @@ for (const scheme of ["light", "dark"] as const) {
     await page.keyboard.press("Escape");
     await expect(computeLegend).toHaveAttribute("aria-pressed", "false");
     await page.mouse.move(5, 5);
-    await primary.getByRole("combobox", { name: "Billing period", exact: true }).focus();
+    await primary.getByRole("button", { name: "Copy prompt", exact: true }).focus();
     const alternative = page.locator('.treemap-data-alternative[data-example="treemap"]');
     await expect(alternative.locator("summary")).toHaveCount(0);
-    const table = alternative.getByRole("table", { name: /Illustrative cloud bills/ });
+    const table = alternative.getByRole("table", {
+      name: /Illustrative September 2026 cloud bill/,
+    });
     await expect(table).toBeAttached();
     const apiRow = table.getByRole("row").filter({ hasText: "API" });
     await expect(apiRow).toContainText("18400");
-    await expect(apiRow).toContainText("16200");
     expect.soft((await audit()).violations).toEqual([]);
-    await primary.getByRole("combobox", { name: "Billing period", exact: true }).click();
-    await expect(page.getByRole("option", { name: "August 2026", exact: true })).toBeVisible();
-    expect.soft((await audit()).violations).toEqual([]);
-    await page.getByRole("option", { name: "August 2026", exact: true }).click();
-    await api.focus();
-    await expect(primary.getByRole("tooltip")).toContainText("$16,200");
     await primary.getByRole("tab", { name: "Code", exact: true }).click();
     await expect(primary.locator(".line-code-block pre")).toBeVisible();
     await page.mouse.move(5, 5);
