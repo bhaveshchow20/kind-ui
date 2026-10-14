@@ -66,12 +66,13 @@ versions as the other fixtures. Its bytes are measured from the installed
 candidate tarball, not an npm-published family or workspace source alias.
 
 Measured October 13, 2026 with Node 22.16.0 from candidate tarball SHA-256
-`5c3d70eab563076a9cdfd7420feffe8e4cc65001d4d8de4f40f5aa606edb97d9`.
+`6533fec3215a39b7783d3841245192969c4e131cf7dba16eec3e84b2ff448012`.
 This candidate contains new exports absent from published Core 0.5.0. Its
 JavaScript includes the mounted React application, Recharts, Motion and shared
 Kind helpers; it is not a standalone library-only size or a new rendering engine.
 Candles and volume use native Recharts geometry and shared axes, with Motion
-updating the SVG entrance clip, latest-candle geometry, current-price marker and discrete viewport transitions. The family also composes the native history range selector. Default marks use
+updating the SVG entrance clip, latest-candle geometry, current-price marker and discrete viewport transitions. The family also composes the native history range selector, using a native
+ComposedChart for its close line and decorative gradient area. Default marks use
 one native grouped-width carrier on an internal hidden axis, while every visible
 candle/volume mark uses the real shared scales and original observations. Custom
 shapes and native callbacks retain the full native path; implicit price axes
@@ -80,23 +81,26 @@ retain native domain inference.
 Two production reset-and-hover runs with all 240 candles measured first-500ms
 maximum callback intervals of 28.8 / 17.2 ms with motion and 25.0 / 30.4 ms with
 reduced motion, including the first reset delay. Neither run recorded a frame
-over 34 ms, a long task, or a browser error. These local measurements are scoped
+over 34 ms, a long task, or a browser error. After navigator styling, a further
+reset-and-hover check measured 17.0 ms with motion and 33.7 ms under reduced
+motion for the first-500ms maximum; all 240 candles remained rendered, without
+long tasks or browser errors. These local measurements are scoped
 to the fixture and machine, rather than a frame-rate guarantee.
 
 | Candlestick fixture | raw | gzip | Brotli |
 | --- | ---: | ---: | ---: |
 | JavaScript recorded baseline | 827,261 | 248,554 | 209,392 |
-| JavaScript current | 884,265 | 264,732 | 222,348 |
+| JavaScript current | 900,249 | 268,580 | 225,194 |
 | JavaScript ceiling | 909,988 | 273,410 | 230,332 |
 | Generated Tailwind CSS recorded baseline | 34,206 | 6,694 | 5,895 |
-| Generated Tailwind CSS current | 35,501 | 6,916 | 6,098 |
+| Generated Tailwind CSS current | 36,377 | 7,106 | 6,269 |
 | Generated Tailwind CSS ceiling | 37,627 | 7,364 | 6,485 |
 
 The new fixture has 10% headroom for each asset/encoding, rounded upward to the
 next byte. Existing fixtures retain their recorded baselines and JavaScript/CSS
 ceilings, and all twelve measured fixtures fit their budgets. Primitive Kind and
 native JavaScript remain identical. No other fixture retains Candlestick runtime.
-The package-wide Tailwind scan grows by 1,598 raw / 242 gzip / 216 Brotli bytes versus
+The package-wide Tailwind scan grows by 2,474 raw / 432 gzip / 387 Brotli bytes versus
 the recorded CSS baseline, within the unchanged existing ceilings. This CSS
 increase also appears in other Kind fixtures because the scan includes the full
 installed package independently of JavaScript tree shaking.
