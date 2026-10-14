@@ -35,6 +35,7 @@ for (const width of [320, 375, 390, 414]) {
       "Sankey",
       "Histogram",
       "Box Plot",
+      "Treemap",
     ]) {
       await page.getByRole("tab", { name: family, exact: true }).click();
       await expect
@@ -45,7 +46,9 @@ for (const width of [320, 375, 390, 414]) {
                 .filter((card) => {
                   const bounds = card.getBoundingClientRect();
                   return [
-                    ...card.querySelectorAll('svg.recharts-surface, [data-kind-ui="chart-legend"]'),
+                    ...card.querySelectorAll(
+                      'svg.recharts-surface, [data-kind-ui="chart-legend"], [data-kind-ui="treemap"], [data-kind-ui="treemap-color-legend"]',
+                    ),
                   ].some((child) => {
                     const rect = child.getBoundingClientRect();
                     return (

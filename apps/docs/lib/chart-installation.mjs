@@ -1,4 +1,4 @@
-/** @typedef {{id: string, version: string, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
+/** @typedef {{id: string, family?: string | undefined, version: string, packageStatus?: string | undefined, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
 /** @typedef {{title: string, description: string, code: string, language: "sh" | "css" | "tsx", filename: string}} InstallationStep */
 
 /** @param {InstallationBundle} bundle */
@@ -42,12 +42,18 @@ export function installationFor(bundle) {
       filename: "App.tsx",
     },
   ];
-  return { itemName, command: `npx shadcn@latest add @kind-ui/${itemName}`, steps };
+  return {
+    available: true,
+    itemName,
+    command: `npx shadcn@latest add @kind-ui/${itemName}`,
+    steps,
+  };
 }
 
 /** @param {InstallationBundle} bundle */
 export function installationMarkdown(bundle) {
-  const { command, steps } = installationFor(bundle);
+  const installation = installationFor(bundle);
+  const { command, steps } = installation;
   return (
     "### CLI\n\nRun this command in your initialized shadcn project:\n\n" +
     `\`\`\`sh\n${command}\n\`\`\`\n\n` +

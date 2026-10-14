@@ -188,7 +188,7 @@ for (const file of markdownFiles("public/markdown")) {
   } else assert.ok(index.includes(publicPath(`/markdown/${file}`)), `Agent index omits ${file}`);
   assert.ok(fullIndex.includes(body.trimEnd()), `Full agent index omits canonical ${file}`);
   if (
-    /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(
+    /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|PackageSource|ApiTable|TreemapDataAlternative|Snapshot)\b/.test(
       body,
     )
   )

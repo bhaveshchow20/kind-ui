@@ -25,6 +25,7 @@ import { HeroHeadline } from "@/components/framework-pill";
 import { InstallChartPicker } from "@/components/install-chart-picker";
 import { KindLogo } from "@/components/kind-logo";
 import { NewChartCard } from "@/components/new-chart-card";
+import { TreemapChartCard } from "@/components/treemap-chart-card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -46,6 +47,7 @@ import {
   showcaseAsset,
   siteLinks,
 } from "@/lib/site-links";
+import { treemapCode, treemapRecipes } from "@/lib/treemap-recipes";
 import { useCopyCode } from "@/lib/use-copy-code";
 import { demoEntry } from "@/lib/utils";
 import { chartItemName } from "../../../registry/names.mjs";
@@ -62,6 +64,7 @@ const families = [
   "Radial",
   "Scatter",
   "Heatmap",
+  "Treemap",
   "Waterfall",
   "Sankey",
   "Histogram",
@@ -735,7 +738,7 @@ type GalleryEntry = {
   family: Family;
   tag: string;
   context: string;
-  source: "basic" | "advanced" | "new" | "activity";
+  source: "basic" | "advanced" | "new" | "activity" | "treemap";
 };
 const excluded = new Set(["steps", "signed", "radar-range", "radial", "radial-stacked"]);
 const gallery: GalleryEntry[] = [
@@ -744,6 +747,7 @@ const gallery: GalleryEntry[] = [
     .filter((r) => !excluded.has(r.id))
     .map((r) => ({ ...r, source: "advanced" as const })),
   ...newRecipes.map((r) => ({ ...r, source: "new" as const })),
+  ...treemapRecipes.map((r) => ({ ...r, source: "treemap" as const })),
   {
     id: "activity",
     family: "Radial",
@@ -775,6 +779,8 @@ const exampleColors: Record<string, string[]> = {
   scatter: ["#2b91ff", "#ff8a57", "#bbe1ff"],
   bubble: ["#a666f0", "#d5b2ff", "#eee3ff"],
   "line-trials": ["#498fff", "#20b997", "#c5e9ff"],
+  "treemap-market": ["#bed8ff", "#c9c5fb", "#b7e6d2", "#f4d4a5"],
+  "treemap-exposure": ["#b9dcfa", "#bce4ce", "#dfcbf2", "#f6d4af"],
   "heatmap-support": ["#fff5e1", "#ffc768", "#f57e37"],
   "heatmap-retention": ["#e6fbec", "#88dfa2", "#20a675"],
   "waterfall-revenue": ["#7388e7", "#28bf99", "#ff6c91"],
@@ -797,6 +803,8 @@ function renderEntry(entry: GalleryEntry, options: DemoOptions, animate: boolean
     replay: 0,
     options,
   };
+  if (entry.source === "treemap")
+    return <TreemapChartCard recipe={findRecipe(treemapRecipes, entry.id)} {...props} />;
   if (entry.source === "activity") return <ActivityDemo options={options} />;
   if (entry.source === "basic") return <ChartCard r={findRecipe(recipes, entry.id)} {...props} />;
   if (entry.source === "advanced")
@@ -804,6 +812,14 @@ function renderEntry(entry: GalleryEntry, options: DemoOptions, animate: boolean
   return <NewChartCard recipe={findRecipe(newRecipes, entry.id)} {...props} />;
 }
 function entryCode(entry: GalleryEntry, options: DemoOptions, animate: boolean) {
+  if (entry.source === "treemap")
+    return treemapCode(
+      findRecipe(treemapRecipes, entry.id),
+      "plain",
+      colorsFor(entry),
+      animate,
+      options,
+    );
   if (entry.source === "activity") return activityCode(options, animate);
   if (entry.source === "basic")
     return snippet(findRecipe(recipes, entry.id), "plain", colorsFor(entry), animate, options);

@@ -17,6 +17,15 @@ for (const width of [375, 1280]) {
         const tooltip = card.getByRole("tooltip");
         const cells = card.locator('[data-kind-ui="heatmap-grid"] td');
         for (const cell of [cells.first(), cells.last()]) {
+          if (expanded) {
+            // Start each pointer trial outside the prior keyboard inspection.
+            const preview = page
+              .getByRole("dialog")
+              .getByRole("tab", { name: "Preview", exact: true });
+            await preview.focus();
+            await preview.hover();
+            await expect(tooltip).toBeHidden();
+          }
           await cell.hover();
           await expect(tooltip).toBeVisible();
           await expect

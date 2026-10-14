@@ -147,7 +147,9 @@ try {
       await mobilePage.setViewportSize({ width, height: 900 });
       await mobilePage.goto(`${origin}/docs/components/${id}/`);
       await mobilePage
-        .locator('.chart-example svg, .chart-example [data-kind-ui="heatmap-grid"]')
+        .locator(
+          '.chart-example svg, .chart-example [data-kind-ui="heatmap-grid"], .chart-example [data-kind-ui="treemap-tile"]',
+        )
         .first()
         .waitFor();
       await mobilePage.waitForLoadState("networkidle");

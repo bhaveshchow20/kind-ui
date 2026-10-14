@@ -6,6 +6,7 @@ import { stripVTControlCharacters } from "node:util";
 import { chromium, expect } from "@playwright/test";
 import { families, variantDefinitions } from "../examples/catalog.mjs";
 import { declarationCompilerOptions, verificationFiles } from "./consumer-validation-files.mjs";
+import { loadingConsumerLabel, loadingConsumerProp } from "./legend-consumer-loading.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
@@ -23,6 +24,7 @@ const marks = {
   histogram: ".recharts-bar-rectangle",
   sankey: ".recharts-sankey-nodes > g, .recharts-sankey-links > g",
   waterfall: ".recharts-bar-rectangle",
+  treemap: '[data-kind-ui="treemap-tile"], [data-kind-ui="treemap-group"]',
 };
 const evidence = { variants: [], loading: [], staticKeys: [], errors: [] };
 const browser = await chromium.launch(
@@ -39,7 +41,12 @@ try {
   for (const family of families) {
     await page.goto(`${origin}/docs/components/${family.id}/`);
     await page.waitForFunction(() => document.querySelectorAll(".component-loading").length === 0);
-    for (const example of family.examples) {
+    // Advanced Treemap adapters remain copied-consumer fixtures; its page teaches one example.
+    const pageExamples =
+      family.id === "treemap"
+        ? family.examples.filter((example) => example.id === "treemap")
+        : family.examples;
+    for (const example of pageExamples) {
       const bundle = bundles[example.id];
       const card = page.locator(`[data-component="${example.id}"]`);
       const variants = bundle.variants ?? { default: { source: sourceFor(bundle) } };
@@ -100,6 +107,7 @@ try {
     await expect(card.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
     const family = bundles[id].family;
     const buttons = card.locator('[data-kind-ui="chart-legend"] button');
+    assert.ok(marks[family], `${id} has an explicit geometry selector`);
     await expect.poll(() => card.locator(marks[family]).count()).toBeGreaterThan(0);
     const count = await buttons.count();
     const focus = !/mode:\s*["']visibility/.test(sourceFor(bundles[id]));
@@ -107,16 +115,39 @@ try {
       await buttons.first().click();
       await expect(buttons.first()).toHaveAttribute("aria-pressed", focus ? "true" : "false");
     }
+    const tiles = card.locator('[data-kind-ui="treemap-tile"]');
+    if (family === "treemap") {
+      // The tile and its root legend share one selection owner.
+      await expect(tiles.first()).toHaveAttribute("aria-pressed", "true");
+      await tiles.first().click();
+      await expect(tiles.first()).toHaveAttribute("aria-pressed", "false");
+      await tiles.first().click();
+      await expect(tiles.first()).toHaveAttribute("aria-pressed", "true");
+    }
+    const tileSelection = await tiles.evaluateAll((nodes) =>
+      nodes.map((node) => [node.getAttribute("data-node-id"), node.getAttribute("aria-pressed")]),
+    );
+    const tileGeometry = await tiles.evaluateAll((nodes) =>
+      nodes.map((node) => [
+        node.getAttribute("data-node-id"),
+        node.style.left,
+        node.style.top,
+        node.style.width,
+        node.style.height,
+      ]),
+    );
     const selection = await buttons.evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute("aria-pressed")),
     );
-    assert.ok(marks[family], `${id} has an explicit geometry selector`);
     const readyMarks = await card.locator(marks[family]).count();
     assert.ok(readyMarks > 0, `${id} renders ready geometry`);
     await consumer.getByRole("button", { name: "Toggle pending", exact: true }).click();
     await expect(card.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(1);
     await expect(
-      card.getByRole("status").filter({ hasText: "Loading chart" }).first(),
+      card
+        .getByRole("status")
+        .filter({ hasText: loadingConsumerLabel(sourceFor(bundles[id])) })
+        .first(),
     ).toBeAttached();
     await expect(card.locator('[data-kind-ui="chart-legend"]')).toBeHidden();
     const pendingButtons = await card
@@ -133,6 +164,26 @@ try {
       `${id} selection after loading`,
     );
     await expect(card.locator(marks[family])).toHaveCount(readyMarks);
+    assert.deepEqual(
+      await tiles.evaluateAll((nodes) =>
+        nodes.map((node) => [node.getAttribute("data-node-id"), node.getAttribute("aria-pressed")]),
+      ),
+      tileSelection,
+      `${id} tile selection after loading`,
+    );
+    assert.deepEqual(
+      await tiles.evaluateAll((nodes) =>
+        nodes.map((node) => [
+          node.getAttribute("data-node-id"),
+          node.style.left,
+          node.style.top,
+          node.style.width,
+          node.style.height,
+        ]),
+      ),
+      tileGeometry,
+      `${id} tile geometry after loading`,
+    );
     evidence.loading.push({
       id,
       buttons: count,
@@ -145,7 +196,7 @@ try {
   mkdirSync("artifacts", { recursive: true });
   writeFileSync("artifacts/legend-browser-results.json", JSON.stringify(evidence, null, 2));
   console.log(
-    `${evidence.variants.length} interactive legend variants and 14 native loading round trips passed; ${evidence.staticKeys.length} quantitative/semantic or legend-free variants remain accurate.`,
+    `${evidence.variants.length} interactive legend variants and ${evidence.loading.length} native loading round trips passed; ${evidence.staticKeys.length} quantitative/semantic or legend-free variants remain accurate.`,
   );
 } finally {
   fixture?.process.kill("SIGTERM");
@@ -170,24 +221,48 @@ async function exerciseLegend(page, card, family, source, id) {
             [
               node,
               ...node.querySelectorAll("path, rect, circle, polygon, polyline, line, ellipse"),
-            ].map((shape) =>
-              ["d", "points", "x", "y", "width", "height", "cx", "cy", "transform"].map((key) =>
+            ].map((shape) => [
+              ...["d", "points", "x", "y", "width", "height", "cx", "cy", "transform"].map((key) =>
                 shape.getAttribute(key),
               ),
-            ),
+              ...(shape instanceof HTMLElement
+                ? [
+                    shape.dataset.nodeId,
+                    shape.style.left,
+                    shape.style.top,
+                    shape.style.width,
+                    shape.style.height,
+                  ]
+                : []),
+            ]),
           ),
         );
     const originalGeometry = await geometry();
     const plotCount = await card.locator(marks[family]).count();
     assert.ok(plotCount > 0, `${id} focus preserves plotted marks`);
     const dimmedPaint = () =>
-      card
-        .locator(
-          '[data-emphasis="dimmed"] [data-kind-ui="emphasis-paint"], [data-kind-ui="sankey-focus-mark"] > g, [data-kind-ui="series-interaction-paint"], [data-focus="dimmed"]',
-        )
-        .evaluateAll(
-          (nodes) => nodes.filter((node) => Number(getComputedStyle(node).opacity) < 1).length,
-        );
+      family === "treemap"
+        ? card.locator(marks.treemap).evaluateAll(
+            (nodes) =>
+              nodes.filter((node) => {
+                let opacity = 1;
+                for (
+                  let ancestor = node;
+                  ancestor && !ancestor.matches("[data-component], [data-testid=consumer-example]");
+                  ancestor = ancestor.parentElement
+                ) {
+                  opacity *= Number(getComputedStyle(ancestor).opacity);
+                }
+                return opacity < 1;
+              }).length,
+          )
+        : card
+            .locator(
+              '[data-emphasis="dimmed"] [data-kind-ui="emphasis-paint"], [data-kind-ui="sankey-focus-mark"] > g, [data-kind-ui="series-interaction-paint"], [data-focus="dimmed"]',
+            )
+            .evaluateAll(
+              (nodes) => nodes.filter((node) => Number(getComputedStyle(node).opacity) < 1).length,
+            );
     await buttons.first().focus();
     await page.keyboard.press("Escape");
     await expect(legend.locator('button[aria-pressed="true"]')).toHaveCount(0);
@@ -351,16 +426,18 @@ async function startConsumer() {
       if (name.startsWith("src/examples/")) write(name, body);
     const name = sourceFor(bundle).match(/export function (\w+)/)?.[1];
     assert.ok(name, `${id} exported component`);
-    const control = variantDefinitions[id];
-    assert.ok(
-      control.options.some((option) => option.value === "loading"),
-      `${id} native loading variant`,
+    const family = families.find((candidate) => candidate.id === bundle.family);
+    assert.ok(family, `${id} catalog family`);
+    // Extra examples retain their own string variant even if another family example has a boolean prop.
+    const loadingProp = loadingConsumerProp(
+      id === family.id ? family : { id },
+      variantDefinitions[id],
     );
     imports.push(
       `import { ${name} as Example${imports.length} } from "./examples/${id}/example.js";`,
     );
     examples.push(
-      `{ id: ${JSON.stringify(id)}, render: (pending: boolean) => <Example${imports.length - 1} ${control.prop}={pending ? "loading" : ${JSON.stringify(control.default)}} /> }`,
+      `{ id: ${JSON.stringify(id)}, render: (pending: boolean) => <Example${imports.length - 1} ${loadingProp} /> }`,
     );
   }
   write(

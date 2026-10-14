@@ -440,6 +440,13 @@ input:focus-visible {
 .source-code .shiki span {
   color: var(--shiki-light);
 }
+/* Destructured Treemap fields use a darker orange token on the light code surface. */
+html:not(.dark)
+  .doc-article[data-doc="components/treemap"]
+  .line-code-block
+  span[style*="--shiki-light:#e36209" i] {
+  color: #ad4c08;
+}
 .dark .source-code .shiki,
 .dark .source-code .shiki span {
   color: var(--shiki-dark);
@@ -803,6 +810,9 @@ input:focus-visible {
 .line-workbench .preview-panel {
   overflow: visible;
   overscroll-behavior: auto;
+}
+.line-workbench[data-component^="treemap"] .preview-panel {
+  height: auto;
 }
 .line-workbench .code-files {
   display: flex;
