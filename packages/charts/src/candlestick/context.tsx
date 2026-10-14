@@ -9,11 +9,32 @@ import {
   useLayoutEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import type { CandlestickPoint } from "./model.js";
 import type { CandlestickViewport, CandlestickViewportReason } from "./viewport.js";
 
 export type NativePoint = CandlestickPoint<object> & { coordinate: number };
+/** Inspection changes repaint only the readout/cursor subscribers, not native geometry. */
+export function createCandlestickInspectionStore() {
+  let current: CandlestickPoint["time"] | null = null;
+  const listeners = new Set<() => void>();
+  return {
+    get: () => current,
+    set: (next: CandlestickPoint["time"] | null) => {
+      if (next === current) return;
+      current = next;
+      for (const listener of [...listeners]) listener();
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+}
+const noInspection = () => null;
 type PointerPosition = Readonly<{ clientX: number; clientY: number }>;
 /** Private per-frame cursor updates do not change the React observation context. */
 export function createCandlestickPointerStore() {
@@ -47,6 +68,88 @@ export function createCandlestickPointerStore() {
     },
   };
 }
+/** Price pills reserve only ordinary native tick labels; candle geometry is never measured. */
+export function createCandlestickAxisLabels() {
+  type Bounds = { left: number; right: number; top: number; bottom: number };
+  type Label = { node: SVGElement; bounds: Bounds; visibility: string };
+  const axes = new Map<string, Label[]>();
+  const pills = new Map<string, Label & { priority: number }>();
+  const bounds = (node: SVGElement) => {
+    const box = node.getBoundingClientRect();
+    const surface = node.ownerSVGElement?.getBoundingClientRect();
+    return {
+      left: box.left - (surface?.left ?? 0),
+      right: box.right - (surface?.left ?? 0),
+      top: box.top - (surface?.top ?? 0),
+      bottom: box.bottom - (surface?.top ?? 0),
+      width: box.width,
+      height: box.height,
+    };
+  };
+  const overlaps = (a: Bounds, b: Bounds) =>
+    a.left < b.right + 2 && a.right > b.left - 2 && a.top < b.bottom + 2 && a.bottom > b.top - 2;
+  const restore = (label: Label) => {
+    label.node.style.visibility = label.visibility;
+  };
+  const refresh = () => {
+    const visible = [...pills.values()].filter((pill) => {
+      const hidden = [...pills.values()].some(
+        (other) => other.priority > pill.priority && overlaps(pill.bounds, other.bounds),
+      );
+      pill.node.style.visibility = hidden ? "hidden" : pill.visibility;
+      return !hidden && pill.visibility !== "hidden";
+    });
+    for (const labels of axes.values())
+      for (const label of labels)
+        label.node.style.visibility = visible.some((pill) => overlaps(label.bounds, pill.bounds))
+          ? "hidden"
+          : label.visibility;
+  };
+  return {
+    register: (id: string, nodes: readonly SVGElement[]) => {
+      const labels = nodes.map((node) => ({
+        node,
+        bounds: bounds(node),
+        visibility: node.style.visibility,
+      }));
+      axes.set(id, labels);
+      refresh();
+      return () => {
+        labels.forEach(restore);
+        axes.delete(id);
+        refresh();
+      };
+    },
+    set: (id: string, node: SVGElement | null, priority = 0, content: SVGElement | null = node) => {
+      const previous = pills.get(id);
+      if (previous) restore(previous);
+      if (node) {
+        const rectangle = bounds(node);
+        const visibility = getComputedStyle(content ?? node).visibility;
+        if (
+          rectangle.width > 0 &&
+          rectangle.height > 0 &&
+          visibility !== "hidden" &&
+          visibility !== "collapse"
+        )
+          pills.set(id, {
+            node,
+            bounds: rectangle,
+            priority,
+            visibility: previous?.node === node ? previous.visibility : node.style.visibility,
+          });
+        else pills.delete(id);
+      } else pills.delete(id);
+      refresh();
+    },
+    dispose: () => {
+      for (const labels of axes.values()) labels.forEach(restore);
+      for (const pill of pills.values()) restore(pill);
+      axes.clear();
+      pills.clear();
+    },
+  };
+}
 export type Context = {
   points: NativePoint[];
   rendered: NativePoint[];
@@ -61,7 +164,8 @@ export type Context = {
   spacing: "ordinal" | "elapsed";
   timeMode: "epoch-ms" | "business-date";
   pointer: ReturnType<typeof createCandlestickPointerStore>;
-  active: NativePoint | null;
+  inspection: ReturnType<typeof createCandlestickInspectionStore>;
+  axisLabels: ReturnType<typeof createCandlestickAxisLabels>;
   selected: NativePoint | null;
   inspect: (time: CandlestickPoint["time"] | null) => void;
   select: (time: CandlestickPoint["time"] | null) => void;
@@ -94,6 +198,15 @@ export function useCandlestick() {
   const value = use(CandleContext);
   if (!value) throw new Error("Candlestick parts require CandlestickChart");
   return value;
+}
+export function useCandlestickInspection() {
+  const context = useCandlestick();
+  const time = useSyncExternalStore(
+    context.inspection.subscribe,
+    context.inspection.get,
+    noInspection,
+  );
+  return context.points.find((point) => point.time === time) ?? null;
 }
 
 type SeriesTargets = {

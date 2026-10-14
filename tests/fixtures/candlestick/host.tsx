@@ -6,7 +6,7 @@ import {
   type CandlestickViewport,
 } from "@kind-ui/charts";
 import { motion } from "motion/react";
-import { type MouseEvent, useCallback, useState } from "react";
+import { type ComponentProps, type MouseEvent, useCallback, useState } from "react";
 
 type Row = CandlestickDatum & { source: string };
 function CustomVolumeElement({ width = 900 }: { width?: number }) {
@@ -54,6 +54,16 @@ const initial: Row[] = [
 const params = new URLSearchParams(location.search);
 const entranceOptions = { revealDurationMs: 10000 };
 const viewportOptions = { revealDurationMs: 0 };
+let historyPaints = 0;
+const historyTimeFormatter = (time: CandlestickTime) => String(time);
+const historyPaintBrushProps: NonNullable<
+  ComponentProps<typeof CandlestickChart.HistoryNavigator>["brushProps"]
+> = {
+  traveller: (geometry) => {
+    document.documentElement.dataset.historyPaints = String(++historyPaints);
+    return <rect {...geometry} />;
+  },
+};
 const volumeRows: Row[] = initial.map((row, index) =>
   row.gap ? row : { ...row, volume: index === 0 || index === 4 ? 1e9 : index === 1 ? 200 : 100 },
 );
@@ -371,7 +381,7 @@ export function CandlestickHost() {
         height={360}
         ref={ref}
         aria-label="Session trade OHLC"
-        formatTime={(time) => String(time)}
+        formatTime={params.has("history-paints") ? historyTimeFormatter : (time) => String(time)}
         formatPrice={(price) => `${price.toFixed(2)} USD`}
         formatVolume={(volume) => `${volume} contracts`}
       >
@@ -386,6 +396,7 @@ export function CandlestickHost() {
         )}
         {params.has("navigation") && (
           <CandlestickChart.HistoryNavigator
+            {...(params.has("history-paints") ? { brushProps: historyPaintBrushProps } : {})}
             {...(params.has("navigation-cancel")
               ? {
                   onTouchCancelCapture: (event) => {

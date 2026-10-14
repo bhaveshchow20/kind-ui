@@ -3,6 +3,7 @@
 import {
   type ComponentProps,
   type ComponentPropsWithRef,
+  isValidElement,
   type ReactNode,
   type Ref,
   type RefCallback,
@@ -36,7 +37,12 @@ import { SeriesInteractionLayer, useSeriesInteraction } from "../series-interact
 import { StaticTooltipFrame, TooltipBase, type TooltipFrameProps } from "../tooltip.js";
 import { tooltipClassName } from "../tooltip-content.js";
 import { cn } from "../utils.js";
-import { type NativePoint, useCandlestick, useCandlestickSeriesTarget } from "./context.js";
+import {
+  type NativePoint,
+  useCandlestick,
+  useCandlestickInspection,
+  useCandlestickSeriesTarget,
+} from "./context.js";
 import { CandlestickSeriesPaint } from "./marks.js";
 import type { CandlestickDatum, CandlestickPoint } from "./model.js";
 import { getCandlestickVisiblePoints } from "./viewport.js";
@@ -84,15 +90,53 @@ export type CandlestickYAxisProps = Omit<
 export function CandlestickYAxis(props: CandlestickYAxisProps) {
   const context = useCandlestick();
   const area = usePlotArea();
+  const id = `candlestick-price-ticks-${useId().replace(/:/g, "")}`;
+  const ordinary =
+    props.tick !== false && typeof props.tick !== "function" && !isValidElement(props.tick);
+  useLayoutEffect(() => {
+    if (!ordinary || props.hide) return;
+    let unregister: (() => void) | undefined;
+    const register = () => {
+      unregister?.();
+      unregister = context.axisLabels.register(
+        id,
+        Array.from(document.getElementsByClassName(id)).filter(
+          (node): node is SVGElement => node instanceof SVGElement,
+        ),
+      );
+    };
+    register();
+    const frame = requestAnimationFrame(register);
+    return () => {
+      cancelAnimationFrame(frame);
+      unregister?.();
+    };
+  });
   const bottom = (area?.height ?? 0) * context.volumeRatio;
   const padding = useMemo(() => ({ bottom }), [bottom]);
   const defaultFormatter = useCallback(
     (value: unknown) => context.formatPrice(Number(value)),
     [context.formatPrice],
   );
+  const tick = useMemo(
+    () =>
+      ordinary
+        ? {
+            ...(typeof props.tick === "object" ? props.tick : {}),
+            className: cn(
+              typeof props.tick === "object" && props.tick && "className" in props.tick
+                ? String(props.tick.className ?? "")
+                : "",
+              id,
+            ),
+          }
+        : props.tick,
+    [ordinary, props.tick, id],
+  );
   return (
     <YAxis
       {...props}
+      {...(tick !== undefined ? { tick } : {})}
       domain={context.priceDomain}
       scale={context.priceScale}
       allowDataOverflow
@@ -302,17 +346,19 @@ export function CandlestickCrosshair({
       if (!node) return;
       if (!x || !y || !area || !context.points.length) {
         node.style.display = "none";
+        context.axisLabels.set(id, null);
         return;
       }
       const cursor = mode === "free" ? context.pointer.get() : null;
       const local = cursor ? context.geometry.current?.local(cursor.clientX, cursor.clientY) : null;
       if (cursor && !local) {
         node.style.display = "none";
+        context.axisLabels.set(id, null);
         return;
       }
-      const px = local?.x ?? (context.active ? x(context.active.coordinate) : undefined);
-      const py =
-        local?.y ?? (context.active?.close === undefined ? undefined : y(context.active.close));
+      const active = context.points.find((point) => point.time === context.inspection.get());
+      const px = local?.x ?? (active ? x(active.coordinate) : undefined);
+      const py = local?.y ?? (active?.close === undefined ? undefined : y(active.close));
       if (
         typeof px !== "number" ||
         !Number.isFinite(px) ||
@@ -320,6 +366,7 @@ export function CandlestickCrosshair({
         px > area.x + area.width
       ) {
         node.style.display = "none";
+        context.axisLabels.set(id, null);
         return;
       }
       node.style.display = "";
@@ -334,8 +381,11 @@ export function CandlestickCrosshair({
           horizontal.current.setAttribute("y2", String(py));
         }
       }
-      if (!showLabels) return;
-      let time = context.active?.time;
+      if (!showLabels) {
+        context.axisLabels.set(id, null);
+        return;
+      }
+      let time = active?.time;
       if (local && context.spacing === "elapsed") {
         const value = timeAt?.(px);
         if (typeof value === "number" && Number.isFinite(value)) {
@@ -368,7 +418,7 @@ export function CandlestickCrosshair({
           context.volumeRatio > 0 &&
           py >= area.y + area.height * (1 - context.volumeRatio);
         const value =
-          local && py !== undefined ? (inVolume ? volumeAt : priceAt)?.(py) : context.active?.close;
+          local && py !== undefined ? (inVolume ? volumeAt : priceAt)?.(py) : active?.close;
         const text =
           typeof value === "number" && Number.isFinite(value) && horizontalVisible
             ? inVolume
@@ -390,11 +440,18 @@ export function CandlestickCrosshair({
             right + priceWidth + 4 <= chartWidth ? right + 4 : Math.max(0, right - priceWidth - 4);
           const top = Math.max(area.y, Math.min((py ?? area.y) - 10, chartHeight - 22));
           priceMarker.current.setAttribute("transform", `translate(${left},${top})`);
+          context.axisLabels.set(id, text && !inVolume ? priceMarker.current : null, 1);
         }
       }
     };
     update();
-    return context.pointer.subscribe(update);
+    const stopPointer = context.pointer.subscribe(update);
+    const stopInspection = context.inspection.subscribe(update);
+    return () => {
+      stopPointer();
+      stopInspection();
+      context.axisLabels.set(id, null);
+    };
   });
   if (!x || !y || !area) return null;
   return (
@@ -471,7 +528,7 @@ export function CandlestickContent<Row extends object = CandlestickDatum>({
   const context = useCandlestick();
   const id = useId();
   useLayoutEffect(() => context.registerContent(id), [context.registerContent, id]);
-  const point = context.active ?? context.selected;
+  const point = useCandlestickInspection() ?? context.selected;
   return (
     <OutsidePlot>
       <div
@@ -502,7 +559,7 @@ export type CandlestickTooltipProps<Row extends object = CandlestickDatum> =
   CandlestickContentProps<Row> & { maxWidth?: number };
 function CandleTooltipFrame(props: TooltipFrameProps) {
   const context = useCandlestick();
-  const point = context.active ?? context.selected;
+  const point = useCandlestickInspection() ?? context.selected;
   const xScale = useXAxisScale();
   const yScale = useYAxisScale();
   const x = point ? xScale?.(point.coordinate) : undefined;
@@ -522,7 +579,7 @@ export function CandlestickTooltip<Row extends object = CandlestickDatum>({
   maxWidth = 260,
 }: CandlestickTooltipProps<Row>) {
   const context = useCandlestick();
-  const point = context.active ?? context.selected;
+  const point = useCandlestickInspection() ?? context.selected;
   if (!point) return null;
   const { ref, ...attributes } = frameProps ?? {};
   const content = (

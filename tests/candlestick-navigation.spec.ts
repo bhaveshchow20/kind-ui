@@ -2,6 +2,25 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./browser";
 
 const url = `http://127.0.0.1:${4205 + Number(process.env.KIND_UI_TEST_PORT_BASE ?? 4173) - 4173}`;
+test("inspection updates preserve the native history overview until its desired window changes", async ({
+  page,
+}) => {
+  await page.goto(`${url}/?navigation&history-paints`);
+  await page.getByRole("button", { name: "History window", exact: true }).click();
+  await page.evaluate(async () => {
+    for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
+  });
+  const root = page.locator("html");
+  const before = await root.getAttribute("data-history-paints");
+  if (!before || Number(before) < 2) throw new Error("Missing native history paint counter");
+  const marks = page.locator('[data-kind-ui="candlestick-mark"]');
+  for (const index of [1, 2, 1, 2]) await marks.nth(index).hover();
+  await expect(page.getByLabel("Inspection", { exact: true })).not.toHaveText("None");
+  await expect(root).toHaveAttribute("data-history-paints", before);
+  await page.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await expect(root).not.toHaveAttribute("data-history-paints", before);
+});
+
 test("visible zoom controls propose controlled windows and preserve native veto", async ({
   page,
 }) => {
@@ -506,6 +525,9 @@ for (const update of ["Append next observation", "Prepend"]) {
       await expect(page.getByLabel("Window changes", { exact: true })).toHaveText(
         String(callbacks + 1),
       );
+      // Identity reconciliation refreshes native Brush after the accepted drag.
+      // Wait for that completion before checking its restored keyboard target.
+      await expect.poll(() => handle.evaluate((node) => node.isConnected)).toBe(false);
       await expect(end).toBeFocused();
       await page.keyboard.press("ArrowRight");
       await expect(page.getByLabel("Window", { exact: true })).toHaveText(

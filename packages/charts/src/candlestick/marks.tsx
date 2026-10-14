@@ -5,7 +5,9 @@ import {
   type ComponentPropsWithRef,
   cloneElement,
   createContext,
+  Fragment,
   isValidElement,
+  memo,
   type ReactNode,
   use,
   useCallback,
@@ -29,7 +31,12 @@ import { type InteractionPaint, useInteractionOpacity } from "../animation.js";
 import { useChart } from "../chart-context.js";
 import { useLineInteraction } from "../line-chart.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "../series-interaction.js";
-import { type NativePoint, useCandlestick, useCandlestickSeriesTarget } from "./context.js";
+import {
+  type Context,
+  type NativePoint,
+  useCandlestick,
+  useCandlestickSeriesTarget,
+} from "./context.js";
 import { candlestickDirectionColors } from "./current-price.js";
 import { useLatestCandlestickGeometry } from "./latest-motion.js";
 import type { CandlestickDatum, CandlestickPoint } from "./model.js";
@@ -94,14 +101,24 @@ export type CandlestickSeriesProps<Row extends object = CandlestickDatum> = {
     props: CandlestickMarkProps & { point: CandlestickPoint<Row>; native: BarShapeProps },
   ) => ReactNode;
 };
-const ShapeContext = createContext<(CandlestickSeriesProps & { latestIdentity?: string }) | null>(
-  null,
-);
+type ShapeOptions = CandlestickSeriesProps &
+  Pick<Context, "formatTime" | "formatPrice" | "priceClipId" | "revealClipId"> & {
+    latestIdentity?: string;
+    xScale: ReturnType<typeof useXAxisScale>;
+    yScale: ReturnType<typeof useYAxisScale>;
+    frame: string;
+    points: NativePoint[];
+    labels: WeakMap<NativePoint, string>;
+  };
+const ShapeContext = createContext<ShapeOptions | null>(null);
+const HistoricalCandlestickMark = memo(CandlestickMark);
 function CandleShape(native: BarShapeProps) {
   const options = use(ShapeContext);
-  const context = useCandlestick();
-  const x = useXAxisScale();
-  const y = useYAxisScale();
+  return options ? renderCandlePoint(native, options) : null;
+}
+function renderCandlePoint(native: BarShapeProps, options: ShapeOptions, unclipped = false) {
+  const x = options?.xScale;
+  const y = options?.yScale;
   if (!options || !x || !y) return null;
   const point = native.payload as NativePoint;
   if (
@@ -124,6 +141,11 @@ function CandleShape(native: BarShapeProps) {
   const [center, open, high, low, close] = coordinates as [number, number, number, number, number];
   const direction =
     point.close > point.open ? "rising" : point.close < point.open ? "falling" : "unchanged";
+  let label = options.markProps?.["aria-label"] ?? options.labels.get(point);
+  if (label === undefined) {
+    label = `${options.formatTime(point.time, point)}: open ${options.formatPrice(point.open, point)}, high ${options.formatPrice(point.high, point)}, low ${options.formatPrice(point.low, point)}, close ${options.formatPrice(point.close, point)}`;
+    options.labels.set(point, label);
+  }
   const props: CandlestickMarkProps = {
     ...options.markProps,
     center,
@@ -136,24 +158,26 @@ function CandleShape(native: BarShapeProps) {
     color: options.markProps?.color ?? options[direction] ?? candlestickDirectionColors[direction],
     role: options.markProps?.role ?? "img",
     strokeWidth: options.markProps?.strokeWidth ?? 1.5,
-    "aria-label":
-      options.markProps?.["aria-label"] ??
-      `${context.formatTime(point.time, point)}: open ${context.formatPrice(point.open, point)}, high ${context.formatPrice(point.high, point)}, low ${context.formatPrice(point.low, point)}, close ${context.formatPrice(point.close, point)}`,
+    "aria-label": label,
   };
-  return (
-    <g clipPath={`url(#${context.priceClipId})`}>
-      <g clipPath={`url(#${context.revealClipId})`}>
-        {options.shape ? (
-          options.shape({ ...props, point: point as CandlestickPoint<CandlestickDatum>, native })
-        ) : (
-          <LatestCandlestickMark
-            {...props}
-            point={point}
-            seriesKey={options.seriesKey}
-            latest={options.latestIdentity === point.identity}
-          />
-        )}
-      </g>
+  const mark = options.shape ? (
+    options.shape({ ...props, point: point as CandlestickPoint<CandlestickDatum>, native })
+  ) : options.latestIdentity !== point.identity ? (
+    <HistoricalCandlestickMark {...props} />
+  ) : (
+    <LatestCandlestickMark
+      {...props}
+      point={point}
+      seriesKey={options.seriesKey}
+      frame={options.frame}
+      latest={options.latestIdentity === point.identity}
+    />
+  );
+  return unclipped ? (
+    mark
+  ) : (
+    <g clipPath={`url(#${options.priceClipId})`}>
+      <g clipPath={`url(#${options.revealClipId})`}>{mark}</g>
     </g>
   );
 }
@@ -161,11 +185,15 @@ function LatestCandlestickMark({
   point,
   seriesKey,
   latest,
+  frame,
   ...props
-}: CandlestickMarkProps & { point: NativePoint; seriesKey: string; latest: boolean }) {
-  const area = usePlotArea();
+}: CandlestickMarkProps & {
+  point: NativePoint;
+  seriesKey: string;
+  latest: boolean;
+  frame: string;
+}) {
   const mark = useRef<SVGGElement>(null);
-  const frame = `${area?.x},${area?.y},${area?.width},${area?.height}`;
   useLatestCandlestickGeometry(
     `candle:${seriesKey}`,
     point.identity,
@@ -212,6 +240,33 @@ function LatestCandlestickMark({
   );
 }
 const renderCandle = (native: BarShapeProps) => <CandleShape {...native} />;
+const emptyCandle = () => null;
+function DefaultCandleCarrier(native: Partial<BarShapeProps>) {
+  if (native.index !== 0 || typeof native.width !== "number") return null;
+  return <DefaultCandleLayer native={native as BarShapeProps} />;
+}
+function DefaultCandleLayer({ native }: { native: BarShapeProps }) {
+  const options = use(ShapeContext);
+  if (!options) return null;
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Native mark activation shares the series keyboard target.
+    <g
+      clipPath={`url(#${options.priceClipId})`}
+      onClick={native.onClick as ComponentProps<"g">["onClick"]}
+    >
+      <g clipPath={`url(#${options.revealClipId})`}>
+        {options.points.map((point) => (
+          <Fragment key={point.identity}>
+            {renderCandlePoint({ ...native, payload: point }, options, true)}
+          </Fragment>
+        ))}
+      </g>
+    </g>
+  );
+}
+// Recharts reads background zIndex on the option object, rather than its element props.
+// Keep the native background carrier in the series' opacity and clipping layer.
+const defaultCandleLayer = { ...(<DefaultCandleCarrier />), zIndex: 0 };
 const candleExtent = (value: unknown) => {
   const point = value as NativePoint;
   return point.gap ? null : [point.low, point.high];
@@ -220,6 +275,15 @@ export function CandlestickSeries<Row extends object = CandlestickDatum>(
   props: CandlestickSeriesProps<Row>,
 ) {
   const context = useCandlestick();
+  const xScale = useXAxisScale();
+  const yScale = useYAxisScale();
+  const area = usePlotArea();
+  const frame = `${area?.x},${area?.y},${area?.width},${area?.height}`;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Formatter identity invalidates cached accessible labels.
+  const labels = useMemo(
+    () => new WeakMap<NativePoint, string>(),
+    [context.formatTime, context.formatPrice],
+  );
   const latestIdentity = useMemo(() => {
     for (let index = context.points.length - 1; index >= 0; index--) {
       const point = context.points[index];
@@ -231,13 +295,23 @@ export function CandlestickSeries<Row extends object = CandlestickDatum>(
     <ShapeContext
       value={{
         ...(props as CandlestickSeriesProps),
+        xScale,
+        yScale,
+        frame,
+        points: context.rendered,
+        labels,
+        formatTime: context.formatTime,
+        formatPrice: context.formatPrice,
+        priceClipId: context.priceClipId,
+        revealClipId: context.revealClipId,
         ...(latestIdentity ? { latestIdentity } : {}),
       }}
     >
       <CandlestickBar
         seriesKey={props.seriesKey}
         dataKey={candleExtent}
-        shape={renderCandle}
+        shape={props.shape ? renderCandle : emptyCandle}
+        {...(!props.shape ? { background: defaultCandleLayer } : {})}
         activeBar={false}
         {...(props.barSize !== undefined ? { barSize: props.barSize } : {})}
         maxBarSize={props.maxBarSize ?? 24}
@@ -273,6 +347,11 @@ const VolumeShapeContext = createContext<{
   falling?: string | undefined;
   unchanged?: string | undefined;
   preserveWidth?: boolean;
+  points?: NativePoint[];
+  nativeProps?: Partial<BarShapeProps>;
+  xScale?: ReturnType<typeof useXAxisScale>;
+  volumeClipId?: string;
+  revealClipId?: string;
 }>({});
 export function CandlestickVolume({
   seriesKey,
@@ -307,7 +386,13 @@ export function CandlestickVolume({
     }
   }
   const context = useCandlestick();
+  const denseDefault =
+    props.shape === undefined &&
+    props.children === undefined &&
+    !props.label &&
+    !Object.keys(props).some((key) => key.startsWith("on"));
   const area = usePlotArea();
+  const xScale = useXAxisScale();
   const id = useId();
   useLayoutEffect(() => context.registerVolume(id), [context.registerVolume, id]);
   const max = getCandlestickVisiblePoints(context.points, context.viewport).reduce(
@@ -334,6 +419,18 @@ export function CandlestickVolume({
       <VolumeShapeContext
         value={{
           shape: props.shape,
+          points: context.rendered,
+          nativeProps: {
+            stroke: props.stroke,
+            strokeWidth: props.strokeWidth,
+            fillOpacity: props.fillOpacity,
+            opacity: props.opacity,
+            ...(props.className !== undefined ? { className: props.className } : {}),
+            ...(props.style !== undefined ? { style: props.style } : {}),
+          },
+          xScale,
+          volumeClipId: context.volumeClipId,
+          revealClipId: context.revealClipId,
           fill: props.fill,
           rising,
           falling,
@@ -348,7 +445,8 @@ export function CandlestickVolume({
           dataKey="volume"
           yAxisId="candlestick-volume"
           activeBar={false}
-          shape={renderVolume}
+          shape={denseDefault ? emptyCandle : renderVolume}
+          {...(denseDefault ? { background: defaultVolumeLayer } : {})}
         />
       </VolumeShapeContext>
     </>
@@ -357,8 +455,7 @@ export function CandlestickVolume({
 function VolumeShape(native: BarShapeProps) {
   const options = use(VolumeShapeContext);
   const option = options.shape;
-  const x = useXAxisScale();
-  const context = useCandlestick();
+  const x = options.xScale;
   const point = native.payload as NativePoint;
   const center = x?.(point.coordinate);
   if (
@@ -391,9 +488,9 @@ function VolumeShape(native: BarShapeProps) {
   // Native grouping can make dense default bars subpixel; match the candle's legible minimum.
   const width = options.preserveWidth ? native.width : Math.max(1, native.width);
   return (
-    <g clipPath={`url(#${context.volumeClipId})`}>
+    <g clipPath={`url(#${options.volumeClipId})`}>
       <rect
-        clipPath={`url(#${context.revealClipId})`}
+        clipPath={`url(#${options.revealClipId})`}
         data-kind-ui="candlestick-volume-mark"
         data-direction={direction}
         x={center - width / 2}
@@ -412,6 +509,38 @@ function VolumeShape(native: BarShapeProps) {
   );
 }
 const renderVolume = (native: BarShapeProps) => <VolumeShape {...native} />;
+
+function DefaultVolumeCarrier(native: Partial<BarShapeProps>) {
+  if (native.index !== 0 || typeof native.width !== "number") return null;
+  return <DefaultVolumeLayer native={native as BarShapeProps} />;
+}
+function DefaultVolumeLayer({ native }: { native: BarShapeProps }) {
+  const options = use(VolumeShapeContext);
+  const y = useYAxisScale("candlestick-volume");
+  if (!y) return null;
+  const baseline = y(0);
+  if (typeof baseline !== "number") return null;
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Native mark activation shares the series keyboard target.
+    <g onClick={native.onClick as ComponentProps<"g">["onClick"]}>
+      {options.points?.map((point) => {
+        const top = y(point.volume ?? 0);
+        if (typeof top !== "number") return null;
+        return (
+          <VolumeShape
+            key={point.identity}
+            {...native}
+            {...options.nativeProps}
+            payload={point}
+            y={top}
+            height={baseline - top}
+          />
+        );
+      })}
+    </g>
+  );
+}
+const defaultVolumeLayer = { ...(<DefaultVolumeCarrier />), zIndex: 0 };
 
 /** Native registered Bars avoid a full Motion component inside strict LazyMotion. */
 function CandlestickBar({

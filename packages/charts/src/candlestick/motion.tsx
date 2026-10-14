@@ -1,9 +1,12 @@
 "use client";
 
 import { animate as animateProgress } from "motion/react";
-import { useLayoutEffect, useRef } from "react";
+import { type CSSProperties, useId, useLayoutEffect, useRef, useState } from "react";
 import { usePlotArea } from "recharts";
 import type { BarChartProps } from "../bar-chart.js";
+import { useChart } from "../chart-context.js";
+import { useLoadingProgress } from "../loading-motion.js";
+import { useLoadingSeed } from "../loading-skeleton.js";
 import { useReducedMotion } from "../motion-preference.js";
 import { useCandlestick } from "./context.js";
 
@@ -105,22 +108,24 @@ export function CandlestickReveal({
 
 /** Decorative placeholders never enter the observation model or inspection callbacks. */
 export function CandlestickLoading() {
-  const reduced = useReducedMotion();
-  const surface = useRef<SVGSVGElement>(null);
+  const { nonce } = useChart();
+  const id = `candlestick-loading-${useId().replace(/:/g, "")}`;
+  const seed = useLoadingSeed(true);
+  const [pulse, setPulse] = useState(0);
+  const { progress, reduced } = useLoadingProgress(pulse, 1000, [0.25, 0.1, 0.25, 1], 264);
+  const window = useRef<SVGRectElement>(null);
   useLayoutEffect(() => {
-    const node = surface.current;
-    if (!node || reduced) return;
-    const controls = animateProgress(0.4, 0.85, {
-      duration: 1.3,
-      repeat: Infinity,
-      repeatType: "reverse",
-      ease: "easeInOut",
-      onUpdate: (value) => {
-        node.style.opacity = String(value);
-      },
-    });
-    return () => controls.stop();
-  }, [reduced]);
+    if (reduced) return;
+    const update = (value: number) =>
+      window.current?.setAttribute("x", String((value - 0.5) * 640));
+    update(progress.get());
+    return progress.on("change", update);
+  }, [progress, reduced]);
+  const variation = (slot: number) => {
+    let value = Math.imul(seed + pulse * 97 + slot * 31, 2654435761) >>> 0;
+    value = Math.imul(value ^ (value >>> 16), 2246822507) >>> 0;
+    return (value % 1000) / 1000;
+  };
   return (
     <div
       aria-hidden="true"
@@ -128,30 +133,73 @@ export function CandlestickLoading() {
       className="absolute inset-0 pointer-events-none text-[color:var(--muted-foreground,GrayText)]"
     >
       <svg
-        ref={surface}
-        viewBox="0 0 600 280"
+        viewBox="0 0 640 240"
         width="100%"
         height="100%"
         preserveAspectRatio="none"
         role="presentation"
+        focusable="false"
         data-kind-ui="chart-loading-skeleton"
+        data-family="candlestick"
+        data-loading-motion="sweep"
+        className="animate-[kind-ui-loading-pulse_var(--kind-ui-loading-cycle,1770ms)_linear_infinite] motion-reduce:animate-none"
+        style={{ "--kind-ui-loading-cycle": "2200ms" } as CSSProperties}
+        onAnimationIteration={(event) => {
+          if (
+            !reduced &&
+            event.target === event.currentTarget &&
+            event.animationName === "kind-ui-loading-pulse"
+          )
+            setPulse((value) => value + 1);
+        }}
       >
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((index) => {
-          const center = 35 + index * 48;
-          const y = 80 + ((index * 37) % 70);
-          return (
-            <g key={index} fill="currentColor" stroke="currentColor" opacity=".6">
-              <line x1={center} x2={center} y1={y - 23} y2={y + 47} />
-              <rect x={center - 10} y={y} width={20} height={24 + ((index * 7) % 18)} />
+        <style
+          nonce={nonce}
+        >{`@keyframes kind-ui-loading-pulse { 0%, 12%, 94%, 100% { opacity: 0; } 14%, 90% { opacity: 1; } }`}</style>
+        <defs>
+          <linearGradient id={`${id}-soft`}>
+            <stop offset="0" stopColor="white" stopOpacity="0" />
+            <stop offset="0.35" stopColor="white" />
+            <stop offset="0.75" stopColor="white" />
+            <stop offset="1" stopColor="white" stopOpacity="0" />
+          </linearGradient>
+          <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="240">
+            {reduced ? (
+              <rect width="640" height="240" fill="white" />
+            ) : (
               <rect
-                x={center - 10}
-                y={238 - ((index * 11) % 28)}
-                width={20}
-                height={18 + ((index * 11) % 28)}
+                ref={window}
+                data-kind-ui="loading-leading-window"
+                x={-320}
+                y={0}
+                width={320}
+                height={240}
+                fill={`url(#${id}-soft)`}
               />
-            </g>
-          );
-        })}
+            )}
+          </mask>
+        </defs>
+        <g mask={`url(#${id})`}>
+          {Array.from({ length: 12 }, (_, index) => {
+            const center = 30 + index * 53;
+            const y = 35 + variation(index * 4) * 120;
+            const body = 12 + variation(index * 4 + 1) * 38;
+            const upperWick = 8 + variation(index * 4 + 2) * 22;
+            const lowerWick = 8 + variation(index * 4 + 3) * 22;
+            return (
+              <g
+                key={center}
+                data-kind-ui="candlestick-loading-mark"
+                fill="currentColor"
+                stroke="currentColor"
+                opacity=".6"
+              >
+                <line x1={center} x2={center} y1={y - upperWick} y2={y + body + lowerWick} />
+                <rect x={center - 10} y={y} width={20} height={body} />
+              </g>
+            );
+          })}
+        </g>
       </svg>
     </div>
   );

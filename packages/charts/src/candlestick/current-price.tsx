@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithRef, type ReactNode, useLayoutEffect, useRef } from "react";
+import { type ComponentPropsWithRef, type ReactNode, useId, useLayoutEffect, useRef } from "react";
 import { DefaultZIndexes, usePlotArea, useYAxisScale, ZIndexLayer } from "recharts";
 import { useChart } from "../chart-context.js";
 import { useCandlestick } from "./context.js";
@@ -76,6 +76,21 @@ export function CandlestickCurrentPrice<Row extends object = CandlestickDatum>({
   const y = value === undefined ? undefined : scale?.(value);
   const moving = useRef<SVGGElement>(null);
   const labelMoving = useRef<SVGGElement>(null);
+  const labelId = useId();
+  const reserveLabel = () => {
+    const node = labelMoving.current;
+    const label = node?.firstElementChild;
+    context.axisLabels.set(
+      labelId,
+      axisLabelVisible ? node : null,
+      0,
+      label instanceof SVGElement ? label : node,
+    );
+  };
+  useLayoutEffect(() => {
+    reserveLabel();
+    return () => context.axisLabels.set(labelId, null);
+  });
   const frame = `${area?.x},${area?.y},${area?.width},${area?.height}`;
   useLatestCandlestickGeometry(
     `price:${seriesKey ?? ""}`,
@@ -88,6 +103,7 @@ export function CandlestickCurrentPrice<Row extends object = CandlestickDatum>({
     ([position]) => {
       moving.current?.setAttribute("transform", `translate(0 ${position})`);
       labelMoving.current?.setAttribute("transform", `translate(0 ${position})`);
+      reserveLabel();
     },
   );
   if (

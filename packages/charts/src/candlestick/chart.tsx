@@ -122,6 +122,8 @@ import {
   CandleContext,
   CandlestickSeriesTargets,
   type Context,
+  createCandlestickAxisLabels,
+  createCandlestickInspectionStore,
   createCandlestickPointerStore,
   type NativePoint,
   useCandlestick,
@@ -304,14 +306,13 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     reason: viewportReason.current,
     identity: points,
   });
-  const [activeTime, setActiveTime] = useState<CandlestickPoint["time"] | null>(null);
+  const [inspection] = useState(createCandlestickInspectionStore);
   const [localSelection, setSelection] = useState(defaultSelection);
   const pendingDefaultSelection = useRef(
     selection === undefined && points.length === 0 && defaultSelection !== null,
   );
   const selectedTime = selection === undefined ? localSelection : selection;
   const selected = points.find((point) => point.time === selectedTime) ?? null;
-  const active = points.find((point) => point.time === activeTime) ?? null;
   const [volumes, setVolumes] = useState<Set<string>>(() => new Set());
   const [contents, setContents] = useState<Set<string>>(() => new Set());
   const registerContent = useCallback((key: string) => {
@@ -347,22 +348,29 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   }, []);
   const geometry = useRef<Context["geometry"]["current"]>(null);
   const [pointer] = useState(createCandlestickPointerStore);
+  const [axisLabels] = useState(createCandlestickAxisLabels);
+  useEffect(() => () => axisLabels.dispose(), [axisLabels]);
   useEffect(() => () => pointer.dispose(), [pointer]);
   const revealClipId = `candlestick-reveal-${useId().replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   const interrupt = useRef(() => {});
+  const controlledViewport = viewport !== undefined;
+  const notifyViewport = useRef(onViewportChange);
+  useLayoutEffect(() => {
+    notifyViewport.current = onViewportChange;
+  }, [onViewportChange]);
   const changeViewport = useCallback(
     (next: CandlestickViewport, reason: CandlestickViewportReason) => {
       viewportReason.current = reason;
       const actual = normalizeCandlestickViewport(next, points.length);
-      if (viewport === undefined) setLocalRange(actual);
+      if (!controlledViewport) setLocalRange(actual);
       const visible = getCandlestickVisiblePoints(points, actual);
-      onViewportChange?.(actual, {
+      notifyViewport.current?.(actual, {
         reason,
         first: visible.at(0)?.time ?? null,
         last: visible.at(-1)?.time ?? null,
       });
     },
-    [points, viewport, onViewportChange],
+    [points, controlledViewport],
   );
   useLayoutEffect(() => {
     if (previous.current !== points) {
@@ -374,13 +382,16 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
       previous.current = points;
     }
   }, [points, viewport, localRange, changeViewport, reconciled]);
-  const inspect = (time: CandlestickPoint["time"] | null) => {
-    if (time === activeTime) return;
-    setActiveTime(time);
-    onInspect?.(
-      (points.find((point) => point.time === time) ?? null) as CandlestickPoint<Row> | null,
-    );
-  };
+  const inspect = useCallback(
+    (time: CandlestickPoint["time"] | null) => {
+      if (time === inspection.get()) return;
+      inspection.set(time);
+      onInspect?.(
+        (points.find((point) => point.time === time) ?? null) as CandlestickPoint<Row> | null,
+      );
+    },
+    [inspection, points, onInspect],
+  );
   const select = (time: CandlestickPoint["time"] | null) => {
     pendingDefaultSelection.current = false;
     if (selection === undefined) setSelection(time);
@@ -394,10 +405,8 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
       if (points.length === 0) return;
       pendingDefaultSelection.current = false;
     }
-    if (activeTime !== null && !points.some((point) => point.time === activeTime)) {
-      setActiveTime(null);
-      onInspect?.(null);
-    }
+    const activeTime = inspection.get();
+    if (activeTime !== null && !points.some((point) => point.time === activeTime)) inspect(null);
     if (
       selectedTime !== null &&
       !points.some((point) => point.time === selectedTime) &&
@@ -408,7 +417,7 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
       onSelectionChange?.(null);
     } else if (selectedTime === null || points.some((point) => point.time === selectedTime))
       removedSelection.current = null;
-  }, [points, activeTime, selectedTime, selection, onInspect, onSelectionChange]);
+  }, [points, inspection, inspect, selectedTime, selection, onSelectionChange]);
   const rendered = useMemo(
     () => getCandlestickVisiblePoints(points, range, overscan),
     [points, range, overscan],
@@ -459,7 +468,8 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     spacing,
     timeMode,
     pointer,
-    active,
+    axisLabels,
+    inspection,
     selected,
     inspect,
     select,
@@ -512,12 +522,9 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
       pointer.set(null);
       drag.current = null;
       acceptedTap.current = null;
-      if (activeTime !== null) {
-        setActiveTime(null);
-        onInspect?.(null);
-      }
+      inspect(null);
     }
-  }, [loading, points.length, pointer, activeTime, onInspect]);
+  }, [loading, points.length, pointer, inspect]);
   return (
     <CandleContext value={context}>
       <FamilyRoot
@@ -546,6 +553,8 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
           onKeyDown: (event) => {
             frameProps?.onKeyDown?.(event);
             if (event.defaultPrevented || event.target !== event.currentTarget || loading) return;
+            const activeTime = inspection.get();
+            const active = points.find((point) => point.time === activeTime) ?? null;
             if (
               [
                 "ArrowLeft",

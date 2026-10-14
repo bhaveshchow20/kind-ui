@@ -3,6 +3,7 @@
 import {
   type ComponentProps,
   type ComponentPropsWithRef,
+  memo,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -12,7 +13,7 @@ import {
 import { Brush, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { OutsidePlot } from "../family-root.js";
 import { cn } from "../utils.js";
-import { useCandlestick } from "./context.js";
+import { type Context, useCandlestick } from "./context.js";
 import { normalizeCandlestickViewport } from "./viewport.js";
 
 type OwnedBrush =
@@ -35,12 +36,19 @@ export type CandlestickHistoryNavigatorProps = Omit<
   brushProps?: Omit<ComponentProps<typeof Brush>, OwnedBrush>;
   overviewProps?: Omit<ComponentProps<typeof Line>, OwnedOverview>;
 };
+const emptyBrushProps: NonNullable<CandlestickHistoryNavigatorProps["brushProps"]> = {};
+const emptyOverviewProps: NonNullable<CandlestickHistoryNavigatorProps["overviewProps"]> = {};
+type NavigatorViewProps = CandlestickHistoryNavigatorProps &
+  Pick<Context, "points" | "changeViewport" | "formatTime" | "loading"> & {
+    from: number;
+    to: number;
+  };
 
 /** Full, evenly spaced observation history; gaps remain missing close values. */
 export function CandlestickHistoryNavigator({
   height = 56,
-  brushProps = {},
-  overviewProps = {},
+  brushProps = emptyBrushProps,
+  overviewProps = emptyOverviewProps,
   className,
   disabled,
   ...props
@@ -66,9 +74,42 @@ export function CandlestickHistoryNavigator({
       throw new Error(`Candlestick HistoryNavigator owns overviewProps.${key}; omit this prop`);
   }
   const context = useCandlestick();
-  const { points, changeViewport, formatTime } = context;
   const viewport = context.targetViewport ?? context.viewport;
-  const unavailable = disabled || context.loading;
+  return (
+    <HistoryNavigatorView
+      {...props}
+      height={height}
+      brushProps={brushProps}
+      overviewProps={overviewProps}
+      className={className}
+      disabled={disabled}
+      points={context.points}
+      from={viewport.from}
+      to={viewport.to}
+      loading={context.loading}
+      changeViewport={context.changeViewport}
+      formatTime={context.formatTime}
+    />
+  );
+}
+
+// Inspection and intermediate price-window frames do not change the desired
+// historical window. Keep the native history chart outside those render updates.
+const HistoryNavigatorView = memo(function HistoryNavigatorView({
+  height = 56,
+  brushProps = emptyBrushProps,
+  overviewProps = emptyOverviewProps,
+  className,
+  disabled,
+  points,
+  from,
+  to,
+  loading,
+  changeViewport,
+  formatTime,
+  ...props
+}: NavigatorViewProps) {
+  const unavailable = disabled || loading;
   const signature = useMemo(() => JSON.stringify(points.map((point) => point.identity)), [points]);
   const geometry = useRef<{ signature: string; data: HistoryTime[] } | null>(null);
   if (geometry.current === null || geometry.current.signature !== signature) {
@@ -170,8 +211,8 @@ export function CandlestickHistoryNavigator({
   }, [unavailable, points.length, currentByIdentity, finishGesture, scheduleRefresh]);
   const last = history.length - 1;
   const currentLast = points.length - 1;
-  const currentStart = Math.max(0, Math.min(currentLast, Math.ceil(viewport.from)));
-  const currentEnd = Math.max(currentStart, Math.min(currentLast, Math.floor(viewport.to)));
+  const currentStart = Math.max(0, Math.min(currentLast, Math.ceil(from)));
+  const currentEnd = Math.max(currentStart, Math.min(currentLast, Math.floor(to)));
   const startIndex = Math.max(
     0,
     Math.min(last, historyByIdentity.get(points[currentStart]?.identity ?? "") ?? currentStart),
@@ -331,4 +372,4 @@ export function CandlestickHistoryNavigator({
       </fieldset>
     </OutsidePlot>
   );
-}
+});

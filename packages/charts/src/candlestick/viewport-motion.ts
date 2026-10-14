@@ -26,8 +26,10 @@ export function useCandlestickViewportMotion(
   const finish = useCallback(() => {
     controls.current?.stop();
     controls.current = undefined;
-    displayed.current = desired.current;
-    setViewport(desired.current);
+    const next = desired.current;
+    const changed = displayed.current.from !== next.from || displayed.current.to !== next.to;
+    displayed.current = next;
+    if (changed) setViewport(next);
   }, []);
   useLayoutEffect(() => {
     controls.current?.stop();
@@ -48,9 +50,12 @@ export function useCandlestickViewportMotion(
     controls.current = animateProgress(0, 1, {
       ...transition,
       onUpdate: (progress) => {
+        const nextFrom = from.from + (target.from - from.from) * progress;
+        const nextTo = from.to + (target.to - from.to) * progress;
+        if (displayed.current.from === nextFrom && displayed.current.to === nextTo) return;
         const next = {
-          from: from.from + (target.from - from.from) * progress,
-          to: from.to + (target.to - from.to) * progress,
+          from: nextFrom,
+          to: nextTo,
         };
         displayed.current = next;
         setViewport(next);
