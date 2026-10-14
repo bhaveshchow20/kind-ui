@@ -175,9 +175,9 @@ const config = ${JSON.stringify(treemapConfig(treemapData(recipe.id), colors), n
 ${options.showLabels === false ? "" : `const textColors: Record<string, string> = ${JSON.stringify(treemapTextColors(treemapData(recipe.id), colors), null, 2)};`}
 const formatValue = (value: number) => "$" + (value / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + "k";
 export function Example() {
-  return <TreemapChart data={data} config={config} aria-label="${recipe.tag}" height={260} padding={${options.gap ?? 1.5}} animate={${animate}} formatValue={formatValue}
+  return <TreemapChart data={data} config={config} aria-label="${recipe.tag}" height={260} padding={${options.gap ?? 6}} animate={${animate}} formatValue={formatValue}
     interaction={{ kind: "category", mode: "focus", eligibleKeys: data.map(node => node.id), markActivation: "matching-legend" }}>
-    <TreemapChart.Tiles tileProps={() => ({ style: { borderRadius: ${options.radius ?? 0}${finish} } })} />
+    <TreemapChart.Tiles tileProps={() => ({ style: { borderRadius: ${options.radius ?? 4}${finish} } })} />
     ${options.showLabels === false ? "" : `<TreemapChart.Labels minWidth={18} minHeight={14} padding={5} labelProps={node => ({ style: { color: textColors[node.path[0] ?? node.id] } })}>${options.showValues === false ? "{node => node.label}" : ""}</TreemapChart.Labels>`}
     <TreemapChart.Tooltip${animate ? ' valueAnimation="shuffle"' : ""} />
     ${options.showLegend === false ? "" : "<TreemapChart.Legend />"}

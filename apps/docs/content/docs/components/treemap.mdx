@@ -28,26 +28,7 @@ import { TreemapChart } from "@kind-ui/charts";
 
 Use `{ id, label, value }` for a leaf and `{ id, label, children }` for a group. IDs stay unique and stable across updates; group totals come from their descendants. Area values must be finite and nonnegative. Zero values remain in the data even when they have no drawable area.
 
-The shared legend emphasizes categories; hide behavior is an explicit interaction option. Neither changes the underlying areas. `animate` enables the shared entrance, emphasis and cursor-tooltip motion. Values settle to their new areas immediately; `valueAnimation="shuffle"` rolls formatted tooltip digits. Reduced motion is respected.
-
-## Storage allocation
-
-For your own record shape, supply typed `accessors`. Here area shows stored GB while the separate color scale shows monthly growth. A missing growth observation differs from zero.
-
-<ChartExample id="treemap-storage" />
-<TreemapDataAlternative id="treemap-storage" />
-
-## Advanced examples
-
-Positive gross exposure keeps signed positions and P&L as separate metadata. Its custom tooltip shows those accounting measures; shares use gross exposure, not NAV.
-
-<ChartExample id="treemap-portfolio" />
-<TreemapDataAlternative id="treemap-portfolio" />
-
-Market turnover is counted once per market; color shows probability change in percentage points.
-
-<ChartExample id="treemap-events" />
-<TreemapDataAlternative id="treemap-events" />
+The shared legend emphasizes categories without reallocating area. `animate` enables shared motion; `valueAnimation="shuffle"` rolls tooltip digits. Reduced motion is respected.
 
 ## Loading State
 
@@ -72,4 +53,4 @@ Keep the chart mounted and set `loading` while data is pending. `loadingLabel` n
 
 Arrows and Home/End move between tiles and group headers. Enter/Space activates them; Escape dismisses inspection. `viewId` and `activeId` control navigation and inspection. `interaction` owns legend selection; `selectedId` remains available for legacy application actions. `rootShare`, `parentShare` and `viewShare` describe the supplied dataset, parent and current subtree respectively; zero denominators yield `null`.
 
-`layout="stable"` retains rows across value and size updates. Changing hierarchy or view creates a new layout. Use `encoding` for a separate color metric with explicit units, domain and missing-value policy. Formatters and application filtering stay under your control.
+`layout="stable"` retains rows across value and size updates. For your own record shape, use `accessors`; `encoding` colors by a separate metric. Formatters and filtering remain consumer-owned.

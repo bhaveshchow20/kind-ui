@@ -100,7 +100,7 @@ export function CloudSpendTreemap({
         animate
         loading={loading}
         loadingLabel="Loading cloud spend"
-        padding={1.5}
+        padding={6}
         formatValue={(value) => currency.format(value)}
       >
         <TreemapChart.Tiles />
@@ -115,8 +115,7 @@ export function CloudSpendTreemap({
         <TreemapChart.Breadcrumbs rootLabel="All services" />
       </TreemapChart>
       <p className="m-0 text-xs text-muted-foreground">
-        Illustrative monthly billing. Area represents spend; color identifies a cost category.
-        Select a category to focus it; inspect any service for its value and full category path.
+        Illustrative monthly billing · Select a category or inspect a service.
       </p>
     </section>
   );

@@ -6,7 +6,9 @@ import { publicPath } from "../lib/routing.mjs";
 import { candidatePromptSource } from "./prompt-source.mjs";
 
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
-const bundles = JSON.parse(readFileSync("generated/treemap-examples.json", "utf8"));
+const bundles = {
+  treemap: JSON.parse(readFileSync("generated/treemap-examples.json", "utf8")).treemap,
+};
 const api = JSON.parse(readFileSync("generated/api.json", "utf8"));
 const rootReference = "TreemapRootReference";
 const artifactDirectory = "artifacts/treemap";
@@ -113,29 +115,6 @@ async function checkAlternatives(page) {
       );
     }
   }
-  for (const [id, zeroID, zeroLabel] of [
-    ["treemap-portfolio", "closed", "Closed position"],
-    ["treemap-events", "solar-paused", "Paused market"],
-    ["treemap-storage", "retired", "Retired storage"],
-  ]) {
-    const card = page.locator(`[data-component="${id}"]`);
-    await expect(tile(card, zeroID)).toHaveCount(0);
-    const table = page.getByRole("table", {
-      name: bundles[id].dataAlternative.caption,
-      exact: true,
-    });
-    const row = table.getByRole("row").filter({ hasText: zeroLabel });
-    await expect(row).toHaveCount(1);
-    await expect(row).toContainText("0");
-    await expect(row).toContainText("Unavailable");
-  }
-  const storage = page.getByRole("table", {
-    name: bundles["treemap-storage"].dataAlternative.caption,
-    exact: true,
-  });
-  await expect(storage.getByRole("row").filter({ hasText: "Planned services" })).toContainText(
-    "Group total",
-  );
 }
 
 async function checkBounds(page, width, theme) {
@@ -279,26 +258,6 @@ try {
     id: "treemap",
     currencyAndStablePeriodIdentity: "passed",
     escape: "passed",
-  });
-
-  const portfolio = page.locator('[data-component="treemap-portfolio"]');
-  await tile(portfolio, "ridge").focus();
-  await expect(portfolio.getByRole("tooltip")).toContainText("Ridge: $100k gross");
-  await expect(portfolio.getByRole("tooltip")).toContainText("Signed position: $-100.0k");
-  await tile(portfolio, "field").focus();
-  await expect(portfolio.getByRole("tooltip")).toContainText("P&L: Unavailable");
-  const events = page.locator('[data-component="treemap-events"]');
-  await tile(events, "rail-opening").focus();
-  await expect(events.getByRole("tooltip")).toContainText("-1.5 pp");
-  await expect(events.getByRole("tooltip")).toContainText("$18k");
-  const storage = page.locator('[data-component="treemap-storage"]');
-  await tile(storage, "logs").focus();
-  await expect(storage.getByRole("tooltip")).toContainText("-8 GB");
-  await tile(storage, "backups").focus();
-  await expect(storage.getByRole("tooltip")).toContainText("Change unavailable");
-  evidence.inspection.push({
-    id: "portfolio/events/storage",
-    originalSignedMetadataAndUnits: "passed",
   });
 
   await primary.scrollIntoViewIfNeeded();

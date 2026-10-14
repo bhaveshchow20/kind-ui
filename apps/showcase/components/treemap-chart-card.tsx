@@ -60,7 +60,7 @@ export function TreemapChartCard({
         config={config}
         aria-label={recipe.tag}
         data={data}
-        padding={options.gap ?? 1.5}
+        padding={options.gap ?? 6}
         animate={animate && entered && !reduced}
         formatValue={formatValue}
         interaction={{
@@ -73,7 +73,7 @@ export function TreemapChartCard({
         <TreemapChart.Tiles
           tileProps={() => ({
             style: {
-              borderRadius: options.radius ?? 0,
+              borderRadius: options.radius ?? 4,
               ...(material === "clay"
                 ? { boxShadow: "inset 0 1px 0 #ffffff60, inset 0 -2px 3px #00000012" }
                 : material === "glow"

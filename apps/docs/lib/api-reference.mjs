@@ -24,7 +24,7 @@ const presentation = {
       height: "280",
       empty: '"No positive values"',
       depth: "Infinity",
-      padding: "1.5",
+      padding: "6",
       groupHeaderHeight: "0",
       layout: '"stable"',
       animate: "false",
