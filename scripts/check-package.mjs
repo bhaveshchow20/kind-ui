@@ -732,13 +732,25 @@ try {
   await production("index.html", "packed-box-plot");
   console.log("Box plot tarball: public-only strict NodeNext/Bundler and production build passed");
 
-  for (const file of ["host.tsx", "selection-host.tsx", "main.tsx", "index.html"])
+  for (const file of [
+    "host.tsx",
+    "selection-host.tsx",
+    "performance-host.tsx",
+    "main.tsx",
+    "index.html",
+  ])
     await copyFixture("candlestick", file);
   await copyFile(
     join(root, "tests/candlestick-consumer.tsx"),
     join(consumer, "candlestick-consumer.tsx"),
   );
-  await typecheck(["host.tsx", "selection-host.tsx", "main.tsx", "candlestick-consumer.tsx"]);
+  await typecheck([
+    "host.tsx",
+    "selection-host.tsx",
+    "performance-host.tsx",
+    "main.tsx",
+    "candlestick-consumer.tsx",
+  ]);
   await production("index.html", "packed-candlestick");
   await production("index.html", "packed-candlestick-development", true);
   console.log(

@@ -75,8 +75,8 @@ test("area pattern fixture wiring stays inside the public host import guard", ()
 
 import "./line-dash-source.test.mjs";
 
-test("candlestick fixtures retain public-only imports including the selection host", () => {
-  for (const file of ["main.tsx", "host.tsx", "selection-host.tsx"]) {
+test("candlestick fixtures retain public-only imports including selection and performance hosts", () => {
+  for (const file of ["main.tsx", "host.tsx", "selection-host.tsx", "performance-host.tsx"]) {
     assertCompositionConsumerSource(
       readFileSync(new URL(`../tests/fixtures/candlestick/${file}`, import.meta.url), "utf8"),
     );

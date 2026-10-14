@@ -11,6 +11,7 @@ export function assertLineConsumerSource(source) {
     "recharts",
     "./host.js",
     "./selection-host.js",
+    "./performance-host.js",
     "./presentation.js",
     "./use-reduced-motion.js",
     "./presentation.css",
