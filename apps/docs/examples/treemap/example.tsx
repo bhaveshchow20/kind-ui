@@ -52,20 +52,18 @@ export function CloudSpendTreemap({ state = "ready" }: { state?: "ready" | "load
   const loading = state === "loading";
   return (
     <section className="space-y-4">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs text-muted-foreground">Cloud infrastructure</p>
-          <h3 className="m-0 text-base font-medium">Monthly spend</h3>
+      {!loading && (
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs text-muted-foreground">Cloud infrastructure</p>
+            <h3 className="m-0 text-base font-medium">Monthly spend</h3>
+          </div>
+          <div className="w-36 shrink-0 text-right">
+            <p className="m-0 text-xl font-semibold tabular-nums">{currency.format(76300)}</p>
+            <p className="m-0 text-xs text-muted-foreground">September 2026 · USD</p>
+          </div>
         </div>
-        <div className="w-36 shrink-0 text-right">
-          <p aria-hidden={loading || undefined} className="m-0 text-xl font-semibold tabular-nums">
-            {loading ? "—" : currency.format(76300)}
-          </p>
-          <p className="m-0 text-xs text-muted-foreground">
-            {loading ? "Loading…" : "September 2026 · USD"}
-          </p>
-        </div>
-      </div>
+      )}
       <TreemapChart
         data={data}
         config={config}
