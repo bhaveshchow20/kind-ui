@@ -274,6 +274,7 @@ try {
     primary.locator('[data-kind-ui="treemap-group"], [data-kind-ui="treemap-group-header"]'),
   ).toHaveCount(0);
   await expect(primary.locator(tileSelector)).toHaveCount(10);
+  await primary.getByRole("combobox", { name: "Billing period", exact: true }).focus();
   await tile(primary, "api").focus();
   await expect(primary.getByRole("tooltip")).toHaveAttribute("aria-label", "Compute / API");
   const compute = primary.locator(
