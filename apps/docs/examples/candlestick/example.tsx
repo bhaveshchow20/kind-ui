@@ -259,7 +259,7 @@ export function AssetCandlestickChart({ state = "ready" }: { state?: "ready" | "
           minHeight: 20,
         }}
       >
-        {candle && (
+        {state !== "loading" && candle && (
           <>
             <span>{time(candle.time)} UTC</span>
             {(["open", "high", "low", "close"] as const).map((key) => (
