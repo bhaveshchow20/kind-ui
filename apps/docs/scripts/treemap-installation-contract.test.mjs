@@ -29,10 +29,17 @@ test("Treemap CLI and manual installation use the canonical composition", () => 
   assert.equal(itemNameFor("treemap"), "treemap-chart");
   assert.ok(registryItems.some((item) => item.name === "treemap-chart"));
   const result = installationFor(bundle);
-  assert.equal(result.available, false);
-  assert.equal(result.command, "");
-  assert.equal(result.steps.length, 0);
-  assert.match(installationMarkdown(bundle), /pending the next Core release/);
+  assert.equal(result.available, true);
+  assert.equal(result.command, "npx shadcn@latest add @kind-ui/treemap-chart");
+  assert.equal(result.steps.length, 4);
+  assert.equal(result.steps[0].code, "npm install @kind-ui/charts motion recharts");
+  assert.match(
+    result.steps[3].code,
+    /import \{ CloudSpendTreemap \} from "@\/components\/treemap-chart"/,
+  );
+  assert.match(installationMarkdown(bundle), /### CLI[\s\S]*### Manual/);
+  assert.doesNotMatch(installationMarkdown(bundle), /pending|after release/);
+  assert.doesNotMatch(result.steps[2].code, /<TreemapChart.Tiles \/>\n\n/);
   assert.doesNotMatch(installationMarkdown(bundle), /@\^0\.6\.0/);
   const page = read("content/docs/components/treemap.mdx");
   assert.ok(page.includes('## Installation\n\n<ChartInstallation id="treemap" />'));
@@ -48,7 +55,7 @@ test("Treemap setup files stay public while validation installs the exact local 
     const manifest = JSON.parse(bundle.files["package.json"]);
     assert.equal(manifest.dependencies["@kind-ui/charts"], "^0.5.0");
     assert.equal(satisfies("0.5.0", manifest.dependencies["@kind-ui/charts"]), true);
-    assert.equal(satisfies("0.5.99", manifest.dependencies["@kind-ui/charts"]), false);
+    assert.equal(satisfies("0.6.0", manifest.dependencies["@kind-ui/charts"]), false);
     publicCopy(bundle.files["README.md"], `${example.id} README`);
     assert.ok(!Object.keys(bundle.files).some((file) => /\.tgz$|provenance/.test(file)));
     const verified = verificationFiles(bundle);

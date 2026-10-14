@@ -2,7 +2,6 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { createGenerator, createProject } from "fumadocs-typescript";
-import { gte } from "semver";
 import ts from "typescript";
 import { registryItems } from "../../../registry/catalog.mjs";
 import { docsProvenanceSchema, parseJson } from "../../../scripts/tooling-schemas.mjs";
@@ -93,11 +92,6 @@ const loadingVariants = new Map(
     .filter((family) => family.loadingVariant)
     .map((family) => [family.id, family.loadingVariant]),
 );
-const minimumCoreVersions = new Map(
-  registryItems
-    .filter((item) => item.minimumCoreVersion)
-    .map((item) => [item.exampleId, item.minimumCoreVersion]),
-);
 const installationNames = new Map(registryItems.map(({ exampleId, name }) => [exampleId, name]));
 for (const example of allExamples) {
   if (!Object.hasOwn(dataLabels, example.id))
@@ -150,8 +144,6 @@ for (const example of allExamples) {
       source: exampleSource.replace(literalDefault, `${loadingVariant.prop} = true`),
     };
   }
-  const minimumCoreVersion = minimumCoreVersions.get(example.family);
-  const coreAvailable = !minimumCoreVersion || gte(provenance.version, minimumCoreVersion);
   const exampleManifest = manifest;
   const files = {
     "package.json": `${JSON.stringify(exampleManifest, null, 2)}\n`,
@@ -188,7 +180,7 @@ for (const example of allExamples) {
       '@import "tailwindcss";\n@source "../node_modules/@kind-ui/charts/dist";\n\n' +
       read("examples/shared/example.css"),
     [`src/examples/${example.id}/example.tsx`]: exampleSource,
-    "README.md": `# ${example.title} — complete consumer\n\n${coreAvailable ? "Install dependencies with npm install, then run npm run dev or npm run build." : "Treemap is pending the next Core release. Published Core does not include it; these files reflect the feature source and require that source package for review."}\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports. Preserve the documented family composition and visibility ownership. Build the included Tailwind v4 CSS, which scans the installed chart package with @source. In an existing app, add an @source path to node_modules/@kind-ui/charts/dist relative to your CSS file.\n`,
+    "README.md": `# ${example.title} — complete consumer\n\nInstall dependencies with npm install, then run npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports. Preserve the documented family composition and visibility ownership. Build the included Tailwind v4 CSS, which scans the installed chart package with @source. In an existing app, add an @source path to node_modules/@kind-ui/charts/dist relative to your CSS file.\n`,
     LICENSE: read("../../LICENSE"),
   };
 
@@ -208,8 +200,6 @@ for (const example of allExamples) {
   const registryItemName = installationNames.get(example.id);
   bundles[example.id] = {
     ...example,
-    ...(minimumCoreVersion ? { minimumCoreVersion } : {}),
-    coreAvailable,
     ...(registryItemName === undefined ? {} : { registryItemName }),
     ...(dataAlternative ? { dataAlternative } : {}),
     ...(variants

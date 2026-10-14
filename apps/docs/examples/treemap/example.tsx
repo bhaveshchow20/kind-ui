@@ -76,7 +76,6 @@ export function CloudSpendTreemap({ state = "ready" }: { state?: "ready" | "load
         formatValue={(value) => currency.format(value)}
       >
         <TreemapChart.Tiles />
-
         <TreemapChart.Tooltip valueAnimation="shuffle" />
         <TreemapChart.Legend />
       </TreemapChart>

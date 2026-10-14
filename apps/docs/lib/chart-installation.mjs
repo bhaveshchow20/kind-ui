@@ -1,22 +1,10 @@
-/** @typedef {{id: string, family?: string | undefined, version: string, coreAvailable?: boolean | undefined, minimumCoreVersion?: string | undefined, packageStatus?: string | undefined, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
+/** @typedef {{id: string, family?: string | undefined, version: string, packageStatus?: string | undefined, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
 /** @typedef {{title: string, description: string, code: string, language: "sh" | "css" | "tsx", filename: string}} InstallationStep */
 
 /** @param {InstallationBundle} bundle */
 export function installationFor(bundle) {
   const itemName = bundle.registryItemName;
   if (!itemName) throw new Error(`No registry installation for example ${bundle.id}`);
-  if (
-    bundle.coreAvailable === false ||
-    (bundle.minimumCoreVersion && !gte(bundle.version, bundle.minimumCoreVersion))
-  )
-    return {
-      available: false,
-      notice:
-        "Treemap is pending the next Core release. Published Core does not include it yet. Installation commands will appear after release.",
-      itemName,
-      command: "",
-      steps: /** @type {InstallationStep[]} */ ([]),
-    };
   const source = bundle.files[`src/examples/${bundle.id}/example.tsx`];
   if (source === undefined) throw new Error(`Missing installation source: ${bundle.id}`);
   const componentName = source.match(/export function (\w+)/)?.[1];
@@ -56,7 +44,6 @@ export function installationFor(bundle) {
   ];
   return {
     available: true,
-    notice: undefined,
     itemName,
     command: `npx shadcn@latest add @kind-ui/${itemName}`,
     steps,
@@ -66,7 +53,6 @@ export function installationFor(bundle) {
 /** @param {InstallationBundle} bundle */
 export function installationMarkdown(bundle) {
   const installation = installationFor(bundle);
-  if (!installation.available) return `${installation.notice}\n`;
   const { command, steps } = installation;
   return (
     "### CLI\n\nRun this command in your initialized shadcn project:\n\n" +
@@ -80,5 +66,3 @@ export function installationMarkdown(bundle) {
       .join("\n")
   );
 }
-
-import { gte } from "semver";
