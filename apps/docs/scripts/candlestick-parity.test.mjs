@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
@@ -280,25 +281,169 @@ test("streaming history agrees with catalog observations and immutable updates r
     { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
   ).outputText;
   const { history, advance } = runInNewContext(code);
+  const showcaseSource = readFileSync(
+    new URL("../../showcase/components/market-candlestick-chart.tsx", import.meta.url),
+    "utf8",
+  );
+  const showcaseParsed = ts.createSourceFile(
+    "market.tsx",
+    showcaseSource,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  for (const name of ["history", "advance"]) {
+    const definition = (ast) =>
+      ast.statements
+        .find((node) => ts.isFunctionDeclaration(node) && node.name?.text === name)
+        ?.getText(ast);
+    assert.equal(
+      definition(showcaseParsed),
+      definition(parsed),
+      `Docs and Showcase ${name} must share the exact simulated observations`,
+    );
+  }
   const initial = history();
   const catalog = JSON.parse(
     readFileSync(new URL("../generated/all-examples.json", import.meta.url), "utf8"),
   ).candlestick;
   assert.deepEqual(JSON.parse(JSON.stringify(initial)), catalog.dataAlternative.rows);
+  const visible = initial.slice(-50);
+  assert.ok(
+    Math.abs(visible.at(-1).close - visible[0].open) < 10,
+    "initial window must not imply a persistent upward trend",
+  );
   let feed = { rows: initial, tick: 0 };
-  for (let tick = 1; tick <= 24; tick++) {
+  const moves = [];
+  const newIntervalMoves = [];
+  for (let tick = 1; tick <= 240; tick++) {
     const before = JSON.stringify(feed);
     const next = advance(feed);
+    moves.push(next.rows.at(-1).close - feed.rows.at(-1).close);
+    if (next.rows.length > feed.rows.length)
+      newIntervalMoves.push(next.rows.at(-1).close - next.rows.at(-1).open);
     assert.equal(JSON.stringify(feed), before);
+    assert.equal(next.rows[0], feed.rows[0]);
     assert.notEqual(next.rows, feed.rows);
     assert.equal(next.rows.length, initial.length + Math.floor(tick / 8));
     for (const [index, row] of next.rows.entries()) {
       assert.ok(row.low <= Math.min(row.open, row.close));
       assert.ok(row.high >= Math.max(row.open, row.close));
       assert.ok(row.volume >= 0);
+      assert.ok(row.low > 0);
       if (index) assert.equal(row.time - next.rows[index - 1].time, 60000);
     }
     assert.equal(next.rows.at(-1).state, "partial");
     feed = next;
+  }
+  assert.ok(moves.slice(0, 2).some((move) => move > 0));
+  assert.ok(
+    moves.slice(0, 2).some((move) => move < 0),
+    "the first two live steps must show both price directions",
+  );
+  assert.ok(moves.filter((move) => move > 0).length > 90);
+  assert.ok(moves.filter((move) => move < 0).length > 90);
+  assert.ok(newIntervalMoves.filter((move) => move > 0).length > 10);
+  assert.ok(newIntervalMoves.filter((move) => move < 0).length > 10);
+});
+
+test("header inspection preserves every memoized plot input while stream updates still reach the plot", () => {
+  const require = createRequire(import.meta.url);
+  const React = require("react");
+  for (const [path, exported, inspectedIndex, inputs] of [
+    ["../examples/candlestick/example.tsx", "AssetCandlestickChart", 1, {}],
+    [
+      "../../showcase/components/market-candlestick-chart.tsx",
+      "MarketCandlestickChart",
+      2,
+      { colors: ["green", "red", "gray"], animate: true },
+    ],
+  ]) {
+    const text = readFileSync(new URL(path, import.meta.url), "utf8");
+    const emitted = ts.transpileModule(text, {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+        jsx: ts.JsxEmit.ReactJSX,
+      },
+    }).outputText;
+    let cursor = 0;
+    let inspected = null;
+    let feed;
+    let update;
+    const actions = [];
+    const setters = [];
+    const callbacks = [];
+    let callbackIndex = 0;
+    const hooks = {
+      ...React,
+      useState(initial) {
+        const index = cursor++;
+        setters[index] ??= (action) => {
+          actions.push(action);
+        };
+        return [index === inspectedIndex ? inspected : initial, setters[index]];
+      },
+      useReducer(reducer, input, initialize) {
+        feed ??= initialize(input);
+        update = reducer;
+        return [feed, () => {}];
+      },
+      useEffect() {},
+      useCallback(callback) {
+        const index = callbackIndex++;
+        callbacks[index] ??= callback;
+        return callbacks[index];
+      },
+    };
+    const exports = {};
+    runInNewContext(emitted, {
+      exports,
+      require: (name) =>
+        name === "react" ? hooks : name === "@kind-ui/charts" ? {} : require(name),
+    });
+    const render = () => {
+      cursor = 0;
+      callbackIndex = 0;
+      return exports[exported](inputs);
+    };
+    const plot = (node) => {
+      if (!node || typeof node !== "object" || !node.props) return null;
+      if (node?.type?.$$typeof === Symbol.for("react.memo")) return node;
+      for (const child of [node?.props?.children].flat()) {
+        const found = plot(child);
+        if (found) return found;
+      }
+      return null;
+    };
+    const first = plot(render());
+    assert.ok(first, `${exported} must isolate its expensive plot with React.memo`);
+    const current = { time: feed.rows[20].time };
+    first.props.onInspect({ ...current, cursorPrice: 2400 });
+    assert.equal(
+      actions.at(-1)(current),
+      current,
+      `${exported} must ignore free cursor movement within the same interval`,
+    );
+    const different = { time: feed.rows[21].time };
+    first.props.onInspect(different);
+    assert.equal(actions.at(-1)(current), different);
+    first.props.onInspect(null);
+    assert.equal(actions.at(-1)(current), null);
+    inspected = { time: feed.rows[20].time };
+    const hovered = plot(render());
+    for (const key of Object.keys(first.props))
+      assert.equal(
+        hovered.props[key],
+        first.props[key],
+        `${exported} hover changed plot input ${key}`,
+      );
+    feed = update(feed);
+    const advanced = plot(render());
+    assert.notEqual(
+      advanced.props.rows,
+      first.props.rows,
+      `${exported} must render updated observations`,
+    );
   }
 });

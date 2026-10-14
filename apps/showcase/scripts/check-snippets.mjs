@@ -90,7 +90,8 @@ try {
             assert.match(source, /<CandlestickControls/);
             assert.match(source, /<CandlestickHistoryNavigator/);
             assert.match(source, /data-kind-ui="candlestick-data-alternative"/);
-            assert.match(source, /feed\.rows\.map/);
+            assert.match(source, /rows=\{feed.rows\}/);
+            assert.match(source, /rows\.map\(\(row\)/);
             assert.match(source, /selection=\{selection\}\s+onSelectionChange=/);
             assert.doesNotMatch(source, /<CandlestickDataTable/);
             assert.match(source, /var\(--chart-grid, #e5e7eb\)/);
@@ -161,11 +162,14 @@ try {
         assert.doesNotMatch(source, /<\w+Chart\.Grid\b/, `${recipe.id} omits the explicit grid`);
       if (recipe.family === "Candlestick") {
         assert.match(source, /"width":40/);
-        assert.match(source, /maxBarSize=\{options.width \?\? 12\}/);
+        assert.match(source, /width=\{options.width \?\? 12\}/);
+        assert.match(source, /maxBarSize=\{width \?\? 12\}/);
         assert.match(source, /"strokeWidth":4/);
-        assert.match(source, /strokeWidth: options.strokeWidth \?\? 1.5/);
+        assert.match(source, /strokeWidth=\{options.strokeWidth \?\? 1.5\}/);
+        assert.match(source, /strokeWidth: strokeWidth \?\? 1.5/);
         assert.match(source, /"showLabels":false/);
-        assert.match(source, /options.showLabels === false \? false/);
+        assert.match(source, /showLabels=\{options.showLabels \?\? true\}/);
+        assert.match(source, /showLabels === false \? false/);
       }
       await writeFile(file, source);
       files.push(file);

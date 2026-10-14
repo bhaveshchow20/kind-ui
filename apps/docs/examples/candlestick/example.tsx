@@ -14,7 +14,7 @@ import {
   CandlestickYAxis,
   type SeriesConfig,
 } from "@kind-ui/charts";
-import { useEffect, useReducer, useState } from "react";
+import { memo, useCallback, useEffect, useReducer, useState } from "react";
 
 type Candle = {
   time: number;
@@ -48,13 +48,13 @@ function history(): Candle[] {
   };
   return Array.from({ length: 240 }, (_, index) => {
     const open = close;
-    const move = (random() - 0.48) * 3.8 + Math.sin(index * 0.063) * 0.6;
-    close = round(open + move);
+    const move = (random() - 0.5) * 3.8 + Math.sin(index * 0.73) * 0.3;
+    close = Math.max(1, round(open + move));
     return {
       time: start + index * 60_000,
       open,
       high: round(Math.max(open, close) + 0.3 + random() * 1.8),
-      low: round(Math.min(open, close) - 0.3 - random() * 1.6),
+      low: Math.max(0.01, round(Math.min(open, close) - 0.3 - random() * 1.6)),
       close,
       volume: round(40 + Math.abs(move) * 24 + random() * 85),
       state: index === 239 ? "partial" : "final",
@@ -66,7 +66,10 @@ function advance(feed: Feed): Feed {
   const latest = feed.rows.at(-1);
   if (!latest) return feed;
   const tick = feed.tick + 1;
-  const close = round(latest.close + Math.sin(tick * 1.41) * 0.56 + Math.cos(tick * 0.37) * 0.31);
+  const close = Math.max(
+    1,
+    round(latest.close + Math.sin(tick * 2.17) * 0.7 + Math.cos(tick * 0.91) * 0.4),
+  );
   if (tick % 8 === 0)
     return {
       tick,
@@ -114,10 +117,79 @@ const timeFormatter = new Intl.DateTimeFormat("en-GB", {
 const money = (value: number) => priceFormatter.format(value);
 const time = (value: number | string) => timeFormatter.format(new Date(Number(value)));
 
+const MarketPlot = memo(function MarketPlot({
+  rows,
+  loading,
+  onInspect,
+}: {
+  rows: Candle[];
+  loading: boolean;
+  onInspect: (point: CandlestickPoint<Candle> | null) => void;
+}) {
+  return (
+    <CandlestickChart<Candle>
+      config={config}
+      data={rows}
+      timeMode="epoch-ms"
+      spacing="ordinal"
+      defaultViewport={{ from: 189.5, to: 239.5 }}
+      followLatest
+      onInspect={onInspect}
+      height={340}
+      loading={loading}
+      loadingLabel="Loading simulated ETH / USD history"
+      aria-label="Simulated ETH / USD one minute candles with volume and historical navigator"
+      formatTime={time}
+      formatPrice={money}
+      formatVolume={(value) => `${value.toFixed(1)} ETH`}
+      animate
+      margin={{ top: 12, right: 8, bottom: 4, left: 0 }}
+    >
+      <CandlestickGrid
+        vertical={false}
+        strokeDasharray="3 3"
+        stroke="currentColor"
+        strokeOpacity={0.1}
+      />
+      <CandlestickXAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={32} />
+      <CandlestickYAxis orientation="right" axisLine={false} tickLine={false} width={76} />
+      <CandlestickSeries
+        seriesKey="price"
+        rising={rising}
+        falling={falling}
+        unchanged={unchanged}
+        maxBarSize={12}
+      />
+      <CandlestickVolume
+        seriesKey="volume"
+        rising={rising}
+        falling={falling}
+        unchanged={unchanged}
+        fillOpacity={0.78}
+        axisProps={{ hide: true }}
+      />
+      <CandlestickCurrentPrice
+        labelTextColor="var(--candlestick-label-text, #fff)"
+        seriesKey="price"
+        rising={rising}
+        falling={falling}
+        unchanged={unchanged}
+      />
+      <CandlestickCrosshair strokeOpacity={0.5} />
+      <CandlestickContent className="sr-only" />
+      <CandlestickControls />
+      <CandlestickHistoryNavigator />
+    </CandlestickChart>
+  );
+});
+
 export function AssetCandlestickChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   const [feed, step] = useReducer(advance, undefined, () => ({ rows: history(), tick: 0 }));
   const [running, setRunning] = useState(true);
   const [inspected, setInspected] = useState<CandlestickPoint<Candle> | null>(null);
+  const onInspect = useCallback((point: CandlestickPoint<Candle> | null) => {
+    setInspected((current) => (current?.time === point?.time ? current : point));
+  }, []);
   useEffect(() => {
     if (!running || state === "loading") return;
     const interval = setInterval(step, 700);
@@ -204,59 +276,7 @@ export function AssetCandlestickChart({ state = "ready" }: { state?: "ready" | "
           </>
         )}
       </div>
-      <CandlestickChart<Candle>
-        config={config}
-        data={feed.rows}
-        timeMode="epoch-ms"
-        spacing="ordinal"
-        defaultViewport={{ from: 189.5, to: 239.5 }}
-        followLatest
-        onInspect={setInspected}
-        height={340}
-        loading={state === "loading"}
-        loadingLabel="Loading simulated ETH / USD history"
-        aria-label="Simulated ETH / USD one minute candles with volume and historical navigator"
-        formatTime={time}
-        formatPrice={money}
-        formatVolume={(value) => `${value.toFixed(1)} ETH`}
-        animate
-        margin={{ top: 12, right: 8, bottom: 4, left: 0 }}
-      >
-        <CandlestickGrid
-          vertical={false}
-          strokeDasharray="3 3"
-          stroke="currentColor"
-          strokeOpacity={0.1}
-        />
-        <CandlestickXAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={32} />
-        <CandlestickYAxis orientation="right" axisLine={false} tickLine={false} width={76} />
-        <CandlestickSeries
-          seriesKey="price"
-          rising={rising}
-          falling={falling}
-          unchanged={unchanged}
-          maxBarSize={12}
-        />
-        <CandlestickVolume
-          seriesKey="volume"
-          rising={rising}
-          falling={falling}
-          unchanged={unchanged}
-          fillOpacity={0.78}
-          axisProps={{ hide: true }}
-        />
-        <CandlestickCurrentPrice
-          labelTextColor="var(--candlestick-label-text, #fff)"
-          seriesKey="price"
-          rising={rising}
-          falling={falling}
-          unchanged={unchanged}
-        />
-        <CandlestickCrosshair strokeOpacity={0.5} />
-        <CandlestickContent className="sr-only" />
-        <CandlestickControls />
-        <CandlestickHistoryNavigator />
-      </CandlestickChart>
+      <MarketPlot rows={feed.rows} loading={state === "loading"} onInspect={onInspect} />
     </div>
   );
 }
