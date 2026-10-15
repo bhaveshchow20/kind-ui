@@ -285,11 +285,11 @@ are scoped to their chart. Consumer controls own their focus, labels and semanti
 Use explicit `CandlestickChart` children, following the other chart families:
 `.Series`, `.Volume`, `.Overlay`, `.Mark`, `.XAxis`, `.YAxis`, `.Grid`, `.Legend`,
 `.Background`, `.ReferenceLine`, `.Crosshair`, `.CurrentPrice`, `.Tooltip`,
-`.Content`, `.Controls`, `.HistoryNavigator`, and `.DataTable` (`.Table` alias).
+`.Readout`, `.Content`, `.Controls`, `.HistoryNavigator`, and `.Table`.
 Grid, Legend and Background reuse the shared components; candle axes reuse the
 shared presentation defaults and retain their time/price geometry. Consumer
 presentation props override those defaults. Standalone Candlestick exports remain
-available. Content retains the candle-specific `(point, selection)` readout.
+available. `Content` places arbitrary HTML outside the plot, like other families. `Readout` follows inspection, then the latest nongap observation; selection remains independent.
 
 ### Records and financial meaning
 
@@ -374,20 +374,20 @@ values; only computed padding is clipped to bounds. Fixed domains must fit the
 bounds, and log domains/bounds must be positive. Only explicitly supplied
 overlay values contribute to autoscaling.
 
-The default `CandlestickDatum` type requires complete OHLC fields or an explicit
+The default `CandlestickRecord` type requires complete OHLC fields or an explicit
 `gap: true` record without price/volume fields. Custom row types remain supported
 through the existing accessors.
 
 ### Composition and chart props
 
 The owning chart renders only the parts you include. Every part also has a named
-export, such as `CandlestickSeries` or `CandlestickDataTable`. Use explicit axes
+export, such as `CandlestickSeries` or `CandlestickTable`. Use explicit axes
 alongside a Series; there is no separate Root or Plot wrapper.
 
 ```tsx
-import { CandlestickChart, type CandlestickDatum } from "@kind-ui/charts";
+import { CandlestickChart, type CandlestickRecord } from "@kind-ui/charts";
 
-const observations: CandlestickDatum[] = [
+const observations: CandlestickRecord[] = [
   { time: "2026-10-01", open: 40, high: 44, low: 38, close: 43, volume: 120 },
   { time: "2026-10-02", open: 43, high: 45, low: 39, close: 41, volume: 95 },
   { time: "2026-10-05", gap: true },
@@ -416,8 +416,8 @@ const observations: CandlestickDatum[] = [
   />
   <CandlestickChart.Volume seriesKey="volume" axisProps={{ hide: true }} />
   <CandlestickChart.Crosshair />
-  <CandlestickChart.Content />
-  <CandlestickChart.DataTable caption="Illustrative trade OHLC in USD and volume in units" />
+  <CandlestickChart.Readout />
+  <CandlestickChart.Table caption="Illustrative trade OHLC in USD and volume in units" />
 </CandlestickChart>;
 ```
 
@@ -478,13 +478,9 @@ provided overlay value is validated before viewport filtering; included values
 also obey caller bounds. Default X-axis ticks use visible observation coordinates
 and skip explicit gaps. Caller-provided ticks and formatters retain control.
 
-`Crosshair` accepts SVG group props and spans both panes. Its default `mode="free"` follows pointer X/Y while `onInspect` independently reports the nearest original candle. `mode="snap"` follows the inspected candle center and close. Keyboard inspection anchors to the candle close in either mode. `showLabels` defaults to true; `labelProps` customizes time/price text. Free elapsed-time labels use the rendered native inverse scale; ordinal labels identify the nearest supplied observation. `Content` renders an
-accessible readout, with optional `children(point, selection)`, `className`, and
-HTML `frameProps`. `Tooltip` uses the same fields/custom renderer while a point
-is inspected or selected, with the shared themed tooltip frame, `role="tooltip"`,
-and `maxWidth` (default 260 pixels). A Tooltip alone announces politely; when
-Content is composed, Tooltip announcements turn off and Content owns the polite
-status announcement. `DataTable` requires a `caption` and retains native table
+`Crosshair` accepts SVG group props and spans both panes. Its default `mode="free"` follows pointer X/Y while `onInspect` independently reports the nearest original candle. `mode="snap"` follows the inspected candle center and close. Keyboard inspection anchors to the candle close in either mode. `showLabels` defaults to true; `labelProps` customizes time/price text. Free elapsed-time labels use the rendered native inverse scale; ordinal labels identify the nearest supplied observation. `Readout` renders persistent OHLC, volume, state and percentage change with native div props/ref or custom `children(point, selection)`. It falls back to the latest nongap observation when inspection ends. `valueAnimation="shuffle"` reuses the shared formatted digit animation and respects reduced motion. Live latest updates are not automatically announced; inspected readouts announce politely.
+
+`Tooltip` is optional, follows the cursor and anchors beside the candle for keyboard inspection. It shares Readout's formatter/row/number presentation, accepts native div props/ref and `maxWidth` (default 260). When a Readout is composed, Tooltip announcements turn off. `Table` requires a `caption` and retains native table
 props/ref. It shows the full series, explicit gaps, missing values, state and
 selection. Add `renderMetadata(point)` and optional `metadataLabel` (default
 `"Metadata"`) to expose source, interval, currency, adjustment policy, or quality

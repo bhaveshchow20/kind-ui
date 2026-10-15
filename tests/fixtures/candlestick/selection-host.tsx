@@ -1,12 +1,12 @@
 import {
   CandlestickChart,
-  type CandlestickDatum,
+  type CandlestickRecord,
   type CandlestickTime,
   type SeriesConfig,
 } from "@kind-ui/charts";
 import { useCallback, useRef, useState } from "react";
 
-const observations: CandlestickDatum[] = [
+const observations: CandlestickRecord[] = [
   { time: 1000, open: 10, high: 14, low: 8, close: 12, volume: 4 },
   { time: 2000, open: 12, high: 15, low: 11, close: 13, volume: 6 },
   { time: 3000, open: 13, high: 16, low: 10, close: 11, volume: 5 },
@@ -46,6 +46,22 @@ export function CandlestickSelectionHost() {
       <button type="button" onClick={() => setDefaultSelection(3000)}>
         Change default selection
       </button>
+      {params.has("default-readout") && (
+        <button
+          type="button"
+          onClick={() =>
+            setData((old) =>
+              old.map((row) =>
+                row.time === 3000 && !row.gap
+                  ? { ...row, close: row.close + 1, high: Math.max(row.high, row.close + 1) }
+                  : row,
+              ),
+            )
+          }
+        >
+          Update latest
+        </button>
+      )}
       <output aria-label="Selection callbacks">{JSON.stringify(changes)}</output>
       <button type="button" onClick={() => setLoading((old) => !old)}>
         Toggle loading
@@ -106,14 +122,30 @@ export function CandlestickSelectionHost() {
               : {})}
           />
         )}
-        <CandlestickChart.Content>
-          {(point, selected) => (
-            <span
-              data-content-render={++contentRenders.current}
-            >{`Inspected ${point?.time ?? "None"}; selected ${selected?.time ?? "None"}`}</span>
-          )}
-        </CandlestickChart.Content>
-        <CandlestickChart.DataTable caption="Selection observations" />
+        {params.has("default-readout") ? (
+          <>
+            <CandlestickChart.Content>
+              <span data-consumer-slot>Consumer summary</span>
+            </CandlestickChart.Content>
+            <CandlestickChart.Readout valueAnimation="shuffle" data-testid="default-readout" />
+            {!params.has("omit-tooltip") && (
+              <CandlestickChart.Tooltip valueAnimation="shuffle" data-testid="financial-tooltip" />
+            )}
+            <CandlestickChart.CurrentPrice seriesKey="price" />
+          </>
+        ) : (
+          <>
+            {" "}
+            <CandlestickChart.Readout>
+              {(point, selected) => (
+                <span
+                  data-content-render={++contentRenders.current}
+                >{`Inspected ${point?.time ?? "None"}; selected ${selected?.time ?? "None"}`}</span>
+              )}
+            </CandlestickChart.Readout>
+          </>
+        )}
+        <CandlestickChart.Table caption="Selection observations" />
       </CandlestickChart>
     </main>
   );

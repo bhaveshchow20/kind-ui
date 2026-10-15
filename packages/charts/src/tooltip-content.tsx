@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { domAnimation, LazyMotion, m } from "motion/react";
 import { type ComponentPropsWithRef, type ReactNode, use } from "react";
 import type { TooltipContentProps as UpstreamTooltipContentProps } from "recharts";
 import { useInteractionOpacity } from "./animation.js";
@@ -201,14 +201,16 @@ export function TooltipItem({
 }) {
   const opacity = useInteractionOpacity(inactive ? 0.28 : 1);
   return (
-    <motion.li
-      {...props}
-      className="flex items-center gap-1 mt-[1px] [&>span:last-of-type]:text-[color:var(--muted-foreground,inherit)] [&_[data-kind-ui=chart-tooltip-value]]:font-medium [&_[data-kind-ui=chart-tooltip-value]]:ml-auto [&_[data-kind-ui=chart-tooltip-value]]:pl-[4px] [&_[data-kind-ui=chart-tooltip-value]]:tabular-nums"
-      data-inactive={inactive || undefined}
-      initial={false}
-      style={{ opacity }}
-    >
-      {children}
-    </motion.li>
+    <LazyMotion features={domAnimation}>
+      <m.li
+        {...props}
+        className="flex items-center gap-1 mt-[1px] [&>span:last-of-type]:text-[color:var(--muted-foreground,inherit)] [&_[data-kind-ui=chart-tooltip-value]]:font-medium [&_[data-kind-ui=chart-tooltip-value]]:ml-auto [&_[data-kind-ui=chart-tooltip-value]]:pl-[4px] [&_[data-kind-ui=chart-tooltip-value]]:tabular-nums"
+        data-inactive={inactive || undefined}
+        initial={false}
+        style={{ opacity }}
+      >
+        {children}
+      </m.li>
+    </LazyMotion>
   );
 }

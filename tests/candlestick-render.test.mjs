@@ -181,8 +181,8 @@ test("standalone compounds require the owning family", () => {
     CandlestickChart.Volume,
     CandlestickChart.Overlay,
     CandlestickChart.Crosshair,
-    CandlestickChart.Content,
-    CandlestickChart.DataTable,
+    CandlestickChart.Readout,
+    CandlestickChart.Table,
   ]) {
     assert.throws(
       () => render(h(Part, { seriesKey: "price", dataKey: "close", caption: "Intervals" })),

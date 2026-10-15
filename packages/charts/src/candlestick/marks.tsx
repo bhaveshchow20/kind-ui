@@ -40,7 +40,7 @@ import {
 } from "./context.js";
 import { candlestickDirectionColors } from "./current-price.js";
 import { useLatestCandlestickGeometry } from "./latest-motion.js";
-import type { CandlestickDatum, CandlestickPoint } from "./model.js";
+import type { CandlestickPoint, CandlestickRecord } from "./model.js";
 import { getCandlestickVisiblePoints } from "./viewport.js";
 export type CandlestickMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> & {
   center: number;
@@ -90,7 +90,7 @@ export function CandlestickMark({
     </g>
   );
 }
-export type CandlestickSeriesProps<Row extends object = CandlestickDatum> = {
+export type CandlestickSeriesProps<Row extends object = CandlestickRecord> = {
   seriesKey: string;
   rising?: string;
   falling?: string;
@@ -162,7 +162,7 @@ function renderCandlePoint(native: BarShapeProps, options: ShapeOptions, unclipp
     "aria-label": label,
   };
   const mark = options.shape ? (
-    options.shape({ ...props, point: point as CandlestickPoint<CandlestickDatum>, native })
+    options.shape({ ...props, point: point as CandlestickPoint<CandlestickRecord>, native })
   ) : options.latestIdentity !== point.identity ? (
     <HistoricalCandlestickMark {...props} />
   ) : (
@@ -265,10 +265,13 @@ const candleExtent = (value: unknown) => {
   const point = value as NativePoint;
   return point.gap ? null : [point.low, point.high];
 };
-export function CandlestickSeries<Row extends object = CandlestickDatum>(
+export function CandlestickSeries<Row extends object = CandlestickRecord>(
   props: CandlestickSeriesProps<Row>,
 ) {
   const context = useCandlestick();
+  const id = useId();
+  const { registerCandle } = context;
+  useLayoutEffect(() => registerCandle(id, props.seriesKey), [registerCandle, id, props.seriesKey]);
   const xScale = useXAxisScale();
   const yScale = useYAxisScale();
   // Keep mounted marks during the layout-only handoff between owned and implicit native axes.
@@ -394,7 +397,10 @@ export function CandlestickVolume({
   const area = usePlotArea();
   const xScale = useXAxisScale();
   const id = useId();
-  useLayoutEffect(() => context.registerVolume(id), [context.registerVolume, id]);
+  useLayoutEffect(
+    () => context.registerVolume(id, seriesKey),
+    [context.registerVolume, id, seriesKey],
+  );
   const max = getCandlestickVisiblePoints(context.points, context.viewport).reduce(
     (value, point) => Math.max(value, point.volume ?? 0),
     0,

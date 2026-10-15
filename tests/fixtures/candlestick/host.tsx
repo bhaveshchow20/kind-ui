@@ -1,6 +1,6 @@
 import {
   CandlestickChart,
-  type CandlestickDatum,
+  type CandlestickRecord,
   type CandlestickSpacing,
   type CandlestickTime,
   type CandlestickViewport,
@@ -8,7 +8,7 @@ import {
 import { motion } from "motion/react";
 import { type ComponentProps, type MouseEvent, useCallback, useState } from "react";
 
-type Row = CandlestickDatum & { source: string };
+type Row = CandlestickRecord & { source: string };
 function CustomVolumeElement({ width = 900 }: { width?: number }) {
   return <rect data-custom-volume="element" x={0} y={0} width={width} height={900} fill="orange" />;
 }
@@ -531,12 +531,12 @@ export function CandlestickHost() {
         <CandlestickChart.Crosshair />
         <CandlestickChart.Tooltip />
         {new URLSearchParams(location.search).has("strict-probe") && (
-          <CandlestickChart.Content>
+          <CandlestickChart.Readout>
             {() => <motion.span>Full consumer Motion probe</motion.span>}
-          </CandlestickChart.Content>
+          </CandlestickChart.Readout>
         )}
         {rows.length < 100 && (
-          <CandlestickChart.DataTable<Row>
+          <CandlestickChart.Table<Row>
             caption="Observed session bars"
             renderMetadata={(point) => point.original.source}
           />

@@ -1,7 +1,7 @@
-import { CandlestickChart, type CandlestickDatum } from "@kind-ui/charts";
+import { CandlestickChart, type CandlestickRecord } from "@kind-ui/charts";
 import { createRoot } from "react-dom/client";
 
-const rows: CandlestickDatum[] = [
+const rows: CandlestickRecord[] = [
   { time: 1_791_244_800_000, open: 40, high: 44, low: 38, close: 43, volume: 120 },
   { time: 1_791_331_200_000, open: 43, high: 45, low: 39, close: 41, volume: 95 },
 ];

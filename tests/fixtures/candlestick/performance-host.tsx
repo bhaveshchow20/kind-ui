@@ -1,12 +1,12 @@
 import {
   CandlestickChart,
-  type CandlestickDatum,
   CandlestickMark,
+  type CandlestickRecord,
   type CandlestickSeriesProps,
 } from "@kind-ui/charts";
 import type { ComponentProps } from "react";
 
-const rows: CandlestickDatum[] = Array.from({ length: 240 }, (_, index) => {
+const rows: CandlestickRecord[] = Array.from({ length: 240 }, (_, index) => {
   const open = 2375 + Math.sin(index * 0.14) * 12;
   const close = index === 239 ? 2399 : open + Math.cos(index * 0.4) * 2;
   return {
@@ -88,7 +88,7 @@ export function CandlestickPerformanceHost() {
           : {})}
       />
       <CandlestickChart.Crosshair showLabels={!params.has("no-crosshair-labels")} />
-      <CandlestickChart.Content />
+      <CandlestickChart.Readout />
       <CandlestickChart.Controls />
       <CandlestickChart.HistoryNavigator />
     </CandlestickChart>

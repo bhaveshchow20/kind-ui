@@ -1,4 +1,5 @@
 import { normalizeCandlestickData } from "@kind-ui/charts";
+import { createRef } from "react";
 
 const rows = [{ t: 1, price: 2, label: "trade", list: [1], gapFlag: 0 }];
 normalizeCandlestickData(rows, {
@@ -53,10 +54,10 @@ void unsupportedVolume;
 // @ts-expect-error Reference annotations cannot mutate the root's fixed price domain.
 <CandlestickChart.ReferenceLine y={10} ifOverflow="extendDomain" />;
 
-import type { CandlestickDatum } from "@kind-ui/charts";
+import type { CandlestickRecord } from "@kind-ui/charts";
 
-const completeObservation: CandlestickDatum = { time: 1, open: 10, high: 12, low: 9, close: 11 };
-const explicitObservation: CandlestickDatum = {
+const completeObservation: CandlestickRecord = { time: 1, open: 10, high: 12, low: 9, close: 11 };
+const explicitObservation: CandlestickRecord = {
   time: 2,
   gap: false,
   open: 11,
@@ -65,10 +66,10 @@ const explicitObservation: CandlestickDatum = {
   close: 12,
   volume: 0,
 };
-const explicitGap: CandlestickDatum = { time: 3, gap: true, state: "Feed unavailable" };
-const defaultRows: CandlestickDatum[] = [completeObservation, explicitObservation, explicitGap];
+const explicitGap: CandlestickRecord = { time: 3, gap: true, state: "Feed unavailable" };
+const defaultRows: CandlestickRecord[] = [completeObservation, explicitObservation, explicitGap];
 normalizeCandlestickData(defaultRows, { timeMode: "epoch-ms" });
-normalizeCandlestickData<CandlestickDatum>([], {
+normalizeCandlestickData<CandlestickRecord>([], {
   timeMode: "epoch-ms",
   accessors: {
     time: "time",
@@ -81,15 +82,15 @@ normalizeCandlestickData<CandlestickDatum>([], {
   },
 });
 // @ts-expect-error A nongap observation requires every OHLC value.
-const missingOHLC: CandlestickDatum = { time: 4, open: 10 };
+const missingOHLC: CandlestickRecord = { time: 4, open: 10 };
 // @ts-expect-error Missing prices require an explicit gap: true discriminant.
-const missingGapFlag: CandlestickDatum = { time: 4 };
+const missingGapFlag: CandlestickRecord = { time: 4 };
 // @ts-expect-error An explicit nongap row still requires complete OHLC.
-const incompleteNongap: CandlestickDatum = { time: 4, gap: false, close: 11 };
+const incompleteNongap: CandlestickRecord = { time: 4, gap: false, close: 11 };
 // @ts-expect-error A gap cannot carry invented OHLC observations.
-const gapWithPrice: CandlestickDatum = { time: 4, gap: true, open: 10 };
+const gapWithPrice: CandlestickRecord = { time: 4, gap: true, open: 10 };
 // @ts-expect-error A gap cannot carry observed volume, including zero.
-const gapWithVolume: CandlestickDatum = { time: 4, gap: true, volume: 0 };
+const gapWithVolume: CandlestickRecord = { time: 4, gap: true, volume: 0 };
 void [missingOHLC, missingGapFlag, incompleteNongap, gapWithPrice, gapWithVolume];
 
 const numericRows = [{ 0: 1, 1: 10, 2: 12, 3: 9, 4: 11, source: "trade" }];
@@ -151,3 +152,25 @@ const latest: CandlestickCurrentPriceProps<(typeof rows)[number]> = {
 };
 <CandlestickCurrentPrice {...latest} />;
 <CandlestickChart.CurrentPrice seriesKey="price" lineVisible={false} />;
+
+const readoutRef = createRef<HTMLDivElement>();
+const financialReadout = (
+  <CandlestickChart
+    data={[]}
+    config={{ price: { color: "#427b67" } }}
+    timeMode="business-date"
+    aria-label="Readout contract"
+  >
+    <CandlestickChart.Content>
+      <span>Consumer-owned summary</span>
+    </CandlestickChart.Content>
+    <CandlestickChart.Readout ref={readoutRef} valueAnimation="shuffle" data-testid="readout" />
+    <CandlestickChart.Tooltip
+      ref={readoutRef}
+      valueAnimation="shuffle"
+      style={{ color: "purple" }}
+    />
+    <CandlestickChart.Table caption="Intervals" />
+  </CandlestickChart>
+);
+void financialReadout;

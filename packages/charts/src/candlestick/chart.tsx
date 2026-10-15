@@ -37,8 +37,8 @@ import { CandlestickHistoryNavigator } from "./history-navigator.js";
 import { CandlestickLatestMotion } from "./latest-motion.js";
 import {
   type CandlestickAccessors,
-  type CandlestickDatum,
   type CandlestickPoint,
+  type CandlestickRecord,
   type CandlestickTimeMode,
   normalizeCandlestickData,
 } from "./model.js";
@@ -66,7 +66,7 @@ export type CandlestickViewportChange = {
   first: CandlestickPoint["time"] | null;
   last: CandlestickPoint["time"] | null;
 };
-export type CandlestickChartProps<Row extends object = CandlestickDatum> = FamilyOptions &
+export type CandlestickChartProps<Row extends object = CandlestickRecord> = FamilyOptions &
   ChartName &
   Omit<
     BarChartProps,
@@ -132,12 +132,12 @@ import {
 } from "./context.js";
 import { CandlestickMark, CandlestickSeries, CandlestickVolume } from "./marks.js";
 import {
-  CandlestickContent,
   CandlestickCrosshair,
-  CandlestickDataTable,
   CandlestickGrid,
   CandlestickOverlay,
+  CandlestickReadout,
   CandlestickReferenceLine,
+  CandlestickTable,
   CandlestickTooltip,
   CandlestickXAxis,
   CandlestickYAxis,
@@ -150,21 +150,21 @@ export type {
 } from "./marks.js";
 export { CandlestickMark, CandlestickSeries, CandlestickVolume } from "./marks.js";
 export type {
-  CandlestickContentProps,
-  CandlestickDataTableProps,
   CandlestickOverlayProps,
+  CandlestickReadoutProps,
   CandlestickReferenceLineProps,
+  CandlestickTableProps,
   CandlestickTooltipProps,
   CandlestickXAxisProps,
   CandlestickYAxisProps,
 } from "./parts.js";
 export {
-  CandlestickContent,
   CandlestickCrosshair,
-  CandlestickDataTable,
   CandlestickGrid,
   CandlestickOverlay,
+  CandlestickReadout,
   CandlestickReferenceLine,
+  CandlestickTable,
   CandlestickTooltip,
   CandlestickXAxis,
   CandlestickYAxis,
@@ -315,7 +315,17 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
   );
   const selectedTime = selection === undefined ? localSelection : selection;
   const selected = points.find((point) => point.time === selectedTime) ?? null;
-  const [volumes, setVolumes] = useState<Set<string>>(() => new Set());
+  const [volumes, setVolumes] = useState<Map<string, string>>(() => new Map());
+  const [candles, setCandles] = useState<Map<string, string>>(() => new Map());
+  const registerCandle = useCallback((id: string, key: string) => {
+    setCandles((old) => new Map(old).set(id, key));
+    return () =>
+      setCandles((old) => {
+        const next = new Map(old);
+        next.delete(id);
+        return next;
+      });
+  }, []);
   const [priceAxes, setPriceAxes] = useState<Set<string>>(() => new Set());
   const registerPriceAxis = useCallback((key: string) => {
     setPriceAxes((old) => new Set(old).add(key));
@@ -340,12 +350,12 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     previousControlledRange.current = viewport;
   }, [viewport]);
   const [overlays, setOverlays] = useState<Map<string, readonly number[]>>(() => new Map());
-  const registerVolume = useCallback((key: string) => {
-    setVolumes((old) => new Set(old).add(key));
+  const registerVolume = useCallback((id: string, key: string) => {
+    setVolumes((old) => new Map(old).set(id, key));
     return () =>
       setVolumes((old) => {
-        const next = new Set(old);
-        next.delete(key);
+        const next = new Map(old);
+        next.delete(id);
         return next;
       });
   }, []);
@@ -493,6 +503,9 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
     contents: contents.size,
     registerContent,
     registerVolume,
+    registerCandle,
+    priceSeries: [...candles.values()][0],
+    volumeSeries: [...volumes.values()][0],
     hasPriceAxis: priceAxes.size > 0,
     registerPriceAxis,
     registerOverlay,
@@ -645,6 +658,19 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
               changeViewport(fitCandlestickViewport(points.length), "reset");
             else return;
             event.preventDefault();
+          },
+          onBlur: (event) => {
+            frameProps?.onBlur?.(event);
+            if (
+              !event.defaultPrevented &&
+              !(
+                event.relatedTarget instanceof Node &&
+                event.currentTarget.contains(event.relatedTarget)
+              )
+            ) {
+              pointer.set(null);
+              inspect(null);
+            }
           },
           onPointerDown: (event) => {
             frameProps?.onPointerDown?.(event);
@@ -959,7 +985,7 @@ export const CandlestickChart = /* @__PURE__ */ Object.assign(CandlestickFamily,
   Controls: CandlestickControls,
   HistoryNavigator: CandlestickHistoryNavigator,
   Tooltip: CandlestickTooltip,
-  Content: CandlestickContent,
-  DataTable: CandlestickDataTable,
-  Table: CandlestickDataTable,
+  Content: OutsidePlot,
+  Readout: CandlestickReadout,
+  Table: CandlestickTable,
 });
