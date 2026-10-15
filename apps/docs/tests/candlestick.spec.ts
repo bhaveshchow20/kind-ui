@@ -24,7 +24,7 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
   expect(count).toBeGreaterThanOrEqual(48);
   expect(count).toBeLessThan(55);
   await expect(asset.locator('[data-kind-ui="candlestick-volume-mark"]')).toHaveCount(count);
-  const readout = asset.locator('[data-kind-ui="candle-readout"]');
+  const readout = asset.locator('[data-kind-ui="candlestick-readout"]');
   const paused = await readout.textContent();
   await asset.getByRole("button", { name: "Step", exact: true }).click();
   await expect(readout).not.toHaveText(paused ?? "");
@@ -221,7 +221,7 @@ test("Candlestick streaming pauses and resumes while zoom, pan and navigator sha
   await page.goto(`.${docRoute("/docs/components/candlestick/")}`);
   const container = page.locator('[data-component="candlestick"]').first();
   await container.getByRole("button", { name: "Pause", exact: true }).click();
-  const readout = container.locator('[data-kind-ui="candle-readout"]');
+  const readout = container.locator('[data-kind-ui="candlestick-readout"]');
   const paused = await readout.textContent();
   await page.waitForTimeout(900);
   await expect(readout).toHaveText(paused ?? "");

@@ -271,7 +271,7 @@ export function newCode(
 ) {
   const imports = {
     Line: "LineChart",
-    Candlestick: "CandlestickChart, type CandlestickDatum",
+    Candlestick: "CandlestickChart, type CandlestickRecord",
     Histogram: "HistogramChart, type HistogramBin",
     "Box Plot": "BoxPlotChart, type BoxPlotSummary, ReferenceLine",
     Heatmap: "HeatmapChart, createHeatmapScale",

@@ -1,5 +1,5 @@
 "use client";
-import { CandlestickChart, type CandlestickDatum, type SeriesConfig } from "@kind-ui/charts";
+import { CandlestickChart, type CandlestickRecord, type SeriesConfig } from "@kind-ui/charts";
 import { useState } from "react";
 
 const buttonStyle = {
@@ -12,7 +12,7 @@ const buttonStyle = {
   color: "inherit",
 };
 
-type Observation = CandlestickDatum & { source: string; reference?: number };
+type Observation = CandlestickRecord & { source: string; reference?: number };
 // Original simulated trade observations; UTC intervals, USD prices, no volume feed.
 const data: Observation[] = [
   {
@@ -171,13 +171,7 @@ export function UpdatedCandlestickChart() {
         />
         <CandlestickChart.XAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={24} />
         <CandlestickChart.YAxis orientation="right" axisLine={false} tickLine={false} width={72} />
-        <CandlestickChart.Series<Observation>
-          seriesKey="price"
-          rising="var(--candlestick-rising, #087f68)"
-          falling="var(--candlestick-falling, #c43d54)"
-          unchanged="var(--candlestick-neutral, #53657b)"
-          maxBarSize={22}
-        />
+        <CandlestickChart.Series<Observation> seriesKey="price" maxBarSize={22} />
         <CandlestickChart.Overlay<Observation>
           seriesKey="reference"
           dataKey="reference"
@@ -186,16 +180,16 @@ export function UpdatedCandlestickChart() {
           connectNulls={false}
         />
         <CandlestickChart.Crosshair strokeOpacity={0.5} />
-        <CandlestickChart.Content<Observation>
-          frameProps={{ style: { minHeight: 36, fontSize: 12, paddingTop: 12 } }}
+        <CandlestickChart.Readout<Observation>
+          style={{ minHeight: 36, fontSize: 12, paddingTop: 12 }}
         >
           {(point, selected) =>
             point
               ? `${time(point.time)} UTC · ${point.original.source} · ${point.state}${point.gap ? "" : ` · Close ${money(point.close ?? 0)}`}${selected?.identity === point.identity ? " · Selected" : ""}`
               : "Inspect the corrected interval, the feed gap or the partial latest candle; Enter selects."
           }
-        </CandlestickChart.Content>
-        <CandlestickChart.DataTable<Observation>
+        </CandlestickChart.Readout>
+        <CandlestickChart.Table<Observation>
           caption="Current observations"
           renderMetadata={(point) => point.original.source}
           metadataLabel="Source"

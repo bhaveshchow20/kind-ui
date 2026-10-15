@@ -1,6 +1,6 @@
 "use client";
 import { CandlestickChart, type CandlestickPoint, type SeriesConfig } from "@kind-ui/charts";
-import { memo, useCallback, useEffect, useReducer, useState } from "react";
+import { type CSSProperties, memo, useCallback, useEffect, useReducer, useState } from "react";
 import type { DemoOptions } from "@/lib/demo-options";
 
 type Candle = {
@@ -105,11 +105,7 @@ const MarketPlot = memo(function MarketPlot({
   rows,
   selection,
   onSelectionChange,
-  onInspect,
   animate,
-  rising,
-  falling,
-  unchanged,
   showGrid,
   showLabels,
   width,
@@ -118,11 +114,7 @@ const MarketPlot = memo(function MarketPlot({
   rows: Candle[];
   selection: number | string | null;
   onSelectionChange: (point: CandlestickPoint<Candle> | null) => void;
-  onInspect: (point: CandlestickPoint<Candle> | null) => void;
   animate: boolean;
-  rising: string;
-  falling: string;
-  unchanged: string;
   showGrid?: boolean;
   showLabels?: boolean;
   width?: number;
@@ -136,10 +128,9 @@ const MarketPlot = memo(function MarketPlot({
         selection={selection}
         onSelectionChange={onSelectionChange}
         timeMode="epoch-ms"
-        spacing="ordinal"
         defaultViewport={{ from: 189.5, to: 239.5 }}
         followLatest
-        onInspect={onInspect}
+        legendPosition="top"
         height={280}
         aria-label="Simulated ETH / USD one minute candles with volume and historical navigator"
         formatTime={time}
@@ -171,29 +162,16 @@ const MarketPlot = memo(function MarketPlot({
         />
         <CandlestickChart.Series
           seriesKey="price"
-          rising={rising}
-          falling={falling}
-          unchanged={unchanged}
           maxBarSize={width ?? 12}
           markProps={{ strokeWidth: strokeWidth ?? 1.5 }}
         />
-        <CandlestickChart.Volume
-          seriesKey="volume"
-          rising={rising}
-          falling={falling}
-          unchanged={unchanged}
-          fillOpacity={0.78}
-          axisProps={{ hide: true }}
-        />
+        <CandlestickChart.Volume seriesKey="volume" fillOpacity={0.78} axisProps={{ hide: true }} />
         <CandlestickChart.CurrentPrice
           labelTextColor="var(--candlestick-label-text, #fff)"
           seriesKey="price"
-          rising={rising}
-          falling={falling}
-          unchanged={unchanged}
         />
         <CandlestickChart.Crosshair stroke="var(--chart-axis, #64748b)" strokeOpacity={0.5} />
-        <CandlestickChart.Content className="sr-only" />
+        <CandlestickChart.Readout valueAnimation="shuffle" className="mb-3" />
         <CandlestickChart.Controls />
         <CandlestickChart.HistoryNavigator />
       </CandlestickChart>
@@ -245,21 +223,22 @@ export function MarketCandlestickChart({
   );
   const [feed, step] = useReducer(advance, undefined, () => ({ rows: history(), tick: 0 }));
   const [running, setRunning] = useState(true);
-  const [inspected, setInspected] = useState<CandlestickPoint<Candle> | null>(null);
-  const onInspect = useCallback((point: CandlestickPoint<Candle> | null) => {
-    setInspected((current) => (current?.time === point?.time ? current : point));
-  }, []);
   useEffect(() => {
     if (!running) return;
     const interval = setInterval(step, 700);
     return () => clearInterval(interval);
   }, [running]);
-  const candle =
-    (inspected ? feed.rows.find((row) => row.time === inspected.time) : null) ?? feed.rows.at(-1);
-  const change = candle ? ((candle.close - candle.open) / candle.open) * 100 : 0;
-  const direction = change > 0 ? rising : change < 0 ? falling : unchanged;
   return (
-    <div style={{ minWidth: 0 }}>
+    <div
+      style={
+        {
+          minWidth: 0,
+          "--candlestick-rising": rising,
+          "--candlestick-falling": falling,
+          "--candlestick-neutral": unchanged,
+        } as CSSProperties
+      }
+    >
       <div
         style={{
           display: "flex",
@@ -300,44 +279,11 @@ export function MarketCandlestickChart({
           </button>
         </div>
       </div>
-      <div
-        data-kind-ui="candle-readout"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "4px 12px",
-          fontSize: 12,
-          fontVariantNumeric: "tabular-nums",
-          marginBottom: 12,
-          minHeight: 20,
-        }}
-      >
-        {candle && (
-          <>
-            <span>{time(candle.time)} UTC</span>
-            {(["open", "high", "low", "close"] as const).map((key) => (
-              <span key={key}>
-                {key[0]?.toUpperCase()}{" "}
-                <span style={{ color: direction }}>{money(candle[key])}</span>
-              </span>
-            ))}
-            <span>Vol {candle.volume.toFixed(1)}</span>
-            <span style={{ color: direction }}>
-              {change >= 0 ? "+" : ""}
-              {change.toFixed(2)}%
-            </span>
-          </>
-        )}
-      </div>
       <MarketPlot
         rows={feed.rows}
         selection={selection}
         onSelectionChange={onSelectionChange}
-        onInspect={onInspect}
         animate={animate}
-        rising={rising}
-        falling={falling}
-        unchanged={unchanged}
         showGrid={options.showGrid ?? true}
         showLabels={options.showLabels ?? true}
         width={options.width ?? 12}

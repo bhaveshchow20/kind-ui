@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
@@ -21,7 +20,6 @@ const bundle = {
   family: "candlestick",
   title: "Candlestick Chart",
   version: "0.5.0",
-  minimumCoreVersion: "0.6.0",
   registryItemName: "candlestick-chart",
   packageStatus: "@kind-ui/charts",
   localPackage: true,
@@ -44,7 +42,7 @@ test("Candlestick uses the established CLI and complete four-step manual composi
     result.steps.map(({ title }) => title),
     ["Install Core", "Configure Tailwind CSS v4", "Create the composition", "Render the chart"],
   );
-  assert.equal(result.steps[0].code, "npm install @kind-ui/charts@^0.6.0 motion recharts");
+  assert.equal(result.steps[0].code, "npm install @kind-ui/charts motion recharts");
   assert.equal(result.steps[2].code, source);
   assert.equal(result.steps[2].filename, "components/candlestick-chart.tsx");
   assert.match(
@@ -80,20 +78,20 @@ test("Candlestick copy prompts preserve the parts actually included in each reci
     };
     const validated = componentBundlesSchema.parse({ [example.id]: recipeBundle })[example.id];
     const prompt = promptFor(validated, {});
-    assert.match(prompt, /Reference package: @kind-ui\/charts@0\.6\.0\./);
-    assert.match(prompt, /Install @kind-ui\/charts@\^0\.6\.0 and its documented/);
+    assert.match(prompt, /Reference package: @kind-ui\/charts@0\.5\.0\./);
+    assert.match(prompt, /Install @kind-ui\/charts and its documented/);
     assert.match(prompt, /https:\/\/kindui\.dev\/charts\/docs\/components\/candlestick\//);
     assert.ok(
       prompt.includes(
         `https://kindui.dev/charts/docs/examples/${example.id}/src/examples/${example.id}/example.tsx`,
       ),
     );
-    assert.match(recipeSource, /<CandlestickChart\.Content/);
+    assert.match(recipeSource, /<CandlestickChart\.Readout/);
     if (example.id === "candlestick-updates") {
-      assert.match(recipeSource, /<CandlestickChart\.DataTable/);
+      assert.match(recipeSource, /<CandlestickChart\.Table/);
       assert.match(prompt, /Preserve the explicit readout and data table parts/);
     } else {
-      assert.doesNotMatch(recipeSource, /<CandlestickChart\.DataTable/);
+      assert.doesNotMatch(recipeSource, /<CandlestickChart\.Table/);
       assert.match(prompt, /Preserve the explicit readout part/);
       assert.doesNotMatch(prompt, /data table|alternative tables/);
     }
@@ -105,15 +103,13 @@ test("Candlestick copy prompts preserve the parts actually included in each reci
   }
 });
 
-test("Candlestick Usage is a client module and consumer selection guidance has no obsolete release gate", () => {
+test("Candlestick Usage follows the standard short composition and shared component table", () => {
   const page = readFileSync(
     new URL("../content/docs/components/candlestick.mdx", import.meta.url),
     "utf8",
   );
-  const usage = page.match(
-    /```tsx title="components\/candlestick-example\.tsx"\n([\s\S]*?)\n```/,
-  )?.[1];
-  assert.ok(usage, "Missing complete Candlestick Usage module");
+  const usage = page.match(/```tsx title="Composition sketch"\n([\s\S]*?)\n```/)?.[1];
+  assert.ok(usage, "Missing Candlestick composition sketch");
   const parsed = ts.createSourceFile(
     "candlestick-example.tsx",
     usage,
@@ -121,14 +117,8 @@ test("Candlestick Usage is a client module and consumer selection guidance has n
     true,
     ts.ScriptKind.TSX,
   );
-  const directive = parsed.statements[0];
-  assert.ok(
-    directive &&
-      ts.isExpressionStatement(directive) &&
-      ts.isStringLiteral(directive.expression) &&
-      directive.expression.text === "use client",
-    "Usage must declare its client boundary before importing compound chart parts",
-  );
+  assert.ok(parsed.statements.length > 0);
+  assert.match(page, /\| Component \| Purpose \|/);
   assert.match(usage, /import \{ CandlestickChart \} from "@kind-ui\/charts"/);
   const emitted = ts.transpileModule(usage, {
     fileName: "candlestick-example.tsx",
@@ -157,12 +147,12 @@ test("generated Candlestick examples expose complete source and standard install
     const actual = bundles[example.id];
     assert.ok(actual, example.id);
     assert.equal(actual.releasePending, undefined);
-    assert.equal(actual.minimumCoreVersion, "0.6.0");
-    assert.equal(example.minimumCoreVersion, "0.6.0");
+    assert.equal(actual.minimumCoreVersion, undefined);
+    assert.equal(example.minimumCoreVersion, undefined);
     assert.equal(actual.version, "0.5.0");
     assert.equal(
       JSON.parse(actual.files["package.json"]).dependencies["@kind-ui/charts"],
-      "^0.6.0",
+      "^0.5.0",
     );
     assert.equal(
       actual.files[`src/examples/${example.id}/example.tsx`],
@@ -173,8 +163,8 @@ test("generated Candlestick examples expose complete source and standard install
       /source candidate|wait for|unreleased|provenance/i,
     );
     const prompt = promptFor(actual, {});
-    assert.match(prompt, /Reference package: @kind-ui\/charts@0\.6\.0\./);
-    assert.match(prompt, /Install @kind-ui\/charts@\^0\.6\.0 and its documented/);
+    assert.match(prompt, /Reference package: @kind-ui\/charts@0\.5\.0\./);
+    assert.match(prompt, /Install @kind-ui\/charts and its documented/);
     const selectedSource = actual.defaultVariant
       ? `variants/${actual.defaultVariant}/example.tsx`
       : `src/examples/${example.id}/example.tsx`;
@@ -186,78 +176,29 @@ test("generated Candlestick examples expose complete source and standard install
   assert.equal(bundles.candlestick.registryItemName, "candlestick-chart");
 });
 
-test("public Candlestick minimum preserves verified candidate identity and rejects old published artifacts", () => {
-  assert.equal(registryItems.length, 15);
+test("Candlestick uses standard installation metadata and retains the exact local pin", () => {
   assert.equal(
     registryItems.find(({ name }) => name === "candlestick-chart").minimumCoreVersion,
-    "0.6.0",
-  );
-  for (const item of registryItems.filter(({ name }) => name !== "candlestick-chart"))
-    assert.equal(item.minimumCoreVersion, undefined);
-  const bundles = JSON.parse(
-    readFileSync(new URL("../generated/all-examples.json", import.meta.url), "utf8"),
+    undefined,
   );
   const provenance = JSON.parse(
     readFileSync(new URL("../vendor/provenance.json", import.meta.url), "utf8"),
   );
-  assert.equal(provenance.version, "0.5.0");
   const tarball = readFileSync(new URL("../vendor/kind-ui-charts-0.5.0.tgz", import.meta.url));
   assert.equal(createHash("sha256").update(tarball).digest("hex"), provenance.sha256);
-  for (const bundle of Object.values(bundles).filter(({ family }) => family !== "candlestick")) {
-    assert.equal(bundle.minimumCoreVersion, undefined);
-    assert.match(promptFor(bundle, {}), /Install @kind-ui\/charts and its documented/);
-    assert.equal(
-      JSON.parse(bundle.files["package.json"]).dependencies["@kind-ui/charts"],
-      `^${bundle.version}`,
-    );
-  }
+  const bundles = JSON.parse(
+    readFileSync(new URL("../generated/all-examples.json", import.meta.url), "utf8"),
+  );
   for (const id of ["candlestick", "candlestick-binary", "candlestick-updates"]) {
-    const files = verificationFiles(bundles[id]);
+    const bundle = bundles[id];
+    assert.match(promptFor(bundle, {}), /Install @kind-ui\/charts and its documented/);
+    assert.doesNotMatch(promptFor(bundle, {}), /pending|after release|@\^0\.6/);
+    const files = verificationFiles(bundle);
     assert.equal(
       JSON.parse(files["package.json"]).dependencies["@kind-ui/charts"],
       "file:vendor/kind-ui-charts-0.5.0.tgz",
     );
   }
-  const checker = readFileSync(
-    new URL("../../../scripts/check-registry-consumers.mjs", import.meta.url),
-    "utf8",
-  );
-  const substitute = checker.match(
-    /dependencies: item.dependencies.map\(\(dependency\) =>\s*([\s\S]*?),\s*\)/,
-  )?.[1];
-  assert.ok(substitute);
-  for (const dependency of [
-    "@kind-ui/charts@0.5.0",
-    "@kind-ui/charts@^0.6.0",
-    "@kind-ui/charts@>=0.6.0",
-  ])
-    assert.equal(
-      runInNewContext(substitute, { dependency, endpoint: "https://test.invalid" }),
-      "https://test.invalid/candidate.tgz",
-    );
-  assert.equal(
-    runInNewContext(substitute, { dependency: "react@^19.3.0", endpoint: "https://test.invalid" }),
-    "react@^19.3.0",
-  );
-  assert.match(checker, /assert.equal\(receipt.package.version, coreVersion\)/);
-  assert.match(
-    checker,
-    /assert.equal\(createHash\("sha256"\).update\(tarball\).digest\("hex"\), receipt.sha256\)/,
-  );
-  const guard = checker.match(/if \(published\) \{[\s\S]*?\n\}\n(?=const publishedMetadata)/)?.[0];
-  assert.ok(guard);
-  const evaluate = (coreVersion) =>
-    runInNewContext(guard, { published: true, coreVersion, registryItems, assert });
-  assert.throws(() => evaluate("0.5.0"), /candlestick-chart requires Core 0.6.0 or later/);
-  evaluate("0.6.0");
-  evaluate("0.7.0");
-  const homepage = readFileSync(new URL("../../showcase/app/page.tsx", import.meta.url), "utf8");
-  for (const manager of ["npm", "pnpm", "yarn", "bun"])
-    assert.ok(
-      homepage.includes(
-        `${manager} ${manager === "npm" ? "install" : "add"} @kind-ui/charts@^0.6.0`,
-      ),
-    );
 });
 
 test("streaming history agrees with catalog observations and immutable updates retain OHLC validity", () => {
@@ -277,7 +218,7 @@ test("streaming history agrees with catalog observations and immutable updates r
         )),
   );
   const code = ts.transpileModule(
-    selected.map((node) => node.getText(parsed)).join("\n") + "\n({ history, advance })",
+    `${selected.map((node) => node.getText(parsed)).join("\n")}\n({ history, advance })`,
     { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
   ).outputText;
   const { history, advance } = runInNewContext(code);
@@ -347,103 +288,14 @@ test("streaming history agrees with catalog observations and immutable updates r
   assert.ok(newIntervalMoves.filter((move) => move < 0).length > 10);
 });
 
-test("header inspection preserves every memoized plot input while stream updates still reach the plot", () => {
-  const require = createRequire(import.meta.url);
-  const React = require("react");
-  for (const [path, exported, inspectedIndex, inputs] of [
-    ["../examples/candlestick/example.tsx", "AssetCandlestickChart", 1, {}],
-    [
-      "../../showcase/components/market-candlestick-chart.tsx",
-      "MarketCandlestickChart",
-      2,
-      { colors: ["green", "red", "gray"], animate: true },
-    ],
+test("persistent readouts consume inspection without host state plumbing", () => {
+  for (const name of [
+    "../examples/candlestick/example.tsx",
+    "../../showcase/components/market-candlestick-chart.tsx",
   ]) {
-    const text = readFileSync(new URL(path, import.meta.url), "utf8");
-    const emitted = ts.transpileModule(text, {
-      compilerOptions: {
-        module: ts.ModuleKind.CommonJS,
-        target: ts.ScriptTarget.ES2022,
-        jsx: ts.JsxEmit.ReactJSX,
-      },
-    }).outputText;
-    let cursor = 0;
-    let inspected = null;
-    let feed;
-    let update;
-    const actions = [];
-    const setters = [];
-    const callbacks = [];
-    let callbackIndex = 0;
-    const hooks = {
-      ...React,
-      useState(initial) {
-        const index = cursor++;
-        setters[index] ??= (action) => {
-          actions.push(action);
-        };
-        return [index === inspectedIndex ? inspected : initial, setters[index]];
-      },
-      useReducer(reducer, input, initialize) {
-        feed ??= initialize(input);
-        update = reducer;
-        return [feed, () => {}];
-      },
-      useEffect() {},
-      useCallback(callback) {
-        const index = callbackIndex++;
-        callbacks[index] ??= callback;
-        return callbacks[index];
-      },
-    };
-    const exports = {};
-    runInNewContext(emitted, {
-      exports,
-      require: (name) =>
-        name === "react" ? hooks : name === "@kind-ui/charts" ? {} : require(name),
-    });
-    const render = () => {
-      cursor = 0;
-      callbackIndex = 0;
-      return exports[exported](inputs);
-    };
-    const plot = (node) => {
-      if (!node || typeof node !== "object" || !node.props) return null;
-      if (node?.type?.$$typeof === Symbol.for("react.memo")) return node;
-      for (const child of [node?.props?.children].flat()) {
-        const found = plot(child);
-        if (found) return found;
-      }
-      return null;
-    };
-    const first = plot(render());
-    assert.ok(first, `${exported} must isolate its expensive plot with React.memo`);
-    const current = { time: feed.rows[20].time };
-    first.props.onInspect({ ...current, cursorPrice: 2400 });
-    assert.equal(
-      actions.at(-1)(current),
-      current,
-      `${exported} must ignore free cursor movement within the same interval`,
-    );
-    const different = { time: feed.rows[21].time };
-    first.props.onInspect(different);
-    assert.equal(actions.at(-1)(current), different);
-    first.props.onInspect(null);
-    assert.equal(actions.at(-1)(current), null);
-    inspected = { time: feed.rows[20].time };
-    const hovered = plot(render());
-    for (const key of Object.keys(first.props))
-      assert.equal(
-        hovered.props[key],
-        first.props[key],
-        `${exported} hover changed plot input ${key}`,
-      );
-    feed = update(feed);
-    const advanced = plot(render());
-    assert.notEqual(
-      advanced.props.rows,
-      first.props.rows,
-      `${exported} must render updated observations`,
-    );
+    const source = readFileSync(new URL(name, import.meta.url), "utf8");
+    assert.match(source, /<CandlestickChart.Readout valueAnimation="shuffle"/);
+    assert.doesNotMatch(source, /onInspect|setInspected|const inspected/);
+    assert.match(source, /const MarketPlot = memo/);
   }
 });

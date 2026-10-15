@@ -599,10 +599,10 @@ function DocumentationSearch() {
 }
 
 const installCommands = {
-  npm: "npm install @kind-ui/charts@^0.6.0",
-  pnpm: "pnpm add @kind-ui/charts@^0.6.0",
-  yarn: "yarn add @kind-ui/charts@^0.6.0",
-  bun: "bun add @kind-ui/charts@^0.6.0",
+  npm: "npm install @kind-ui/charts",
+  pnpm: "pnpm add @kind-ui/charts",
+  yarn: "yarn add @kind-ui/charts",
+  bun: "bun add @kind-ui/charts",
   shadcn: "npx shadcn@latest add @kind-ui/line-chart",
 };
 const installChartNames = [

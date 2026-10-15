@@ -1,6 +1,6 @@
 "use client";
-import { CandlestickChart, type CandlestickPoint, type SeriesConfig } from "@kind-ui/charts";
-import { memo, useCallback, useEffect, useReducer, useState } from "react";
+import { CandlestickChart, type SeriesConfig } from "@kind-ui/charts";
+import { memo, useEffect, useReducer, useState } from "react";
 
 type Candle = {
   time: number;
@@ -20,9 +20,6 @@ const buttonStyle = {
   background: "transparent",
   color: "inherit",
 };
-const rising = "var(--candlestick-rising, #087f68)";
-const falling = "var(--candlestick-falling, #c43d54)";
-const unchanged = "var(--candlestick-neutral, #53657b)";
 const round = (value: number) => Math.round(value * 100) / 100;
 const start = Date.UTC(2026, 9, 13, 8);
 function history(): Candle[] {
@@ -106,21 +103,18 @@ const time = (value: number | string) => timeFormatter.format(new Date(Number(va
 const MarketPlot = memo(function MarketPlot({
   rows,
   loading,
-  onInspect,
 }: {
   rows: Candle[];
   loading: boolean;
-  onInspect: (point: CandlestickPoint<Candle> | null) => void;
 }) {
   return (
     <CandlestickChart<Candle>
       config={config}
       data={rows}
       timeMode="epoch-ms"
-      spacing="ordinal"
       defaultViewport={{ from: 189.5, to: 239.5 }}
       followLatest
-      onInspect={onInspect}
+      legendPosition="top"
       height={340}
       loading={loading}
       loadingLabel="Loading simulated ETH / USD history"
@@ -139,30 +133,14 @@ const MarketPlot = memo(function MarketPlot({
       />
       <CandlestickChart.XAxis axisLine={false} tickLine={false} tickMargin={10} minTickGap={32} />
       <CandlestickChart.YAxis orientation="right" axisLine={false} tickLine={false} width={76} />
-      <CandlestickChart.Series
-        seriesKey="price"
-        rising={rising}
-        falling={falling}
-        unchanged={unchanged}
-        maxBarSize={12}
-      />
-      <CandlestickChart.Volume
-        seriesKey="volume"
-        rising={rising}
-        falling={falling}
-        unchanged={unchanged}
-        fillOpacity={0.78}
-        axisProps={{ hide: true }}
-      />
+      <CandlestickChart.Series seriesKey="price" maxBarSize={12} />
+      <CandlestickChart.Volume seriesKey="volume" fillOpacity={0.78} axisProps={{ hide: true }} />
       <CandlestickChart.CurrentPrice
         labelTextColor="var(--candlestick-label-text, #fff)"
         seriesKey="price"
-        rising={rising}
-        falling={falling}
-        unchanged={unchanged}
       />
       <CandlestickChart.Crosshair strokeOpacity={0.5} />
-      <CandlestickChart.Content className="sr-only" />
+      <CandlestickChart.Readout valueAnimation="shuffle" className="mb-3" />
       <CandlestickChart.Controls />
       <CandlestickChart.HistoryNavigator />
     </CandlestickChart>
@@ -172,97 +150,57 @@ const MarketPlot = memo(function MarketPlot({
 export function AssetCandlestickChart({ state = "ready" }: { state?: "ready" | "loading" }) {
   const [feed, step] = useReducer(advance, undefined, () => ({ rows: history(), tick: 0 }));
   const [running, setRunning] = useState(true);
-  const [inspected, setInspected] = useState<CandlestickPoint<Candle> | null>(null);
-  const onInspect = useCallback((point: CandlestickPoint<Candle> | null) => {
-    setInspected((current) => (current?.time === point?.time ? current : point));
-  }, []);
   useEffect(() => {
     if (!running || state === "loading") return;
     const interval = setInterval(step, 700);
     return () => clearInterval(interval);
   }, [running, state]);
-  const candle =
-    (inspected ? feed.rows.find((row) => row.time === inspected.time) : null) ?? feed.rows.at(-1);
-  const change = candle ? ((candle.close - candle.open) / candle.open) * 100 : 0;
-  const direction = change > 0 ? rising : change < 0 ? falling : unchanged;
+  const loading = state === "loading";
   return (
     <div style={{ minWidth: 0 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          alignItems: "center",
-          flexWrap: "wrap",
-          marginBottom: 12,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <strong style={{ fontSize: 14 }}>ETH / USD · 1m</strong>
-          <span
-            style={{
-              border: "1px solid var(--border, #dfe2e8)",
-              borderRadius: 5,
-              padding: "2px 6px",
-              fontSize: 10,
-              color: "var(--muted-foreground)",
-            }}
-          >
-            SIMULATED
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button
-            style={buttonStyle}
-            type="button"
-            disabled={state === "loading"}
-            onClick={() => setRunning(!running)}
-          >
-            {running ? "Pause" : "Resume"}
-          </button>
-          <button
-            style={buttonStyle}
-            type="button"
-            disabled={state === "loading"}
-            onClick={() => {
-              setRunning(false);
-              step();
-            }}
-          >
-            Step
-          </button>
-        </div>
-      </div>
-      <div
-        data-kind-ui="candle-readout"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "4px 12px",
-          fontSize: 12,
-          fontVariantNumeric: "tabular-nums",
-          marginBottom: 12,
-          minHeight: 20,
-        }}
-      >
-        {state !== "loading" && candle && (
-          <>
-            <span>{time(candle.time)} UTC</span>
-            {(["open", "high", "low", "close"] as const).map((key) => (
-              <span key={key}>
-                {key[0]?.toUpperCase()}{" "}
-                <span style={{ color: direction }}>{money(candle[key])}</span>
-              </span>
-            ))}
-            <span>Vol {candle.volume.toFixed(1)}</span>
-            <span style={{ color: direction }}>
-              {change >= 0 ? "+" : ""}
-              {change.toFixed(2)}%
+      {!loading && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            alignItems: "center",
+            flexWrap: "wrap",
+            marginBottom: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <strong style={{ fontSize: 14 }}>ETH / USD · 1m</strong>
+            <span
+              style={{
+                border: "1px solid var(--border, #dfe2e8)",
+                borderRadius: 5,
+                padding: "2px 6px",
+                fontSize: 10,
+                color: "var(--muted-foreground)",
+              }}
+            >
+              SIMULATED
             </span>
-          </>
-        )}
-      </div>
-      <MarketPlot rows={feed.rows} loading={state === "loading"} onInspect={onInspect} />
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button style={buttonStyle} type="button" onClick={() => setRunning(!running)}>
+              {running ? "Pause" : "Resume"}
+            </button>
+            <button
+              style={buttonStyle}
+              type="button"
+              onClick={() => {
+                setRunning(false);
+                step();
+              }}
+            >
+              Step
+            </button>
+          </div>
+        </div>
+      )}
+      <MarketPlot rows={feed.rows} loading={loading} />
     </div>
   );
 }

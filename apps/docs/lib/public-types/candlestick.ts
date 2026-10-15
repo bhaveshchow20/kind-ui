@@ -34,10 +34,10 @@ export type CandlestickChartReference = Pick<
   | "width"
   | "height"
 >;
-export type CandlestickDatumReference = Chart.CandlestickDatum;
+export type CandlestickRecordReference = Chart.CandlestickRecord;
 export type CandlestickPointReference = Chart.CandlestickPoint;
-export type CandlestickAccessorsReference = Chart.CandlestickAccessors<Chart.CandlestickDatum>;
-export type CandlestickDataOptionsReference = Chart.CandlestickDataOptions<Chart.CandlestickDatum>;
+export type CandlestickAccessorsReference = Chart.CandlestickAccessors<Chart.CandlestickRecord>;
+export type CandlestickDataOptionsReference = Chart.CandlestickDataOptions<Chart.CandlestickRecord>;
 export type CandlestickViewportReference = Chart.CandlestickViewport;
 export type CandlestickViewportChangeReference = Chart.CandlestickViewportChange;
 export type CandlestickPriceDomainReference = Chart.CandlestickPriceDomainOptions;
@@ -54,10 +54,10 @@ export type CandlestickOverlayReference = Pick<
   Chart.CandlestickOverlayProps,
   "seriesKey" | "dataKey" | "includeInDomain" | "stroke" | "connectNulls"
 >;
-export type CandlestickContentReference = Chart.CandlestickContentProps;
+export type CandlestickReadoutReference = Chart.CandlestickReadoutProps;
 export type CandlestickTooltipReference = Chart.CandlestickTooltipProps;
-export type CandlestickDataTableReference = Pick<
-  Chart.CandlestickDataTableProps,
+export type CandlestickTableReference = Pick<
+  Chart.CandlestickTableProps,
   "caption" | "renderMetadata" | "metadataLabel"
 >;
 

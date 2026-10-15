@@ -14,7 +14,7 @@ export function installationFor(bundle) {
     {
       title: "Install Core",
       description: "Add the package and its peers to your React 19.3 project.",
-      code: `npm install @kind-ui/charts${bundle.minimumCoreVersion ? `@^${bundle.minimumCoreVersion}` : ""} motion recharts`,
+      code: "npm install @kind-ui/charts motion recharts",
       language: "sh",
       filename: "Terminal",
     },

@@ -31,7 +31,7 @@ test("Candlestick card preserves source-labelled inspection, copied code and ins
   });
   expect(await table.getByRole("row").count()).toBeGreaterThanOrEqual(241);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
-  const readout = card.locator('[data-kind-ui="candle-readout"]');
+  const readout = card.locator('[data-kind-ui="candlestick-readout"]');
   const paused = await readout.textContent();
   await card.getByRole("button", { name: "Step", exact: true }).click();
   await expect(readout).not.toHaveText(paused ?? "");
@@ -211,7 +211,7 @@ for (const theme of ["light", "dark"] as const) {
         const contrast = (color: readonly number[], backdrop: readonly number[]) =>
           (Math.max(luminance(color), luminance(backdrop)) + 0.05) /
           (Math.min(luminance(color), luminance(backdrop)) + 0.05);
-        const text = [...card.querySelectorAll('[data-kind-ui="candle-readout"] span')]
+        const text = [...card.querySelectorAll('[data-kind-ui="candlestick-readout"] span')]
           .filter((node) => node.children.length === 0)
           .map((node) => ({
             text: node.textContent,
@@ -311,7 +311,7 @@ test("Candlestick streaming pauses and resumes while zoom, pan and navigator sha
   await page.getByRole("tab", { name: "Candlestick", exact: true }).click();
   const container = page.locator(".demo-grid .chart-card");
   await container.getByRole("button", { name: "Pause", exact: true }).click();
-  const readout = container.locator('[data-kind-ui="candle-readout"]');
+  const readout = container.locator('[data-kind-ui="candlestick-readout"]');
   const paused = await readout.textContent();
   await page.waitForTimeout(900);
   await expect(readout).toHaveText(paused ?? "");

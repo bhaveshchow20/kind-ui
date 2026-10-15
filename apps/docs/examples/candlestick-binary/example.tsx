@@ -119,23 +119,15 @@ export function BinaryBidCandlestickChart() {
           strokeOpacity={0.3}
           strokeDasharray="4 4"
         />
-        <CandlestickChart.Series<Quote>
-          seriesKey="bid"
-          rising="var(--candlestick-rising, #087f68)"
-          falling="var(--candlestick-falling, #c43d54)"
-          unchanged="var(--candlestick-neutral, #53657b)"
-          maxBarSize={22}
-        />
+        <CandlestickChart.Series<Quote> seriesKey="bid" maxBarSize={22} />
         <CandlestickChart.Crosshair strokeOpacity={0.5} />
-        <CandlestickChart.Content<Quote>
-          frameProps={{ style: { minHeight: 36, fontSize: 12, paddingTop: 12 } }}
-        >
+        <CandlestickChart.Readout<Quote> style={{ minHeight: 36, fontSize: 12, paddingTop: 12 }}>
           {(point) =>
             point
               ? `${time(point.time)} UTC · ${point.original.source} · O ${quote(point.open ?? 0)} / H ${quote(point.high ?? 0)} / L ${quote(point.low ?? 0)} / C ${quote(point.close ?? 0)} · ${point.state}`
               : "Inspect a quote interval. The dashed line is a USD 0.50 reference."
           }
-        </CandlestickChart.Content>
+        </CandlestickChart.Readout>
       </CandlestickChart>
     </div>
   );
