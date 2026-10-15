@@ -30,7 +30,7 @@ export type DemoOptions = {
 
 export function demoDefaults(id: string): DemoOptions {
   return {
-    strokeWidth: 3,
+    strokeWidth: id === "candlestick-sessions" ? 1.5 : 3,
     showGrid: true,
     showLegend: true,
     showLabels: !["radial", "radial-stacked", "gauge"].includes(id),
@@ -45,7 +45,16 @@ export function demoDefaults(id: string): DemoOptions {
     dots: false,
     fillOpacity: id === "stacked" ? 0.55 : id === "radar-outline" ? 0 : 0.3,
     radius: id === "pie" || id === "donut" ? 0 : 5,
-    width: id === "horizontal" ? 18 : id === "bubble" ? 60 : id === "scatter" ? 75 : 35,
+    width:
+      id === "candlestick-sessions"
+        ? 14
+        : id === "horizontal"
+          ? 18
+          : id === "bubble"
+            ? 60
+            : id === "scatter"
+              ? 75
+              : 35,
     stacked: false,
     innerRadius: id === "donut" ? 54 : 0,
     gridType: "polygon",

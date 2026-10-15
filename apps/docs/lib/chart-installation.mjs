@@ -1,4 +1,4 @@
-/** @typedef {{id: string, version: string, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
+/** @typedef {{id: string, version: string, minimumCoreVersion?: string | undefined, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
 /** @typedef {{title: string, description: string, code: string, language: "sh" | "css" | "tsx", filename: string}} InstallationStep */
 
 /** @param {InstallationBundle} bundle */

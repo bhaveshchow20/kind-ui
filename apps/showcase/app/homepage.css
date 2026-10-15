@@ -10,6 +10,10 @@
   --input: #d4d4d4;
   --ring: #898989;
   --accent: #f2f2f2;
+  --candlestick-label-text: #fff;
+  --candlestick-rising: #087f68;
+  --candlestick-falling: #c43d54;
+  --candlestick-neutral: #53657b;
   --chart-grid: #eee;
   --chart-axis: #939393;
   --popover: #ffffffeb;
@@ -26,6 +30,10 @@
   --border: #252525;
   --input: #393939;
   --accent: #1c1c1c;
+  --candlestick-label-text: #000;
+  --candlestick-rising: #22b99f;
+  --candlestick-falling: #f57888;
+  --candlestick-neutral: #94a3b8;
   --chart-grid: #252525;
   --chart-axis: #888;
   --popover: #141414eb;

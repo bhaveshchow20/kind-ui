@@ -382,10 +382,15 @@ test("page Markdown keeps selected examples and readable presentation fallbacks"
 test("copied examples focus on chart rendering", () => {
   for (const [id, bundle] of Object.entries(completeBundles)) {
     const source = readFileSync(`examples/${id}/example.tsx`, "utf8");
-    assert.ok(
-      !/data-chart-alternative|<table\b|<\w+(?:Chart)?\.(?:Table|DataTable)\b/.test(source),
-      id,
-    );
+    if (id === "candlestick-updates") {
+      // This recipe explicitly teaches identity-preserving updates and their typed row table.
+      assert.match(source, /<CandlestickChart\.DataTable/);
+    } else {
+      assert.ok(
+        !/data-chart-alternative|<table\b|<\w+(?:Chart)?\.(?:Table|DataTable)\b/.test(source),
+        id,
+      );
+    }
     assert.equal(bundle.files[`src/examples/${id}/example.tsx`], source);
   }
 });

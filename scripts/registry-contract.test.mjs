@@ -44,7 +44,7 @@ const catalog = catalogSchema.parse(readJson(path.join(output, "registry.json"))
 test("official CLI output has a flat complete catalog and content-free discovery payload", () => {
   assert.equal(catalog.homepage, registryHomepage);
   assert.equal(registryEndpoint, "https://kindui.dev/r/");
-  assert.equal(catalog.items.length, 14);
+  assert.equal(catalog.items.length, 15);
   assert.deepEqual(
     catalog.items.map(({ name }) => name),
     registryItems.map(({ name }) => name),
@@ -54,9 +54,11 @@ test("official CLI output has a flat complete catalog and content-free discovery
     ["registry.json", ...registryItems.map(({ name }) => `${name}.json`)].sort(),
   );
   for (const item of catalog.items) {
+    const definition = registryItems.find(({ name }) => name === item.name);
+    assert.ok(definition);
     assert.ok(item.files.every((file) => !Object.hasOwn(file, "content")));
     assert.deepEqual(item.dependencies, [
-      `@kind-ui/charts@${coreVersion}`,
+      `@kind-ui/charts@${definition.minimumCoreVersion ? `^${definition.minimumCoreVersion}` : coreVersion}`,
       "react@^19.3.0",
       "react-dom@^19.3.0",
       "recharts@^3.10.1",
@@ -126,4 +128,24 @@ test("lookup and policy reject missing examples, nested names and absent depende
   assert.equal(itemSchema.safeParse({ ...first, name: "charts/line-chart" }).success, false);
   assert.equal(itemSchema.safeParse({ ...first, dependencies: undefined }).success, false);
   assert.equal(itemSchema.safeParse({ ...first, files: [] }).success, false);
+});
+
+test("Candlestick has a canonical flat registry address and exact editable source", () => {
+  assert.equal(itemNameFor("candlestick"), "candlestick-chart");
+  const definition = registryItems.find((item) => item.exampleId === "candlestick");
+  assert.ok(definition);
+  assert.equal(definition.name, "candlestick-chart");
+  const item = itemSchema.parse(readJson(path.join(output, "candlestick-chart.json")));
+  const file = item.files[0];
+  assert.ok(file);
+  assert.equal(file.path, "components/candlestick-chart.tsx");
+  assert.equal(file.target, "@components/candlestick-chart.tsx");
+  assert.equal(
+    file.content,
+    readFileSync(path.join(root, "apps/docs/examples/candlestick/example.tsx"), "utf8"),
+  );
+  assert.equal(
+    new URL(`${definition.name}.json`, registryEndpoint).pathname,
+    "/r/candlestick-chart.json",
+  );
 });

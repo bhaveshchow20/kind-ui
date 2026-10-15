@@ -98,3 +98,53 @@ test("installed combo legend and activity rings retain explicit values on a narr
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   expect(errors).toEqual([]);
 });
+
+test("installed Candlestick composition preserves streaming inspection and shared history controls", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 375, height: 850 });
+  await page.goto("/");
+  await page
+    .getByRole("combobox", { name: "Chart", exact: true })
+    .selectOption("candlestick-chart");
+  const composition = page.getByRole("region", { name: "Installed composition" });
+  const marks = composition.locator('[data-kind-ui="candlestick-mark"]');
+  const volume = composition.locator('[data-kind-ui="candlestick-volume-mark"]');
+  await composition.getByRole("button", { name: "Pause", exact: true }).click();
+  await expect(composition.getByText("SIMULATED", { exact: true })).toBeVisible();
+  const count = await marks.count();
+  expect(count).toBeGreaterThanOrEqual(48);
+  expect(count).toBeLessThan(55);
+  await expect(volume).toHaveCount(count);
+  expect(
+    await volume.evaluateAll((nodes) =>
+      Math.min(...nodes.map((node) => Number(node.getAttribute("width")))),
+    ),
+  ).toBeGreaterThanOrEqual(1);
+  await expect(composition.locator('[data-kind-ui="candlestick-current-price"]')).toBeVisible();
+  await expect(composition.locator('[data-kind-ui="candlestick-history-navigator"]')).toBeVisible();
+  const readout = composition.locator('[data-kind-ui="candle-readout"]');
+  const paused = await readout.textContent();
+  await composition.getByRole("button", { name: "Step", exact: true }).click();
+  await expect(readout).not.toHaveText(paused ?? "");
+  const stepped = await readout.textContent();
+  await composition.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(readout).not.toHaveText(stepped ?? "");
+  await composition.getByRole("button", { name: "Pause", exact: true }).click();
+  await composition.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await expect.poll(() => marks.count()).toBeLessThan(count);
+  await composition.getByRole("button", { name: "Reset view", exact: true }).click();
+  await expect.poll(() => marks.count()).toBeGreaterThanOrEqual(240);
+  await composition.locator('[data-kind-ui="chart"]').focus();
+  await page.keyboard.press("Home");
+  const content = composition.locator('[data-kind-ui="candlestick-content"]');
+  await expect(content).toContainText("08:00");
+  await expect(content).toContainText("ETH");
+  await expect(content).toContainText("Open");
+  await expect(content).toContainText("close");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  expect(errors).toEqual([]);
+});

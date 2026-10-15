@@ -1,7 +1,15 @@
 import type { BoxPlotSummary, HistogramBin, SankeyFlowData, WaterfallEntry } from "@kind-ui/charts";
 import { demoEntry } from "@/lib/utils";
 import type { DemoOptions } from "./demo-options";
+import { marketCandlestickSource } from "./market-candlestick-source";
 export const newRecipes = [
+  {
+    id: "candlestick-sessions",
+    family: "Candlestick",
+    tag: "Session price action",
+    context:
+      "Simulated ETH / USD one-minute candles with live OHLC, volume and historical navigation.",
+  },
   {
     id: "line-trials",
     family: "Line",
@@ -263,6 +271,7 @@ export function newCode(
 ) {
   const imports = {
     Line: "LineChart",
+    Candlestick: "CandlestickChart, type CandlestickRecord",
     Histogram: "HistogramChart, type HistogramBin",
     "Box Plot": "BoxPlotChart, type BoxPlotSummary, ReferenceLine",
     Heatmap: "HeatmapChart, createHeatmapScale",
@@ -272,9 +281,13 @@ export function newCode(
   }[r.family];
   const paletteLookup =
     r.family === "Sankey"
-      ? `function paletteColor(index: number): string {\n  const color = colors[index];\n  if (color === undefined) throw new Error(\"Missing palette color\");\n  return color;\n}\n`
+      ? `function paletteColor(index: number): string {\n  const color = colors[index];\n  if (color === undefined) throw new Error("Missing palette color");\n  return color;\n}\n`
       : "";
-  const intro = `"use client";\n\nimport { ${imports} } from "@kind-ui/charts";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)} as const;\nconst animate = ${animate};\n${paletteLookup}`;
+  const reactImports = r.family === "Candlestick" ? 'import { useState } from "react";\n' : "";
+  const intro = `"use client";\n\nimport { ${imports} } from "@kind-ui/charts";\n${reactImports}\n// ${r.context}\nconst colors = ${JSON.stringify(colors)} as const;\nconst animate = ${animate};\n${paletteLookup}`;
+  if (r.family === "Candlestick") {
+    return marketCandlestickSource(colors, animate, options);
+  }
   if (r.family === "Line") {
     return (
       intro +

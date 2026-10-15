@@ -35,6 +35,7 @@ for (const width of [320, 375, 390, 414]) {
       "Sankey",
       "Histogram",
       "Box Plot",
+      "Candlestick",
     ]) {
       await page.getByRole("tab", { name: family, exact: true }).click();
       await expect

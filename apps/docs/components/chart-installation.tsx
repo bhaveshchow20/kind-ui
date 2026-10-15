@@ -26,7 +26,8 @@ async function installationCode(step: Pick<InstallationStep, "code" | "filename"
 }
 
 export async function ChartInstallation({ id }: { id: ComponentId }) {
-  const { command, steps } = installationFor(componentBundleFor(validatedBundles, id));
+  const bundle = componentBundleFor(validatedBundles, id);
+  const { command, steps } = installationFor(bundle);
   const blocks = await Promise.all(steps.map(installationCode));
   return (
     <InstallationTabs
