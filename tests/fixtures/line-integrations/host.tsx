@@ -255,3 +255,49 @@ export function ThemingHost() {
     </section>
   );
 }
+
+export function CandlestickHydrationHost() {
+  const [corrected, setCorrected] = useState(false);
+  return (
+    <section data-candlestick-hydration="">
+      <button type="button" onClick={() => setCorrected(!corrected)}>
+        Correct candle
+      </button>
+      <Chart.CandlestickChart
+        config={{ price: { label: "Quote OHLC", color: "#427b67" } }}
+        aria-label="Bounded quote observations"
+        timeMode="epoch-ms"
+        priceBounds={[0, 1]}
+        priceDomain={[0, 1]}
+        width={400}
+        height={220}
+        data={[
+          {
+            time: 1791824400000,
+            open: 0.42,
+            low: 0.38,
+            high: corrected ? 0.65 : 0.55,
+            close: 0.51,
+            source: "Bid OHLC",
+          },
+          {
+            time: 1791828000000,
+            open: 0.51,
+            low: 0.48,
+            high: 0.6,
+            close: 0.57,
+            source: "Bid OHLC",
+          },
+        ]}
+        formatPrice={(value) => `${(100 * value).toFixed(1)} probability points`}
+      >
+        <Chart.CandlestickChart.XAxis />
+        <Chart.CandlestickChart.YAxis />
+        <Chart.CandlestickChart.Series seriesKey="price" />
+        <Chart.CandlestickChart.Crosshair />
+        <Chart.CandlestickChart.Tooltip />
+        <Chart.CandlestickChart.Table caption="Quote source observations" />
+      </Chart.CandlestickChart>
+    </section>
+  );
+}

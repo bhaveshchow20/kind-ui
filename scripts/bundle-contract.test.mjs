@@ -144,3 +144,55 @@ test("measurement ignores a zero-code module instead of mistaking a traversed ba
   assert.equal(measured.css.raw, 15);
   assertBundleRetention("cartesian", measured.modules);
 });
+
+test("candlestick fixture retains its core and price-pane loading but rejects other family roots", () => {
+  const common = [
+    "/node_modules/@kind-ui/charts/dist/candlestick/chart.js",
+    "/node_modules/@kind-ui/charts/dist/loading-skeleton.js",
+    "/node_modules/@kind-ui/charts/dist/candlestick/motion.js",
+  ];
+  assertBundleRetention("candlestick", common);
+  for (const name of [
+    "composition/line",
+    "heatmap",
+    "sankey-chart",
+    "loading-polar-designs",
+    "loading-cartesian-designs",
+  ]) {
+    assert.throws(
+      () =>
+        assertBundleRetention("candlestick", [
+          ...common,
+          `/node_modules/@kind-ui/charts/dist/${name}.js`,
+        ]),
+      /unrelated/,
+    );
+  }
+  assert.throws(() => assertBundleRetention("candlestick", common.slice(1)), /own candlestick/);
+  assert.throws(
+    () => assertBundleRetention("candlestick", common.slice(0, 2)),
+    /own candlestick Motion/,
+  );
+});
+
+test("every unrelated bundle fixture rejects emitted candlestick runtime", () => {
+  for (const fixture of [
+    "app",
+    "cartesian-native",
+    "polar-native",
+    "sankey-native",
+    "cartesian",
+    "polar",
+    "heatmap",
+    "sankey",
+  ]) {
+    assert.throws(
+      () =>
+        assertBundleRetention(fixture, [
+          "/node_modules/@kind-ui/charts/dist/loading-skeleton.js",
+          "/node_modules/@kind-ui/charts/dist/candlestick/chart.js",
+        ]),
+      /unrelated candlestick/,
+    );
+  }
+});

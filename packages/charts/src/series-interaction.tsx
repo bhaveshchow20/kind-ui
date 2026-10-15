@@ -75,10 +75,16 @@ export function SeriesInteractionLayer({
   hidden,
   children,
   onKeyDown,
+  paint: Paint = InteractionPaint,
+  keyboardTarget = true,
 }: {
   seriesKey: string | undefined;
   hidden: boolean;
   onKeyDown?: KeyboardEventHandler<SVGElement> | undefined;
+  /** Internal paint seam for renderers that preserve a consumer strict LazyMotion boundary. */
+  paint?: typeof InteractionPaint;
+  /** Internal opt-out for duplicate compound parts of the same logical series. */
+  keyboardTarget?: boolean;
   children: ReactNode;
 }) {
   const interaction = useChartInteraction();
@@ -109,21 +115,21 @@ export function SeriesInteractionLayer({
       ? 1
       : emphasis.factor;
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useAriaPropsSupportedByRole: Role, pressed state and handlers are enabled together for opted-in SVG controls.
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: Button role and pressed state are enabled together for opted-in SVG controls.
     <g
       data-kind-ui="series-interaction"
       data-series={seriesKey}
       aria-hidden={hidden || undefined}
       pointerEvents={hidden ? "none" : undefined}
-      role={interactive ? "button" : undefined}
-      tabIndex={interactive ? 0 : undefined}
+      role={interactive && keyboardTarget ? "button" : undefined}
+      tabIndex={interactive && keyboardTarget ? 0 : undefined}
       aria-label={
-        interactive
+        interactive && keyboardTarget
           ? `${interaction.mode === "focus" ? "Highlight" : "Toggle"} ${config[seriesKey]?.label ?? seriesKey}`
           : undefined
       }
       aria-pressed={
-        interactive
+        interactive && keyboardTarget
           ? interaction.mode === "focus"
             ? interaction.selected === seriesKey
             : (interaction.visible?.includes(seriesKey) ?? true)
@@ -153,6 +159,7 @@ export function SeriesInteractionLayer({
         if (event.target === event.currentTarget) onKeyDown?.(event);
         if (
           interactive &&
+          keyboardTarget &&
           event.target === event.currentTarget &&
           !event.defaultPrevented &&
           (event.key === "Enter" || event.key === " ")
@@ -163,9 +170,9 @@ export function SeriesInteractionLayer({
         }
       }}
     >
-      <InteractionPaint data-kind-ui="series-interaction-paint" opacity={hidden ? 0 : factor}>
+      <Paint data-kind-ui="series-interaction-paint" opacity={hidden ? 0 : factor}>
         {children}
-      </InteractionPaint>
+      </Paint>
     </g>
   );
 }

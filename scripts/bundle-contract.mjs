@@ -18,6 +18,7 @@ export const bundleFixtures = [
   "polar",
   "polar-native",
   "heatmap",
+  "candlestick",
   "sankey",
   "sankey-native",
 ];
@@ -92,6 +93,23 @@ export function measureBundle(result) {
 
 /** @param {string} fixture @param {string[]} modules */
 export function assertBundleRetention(fixture, modules) {
+  if (fixture !== "candlestick") {
+    for (const id of modules) {
+      assert.ok(
+        !id.includes("/@kind-ui/charts/dist/candlestick/"),
+        `${fixture}: unrelated candlestick family retained: ${id}`,
+      );
+    }
+  } else {
+    assert.ok(
+      modules.some((id) => id.endsWith("/@kind-ui/charts/dist/candlestick/chart.js")),
+      `${fixture}: own candlestick implementation must remain retained`,
+    );
+    assert.ok(
+      modules.some((id) => id.endsWith("/@kind-ui/charts/dist/candlestick/motion.js")),
+      `${fixture}: own candlestick Motion implementation must remain retained`,
+    );
+  }
   if (fixture.startsWith("primitive-")) {
     assert.ok(
       !modules.some((id) => /(?:motion|framer-motion|motion-dom|motion-utils)\//.test(id)),
@@ -107,6 +125,7 @@ export function assertBundleRetention(fixture, modules) {
     ["line-loading", "line"],
     ["polar", "radar"],
     ["heatmap", "heatmap"],
+    ["candlestick", "candlestick"],
     ["sankey", "sankey"],
   ]).get(fixture);
   if (!family) return;
@@ -125,7 +144,13 @@ export function assertBundleRetention(fixture, modules) {
     );
     const design = /loading-(cartesian|polar|standalone)-designs\.js$/.exec(id)?.[1];
     const allowedDesign =
-      family === "radar" ? "polar" : family === "line" ? undefined : "standalone";
+      family === "radar"
+        ? "polar"
+        : family === "line"
+          ? undefined
+          : family === "candlestick"
+            ? undefined
+            : "standalone";
     assert.ok(
       !design || design === allowedDesign,
       `${fixture}: unrelated loading design retained: ${id}`,
@@ -254,6 +279,7 @@ export async function checkBundleContract({ root, consumer, artifactSha256, buil
       "line-loading",
       "polar",
       "heatmap",
+      "candlestick",
       "sankey",
     ].includes(fixture);
     await writeFile(

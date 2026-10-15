@@ -11,7 +11,7 @@ import {
   type ZAxisProps,
 } from "recharts";
 
-const tick = {
+export const axisTick = {
   fontSize: 12,
   fill: "var(--muted-foreground, #6b7280)",
 };
@@ -28,12 +28,12 @@ export function Grid(props: CartesianGridProps) {
 export function XAxis<DataPoint = unknown, DataValue = unknown>(
   props: XAxisProps<DataPoint, DataValue>,
 ) {
-  return <NativeXAxis axisLine={false} tickLine={false} tick={tick} {...props} />;
+  return <NativeXAxis axisLine={false} tickLine={false} tick={axisTick} {...props} />;
 }
 export function YAxis<DataPoint = unknown, DataValue = unknown>(
   props: YAxisProps<DataPoint, DataValue>,
 ) {
-  return <NativeYAxis axisLine={false} tickLine={false} tick={tick} {...props} />;
+  return <NativeYAxis axisLine={false} tickLine={false} tick={axisTick} {...props} />;
 }
 export function ScatterXAxis<DataPoint = unknown, DataValue = unknown>(
   props: XAxisProps<DataPoint, DataValue>,

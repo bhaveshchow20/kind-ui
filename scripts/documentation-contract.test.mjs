@@ -21,7 +21,7 @@ test("quick-start README uses public imports, Tailwind setup and existing docume
 });
 test("rejects missing documentation, public package import and Tailwind setup", () => {
   assert.throws(
-    () => check(readme.replace(documentationSource, "https://example.com")),
+    () => check(readme.replaceAll(documentationSource, "https://example.com")),
     /canonical documentation/,
   );
   assert.throws(() => check(withoutPublicImports(readme)), /public package import/);
