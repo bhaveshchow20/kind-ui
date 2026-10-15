@@ -15,7 +15,7 @@ test("inspection of a 240-candle history does not repaint unchanged consumer geo
   for (let index = 0; index < 12; index++) {
     await page.mouse.move(svg.x + 50 + index * 65, svg.y + 150);
   }
-  await expect(page.locator('[data-kind-ui="candlestick-content"]')).toContainText("Open");
+  await expect(page.locator('[data-kind-ui="candlestick-readout"]')).toContainText("Open");
   await expect
     .poll(() => page.evaluate(() => document.documentElement.dataset.candlePaints))
     .toBe(before);

@@ -13,6 +13,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useSyncExternalStore,
 } from "react";
 import {
   DefaultZIndexes,
@@ -31,11 +32,13 @@ import {
 } from "recharts";
 import { axisTick, Grid, XAxis as SharedXAxis, YAxis as SharedYAxis } from "../cartesian-parts.js";
 import { useChart } from "../chart-context.js";
+import { useChartInteraction } from "../chart-interaction.js";
 import { OutsidePlot } from "../family-root.js";
 import { useLineInteraction } from "../line-chart.js";
 import { SeriesInteractionLayer, useSeriesInteraction } from "../series-interaction.js";
 import { StaticTooltipFrame, TooltipBase, type TooltipFrameProps } from "../tooltip.js";
-import { tooltipClassName } from "../tooltip-content.js";
+import { TooltipItem, tooltipClassName } from "../tooltip-content.js";
+import { TooltipNumber } from "../tooltip-number.js";
 import { cn } from "../utils.js";
 import {
   type NativePoint,
@@ -43,8 +46,9 @@ import {
   useCandlestickInspection,
   useCandlestickSeriesTarget,
 } from "./context.js";
+import { candlestickDirectionColors } from "./current-price.js";
 import { CandlestickSeriesPaint } from "./marks.js";
-import type { CandlestickDatum, CandlestickPoint } from "./model.js";
+import type { CandlestickPoint, CandlestickRecord } from "./model.js";
 import { getCandlestickVisiblePoints } from "./viewport.js";
 export type CandlestickXAxisProps = Omit<
   ComponentProps<typeof XAxis>,
@@ -148,7 +152,7 @@ export function CandlestickYAxis(props: CandlestickYAxisProps) {
   );
 }
 export const CandlestickGrid = Grid;
-export type CandlestickOverlayProps<Row extends object = CandlestickDatum> = Omit<
+export type CandlestickOverlayProps<Row extends object = CandlestickRecord> = Omit<
   ComponentProps<typeof Line>,
   "dataKey" | "data" | "isAnimationActive" | "xAxisId" | "yAxisId"
 > & {
@@ -156,7 +160,7 @@ export type CandlestickOverlayProps<Row extends object = CandlestickDatum> = Omi
   dataKey: (keyof Row & string) | ((row: Row) => number | null | undefined);
   includeInDomain?: boolean;
 };
-export function CandlestickOverlay<Row extends object = CandlestickDatum>({
+export function CandlestickOverlay<Row extends object = CandlestickRecord>({
   seriesKey,
   dataKey,
   includeInDomain = false,
@@ -514,129 +518,217 @@ export function CandlestickCrosshair({
     </ZIndexLayer>
   );
 }
-export type CandlestickContentProps<Row extends object = CandlestickDatum> = {
+export type CandlestickReadoutProps<Row extends object = CandlestickRecord> = Omit<
+  ComponentPropsWithRef<"div">,
+  "children"
+> & {
   children?: (
     point: CandlestickPoint<Row> | null,
     selection: CandlestickPoint<Row> | null,
   ) => ReactNode;
-  className?: string;
-  frameProps?: ComponentPropsWithRef<"div">;
+  /** Animate formatted digits only; observations and calculations remain unchanged. */
+  valueAnimation?: "shuffle";
 };
-export function CandlestickContent<Row extends object = CandlestickDatum>({
+/** A persistent readout follows inspection, then the latest observation—not persistent selection. */
+export function CandlestickReadout<Row extends object = CandlestickRecord>({
   children,
+  valueAnimation,
   className,
-  frameProps,
-}: CandlestickContentProps<Row>) {
+  ...props
+}: CandlestickReadoutProps<Row>) {
   const context = useCandlestick();
   const id = useId();
   useLayoutEffect(() => context.registerContent(id), [context.registerContent, id]);
-  const point = useCandlestickInspection() ?? context.selected;
+  const inspected = useCandlestickInspection();
+  const latest = useMemo(() => {
+    for (let index = context.points.length - 1; index >= 0; index--) {
+      const item = context.points[index];
+      if (item && !item.gap) return item;
+    }
+    return null;
+  }, [context.points]);
+  const point = inspected ?? latest;
+  if (context.loading) return null;
   return (
     <OutsidePlot>
       <div
         role="status"
-        aria-live="polite"
-        {...frameProps}
-        className={className ?? frameProps?.className}
-        data-kind-ui="candlestick-content"
+        aria-live={inspected ? "polite" : "off"}
+        {...props}
+        className={cn("text-xs tabular-nums", className)}
+        data-kind-ui="candlestick-readout"
       >
-        {children ? (
-          children(
-            point as unknown as CandlestickPoint<Row> | null,
-            context.selected as CandlestickPoint<Row> | null,
-          )
-        ) : point ? (
-          <>
-            {context.formatTime(point.time, point)}
-            {point.gap
-              ? ` — gap${point.state ? `, ${point.state}` : ""}`
-              : ` — Open ${context.formatPrice(point.open ?? 0, point)}, high ${context.formatPrice(point.high ?? 0, point)}, low ${context.formatPrice(point.low ?? 0, point)}, close ${context.formatPrice(point.close ?? 0, point)}${point.volume === undefined ? "" : `, volume ${context.formatVolume(point.volume, point)}`}${point.state ? `, ${point.state}` : ""}`}
-          </>
-        ) : null}
+        {children
+          ? children(
+              point as unknown as CandlestickPoint<Row> | null,
+              context.selected as unknown as CandlestickPoint<Row> | null,
+            )
+          : point && <CandleValues point={point} inline valueAnimation={valueAnimation} />}
       </div>
     </OutsidePlot>
   );
 }
-export type CandlestickTooltipProps<Row extends object = CandlestickDatum> =
-  CandlestickContentProps<Row> & { maxWidth?: number };
+function CandleValues({
+  point,
+  inline = false,
+  valueAnimation,
+}: {
+  point: CandlestickPoint<object>;
+  inline?: boolean;
+  valueAnimation: "shuffle" | undefined;
+}) {
+  const context = useCandlestick();
+  const { visibleSeries } = useChart();
+  const interaction = useChartInteraction();
+  const inactive = (key: string | undefined) =>
+    key !== undefined &&
+    ((visibleSeries !== undefined && !visibleSeries.includes(key)) ||
+      (interaction.kind === "series" &&
+        interaction.selected !== null &&
+        interaction.selected !== key));
+  const number = (value: string) =>
+    valueAnimation === "shuffle" ? <TooltipNumber value={value} /> : value;
+  const priceInactive = inactive(context.priceSeries);
+  const rows: { label: string; short: string; value: string; series: string | undefined }[] =
+    point.gap
+      ? []
+      : (["open", "high", "low", "close"] as const).flatMap((key) =>
+          point[key] === undefined
+            ? []
+            : [
+                {
+                  label: key[0]?.toUpperCase() + key.slice(1),
+                  short: key[0]?.toUpperCase() ?? key,
+                  value: context.formatPrice(point[key], point),
+                  series: context.priceSeries,
+                },
+              ],
+        );
+  if (point.volume !== undefined)
+    rows.push({
+      label: "Volume",
+      short: "Vol",
+      value: context.formatVolume(point.volume, point),
+      series: context.volumeSeries,
+    });
+  if (inline && point.open !== undefined && point.close !== undefined && point.open !== 0) {
+    const change = ((point.close - point.open) / point.open) * 100;
+    rows.push({
+      label: "Change",
+      short: "Change",
+      value: `${change >= 0 ? "+" : ""}${change.toFixed(2)}%`,
+      series: context.priceSeries,
+    });
+  }
+  const direction =
+    point.close !== undefined && point.open !== undefined
+      ? point.close > point.open
+        ? "rising"
+        : point.close < point.open
+          ? "falling"
+          : "unchanged"
+      : "unchanged";
+  return (
+    <>
+      <div className={inline ? "mb-1" : "mb-1 font-medium"}>
+        {context.formatTime(point.time, point)}
+        {point.gap ? " · Gap" : ""}
+        {point.state ? ` · ${point.state}` : ""}
+      </div>
+      <ul className={cn("m-0 p-0 list-none", inline && "flex flex-wrap gap-x-3 gap-y-1")}>
+        {rows.map((row) => (
+          <TooltipItem
+            key={row.label}
+            inactive={row.series === context.priceSeries ? priceInactive : inactive(row.series)}
+            {...(row.series === undefined ? {} : { "data-series": row.series })}
+          >
+            <span>
+              {inline ? (
+                <abbr className="no-underline" title={row.label}>
+                  {row.short}
+                </abbr>
+              ) : (
+                row.label
+              )}
+            </span>
+            <span
+              data-kind-ui="chart-tooltip-value"
+              style={
+                inline && row.series === context.priceSeries
+                  ? { color: candlestickDirectionColors[direction] }
+                  : undefined
+              }
+            >
+              {number(row.value)}
+            </span>
+          </TooltipItem>
+        ))}
+      </ul>
+    </>
+  );
+}
+export type CandlestickTooltipProps<Row extends object = CandlestickRecord> =
+  CandlestickReadoutProps<Row> & { maxWidth?: number };
 function CandleTooltipFrame(props: TooltipFrameProps) {
   const context = useCandlestick();
+  const pointer = useSyncExternalStore(context.pointer.subscribe, context.pointer.get, () => null);
   const point = useCandlestickInspection() ?? context.selected;
   const xScale = useXAxisScale();
   const yScale = useYAxisScale();
   const x = point ? xScale?.(point.coordinate) : undefined;
   const y = point?.close === undefined ? undefined : yScale?.(point.close);
+  // Shared positioning follows the cursor; keyboard inspection anchors beside its candle.
   return (
     <StaticTooltipFrame
       {...props}
-      x={Math.max(0, Math.min((typeof x === "number" ? x : props.x) + 12, props.maxX))}
-      y={Math.max(0, Math.min(typeof y === "number" ? y + 12 : props.y, props.maxY))}
+      x={
+        pointer
+          ? props.x
+          : Math.max(0, Math.min((typeof x === "number" ? x : props.x) + 12, props.maxX))
+      }
+      y={
+        pointer
+          ? props.y
+          : Math.max(0, Math.min(typeof y === "number" ? y + 12 : props.y, props.maxY))
+      }
     />
   );
 }
-export function CandlestickTooltip<Row extends object = CandlestickDatum>({
+export function CandlestickTooltip<Row extends object = CandlestickRecord>({
   children,
   className,
-  frameProps,
+  valueAnimation,
   maxWidth = 260,
+  ref,
+  ...props
 }: CandlestickTooltipProps<Row>) {
   const context = useCandlestick();
   const point = useCandlestickInspection() ?? context.selected;
-  if (!point) return null;
-  const { ref, ...attributes } = frameProps ?? {};
-  const content = (
-    <div data-kind-ui="candlestick-content" className={cn(tooltipClassName, className)}>
-      {children ? (
-        children(
-          point as unknown as CandlestickPoint<Row>,
-          context.selected as CandlestickPoint<Row> | null,
-        )
-      ) : (
-        <>
-          <div>{context.formatTime(point.time, point)}</div>
-          {point.gap ? (
-            <div>Gap{point.state ? `, ${point.state}` : ""}</div>
-          ) : (
-            <dl>
-              {(["open", "high", "low", "close"] as const).map((key) => (
-                <div key={key} className="flex justify-between gap-3">
-                  <dt>
-                    {key[0]?.toUpperCase()}
-                    {key.slice(1)}
-                  </dt>
-                  <dd>{context.formatPrice(point[key] ?? 0, point)}</dd>
-                </div>
-              ))}
-              {point.volume !== undefined && (
-                <div className="flex justify-between gap-3">
-                  <dt>Volume</dt>
-                  <dd>{context.formatVolume(point.volume, point)}</dd>
-                </div>
-              )}
-              {point.state && <div>{point.state}</div>}
-            </dl>
-          )}
-        </>
-      )}
-    </div>
-  );
+  if (context.loading || !point) return null;
   return (
     <TooltipBase
       active
       defaultIndex={context.rendered.findIndex((row) => row.identity === point.identity)}
       maxWidth={maxWidth}
       Frame={CandleTooltipFrame}
-      content={() => content}
       {...(ref ? { ref } : {})}
-      frameProps={{
-        role: "tooltip",
-        "aria-live": context.contents ? "off" : "polite",
-        ...attributes,
-      }}
+      content={() => (
+        <div data-kind-ui="candlestick-tooltip" className={cn(tooltipClassName, className)}>
+          {children ? (
+            children(
+              point as unknown as CandlestickPoint<Row>,
+              context.selected as unknown as CandlestickPoint<Row> | null,
+            )
+          ) : (
+            <CandleValues point={point} valueAnimation={valueAnimation} />
+          )}
+        </div>
+      )}
+      frameProps={{ role: "tooltip", "aria-live": context.contents ? "off" : "polite", ...props }}
     />
   );
 }
-export type CandlestickDataTableProps<Row extends object = CandlestickDatum> = Omit<
+export type CandlestickTableProps<Row extends object = CandlestickRecord> = Omit<
   ComponentPropsWithRef<"table">,
   "children"
 > & {
@@ -644,12 +736,12 @@ export type CandlestickDataTableProps<Row extends object = CandlestickDatum> = O
   renderMetadata?: (point: CandlestickPoint<Row>) => ReactNode;
   metadataLabel?: string;
 };
-export function CandlestickDataTable<Row extends object = CandlestickDatum>({
+export function CandlestickTable<Row extends object = CandlestickRecord>({
   caption,
   renderMetadata,
   metadataLabel = "Metadata",
   ...props
-}: CandlestickDataTableProps<Row>) {
+}: CandlestickTableProps<Row>) {
   const context = useCandlestick();
   return (
     <OutsidePlot>

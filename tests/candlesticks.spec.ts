@@ -84,11 +84,11 @@ test("packed OHLC geometry, gaps, volume, updates and accessible inspection", as
   const frame = page.locator('[data-kind-ui="chart"]').filter({ has: chart });
   await frame.focus();
   await page.keyboard.press("Home");
-  await expect(page.locator('[data-kind-ui="candlestick-content"]')).toContainText("2026-03-05");
+  await expect(page.locator('[data-kind-ui="candlestick-readout"]')).toContainText("2026-03-05");
   await page.keyboard.press("ArrowRight");
-  await expect(page.locator('[data-kind-ui="candlestick-content"]')).toContainText("2026-03-06");
+  await expect(page.locator('[data-kind-ui="candlestick-readout"]')).toContainText("2026-03-06");
   await page.keyboard.press("ArrowRight");
-  await expect(page.locator('[data-kind-ui="candlestick-content"]')).toContainText("2026-03-10");
+  await expect(page.locator('[data-kind-ui="candlestick-readout"]')).toContainText("2026-03-10");
   await page.keyboard.press("Enter");
   await expect(table.locator('tr[data-selected="true"]')).toContainText("2026-03-10");
   await page.getByRole("button", { name: "Prepend", exact: true }).click();

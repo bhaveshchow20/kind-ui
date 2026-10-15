@@ -5,7 +5,7 @@ const url = `http://127.0.0.1:${4204 + Number(process.env.KIND_UI_TEST_PORT_BASE
 test("initial default selection survives loading and is consumed only once", async ({ page }) => {
   await page.goto(`${url}/?selection-contract&initial-empty`);
   const callbacks = page.locator('output[aria-label="Selection callbacks"]');
-  const content = page.locator('[data-kind-ui="candlestick-content"]');
+  const content = page.locator('[data-kind-ui="candlestick-readout"]');
   await expect(callbacks).toHaveText("[]");
   await page.getByRole("button", { name: "Change default selection", exact: true }).click();
   await page.getByRole("button", { name: "Load observations", exact: true }).click();
@@ -22,7 +22,7 @@ test("Enter and Space preserve persistent selection without transient inspection
   page,
 }) => {
   await page.goto(`${url}/?selection-contract`);
-  const content = page.locator('[data-kind-ui="candlestick-content"]');
+  const content = page.locator('[data-kind-ui="candlestick-readout"]');
   const frame = page.locator('[data-kind-ui="chart"]').first();
   await frame.focus();
   await expect(content).toContainText("selected 2000");
@@ -68,5 +68,5 @@ test("missing pending selection reports removal after first history arrives", as
   await expect(callbacks).toHaveText("[]");
   await page.getByRole("button", { name: "Load observations", exact: true }).click();
   await expect(callbacks).toHaveText("[null]");
-  await expect(page.locator('[data-kind-ui="candlestick-content"]')).toContainText("selected None");
+  await expect(page.locator('[data-kind-ui="candlestick-readout"]')).toContainText("selected None");
 });

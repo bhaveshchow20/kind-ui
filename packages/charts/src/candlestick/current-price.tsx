@@ -5,14 +5,14 @@ import { DefaultZIndexes, usePlotArea, useYAxisScale, ZIndexLayer } from "rechar
 import { useChart } from "../chart-context.js";
 import { useCandlestick } from "./context.js";
 import { useLatestCandlestickGeometry } from "./latest-motion.js";
-import type { CandlestickDatum, CandlestickPoint } from "./model.js";
+import type { CandlestickPoint, CandlestickRecord } from "./model.js";
 
 export const candlestickDirectionColors = {
-  rising: "#15803d",
-  falling: "#be123c",
-  unchanged: "#64748b",
+  rising: "var(--candlestick-rising,#087f68)",
+  falling: "var(--candlestick-falling,#c43d54)",
+  unchanged: "var(--candlestick-neutral,#53657b)",
 };
-export type CandlestickCurrentPriceProps<Row extends object = CandlestickDatum> = Omit<
+export type CandlestickCurrentPriceProps<Row extends object = CandlestickRecord> = Omit<
   ComponentPropsWithRef<"g">,
   "children"
 > & {
@@ -30,7 +30,7 @@ export type CandlestickCurrentPriceProps<Row extends object = CandlestickDatum> 
 };
 
 /** The last observed close remains independent of transient inspection and persistent selection. */
-export function CandlestickCurrentPrice<Row extends object = CandlestickDatum>({
+export function CandlestickCurrentPrice<Row extends object = CandlestickRecord>({
   seriesKey,
   orientation = "right",
   lineVisible = true,

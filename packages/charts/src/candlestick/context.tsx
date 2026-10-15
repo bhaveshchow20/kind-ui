@@ -176,7 +176,10 @@ export type Context = {
   volumeRatio: number;
   contents: number;
   registerContent: (key: string) => () => void;
-  registerVolume: (key: string) => () => void;
+  registerVolume: (id: string, key: string) => () => void;
+  registerCandle: (id: string, key: string) => () => void;
+  priceSeries: string | undefined;
+  volumeSeries: string | undefined;
   hasPriceAxis: boolean;
   registerPriceAxis: (key: string) => () => void;
   registerOverlay: (key: string, values: readonly number[]) => () => void;

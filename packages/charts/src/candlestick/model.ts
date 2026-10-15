@@ -3,7 +3,7 @@ export type CandlestickTime = number | string;
 export type CandlestickTimeMode = "epoch-ms" | "business-date";
 
 /** Complete observed OHLC or an explicit gap with no fabricated prices or volume. */
-export type CandlestickDatum = {
+export type CandlestickRecord = {
   time: CandlestickTime;
   state?: string;
 } & (
@@ -48,7 +48,7 @@ export interface CandlestickDataOptions<Row> {
   priceBounds?: readonly [number, number];
 }
 
-export interface CandlestickPoint<Row = CandlestickDatum> {
+export interface CandlestickPoint<Row = CandlestickRecord> {
   time: CandlestickTime;
   timeValue: number;
   identity: string;
@@ -99,7 +99,7 @@ function finiteNumber(value: unknown, path: string): number {
 }
 
 /** Validate without sorting, filling, clamping or mutating caller records. */
-export function normalizeCandlestickData<Row = CandlestickDatum>(
+export function normalizeCandlestickData<Row = CandlestickRecord>(
   data: readonly Row[],
   options: CandlestickDataOptions<Row>,
 ): CandlestickPoint<Row>[] {
