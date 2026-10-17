@@ -58,7 +58,9 @@
     "test:ai": "node --test tests/ai-answers.test.mjs tests/ai-conversation.test.mjs",
     "check:ai:types": "tsc -p tests/fixtures/ai-answers && tsc -p tests/fixtures/ai-conversation",
     "check:ai:package": "node scripts/check-ai-package.mjs",
-    "check:ai": "npm run build:ai && npm run test:ai && npm run check:ai:types && npm run check:ai:package"
+    "check:ai": "npm run build:ai && npm run test:ai && npm run check:ai:types && npm run check:ai:package",
+    "test:ai:browser": "playwright test --config playwright.ai-answers.config.mjs && npm run test:ai:conversation:browser",
+    "test:ai:conversation:browser": "playwright test --config playwright.ai-conversation.config.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",

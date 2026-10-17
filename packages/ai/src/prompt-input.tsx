@@ -110,9 +110,19 @@ export function usePromptInputAttachments() {
 export function usePromptInputReferencedSources() {
   return required(useContext(LocalReferencedSourcesContext), "usePromptInputReferencedSources");
 }
-function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
-  if (typeof ref === "function") ref(value);
-  else if (ref) ref.current = value;
+function composeRef<T>(internal: RefObject<T | null>, ref: Ref<T> | undefined) {
+  return (value: T | null) => {
+    internal.current = value;
+    const cleanup = typeof ref === "function" ? ref(value) : undefined;
+    if (ref && typeof ref !== "function") ref.current = value;
+    if (value === null) return;
+    return () => {
+      internal.current = null;
+      if (typeof cleanup === "function") cleanup();
+      else if (typeof ref === "function") ref(null);
+      else if (ref) ref.current = null;
+    };
+  };
 }
 function useFiles(): AttachmentsContext {
   const [files, setFiles] = useState<PromptInputFile[]>([]);
@@ -312,6 +322,7 @@ export function PromptInput({
   ref,
   onDrop,
   onDragOver,
+  onDragLeave,
   onFocus,
   onBlur,
   ...props
@@ -573,10 +584,7 @@ export function PromptInput({
             <form
               {...props}
               id={rootId}
-              ref={(element) => {
-                formRef.current = element;
-                assignRef(ref, element);
-              }}
+              ref={composeRef(formRef, ref)}
               onSubmit={(event) => {
                 void submit(event);
               }}
@@ -611,7 +619,10 @@ export function PromptInput({
                   setDropActive(true);
                 }
               }}
-              onDragLeave={() => setDropActive(false)}
+              onDragLeave={(event) => {
+                onDragLeave?.(event);
+                if (!event.defaultPrevented) setDropActive(false);
+              }}
               onDrop={(event) => {
                 onDrop?.(event);
                 setDropActive(false);
@@ -747,10 +758,7 @@ export function PromptInputTextarea({
     <Textarea
       autoGrow={false}
       {...props}
-      ref={(element) => {
-        elementRef.current = element;
-        assignRef(ref, element);
-      }}
+      ref={composeRef(elementRef, ref)}
       name={name ?? (state.syncHiddenInput ? undefined : "message")}
       rows={rows}
       value={text}
@@ -1119,6 +1127,8 @@ export function PromptInputActionAddScreenshot({
   ...props
 }: PromptInputActionAddScreenshotProps) {
   const attachments = usePromptInputAttachments();
+  const prompt = useContext(InputContext);
+  const disabled = props.disabled || prompt?.disabled;
   const [capturing, setCapturing] = useState(false);
   const captureBusy = useRef(false);
   const live = useRef(true);
@@ -1135,7 +1145,7 @@ export function PromptInputActionAddScreenshot({
     };
   }, []);
   async function capture() {
-    if (captureBusy.current || !live.current) return;
+    if (disabled || captureBusy.current || !live.current) return;
     captureBusy.current = true;
     setCapturing(true);
     let stream: MediaStream | undefined;
@@ -1205,7 +1215,7 @@ export function PromptInputActionAddScreenshot({
   return (
     <PromptInputActionMenuItem
       {...props}
-      disabled={props.disabled || capturing}
+      disabled={disabled || capturing}
       closeOnClick={false}
       onClick={(event) => {
         onClick?.(event);
@@ -1515,10 +1525,7 @@ export function PromptInputQuoteContent({
   return (
     <div
       {...props}
-      ref={(node) => {
-        element.current = node;
-        assignRef(ref, node);
-      }}
+      ref={composeRef(element, ref)}
       data-overflows={overflows || undefined}
       className={cn(
         "max-h-[3lh] min-w-0 flex-1 overflow-hidden whitespace-pre-wrap data-[overflows]:mask-b-from-70%",

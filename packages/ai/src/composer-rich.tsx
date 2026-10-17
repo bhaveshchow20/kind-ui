@@ -657,9 +657,15 @@ function RichInput({
     },
     [extensions],
   );
-  const isEditorEmpty = useEditorState({
+  const editorState = useEditorState({
     editor,
-    selector: ({ editor: currentEditor }) => currentEditor?.isEmpty ?? false,
+    selector: ({ editor: currentEditor }) => ({
+      isEmpty: currentEditor?.isEmpty ?? false,
+      controlledDocument: value === undefined ? null : (currentEditor?.state.doc ?? null),
+    }),
+    equalityFn: (previous, next) =>
+      previous.isEmpty === next?.isEmpty &&
+      previous.controlledDocument === next?.controlledDocument,
   });
   editorInstance.current = editor;
   useEffect(() => {
@@ -697,10 +703,11 @@ function RichInput({
     });
   }, [editor, registerEditor, clearOnSubmit]);
   useEffect(() => {
-    if (typeof editorRef === "function") editorRef(editor);
-    else if (editorRef) editorRef.current = editor;
+    const cleanup = typeof editorRef === "function" ? editorRef(editor) : undefined;
+    if (editorRef && typeof editorRef !== "function") editorRef.current = editor;
     return () => {
-      if (typeof editorRef === "function") editorRef(null);
+      if (typeof cleanup === "function") cleanup();
+      else if (typeof editorRef === "function") editorRef(null);
       else if (editorRef) editorRef.current = null;
     };
   }, [editor, editorRef]);
@@ -712,14 +719,21 @@ function RichInput({
   useEffect(() => {
     if (editor && !editor.isDestroyed) editor.view.dispatch(editor.state.tr);
   }, [editor, placeholder]);
+  // A rejected controlled edit changes the document while value retains its identity.
   useEffect(() => {
-    if (!editor || value === undefined || equal(value, last.current)) return;
+    if (
+      !editor ||
+      value === undefined ||
+      !editorState?.controlledDocument ||
+      equal(value, serialize(editor))
+    )
+      return;
     editor.commands.setContent(content(value), { emitUpdate: false });
     last.current = serialize(editor);
     latest.current.onTextChange?.(last.current.text);
     integrationRef.current?.setText(last.current.text);
     api.current.close();
-  }, [editor, value]);
+  }, [editor, value, editorState?.controlledDocument]);
   useEffect(() => {
     if (!editor) return;
     const dom = editor.view.dom;
@@ -774,8 +788,15 @@ function RichInput({
       ref={(node) => {
         anchor.current = node;
         const ref = props.ref;
-        if (typeof ref === "function") ref(node);
-        else if (ref) ref.current = node;
+        const cleanup = typeof ref === "function" ? ref(node) : undefined;
+        if (ref && typeof ref !== "function") ref.current = node;
+        if (node === null) return;
+        return () => {
+          anchor.current = null;
+          if (typeof cleanup === "function") cleanup();
+          else if (typeof ref === "function") ref(null);
+          else if (ref) ref.current = null;
+        };
       }}
       onKeyDownCapture={(event) => {
         onKeyDownCapture?.(event);
@@ -787,7 +808,7 @@ function RichInput({
       }}
     >
       <ChipRenderContext.Provider value={{ triggers }}>
-        {isEditorEmpty && (
+        {editorState?.isEmpty && (
           <div
             aria-hidden="true"
             className="pointer-events-none invisible col-start-1 row-start-1 min-h-10 max-h-60 overflow-hidden whitespace-pre-wrap px-2.5 py-1.5 text-ai-label leading-[1.625rem] [overflow-wrap:anywhere]"

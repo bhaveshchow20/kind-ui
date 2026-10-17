@@ -582,7 +582,7 @@ export function Prompt({
               event.key === "ArrowDown" ? 0 : options.length - 1,
               event.key === "ArrowDown" ? 1 : -1,
             );
-          } else if (event.key === "ArrowLeft" && !input) {
+          } else if (event.key === "ArrowLeft" && event.target === root.current) {
             event.preventDefault();
             back();
           } else if (

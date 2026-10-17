@@ -5,6 +5,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
+import { build } from "vite";
 import { z } from "zod";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -93,6 +95,33 @@ try {
     await assert.rejects(fs.access(path.join(consumer, `node_modules/@kind-ui/${excluded}`)));
   }
   await assert.rejects(fs.access(path.join(consumer, "node_modules/ai")));
+  // Disable host discovery: installed package styles must register their own utilities.
+  await fs.writeFile(
+    path.join(consumer, "ai-styles.css"),
+    '@import "tailwindcss" source(none);\n@import "@kind-ui/ai/styles.css";\n',
+  );
+  const styles = await build({
+    configFile: false,
+    root: consumer,
+    logLevel: "silent",
+    plugins: [tailwindcss()],
+    build: {
+      write: false,
+      rolldownOptions: { input: path.join(consumer, "ai-styles.css") },
+    },
+  });
+  assert.ok(!Array.isArray(styles) && "output" in styles, "Expected one CSS build output");
+  const css = styles.output
+    .flatMap((item) =>
+      item.type === "asset" && item.fileName.endsWith(".css") ? [String(item.source)] : [],
+    )
+    .join("\n");
+  assert.match(css, /\.text-ai-body\b/, "Packed styles must generate AI typography utilities");
+  assert.match(css, /max-width:72ch/, "Packed styles must generate Markdown layout utilities");
+  assert.ok(
+    css.includes("[data-slot=generated-image-content]"),
+    "Packed styles must generate GeneratedImage state/visibility selectors",
+  );
   /** @type {string[]} */
   const runtimeTests = [];
   /** @type {string[]} */
