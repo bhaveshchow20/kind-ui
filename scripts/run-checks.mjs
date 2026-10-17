@@ -53,6 +53,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         "test:cartesian-visibility",
         "test:registry",
         "test:primitives:browser",
+        "test:ai:browser",
       ],
       process.argv.slice(3),
     );

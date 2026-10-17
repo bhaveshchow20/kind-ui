@@ -58,7 +58,8 @@
     "test:ai": "node --test tests/ai-answers.test.mjs packages/ai/tests/context-research.test.mjs",
     "check:ai:types": "tsc -p tests/fixtures/ai-answers && tsc -p packages/ai/tests/tsconfig.context-research.json && tsc -p packages/ai/tests/tsconfig.context-research.json --module ESNext --moduleResolution Bundler",
     "check:ai:package": "node scripts/check-ai-package.mjs",
-    "check:ai": "npm run build:ai && npm run test:ai && npm run check:ai:types && npm run check:ai:package"
+    "check:ai": "npm run build:ai && npm run test:ai && npm run check:ai:types && npm run check:ai:package",
+    "test:ai:browser": "playwright test --config playwright.ai-answers.config.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
