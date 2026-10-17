@@ -27,6 +27,54 @@
     "./thinking-dots": {
       "types": "./dist/thinking-dots.d.ts",
       "import": "./dist/thinking-dots.js"
+    },
+    "./question": {
+      "types": "./dist/question.d.ts",
+      "import": "./dist/question.js"
+    },
+    "./markdown": {
+      "types": "./dist/markdown.d.ts",
+      "import": "./dist/markdown.js"
+    },
+    "./markdown-code-block": {
+      "types": "./dist/markdown-code-block.d.ts",
+      "import": "./dist/markdown-code-block.js"
+    },
+    "./markdown-table": {
+      "types": "./dist/markdown-table.d.ts",
+      "import": "./dist/markdown-table.js"
+    },
+    "./markdown-context": {
+      "types": "./dist/markdown-context.d.ts",
+      "import": "./dist/markdown-context.js"
+    },
+    "./generated-image": {
+      "types": "./dist/generated-image.d.ts",
+      "import": "./dist/generated-image.js"
+    },
+    "./document": {
+      "types": "./dist/document.d.ts",
+      "import": "./dist/document.js"
+    },
+    "./transcript": {
+      "types": "./dist/transcript.d.ts",
+      "import": "./dist/transcript.js"
+    },
+    "./feedback-bar": {
+      "types": "./dist/feedback-bar.d.ts",
+      "import": "./dist/feedback-bar.js"
+    },
+    "./callout": {
+      "types": "./dist/callout.d.ts",
+      "import": "./dist/callout.js"
+    },
+    "./loader": {
+      "types": "./dist/loader.d.ts",
+      "import": "./dist/loader.js"
+    },
+    "./status": {
+      "types": "./dist/status.d.ts",
+      "import": "./dist/status.js"
     }
   },
   "scripts": {
