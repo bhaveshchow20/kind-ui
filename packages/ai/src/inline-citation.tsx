@@ -446,6 +446,7 @@ function CitationStep({
 }: InlineCitationCarouselPrevProps & { direction: "prev" | "next" }) {
   const context = useInlineCitationCarousel();
   const previous = direction === "prev";
+  const inactive = disabled || !(previous ? context.canScrollPrev : context.canScrollNext);
   return useRender({
     defaultTagName: "button",
     render: render ?? <Button variant="ghost" size="sm" />,
@@ -454,7 +455,7 @@ function CitationStep({
       type: "button",
       "aria-label": previous ? "Previous source" : "Next source",
       ...props,
-      disabled: disabled || !(previous ? context.canScrollPrev : context.canScrollNext),
+      disabled: inactive,
       "data-slot": `inline-citation-carousel-${direction}`,
       className: cn(
         actionClass,
@@ -462,6 +463,10 @@ function CitationStep({
         className,
       ),
       onClick: (event: MouseEvent<HTMLButtonElement>) => {
+        if (inactive) {
+          event.preventDefault();
+          return;
+        }
         onClick?.(event);
         if (!event.defaultPrevented) (previous ? context.prev : context.next)();
       },

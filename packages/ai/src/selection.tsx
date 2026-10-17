@@ -243,11 +243,13 @@ export function Selection({
         modal={false}
         onOpenChange={(next, details) => {
           const target = details.event.target;
+          const view = contentEl?.ownerDocument.defaultView;
           // Selecting a different passage inside the scope should not be treated as an outside dismissal.
           if (
             !next &&
             details.reason === "outside-press" &&
-            target instanceof Node &&
+            view &&
+            target instanceof view.Node &&
             contentEl?.contains(target)
           ) {
             details.cancel();

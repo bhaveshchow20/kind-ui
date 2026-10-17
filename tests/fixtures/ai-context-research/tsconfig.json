@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.tests.json",
+  "include": ["./*.tsx", "../../ai-context-research.spec.ts"],
+  "exclude": []
+}
