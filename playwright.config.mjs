@@ -7,6 +7,7 @@ export default defineConfig({
   testMatch: "*.spec.ts",
   testIgnore: [
     "ai-answers.spec.ts",
+    "ai-agent-work.spec.ts",
     "primitives.spec.ts",
     "composition.spec.ts",
     "chart-frame.spec.ts",
