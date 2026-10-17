@@ -1,5 +1,11 @@
 # @kind-ui/charts
 
+## 0.5.1
+
+### Patch Changes
+
+- 5fabf25: Reduce redundant chart presentation and Heatmap interaction work while preserving chart APIs, appearance and consumer Motion configuration.
+
 ## 0.5.0
 
 ### Minor Changes
