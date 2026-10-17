@@ -131,7 +131,8 @@ export const api = {
       name: "inputRef / actionsRef",
       type: "Ref<HTMLInputElement> / RefObject<{ unmount } | null>",
       default: "—",
-      description: "Access the input or manage popup unmounting for external animations.",
+      description:
+        "Access the hidden form input or manage popup unmounting for external animations. Use ComboboxInput.ref for the editable field.",
     },
     {
       name: "children / id",
@@ -182,6 +183,12 @@ export const api = {
   ],
   ComboboxTrigger: [
     {
+      name: "nativeButton",
+      type: "boolean",
+      default: "true",
+      description: "Set false when render supplies a non-button host.",
+    },
+    {
       name: "render",
       type: "ReactElement | render function",
       default: "Ghost Button, size icon-sm",
@@ -201,6 +208,12 @@ export const api = {
     },
   ],
   ComboboxClear: [
+    {
+      name: "nativeButton",
+      type: "boolean",
+      default: "true",
+      description: "Set false when render supplies a non-button host.",
+    },
     {
       name: "render",
       type: "ReactElement | render function",
@@ -322,6 +335,12 @@ export const api = {
     },
   ],
   ComboboxItem: [
+    {
+      name: "nativeButton",
+      type: "boolean",
+      default: "false",
+      description: "Set true when render supplies a native button host.",
+    },
     {
       name: "value",
       type: "Value",

@@ -60,6 +60,12 @@ export const api = {
   ],
   DialogTrigger: [
     {
+      name: "nativeButton",
+      type: "boolean",
+      default: "true",
+      description: "Set false when render supplies a non-button host.",
+    },
+    {
       name: "render",
       type: "ReactElement | render function",
       default: "Outline Button, size sm",
@@ -162,6 +168,12 @@ export const api = {
   ],
   DialogBackdrop: [
     {
+      name: "forceRender",
+      type: "boolean",
+      default: "false",
+      description: "Render the backdrop even when this dialog is nested inside another dialog.",
+    },
+    {
       name: "className / style",
       type: "Value | (state => value)",
       default: "Dimmed fixed backdrop",
@@ -230,6 +242,12 @@ export const api = {
     },
   ],
   DialogClose: [
+    {
+      name: "nativeButton",
+      type: "boolean",
+      default: "true",
+      description: "Set false when render supplies a non-button host.",
+    },
     {
       name: "render",
       type: "ReactElement | render function",
