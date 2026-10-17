@@ -75,6 +75,46 @@
     "./status": {
       "types": "./dist/status.d.ts",
       "import": "./dist/status.js"
+    },
+    "./tool": {
+      "types": "./dist/tool.d.ts",
+      "import": "./dist/tool.js"
+    },
+    "./confirmation": {
+      "types": "./dist/confirmation.d.ts",
+      "import": "./dist/confirmation.js"
+    },
+    "./reasoning": {
+      "types": "./dist/reasoning.d.ts",
+      "import": "./dist/reasoning.js"
+    },
+    "./chain-of-thought": {
+      "types": "./dist/chain-of-thought.d.ts",
+      "import": "./dist/chain-of-thought.js"
+    },
+    "./action": {
+      "types": "./dist/action.d.ts",
+      "import": "./dist/action.js"
+    },
+    "./agent-run": {
+      "types": "./dist/agent-run.d.ts",
+      "import": "./dist/agent-run.js"
+    },
+    "./plan": {
+      "types": "./dist/plan.d.ts",
+      "import": "./dist/plan.js"
+    },
+    "./task": {
+      "types": "./dist/task.d.ts",
+      "import": "./dist/task.js"
+    },
+    "./queue": {
+      "types": "./dist/queue.d.ts",
+      "import": "./dist/queue.js"
+    },
+    "./checkpoint": {
+      "types": "./dist/checkpoint.d.ts",
+      "import": "./dist/checkpoint.js"
     }
   },
   "scripts": {
@@ -96,6 +136,7 @@
     "@streamdown/mermaid": "1.0.2",
     "clsx": "2.1.1",
     "lucide-react": "1.57.0",
-    "streamdown": "2.4.0"
+    "streamdown": "2.4.0",
+    "partial-json": "0.1.7"
   }
 }
