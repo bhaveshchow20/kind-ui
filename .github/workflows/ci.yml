@@ -90,7 +90,6 @@ jobs:
             artifacts/line-integrations/*build.log
             artifacts/line-integrations/*evidence.json
             artifacts/bundle-measurements.json
-            artifacts/primitives/package/
           if-no-files-found: warn
           retention-days: ${{ job.status != 'success' && 3 || 1 }}
   playwright:
@@ -137,7 +136,6 @@ jobs:
         with:
           name: chart-screenshots-shard-${{ matrix.shard }}
           path: |
-            artifacts/primitives/test-results/
             artifacts/chart-tests/
             artifacts/composition-tests/
             artifacts/chart-frame-tests/
