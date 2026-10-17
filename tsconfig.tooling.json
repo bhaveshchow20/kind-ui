@@ -37,6 +37,7 @@
     "scripts/build-registry.mjs",
     "scripts/check-registry-consumers.mjs",
     "scripts/build-primitives-registry.mjs",
-    "scripts/check-primitives-package.mjs"
+    "scripts/check-primitives-package.mjs",
+    "scripts/check-ai-package.mjs"
   ]
 }
