@@ -1,0 +1,186 @@
+@import "@fontsource-variable/geist";
+/* Shared type roles and optional Kind palette. Import after Tailwind; consumer utilities stay authoritative. */
+@custom-variant dark (&:where(.dark, .dark *));
+@theme inline {
+  --text-kind-meta: 0.6875rem;
+  --text-kind-meta--line-height: 1.45;
+  --text-kind-description: 0.75rem;
+  --text-kind-description--line-height: 1.5;
+  --text-kind-label: 0.8125rem;
+  --text-kind-label--line-height: 1.4;
+  --text-kind-title: 0.875rem;
+  --text-kind-title--line-height: 1.4;
+  --text-kind-body: 0.875rem;
+  --text-kind-body--line-height: 1.6;
+  --text-kind-prose: 1rem;
+  --text-kind-prose--line-height: 1.625;
+  --font-sans: var(--kind-font-family);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--kind-primary-hover);
+  --color-primary-pressed: var(--kind-primary-pressed);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--kind-secondary-hover);
+  --color-secondary-pressed: var(--kind-secondary-pressed);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-field: var(--kind-field);
+  --color-field-hover: var(--kind-field-hover);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-hover: var(--kind-destructive-hover);
+  --color-destructive-pressed: var(--kind-destructive-pressed);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-link: var(--kind-link);
+  --color-danger-text: var(--kind-danger-text, var(--destructive));
+  --color-surface: var(--kind-surface, var(--background));
+  --color-elevated: var(--kind-elevated, var(--background));
+  --color-inset: var(--kind-inset, var(--secondary));
+  --shadow-kind-float: var(--kind-float-shadow);
+  --shadow-kind-surface: var(--kind-surface-shadow);
+  --shadow-kind-focus: var(--kind-focus-shadow);
+  --color-placeholder: var(--kind-placeholder);
+  --ease-kind-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-kind-feedback: 120ms;
+  --duration-kind-reveal: 180ms;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --kind-font-family: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
+    --background: #ffffff;
+    --foreground: #1c1c1e;
+    --primary: #0066cc;
+    --primary-foreground: #ffffff;
+    --kind-primary-hover: #005bb8;
+    --kind-primary-pressed: #004f9f;
+    --secondary: #f2f2f7;
+    --secondary-foreground: #1c1c1e;
+    --kind-secondary-hover: #e5e5ea;
+    --kind-secondary-pressed: #d1d1d6;
+    --muted: #f2f2f7;
+    --muted-foreground: #636366;
+    --accent: #e8f2ff;
+    --kind-field: #f2f2f7;
+    --kind-field-hover: #eaeaef;
+    --destructive: #d70015;
+    --destructive-foreground: #ffffff;
+    --kind-destructive-hover: #be0013;
+    --kind-destructive-pressed: #a60011;
+    --border: #0000000a;
+    --input: transparent;
+    --ring: #8e8e93;
+    --kind-link: #0066cc;
+    --kind-danger-text: #d70015;
+    --kind-field-radius: 1rem;
+    --kind-compact-radius: 0.75rem;
+    --kind-action-radius: 9999px;
+    --kind-body-size: 1.0625rem;
+    --kind-body-leading: 1.375rem;
+    --kind-control-height: 2.75rem;
+    --kind-field-padding-inline: 1rem;
+    --kind-field-padding-block: 0.875rem;
+    --kind-feedback-duration: 150ms;
+    --kind-action-shadow: none;
+    --kind-field-shadow: none;
+    --kind-surface: #ffffff;
+    --kind-elevated: #ffffff;
+    --kind-inset: #f5f5f6;
+    --kind-float-shadow: 0 2px 8px -4px #00000014, 0 16px 48px -16px #00000026;
+    --kind-surface-shadow: 0 1px 3px #00000005, 0 3px 12px -6px #00000012;
+    --kind-focus-shadow: inset 0 0 0 9999px #00000005;
+    --kind-panel-border: #e5e5e8;
+    --kind-placeholder: #737373;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --background: #1c1c1e;
+    --foreground: #f5f5f7;
+    --primary: #0066cc;
+    --primary-foreground: #ffffff;
+    --kind-primary-hover: #005bb8;
+    --kind-primary-pressed: #004f9f;
+    --secondary: #3a3a3c;
+    --secondary-foreground: #f5f5f7;
+    --kind-secondary-hover: #48484a;
+    --kind-secondary-pressed: #545456;
+    --muted: #000000;
+    --muted-foreground: #aeaeb2;
+    --accent: #14304d;
+    --kind-field: #2c2c2e;
+    --kind-field-hover: #343436;
+    --destructive: #d70015;
+    --destructive-foreground: #ffffff;
+    --kind-destructive-hover: #be0013;
+    --kind-destructive-pressed: #a60011;
+    --border: #ffffff0a;
+    --input: transparent;
+    --ring: #8e8e93;
+    --kind-link: #64b5ff;
+    --kind-danger-text: #ff8790;
+    --kind-surface: #202022;
+    --kind-elevated: #272729;
+    --kind-inset: #19191b;
+    --kind-float-shadow: 0 2px 8px -4px #00000040, 0 16px 48px -16px #00000080;
+    --kind-surface-shadow: 0 1px 3px #00000018, 0 3px 12px -6px #00000040;
+    --kind-focus-shadow: inset 0 0 0 9999px #ffffff08;
+    --kind-panel-border: #3a3a3d;
+    --kind-placeholder: #a1a1aa;
+  }
+
+  @media (prefers-contrast: more) {
+    :root {
+      --muted-foreground: #3a3a3c;
+      --input: #636366;
+      --border: #636366;
+      --ring: #3a3a3c;
+    }
+    .dark {
+      --muted-foreground: #e5e5ea;
+      --input: #aeaeb2;
+      --border: #aeaeb2;
+      --ring: #e5e5ea;
+    }
+  }
+}
+@theme inline {
+  --color-warning: var(--kind-warning);
+  --color-success: var(--kind-success);
+}
+@layer base {
+  :root {
+    --kind-warning: #8b5900;
+    --kind-success: #207437;
+  }
+  .dark {
+    --kind-warning: #e5b454;
+    --kind-success: #76ca8b;
+  }
+}
+@layer components {
+  .kind-surface {
+    border: 1px solid var(--kind-panel-border, var(--border));
+    box-shadow: var(--kind-surface-shadow);
+  }
+  .kind-surface .kind-surface {
+    box-shadow: none;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  .kind-surface {
+    border-color: CanvasText;
+  }
+}

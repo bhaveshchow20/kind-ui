@@ -35,6 +35,8 @@
     "scripts/ci-paths.mjs",
     "scripts/run-checks.mjs",
     "scripts/build-registry.mjs",
-    "scripts/check-registry-consumers.mjs"
+    "scripts/check-registry-consumers.mjs",
+    "scripts/build-primitives-registry.mjs",
+    "scripts/check-primitives-package.mjs"
   ]
 }
