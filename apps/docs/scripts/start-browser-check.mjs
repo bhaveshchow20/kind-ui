@@ -21,7 +21,15 @@ try {
     });
   });
   const code = await new Promise((resolve, reject) => {
-    const check = spawn(process.execPath, ["scripts/check-browser.mjs"], { stdio: "inherit" });
+    const check = spawn(
+      process.execPath,
+      [
+        process.argv[2] === "primitives"
+          ? "scripts/check-primitives-browser.mjs"
+          : "scripts/check-browser.mjs",
+      ],
+      { stdio: "inherit" },
+    );
     check.once("error", reject);
     check.once("exit", resolve);
   });

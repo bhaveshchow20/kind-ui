@@ -1,0 +1,50 @@
+---
+title: Dialog
+description: Focus a task in an accessible modal with explicit open and close controls.
+---
+
+Use a dialog for a focused task that needs its own space. Compose `DialogTitle`, a useful description and a visible close action inside `DialogContent`. This example keeps draft changes separate until you save.
+
+<PrimitiveExample id="dialog" />
+
+`DialogContent` composes the portal, backdrop and popup. Use those parts directly for a custom layout. Keyboard focus stays inside a modal and returns to its trigger when it closes; Escape dismisses it.
+
+## API reference
+
+import { api } from '@/lib/primitives/dialog';
+
+### Dialog
+
+<ApiTable title="Dialog" rows={api.Dialog} />
+
+### DialogTrigger
+
+<ApiTable title="DialogTrigger" rows={api.DialogTrigger} />
+
+### DialogContent
+
+<ApiTable title="DialogContent" rows={api.DialogContent} />
+
+### DialogPortal
+
+<ApiTable title="DialogPortal" rows={api.DialogPortal} />
+
+### DialogBackdrop
+
+<ApiTable title="DialogBackdrop" rows={api.DialogBackdrop} />
+
+### DialogPopup
+
+<ApiTable title="DialogPopup" rows={api.DialogPopup} />
+
+### DialogTitle
+
+<ApiTable title="DialogTitle" rows={api.DialogTitle} />
+
+### DialogDescription
+
+<ApiTable title="DialogDescription" rows={api.DialogDescription} />
+
+### DialogClose
+
+<ApiTable title="DialogClose" rows={api.DialogClose} />

@@ -1,0 +1,18 @@
+---
+title: Textarea
+description: A multiline field that grows with its content.
+---
+
+import { api } from "@/lib/primitives/textarea";
+
+Pair Textarea with a visible label. It grows with text up to its maximum height using native CSS field sizing. Set `autoGrow={false}` to size it with `rows` instead.
+
+<PrimitiveExample id="textarea" />
+
+Keep value and validation in your application. Connect hints and errors with `aria-describedby`, and set `aria-invalid` when the entered value needs attention.
+
+## API reference
+
+### Textarea
+
+<ApiTable title="Textarea" rows={api.Textarea} />

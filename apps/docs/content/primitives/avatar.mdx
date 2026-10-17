@@ -1,0 +1,30 @@
+---
+title: Avatar
+description: Profile images with initials or icons as a fallback.
+---
+
+import { api } from "@/lib/primitives/avatar";
+
+Compose AvatarImage and AvatarFallback inside Avatar. The fallback remains available while an image loads or when it fails; use initials that remain recognizable at small sizes.
+
+<PrimitiveExample id="avatar" />
+
+Give the person an accessible name once. This example labels the root and uses an empty image `alt` to avoid announcing the same name twice.
+
+## API reference
+
+### Avatar
+
+<ApiTable title="Avatar" rows={api.Avatar} />
+
+### AvatarImage
+
+<ApiTable title="AvatarImage" rows={api.AvatarImage} />
+
+### AvatarFallback
+
+<ApiTable title="AvatarFallback" rows={api.AvatarFallback} />
+
+### avatarVariants
+
+<ApiTable title="avatarVariants" rows={api.avatarVariants} />

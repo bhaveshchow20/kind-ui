@@ -1,0 +1,22 @@
+---
+title: Button
+description: Actions with clear labels, loading feedback and optional icons.
+---
+
+import { api } from "@/lib/primitives/button";
+
+Use a Button for an action. Keep its label specific, and set `loading` while work is pending to prevent repeated activation. The built-in feedback respects reduced motion.
+
+<PrimitiveExample id="button" />
+
+Use `type="submit"` inside a form. For navigation, apply `buttonVariants()` to a semantic link. `shortcut` displays a hint; your application registers the shortcut.
+
+## API reference
+
+### Button
+
+<ApiTable title="Button" rows={api.Button} />
+
+### buttonVariants
+
+<ApiTable title="buttonVariants" rows={api.buttonVariants} />

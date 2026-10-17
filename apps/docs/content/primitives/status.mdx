@@ -1,0 +1,22 @@
+---
+title: Status
+description: Readable state labels with a small visual indicator.
+---
+
+import { api } from "@/lib/primitives/status";
+
+Use Status to identify a process or item state. Your application owns state changes, labels and announcements. Set `pulse` only while activity is happening; it respects reduced motion.
+
+<PrimitiveExample id="status" />
+
+`pending` uses a neutral dashed treatment, `inflight` uses info, `active` uses success, and `error` uses danger. A stable `role="status"` region can announce meaningful changes without moving focus.
+
+## API reference
+
+### Status
+
+<ApiTable title="Status" rows={api.Status} />
+
+### statusVariants
+
+<ApiTable title="statusVariants" rows={api.statusVariants} />

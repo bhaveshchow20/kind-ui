@@ -9,16 +9,17 @@
   },
   "scripts": {
     "prepare:package": "node scripts/prepare-package.mjs",
-    "generate": "node scripts/generate.mjs",
+    "generate": "npm run prepare:primitives && node scripts/generate.mjs",
     "dev": "next dev --webpack --hostname 127.0.0.1 --port 6373",
     "build": "npm run generate && next build --webpack",
-    "typecheck": "fumadocs-mdx && tsc --noEmit",
+    "typecheck": "npm run prepare:primitives && fumadocs-mdx && tsc --noEmit",
     "check": "npm run typecheck && node --test scripts/example-contract.test.mjs scripts/component-bundles.test.mjs scripts/validated-artifact.test.mjs scripts/focus-contract.test.mjs scripts/installation-contract.test.mjs && node scripts/check-export.mjs",
     "check:consumers": "node scripts/check-consumers.mjs",
     "preview": "node scripts/serve.mjs",
     "snapshot:site": "node scripts/snapshot-site.mjs",
     "check:browser": "node scripts/start-browser-check.mjs",
-    "check:accessibility": "playwright test"
+    "check:accessibility": "playwright test",
+    "prepare:primitives": "npm run build --prefix ../../packages/primitives"
   },
   "dependencies": {
     "@fontsource-variable/geist": "5.3.0",
@@ -41,7 +42,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "recharts": "3.10.1",
-    "tailwind-merge": "3.6.0"
+    "tailwind-merge": "3.6.0",
+    "@kind-ui/primitives": "file:../../packages/primitives"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
