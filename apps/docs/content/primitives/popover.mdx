@@ -1,0 +1,50 @@
+---
+title: Popover
+description: An anchored surface for a small task or contextual controls.
+---
+
+import { api } from "@/lib/primitives/popover";
+
+Compose a trigger with `PopoverContent`, then add a title, description and close control. The content handles its portal and placement. Use `open` and `onOpenChange` when other parts of your interface need to coordinate visibility.
+
+<PrimitiveExample id="popover" />
+
+## API reference
+
+`Content` combines the portal, positioner and styled popup. Use the individual parts when you need to control their markup or mounting. Element parts also accept refs, native attributes and event handlers.
+
+### Popover
+
+<ApiTable title="Popover" rows={api.Popover} />
+
+### PopoverTrigger
+
+<ApiTable title="PopoverTrigger" rows={api.PopoverTrigger} />
+
+### PopoverContent
+
+<ApiTable title="PopoverContent" rows={api.PopoverContent} />
+
+### PopoverClose
+
+<ApiTable title="PopoverClose" rows={api.PopoverClose} />
+
+### PopoverTitle
+
+<ApiTable title="PopoverTitle" rows={api.PopoverTitle} />
+
+### PopoverDescription
+
+<ApiTable title="PopoverDescription" rows={api.PopoverDescription} />
+
+### PopoverPortal
+
+<ApiTable title="PopoverPortal" rows={api.PopoverPortal} />
+
+### PopoverPositioner
+
+<ApiTable title="PopoverPositioner" rows={api.PopoverPositioner} />
+
+### PopoverPopup
+
+<ApiTable title="PopoverPopup" rows={api.PopoverPopup} />

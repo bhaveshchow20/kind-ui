@@ -1,0 +1,38 @@
+---
+title: Hover Card
+description: A supplementary preview of a link’s destination.
+---
+
+import { api } from "@/lib/primitives/hover-card";
+
+Compose a real link with `HoverCardTrigger` and place its preview in `HoverCardContent`. Pointer hover and keyboard focus open the card. Keep essential information at the link destination so it remains available without opening the preview.
+
+<PrimitiveExample id="hover-card" />
+
+## API reference
+
+`Content` combines the portal, positioner and styled popup. Use the individual parts when you need to control their markup or mounting. Element parts also accept refs, native attributes and event handlers.
+
+### HoverCard
+
+<ApiTable title="HoverCard" rows={api.HoverCard} />
+
+### HoverCardTrigger
+
+<ApiTable title="HoverCardTrigger" rows={api.HoverCardTrigger} />
+
+### HoverCardContent
+
+<ApiTable title="HoverCardContent" rows={api.HoverCardContent} />
+
+### HoverCardPortal
+
+<ApiTable title="HoverCardPortal" rows={api.HoverCardPortal} />
+
+### HoverCardPositioner
+
+<ApiTable title="HoverCardPositioner" rows={api.HoverCardPositioner} />
+
+### HoverCardPopup
+
+<ApiTable title="HoverCardPopup" rows={api.HoverCardPopup} />

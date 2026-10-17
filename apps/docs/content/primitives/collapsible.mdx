@@ -1,0 +1,32 @@
+---
+title: Collapsible
+description: Reveal supporting detail while keeping the main task in view.
+---
+
+import { api } from "@/lib/primitives/collapsible";
+
+Compose `CollapsibleTrigger` with `CollapsibleContent` for a standard disclosure. Use `CollapsiblePreviewContent` when a clipped preview should remain visible while closed; share the root’s controlled `open` state and connect the trigger to its `id`.
+
+<PrimitiveExample id="collapsible" />
+
+The closed preview makes clipped content inert and exposes `previewDescription` to assistive technology. Pass `returnFocusRef` when closing could hide a focused control. The standard panel follows Base UI’s mount lifecycle.
+
+## API reference
+
+Element parts accept refs and native attributes. Root, trigger and standard content also support Base UI’s state-aware styling and `render` composition.
+
+### Collapsible
+
+<ApiTable title="Collapsible" rows={api.Collapsible} />
+
+### CollapsibleTrigger
+
+<ApiTable title="CollapsibleTrigger" rows={api.CollapsibleTrigger} />
+
+### CollapsibleContent
+
+<ApiTable title="CollapsibleContent" rows={api.CollapsibleContent} />
+
+### CollapsiblePreviewContent
+
+<ApiTable title="CollapsiblePreviewContent" rows={api.CollapsiblePreviewContent} />
