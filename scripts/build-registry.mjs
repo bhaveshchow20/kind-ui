@@ -18,13 +18,9 @@ const packageJson = /** @type {unknown} */ (
 const manifest = z.object({ version: z.string() }).parse(packageJson);
 if (manifest.version !== coreVersion)
   throw new Error(`Registry targets Core ${coreVersion}, source package is ${manifest.version}`);
-const dependencies = [
-  `@kind-ui/charts@${coreVersion}`,
-  "react@^19.3.0",
-  "react-dom@^19.3.0",
-  "recharts@^3.10.1",
-  "motion@^13.4.6",
-];
+// Core declares its peers. Re-adding their ranges through the CLI upgrades
+// compatible exact host pins instead of leaving npm to resolve missing peers.
+const dependencies = [`@kind-ui/charts@${coreVersion}`];
 const items = registryItems.map(({ exampleId, name, title, description }) => {
   const sourcePath = `src/examples/${exampleId}/example.tsx`;
   const files = filesFor(
@@ -50,7 +46,7 @@ const items = registryItems.map(({ exampleId, name, title, description }) => {
     title,
     description,
     dependencies,
-    devDependencies: ["tailwindcss@^4.0.0"],
+    devDependencies: [],
     css: registryCss,
     files: [{ path: relative, type: "registry:component", target: `@components/${name}.tsx` }],
   };
