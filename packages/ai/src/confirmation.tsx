@@ -121,16 +121,6 @@ export function Confirmation({
       mounted.current = false;
     };
   }, []);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: A new approval ID invalidates the previous request generation and clears its pending UI.
-  useEffect(() => {
-    generation.current += 1;
-    lock.current = false;
-    setBusy(false);
-    setFailed(false);
-    return () => {
-      generation.current += 1;
-    };
-  }, [approval?.id]);
   const lifecycleMode =
     stateProp !== undefined &&
     stateProp !== "pending" &&
@@ -150,12 +140,19 @@ export function Confirmation({
   const active =
     !lifecycleMode ||
     (approval !== undefined && stateProp !== "input-streaming" && stateProp !== "input-available");
-  const blocked =
-    disabled ||
-    submitting ||
-    busy ||
-    state !== "pending" ||
-    (lifecycleMode && stateProp !== "approval-requested");
+  const actionable =
+    active && state === "pending" && (!lifecycleMode || stateProp === "approval-requested");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Approval identity and actionability invalidate pending submissions before promise callbacks can settle.
+  useLayoutEffect(() => {
+    generation.current += 1;
+    lock.current = false;
+    setBusy(false);
+    setFailed(false);
+    return () => {
+      generation.current += 1;
+    };
+  }, [approval?.id, actionable]);
+  const blocked = disabled || submitting || busy || !actionable;
 
   const request = (next: "approved" | "rejected") => {
     if (blocked || lock.current) return;

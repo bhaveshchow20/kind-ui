@@ -1,4 +1,5 @@
 @import "@kind-ui/primitives/styles.css";
+@source "./";
 
 @theme inline {
   --text-ai-meta: var(--text-kind-meta);

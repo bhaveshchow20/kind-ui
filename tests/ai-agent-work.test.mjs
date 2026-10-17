@@ -164,3 +164,17 @@ test("native code and checkpoint contracts preserve consumer props and context e
   assert.throws(() => render(h(K.ConfirmationAccept)), /within Confirmation/);
   assert.throws(() => render(h(K.ReasoningTrigger)), /require <Reasoning>/);
 });
+
+test("checkpoint variants reach the underlying button and retain their recipes", () => {
+  for (const variant of ["default", "ghost", "outline"]) {
+    const output = render(h(K.CheckpointTrigger, { variant }, "Restore"));
+    assert.match(output, new RegExp(`data-variant="${variant}"`));
+    if (variant === "default") {
+      assert.match(output, /\bbg-primary\b/);
+      assert.match(output, /\btext-primary-foreground\b/);
+      assert.doesNotMatch(output, /\btext-muted-foreground\b|hover:bg-inset/);
+    } else {
+      assert.match(output, /\btext-muted-foreground\b/);
+    }
+  }
+});

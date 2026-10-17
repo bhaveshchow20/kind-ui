@@ -3,7 +3,7 @@ import { Button } from "@kind-ui/primitives/button";
 import { Tooltip, TooltipProvider } from "@kind-ui/primitives/tooltip";
 import { Bookmark } from "lucide-react";
 import type { ComponentProps } from "react";
-import { actionClass, cn } from "./utils.js";
+import { actionVariants, cn } from "./utils.js";
 export type CheckpointProps = ComponentProps<"div">;
 export function Checkpoint({ className, children, ...props }: CheckpointProps) {
   return (
@@ -65,7 +65,7 @@ export function CheckpointTrigger({
 }: CheckpointTriggerProps) {
   const button = (
     <Button
-      variant="ghost"
+      variant={variant}
       size="sm"
       type="button"
       aria-label={tooltip}
@@ -73,8 +73,9 @@ export function CheckpointTrigger({
       data-slot="checkpoint-trigger"
       data-size={size}
       className={cn(
-        actionClass,
-        "min-h-8 min-w-0 max-w-full gap-1.5 whitespace-normal rounded-md [overflow-wrap:anywhere] px-2 coarse:min-h-11 coarse:min-w-11 text-ai-label font-medium text-muted-foreground hover:bg-inset hover:text-foreground",
+        actionVariants(variant),
+        "min-h-8 min-w-0 max-w-full gap-1.5 whitespace-normal rounded-md [overflow-wrap:anywhere] px-2 coarse:min-h-11 coarse:min-w-11 text-ai-label font-medium",
+        variant !== "default" && "text-muted-foreground hover:bg-inset hover:text-foreground",
         variant === "outline" && "border border-transparent bg-surface",
         size === "sm" && "min-h-7 gap-1 px-1.5 text-ai-description",
         size === "lg" && "min-h-8 px-2.5 text-ai-body",
