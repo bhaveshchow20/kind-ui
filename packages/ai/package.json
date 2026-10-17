@@ -1,0 +1,101 @@
+{
+  "name": "@kind-ui/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "src",
+    "LICENSE",
+    "THIRD_PARTY.md",
+    "licenses"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./src/styles.css",
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js"
+    },
+    "./thinking-dots": {
+      "types": "./dist/thinking-dots.d.ts",
+      "import": "./dist/thinking-dots.js"
+    },
+    "./question": {
+      "types": "./dist/question.d.ts",
+      "import": "./dist/question.js"
+    },
+    "./markdown": {
+      "types": "./dist/markdown.d.ts",
+      "import": "./dist/markdown.js"
+    },
+    "./markdown-code-block": {
+      "types": "./dist/markdown-code-block.d.ts",
+      "import": "./dist/markdown-code-block.js"
+    },
+    "./markdown-table": {
+      "types": "./dist/markdown-table.d.ts",
+      "import": "./dist/markdown-table.js"
+    },
+    "./markdown-context": {
+      "types": "./dist/markdown-context.d.ts",
+      "import": "./dist/markdown-context.js"
+    },
+    "./generated-image": {
+      "types": "./dist/generated-image.d.ts",
+      "import": "./dist/generated-image.js"
+    },
+    "./document": {
+      "types": "./dist/document.d.ts",
+      "import": "./dist/document.js"
+    },
+    "./transcript": {
+      "types": "./dist/transcript.d.ts",
+      "import": "./dist/transcript.js"
+    },
+    "./feedback-bar": {
+      "types": "./dist/feedback-bar.d.ts",
+      "import": "./dist/feedback-bar.js"
+    },
+    "./callout": {
+      "types": "./dist/callout.d.ts",
+      "import": "./dist/callout.js"
+    },
+    "./loader": {
+      "types": "./dist/loader.d.ts",
+      "import": "./dist/loader.js"
+    },
+    "./status": {
+      "types": "./dist/status.d.ts",
+      "import": "./dist/status.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "motion": "^13.4.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^4.0.0"
+  },
+  "dependencies": {
+    "@base-ui/react": "1.4.1",
+    "@kind-ui/primitives": "0.0.0",
+    "@streamdown/cjk": "1.0.2",
+    "@streamdown/code": "1.1.0",
+    "@streamdown/math": "1.0.2",
+    "@streamdown/mermaid": "1.0.2",
+    "clsx": "2.1.1",
+    "lucide-react": "1.57.0",
+    "streamdown": "2.4.0"
+  }
+}
