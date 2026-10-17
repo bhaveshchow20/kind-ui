@@ -5,7 +5,14 @@ import { useRender } from "@base-ui/react/use-render";
 import { Button } from "@kind-ui/primitives/button";
 import type { ClassValue } from "clsx";
 import { CircleAlert, Clock3, Grid2x2, Image as ImageIcon, RotateCcw, X } from "lucide-react";
-import { type ComponentProps, createContext, useContext, useEffect, useRef, useState } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { actionClass, cn, safeUrl, surfaceClass } from "./utils.js";
 
 export type GeneratedImageState = "queued" | "generating" | "complete" | "error";
@@ -82,8 +89,8 @@ export function GeneratedImage({
   const [actionFailed, setActionFailed] = useState(false);
   const lock = useRef(false);
   const generation = useRef(0);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Lifecycle or request identity changes invalidate pending action results before they can update the replacement canvas.
-  useEffect(() => {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Invalidate at commit (including unmount), before stale promise microtasks can affect a replacement canvas.
+  useLayoutEffect(() => {
     generation.current += 1;
     lock.current = false;
     setBusy(false);
