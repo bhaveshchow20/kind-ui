@@ -27,12 +27,15 @@ export type TableDownloadFormat = "csv" | "markdown";
 /** Read rendered text at the time an action is invoked, including rich cell children. */
 export function extractTableData(table: HTMLTableElement): TableData {
   return {
-    headers: Array.from(
-      table.querySelectorAll("thead th"),
-      (cell) => cell.textContent?.trim() ?? "",
+    headers: Array.from(table.tHead?.rows ?? []).flatMap((row) =>
+      Array.from(row.cells)
+        .filter((cell) => cell.tagName === "TH")
+        .map((cell) => cell.textContent?.trim() ?? ""),
     ),
-    rows: Array.from(table.querySelectorAll("tbody tr"), (row) =>
-      Array.from(row.querySelectorAll("th,td"), (cell) => cell.textContent?.trim() ?? ""),
+    rows: Array.from(table.tBodies).flatMap((section) =>
+      Array.from(section.rows, (row) =>
+        Array.from(row.cells, (cell) => cell.textContent?.trim() ?? ""),
+      ),
     ),
   };
 }
@@ -55,7 +58,11 @@ export function tableDataToTSV({ headers, rows }: TableData): string {
 
 export function tableDataToMarkdown({ headers, rows }: TableData): string {
   if (!headers.length) return "";
-  const encodeCell = (value: string) => value.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+  const encodeCell = (value: string) =>
+    value
+      .replace(/\\/g, "\\\\")
+      .replace(/\|/g, "\\|")
+      .replace(/\r\n|\r|\n/g, "<br>");
   const line = (row: string[]) => `| ${row.map(encodeCell).join(" | ")} |`;
   return [
     line(headers),

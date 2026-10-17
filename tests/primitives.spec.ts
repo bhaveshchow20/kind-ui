@@ -132,3 +132,71 @@ test("primitive-only styles fit narrow light and dark views without accessibilit
   await expect(page.locator('[data-slot="code-block-language"]')).toHaveCSS("font-size", "12px");
   expect(errors).toEqual([]);
 });
+
+test("preview mounted expanded keeps observing growth and shrinkage after closing", async ({
+  page,
+}) => {
+  await page.goto("/?previewOpen");
+  const preview = page.locator('[data-slot="collapsible-preview-inner"]');
+  const content = preview.locator(":scope > div");
+  await expect(preview).not.toHaveAttribute("inert");
+  await content.evaluate((element) => {
+    element.style.height = "24px";
+    element.style.lineHeight = "24px";
+  });
+  await page.getByRole("button", { name: "Toggle preview", exact: true }).click();
+  await expect(preview).not.toHaveAttribute("inert");
+  await content.evaluate((element) => {
+    element.style.height = "96px";
+  });
+  await expect(preview).toHaveAttribute("inert", "");
+  await content.evaluate((element) => {
+    element.style.height = "24px";
+  });
+  await expect(preview).not.toHaveAttribute("inert");
+  await content.evaluate((element) => {
+    element.style.height = "auto";
+    element.textContent = "New streamed content ".repeat(30);
+  });
+  await expect(preview).toHaveAttribute("inert", "");
+  await content.evaluate((element) => {
+    element.textContent = "Short";
+  });
+  await expect(preview).not.toHaveAttribute("inert");
+});
+
+test("table copy keeps nested table text in its cell without adding nested rows or columns", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          (window as unknown as { copiedTable: string }).copiedTable = text;
+        },
+      },
+    });
+  });
+  await page.goto("/");
+  const table = page.locator('[data-slot="table-viewport"] > table');
+  await table.evaluate((element) => {
+    const header = element.querySelector("thead th");
+    const cell = element.querySelector("tbody td");
+    if (!header || !cell) throw new Error("Missing outer table cells");
+    for (const target of [header, cell]) {
+      const nested = document.createElement("table");
+      nested.innerHTML =
+        "<thead><tr><th>Nested heading</th></tr></thead><tbody><tr><td>Nested value</td></tr></tbody>";
+      target.append(nested);
+    }
+    const extraBody = document.createElement("tbody");
+    extraBody.innerHTML = "<tr><th>South</th><td>2</td></tr>";
+    element.append(extraBody);
+  });
+  await page.getByRole("button", { name: "Copy table", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Copy table as CSV", exact: true }).click();
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { copiedTable: string }).copiedTable))
+    .toBe("RegionNested headingNested value,Total\nNorthNested headingNested value,0\nSouth,2");
+});

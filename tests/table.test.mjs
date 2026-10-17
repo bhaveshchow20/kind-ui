@@ -150,3 +150,19 @@ test("Markdown escapes slashes and pipes, pads short rows and retains excess cel
   assert.equal(P.tableDataToMarkdown({ headers: [], rows: [["value"]] }), "");
   assert.equal(P.tableDataToMarkdown({ headers: ["A"], rows: [] }), "| A |\n| --- |");
 });
+
+test("Markdown normalizes CRLF, CR and LF inside headers and cells without adding rows", () => {
+  const data = {
+    headers: ["First\r\nsecond", "A|B\rC\\D"],
+    rows: [
+      ["one\ntwo", "three\rfour\r\nfive"],
+      ["", "unchanged"],
+    ],
+  };
+  const original = structuredClone(data);
+  assert.equal(
+    P.tableDataToMarkdown(data),
+    "| First<br>second | A\\|B<br>C\\\\D |\n| --- | --- |\n| one<br>two | three<br>four<br>five |\n|  | unchanged |",
+  );
+  assert.deepEqual(data, original);
+});

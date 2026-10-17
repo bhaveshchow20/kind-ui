@@ -43,7 +43,9 @@ import "./styles.css";
 function Fixture() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [destination, setDestination] = useState<string | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(() =>
+    new URL(window.location.href).searchParams.has("previewOpen"),
+  );
   const previewTrigger = useRef<HTMLButtonElement>(null);
   const table = (
     <Table>

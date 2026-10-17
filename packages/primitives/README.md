@@ -60,6 +60,8 @@ Shared `text-kind-*` roles own primitive typography; importing primitive styles
 alone supplies their size and line-height. AI typography retains compatible
 aliases. Table text exports read header and body cells, including body row
 headers; captions, footers and merged-cell expansion are not part of that format.
+Nested table text remains part of its containing cell, but nested rows and cells
+do not become extra export entries. Markdown cell line breaks become `<br>`.
 
 Props and refs remain with their implementations. Trigger, content and item parts
 compose independently; controlled state and event details pass through. Consumer
