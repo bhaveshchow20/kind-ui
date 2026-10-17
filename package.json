@@ -55,8 +55,8 @@
     "check:primitives:package": "npm run build:primitives:registry && node --test tests/primitives-source.test.mjs && node scripts/check-primitives-package.mjs",
     "test:primitives:browser": "playwright test --config playwright.primitives.config.mjs",
     "build:ai": "npm run build:primitives && npm run build --workspace @kind-ui/ai",
-    "test:ai": "node --test tests/ai-answers.test.mjs",
-    "check:ai:types": "tsc -p tests/fixtures/ai-answers",
+    "test:ai": "node --test tests/ai-answers.test.mjs tests/ai-conversation.test.mjs",
+    "check:ai:types": "tsc -p tests/fixtures/ai-answers && tsc -p tests/fixtures/ai-conversation",
     "check:ai:package": "node scripts/check-ai-package.mjs",
     "check:ai": "npm run build:ai && npm run test:ai && npm run check:ai:types && npm run check:ai:package"
   },
