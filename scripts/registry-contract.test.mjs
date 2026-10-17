@@ -55,15 +55,32 @@ test("official CLI output has a flat complete catalog and content-free discovery
   );
   for (const item of catalog.items) {
     assert.ok(item.files.every((file) => !Object.hasOwn(file, "content")));
-    assert.deepEqual(item.dependencies, [
-      `@kind-ui/charts@${coreVersion}`,
-      "react@^19.3.0",
-      "react-dom@^19.3.0",
-      "recharts@^3.10.1",
-      "motion@^13.4.6",
-    ]);
-    assert.deepEqual(item.devDependencies, ["tailwindcss@^4.0.0"]);
+    assert.deepEqual(item.dependencies, [`@kind-ui/charts@${coreVersion}`]);
+    assert.deepEqual(item.devDependencies, []);
     assert.deepEqual(item.css, registryCss);
+  }
+});
+
+test("Core owns the shared peer requirements without registry requests replacing host pins", () => {
+  const core = z
+    .object({ peerDependencies: z.record(z.string(), z.string()) })
+    .parse(readJson(path.join(root, "packages/charts/package.json")));
+  assert.deepEqual(core.peerDependencies, {
+    motion: "^13.4.6",
+    react: "^19.3.0",
+    "react-dom": "^19.3.0",
+    recharts: "^3.10.1",
+    tailwindcss: "^4.0.0",
+  });
+  for (const item of catalog.items) {
+    for (const name of Object.keys(core.peerDependencies)) {
+      assert.ok(
+        ![...item.dependencies, ...item.devDependencies].some((spec) =>
+          spec.startsWith(`${name}@`),
+        ),
+        `${item.name} must let npm preserve compatible ${name} host pins`,
+      );
+    }
   }
 });
 
