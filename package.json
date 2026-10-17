@@ -11,7 +11,7 @@
   },
   "packageManager": "npm@11.9.0",
   "scripts": {
-    "build": "tsc -b packages/charts --force && npm run build:primitives",
+    "build": "tsc -b packages/charts --force && npm run build:primitives && npm run build --workspace @kind-ui/ai",
     "typecheck": "npm run build && npm run check:tooling && npm run check:types && npm run check:apps-tooling",
     "lint": "biome check .",
     "format": "biome check --write .",
@@ -53,7 +53,8 @@
     "build:primitives:registry": "node scripts/build-primitives-registry.mjs",
     "test:primitives": "node --test tests/primitives.test.mjs tests/table.test.mjs tests/dialog.test.mjs tests/combobox.test.mjs tests/hover-card.test.mjs",
     "check:primitives:package": "npm run build:primitives:registry && node --test tests/primitives-source.test.mjs && node scripts/check-primitives-package.mjs",
-    "test:primitives:browser": "playwright test --config playwright.primitives.config.mjs"
+    "test:primitives:browser": "playwright test --config playwright.primitives.config.mjs",
+    "build:ai": "npm run build:primitives && npm run build --workspace @kind-ui/ai"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",

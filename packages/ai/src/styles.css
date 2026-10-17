@@ -1,0 +1,70 @@
+@import "@kind-ui/primitives/styles.css";
+
+@theme inline {
+  --text-ai-meta: var(--text-kind-meta);
+  --text-ai-meta--line-height: var(--text-kind-meta--line-height);
+  --text-ai-description: var(--text-kind-description);
+  --text-ai-description--line-height: var(--text-kind-description--line-height);
+  --text-ai-label: var(--text-kind-label);
+  --text-ai-label--line-height: var(--text-kind-label--line-height);
+  --text-ai-title: var(--text-kind-title);
+  --text-ai-title--line-height: var(--text-kind-title--line-height);
+  --text-ai-body: var(--text-kind-body);
+  --text-ai-body--line-height: var(--text-kind-body--line-height);
+  --text-ai-prose: var(--text-kind-prose);
+  --text-ai-prose--line-height: var(--text-kind-prose--line-height);
+}
+
+@keyframes kind-shimmer {
+  from {
+    background-position: 200% center;
+  }
+  to {
+    background-position: -200% center;
+  }
+}
+@layer components {
+  .kind-shimmer {
+    color: transparent;
+    background-image:
+      linear-gradient(
+        100deg,
+        transparent calc(50% - var(--kind-loader-spread, 20%)),
+        var(--foreground),
+        transparent calc(50% + var(--kind-loader-spread, 20%))
+      ),
+      linear-gradient(var(--muted-foreground), var(--muted-foreground));
+    background-size: 200% 100%;
+    background-clip: text;
+    animation: kind-shimmer var(--kind-loader-duration, 2s) linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kind-shimmer {
+      animation: none;
+      color: var(--muted-foreground);
+      background-image: none;
+    }
+  }
+  @media (forced-colors: active) {
+    .kind-shimmer {
+      background-image: none;
+      color: CanvasText;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .kind-content-reveal {
+    animation: kind-content-reveal var(--duration-kind-reveal, 180ms) var(--ease-kind-out) both;
+  }
+}
+@keyframes kind-content-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
