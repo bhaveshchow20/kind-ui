@@ -40,7 +40,7 @@ export default function CodeBlockExample() {
       </div>
       <CodeBlock code={code} language="typescript" filename="welcome.ts" wrap={wrap}>
         <CodeBlockHeader>
-          <CodeBlockLanguage>welcome.ts</CodeBlockLanguage>
+          <CodeBlockLanguage className="text-foreground">welcome.ts</CodeBlockLanguage>
           <CodeBlockActions>
             <CodeBlockDownloadButton
               onDownload={() => setFeedback("Downloaded welcome.ts")}

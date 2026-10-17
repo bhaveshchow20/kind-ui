@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import AxeBuilder from "@axe-core/playwright";
 import { chromium, expect } from "@playwright/test";
 
 const ids = JSON.parse(readFileSync("content/primitives/meta.json", "utf8")).pages;
@@ -32,6 +33,15 @@ export async function checkPrimitiveDocs(browser, origin) {
           `${id}: overflow at ${width}`,
         );
         if (width === 1440) {
+          const { violations } = await new AxeBuilder({ page })
+            .include(".primitive-preview")
+            .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+            .analyze();
+          assert.deepEqual(
+            violations.map(({ id, nodes }) => ({ id, targets: nodes.map(({ target }) => target) })),
+            [],
+            `${id}: preview accessibility`,
+          );
           const links = await page
             .locator('#nd-sidebar a[href^="/components/"]')
             .evaluateAll((nodes) =>
