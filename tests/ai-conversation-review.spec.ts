@@ -1,5 +1,26 @@
 import { expect, test } from "@playwright/test";
 
+test("conversation viewport forwards key handlers once before its cancellable scroll interruption", async ({
+  page,
+}) => {
+  await page.goto("/?case=conversation");
+  const viewport = page.locator('[data-slot="conversation-viewport"]');
+  const events = page.getByLabel("Conversation key events");
+  await viewport.press("ArrowUp");
+  await expect(viewport).toBeFocused();
+  await expect(events).toHaveText("consumer:ArrowUp:conversation-viewport");
+
+  await page.getByRole("checkbox", { name: "Cancel conversation keyboard default" }).uncheck();
+  await viewport.press("PageUp");
+  await expect(events).toHaveText(
+    "consumer:ArrowUp:conversation-viewport|consumer:PageUp:conversation-viewport|stop",
+  );
+  await page.getByRole("button", { name: "Nested conversation action" }).press("Home");
+  await expect(events).toHaveText(
+    "consumer:ArrowUp:conversation-viewport|consumer:PageUp:conversation-viewport|stop|consumer:Home:conversation-viewport",
+  );
+});
+
 test("controlled rich edits submit only the host value when rejected, delayed or accepted", async ({
   page,
 }) => {

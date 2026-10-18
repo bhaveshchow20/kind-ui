@@ -127,6 +127,7 @@ export function ConversationContent({
   className,
   children,
   onScroll,
+  onKeyDown,
   ...props
 }: ConversationContentProps) {
   const context = useConversation();
@@ -159,6 +160,7 @@ export function ConversationContent({
       ),
       onScroll,
       onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
+        onKeyDown?.(event);
         // Stop following before the browser scrolls. The stream can otherwise
         // resize between the key press and its scroll event and pull the reader back.
         if (

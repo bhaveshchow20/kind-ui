@@ -1,4 +1,5 @@
 import { ComposerRich, ComposerRichInput, type ComposerValue } from "@kind-ui/ai/composer-rich";
+import { Conversation, ConversationContent } from "@kind-ui/ai/conversation";
 import {
   PromptInput,
   PromptInputActionAddScreenshot,
@@ -12,6 +13,50 @@ import {
 import type { Editor } from "@tiptap/core";
 import { createRef, type RefCallback, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { useStickToBottom } from "use-stick-to-bottom";
+
+function ConversationKeyboard() {
+  const instance = useStickToBottom({ initial: false, resize: "instant" });
+  const [cancel, setCancel] = useState(true);
+  const [events, setEvents] = useState<string[]>([]);
+  return (
+    <>
+      <label>
+        <input
+          type="checkbox"
+          checked={cancel}
+          onChange={(event) => setCancel(event.target.checked)}
+        />
+        Cancel conversation keyboard default
+      </label>
+      <Conversation
+        initial={false}
+        resize="instant"
+        instance={{
+          ...instance,
+          stopScroll: () => {
+            setEvents((previous) => [...previous, "stop"]);
+            instance.stopScroll();
+          },
+        }}
+      >
+        <ConversationContent
+          render={<div style={{ height: 100, overflowY: "auto" }} />}
+          onKeyDown={(event) => {
+            const entry = `consumer:${event.key}:${event.currentTarget.dataset.slot}`;
+            setEvents((previous) => [...previous, entry]);
+            if (cancel) event.preventDefault();
+          }}
+        >
+          <div style={{ height: 500 }}>
+            <button type="button">Nested conversation action</button>
+          </div>
+        </ConversationContent>
+      </Conversation>
+      <output aria-label="Conversation key events">{events.join("|")}</output>
+    </>
+  );
+}
 
 function ControlledEditor() {
   const [value, setValue] = useState<ComposerValue>({
@@ -178,13 +223,15 @@ function Refs() {
 
 const scenario = new URLSearchParams(window.location.search).get("case");
 const App =
-  scenario === "drag"
-    ? DragLeave
-    : scenario === "capture"
-      ? Screenshot
-      : scenario === "refs"
-        ? Refs
-        : ControlledEditor;
+  scenario === "conversation"
+    ? ConversationKeyboard
+    : scenario === "drag"
+      ? DragLeave
+      : scenario === "capture"
+        ? Screenshot
+        : scenario === "refs"
+          ? Refs
+          : ControlledEditor;
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing regression fixture root.");
 createRoot(root).render(<App />);
