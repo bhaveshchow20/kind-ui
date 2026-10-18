@@ -3,7 +3,13 @@ import {
   GeneratedImageRetry,
   type GeneratedImageState,
 } from "@kind-ui/ai/generated-image";
-import { Prompt, PromptOption, PromptStep, PromptSubmit } from "@kind-ui/ai/question";
+import {
+  Prompt,
+  PromptOption,
+  PromptOptionOther,
+  PromptStep,
+  PromptSubmit,
+} from "@kind-ui/ai/question";
 import {
   type RefObject,
   startTransition,
@@ -77,6 +83,8 @@ function ImageFixture() {
 }
 
 function Fixture() {
+  if (new URLSearchParams(window.location.search).has("eligibility"))
+    return <PromptEligibilityFixture />;
   return (
     <>
       <Prompt>
@@ -90,6 +98,45 @@ function Fixture() {
         <PromptSubmit />
       </Prompt>
       <ImageFixture />
+    </>
+  );
+}
+
+function PromptEligibilityFixture() {
+  const [optionState, setOptionState] = useState("enabled");
+  const [answers, setAnswers] = useState<string[]>([]);
+  return (
+    <>
+      {["enabled", "disabled", "removed"].map((state) => (
+        <button key={state} type="button" onClick={() => setOptionState(state)}>
+          Set option {state}
+        </button>
+      ))}
+      <output data-testid="prompt-answers">{JSON.stringify(answers)}</output>
+      <Prompt onAnswer={(answer) => setAnswers((previous) => [...previous, answer])}>
+        <PromptStep name="choice">
+          <PromptOption value="a">Option A</PromptOption>
+          {optionState !== "removed" && (
+            <PromptOption value="b" disabled={optionState === "disabled"}>
+              Option B
+            </PromptOption>
+          )}
+          <PromptOptionOther />
+        </PromptStep>
+        <PromptSubmit />
+      </Prompt>
+      <Prompt aria-label="No enabled options">
+        <PromptStep name="disabled">
+          <PromptOption value="disabled" disabled>
+            Disabled option
+          </PromptOption>
+        </PromptStep>
+        <PromptSubmit />
+      </Prompt>
+      <Prompt aria-label="No options">
+        <PromptStep name="empty" />
+        <PromptSubmit />
+      </Prompt>
     </>
   );
 }

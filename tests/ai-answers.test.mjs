@@ -53,6 +53,49 @@ test("Prompt renders only its current step and retains the submit composition", 
   assert.match(output, /data-slot="prompt-submit"/);
 });
 
+test("Prompt Continue reflects enabled choices, write-in eligibility and consumer disabling", () => {
+  for (const { options, promptProps, submitProps, disabled } of [
+    { options: [], disabled: true },
+    { options: [h(K.PromptOption, { value: "a", disabled: true }, "A")], disabled: true },
+    { options: [h(K.PromptOption, { value: "a" }, "A")], disabled: false },
+    { options: [h(K.PromptOptionOther, { key: "other" })], disabled: true },
+    {
+      options: [h(K.PromptOptionOther, { key: "other" })],
+      promptProps: { defaultValues: { choice: "   " } },
+      disabled: true,
+    },
+    {
+      options: [h(K.PromptOptionOther, { key: "other" })],
+      promptProps: { defaultValues: { choice: "Custom" } },
+      disabled: false,
+    },
+    {
+      options: [h(K.PromptOption, { value: "a" }, "A")],
+      promptProps: { disabled: true },
+      disabled: true,
+    },
+    {
+      options: [h(K.PromptOption, { value: "a" }, "A")],
+      submitProps: { disabled: true },
+      disabled: true,
+    },
+  ]) {
+    const output = render(
+      h(
+        K.Prompt,
+        promptProps,
+        h(K.PromptStep, { name: "choice" }, ...options),
+        h(K.PromptSubmit, submitProps),
+      ),
+    );
+    const button = output.match(/<button[^>]*data-slot="prompt-submit"[^>]*>/)?.[0];
+    assert.ok(button);
+    assert.equal(button.includes('disabled=""'), disabled, button);
+  }
+  const empty = render(h(K.Prompt, null, h(K.PromptSubmit)));
+  assert.match(empty, /<button(?=[^>]*data-slot="prompt-submit")(?=[^>]*disabled="")[^>]*>/);
+});
+
 test("GeneratedImage renders explicit lifecycle states and only supplied capabilities", () => {
   for (const state of ["queued", "generating", "complete", "error"]) {
     const output = render(

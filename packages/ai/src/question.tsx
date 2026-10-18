@@ -336,6 +336,7 @@ interface PromptContextValue {
   totalSteps: number;
   partial: Record<string, string>;
   canBack: boolean;
+  canSubmit: boolean;
   submit: (option?: { value: string; other: boolean }) => void;
   back: () => void;
   dismiss: () => void;
@@ -442,18 +443,21 @@ export function Prompt({
     if (!disabled && currentStep !== undefined)
       setDrafts((previous) => ({ ...previous, [currentStep]: { ...draft, value, other } }));
   };
+  const isEligible = (selected: { value: string; other: boolean }) => {
+    const value = selected.other ? draft.writeIn.trim() : selected.value;
+    return (
+      (!selected.other || !!value) &&
+      options.some(
+        (item) =>
+          item.other === selected.other && (item.other || item.value === value) && !item.disabled,
+      )
+    );
+  };
   const submit = (option?: { value: string; other: boolean }) => {
     if (!step || disabled || lock.current) return;
     const selected = option ?? draft;
     const value = selected.other ? draft.writeIn.trim() : selected.value;
-    if (
-      (selected.other && !value) ||
-      !options.some(
-        (item) =>
-          item.other === selected.other && (item.other || item.value === value) && !item.disabled,
-      )
-    )
-      return;
+    if (!isEligible(selected)) return;
     lock.current = true;
     try {
       const next = { ...partial, [step.name]: value };
@@ -521,6 +525,7 @@ export function Prompt({
         totalSteps: steps.length,
         partial,
         canBack: stepIndex > 0,
+        canSubmit: !!step && isEligible(draft),
         submit,
         back,
         dismiss,
@@ -791,11 +796,7 @@ export function PromptSubmit({
       "data-slot": "prompt-submit",
       className: cn(actionVariants("default"), "rounded-lg px-3 text-ai-label", className),
       children,
-      disabled:
-        disabled ||
-        prompt.disabled ||
-        !prompt.totalSteps ||
-        (prompt.other && !prompt.writeIn.trim()),
+      disabled: disabled || prompt.disabled || !prompt.canSubmit,
       onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         if (!event.defaultPrevented) prompt.submit();

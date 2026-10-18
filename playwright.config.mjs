@@ -8,6 +8,7 @@ export default defineConfig({
   testIgnore: [
     "ai-answers.spec.ts",
     "ai-conversation-review.spec.ts",
+    "ai-context-research.spec.ts",
     "primitives.spec.ts",
     "composition.spec.ts",
     "chart-frame.spec.ts",

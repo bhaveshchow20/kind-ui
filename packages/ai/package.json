@@ -76,6 +76,30 @@
       "types": "./dist/status.d.ts",
       "import": "./dist/status.js"
     },
+    "./attachments": {
+      "types": "./dist/attachments.d.ts",
+      "import": "./dist/attachments.js"
+    },
+    "./uploader": {
+      "types": "./dist/uploader.d.ts",
+      "import": "./dist/uploader.js"
+    },
+    "./sources": {
+      "types": "./dist/sources.d.ts",
+      "import": "./dist/sources.js"
+    },
+    "./inline-citation": {
+      "types": "./dist/inline-citation.d.ts",
+      "import": "./dist/inline-citation.js"
+    },
+    "./context": {
+      "types": "./dist/context.d.ts",
+      "import": "./dist/context.js"
+    },
+    "./selection": {
+      "types": "./dist/selection.d.ts",
+      "import": "./dist/selection.js"
+    },
     "./conversation": {
       "types": "./dist/conversation.d.ts",
       "import": "./dist/conversation.js"
@@ -103,7 +127,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "test:context-research": "node --test tests/context-research.test.mjs && tsc -p tests/tsconfig.context-research.json && tsc -p tests/tsconfig.context-research.json --module ESNext --moduleResolution Bundler"
   },
   "peerDependencies": {
     "motion": "^13.4.6",
@@ -125,6 +150,7 @@
     "@tiptap/starter-kit": "3.32.0",
     "@tiptap/suggestion": "3.32.0",
     "clsx": "2.1.1",
+    "embla-carousel-react": "8.6.0",
     "lucide-react": "1.57.0",
     "streamdown": "2.4.0",
     "use-stick-to-bottom": "1.1.3"

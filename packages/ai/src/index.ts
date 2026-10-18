@@ -1,3 +1,50 @@
+export type {
+  AttachmentActionProps,
+  AttachmentContentProps,
+  AttachmentData,
+  AttachmentDescriptionProps,
+  AttachmentEmptyProps,
+  AttachmentHoverCardContentProps,
+  AttachmentHoverCardProps,
+  AttachmentHoverCardTriggerProps,
+  AttachmentIconProps,
+  AttachmentInfoProps,
+  AttachmentMediaCategory,
+  AttachmentMediaProps,
+  AttachmentNameProps,
+  AttachmentOverlayProps,
+  AttachmentPreviewProps,
+  AttachmentProgressProps,
+  AttachmentProps,
+  AttachmentRemoveProps,
+  AttachmentState,
+  AttachmentsProps,
+  AttachmentVariant,
+} from "./attachments.js";
+export {
+  Attachment,
+  AttachmentAction,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentEmpty,
+  AttachmentHoverCard,
+  AttachmentHoverCardContent,
+  AttachmentHoverCardTrigger,
+  AttachmentIcon,
+  AttachmentInfo,
+  AttachmentMedia,
+  AttachmentName,
+  AttachmentOverlay,
+  AttachmentPreview,
+  AttachmentProgress,
+  AttachmentRemove,
+  Attachments,
+  attachmentVariants,
+  getAttachmentLabel,
+  getMediaCategory,
+  useAttachmentContext,
+  useAttachmentsContext,
+} from "./attachments.js";
 export type { CalloutProps } from "./callout.js";
 export { Callout, CalloutContent, CalloutIcon, calloutVariants } from "./callout.js";
 export type {
@@ -11,6 +58,46 @@ export type {
   SelectContext,
 } from "./composer-rich.js";
 export { ComposerRich, ComposerRichInput, ComposerSuggestions } from "./composer-rich.js";
+export type {
+  AnimatedNumberProps,
+  ContextCacheUsageProps,
+  ContextContentBodyProps,
+  ContextContentFooterProps,
+  ContextContentHeaderProps,
+  ContextContentProps,
+  ContextCosts,
+  ContextFormatters,
+  ContextInputUsageProps,
+  ContextModel,
+  ContextOutputUsageProps,
+  ContextProps,
+  ContextReasoningUsageProps,
+  ContextTriggerProps,
+  ContextUsage,
+  UsageBarProps,
+  UsageMeterProps,
+  UsageStatLabelProps,
+  UsageStatProps,
+  UsageStatValueProps,
+} from "./context.js";
+export {
+  AnimatedNumber,
+  Context,
+  ContextCacheUsage,
+  ContextContent,
+  ContextContentBody,
+  ContextContentFooter,
+  ContextContentHeader,
+  ContextInputUsage,
+  ContextOutputUsage,
+  ContextReasoningUsage,
+  ContextTrigger,
+  UsageBar,
+  UsageMeter,
+  UsageStat,
+  UsageStatLabel,
+  UsageStatValue,
+} from "./context.js";
 export type {
   ConversationContentProps,
   ConversationDownloadProps,
@@ -94,6 +181,55 @@ export {
   generatedImageOverlayVariants,
   generatedImageVariants,
 } from "./generated-image.js";
+export type {
+  InlineCitationActionProps,
+  InlineCitationCardBodyProps,
+  InlineCitationCardProps,
+  InlineCitationCardTriggerProps,
+  InlineCitationCarouselApi,
+  InlineCitationCarouselContentProps,
+  InlineCitationCarouselHeaderProps,
+  InlineCitationCarouselIndexProps,
+  InlineCitationCarouselItemProps,
+  InlineCitationCarouselNavProps,
+  InlineCitationCarouselNextProps,
+  InlineCitationCarouselPrevProps,
+  InlineCitationCarouselProps,
+  InlineCitationCarouselState,
+  InlineCitationContentProps,
+  InlineCitationDescriptionProps,
+  InlineCitationImageProps,
+  InlineCitationNameProps,
+  InlineCitationProps,
+  InlineCitationQuoteProps,
+  InlineCitationSourceProps,
+  InlineCitationTextProps,
+  InlineCitationTitleProps,
+} from "./inline-citation.js";
+export {
+  InlineCitation,
+  InlineCitationAction,
+  InlineCitationCard,
+  InlineCitationCardBody,
+  InlineCitationCardTrigger,
+  InlineCitationCarousel,
+  InlineCitationCarouselContent,
+  InlineCitationCarouselHeader,
+  InlineCitationCarouselIndex,
+  InlineCitationCarouselItem,
+  InlineCitationCarouselNav,
+  InlineCitationCarouselNext,
+  InlineCitationCarouselPrev,
+  InlineCitationContent,
+  InlineCitationDescription,
+  InlineCitationImage,
+  InlineCitationName,
+  InlineCitationQuote,
+  InlineCitationSource,
+  InlineCitationText,
+  InlineCitationTitle,
+  useInlineCitationCarousel,
+} from "./inline-citation.js";
 export type { LoaderProps, TextShimmerProps } from "./loader.js";
 export { Loader, loaderVariants, Shimmer } from "./loader.js";
 export type { MarkdownProps } from "./markdown.js";
@@ -329,6 +465,41 @@ export {
   usePrompt,
   useQuestion,
 } from "./question.js";
+export type {
+  SelectionButtonProps,
+  SelectionContentProps,
+  SelectionProps,
+  SelectionSeparatorProps,
+  SelectionToolbarProps,
+  SelectionValue,
+} from "./selection.js";
+export {
+  Selection,
+  SelectionButton,
+  SelectionContent,
+  SelectionSeparator,
+  SelectionToolbar,
+  useSelection,
+} from "./selection.js";
+export type {
+  SourceDescriptionProps,
+  SourceNameProps,
+  SourceProps,
+  SourcesContentProps,
+  SourcesProps,
+  SourcesTriggerProps,
+  SourceTitleProps,
+} from "./sources.js";
+export {
+  Source,
+  SourceDescription,
+  SourceName,
+  Sources,
+  SourcesContent,
+  SourcesTrigger,
+  SourceTitle,
+  sourceVariants,
+} from "./sources.js";
 export type { StatusProps, StatusState } from "./status.js";
 export { Status, statusVariants } from "./status.js";
 export type { SuggestionProps, SuggestionsProps } from "./suggestion.js";
@@ -354,3 +525,24 @@ export {
   TranscriptWord,
   useTranscript,
 } from "./transcript.js";
+export type {
+  CreateXhrUploaderOptions,
+  UploadError,
+  UploaderAttachOptions,
+  UploaderContextValue,
+  UploaderDropzoneProps,
+  UploaderFn,
+  UploaderListProps,
+  UploaderProps,
+  UploaderTriggerProps,
+  UploadItem,
+} from "./uploader.js";
+export {
+  createXhrUploader,
+  Uploader,
+  UploaderDropzone,
+  UploaderList,
+  UploaderTrigger,
+  useUploader,
+  useUploaderAttach,
+} from "./uploader.js";
