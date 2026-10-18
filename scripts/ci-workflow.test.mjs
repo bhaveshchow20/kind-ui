@@ -149,6 +149,28 @@ test("both test pipelines retain every aggregate browser suite's available failu
   }
 });
 
+test("parallel source fixtures isolate Vite caches and retain their CI failure traces", async () => {
+  const caches = new Set();
+  const uploads = ci.jobs.playwright.steps.filter(
+    (step) => step.uses?.startsWith("actions/upload-artifact@") && step.if === "always()",
+  );
+  for (const name of ["primitives", "ai-answers", "ai-context-research", "ai-agent-work"]) {
+    const { default: fixture } = await import(
+      new URL(`../tests/fixtures/${name}/vite.config.mjs`, import.meta.url)
+    );
+    assert.equal(typeof fixture.cacheDir, "string", `${name} needs an explicit cache directory`);
+    assert.ok(!caches.has(fixture.cacheDir), `${name} shares another fixture's cache`);
+    caches.add(fixture.cacheDir);
+    const { default: browser } = await import(
+      new URL(`../playwright.${name}.config.mjs`, import.meta.url)
+    );
+    assert.ok(
+      uploads.some((step) => step.with.path.split("\n").includes(`${browser.outputDir}/`)),
+      `Missing CI failure traces: ${browser.outputDir}`,
+    );
+  }
+});
+
 test("advisory checks include development tooling and npm updates cover both lockfiles", async () => {
   for (const job of [ci.jobs.fast, docs.jobs.build, release.jobs.validate]) {
     assert.ok(job.steps.some((step) => step.run === "npm audit --audit-level=high --include=dev"));
