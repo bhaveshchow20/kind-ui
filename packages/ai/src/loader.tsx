@@ -21,18 +21,24 @@ export function Loader({
   render,
   ...props
 }: LoaderProps) {
+  const normalizedDuration = Number.isFinite(duration)
+    ? Math.max(0.1, duration)
+    : variant === "pulse"
+      ? 1.4
+      : 2.2;
+  const normalizedSpread = Number.isFinite(spread) ? Math.max(0, Math.min(100, spread)) : 40;
   return useRender({
     defaultTagName: "span",
     render,
     props: {
       role: "status",
-      "aria-label": typeof children === "string" ? children : "Loading",
+      "aria-label": typeof children === "string" ? children : undefined,
       ...props,
       "data-slot": "loader",
       "data-variant": variant,
       style: {
-        "--kind-loader-duration": `${Math.max(0.1, duration)}s`,
-        "--kind-loader-spread": `${Math.max(0, Math.min(100, spread))}%`,
+        "--kind-loader-duration": `${normalizedDuration}s`,
+        "--kind-loader-spread": `${normalizedSpread}%`,
         ...style,
       } as CSSProperties,
       className: loaderVariants({
@@ -63,6 +69,9 @@ export function Shimmer({
   style,
   ...props
 }: TextShimmerProps) {
+  const normalizedDuration = Number.isFinite(duration) ? Math.max(0.1, duration) : 2;
+  const spreadWidth = children.length * Math.max(0, Number.isFinite(spread) ? spread : 2);
+  const normalizedSpread = Number.isFinite(spreadWidth) ? spreadWidth : children.length * 2;
   return (
     <Tag
       {...props}
@@ -73,8 +82,8 @@ export function Shimmer({
       )}
       style={
         {
-          "--kind-loader-duration": `${Math.max(0.1, duration)}s`,
-          "--kind-loader-spread": `${children.length * Math.max(0, spread)}px`,
+          "--kind-loader-duration": `${normalizedDuration}s`,
+          "--kind-loader-spread": `${normalizedSpread}px`,
           ...style,
         } as CSSProperties
       }
@@ -97,7 +106,7 @@ export function loaderVariants({
     variant === "shimmer"
       ? "kind-shimmer"
       : variant === "pulse"
-        ? "text-muted-foreground motion-safe:animate-pulse"
+        ? "text-muted-foreground motion-safe:animate-pulse motion-safe:[animation-duration:var(--kind-loader-duration,2s)]"
         : "text-muted-foreground",
     extraClass,
     className,
