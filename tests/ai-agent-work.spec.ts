@@ -81,3 +81,23 @@ for (const decision of ["approved", "rejected"] as const) {
     await expect(page.getByTestId("errors")).toHaveText("1");
   });
 }
+
+for (const [elapsed, seconds, message] of [
+  [0, 0, "Thought for less than a second"],
+  [250, 0, "Thought for less than a second"],
+  [999, 0, "Thought for less than a second"],
+  [1000, 1, "Thought for 1 second"],
+  [2250, 2, "Thought for 2 seconds"],
+] as const) {
+  test(`reasoning completion preserves elapsed whole seconds at ${elapsed}ms`, async ({ page }) => {
+    await page.goto("/?reasoning");
+    await page.clock.install();
+    await page.clock.pauseAt(new Date(Date.now() + 1000));
+    await page.getByRole("button", { name: "Start reasoning", exact: true }).click();
+    await expect(page.getByTestId("duration")).toHaveText("0");
+    await page.clock.runFor(elapsed);
+    await page.getByRole("button", { name: "Finish reasoning", exact: true }).click();
+    await expect(page.getByTestId("duration")).toHaveText(String(seconds));
+    await expect(page.locator('[data-slot="reasoning-trigger"]')).toHaveText(message);
+  });
+}

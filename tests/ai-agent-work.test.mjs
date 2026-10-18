@@ -178,3 +178,14 @@ test("checkpoint variants reach the underlying button and retain their recipes",
     }
   }
 });
+
+test("step descriptions render numeric zero in the description wrapper and omit absent values", () => {
+  const zero = render(h(K.ChainOfThoughtStep, { label: "Search", description: 0 }));
+  assert.match(zero, /<div class="[^"]*text-ai-description[^"]*">0<\/div>/);
+  for (const description of [null, undefined]) {
+    const output = render(h(K.ChainOfThoughtStep, { label: "Search", description }));
+    assert.doesNotMatch(output, /text-ai-description/);
+  }
+  const text = render(h(K.ChainOfThoughtStep, { label: "Search", description: "No matches" }));
+  assert.match(text, /<div class="[^"]*text-ai-description[^"]*">No matches<\/div>/);
+});

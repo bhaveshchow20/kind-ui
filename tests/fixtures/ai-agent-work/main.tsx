@@ -5,6 +5,7 @@ import {
   ConfirmationReject,
   type ConfirmationState,
 } from "@kind-ui/ai/confirmation";
+import { Reasoning, ReasoningTrigger, useReasoning } from "@kind-ui/ai/reasoning";
 import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -16,6 +17,29 @@ function deferred() {
     reject = decline;
   });
   return { promise, resolve, reject };
+}
+
+function MeasuredDuration() {
+  const { duration } = useReasoning();
+  return <output data-testid="duration">{duration ?? "unmeasured"}</output>;
+}
+
+function ReasoningFixture() {
+  const [streaming, setStreaming] = useState(false);
+  return (
+    <main>
+      <Reasoning isStreaming={streaming} autoClose={false}>
+        <ReasoningTrigger />
+        <MeasuredDuration />
+      </Reasoning>
+      <button type="button" onClick={() => setStreaming(true)}>
+        Start reasoning
+      </button>
+      <button type="button" onClick={() => setStreaming(false)}>
+        Finish reasoning
+      </button>
+    </main>
+  );
 }
 
 function Fixture() {
@@ -98,4 +122,6 @@ function Fixture() {
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing fixture root");
-createRoot(root).render(<Fixture />);
+createRoot(root).render(
+  new URL(window.location.href).searchParams.has("reasoning") ? <ReasoningFixture /> : <Fixture />,
+);

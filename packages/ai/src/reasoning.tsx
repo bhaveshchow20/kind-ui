@@ -132,7 +132,7 @@ export function Reasoning({
       return () => clearInterval(interval);
     }
     if (start.current !== null) {
-      setMeasuredDuration(Math.max(0, Math.ceil((performance.now() - start.current) / 1000)));
+      setMeasuredDuration(Math.max(0, Math.floor((performance.now() - start.current) / 1000)));
       start.current = null;
       if (latest.current.autoClose && interactionVersion.current === runVersion.current) {
         const version = interactionVersion.current;

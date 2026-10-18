@@ -108,7 +108,7 @@ export function ChainOfThoughtStep({
             >
               {label}
             </div>
-            {description && (
+            {description != null && (
               <div className="mt-0.5 max-w-[68ch] break-words text-start text-ai-description text-muted-foreground">
                 {description}
               </div>
