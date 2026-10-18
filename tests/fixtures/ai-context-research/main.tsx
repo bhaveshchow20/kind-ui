@@ -7,6 +7,7 @@ import {
   useInlineCitationCarousel,
 } from "@kind-ui/ai/inline-citation";
 import { Selection, SelectionContent } from "@kind-ui/ai/selection";
+import { Uploader, UploaderTrigger } from "@kind-ui/ai/uploader";
 import { PopoverPopup, PopoverPortal, PopoverPositioner } from "@kind-ui/primitives/popover";
 import { useState } from "react";
 import { createPortal } from "react-dom";
@@ -58,12 +59,61 @@ function CarouselControls() {
   );
 }
 
+function UploaderControls() {
+  const [disabled, setDisabled] = useState(false);
+  const [rootDisabled, setRootDisabled] = useState(false);
+  const [cancel, setCancel] = useState(false);
+  const [calls, setCalls] = useState(0);
+  return (
+    <section aria-label="Uploader trigger">
+      <label>
+        <input
+          type="checkbox"
+          checked={disabled}
+          onChange={(event) => setDisabled(event.target.checked)}
+        />
+        Disable upload trigger
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={rootDisabled}
+          onChange={(event) => setRootDisabled(event.target.checked)}
+        />
+        Disable uploader
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={cancel}
+          onChange={(event) => setCancel(event.target.checked)}
+        />
+        Cancel upload trigger
+      </label>
+      <output data-testid="upload-trigger-calls">{calls}</output>
+      <Uploader disabled={rootDisabled}>
+        <UploaderTrigger
+          disabled={disabled}
+          render={<a href="#upload-trigger" />}
+          onClick={(event) => {
+            setCalls((value) => value + 1);
+            if (cancel) event.preventDefault();
+          }}
+        >
+          Choose upload
+        </UploaderTrigger>
+      </Uploader>
+    </section>
+  );
+}
+
 function Fixture() {
   const [frame, setFrame] = useState<HTMLIFrameElement | null>(null);
   const [document, setDocument] = useState<Document | null>(null);
   const [changes, setChanges] = useState<boolean[]>([]);
   return (
     <main>
+      <UploaderControls />
       <InlineCitationCarousel className="w-80" opts={{ watchResize: false }}>
         <InlineCitationCarouselContent>
           <InlineCitationCarouselItem>First source</InlineCitationCarouselItem>

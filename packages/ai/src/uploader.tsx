@@ -485,6 +485,7 @@ export function UploaderTrigger({
   ...props
 }: UploaderTriggerProps) {
   const uploader = useUploader();
+  const inactive = disabled || uploader.disabled;
   return useRender({
     defaultTagName: "button",
     render: render ?? <Button variant="ghost" size="sm" />,
@@ -493,15 +494,19 @@ export function UploaderTrigger({
       type: "button",
       ...props,
       "data-slot": "uploader-trigger",
-      disabled: disabled || uploader.disabled,
+      disabled: inactive,
       className: cn(
         actionClass,
         "min-h-8 min-w-8 gap-1.5 rounded-lg border border-border/55 bg-elevated px-2.5 text-ai-label font-medium text-foreground [&>svg]:size-4 [&>svg]:shrink-0 coarse:min-w-11",
         className,
       ),
       onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+        if (inactive) {
+          event.preventDefault();
+          return;
+        }
         onClick?.(event);
-        if (!event.defaultPrevented && !disabled && !uploader.disabled) uploader.open();
+        if (!event.defaultPrevented) uploader.open();
       },
     },
   });

@@ -1,5 +1,35 @@
 import { expect, test } from "@playwright/test";
 
+for (const disabledSource of ["Disable upload trigger", "Disable uploader"]) {
+  test(`${disabledSource} prevents composed trigger callbacks and navigation`, async ({ page }) => {
+    await page.goto("/");
+    let fileChoosers = 0;
+    page.on("filechooser", () => {
+      fileChoosers += 1;
+    });
+    const trigger = page.getByRole("link", { name: "Choose upload" });
+    const calls = page.getByTestId("upload-trigger-calls");
+    await page.getByLabel(disabledSource, { exact: true }).check();
+    await trigger.click();
+    await expect(calls).toHaveText("0");
+    await expect(page).not.toHaveURL(/#/);
+    expect(fileChoosers).toBe(0);
+    await page.getByLabel(disabledSource, { exact: true }).uncheck();
+    await page.getByLabel("Cancel upload trigger").check();
+    await trigger.click();
+    await expect(calls).toHaveText("1");
+    await expect(page).not.toHaveURL(/#/);
+    expect(fileChoosers).toBe(0);
+    await page.getByLabel("Cancel upload trigger").uncheck();
+    const chooser = page.waitForEvent("filechooser");
+    await trigger.click();
+    await (await chooser).setFiles([]);
+    await expect(calls).toHaveText("2");
+    await expect(page).toHaveURL(/#upload-trigger$/);
+    expect(fileChoosers).toBe(1);
+  });
+}
+
 test("disabled citation anchors block navigation and retain consumer cancellation", async ({
   page,
 }) => {
