@@ -7,6 +7,7 @@ export default defineConfig({
   testMatch: "*.spec.ts",
   testIgnore: [
     "ai-answers.spec.ts",
+    "ai-reasoning-*.spec.ts",
     "ai-context-research.spec.ts",
     "ai-conversation-review.spec.ts",
     "ai-agent-work.spec.ts",

@@ -2,10 +2,13 @@
 
 import { useReducedMotion } from "@kind-ui/primitives/use-reduced-motion";
 import { motion, useAnimationControls } from "motion/react";
-import { useEffect } from "react";
+import { type ComponentProps, useEffect } from "react";
+import { cn } from "./utils.js";
+
+export type ThinkingDotsProps = Omit<ComponentProps<"span">, "children" | "aria-hidden">;
 
 /** Decorative activity stays local to the host-owned streaming state. */
-export function ThinkingDots() {
+export function ThinkingDots({ className, ...props }: ThinkingDotsProps = {}) {
   const reducedMotion = useReducedMotion();
   const controls = useAnimationControls();
   // Activity starts independently of an ancestor's suppressed entrance animation.
@@ -29,9 +32,13 @@ export function ThinkingDots() {
   }, [controls, reducedMotion]);
   return (
     <span
+      {...props}
       aria-hidden="true"
       data-slot="thinking-dots"
-      className="inline-flex h-4 w-4 shrink-0 items-center justify-center gap-0.5 text-muted-foreground"
+      className={cn(
+        "inline-flex h-4 w-4 shrink-0 items-center justify-center gap-0.5 text-muted-foreground",
+        className,
+      )}
     >
       {[0, 1, 2].map((index) => (
         <motion.span

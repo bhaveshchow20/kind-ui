@@ -15,6 +15,26 @@
     "licenses"
   ],
   "exports": {
+    "./guardrail-notice": {
+      "types": "./dist/guardrail-notice.d.ts",
+      "import": "./dist/guardrail-notice.js"
+    },
+    "./typing-indicator": {
+      "types": "./dist/typing-indicator.d.ts",
+      "import": "./dist/typing-indicator.js"
+    },
+    "./reasoning-effort": {
+      "types": "./dist/reasoning-effort.d.ts",
+      "import": "./dist/reasoning-effort.js"
+    },
+    "./thinking-indicator": {
+      "types": "./dist/thinking-indicator.d.ts",
+      "import": "./dist/thinking-indicator.js"
+    },
+    "./streaming-text": {
+      "types": "./dist/streaming-text.d.ts",
+      "import": "./dist/streaming-text.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"

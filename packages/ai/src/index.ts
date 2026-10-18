@@ -277,6 +277,8 @@ export {
   generatedImageOverlayVariants,
   generatedImageVariants,
 } from "./generated-image.js";
+export type { GuardrailNoticeAlternative, GuardrailNoticeProps } from "./guardrail-notice.js";
+export { GuardrailNotice } from "./guardrail-notice.js";
 export type {
   InlineCitationActionProps,
   InlineCitationCardBodyProps,
@@ -644,6 +646,8 @@ export type {
   ReasoningTriggerProps,
 } from "./reasoning.js";
 export { Reasoning, ReasoningContent, ReasoningTrigger, useReasoning } from "./reasoning.js";
+export type { EffortLevel, ReasoningEffortProps } from "./reasoning-effort.js";
+export { ReasoningEffort } from "./reasoning-effort.js";
 export type {
   SelectionButtonProps,
   SelectionContentProps,
@@ -681,6 +685,8 @@ export {
 } from "./sources.js";
 export type { StatusProps, StatusState } from "./status.js";
 export { Status, statusVariants } from "./status.js";
+export type { StreamingTextProps, StreamingTextState } from "./streaming-text.js";
+export { StreamingText } from "./streaming-text.js";
 export type { SuggestionProps, SuggestionsProps } from "./suggestion.js";
 export { Suggestion, Suggestions, suggestionVariants } from "./suggestion.js";
 export type {
@@ -701,6 +707,10 @@ export {
   TaskLabel,
   TaskTrigger,
 } from "./task.js";
+export type { ThinkingDotsProps } from "./thinking-dots.js";
+export { ThinkingDots } from "./thinking-dots.js";
+export type { ThinkingIndicatorProps } from "./thinking-indicator.js";
+export { ThinkingIndicator } from "./thinking-indicator.js";
 export type {
   ToolArgumentProps,
   ToolBlockProps,
@@ -759,6 +769,8 @@ export {
   TranscriptWord,
   useTranscript,
 } from "./transcript.js";
+export type { TypingIndicatorProps } from "./typing-indicator.js";
+export { TypingIndicator } from "./typing-indicator.js";
 export type {
   CreateXhrUploaderOptions,
   UploadError,
