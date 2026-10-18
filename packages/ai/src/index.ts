@@ -1,4 +1,31 @@
 export type {
+  ActionContentProps,
+  ActionIconProps,
+  ActionLabelProps,
+  ActionProps,
+  ActionTriggerProps,
+} from "./action.js";
+export { Action, ActionContent, ActionIcon, ActionLabel, ActionTrigger } from "./action.js";
+export type {
+  AgentRunContentProps,
+  AgentRunHeaderProps,
+  AgentRunMetaProps,
+  AgentRunProps,
+  AgentRunState,
+  AgentRunStepProps,
+  AgentRunTextProps,
+  AgentRunTitleProps,
+} from "./agent-run.js";
+export {
+  AgentRun,
+  AgentRunContent,
+  AgentRunHeader,
+  AgentRunMeta,
+  AgentRunStep,
+  AgentRunText,
+  AgentRunTitle,
+} from "./agent-run.js";
+export type {
   AttachmentActionProps,
   AttachmentContentProps,
   AttachmentData,
@@ -48,6 +75,86 @@ export {
 export type { CalloutProps } from "./callout.js";
 export { Callout, CalloutContent, CalloutIcon, calloutVariants } from "./callout.js";
 export type {
+  ChainOfThoughtContentProps,
+  ChainOfThoughtHeaderProps,
+  ChainOfThoughtIconProps,
+  ChainOfThoughtImageProps,
+  ChainOfThoughtProps,
+  ChainOfThoughtSearchResultProps,
+  ChainOfThoughtSearchResultsProps,
+  ChainOfThoughtStepContentProps,
+  ChainOfThoughtStepProps,
+  ChainOfThoughtStepStaticProps,
+  ChainOfThoughtStepTriggerProps,
+} from "./chain-of-thought.js";
+export {
+  ChainOfThought,
+  ChainOfThoughtContent,
+  ChainOfThoughtHeader,
+  ChainOfThoughtIcon,
+  ChainOfThoughtImage,
+  ChainOfThoughtSearchResult,
+  ChainOfThoughtSearchResults,
+  ChainOfThoughtStep,
+  ChainOfThoughtStepContent,
+  ChainOfThoughtStepStatic,
+  ChainOfThoughtStepTrigger,
+} from "./chain-of-thought.js";
+export type { CheckpointIconProps, CheckpointProps, CheckpointTriggerProps } from "./checkpoint.js";
+export { Checkpoint, CheckpointIcon, CheckpointTrigger } from "./checkpoint.js";
+export type {
+  ComposerItem,
+  ComposerRichInputProps,
+  ComposerRichProps,
+  ComposerSegment,
+  ComposerSuggestionsProps,
+  ComposerTrigger,
+  ComposerValue,
+  SelectContext,
+} from "./composer-rich.js";
+export { ComposerRich, ComposerRichInput, ComposerSuggestions } from "./composer-rich.js";
+export type {
+  ConfirmationAcceptedProps,
+  ConfirmationAcceptProps,
+  ConfirmationActionProps,
+  ConfirmationActionsProps,
+  ConfirmationApproval,
+  ConfirmationApprovedProps,
+  ConfirmationContentProps,
+  ConfirmationDescriptionProps,
+  ConfirmationHeaderProps,
+  ConfirmationIconProps,
+  ConfirmationPendingProps,
+  ConfirmationProps,
+  ConfirmationRejectedProps,
+  ConfirmationRejectProps,
+  ConfirmationRequestProps,
+  ConfirmationResponse,
+  ConfirmationState,
+  ConfirmationStatusProps,
+  ConfirmationTitleProps,
+  ConfirmationTone,
+} from "./confirmation.js";
+export {
+  Confirmation,
+  ConfirmationAccept,
+  ConfirmationAccepted,
+  ConfirmationAction,
+  ConfirmationActions,
+  ConfirmationApproved,
+  ConfirmationContent,
+  ConfirmationDescription,
+  ConfirmationHeader,
+  ConfirmationIcon,
+  ConfirmationPending,
+  ConfirmationReject,
+  ConfirmationRejected,
+  ConfirmationRequest,
+  ConfirmationStatus,
+  ConfirmationTitle,
+  confirmationVariants,
+} from "./confirmation.js";
+export type {
   AnimatedNumberProps,
   ContextCacheUsageProps,
   ContextContentBodyProps,
@@ -87,17 +194,6 @@ export {
   UsageStatLabel,
   UsageStatValue,
 } from "./context.js";
-export type {
-  ComposerItem,
-  ComposerRichInputProps,
-  ComposerRichProps,
-  ComposerSegment,
-  ComposerSuggestionsProps,
-  ComposerTrigger,
-  ComposerValue,
-  SelectContext,
-} from "./composer-rich.js";
-export { ComposerRich, ComposerRichInput, ComposerSuggestions } from "./composer-rich.js";
 export type {
   ConversationContentProps,
   ConversationDownloadProps,
@@ -319,6 +415,26 @@ export {
   modelSelectorVariants,
 } from "./model-selector.js";
 export type {
+  PlanActionProps,
+  PlanContentProps,
+  PlanDescriptionProps,
+  PlanFooterProps,
+  PlanHeaderProps,
+  PlanProps,
+  PlanTitleProps,
+  PlanTriggerProps,
+} from "./plan.js";
+export {
+  Plan,
+  PlanAction,
+  PlanContent,
+  PlanDescription,
+  PlanFooter,
+  PlanHeader,
+  PlanTitle,
+  PlanTrigger,
+} from "./plan.js";
+export type {
   AttachmentsContext,
   PromptInputActionAddAttachmentsProps,
   PromptInputActionAddScreenshotProps,
@@ -466,6 +582,69 @@ export {
   useQuestion,
 } from "./question.js";
 export type {
+  QueueItemActionProps,
+  QueueItemActionsProps,
+  QueueItemAttachmentProps,
+  QueueItemContentProps,
+  QueueItemDescriptionProps,
+  QueueItemFileProps,
+  QueueItemImageProps,
+  QueueItemIndicatorProps,
+  QueueItemProps,
+  QueueListProps,
+  QueueMessage,
+  QueueMessagePart,
+  QueueProps,
+  QueueSectionContentProps,
+  QueueSectionLabelProps,
+  QueueSectionProps,
+  QueueSectionTriggerProps,
+  QueueTodo,
+  TodoContentProps,
+  TodoHeaderProps,
+  TodoItemIconProps,
+  TodoItemLabelProps,
+  TodoItemProps,
+  TodoListProps,
+  TodoProps,
+  TodoStatus,
+  TodoTitleProps,
+  TodoTriggerProps,
+} from "./queue.js";
+export {
+  Queue,
+  QueueItem,
+  QueueItemAction,
+  QueueItemActions,
+  QueueItemAttachment,
+  QueueItemContent,
+  QueueItemDescription,
+  QueueItemFile,
+  QueueItemImage,
+  QueueItemIndicator,
+  QueueList,
+  QueueSection,
+  QueueSectionContent,
+  QueueSectionLabel,
+  QueueSectionTrigger,
+  Todo,
+  TodoContent,
+  TodoHeader,
+  TodoItem,
+  TodoItemIcon,
+  TodoItemLabel,
+  TodoList,
+  TodoTitle,
+  TodoTrigger,
+} from "./queue.js";
+export type {
+  ReasoningContentProps,
+  ReasoningContextValue,
+  ReasoningProps,
+  ReasoningTriggerProps,
+} from "./reasoning.js";
+export { Reasoning, ReasoningContent, ReasoningTrigger, useReasoning } from "./reasoning.js";
+export type {
   SelectionButtonProps,
   SelectionContentProps,
   SelectionProps,
@@ -504,6 +683,61 @@ export type { StatusProps, StatusState } from "./status.js";
 export { Status, statusVariants } from "./status.js";
 export type { SuggestionProps, SuggestionsProps } from "./suggestion.js";
 export { Suggestion, Suggestions, suggestionVariants } from "./suggestion.js";
+export type {
+  TaskContentProps,
+  TaskIconProps,
+  TaskItemFileProps,
+  TaskItemProps,
+  TaskLabelProps,
+  TaskProps,
+  TaskTriggerProps,
+} from "./task.js";
+export {
+  Task,
+  TaskContent,
+  TaskIcon,
+  TaskItem,
+  TaskItemFile,
+  TaskLabel,
+  TaskTrigger,
+} from "./task.js";
+export type {
+  ToolArgumentProps,
+  ToolBlockProps,
+  ToolContentProps,
+  ToolErrorProps,
+  ToolHeaderProps,
+  ToolIconProps,
+  ToolInputProps,
+  ToolLabelProps,
+  ToolNameProps,
+  ToolOutputProps,
+  ToolPart,
+  ToolProps,
+  ToolState,
+  ToolStateAlias,
+  ToolStatusProps,
+  ToolStatusValue,
+  ToolSubtitleProps,
+  ToolTriggerProps,
+} from "./tool.js";
+export {
+  getStatusBadge,
+  Tool,
+  ToolArgument,
+  ToolBlock,
+  ToolContent,
+  ToolError,
+  ToolHeader,
+  ToolIcon,
+  ToolInput,
+  ToolLabel,
+  ToolName,
+  ToolOutput,
+  ToolStatus,
+  ToolSubtitle,
+  ToolTrigger,
+} from "./tool.js";
 export type {
   TranscriptContentProps,
   TranscriptItemProps,

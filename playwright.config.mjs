@@ -9,6 +9,7 @@ export default defineConfig({
     "ai-answers.spec.ts",
     "ai-context-research.spec.ts",
     "ai-conversation-review.spec.ts",
+    "ai-agent-work.spec.ts",
     "primitives.spec.ts",
     "composition.spec.ts",
     "chart-frame.spec.ts",
