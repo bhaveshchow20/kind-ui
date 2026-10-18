@@ -140,6 +140,9 @@ jobs:
             artifacts/composition-tests/
             artifacts/chart-frame-tests/
             artifacts/line-integration-tests/
+            artifacts/primitives/test-results/
+            artifacts/ai/answers-interactions/
+            artifacts/ai/context-research/test-results/
             artifacts/line-integrations/next-build.log
           if-no-files-found: error
           retention-days: ${{ job.status != 'success' && 3 || 1 }}
