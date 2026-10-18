@@ -99,6 +99,30 @@
     "./selection": {
       "types": "./dist/selection.d.ts",
       "import": "./dist/selection.js"
+    },
+    "./conversation": {
+      "types": "./dist/conversation.d.ts",
+      "import": "./dist/conversation.js"
+    },
+    "./message": {
+      "types": "./dist/message.d.ts",
+      "import": "./dist/message.js"
+    },
+    "./prompt-input": {
+      "types": "./dist/prompt-input.d.ts",
+      "import": "./dist/prompt-input.js"
+    },
+    "./composer-rich": {
+      "types": "./dist/composer-rich.d.ts",
+      "import": "./dist/composer-rich.js"
+    },
+    "./model-selector": {
+      "types": "./dist/model-selector.d.ts",
+      "import": "./dist/model-selector.js"
+    },
+    "./suggestion": {
+      "types": "./dist/suggestion.d.ts",
+      "import": "./dist/suggestion.js"
     }
   },
   "scripts": {
@@ -119,9 +143,16 @@
     "@streamdown/code": "1.1.0",
     "@streamdown/math": "1.0.2",
     "@streamdown/mermaid": "1.0.2",
+    "@tiptap/core": "3.32.0",
+    "@tiptap/extension-placeholder": "3.32.0",
+    "@tiptap/pm": "3.32.0",
+    "@tiptap/react": "3.32.0",
+    "@tiptap/starter-kit": "3.32.0",
+    "@tiptap/suggestion": "3.32.0",
     "clsx": "2.1.1",
     "embla-carousel-react": "8.6.0",
     "lucide-react": "1.57.0",
-    "streamdown": "2.4.0"
+    "streamdown": "2.4.0",
+    "use-stick-to-bottom": "1.1.3"
   }
 }

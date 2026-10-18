@@ -154,7 +154,7 @@ test("parallel source fixtures isolate Vite caches and retain their CI failure t
   const uploads = ci.jobs.playwright.steps.filter(
     (step) => step.uses?.startsWith("actions/upload-artifact@") && step.if === "always()",
   );
-  for (const name of ["primitives", "ai-answers", "ai-context-research"]) {
+  for (const name of ["primitives", "ai-answers", "ai-context-research", "ai-conversation"]) {
     const { default: fixture } = await import(
       new URL(`../tests/fixtures/${name}/vite.config.mjs`, import.meta.url)
     );

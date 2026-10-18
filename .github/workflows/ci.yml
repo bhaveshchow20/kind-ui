@@ -139,6 +139,7 @@ jobs:
             artifacts/chart-tests/
             artifacts/composition-tests/
             artifacts/chart-frame-tests/
+            artifacts/ai/conversation-review/
             artifacts/line-integration-tests/
             artifacts/primitives/test-results/
             artifacts/ai/answers-interactions/

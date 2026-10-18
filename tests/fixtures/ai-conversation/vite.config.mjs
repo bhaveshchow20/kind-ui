@@ -1,0 +1,9 @@
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  root: fileURLToPath(new URL("./", import.meta.url)),
+  cacheDir: fileURLToPath(new URL("../../../node_modules/.vite-ai-conversation", import.meta.url)),
+  esbuild: { jsx: "automatic" },
+  server: { fs: { allow: [fileURLToPath(new URL("../../../", import.meta.url))] } },
+});
