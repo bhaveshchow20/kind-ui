@@ -462,7 +462,7 @@ export function PatternHost({ horizontal = false }: { horizontal?: boolean }) {
               activeBar={
                 override === "active" ? <Chart.Rectangle data-host-active="" /> : undefined
               }
-              pattern={override === "off" ? "none" : undefined}
+              pattern={override === "off" ? false : undefined}
             >
               {override === "cell" && <Chart.Cell fill="#123456" />}
             </Chart.BarSeries>
@@ -585,7 +585,7 @@ export function ProjectionHost({ horizontal = false }: { horizontal?: boolean })
               shape={shape ? <Rectangle fill="pink" /> : undefined}
               stackId={stacked ? "stack" : undefined}
               fill={explicit ? "purple" : undefined}
-              pattern={none ? "none" : undefined}
+              pattern={none ? false : undefined}
             >
               {cells && rows.map((row) => <Cell key={row.category} fill="orange" />)}
             </Chart.BarSeries>

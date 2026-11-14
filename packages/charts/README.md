@@ -408,7 +408,7 @@ Hosts still own raw data tables and accessible alternatives.
 
 The source-only example at `/contracts.html` includes vertical/horizontal Bar,
 Area and Combo with a separate raw latency axis and original data tables.
-Recharts 3.10.1 applies native expand to every numeric axis. For mixed-unit Combo
+Recharts applies native expand to every numeric axis. For mixed-unit Combo
 charts, the example therefore uses caller-selected fraction `dataKey` accessors
 for the stacked bars with `stackOffset="none"`, a `[0, 1]` share axis, and an
 unchanged raw latency line on `[0, 10]`. The raw rows stay intact; an explicit

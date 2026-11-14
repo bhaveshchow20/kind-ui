@@ -47,6 +47,12 @@ test("installation commands explicitly include every public required peer", asyn
 test("quick-start README uses public imports, stylesheet and existing documentation sources", () => {
   check(readme);
 });
+test("public package guidance leaves exact peer versions to metadata", () => {
+  assert.doesNotMatch(
+    readme,
+    /\b(?:React|React DOM|Recharts|Motion)\s+v?\d|\b(?:react|react-dom|recharts|motion)@\d/i,
+  );
+});
 test("rejects missing documentation, public package import and stylesheet setup", () => {
   assert.throws(
     () => check(readme.replace(documentationSource, "https://example.com")),

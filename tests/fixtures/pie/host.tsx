@@ -25,15 +25,19 @@ const identity: NonNullable<Chart.TooltipProps["itemKey"]> = (entry) => String(e
 export function PinnedPieHost({
   category = "beta",
   accessor = false,
+  bound = false,
 }: {
   category?: string;
   accessor?: boolean;
+  bound?: boolean;
 }) {
   const [data, setData] = useState(original);
   const [generation, setGeneration] = useState(0);
   const [override, setOverride] = useState(false);
   const [nativeIndex, setNativeIndex] = useState(false);
-  const [visible, setVisible] = useState<string[] | undefined>(undefined);
+  const [visible, setVisible] = useState<string[] | undefined>(
+    bound ? ["beta", "zero", "missing"] : undefined,
+  );
   const rootProps: Chart.RootProps =
     visible === undefined ? { config } : { config, visibleSeries: visible };
   return (
@@ -68,7 +72,17 @@ export function PinnedPieHost({
       <button type="button" onClick={() => setData([...original, { id: "beta", value: 5 }])}>
         Duplicate pin
       </button>
-      <Chart.Root {...rootProps}>
+      <Chart.Root
+        {...rootProps}
+        {...(bound
+          ? {
+              interaction: {
+                kind: "category" as const,
+                eligibleKeys: original.map((row) => row.id),
+              },
+            }
+          : {})}
+      >
         <Chart.PieChart
           key={generation}
           width={320}
@@ -82,6 +96,7 @@ export function PinnedPieHost({
             categoryKey={accessor ? (row) => row.id : "id"}
             dataKey="value"
             nameKey="id"
+            interactionBinding={bound ? "root" : undefined}
           />
           <Chart.Tooltip
             itemKey={identity}
@@ -793,6 +808,69 @@ export function SelectiveGlowHost({ accessor = false }: { accessor?: boolean }) 
           ))}
         </tbody>
       </table>
+    </main>
+  );
+}
+
+export function CellIdentityPieHost({ accessor = false }: { accessor?: boolean }) {
+  const [data, setData] = useState(original.slice(0, 2));
+  const [visible, setVisible] = useState(["alpha", "beta"]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [veto, setVeto] = useState(false);
+  const [nativeEvents, setNativeEvents] = useState(0);
+  const [nativePayload, setNativePayload] = useState("");
+  return (
+    <main>
+      <button type="button" onClick={() => setData((rows) => [...rows].reverse())}>
+        Reorder identity
+      </button>
+      <button type="button" onClick={() => setVisible(["beta"])}>
+        Hide Alpha
+      </button>
+      <button type="button" onClick={() => setVeto((value) => !value)}>
+        Veto native click
+      </button>
+      <output aria-label="Shared category">{selected ?? "none"}</output>
+      <output aria-label="Native events">{nativeEvents}</output>
+      <output aria-label="Native payload">{nativePayload}</output>
+      <Chart.Root
+        config={config}
+        visibleSeries={visible}
+        interaction={{
+          kind: "category",
+          mode: "focus",
+          eligibleKeys: ["alpha", "beta"],
+          markActivation: "matching-legend",
+          selected,
+          onSelectionChange: setSelected,
+        }}
+      >
+        <Chart.PieChart width={320} height={300} aria-label="Cell identity pie">
+          <Chart.PieSeries
+            data={data}
+            categoryKey={accessor ? (row) => row.id : "id"}
+            dataKey="value"
+            nameKey="id"
+            interactionBinding="root"
+            glowCategories={["beta"]}
+            onClick={(sector) => setNativePayload(String(sector.payload.id))}
+          >
+            {data.map((row) => (
+              <Chart.Cell
+                key={row.id}
+                id="alpha"
+                fill="#e11d48"
+                data-original-category={row.id}
+                onClick={(event) => {
+                  setNativeEvents((count) => count + 1);
+                  if (veto) event.preventDefault();
+                }}
+              />
+            ))}
+          </Chart.PieSeries>
+        </Chart.PieChart>
+        <Chart.Legend />
+      </Chart.Root>
     </main>
   );
 }

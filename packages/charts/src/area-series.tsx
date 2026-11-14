@@ -7,8 +7,8 @@ import { type AreaMaterial, MaterialArea } from "./area-material.js";
 import { useChart } from "./chart-context.js";
 import { type FillPattern, FillPatternDefinition, patternResourceId } from "./fill-pattern.js";
 import { useLineInteraction } from "./line-chart.js";
-import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Area<DataPoint, Value>>,
@@ -22,7 +22,7 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   activePointStyle?: PointStyle;
   /** Finish on the native area; explicit shape/filter retain consumer ownership. */
   material?: AreaMaterial;
-  /** Static fill encoding; none opts out of configured patterns. Native paint/shape wins. */
+  /** Static fill encoding; false opts out of configured patterns. Native paint/shape wins. */
   pattern?: FillPattern | false | undefined;
 };
 
@@ -100,7 +100,9 @@ export function AreaSeries<DataPoint = unknown, Value = unknown>({
           <Area
             activeDot={<ActiveMarker variant={activePointStyle} />}
             {...nativeProps}
-            {...(props.dot === undefined && pointStyle !== "default" ? { dot: <PointMarker variant={pointStyle} /> } : {})}
+            {...(props.dot === undefined && pointStyle !== "default"
+              ? { dot: <PointMarker variant={pointStyle} /> }
+              : {})}
             {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
             {...(material !== "plain" && props.shape === undefined && props.filter === undefined
               ? {

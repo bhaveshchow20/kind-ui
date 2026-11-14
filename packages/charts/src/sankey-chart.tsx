@@ -270,51 +270,51 @@ export function SankeyChart({
             inert={loading || undefined}
             style={{ display: "contents" }}
           >
-          <EngineSankey
-            {...(props as NativeProps)}
-            {...(nodeConfig
-              ? ({
-                  node: props.node ?? configuredNode,
-                  link: props.link ?? configuredLink,
-                } as NativeProps)
-              : {})}
-            onClick={(item, type, event) => {
-              props.onClick?.(item as SankeyNodeProps | SankeyLinkProps, type, event);
-              if (interactionBinding && type === "node")
-                interaction?.activate(
-                  { kind: "node", key: (item as SankeyNodeProps).payload.id },
-                  "mark",
-                  event,
-                );
-            }}
-            {...(interactionBinding
-              ? {
-                  node:
-                    (props.node as NativeProps["node"]) ??
-                    ((shape: NativeNodeProps) => (
-                      <SankeyFocusMark
-                        nodeKey={(shape as SankeyNodeProps).payload.id}
-                        adjacent={adjacent}
-                      >
-                        <SankeyNode {...(shape as SankeyNodeProps)} />
-                      </SankeyFocusMark>
-                    )),
-                  link:
-                    (props.link as NativeProps["link"]) ??
-                    ((shape: NativeLinkProps) => (
-                      <SankeyFocusMark
-                        endpoints={[
-                          (shape as SankeyLinkProps).payload.source.id,
-                          (shape as SankeyLinkProps).payload.target.id,
-                        ]}
-                        adjacent={adjacent}
-                      >
-                        <SankeyLink {...(shape as SankeyLinkProps)} />
-                      </SankeyFocusMark>
-                    )),
-                }
-              : {})}
-            data={drawable && links.length ? { nodes, links } : { nodes: [], links: [] }}
+            <EngineSankey
+              {...(props as NativeProps)}
+              {...(nodeConfig
+                ? ({
+                    node: props.node ?? configuredNode,
+                    link: props.link ?? configuredLink,
+                  } as NativeProps)
+                : {})}
+              onClick={(item, type, event) => {
+                props.onClick?.(item as SankeyNodeProps | SankeyLinkProps, type, event);
+                if (interactionBinding && type === "node")
+                  interaction?.activate(
+                    { kind: "node", key: (item as SankeyNodeProps).payload.id },
+                    "mark",
+                    event,
+                  );
+              }}
+              {...(interactionBinding
+                ? {
+                    node:
+                      (props.node as NativeProps["node"]) ??
+                      ((shape: NativeNodeProps) => (
+                        <SankeyFocusMark
+                          nodeKey={(shape as SankeyNodeProps).payload.id}
+                          adjacent={adjacent}
+                        >
+                          <SankeyNode {...(shape as SankeyNodeProps)} />
+                        </SankeyFocusMark>
+                      )),
+                    link:
+                      (props.link as NativeProps["link"]) ??
+                      ((shape: NativeLinkProps) => (
+                        <SankeyFocusMark
+                          endpoints={[
+                            (shape as SankeyLinkProps).payload.source.id,
+                            (shape as SankeyLinkProps).payload.target.id,
+                          ]}
+                          adjacent={adjacent}
+                        >
+                          <SankeyLink {...(shape as SankeyLinkProps)} />
+                        </SankeyFocusMark>
+                      )),
+                  }
+                : {})}
+              data={drawable && links.length ? { nodes, links } : { nodes: [], links: [] }}
             >
               <NativeSize onSize={onSize} />
               {props.children}

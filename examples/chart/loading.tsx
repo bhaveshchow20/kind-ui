@@ -179,6 +179,20 @@ function Preview() {
         <label>
           <input
             type="checkbox"
+            checked={visibleBars.includes("sales")}
+            onChange={(event) =>
+              setVisibleBars((current) =>
+                event.target.checked
+                  ? [...current.filter((key) => key !== "sales"), "sales"]
+                  : current.filter((key) => key !== "sales"),
+              )
+            }
+          />{" "}
+          Visible sales bars
+        </label>
+        <label>
+          <input
+            type="checkbox"
             checked={shortHeatmap}
             onChange={(event) => setShortHeatmap(event.target.checked)}
           />{" "}

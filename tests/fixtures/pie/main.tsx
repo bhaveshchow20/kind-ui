@@ -1,13 +1,25 @@
 import { createRoot, hydrateRoot } from "react-dom/client";
 import "@kind-ui/charts/styles.css";
-import { MaterialGallery, PieHost, PinnedPieHost, SelectiveGlowHost } from "./host.js";
+import {
+  CellIdentityPieHost,
+  MaterialGallery,
+  PieHost,
+  PinnedPieHost,
+  SelectiveGlowHost,
+} from "./host.js";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
 const query = new URLSearchParams(location.search);
-if (query.has("pinned")) {
+if (query.has("cell-identity")) {
+  createRoot(root).render(<CellIdentityPieHost accessor={query.has("accessor")} />);
+} else if (query.has("pinned")) {
   createRoot(root).render(
-    <PinnedPieHost category={query.get("category") ?? "beta"} accessor={query.has("accessor")} />,
+    <PinnedPieHost
+      category={query.get("category") ?? "beta"}
+      accessor={query.has("accessor")}
+      bound={query.has("bound")}
+    />,
   );
 } else if (query.has("selective")) {
   void hydrateSelective(root, query.has("accessor"));

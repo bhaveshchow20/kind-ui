@@ -6,8 +6,8 @@ import { useChart } from "./chart-context.js";
 import { useLineInteraction } from "./line-chart.js";
 import { dashCycle, dashDuration, type LineDashAnimation } from "./line-dash.js";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
-import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 import { PointMarker, type PointStyle } from "./point-marker.js";
+import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interaction.js";
 
 // Preserve the legacy native defaults while allowing explicit row/value parameters.
 type DefaultLineDataKey = Extract<ComponentProps<typeof Line>["dataKey"], (row: never) => unknown>;
@@ -92,7 +92,9 @@ export function LineSeries<
         <Line<DataPoint, Value>
           isAnimationActive={false}
           {...props}
-          {...(props.dot === undefined && pointStyle !== "default" ? { dot: <PointMarker variant={pointStyle} /> } : {})}
+          {...(props.dot === undefined && pointStyle !== "default"
+            ? { dot: <PointMarker variant={pointStyle} /> }
+            : {})}
           {...(interaction.onClick !== undefined ? { onClick: interaction.onClick } : {})}
           {...(material !== "plain" && props.shape === undefined && props.filter === undefined
             ? {
@@ -110,23 +112,25 @@ export function LineSeries<
                 strokeLinejoin: props.strokeLinejoin ?? "round",
               }
             : {})}
-      style={
-        dashed
-          ? ({
-              ...props.style,
-              "--kind-ui-dash-cycle": `${cycle}px`,
-              "--kind-ui-dash-offset": baseline,
-              "--kind-ui-dash-duration": `${duration}ms`,
-              "--kind-ui-dash-direction":
-                dashAnimation && dashAnimation.direction === "reverse" ? "reverse" : "normal",
-            } as CSSProperties)
-          : props.style
-      }
+          style={
+            dashed
+              ? ({
+                  ...props.style,
+                  "--kind-ui-dash-cycle": `${cycle}px`,
+                  "--kind-ui-dash-offset": baseline,
+                  "--kind-ui-dash-duration": `${duration}ms`,
+                  "--kind-ui-dash-direction":
+                    dashAnimation && dashAnimation.direction === "reverse" ? "reverse" : "normal",
+                } as CSSProperties)
+              : props.style
+          }
           id={id}
           zIndex={0}
           hide={renderedHide}
           {...(color !== undefined ? { stroke: color } : {})}
-          className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className].filter(Boolean).join(" ")}
+          className={["kind-ui-line-series", dashed && "kind-ui-line-dash", className]
+            .filter(Boolean)
+            .join(" ")}
         />
       </SeriesInteractionLayer>
     </ZIndexLayer>

@@ -600,3 +600,63 @@ for (const category of ["zero", "unknown"]) {
     }
   });
 }
+
+for (const accessor of [false, true]) {
+  test(`bound initial Pie pin resolves filtered rows (${accessor ? "accessor" : "field"})`, async ({
+    page,
+  }) => {
+    await page.goto(`${url}/?pinned&bound${accessor ? "&accessor" : ""}`);
+    const tooltip = page.locator('[data-kind-ui="chart-tooltip"]');
+    await expect(tooltip).toContainText("Beta");
+    await expect(tooltip).toContainText("40 seats");
+    await expect(page.locator('[data-kind-ui="pie-sector"][name="alpha"]')).toHaveCount(0);
+    await page.getByRole("button", { name: "Reorder pin", exact: true }).click();
+    await expect(tooltip).toContainText("Beta");
+    await expect(tooltip).toContainText("40 seats");
+    await page.getByRole("button", { name: "Filter pin", exact: true }).click();
+    await expect(tooltip).not.toBeVisible();
+    await page.getByRole("button", { name: "Show pin", exact: true }).click();
+    await expect(tooltip).not.toBeVisible();
+    await page.getByRole("button", { name: "Remount pin", exact: true }).click();
+    await expect(tooltip).toContainText("Beta");
+  });
+}
+
+for (const accessor of [false, true]) {
+  test(`bound Pie identity survives Cell payload overrides (${accessor ? "accessor" : "field"})`, async ({
+    page,
+  }) => {
+    await page.goto(`${url}/?cell-identity${accessor ? "&accessor" : ""}`);
+    const beta = page.locator('[data-original-category="beta"][data-kind-ui="pie-sector"]');
+    await expect(beta).toHaveAttribute("fill", "#e11d48");
+    await beta.click();
+    await expect(page.getByLabel("Native events")).toHaveText("1");
+    await expect(page.getByLabel("Native payload")).toHaveText("alpha");
+    await expect(page.getByLabel("Shared category")).toHaveText("beta");
+    const mark = page.getByRole("button", { name: "Highlight beta", exact: true });
+    await expect(mark.locator('[data-kind-ui="pie-halo"]')).toHaveCount(1);
+    await mark.focus();
+    await page.keyboard.press("Escape");
+    await expect(page.getByLabel("Shared category")).toHaveText("none");
+    await mark.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByLabel("Shared category")).toHaveText("beta");
+    await page.getByRole("button", { name: "Veto native click", exact: true }).click();
+    await page.locator('[data-original-category="alpha"][data-kind-ui="pie-sector"]').click();
+    await expect(page.getByLabel("Native events")).toHaveText("2");
+    await expect(page.getByLabel("Shared category")).toHaveText("beta");
+    await page.getByRole("button", { name: "Reorder identity", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Highlight beta", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page.getByRole("button", { name: "Hide Alpha", exact: true }).click();
+    await expect(page.locator('[data-kind-ui="pie-sector"]')).toHaveCount(1);
+    await expect(
+      page
+        .getByRole("button", { name: "Highlight beta", exact: true })
+        .locator('[data-kind-ui="pie-halo"]'),
+    ).toHaveCount(1);
+    await expect(beta).toHaveAttribute("fill", "#e11d48");
+  });
+}
