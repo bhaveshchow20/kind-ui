@@ -128,10 +128,7 @@ export function UpdatedCandlestickChart() {
   };
   return (
     <div style={{ minWidth: 0 }}>
-      <p style={{ marginBottom: 16, fontSize: 12 }}>
-        Simulated trade feed · USD · UTC · Missing volume stays missing
-      </p>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
         <button
           style={buttonStyle}
           type="button"
@@ -180,21 +177,21 @@ export function UpdatedCandlestickChart() {
           connectNulls={false}
         />
         <CandlestickChart.Crosshair strokeOpacity={0.5} />
-        <CandlestickChart.Readout<Observation>
-          style={{ minHeight: 36, fontSize: 12, paddingTop: 12 }}
-        >
+        <CandlestickChart.Tooltip<Observation> />
+        <CandlestickChart.Readout<Observation> className="sr-only">
           {(point, selected) =>
             point
               ? `${time(point.time)} UTC · ${point.original.source} · ${point.state}${point.gap ? "" : ` · Close ${money(point.close ?? 0)}`}${selected?.identity === point.identity ? " · Selected" : ""}`
               : "Inspect the corrected interval, the feed gap or the partial latest candle; Enter selects."
           }
         </CandlestickChart.Readout>
-        <CandlestickChart.Table<Observation>
-          caption="Current observations"
-          renderMetadata={(point) => point.original.source}
-          metadataLabel="Source"
-          style={{ width: "100%", fontSize: 12, marginTop: 12 }}
-        />
+        <div className="sr-only">
+          <CandlestickChart.Table<Observation>
+            caption="Current observations"
+            renderMetadata={(point) => point.original.source}
+            metadataLabel="Source"
+          />
+        </div>
       </CandlestickChart>
     </div>
   );

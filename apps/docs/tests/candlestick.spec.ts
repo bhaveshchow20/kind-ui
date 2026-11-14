@@ -16,9 +16,9 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
     page.getByRole("heading", { name: "Candlestick Chart", exact: true, level: 1 }),
   ).toBeVisible();
   const asset = page.locator('[data-component="candlestick"]');
-  await expect(
-    asset.locator(".preview-panel").getByText("SIMULATED", { exact: true }),
-  ).toBeVisible();
+  await expect(asset.locator(".preview-panel").getByText("SIMULATED", { exact: true })).toHaveCount(
+    0,
+  );
   await asset.getByRole("button", { name: "Pause", exact: true }).click();
   const count = await asset.locator(marks).count();
   expect(count).toBeGreaterThanOrEqual(48);

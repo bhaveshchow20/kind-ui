@@ -20,7 +20,7 @@ test("Candlestick card preserves source-labelled inspection, copied code and ins
   await page.getByRole("tab", { name: "Candlestick", exact: true }).click();
   const card = page.locator(".demo-grid .chart-card");
   await expect(card).toHaveCount(1);
-  await expect(card.getByText("SIMULATED", { exact: true })).toBeVisible();
+  await expect(card.getByText("SIMULATED", { exact: true })).toHaveCount(0);
   await card.getByRole("button", { name: "Pause", exact: true }).click();
   const markCount = await card.locator('[data-kind-ui="candlestick-mark"]').count();
   expect(markCount).toBeGreaterThanOrEqual(48);
@@ -89,7 +89,7 @@ test("Candlestick card preserves source-labelled inspection, copied code and ins
   expect(copied).toContain('stroke="var(--chart-grid, #e5e7eb)"');
   expect(copied).toContain('stroke="var(--chart-axis, #64748b)"');
   expect(copied).toContain("selection={selection}");
-  expect(copied).toContain("SIMULATED");
+  expect(copied).not.toContain("SIMULATED");
   expect(copied).toContain("setInterval(step, 700)");
   expect(copied).not.toContain("--showcase-candlestick-");
   expect(copied).not.toMatch(/responsive|localhost|127\.0\.0\.1/);

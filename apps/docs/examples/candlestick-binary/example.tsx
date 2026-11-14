@@ -75,9 +75,6 @@ const time = (value: number | string) =>
 export function BinaryBidCandlestickChart() {
   return (
     <div style={{ minWidth: 0 }}>
-      <p style={{ marginBottom: 16, fontSize: 12 }}>
-        Simulated bid quotes · USD per contract · USD 1 payout · UTC
-      </p>
       <CandlestickChart<Quote>
         config={config}
         data={data}
@@ -121,7 +118,8 @@ export function BinaryBidCandlestickChart() {
         />
         <CandlestickChart.Series<Quote> seriesKey="bid" maxBarSize={22} />
         <CandlestickChart.Crosshair strokeOpacity={0.5} />
-        <CandlestickChart.Readout<Quote> style={{ minHeight: 36, fontSize: 12, paddingTop: 12 }}>
+        <CandlestickChart.Tooltip<Quote> />
+        <CandlestickChart.Readout<Quote> className="sr-only">
           {(point) =>
             point
               ? `${time(point.time)} UTC · ${point.original.source} · O ${quote(point.open ?? 0)} / H ${quote(point.high ?? 0)} / L ${quote(point.low ?? 0)} / C ${quote(point.close ?? 0)} · ${point.state}`

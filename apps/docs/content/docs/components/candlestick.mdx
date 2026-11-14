@@ -11,7 +11,7 @@ description: Inspect OHLC prices, aligned volume and live market history.
 
 ## Usage
 
-Compose the price plot, then add the financial parts your app needs. `Readout` follows inspection and returns to the latest candle when inspection ends. Selection remains independent. `CurrentPrice` follows the latest nongap candle close; it is not a separate live quote or trade.
+Compose only the financial parts your app needs. `CurrentPrice` follows the latest nongap candle close; it is not a separate live quote or trade.
 
 ```tsx title="Composition sketch"
 import { CandlestickChart } from "@kind-ui/charts";
@@ -32,25 +32,25 @@ import { CandlestickChart } from "@kind-ui/charts";
 </CandlestickChart>
 ```
 
-A floating `<CandlestickChart.Tooltip />` is optional. Use `Content` for your own HTML summary or controls, and `Legend` for configured series actions. Omitted parts stay absent. Direction colors have shared theme defaults; native styles and per-part overrides remain available.
+Use `Tooltip` for on-demand detail, `Content` for app controls and `Legend` for series actions. Omitted parts stay absent.
 
 ## Live updates and history
 
-Replace the forming candle, append a later interval, correct history or prepend older observations. Immutable updates preserve time identities. Try Pause, Resume and Step above; the overview and zoom controls share one viewport.
+Replace, append, correct or prepend immutable observations. Pause, Resume and Step demonstrate the update paths.
 
 <ChartExample id="candlestick-updates" />
 
-Use `viewport` and `onViewportChange` for application-owned navigation, or `defaultViewport` for an initial window. `followLatest` follows appends only from the previous latest edge. Historical browsing stays anchored. `selection` and `onSelectionChange` control persistent selection; `onInspect` reports transient inspection without requiring React state in your app just to render a readout.
+Use `viewport` and `onViewportChange` for application-owned navigation. `followLatest` follows appends only from the latest edge; historical browsing stays anchored.
 
 ## Bounded quotes
 
-These are simulated bid OHLC in USD per contract, with explicit source labels and bounds. They are not executed trades; no trade volume or opposite outcome is inferred.
+Simulated bid OHLC stays bounded to the contract payout. It does not imply trades, volume or the opposite outcome.
 
 <ChartExample id="candlestick-binary" />
 
 ## Loading State
 
-Set `loading` and a descriptive `loadingLabel` while observations are pending. Use `empty` to describe a valid feed with no observations. Feed errors remain app-owned so the surrounding application can present its alert, retry and cancellation behavior. This example shows only the animated candle silhouette and accessible loading announcement; its header, readout, market values and controls return when ready. Motion respects reduced-motion preferences.
+Set `loading` with a descriptive `loadingLabel`, and use `empty` for a valid feed with no observations. Feed errors and retry behavior remain app-owned.
 
 <ChartExample id="candlestick" variant="loading" />
 

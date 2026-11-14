@@ -140,7 +140,8 @@ const MarketPlot = memo(function MarketPlot({
         seriesKey="price"
       />
       <CandlestickChart.Crosshair strokeOpacity={0.5} />
-      <CandlestickChart.Readout valueAnimation="shuffle" className="mb-3" />
+      <CandlestickChart.Tooltip />
+      <CandlestickChart.Readout valueAnimation="shuffle" className="sr-only" />
       <CandlestickChart.Controls />
       <CandlestickChart.HistoryNavigator />
     </CandlestickChart>
@@ -162,42 +163,24 @@ export function AssetCandlestickChart({ state = "ready" }: { state?: "ready" | "
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
-            gap: 12,
-            alignItems: "center",
-            flexWrap: "wrap",
-            marginBottom: 12,
+            justifyContent: "flex-end",
+            gap: 6,
+            marginBottom: 8,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <strong style={{ fontSize: 14 }}>ETH / USD · 1m</strong>
-            <span
-              style={{
-                border: "1px solid var(--border, #dfe2e8)",
-                borderRadius: 5,
-                padding: "2px 6px",
-                fontSize: 10,
-                color: "var(--muted-foreground)",
-              }}
-            >
-              SIMULATED
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button style={buttonStyle} type="button" onClick={() => setRunning(!running)}>
-              {running ? "Pause" : "Resume"}
-            </button>
-            <button
-              style={buttonStyle}
-              type="button"
-              onClick={() => {
-                setRunning(false);
-                step();
-              }}
-            >
-              Step
-            </button>
-          </div>
+          <button style={buttonStyle} type="button" onClick={() => setRunning(!running)}>
+            {running ? "Pause" : "Resume"}
+          </button>
+          <button
+            style={buttonStyle}
+            type="button"
+            onClick={() => {
+              setRunning(false);
+              step();
+            }}
+          >
+            Step
+          </button>
         </div>
       )}
       <MarketPlot rows={feed.rows} loading={loading} />

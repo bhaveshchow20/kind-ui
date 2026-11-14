@@ -122,7 +122,7 @@ test("Candlestick Usage follows the standard short composition and shared compon
   assert.match(page, /\| Component \| Purpose \|/);
   assert.match(usage, /import \{ CandlestickChart \} from "@kind-ui\/charts"/);
   assert.match(page, /latest nongap candle close/);
-  assert.match(page, /Feed errors remain app-owned/);
+  assert.match(page, /Feed errors and retry behavior remain app-owned/);
   const emitted = ts.transpileModule(usage, {
     fileName: "candlestick-example.tsx",
     reportDiagnostics: true,
