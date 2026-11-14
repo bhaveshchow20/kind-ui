@@ -613,6 +613,122 @@ test("stage descriptions retain consumer IDs and join the active tooltip descrip
   ]);
 });
 
+test("the default tooltip overlays the chart frame without changing layout", async ({ page }) => {
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const frame = chart.locator('[data-kind-ui="chart"]');
+  const before = await frame.boundingBox();
+  await stage(chart, "entry").focus();
+  const tooltip = chart.getByRole("tooltip");
+  await expect(tooltip).toContainText("Entry: 100; Share of first stage: 100%");
+  await expect(tooltip).toHaveCSS("position", "absolute");
+  await expect(tooltip).toHaveCSS("padding-left", "8px");
+  await expect(tooltip).toHaveCSS("padding-top", "6px");
+  const after = await frame.boundingBox();
+  expect(after?.height).toBe(before?.height);
+  const frameBounds = await frame.boundingBox();
+  const tooltipBounds = await tooltip.boundingBox();
+  expect(tooltipBounds?.x).toBeGreaterThanOrEqual(frameBounds?.x ?? 0);
+  expect(tooltipBounds?.y).toBeGreaterThanOrEqual(frameBounds?.y ?? 0);
+  expect((tooltipBounds?.x ?? 0) + (tooltipBounds?.width ?? 0)).toBeLessThanOrEqual(
+    (frameBounds?.x ?? 0) + (frameBounds?.width ?? 0),
+  );
+});
+
+test("a hidden tooltip does not describe the active stage", async ({ page }) => {
+  await page.goto(`${packed}?hidden-tooltip`);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const first = stage(chart, "entry");
+  await first.focus();
+  const tooltip = chart.locator('[data-kind-ui="funnel-tooltip"]');
+  await expect(tooltip).toHaveAttribute("role", "tooltip");
+  await expect(tooltip).toHaveAttribute("hidden", "");
+  const tooltipId = await tooltip.getAttribute("id");
+  expect(tooltipId).toBeTruthy();
+  expect(((await first.getAttribute("aria-describedby")) ?? "").trim().split(/\s+/)).toEqual([
+    "p-2",
+    "p-4",
+  ]);
+});
+
+test("animated stage emphasis uses interruptible shared paint motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(packed);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const entry = stage(chart, "entry");
+  const review = stage(chart, "review");
+  const paint = review.locator('[data-kind-ui="emphasis-paint"]');
+  await entry.hover();
+  const samples = await paint.evaluate(
+    (element) =>
+      new Promise<number[]>((resolve) => {
+        const values: number[] = [];
+        const started = performance.now();
+        const read = () => {
+          values.push(Number((element as SVGElement).style.opacity));
+          if (performance.now() - started >= 180) resolve(values);
+          else requestAnimationFrame(read);
+        };
+        read();
+      }),
+  );
+  expect(new Set(samples.map((value) => value.toFixed(3))).size).toBeGreaterThan(3);
+  expect(samples.some((value) => value > 0.28 && value < 1)).toBe(true);
+  await review.hover();
+  const retargeted = Number(
+    await paint.evaluate((element) => (element as SVGElement).style.opacity),
+  );
+  expect(retargeted).toBeLessThan(0.98);
+  await expect
+    .poll(() => paint.evaluate((element) => Number((element as SVGElement).style.opacity)))
+    .toBeCloseTo(1, 2);
+});
+
+test("transient emphasis clears before cancellation-vetoing consumer handlers", async ({
+  page,
+}) => {
+  await page.goto(`${packed}?prevent-transient-cleanup`);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const entry = stage(chart, "entry");
+  const review = stage(chart, "review").locator('[data-kind-ui="funnel-mark"]');
+  await entry.hover();
+  await expect.poll(() => effectiveOpacity(review)).toBeCloseTo(0.28, 2);
+  await page.mouse.move(0, 0);
+  await expect.poll(() => effectiveOpacity(review)).toBeCloseTo(1, 2);
+  await entry.hover();
+  await entry.dispatchEvent("pointercancel", { pointerType: "mouse" });
+  await expect.poll(() => effectiveOpacity(review)).toBeCloseTo(1, 2);
+
+  await page.goto(`${packed}?prevent-transient-cleanup`);
+  const refreshed = page.getByRole("region", { name: "Stage snapshot" });
+  const focused = stage(refreshed, "entry");
+  const dimmed = stage(refreshed, "review").locator('[data-kind-ui="funnel-mark"]');
+  await focused.focus();
+  await expect.poll(() => effectiveOpacity(dimmed)).toBeCloseTo(0.28, 2);
+  await page.getByRole("button", { name: "External inspection", exact: true }).focus();
+  await expect.poll(() => effectiveOpacity(dimmed)).toBeCloseTo(1, 2);
+});
+
+test("consumer synchronous re-entry and refocus restore transient emphasis", async ({ page }) => {
+  await page.goto(`${packed}?reenter-on-pointer-leave`);
+  const chart = page.getByRole("region", { name: "Stage snapshot" });
+  const entry = stage(chart, "entry");
+  const review = stage(chart, "review").locator('[data-kind-ui="funnel-mark"]');
+  await entry.hover();
+  await page.mouse.move(0, 0);
+  await expect.poll(() => effectiveOpacity(review)).toBeCloseTo(0.28, 2);
+
+  await page.goto(`${packed}?refocus-on-blur`);
+  const refreshed = page.getByRole("region", { name: "Stage snapshot" });
+  const focused = stage(refreshed, "entry");
+  const dimmed = stage(refreshed, "review").locator('[data-kind-ui="funnel-mark"]');
+  await focused.focus();
+  await expect.poll(() => effectiveOpacity(dimmed)).toBeCloseTo(0.28, 2);
+  await page.getByRole("button", { name: "External inspection", exact: true }).focus();
+  await expect(focused).toBeFocused();
+  await expect.poll(() => effectiveOpacity(dimmed)).toBeCloseTo(0.28, 2);
+});
+
 test("stable React callback refs retain one lifecycle through inspection selection and emphasis", async ({
   page,
 }) => {

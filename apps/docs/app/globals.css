@@ -3,7 +3,9 @@
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 @import "../examples/shared/example.css";
+@import "@kind-ui/primitives/styles.css";
 @source "../node_modules/@kind-ui/charts/dist";
+@source "../node_modules/@kind-ui/primitives/dist";
 .line-code-block pre {
   margin: 0;
   max-height: none;
@@ -1008,5 +1010,38 @@ input:focus-visible {
 @media (min-width: 768px) {
   .glass-mobile-tools {
     display: none;
+  }
+}
+
+/* Primitive pages share the existing docs controls and one calm demo surface. */
+.primitive-workbench .primitive-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20rem;
+  min-width: 0;
+  padding: 2rem;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 1.25rem;
+  background: var(--color-fd-card);
+  color: var(--color-fd-foreground);
+  box-shadow: 0 8px 30px -18px #00000024;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.primitive-workbench .line-code-block {
+  margin: 0;
+}
+.primitive-workbench .line-code-viewport {
+  max-height: 28rem;
+  overflow: auto;
+}
+.primitive-workbench .code-files {
+  margin-top: 0;
+}
+@media (max-width: 640px) {
+  .primitive-workbench .primitive-preview {
+    padding: 1.25rem;
+    min-height: 18rem;
   }
 }

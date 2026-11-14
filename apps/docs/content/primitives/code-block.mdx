@@ -1,0 +1,46 @@
+---
+title: Code Block
+description: Display code with line numbers, copy feedback and file downloads.
+---
+
+Give `CodeBlock` a source string and compose its header, actions and content when you need a custom label. Copy and download always use the original `code` string. Try the actions or toggle line wrapping below.
+
+<PrimitiveExample id="code-block" />
+
+For syntax highlighting, prepare `tokens` with your highlighter on the server and pass them alongside the matching `code`. The language label alone does not highlight source text.
+
+## API reference
+
+import { api } from '@/lib/primitives/code-block';
+
+### CodeBlock
+
+<ApiTable title="CodeBlock" rows={api.CodeBlock} />
+
+### CodeBlockHeader
+
+<ApiTable title="CodeBlockHeader" rows={api.CodeBlockHeader} />
+
+### CodeBlockLanguage
+
+<ApiTable title="CodeBlockLanguage" rows={api.CodeBlockLanguage} />
+
+### CodeBlockActions
+
+<ApiTable title="CodeBlockActions" rows={api.CodeBlockActions} />
+
+### CodeBlockContent
+
+<ApiTable title="CodeBlockContent" rows={api.CodeBlockContent} />
+
+### CodeBlockCopyButton
+
+<ApiTable title="CodeBlockCopyButton" rows={api.CodeBlockCopyButton} />
+
+### CodeBlockDownloadButton
+
+<ApiTable title="CodeBlockDownloadButton" rows={api.CodeBlockDownloadButton} />
+
+### CodeBlockToken
+
+<ApiTable title="CodeBlockToken" rows={api.CodeBlockToken} />

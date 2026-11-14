@@ -18,10 +18,11 @@ import {
 } from "fumadocs-ui/layouts/shared/slots/search-trigger";
 import { PanelLeft } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cloneElement, isValidElement, type SVGProps, useCallback, useEffect, useRef } from "react";
 
 import { DocsThemeSwitch } from "@/components/theme-switch";
-import { docRoute, legacyDocSlugs } from "@/lib/routing.mjs";
+import { basePath, docRoute, legacyDocSlugs } from "@/lib/routing.mjs";
 
 function AccessibleSearchTrigger(props: FullSearchTriggerProps) {
   const { open } = useSearchContext();
@@ -139,7 +140,17 @@ export function MobileDocsNavigation() {
     </SidebarTrigger>
   );
 }
-export function GlassDocsLayout({ children, tree, githubUrl, links, ...props }: GlassLayoutProps) {
+export function GlassDocsLayout({
+  children,
+  tree,
+  primitiveTree,
+  githubUrl,
+  links,
+  ...props
+}: GlassLayoutProps & { primitiveTree: PageTree.Root }) {
+  const pathname = usePathname();
+  const primitive = !basePath && pathname.startsWith("/components/");
+  if (primitive) tree = primitiveTree;
   const accessibleLinks = resolveLinkItems({
     ...(githubUrl === undefined ? {} : { githubUrl }),
     ...(links === undefined ? {} : { links }),
@@ -168,7 +179,19 @@ export function GlassDocsLayout({ children, tree, githubUrl, links, ...props }: 
       links={accessibleLinks}
       tree={tree}
       sidebar={{ collapsible: false }}
-      tabs={tabs}
+      tabs={primitive ? [] : tabs}
+      {...(primitive
+        ? {
+            nav: {
+              title: (
+                <span className="kind-wordmark">
+                  kind<span>ui</span>
+                </span>
+              ),
+              url: "/components/button/",
+            },
+          }
+        : {})}
       slots={{
         searchTrigger: { sm: SearchTrigger, full: AccessibleSearchTrigger },
         themeSwitch: DocsThemeSwitch,

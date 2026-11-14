@@ -1,0 +1,34 @@
+---
+title: Tooltip
+description: A brief hint for an action, available on hover, focus and touch.
+---
+
+import { api } from "@/lib/primitives/tooltip";
+
+Use a tooltip for a short, supplementary explanation. Give icon buttons an accessible name independently of the hint. Pass `content` to wrap a single trigger, or compose `TooltipTrigger` and `TooltipContent` for more control. Group nearby tooltips in `TooltipProvider` to share delays.
+
+<PrimitiveExample id="tooltip" />
+
+Keep interactive controls out of tooltip content. Use Popover for a surface that needs buttons or form fields. The trigger remains the action target; a touch press toggles the hint without replaying the action.
+
+## API reference
+
+Element parts retain native attributes, handlers and refs. `TooltipChangeDetails` includes Base UI change details and Kind’s `"touch-press"` reason.
+
+### Tooltip
+
+Placement, arrow, anchor and portal options on `Tooltip` apply to the `content` shorthand. With explicit parts, pass those options to `TooltipContent`.
+
+<ApiTable title="Tooltip" rows={api.Tooltip} />
+
+### TooltipProvider
+
+<ApiTable title="TooltipProvider" rows={api.TooltipProvider} />
+
+### TooltipTrigger
+
+<ApiTable title="TooltipTrigger" rows={api.TooltipTrigger} />
+
+### TooltipContent
+
+<ApiTable title="TooltipContent" rows={api.TooltipContent} />
