@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { test } from "node:test";
 import { allExamples, examples, families } from "../examples/catalog.mjs";
 import { filesFor, promptFor } from "../lib/example-files.mjs";
@@ -17,11 +19,25 @@ test("installation Markdown exposes all package-manager commands to consumers", 
   assert.ok(!markdown.includes("<InstallationCommands"));
 });
 
+test("public documentation does not pin package or peer versions", () => {
+  const files = readdirSync("content/docs", { recursive: true })
+    .filter((file) => typeof file === "string" && /\.mdx?$/.test(file))
+    .map((file) => `content/docs/${file}`);
+  files.push("lib/consumer-agent-guide.md");
+  for (const file of files)
+    assert.doesNotMatch(
+      readFileSync(file, "utf8"),
+      /\b\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?\b/,
+      `Version-specific public documentation in ${file}`,
+    );
+});
+
 import "./composition-guide.test.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/examples.json", "utf8"));
 const completeBundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const provenance = JSON.parse(readFileSync("vendor/provenance.json", "utf8"));
+const repositoryRoot = resolve(import.meta.dirname, "../../..");
 test("Introduction is the first Get Started page at the preserved docs root", () => {
   const root = JSON.parse(readFileSync("content/docs/meta.json", "utf8"));
   const start = JSON.parse(readFileSync("content/docs/start/meta.json", "utf8"));
@@ -82,6 +98,22 @@ test("private package bytes match validation without public provenance or archiv
   assert.equal(provenance.guardedArtifact, true);
   assert.equal(existsSync("public/package-provenance.json"), false);
   assert.equal(existsSync("public/examples/package"), false);
+});
+
+test("private package provenance identifies a reachable matching source commit", () => {
+  execFileSync("git", ["cat-file", "-e", `${provenance.sourceCommit}^{commit}`], {
+    cwd: repositoryRoot,
+  });
+  execFileSync("git", ["merge-base", "--is-ancestor", provenance.sourceCommit, "HEAD"], {
+    cwd: repositoryRoot,
+  });
+  const sourceManifest = JSON.parse(
+    execFileSync("git", ["show", `${provenance.sourceCommit}:packages/charts/package.json`], {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+    }),
+  );
+  assert.equal(sourceManifest.version, provenance.version);
 });
 
 test("Line snippets are standalone public consumers with a shared data alternative", () => {

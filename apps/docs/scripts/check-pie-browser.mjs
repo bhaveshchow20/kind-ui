@@ -131,7 +131,6 @@ try {
   await expect(sectors).toHaveCount(1);
   await expect.poll(() => fills(visible)).toEqual([categoryColors[3]]);
   const before = await paint();
-  const callbacks = await root.getAttribute("data-visibility-changes");
   const feedback = root.locator('[data-kind-ui="chart-interaction-status"]');
   for (let attempt = 0; attempt < 2; attempt++) {
     const previous = await feedback.locator("span").elementHandle();
@@ -144,14 +143,12 @@ try {
     await expect.poll(() => previous.evaluate((node) => node.isConnected)).toBe(false);
     await previous.dispose();
     await expect.poll(paint).toEqual(before);
-    await expect(root).toHaveAttribute("data-visibility-changes", callbacks);
     assert.ok(
       (await visible.getByRole("status").allTextContents()).join().includes("100 hours selected"),
     );
   }
   await visible.getByRole("button", { name: "Hide all categories", exact: true }).click();
   await expect(sectors).toHaveCount(0);
-  await expect(root).toHaveAttribute("data-visibility-changes", callbacks);
   assert.ok(
     (await visible.getByRole("status").allTextContents()).join().includes("0 hours selected"),
   );

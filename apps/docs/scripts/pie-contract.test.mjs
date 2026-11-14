@@ -87,7 +87,7 @@ test("Pie consumers preserve category identity and public source parity", () => 
   assert.match(visibility, /categoryKey="key"/);
   assert.ok(!visibility.includes("<Chart.Cell"));
   assert.ok(!visibility.includes("LabelList"));
-  assert.match(visibility, /onVisibleSeriesChange=\{\(next\) => \{\s*setVisible\(next\);/);
+  assert.match(visibility, /onVisibleSeriesChange=\{setVisible\}/);
 });
 
 test("Pie category-default contracts reject missing identity and category metadata", () => {
