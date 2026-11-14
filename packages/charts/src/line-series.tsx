@@ -53,21 +53,27 @@ export function LineSeries<
   const isProjected = projected?.isProjected;
   const projection = useMemo(() => {
     const start = isProjected && rows ? getProjectedStart(rows, isProjected) : (rows?.length ?? 0);
-    return { start, projectedRows: new Set<unknown>(rows?.slice(start)) };
+    return {
+      start,
+      rows: new Set<unknown>(rows),
+      projectedRows: new Set<unknown>(rows?.slice(start)),
+    };
   }, [rows, isProjected]);
-  const { start, projectedRows } = projection;
+  const { start, rows: rowSet, projectedRows } = projection;
   useLayoutEffect(() => {
     if (!isProjected) return;
     return registerProjection(id, (datum, activeIndex) => {
+      if (projectedRows.has(datum)) return true;
+      if (rowSet.has(datum)) return false;
       const index =
         typeof activeIndex === "string" || typeof activeIndex === "number"
           ? Number(activeIndex)
           : NaN;
-      // Index disambiguates repeated payloads; separate series data may use another index space.
-      if (Number.isInteger(index) && rows?.[index] === datum) return index >= start;
-      return projectedRows.has(datum);
+      if (Number.isInteger(index) && index >= 0 && index < (rows?.length ?? 0))
+        return index >= start;
+      return false;
     });
-  }, [id, isProjected, rows, start, projectedRows, registerProjection]);
+  }, [id, isProjected, rows, start, rowSet, projectedRows, registerProjection]);
   const key = seriesKey ?? (typeof props.dataKey === "string" ? props.dataKey : undefined);
   const effectiveHide =
     hide === true || (visibleSeries !== undefined && !visibleSeries.includes(key ?? ""));
@@ -115,6 +121,7 @@ export function LineSeries<
         ? {
             shape: (
               <ProjectedCurve
+                projectedStart={start}
                 projectedRows={projectedRows}
                 projectedDasharray={projected.strokeDasharray ?? "4 4"}
                 material={props.filter === undefined ? material : "plain"}

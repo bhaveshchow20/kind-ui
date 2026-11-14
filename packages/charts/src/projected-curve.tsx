@@ -1,13 +1,100 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import type { SVGProps } from "react";
 import { Curve, LineDrawShape, type LineDrawShapeProps } from "recharts";
 import { type LineMaterial, MaterialCurve } from "./line-material.js";
-import { getProjectedStart } from "./line-projection.js";
-import { getProjectionBounds, getProjectionClip } from "./projected-clip.js";
+
+type Point = { x: number | null; y: number | null; payload?: unknown };
+
+function splitInteractionProps<Props extends object>(props: Props) {
+  const paint = { ...props } as Record<string, unknown>;
+  const interaction: Record<string, unknown> = {};
+  for (const key of Object.keys(paint)) {
+    if (
+      key === "role" ||
+      key === "tabIndex" ||
+      key === "focusable" ||
+      key.startsWith("aria-") ||
+      /^on[A-Z]/.test(key)
+    ) {
+      interaction[key] = paint[key];
+      delete paint[key];
+    }
+  }
+  return {
+    interaction: interaction as SVGProps<SVGGElement>,
+    paint: paint as Props,
+  };
+}
+
+function getProjectionClip(
+  points: readonly Point[],
+  start: number,
+  type: unknown,
+  layout: unknown,
+  connectNulls: boolean | undefined,
+) {
+  if (start <= 0 || start >= points.length) return null;
+  if (layout !== undefined && layout !== "horizontal" && layout !== "vertical") {
+    throw new Error("Projected LineSeries requires a horizontal or vertical Cartesian layout");
+  }
+  const axis = layout === "vertical" ? "y" : "x";
+  const aligned = axis === "x" ? ["monotoneX", "bumpX"] : ["monotoneY", "bumpY"];
+  const supported = [
+    "linear",
+    "monotone",
+    "bump",
+    "step",
+    "stepBefore",
+    "stepAfter",
+    "basis",
+    "basisOpen",
+    "natural",
+    ...aligned,
+  ];
+  if (typeof type === "string" && !supported.includes(type)) {
+    throw new Error(
+      "Projected LineSeries requires an open curve aligned with its category axis; use a custom shape for other interpolation modes",
+    );
+  }
+  const coordinates = points
+    .map((point) => point[axis])
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const first = coordinates[0];
+  const last = coordinates.at(-1);
+  if (first === undefined || last === undefined || first === last) {
+    throw new Error("Projected LineSeries requires distinct monotonic category coordinates");
+  }
+  const direction = last > first ? 1 : -1;
+  if (
+    coordinates.some(
+      (value, index) => index > 0 && direction * (value - (coordinates[index - 1] as number)) <= 0,
+    )
+  ) {
+    throw new Error(
+      "Projected LineSeries requires distinct monotonic category coordinates; reordered numeric coordinates need a custom shape",
+    );
+  }
+  let anchor = start - 1;
+  if (connectNulls) {
+    while (anchor >= 0) {
+      const point = points[anchor];
+      if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) break;
+      anchor--;
+    }
+  }
+  const boundary = points[anchor]?.[axis] ?? points[start]?.[axis];
+  if (typeof boundary !== "number" || !Number.isFinite(boundary)) {
+    throw new Error(
+      "Projected LineSeries requires a finite category coordinate at the projection boundary",
+    );
+  }
+  return { axis, boundary, direction };
+}
 
 /** Two paints of the complete native path; no point partition or spline recomputation. */
 export function ProjectedCurve({
+  projectedStart,
   projectedRows,
   projectedDasharray,
   material,
@@ -17,64 +104,34 @@ export function ProjectedCurve({
   ...props
 }: Omit<LineDrawShapeProps, "pathRef"> & {
   pathRef?: LineDrawShapeProps["pathRef"];
+  projectedStart: number;
   projectedRows: ReadonlySet<unknown>;
   projectedDasharray: string | number;
   material: LineMaterial;
   filterId: string;
   materialWidth: number | string;
 }) {
-  const paintRef = useRef<SVGGElement>(null);
   const points = props.points ?? [];
-  const start = getProjectedStart(points, (point) =>
-    projectedRows.has("payload" in point ? point.payload : undefined),
-  );
+  const projectionPoints = points as readonly Point[];
+  let renderedProjectedStart = points.length;
+  while (
+    renderedProjectedStart > 0 &&
+    projectedRows.has(projectionPoints[renderedProjectedStart - 1]?.payload)
+  )
+    renderedProjectedStart--;
+  if (renderedProjectedStart === points.length)
+    renderedProjectedStart = Math.min(projectedStart, points.length);
   const hasProjectedValue = points
-    .slice(start)
+    .slice(renderedProjectedStart)
     .some((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
   const hasHistoricalValue = points
-    .slice(0, start)
+    .slice(0, renderedProjectedStart)
     .some((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
   const mixed = hasProjectedValue && hasHistoricalValue;
-  const bounds = mixed
-    ? getProjectionBounds(
-        points,
-        props.style?.strokeWidth ?? (material === "plain" ? props.strokeWidth : materialWidth),
-        props.style?.strokeMiterlimit ?? props.strokeMiterlimit,
-        materialWidth,
-        material !== "plain",
-      )
-    : null;
-  useLayoutEffect(() => {
-    if (!bounds || !paintRef.current) return;
-    for (const path of Array.from(paintRef.current.querySelectorAll("path.recharts-line-curve"))) {
-      const style = getComputedStyle(path);
-      const actualPadding =
-        Number.parseFloat(style.strokeWidth) * Math.max(2, Number(style.strokeMiterlimit));
-      if (!Number.isFinite(actualPadding) || actualPadding > bounds.strokePadding + 0.01) {
-        throw new Error(
-          "Projected LineSeries CSS stroke exceeds its declared numeric paint bounds; declare stroke metrics or use a custom shape",
-        );
-      }
-      const filterUrl = /^url\((?:"([^"]+)"|'([^']+)'|([^)'"]+))\)$/.exec(style.filter);
-      const url = filterUrl?.[1] ?? filterUrl?.[2] ?? filterUrl?.[3];
-      const ownFilter =
-        material !== "plain" &&
-        url !== undefined &&
-        ["historical", "projected"].some((part) => url.endsWith(`#${filterId}-${part}`));
-      if (
-        (style.filter && style.filter !== "none" && !ownFilter) ||
-        (style.vectorEffect && style.vectorEffect !== "none") ||
-        (style.transform && style.transform !== "none")
-      ) {
-        throw new Error(
-          "Projected LineSeries requires a custom shape for external filters, transforms or non-scaling strokes",
-        );
-      }
-    }
-  });
-  const render = (projected: boolean) => {
+  const render = (projected: boolean, base = props) => {
     const paint = {
-      ...props,
+      ...base,
+      ...(mixed && projected && base.id ? { id: `${base.id}-projected` } : {}),
       ...(projected ? { strokeDasharray: projectedDasharray } : {}),
     };
     if (material !== "plain") {
@@ -104,37 +161,54 @@ export function ProjectedCurve({
         {render(true)}
       </g>
     );
-  const seam = getProjectionClip(points, start, props.type, props.layout, props.connectNulls);
+  const seam = getProjectionClip(
+    projectionPoints,
+    renderedProjectedStart,
+    props.type,
+    props.layout,
+    props.connectNulls,
+  );
   if (!seam) return <g clipPath={clipPath}>{render(false)}</g>;
-  if (!bounds) return null;
-  if (
-    (props.filter && props.filter !== "none") ||
-    (props.style?.filter && props.style.filter !== "none") ||
-    (props.transform && props.transform !== "none") ||
-    (props.style?.transform && props.style.transform !== "none") ||
-    (props.vectorEffect && props.vectorEffect !== "none") ||
-    (props.style?.vectorEffect && props.style.vectorEffect !== "none")
-  ) {
-    throw new Error(
-      "Projected LineSeries requires a custom shape for external filters, transforms or non-scaling strokes",
-    );
-  }
-  const minX = Math.min(bounds.minX, seam.axis === "x" ? seam.boundary : bounds.minX);
-  const minY = Math.min(bounds.minY, seam.axis === "y" ? seam.boundary : bounds.minY);
-  const maxX = Math.max(bounds.maxX, seam.axis === "x" ? seam.boundary : bounds.maxX);
-  const maxY = Math.max(bounds.maxY, seam.axis === "y" ? seam.boundary : bounds.maxY);
+  const extent =
+    points.reduce(
+      (largest, point) =>
+        Math.max(
+          largest,
+          Number.isFinite(point.x) ? Math.abs(point.x as number) : 0,
+          Number.isFinite(point.y) ? Math.abs(point.y as number) : 0,
+        ),
+      1,
+    ) *
+      1024 +
+    1024;
   const low =
     seam.axis === "x"
-      ? { x: minX, y: minY, width: seam.boundary - minX, height: maxY - minY }
-      : { x: minX, y: minY, width: maxX - minX, height: seam.boundary - minY };
+      ? { x: -extent, y: -extent, width: seam.boundary + extent, height: extent * 2 }
+      : { x: -extent, y: -extent, width: extent * 2, height: seam.boundary + extent };
   const high =
     seam.axis === "x"
-      ? { x: seam.boundary, y: minY, width: maxX - seam.boundary, height: maxY - minY }
-      : { x: minX, y: seam.boundary, width: maxX - minX, height: maxY - seam.boundary };
+      ? { x: seam.boundary, y: -extent, width: extent - seam.boundary, height: extent * 2 }
+      : { x: -extent, y: seam.boundary, width: extent * 2, height: extent - seam.boundary };
   const historical = seam.direction === 1 ? low : high;
   const projected = seam.direction === 1 ? high : low;
+  const { transform, style, ...untransformed } = props;
+  const { transform: cssTransform, transformOrigin, transformBox, ...paintStyle } = style ?? {};
+  const { interaction, paint } = splitInteractionProps({
+    ...untransformed,
+    ...(Object.keys(paintStyle).length > 0 ? { style: paintStyle } : {}),
+  });
+  const wrapperStyle =
+    cssTransform === undefined && transformOrigin === undefined && transformBox === undefined
+      ? undefined
+      : { transform: cssTransform, transformOrigin, transformBox };
   return (
-    <g ref={paintRef} data-kind-ui="projected-line" clipPath={clipPath}>
+    <g
+      {...interaction}
+      data-kind-ui="projected-line"
+      clipPath={clipPath}
+      transform={transform}
+      style={wrapperStyle}
+    >
       <defs>
         <clipPath id={`${filterId}-historical-clip`} clipPathUnits="userSpaceOnUse">
           <rect {...historical} />
@@ -144,10 +218,10 @@ export function ProjectedCurve({
         </clipPath>
       </defs>
       <g data-projected="false" clipPath={`url(#${filterId}-historical-clip)`}>
-        {render(false)}
+        {render(false, paint)}
       </g>
       <g data-projected="true" clipPath={`url(#${filterId}-projected-clip)`}>
-        {render(true)}
+        {render(true, paint)}
       </g>
     </g>
   );
