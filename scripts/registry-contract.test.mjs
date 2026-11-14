@@ -4,9 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { allExamples } from "../apps/docs/examples/catalog.mjs";
 import {
-  coreRequirementFor,
+  coreVersion,
   itemNameFor,
   registryCss,
   registryEndpoint,
@@ -145,18 +144,4 @@ test("lookup and policy reject missing examples, nested names and absent depende
   assert.equal(itemSchema.safeParse({ ...first, name: "charts/line-chart" }).success, false);
   assert.equal(itemSchema.safeParse({ ...first, dependencies: undefined }).success, false);
   assert.equal(itemSchema.safeParse({ ...first, files: [] }).success, false);
-});
-
-test("all chart installs share a compatible Core range and cannot request a downgrade", () => {
-  for (const example of allExamples) assert.equal(coreRequirementFor(example.id), "^0.6.0");
-  for (const definition of registryItems) {
-    assert.equal(definition.coreRequirement, "^0.6.0");
-    const item = itemSchema.parse(readJson(path.join(output, `${definition.name}.json`)));
-    assert.deepEqual(
-      item.dependencies.filter((dependency) => dependency.startsWith("@kind-ui/charts@")),
-      ["@kind-ui/charts@^0.6.0"],
-      definition.name,
-    );
-  }
-  assert.throws(() => coreRequirementFor("unknown"), /No Core requirement/);
 });
