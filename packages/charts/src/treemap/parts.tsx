@@ -330,21 +330,12 @@ function TileLabel<T>({
       className="pointer-events-none absolute block overflow-hidden text-xs font-medium leading-tight"
       style={{ inset: padding, fontSize }}
     >
-      <span
-        data-kind-ui="treemap-label-surface"
-        className="inline-flex max-w-full flex-col rounded-[3px] px-1 py-0.5"
-        style={{
-          background: "var(--background,Canvas)",
-          color: "var(--foreground,CanvasText)",
-        }}
-      >
-        <span className="block truncate" title={node.label}>
-          {node.label}
-        </span>
-        {showValue && (
-          <span className="mt-0.5 block whitespace-nowrap font-normal tabular-nums">{value}</span>
-        )}
+      <span className="block truncate" title={node.label}>
+        {node.label}
       </span>
+      {showValue && (
+        <span className="mt-0.5 block whitespace-nowrap font-normal tabular-nums">{value}</span>
+      )}
     </span>
   );
 }

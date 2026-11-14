@@ -100,8 +100,7 @@ test("Tiles includes fitted text by default and supports label opt-out and custo
   assert.equal(TreemapChart.Labels, undefined);
   const html = render(chart(h(TreemapChart.Tiles)));
   assert.equal((html.match(/data-kind-ui="treemap-label"/g) ?? []).length, 3);
-  assert.equal((html.match(/data-kind-ui="treemap-label-surface"/g) ?? []).length, 3);
-  assert.match(html, /background:var\(--background,Canvas\);color:var\(--foreground,CanvasText\)/);
+  assert.doesNotMatch(html, /treemap-label-surface|var\(--background,Canvas\)|rounded-\[3px\]/);
   assert.match(html, /tabular-nums[^>]*>6</);
   assert.doesNotMatch(
     render(chart(h(TreemapChart.Tiles, { labels: false }))),
