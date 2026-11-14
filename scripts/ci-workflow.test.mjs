@@ -66,6 +66,13 @@ test("Docs follows shared dependency, build configuration, and package gate chan
   }
 });
 
+test("Docs package provenance checks have repository history", () => {
+  for (const id of ["build", "consumers", "browsers"]) {
+    const checkout = docs.jobs[id].steps.find((step) => step.uses?.startsWith("actions/checkout@"));
+    assert.equal(checkout.with["fetch-depth"], 0);
+  }
+});
+
 test("both test pipelines retain every aggregate browser suite's available failure output", async () => {
   const directories = await Promise.all(
     [
