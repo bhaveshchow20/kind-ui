@@ -130,7 +130,6 @@ chart remain host-owned. Supply an accessible data alternative alongside charts.
 Run `npm run dev:chart` and open `/loading.html` for all-family replay, load,
 empty-input, resize and interrupted-update controls.
 
-
 ## Selective Pie glow
 
 `PieSeries` accepts `glowCategories?: readonly string[]` with `categoryKey` and
@@ -142,10 +141,62 @@ IDs do nothing; reorder/filter preserve colors and membership. Selected default
 sectors use glow; others retain `material` (default plain). Native custom paint,
 shapes and handlers retain ownership. Keep labels and a data alternative.
 
-## License
+### Projected trailing line data
 
-[MIT](LICENSE) © 2026 Bhavesh Chowdhury.
+`LineSeries` accepts `projected={{ isProjected: (row) => row.estimated,
+strokeDasharray: "6 3" }}`. The accessor flags caller-supplied values; Kind UI
+does not compute forecasts. Only a contiguous flagged suffix in the supplied
+data order is projected. Flags before the final historical row are ignored.
+Filtering or reordering data recomputes that suffix.
 
+Omitting `projected` retains the existing native rendering. With projection,
+one native Line retains series/category identity, dots, custom marker renderers,
+axes, labels and tooltip entries. Its default stroke is painted by two native
+Curves, each receiving the complete original points, interpolation type and
+`connectNulls` option. Complementary clips change paint at the historical
+category coordinate without recomputing the spline. Missing values remain
+native gaps unless `connectNulls` is enabled; no values are synthesized.
+
+Mixed historical/projected automatic paint requires distinct monotonic
+category coordinates and an aligned open interpolation mode: `linear`,
+`monotone`, `bump`, `step`, `stepBefore`, `stepAfter`, `basis`, `basisOpen`,
+`natural`, plus `monotoneX`/`bumpX` for horizontal layouts or
+`monotoneY`/`bumpY` for vertical layouts. Custom curve factories retain their
+native path when their category coordinates follow the same monotonic contract.
+Closed, opposite-axis interpolation, repeated numeric coordinates and reordered
+numeric coordinates throw an actionable error. Explicit custom shapes retain
+their own drawing contract. Fully projected or fully historical series need no
+seam and keep native interpolation without these restrictions.
+
+Empty data paints nothing. A single point retains its native dot and projected
+tooltip status without inventing a segment. An entirely flagged series is
+projected. Historical stroke/dash options are retained; projected dash defaults
+to `"4 4"`. Both paints retain stroke, width and opacity, while their shared
+wrapper owns transforms, focus, accessible semantics and handlers as one logical
+line. Line materials apply to both paints. Explicit native `shape` owns stroke
+rendering, so it bypasses automatic projection paint while projected tooltip
+status remains available.
+
+The default tooltip says “Projected” for projected rows. Custom tooltip content
+and data alternatives remain caller-owned. `getProjectedStart(data,
+isProjected)` returns the first projected index, or `data.length` when there is
+no trailing projection; use the same data and accessor for an accessible table.
+Missing flagged rows should retain both “No data” and “Projected” in that table.
+The option also works in configured `LineChart.series` objects and composed
+`ComboChart` children without adding a second series or legend entry.
+
+```tsx
+const isProjected = (row: Row) => row.estimated;
+const start = getProjectedStart(data, isProjected);
+<LineSeries<Row> dataKey="total" projected={{ isProjected }} />;
+// In the caller-owned table: index >= start ? "Projected" : "Historical".
+```
+
+Run `npm run dev:chart` and open `/projected-line.html` for the responsive
+example. Its visible description explains the dashed encoding without requiring
+hover, and its table preserves the same status for keyboard and screen-reader
+users. Projection follows the chart's existing loading, motion and reduced-motion
+behavior.
 
 ### Point marker styles
 
@@ -253,3 +304,7 @@ The full name/value remains in a SVG title even when inside text clips. Keep the
 as the complete accessible data alternative. Custom `children` (including `tspan`)
 replace visual text while preserving the default title. No label or animation is
 installed implicitly. `/sankeys.html` demonstrates both positions.
+
+## License
+
+[MIT](LICENSE) © 2026 Bhavesh Chowdhury.

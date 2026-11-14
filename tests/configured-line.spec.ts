@@ -1,5 +1,243 @@
 import { expect, test } from "@playwright/test";
 
+test("projection changes only paint and retains the complete native monotone path", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const geometry = page.locator('[data-case="projection-geometry"] [data-curve="monotone"]');
+  const native = geometry.locator('[data-geometry="native"]');
+  const projected = geometry.locator('[data-geometry="projected"]');
+  const nativePath = native.locator("path.recharts-line-curve");
+  await expect(nativePath).toHaveCount(1);
+  const completePath = await nativePath.getAttribute("d");
+  if (!completePath) throw new Error("Missing native geometry path");
+  const paintedPaths = projected.locator("path.recharts-line-curve");
+  await expect(paintedPaths).toHaveCount(2);
+  // A paint/clip seam must send the same complete points to native Curve for both paints.
+  // Splitting points violates this regression by recomputing the spline at the seam.
+  for (const paint of await paintedPaths.all())
+    await expect(paint).toHaveAttribute("d", completePath);
+  const dots = (plot: typeof native) =>
+    plot
+      .locator(".recharts-line-dot")
+      .evaluateAll((nodes) =>
+        nodes.map((node) => [node.getAttribute("cx"), node.getAttribute("cy")]),
+      );
+  expect(await dots(projected)).toEqual(await dots(native));
+});
+
+test("supported curves retain full geometry and expanded clips preserve wide-stroke overflow", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const root = page.locator('[data-case="projection-geometry"]');
+  for (const type of [
+    "linear",
+    "monotone",
+    "bump",
+    "step",
+    "stepBefore",
+    "stepAfter",
+    "basis",
+    "basisOpen",
+    "natural",
+  ]) {
+    const fixture = root.locator(`[data-curve="${type}"]`);
+    const native = fixture.locator('[data-geometry="native"] path.recharts-line-curve');
+    await expect(native).toHaveCount(1);
+    const d = await native.getAttribute("d");
+    if (!d) throw new Error("Missing native path");
+    const paints = fixture.locator('[data-geometry="projected"] path.recharts-line-curve');
+    await expect(paints).toHaveCount(2);
+    for (const paint of await paints.all()) await expect(paint).toHaveAttribute("d", d);
+    const rectangles = await fixture
+      .locator(
+        '[data-geometry="projected"] [data-kind-ui="projected-line"] > defs > clipPath > rect',
+      )
+      .evaluateAll((nodes) =>
+        nodes.map((node) => ({
+          y: Number(node.getAttribute("y")),
+          height: Number(node.getAttribute("height")),
+        })),
+      );
+    expect(rectangles).toHaveLength(2);
+    for (const rect of rectangles) {
+      expect(rect.y).toBeLessThanOrEqual(-80);
+      expect(rect.y + rect.height).toBeGreaterThanOrEqual(360);
+    }
+  }
+  const material = root.locator('[data-kind-ui="line-material"]');
+  await expect(material).toHaveCount(2);
+  const filters = await material.locator("filter").evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      x: Number(node.getAttribute("x")),
+      y: Number(node.getAttribute("y")),
+      width: Number(node.getAttribute("width")),
+      height: Number(node.getAttribute("height")),
+    })),
+  );
+  const clipRects = await root
+    .locator(
+      '[data-kind-ui="projected-line"]:has([data-kind-ui="line-material"]) > defs > clipPath > rect',
+    )
+    .evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        x: Number(node.getAttribute("x")),
+        y: Number(node.getAttribute("y")),
+        width: Number(node.getAttribute("width")),
+        height: Number(node.getAttribute("height")),
+      })),
+    );
+  expect(clipRects).toHaveLength(2);
+  const minX = Math.min(...clipRects.map((rect) => rect.x));
+  const maxX = Math.max(...clipRects.map((rect) => rect.x + rect.width));
+  for (const filter of filters) {
+    expect(minX).toBeLessThanOrEqual(filter.x);
+    expect(maxX).toBeGreaterThanOrEqual(filter.x + filter.width);
+    for (const rect of clipRects) {
+      expect(rect.y).toBeLessThanOrEqual(filter.y);
+      expect(rect.y + rect.height).toBeGreaterThanOrEqual(filter.y + filter.height);
+    }
+  }
+  await expect(
+    root.locator('[data-vertical="true"] [data-kind-ui="projected-line"] path.recharts-line-curve'),
+  ).toHaveCount(2);
+});
+
+test("unsupported mixed curve modes and ambiguous numeric coordinates fail explicitly", async ({
+  page,
+}) => {
+  await page.goto("/?projection-contract");
+  const root = page.locator('[data-case="projection-contract"]');
+  for (const type of ["basisClosed", "linearClosed", "monotoneY"]) {
+    await expect(root.locator(`[data-invalid="${type}"] [role="alert"]`)).toContainText(
+      "open curve aligned",
+    );
+  }
+  for (const mode of ["reordered", "repeated"]) {
+    await expect(root.locator(`[data-invalid="${mode}"] [role="alert"]`)).toContainText(
+      "distinct monotonic",
+    );
+  }
+});
+
+test("projected native paints keep gaps, zeroes, markers, tooltip identity and combo ownership", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const root = page.locator('[data-case="projection-cases"]');
+  const gap = root.locator('[data-projection-connect="false"]');
+  const connected = root.locator('[data-projection-connect="true"]');
+  for (const plot of [gap, connected]) {
+    await expect(plot.locator('[data-projected="true"] path')).toHaveAttribute(
+      "stroke-dasharray",
+      "6 3",
+    );
+    await expect(plot.locator('[data-projected="false"] path')).toHaveAttribute(
+      "stroke-dasharray",
+      "2 1",
+    );
+    await expect(plot.locator('[data-projected="true"] path')).toHaveAttribute("stroke-width", "3");
+    await expect(plot.locator('[data-kind-ui="point-marker"]')).toHaveCount(3);
+  }
+  const responsivePath = await connected.locator('[data-projected="true"] path').getAttribute("d");
+  await page.getByRole("button", { name: "Resize", exact: true }).click();
+  await expect(root).toHaveCSS("width", "360px");
+  await expect
+    .poll(() => connected.locator('[data-projected="true"] path').getAttribute("d"))
+    .not.toBe(responsivePath);
+  await page.getByRole("button", { name: "Resize", exact: true }).click();
+  await expect(root).toHaveCSS("width", "500px");
+  const allProjected = root.locator('[data-case="projection-all-projected"]');
+  await expect(
+    allProjected.locator('[data-kind-ui="projected-line"][data-projected="true"]'),
+  ).toHaveCount(1);
+  await expect(allProjected.locator("path.recharts-line-curve")).toHaveCount(1);
+  await expect(allProjected.locator("path.recharts-line-curve")).toHaveAttribute(
+    "stroke-dasharray",
+    "6 3",
+  );
+  await expect(allProjected.locator('[data-kind-ui="point-marker"]')).toHaveCount(2);
+  await allProjected.locator("svg.recharts-surface").focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(allProjected.locator('[data-kind-ui="projection-status"]')).toHaveText("Projected");
+  await page.keyboard.press("Escape");
+  const allHistorical = root.locator('[data-case="projection-all-historical"]');
+  await expect(allHistorical.locator('[data-kind-ui="projected-line"]')).toHaveCount(0);
+  await expect(allHistorical.locator("path.recharts-line-curve")).toHaveCount(0);
+  await expect(allHistorical.locator('[data-kind-ui="point-marker"]')).toHaveCount(1);
+  const gapPath = await gap.locator('[data-projected="true"] path').getAttribute("d");
+  const connectedPath = await connected.locator('[data-projected="true"] path').getAttribute("d");
+  expect(gapPath).not.toEqual(connectedPath);
+  // Full native paths retain the gap as separate subpaths, rather than inventing a connector.
+  expect(gapPath?.match(/M/g)?.length).toBe(2);
+  expect(connectedPath?.match(/M/g)?.length).toBe(1);
+  await connected.locator("svg.recharts-surface").focus();
+  for (let index = 0; index < 4; index++) await page.keyboard.press("ArrowRight");
+  const item = connected.locator('[data-kind-ui="chart-tooltip-item"]');
+  await expect(item).toHaveCount(1);
+  await expect(item).toHaveAttribute("data-series", "total");
+  await expect(item).toContainText("Projected");
+  await expect(item.locator('[data-kind-ui="chart-tooltip-value"]')).toHaveText("0");
+  await expect(
+    connected.locator('[data-kind-ui="active-marker"][data-point-style="colored-border"]'),
+  ).toHaveCount(1);
+  await expect(
+    root.locator('[data-case="projection-combo"] [data-kind-ui="projected-line"]'),
+  ).toHaveCount(1);
+  const custom = root.locator('[data-case="projection-native-shape"]');
+  await expect(custom.locator('[data-custom-projection="owned"]')).toHaveCount(1);
+  await expect(custom.locator('[data-kind-ui="projected-line"]')).toHaveCount(0);
+  const perSeries = root.locator('[data-case="projection-per-series"]');
+  await expect(perSeries.locator('[data-kind-ui="projected-line"]')).toHaveCount(1);
+  await perSeries.locator("svg.recharts-surface").focus();
+  for (let index = 0; index < 3; index++) await page.keyboard.press("ArrowRight");
+  await expect(
+    perSeries.locator('[data-series="total"] [data-kind-ui="projection-status"]'),
+  ).toHaveText("Projected");
+  await expect(
+    perSeries.locator('[data-series="other"] [data-kind-ui="projection-status"]'),
+  ).toHaveCount(0);
+  await expect(
+    perSeries.locator('[data-series="total"] [data-kind-ui="chart-tooltip-value"]'),
+  ).toHaveText("0");
+  await page.keyboard.press("Escape");
+  const interaction = root.locator('[data-case="projection-interaction"]');
+  const interactionSurface = interaction.locator('[aria-label="Projected interactive line"]');
+  await expect(interactionSurface).toHaveCount(1);
+  await expect(interactionSurface).toHaveAttribute("role", "img");
+  await expect(interactionSurface).toHaveAttribute("tabindex", "0");
+  await expect(interactionSurface).toHaveAttribute("transform", "translate(5 0)");
+  await expect(interaction.locator("path.recharts-line-curve[transform]")).toHaveCount(0);
+  await interactionSurface.dispatchEvent("click");
+  await expect(interaction.locator("[data-line-clicks]")).toHaveText("1");
+  const brushed = root.locator('[data-case="projection-brush"]');
+  await expect(brushed.locator('[data-kind-ui="projected-line"]')).toHaveCount(1);
+  await expect(brushed.locator("path.recharts-line-curve")).toHaveCount(2);
+  await brushed.locator("svg.recharts-surface").focus();
+  for (let index = 0; index < 4; index++) await page.keyboard.press("ArrowRight");
+  await expect(brushed.locator('[data-kind-ui="projection-status"]')).toHaveText("Projected");
+  await page.keyboard.press("Escape");
+  await root.screenshot({ path: "artifacts/configured-line-tests/projected-line.png" });
+  await root.getByRole("button", { name: "Reorder projection" }).click();
+  await expect(connected.locator('[data-kind-ui="projected-line"]')).toHaveCount(0);
+  await expect(root.getByRole("cell", { name: "Projected", exact: true })).toHaveCount(0);
+  await root.getByRole("button", { name: "Filter projection" }).click();
+  await expect(connected.locator('[data-kind-ui="point-marker"]')).toHaveCount(1);
+  await expect(connected.locator('[data-kind-ui="projected-line"]')).toHaveCount(0);
+  await expect(root.getByRole("cell", { name: "Projected", exact: true })).toHaveCount(1);
+  await root.getByRole("button", { name: "Reorder projection" }).click();
+  await root.getByRole("button", { name: "Filter projection" }).click();
+  await root.getByRole("button", { name: "Missing projection" }).click();
+  await expect(connected.locator('[data-kind-ui="point-marker"]')).toHaveCount(2);
+  await expect(root.getByRole("row", { name: "Apr No data Projected" })).toHaveCount(1);
+  await root.getByRole("button", { name: "Empty projection" }).click();
+  await expect(connected.locator('[data-kind-ui="point-marker"]')).toHaveCount(0);
+  await expect(connected.locator(".recharts-line-curve")).toHaveCount(0);
+  await expect(root.getByRole("cell", { name: "Projected", exact: true })).toHaveCount(0);
+});
+
 test("configured line is complete, responsive and owns uncontrolled visibility without website CSS", async ({
   page,
 }) => {
@@ -122,6 +360,13 @@ test("configured default motion respects reduced motion and explicit off", async
   const clip = basic.locator("clipPath[id$='-reveal'] rect");
   await expect(frame).toHaveAttribute("data-motion", "on");
   await expect(clip).toHaveCount(1);
+  const projected = page.locator('[data-case="projection-cases"] [data-projection-connect="true"]');
+  await expect(projected.locator('[data-kind-ui="line-frame"]')).toHaveAttribute(
+    "data-motion",
+    "on",
+  );
+  await expect(projected.locator('[data-kind-ui="projected-line"] path')).toHaveCount(2);
+  await expect(projected.locator("clipPath[id$='-reveal'] rect")).toHaveCount(1);
   await page.clock.runFor(120);
   const progress = Number.parseFloat((await clip.getAttribute("width")) ?? "NaN");
   expect(progress).toBeGreaterThan(0);
@@ -138,6 +383,12 @@ test("configured default motion respects reduced motion and explicit off", async
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(frame).toHaveAttribute("data-motion", "off");
   await expect(clip).toHaveCount(0);
+  await expect(projected.locator('[data-kind-ui="line-frame"]')).toHaveAttribute(
+    "data-motion",
+    "off",
+  );
+  await expect(projected.locator('[data-kind-ui="projected-line"] path')).toHaveCount(2);
+  await expect(projected.locator("clipPath[id$='-reveal'] rect")).toHaveCount(0);
 });
 
 test("single-point and sparse line values remain visible without inventing interpolation", async ({
