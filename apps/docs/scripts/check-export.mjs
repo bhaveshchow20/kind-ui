@@ -91,6 +91,10 @@ assert.equal(
 for (const file of textExportFiles(root)) {
   const body = readFileSync(path.join(root, file), "utf8");
   assertPublicCopy(body, file);
+  assert.ok(
+    !body.includes('"coreRequirement"'),
+    `Internal compatibility metadata exposed in ${file}`,
+  );
   for (const receipt of [provenance.sourceCommit, provenance.sha256])
     assert.ok(!body.includes(receipt), `Internal receipt exposed in ${file}`);
 }

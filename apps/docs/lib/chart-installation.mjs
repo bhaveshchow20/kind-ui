@@ -1,4 +1,4 @@
-/** @typedef {{id: string, version: string, coreRequirement?: string | undefined, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
+/** @typedef {{id: string, registryItemName?: string | undefined, files: Record<string, string>}} InstallationBundle */
 /** @typedef {{title: string, description: string, code: string, language: "sh" | "css" | "tsx", filename: string}} InstallationStep */
 /** @typedef {"npm" | "pnpm" | "yarn" | "bun"} PackageManager */
 /** @typedef {{manager: PackageManager, command: string}} PackageInstallCommand */

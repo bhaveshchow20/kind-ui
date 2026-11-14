@@ -13,7 +13,11 @@ import { docRoute, publicPath } from "@/lib/routing.mjs";
 import { source } from "@/lib/source";
 import { ApiTable } from "./api-table";
 import { ChartInstallation } from "./chart-installation";
-import { type ComponentId, ComponentPlayground } from "./component-playground";
+import {
+  type ComponentBundle,
+  type ComponentId,
+  ComponentPlayground,
+} from "./component-playground";
 import { CopyMarkdown } from "./copy-markdown";
 import { MobileDocsNavigation } from "./glass-docs-layout";
 import { TrackedCodeBlock } from "./tracked-code-block";
@@ -64,12 +68,29 @@ async function LineExample({
         ),
       )
     : undefined;
+  const playgroundBundle = {
+    id: bundle.id,
+    title: bundle.title,
+    family: bundle.family,
+    ...(bundle.variantControl === undefined ? {} : { variantControl: bundle.variantControl }),
+    ...(bundle.defaultVariant === undefined ? {} : { defaultVariant: bundle.defaultVariant }),
+    ...(bundle.variants === undefined
+      ? {}
+      : {
+          variants: Object.fromEntries(
+            Object.entries(bundle.variants).map(([value, option]) => [
+              value,
+              { label: option.label },
+            ]),
+          ),
+        }),
+  } satisfies ComponentBundle;
   return (
     <ComponentPlayground
       key={`${id}-${variant ?? "ready"}`}
       {...(variant === undefined ? {} : { fixedVariant: variant })}
       {...(instance === undefined ? {} : { instance })}
-      bundle={bundle}
+      bundle={playgroundBundle}
       sourceCode={sourceCode}
       {...(variantCode === undefined ? {} : { variantCode })}
     />

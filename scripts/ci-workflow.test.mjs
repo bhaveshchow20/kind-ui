@@ -115,7 +115,7 @@ test("homepage indexing checks build and serve both preview and public mounts", 
     appSteps.some(
       (step) =>
         step.run ===
-        "npm run test:browser -- tests/routes.spec.ts tests/accessibility.spec.ts tests/funnel.spec.ts tests/responsive-cards.spec.ts",
+        "npm run test:browser -- tests/routes.spec.ts tests/accessibility.spec.ts tests/funnel.spec.ts tests/responsive-cards.spec.ts --project=chromium",
     ),
   );
 });
