@@ -260,8 +260,31 @@ export function Host() {
               onPointerEnter: (event) => {
                 if (params.has("prevent-inspection")) event.preventDefault();
               },
+              onPointerLeave: (event) => {
+                if (params.has("prevent-transient-cleanup")) event.preventDefault();
+                if (params.has("reenter-on-pointer-leave")) {
+                  const view = event.currentTarget.ownerDocument.defaultView;
+                  if (view)
+                    event.currentTarget.dispatchEvent(
+                      new view.PointerEvent("pointerover", {
+                        bubbles: true,
+                        pointerType: "mouse",
+                      }),
+                    );
+                }
+              },
+              onPointerCancel: (event) => {
+                if (params.has("prevent-transient-cleanup")) event.preventDefault();
+              },
               onFocus: (event) => {
                 if (params.has("prevent-inspection")) event.preventDefault();
+              },
+              onBlur: (event) => {
+                if (params.has("prevent-transient-cleanup")) event.preventDefault();
+                if (params.has("refocus-on-blur")) {
+                  event.preventDefault();
+                  event.currentTarget.focus();
+                }
               },
               onKeyDown: (event) => {
                 if (
@@ -295,7 +318,7 @@ export function Host() {
               </span>
             )}
           />
-          <FunnelChart.Tooltip<Row> />
+          <FunnelChart.Tooltip<Row> hidden={params.has("hidden-tooltip")} />
           {params.has("stable-ref") && <FunnelChart.Legend />}
           <FunnelChart.Content>
             <button

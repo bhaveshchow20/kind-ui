@@ -22,6 +22,7 @@ import {
   FunnelChart as NativeFunnelChart,
   usePlotArea,
 } from "recharts";
+import { InteractionPaint, InteractionPaintScope, RegisterInteractionMotion } from "./animation.js";
 import { useChart } from "./chart-context.js";
 import {
   type ChartInteractionConfig,
@@ -48,7 +49,7 @@ import { Legend, type LegendProps } from "./legend.js";
 import { LoadingSkeletonSurface, LoadingStatus, useLoadingSeed } from "./loading-skeleton.js";
 import { useReducedMotion } from "./motion-preference.js";
 import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
-import type { TooltipContentProps } from "./tooltip-content.js";
+import { type TooltipContentProps, tooltipClassName } from "./tooltip-content.js";
 import { TooltipNumber } from "./tooltip-number.js";
 import { cn } from "./utils.js";
 
@@ -336,6 +337,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
       interaction={{ ...interaction, kind: "category", mode: "focus", eligibleKeys: keys }}
       frameProps={{
         ...frameProps,
+        className: cn("relative", frameProps?.className),
         onKeyDown: (event) => {
           frameProps?.onKeyDown?.(event);
           escapeHandler.current?.(event);
@@ -353,6 +355,7 @@ function FunnelChartRoot<T = FunnelDatum>(props: FunnelChartProps<T>) {
       }}
     >
       <FunnelContext value={context as Context<unknown>}>
+        <RegisterInteractionMotion enabled={animationEnabled && !reduced && !loading} />
         <FunnelEscapeHandler handlerRef={escapeHandler} />
         <NativeFunnelChart
           {...chartProps}
@@ -513,7 +516,9 @@ export function FunnelStages<T = FunnelDatum>(props: FunnelStagesProps<T>) {
     throw new Error("FunnelStages geometry must be rectangle or trapezoid");
   return (
     <FunnelStageOptions value={props as FunnelStagesProps<unknown>}>
-      <FunnelNativeStages stages={nativeStages} loading={context.loading} />
+      <InteractionPaintScope>
+        <FunnelNativeStages stages={nativeStages} loading={context.loading} />
+      </InteractionPaintScope>
     </FunnelStageOptions>
   );
 }
@@ -710,12 +715,12 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
         if (!event.defaultPrevented && event.pointerType !== "touch") emphasis.enter("pointer");
       }}
       onPointerLeave={(event) => {
+        emphasis.leave("pointer");
         props.onPointerLeave?.(event);
-        if (!event.defaultPrevented) emphasis.leave("pointer");
       }}
       onPointerCancel={(event) => {
+        emphasis.leave("pointer");
         props.onPointerCancel?.(event);
-        if (!event.defaultPrevented) emphasis.leave("pointer");
       }}
       onFocus={(event) => {
         props.onFocus?.(event);
@@ -725,8 +730,8 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
         }
       }}
       onBlur={(event) => {
+        emphasis.leave("keyboard");
         props.onBlur?.(event);
-        if (!event.defaultPrevented) emphasis.leave("keyboard");
       }}
       onClick={(event) => {
         props.onClick?.(event);
@@ -797,36 +802,38 @@ function FunnelStageMark<T>({ native }: { native: FunnelTrapezoidItem }) {
       ) : null}
       {!context.loading && stage.value !== null && stage.value > 0 ? (
         <FunnelPaint opacity={context.opacity}>
-          <g
-            data-kind-ui="emphasis-paint"
-            data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}
-            className={emphasisPaintClassName}
-            style={{ opacity: emphasis.factor }}
-          >
-            <g
-              data-inactive={(interaction.selected !== null && !selected) || undefined}
-              className="data-[inactive=true]:opacity-40"
+          <g data-emphasis={emphasis.dimmed ? "dimmed" : "baseline"}>
+            <InteractionPaint
+              data-kind-ui="emphasis-paint"
+              className={emphasisPaintClassName}
+              opacity={emphasis.factor}
+              identity={JSON.stringify(["funnel-stage", stage.id])}
             >
-              {Shape ? (
-                <Shape
-                  stage={stage}
-                  geometry={geometry}
-                  fill={paints[stage.id] ?? "currentColor"}
-                  selected={selected}
-                  active={active}
-                />
-              ) : (
-                <polygon
-                  data-kind-ui="funnel-mark"
-                  data-upper-width={upperWidth}
-                  data-lower-width={lowerWidth}
-                  points={points.map((point) => point.join(",")).join(" ")}
-                  fill={paints[stage.id] ?? "currentColor"}
-                  stroke="var(--background,white)"
-                  strokeWidth="1"
-                />
-              )}
-            </g>
+              <g
+                data-inactive={(interaction.selected !== null && !selected) || undefined}
+                className="data-[inactive=true]:opacity-40"
+              >
+                {Shape ? (
+                  <Shape
+                    stage={stage}
+                    geometry={geometry}
+                    fill={paints[stage.id] ?? "currentColor"}
+                    selected={selected}
+                    active={active}
+                  />
+                ) : (
+                  <polygon
+                    data-kind-ui="funnel-mark"
+                    data-upper-width={upperWidth}
+                    data-lower-width={lowerWidth}
+                    points={points.map((point) => point.join(",")).join(" ")}
+                    fill={paints[stage.id] ?? "currentColor"}
+                    stroke="var(--background,white)"
+                    strokeWidth="1"
+                  />
+                )}
+              </g>
+            </InteractionPaint>
           </g>
         </FunnelPaint>
       ) : null}
@@ -910,10 +917,10 @@ export function FunnelTooltip<T = FunnelDatum>({
   ...props
 }: FunnelTooltipProps<T>) {
   const context = useFunnel<T>();
-  useEffect(() => {
-    context.setTooltipMounted(true);
+  useLayoutEffect(() => {
+    context.setTooltipMounted(!props.hidden);
     return () => context.setTooltipMounted(false);
-  }, [context.setTooltipMounted]);
+  }, [context.setTooltipMounted, props.hidden]);
   const stage = context.model.stages.find((item) => item.id === context.activeId);
   const formattedValue =
     stage?.value === null ? context.missingLabel : stage ? context.formatValue(stage.value) : "";
@@ -927,7 +934,8 @@ export function FunnelTooltip<T = FunnelDatum>({
         data-kind-ui="funnel-tooltip"
         hidden={!stage || context.loading || props.hidden || undefined}
         className={cn(
-          "mt-[0.75rem] rounded-[var(--radius,0.5rem)] border border-solid border-[var(--border,#d1d5db)] px-[0.8rem] py-[0.6rem] text-[0.8rem] wrap-anywhere [&[hidden]]:hidden",
+          tooltipClassName,
+          "pointer-events-none absolute right-2 top-2 z-10 max-w-[calc(100%-1rem)] wrap-anywhere [&[hidden]]:hidden",
           props.className,
         )}
       >
