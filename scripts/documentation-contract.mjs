@@ -22,6 +22,16 @@ export function assertDocumentationContract(readme, packedFiles) {
     /import\s+["']@kind-ui\/charts\/styles\.css["']/,
     "Removed stylesheet export must not be imported",
   );
+  assert.doesNotMatch(
+    readme,
+    /@kind-ui\/charts@(?:v?\d|\^|~|[<>=])/i,
+    "Public README must not pin a specific package version",
+  );
+  assert.doesNotMatch(
+    readme,
+    /\b(?:alpha|beta|pre-?release|experimental|coming soon|future release|not yet (?:available|released|supported))\b/i,
+    "Public README must not present shipped APIs as prerelease or future work",
+  );
   assert.match(readme, /from\s+["']@kind-ui\/charts["']/, "Missing public package import");
   for (const target of links) {
     if (target.startsWith(repositorySourcePrefix)) {

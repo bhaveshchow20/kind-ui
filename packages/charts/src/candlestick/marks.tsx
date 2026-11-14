@@ -40,7 +40,13 @@ import {
 } from "./context.js";
 import { candlestickDirectionColors } from "./current-price.js";
 import { useLatestCandlestickGeometry } from "./latest-motion.js";
-import type { CandlestickPoint, CandlestickRecord } from "./model.js";
+import {
+  type CandlestickDirection,
+  type CandlestickPoint,
+  type CandlestickRecord,
+  getCandlestickDirection,
+  getLatestCandlestickObservations,
+} from "./model.js";
 import { getCandlestickVisiblePoints } from "./viewport.js";
 export type CandlestickMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> & {
   center: number;
@@ -49,7 +55,7 @@ export type CandlestickMarkProps = Omit<ComponentPropsWithRef<"g">, "children"> 
   high: number;
   low: number;
   close: number;
-  direction: "rising" | "falling" | "unchanged";
+  direction: CandlestickDirection;
 };
 export function CandlestickMark({
   center,
@@ -140,8 +146,7 @@ function renderCandlePoint(native: BarShapeProps, options: ShapeOptions, unclipp
   if (!coordinates.every((value) => typeof value === "number" && Number.isFinite(value)))
     return null;
   const [center, open, high, low, close] = coordinates as [number, number, number, number, number];
-  const direction =
-    point.close > point.open ? "rising" : point.close < point.open ? "falling" : "unchanged";
+  const direction = getCandlestickDirection(point);
   let label = options.markProps?.["aria-label"] ?? options.labels.get(point);
   if (label === undefined) {
     label = `${options.formatTime(point.time, point)}: open ${options.formatPrice(point.open, point)}, high ${options.formatPrice(point.high, point)}, low ${options.formatPrice(point.low, point)}, close ${options.formatPrice(point.close, point)}`;
@@ -288,11 +293,7 @@ export function CandlestickSeries<Row extends object = CandlestickRecord>(
     [context.formatTime, context.formatPrice],
   );
   const latestIdentity = useMemo(() => {
-    for (let index = context.points.length - 1; index >= 0; index--) {
-      const point = context.points[index];
-      if (point && !point.gap) return point.identity;
-    }
-    return undefined;
+    return getLatestCandlestickObservations(context.points)[0]?.identity;
   }, [context.points]);
   return (
     <ShapeContext
@@ -472,8 +473,7 @@ function VolumeShape(native: BarShapeProps) {
     point.open === undefined
   )
     return null;
-  const direction =
-    point.close > point.open ? "rising" : point.close < point.open ? "falling" : "unchanged";
+  const direction = getCandlestickDirection(point);
   const centered = {
     ...native,
     x: center - native.width / 2,

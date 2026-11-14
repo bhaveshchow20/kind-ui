@@ -183,7 +183,7 @@ export function CandlestickHistoryNavigator({
       throw new Error(`Candlestick HistoryNavigator owns overviewProps.${key}; omit this prop`);
   }
   const context = useCandlestick();
-  const viewport = context.targetViewport ?? context.viewport;
+  const viewport = context.targetViewport;
   return (
     <HistoryNavigatorView
       {...props}

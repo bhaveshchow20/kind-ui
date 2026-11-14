@@ -114,6 +114,9 @@ test("packed OHLC geometry, gaps, volume, updates and accessible inspection", as
   await page.getByRole("button", { name: "Empty", exact: true }).click();
   await expect(page.locator(marks)).toHaveCount(0);
   await expect(table.locator("tbody tr")).toHaveCount(0);
+  await expect(
+    page.getByRole("status").filter({ hasText: "No candle observations" }),
+  ).toBeVisible();
   expect(errors).toEqual([]);
 });
 

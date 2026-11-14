@@ -865,7 +865,9 @@ function CandlestickFamily<Row extends object>(props: CandlestickChartProps<Row>
               </div>
               {!loading && points.length === 0 && (
                 <OutsidePlot>
-                  <div data-kind-ui="candlestick-empty">{empty}</div>
+                  <div role="status" data-kind-ui="candlestick-empty">
+                    {empty}
+                  </div>
                 </OutsidePlot>
               )}
             </CandlestickLatestMotion>

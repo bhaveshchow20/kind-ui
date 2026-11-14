@@ -61,6 +61,32 @@ export interface CandlestickPoint<Row = CandlestickRecord> {
   volume?: number;
   state?: string;
 }
+export type CandlestickDirection = "rising" | "falling" | "unchanged";
+
+export function getCandlestickDirection(
+  point: Pick<CandlestickPoint, "open" | "close">,
+): CandlestickDirection {
+  return point.close !== undefined && point.open !== undefined
+    ? point.close > point.open
+      ? "rising"
+      : point.close < point.open
+        ? "falling"
+        : "unchanged"
+    : "unchanged";
+}
+
+export function getLatestCandlestickObservations<Point extends Pick<CandlestickPoint, "gap">>(
+  points: readonly Point[],
+): [latest: Point | undefined, previous: Point | undefined] {
+  let latest: Point | undefined;
+  for (let index = points.length - 1; index >= 0; index -= 1) {
+    const point = points[index];
+    if (!point || point.gap) continue;
+    if (!latest) latest = point;
+    else return [latest, point];
+  }
+  return [latest, undefined];
+}
 
 const priceFields = ["open", "high", "low", "close"] as const;
 const fields = ["time", ...priceFields, "volume", "gap", "state"] as const;

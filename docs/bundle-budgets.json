@@ -312,26 +312,26 @@
     "candlestick": {
       "baseline": {
         "js": {
-          "raw": 827261,
-          "gzip": 248554,
-          "brotli": 209392
+          "raw": 915021,
+          "gzip": 272517,
+          "brotli": 228254
         },
         "css": {
-          "raw": 34206,
-          "gzip": 6694,
-          "brotli": 5895
+          "raw": 36940,
+          "gzip": 7231,
+          "brotli": 6393
         }
       },
       "maximum": {
         "js": {
-          "raw": 909988,
-          "gzip": 273410,
-          "brotli": 230332
+          "raw": 1006524,
+          "gzip": 299769,
+          "brotli": 251080
         },
         "css": {
-          "raw": 37627,
-          "gzip": 7364,
-          "brotli": 6485
+          "raw": 40634,
+          "gzip": 7955,
+          "brotli": 7033
         }
       }
     }

@@ -65,8 +65,8 @@ production/minification/compression method and pinned React/Recharts/Motion
 versions as the other fixtures. Its bytes are measured from the installed
 candidate tarball, not an npm-published family or workspace source alias.
 
-Measured October 14, 2026 with Node 22.16.0 from candidate tarball SHA-256
-`5065f40e09488be42f8d089d6a66f62a910c51463789eeb260db3ac30e390a70`.
+Measured November 14, 2026 with Node 22.16.0 from candidate tarball SHA-256
+`c84e7f17f54a1c5a3a68307c750d767c28ef33df436acee4d90c49da70ae39b2`.
 This candidate contains new exports absent from published Core 0.5.0. Its
 JavaScript includes the mounted React application, Recharts, Motion and shared
 Kind helpers; it is not a standalone library-only size or a new rendering engine.
@@ -89,21 +89,20 @@ to the fixture and machine, rather than a frame-rate guarantee.
 
 | Candlestick fixture | raw | gzip | Brotli |
 | --- | ---: | ---: | ---: |
-| JavaScript recorded baseline | 827,261 | 248,554 | 209,392 |
-| JavaScript current | 900,842 | 268,711 | 225,398 |
-| JavaScript ceiling | 909,988 | 273,410 | 230,332 |
-| Generated Tailwind CSS recorded baseline | 34,206 | 6,694 | 5,895 |
-| Generated Tailwind CSS current | 36,824 | 7,202 | 6,355 |
-| Generated Tailwind CSS ceiling | 37,627 | 7,364 | 6,485 |
+| JavaScript recorded baseline | 915,021 | 272,517 | 228,254 |
+| JavaScript current | 915,021 | 272,517 | 228,254 |
+| JavaScript ceiling | 1,006,524 | 299,769 | 251,080 |
+| Generated Tailwind CSS recorded baseline | 36,940 | 7,231 | 6,393 |
+| Generated Tailwind CSS current | 36,940 | 7,231 | 6,393 |
+| Generated Tailwind CSS ceiling | 40,634 | 7,955 | 7,033 |
 
-The new fixture has 10% headroom for each asset/encoding, rounded upward to the
-next byte. Existing fixtures retain their recorded baselines and JavaScript/CSS
-ceilings, and all twelve measured fixtures fit their budgets. Primitive Kind and
-native JavaScript remain identical. No other fixture retains Candlestick runtime.
-The package-wide Tailwind scan grows by 2,474 raw / 432 gzip / 387 Brotli bytes versus
-the recorded CSS baseline, within the unchanged existing ceilings. This CSS
-increase also appears in other Kind fixtures because the scan includes the full
-installed package independently of JavaScript tree shaking.
+The reviewed baseline includes the persistent Readout and its shared formatted
+value presentation. It has 10% headroom for each asset/encoding, rounded upward
+to the next byte. Existing fixtures retain their recorded baselines and
+JavaScript/CSS ceilings, and all twelve measured fixtures fit their budgets.
+Primitive Kind and native JavaScript remain identical. No other fixture retains
+Candlestick runtime. The package-wide Tailwind scan includes the full installed
+package independently of JavaScript tree shaking.
 
 The family gate requires its own implementation and SVG Motion/loading module to
 remain retained, and rejects unrelated chart roots and loading-design groups.

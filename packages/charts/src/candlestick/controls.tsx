@@ -32,7 +32,7 @@ export function CandlestickControls({
     throw new Error("Candlestick Controls zoomFactor must be finite and greater than 1");
   const context = useCandlestick();
   const { points, changeViewport } = context;
-  const viewport = context.targetViewport ?? context.viewport;
+  const viewport = context.targetViewport;
   const unavailable = disabled || context.loading || points.length === 0;
   const span = viewport.to - viewport.from;
   const zoom = (factor: number) =>
