@@ -137,7 +137,7 @@ test("nonce-authorized loading and dash keyframes work under CSP", async ({ page
     .not.toBe(before);
   await example.getByText("Toggle loading", { exact: true }).click();
   const skeleton = example.locator('[data-example="line"] [data-kind-ui="chart-loading-skeleton"]');
-  await expect(skeleton).toHaveCSS("animation-name", "kind-ui-loading-pulse");
+  await expect(skeleton).toHaveCSS("animation-name", "kind-ui-loading-cycle");
   expect(await skeleton.locator("style").evaluate((node) => node.nonce)).toBe("request-nonce");
   await expect
     .poll(() =>
