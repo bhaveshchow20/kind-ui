@@ -4,9 +4,9 @@ import { Check, ChevronDown, Copy } from "lucide-react";
 import { type ReactNode, useCallback, useId, useState } from "react";
 import type { ComponentBundleData } from "@/lib/component-bundles.server.mjs";
 import { promptFor } from "@/lib/example-files.mjs";
+import { PreviewCode } from "./preview-code";
 import { previews } from "./previews";
 import { Button } from "./ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 export type ComponentId = keyof typeof previews;
 export type ComponentBundle = ComponentBundleData & { id: ComponentId };
@@ -28,7 +28,6 @@ export function ComponentPlayground({
   const options = Object.entries(bundle.variants ?? {}).filter(([value]) => value !== "loading");
   const controlId = useId();
   const [status, setStatus] = useState("");
-  const [tab, setTab] = useState("preview");
   const Preview = previews[id];
   const inertSelectBackground = useCallback((content: HTMLDivElement | null) => {
     if (!content || !document.body.contains(content)) return;
@@ -59,96 +58,85 @@ export function ComponentPlayground({
     }
   }
   return (
-    <Tabs
-      value={tab}
-      onValueChange={setTab}
-      className="component-workbench line-workbench"
-      data-component={
-        instance ? `${id}-${instance}` : fixedVariant === "loading" ? `${id}-loading` : id
-      }
-      data-state={fixedVariant === "loading" ? "loading" : "ready"}
-      id={
-        instance
-          ? `example-${id}-${instance}`
-          : fixedVariant
-            ? `example-${id}-${fixedVariant}`
-            : id !== bundle.family
-              ? `example-${id}`
-              : "component-preview"
-      }
-    >
-      <div className="playground-header">
-        <TabsList aria-label={`${bundle.title} component`} className="preview-tabs">
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-        </TabsList>
-        {!fixedVariant && options.length > 1 && (
-          <Select.Root
-            {...(variant === undefined ? {} : { value: variant })}
-            onValueChange={setVariant}
-          >
-            <Select.Trigger
-              id={controlId}
-              aria-label={bundle.variantControl}
-              className="line-variant-trigger"
-            >
-              <Select.Value />
-              <Select.Icon>
-                <ChevronDown size={14} aria-hidden="true" />
-              </Select.Icon>
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Content
-                ref={inertSelectBackground}
-                position="popper"
-                sideOffset={6}
-                className="select-content"
+    <>
+      <PreviewCode
+        title={bundle.title}
+        className="line-workbench"
+        data-component={
+          instance ? `${id}-${instance}` : fixedVariant === "loading" ? `${id}-loading` : id
+        }
+        data-state={fixedVariant === "loading" ? "loading" : "ready"}
+        id={
+          instance
+            ? `example-${id}-${instance}`
+            : fixedVariant
+              ? `example-${id}-${fixedVariant}`
+              : id !== bundle.family
+                ? `example-${id}`
+                : "component-preview"
+        }
+        controls={
+          <>
+            {!fixedVariant && options.length > 1 && (
+              <Select.Root
+                {...(variant === undefined ? {} : { value: variant })}
+                onValueChange={setVariant}
               >
-                <Select.Viewport>
-                  {options.map(([value, option]) => (
-                    <Select.Item key={value} value={value} className="select-item">
-                      <Select.ItemText>{option.label}</Select.ItemText>
-                      <Select.ItemIndicator>
-                        <Check size={14} />
-                      </Select.ItemIndicator>
-                    </Select.Item>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        )}
-        <div className="playground-actions">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="copy-prompt"
-            aria-label={status === "Prompt copied" ? "Copied" : "Copy prompt"}
-            onClick={() => copy(promptFor(bundle, {}, variant), "Prompt")}
-          >
-            {status === "Prompt copied" ? <Check size={14} /> : <Copy size={14} />}
-            <span>{status === "Prompt copied" ? "Copied" : "Copy prompt"}</span>
-          </Button>
-        </div>
-      </div>
-      <TabsContent
-        value="preview"
-        forceMount
-        aria-hidden={tab !== "preview"}
-        data-inactive={tab !== "preview"}
-        inert={tab !== "preview"}
-        className="preview-panel"
-      >
-        <div className="chart-example not-prose">
-          <Preview {...(variant === undefined ? {} : { variant })} />
-        </div>
-      </TabsContent>
-      <TabsContent value="code" forceMount hidden={tab !== "code"} className="code-files">
-        {variant && variantCode ? variantCode[variant] : sourceCode}
-      </TabsContent>
+                <Select.Trigger
+                  id={controlId}
+                  aria-label={bundle.variantControl}
+                  className="line-variant-trigger"
+                >
+                  <Select.Value />
+                  <Select.Icon>
+                    <ChevronDown size={14} aria-hidden="true" />
+                  </Select.Icon>
+                </Select.Trigger>
+                <Select.Portal>
+                  <Select.Content
+                    ref={inertSelectBackground}
+                    position="popper"
+                    sideOffset={6}
+                    className="select-content"
+                  >
+                    <Select.Viewport>
+                      {options.map(([value, option]) => (
+                        <Select.Item key={value} value={value} className="select-item">
+                          <Select.ItemText>{option.label}</Select.ItemText>
+                          <Select.ItemIndicator>
+                            <Check size={14} />
+                          </Select.ItemIndicator>
+                        </Select.Item>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            )}
+            <div className="playground-actions">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="copy-prompt"
+                aria-label={status === "Prompt copied" ? "Copied" : "Copy prompt"}
+                onClick={() => copy(promptFor(bundle, {}, variant), "Prompt")}
+              >
+                {status === "Prompt copied" ? <Check size={14} /> : <Copy size={14} />}
+                <span>{status === "Prompt copied" ? "Copied" : "Copy prompt"}</span>
+              </Button>
+            </div>
+          </>
+        }
+        preview={
+          <div className="chart-example not-prose">
+            <Preview {...(variant === undefined ? {} : { variant })} />
+          </div>
+        }
+        code={variant && variantCode ? variantCode[variant] : sourceCode}
+      />
       <span role="status" className="sr-only">
         {status}
       </span>
-    </Tabs>
+    </>
   );
 }

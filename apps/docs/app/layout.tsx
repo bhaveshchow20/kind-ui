@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { GlassDocsLayout } from "@/components/glass-docs-layout";
 import { Provider } from "@/components/provider";
 import { docRoute, publicPath } from "@/lib/routing.mjs";
-import { source } from "@/lib/source";
+import { primitiveSource, source } from "@/lib/source";
 import { indexingMetadata } from "../../indexing.mjs";
 
 export const metadata: Metadata = {
@@ -31,6 +31,17 @@ export default function Layout({ children }: { children: ReactNode }) {
         <Provider>
           <GlassDocsLayout
             tree={source.getPageTree()}
+            primitiveTree={{
+              name: "Components",
+              children: [
+                {
+                  type: "folder",
+                  name: "Components",
+                  defaultOpen: true,
+                  children: primitiveSource.getPageTree().children,
+                },
+              ],
+            }}
             nav={{
               title: (
                 <span className="kind-wordmark">
