@@ -16,6 +16,8 @@ export const legendButtonClassName =
   "inline-flex items-center gap-1.5 border border-solid border-[color:var(--border,currentColor)] rounded-[var(--radius,6px)] bg-[color:var(--muted,transparent)] text-inherit min-h-6 py-[3px] px-1.5 font-[family-name:inherit] text-[11px] leading-4 cursor-pointer data-[inactive=true]:text-[color:var(--muted-foreground,GrayText)] data-[inactive=true]:no-underline data-[inactive=true]:[&_[data-fill-pattern]]:opacity-50";
 
 export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
+  /** Explicit ordered metadata identities; omitted keys do not appear in the legend. */
+  itemKeys?: readonly string[];
   /** Use the existing square color swatch instead of configured icons or symbols. */
   hideIcon?: boolean;
   /** Explicit series emphasis; visibility click behavior remains controlled by chart. */
@@ -32,9 +34,22 @@ export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
 };
 
 /** Configured items focus independently; explicit visibility mode opts into hide/show. */
-export function Legend({ hideIcon = false, emphasis = "series", children, ...props }: LegendProps) {
+export function Legend({
+  itemKeys,
+  hideIcon = false,
+  emphasis = "series",
+  children,
+  ...props
+}: LegendProps) {
   const { config, paints, visibleSeries } = useChart();
   const interaction = useChartInteraction();
+  const items =
+    itemKeys === undefined
+      ? Object.entries(config)
+      : itemKeys.flatMap((key) => {
+          const item = Object.hasOwn(config, key) ? config[key] : undefined;
+          return item ? [[key, item] as const] : [];
+        });
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: Delegates clicks from native buttons, which already implement Enter and Space.
     <ul
@@ -55,7 +70,7 @@ export function Legend({ hideIcon = false, emphasis = "series", children, ...pro
           );
       }}
     >
-      {Object.entries(config).map(([key, item]) => {
+      {items.map(([key, item]) => {
         const visible = visibleSeries?.includes(key) ?? true;
         const inactive =
           !visible || (interaction.selected !== null && interaction.selected !== key);
