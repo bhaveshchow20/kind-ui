@@ -172,7 +172,7 @@ try {
   assert.equal(response?.status(), 200);
   await page.evaluate(() => document.fonts.ready);
   await expect(page.locator(`[data-component="treemap"] ${tileSelector}`).first()).toBeVisible();
-  await expect(page.locator(".line-workbench")).toHaveCount(2);
+  await expect(page.locator(".line-workbench")).toHaveCount(3);
   for (const id of Object.keys(bundles)) {
     const card = page.locator(`[data-component="${id}"]`);
     await card.scrollIntoViewIfNeeded();
@@ -214,7 +214,7 @@ try {
     primary.locator('[data-kind-ui="treemap-group"], [data-kind-ui="treemap-group-header"]'),
   ).toHaveCount(0);
   await expect(primary.locator(tileSelector)).toHaveCount(10);
-  await primary.getByRole("button", { name: "Copy prompt", exact: true }).focus();
+  await primary.locator("button.copy-prompt").focus();
   await tile(primary, "api").focus();
   await expect(primary.getByRole("tooltip")).toHaveAttribute("aria-label", "Compute / API");
   const compute = primary.locator(
