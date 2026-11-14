@@ -792,6 +792,7 @@ const exampleColors: Record<string, string[]> = {
     "var(--showcase-candlestick-neutral, #53657b)",
   ],
 };
+const candlestickSourceColors = ["#087f68", "#c43d54", "#53657b"];
 function colorsFor(entry: GalleryEntry) {
   return exampleColors[entry.id] ?? ["#8d77cb", "#bfaee4", "#e4dcf4"];
 }
@@ -811,17 +812,12 @@ function renderEntry(entry: GalleryEntry, options: DemoOptions, animate: boolean
 }
 function entryCode(entry: GalleryEntry, options: DemoOptions, animate: boolean) {
   if (entry.source === "activity") return activityCode(options, animate);
+  const colors = entry.id === "candlestick-sessions" ? candlestickSourceColors : colorsFor(entry);
   if (entry.source === "basic")
-    return snippet(findRecipe(recipes, entry.id), "plain", colorsFor(entry), animate, options);
+    return snippet(findRecipe(recipes, entry.id), "plain", colors, animate, options);
   if (entry.source === "advanced")
-    return advancedCode(
-      findRecipe(advancedRecipes, entry.id),
-      "plain",
-      colorsFor(entry),
-      animate,
-      options,
-    );
-  return newCode(findRecipe(newRecipes, entry.id), "plain", colorsFor(entry), animate, options);
+    return advancedCode(findRecipe(advancedRecipes, entry.id), "plain", colors, animate, options);
+  return newCode(findRecipe(newRecipes, entry.id), "plain", colors, animate, options);
 }
 export default function Page() {
   const { resolvedTheme } = useTheme();

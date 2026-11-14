@@ -91,6 +91,7 @@ test("Candlestick card preserves source-labelled inspection, copied code and ins
   expect(copied).toContain("selection={selection}");
   expect(copied).toContain("SIMULATED");
   expect(copied).toContain("setInterval(step, 700)");
+  expect(copied).not.toContain("--showcase-candlestick-");
   expect(copied).not.toMatch(/responsive|localhost|127\.0\.0\.1/);
   await page.keyboard.press("Escape");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
