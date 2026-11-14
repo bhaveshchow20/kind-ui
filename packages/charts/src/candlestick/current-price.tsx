@@ -5,7 +5,12 @@ import { DefaultZIndexes, usePlotArea, useYAxisScale, ZIndexLayer } from "rechar
 import { useChart } from "../chart-context.js";
 import { useCandlestick } from "./context.js";
 import { useLatestCandlestickGeometry } from "./latest-motion.js";
-import type { CandlestickPoint, CandlestickRecord } from "./model.js";
+import {
+  type CandlestickDirection,
+  type CandlestickPoint,
+  type CandlestickRecord,
+  getLatestCandlestickObservations,
+} from "./model.js";
 
 export const candlestickDirectionColors = {
   rising: "var(--candlestick-rising,#087f68)",
@@ -49,13 +54,12 @@ export function CandlestickCurrentPrice<Row extends object = CandlestickRecord>(
   const chart = useChart();
   const area = usePlotArea();
   const scale = useYAxisScale();
-  const observations = context.points.filter((point) => !point.gap && point.close !== undefined);
-  const point = observations.at(-1);
-  const prior = observations.at(-2)?.close ?? point?.open;
+  const [point, previous] = getLatestCandlestickObservations(context.points);
+  const prior = previous?.close ?? point?.open;
   const last = useRef<{
     price: number | undefined;
     original: object | undefined;
-    direction: "rising" | "falling" | "unchanged";
+    direction: CandlestickDirection;
   }>({ price: prior, original: point?.original, direction: "unchanged" });
   const value = point?.close;
   const direction =

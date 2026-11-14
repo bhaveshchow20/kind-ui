@@ -48,7 +48,12 @@ import {
 } from "./context.js";
 import { candlestickDirectionColors } from "./current-price.js";
 import { CandlestickSeriesPaint } from "./marks.js";
-import type { CandlestickPoint, CandlestickRecord } from "./model.js";
+import {
+  type CandlestickPoint,
+  type CandlestickRecord,
+  getCandlestickDirection,
+  getLatestCandlestickObservations,
+} from "./model.js";
 import { getCandlestickVisiblePoints } from "./viewport.js";
 export type CandlestickXAxisProps = Omit<
   ComponentProps<typeof XAxis>,
@@ -540,13 +545,10 @@ export function CandlestickReadout<Row extends object = CandlestickRecord>({
   const id = useId();
   useLayoutEffect(() => context.registerContent(id), [context.registerContent, id]);
   const inspected = useCandlestickInspection();
-  const latest = useMemo(() => {
-    for (let index = context.points.length - 1; index >= 0; index--) {
-      const item = context.points[index];
-      if (item && !item.gap) return item;
-    }
-    return null;
-  }, [context.points]);
+  const latest = useMemo(
+    () => getLatestCandlestickObservations(context.points)[0] ?? null,
+    [context.points],
+  );
   const point = inspected ?? latest;
   if (context.loading) return null;
   return (
@@ -620,14 +622,7 @@ function CandleValues({
       series: context.priceSeries,
     });
   }
-  const direction =
-    point.close !== undefined && point.open !== undefined
-      ? point.close > point.open
-        ? "rising"
-        : point.close < point.open
-          ? "falling"
-          : "unchanged"
-      : "unchanged";
+  const direction = getCandlestickDirection(point);
   return (
     <>
       <div className={inline ? "mb-1" : "mb-1 font-medium"}>

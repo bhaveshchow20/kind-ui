@@ -62,20 +62,28 @@ test("current price follows latest movement and native right/log scale independe
   expect(errors).toEqual([]);
 });
 
+test("current price remains the latest non-gap supplied candle close", async ({ page }) => {
+  await page.goto(`${url}/?current-price&trailing-gap`);
+  await expect(page.locator(currentPrice).locator("text")).toContainText("112");
+  await expect(page.locator('[data-kind-ui="candlestick-readout"]')).toContainText("2026-03-11");
+});
+
 test("volume direction colors match candles and consumer paint overrides remain authoritative", async ({
   page,
 }) => {
   await page.goto(`${url}/?current-price`);
   const volumes = page.locator('[data-kind-ui="candlestick-volume-mark"]');
-  await expect(volumes.first()).toHaveAttribute("fill", "#15803d");
-  await expect(volumes.nth(1)).toHaveAttribute("fill", "#be123c");
+  const candles = page.locator('[data-kind-ui="candlestick-mark"]');
+  for (const index of [0, 1]) {
+    const color = await candles.nth(index).getAttribute("color");
+    expect(color).not.toBeNull();
+    await expect(volumes.nth(index)).toHaveAttribute("fill", color ?? "");
+  }
   await expect(volumes.first()).toHaveAttribute("fill-opacity", "0.35");
-  await expect(page.locator('[data-kind-ui="candlestick-mark"]').first()).toHaveAttribute(
-    "color",
-    "#15803d",
-  );
   await page.getByRole("button", { name: "Latest Neutral", exact: true }).click();
-  await expect(volumes.last()).toHaveAttribute("fill", "#64748b");
+  const neutral = await candles.last().getAttribute("color");
+  expect(neutral).not.toBeNull();
+  await expect(volumes.last()).toHaveAttribute("fill", neutral ?? "");
   await page.goto(`${url}/?current-price&volume-paint`);
   await expect(volumes.first()).toHaveAttribute("fill", "purple");
   await expect(volumes.first()).toHaveAttribute("fill-opacity", "0.7");

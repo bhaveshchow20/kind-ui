@@ -32,6 +32,16 @@ test("rejects missing documentation, public package import and Tailwind setup", 
     /Removed stylesheet export/,
   );
 });
+test("rejects public package versions and prerelease positioning", () => {
+  assert.throws(
+    () => check(`${readme}\n\`\`\`sh\nnpm install @kind-ui/charts@0.5.0\n\`\`\``),
+    /specific package version/,
+  );
+  assert.throws(
+    () => check(`${readme}\nCandlestick charts are coming in a future release.`),
+    /prerelease or future work/,
+  );
+});
 test("negative fixtures remove Tailwind setup from every example", () => {
   const multipleExamples = `[Documentation](${documentationSource})
 

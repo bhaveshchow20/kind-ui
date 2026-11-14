@@ -67,9 +67,19 @@ const historyPaintBrushProps: NonNullable<
 const volumeRows: Row[] = initial.map((row, index) =>
   row.gap ? row : { ...row, volume: index === 0 || index === 4 ? 1e9 : index === 1 ? 200 : 100 },
 );
+const trailingGapRows: Row[] = [
+  ...initial,
+  { time: "2026-03-12", gap: true, source: "Explicit missing bucket" },
+];
 export function CandlestickHost() {
   const [rows, setRows] = useState<Row[]>(
-    params.has("initial-empty") ? [] : params.has("overscan-volume") ? volumeRows : initial,
+    params.has("initial-empty")
+      ? []
+      : params.has("overscan-volume")
+        ? volumeRows
+        : params.has("trailing-gap")
+          ? trailingGapRows
+          : initial,
   );
   const [spacing, setSpacing] = useState<CandlestickSpacing>("ordinal");
   const [small, setSmall] = useState(false);
@@ -530,11 +540,11 @@ export function CandlestickHost() {
         />
         <CandlestickChart.Crosshair />
         <CandlestickChart.Tooltip />
-        {new URLSearchParams(location.search).has("strict-probe") && (
-          <CandlestickChart.Readout>
-            {() => <motion.span>Full consumer Motion probe</motion.span>}
-          </CandlestickChart.Readout>
-        )}
+        <CandlestickChart.Readout>
+          {params.has("strict-probe")
+            ? () => <motion.span>Full consumer Motion probe</motion.span>
+            : undefined}
+        </CandlestickChart.Readout>
         {rows.length < 100 && (
           <CandlestickChart.Table<Row>
             caption="Observed session bars"
