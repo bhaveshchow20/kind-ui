@@ -156,6 +156,13 @@ void (<FunnelChart.Stages stageProps={() => ownedFocusKey} />);
 // @ts-expect-error Funnel legend order and stage membership remain data-owned.
 void (<FunnelChart.Legend itemKeys={["stale"]} />);
 
+// @ts-expect-error Labels own their generated list children, including through structural spreads.
+void (<FunnelChart.Labels {...ownedChildren} />);
+// @ts-expect-error Tooltip owns its generated content, including through structural spreads.
+void (<FunnelChart.Tooltip {...ownedChildren} />);
+// @ts-expect-error DataTable owns its generated table children, including through structural spreads.
+void (<FunnelChart.DataTable {...ownedChildren} caption="Stage data" />);
+
 const ownedInnerHTML = {
   className: "consumer",
   dangerouslySetInnerHTML: { __html: "<title>Replaced stage</title>" },

@@ -853,6 +853,7 @@ export type FunnelLabelsProps<T = FunnelDatum> = Omit<
   ComponentPropsWithRef<"ul">,
   "children" | "dangerouslySetInnerHTML"
 > & {
+  children?: never;
   dangerouslySetInnerHTML?: never;
   render?: (stage: FunnelStage<T>) => ReactNode;
 };
@@ -898,6 +899,7 @@ export type FunnelTooltipProps<T = FunnelDatum> = Omit<
   ComponentPropsWithRef<"div">,
   "children" | "id" | "role" | "dangerouslySetInnerHTML"
 > & {
+  children?: never;
   dangerouslySetInnerHTML?: never;
   Content?: ComponentType<FunnelTooltipContentProps<T>>;
   valueAnimation?: TooltipContentProps["valueAnimation"];
@@ -962,7 +964,12 @@ export interface FunnelDataColumn<T = FunnelDatum> {
 export type FunnelDataTableProps<T = FunnelDatum> = Omit<
   ComponentPropsWithRef<"table">,
   "children" | "dangerouslySetInnerHTML"
-> & { dangerouslySetInnerHTML?: never; caption: string; columns?: readonly FunnelDataColumn<T>[] };
+> & {
+  children?: never;
+  dangerouslySetInnerHTML?: never;
+  caption: string;
+  columns?: readonly FunnelDataColumn<T>[];
+};
 export function FunnelDataTable<T = FunnelDatum>({
   caption,
   columns = [],
