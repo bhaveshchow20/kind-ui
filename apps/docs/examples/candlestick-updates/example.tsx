@@ -185,13 +185,6 @@ export function UpdatedCandlestickChart() {
               : "Inspect the corrected interval, the feed gap or the partial latest candle; Enter selects."
           }
         </CandlestickChart.Readout>
-        <div className="sr-only">
-          <CandlestickChart.Table<Observation>
-            caption="Current observations"
-            renderMetadata={(point) => point.original.source}
-            metadataLabel="Source"
-          />
-        </div>
       </CandlestickChart>
     </div>
   );

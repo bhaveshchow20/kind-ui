@@ -44,6 +44,10 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
   await expect(binary.locator('[data-kind-ui="candlestick-readout"]')).toContainText("partial");
   await expect(binary.locator('[data-kind-ui="candlestick-readout"]')).toContainText("$0.59");
 
+  const updates = page.locator('[data-component="candlestick-updates"]');
+  await expect(updates.locator('[data-kind-ui="candlestick-table"]')).toHaveCount(0);
+  await expect(updates.getByText("Current observations", { exact: true })).toHaveCount(0);
+
   await expect(page.getByRole("heading", { name: "Live updates", exact: true })).toHaveCount(0);
   const panels = await page
     .locator('[data-component^="candlestick"] .preview-panel')

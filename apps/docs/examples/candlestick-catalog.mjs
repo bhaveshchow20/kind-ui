@@ -136,8 +136,7 @@ export const family = {
       ],
     },
     "candlestick-updates": {
-      caption:
-        "Initial observations before updates: original simulated trade OHLC in USD, epoch milliseconds in UTC. The interactive Current observations table reflects replacements, corrections, appends and prepends.",
+      caption: "Initial simulated trade OHLC observations in USD.",
       columns: {
         time: "Interval (epoch ms)",
         open: "Open (USD)",

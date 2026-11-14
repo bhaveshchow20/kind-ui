@@ -88,14 +88,9 @@ test("Candlestick copy prompts preserve the parts actually included in each reci
       ),
     );
     assert.match(recipeSource, /<CandlestickChart\.Readout/);
-    if (example.id === "candlestick-updates") {
-      assert.match(recipeSource, /<CandlestickChart\.Table/);
-      assert.match(prompt, /Preserve the explicit readout and data table parts/);
-    } else {
-      assert.doesNotMatch(recipeSource, /<CandlestickChart\.Table/);
-      assert.match(prompt, /Preserve the explicit readout part/);
-      assert.doesNotMatch(prompt, /data table|alternative tables/);
-    }
+    assert.doesNotMatch(recipeSource, /<CandlestickChart\.Table/);
+    assert.match(prompt, /Preserve the explicit readout part/);
+    assert.doesNotMatch(prompt, /data table|alternative tables/);
     assert.doesNotMatch(
       prompt,
       /source candidate|wait for|unreleased|checksum|provenance|127\.0\.0\.1|localhost/i,
