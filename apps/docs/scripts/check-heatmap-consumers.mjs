@@ -15,7 +15,7 @@ function writeFiles(files) {
 }
 writeFiles(verificationFiles(bundles.heatmap));
 mkdirSync(path.join(root, "vendor"), { recursive: true });
-cpSync("vendor/kind-ui-charts-0.1.0.tgz", path.join(root, "vendor/kind-ui-charts-0.1.0.tgz"));
+cpSync("vendor/kind-ui-charts-0.1.1.tgz", path.join(root, "vendor/kind-ui-charts-0.1.1.tgz"));
 execFileSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
   cwd: root,
   stdio: "inherit",

@@ -29,9 +29,23 @@ Chart-owned angular entrance respects reduced motion. `animationDirection` chang
 
 ## Controlled categories
 
-Filter rows when legend state changes: `Root.visibleSeries` alone does not hide sectors. Remaining sectors use the selected total; this example allows an empty selection.
+This example filters rows in consumer state when legend visibility changes. `Root.visibleSeries` alone does not hide an unbound PieSeries. Remaining sectors use the selected total. Hiding the final visible eligible category through the legend is rejected with a scoped announcement; Hide all categories and Show all categories explicitly update consumer-owned visibility, including an empty selection and restoration.
 
 <ChartExample id="pie-visibility" />
+
+Alternatively, set `interactionBinding="root"` on PieSeries and give Root a category-kind `interaction` with a settled `eligibleKeys` snapshot. Supply explicit data and unique, nonempty string category IDs. Include hidden categories and zero values in the snapshot. The binding filters original rows and positional Cells together before native geometry is computed; pass the complete rows rather than duplicating the filter.
+
+With `markActivation="matching-legend"`, native sector and legend activation share Root's visibility or focus action. Focus highlights without filtering; Enter/Space activates and Escape requests reset. Consumer Cell and series handlers run first and can veto with `preventDefault()`; `interaction.onBeforeInteraction` can also veto. Shared actions use the current committed state, while the pressed category is captured from the original rendered row before a consumer can synchronously reorder or filter it. A Cell may override native payload fields or paint without replacing this shared identity. Custom rendering retains its native ownership; keep a legend or explicit controls for accessible interaction.
+
+## Initial tooltip
+
+`defaultPinnedCategory` selects an initial tooltip by category identity. It requires one direct PieSeries with explicit rows and `categoryKey`, and one direct Tooltip; Fragments are allowed, other direct children and multiple series are unsupported for this pin. Use `Tooltip.itemKey` to resolve your original category keys.
+
+The captured category follows row reorder. A bound Pie resolves its index among visible rows; an unbound Pie keeps its consumer-rendered row indices. Removing or hiding the pinned identity clears the pin permanently for that mount. An unknown initial category has no pin. An unbound Pie also clears an ambiguous duplicate pin; Root-bound rows instead require unique category keys and throw for duplicates. Pointer movement/down, focus or a key press also dismisses it. Changing the default or restoring a row does not repin; remount to initialize it again. Explicit Tooltip `active` and `defaultIndex` retain their ownership. The initial pin is separate from Root focus selection and selective glow.
+
+## Loading
+
+Set `loading` explicitly and use `loadingLabel` for the pending status. The boundary preserves chart layout, blocks chart inspection while pending and renders a Pie loading illustration. Empty data alone does not imply loading; keep an explicit empty-result message. Loading release and interruption preserve consumer geometry and motion ownership.
 
 ## Materials
 
@@ -41,9 +55,7 @@ Choose plain, paper, clay or glow. Percentage labels remain inside sectors; cate
 
 ### Selective glow
 
-`glowCategories` is a source-package addition. The deployed previews continue to use the centrally pinned package; the runnable example is in `examples/chart/pie-selective-glow.tsx` until coordinated package integration.
-
-Use `glowCategories={["design"]}` with `categoryKey="key"` to give only Design a halo. Selection uses original row IDs, so reorder and filtering retain category colors and membership. Unknown or removed IDs are ignored; restoring a row restores its glow. An empty list retains the series `material`. Selected sectors use glow instead of paper or clay; `material="glow"` still glows every default sector.
+Use `glowCategories={["design"]}` with `categoryKey="key"` to give only Design a halo. Membership uses original row IDs, so reorder and filtering retain category colors and membership. Unknown or removed IDs are ignored; restoring a row restores its glow. An empty list retains the series `material`. Listed categories use glow instead of paper or clay; `material="glow"` still glows every default sector.
 
 ```tsx title="Selected category on a rounded donut"
 <Chart.PieSeries
@@ -92,6 +104,9 @@ Use inside a sized `ResponsiveContainer`.
 | --- | --- | --- | --- |
 | `animate` | `boolean \| PieAnimation` | `false` | Sector entrance and interaction motion; respects reduced motion. |
 | `animationDirection` | `"clockwise" \| "anticlockwise"` | `"clockwise"` | Continuous entrance sweep; native geometry and row order stay unchanged. |
+| `defaultPinnedCategory` | `string` | Off | Initial category tooltip; requires one direct category-keyed PieSeries and one Tooltip. Dismissal is permanent until remount. |
+| `loading` | `boolean` | `false` | Explicit pending state with a chart-owned loading illustration and blocked inspection. |
+| `loadingLabel` | `string` | `"Loading chart"` | Accessible pending status. |
 | `accessibilityLayer` | `boolean` | `true` in Recharts | Enables native keyboard inspection; set explicitly here. |
 | `aria-label` / `aria-labelledby` | `string` | — | Accessible chart name. |
 | `children` | `ReactNode` | — | Explicit PieSeries, labels and tooltip. |
@@ -111,6 +126,7 @@ Value and category identity use separate fields.
 | `data` | `Row[]` | — | Consumer-owned category rows. |
 | `dataKey` | `string \| number \| ((row: Row) => unknown)` | `"value"` in Recharts | Numeric value field or accessor; set explicitly here. |
 | `categoryKey` | `string \| ((row: Row) => string)` | Off | Resolves an own top-level field or accessor into `Root.config`; requires explicit series data and string IDs. |
+| `interactionBinding` | `"root"` | Off | Shares category identities with category-kind Root interaction; filters original rows and Cells using Root visibility. |
 | `nameKey` | `string \| number \| ((row: Row) => unknown)` | `"name"` | Native category name; use config keys for semantic identity. |
 | `innerRadius` | `number` or percentage | `0` | A positive radius produces a Donut. |
 | `outerRadius` | `number` or percentage | `"80%"` | Sector size; percentages use Recharts' available radius. |
@@ -124,7 +140,7 @@ Value and category identity use separate fields.
 
 </div>
 
-Explicit series fill disables category defaults; datum or Cell fill wins over them. Custom shapes retain rendering control. Filter rows explicitly; `PieSeries` has no `seriesKey`. Custom shapes, filters or transforms can bypass Kind paint. See [Recharts Pie](https://recharts.github.io/en-US/api/Pie/).
+Explicit series fill disables category defaults; datum or Cell fill wins over them. Custom shapes retain rendering control. Choose consumer row filtering or explicit Root binding; `PieSeries` has no `seriesKey`. Custom shapes, filters or transforms can bypass Kind paint. See [Recharts Pie](https://recharts.github.io/en-US/api/Pie/).
 
 ## Shared components
 

@@ -2,9 +2,18 @@ import type * as Chart from "@kind-ui/charts";
 
 // Focused documentation views of the installed public declarations.
 // Keep native engine props in the original exported types rather than duplicating them here.
-export type Root = Pick<
+// Distribute over the visibility branches so controlled/defaulted ownership stays exclusive.
+type DistributivePick<Props, Keys extends keyof Props> = Props extends unknown
+  ? Pick<Props, Keys>
+  : never;
+export type Root = DistributivePick<
   Chart.RootProps,
-  "config" | "emphasis" | "visibleSeries" | "onVisibleSeriesChange"
+  | "config"
+  | "emphasis"
+  | "visibleSeries"
+  | "defaultVisibleSeries"
+  | "onVisibleSeriesChange"
+  | "interaction"
 >;
 export type SeriesMetadata = Chart.SeriesConfig[string];
 export type Legend = Pick<Chart.LegendProps, "emphasis" | "hideIcon" | "children" | "className">;

@@ -1,6 +1,6 @@
 ---
 title: Root
-description: Share series labels, colors and visibility across a chart.
+description: Share series labels, colors, visibility and focus across a chart.
 ---
 
 `Root` connects your plot, legend and tooltip to a [series config](/docs/chart-components/series-config/).
@@ -28,7 +28,7 @@ const config = {
 
 ## Visibility
 
-Pass `visibleSeries` to select which configured series are shown. Add `onVisibleSeriesChange` to make [Legend](/docs/chart-components/legend/) items toggle buttons. The callback requires `visibleSeries`; keep that selection in your own state.
+Pass `visibleSeries` to control visibility in your own state. Add `onVisibleSeriesChange` to receive [Legend](/docs/chart-components/legend/) requests; without it, controlled visibility is read-only unless you configure focus interaction.
 
 ```tsx
 import { useState } from "react";
@@ -43,6 +43,47 @@ const [visibleSeries, setVisibleSeries] = useState<string[]>(Object.keys(config)
   {/* Legend and plot */}
 </Chart.Root>
 ```
+
+For Root-owned visibility, pass `defaultVisibleSeries`. Root updates this initial selection internally; an optional `onVisibleSeriesChange` observes accepted changes. Choose `visibleSeries` or `defaultVisibleSeries`, never both. A visibility callback requires one of these arrays.
+
+```tsx
+<Chart.Root config={config} defaultVisibleSeries={Object.keys(config)}>
+  <Chart.Legend />
+  {/* Legend and plot share Root-owned visibility */}
+</Chart.Root>
+```
+
+Series adapters consume this visibility. An unbound [PieSeries](/docs/components/pie/) keeps consumer-owned row filtering; opt into its category binding to let Root filter rows and Cells together.
+
+Legend requests cannot hide the final visible eligible item. Root preserves visibility and announces “At least one item must remain visible.” An external controlled update may still set `visibleSeries={[]}`; your data alternative and empty-result message remain consumer-owned.
+
+## Interaction and eligibility
+
+Use `interaction` to declare the shared identity kind and a settled `eligibleKeys` snapshot. Include hidden Root items and zero values; exclude identities unavailable in the current data snapshot. Keep IDs stable across reorder. Native adapters also report availability. Without an explicit snapshot, Root uses registered identities, falling back to config keys when none are registered.
+
+Eligible legend items can be controls. Genuinely unavailable items retain their labels without a toggle button; an item hidden through Root remains eligible for restoration. Empty data or native `hide` does not write a new visibility array or call the visibility callback. Availability changes also do not synthesize a controlled selection callback.
+
+`mode="visibility"` is the default. `mode="focus"` highlights an identity without filtering data. Use `kind="series"` for native series, `"category"` for bound Pie categories, or `"node"` for node focus; node interaction supports focus only.
+
+```tsx
+<Chart.Root
+  config={config}
+  interaction={{
+    kind: "series",
+    mode: "focus",
+    eligibleKeys: Object.keys(config),
+    defaultSelected: null,
+    markActivation: "matching-legend",
+  }}
+>
+  <Chart.Legend />
+  {/* Participating marks and legend share focus */}
+</Chart.Root>
+```
+
+Focus selection can be controlled with `selected` and the required `onSelectionChange`, or initialized with `defaultSelected` and an optional callback. Do not combine them or switch selection ownership during a mount. Activating the selected identity clears it; Escape requests a focus reset. Root announces accepted focus and visibility changes in a scoped live region. `markActivation="matching-legend"` opts participating native marks into the same actions; its default is no mark activation.
+
+Consumer handlers run first. `event.preventDefault()` or `interaction.onBeforeInteraction(request)` returning `false` vetoes the action, including Escape reset. A request supplies its identity (or `null` for reset), source, mode and original event. Shared actions use the current committed state and callbacks, including after a consumer handler updates state synchronously.
 
 ## Props
 

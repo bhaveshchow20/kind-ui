@@ -16,7 +16,7 @@ Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
     <Chart.ComboChart data={data} animate accessibilityLayer aria-label="Monthly production in units">
       <Chart.CartesianGrid vertical={false} />
       <Chart.XAxis dataKey="period" />
-      <Chart.YAxis domain={[0, 1200]} />
+      <Chart.YAxis domain={[0, 1200]} width={96} />
       <Chart.AreaSeries dataKey="capacity" type="stepAfter" fillOpacity={0.18} />
       <Chart.BarSeries dataKey="shipped" maxBarSize={32} />
       <Chart.LineSeries dataKey="target" type="linear" dot={false} strokeDasharray="6 4" />
@@ -27,6 +27,8 @@ Combine `BarSeries`, `AreaSeries` and `LineSeries` in one plot.
 ```
 
 Choose each series’ interpolation and paint explicitly. `ComboChart` uses native composed-chart props, without Line’s configured `series` or `xDataKey` shortcuts.
+
+These examples reserve numeric axis widths so labels remain present through Code/Preview changes and resizing. Choose widths that fit your units and text size; the stacked example reserves space for both revenue and percentage labels.
 
 ## Stacks and two axes
 

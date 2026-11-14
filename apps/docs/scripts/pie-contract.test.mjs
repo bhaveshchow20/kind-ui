@@ -6,7 +6,7 @@ import { filesFor, promptFor } from "../lib/example-files.mjs";
 
 const bundles = JSON.parse(readFileSync("generated/pie-examples.json", "utf8"));
 function assertCategoryDefaults(source, rows) {
-  assert.match(source, /<Chart.Root config=\{config\}/);
+  assert.match(source, /<Chart.Root\s+config=\{config\}/);
   assert.match(source, /categoryKey="key"/);
   const parsed = ts.createSourceFile("example.tsx", source, ts.ScriptTarget.Latest, true);
   const declaration = parsed.statements

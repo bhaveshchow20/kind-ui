@@ -8,6 +8,56 @@ const bundles = JSON.parse(readFileSync("generated/combo-examples.json", "utf8")
 mkdirSync("artifacts", { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH });
 const findings = [];
+async function checkQuantitativeAxes(page, id, viewport) {
+  const surface = page.locator(`[data-component="${id}"] .recharts-surface`);
+  const axes = surface.locator("g.recharts-yAxis");
+  await expect(axes).toHaveCount(id === "combo-stacked" ? 2 : 1);
+  const tickGroups = surface.locator("g.recharts-yAxis-tick-labels");
+  await expect(tickGroups).toHaveCount(id === "combo-stacked" ? 2 : 1);
+  for (const axis of await tickGroups.all())
+    await expect
+      .poll(() => axis.locator("text.recharts-cartesian-axis-tick-value").count())
+      .toBeGreaterThan(0);
+  const labels = await surface.evaluate((svg) => {
+    const outer = svg.getBoundingClientRect();
+    return [...svg.querySelectorAll("g.recharts-yAxis-tick-labels")].map((axis) =>
+      [...axis.querySelectorAll("text.recharts-cartesian-axis-tick-value")].map((tick) => {
+        const box = tick.getBoundingClientRect();
+        return {
+          text: tick.textContent?.trim(),
+          width: box.width,
+          inset: box.left - outer.left,
+          inside: box.left >= outer.left - 1 && box.right <= outer.right + 1,
+        };
+      }),
+    );
+  });
+  for (const axis of labels) {
+    assert.ok(axis.length > 0, `${id}: empty quantitative axis at ${viewport}`);
+    assert.ok(
+      axis.every((tick) => tick.inset >= 7 && tick.inside),
+      `${id}: axis labels at ${viewport}: ${JSON.stringify(axis)}`,
+    );
+  }
+  if (id === "combo-stacked") {
+    assert.equal(
+      labels.filter((axis) => axis.every((tick) => /^\$[\d,.]+k$/.test(tick.text))).length,
+      1,
+      `Missing revenue scale at ${viewport}`,
+    );
+    assert.equal(
+      labels.filter((axis) => axis.every((tick) => /^[\d,.]+%$/.test(tick.text))).length,
+      1,
+      `Missing percentage scale at ${viewport}`,
+    );
+  } else {
+    assert.ok(
+      labels.every((axis) => axis.every((tick) => /^[\d,.]+$/.test(tick.text))),
+      `${id}: invalid numeric scale at ${viewport}`,
+    );
+  }
+  findings.push({ check: "individual quantitative axes", id, viewport, labels });
+}
 try {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1080 },
@@ -55,6 +105,7 @@ try {
       await workbench.locator(".line-code-viewport").evaluate((node) => node.scrollTop > 0),
     );
     await workbench.getByRole("tab", { name: "Preview", exact: true }).click();
+    await checkQuantitativeAxes(page, id, "desktop after Code/Preview");
   }
   const stacked = page.locator('[data-component="combo-stacked"]');
   await stacked.scrollIntoViewIfNeeded();
@@ -149,7 +200,7 @@ try {
   await page.screenshot({ path: "artifacts/combo-desktop.png", fullPage: true });
   await stacked.scrollIntoViewIfNeeded();
   await stacked.screenshot({ path: "artifacts/combo-stacked.png" });
-  for (const width of [320, 375]) {
+  for (const width of [320, 375, 320]) {
     await page.setViewportSize({ width, height: 812 });
     await page.evaluate(() => scrollTo(0, 0));
     await page.waitForTimeout(200);
@@ -159,6 +210,10 @@ try {
     );
     await page.screenshot({ path: `artifacts/combo-mobile-${width}.png`, fullPage: true });
     for (const id of Object.keys(bundles)) {
+      const workbench = page.locator(`[data-component="${id}"]`);
+      await workbench.getByRole("tab", { name: "Code", exact: true }).click();
+      await workbench.getByRole("tab", { name: "Preview", exact: true }).click();
+      await checkQuantitativeAxes(page, id, `${width}px after Code/Preview`);
       const axisBounds = await page
         .locator(`[data-component="${id}"] .recharts-surface`)
         .evaluate((svg) => {
@@ -172,7 +227,7 @@ try {
               inset: tick.getBoundingClientRect().left - left,
             }));
         });
-      assert.ok(axisBounds.length > 0);
+      assert.ok(axisBounds.length > 0, `${id}: missing numeric ticks at ${width}px`);
       assert.ok(
         axisBounds.every((tick) => tick.inset >= 7),
         `${id}: ${JSON.stringify(axisBounds)}`,
@@ -190,6 +245,7 @@ try {
   await page.waitForTimeout(200);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   for (const id of Object.keys(bundles)) {
+    await checkQuantitativeAxes(page, id, "200% text");
     const bounds = await page
       .locator(`[data-component="${id}"] .recharts-surface`)
       .evaluate((svg) => {
@@ -206,7 +262,7 @@ try {
             };
           });
       });
-    assert.ok(bounds.length > 0);
+    assert.ok(bounds.length > 0, `${id}: missing numeric ticks at 200% text`);
     assert.ok(
       bounds.every((tick) => tick.inside),
       `${id}: clipped labels ${JSON.stringify(bounds)}`,
