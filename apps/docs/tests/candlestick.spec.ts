@@ -33,16 +33,16 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
   await expect(asset.locator('[data-kind-ui="candlestick-history-navigator"]')).toBeVisible();
   await asset.locator('[data-kind-ui="chart"]').focus();
   await page.keyboard.press("Home");
-  await expect(asset.locator('[data-kind-ui="candlestick-content"]')).toContainText("08:00");
+  await expect(asset.locator('[data-kind-ui="candlestick-readout"]')).toContainText("08:00");
 
   const binary = page.locator('[data-component="candlestick-binary"]');
   await expect(binary.locator(marks)).toHaveCount(6);
   await expect(binary.locator('[data-kind-ui="candlestick-volume-mark"]')).toHaveCount(0);
   await binary.locator('[data-kind-ui="chart"]').focus();
   await page.keyboard.press("End");
-  await expect(binary.locator('[data-kind-ui="candlestick-content"]')).toContainText("Bid quotes");
-  await expect(binary.locator('[data-kind-ui="candlestick-content"]')).toContainText("partial");
-  await expect(binary.locator('[data-kind-ui="candlestick-content"]')).toContainText("$0.59");
+  await expect(binary.locator('[data-kind-ui="candlestick-readout"]')).toContainText("Bid quotes");
+  await expect(binary.locator('[data-kind-ui="candlestick-readout"]')).toContainText("partial");
+  await expect(binary.locator('[data-kind-ui="candlestick-readout"]')).toContainText("$0.59");
 
   await expect(page.getByRole("heading", { name: "Live updates", exact: true })).toHaveCount(0);
   const panels = await page
@@ -88,8 +88,8 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
   expect(sourceResponse.ok()).toBe(true);
   expect(copiedSource.trimEnd()).toBe((await sourceResponse.text()).trimEnd());
   expect(copiedSource).toContain("<CandlestickChart");
-  expect(copiedSource).toContain("<CandlestickSeries");
-  expect(copiedSource).toContain("<CandlestickVolume");
+  expect(copiedSource).toContain("<CandlestickChart.Series");
+  expect(copiedSource).toContain("<CandlestickChart.Volume");
   for (const [id, example] of [
     ["candlestick", asset],
     ["candlestick-binary", binary],
@@ -99,8 +99,9 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
     const selectedSource =
       id === "candlestick" ? "variants/ready/example.tsx" : `src/examples/${id}/example.tsx`;
     expect(prompt).toContain(`https://kindui.dev/charts/docs/examples/${id}/${selectedSource}`);
-    expect(prompt).toContain("Reference package: @kind-ui/charts@0.6.0.");
-    expect(prompt).toContain("Install @kind-ui/charts@^0.6.0 and its documented");
+    expect(prompt).toContain("Reference package: @kind-ui/charts.");
+    expect(prompt).toContain("Install @kind-ui/charts and its documented");
+    expect(prompt).not.toMatch(/@kind-ui\/charts@/);
     expect(prompt).toContain("Preserve the explicit readout part");
     expect(prompt).not.toMatch(/data table|alternative tables/);
     expect(prompt).not.toMatch(
@@ -190,7 +191,7 @@ test("Candlestick installation and section copy controls fit narrow layouts with
           layout.pageWidth,
           JSON.stringify({ width, fontFamily, fontSize, layout }),
         ).toBeLessThanOrEqual(layout.viewport + 1);
-        const inspectedHeading = page.locator("#inspection-and-accessibility");
+        const inspectedHeading = page.locator("#data-and-financial-ownership");
         await expect(inspectedHeading.locator(":scope > a")).toBeVisible();
         const copyAction = inspectedHeading.getByRole("button", {
           name: "Copy Anchor Link",
@@ -298,7 +299,7 @@ for (const theme of ["light", "dark"]) {
       const frame = container.locator('[data-kind-ui="chart"]').first();
       await frame.focus();
       await frame.press("End");
-      await expect(container.locator('[data-kind-ui="candlestick-content"]')).not.toBeEmpty();
+      await expect(container.locator('[data-kind-ui="candlestick-readout"]')).not.toBeEmpty();
       const layout = await container.locator(".preview-panel").evaluate((panel) => {
         const bounds = panel.getBoundingClientRect();
         const composition = panel.querySelector(".chart-example")?.getBoundingClientRect();

@@ -155,7 +155,7 @@ test("each registered family has a complete public consumer", () => {
   assert.equal(manifest.private, true);
   assert.equal(manifest.devDependencies.tailwindcss, "4.3.3");
   assert.equal(manifest.devDependencies["@tailwindcss/vite"], "4.3.3");
-  assert.equal(manifest.dependencies["@kind-ui/charts"], `^${provenance.version}`);
+  assert.equal(manifest.dependencies["@kind-ui/charts"], "latest");
   assert.ok(!Object.hasOwn(bundle.files, "package-lock.json"));
   for (const file of [
     "package.json",
@@ -384,7 +384,7 @@ test("copied examples focus on chart rendering", () => {
     const source = readFileSync(`examples/${id}/example.tsx`, "utf8");
     if (id === "candlestick-updates") {
       // This recipe explicitly teaches identity-preserving updates and their typed row table.
-      assert.match(source, /<CandlestickChart\.DataTable/);
+      assert.match(source, /<CandlestickChart\.Table/);
     } else {
       assert.ok(
         !/data-chart-alternative|<table\b|<\w+(?:Chart)?\.(?:Table|DataTable)\b/.test(source),

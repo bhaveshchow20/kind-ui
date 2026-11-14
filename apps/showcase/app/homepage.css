@@ -14,6 +14,9 @@
   --candlestick-rising: #087f68;
   --candlestick-falling: #c43d54;
   --candlestick-neutral: #53657b;
+  --showcase-candlestick-rising: #087f68;
+  --showcase-candlestick-falling: #c43d54;
+  --showcase-candlestick-neutral: #53657b;
   --chart-grid: #eee;
   --chart-axis: #939393;
   --popover: #ffffffeb;
@@ -34,6 +37,9 @@
   --candlestick-rising: #22b99f;
   --candlestick-falling: #f57888;
   --candlestick-neutral: #94a3b8;
+  --showcase-candlestick-rising: #22b99f;
+  --showcase-candlestick-falling: #f57888;
+  --showcase-candlestick-neutral: #94a3b8;
   --chart-grid: #252525;
   --chart-axis: #888;
   --popover: #141414eb;

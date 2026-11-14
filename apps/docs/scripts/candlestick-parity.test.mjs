@@ -78,7 +78,8 @@ test("Candlestick copy prompts preserve the parts actually included in each reci
     };
     const validated = componentBundlesSchema.parse({ [example.id]: recipeBundle })[example.id];
     const prompt = promptFor(validated, {});
-    assert.match(prompt, /Reference package: @kind-ui\/charts@0\.5\.0\./);
+    assert.match(prompt, /Reference package: @kind-ui\/charts\./);
+    assert.doesNotMatch(prompt, /@kind-ui\/charts@/);
     assert.match(prompt, /Install @kind-ui\/charts and its documented/);
     assert.match(prompt, /https:\/\/kindui\.dev\/charts\/docs\/components\/candlestick\//);
     assert.ok(
@@ -120,6 +121,8 @@ test("Candlestick Usage follows the standard short composition and shared compon
   assert.ok(parsed.statements.length > 0);
   assert.match(page, /\| Component \| Purpose \|/);
   assert.match(usage, /import \{ CandlestickChart \} from "@kind-ui\/charts"/);
+  assert.match(page, /latest nongap candle close/);
+  assert.match(page, /Feed errors remain app-owned/);
   const emitted = ts.transpileModule(usage, {
     fileName: "candlestick-example.tsx",
     reportDiagnostics: true,
@@ -152,7 +155,7 @@ test("generated Candlestick examples expose complete source and standard install
     assert.equal(actual.version, "0.5.0");
     assert.equal(
       JSON.parse(actual.files["package.json"]).dependencies["@kind-ui/charts"],
-      "^0.5.0",
+      "latest",
     );
     assert.equal(
       actual.files[`src/examples/${example.id}/example.tsx`],
@@ -163,7 +166,8 @@ test("generated Candlestick examples expose complete source and standard install
       /source candidate|wait for|unreleased|provenance/i,
     );
     const prompt = promptFor(actual, {});
-    assert.match(prompt, /Reference package: @kind-ui\/charts@0\.5\.0\./);
+    assert.match(prompt, /Reference package: @kind-ui\/charts\./);
+    assert.doesNotMatch(prompt, /@kind-ui\/charts@/);
     assert.match(prompt, /Install @kind-ui\/charts and its documented/);
     const selectedSource = actual.defaultVariant
       ? `variants/${actual.defaultVariant}/example.tsx`

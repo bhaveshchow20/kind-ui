@@ -209,7 +209,6 @@ export function controlsFor(family: string, id: string): Control[] {
           step: 0.5,
           unit: "px",
         },
-        { kind: "range", key: "width", label: "Candle width", min: 4, max: 48, unit: "px" },
         grid,
         labels,
       ];

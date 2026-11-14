@@ -52,11 +52,13 @@ test("Candlestick card preserves source-labelled inspection, copied code and ins
   ).toBe(false);
   await frame.focus();
   await frame.press("Home");
-  await expect(card.locator('[data-kind-ui="candlestick-content"]')).toContainText("08:00");
+  await expect(card.locator('[data-kind-ui="candlestick-readout"]')).toContainText("08:00");
   await frame.press("Enter");
   await expect(table.locator('tr[data-selected="true"]')).toContainText("08:00");
   await frame.press("Escape");
   await expect(table.locator('tr[data-selected="true"]')).toHaveCount(0);
+  await card.locator('[data-candle-part="body"]').nth(20).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await card.getByRole("button", { name: "Zoom in", exact: true }).click();
   await expect
     .poll(() => card.locator('[data-kind-ui="candlestick-mark"]').count())
@@ -72,19 +74,16 @@ test("Candlestick card preserves source-labelled inspection, copied code and ins
     "aria-valuenow",
     "1.5",
   );
-  await expect(dialog.getByRole("slider", { name: "Candle width", exact: true })).toHaveAttribute(
-    "aria-valuenow",
-    "14",
-  );
+  await expect(dialog.getByRole("slider", { name: "Candle width", exact: true })).toHaveCount(0);
   await dialog.getByRole("tab", { name: "Code", exact: true }).click();
   await dialog.getByRole("button", { name: "Copy code", exact: true }).click();
   await expect(dialog.locator('.playground-footer [role="status"]')).toHaveText("Code copied");
   const copied = await page.evaluate(() => sessionStorage.getItem("candlestick-code"));
   expect(copied).toContain('from "@kind-ui/charts"');
-  expect(copied).toContain("<CandlestickVolume");
-  expect(copied).toContain("<CandlestickCurrentPrice");
-  expect(copied).toContain("<CandlestickControls");
-  expect(copied).toContain("<CandlestickHistoryNavigator");
+  expect(copied).toContain("<CandlestickChart.Volume");
+  expect(copied).toContain("<CandlestickChart.CurrentPrice");
+  expect(copied).toContain("<CandlestickChart.Controls");
+  expect(copied).toContain("<CandlestickChart.HistoryNavigator");
   expect(copied).toContain('data-kind-ui="candlestick-data-alternative"');
   expect(copied).not.toContain("<CandlestickChart.DataTable");
   expect(copied).toContain('stroke="var(--chart-grid, #e5e7eb)"');

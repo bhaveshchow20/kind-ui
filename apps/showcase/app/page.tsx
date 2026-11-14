@@ -787,9 +787,9 @@ const exampleColors: Record<string, string[]> = {
   "box-latency": ["#a475ed", "#cda9ff", "#eee1ff"],
   "box-regions": ["#24b493", "#85dfc4", "#cbf4e6"],
   "candlestick-sessions": [
-    "var(--candlestick-rising, #087f68)",
-    "var(--candlestick-falling, #c43d54)",
-    "var(--candlestick-neutral, #53657b)",
+    "var(--showcase-candlestick-rising, #087f68)",
+    "var(--showcase-candlestick-falling, #c43d54)",
+    "var(--showcase-candlestick-neutral, #53657b)",
   ],
 };
 function colorsFor(entry: GalleryEntry) {
@@ -978,7 +978,11 @@ export default function Page() {
                     className={`example-shell example-${entry.id}`}
                     key={entry.id}
                     onClick={(event) => {
-                      if (!(event.target as Element).closest('button,a,input,[role="gridcell"]')) {
+                      if (
+                        !(event.target as Element).closest(
+                          'button,a,input,[role="gridcell"],[data-kind-ui="chart"]',
+                        )
+                      ) {
                         triggerRef.current = event.currentTarget.querySelector(".tile-open");
                         explore(entry);
                       }

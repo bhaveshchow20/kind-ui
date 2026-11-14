@@ -11,7 +11,7 @@ description: Inspect OHLC prices, aligned volume and live market history.
 
 ## Usage
 
-Compose the price plot, then add the financial parts your app needs. `Readout` follows inspection and returns to the latest candle when inspection ends. Selection remains independent. `CurrentPrice` always follows the latest nongap observation.
+Compose the price plot, then add the financial parts your app needs. `Readout` follows inspection and returns to the latest candle when inspection ends. Selection remains independent. `CurrentPrice` follows the latest nongap candle close; it is not a separate live quote or trade.
 
 ```tsx title="Composition sketch"
 import { CandlestickChart } from "@kind-ui/charts";
@@ -50,7 +50,7 @@ These are simulated bid OHLC in USD per contract, with explicit source labels an
 
 ## Loading State
 
-Set `loading` and a descriptive `loadingLabel` while observations are pending. This example shows only the animated candle silhouette and accessible loading announcement; its header, readout, market values and controls return when ready. Motion respects reduced-motion preferences.
+Set `loading` and a descriptive `loadingLabel` while observations are pending. Use `empty` to describe a valid feed with no observations. Feed errors remain app-owned so the surrounding application can present its alert, retry and cancellation behavior. This example shows only the animated candle silhouette and accessible loading announcement; its header, readout, market values and controls return when ready. Motion respects reduced-motion preferences.
 
 <ChartExample id="candlestick" variant="loading" />
 
