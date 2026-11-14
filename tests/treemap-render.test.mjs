@@ -49,6 +49,23 @@ test("TreemapChart owns its frame and renders only explicit parts", () => {
   assert.throws(() => render(h(TreemapChart.Tiles)), /require TreemapChart/);
 });
 
+test("treemap links keyboard instructions without replacing consumer descriptions", () => {
+  const html = render(
+    chart(h(TreemapChart.Tiles), {
+      "aria-describedby": "consumer-help",
+    }),
+  );
+  assert.match(html, /data-kind-ui="chart-instructions"/);
+  assert.match(html, /Arrow keys move between treemap items/);
+  assert.match(html, /aria-describedby="consumer-help [^"]+"/);
+});
+
+test("CSS-sized treemaps defer server geometry until measurement", () => {
+  const html = render(chart(h(TreemapChart.Tiles), { width: 320, height: "100%" }));
+  assert.match(html, /height:100%/);
+  assert.doesNotMatch(html, /data-kind-ui="treemap-tile"/);
+});
+
 test("treemap glyphs exclude zero area, retain stable IDs and include group headers", () => {
   const html = render(
     chart([h(TreemapChart.Groups, { key: "groups" }), h(TreemapChart.Tiles, { key: "tiles" })]),
@@ -83,6 +100,8 @@ test("Tiles includes fitted text by default and supports label opt-out and custo
   assert.equal(TreemapChart.Labels, undefined);
   const html = render(chart(h(TreemapChart.Tiles)));
   assert.equal((html.match(/data-kind-ui="treemap-label"/g) ?? []).length, 3);
+  assert.equal((html.match(/data-kind-ui="treemap-label-surface"/g) ?? []).length, 3);
+  assert.match(html, /background:var\(--background,Canvas\);color:var\(--foreground,CanvasText\)/);
   assert.match(html, /tabular-nums[^>]*>6</);
   assert.doesNotMatch(
     render(chart(h(TreemapChart.Tiles, { labels: false }))),

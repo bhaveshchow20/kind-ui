@@ -836,9 +836,9 @@ test("treemap active dismissal consumes one Escape and allows already-dismissed 
   await expect(page.getByRole("tooltip")).toHaveCount(0);
 });
 
-for (const native of ["hidden", "inert"]) {
+for (const native of ["hidden", "inert", "class", "style"]) {
   for (const target of ["tile", "header", "ancestor"]) {
-    test(`treemap excludes ${native} ${target} from native entry, arrows and loading restoration`, async ({
+    test(`treemap excludes ${native} ${target} from entry, arrows and loading restoration`, async ({
       page,
     }) => {
       await page.goto(
@@ -851,7 +851,10 @@ for (const native of ["hidden", "inert"]) {
       await expect(stops).toBeVisible();
       expect(
         await stops.evaluate(
-          (element) => !element.closest("[hidden],[inert]") && !element.matches(":disabled"),
+          (element) =>
+            element.getClientRects().length > 0 &&
+            !element.closest("[hidden],[inert]") &&
+            !element.matches(":disabled"),
         ),
       ).toBe(true);
       await page.getByRole("button", { name: "Before chart entry", exact: true }).focus();
@@ -868,7 +871,10 @@ for (const native of ["hidden", "inert"]) {
           await page
             .locator(":focus")
             .evaluate(
-              (element) => !element.closest("[hidden],[inert]") && !element.matches(":disabled"),
+              (element) =>
+                element.getClientRects().length > 0 &&
+                !element.closest("[hidden],[inert]") &&
+                !element.matches(":disabled"),
             ),
         ).toBe(true);
       }
@@ -892,7 +898,10 @@ for (const native of ["hidden", "inert"]) {
       await expect(stops).toHaveCount(1);
       expect(
         await stops.evaluate(
-          (element) => !element.closest("[hidden],[inert]") && !element.matches(":disabled"),
+          (element) =>
+            element.getClientRects().length > 0 &&
+            !element.closest("[hidden],[inert]") &&
+            !element.matches(":disabled"),
         ),
       ).toBe(true);
       await page.getByRole("button", { name: "Before chart entry", exact: true }).focus();
@@ -986,6 +995,24 @@ test("shared treemap legend dims and hides without reallocating area, and guards
       await expect(alpha).not.toHaveAttribute("data-inactive", "true");
     }
   }
+});
+
+test("shared treemap legend focus preserves independent node selection semantics", async ({
+  page,
+}) => {
+  await page.goto("/?shared-legend");
+  const alpha = tile(page, "a");
+  const alphaRow = page.getByRole("row").filter({ hasText: "Alpha" }).getByRole("button");
+  await alpha.focus();
+  await page.keyboard.press("Space");
+  await expect(output(page, "Selected ID")).toHaveText("a");
+  await expect(alpha).toHaveAttribute("aria-pressed", "true");
+  await expect(alphaRow).toHaveAttribute("aria-pressed", "true");
+  await page.locator('button[data-legend-key="energy"]').click();
+  await expect(alpha).toHaveAttribute("data-inactive", "true");
+  await expect(output(page, "Selected ID")).toHaveText("a");
+  await expect(alpha).toHaveAttribute("aria-pressed", "true");
+  await expect(alphaRow).toHaveAttribute("aria-pressed", "true");
 });
 
 test("treemap tooltip follows motion within the same tile and clamps on resize", async ({
