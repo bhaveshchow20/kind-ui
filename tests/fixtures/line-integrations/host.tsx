@@ -296,6 +296,7 @@ export function CandlestickHydrationHost() {
         <Chart.CandlestickChart.Series seriesKey="price" />
         <Chart.CandlestickChart.Crosshair />
         <Chart.CandlestickChart.Tooltip />
+        <Chart.CandlestickChart.Readout />
         <Chart.CandlestickChart.Table caption="Quote source observations" />
       </Chart.CandlestickChart>
     </section>
