@@ -39,15 +39,12 @@ export function CohortComparisonChart() {
               formatValue={(value) => people.format(value)}
             >
               <FunnelChart.Stages />
-              <FunnelChart.Labels className="grid gap-1 text-xs" />
               <FunnelChart.Tooltip />
+              <FunnelChart.Legend />
             </FunnelChart>
           </section>
         ))}
       </div>
-      <figcaption className="mt-2 text-xs text-[var(--muted-foreground,#666)]">
-        Signup cohorts · users · shared scale of 1,600 · each cohort's own starters
-      </figcaption>
     </figure>
   );
 }

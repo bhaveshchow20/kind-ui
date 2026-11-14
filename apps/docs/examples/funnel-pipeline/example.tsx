@@ -60,21 +60,9 @@ export function WeightedPipelineChart() {
         animate={{ revealDurationMs: 700 }}
       >
         <FunnelChart.Stages<PipelineStage> />
-        <FunnelChart.Labels<PipelineStage>
-          className="grid gap-1 text-xs"
-          render={(stage) => (
-            <span>
-              {stage.label}: {stage.value === null ? "Not reported" : dollars.format(stage.value)}
-              {" · "}
-              {duration(stage.datum.medianDays)}
-            </span>
-          )}
-        />
         <FunnelChart.Tooltip<PipelineStage> Content={PipelineReadout} />
+        <FunnelChart.Legend />
       </FunnelChart>
-      <figcaption className="mt-2 text-xs text-[var(--muted-foreground,#666)]">
-        Current stage snapshot · weighted USD · supplied stage duration
-      </figcaption>
     </figure>
   );
 }

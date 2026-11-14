@@ -22,8 +22,8 @@ import { FunnelChart } from "@kind-ui/charts";
   denominator="first" ratioLabel="Share of starting sessions"
 >
   <FunnelChart.Stages />
-  <FunnelChart.Labels />
   <FunnelChart.Tooltip />
+  <FunnelChart.Legend />
 </FunnelChart>
 ```
 
@@ -180,7 +180,7 @@ The default list shares root formatting and includes available ratios. `render(s
 
 <ApiTable name="FunnelReadoutContextReference" />
 
-The in-flow readout follows inspection without native SVG tooltip coordinates. Its generated `id` and `role` are owned by the chart. `Content` owns its presentation; `valueAnimation="shuffle"` animates only the built-in known-value digits and respects reduced motion.
+The floating readout overlays the chart frame without changing layout and follows the inspected stage. Its generated `id` and `role` are owned by the chart. `Content` owns its presentation; `valueAnimation="shuffle"` animates only the built-in known-value digits and respects reduced motion.
 
 <span id="funneldatatable" />
 

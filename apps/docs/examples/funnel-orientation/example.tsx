@@ -33,12 +33,9 @@ export function ApplicationWorkflowChart({
         animate={{ revealDurationMs: 700 }}
       >
         <FunnelChart.Stages geometry="trapezoid" />
-        <FunnelChart.Labels className="grid gap-1 text-xs" />
         <FunnelChart.Tooltip />
+        <FunnelChart.Legend />
       </FunnelChart>
-      <figcaption className="mt-2 text-xs text-[var(--muted-foreground,#666)]">
-        Applications · current-to-next boundary widths · share of previous stage
-      </figcaption>
     </figure>
   );
 }

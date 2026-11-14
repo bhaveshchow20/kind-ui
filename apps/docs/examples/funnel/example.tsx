@@ -34,12 +34,9 @@ export function CheckoutCohortChart({ state = "ready" }: { state?: "ready" | "lo
         loadingLabel="Loading checkout cohort"
       >
         <FunnelChart.Stages />
-        <FunnelChart.Labels className="grid gap-1 text-xs" />
         <FunnelChart.Tooltip />
+        <FunnelChart.Legend />
       </FunnelChart>
-      <figcaption className="mt-2 text-xs text-[var(--muted-foreground,#666)]">
-        June cohort · sessions · share of starters
-      </figcaption>
     </figure>
   );
 }

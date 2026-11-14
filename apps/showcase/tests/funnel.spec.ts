@@ -41,11 +41,28 @@ test("Funnel checkout gallery and expanded example retain stage values and denom
   const card = page.locator(".demo-grid .chart-card").first();
   await expect(card.getByRole("heading", { name: "Checkout journey" })).toBeVisible();
   await expect(card.locator('[data-kind-ui="funnel-stage"]')).toHaveCount(4);
+  const orientation = card.getByRole("group", { name: "Funnel orientation" });
+  const vertical = orientation.getByRole("button", { name: "Vertical", exact: true });
+  const horizontal = orientation.getByRole("button", { name: "Horizontal", exact: true });
+  await expect(vertical).toHaveAttribute("aria-pressed", "true");
+  const verticalPoints = await card
+    .locator('[data-kind-ui="funnel-mark"]')
+    .first()
+    .getAttribute("points");
+  await horizontal.click();
+  await expect(horizontal).toHaveAttribute("aria-pressed", "true");
+  await expect(card.locator('[data-kind-ui="funnel-mark"]').first()).not.toHaveAttribute(
+    "points",
+    verticalPoints ?? "",
+  );
+  await page.mouse.move(0, 0);
   await card.locator('[data-stage-id="payment"][data-kind-ui="funnel-stage"]').focus();
   await expect(card.getByRole("tooltip")).toContainText("1,200");
   await expect(card.getByRole("tooltip")).toContainText("50%");
   await expect(card.getByRole("table", { name: "Checkout sessions" })).toContainText("2,400");
-  await expect(card.locator(".chart-context")).toContainText("sessions");
+  await expect(card.locator('[data-kind-ui="funnel-labels"]')).toHaveCount(0);
+  await expect(card.locator('[data-kind-ui="chart-legend"]')).toBeVisible();
+  await expect(card.locator(".chart-context")).toHaveCount(0);
   await card.screenshot({ path: testInfo.outputPath("funnel-card.png") });
   await page.locator(".tile-open").first().click();
   const expanded = page.locator(".playground-preview .chart-card");
@@ -53,7 +70,7 @@ test("Funnel checkout gallery and expanded example retain stage values and denom
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("Checkout journey");
   await expect(dialog.getByRole("switch")).toHaveCount(2);
-  await dialog.getByRole("switch", { name: "Labels", exact: true }).uncheck();
+  await expect(dialog.getByRole("switch", { name: "Labels", exact: true })).not.toBeChecked();
   await dialog.getByRole("switch", { name: "Legend", exact: true }).uncheck();
   await expect(expanded.locator('[data-kind-ui="funnel-labels"]')).toHaveCount(0);
   await expect(expanded.locator('[data-kind-ui="chart-legend"]')).toHaveCount(0);
@@ -63,6 +80,8 @@ test("Funnel checkout gallery and expanded example retain stage values and denom
   expect(copied).toContain('denominator="first"');
   expect(copied).toContain('ratioLabel="Share of basket sessions"');
   expect(copied).toContain('geometry="trapezoid"');
+  expect(copied).toContain('useState<"vertical" | "horizontal">("vertical")');
+  expect(copied).toContain("orientation={orientation}");
   expect(copied).toContain('"value": 2400');
   expect(copied).toContain('"value": 960');
   expect(copied).not.toContain("FunnelChart.Labels");

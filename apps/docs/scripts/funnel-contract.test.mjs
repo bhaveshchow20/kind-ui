@@ -35,6 +35,8 @@ for (const example of family.examples) {
     assert.equal(directive.expression.text, "use client");
     assert.doesNotMatch(source, /from ["'](?:@\/|\.\.\/)/);
     assert.doesNotMatch(source, /<table\b|FunnelChart\.DataTable|localhost|127\.0\.0\.1/);
+    assert.doesNotMatch(source, /FunnelChart\.Labels|<figcaption\b/);
+    assert.match(source, /FunnelChart\.Legend/);
     const variable = parsed.statements
       .flatMap((statement) =>
         ts.isVariableStatement(statement) ? [...statement.declarationList.declarations] : [],
@@ -65,7 +67,6 @@ for (const example of family.examples) {
       assert.match(source, /id:\s*\(record\)\s*=>\s*record\.key/);
       assert.match(source, /label:\s*\(record\)\s*=>\s*record\.title/);
       assert.match(source, /value:\s*\(record\)\s*=>\s*record\.weightedUsd/);
-      assert.match(source, /FunnelChart\.Labels<PipelineStage>/);
       assert.match(source, /stage\.datum\.medianDays/);
     } else if (example.id === "funnel-comparison") {
       rows = ["June", "July"].flatMap((cohort) => {

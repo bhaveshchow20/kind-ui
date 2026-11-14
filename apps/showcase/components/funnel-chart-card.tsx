@@ -1,7 +1,7 @@
 "use client";
 import { FunnelChart } from "@kind-ui/charts";
 import { motion, useInView, useReducedMotion } from "motion/react";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Finish } from "@/lib/advanced-chart-recipes";
 import type { DemoOptions } from "@/lib/demo-options";
 import { checkoutStages, type FunnelRecipe } from "@/lib/funnel-recipes";
@@ -26,6 +26,7 @@ export function FunnelChartCard({
   const cardRef = useRef<HTMLElement>(null);
   const entered = useInView(cardRef, { once: true, amount: 0.3 });
   const chartAnimate = animate && entered && !reduced;
+  const [orientation, setOrientation] = useState<"vertical" | "horizontal">("vertical");
   const config = useMemo(
     () =>
       Object.fromEntries(
@@ -47,6 +48,22 @@ export function FunnelChartCard({
     >
       <div className="card-top">
         <h3 className="chart-tag">{recipe.tag}</h3>
+        <fieldset
+          aria-label="Funnel orientation"
+          className="m-0 flex rounded-md border border-border p-0.5 text-[11px]"
+        >
+          {(["vertical", "horizontal"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={orientation === value}
+              className="rounded px-2 py-1 capitalize text-muted-foreground transition-colors aria-pressed:bg-muted aria-pressed:text-foreground"
+              onClick={() => setOrientation(value)}
+            >
+              {value === "vertical" ? "Vertical" : "Horizontal"}
+            </button>
+          ))}
+        </fieldset>
       </div>
       <FunnelChart
         key={`${replay}-${chartAnimate}`}
@@ -57,6 +74,7 @@ export function FunnelChartCard({
         style={{ width: "100%", height: 220 }}
         aria-label={recipe.tag}
         denominator="first"
+        orientation={orientation}
         ratioLabel="Share of basket sessions"
         formatValue={formatValue}
         animate={chartAnimate}
@@ -81,7 +99,6 @@ export function FunnelChartCard({
         <FunnelChart.Tooltip />
         {options.showLegend !== false && <FunnelChart.Legend />}
       </FunnelChart>
-      <p className="chart-context">{recipe.context}</p>
       <div className="sr-only">
         <table>
           <caption>Checkout sessions</caption>
