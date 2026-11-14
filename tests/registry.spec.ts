@@ -114,7 +114,7 @@ test("installed Candlestick composition preserves streaming inspection and share
   const marks = composition.locator('[data-kind-ui="candlestick-mark"]');
   const volume = composition.locator('[data-kind-ui="candlestick-volume-mark"]');
   await composition.getByRole("button", { name: "Pause", exact: true }).click();
-  await expect(composition.getByText("SIMULATED", { exact: true })).toBeVisible();
+  await expect(composition.getByText("SIMULATED", { exact: true })).toHaveCount(0);
   const count = await marks.count();
   expect(count).toBeGreaterThanOrEqual(48);
   expect(count).toBeLessThan(55);
@@ -126,7 +126,7 @@ test("installed Candlestick composition preserves streaming inspection and share
   ).toBeGreaterThanOrEqual(1);
   await expect(composition.locator('[data-kind-ui="candlestick-current-price"]')).toBeVisible();
   await expect(composition.locator('[data-kind-ui="candlestick-history-navigator"]')).toBeVisible();
-  const readout = composition.locator('[data-kind-ui="candle-readout"]');
+  const readout = composition.locator('[data-kind-ui="candlestick-readout"]');
   const paused = await readout.textContent();
   await composition.getByRole("button", { name: "Step", exact: true }).click();
   await expect(readout).not.toHaveText(paused ?? "");
@@ -140,11 +140,10 @@ test("installed Candlestick composition preserves streaming inspection and share
   await expect.poll(() => marks.count()).toBeGreaterThanOrEqual(240);
   await composition.locator('[data-kind-ui="chart"]').focus();
   await page.keyboard.press("Home");
-  const content = composition.locator('[data-kind-ui="candlestick-content"]');
-  await expect(content).toContainText("08:00");
-  await expect(content).toContainText("ETH");
-  await expect(content).toContainText("Open");
-  await expect(content).toContainText("close");
+  await expect(readout).toContainText("08:00");
+  await expect(readout).toContainText("ETH");
+  await expect(readout.getByTitle("Open")).toHaveText("O");
+  await expect(readout.getByTitle("Close")).toHaveText("C");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   expect(errors).toEqual([]);
 });
