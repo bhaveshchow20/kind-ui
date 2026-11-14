@@ -42,6 +42,7 @@ test("fixed-size Scatter SSR matches the native empty wrapper; hosts supply a da
 
 test("direct and namespace imports expose the same public components", () => {
   assert.deepEqual(Object.keys(Chart).sort(), [
+    "ActivityRings",
     "AreaChart",
     "AreaRevealShape",
     "AreaSeries",
@@ -91,6 +92,7 @@ test("direct and namespace imports expose the same public components", () => {
     "ResponsiveContainer",
     "Root",
     "SankeyChart",
+    "SankeyLegend",
     "SankeyLink",
     "SankeyNode",
     "SankeyTable",
@@ -1301,5 +1303,97 @@ test("Radar selection is SSR-safe without state glue and rejects ownerless contr
         }),
       ),
     ),
+  );
+});
+
+test("heatmap compact controls retain caption, scoped associated headers and custom cell ownership", () => {
+  const grid = (layout, extra = {}) =>
+    render(
+      h(
+        Chart.HeatmapChart,
+        {
+          rows: ["A"],
+          columns: ["X"],
+          data: [{ row: "A", column: "X", value: 0 }],
+          scale: Chart.createHeatmapScale({ domain: [0, 1], colors: ["#ffffff", "#000000"] }),
+        },
+        h(Chart.HeatmapGrid, { caption: "Compact", layout, ...extra }),
+      ),
+    );
+  const markup = grid(
+    { cellSize: 12, gap: 0, rowLabels: "hidden", columnLabels: "hidden" },
+    {
+      Cell: ({ formattedValue }) => h("em", { "data-consumer": "cell" }, formattedValue),
+      cellProps: () => ({ style: { height: 20, opacity: 0.5 }, className: "consumer-cell" }),
+      style: { borderSpacing: 8 },
+    },
+  );
+  assert.match(markup, /<caption>Compact<\/caption>/);
+  assert.match(markup, /scope="row" id="([^"]+)">/);
+  assert.match(markup, /scope="col"[^>]*id="([^"]+)">X/);
+  const rowId = markup.match(/scope="row" id="([^"]+)"/)[1];
+  const columnId = markup.match(/scope="col"[^>]*id="([^"]+)"/)[1];
+  assert.ok(markup.includes(`headers="${rowId} ${columnId}"`));
+  assert.match(markup, /--heatmap-cell-size:12px/);
+  assert.match(markup, /--heatmap-gap:0px/);
+  assert.match(markup, /data-row-labels="hidden"/);
+  assert.match(markup, /data-column-labels="hidden"/);
+  assert.match(markup, /border-spacing:8px/);
+  assert.match(markup, /height:20px;opacity:0.5;background-color:#ffffff/);
+  assert.match(markup, /class="consumer-cell"/);
+  assert.match(markup, /<em data-consumer="cell">0<\/em>/);
+  assert.doesNotMatch(
+    grid(undefined),
+    /data-cell-sizing|data-row-labels|data-column-labels|--heatmap-cell-size/,
+  );
+  assert.match(
+    grid({ cellSize: "1rem", gap: "0.25rem" }),
+    /--heatmap-cell-size:1rem;--heatmap-gap:0.25rem/,
+  );
+  for (const cellSize of [0, -1, NaN, Infinity])
+    assert.throws(() => grid({ cellSize }), /cellSize.*finite.*positive/);
+  for (const gap of [-1, NaN, Infinity])
+    assert.throws(() => grid({ gap }), /gap.*finite.*nonnegative/);
+});
+
+test("category mode rejects missing data and unconfigured identities", () => {
+  const config = { alpha: { label: "Alpha", color: "red" } };
+  for (const props of [
+    { categoryKey: "id", dataKey: "value" },
+    { categoryKey: "id", dataKey: "value", data: [{ id: "missing", value: 1 }] },
+  ])
+    assert.throws(
+      () => render(h(Root, { config }, h(Chart.PieSeries, props))),
+      /explicit data|Root.config/,
+    );
+  assert.throws(
+    () => render(h(Root, { config }, h(Chart.RadialBarChart, { categoryKey: "id" }))),
+    /explicit chart data/,
+  );
+});
+test("Sankey node metadata uses arbitrary IDs and preserves standalone legacy/explicit paint", () => {
+  const config = { "node / a": { label: "Input", color: "#123456" } };
+  const legend = render(h(Chart.SankeyLegend, { config }));
+  assert.match(legend, /data-node="node \/ a"/);
+  assert.match(legend, /--kind-ui-chart-indicator-color:#123456/);
+  const props = {
+    x: 0,
+    y: 0,
+    width: 10,
+    height: 20,
+    index: 0,
+    payload: { id: "node / a", name: "Input", value: 1 },
+  };
+  assert.match(render(h(Chart.SankeyNode, props)), /fill="#4f46e5"/);
+  assert.match(render(h(Chart.SankeyNode, { ...props, color: "#abcdef" })), /fill="#abcdef"/);
+  assert.throws(
+    () =>
+      render(
+        h(Chart.SankeyChart, {
+          nodeConfig: config,
+          data: { nodes: [{ id: "unknown", name: "Other" }], links: [] },
+        }),
+      ),
+    /requires metadata/,
   );
 });

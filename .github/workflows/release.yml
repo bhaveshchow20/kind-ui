@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Expected reviewed package version (0.0.0 rehearses the private pipeline)
+        description: Expected reviewed package version (private packages rehearse the pipeline)
         required: true
-        default: 0.0.0
+        default: 0.1.0
         type: string
       dist_tag:
         description: Proposed npm dist-tag, recorded for review

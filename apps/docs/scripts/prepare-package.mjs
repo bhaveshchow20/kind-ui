@@ -28,7 +28,7 @@ if (
 mkdirSync("vendor", { recursive: true });
 if (release && !/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(release))
   throw new Error("Release version must be exact semver");
-const canonical = "vendor/kind-ui-charts-0.0.0.tgz";
+const canonical = "vendor/kind-ui-charts-0.1.0.tgz";
 let packed;
 if (release) {
   packed = JSON.parse(

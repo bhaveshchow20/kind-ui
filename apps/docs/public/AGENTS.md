@@ -1,6 +1,6 @@
 # Kind UI chart consumer guidance
 
-Use /llms.txt for the documented component list. The package is private at 0.0.0 and unpublished. Use /package-provenance.json and the exact /examples/package/kind-ui-charts-0.0.0.tgz from the guarded source snapshot recorded in provenance; do not substitute main or a registry install.
+Use /llms.txt for the documented component list. The 0.1.0 candidate is unpublished and publishing remains disabled. Use /package-provenance.json and the exact /examples/package/kind-ui-charts-0.1.0.tgz from the guarded source snapshot recorded in provenance; do not substitute main or a registry install.
 
 Start with /llms.txt, /markdown/start/installation.md and /markdown/components/line.md and /markdown/components/area.md. Markdown includes standalone public consumer source and links to locked setup files. Copy prompt links the selected curve/material source; runtime legend toggles are not serialized.
 

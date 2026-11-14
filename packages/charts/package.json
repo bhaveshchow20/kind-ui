@@ -1,7 +1,6 @@
 {
   "name": "@kind-ui/charts",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Composable React chart components built on Recharts and Motion.",
   "repository": {
     "type": "git",
@@ -36,6 +35,7 @@
   },
   "types": "./dist/index.d.ts",
   "files": [
+    "CHANGELOG.md",
     "dist/**/*.js",
     "dist/**/*.d.ts",
     "dist/styles.css"

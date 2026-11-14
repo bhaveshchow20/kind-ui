@@ -231,7 +231,7 @@
     max-width: 100%;
   }
   [data-kind-ui="heatmap-grid"] {
-    border-spacing: 3px;
+    border-spacing: var(--heatmap-gap, 3px);
     table-layout: fixed;
     width: 100%;
     min-width: calc(7rem + var(--heatmap-columns) * 3.25rem);
@@ -265,6 +265,54 @@
     font-variant-numeric: tabular-nums;
     font-size: 0.75rem;
     cursor: default;
+  }
+  [data-kind-ui="heatmap-grid"][data-cell-sizing="fixed"] {
+    --heatmap-row-width: 6.8rem;
+    width: calc(
+      var(--heatmap-row-width) +
+      var(--heatmap-gap, 3px) +
+      var(--heatmap-columns) *
+      (var(--heatmap-cell-size) + var(--heatmap-gap, 3px)) +
+      var(--heatmap-gap, 3px)
+    );
+    min-width: 0;
+  }
+  [data-kind-ui="heatmap-grid"][data-cell-sizing="fixed"][data-row-labels="hidden"] {
+    --heatmap-row-width: 0px;
+  }
+  [data-kind-ui="heatmap-grid"]:where([data-cell-sizing="fixed"]) caption {
+    width: auto;
+  }
+  [data-kind-ui="heatmap-grid"][data-cell-sizing="fixed"] col {
+    width: var(--heatmap-cell-size);
+  }
+  [data-kind-ui="heatmap-grid"][data-cell-sizing="fixed"] col[data-kind-ui="heatmap-row-column"] {
+    width: var(--heatmap-row-width);
+  }
+  [data-kind-ui="heatmap-grid"][data-cell-sizing="fixed"] tbody th {
+    padding-block: 0;
+    line-height: var(--heatmap-cell-size);
+  }
+  [data-kind-ui="heatmap-grid"][data-cell-sizing="fixed"] td {
+    box-sizing: border-box;
+    width: var(--heatmap-cell-size);
+    height: var(--heatmap-cell-size);
+    line-height: var(--heatmap-cell-size);
+    padding: 0;
+  }
+  [data-kind-ui="heatmap-grid"][data-row-labels="hidden"] th:first-child,
+  [data-kind-ui="heatmap-grid"][data-column-labels="hidden"] thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  [data-kind-ui="heatmap-grid"][data-row-labels="hidden"]:not([data-cell-sizing="fixed"]) {
+    min-width: calc(var(--heatmap-columns) * 3.25rem);
   }
   [data-kind-ui="heatmap-row-label"] {
     display: block;

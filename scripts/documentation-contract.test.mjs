@@ -5,7 +5,7 @@ import { assertDocumentationContract, recipeSourcePrefix } from "./documentation
 
 const readme = await readFile(new URL("../packages/charts/README.md", import.meta.url), "utf8");
 const recipes = await readdir(new URL("../examples/chart/", import.meta.url));
-const files = ["README.md", "LICENSE", "package.json"];
+const files = ["README.md", "CHANGELOG.md", "LICENSE", "package.json"];
 
 test("shipped README links use available versioned recipes", () => {
   assertDocumentationContract(readme, recipes, files);
@@ -45,5 +45,17 @@ test("rejects missing recipe targets and other unpacked local files", () => {
   assert.throws(
     () => assertDocumentationContract(`${readme}\n[guide](../../docs/guide.md)`, recipes, files),
     /Link leaves the package/,
+  );
+});
+
+test("rejects a README changelog link when the changelog is not packed", () => {
+  assert.throws(
+    () =>
+      assertDocumentationContract(
+        readme,
+        recipes,
+        files.filter((file) => file !== "CHANGELOG.md"),
+      ),
+    /Link leaves the package: CHANGELOG.md/,
   );
 });

@@ -6,11 +6,12 @@ import {
   HeatmapDataTable,
   type HeatmapDatum,
   HeatmapGrid,
+  type HeatmapGridProps,
   HeatmapLegend,
   type HeatmapMaterial,
   HeatmapTooltip,
 } from "@kind-ui/charts";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const teams = ["Platform", "Payments", "Identity", "Search", "Messaging"];
 const regions = ["US East", "US West", "Europe", "Asia", "Oceania"];
@@ -283,6 +284,202 @@ export function Edges() {
         <HeatmapGrid caption="Empty grid" />
         <HeatmapTooltip />
       </HeatmapChart>
+    </section>
+  );
+}
+
+const rows = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const columns = Array.from({ length: 26 }, (_, index) => `Week ${index + 1}`);
+const data = rows.flatMap((row, r) =>
+  columns.map((column, c) => ({ row, column, value: (r + c) % 5 })),
+);
+const scale = createHeatmapScale({ domain: [0, 4], colors: ["#eef4eb", "#327448"] });
+function Dot({ cell }: HeatmapCellContentProps) {
+  return <span data-custom-cell={cell.value} aria-hidden="true" />;
+}
+
+export function CompactHeatmap() {
+  const [labels, setLabels] = useState<"visible" | "hidden">("hidden");
+  const [size, setSize] = useState<number | string>(12);
+  const [gap, setGap] = useState<number | string>(3);
+  const [events, setEvents] = useState(0);
+  const cellRef = useRef<HTMLTableCellElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const layout = {
+    cellSize: size,
+    gap,
+    rowLabels: labels,
+    columnLabels: labels,
+  } satisfies NonNullable<HeatmapGridProps["layout"]>;
+  return (
+    <section aria-label="Compact fixture" style={{ maxWidth: 700, padding: 16 }}>
+      <button type="button" onClick={() => setLabels(labels === "hidden" ? "visible" : "hidden")}>
+        Toggle compact labels
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setSize("1rem");
+          setGap("0.25rem");
+        }}
+      >
+        Use CSS lengths
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setSize(12);
+          setGap(0);
+        }}
+      >
+        Use zero gap
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          if (cellRef.current && tableRef.current?.contains(cellRef.current))
+            cellRef.current.focus();
+        }}
+      >
+        Focus consumer ref
+      </button>
+      <output aria-label="Consumer events">{events}</output>
+      <HeatmapChart rows={rows} columns={columns} data={data} scale={scale}>
+        <HeatmapGrid
+          caption="Compact contributions"
+          ref={tableRef}
+          layout={layout}
+          Cell={Dot}
+          rowLabel={(row) => `Day: ${row}`}
+          columnLabel={(column) => `Period: ${column}`}
+          cellProps={(cell) => ({
+            ...(cell.rowIndex === 0 && cell.columnIndex === 0 ? { ref: cellRef } : {}),
+            className: "consumer-cell",
+            style: { borderRadius: 2, opacity: 0.8 },
+            onFocus: () => setEvents((count) => count + 1),
+          })}
+        />
+        <HeatmapTooltip />
+        <details>
+          <summary>Compact data</summary>
+          <HeatmapDataTable caption="Contribution values" />
+        </details>
+      </HeatmapChart>
+      <HeatmapChart
+        rows={["A"]}
+        columns={["X", "Y"]}
+        data={[{ row: "A", column: "X", value: 1 }]}
+        scale={scale}
+      >
+        <HeatmapGrid
+          caption="Explicit compact styles"
+          layout={{ cellSize: 12, gap: 2 }}
+          style={{ borderSpacing: 7, width: 180 }}
+          cellProps={() => ({
+            style: { height: 28, padding: 4, borderRadius: 8 },
+            onKeyDown: (event) => event.preventDefault(),
+          })}
+        />
+        <HeatmapTooltip />
+      </HeatmapChart>
+      <HeatmapChart rows={["A"]} columns={["X"]} data={[]} scale={scale}>
+        <HeatmapGrid caption="Independent headers" layout={{ cellSize: 12, rowLabels: "hidden" }} />
+      </HeatmapChart>
+      <HeatmapChart rows={["A"]} columns={["X"]} data={[]} scale={scale}>
+        <HeatmapGrid caption="Default dimensions" />
+      </HeatmapChart>
+    </section>
+  );
+}
+
+// @ts-expect-error Layout only accepts explicit visibility values.
+export const InvalidVisibility = <HeatmapGrid caption="Invalid" layout={{ rowLabels: false }} />;
+// @ts-expect-error Cell lengths are CSS strings or pixel numbers.
+export const InvalidSize = <HeatmapGrid caption="Invalid" layout={{ cellSize: {} }} />;
+export const InvalidChartLayout = (
+  // @ts-expect-error Layout belongs to the grid, not its context provider.
+  <HeatmapChart rows={[]} columns={[]} data={[]} scale={scale} layout={{ cellSize: 12 }} />
+);
+
+export function DismissalHeatmaps() {
+  const [compact, setCompact] = useState(false);
+  const [updated, setUpdated] = useState(false);
+  const [blocked, setBlocked] = useState(false);
+  const [prevented, setPrevented] = useState(false);
+  const [events, setEvents] = useState<Record<string, number>>({});
+  const count = (name: string) =>
+    setEvents((value) => ({ ...value, [name]: (value[name] ?? 0) + 1 }));
+  return (
+    <section aria-label="Dismissal fixtures" style={{ padding: 16 }}>
+      <button type="button" onClick={() => setCompact(!compact)}>
+        Change dismissal layout
+      </button>
+      <button type="button" onClick={() => setUpdated(!updated)}>
+        Change dismissal data
+      </button>
+      <label>
+        <input
+          type="checkbox"
+          checked={blocked}
+          onChange={(event) => setBlocked(event.target.checked)}
+        />
+        Block dismissal Escape
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={prevented}
+          onChange={(event) => setPrevented(event.target.checked)}
+        />
+        Prevent dismissal Escape
+      </label>
+      <output
+        aria-label="Dismissal callbacks"
+        style={{ display: "block", height: 96, overflow: "auto" }}
+      >
+        {JSON.stringify(events)}
+      </output>
+      {["First", "Second"].map((name) => (
+        <HeatmapChart
+          key={name}
+          rows={["Mon", "Thu"]}
+          columns={Array.from({ length: 20 }, (_, i) => String(i + 1))}
+          data={[{ row: "Mon", column: "1", value: updated ? 2 : 1 }]}
+          scale={scale}
+          style={{ maxWidth: 500 }}
+          onPointerMoveCapture={() => count(`${name}-move`)}
+          onPointerDownCapture={() => count(`${name}-press`)}
+          onKeyDownCapture={(event) => {
+            if (prevented && event.key === "Escape") event.preventDefault();
+          }}
+        >
+          <HeatmapGrid
+            caption={`${name} dismissal grid`}
+            layout={
+              compact
+                ? { cellSize: 12, gap: 3, rowLabels: "hidden", columnLabels: "hidden" }
+                : { cellSize: 24 }
+            }
+            Cell={Dot}
+            onKeyDown={() => count(`${name}-key`)}
+            cellProps={() => ({
+              onPointerEnter: () => {
+                count(`${name}-enter`);
+              },
+              onPointerDown: () => count(`${name}-down`),
+              onPointerMove: () => count(`${name}-cell-move`),
+              onFocus: () => count(`${name}-focus`),
+              onKeyDown: (event) => {
+                if (blocked && event.key === "Escape") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+              },
+            })}
+          />
+          <HeatmapTooltip />
+        </HeatmapChart>
+      ))}
     </section>
   );
 }

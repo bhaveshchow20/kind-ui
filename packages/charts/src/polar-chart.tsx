@@ -12,8 +12,10 @@ import {
 } from "react";
 import { RadarChart as EngineRadarChart, RadialBarChart as EngineRadialBarChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
+import type { CategoryKey } from "./category-cells.js";
 import { LineChartFrame, useLineInteraction } from "./line-chart.js";
 import { type RadarSelectionProps, RadarSelectionProvider } from "./radar-interaction.js";
+import { RadialCategory } from "./radial-category.js";
 
 export type RadarAnimation = LineAnimation;
 export type RadialBarAnimation = LineAnimation;
@@ -26,6 +28,8 @@ export type RadarChartProps<DataPoint = unknown> = ComponentProps<
 export type RadialBarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadialBarChart<DataPoint>
 > & {
+  /** Opt-in category colors from Root.config, resolved from original chart rows. */
+  categoryKey?: CategoryKey<DataPoint> | undefined;
   animate?: boolean | RadialBarAnimation | undefined;
   /** Entrance direction only; native chart and axis angles stay consumer-owned. */
   animationDirection?: "clockwise" | "anticlockwise" | undefined;
@@ -169,9 +173,24 @@ export function RadarChart<DataPoint = unknown>({
 export function RadialBarChart<DataPoint = unknown>({
   animate = false,
   animationDirection = "clockwise",
+  categoryKey,
   children,
   ...props
 }: RadialBarChartProps<DataPoint>) {
+  if (categoryKey !== undefined && props.data === undefined)
+    throw new Error("RadialBarChart categoryKey requires explicit chart data");
+  const categories =
+    categoryKey === undefined
+      ? null
+      : {
+          data: props.data ?? [],
+          key: (row: unknown) => {
+            if (typeof categoryKey === "function") return categoryKey(row as DataPoint);
+            return row !== null && typeof row === "object" && Object.hasOwn(row, categoryKey)
+              ? ((row as Record<string, string>)[categoryKey] as string)
+              : "";
+          },
+        };
   const { enabled, options, reveal, interrupt } = usePolarMotion(animate);
   const [progress, setProgress] = useState(1);
   const duration = options.revealDurationMs ?? 1000;
@@ -203,20 +222,22 @@ export function RadialBarChart<DataPoint = unknown>({
     return () => controls.stop();
   }, [reveal, duration, easing, interrupt]);
   return (
-    <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
-      <RadialMotion value={{ reveal, progress, direction: animationDirection }}>
-        <PolarMotion value={{ reveal, options }}>
-          <LineChartFrame
-            engine={EngineRadialBarChart<DataPoint>}
-            chartProps={props}
-            motionEnabled={enabled}
-            interrupt={interrupt}
-          >
-            <PolarLifecycle {...props}>{children}</PolarLifecycle>
-            {children}
-          </LineChartFrame>
-        </PolarMotion>
-      </RadialMotion>
-    </MotionContext>
+    <RadialCategory value={categories}>
+      <MotionContext value={{ enabled, transition: options.hoverTransition ?? defaultHover }}>
+        <RadialMotion value={{ reveal, progress, direction: animationDirection }}>
+          <PolarMotion value={{ reveal, options }}>
+            <LineChartFrame
+              engine={EngineRadialBarChart<DataPoint>}
+              chartProps={props}
+              motionEnabled={enabled}
+              interrupt={interrupt}
+            >
+              <PolarLifecycle {...props}>{children}</PolarLifecycle>
+              {children}
+            </LineChartFrame>
+          </PolarMotion>
+        </RadialMotion>
+      </MotionContext>
+    </RadialCategory>
   );
 }

@@ -1,9 +1,10 @@
 # First charts release readiness
 
-This is a proposal and validation change. `@kind-ui/charts` and the workspace
-remain private at `0.0.0`. There is no publishing workflow, OIDC permission,
-release tag, GitHub Release, account setup or publication authorization.
-Audited main: `68ce9ad10d617faae3f08c562cb2768035167ee3`.
+The current local candidate is public `@kind-ui/charts@0.1.0`; the workspace
+remains private at `0.0.0`. The manual validation workflow keeps publishing
+hard-disabled and grants no OIDC permission. No release tag, GitHub Release,
+credential/trust setup or publication is authorized by candidate preparation.
+The earlier packaging audit below examined main: `68ce9ad10d617faae3f08c562cb2768035167ee3`.
 
 ## Distribution and ecosystem evidence
 
@@ -151,19 +152,20 @@ artifact by run ID/attempt, checkout commit, PR head/base and SHA-256, then
 verify its downloaded checksum. Never repack a directory at publication. Version,
 manifest or source changes require building/installing/testing a fresh tarball.
 
-The recurring native Radial sector hit-probe failure is an unresolved release
-gate. Green retries alone do not explain it. Do not suppress it or infer a cause
-from this packaging PR. Loading states are not added or claimed. `apps/docs`,
+The recurring native Radial sector hit-probe failure was an unresolved gate in
+the earlier packaging audit. Preserve its test oracle and require current
+aggregate results for the versioned candidate; green retries alone do not
+explain a failure. Loading states are not added or claimed. `apps/docs`,
 homepage work and draft editorial branches are outside this change.
 
 ## Proposed versioning and separately approved setup
 
-Propose a reviewed `0.1.0` first version; the owner must choose version/dist-tag.
+The reviewed first candidate is `0.1.0`, with `latest` as its intended dist-tag. Publication remains separately authorized.
 For pre-1.0, breaking APIs increment minor; compatible fixes increment patch.
-Document this before users install. Follow the existing policy: adopt Changesets
-in a separate approved setup PR using its standard CLI for reviewed version and
-changelog changes. One package needs no custom version script, release bot or
-multi-package orchestration layer. Do not invent release notes for a placeholder.
+Document this before users install. The reviewed Changesets setup uses its standard CLI for version and changelog
+changes. The public `0.1.0` candidate includes its initial API notes and the
+reviewed entrance-settlement patch. One package needs no custom version script,
+release bot or multi-package orchestration layer.
 
 Prepare a version/changelog commit with publication still disabled. After approval,
 use a protected GitHub-hosted publishing job with `contents: read`, job-scoped
@@ -201,7 +203,7 @@ Remaining owner decisions and release gates:
 For a compatible existing npm React/DOM host, ordinary local review after packing:
 
 ```sh
-npm install /absolute/path/to/artifacts/package/kind-ui-charts-0.0.0.tgz
+npm install /absolute/path/to/artifacts/package/kind-ui-charts-0.1.0.tgz
 ```
 
 After an approved publication, the recommended npm user install in that host is
@@ -212,7 +214,7 @@ can change the result. React/DOM and matching types belong to the host app.
 The following fully pinned command is for reproducing the tested tuple:
 
 ```sh
-npm install /absolute/path/to/artifacts/package/kind-ui-charts-0.0.0.tgz react@19.3.0 react-dom@19.3.0 react-is@19.3.0 recharts@3.10.1 motion@13.4.6
+npm install /absolute/path/to/artifacts/package/kind-ui-charts-0.1.0.tgz react@19.3.0 react-dom@19.3.0 react-is@19.3.0 recharts@3.10.1 motion@13.4.6
 ```
 
 After an approved `0.1.0` publication, the expected registry form is:

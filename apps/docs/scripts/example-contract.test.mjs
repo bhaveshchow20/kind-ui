@@ -20,7 +20,7 @@ test("each registered family has a complete public consumer", () => {
   assert.match(bundle.files["src/main.tsx"], /@kind-ui\/charts\/styles\.css/);
   const manifest = JSON.parse(bundle.files["package.json"]);
   assert.equal(manifest.private, true);
-  assert.equal(manifest.dependencies["@kind-ui/charts"], "file:vendor/kind-ui-charts-0.0.0.tgz");
+  assert.equal(manifest.dependencies["@kind-ui/charts"], "file:vendor/kind-ui-charts-0.1.0.tgz");
   const lock = JSON.parse(bundle.files["package-lock.json"]);
   assert.equal(lock.packages["node_modules/@kind-ui/charts"].integrity, provenance.integrity);
   for (const file of [
@@ -37,7 +37,7 @@ test("each registered family has a complete public consumer", () => {
 });
 test("download package bytes match the validated snapshot", () => {
   const digest = createHash("sha256")
-    .update(readFileSync("public/examples/package/kind-ui-charts-0.0.0.tgz"))
+    .update(readFileSync("public/examples/package/kind-ui-charts-0.1.0.tgz"))
     .digest("hex");
   assert.equal(digest, provenance.sha256);
   assert.equal(provenance.guardedArtifact, true);

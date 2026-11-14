@@ -31,7 +31,7 @@ if (installed.version !== provenance.version)
     "Installed chart package differs from pinned tarball. Run npm install after prepare:package.",
   );
 const tarballHash = createHash("sha256")
-  .update(readFileSync("vendor/kind-ui-charts-0.0.0.tgz"))
+  .update(readFileSync("vendor/kind-ui-charts-0.1.0.tgz"))
   .digest("hex");
 if (tarballHash !== provenance.sha256) throw new Error("Package tarball does not match provenance");
 const appLock = JSON.parse(read("package-lock.json"));
@@ -45,7 +45,7 @@ const manifest = {
   type: "module",
   scripts: { dev: "vite --host 127.0.0.1", build: "tsc --noEmit && vite build" },
   dependencies: {
-    "@kind-ui/charts": local ? "file:vendor/kind-ui-charts-0.0.0.tgz" : provenance.version,
+    "@kind-ui/charts": local ? "file:vendor/kind-ui-charts-0.1.0.tgz" : provenance.version,
     react: "19.3.0",
     "react-dom": "19.3.0",
     recharts: "3.10.1",
@@ -155,7 +155,7 @@ for (const example of allExamples) {
     "src/main.tsx": `import { StrictMode } from "react";\nimport { createRoot } from "react-dom/client";\nimport { ${componentName} } from "./examples/${example.id}/example";\nimport "@kind-ui/charts/styles.css";\nimport "./example.css";\nconst root = document.getElementById("root");\nif (!root) throw new Error("Missing mount element");\ncreateRoot(root).render(<StrictMode><${componentName} /></StrictMode>);\n`,
     "src/example.css": read("examples/shared/example.css"),
     [`src/examples/${example.id}/example.tsx`]: exampleSource,
-    "README.md": `# ${example.title} — complete consumer\n\n${status}.\n\nNode 22.12+ and npm 11.9. Use the pinned vendor tarball identified by provenance; this package is not on npm.\n\nUse these complete files, preserving their directory structure. Put the exact package asset at vendor/kind-ui-charts-0.0.0.tgz. Run npm ci, then npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports; ${example.id.startsWith("area") ? "Area uses Root and ResponsiveContainer; stacked legend visibility is consumer-owned." : "Preserve the documented family composition and visibility ownership."} No demo modules are required. Documentation consumer of package source ${provenance.sourceCommit}.\n\nVendor SHA-256: ${provenance.sha256}.\n`,
+    "README.md": `# ${example.title} — complete consumer\n\n${status}.\n\nNode 22.12+ and npm 11.9. Use the pinned vendor tarball identified by provenance; this package is not on npm.\n\nUse these complete files, preserving their directory structure. Put the exact package asset at vendor/kind-ui-charts-0.1.0.tgz. Run npm ci, then npm run dev or npm run build.\n\n${example.notes}\n\nAcceptance: ${example.acceptance}\n\nPaste example.tsx into your app. It includes its data and public imports; ${example.id.startsWith("area") ? "Area uses Root and ResponsiveContainer; stacked legend visibility is consumer-owned." : "Preserve the documented family composition and visibility ownership."} No demo modules are required. Documentation consumer of package source ${provenance.sourceCommit}.\n\nVendor SHA-256: ${provenance.sha256}.\n`,
     LICENSE: read("../../LICENSE"),
   };
   if (existsSync("examples/shared/consumer-package-lock.json"))
@@ -166,7 +166,7 @@ for (const example of allExamples) {
       .filter((file) => file !== "README.md")
       .map((file) => `- [${file}](${origin}/examples/${example.id}/${file})`)
       .join("\n") +
-    `\n- [Pinned tarball](${origin}/examples/package/kind-ui-charts-0.0.0.tgz)\n- [Provenance](${origin}/package-provenance.json)\n`;
+    `\n- [Pinned tarball](${origin}/examples/package/kind-ui-charts-0.1.0.tgz)\n- [Provenance](${origin}/package-provenance.json)\n`;
   bundles[example.id] = {
     ...example,
     ...(dataAlternative ? { dataAlternative } : {}),
@@ -205,7 +205,7 @@ for (const family of families)
 write("public/package-provenance.json", JSON.stringify(provenance, null, 2) + "\n");
 if (local) {
   mkdirSync("public/examples/package", { recursive: true });
-  cpSync("vendor/kind-ui-charts-0.0.0.tgz", "public/examples/package/kind-ui-charts-0.0.0.tgz");
+  cpSync("vendor/kind-ui-charts-0.1.0.tgz", "public/examples/package/kind-ui-charts-0.1.0.tgz");
 }
 const project = await createProject({ tsconfigPath: "tsconfig.json" });
 const generator = createGenerator({ project });
@@ -288,7 +288,7 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
         (file) => !inline.some(([name]) => name === file),
       );
       return (
-        `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\n${bundle.packageStatus}. Pinned package asset: ${origin}/examples/package/kind-ui-charts-0.0.0.tgz.\n\n` +
+        `## Complete ${bundle.title} consumer\n\n${bundle.notes}\n\n${bundle.packageStatus}. Pinned package asset: ${origin}/examples/package/kind-ui-charts-0.1.0.tgz.\n\n` +
         inline
           .map(
             ([file, source]) =>

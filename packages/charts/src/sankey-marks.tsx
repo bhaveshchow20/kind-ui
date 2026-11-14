@@ -6,8 +6,8 @@ import type {
   SankeyLinkProps as NativeLinkProps,
   SankeyNodeProps as NativeNodeProps,
 } from "recharts";
-
 import { SankeyMotion } from "./sankey-chart.js";
+import { SankeyColors, sankeyColor } from "./sankey-colors.js";
 import { type SankeyFinish, SankeyFinishFilter } from "./sankey-finish.js";
 
 export type SankeyMaterial = "solid" | "gradient";
@@ -35,14 +35,17 @@ export function SankeyLink({
   sourceRelativeY: _sourceRelativeY,
   targetRelativeY: _targetRelativeY,
   index: _index,
-  payload: _payload,
+  payload,
   material = "solid",
   finish = "plain",
-  color = "#4f46e5",
-  targetColor = "#06b6d4",
+  color,
+  targetColor,
   pathProps,
   ...presentation
 }: SankeyLinkProps) {
+  const config = use(SankeyColors);
+  color ??= (config ? sankeyColor(config, payload.source.id) : undefined) ?? "#4f46e5";
+  targetColor ??= (config ? sankeyColor(config, payload.target.id) : undefined) ?? "#06b6d4";
   const id = `sankey-${useId().replace(/:/g, "")}`;
   const { reveal, progress, width } = use(SankeyMotion);
   const settled = useMotionValue(1);
@@ -161,13 +164,15 @@ export function SankeyNode({
   y,
   width,
   height,
-  color = "#4f46e5",
+  color,
   rectProps,
   finish = "plain",
   index: _index,
-  payload: _payload,
+  payload,
   ...presentation
 }: SankeyNodeProps) {
+  const config = use(SankeyColors);
+  color ??= (config ? sankeyColor(config, payload.id) : undefined) ?? "#4f46e5";
   const id = `sankey-node-${useId().replace(/:/g, "")}`;
   const finished =
     finish !== "plain" &&
