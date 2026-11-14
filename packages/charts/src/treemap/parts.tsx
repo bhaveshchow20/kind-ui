@@ -13,7 +13,6 @@ import {
   useState,
 } from "react";
 import { AnimatedTooltipFrame, useInteractionOpacity } from "../animation.js";
-import { useChartInteraction } from "../chart-interaction.js";
 import { useEmphasis } from "../emphasis.js";
 import { FamilyLegend, OutsidePlot } from "../family-root.js";
 import { TooltipItem, tooltipClassName } from "../tooltip-content.js";
@@ -89,13 +88,8 @@ function Mark<T>({
     },
     [context.register, node.id, consumerRef],
   );
-  const interaction = useChartInteraction();
   const rootKey = node.path[0] ?? node.id;
-  const identityKey = interaction.kind === "node" ? node.id : rootKey;
-  const sharedSelection = interaction.eligible.includes(identityKey);
-  const selected = sharedSelection
-    ? interaction.mode === "focus" && interaction.selected === identityKey
-    : context.selectedId === node.id;
+  const selected = context.selectedId === node.id;
   const emphasis = useEmphasis(
     { kind: "series", key: rootKey, scope: "treemap", seriesKey: rootKey },
     !context.loading && !context.isHidden(node),
@@ -303,7 +297,7 @@ export function TreemapGroups<T = TreemapNode>({
     </div>
   );
 }
-// Match Heatmap's luminance-based label paint for explicit fills; theme tokens inherit foreground.
+// Give consumer-supplied tile content a readable default for explicit fills.
 function tileTextColor(fill?: string): string {
   if (!fill || !/^#[0-9a-f]{6}$/i.test(fill)) return "var(--foreground,#172033)";
   const channels = [1, 3, 5].map((i) => {
@@ -336,18 +330,27 @@ function TileLabel<T>({
       className="pointer-events-none absolute block overflow-hidden text-xs font-medium leading-tight"
       style={{ inset: padding, fontSize }}
     >
-      <span className="block truncate" title={node.label}>
-        {node.label}
+      <span
+        data-kind-ui="treemap-label-surface"
+        className="inline-flex max-w-full flex-col rounded-[3px] px-1 py-0.5"
+        style={{
+          background: "var(--background,Canvas)",
+          color: "var(--foreground,CanvasText)",
+        }}
+      >
+        <span className="block truncate" title={node.label}>
+          {node.label}
+        </span>
+        {showValue && (
+          <span className="mt-0.5 block whitespace-nowrap font-normal tabular-nums">{value}</span>
+        )}
       </span>
-      {showValue && (
-        <span className="mt-0.5 block whitespace-nowrap font-normal tabular-nums">{value}</span>
-      )}
     </span>
   );
 }
 export type TreemapTooltipProps<T = TreemapNode> = Omit<
   ComponentPropsWithRef<"div">,
-  "children"
+  "children" | "id"
 > & {
   children?: ReactNode | ((node: TreemapItem<T>) => ReactNode);
   valueAnimation?: "shuffle";
@@ -469,7 +472,9 @@ export function TreemapTooltip<T = TreemapNode>({
     </div>
   );
 }
-export type TreemapBreadcrumbsProps = ComponentPropsWithRef<"nav"> & { rootLabel?: string };
+export type TreemapBreadcrumbsProps = Omit<ComponentPropsWithRef<"nav">, "children"> & {
+  rootLabel?: string;
+};
 export function TreemapBreadcrumbs({ rootLabel = "All", ...props }: TreemapBreadcrumbsProps) {
   const context = useTreemap();
   const view = context.model.byId.get(context.viewId ?? "");
@@ -527,7 +532,6 @@ export function TreemapDataTable<T = TreemapNode>({
   ...props
 }: TreemapDataTableProps<T>) {
   const context = useTreemap<T>();
-  const interaction = useChartInteraction();
   const nodes = scope === "root" ? context.model.nodes : context.viewNodes;
   const table = useRef<HTMLTableElement | null>(null);
   const pendingFocus = useRef<{ viewId: string; owner: HTMLButtonElement } | null>(null);
@@ -594,10 +598,7 @@ export function TreemapDataTable<T = TreemapNode>({
           <tbody>
             {nodes.map((node) => {
               const attributes = rowProps?.(node);
-              const identityKey = interaction.kind === "node" ? node.id : (node.path[0] ?? node.id);
-              const selected = interaction.eligible.includes(identityKey)
-                ? interaction.mode === "focus" && interaction.selected === identityKey
-                : context.selectedId === node.id;
+              const selected = context.selectedId === node.id;
               const share = (value: number | null) =>
                 value === null ? "—" : `${(value * 100).toFixed(2)}%`;
               return (
@@ -661,7 +662,7 @@ export function TreemapDataTable<T = TreemapNode>({
     </OutsidePlot>
   );
 }
-export type TreemapColorLegendProps = ComponentPropsWithRef<"div">;
+export type TreemapColorLegendProps = Omit<ComponentPropsWithRef<"div">, "children">;
 export function TreemapColorLegend(props: TreemapColorLegendProps) {
   const { colors } = useTreemap();
   const { legend } = colors;

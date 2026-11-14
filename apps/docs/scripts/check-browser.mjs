@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { families } from "../examples/catalog.mjs";
 import { checkMobileLayout } from "./check-mobile-layout.mjs";
+import { checkPrimitiveDocs } from "./check-primitives-browser.mjs";
 import { checkThemeSwitch } from "./check-theme-switch-browser.mjs";
 import { expectDimmedSeries } from "./interaction-paint.mjs";
 
@@ -264,6 +265,7 @@ try {
   await context.close();
   await checkThemeSwitch(browser, origin);
   await checkMobileLayout(browser, origin);
+  await checkPrimitiveDocs(browser, origin);
   console.log(
     "Registered component navigation/search/routes, removed routes, Line selected prompt/source, legend visibility and dark mobile enlarged text passed.",
   );

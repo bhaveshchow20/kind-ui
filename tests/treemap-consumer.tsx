@@ -135,6 +135,20 @@ void (
   </TreemapChart>
 );
 
+const ignoredTooltipId = (
+  // @ts-expect-error Tooltip IDs are owned by the chart's aria-describedby contract.
+  <TreemapChart.Tooltip id="consumer-tooltip" />
+);
+const ignoredBreadcrumbChildren = (
+  // @ts-expect-error Breadcrumb content is derived from the current view path.
+  <TreemapChart.Breadcrumbs>Consumer breadcrumb</TreemapChart.Breadcrumbs>
+);
+const ignoredColorLegendChildren = (
+  // @ts-expect-error Color legend entries are derived from the active encoding.
+  <TreemapChart.ColorLegend>Consumer legend</TreemapChart.ColorLegend>
+);
+void [ignoredTooltipId, ignoredBreadcrumbChildren, ignoredColorLegendChildren];
+
 void (
   (
     // @ts-expect-error Custom records require accessors even when their generic is inferred.

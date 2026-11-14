@@ -142,10 +142,20 @@ export function TreemapHost() {
   const [owned, setOwned] = useState(params.get("direction") !== "to-controlled");
   const [blocked, setBlocked] = useState(true);
   const [escapeEvents, setEscapeEvents] = useState<readonly boolean[]>([]);
-  const nativeUnavailable = (target: string, id: string) =>
-    blocked && params.get("target") === target && id === (target === "tile" ? "d" : "energy")
-      ? { hidden: params.get("native") === "hidden", inert: params.get("native") === "inert" }
-      : {};
+  const nativeUnavailable = (target: string, id: string) => {
+    if (
+      !blocked ||
+      params.get("target") !== target ||
+      id !== (target === "tile" ? "d" : "energy")
+    ) {
+      return {};
+    }
+    if (params.get("native") === "hidden") return { hidden: true };
+    if (params.get("native") === "inert") return { inert: true };
+    if (params.get("native") === "class") return { className: "treemap-consumer-hidden" };
+    if (params.get("native") === "style") return { style: { display: "none" } };
+    return {};
+  };
   const [view, setView] = useState<string | null>(held ? "platforms" : null);
   const [requests, setRequests] = useState(0);
   const [dark, setDark] = useState(false);
@@ -165,7 +175,7 @@ export function TreemapHost() {
         : encoding;
   return (
     <section aria-label="Treemap public consumer">
-      <style>{`.treemap-consumer-opacity-initial { opacity: 0.45; } .treemap-consumer-opacity-changed { opacity: 0.8; }`}</style>
+      <style>{`.treemap-consumer-opacity-initial { opacity: 0.45; } .treemap-consumer-opacity-changed { opacity: 0.8; } .treemap-consumer-hidden { display: none; }`}</style>
       <button type="button" onClick={() => setChangedOpacity((value) => !value)}>
         Class opacity
       </button>

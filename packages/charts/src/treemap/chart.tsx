@@ -144,6 +144,7 @@ const defaultFormat = (value: number) => String(value);
 const isAvailableControl = (element: HTMLElement | null | undefined): element is HTMLElement =>
   !!element &&
   element.isConnected &&
+  element.getClientRects().length > 0 &&
   !element.matches(":disabled") &&
   element.closest("[hidden], [inert]") === null;
 export function TreemapChartRoot<const T = TreemapNode>({
@@ -158,8 +159,10 @@ export function TreemapChartRoot<const T = TreemapNode>({
   onVisibleSeriesChange,
   ...props
 }: TreemapChartProps<T>) {
+  const instructionId = useId();
   if (Object.hasOwn(props, "rootProps")) throw new Error("TreemapChart does not accept rootProps");
   if (props.children === undefined) throw new Error("TreemapChart requires explicit children");
+  const describedBy = [props["aria-describedby"], instructionId].filter(Boolean).join(" ");
   return (
     <FamilyRoot
       family="TreemapChart"
@@ -172,8 +175,12 @@ export function TreemapChartRoot<const T = TreemapNode>({
       {...(nonce !== undefined ? { nonce } : {})}
       {...(frameProps !== undefined ? { frameProps } : {})}
       {...(legendPosition ? { legendPosition } : {})}
+      instructions={{
+        id: instructionId,
+        text: "Arrow keys move between treemap items. Home and End move to the first and last item. Enter or Space activates an item. Escape dismisses inspection.",
+      }}
     >
-      <TreemapPlot<T> {...props} />
+      <TreemapPlot<T> {...props} aria-describedby={describedBy} />
     </FamilyRoot>
   );
 }
@@ -285,6 +292,15 @@ function TreemapPlot<T>({
 
   const root = useRef<HTMLDivElement | null>(null);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
+  const availabilitySignature = useCallback(
+    () =>
+      JSON.stringify(
+        [...buttons.current.entries()]
+          .map(([id, button]) => [id, isAvailableControl(button)])
+          .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+      ),
+    [],
+  );
   const focusedInside = useRef(false);
   const lastFocusedControl = useRef<{
     path: readonly string[] | null;
@@ -306,7 +322,7 @@ function TreemapPlot<T>({
   }, []);
   const [size, setSize] = useState({
     width: typeof width === "number" ? width : 0,
-    height: typeof height === "number" ? height : 280,
+    height: typeof height === "number" ? height : 0,
   });
   useLayoutEffect(() => {
     const element = root.current;
@@ -473,31 +489,26 @@ function TreemapPlot<T>({
   const [registeredVersion, setRegisteredVersion] = useState(0);
   const pendingRegistry = useRef(false);
   const registrySignature = useRef("");
-  const register = useCallback((id: string, node: HTMLButtonElement | null) => {
-    if (node) buttons.current.set(id, node);
-    else buttons.current.delete(id);
-    if (pendingRegistry.current) return;
-    pendingRegistry.current = true;
-    // Consumer callback refs can detach and reattach during one commit. Compare the
-    // settled membership, rather than turning those temporary changes into renders.
-    queueMicrotask(() => {
-      pendingRegistry.current = false;
-      const signature = JSON.stringify(
-        [...buttons.current.entries()]
-          .map(([id, button]) => [id, isAvailableControl(button)])
-          .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
-      );
-      if (signature === registrySignature.current) return;
-      registrySignature.current = signature;
-      setRegisteredVersion((version) => version + 1);
-    });
-  }, []);
+  const register = useCallback(
+    (id: string, node: HTMLButtonElement | null) => {
+      if (node) buttons.current.set(id, node);
+      else buttons.current.delete(id);
+      if (pendingRegistry.current) return;
+      pendingRegistry.current = true;
+      // Consumer callback refs can detach and reattach during one commit. Compare the
+      // settled membership, rather than turning those temporary changes into renders.
+      queueMicrotask(() => {
+        pendingRegistry.current = false;
+        const signature = availabilitySignature();
+        if (signature === registrySignature.current) return;
+        registrySignature.current = signature;
+        setRegisteredVersion((version) => version + 1);
+      });
+    },
+    [availabilitySignature],
+  );
   useLayoutEffect(() => {
-    const signature = JSON.stringify(
-      [...buttons.current.entries()]
-        .map(([id, button]) => [id, isAvailableControl(button)])
-        .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
-    );
+    const signature = availabilitySignature();
     if (signature === registrySignature.current) return;
     registrySignature.current = signature;
     setRegisteredVersion((version) => version + 1);
@@ -506,22 +517,18 @@ function TreemapPlot<T>({
     const element = root.current;
     if (!element) return;
     const observer = new MutationObserver(() => {
-      const signature = JSON.stringify(
-        [...buttons.current.entries()]
-          .map(([id, button]) => [id, isAvailableControl(button)])
-          .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
-      );
+      const signature = availabilitySignature();
       if (signature === registrySignature.current) return;
       registrySignature.current = signature;
       setRegisteredVersion((version) => version + 1);
     });
-    const attributeFilter = ["disabled", "hidden", "inert"];
+    const attributeFilter = ["class", "disabled", "hidden", "inert", "style"];
     observer.observe(element, { subtree: true, attributes: true, attributeFilter });
     for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
       observer.observe(ancestor, { attributes: true, attributeFilter });
     }
     return () => observer.disconnect();
-  }, []);
+  }, [availabilitySignature]);
   void registeredVersion;
   const navigation = geometry.rectangles.filter((node) => {
     const button = buttons.current.get(node.id);

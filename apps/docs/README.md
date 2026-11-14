@@ -48,3 +48,25 @@ Use `<ChartExample id="…" />` in MDX; the existing LineExample and AreaExample
 The default build keeps `/docs/` pages and nonindexable preview metadata. Production builds use `KIND_UI_DEPLOYMENT_ENV=production` and `NEXT_PUBLIC_KIND_DOCS_BASE_PATH=/charts/docs`. The prefix is compiled into routes, navigation, search, assets and retrieval links; changing it requires rebuilding. Component pages then live at `/charts/docs/components/line/`, without another `/docs/` segment.
 
 `NEXT_PUBLIC_KIND_DOCS_BASE_PATH=/charts/docs KIND_DOCS_PORT=6374 npm run preview` mounts `out/` beneath that prefix locally. An integration harness must strip `/charts/docs` before reading the intact export, serve directory `index.html` files for deep reloads, and keep this application's `_next`, Markdown, examples and search endpoint under the docs prefix. Set `KIND_DOCS_ORIGIN=https://kindui.dev` for absolute production agent links. Hosting and DNS remain part of the deployment owner's handoff.
+
+## Primitive component documentation
+
+The root-mounted build also serves the 14 primitives from `@kind-ui/primitives` at
+`/components/{component-name}/`. It uses a separate Fumadocs collection in
+`content/primitives`, a Components-only sidebar, and the shared Preview/Code frame
+and API table. Existing chart pages remain at `/docs/`.
+
+Each page owns `examples/primitives/<name>.tsx` and `lib/primitives/<name>.ts`.
+The live preview imports the standalone example; the server reads that same file
+for highlighted Code, keeping imports, data and behavior synchronized. API rows
+are curated against the current exported types and implementation defaults.
+The app imports the public primitive styles and scans its built utilities.
+
+The local workspace dependency is prepared by `generate` and `typecheck`; it does
+not alter the guarded Charts artifact. Run `node scripts/start-browser-check.mjs
+primitives` for the focused route, sidebar, exact-source, responsive and interaction
+checks. The same checks run as part of `npm run check:browser`.
+
+The existing `/charts/docs` build remains chart-only: primitive pages are omitted
+from that export so they cannot acquire a `/charts/docs/components` URL. Deployment
+of the root-mounted component routes is outside this documentation change.

@@ -20,7 +20,11 @@ try {
       }
     });
   });
-  for (const script of ["scripts/check-browser.mjs", "scripts/check-treemap-browser.mjs"]) {
+  const scripts =
+    process.argv[2] === "primitives"
+      ? ["scripts/check-primitives-browser.mjs"]
+      : ["scripts/check-browser.mjs", "scripts/check-treemap-browser.mjs"];
+  for (const script of scripts) {
     const code = await new Promise((resolve, reject) => {
       const check = spawn(process.execPath, [script], { stdio: "inherit" });
       check.once("error", reject);

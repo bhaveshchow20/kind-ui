@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@import "@kind-ui/ai/styles.css";
+@source "../../../node_modules/@kind-ui/ai/src";
+@source "../../../node_modules/@kind-ui/primitives/src";

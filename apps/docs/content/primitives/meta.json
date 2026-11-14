@@ -1,0 +1,19 @@
+{
+  "title": "Components",
+  "pages": [
+    "button",
+    "textarea",
+    "avatar",
+    "tooltip",
+    "popover",
+    "menu",
+    "collapsible",
+    "badge",
+    "status",
+    "code-block",
+    "table",
+    "dialog",
+    "combobox",
+    "hover-card"
+  ]
+}
