@@ -28,11 +28,19 @@ import { TreemapChart } from "@kind-ui/charts";
 
 The shared legend emphasizes categories without reallocating area. `animate` enables shared motion; `valueAnimation="shuffle"` rolls tooltip digits. Reduced motion is respected.
 
+The **Event and market activity** example sets `depth={1}` so each view shows one hierarchy level. Activate a topic or event tile with click, Enter or Space to drill down; use the breadcrumbs to move back up.
+
 ## Loading State
 
-Use **Show chart** to transition from the placeholder to data, or **Show loading** to return. The chart stays mounted; `animate` enables its entrance, and `loadingLabel` names the pending state.
+Use **Show chart** to transition from the placeholder to data, or **Show loading** to return. The chart stays mounted; `animate` enables its entrance, and `loadingLabel` names the loading state.
 
 <ChartExample id="treemap" variant="loading" />
+
+### Empty and invalid data
+
+An empty array or a hierarchy with no positive area shows `empty`, which defaults to **No positive values**. Invalid IDs, duplicate records, cycles, and missing, negative or nonfinite leaf values throw descriptive errors instead of rendering misleading geometry.
+
+The data table above is the accessible alternative for the primary example. Applications can place `TreemapChart.DataTable` or their own equivalent outside the graph when the chart needs a persistent tabular view.
 
 ## API reference
 
@@ -73,7 +81,7 @@ The family supplies ancestor context, the original leaf value and its share to t
 | --- | --- | --- |
 | `valueAnimation` | None | `"shuffle"` uses the shared rolling number. |
 | `children(item)` | Family readout | Custom content using the original datum and supplied values. |
-| Native div props / ref | — | Consumer presentation and semantics. |
+| Native div props / ref | — | Consumer presentation and semantics; the tooltip ID remains chart-owned. |
 
 ### TreemapChart.Legend and optional parts
 
@@ -97,6 +105,6 @@ Keep category colors, legend actions and tooltip presentation aligned with these
 | [Legend](/docs/chart-components/legend/) | Identify categories and focus by dimming other tiles. |
 | [Tooltip](/docs/chart-components/tooltip/) | Style the floating readout for the inspected tile. |
 
-Arrows and Home/End move between tiles and group headers. Enter/Space activates them; Escape dismisses inspection. `viewId` and `activeId` control navigation and inspection. `interaction` owns legend selection; `selectedId` remains available for legacy application actions. `rootShare`, `parentShare` and `viewShare` describe the supplied dataset, parent and current subtree respectively; zero denominators yield `null`.
+Arrows and Home/End move between tiles and group headers. Enter/Space activates them; Escape dismisses inspection. Pair `viewId` with `onViewChange`, `activeId` with `onActiveChange`, and `selectedId` with `onSelectionChange` for controlled navigation, inspection and application selection. `onActivate` handles click or keyboard activation without taking ownership of selection. `interaction` separately owns shared legend focus or visibility. `rootShare`, `parentShare` and `viewShare` describe the supplied dataset, parent and current subtree respectively; zero denominators yield `null`.
 
 `layout="stable"` retains rows across value and size updates. For your own record shape, use `accessors`; `encoding` colors by a separate metric. Formatters and filtering remain consumer-owned.

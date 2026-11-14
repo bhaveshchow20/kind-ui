@@ -264,9 +264,19 @@ try {
   await rootProps.focus();
   await expect(rootProps).toBeFocused();
   await expect(page.locator("#installation")).toBeVisible();
-  await expect(
-    page.getByText("Treemap is pending the next Core release.", { exact: false }).first(),
-  ).toBeVisible();
+
+  const hierarchy = page.locator('[data-component="treemap-events"]');
+  await hierarchy.scrollIntoViewIfNeeded();
+  await tile(hierarchy, "transport").focus();
+  await page.keyboard.press("Enter");
+  await expect(tile(hierarchy, "rail")).toBeVisible();
+  await tile(hierarchy, "rail").focus();
+  await page.keyboard.press("Enter");
+  await expect(tile(hierarchy, "rail-approval")).toBeVisible();
+  await hierarchy.getByRole("button", { name: "Transport", exact: true }).click();
+  await expect(tile(hierarchy, "rail")).toBeVisible();
+  await hierarchy.getByRole("button", { name: "All topics", exact: true }).click();
+  await expect(tile(hierarchy, "transport")).toBeVisible();
   await page.screenshot({ path: `${artifactDirectory}/desktop.png`, fullPage: true });
 
   for (const width of [375, 320]) {

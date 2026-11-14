@@ -55,7 +55,7 @@ export function CloudSpendTreemap({ state = "ready" }: { state?: "ready" | "load
       {!loading && (
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs text-muted-foreground">Cloud infrastructure</p>
+            <p className="text-xs text-muted-foreground">Illustrative cloud infrastructure</p>
             <h3 className="m-0 text-base font-medium">Monthly spend</h3>
           </div>
           <div className="w-36 shrink-0 text-right">

@@ -109,6 +109,7 @@ export function EventActivityTreemap() {
       aria-label="Illustrative 24-hour market turnover and probability-point change"
       animate
       height={320}
+      depth={1}
       padding={3}
       formatValue={(value) => `$${value}k turnover`}
     >

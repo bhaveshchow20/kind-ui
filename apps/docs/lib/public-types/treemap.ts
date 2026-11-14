@@ -6,6 +6,9 @@ export type TreemapRootReference = Pick<
   | "config"
   | "height"
   | "padding"
+  | "depth"
+  | "groupHeaderHeight"
+  | "layout"
   | "formatValue"
   | "interaction"
   | "accessors"
@@ -13,6 +16,17 @@ export type TreemapRootReference = Pick<
   | "animate"
   | "loading"
   | "loadingLabel"
+  | "empty"
+  | "viewId"
+  | "defaultViewId"
+  | "onViewChange"
+  | "activeId"
+  | "defaultActiveId"
+  | "onActiveChange"
+  | "selectedId"
+  | "defaultSelectedId"
+  | "onSelectionChange"
+  | "onActivate"
 >;
 export type TreemapNodeReference = Chart.TreemapNode;
 export type TreemapAccessorsReference = Chart.TreemapAccessors<Chart.TreemapNode>;

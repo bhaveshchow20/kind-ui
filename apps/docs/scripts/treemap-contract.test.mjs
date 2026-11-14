@@ -110,14 +110,6 @@ for (const example of family.examples) {
               ? descendantTotal(node.datum, spec.children, metric)
               : "Not aggregated"
             : (node.datum[metric] ?? "Unavailable");
-      if (example.id === "treemap") {
-        const previous = sourceData(source, "previousValues");
-        const sumPrevious = (entry) =>
-          entry.kind === "leaf"
-            ? previous[entry.id]
-            : entry.children.reduce((total, child) => total + sumPrevious(child), 0);
-        row.previousValue = sumPrevious(node);
-      }
       return row;
     });
     assert.deepEqual(family.dataLabels[example.id].rows, rows);
@@ -126,13 +118,9 @@ for (const example of family.examples) {
       assert.ok(rows.some((row) => row.kind === "Leaf" && row[spec.area] === 0));
     if (spec.metrics.length)
       assert.ok(rows.some((row) => spec.metrics.some((metric) => row[metric] === "Unavailable")));
-    for (const part of [
-      "Tiles",
-      "Labels",
-      "Tooltip",
-      example.id === "treemap" ? "Legend" : "ColorLegend",
-    ])
+    for (const part of ["Tiles", "Tooltip", example.id === "treemap" ? "Legend" : "ColorLegend"])
       assert.ok(source.includes(`<TreemapChart.${part}`), `Missing explicit ${part}`);
+    assert.doesNotMatch(source, /<TreemapChart\.Labels/);
     assert.doesNotMatch(source, /<TreemapChart\.(?:Root|Plot|DataTable)|<table\b/);
     assert.doesNotMatch(source, /from ["']\.\.?\//);
     assert.doesNotMatch(source, /\?\?\s*0/, "Missing leaf area must never silently become zero");
@@ -182,6 +170,46 @@ test("one monthly bill preserves supplied identities and totals", () => {
     /previousPeriod|previousValues|period\?:|View (?:plotted )?[Dd]ata|DataTable/,
   );
 });
+test("event activity demonstrates keyboard-operable hierarchy navigation", () => {
+  const source = readFileSync(new URL("examples/treemap-events/example.tsx", docs), "utf8");
+  const guide = readFileSync(new URL("content/docs/components/treemap.mdx", docs), "utf8");
+  assert.match(source, /depth=\{1\}/);
+  assert.match(source, /<TreemapChart\.Breadcrumbs/);
+  assert.match(guide, /drill down/i);
+});
+test("root API includes empty, layout, navigation, inspection, and selection ownership", () => {
+  const reference = readFileSync(new URL("lib/public-types/treemap.ts", docs), "utf8");
+  for (const prop of [
+    "empty",
+    "depth",
+    "groupHeaderHeight",
+    "layout",
+    "viewId",
+    "defaultViewId",
+    "onViewChange",
+    "activeId",
+    "defaultActiveId",
+    "onActiveChange",
+    "selectedId",
+    "defaultSelectedId",
+    "onSelectionChange",
+    "onActivate",
+  ])
+    assert.ok(reference.includes(`| "${prop}"`), `Missing ${prop} from TreemapRootReference`);
+});
+test("public Treemap guidance never exposes package versions or prerelease wording", () => {
+  for (const path of [
+    "content/docs/components/treemap.mdx",
+    "examples/treemap/example.tsx",
+    "examples/treemap-events/example.tsx",
+    "../showcase/components/treemap-chart-card.tsx",
+    "../showcase/lib/treemap-recipes.ts",
+  ]) {
+    const source = readFileSync(new URL(path, docs), "utf8");
+    assert.doesNotMatch(source, /@kind-ui\/charts@[\w.-]+/);
+    assert.doesNotMatch(source, /\b(?:prerelease|unpublished|pending (?:the )?next release)\b/i);
+  }
+});
 test("signed exposure is precomputed and market activity is not duplicated per outcome", () => {
   const portfolio = sourceData(
     readFileSync(new URL("examples/treemap-portfolio/example.tsx", docs), "utf8"),
@@ -216,15 +244,8 @@ test("generated consumers and selected metric sources match their canonical exam
     assert.equal(bundles[example.id].files[path], source);
     for (const [variant, selection] of Object.entries(bundles[example.id].variants ?? {})) {
       assert.equal(filesFor(bundles[example.id], {}, variant)[path], selection.source);
-      if (variant === "loading") {
-        assert.equal(example.id, "treemap");
-        assert.ok(selection.source.includes("loading = true"));
-        assert.ok(selection.source.includes('period = "current"'));
-      } else {
-        assert.ok(selection.source.includes(`${family.variants[example.id].prop} = "${variant}"`));
-        if (example.id === "treemap") assert.ok(selection.source.includes("loading = false"));
-      }
+      assert.ok(selection.source.includes(`${family.variants[example.id].prop} = "${variant}"`));
     }
   }
-  assert.deepEqual(Object.keys(bundles.treemap.variants), ["current", "previous", "loading"]);
+  assert.deepEqual(Object.keys(bundles.treemap.variants), ["ready", "loading"]);
 });
