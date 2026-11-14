@@ -7,23 +7,17 @@ export const treemapRecipes = [
     id: "treemap-market",
     family: "Treemap",
     tag: "Monthly cloud spend",
-    context:
-      "Compute and data services account for most of this team's September bill. Select a family to inspect its services.",
+    context: "Compare service families and inspect individual costs.",
     areaLabel: "September spend · USD",
     colorLabel: "Service family",
-    summary: "$76.3k",
-    summaryLabel: "10 services · September 2026",
   },
   {
     id: "treemap-exposure",
     family: "Treemap",
     tag: "Portfolio allocation",
-    context:
-      "See concentration across sectors and individual holdings. Values are an illustrative allocation, not live market prices.",
+    context: "Compare sector concentration and inspect individual holdings.",
     areaLabel: "Position value · USD",
     colorLabel: "Sector",
-    summary: "$197k",
-    summaryLabel: "9 holdings · illustrative portfolio",
   },
 ] as const;
 export type TreemapRecipe = (typeof treemapRecipes)[number];

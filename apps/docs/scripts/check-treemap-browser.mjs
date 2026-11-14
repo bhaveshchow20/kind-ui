@@ -203,6 +203,9 @@ try {
   const primary = page.locator('[data-component="treemap"]');
   await primary.scrollIntoViewIfNeeded();
   await checkSource(page, context, primary, "treemap", "ready");
+  const primaryExample = primary.locator(".chart-example > section");
+  await expect(primaryExample.locator(":scope > *")).toHaveCount(1);
+  await expect(primaryExample.locator(':scope > [data-kind-ui="chart"]')).toHaveCount(1);
   await expect(primary.getByRole("combobox")).toHaveCount(0);
   const before = await geometry(primary);
   await tile(primary, "api").focus();
@@ -267,6 +270,9 @@ try {
 
   const hierarchy = page.locator('[data-component="treemap-events"]');
   await hierarchy.scrollIntoViewIfNeeded();
+  await expect(hierarchy.getByText("Illustrative event/market data", { exact: false })).toHaveCount(
+    0,
+  );
   await tile(hierarchy, "transport").focus();
   await page.keyboard.press("Enter");
   await expect(tile(hierarchy, "rail")).toBeVisible();

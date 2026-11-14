@@ -12,7 +12,7 @@ description: See where resources go, from categories to individual services.
 
 ## Usage
 
-Each service occupies its share of one monthly bill. Color identifies its category. Inspect a tile for its service value and ancestor context.
+Area shows each leaf's share. Color identifies its category. Inspect a tile for its value and hierarchy.
 
 ```tsx title="Composition sketch"
 import { TreemapChart } from "@kind-ui/charts";
@@ -24,25 +24,23 @@ import { TreemapChart } from "@kind-ui/charts";
 </TreemapChart>
 ```
 
-`TreemapNode` is the input type. Use `{ id, label, value }` for a leaf and `{ id, label, children }` for a group. IDs stay unique and stable across updates; group totals come from their descendants. Area values must be finite and nonnegative. Zero values remain in the data even when they have no drawable area.
+Use `{ id, label, value }` for a leaf and `{ id, label, children }` for a group. Keep IDs stable; group totals derive from their descendants. Values must be finite and nonnegative.
 
-The shared legend emphasizes categories without reallocating area. `animate` enables shared motion; `valueAnimation="shuffle"` rolls tooltip digits. Reduced motion is respected.
+The legend emphasizes categories without changing geometry. `animate` and `valueAnimation="shuffle"` use the shared reduced-motion behavior.
 
-The **Event and market activity** example sets `depth={1}` so each view shows one hierarchy level. Activate a topic or event tile with click, Enter or Space to drill down; use the breadcrumbs to move back up.
+Set `depth={1}` and render `Breadcrumbs` to drill down by click or keyboard.
 
 <ChartExample id="treemap-events" />
 
 ## Loading State
 
-Use **Show chart** to transition from the placeholder to data, or **Show loading** to return. The chart stays mounted; `animate` enables its entrance, and `loadingLabel` names the loading state.
+Use the control to compare the mounted loading and ready states. `loadingLabel` names the pending state.
 
 <ChartExample id="treemap" variant="loading" />
 
 ### Empty and invalid data
 
-An empty array or a hierarchy with no positive area shows `empty`, which defaults to **No positive values**. Invalid IDs, duplicate records, cycles, and missing, negative or nonfinite leaf values throw descriptive errors instead of rendering misleading geometry.
-
-The data table above is the accessible alternative for the primary example. Applications can place `TreemapChart.DataTable` or their own equivalent outside the graph when the chart needs a persistent tabular view.
+An empty array or hierarchy with no positive area shows `empty`. Invalid hierarchies throw descriptive errors instead of rendering misleading geometry.
 
 ## API reference
 

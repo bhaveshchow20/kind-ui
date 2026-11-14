@@ -117,13 +117,6 @@ export function EventActivityTreemap() {
       <TreemapChart.Tooltip valueAnimation="shuffle" />
       <TreemapChart.ColorLegend />
       <TreemapChart.Breadcrumbs rootLabel="All topics" />
-      <TreemapChart.Content>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Illustrative event/market data · 24 hours ending October 9, 2026 · Area: market-level USD
-          turnover, counted once per leaf. Color: probability-point change, not relative return.
-          Topic and event totals derive from markets.
-        </p>
-      </TreemapChart.Content>
     </TreemapChart>
   );
 }

@@ -46,10 +46,6 @@ export function TreemapChartCard({
       <div className="card-top">
         <h3 className="chart-tag">{recipe.tag}</h3>
       </div>
-      <div className="chart-summary">
-        <strong>{recipe.summary}</strong>
-        <span>{recipe.summaryLabel}</span>
-      </div>
       <TreemapChart
         key={replay}
         frameProps={{ className: "chart-root" }}
@@ -109,7 +105,6 @@ export function TreemapChartCard({
           </tbody>
         </table>
       </div>
-      <p className="chart-context">{recipe.context}</p>
     </motion.article>
   );
 }

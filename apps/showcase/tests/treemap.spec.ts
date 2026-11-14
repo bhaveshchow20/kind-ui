@@ -50,6 +50,7 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(cards.nth(0)).toContainText("Monthly cloud spend");
       await expect(cards.nth(1)).toContainText("Portfolio allocation");
       for (const card of [cards.nth(0), cards.nth(1)]) {
+        await expect(card.locator(".chart-summary, .chart-context")).toHaveCount(0);
         await assertContained(card);
         const tile = card.locator('[data-kind-ui="treemap-tile"]').first();
         await tile.focus();
@@ -78,7 +79,6 @@ test("cloud spend shares, hierarchy and category selection preserve useful value
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
   const card = await openExample(page, "Monthly cloud spend");
-  await expect(card).toContainText("$76.3k");
   const api = card.locator('[data-kind-ui="treemap-tile"][data-node-id="api"]');
   const before = await api.boundingBox();
   const dataLegend = card.locator('button[data-legend-key="data"]');
@@ -107,7 +107,6 @@ test("portfolio tooltip shows holding value and sector share without changing al
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
   const card = await openExample(page, "Portfolio allocation");
-  await expect(card).toContainText("$197k");
   const aapl = card.locator('[data-kind-ui="treemap-tile"][data-node-id="aapl"]');
   await aapl.click();
   await expect(aapl).toHaveAttribute("aria-pressed", "true");
