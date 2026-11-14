@@ -1,0 +1,199 @@
+{
+  "name": "@kind-ui/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "src",
+    "LICENSE",
+    "THIRD_PARTY.md",
+    "licenses"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./src/styles.css",
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js"
+    },
+    "./thinking-dots": {
+      "types": "./dist/thinking-dots.d.ts",
+      "import": "./dist/thinking-dots.js"
+    },
+    "./question": {
+      "types": "./dist/question.d.ts",
+      "import": "./dist/question.js"
+    },
+    "./markdown": {
+      "types": "./dist/markdown.d.ts",
+      "import": "./dist/markdown.js"
+    },
+    "./markdown-code-block": {
+      "types": "./dist/markdown-code-block.d.ts",
+      "import": "./dist/markdown-code-block.js"
+    },
+    "./markdown-table": {
+      "types": "./dist/markdown-table.d.ts",
+      "import": "./dist/markdown-table.js"
+    },
+    "./markdown-context": {
+      "types": "./dist/markdown-context.d.ts",
+      "import": "./dist/markdown-context.js"
+    },
+    "./generated-image": {
+      "types": "./dist/generated-image.d.ts",
+      "import": "./dist/generated-image.js"
+    },
+    "./document": {
+      "types": "./dist/document.d.ts",
+      "import": "./dist/document.js"
+    },
+    "./transcript": {
+      "types": "./dist/transcript.d.ts",
+      "import": "./dist/transcript.js"
+    },
+    "./feedback-bar": {
+      "types": "./dist/feedback-bar.d.ts",
+      "import": "./dist/feedback-bar.js"
+    },
+    "./callout": {
+      "types": "./dist/callout.d.ts",
+      "import": "./dist/callout.js"
+    },
+    "./loader": {
+      "types": "./dist/loader.d.ts",
+      "import": "./dist/loader.js"
+    },
+    "./status": {
+      "types": "./dist/status.d.ts",
+      "import": "./dist/status.js"
+    },
+    "./attachments": {
+      "types": "./dist/attachments.d.ts",
+      "import": "./dist/attachments.js"
+    },
+    "./uploader": {
+      "types": "./dist/uploader.d.ts",
+      "import": "./dist/uploader.js"
+    },
+    "./sources": {
+      "types": "./dist/sources.d.ts",
+      "import": "./dist/sources.js"
+    },
+    "./inline-citation": {
+      "types": "./dist/inline-citation.d.ts",
+      "import": "./dist/inline-citation.js"
+    },
+    "./context": {
+      "types": "./dist/context.d.ts",
+      "import": "./dist/context.js"
+    },
+    "./selection": {
+      "types": "./dist/selection.d.ts",
+      "import": "./dist/selection.js"
+    },
+    "./conversation": {
+      "types": "./dist/conversation.d.ts",
+      "import": "./dist/conversation.js"
+    },
+    "./message": {
+      "types": "./dist/message.d.ts",
+      "import": "./dist/message.js"
+    },
+    "./prompt-input": {
+      "types": "./dist/prompt-input.d.ts",
+      "import": "./dist/prompt-input.js"
+    },
+    "./composer-rich": {
+      "types": "./dist/composer-rich.d.ts",
+      "import": "./dist/composer-rich.js"
+    },
+    "./model-selector": {
+      "types": "./dist/model-selector.d.ts",
+      "import": "./dist/model-selector.js"
+    },
+    "./suggestion": {
+      "types": "./dist/suggestion.d.ts",
+      "import": "./dist/suggestion.js"
+    },
+    "./tool": {
+      "types": "./dist/tool.d.ts",
+      "import": "./dist/tool.js"
+    },
+    "./confirmation": {
+      "types": "./dist/confirmation.d.ts",
+      "import": "./dist/confirmation.js"
+    },
+    "./reasoning": {
+      "types": "./dist/reasoning.d.ts",
+      "import": "./dist/reasoning.js"
+    },
+    "./chain-of-thought": {
+      "types": "./dist/chain-of-thought.d.ts",
+      "import": "./dist/chain-of-thought.js"
+    },
+    "./action": {
+      "types": "./dist/action.d.ts",
+      "import": "./dist/action.js"
+    },
+    "./agent-run": {
+      "types": "./dist/agent-run.d.ts",
+      "import": "./dist/agent-run.js"
+    },
+    "./plan": {
+      "types": "./dist/plan.d.ts",
+      "import": "./dist/plan.js"
+    },
+    "./task": {
+      "types": "./dist/task.d.ts",
+      "import": "./dist/task.js"
+    },
+    "./queue": {
+      "types": "./dist/queue.d.ts",
+      "import": "./dist/queue.js"
+    },
+    "./checkpoint": {
+      "types": "./dist/checkpoint.d.ts",
+      "import": "./dist/checkpoint.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "test:context-research": "node --test tests/context-research.test.mjs && tsc -p tests/tsconfig.context-research.json && tsc -p tests/tsconfig.context-research.json --module ESNext --moduleResolution Bundler"
+  },
+  "peerDependencies": {
+    "motion": "^13.4.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^4.0.0"
+  },
+  "dependencies": {
+    "@base-ui/react": "1.4.1",
+    "@kind-ui/primitives": "0.0.0",
+    "@streamdown/cjk": "1.0.2",
+    "@streamdown/code": "1.1.0",
+    "@streamdown/math": "1.0.2",
+    "@streamdown/mermaid": "1.0.2",
+    "@tiptap/core": "3.32.0",
+    "@tiptap/extension-placeholder": "3.32.0",
+    "@tiptap/pm": "3.32.0",
+    "@tiptap/react": "3.32.0",
+    "@tiptap/starter-kit": "3.32.0",
+    "@tiptap/suggestion": "3.32.0",
+    "clsx": "2.1.1",
+    "embla-carousel-react": "8.6.0",
+    "lucide-react": "1.57.0",
+    "streamdown": "2.4.0",
+    "use-stick-to-bottom": "1.1.3",
+    "partial-json": "0.1.7"
+  }
+}
