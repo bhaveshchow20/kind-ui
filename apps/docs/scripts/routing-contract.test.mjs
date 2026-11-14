@@ -1,7 +1,18 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { test } from "node:test";
-import { normalizeBasePath } from "../lib/routing.mjs";
+import { canonicalDocSlugs, legacyDocSlugs, normalizeBasePath } from "../lib/routing.mjs";
+
+test("old start links resolve to canonical pages without affecting other routes", () => {
+  assert.deepEqual(legacyDocSlugs, [
+    ["start", "installation"],
+    ["start", "quickstart"],
+  ]);
+  for (const page of ["installation", "quickstart"])
+    assert.deepEqual(canonicalDocSlugs(["start", page]), [page]);
+  assert.deepEqual(canonicalDocSlugs(["components", "line"]), ["components", "line"]);
+  assert.equal(canonicalDocSlugs(null), null);
+});
 
 test("default and prefixed builds keep separate page and retrieval contracts", () => {
   for (const prefix of ["", "/charts/docs"]) {

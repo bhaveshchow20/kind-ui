@@ -4,6 +4,7 @@ import { animate as animateValue } from "motion/react";
 import {
   type ComponentProps,
   createContext,
+  memo,
   useCallback,
   useLayoutEffect,
   useRef,
@@ -12,11 +13,16 @@ import {
 } from "react";
 import { PieChart as EnginePieChart } from "recharts";
 import { type LineAnimation, MotionContext } from "./animation.js";
+import { useChart } from "./chart-context.js";
 import { LineChartFrame } from "./line-chart.js";
 import { PolarLoadingDesign } from "./loading-polar-designs.js";
 
+import { PieTooltipPin, pinnedPieIndex } from "./pie-tooltip-pin.js";
+
 export type PieAnimation = LineAnimation;
 export type PieChartProps = ComponentProps<typeof EnginePieChart> & {
+  /** Initial tooltip category; one direct categoryKey PieSeries with explicit data only. */
+  defaultPinnedCategory?: string | undefined;
   animate?: boolean | PieAnimation | undefined;
   loading?: boolean | undefined;
   loadingLabel?: string | undefined;
@@ -51,8 +57,62 @@ export function PieChart({
   loadingLabel,
   animationDirection = "clockwise",
   children,
+  defaultPinnedCategory,
   ...props
 }: PieChartProps) {
+  const { visibleSeries } = useChart();
+  const [initialCategory] = useState(defaultPinnedCategory);
+  const [pinCleared, setPinCleared] = useState(false);
+  const clearPin = useCallback(() => setPinCleared(true), []);
+  const pinIndex =
+    initialCategory === undefined || pinCleared
+      ? undefined
+      : visibleSeries !== undefined && !visibleSeries.includes(initialCategory)
+        ? undefined
+        : pinnedPieIndex(children, initialCategory);
+  useLayoutEffect(() => {
+    if (initialCategory !== undefined && pinIndex === undefined) clearPin();
+  }, [initialCategory, pinIndex, clearPin]);
+  const chart = (
+    <PieChartPlot
+      {...props}
+      animate={animate}
+      loading={loading}
+      loadingLabel={loadingLabel}
+      animationDirection={animationDirection}
+    >
+      {children}
+    </PieChartPlot>
+  );
+  return (
+    <PieTooltipPin value={pinIndex}>
+      {initialCategory === undefined ? (
+        chart
+      ) : (
+        <div
+          style={{ display: "contents" }}
+          onPointerMoveCapture={clearPin}
+          onPointerDownCapture={clearPin}
+          onFocusCapture={clearPin}
+          onKeyDownCapture={clearPin}
+        >
+          {chart}
+        </div>
+      )}
+    </PieTooltipPin>
+  );
+}
+
+// Pin dismissal changes Tooltip context only. Keep the native plot's providers and
+// geometry inputs intact while a pressed sector is awaiting its native click.
+const PieChartPlot = memo(function PieChartPlot({
+  animate = false,
+  loading,
+  loadingLabel,
+  animationDirection = "clockwise",
+  children,
+  ...props
+}: Omit<PieChartProps, "defaultPinnedCategory">) {
   const reduced = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [interacted, setInteracted] = useState(false);
   const finish = useCallback(() => {
@@ -120,4 +180,4 @@ export function PieChart({
       </PieMotion>
     </MotionContext>
   );
-}
+});

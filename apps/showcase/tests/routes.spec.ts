@@ -21,8 +21,8 @@ test("home redirects only in prefixed mode and direct refresh loads assets", asy
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   for (const asset of [
-    "hero-art.webp",
     "footer-clouds.webp",
+    "cherry-blossom.png",
     "kind-bloom.svg",
     "kind-bloom.ico",
     "kind-bloom-apple.png",
@@ -31,7 +31,7 @@ test("home redirects only in prefixed mode and direct refresh loads assets", asy
   }
   await expect(page.locator("head link[rel='icon']").first()).toHaveAttribute(
     "href",
-    `${basePath}/kind-bloom.svg`,
+    `${basePath}/cherry-blossom.png`,
   );
   expect(missing).toEqual([]);
 });
@@ -39,13 +39,12 @@ test("home redirects only in prefixed mode and direct refresh loads assets", asy
 test("Docs links, search aliases and page anchors have real destinations", async ({ page }) => {
   await page.goto("./");
   const docs = page.getByRole("link", {
-    name: "Docs (owner-private)",
+    name: /^(Docs|Go to Documentation|Documentation|Read the docs|Get started with the docs|Meet Kind UI Charts)$/,
     exact: true,
     includeHidden: true,
   });
-  await expect(docs).toHaveCount(3);
+  await expect(docs).toHaveCount(2);
   for (const link of await docs.all()) await expect(link).toHaveAttribute("href", siteLinks.docs);
-  await expect(page.locator(".docs-preview-note")).toContainText("private to the owner");
   await page.getByRole("button", { name: "Search documentation" }).click();
   const results = page.locator(".documentation-search-results");
   for (const { name, href } of documentationCharts) {
@@ -59,10 +58,10 @@ test("Docs links, search aliases and page anchors have real destinations", async
   await page.keyboard.press("End");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Search documentation" })).toBeFocused();
-  await page.getByRole("link", { name: "Skip to charts" }).focus();
+  await page.getByRole("link", { name: "Skip to components" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#showcase")).toBeFocused();
-  await page.getByRole("link", { name: "Back to top" }).click();
+  await page.getByRole("link", { name: "Back to top ↑" }).click();
   await expect(page).toHaveURL(/#top$/);
   await expect(page.locator(".wordmark")).toBeInViewport();
 });
@@ -72,8 +71,8 @@ test("rapid family switching and search panel scrolling stay usable on mobile", 
 }) => {
   await page.setViewportSize({ width: 375, height: 700 });
   await page.goto("./");
-  for (const name of ["Histogram", "Line", "Box Plot", "Line", "Heatmap", "Bar", "All charts"]) {
-    await page.getByRole("tab", { name: new RegExp(`^${name}(?:\\s|$)`) }).click();
+  for (const name of ["Histogram", "Line", "Box Plot", "Line", "Heatmap", "Bar", "Area"]) {
+    await page.getByRole("tab", { name, exact: true }).click();
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   await page.getByRole("button", { name: "Search documentation" }).click();

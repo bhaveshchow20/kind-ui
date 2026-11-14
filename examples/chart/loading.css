@@ -34,7 +34,7 @@ nav {
   gap: 12px;
   margin: 28px 0;
 }
-button {
+nav button {
   border: 1px solid #b6c3bb;
   background: white;
   padding: 9px 16px;
@@ -43,7 +43,7 @@ button {
   font: inherit;
   cursor: pointer;
 }
-button:focus-visible {
+nav button:focus-visible {
   outline: 3px solid #568577;
   outline-offset: 3px;
 }
@@ -74,6 +74,14 @@ main {
   font-size: 12px;
   color: #708078;
   margin-top: -8px;
+}
+/* Reserve the existing legend button box while native data is unavailable. */
+.charts [data-kind-ui="chart-legend-item"] > span {
+  box-sizing: border-box;
+  gap: 6px;
+  min-height: 24px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
 }
 .chart-stage {
   min-height: 260px;

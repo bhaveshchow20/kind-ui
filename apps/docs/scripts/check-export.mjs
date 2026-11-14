@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { basePath, publicPath } from "../lib/routing.mjs";
+import { basePath, legacyDocSlugs, publicPath } from "../lib/routing.mjs";
 
 import { assertPublicCopy } from "./public-copy.mjs";
 
@@ -50,6 +50,13 @@ for (const file of readdirSync(root, { recursive: true }).filter((name) =>
 }
 const search = JSON.parse(readFileSync(path.join(root, "api/search"), "utf8"));
 const searchIds = search.internalDocumentIDStore.internalIdToId;
+for (const slug of legacyDocSlugs) {
+  assert.ok(searchIds.includes(publicPath(`/docs/${slug[1]}`)), `Search omits ${slug[1]}`);
+  assert.ok(
+    !searchIds.some((id) => id.startsWith(publicPath(`/docs/${slug.join("/")}`))),
+    "Search indexes a legacy alias",
+  );
+}
 for (const id of searchIds.filter((id) => id.startsWith(publicPath("/docs/components/"))))
   assert.ok(
     familyIds.some(
@@ -119,7 +126,14 @@ for (const file of markdownFiles("public/markdown")) {
     readFileSync(path.join("public/markdown", file), "utf8"),
     `Stale Markdown: ${file}`,
   );
-  assert.ok(index.includes(publicPath(`/markdown/${file}`)), `Agent index omits ${file}`);
+  const alias = legacyDocSlugs.find((slug) => file === `${slug.join("/")}.md`);
+  if (alias) {
+    assert.equal(body, readFileSync(path.join(root, "markdown", `${alias[1]}.md`), "utf8"));
+    assert.ok(
+      !index.includes(publicPath(`/markdown/${file}`)),
+      `Agent index duplicates alias ${file}`,
+    );
+  } else assert.ok(index.includes(publicPath(`/markdown/${file}`)), `Agent index omits ${file}`);
   assert.ok(fullIndex.includes(body.trimEnd()), `Full agent index omits canonical ${file}`);
   if (
     /<(?:ComponentPlayground|ChartExample|LineExample|AreaExample|PackageSource|ApiTable|Snapshot)\b/.test(

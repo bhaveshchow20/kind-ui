@@ -455,6 +455,27 @@ Use nonnegative, finite values for meaningful proportional data. Kind preserves 
 
 `examples/chart/pies.html` contains two bounded recipes: a pie allocation and a donut capacity summary. Both consume these public APIs and share existing tooltip/legend/formatting/accessibility behavior. The isolated tarball host in `tests/fixtures/pie` is separate from the recipes and is checked with strict NodeNext/Bundler declarations, a production build and browser contracts.
 
+### Rounded and petal-shaped sectors
+
+`PieSeries` already passes through native `cornerRadius` and `paddingAngle`.
+The [complete rounded/petal recipe](../apps/docs/examples/pie-rounded/example.tsx)
+uses public exports, category labels, keyboard inspection and an hours/share table.
+Run the [docs app](../apps/docs/README.md) and open `/docs/components/pie/` to select
+rounded pie, rounded donut or petal donut and copy the matching complete consumer.
+
+For the 58/108-unit donut, `cornerRadius={8}` with `paddingAngle={2}` rounds the
+sectors; `innerRadius={68}`, `cornerRadius={20}` and `paddingAngle={8}` create petal-like ends.
+Native sectors clamp the corner radius to half the ring thickness, can fall back
+when narrow angles cannot fit rounding, and leave full circles without rounded ends.
+Use finite nonnegative values, `0 <= innerRadius < outerRadius`, and a sweep greater
+than zero and at most 360 degrees. With `minAngle={0}`, keep total padding strictly
+below the sweep: `n * paddingAngle` for a full circle, `(n - 1) * paddingAngle` for
+a partial sweep with `n` positive categories. A single supplied row ignores padding.
+Zero categories have no painted share; preserve them in the data alternative.
+Recheck constraints after filtering. Padding affects painted arc lengths, not the
+original data shares; the petal silhouette is data-dependent. The recipes disable
+animation, preserving existing defaults and native rendering ownership.
+
 ### Pie and donut finishes
 
 `PieSeries` accepts `material="plain" | "paper" | "clay" | "glow"` (`PieMaterial`),

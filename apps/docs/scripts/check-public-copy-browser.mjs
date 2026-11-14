@@ -24,7 +24,7 @@ try {
   });
   const routes = [
     "/docs/",
-    "/docs/start/installation/",
+    "/docs/installation/",
     "/docs/components/bar/",
     "/docs/components/combo/",
     "/docs/chart-components/root/",

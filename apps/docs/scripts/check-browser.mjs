@@ -84,9 +84,7 @@ try {
   await curve.getByRole("button", { name: "Copy prompt", exact: true }).click();
   const prompt = await page.evaluate(() => navigator.clipboard.readText());
   assert.ok(prompt.includes("/examples/line-smooth/variants/stepAfter/example.tsx"));
-  assert.ok(
-    prompt.includes("/docs/components/line/") && prompt.includes("/docs/start/installation/"),
-  );
+  assert.ok(prompt.includes("/docs/components/line/") && prompt.includes("/docs/installation/"));
   assert.ok(prompt.length < 7000);
   const selected = await context.request.get(
     `${origin}/examples/line-smooth/variants/stepAfter/example.tsx`,

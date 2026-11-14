@@ -1,100 +1,123 @@
 import { expect, test } from "@playwright/test";
 
 for (const width of [320, 375, 768, 1280]) {
-  test(`hero renders bundled Instrument Serif with preserved metrics at ${width}px`, async ({
-    page,
-  }) => {
+  test(`Geist fonts render locally without overflow at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
-    const fontResponses: string[] = [];
+    const fonts: string[] = [];
     page.on("response", (response) => {
-      if (/\.(ttf|woff2?)(?:\?|$)/.test(response.url()) && response.ok()) {
-        fontResponses.push(response.url());
-      }
+      if (/\.(ttf|woff2?)(?:\?|$)/.test(response.url()) && response.ok())
+        fonts.push(response.url());
     });
     await page.goto("./");
     await page.evaluate(() => document.fonts.ready);
-    const headline = page.locator(".hero h1");
-    await expect(headline).toHaveText("Bring your datato life");
-    const metrics = await headline.evaluate((node) => {
-      const style = getComputedStyle(node);
-      const heroNode = node.closest(".hero");
-      if (!heroNode) throw new Error("Headline must remain inside the hero");
-      const hero = heroNode.getBoundingClientRect();
-      return {
-        family: style.fontFamily,
-        bodyFamily: getComputedStyle(document.body).fontFamily,
-        weight: style.fontWeight,
-        size: Number.parseFloat(style.fontSize),
-        spacing: Number.parseFloat(style.letterSpacing),
-        lineHeight: Number.parseFloat(style.lineHeight),
-        heroHeight: hero.height,
-        lines: Array.from(node.children, (line) => {
-          const range = document.createRange();
-          range.selectNodeContents(line);
-          const bounds = range.getBoundingClientRect();
-          return {
-            rects: range.getClientRects().length,
-            left: bounds.left,
-            right: bounds.right,
-            top: bounds.top,
-            bottom: bounds.bottom,
-          };
-        }),
-        heroTop: hero.top,
-        heroBottom: hero.bottom,
-        scrollWidth: document.documentElement.scrollWidth,
-      };
-    });
-    const size =
-      width <= 650
-        ? Math.min(72, Math.max(46, width * 0.128))
-        : Math.min(100, Math.max(62, width * 0.073));
-    expect(metrics.family).toMatch(/instrumentSerif/i);
-    expect(metrics.bodyFamily).not.toMatch(/instrumentSerif/i);
-    expect(metrics.weight).toBe("400");
-    expect(metrics.size).toBeCloseTo(size, 2);
-    expect(metrics.spacing).toBeCloseTo(size * -0.025, 2);
-    expect(metrics.lineHeight).toBeCloseTo(size * (width <= 650 ? 0.98 : 0.96), 2);
-    expect(metrics.scrollWidth).toBeLessThanOrEqual(width);
-    expect(metrics.lines).toHaveLength(2);
-    for (const line of metrics.lines) {
-      expect(line.rects).toBe(1);
-      expect(line.left).toBeGreaterThanOrEqual(0);
-      expect(line.right).toBeLessThanOrEqual(width);
-      expect(line.top).toBeGreaterThan(metrics.heroTop);
-      expect(line.bottom).toBeLessThan(metrics.heroBottom);
-    }
-    expect(fontResponses.length).toBeGreaterThan(0);
-    expect(fontResponses.every((url) => new URL(url).origin === new URL(page.url()).origin)).toBe(
-      true,
+    await expect(page.locator(".hero h1")).toHaveAccessibleName(
+      "Interactive charts for React.js and Next.js, built on Recharts and Motion and ready for Codex, Claude, Gemini, Grok and your agents.",
     );
-
-    // Computed CSS alone can pass while glyphs silently fall back to Georgia.
+    await expect(page.locator(".brand-pill-framework .brand-pill-face")).toHaveText("React.js");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width,
+    );
+    for (const [group, labels] of Object.entries({
+      framework: ["React.js", "Next.js"],
+      stack: ["Recharts", "Motion"],
+      agent: ["Codex", "Claude", "Gemini", "Grok", "your agents"],
+    })) {
+      const pill = page.locator(`.brand-pill-${group}`);
+      for (const label of labels) {
+        await expect(pill.locator(".brand-pill-face")).toHaveText(
+          label === "your agents" ? `🤖${label}` : label,
+        );
+        await expect
+          .poll(() =>
+            pill.evaluate((element) => {
+              const face = element.querySelector(".brand-pill-face");
+              if (!face) return false;
+              const outer = element.getBoundingClientRect();
+              const inner = face.getBoundingClientRect();
+              const padding = Number.parseFloat(getComputedStyle(element).paddingRight);
+              return (
+                inner.left >= outer.left + padding - 1 && inner.right <= outer.right - padding + 1
+              );
+            }),
+          )
+          .toBe(true);
+        await pill.click();
+      }
+    }
+    expect(fonts.length).toBeGreaterThan(0);
+    expect(fonts.every((url) => new URL(url).origin === new URL(page.url()).origin)).toBe(true);
     const session = await page.context().newCDPSession(page);
     await session.send("DOM.enable");
     await session.send("CSS.enable");
     const { root } = await session.send("DOM.getDocument");
     const { nodeIds } = await session.send("DOM.querySelectorAll", {
       nodeId: root.nodeId,
-      selector: ".hero h1 span",
+      selector: ".hero h1",
     });
-    expect(nodeIds).toHaveLength(2);
+    expect(nodeIds).toHaveLength(1);
     for (const nodeId of nodeIds) {
-      const { fonts } = await session.send("CSS.getPlatformFontsForNode", { nodeId });
-      expect(fonts).toHaveLength(1);
-      expect(fonts[0].familyName).toBe("Instrument Serif");
-      expect(fonts[0].isCustomFont).toBe(true);
-      expect(fonts[0].glyphCount).toBeGreaterThan(0);
+      const { fonts: platformFonts } = await session.send("CSS.getPlatformFontsForNode", {
+        nodeId,
+      });
+      expect(
+        platformFonts
+          .filter((font) => font.glyphCount > 0)
+          .every(
+            (font) =>
+              (/Geist/.test(font.familyName) && font.isCustomFont) || /Emoji/.test(font.familyName),
+          ),
+      ).toBe(true);
     }
-    await session.detach();
-    await test.info().attach("headline-metrics", {
-      body: JSON.stringify(metrics, null, 2),
-      contentType: "application/json",
-    });
-    await test.info().attach("hero", {
-      body: await page.locator(".hero").screenshot(),
-      contentType: "image/png",
-    });
   });
 }
+
+test("framework pill switches with a click and stays still with reduced motion", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("./");
+  const pill = page.getByRole("button", { name: "Switch between React.js and Next.js" });
+  await expect(pill.locator(".brand-pill-face")).toHaveText("React.js");
+  await pill.click();
+  await expect(pill.locator(".brand-pill-face")).toHaveText("Next.js");
+  await pill.press("Enter");
+  await expect(pill.locator(".brand-pill-face")).toHaveText("React.js");
+  await expect(page.locator(".hero-description, .hero-toys")).toHaveCount(0);
+});
+
+test("pills animate to the width of their current label", async ({ page }) => {
+  await page.goto("./");
+  const pill = page.locator(".brand-pill-stack");
+  await expect(pill.locator(".brand-pill-face").last()).toHaveText("Recharts");
+  await page.evaluate(() => document.fonts.ready);
+  const before = await pill.evaluate((element) => element.getBoundingClientRect().width);
+  await pill.click();
+  await expect(pill.locator(".brand-pill-face").last()).toHaveText("Motion");
+  await expect
+    .poll(() => pill.evaluate((element) => element.getBoundingClientRect().width))
+    .toBeLessThan(before - 15);
+  await expect(pill.locator(".brand-pill-face img.brand-motion")).toBeVisible();
+});
+
+test("one random pill changes at a time with a pause before the next", async ({ page }) => {
+  await page.addInitScript(() => {
+    Math.random = () => 0;
+  });
+  await page.clock.install();
+  await page.goto("./");
+  const framework = page.locator(".brand-pill-framework .brand-pill-sizer");
+  const stack = page.locator(".brand-pill-stack .brand-pill-sizer");
+  const agent = page.locator(".brand-pill-agent .brand-pill-sizer");
+  await expect(framework).toHaveText("React.js");
+  await page.clock.runFor(2600);
+  await expect(framework).toHaveText("Next.js");
+  await expect(stack).toHaveText("Recharts");
+  await expect(agent).toHaveText("Codex");
+  await page.clock.runFor(1000);
+  await expect(stack).toHaveText("Recharts");
+  await page.clock.runFor(1000);
+  await expect(stack).toHaveText("Motion");
+  await expect(framework).toHaveText("Next.js");
+  await expect(agent).toHaveText("Codex");
+});

@@ -300,6 +300,8 @@ for (const entry of readdirSync("content/docs", { recursive: true }).filter((ent
     .join("");
   const markdown = `# ${title}\n\n${description}\n\n${body.trim()}\n`;
   write(`public/markdown/${key}.md`, markdown);
+  if (["installation", "quickstart"].includes(key))
+    write(`public/markdown/start/${key}.md`, markdown);
   index.push({ key, title, markdown });
 }
 write(

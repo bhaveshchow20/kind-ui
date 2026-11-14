@@ -11,7 +11,6 @@ export default defineConfig({
       onwarn: diagnostics.onwarn,
       input: {
         projectedLine: fileURLToPath(new URL("./projected-line.html", import.meta.url)),
-        pointMarkers: fileURLToPath(new URL("./point-markers.html", import.meta.url)),
         loading: fileURLToPath(new URL("./loading.html", import.meta.url)),
         presentation: fileURLToPath(new URL("./presentation.html", import.meta.url)),
         example: fileURLToPath(new URL("./index.html", import.meta.url)),

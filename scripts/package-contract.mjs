@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { assertReviewedVersion } from "./release-plan.mjs";
+
+const reviewedVersion = JSON.parse(
+  readFileSync(new URL("../.changeset/release-version.json", import.meta.url)),
+);
 
 export function assertPackageContract(manifest, files, sources = []) {
   assert.equal(manifest.private, undefined, "Reviewed public candidate must omit the private flag");
-  assert.equal(manifest.version, "0.1.1", "Version must match the reviewed public candidate");
+  assertReviewedVersion(reviewedVersion, manifest);
   assert.ok(manifest.description?.trim(), "Package must describe its purpose");
   assert.equal(manifest.license, "MIT", "Package must declare its license");
   assert.deepEqual(

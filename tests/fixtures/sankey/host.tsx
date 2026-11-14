@@ -8,6 +8,7 @@ import {
   type SankeyLinkProps,
   type SankeyMaterial,
   SankeyNode,
+  SankeyNodeLabel,
   SankeyTable,
 } from "@kind-ui/charts";
 import { useRef, useState } from "react";
@@ -206,7 +207,14 @@ export function Host() {
               animate={{ revealDurationMs: 3000 }}
               title="Packed Sankey"
               node={(props) => (
-                <SankeyNode finish="clay" {...props} rectProps={{ "aria-label": "Native node" }} />
+                <g>
+                  <SankeyNode
+                    finish="clay"
+                    {...props}
+                    rectProps={{ "aria-label": "Native node" }}
+                  />
+                  <SankeyNodeLabel node={props} data={flow} showValues />
+                </g>
               )}
               link={(props: SankeyLinkProps) => (
                 <SankeyLink

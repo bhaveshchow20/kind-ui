@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import "@kind-ui/charts/styles.css";
 import "./pies.css";
 import { Allocation } from "./pie-recipes.js";
+import { SelectiveGlowChart } from "./pie-selective-glow.js";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing root");
@@ -15,6 +16,7 @@ createRoot(root).render(
     <div className="pie-grid">
       <Allocation />
       <Allocation donut />
+      <SelectiveGlowChart />
     </div>
   </main>,
 );

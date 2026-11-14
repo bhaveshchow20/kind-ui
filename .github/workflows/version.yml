@@ -31,9 +31,7 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - id: plan
         name: Only prepare versions for pending package changesets
-        run: |
-          npm run release:status -- --output /tmp/kind-version-status.json
-          node --input-type=module -e 'import { readFileSync, appendFileSync } from "node:fs"; const status = JSON.parse(readFileSync("/tmp/kind-version-status.json", "utf8")); appendFileSync(process.env.GITHUB_OUTPUT, `has_changesets=${status.releases.length > 0}\n`);'
+        run: node scripts/prepare-release-version.mjs --status
       - name: Open or update the reviewed version and changelog PR
         if: steps.plan.outputs.has_changesets == 'true'
         uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2, compatible with Changesets CLI 3

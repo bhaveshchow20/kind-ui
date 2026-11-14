@@ -1,18 +1,9 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import { Check, Copy } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useMemo, useRef, useState } from "react";
-import { CodeBlock } from "@/components/code-block";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import type { Finish } from "@/lib/advanced-chart-recipes";
+import type { DemoOptions } from "@/lib/demo-options";
 import {
   type BoxRow,
   boxRows,
@@ -20,11 +11,9 @@ import {
   heatmapData,
   histogramBins,
   type NewRecipe,
-  newCode,
   sankeyData,
   waterfallEntries,
 } from "@/lib/new-chart-recipes";
-import { useCopyCode } from "@/lib/use-copy-code";
 
 function NewChart({
   recipe: r,
@@ -32,12 +21,14 @@ function NewChart({
   colors,
   animate,
   entranceKey,
+  options = {},
 }: {
   recipe: NewRecipe;
   material: Finish;
   colors: string[];
   animate: boolean;
   entranceKey: string;
+  options?: DemoOptions;
 }) {
   const [distributionVisible, setDistributionVisible] = useState([
     r.family === "Histogram" ? "count" : "spread",
@@ -66,21 +57,37 @@ function NewChart({
         rootProps={{ className: "chart-root" }}
         animate={animate}
         material={material}
-        curve="monotone"
+        curve={options.curve ?? "monotone"}
+        series={[
+          {
+            seriesKey: "trials",
+            dataKey: "trials",
+            dot: options.dots ?? false,
+            strokeWidth: options.strokeWidth ?? 3,
+          },
+          {
+            seriesKey: "paid",
+            dataKey: "paid",
+            dot: options.dots ?? false,
+            strokeWidth: options.strokeWidth ?? 3,
+          },
+        ]}
         aria-label={r.tag}
         yAxis={{ width: "auto", tick: { fontSize: 11 } }}
         xAxis={{ tick: { fontSize: 11 } }}
-        grid={{
-          stroke: "var(--chart-grid)",
-          vertical: false,
-          strokeDasharray: "3 5",
-        }}
+        grid={
+          options.showGrid === false
+            ? false
+            : { stroke: "var(--chart-grid)", vertical: false, strokeDasharray: "3 5" }
+        }
+        legend={options.showLegend === false ? false : undefined}
         tooltip={{ valueAnimation: animate ? "shuffle" : undefined }}
       />
     );
   }
   if (r.family === "Histogram") {
-    const density = r.id === "histogram-latency";
+    const latency = r.id === "histogram-latency";
+    const density = options.density ?? latency;
     return (
       <Chart.Root
         key={entranceKey}
@@ -88,7 +95,7 @@ function NewChart({
         visibleSeries={distributionVisible}
         onVisibleSeriesChange={setDistributionVisible}
         config={{
-          count: { label: density ? "Density" : "Orders", color: colors[0] },
+          count: { label: density ? "Density" : latency ? "Requests" : "Orders", color: colors[0] },
         }}
       >
         <div className="chart-canvas">
@@ -103,7 +110,7 @@ function NewChart({
                 tickLine: false,
                 axisLine: false,
                 tick: { fontSize: 11 },
-                tickFormatter: (value) => (density ? `${value} ms` : `$${value}`),
+                tickFormatter: (value) => (latency ? `${value} ms` : `$${value}`),
               }}
               yAxisProps={{
                 width: "auto",
@@ -114,26 +121,37 @@ function NewChart({
               }}
             >
               <Chart.CartesianGrid
+                horizontal={options.showGrid ?? true}
                 vertical={false}
                 stroke="var(--chart-grid)"
                 strokeDasharray="3 5"
               />
-              <Chart.HistogramSeries material={material} />
+              <Chart.HistogramSeries
+                material={material}
+                stroke={options.binBorders === false ? "none" : "var(--background)"}
+                strokeWidth={1.5}
+              />
               <Chart.Tooltip
                 valueAnimation={animate ? "shuffle" : undefined}
                 labelFormatter={(_label, entries) => {
                   const bin = entries[0]?.payload as Chart.HistogramBin | undefined;
-                  return bin ? `${bin.lower}–${bin.upper} ${density ? "ms" : "USD"}` : "";
+                  return bin ? `${bin.lower}–${bin.upper} ${latency ? "ms" : "USD"}` : "";
                 }}
                 formatter={(value) => [
                   density ? Number(value).toFixed(4) : String(value),
-                  density ? "Density per ms" : "Orders",
+                  density
+                    ? latency
+                      ? "Density per ms"
+                      : "Density per dollar"
+                    : latency
+                      ? "Requests"
+                      : "Orders",
                 ]}
               />
             </Chart.HistogramChart>
           </Chart.ResponsiveContainer>
         </div>
-        <Chart.Legend />
+        {options.showLegend !== false && <Chart.Legend />}
       </Chart.Root>
     );
   }
@@ -162,8 +180,8 @@ function NewChart({
               margin={{ top: 16, right: 12, left: 0, bottom: 8 }}
             >
               <Chart.CartesianGrid
-                vertical={horizontal}
-                horizontal={!horizontal}
+                vertical={horizontal && (options.showGrid ?? true)}
+                horizontal={!horizontal && (options.showGrid ?? true)}
                 stroke="var(--chart-grid)"
                 strokeDasharray="3 5"
               />
@@ -197,9 +215,11 @@ function NewChart({
                 stroke="var(--chart-axis)"
               />
               <Chart.BoxPlotSeries<BoxRow>
+                strokeWidth={options.strokeWidth ?? 3}
                 dataKey="summary"
                 seriesKey="spread"
-                barSize={32}
+                barSize={options.width ?? 32}
+                outlierRadius={options.outlierRadius ?? 3}
                 material={material}
                 fillOpacity={0.65}
               />
@@ -213,7 +233,7 @@ function NewChart({
             </Chart.BoxPlotChart>
           </Chart.ResponsiveContainer>
         </div>
-        <Chart.Legend />
+        {options.showLegend !== false && <Chart.Legend />}
       </Chart.Root>
     );
   }
@@ -232,7 +252,13 @@ function NewChart({
         <Chart.HeatmapGrid
           caption={r.tag}
           material={material}
-          Cell={r.id === "heatmap-support" ? () => null : undefined}
+          layout={{
+            gap: options.gap ?? 4,
+            rowLabels: options.showLabels === false ? "hidden" : "visible",
+            columnLabels: options.showLabels === false ? "hidden" : "visible",
+          }}
+          cellProps={() => ({ style: { borderRadius: options.radius ?? 5 } })}
+          Cell={(options.showValues ?? r.id === "heatmap-retention") ? undefined : () => null}
         />
         <Chart.HeatmapLegend label={r.id === "heatmap-retention" ? "Active users" : "Tickets"} />
         <Chart.HeatmapTooltip valueAnimation={animate ? "shuffle" : undefined} />
@@ -255,6 +281,7 @@ function NewChart({
               margin={{ top: 20, right: 12, left: 0, bottom: 0 }}
             >
               <Chart.CartesianGrid
+                horizontal={options.showGrid ?? true}
                 vertical={false}
                 stroke="var(--chart-grid)"
                 strokeDasharray="3 5"
@@ -274,8 +301,14 @@ function NewChart({
                 tick={{ fontSize: 11 }}
               />
               <Chart.ReferenceLine y={0} stroke="var(--chart-axis)" />
-              <Chart.WaterfallConnectors data={water} stroke="var(--chart-axis)" />
-              <Chart.WaterfallSeries material={material} radius={4}>
+              {(options.connectors ?? true) && (
+                <Chart.WaterfallConnectors data={water} stroke="var(--chart-axis)" />
+              )}
+              <Chart.WaterfallSeries
+                material={material}
+                radius={options.radius ?? 4}
+                maxBarSize={options.width ?? 35}
+              >
                 {water.map((row) => (
                   <Chart.Cell
                     key={row.id}
@@ -302,22 +335,24 @@ function NewChart({
             key={entranceKey}
             data={flow}
             animate={animate}
-            nodeWidth={12}
-            nodePadding={24}
+            nodeWidth={options.nodeWidth ?? 12}
+            nodePadding={options.nodePadding ?? 24}
             margin={{ top: 12, bottom: 12, left: 65, right: 85 }}
             node={(props) => (
               <g>
                 <Chart.SankeyNode {...props} color={colors[props.index % colors.length]} />
-                <text
-                  x={props.x < 100 ? props.x - 8 : props.x + props.width + 8}
-                  y={props.y + props.height / 2}
-                  textAnchor={props.x < 100 ? "end" : "start"}
-                  dominantBaseline="middle"
-                  fill="currentColor"
-                  fontSize={11}
-                >
-                  {props.payload.name}
-                </text>
+                {options.showLabels !== false && (
+                  <text
+                    x={props.x < 100 ? props.x - 8 : props.x + props.width + 8}
+                    y={props.y + props.height / 2}
+                    textAnchor={props.x < 100 ? "end" : "start"}
+                    dominantBaseline="middle"
+                    fill="currentColor"
+                    fontSize={11}
+                  >
+                    {props.payload.name}
+                  </text>
+                )}
               </g>
             )}
             link={(props) => (
@@ -336,7 +371,7 @@ function NewChart({
                       colors.length
                   ]
                 }
-                pathProps={{ opacity: 0.45 }}
+                pathProps={{ opacity: options.linkOpacity ?? 0.45 }}
               />
             )}
           />
@@ -352,19 +387,19 @@ export function NewChartCard({
   colors,
   animate,
   replay,
+  options = {},
 }: {
   recipe: NewRecipe;
   material: Finish;
   colors: string[];
   animate: boolean;
   replay: number;
+  options?: DemoOptions;
 }) {
   const reduced = useReducedMotion();
   const cardRef = useRef<HTMLElement>(null);
   const entered = useInView(cardRef, { once: true, amount: 0.3 });
   const chartAnimate = animate && entered && !reduced;
-  const code = newCode(recipe, material, colors, animate);
-  const { copy, copied, message: copyMessage } = useCopyCode(code);
   return (
     <motion.article
       ref={cardRef}
@@ -374,52 +409,16 @@ export function NewChartCard({
       viewport={{ once: true, amount: 0.12 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <p className="copy-feedback" role="status">
-        {copyMessage}
-      </p>
       <div className="card-top">
         <h3 className="chart-tag">{recipe.tag}</h3>
-        <div className="card-code-actions">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={copy}
-            aria-label={`Copy code for ${recipe.tag}`}
-          >
-            {copied ? <Check /> : <Copy />}
-          </Button>
-          <span className="action-divider" />
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" aria-label="View chart code">
-                Code
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="code-dialog">
-              <DialogTitle className="sr-only">{recipe.tag} code</DialogTitle>
-              <DialogDescription className="sr-only">
-                A complete Kind UI chart example with the current palette and motion settings.
-              </DialogDescription>
-              <div className="code-block-header">
-                <span className="code-file">
-                  <span className="typescript-badge">TS</span>chart-{recipe.id}
-                  .tsx
-                </span>
-                <Button variant="ghost" size="icon-sm" onClick={copy} aria-label="Copy code">
-                  {copied ? <Check /> : <Copy />}
-                </Button>
-              </div>
-              <CodeBlock code={code} />
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
       <NewChart
-        entranceKey={`${replay}-${entered}`}
+        entranceKey={`${replay}-${chartAnimate}`}
         recipe={recipe}
         material={material}
         colors={colors}
         animate={chartAnimate}
+        options={options}
       />
       <p className="chart-context">{recipe.context}</p>
     </motion.article>

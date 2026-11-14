@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { inc } from "semver";
 import { assertPackageContract } from "./package-contract.mjs";
 
 const manifest = JSON.parse(
@@ -65,7 +66,14 @@ for (const privateFlag of [true, false]) {
     );
   });
 }
-for (const version of ["0.0.0", "0.1.0", "0.1.2", "0.2.0", "1.0.0", "0.1.1-preview.1"]) {
+for (const version of [
+  "0.0.0",
+  "0.1.0",
+  inc(manifest.version, "patch"),
+  inc(manifest.version, "minor"),
+  inc(manifest.version, "major"),
+  `${manifest.version}-preview.1`,
+]) {
   test(`rejects unreviewed candidate version ${version}`, () => {
     assert.throws(
       () => assertPackageContract({ ...manifest, version }, files),

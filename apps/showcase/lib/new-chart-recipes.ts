@@ -1,16 +1,17 @@
 import type * as Chart from "@kind-ui/charts";
+import type { DemoOptions } from "./demo-options";
 export const newRecipes = [
   {
     id: "line-configured",
     family: "Line",
-    tag: "From trial to paid",
+    tag: "Trials & subscriptions",
     context:
       "Six months of trial starts and paid conversions. A complete chart composed from the library’s config API.",
   },
   {
     id: "histogram-orders",
     family: "Histogram",
-    tag: "What customers spend",
+    tag: "Order totals",
     context: "Order totals from 240 café purchases. Most baskets fall between $10 and $20.",
   },
   {
@@ -23,7 +24,7 @@ export const newRecipes = [
   {
     id: "box-latency",
     family: "Box Plot",
-    tag: "Beyond average latency",
+    tag: "Request times",
     context:
       "Request times by endpoint in milliseconds. Boxes show the middle 50%, center lines the median, and dots the outliers.",
   },
@@ -63,14 +64,14 @@ export const newRecipes = [
   {
     id: "sankey-acquisition",
     family: "Sankey",
-    tag: "From visit to signup",
+    tag: "Visit to signup",
     context:
       "1,200 visits from search and social. 380 became signups; flow widths show the conversion split.",
   },
   {
     id: "sankey-energy",
     family: "Sankey",
-    tag: "Where energy goes",
+    tag: "Energy use",
     context:
       "A building’s daily 1,000 kWh supply from grid and solar, distributed across cooling, lighting, and equipment.",
   },
@@ -252,7 +253,13 @@ export function boxRows(id: string): BoxRow[] {
         },
       ];
 }
-export function newCode(r: NewRecipe, material: string, colors: string[], animate: boolean) {
+export function newCode(
+  r: NewRecipe,
+  material: string,
+  colors: string[],
+  animate: boolean,
+  options: DemoOptions = {},
+) {
   const intro = `"use client";\n\nimport * as Chart from "@kind-ui/charts";\nimport { useState } from "react";\nimport "@kind-ui/charts/styles.css";\n\n// ${r.context}\nconst colors = ${JSON.stringify(colors)};\nconst animate = ${animate};\n`;
   if (r.family === "Line") {
     return (
@@ -260,30 +267,31 @@ export function newCode(r: NewRecipe, material: string, colors: string[], animat
       `const data = ${JSON.stringify(conversionData, null, 2)};
 const config = {trials:{label:"Trial starts",color:colors[0]},paid:{label:"Paid conversions",color:colors[1]}};
 export function Example(){
- return <Chart.LineChart data={data} config={config} xDataKey="month" responsive style={{width:"100%",height:280}} animate={animate} material="${material}" curve="monotone" aria-label="${r.tag}" yAxis={{width:"auto"}} tooltip={{valueAnimation:animate ? "shuffle" : undefined}} />;
+ return <Chart.LineChart data={data} config={config} xDataKey="month" responsive style={{width:"100%",height:280}} animate={animate} material="${material}" curve="${options.curve ?? "monotone"}" grid={${options.showGrid === false ? "false" : "undefined"}} legend={${options.showLegend === false ? "false" : "undefined"}} series={[{seriesKey:"trials",dataKey:"trials",dot:${options.dots ?? false},strokeWidth:${options.strokeWidth ?? 3}},{seriesKey:"paid",dataKey:"paid",dot:${options.dots ?? false},strokeWidth:${options.strokeWidth ?? 3}}]} aria-label="${r.tag}" yAxis={{width:"auto"}} tooltip={{valueAnimation:animate ? "shuffle" : undefined}} />;
 }
 `
     );
   }
   if (r.family === "Histogram") {
-    const density = r.id === "histogram-latency";
+    const latency = r.id === "histogram-latency";
+    const density = options.density ?? latency;
     return (
       intro +
       `const bins: Chart.HistogramBin[] = ${JSON.stringify(histogramBins(r.id), null, 2)};
-const config = {count:{label:"${density ? "Density" : "Orders"}",color:colors[0]}};
+const config = {count:{label:"${density ? "Density" : latency ? "Requests" : "Orders"}",color:colors[0]}};
 export function Example(){
  const [visible, setVisible] = useState(["count"]);
  return <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
   <Chart.ResponsiveContainer width="100%" height={240}>
    <Chart.HistogramChart bins={bins} measure="${density ? "density" : "count"}" animate={${animate}} aria-label="${r.tag}" margin={{top:16,right:12,left:0,bottom:8}}
-    xAxisProps={{tickLine:false,axisLine:false,tickFormatter:value => ${density ? "`${value} ms`" : "`$${value}`"}}}
+    xAxisProps={{tickLine:false,axisLine:false,tickFormatter:value => ${latency ? "`${value} ms`" : "`$${value}`"}}}
     yAxisProps={{width:"auto",tickLine:false,axisLine:false${density ? ",tickFormatter:value => Number(value).toFixed(3)" : ""}}}>
-    <Chart.CartesianGrid vertical={false} strokeDasharray="3 5" />
-    <Chart.HistogramSeries material="${material}" />
-    <Chart.Tooltip valueAnimation={${animate} ? "shuffle" : undefined} labelFormatter={(_label,entries) => {const bin=entries[0]?.payload as Chart.HistogramBin | undefined;return bin ? bin.lower + "–" + bin.upper + "${density ? " ms" : " USD"}" : "";}} formatter={value => [${density ? "Number(value).toFixed(4)" : "String(value)"},"${density ? "Density per ms" : "Orders"}"]} />
+    <Chart.CartesianGrid horizontal={${options.showGrid ?? true}} vertical={false} strokeDasharray="3 5" />
+    <Chart.HistogramSeries material="${material}" stroke="${options.binBorders === false ? "none" : "var(--background)"}" strokeWidth={1.5} />
+    <Chart.Tooltip valueAnimation={${animate} ? "shuffle" : undefined} labelFormatter={(_label,entries) => {const bin=entries[0]?.payload as Chart.HistogramBin | undefined;return bin ? bin.lower + "–" + bin.upper + "${latency ? " ms" : " USD"}" : "";}} formatter={value => [${density ? "Number(value).toFixed(4)" : "String(value)"},"${density ? (latency ? "Density per ms" : "Density per dollar") : latency ? "Requests" : "Orders"}"]} />
    </Chart.HistogramChart>
   </Chart.ResponsiveContainer>
-  <Chart.Legend />
+  ${(options.showLegend ?? true) ? "<Chart.Legend />" : ""}
  </Chart.Root>;
 }
 `
@@ -301,15 +309,15 @@ export function Example(){
  return <Chart.Root config={config} visibleSeries={visible} onVisibleSeriesChange={setVisible}>
   <Chart.ResponsiveContainer width="100%" height={240}>
    <Chart.BoxPlotChart data={data} layout="${horizontal ? "vertical" : "horizontal"}" animate={${animate}} aria-label="${r.tag}" margin={{top:16,right:12,left:0,bottom:8}}>
-    <Chart.CartesianGrid vertical={${horizontal}} horizontal={${!horizontal}} strokeDasharray="3 5" />
+    <Chart.CartesianGrid vertical={${horizontal && (options.showGrid ?? true)}} horizontal={${!horizontal && (options.showGrid ?? true)}} strokeDasharray="3 5" />
     <Chart.XAxis type="${horizontal ? "number" : "category"}" ${horizontal ? 'domain={["dataMin","dataMax"]} tickFormatter={value => `${value} pp`}' : 'dataKey="category"'} tickLine={false} axisLine={false} tick={{fontSize:11}} />
     <Chart.YAxis width="auto" type="${horizontal ? "category" : "number"}" ${horizontal ? 'dataKey="category"' : 'domain={[0,"dataMax"]} tickFormatter={value => `${value} ms`}'} tickLine={false} axisLine={false} tick={{fontSize:11}} />
     <Chart.ReferenceLine ${horizontal ? "x" : "y"}={0} />
-    <Chart.BoxPlotSeries<Row> dataKey="summary" seriesKey="spread" barSize={32} material="${material}" fillOpacity={0.65} />
+    <Chart.BoxPlotSeries<Row> strokeWidth={${options.strokeWidth ?? 3}} dataKey="summary" seriesKey="spread" barSize={${options.width ?? 32}} outlierRadius={${options.outlierRadius ?? 3}} material="${material}" fillOpacity={0.65} />
     <Chart.Tooltip valueAnimation={${animate} ? "shuffle" : undefined} formatter={(_value,_name,item) => [String((item.payload as Row).summary.median) + " ${horizontal ? "pp" : "ms"}","Median"]} />
    </Chart.BoxPlotChart>
   </Chart.ResponsiveContainer>
-  <Chart.Legend />
+  ${(options.showLegend ?? true) ? "<Chart.Legend />" : ""}
  </Chart.Root>;
 }
 `
@@ -319,16 +327,16 @@ export function Example(){
     const h = heatmapData(r.id);
     return (
       intro +
-      `const rows = ${JSON.stringify(h.rows)};\nconst columns = ${JSON.stringify(h.columns)};\nconst data = ${JSON.stringify(h.data, null, 2)};\nconst scale = Chart.createHeatmapScale({domain:[0,${h.max}],colors});\n\nexport function Example(){\n return <Chart.HeatmapChart rows={rows} columns={columns} data={data} scale={scale} animate={${animate}}${r.id === "heatmap-retention" ? " formatValue={value => `${value}%`}" : ""}>\n  <Chart.HeatmapGrid caption="${r.tag}" material="${material}"${r.id === "heatmap-support" ? " Cell={() => null}" : ""} />\n  <Chart.HeatmapLegend label="${r.id === "heatmap-retention" ? "Active users" : "Tickets"}" />\n  <Chart.HeatmapTooltip valueAnimation={animate ? "shuffle" : undefined} />\n </Chart.HeatmapChart>;\n}\n`
+      `const rows = ${JSON.stringify(h.rows)};\nconst columns = ${JSON.stringify(h.columns)};\nconst data = ${JSON.stringify(h.data, null, 2)};\nconst scale = Chart.createHeatmapScale({domain:[0,${h.max}],colors});\n\nexport function Example(){\n return <Chart.HeatmapChart rows={rows} columns={columns} data={data} scale={scale} animate={${animate}}${r.id === "heatmap-retention" ? " formatValue={value => `${value}%`}" : ""}>\n  <Chart.HeatmapGrid caption="${r.tag}" material="${material}" layout={{gap:${options.gap ?? 4},rowLabels:"${options.showLabels === false ? "hidden" : "visible"}",columnLabels:"${options.showLabels === false ? "hidden" : "visible"}"}} cellProps={() => ({style:{borderRadius:${options.radius ?? 5}}})}${(options.showValues ?? r.id === "heatmap-retention") ? "" : " Cell={() => null}"} />\n  <Chart.HeatmapLegend label="${r.id === "heatmap-retention" ? "Active users" : "Tickets"}" />\n  <Chart.HeatmapTooltip valueAnimation={animate ? "shuffle" : undefined} />\n </Chart.HeatmapChart>;\n}\n`
     );
   }
   if (r.family === "Waterfall")
     return (
       intro +
-      `const entries: Chart.WaterfallEntry[] = ${JSON.stringify(waterfallEntries(r.id), null, 2)};\nconst data = Chart.computeWaterfallData(entries);\nconst config = {range:{label:"Balance",color:colors[0]}};\n\nexport function Example(){\n return <Chart.Root config={config}>\n  <Chart.ResponsiveContainer width="100%" height={240}>\n   <Chart.WaterfallChart data={data} animate={${animate}} accessibilityLayer aria-label="${r.tag}" margin={{top:20,right:12,left:0,bottom:0}}>\n    <Chart.CartesianGrid vertical={false} strokeDasharray="3 5" />\n    <Chart.XAxis dataKey="id" tickFormatter={id => data.find(row => row.id===id)?.label ?? String(id)} tickLine={false} axisLine={false} tick={{fontSize:11}} />\n    <Chart.YAxis width="auto" tickFormatter={value => "$" + value/1000 + "k"} tickLine={false} axisLine={false} />\n    <Chart.ReferenceLine y={0} />\n    <Chart.WaterfallConnectors data={data} />\n    <Chart.WaterfallSeries material="${material}" radius={4}>\n     {data.map(row => <Chart.Cell key={row.id} fill={colors[row.kind!=="delta"?0:(row.value??0)<0?2:1]} />)}\n    </Chart.WaterfallSeries>\n    <Chart.Tooltip formatter={(_value,_name,item) => {const row=item.payload as Chart.WaterfallDatum;return ["$" + row.value?.toLocaleString("en-US"),row.label];}} />\n   </Chart.WaterfallChart>\n  </Chart.ResponsiveContainer>\n </Chart.Root>;\n}\n`
+      `const entries: Chart.WaterfallEntry[] = ${JSON.stringify(waterfallEntries(r.id), null, 2)};\nconst data = Chart.computeWaterfallData(entries);\nconst config = {range:{label:"Balance",color:colors[0]}};\n\nexport function Example(){\n return <Chart.Root config={config}>\n  <Chart.ResponsiveContainer width="100%" height={240}>\n   <Chart.WaterfallChart data={data} animate={${animate}} accessibilityLayer aria-label="${r.tag}" margin={{top:20,right:12,left:0,bottom:0}}>\n    <Chart.CartesianGrid horizontal={${options.showGrid ?? true}} vertical={false} strokeDasharray="3 5" />\n    <Chart.XAxis dataKey="id" tickFormatter={id => data.find(row => row.id===id)?.label ?? String(id)} tickLine={false} axisLine={false} tick={{fontSize:11}} />\n    <Chart.YAxis width="auto" tickFormatter={value => "$" + value/1000 + "k"} tickLine={false} axisLine={false} />\n    <Chart.ReferenceLine y={0} />\n    ${(options.connectors ?? true) ? "<Chart.WaterfallConnectors data={data} />" : ""}\n    <Chart.WaterfallSeries material="${material}" radius={${options.radius ?? 4}} maxBarSize={${options.width ?? 35}}>\n     {data.map(row => <Chart.Cell key={row.id} fill={colors[row.kind!=="delta"?0:(row.value??0)<0?2:1]} />)}\n    </Chart.WaterfallSeries>\n    <Chart.Tooltip formatter={(_value,_name,item) => {const row=item.payload as Chart.WaterfallDatum;return ["$" + row.value?.toLocaleString("en-US"),row.label];}} />\n   </Chart.WaterfallChart>\n  </Chart.ResponsiveContainer>\n </Chart.Root>;\n}\n`
     );
   return (
     intro +
-    `const data: Chart.SankeyFlowData = ${JSON.stringify(sankeyData(r.id), null, 2)};\n\nexport function Example(){\n return <>\n  <Chart.ResponsiveContainer width="100%" height={240}>\n   <Chart.SankeyChart data={data} animate={${animate}} nodeWidth={12} nodePadding={24} margin={{top:12,bottom:12,left:65,right:85}}\n    node={props => <g><Chart.SankeyNode {...props} color={colors[props.index%colors.length]} /><text x={props.x<100?props.x-8:props.x+props.width+8} y={props.y+props.height/2} textAnchor={props.x<100?"end":"start"} dominantBaseline="middle" fill="currentColor" fontSize={11}>{props.payload.name}</text></g>}\n    link={props => <Chart.SankeyLink {...props} material="gradient" color={colors[data.nodes.findIndex(node => node.id===props.payload.source.id)%colors.length]} targetColor={colors[data.nodes.findIndex(node => node.id===props.payload.target.id)%colors.length]} pathProps={{opacity:0.45}} />} />\n  </Chart.ResponsiveContainer>\n  <Chart.SankeyTable data={data} caption="${r.tag}" className="sr-only" />\n </>;\n}\n`
+    `const data: Chart.SankeyFlowData = ${JSON.stringify(sankeyData(r.id), null, 2)};\n\nexport function Example(){\n return <>\n  <Chart.ResponsiveContainer width="100%" height={240}>\n   <Chart.SankeyChart data={data} animate={${animate}} nodeWidth={${options.nodeWidth ?? 12}} nodePadding={${options.nodePadding ?? 24}} margin={{top:12,bottom:12,left:65,right:85}}\n    node={props => <g><Chart.SankeyNode {...props} color={colors[props.index%colors.length]} />${(options.showLabels ?? true) ? '<text x={props.x<100?props.x-8:props.x+props.width+8} y={props.y+props.height/2} textAnchor={props.x<100?"end":"start"} dominantBaseline="middle" fill="currentColor" fontSize={11}>{props.payload.name}</text>' : ""}</g>}\n    link={props => <Chart.SankeyLink {...props} material="gradient" color={colors[data.nodes.findIndex(node => node.id===props.payload.source.id)%colors.length]} targetColor={colors[data.nodes.findIndex(node => node.id===props.payload.target.id)%colors.length]} pathProps={{opacity:${options.linkOpacity ?? 0.45}}} />} />\n  </Chart.ResponsiveContainer>\n  <Chart.SankeyTable data={data} caption="${r.tag}" className="sr-only" />\n </>;\n}\n`
   );
 }

@@ -7,6 +7,13 @@ test("Sankey native widths, labels, pointer and keyboard inspection retain zero"
 }) => {
   await page.goto("/sankeys.html");
   const recipe = page.locator("main > section").first();
+  const icons = recipe.locator('[data-kind-ui="sankey-node-icon"]');
+  await expect(icons).toHaveCount(2);
+  await expect(icons.first()).toHaveAttribute("aria-hidden", "true");
+  await expect(icons.first()).toHaveAttribute("focusable", "false");
+  await expect(
+    recipe.locator('[data-node-id="use"] [data-kind-ui="sankey-node-icon"]'),
+  ).toHaveCount(0);
   const paths = recipe.locator("path[data-flow-id]");
   await expect(paths).toHaveCount(3);
   const widths = await paths.evaluateAll((marks) =>
@@ -164,4 +171,14 @@ test("our SankeyLink flows while consumer paint refs and handlers remain owned; 
   await page.screenshot({ path: info.outputPath("sankey-stream-entrance.png") });
   await paths.first().dispatchEvent("click");
   await expect(page.getByRole("region", { name: "Mark ownership" })).toContainText("1 /");
+});
+
+test("packed Sankey labels track node identity and current values", async ({ page }) => {
+  await page.goto(packed);
+  const label = page.locator('[data-kind-ui="sankey-node-label"][data-node-id="a"]');
+  await expect(label.locator("text")).toHaveText("Input: 10");
+  await page.getByRole("button", { name: "Change data" }).click();
+  await expect(label.locator("text")).toHaveText("Input: 20");
+  await expect(label.locator("title")).toHaveText("Input: 20");
+  await expect(page.getByRole("table")).toContainText("20");
 });

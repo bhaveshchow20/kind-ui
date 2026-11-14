@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import { DocsThemeSwitch } from "@/components/theme-switch";
-import { docRoute } from "@/lib/routing.mjs";
+import { docRoute, legacyDocSlugs } from "@/lib/routing.mjs";
 
 function NavigationTitle() {
   const { slots, props } = useGlassLayout();
@@ -34,7 +34,7 @@ function NavigationTitle() {
 function pageUrls(nodes: PageTree.Node[]): string[] {
   return nodes.flatMap((node) =>
     node.type === "page"
-      ? [node.url.replace(/\/$/, "")]
+      ? [node.url.replace(/(.+)\/$/, "$1")]
       : node.type === "folder"
         ? pageUrls(node.children)
         : [],
@@ -94,35 +94,24 @@ export function MobileDocsNavigation() {
   );
 }
 export function GlassDocsLayout({ children, tree, ...props }: GlassLayoutProps) {
-  const urls = pageUrls(tree.children);
+  const tabs = tree.children.flatMap((section) => {
+    if (section.type !== "folder") return [];
+    const urls = pageUrls(section.children);
+    if (!urls.length) return [];
+    const activeUrls = new Set(urls);
+    for (const slug of legacyDocSlugs) {
+      if (activeUrls.has(docRoute(`/docs/${slug[1]}`)))
+        activeUrls.add(docRoute(`/docs/${slug.join("/")}`));
+    }
+    if (activeUrls.has(docRoute("/docs"))) activeUrls.add("/");
+    return [{ title: section.name, url: urls[0] === "/" ? "/" : `${urls[0]}/`, urls: activeUrls }];
+  });
   return (
     <GlassLayout
       {...props}
       tree={tree}
       sidebar={{ collapsible: false }}
-      tabs={[
-        {
-          title: "Components",
-          url: docRoute("/docs/components/line/"),
-          urls: new Set(
-            urls.filter(
-              (url) =>
-                !url.startsWith(docRoute("/docs/guides/")) &&
-                !url.startsWith(docRoute("/docs/agents/")),
-            ),
-          ),
-        },
-        {
-          title: "Guides",
-          url: docRoute("/docs/guides/materials/"),
-          urls: new Set(urls.filter((url) => url.startsWith(docRoute("/docs/guides/")))),
-        },
-        {
-          title: "Agents",
-          url: docRoute("/docs/agents/consumer/"),
-          urls: new Set(urls.filter((url) => url.startsWith(docRoute("/docs/agents/")))),
-        },
-      ]}
+      tabs={tabs}
       slots={{
         themeSwitch: DocsThemeSwitch,
         header: () => null,

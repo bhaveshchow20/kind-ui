@@ -1,24 +1,9 @@
 "use client";
 import * as Chart from "@kind-ui/charts";
-import { Check, Copy } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useMemo, useRef, useState } from "react";
-import { CodeBlock } from "@/components/code-block";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  type AdvancedRecipe,
-  advancedCode,
-  advancedData,
-  type Finish,
-} from "@/lib/advanced-chart-recipes";
-import { useCopyCode } from "@/lib/use-copy-code";
+import { type AdvancedRecipe, advancedData, type Finish } from "@/lib/advanced-chart-recipes";
+import type { DemoOptions } from "@/lib/demo-options";
 
 export { advancedRecipes } from "@/lib/advanced-chart-recipes";
 
@@ -39,6 +24,7 @@ function useChartExample({
   visible,
   animate,
   replay,
+  options = {},
 }: {
   recipe: AdvancedRecipe;
   material: Finish;
@@ -46,8 +32,9 @@ function useChartExample({
   visible: string[];
   animate: boolean;
   replay: number;
+  options?: DemoOptions;
 }) {
-  const data = useMemo(() => advancedData(r.id), [r.id]);
+  const data = useMemo(() => advancedData(r.id, options), [r.id, options]);
   const pieData = useMemo(
     () =>
       data
@@ -69,7 +56,12 @@ function useChartExample({
         aria-label={r.tag}
         margin={{ top: 20, right: 18, left: 0, bottom: 0 }}
       >
-        <Chart.CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="3 5" />
+        <Chart.CartesianGrid
+          horizontal={options.showGrid ?? true}
+          vertical={false}
+          stroke="var(--chart-grid)"
+          strokeDasharray="3 5"
+        />
         <Chart.XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
         <Chart.YAxis
           tickLine={false}
@@ -78,17 +70,27 @@ function useChartExample({
           tickFormatter={(value) => (r.id === "combo" ? `$${value / 1000}k` : `${value} TB`)}
         />
         {r.id === "combo" ? (
-          <Chart.BarSeries dataKey="a" radius={4} maxBarSize={28} material={material} />
+          <Chart.BarSeries
+            dataKey="a"
+            radius={options.radius ?? 4}
+            maxBarSize={28}
+            material={material}
+          />
         ) : (
-          <Chart.AreaSeries dataKey="a" type="monotone" fillOpacity={0.2} material={material} />
+          <Chart.AreaSeries
+            dataKey="a"
+            type={options.curve ?? "monotone"}
+            fillOpacity={0.2}
+            material={material}
+          />
         )}
         <Chart.LineSeries
           dataKey="b"
           type="monotone"
           material={material}
           strokeDasharray="4 4"
-          dot={false}
-          strokeWidth={2.5}
+          dot={options.dots ?? false}
+          strokeWidth={options.strokeWidth ?? 2.5}
         />
         <Chart.Tooltip valueAnimation={animate ? "shuffle" : undefined} />
       </Chart.ComboChart>
@@ -100,9 +102,11 @@ function useChartExample({
           data={pieData}
           dataKey="value"
           nameKey="id"
-          innerRadius={r.id === "donut" ? "54%" : 0}
+          innerRadius={`${options.innerRadius ?? (r.id === "donut" ? 54 : 0)}%`}
           outerRadius="85%"
-          paddingAngle={0}
+          cornerRadius={options.radius ?? 5}
+          startAngle={options.rotation ?? 90}
+          endAngle={(options.rotation ?? 90) + 360}
         />
         <Chart.Tooltip
           itemKey={(entry) => String(entry.payload.id)}
@@ -118,11 +122,11 @@ function useChartExample({
         animate={animate}
         accessibilityLayer
         aria-label={r.tag}
-        outerRadius="70%"
+        outerRadius={`${options.outerRadius ?? 70}%`}
         selection={r.id === "radar" ? "series" : "none"}
       >
         <Chart.PolarGrid
-          gridType={r.id === "radar-outline" ? "circle" : "polygon"}
+          gridType={options.gridType ?? (r.id === "radar-outline" ? "circle" : "polygon")}
           stroke="var(--chart-grid)"
         />
         <Chart.PolarAngleAxis dataKey="category" tick={{ fontSize: 11 }} tickLine={false} />
@@ -138,11 +142,13 @@ function useChartExample({
           <>
             <Chart.RadarSeries
               dataKey="a"
-              fillOpacity={r.id === "radar-outline" ? 0 : 0.18}
+              strokeWidth={options.strokeWidth ?? 3}
+              fillOpacity={options.fillOpacity ?? (r.id === "radar-outline" ? 0 : 0.18)}
               dot={{ r: 3, fill: config.a.color, stroke: "var(--background)", strokeWidth: 1.5 }}
             />
             <Chart.RadarSeries
               dataKey="b"
+              strokeWidth={options.strokeWidth ?? 3}
               fill="none"
               strokeDasharray="4 4"
               dot={(props) => (
@@ -170,10 +176,12 @@ function useChartExample({
         animate={animate}
         accessibilityLayer
         aria-label={r.tag}
-        startAngle={r.id === "gauge" ? 180 : 90}
-        endAngle={r.id === "gauge" ? 0 : -270}
+        startAngle={options.rotation ?? (r.id === "gauge" ? 180 : 90)}
+        endAngle={
+          (options.rotation ?? (r.id === "gauge" ? 180 : 90)) - (r.id === "gauge" ? 180 : 360)
+        }
         innerRadius={r.id === "gauge" ? "55%" : "20%"}
-        outerRadius="90%"
+        outerRadius={`${options.outerRadius ?? 90}%`}
         cy={r.id === "gauge" ? "65%" : "50%"}
         barGap={3}
       >
@@ -185,12 +193,18 @@ function useChartExample({
           axisLine={false}
           tickLine={false}
         >
-          {r.id === "gauge" && <Chart.Label position="center" value="72%" fill="currentColor" />}
+          {r.id === "gauge" && (
+            <Chart.Label
+              position="center"
+              value={`${options.progress ?? 72}%`}
+              fill="currentColor"
+            />
+          )}
         </Chart.PolarRadiusAxis>
         <Chart.RadialBarSeries
           dataKey="a"
           background
-          cornerRadius={4}
+          cornerRadius={options.radius ?? 4}
           stackId={r.id === "radial-stacked" ? "work" : undefined}
         >
           {r.id !== "gauge" && (
@@ -205,7 +219,7 @@ function useChartExample({
           <Chart.RadialBarSeries
             dataKey="b"
             fillOpacity={0.5}
-            cornerRadius={4}
+            cornerRadius={options.radius ?? 4}
             stackId={r.id === "radial-stacked" ? "work" : undefined}
           />
         )}
@@ -220,7 +234,12 @@ function useChartExample({
       aria-label={r.tag}
       margin={{ top: 20, right: 18, left: 0, bottom: 10 }}
     >
-      <Chart.CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 5" />
+      <Chart.CartesianGrid
+        horizontal={options.showGrid ?? true}
+        vertical={options.showGrid ?? true}
+        stroke="var(--chart-grid)"
+        strokeDasharray="3 5"
+      />
       <Chart.XAxis
         dataKey="x"
         type="number"
@@ -241,12 +260,36 @@ function useChartExample({
         tick={{ fontSize: 11 }}
       />
       {r.id === "bubble" && <Chart.ZAxis dataKey="z" name="Requests" range={[50, 340]} />}
-      <Chart.ScatterSeries data={data} seriesKey="a" shape="circle" />
+      <Chart.ScatterSeries
+        data={data}
+        seriesKey="a"
+        shape={(props) => (
+          <Chart.Symbols
+            cx={props.cx}
+            cy={props.cy}
+            type={options.pointShape ?? "circle"}
+            size={
+              r.id === "bubble"
+                ? (Number(props.size ?? 60) * (options.width ?? 60)) / 60
+                : (options.width ?? 60)
+            }
+            fill={config.a.color}
+          />
+        )}
+      />
       {r.id !== "bubble" && (
         <Chart.ScatterSeries
           data={data.map((row) => ({ ...row, y: row.social }))}
           seriesKey="b"
-          shape="diamond"
+          shape={(props) => (
+            <Chart.Symbols
+              cx={props.cx}
+              cy={props.cy}
+              type={options.pointShape ?? "diamond"}
+              size={options.width ?? 60}
+              fill={config.b.color}
+            />
+          )}
         />
       )}
       <Chart.ScatterTooltip
@@ -271,12 +314,14 @@ export function AdvancedChartCard({
   colors,
   animate,
   replay,
+  options = {},
 }: {
   recipe: AdvancedRecipe;
   material: Finish;
   colors: string[];
   animate: boolean;
   replay: number;
+  options?: DemoOptions;
 }) {
   const reduced = useReducedMotion();
   const cardRef = useRef<HTMLElement>(null);
@@ -294,15 +339,20 @@ export function AdvancedChartCard({
             formatValue: (value: unknown) => formatAdvancedValue(recipe.id, value),
             ...(recipe.id === "scatter" ||
             (recipe.family === "Radar" && recipe.id !== "radar-range")
-              ? { legendShape: i === 0 ? "circle" : "diamond" }
+              ? {
+                  legendShape:
+                    recipe.id === "scatter"
+                      ? (options.pointShape ?? (i === 0 ? "circle" : "diamond"))
+                      : i === 0
+                        ? "circle"
+                        : "diamond",
+                }
               : {}),
           },
         ]),
       ),
-    [recipe, colors],
+    [recipe, colors, options.pointShape],
   );
-  const code = advancedCode(recipe, material, colors, animate);
-  const { copy, copied, message: copyMessage } = useCopyCode(code);
   return (
     <motion.article
       ref={cardRef}
@@ -312,48 +362,8 @@ export function AdvancedChartCard({
       viewport={{ once: true, amount: 0.12 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <p className="copy-feedback" role="status">
-        {copyMessage}
-      </p>
       <div className="card-top">
         <h3 className="chart-tag">{recipe.tag}</h3>
-        <div className="card-code-actions">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={copy}
-            aria-label={`Copy code for ${recipe.tag}`}
-          >
-            {copied ? <Check /> : <Copy />}
-          </Button>
-          <span className="action-divider" />
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" aria-label="View chart code">
-                Code
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="code-dialog">
-              <DialogTitle className="sr-only">{recipe.tag} code</DialogTitle>
-              <DialogDescription className="sr-only">
-                A complete Kind UI chart example with the current palette and animation settings.
-              </DialogDescription>
-              <div className="code-block-header">
-                <span className="code-file">
-                  <span className="typescript-badge">TS</span>chart-{recipe.id}
-                  .tsx
-                </span>
-                <Button variant="ghost" size="icon-sm" onClick={copy} aria-label="Copy code">
-                  {copied ? <Check /> : <Copy />}
-                </Button>
-              </div>
-              <CodeBlock code={code} />
-              <div className="code-block-note sr-only">
-                Requires the built @kind-ui/charts workspace package.
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
       <Chart.Root
         className="chart-root"
@@ -371,9 +381,12 @@ export function AdvancedChartCard({
             visible={visible}
             animate={chartAnimate}
             replay={replay}
+            options={options}
           />
         </div>
-        <Chart.Legend aria-label={`Visible series for ${recipe.tag}`} />
+        {options.showLegend !== false && (
+          <Chart.Legend aria-label={`Visible series for ${recipe.tag}`} />
+        )}
       </Chart.Root>
       {visible.length === 0 && (
         <p className="all-hidden" role="status">

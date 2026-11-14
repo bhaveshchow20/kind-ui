@@ -37,8 +37,16 @@ test("all workflows keep untrusted code read-only, pinned, and bounded", () => {
     assert.equal(workflow.on.pull_request_target, undefined);
     assert.equal(workflow.on.workflow_run, undefined);
     assert.ok(!JSON.stringify(workflow).includes("secrets."));
-    for (const job of Object.values(workflow.jobs)) {
-      assert.equal(job.permissions, undefined);
+    for (const [name, job] of Object.entries(workflow.jobs)) {
+      if (workflow === release && name === "publish") {
+        assert.deepEqual(job.permissions, { contents: "read", "id-token": "write" });
+        assert.equal(job.environment, "npm-release");
+        assert.equal(workflow.on.pull_request, undefined);
+        assert.deepEqual(workflow.on.push.branches, ["main"]);
+        assert.ok(job.if.includes("github.ref == 'refs/heads/main'"));
+      } else {
+        assert.equal(job.permissions, undefined);
+      }
       assert.ok(Number.isInteger(job["timeout-minutes"]));
       assert.ok(job["timeout-minutes"] > 0 && job["timeout-minutes"] <= 60);
       for (const step of job.steps) {
@@ -162,7 +170,7 @@ test("split CI covers all aggregate gates and sends shard args to every browser 
 });
 
 test("cached browser binaries do not replace OS dependency installation", () => {
-  for (const job of [ci.jobs.playwright, docs.jobs.browsers, release.jobs.validate]) {
+  for (const job of [ci.jobs.playwright, docs.jobs.browsers]) {
     const steps = job.steps;
     const cache = steps.find((s) => s.uses?.startsWith("actions/cache@"));
     assert.equal(cache.with.path, "~/.cache/ms-playwright");
@@ -175,6 +183,20 @@ test("cached browser binaries do not replace OS dependency installation", () => 
     const install = steps.find((s) => s.run === "npm exec playwright install -- chromium");
     assert.equal(install.if, "steps.browsers.outputs.cache-hit != 'true'");
   }
+});
+
+test("release installs fresh browser binaries and OS dependencies without caching", () => {
+  for (const job of Object.values(release.jobs)) {
+    assert.ok(!job.steps.some((s) => s.uses?.startsWith("actions/cache@")));
+    const setup = job.steps.find((s) => s.uses?.startsWith("actions/setup-node@"));
+    assert.equal(setup.with.cache, undefined);
+    assert.equal(setup.with["package-manager-cache"], false);
+  }
+  const install = release.jobs.validate.steps.find(
+    (s) => s.run === "npm exec playwright install -- --with-deps chromium",
+  );
+  assert.ok(install);
+  assert.equal(install.if, undefined);
 });
 
 test("Docs separates copied consumers without dropping any browser or build gate", () => {

@@ -28,6 +28,7 @@ import {
   LineSeries as StaticLineSeries,
   type LineSeriesProps as StaticLineSeriesProps,
 } from "./line-series.js";
+import { registerPiePinComponent } from "./pie-pin-identity.js";
 import { markerPaint, type PointStyle } from "./point-marker.js";
 import { TooltipBase, type TooltipFrameProps, type TooltipProps } from "./tooltip.js";
 
@@ -242,4 +243,6 @@ function MovingFrame({ x, y, maxX, maxY, ref, style, frameProps, children }: Too
 export function Tooltip(props: TooltipProps) {
   return <TooltipBase {...props} Frame={MovingFrame} />;
 }
+registerPiePinComponent(Tooltip, "tooltip");
+
 export type { TooltipProps };
