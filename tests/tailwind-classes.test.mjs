@@ -216,5 +216,5 @@ test("loading styles carry the consumer CSP nonce", () => {
       ),
     ),
   );
-  assert.match(html, /<style nonce="request-nonce">@keyframes kind-ui-loading-pulse/);
+  assert.match(html, /<style nonce="request-nonce">@keyframes kind-ui-loading-cycle/);
 });
