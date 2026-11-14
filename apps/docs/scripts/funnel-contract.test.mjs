@@ -135,7 +135,7 @@ for (const example of family.examples) {
   });
 }
 
-test("Funnel install metadata requires compatible exports without changing candidate identity", () => {
+test("Funnel keeps internal compatibility metadata out of public setup guidance", () => {
   const bundles = JSON.parse(
     readFileSync(new URL("../generated/funnel-examples.json", import.meta.url), "utf8"),
   );
@@ -143,10 +143,11 @@ test("Funnel install metadata requires compatible exports without changing candi
     assert.equal(bundle.coreRequirement, "^0.6.0");
     assert.equal(
       JSON.parse(bundle.files["package.json"]).dependencies["@kind-ui/charts"],
-      "^0.6.0",
+      "latest",
     );
-    assert.match(promptFor(bundle, {}), /Reference package: @kind-ui\/charts@\^0\.6\.0/);
-    assert.match(promptFor(bundle, {}), /Install @kind-ui\/charts@\^0\.6\.0/);
-    assert.doesNotMatch(promptFor(bundle, {}), /Reference package: @kind-ui\/charts@0\.5\.0/);
+    assert.match(promptFor(bundle, {}), /Reference package: @kind-ui\/charts\./);
+    assert.match(promptFor(bundle, {}), /Install @kind-ui\/charts and/);
+    assert.doesNotMatch(promptFor(bundle, {}), /@kind-ui\/charts@(?:\^|~)?\d/);
+    assert.doesNotMatch(JSON.stringify(bundle.files), /@kind-ui\/charts@(?:\^|~)?\d/);
   }
 });

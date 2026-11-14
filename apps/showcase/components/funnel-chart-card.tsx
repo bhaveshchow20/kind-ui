@@ -10,7 +10,6 @@ import { demoEntry } from "@/lib/utils";
 const formatValue = (value: number) => value.toLocaleString("en-US");
 export function FunnelChartCard({
   recipe,
-  material,
   colors,
   animate,
   replay,
@@ -23,7 +22,6 @@ export function FunnelChartCard({
   replay: number;
   options?: DemoOptions;
 }) {
-  void material;
   const reduced = useReducedMotion();
   const cardRef = useRef<HTMLElement>(null);
   const entered = useInView(cardRef, { once: true, amount: 0.3 });

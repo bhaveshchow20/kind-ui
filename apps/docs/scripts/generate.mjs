@@ -136,8 +136,7 @@ for (const example of allExamples) {
         ...manifest,
         dependencies: {
           ...manifest.dependencies,
-          "@kind-ui/charts":
-            coreRequirement === provenance.version ? `^${provenance.version}` : coreRequirement,
+          "@kind-ui/charts": "latest",
         },
       },
       null,

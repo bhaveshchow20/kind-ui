@@ -67,6 +67,7 @@ test("Funnel checkout gallery and expanded example retain stage values and denom
   expect(copied).toContain('"value": 960');
   expect(copied).not.toContain("FunnelChart.Labels");
   expect(copied).not.toContain("FunnelChart.Legend");
+  expect(copied).toContain('<div className="sr-only">');
   expect(copied).toContain("<table>");
   await page.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);

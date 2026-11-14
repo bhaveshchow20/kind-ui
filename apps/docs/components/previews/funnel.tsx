@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
-import { type ComponentType, memo, type ReactNode, useLayoutEffect, useRef } from "react";
+import { type ComponentType, memo } from "react";
+import { PreviewPanelFrame } from "./preview-panel-frame";
 import type { PreviewProps } from "./types";
 
 const loading = () => (
@@ -34,53 +35,25 @@ const Workflow = dynamic(
   { loading, ssr: false },
 );
 
-// Stage readouts and stacked comparison panels determine the shared Preview/Code height.
-function Frame({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const node = ref.current;
-    const workbench = node?.closest<HTMLElement>(".component-workbench");
-    const panel = node?.closest<HTMLElement>(".preview-panel");
-    if (!node || !workbench || !panel) return;
-    const measure = () => {
-      const padding = getComputedStyle(panel);
-      const height = Math.ceil(
-        node.getBoundingClientRect().height +
-          Number.parseFloat(padding.paddingTop) +
-          Number.parseFloat(padding.paddingBottom),
-      );
-      workbench.style.setProperty("--line-panel-height", `${height}px`);
-    };
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
-    measure();
-    return () => {
-      observer.disconnect();
-      workbench.style.removeProperty("--line-panel-height");
-    };
-  }, []);
-  return <div ref={ref}>{children}</div>;
-}
-
 export const previews = {
   funnel: ({ variant }: PreviewProps) => (
-    <Frame>
+    <PreviewPanelFrame>
       <Checkout state={variant === "loading" ? "loading" : "ready"} />
-    </Frame>
+    </PreviewPanelFrame>
   ),
   "funnel-pipeline": () => (
-    <Frame>
+    <PreviewPanelFrame>
       <Pipeline />
-    </Frame>
+    </PreviewPanelFrame>
   ),
   "funnel-comparison": () => (
-    <Frame>
+    <PreviewPanelFrame>
       <Comparison />
-    </Frame>
+    </PreviewPanelFrame>
   ),
   "funnel-orientation": ({ variant }: PreviewProps) => (
-    <Frame>
+    <PreviewPanelFrame>
       <Workflow orientation={variant === "vertical" ? "vertical" : "horizontal"} />
-    </Frame>
+    </PreviewPanelFrame>
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

@@ -19,12 +19,11 @@ export const checkoutStages = [
 ] as const satisfies readonly FunnelDatum[];
 export function funnelCode(
   recipe: FunnelRecipe,
-  material: string,
+  _material: string,
   colors: string[],
   animate: boolean,
   options: DemoOptions = {},
 ) {
-  void material;
   const palette = checkoutStages.map((_, index) =>
     demoEntry(colors, index % Math.max(1, colors.length)),
   );
@@ -46,7 +45,9 @@ export function Example() {
       ${options.showLegend === false ? "" : "<FunnelChart.Legend />"}
     </FunnelChart>
     <p>${recipe.context}</p>
-    <table><caption>Checkout sessions</caption><thead><tr><th scope="col">Stage</th><th scope="col">Sessions</th><th scope="col">Share of basket sessions</th></tr></thead><tbody>{data.map((stage) => <tr key={stage.id}><th scope="row">{stage.label}</th><td>{formatValue(stage.value)}</td><td>{stage.value / 2400 * 100}%</td></tr>)}</tbody></table>
+    <div className="sr-only">
+      <table><caption>Checkout sessions</caption><thead><tr><th scope="col">Stage</th><th scope="col">Sessions</th><th scope="col">Share of basket sessions</th></tr></thead><tbody>{data.map((stage) => <tr key={stage.id}><th scope="row">{stage.label}</th><td>{formatValue(stage.value)}</td><td>{stage.value / 2400 * 100}%</td></tr>)}</tbody></table>
+    </div>
   </>;
 }
 `;

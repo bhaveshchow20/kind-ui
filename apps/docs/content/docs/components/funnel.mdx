@@ -45,11 +45,17 @@ Switch orientation while preserving stage order. Tapered boundaries encode the c
 
 <ChartExample id="funnel-orientation" />
 
-## Loading state
+## Loading State
 
 Set `loading` and name the pending data with `loadingLabel`.
 
 <ChartExample id="funnel" variant="loading" />
+
+## Empty and failed data
+
+An empty `data` array renders the `empty` content without mounting stage targets. Keep measured zero stages in `data`; they remain available to labels, inspection and tables.
+
+`FunnelChart` validates supplied aggregates synchronously and does not own remote-data errors. Handle request failures before rendering the chart, or use your application error boundary, and provide a retry action beside the failure message.
 
 ## API reference
 

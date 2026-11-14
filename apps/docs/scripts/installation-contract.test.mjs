@@ -142,18 +142,20 @@ test("installation rejects missing source, missing exports and unknown items", (
   );
 });
 
-test("Funnel Manual installs require compatible Core across all package managers", () => {
+test("Funnel public installation commands do not expose an internal Core version", () => {
   const bundles = JSON.parse(read("generated/all-examples.json"));
   const installation = installationFor(bundles.funnel);
   assert.deepEqual(
     installation.coreInstallCommands.map(({ command }) => command),
     [
-      "npm install @kind-ui/charts@^0.6.0 motion recharts",
-      "pnpm add @kind-ui/charts@^0.6.0 motion recharts",
-      "yarn add @kind-ui/charts@^0.6.0 motion recharts",
-      "bun add @kind-ui/charts@^0.6.0 motion recharts",
+      "npm install @kind-ui/charts motion recharts",
+      "pnpm add @kind-ui/charts motion recharts",
+      "yarn add @kind-ui/charts motion recharts",
+      "bun add @kind-ui/charts motion recharts",
     ],
   );
   assert.equal(installation.steps[0].code, installation.coreInstallCommands[0].command);
-  assert.match(installationMarkdown(bundles.funnel), /@kind-ui\/charts@\^0\.6\.0/);
+  const markdown = installationMarkdown(bundles.funnel);
+  assert.doesNotMatch(markdown, /@kind-ui\/charts@(?:\^|~)?\d/);
+  assert.doesNotMatch(markdown, /React \d/);
 });

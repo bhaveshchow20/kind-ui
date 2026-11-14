@@ -20,18 +20,12 @@ export function installationFor(bundle) {
   if (source === undefined) throw new Error(`Missing installation source: ${bundle.id}`);
   const componentName = source.match(/export function (\w+)/)?.[1];
   if (!componentName) throw new Error(`Missing composition export: ${bundle.id}`);
-  const installCommands = bundle.coreRequirement
-    ? coreInstallCommands.map(({ manager, command }) => ({
-        manager,
-        command: command.replace("@kind-ui/charts", `@kind-ui/charts@${bundle.coreRequirement}`),
-      }))
-    : coreInstallCommands;
   /** @type {InstallationStep[]} */
   const steps = [
     {
       title: "Install Core",
-      description: "Add the package and its peers to your React 19.3 project.",
-      code: installCommands[0]?.command ?? coreInstallCommand,
+      description: "Add the package and its peers to your React project.",
+      code: coreInstallCommands[0]?.command ?? coreInstallCommand,
       language: "sh",
       filename: "Terminal",
     },
@@ -67,7 +61,7 @@ export function installationFor(bundle) {
     { manager: "yarn", command: `yarn dlx shadcn@latest add @kind-ui/${itemName}` },
     { manager: "bun", command: `bunx shadcn@latest add @kind-ui/${itemName}` },
   ];
-  return { itemName, command, cliCommands, coreInstallCommands: installCommands, steps };
+  return { itemName, command, cliCommands, coreInstallCommands, steps };
 }
 
 /** @param {readonly PackageInstallCommand[]} commands @param {number} level */
