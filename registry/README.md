@@ -11,8 +11,12 @@ The documentation example catalog owns which compositions are canonical.
 `activity-rings` from `radial-activity`. Build staging preserves the exact
 composition bytes and public imports; the CLI places editable files under each
 consumer's configured components alias. Core owns chart geometry, interactions,
-and animation. The registry pins `@kind-ui/charts@0.5.0` and declares its React,
-React DOM, Recharts, and Motion requirements.
+and animation. The registry pins `@kind-ui/charts@0.5.0`. Core's package manifest
+declares the React, React DOM, Recharts, Motion and Tailwind peer requirements;
+npm resolves missing peers and retains compatible exact versions in the host.
+The registry does not re-add peer ranges through the CLI, which would replace
+those host pins with newer releases. Consumer checks still require every selected
+version to remain unchanged after installation and overwrite.
 
 The supported registry `css` field registers package utilities with Tailwind v4
 for standard `src/`, `app/`, and `src/app/` stylesheet locations. Other layouts

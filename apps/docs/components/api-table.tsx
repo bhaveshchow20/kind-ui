@@ -1,18 +1,32 @@
 import mdx from "fumadocs-ui/mdx";
 import tables from "@/generated/api.json";
 import { referenceRows, referenceTitle } from "@/lib/api-reference.mjs";
+export interface ApiRow {
+  name: string;
+  type: string;
+  default: string;
+  description: string;
+}
 export function ApiTable({
   name,
+  title,
+  rows,
   compact: _compact = false,
-}: {
-  name: keyof typeof tables;
+}: (
+  | { name: keyof typeof tables; title?: never; rows?: never }
+  | {
+      name?: never;
+      title: string;
+      rows: ApiRow[];
+    }
+) & {
   compact?: boolean;
 }) {
-  const table = referenceRows(name, tables[name]);
+  const table = rows ?? referenceRows(name, tables[name]);
   return (
     <section
       className="line-props-scroll"
-      aria-label={`${referenceTitle(name)} props`}
+      aria-label={`${title ?? referenceTitle(name)} props`}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users need to scroll wide API references.
       tabIndex={0}
     >
