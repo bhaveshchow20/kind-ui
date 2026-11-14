@@ -214,7 +214,7 @@ test("candlestick public compound hydrates at both pinned peer combinations", as
   await expect(host.getByRole("table")).toContainText("65.0 probability points");
   await host.locator('[data-kind-ui="chart"]').focus();
   await page.keyboard.press("Home");
-  await expect(host.locator('[data-kind-ui="candlestick-content"]')).toContainText(
+  await expect(host.locator('[data-kind-ui="candlestick-readout"]')).toContainText(
     "65.0 probability points",
   );
   expect(errors).toEqual([]);
