@@ -29,25 +29,25 @@ import { FunnelChart } from "@kind-ui/charts";
 
 ## Weighted pipeline snapshot
 
-Values may increase between stages. This snapshot shows supplied weighted amounts and duration metadata, including an unknown amount and a measured zero.
+Supplied values may increase; unknown and measured-zero stages stay distinct.
 
 <ChartExample id="funnel-pipeline" />
 
 ## Compare cohorts
 
-Use one `scaleMax` for both panels. Each panel’s ratio still uses its own starting cohort.
+Compare cohorts on one shared scale without changing each cohort’s denominator.
 
 <ChartExample id="funnel-comparison" />
 
 ## Application progression
 
-Switch orientation while preserving stage order. Tapered boundaries encode the current and next values; their area does not encode a stage value.
+Switch orientation without changing stage order or taper semantics.
 
 <ChartExample id="funnel-orientation" />
 
 ## Loading State
 
-Set `loading` and name the pending data with `loadingLabel`.
+Set `loading` and `loadingLabel` while data is pending.
 
 <ChartExample id="funnel" variant="loading" />
 
