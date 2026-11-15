@@ -13,7 +13,8 @@ test("installed Funnel preserves checkout values, inspection and loading recover
   const stages = composition.locator('[data-kind-ui="funnel-stage"]');
   await expect(stages).toHaveCount(5);
   await expect(composition.locator('[data-kind-ui="funnel-mark"]')).toHaveCount(5);
-  await expect(composition.locator('[data-kind-ui="funnel-labels"]')).toContainText("2,400");
+  await expect(composition.locator('[data-kind-ui="funnel-labels"]')).toHaveCount(0);
+  await expect(composition.locator('[data-kind-ui="chart-legend"]')).toBeVisible();
   const payment = composition.locator('[data-kind-ui="funnel-stage"][data-stage-id="payment"]');
   await payment.focus();
   await expect(composition.getByRole("tooltip")).toContainText("1,080");
@@ -27,10 +28,11 @@ test("installed Funnel preserves checkout values, inspection and loading recover
   await expect(composition.locator('[data-kind-ui="chart-loading-status"]')).toHaveText(
     "Loading checkout cohort",
   );
-  await expect(composition.locator('[data-kind-ui="funnel-labels"]')).not.toBeVisible();
+  await expect(composition.locator('[data-kind-ui="funnel-labels"]')).toHaveCount(0);
   await page.getByRole("button", { name: "Loading", exact: true }).click();
   await expect(composition.locator('[data-kind-ui="funnel-mark"]')).toHaveCount(5);
-  await expect(composition.locator('[data-kind-ui="funnel-labels"]')).toContainText("900");
+  await expect(composition.locator('[data-kind-ui="funnel-labels"]')).toHaveCount(0);
+  await expect(composition.locator('[data-kind-ui="chart-legend"]')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   expect(errors).toEqual([]);
 });
