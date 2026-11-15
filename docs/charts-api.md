@@ -30,6 +30,6 @@ The [customization guide](https://kindui.dev/charts/docs/guides/customization/) 
 
 ## Agent retrieval and verification
 
-Start with [llms.txt](https://kindui.dev/charts/docs/llms.txt), then retrieve the relevant Markdown reference and complete example setup files. [llms-full.txt](https://kindui.dev/charts/docs/llms-full.txt) includes complete consumer code and generated API tables. Install the repository consumer skill with `npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`.
+Start with [llms.txt](https://kindui.dev/charts/docs/llms.txt), then retrieve the relevant Markdown reference and complete example setup files. [llms-full.txt](https://kindui.dev/charts/docs/llms-full.txt) includes complete consumer code and generated API tables. Install the repository consumer skill with `npx skills add kind-ui/charts --skill kind-ui-charts`.
 
 Homepage (`apps/showcase`) and docs (`apps/docs`) own the maintained examples. Internal regression fixtures in `tests/fixtures` validate package and browser contracts. See [CONTRIBUTING.md](../CONTRIBUTING.md) for library/package/browser checks and [release automation](release-automation.md) for exact artifact publication.

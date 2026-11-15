@@ -17,10 +17,7 @@ function assertVersionPullRequests(w) {
   assert.deepEqual(w.permissions, { contents: "read" });
   assert.deepEqual(Object.keys(w.jobs), ["version"]);
   const job = w.jobs.version;
-  assert.equal(
-    job.if,
-    "github.repository == 'bhaveshchow20/kind-ui' && github.ref == 'refs/heads/main'",
-  );
+  assert.equal(job.if, "github.repository == 'kind-ui/charts' && github.ref == 'refs/heads/main'");
   assert.deepEqual(job.permissions, { contents: "write", "pull-requests": "write" });
   assert.equal(job.environment, undefined);
   const plan = job.steps.find((step) => step.id === "plan");
@@ -87,7 +84,7 @@ function assertRelease(w) {
   assert.deepEqual(w.permissions, { contents: "read" }, "No publishing identity is granted");
   assert.equal(
     w.jobs.plan.if,
-    "github.repository == 'bhaveshchow20/kind-ui' && github.ref == 'refs/heads/main'",
+    "github.repository == 'kind-ui/charts' && github.ref == 'refs/heads/main'",
   );
   assert.deepEqual(w.on.push.branches, ["main"]);
   assert.deepEqual(w.on.push.paths, [
@@ -121,7 +118,7 @@ function assertRelease(w) {
   assert.deepEqual(w.jobs.publish.needs, ["plan", "verify"]);
   assert.equal(
     w.jobs.publish.if,
-    "github.repository == 'bhaveshchow20/kind-ui' && " +
+    "github.repository == 'kind-ui/charts' && " +
       "github.ref == 'refs/heads/main' && " +
       "needs.plan.outputs.publish == 'true' && " +
       "needs.verify.outputs.publishable == 'true'",

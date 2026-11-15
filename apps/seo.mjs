@@ -43,7 +43,7 @@ export const chartSourceData = {
   name: "@kind-ui/charts",
   description: "Composable React chart components built on Recharts and Motion.",
   url: showcaseURL,
-  codeRepository: "https://github.com/bhaveshchow20/kind-ui",
-  license: "https://github.com/bhaveshchow20/kind-ui/blob/main/LICENSE",
+  codeRepository: "https://github.com/kind-ui/charts",
+  license: "https://github.com/kind-ui/charts/blob/main/LICENSE",
   programmingLanguage: "TypeScript",
 };

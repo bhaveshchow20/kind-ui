@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   plan:
-    if: github.repository == 'bhaveshchow20/kind-ui' && github.ref == 'refs/heads/main'
+    if: github.repository == 'kind-ui/charts' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -139,7 +139,7 @@ jobs:
   publish:
     # Publication is limited to the reviewed version transition and verified public artifact.
     if: >-
-      github.repository == 'bhaveshchow20/kind-ui' &&
+      github.repository == 'kind-ui/charts' &&
       github.ref == 'refs/heads/main' &&
       needs.plan.outputs.publish == 'true' &&
       needs.verify.outputs.publishable == 'true'

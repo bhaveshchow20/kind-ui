@@ -51,7 +51,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               ),
               url: docRoute("/docs/"),
             }}
-            githubUrl="https://github.com/bhaveshchow20/kind-ui"
+            githubUrl="https://github.com/kind-ui/charts"
           >
             {children}
           </GlassDocsLayout>

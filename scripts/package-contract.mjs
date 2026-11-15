@@ -18,12 +18,12 @@ export function assertPackageContract(inputManifest, files, sources = []) {
     manifest.repository,
     {
       type: "git",
-      url: "git+https://github.com/bhaveshchow20/kind-ui.git",
+      url: "git+https://github.com/kind-ui/charts.git",
       directory: "packages/charts",
     },
     "Repository metadata must identify the package source for provenance",
   );
-  assert.equal(manifest.bugs?.url, "https://github.com/bhaveshchow20/kind-ui/issues");
+  assert.equal(manifest.bugs?.url, "https://github.com/kind-ui/charts/issues");
   assert.equal(manifest.homepage, "https://kindui.dev/charts");
   assert.equal(manifest.type, "module", "Package must declare ESM");
   const entry = manifest.exports?.["."];

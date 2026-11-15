@@ -70,7 +70,7 @@ export async function ensureGitHubRelease(entry, request) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  assert.equal(process.env.GITHUB_REPOSITORY, "bhaveshchow20/kind-ui");
+  assert.equal(process.env.GITHUB_REPOSITORY, "kind-ui/charts");
   assert.equal(process.env.GITHUB_REF, "refs/heads/main");
   assert.ok(process.env.GITHUB_TOKEN, "GitHub workflow token is required");
   assert.equal(
@@ -87,7 +87,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     integrity: process.env.RELEASE_INTEGRITY,
   });
   const request = async (method, path, body) => {
-    const response = await fetch(`https://api.github.com/repos/bhaveshchow20/kind-ui/${path}`, {
+    const response = await fetch(`https://api.github.com/repos/kind-ui/charts/${path}`, {
       method,
       headers: {
         Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,

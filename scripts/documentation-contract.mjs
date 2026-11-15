@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 
-export const repositorySourcePrefix = "https://github.com/bhaveshchow20/kind-ui/";
+export const repositorySourcePrefix = "https://github.com/kind-ui/charts/";
 export const documentationSource = "https://kindui.dev/charts/docs/";
 
 /** @param {string} readme @param {string[]} packedFiles */

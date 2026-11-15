@@ -113,7 +113,7 @@ for (const [name, mutate] of [
   });
 
 test("only push or explicit validation on canonical main can enter the pipeline", () => {
-  const context = { repository: "bhaveshchow20/kind-ui", ref: "refs/heads/main", event: "push" };
+  const context = { repository: "kind-ui/charts", ref: "refs/heads/main", event: "push" };
   assertReleaseContext(context);
   assertReleaseContext({ ...context, event: "workflow_dispatch" });
   for (const bad of [

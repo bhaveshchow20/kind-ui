@@ -23,7 +23,7 @@ writeFileSync(
   path.join(destination, "provenance.json"),
   `${JSON.stringify(
     {
-      editableSource: "https://github.com/bhaveshchow20/kind-ui",
+      editableSource: "https://github.com/kind-ui/charts",
       appPath: "apps/docs",
       sourceCommit: commit,
       package: packageInfo,
