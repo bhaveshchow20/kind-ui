@@ -22,6 +22,7 @@ import { AdvancedChartCard, advancedRecipes } from "@/components/advanced-chart-
 import { CodeBlock } from "@/components/code-block";
 import { DemoControls } from "@/components/demo-controls";
 import { HeroHeadline } from "@/components/framework-pill";
+import { FunnelChartCard } from "@/components/funnel-chart-card";
 import { InstallChartPicker } from "@/components/install-chart-picker";
 import { KindLogo } from "@/components/kind-logo";
 import { NewChartCard } from "@/components/new-chart-card";
@@ -38,6 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { activityCode } from "@/lib/activity-recipe";
 import { advancedCode } from "@/lib/advanced-chart-recipes";
 import { type DemoOptions, demoDefaults } from "@/lib/demo-options";
+import { funnelCode, funnelRecipes } from "@/lib/funnel-recipes";
 import { newCode, newRecipes } from "@/lib/new-chart-recipes";
 import {
   docsAccessNote,
@@ -64,6 +66,7 @@ const families = [
   "Heatmap",
   "Waterfall",
   "Sankey",
+  "Funnel",
   "Histogram",
   "Box Plot",
 ] as const;
@@ -735,7 +738,7 @@ type GalleryEntry = {
   family: Family;
   tag: string;
   context: string;
-  source: "basic" | "advanced" | "new" | "activity";
+  source: "basic" | "advanced" | "new" | "activity" | "funnel";
 };
 const excluded = new Set(["steps", "signed", "radar-range", "radial", "radial-stacked"]);
 const gallery: GalleryEntry[] = [
@@ -744,6 +747,7 @@ const gallery: GalleryEntry[] = [
     .filter((r) => !excluded.has(r.id))
     .map((r) => ({ ...r, source: "advanced" as const })),
   ...newRecipes.map((r) => ({ ...r, source: "new" as const })),
+  ...funnelRecipes.map((r) => ({ ...r, source: "funnel" as const })),
   {
     id: "activity",
     family: "Radial",
@@ -781,6 +785,7 @@ const exampleColors: Record<string, string[]> = {
   "waterfall-budget": ["#5f92ed", "#27b99b", "#ff9653"],
   "sankey-acquisition": ["#4b9df9", "#b083f3", "#40c7ad"],
   "sankey-energy": ["#558de3", "#ffc147", "#30c79d"],
+  "funnel-checkout": ["#418fff", "#68a5f4", "#80b2ed", "#a1c5ed"],
   "histogram-orders": ["#f2a248", "#ffd096", "#fff0dc"],
   "histogram-latency": ["#48a2f9", "#a2d3fc", "#dcf0ff"],
   "box-latency": ["#a475ed", "#cda9ff", "#eee1ff"],
@@ -798,6 +803,8 @@ function renderEntry(entry: GalleryEntry, options: DemoOptions, animate: boolean
     options,
   };
   if (entry.source === "activity") return <ActivityDemo options={options} />;
+  if (entry.source === "funnel")
+    return <FunnelChartCard recipe={findRecipe(funnelRecipes, entry.id)} {...props} />;
   if (entry.source === "basic") return <ChartCard r={findRecipe(recipes, entry.id)} {...props} />;
   if (entry.source === "advanced")
     return <AdvancedChartCard recipe={findRecipe(advancedRecipes, entry.id)} {...props} />;
@@ -805,6 +812,14 @@ function renderEntry(entry: GalleryEntry, options: DemoOptions, animate: boolean
 }
 function entryCode(entry: GalleryEntry, options: DemoOptions, animate: boolean) {
   if (entry.source === "activity") return activityCode(options, animate);
+  if (entry.source === "funnel")
+    return funnelCode(
+      findRecipe(funnelRecipes, entry.id),
+      "plain",
+      colorsFor(entry),
+      animate,
+      options,
+    );
   if (entry.source === "basic")
     return snippet(findRecipe(recipes, entry.id), "plain", colorsFor(entry), animate, options);
   if (entry.source === "advanced")

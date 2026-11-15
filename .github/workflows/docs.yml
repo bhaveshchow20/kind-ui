@@ -225,6 +225,10 @@ jobs:
           node --test scripts/check-sankey-source.test.mjs
           node scripts/start-sankey-checks.mjs
         working-directory: apps/docs
+      - name: Check Funnel documentation
+        if: matrix.group == 'advanced'
+        run: node scripts/start-funnel-checks.mjs
+        working-directory: apps/docs
       - name: Check histogram documentation
         if: matrix.group == 'advanced'
         run: |
@@ -298,6 +302,8 @@ jobs:
             apps/docs/artifacts/combo-*.png
             apps/docs/artifacts/heatmap/*.png
             apps/docs/artifacts/heatmap/*.json
+            apps/docs/artifacts/funnel/*.png
+            apps/docs/artifacts/funnel/*.json
           if-no-files-found: warn
           retention-days: ${{ job.status != 'success' && 3 || 1 }}
   docs:

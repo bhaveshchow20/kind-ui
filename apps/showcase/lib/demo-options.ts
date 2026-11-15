@@ -33,7 +33,7 @@ export function demoDefaults(id: string): DemoOptions {
     strokeWidth: 3,
     showGrid: true,
     showLegend: true,
-    showLabels: !["radial", "radial-stacked", "gauge"].includes(id),
+    showLabels: !["radial", "radial-stacked", "gauge", "funnel-checkout"].includes(id),
     rotation: id === "gauge" ? 180 : 90,
     outerRadius: id.startsWith("radar") ? 70 : 90,
     exercise: 30,

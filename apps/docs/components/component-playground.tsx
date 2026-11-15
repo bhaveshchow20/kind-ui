@@ -2,14 +2,20 @@
 import * as Select from "@radix-ui/react-select";
 import { Check, ChevronDown, Copy } from "lucide-react";
 import { type ReactNode, useCallback, useId, useState } from "react";
-import type { ComponentBundleData } from "@/lib/component-bundles.server.mjs";
 import { promptFor } from "@/lib/example-files.mjs";
 import { PreviewCode } from "./preview-code";
 import { previews } from "./previews";
 import { Button } from "./ui/button";
 
 export type ComponentId = keyof typeof previews;
-export type ComponentBundle = ComponentBundleData & { id: ComponentId };
+export type ComponentBundle = {
+  id: ComponentId;
+  title: string;
+  family: string;
+  variants?: Record<string, { label: string }>;
+  variantControl?: string;
+  defaultVariant?: string;
+};
 export function ComponentPlayground({
   bundle,
   sourceCode,

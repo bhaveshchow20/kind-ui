@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
-import { type ComponentType, memo, type ReactNode, useLayoutEffect, useRef } from "react";
+import { type ComponentType, memo } from "react";
+import { PreviewPanelFrame } from "./preview-panel-frame";
 import type { PreviewProps } from "./types";
 
 function Loading() {
@@ -31,59 +32,32 @@ const Material = dynamic(
     ssr: false,
   },
 );
-// Native matrices and their in-flow tooltips determine the shared Preview/Code height.
-function Frame({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const node = ref.current;
-    const workbench = node?.closest<HTMLElement>(".component-workbench");
-    const panel = node?.closest<HTMLElement>(".preview-panel");
-    if (!node || !workbench || !panel) return;
-    const measure = () => {
-      const padding = getComputedStyle(panel);
-      const height = Math.ceil(
-        node.getBoundingClientRect().height +
-          Number.parseFloat(padding.paddingTop) +
-          Number.parseFloat(padding.paddingBottom),
-      );
-      workbench.style.setProperty("--line-panel-height", `${height}px`);
-    };
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
-    measure();
-    return () => {
-      observer.disconnect();
-      workbench.style.removeProperty("--line-panel-height");
-    };
-  }, []);
-  return <div ref={ref}>{children}</div>;
-}
 const Compact = dynamic(
   () => import("@/examples/heatmap-compact/example").then((m) => memo(m.CompactActivityHeatmap)),
   { loading: Loading, ssr: false },
 );
 export const previews = {
   "heatmap-compact": () => (
-    <Frame>
+    <PreviewPanelFrame>
       <div className="not-prose">
         <Compact />
       </div>
-    </Frame>
+    </PreviewPanelFrame>
   ),
 
   heatmap: ({ variant }: PreviewProps) => (
-    <Frame>
+    <PreviewPanelFrame>
       <Support state={variant as "ready" | "loading"} />
-    </Frame>
+    </PreviewPanelFrame>
   ),
   "heatmap-diverging": () => (
-    <Frame>
+    <PreviewPanelFrame>
       <Regional />
-    </Frame>
+    </PreviewPanelFrame>
   ),
   "heatmap-materials": ({ variant }: PreviewProps) => (
-    <Frame>
+    <PreviewPanelFrame>
       <Material appearance={variant as "default" | "clay" | "glow"} />
-    </Frame>
+    </PreviewPanelFrame>
   ),
 } satisfies Record<string, ComponentType<PreviewProps>>;

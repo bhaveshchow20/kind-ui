@@ -8,11 +8,18 @@ interface ExampleBundle {
   packageStatus?: string | undefined;
   localPackage?: boolean | undefined;
   version?: string | undefined;
+  coreRequirement?: string | undefined;
   acceptance?: string | undefined;
+}
+interface PromptBundle {
+  id: string;
+  family: string;
+  title: string;
+  defaultVariant?: string | undefined;
 }
 export function filesFor(
   bundle: ExampleBundle,
   settings: unknown,
   variant?: string,
 ): Record<string, string>;
-export function promptFor(bundle: ExampleBundle, settings: unknown, variant?: string): string;
+export function promptFor(bundle: PromptBundle, settings: unknown, variant?: string): string;

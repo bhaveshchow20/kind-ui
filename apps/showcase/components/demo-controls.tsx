@@ -212,6 +212,8 @@ export function controlsFor(family: string, id: string): Control[] {
         barWidth,
         grid,
       ];
+    case "Funnel":
+      return [labels, legend];
     case "Sankey":
       return [
         { kind: "range", key: "nodeWidth", label: "Node width", min: 6, max: 28, unit: "px" },
