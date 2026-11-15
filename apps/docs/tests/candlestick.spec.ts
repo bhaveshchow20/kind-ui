@@ -11,7 +11,9 @@ test("Candlestick docs preserve original OHLC, quote metadata, live updates and 
   page.on("pageerror", (error) => errors.push(error.message));
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto(`.${docRoute("/docs/components/candlestick/")}`);
+  await page.goto(`.${docRoute("/docs/components/candlestick/")}`, {
+    waitUntil: "domcontentloaded",
+  });
   await expect(
     page.getByRole("heading", { name: "Candlestick Chart", exact: true, level: 1 }),
   ).toBeVisible();
@@ -119,7 +121,9 @@ test("Candlestick installation and section copy controls fit narrow layouts with
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto(`.${docRoute("/docs/components/candlestick/")}`);
+  await page.goto(`.${docRoute("/docs/components/candlestick/")}`, {
+    waitUntil: "domcontentloaded",
+  });
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 900 });
     for (const fontFamily of ["", "Arial, sans-serif"]) {
@@ -131,9 +135,13 @@ test("Candlestick installation and section copy controls fit narrow layouts with
           },
           { fontFamily, fontSize },
         );
-        const widths = await page
-          .locator('[data-component="candlestick"] [data-kind-ui="candlestick-volume-mark"]')
-          .evaluateAll((nodes) => nodes.map((node) => Number(node.getAttribute("width"))));
+        const volumeMarks = page.locator(
+          '[data-component="candlestick"] [data-kind-ui="candlestick-volume-mark"]',
+        );
+        await expect(volumeMarks.first()).toBeVisible();
+        const widths = await volumeMarks.evaluateAll((nodes) =>
+          nodes.map((node) => Number(node.getAttribute("width"))),
+        );
         expect(widths.length).toBeGreaterThan(0);
         expect(Math.min(...widths)).toBeGreaterThanOrEqual(1);
         const installation = page.locator('[data-chart-installation="candlestick"]');
@@ -223,7 +231,9 @@ test("Candlestick streaming pauses and resumes while zoom, pan and navigator sha
   page,
 }, info) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto(`.${docRoute("/docs/components/candlestick/")}`);
+  await page.goto(`.${docRoute("/docs/components/candlestick/")}`, {
+    waitUntil: "domcontentloaded",
+  });
   const container = page.locator('[data-component="candlestick"]').first();
   await container.getByRole("button", { name: "Pause", exact: true }).click();
   const readout = container.locator('[data-kind-ui="candlestick-readout"]');
@@ -291,7 +301,9 @@ for (const theme of ["light", "dark"]) {
     page,
   }, info) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto(`.${docRoute("/docs/components/candlestick/")}`);
+    await page.goto(`.${docRoute("/docs/components/candlestick/")}`, {
+      waitUntil: "domcontentloaded",
+    });
     await page.evaluate(
       (theme) => document.documentElement.classList.toggle("dark", theme === "dark"),
       theme,
