@@ -13,7 +13,7 @@ Original docs source and adaptations of Kind UI examples use this repository's M
 | Lucide React | 1.50.0 | ISC |
 | clsx / tailwind-merge | 2.1.1 / 3.6.0 | MIT |
 | class-variance-authority | 0.7.1 | Apache-2.0 |
-| Next.js | 16.3.8 | MIT |
+| Next.js | 16.4.6 | MIT |
 | React and React DOM | 19.3.0 | MIT |
 | Recharts | 3.10.1 | MIT |
 | Motion | 13.4.6 | MIT |
