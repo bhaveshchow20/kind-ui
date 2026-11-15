@@ -5,8 +5,8 @@
     "brotliQuality": 11
   },
   "tools": {
-    "vite": "8.3.1",
-    "rolldown": "1.2.12",
+    "vite": "8.3.8",
+    "rolldown": "1.2.19",
     "@tailwindcss/vite": "4.3.3",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",
