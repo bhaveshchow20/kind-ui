@@ -38,12 +38,22 @@ assert.ok(
   "Snippet evaluation requires lib/utils.ts to export the demoEntry function implementation",
 );
 const helperUrl = moduleUrl(helper.getText(utilities));
+const candleSourceUrl = moduleUrl(
+  await readFile(join(app, "lib/market-candlestick-source.ts"), "utf8"),
+);
 async function evaluate(source) {
   const linked = source.replace(
     /from\s*(["'])@\/lib\/utils\1/g,
     `from ${JSON.stringify(helperUrl)}`,
   );
-  return import(moduleUrl(linked));
+  return import(
+    moduleUrl(
+      linked.replace(
+        /from\s*(["'])\.\/market-candlestick-source\1/g,
+        `from ${JSON.stringify(candleSourceUrl)}`,
+      ),
+    )
+  );
 }
 const page = await readFile(join(app, "app/page.tsx"), "utf8");
 const basic = await evaluate(
@@ -74,6 +84,23 @@ try {
             /visibleSeries=|onVisibleSeriesChange=|data\.filter\(/,
             `${recipe.id} copied focus must preserve the complete data`,
           );
+          if (recipe.family === "Candlestick") {
+            assert.match(source, /<CandlestickChart\.Volume\s+seriesKey="volume"/);
+            assert.match(source, /<CandlestickChart\.CurrentPrice/);
+            assert.match(source, /<CandlestickChart\.Controls/);
+            assert.match(source, /<CandlestickChart\.HistoryNavigator/);
+            assert.match(source, /data-kind-ui="candlestick-data-alternative"/);
+            assert.match(source, /rows=\{feed.rows\}/);
+            assert.match(source, /rows\.map\(\(row\)/);
+            assert.match(source, /selection=\{selection\}\s+onSelectionChange=/);
+            assert.doesNotMatch(source, /<CandlestickChart\.DataTable/);
+            assert.match(source, /var\(--chart-grid, #e5e7eb\)/);
+            assert.match(source, /var\(--chart-axis, #64748b\)/);
+            assert.match(source, /timeMode="epoch-ms"/);
+            assert.match(source, /SIMULATED/);
+            assert.match(source, /setInterval\(step, 700\)/);
+            assert.doesNotMatch(source, /responsive|\.Root|\.Plot|synthetic executions/i);
+          }
           if (recipe.family === "Pie") {
             assert.match(source, /<PieChart\.Series/);
             assert.doesNotMatch(source, /interactionBinding=/);
@@ -86,7 +113,7 @@ try {
       }
     }
   }
-  assert.equal(files.length, 192, "Every recipe, finish and motion setting must be checked");
+  assert.equal(files.length, 198, "Every recipe, finish and motion setting must be checked");
   const changedOptions = {
     strokeWidth: 4,
     showGrid: false,
@@ -131,8 +158,22 @@ try {
         changedOptions,
       );
       assert.doesNotMatch(source, /<\w+Chart\.Legend\b/, `${recipe.id} hides the explicit legend`);
-      if (recipe.family !== "Heatmap")
+      if (recipe.family === "Candlestick") {
+        assert.match(source, /showGrid !== false &&/, "Streaming component gates its shared grid");
+      } else if (recipe.family !== "Heatmap") {
         assert.doesNotMatch(source, /<\w+Chart\.Grid\b/, `${recipe.id} omits the explicit grid`);
+      }
+      if (recipe.family === "Candlestick") {
+        assert.match(source, /"width":40/);
+        assert.match(source, /width=\{options.width \?\? 12\}/);
+        assert.match(source, /maxBarSize=\{width \?\? 12\}/);
+        assert.match(source, /"strokeWidth":4/);
+        assert.match(source, /strokeWidth=\{options.strokeWidth \?\? 1.5\}/);
+        assert.match(source, /strokeWidth: strokeWidth \?\? 1.5/);
+        assert.match(source, /"showLabels":false/);
+        assert.match(source, /showLabels=\{options.showLabels \?\? true\}/);
+        assert.match(source, /showLabels === false \? false/);
+      }
       await writeFile(file, source);
       files.push(file);
     }

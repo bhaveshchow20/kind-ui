@@ -324,8 +324,17 @@ for (const width of [320, 548, 1280]) {
     await install.getByRole("tab", { name: "shadcn", exact: true }).click();
     const name = install.getByRole("button", { name: /^Switch chart type:/ });
     const initial = await install.boundingBox();
-    for (let i = 0; i < 6; i++) await name.click();
-    await expect(name).toHaveAccessibleName("Switch chart type: histogram-chart");
+    const targetName = "Switch chart type: histogram-chart";
+    const seenNames = new Set<string>();
+    while ((await name.getAttribute("aria-label")) !== targetName) {
+      const currentName = await name.getAttribute("aria-label");
+      if (!currentName || seenNames.has(currentName)) {
+        throw new Error("Histogram chart is missing from the install picker");
+      }
+      seenNames.add(currentName);
+      await name.click();
+    }
+    await expect(name).toHaveAccessibleName(targetName);
     const expanded = await install.boundingBox();
     if (!initial || !expanded) throw new Error("Missing install panel bounds");
     if (width > 380) expect(expanded.width).toBeGreaterThan(initial.width);

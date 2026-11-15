@@ -198,6 +198,20 @@ export function controlsFor(family: string, id: string): Control[] {
         grid,
         legend,
       ];
+    case "Candlestick":
+      return [
+        {
+          kind: "range",
+          key: "strokeWidth",
+          label: "Wick weight",
+          min: 0.5,
+          max: 4,
+          step: 0.5,
+          unit: "px",
+        },
+        grid,
+        labels,
+      ];
     case "Box Plot":
       return [
         { kind: "range", key: "width", label: "Box width", min: 12, max: 48, unit: "px" },

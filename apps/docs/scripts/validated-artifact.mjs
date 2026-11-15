@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import {
   artifactReceiptSchema,
@@ -65,4 +65,11 @@ export function readValidatedArtifact(root, directory, inputManifest) {
     "Validated workflow attempt is missing",
   );
   return checked;
+}
+
+/** Same-version tarball replacements otherwise reuse Webpack's managed-package snapshot. */
+/** @param {string} docsRoot @param {string | undefined} previousSha @param {string} nextSha */
+export function invalidateChangedPackageCache(docsRoot, previousSha, nextSha) {
+  if (previousSha === nextSha) return;
+  rmSync(path.join(docsRoot, ".next/cache/webpack"), { recursive: true, force: true });
 }

@@ -2,6 +2,7 @@
 import { previews as area } from "./area";
 import { previews as bar } from "./bar";
 import { previews as boxPlot } from "./box-plot";
+import { previews as candlestick } from "./candlestick";
 import { previews as combo } from "./combo";
 import { previews as heatmap } from "./heatmap";
 import { previews as histogram } from "./histogram";
@@ -17,6 +18,7 @@ export const previews = {
   ...area,
   ...bar,
   ...combo,
+  ...candlestick,
   ...pie,
   ...radar,
   ...radial,

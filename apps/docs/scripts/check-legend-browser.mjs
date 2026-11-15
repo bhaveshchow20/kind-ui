@@ -10,6 +10,7 @@ import { declarationCompilerOptions, verificationFiles } from "./consumer-valida
 const origin = process.env.KIND_DOCS_BROWSER_ORIGIN || "http://127.0.0.1:6373";
 const bundles = JSON.parse(readFileSync("generated/all-examples.json", "utf8"));
 const marks = {
+  candlestick: '[data-kind-ui="candlestick-mark"]',
   area: ".recharts-area-area",
   bar: ".recharts-bar-rectangle",
   "box-plot": ".recharts-bar-rectangle",
@@ -39,7 +40,16 @@ try {
   for (const family of families) {
     await page.goto(`${origin}/docs/components/${family.id}/`);
     await page.waitForFunction(() => document.querySelectorAll(".component-loading").length === 0);
-    for (const example of family.examples) {
+    const mdx = readFileSync(`content/docs/components/${family.id}.mdx`, "utf8");
+    const renderedIds = new Set(
+      [...mdx.matchAll(/<(?:ChartExample|LineExample|AreaExample)\s+id="([^"]+)"/g)].map(
+        (match) => match[1],
+      ),
+    );
+    assert.ok(renderedIds.has(family.id), `${family.id} primary example remains documented`);
+    for (const id of renderedIds)
+      assert.ok(bundles[id], `${family.id} references a complete consumer: ${id}`);
+    for (const example of family.examples.filter(({ id }) => renderedIds.has(id))) {
       const bundle = bundles[example.id];
       const card = page.locator(`[data-component="${example.id}"]`);
       const variants = bundle.variants ?? { default: { source: sourceFor(bundle) } };
@@ -99,6 +109,12 @@ try {
     const card = consumer.locator('[data-testid="consumer-example"]');
     await expect(card.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
     const family = bundles[id].family;
+    if (family === "candlestick")
+      await card.getByRole("button", { name: "Pause", exact: true }).click();
+    const loadingSelector =
+      family === "candlestick"
+        ? '[data-kind-ui="candlestick-loading"]'
+        : '[data-kind-ui="chart-loading-skeleton"]';
     const buttons = card.locator('[data-kind-ui="chart-legend"] button');
     await expect.poll(() => card.locator(marks[family]).count()).toBeGreaterThan(0);
     const count = await buttons.count();
@@ -114,9 +130,15 @@ try {
     const readyMarks = await card.locator(marks[family]).count();
     assert.ok(readyMarks > 0, `${id} renders ready geometry`);
     await consumer.getByRole("button", { name: "Toggle pending", exact: true }).click();
-    await expect(card.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(1);
+    await expect(card.locator(loadingSelector)).toHaveCount(1);
     await expect(
-      card.getByRole("status").filter({ hasText: "Loading chart" }).first(),
+      card
+        .getByRole("status")
+        .filter({
+          hasText:
+            family === "candlestick" ? "Loading simulated ETH / USD history" : "Loading chart",
+        })
+        .first(),
     ).toBeAttached();
     await expect(card.locator('[data-kind-ui="chart-legend"]')).toBeHidden();
     const pendingButtons = await card
@@ -125,7 +147,7 @@ try {
     assert.equal(pendingButtons, 0);
     // The same chart instance restores its selection when data returns.
     await consumer.getByRole("button", { name: "Toggle pending", exact: true }).click();
-    await expect(card.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
+    await expect(card.locator(loadingSelector)).toHaveCount(0);
     await expect(buttons).toHaveCount(count);
     assert.deepEqual(
       await buttons.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-pressed"))),
@@ -145,7 +167,7 @@ try {
   mkdirSync("artifacts", { recursive: true });
   writeFileSync("artifacts/legend-browser-results.json", JSON.stringify(evidence, null, 2));
   console.log(
-    `${evidence.variants.length} interactive legend variants and 14 native loading round trips passed; ${evidence.staticKeys.length} quantitative/semantic or legend-free variants remain accurate.`,
+    `${evidence.variants.length} interactive legend variants and ${evidence.loading.length} native loading round trips passed; ${evidence.staticKeys.length} quantitative/semantic or legend-free variants remain accurate.`,
   );
 } finally {
   fixture?.process.kill("SIGTERM");

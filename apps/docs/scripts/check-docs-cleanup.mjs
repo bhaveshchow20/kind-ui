@@ -74,7 +74,13 @@ try {
             `${key} readable reference width`,
           );
         }
-        await expect(pending.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
+        await expect(
+          pending.locator(
+            id === "candlestick"
+              ? '[data-kind-ui="candlestick-loading"]'
+              : '[data-kind-ui="chart-loading-skeleton"]',
+          ),
+        ).toBeVisible();
         await pending.getByRole("tab", { name: "Code", exact: true }).click();
         assert.equal((await pending.locator("pre").textContent()).trim(), loading.source.trim());
         await pending.getByRole("tab", { name: "Preview", exact: true }).click();
@@ -171,7 +177,7 @@ try {
     ),
   );
   console.log(
-    `Docs cleanup: ${evidence.length} page/viewport checks, 13 family loading previews and ${loadingCoverage.length} native loading exports, focus and canonical favicon passed.`,
+    `Docs cleanup: ${evidence.length} page/viewport checks, ${families.length} family loading previews and ${loadingCoverage.length} native loading exports, focus and canonical favicon passed.`,
   );
 } finally {
   await browser.close();

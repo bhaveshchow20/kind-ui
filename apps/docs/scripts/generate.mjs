@@ -42,7 +42,7 @@ const manifest = {
   type: "module",
   scripts: { dev: "vite --host 127.0.0.1", build: "tsc --noEmit && vite build" },
   dependencies: {
-    "@kind-ui/charts": `^${provenance.version}`,
+    "@kind-ui/charts": "latest",
     react: "19.3.0",
     "react-dom": "19.3.0",
     recharts: "3.10.1",

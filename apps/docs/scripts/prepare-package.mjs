@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { cpSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import {
   artifactReceiptSchema,
@@ -9,7 +9,12 @@ import {
   packageIdentitySchema,
   parseJson,
 } from "../../../scripts/tooling-schemas.mjs";
-import { readLocalCandidate, readValidatedArtifact, sourcePaths } from "./validated-artifact.mjs";
+import {
+  invalidateChangedPackageCache,
+  readLocalCandidate,
+  readValidatedArtifact,
+  sourcePaths,
+} from "./validated-artifact.mjs";
 
 const root = path.resolve("../..");
 const release = process.env.KIND_DOCS_RELEASE_VERSION;
@@ -48,6 +53,9 @@ mkdirSync("vendor", { recursive: true });
 if (release && !/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(release))
   throw new Error("Release version must be exact semver");
 const canonical = `vendor/kind-ui-charts-${release || packageManifest.version}.tgz`;
+const previousSha = existsSync(canonical)
+  ? createHash("sha256").update(readFileSync(canonical)).digest("hex")
+  : undefined;
 let packed;
 let validation;
 if (release) {
@@ -136,6 +144,7 @@ writeFileSync(
     2,
   )}\n`,
 );
+invalidateChangedPackageCache(path.resolve("."), previousSha, sha);
 console.log(
   `Pinned ${packed.name}@${packed.version} (${release ? "registry" : commit.slice(0, 7)})`,
 );

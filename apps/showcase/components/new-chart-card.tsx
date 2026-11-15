@@ -28,6 +28,7 @@ import {
   waterfallEntries,
 } from "@/lib/new-chart-recipes";
 import { demoEntry } from "@/lib/utils";
+import { MarketCandlestickChart } from "./market-candlestick-chart";
 
 function NewChart({
   recipe: r,
@@ -50,9 +51,19 @@ function NewChart({
   const water = useMemo(() => computeWaterfallData(waterfallEntries(r.id)), [r.id]);
   const flow = useMemo(() => sankeyData(r.id), [r.id]);
   const scale = useMemo(
-    () => createHeatmapScale({ domain: [0, heat.max], colors }),
-    [heat.max, colors],
+    () => (r.family === "Heatmap" ? createHeatmapScale({ domain: [0, heat.max], colors }) : null),
+    [r.family, heat.max, colors],
   );
+  if (r.family === "Candlestick") {
+    return (
+      <MarketCandlestickChart
+        key={entranceKey}
+        colors={colors}
+        animate={animate}
+        options={options}
+      />
+    );
+  }
   if (r.family === "Line") {
     return (
       <LineChart
@@ -240,7 +251,7 @@ function NewChart({
       </BoxPlotChart>
     );
   }
-  if (r.family === "Heatmap")
+  if (r.family === "Heatmap" && scale)
     return (
       <HeatmapChart
         key={entranceKey}

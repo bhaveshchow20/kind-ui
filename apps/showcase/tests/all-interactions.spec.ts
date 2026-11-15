@@ -14,6 +14,7 @@ const families = [
   "Sankey",
   "Histogram",
   "Box Plot",
+  "Candlestick",
 ];
 
 for (const width of [375, 1280]) {

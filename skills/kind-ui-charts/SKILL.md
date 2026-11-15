@@ -27,7 +27,9 @@ Use the maintained docs examples for [Combo](https://kindui.dev/charts/docs/comp
 [Heatmap](https://kindui.dev/charts/docs/components/heatmap/),
 and [Line](https://kindui.dev/charts/docs/components/line/).
 Retrieve complete consumer source from the documentation. Examples render only
-the graph; the host application owns any accessible data alternative. Use the
+the graph and its explicit parts; the Candlestick live-update example includes
+its chart-owned current observations table. The host owns other accessible data
+alternatives. Use the
 family table to route other chart requests.
 
 ## Retrieve a family contract when needed

@@ -66,6 +66,7 @@ const families = [
   "Sankey",
   "Histogram",
   "Box Plot",
+  "Candlestick",
 ] as const;
 type Family = (typeof families)[number];
 const repo = siteLinks.repository;
@@ -712,7 +713,7 @@ function InstallSection() {
                 <>
                   <span className="install-tool">{installCommands[key].split(" ")[0]}</span>{" "}
                   {installCommands[key].split(" ").slice(1, -1).join(" ")}{" "}
-                  <span className="install-package">@kind-ui/charts</span>
+                  <span className="install-package">{installCommands[key].split(" ").at(-1)}</span>
                 </>
               )}
             </code>
@@ -785,7 +786,13 @@ const exampleColors: Record<string, string[]> = {
   "histogram-latency": ["#48a2f9", "#a2d3fc", "#dcf0ff"],
   "box-latency": ["#a475ed", "#cda9ff", "#eee1ff"],
   "box-regions": ["#24b493", "#85dfc4", "#cbf4e6"],
+  "candlestick-sessions": [
+    "var(--showcase-candlestick-rising, #087f68)",
+    "var(--showcase-candlestick-falling, #c43d54)",
+    "var(--showcase-candlestick-neutral, #53657b)",
+  ],
 };
+const candlestickSourceColors = ["#087f68", "#c43d54", "#53657b"];
 function colorsFor(entry: GalleryEntry) {
   return exampleColors[entry.id] ?? ["#8d77cb", "#bfaee4", "#e4dcf4"];
 }
@@ -805,17 +812,12 @@ function renderEntry(entry: GalleryEntry, options: DemoOptions, animate: boolean
 }
 function entryCode(entry: GalleryEntry, options: DemoOptions, animate: boolean) {
   if (entry.source === "activity") return activityCode(options, animate);
+  const colors = entry.id === "candlestick-sessions" ? candlestickSourceColors : colorsFor(entry);
   if (entry.source === "basic")
-    return snippet(findRecipe(recipes, entry.id), "plain", colorsFor(entry), animate, options);
+    return snippet(findRecipe(recipes, entry.id), "plain", colors, animate, options);
   if (entry.source === "advanced")
-    return advancedCode(
-      findRecipe(advancedRecipes, entry.id),
-      "plain",
-      colorsFor(entry),
-      animate,
-      options,
-    );
-  return newCode(findRecipe(newRecipes, entry.id), "plain", colorsFor(entry), animate, options);
+    return advancedCode(findRecipe(advancedRecipes, entry.id), "plain", colors, animate, options);
+  return newCode(findRecipe(newRecipes, entry.id), "plain", colors, animate, options);
 }
 export default function Page() {
   const { resolvedTheme } = useTheme();
@@ -972,7 +974,11 @@ export default function Page() {
                     className={`example-shell example-${entry.id}`}
                     key={entry.id}
                     onClick={(event) => {
-                      if (!(event.target as Element).closest('button,a,input,[role="gridcell"]')) {
+                      if (
+                        !(event.target as Element).closest(
+                          'button,a,input,[role="gridcell"],[data-kind-ui="chart"]',
+                        )
+                      ) {
                         triggerRef.current = event.currentTarget.querySelector(".tile-open");
                         explore(entry);
                       }

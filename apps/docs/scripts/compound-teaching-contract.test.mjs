@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
+import { families } from "../examples/catalog.mjs";
 
 async function text(path) {
   return readFile(path, "utf8");
@@ -93,7 +94,11 @@ test("shared legend browser checks visit current compound documentation pages", 
 
 test("chart pages begin with their example instead of a dataset scenario", async () => {
   const files = (await readdir("content/docs/components")).filter((file) => file.endsWith(".mdx"));
-  assert.equal(files.length, 13);
+  assert.equal(files.length, families.length);
+  assert.deepEqual(
+    files.map((file) => file.replace(/\.mdx$/, "")).sort(),
+    families.map(({ id }) => id).sort(),
+  );
   for (const file of files) {
     const source = await text(`content/docs/components/${file}`);
     const body = source.replace(/^---[\s\S]*?---\s*/, "");

@@ -3,6 +3,7 @@ export interface RegistryComposition {
   name: string;
   title: string;
   description: string;
+  minimumCoreVersion?: string;
 }
 export const registryItems: RegistryComposition[];
 export function itemNameFor(exampleId: string): string;
