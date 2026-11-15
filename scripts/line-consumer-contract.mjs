@@ -5,10 +5,13 @@ export function assertLineConsumerSource(source) {
   const allowed = new Set([
     "@kind-ui/charts",
     "react",
+    "motion/react",
     "react-dom/client",
     "react-dom",
     "recharts",
     "./host.js",
+    "./selection-host.js",
+    "./performance-host.js",
     "./presentation.js",
     "./use-reduced-motion.js",
     "./presentation.css",

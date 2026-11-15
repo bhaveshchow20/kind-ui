@@ -42,7 +42,10 @@ export type FamilyProps<Props, Explicit = Props> = Omit<
 > &
   FamilyOptions &
   ChartName & { children: Exclude<ReactNode, undefined> };
-const FamilySlot = createContext<{ host: HTMLDivElement | null } | null>(null);
+const FamilySlot = createContext<{
+  host: HTMLDivElement | null;
+  bottom: HTMLDivElement | null;
+} | null>(null);
 type Instructions = { id: string; text: string };
 
 /** Mount HTML parts outside the engine while retaining their React context and handlers. */
@@ -56,6 +59,7 @@ export function FamilyLayout({
   legendPosition?: "top" | "bottom";
 }) {
   const [host, setHost] = useState<HTMLDivElement | null>(null);
+  const [bottom, setBottom] = useState<HTMLDivElement | null>(null);
   const slot = (
     <div
       data-kind-ui="chart-parts"
@@ -65,17 +69,30 @@ export function FamilyLayout({
     />
   );
   return (
-    <FamilySlot value={{ host }}>
+    <FamilySlot value={{ host, bottom }}>
       {legendPosition === "top" && slot}
       {children}
       {legendPosition === "bottom" && slot}
+      <div
+        data-kind-ui="chart-bottom-parts"
+        className="empty:hidden [&[hidden]]:hidden"
+        hidden={loading || undefined}
+        ref={setBottom}
+      />
     </FamilySlot>
   );
 }
-export function OutsidePlot({ children }: { children: ReactNode }) {
+export function OutsidePlot({
+  children,
+  placement,
+}: {
+  children: ReactNode;
+  placement?: "bottom";
+}) {
   const slot = use(FamilySlot);
   if (!slot) throw new Error("Compound HTML parts require a chart-family frame");
-  return slot.host ? createPortal(children, slot.host) : null;
+  const host = placement === "bottom" ? slot.bottom : slot.host;
+  return host ? createPortal(children, host) : null;
 }
 export function FamilyLegend(props: LegendProps) {
   return (

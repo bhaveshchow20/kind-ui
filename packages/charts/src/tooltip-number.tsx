@@ -1,6 +1,6 @@
 "use client";
 
-import { animate, motion, useMotionValue, useTransform } from "motion/react";
+import { animate, domAnimation, LazyMotion, m, useMotionValue, useTransform } from "motion/react";
 import { useLayoutEffect, useRef } from "react";
 
 import { useReducedMotion } from "./motion-preference.js";
@@ -30,17 +30,13 @@ function Digit({ digit }: { digit: number }) {
       data-kind-ui="tooltip-digit"
       className="relative inline-block w-max h-[1lh] overflow-clip shrink-0"
     >
-      <motion.span
-        data-kind-ui="tooltip-digit-reel"
-        className="block leading-[inherit]"
-        style={{ y }}
-      >
+      <m.span data-kind-ui="tooltip-digit-reel" className="block leading-[inherit]" style={{ y }}>
         {reel.map((index) => (
           <span key={index} className="block h-[1lh]">
             {index % 10}
           </span>
         ))}
-      </motion.span>
+      </m.span>
     </span>
   );
 }
@@ -69,7 +65,7 @@ function RollingNumber({ text }: { text: string }) {
   const characters = text.match(/[0-9]|[^0-9]+/g) ?? [];
   let place = characters.filter((character) => /^[0-9]$/.test(character)).length;
   return (
-    <motion.span
+    <m.span
       data-kind-ui="tooltip-number"
       className="inline-block relative min-w-max overflow-clip align-bottom whitespace-pre tabular-nums"
       style={{ width }}
@@ -90,7 +86,7 @@ function RollingNumber({ text }: { text: string }) {
           ),
         )}
       </span>
-    </motion.span>
+    </m.span>
   );
 }
 
@@ -103,5 +99,11 @@ export function TooltipNumber({ value }: { value: string | number }) {
     !/[0-9]/.test(text) ||
     /\p{Decimal_Number}/u.test(text.replace(/[0-9]/g, "")) ||
     /[\u0590-\u08ff\u200e\u200f\u202a-\u202e\u2066-\u2069]/.test(text);
-  return reduced || unsupported ? value : <RollingNumber text={text} />;
+  return reduced || unsupported ? (
+    value
+  ) : (
+    <LazyMotion features={domAnimation}>
+      <RollingNumber text={text} />
+    </LazyMotion>
+  );
 }

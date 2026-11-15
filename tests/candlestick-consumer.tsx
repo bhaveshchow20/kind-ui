@@ -1,0 +1,176 @@
+import { normalizeCandlestickData } from "@kind-ui/charts";
+import { createRef } from "react";
+
+const rows = [{ t: 1, price: 2, label: "trade", list: [1], gapFlag: 0 }];
+normalizeCandlestickData(rows, {
+  timeMode: "epoch-ms",
+  accessors: { time: "t", open: "price", high: (row) => row.price, low: "price", close: "price" },
+});
+normalizeCandlestickData(rows, {
+  timeMode: "epoch-ms",
+  // @ts-expect-error Time accessor must produce a time identity.
+  accessors: { time: "list" },
+});
+normalizeCandlestickData(rows, {
+  timeMode: "epoch-ms",
+  // @ts-expect-error A label is not a price.
+  accessors: { open: "label" },
+});
+normalizeCandlestickData(rows, {
+  timeMode: "epoch-ms",
+  // @ts-expect-error Gap markers are explicit booleans.
+  accessors: { gap: "gapFlag" },
+});
+normalizeCandlestickData(rows, {
+  timeMode: "epoch-ms",
+  // @ts-expect-error Closing prices must be numeric.
+  accessors: { close: (row) => row.label },
+});
+
+import { CandlestickChart, type CandlestickVolumeProps } from "@kind-ui/charts";
+
+<CandlestickChart
+  data={[]}
+  config={{ price: { color: "#427b67" } }}
+  timeMode="epoch-ms"
+  aria-label="Candlestick type contract"
+  // @ts-expect-error Financial candles have a time X axis and a price Y axis.
+  layout="vertical"
+>
+  <CandlestickChart.Grid stroke="purple" />
+  <CandlestickChart.Legend />
+  <CandlestickChart.Background pattern="pinpoints" opacity={0.1} />
+  <CandlestickChart.Table caption="Original observations" />
+  <CandlestickChart.Series seriesKey="price" />
+</CandlestickChart>;
+const unsupportedVolume: CandlestickVolumeProps = {
+  seriesKey: "volume",
+  // @ts-expect-error Volume uses the root's validated records and time coordinates.
+  data: [{ volume: 30 }],
+};
+void unsupportedVolume;
+
+<CandlestickChart.ReferenceLine y={10} ifOverflow="visible" />;
+// @ts-expect-error Reference annotations cannot mutate the root's fixed price domain.
+<CandlestickChart.ReferenceLine y={10} ifOverflow="extendDomain" />;
+
+import type { CandlestickRecord } from "@kind-ui/charts";
+
+const completeObservation: CandlestickRecord = { time: 1, open: 10, high: 12, low: 9, close: 11 };
+const explicitObservation: CandlestickRecord = {
+  time: 2,
+  gap: false,
+  open: 11,
+  high: 13,
+  low: 10,
+  close: 12,
+  volume: 0,
+};
+const explicitGap: CandlestickRecord = { time: 3, gap: true, state: "Feed unavailable" };
+const defaultRows: CandlestickRecord[] = [completeObservation, explicitObservation, explicitGap];
+normalizeCandlestickData(defaultRows, { timeMode: "epoch-ms" });
+normalizeCandlestickData<CandlestickRecord>([], {
+  timeMode: "epoch-ms",
+  accessors: {
+    time: "time",
+    open: "open",
+    high: "high",
+    low: "low",
+    close: "close",
+    gap: "gap",
+    state: "state",
+  },
+});
+// @ts-expect-error A nongap observation requires every OHLC value.
+const missingOHLC: CandlestickRecord = { time: 4, open: 10 };
+// @ts-expect-error Missing prices require an explicit gap: true discriminant.
+const missingGapFlag: CandlestickRecord = { time: 4 };
+// @ts-expect-error An explicit nongap row still requires complete OHLC.
+const incompleteNongap: CandlestickRecord = { time: 4, gap: false, close: 11 };
+// @ts-expect-error A gap cannot carry invented OHLC observations.
+const gapWithPrice: CandlestickRecord = { time: 4, gap: true, open: 10 };
+// @ts-expect-error A gap cannot carry observed volume, including zero.
+const gapWithVolume: CandlestickRecord = { time: 4, gap: true, volume: 0 };
+void [missingOHLC, missingGapFlag, incompleteNongap, gapWithPrice, gapWithVolume];
+
+const numericRows = [{ 0: 1, 1: 10, 2: 12, 3: 9, 4: 11, source: "trade" }];
+const numericPoints = normalizeCandlestickData(numericRows, {
+  timeMode: "epoch-ms",
+  accessors: { time: 0, open: 1, high: 2, low: 3, close: 4 },
+});
+const numericSource: string | undefined = numericPoints[0]?.original.source;
+void numericSource;
+
+import {
+  CandlestickControls,
+  type CandlestickControlsProps,
+  CandlestickCrosshair,
+  type CandlestickCrosshairProps,
+  CandlestickCurrentPrice,
+  type CandlestickCurrentPriceProps,
+  CandlestickHistoryNavigator,
+  type CandlestickHistoryNavigatorProps,
+} from "@kind-ui/charts";
+
+const freeCursor: CandlestickCrosshairProps = {
+  mode: "free",
+  showLabels: true,
+  labelProps: { fill: "black" },
+};
+<CandlestickCrosshair {...freeCursor} />;
+<CandlestickChart.Crosshair mode="snap" />;
+// @ts-expect-error Crosshair mode has an explicit finite contract.
+<CandlestickCrosshair mode="automatic" />;
+const controls: CandlestickControlsProps = {
+  zoomFactor: 2,
+  zoomInProps: { onClick: (event) => event.preventDefault(), children: "Closer" },
+  resetProps: { "aria-label": "Fit supplied observations" },
+};
+<CandlestickControls {...controls} />;
+<CandlestickChart.Controls disabled />;
+const navigator: CandlestickHistoryNavigatorProps = {
+  height: 64,
+  brushProps: { stroke: "gray", travellerWidth: 8 },
+  overviewProps: { stroke: "purple", strokeWidth: 1.5 },
+};
+<CandlestickHistoryNavigator {...navigator} />;
+<CandlestickChart.HistoryNavigator aria-label="Historical range" />;
+const forbiddenNavigator: CandlestickHistoryNavigatorProps = {
+  // @ts-expect-error The root owns the brush's observations and range.
+  brushProps: { data: [{ time: 1 }] },
+};
+void forbiddenNavigator;
+const latest: CandlestickCurrentPriceProps<(typeof rows)[number]> = {
+  orientation: "right",
+  labelTextColor: "black",
+  children: (point, label) => (
+    <text>
+      {point.original.label}
+      {label}
+    </text>
+  ),
+};
+<CandlestickCurrentPrice {...latest} />;
+<CandlestickChart.CurrentPrice seriesKey="price" lineVisible={false} />;
+
+const readoutRef = createRef<HTMLDivElement>();
+const financialReadout = (
+  <CandlestickChart
+    data={[]}
+    config={{ price: { color: "#427b67" } }}
+    timeMode="business-date"
+    aria-label="Readout contract"
+  >
+    <CandlestickChart.Content>
+      <span>Consumer-owned summary</span>
+    </CandlestickChart.Content>
+    <CandlestickChart.Readout ref={readoutRef} valueAnimation="shuffle" data-testid="readout" />
+    <CandlestickChart.Tooltip
+      ref={readoutRef}
+      valueAnimation="shuffle"
+      style={{ color: "purple" }}
+    />
+    <CandlestickChart.Table caption="Intervals" />
+  </CandlestickChart>
+);
+void financialReadout;

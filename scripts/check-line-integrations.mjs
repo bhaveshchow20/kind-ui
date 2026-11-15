@@ -108,7 +108,7 @@ for (const row of compatibilityMatrix) {
     await writeFile(join(scratch, "host.tsx"), source);
     await writeFile(
       join(scratch, "main.tsx"),
-      'import { createRoot } from "react-dom/client"; import { IntegrationHost, ThemingHost } from "./host.js"; import "./styles.css"; const root=document.getElementById("root"); if(!root)throw new Error("Missing root"); createRoot(root).render(<><IntegrationHost /><ThemingHost /></>);',
+      'import { createRoot } from "react-dom/client"; import { IntegrationHost, ThemingHost, CandlestickHydrationHost } from "./host.js"; import "./styles.css"; const root=document.getElementById("root"); if(!root)throw new Error("Missing root"); createRoot(root).render(<><IntegrationHost /><ThemingHost /><CandlestickHydrationHost /></>);',
     );
     await writeFile(
       join(scratch, "styles.css"),
@@ -194,7 +194,7 @@ await writeFile("icons.json", JSON.stringify([...bundledIcons].map((id) => id.sl
     // Server components use named client boundaries; compound members remain in client hosts.
     await writeFile(
       join(scratch, "app/page.tsx"),
-      `import { LineChart, LineSeries, XAxis } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost, ThemingHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} aria-label="Server boundary totals"><XAxis dataKey="month" /><LineSeries dataKey="total" /></LineChart><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /><ThemingHost /></main>}`,
+      `import { LineChart, LineSeries, XAxis } from "@kind-ui/charts"; import { IntegrationHost, PatternHydrationHost, ColorHydrationHost, ThemingHost, CandlestickHydrationHost } from "./charts"; export default function Page(){return <main><LineChart data={[{ month:"Jan", total:0 }]} config={{ total:{label:"Total",color:"red"} }} aria-label="Server boundary totals"><XAxis dataKey="month" /><LineSeries dataKey="total" /></LineChart><IntegrationHost /><PatternHydrationHost /><ColorHydrationHost /><ThemingHost /><CandlestickHydrationHost /></main>}`,
     );
     await writeFile(
       join(scratch, "postcss.config.mjs"),

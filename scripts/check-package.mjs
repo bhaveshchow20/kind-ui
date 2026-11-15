@@ -203,6 +203,11 @@ try {
     "chart.test.mjs",
     "chart-frame.test.mjs",
     "compound-chart.test.mjs",
+    "candlestick-model.test.mjs",
+    "candlestick-viewport.test.mjs",
+    "candlestick-render.test.mjs",
+    "candlestick-current-price.test.mjs",
+    "candlestick-navigation.test.mjs",
     "tailwind-classes.test.mjs",
     "consumer.tsx",
   ]) {
@@ -216,6 +221,11 @@ try {
       "chart.test.mjs",
       "chart-frame.test.mjs",
       "compound-chart.test.mjs",
+      "candlestick-model.test.mjs",
+      "candlestick-viewport.test.mjs",
+      "candlestick-render.test.mjs",
+      "candlestick-current-price.test.mjs",
+      "candlestick-navigation.test.mjs",
       "tailwind-classes.test.mjs",
     ],
     ordinary,
@@ -357,6 +367,7 @@ try {
         "sankey",
         "histogram",
         "box-plot",
+        "candlestick",
         "number-shuffle",
         "activity-rings",
         "tailwind-setup",
@@ -492,6 +503,15 @@ try {
     join(root, "tests/tailwind-classes.test.mjs"),
     join(consumer, "tailwind-classes.test.mjs"),
   );
+  for (const file of [
+    "candlestick-model.test.mjs",
+    "candlestick-viewport.test.mjs",
+    "candlestick-render.test.mjs",
+    "candlestick-current-price.test.mjs",
+    "candlestick-navigation.test.mjs",
+  ]) {
+    await copyFile(join(root, "tests", file), join(consumer, file));
+  }
   run(
     process.execPath,
     [
@@ -499,6 +519,11 @@ try {
       "chart.test.mjs",
       "chart-frame.test.mjs",
       "compound-chart.test.mjs",
+      "candlestick-model.test.mjs",
+      "candlestick-viewport.test.mjs",
+      "candlestick-render.test.mjs",
+      "candlestick-current-price.test.mjs",
+      "candlestick-navigation.test.mjs",
       "tailwind-classes.test.mjs",
     ],
     consumer,
@@ -706,6 +731,31 @@ try {
   await typecheck(["host.tsx", "main.tsx"]);
   await production("index.html", "packed-box-plot");
   console.log("Box plot tarball: public-only strict NodeNext/Bundler and production build passed");
+
+  for (const file of [
+    "host.tsx",
+    "selection-host.tsx",
+    "performance-host.tsx",
+    "main.tsx",
+    "index.html",
+  ])
+    await copyFixture("candlestick", file);
+  await copyFile(
+    join(root, "tests/candlestick-consumer.tsx"),
+    join(consumer, "candlestick-consumer.tsx"),
+  );
+  await typecheck([
+    "host.tsx",
+    "selection-host.tsx",
+    "performance-host.tsx",
+    "main.tsx",
+    "candlestick-consumer.tsx",
+  ]);
+  await production("index.html", "packed-candlestick");
+  await production("index.html", "packed-candlestick-development", true);
+  console.log(
+    "Candlestick tarball: public-only strict NodeNext/Bundler and production build passed",
+  );
 
   // Presentation behavior is independently checked through the installed tarball.
   for (const file of [

@@ -107,6 +107,73 @@ export {
   validateBoxPlotSummary,
 } from "./box-plot.js";
 export {
+  CandlestickChart,
+  type CandlestickChartProps,
+  CandlestickCrosshair,
+  CandlestickGrid,
+  CandlestickMark,
+  type CandlestickMarkProps,
+  CandlestickOverlay,
+  type CandlestickOverlayProps,
+  CandlestickReadout,
+  type CandlestickReadoutProps,
+  CandlestickReferenceLine,
+  type CandlestickReferenceLineProps,
+  CandlestickSeries,
+  type CandlestickSeriesProps,
+  CandlestickTable,
+  type CandlestickTableProps,
+  CandlestickTooltip,
+  type CandlestickTooltipProps,
+  type CandlestickViewportChange,
+  CandlestickVolume,
+  type CandlestickVolumeProps,
+  CandlestickXAxis,
+  type CandlestickXAxisProps,
+  CandlestickYAxis,
+  type CandlestickYAxisProps,
+} from "./candlestick/chart.js";
+export { CandlestickControls, type CandlestickControlsProps } from "./candlestick/controls.js";
+export {
+  CandlestickCurrentPrice,
+  type CandlestickCurrentPriceProps,
+} from "./candlestick/current-price.js";
+export {
+  CandlestickHistoryNavigator,
+  type CandlestickHistoryNavigatorProps,
+} from "./candlestick/history-navigator.js";
+export {
+  type CandlestickAccessors,
+  type CandlestickDataOptions,
+  type CandlestickPoint,
+  type CandlestickRecord,
+  type CandlestickTime,
+  type CandlestickTimeMode,
+  normalizeCandlestickData,
+} from "./candlestick/model.js";
+export type { CandlestickCrosshairProps } from "./candlestick/parts.js";
+export {
+  type CandlestickPriceDomainOptions,
+  type CandlestickPriceScale,
+  type CandlestickScalePoint,
+  type CandlestickSpacing,
+  getCandlestickLogicalCoordinate,
+  getCandlestickPriceDomain,
+  getCandlestickTimeCoordinate,
+  getCandlestickTimeDomain,
+} from "./candlestick/scales.js";
+export {
+  type CandlestickViewport,
+  type CandlestickViewportIdentity,
+  type CandlestickViewportReason,
+  fitCandlestickViewport,
+  getCandlestickVisiblePoints,
+  normalizeCandlestickViewport,
+  panCandlestickViewport,
+  reconcileCandlestickViewport,
+  zoomCandlestickViewport,
+} from "./candlestick/viewport.js";
+export {
   ChartBackgroundPattern,
   type ChartBackgroundPatternDefinition,
   type ChartBackgroundPatternProps,

@@ -21,7 +21,7 @@ test("quick-start README uses public imports, Tailwind setup and existing docume
 });
 test("rejects missing documentation, public package import and Tailwind setup", () => {
   assert.throws(
-    () => check(readme.replace(documentationSource, "https://example.com")),
+    () => check(readme.replaceAll(documentationSource, "https://example.com")),
     /canonical documentation/,
   );
   assert.throws(() => check(withoutPublicImports(readme)), /public package import/);
@@ -30,6 +30,16 @@ test("rejects missing documentation, public package import and Tailwind setup", 
   assert.throws(
     () => check(`${readme}\nimport "@kind-ui/charts/styles.css";`),
     /Removed stylesheet export/,
+  );
+});
+test("rejects public package versions and prerelease positioning", () => {
+  assert.throws(
+    () => check(`${readme}\n\`\`\`sh\nnpm install @kind-ui/charts@0.5.0\n\`\`\``),
+    /specific package version/,
+  );
+  assert.throws(
+    () => check(`${readme}\nCandlestick charts are coming in a future release.`),
+    /prerelease or future work/,
   );
 });
 test("negative fixtures remove Tailwind setup from every example", () => {
