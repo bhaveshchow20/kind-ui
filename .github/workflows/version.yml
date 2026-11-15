@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   version:
-    if: github.repository == 'bhaveshchow20/kind-ui' && github.ref == 'refs/heads/main'
+    if: github.repository == 'kind-ui/charts' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

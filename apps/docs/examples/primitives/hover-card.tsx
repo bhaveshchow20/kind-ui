@@ -13,7 +13,7 @@ export default function HoverCardExample() {
         Small details add up. Explore the components built by{" "}
         <HoverCard>
           <HoverCardTrigger
-            href="https://github.com/bhaveshchow20/kind-ui"
+            href="https://github.com/kind-ui/charts"
             className="font-medium text-foreground underline decoration-border underline-offset-4"
           >
             Kind UI

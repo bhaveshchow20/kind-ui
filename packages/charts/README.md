@@ -8,7 +8,7 @@ and optional animation. Compose a chart from styled family parts, then customize
 [Website](https://kindui.dev/charts) ·
 [Documentation](https://kindui.dev/charts/docs/) ·
 [Examples](https://kindui.dev/charts/docs/components/line/) ·
-[GitHub](https://github.com/bhaveshchow20/kind-ui)
+[GitHub](https://github.com/kind-ui/charts)
 
 ## Chart types
 

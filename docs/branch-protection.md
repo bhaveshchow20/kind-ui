@@ -2,7 +2,7 @@
 
 Kind UI uses a small, owner-led contribution workflow. Protect `main` with pull requests and the existing aggregate CI checks, while allowing the owner to merge their own passing PRs. The reviewable configuration is [`.github/main-ruleset.json`](../.github/main-ruleset.json); committing that file alone does not enable protection on GitHub.
 
-The [live main ruleset](https://github.com/bhaveshchow20/kind-ui/rules/24283802) was enabled on September 30, 2026. GitHub API read-back confirmed active enforcement, no bypass actors, all four rule types and `main` reporting `protected: true`. This records configuration verification; the next ordinary PR should verify the merge experience.
+The [live main ruleset](https://github.com/kind-ui/charts/rules/24283802) was enabled on September 30, 2026. GitHub API read-back confirmed active enforcement, no bypass actors, all four rule types and `main` reporting `protected: true`. This records configuration verification; the next ordinary PR should verify the merge experience.
 
 ## Policy
 
@@ -31,15 +31,15 @@ Do not require CodeRabbit, paid integrations, deployments, signing or a merge qu
 Inspect the live rule and effective branch rules with an authenticated GitHub CLI:
 
 ```sh
-gh api repos/bhaveshchow20/kind-ui/rulesets/24283802
-gh api repos/bhaveshchow20/kind-ui/rules/branches/main
-gh api repos/bhaveshchow20/kind-ui/branches/main --jq .protected
+gh api repos/kind-ui/charts/rulesets/24283802
+gh api repos/kind-ui/charts/rules/branches/main
+gh api repos/kind-ui/charts/branches/main --jq .protected
 ```
 
 After reviewing a deliberate policy change and updating the checked-in JSON, apply it to the existing rule:
 
 ```sh
-gh api --method PUT repos/bhaveshchow20/kind-ui/rulesets/24283802 \
+gh api --method PUT repos/kind-ui/charts/rulesets/24283802 \
   --input .github/main-ruleset.json
 ```
 

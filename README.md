@@ -7,10 +7,10 @@ Composable, interactive charts for React and Next.js. Designed for builders and 
 [![Kind UI chart gallery: line, area, bar, heatmap, radar and Sankey charts](apps/showcase/public/social/homepage-v1.png)](https://kindui.dev/charts)
 
 [![npm version](https://img.shields.io/npm/v/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
-[![CI](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/ci.yml)
-[![Docs](https://github.com/bhaveshchow20/kind-ui/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/bhaveshchow20/kind-ui/actions/workflows/docs.yml)
+[![CI](https://github.com/kind-ui/charts/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kind-ui/charts/actions/workflows/ci.yml)
+[![Docs](https://github.com/kind-ui/charts/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/kind-ui/charts/actions/workflows/docs.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-5865F2)](https://deepwiki.com/bhaveshchow20/kind-ui)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-5865F2)](https://deepwiki.com/kind-ui/charts)
 
 [Get started](#get-started) · [Explore charts](#explore-charts) · [AI agents](#ai-agents) · [Contribute](#contribute)
 
@@ -66,7 +66,7 @@ Explore [materials](https://kindui.dev/charts/docs/guides/materials/), [motion](
 Install the Kind UI consumer skill:
 
 ```sh
-npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts
+npx skills add kind-ui/charts --skill kind-ui-charts
 ```
 
 Start with the [documentation index](https://kindui.dev/charts/docs/llms.txt) and [agent consumer guide](https://kindui.dev/charts/docs/markdown/agents/consumer.md). Use the [complete reference](https://kindui.dev/charts/docs/llms-full.txt) when you need all documentation in one file. Each chart guide includes example setup files and prompts.

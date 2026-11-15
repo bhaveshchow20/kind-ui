@@ -7,7 +7,7 @@ const docsDestination = process.env.NEXT_PUBLIC_DOCS_URL ?? "https://kindui.dev/
 export const siteLinks = {
   home: showcaseBasePath || "/",
   docs: `${docsDestination.replace(/\/$/, "")}/`,
-  repository: "https://github.com/bhaveshchow20/kind-ui",
+  repository: "https://github.com/kind-ui/charts",
   creator: "https://x.com/BhaveshChow",
 };
 

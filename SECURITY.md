@@ -6,7 +6,7 @@ Kind UI publishes `@kind-ui/charts` on npm and remains before 1.0. The package i
 
 ## Reporting a suspected vulnerability
 
-Use [GitHub private vulnerability reporting](https://github.com/bhaveshchow20/kind-ui/security/advisories/new), which is enabled for this repository. Do not put secrets, exploit details, or private user data in public issues, pull requests, or logs.
+Use [GitHub private vulnerability reporting](https://github.com/kind-ui/charts/security/advisories/new), which is enabled for this repository. Do not put secrets, exploit details, or private user data in public issues, pull requests, or logs.
 
 Include the affected commit/version, impact, a minimal reproduction, and any suggested mitigation. Share only the information necessary to investigate.
 

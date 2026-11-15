@@ -70,11 +70,7 @@ export function assertReleaseTransition({
 
 /** @param {{repository?: string | undefined, ref?: string | undefined, event?: string | undefined}} context */
 export function assertReleaseContext(context) {
-  assert.equal(
-    context.repository,
-    "bhaveshchow20/kind-ui",
-    "Release only the canonical repository",
-  );
+  assert.equal(context.repository, "kind-ui/charts", "Release only the canonical repository");
   assert.equal(context.ref, "refs/heads/main", "Release only main");
   assert.ok(
     ["push", "workflow_dispatch"].includes(context.event ?? ""),

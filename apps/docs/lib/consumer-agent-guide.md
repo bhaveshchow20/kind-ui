@@ -1,7 +1,7 @@
 # Kind UI chart consumer guidance
 
 Install the existing consumer skill:
-`npx skills add bhaveshchow20/kind-ui --skill kind-ui-charts`.
+`npx skills add kind-ui/charts --skill kind-ui-charts`.
 
 Start with /llms.txt. Retrieve /markdown/installation.md and the relevant
 family Markdown; /markdown/agents/consumer.md explains the retrieval workflow.

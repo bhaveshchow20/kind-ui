@@ -41,7 +41,7 @@ versioning or authorize publication now.
 
 ## Artifact and publication
 
-Only canonical `bhaveshchow20/kind-ui` main pushes and explicit main dispatches
+Only canonical `kind-ui/charts` main pushes and explicit main dispatches
 enter the pipeline. A real version transition runs the full Node 22 validation
 used by the current release workflow. Publication depends on validation and
 artifact verification. Required PR CI remains the separate fail-closed “All checks”
@@ -108,7 +108,7 @@ The existing local 0.1.1 publication does not prove that hosted OIDC works; no
 extra package version is published to test setup.
 
 The approved npm trust is limited to `@kind-ui/charts`, GitHub repository
-`bhaveshchow20/kind-ui`, workflow filename `release.yml`, environment
+`kind-ui/charts`, workflow filename `release.yml`, environment
 `npm-release`, and direct `npm publish`. It does not grant dist-tag management
 or introduce a token. Release jobs retain npm 11.9. A setup-only official npm
 11.21 CLI can configure trust without changing the repository toolchain.
@@ -116,8 +116,8 @@ or introduce a token. Release jobs retain npm 11.9. A setup-only official npm
 The GitHub environment allows the branch `main` only. The publisher alone gets
 `id-token: write`; `github-release` alone gets `contents: write` in this release
 workflow, and the remaining jobs retain `contents: read`. The OIDC subject is
-`repo:bhaveshchow20/kind-ui:environment:npm-release`, and the workflow is
-`bhaveshchow20/kind-ui/.github/workflows/release.yml@refs/heads/main`.
+`repo:kind-ui/charts:environment:npm-release`, and the workflow is
+`kind-ui/charts/.github/workflows/release.yml@refs/heads/main`.
 Do not cache release dependencies or outputs.
 
 The approved repository Actions setting permits version PR creation while the
@@ -140,7 +140,7 @@ read verified its configuration:
 - Package: `@kind-ui/charts`
 - Provider: GitHub
 - Trust ID: `1a7824a6-aa41-4b89-9e1a-6ec4a36c8402`
-- Repository: `bhaveshchow20/kind-ui`
+- Repository: `kind-ui/charts`
 - Workflow: `release.yml`
 - Environment: `npm-release`
 - Registry permissions: `createPackage`, `createStagedPackage`
