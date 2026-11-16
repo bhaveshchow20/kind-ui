@@ -13,31 +13,10 @@ function previewOrigin(baseURL: string | undefined): string {
   return new URL(baseURL).origin;
 }
 
-test("agent reference aliases resolve directly to the generated Docs reference", async ({
-  request,
-  baseURL,
-}) => {
+test("home loads and direct refresh loads assets", async ({ page, request, baseURL }) => {
   const serverOrigin = previewOrigin(baseURL);
-  for (const prefix of new Set(["", basePath])) {
-    for (const file of ["llms.txt", "llms-full.txt"]) {
-      const response = await request.get(`${serverOrigin}${prefix}/${file}`, {
-        maxRedirects: 0,
-      });
-      expect(response.status()).toBe(308);
-      expect(response.headers().location).toBe(`https://kindui.dev/charts/docs/${file}`);
-    }
-  }
-});
-
-test("home redirects only in prefixed mode and direct refresh loads assets", async ({
-  page,
-  request,
-  baseURL,
-}) => {
-  const serverOrigin = previewOrigin(baseURL);
-  const root = await request.get(`${serverOrigin}/`, { maxRedirects: 0 });
-  expect(root.status()).toBe(basePath ? 307 : 200);
-  if (basePath) expect(root.headers().location).toBe(basePath);
+  const home = await request.get(`${serverOrigin}${basePath || "/"}`, { maxRedirects: 0 });
+  expect(home.status()).toBe(200);
   const missing: string[] = [];
   page.on("response", (response) => {
     if (response.url().startsWith(`${serverOrigin}/`) && response.status() >= 400)

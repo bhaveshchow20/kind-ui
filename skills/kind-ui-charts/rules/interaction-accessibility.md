@@ -32,7 +32,7 @@ import { ComboChart } from "@kind-ui/charts";
 </ComboChart>
 ```
 
-See the [Combo examples](https://kindui.dev/charts/docs/components/combo/).
+See the [Combo examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/combo.mdx).
 A visibility callback alone is invalid: provide controlled `visibleSeries`
 or opt-in `defaultVisibleSeries`. Never pass
 both controlled and default values.

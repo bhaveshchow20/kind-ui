@@ -22,10 +22,10 @@ Inspect the consumer’s installed version before adapting a documented example.
 5. Build the chosen consumer and report checks actually run using the verification
    steps in [setup and verification](rules/setup-testing.md).
 
-Use the maintained docs examples for [Combo](https://kindui.dev/charts/docs/components/combo/),
-[Sankey](https://kindui.dev/charts/docs/components/sankey/),
-[Heatmap](https://kindui.dev/charts/docs/components/heatmap/),
-and [Line](https://kindui.dev/charts/docs/components/line/).
+Use the maintained docs examples for [Combo](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/combo.mdx),
+[Sankey](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/sankey.mdx),
+[Heatmap](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/heatmap.mdx),
+and [Line](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/line.mdx).
 Retrieve complete consumer source from the documentation. Examples render only
 the graph; the host application owns any accessible data alternative. Use the
 family table to route other chart requests.
@@ -33,9 +33,9 @@ family table to route other chart requests.
 ## Retrieve a family contract when needed
 
 For each family or option, retrieve the relevant Markdown
-from the official [documentation index](https://kindui.dev/charts/docs/llms.txt).
-The [complete reference](https://kindui.dev/charts/docs/llms-full.txt) includes
-consumer code and API tables. Check the installed declarations for exact props;
+from the official [documentation source](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs).
+The [agent consumer guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/agents/consumer.mdx) covers
+consumer setup. Check the installed declarations for exact props;
 chart families and series do not all share one contract. Fetch only the needed
 family/shared-part pages. These are HTTP documentation resources, not an MCP server.
 

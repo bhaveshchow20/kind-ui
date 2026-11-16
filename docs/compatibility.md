@@ -83,5 +83,5 @@ separate browser checks passed: require successful aggregate completion checks.
 This small matrix is not a Cartesian test of all versions in the peer ranges.
 It does not establish CommonJS support, other framework versions, other browser
 engines or untested peer combinations. Public examples are available at
-[Charts](https://kindui.dev/charts/) and the
-[Charts documentation](https://kindui.dev/charts/docs/).
+[Charts](https://github.com/kind-ui/charts) and the
+[Charts documentation](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs).

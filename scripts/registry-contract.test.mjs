@@ -35,7 +35,7 @@ const itemSchema = z.object({
 const catalogSchema = z.object({
   $schema: z.literal("https://ui.shadcn.com/schema/registry.json"),
   name: z.literal("kind-ui"),
-  homepage: z.literal("https://kindui.dev/charts/"),
+  homepage: z.literal("https://github.com/kind-ui/charts"),
   items: z.array(itemSchema),
 });
 const readJson = (file) => /** @type {unknown} */ (JSON.parse(readFileSync(file, "utf8")));
@@ -121,7 +121,7 @@ test("directory submission entry has the production namespace, endpoint and revi
   const entry = z
     .object({
       name: z.literal("@kind-ui"),
-      homepage: z.literal("https://kindui.dev/charts/"),
+      homepage: z.literal("https://github.com/kind-ui/charts"),
       url: z.literal("https://kindui.dev/r/{name}.json"),
       description: z.string().min(1),
       logo: z.string().startsWith("<svg"),

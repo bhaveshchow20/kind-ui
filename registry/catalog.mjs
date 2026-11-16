@@ -22,7 +22,7 @@ export function itemNameFor(exampleId) {
 }
 
 export const coreVersion = "0.5.0";
-export const registryHomepage = "https://kindui.dev/charts/";
+export const registryHomepage = "https://github.com/kind-ui/charts";
 export const registryEndpoint = "https://kindui.dev/r/";
 export const sourcePaths = [
   "../node_modules/@kind-ui/charts/dist",
