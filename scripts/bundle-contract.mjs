@@ -18,6 +18,7 @@ export const bundleFixtures = [
   "polar",
   "polar-native",
   "heatmap",
+  "treemap",
   "sankey",
   "sankey-native",
 ];
@@ -107,10 +108,15 @@ export function assertBundleRetention(fixture, modules) {
     ["line-loading", "line"],
     ["polar", "radar"],
     ["heatmap", "heatmap"],
+    ["treemap", "treemap"],
     ["sankey", "sankey"],
   ]).get(fixture);
   if (!family) return;
   for (const id of modules) {
+    assert.ok(
+      family === "treemap" || (!id.includes("/d3-hierarchy/") && !id.includes("/dist/treemap/")),
+      `${fixture}: unrelated hierarchy layout retained: ${id}`,
+    );
     const standalone = /@kind-ui\/charts\/dist\/(heatmap(?:-[^/]+)?|sankey(?:-[^/]+)?)\.js$/.exec(
       id,
     )?.[1];
@@ -254,6 +260,7 @@ export async function checkBundleContract({ root, consumer, artifactSha256, buil
       "line-loading",
       "polar",
       "heatmap",
+      "treemap",
       "sankey",
     ].includes(fixture);
     await writeFile(

@@ -177,6 +177,62 @@ ActivityRings takes `rings` with stable keys, values and optional finite domains
 
 Applications own aggregation, filtering, dates, units, domains and request state.
 
+### Treemap
+
+Use nested `{ id, label, children }` groups and `{ id, label, value }` leaves.
+Groups sum their leaves. IDs are globally unique; values are finite and nonnegative.
+Keep input immutable. Custom records can use `accessors` instead.
+
+```tsx
+const data = [{ id: "storage", label: "Storage", children: [
+  { id: "media", label: "Media", value: 80 },
+  { id: "backups", label: "Backups", value: 20 },
+] }];
+
+<TreemapChart data={data} config={{ storage: { color: "var(--chart-1)" } }}
+  aria-label="Storage allocation" formatValue={value => `${value} GB`} animate>
+  <TreemapChart.Tiles />
+  <TreemapChart.Tooltip valueAnimation="shuffle" />
+  <TreemapChart.Legend />
+  <TreemapChart.Breadcrumbs />
+</TreemapChart>
+```
+
+Compose only the parts you need. `Tiles` draws the layout; `Tile` owns each positioned native button and shared interaction. Use `Tiles.render` with `<TreemapChart.Tile {...props} />` to customize the renderer, or `tileProps` for native props. The default is a leaf-only mosaic; hierarchy still owns layout, color and tooltip paths. Group headers are opt-in with `Groups` and a positive `groupHeaderHeight`.
+`Tiles` includes fitted names and formatted values by default. Use `labels={false}` to omit text, or supply tile `children` for custom content. Native tile styles own the label color. `Tiles` and `Groups` preserve native props, refs and handlers.
+`Tooltip` follows the pointer, clamps to the chart, and uses the shared tooltip
+rows and optional number animation. Keyboard inspection anchors it to the tile;
+Escape dismisses it. Arrows and Home/End navigate one tile tab stop.
+
+Root IDs connect `config`, `Legend` and the shared `interaction` contract.
+Focus mode dims other roots; explicit `interaction.mode="visibility"` with
+`defaultVisibleSeries`/`visibleSeries` opts into hiding. Hidden roots retain their area and identity; the legend's
+existing last-visible guard applies. Supply `interaction.markActivation` to
+bind tile clicks to the same legend selection. Group activation enters a subtree;
+`Breadcrumbs` returns to its ancestors. `viewId`/`onViewChange` controls that view.
+`activeId`/`onActiveChange` controls inspection. Node-level `selectedId` and
+`onSelectionChange` remain available for application actions; legend focus is
+owned by `interaction`.
+
+`layout="stable"` retains D3 resquarify rows during value changes and resizing.
+Membership changes and subtree navigation establish a new layout. Dimming never
+changes geometry. `animate` enables shared interaction Motion and a short entrance;
+reduced motion and `loading` suppress it. Area updates settle directly to their
+actual geometry rather than displaying interpolated values as data.
+
+For independent color metrics, supply `encoding` and compose `ColorLegend`.
+Categorical, sequential, diverging, threshold and custom encodings are supported.
+Use fixed domains for comparisons. Missing color is distinct from zero; groups
+require an explicit group metric or aggregation. Core does not infer signed
+accounting or average returns. Format units in the caller.
+
+`useTreemap` exposes records, derived areas, rectangles and navigation for custom
+parts. `normalizeTreemap` returns the model without rendering. `rootShare`,
+`parentShare` and `viewShare` use their respective supplied totals and return
+`null` for zero denominators. `DataTable` is an optional accessible alternative,
+including zero-area items; applications choose where to place it through `Content`.
+`depth`, `padding`, `groupHeaderHeight` control density.
+
 ## Visibility and interaction
 
 Use `visibleSeries` with `onVisibleSeriesChange` for controlled visibility, or

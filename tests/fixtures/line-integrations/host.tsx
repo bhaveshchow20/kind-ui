@@ -255,3 +255,36 @@ export function ThemingHost() {
     </section>
   );
 }
+
+export function TreemapIntegrationHost() {
+  const [selected, setSelected] = useState<string | null>(null);
+  return (
+    <section data-treemap-integration="">
+      <Chart.TreemapChart
+        data={[
+          {
+            kind: "group",
+            id: "allocation",
+            label: "Allocation",
+            children: [
+              { kind: "leaf", id: "first", label: "First allocation", value: 8 },
+              { kind: "leaf", id: "second", label: "Second allocation", value: 4 },
+            ],
+          },
+        ]}
+        config={{}}
+        width={320}
+        height={200}
+        aria-label="Treemap hydration"
+        selectedId={selected}
+        onSelectionChange={setSelected}
+      >
+        <Chart.TreemapChart.Groups />
+        <Chart.TreemapChart.Tiles className="rounded-md" />
+        <Chart.TreemapChart.Tooltip />
+        <Chart.TreemapChart.DataTable caption="Allocation values" />
+      </Chart.TreemapChart>
+      <output aria-label="Treemap selection">{selected ?? "none"}</output>
+    </section>
+  );
+}

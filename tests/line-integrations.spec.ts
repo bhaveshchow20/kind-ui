@@ -197,3 +197,20 @@ for (const host of ["vite", "next"] as const) {
     await expect(box(tokens)).toHaveCSS("background-color", "rgb(240, 220, 250)");
   });
 }
+
+for (const framework of ["Vite", "Next"]) {
+  test(`${framework} packed Treemap hydrates and synchronizes selection`, async ({
+    page,
+  }, testInfo) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(framework === "Next" ? String(testInfo.project.metadata.nextURL) : "/");
+    const host = page.locator("[data-treemap-integration]");
+    const first = host.locator('[data-kind-ui="treemap-tile"][data-node-id="first"]');
+    await expect(first).toBeVisible();
+    await first.focus();
+    await first.press("Enter");
+    await expect(page.getByRole("status", { name: "Treemap selection" })).toHaveText("first");
+    expect(errors).toEqual([]);
+  });
+}

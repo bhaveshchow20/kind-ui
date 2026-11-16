@@ -308,6 +308,32 @@
           "brotli": 1523
         }
       }
+    },
+    "treemap": {
+      "baseline": {
+        "js": {
+          "raw": 654152,
+          "gzip": 204877,
+          "brotli": 174822
+        },
+        "css": {
+          "raw": 35882,
+          "gzip": 6960,
+          "brotli": 6130
+        }
+      },
+      "maximum": {
+        "js": {
+          "raw": 686860,
+          "gzip": 215121,
+          "brotli": 183564
+        },
+        "css": {
+          "raw": 37677,
+          "gzip": 7308,
+          "brotli": 6437
+        }
+      }
     }
   }
 }

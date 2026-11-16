@@ -22,6 +22,7 @@
     "seo.mjs",
     "docs/lib/routing.mjs",
     "docs/scripts/consumer-shards.mjs",
+    "docs/scripts/loading-coverage.mjs",
     "docs/scripts/serve.mjs",
     "docs/scripts/validated-artifact.mjs",
     "docs/scripts/verify-pinned-package.mjs",
