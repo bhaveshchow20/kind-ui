@@ -18,7 +18,7 @@ and optional animation. Compose a chart from styled family parts, then customize
 | Polar | Pie/Donut, Radar, Radial/ActivityRings |
 | Relationships | Scatter/Bubble, Heatmap |
 | Distributions | Histogram, BoxPlot |
-| Flow & change | Sankey, Waterfall |
+| Flow & change | Sankey, Waterfall, Funnel |
 
 Donut and Bubble use `PieChart` and `ScatterChart` composition.
 
@@ -130,6 +130,8 @@ data, domains and business state.
 
 Every chart takes `config`, an accessible name, and explicit children. Config
 provides labels and colors; it never creates series, axes, legends or tooltips.
+
+Shared `Legend` accepts optional `itemKeys` to render an explicit ordered subset of configured identities. `FunnelChart.Legend` owns this list from the current stages, preserving input order even for integer-like IDs and excluding stale config entries.
 Omitting a part omits it. Fragments and wrapped components are supported.
 
 | Chart | Parts |
@@ -281,3 +283,56 @@ are scoped to their chart. Consumer controls own their focus, labels and semanti
 ## License
 
 [MIT](LICENSE) © 2026 Bhavesh Chowdhury.
+
+## Funnel charts
+
+`FunnelChart` displays supplied stage aggregates in their original order. Use it
+for cohort steps, current pipeline inventory, weighted amounts or application
+stages. The caller owns population, time window, units and stage qualification.
+
+```tsx
+import { FunnelChart } from "@kind-ui/charts";
+
+const data = [
+  { id: "started", label: "Started checkout", value: 1200 },
+  { id: "payment", label: "Reached payment", value: 840 },
+  { id: "ordered", label: "Placed order", value: 600 },
+];
+const config = {
+  started: { color: "#3659b8" },
+  payment: { color: "#537f76" },
+  ordered: { color: "#7e68ac" },
+};
+
+<FunnelChart data={data} config={config} aria-label="Checkout sessions"
+  denominator="first" ratioLabel="Share of starting sessions">
+  <FunnelChart.Stages />
+  <FunnelChart.Labels />
+  <FunnelChart.Tooltip />
+  <FunnelChart.DataTable caption="Checkout sessions in the selected cohort" />
+</FunnelChart>
+```
+
+| Contract | Behavior |
+| --- | --- |
+| Records | Standard `{ id, label, value }` or generic `data` with typed `accessors.id`, `.label`, `.value`. Original `datum` remains available in callbacks. |
+| Values | Finite nonnegative numbers, decimals and increases are valid. `null` and `undefined` stay unknown. Input order is preserved. |
+| Identity | Unique nonempty string IDs; `config` supplies a color for every stage; legend labels fall back to the supplied stage label, with explicit config labels taking precedence. An accessible name and explicit children are required. |
+| Geometry | `Stages` defaults to rectangular bands with constant height: cross width and stage area are proportional to value. `geometry="trapezoid"` interpolates current/next known boundary widths; its area is not stage value. No fabricated terminal triangle or minimum width. |
+| Orientation | `orientation="vertical"` by default; `"horizontal"` projects native stage geometry from left to right. |
+| Scale | Largest known value by default, or explicit positive `scaleMax` covering every value. Share it across comparison panels. It does not set ratio denominators. |
+| Ratios | Omitted by default. `denominator="first"`, `"previous"`, a nonnegative number or typed callback opts in. Supply `ratioLabel` to name its meaning. Ratios are fractions; displays use percentages. Unknown numerator/denominator or zero denominator gives unavailable; increases may exceed 100%. Previous means the adjacent supplied stage. An opted-in table keeps denominator and ratio columns when values are unavailable. |
+| Unknown and zero | Unknown has a separate neutral band; zero has no filled area. Both remain inspectable and present in the table. Unknown interrupts taper. |
+| Numeric limits | Unrepresentable positive normalized widths or ratios throw with a rescaling message. Negative/nonfinite values, duplicate IDs and invalid settings throw. |
+| Inspection | Pointer, focus and touch inspect stages. `activeId` plus `onActiveIdChange` controls inspection; `defaultActiveId` initializes local ownership. Stale IDs display no tooltip without writing controlled state. Changing a controlled ID opens that stage after dismissal. |
+| Selection | `interaction` accepts shared category focus options and `selected`/`defaultSelected` state. Click, Enter and Space activate; arrows/Home/End navigate; Escape dismisses/reset according to consumer veto. `interaction.markActivation` set to `"none"` keeps inspection without mark toggle semantics. Selection never removes stages or changes ratios. |
+| Customization | Typed `Stages.Shape`, `stageProps`, `Labels.render`, `Tooltip.Content` and table columns retain original records. Consumer handlers, refs and styles remain available. `stageProps` excludes owned children, role, navigation, semantic ARIA and stage identity attributes; consumer description IDs compose with the tooltip ID. |
+| Loading and motion | `loading` makes content inert and hides stale readouts; `loadingLabel` names pending data. A focused stage recovers after loading if its identity survives and focus has not moved elsewhere. Optional Motion entrance preserves final geometry; reduced motion settles immediately and interaction/input changes interrupt entrance. |
+
+Compose only the parts needed: `Stages`, `Labels`, `Tooltip`, `DataTable`,
+`Legend` and `Content`. Generic parts require their record type explicitly when
+JSX context cannot infer it. Empty, single-stage and all-zero datasets are valid.
+`createFunnelModel({ data, accessors, denominator, scaleMax })` provides the same
+validation and metrics without rendering; it never qualifies events, imputes
+stages, computes cohorts or infers attrition. Alternative paths require explicit
+edges in a flow chart.

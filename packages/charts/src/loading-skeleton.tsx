@@ -27,7 +27,8 @@ export type LoadingFamily =
   | "radial-bar"
   | "activity-rings"
   | "heatmap"
-  | "sankey";
+  | "sankey"
+  | "funnel";
 
 /** Internal composition keeps unused family illustrations out of single-chart bundles. */
 export type LoadingDesign = (seed: number) => ReactNode;
@@ -142,13 +143,12 @@ export function LoadingSkeletonSurface({
   const horizontal = animation?.layout === "vertical";
   const position = useTransform(horizontalProgress, (value) => (value - 0.5) * 640);
   const verticalPosition = useTransform(verticalProgress, (value) => 240 - value * 240);
+  const wavePosition = useTransform(progress, (value) => (value - 0.5) * 240);
   const areaPosition = useTransform(areaMotion.progress, (value) => (value - 0.5) * 640);
   const barPosition = useTransform(barMotion.progress, (value) => (value - 0.5) * 640);
   const pulseStyle = {
     ...style,
-    // Radar's two polygon MotionValues continuously morph; disabling the CSS
-    // opacity pulse keeps them visible rather than disabling their animation.
-    ...(cycleDuration === 0 || family === "radar" ? { animation: "none" } : {}),
+    ...(cycleDuration === 0 ? { animation: "none" } : {}),
     "--kind-ui-loading-cycle": `${cycleMs}ms`,
     "--kind-ui-loading-horizontal": `url(#${id}-horizontal)`,
     "--kind-ui-loading-vertical": `url(#${id}-vertical)`,
@@ -157,7 +157,7 @@ export function LoadingSkeletonSurface({
   const polar = ["pie", "radar", "radial-bar", "activity-rings"].includes(family);
   return (
     <svg
-      className="visible pointer-events-none text-[color:var(--muted-foreground,#8b969b)] animate-[kind-ui-loading-pulse_var(--kind-ui-loading-cycle,1770ms)_linear_infinite] motion-reduce:animate-none [&_svg]:overflow-visible [&_[data-loading-motion=grow]]:[mask:var(--kind-ui-loading-vertical)] [&:is([data-family=bar],[data-family=waterfall],[data-family=histogram],[data-family=box-plot])_[data-loading-motion=grow]]:[mask:none] [&_[data-loading-motion=reveal]]:[mask:var(--kind-ui-loading-horizontal)] [&_[data-loading-motion=area-reveal]]:[mask:var(--kind-ui-loading-area)] [&[data-family=combo][data-loading-layout=vertical]_[data-loading-motion=grow]]:[transform:matrix(0,0.375,-2.6666667,0,640,0)]"
+      className="visible pointer-events-none text-[color:var(--muted-foreground,#8b969b)] animate-[kind-ui-loading-cycle_var(--kind-ui-loading-cycle,1770ms)_linear_infinite] motion-reduce:animate-none [&_svg]:overflow-visible [&_[data-loading-motion=grow]]:[mask:var(--kind-ui-loading-vertical)] [&:is([data-family=bar],[data-family=waterfall],[data-family=histogram],[data-family=box-plot])_[data-loading-motion=grow]]:[mask:none] [&_[data-loading-motion=reveal]]:[mask:var(--kind-ui-loading-horizontal)] [&_[data-loading-motion=area-reveal]]:[mask:var(--kind-ui-loading-area)] [&[data-family=combo][data-loading-layout=vertical]_[data-loading-motion=grow]]:[transform:matrix(0,0.375,-2.6666667,0,640,0)]"
       data-kind-ui="chart-loading-skeleton"
       data-family={family}
       data-loading-layout={animation?.layout}
@@ -181,7 +181,7 @@ export function LoadingSkeletonSurface({
                       : "grow"
       }
       onAnimationIteration={(event) => {
-        if (event.target === event.currentTarget && event.animationName === "kind-ui-loading-pulse")
+        if (event.target === event.currentTarget && event.animationName === "kind-ui-loading-cycle")
           setPulse((value) => value + 1);
       }}
       aria-hidden="true"
@@ -197,7 +197,7 @@ export function LoadingSkeletonSurface({
     >
       <style
         nonce={nonce}
-      >{`@keyframes kind-ui-loading-pulse { 0%, 12%, 94%, 100% { opacity: 0; } 14%, 90% { opacity: 1; } }`}</style>
+      >{`@keyframes kind-ui-loading-cycle { from { --kind-ui-loading-iteration: 0; } to { --kind-ui-loading-iteration: 1; } }`}</style>
       <defs>
         <linearGradient id={`${id}-soft-x`}>
           <stop offset="0" stopColor="white" stopOpacity="0" />
@@ -211,6 +211,20 @@ export function LoadingSkeletonSurface({
           <stop offset="0.75" stopColor="white" />
           <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
+        <mask id={`${id}-wave`} maskUnits="userSpaceOnUse" x="0" y="0" width="640" height="240">
+          {reduced ? (
+            <rect data-kind-ui="loading-wave-static" width="640" height="240" fill="white" />
+          ) : (
+            <motion.rect
+              data-kind-ui="loading-wave-window"
+              x="0"
+              y={wavePosition}
+              width="640"
+              height="120"
+              fill={`url(#${id}-soft-y)`}
+            />
+          )}
+        </mask>
         <mask
           id={`${id}-horizontal`}
           maskUnits="userSpaceOnUse"
@@ -294,35 +308,36 @@ export function LoadingSkeletonSurface({
           )}
         </mask>
       </defs>
-      <g
-        data-kind-ui="loading-design"
-        opacity="0.48"
-        mask={
-          family === "radar"
-            ? undefined
-            : polar
-              ? `url(#${id}-angular)`
-              : family === "line" || family === "area"
-                ? `url(#${id}-horizontal)`
-                : family === "bar" ||
-                    family === "waterfall" ||
-                    family === "histogram" ||
-                    family === "box-plot"
+      <g data-kind-ui="loading-design" opacity="0.48" mask={`url(#${id}-wave)`}>
+        <g
+          data-kind-ui="loading-family-motion"
+          mask={
+            family === "radar"
+              ? undefined
+              : polar
+                ? `url(#${id}-angular)`
+                : family === "line" || family === "area"
                   ? `url(#${id}-horizontal)`
+                  : family === "bar" ||
+                      family === "waterfall" ||
+                      family === "histogram" ||
+                      family === "box-plot"
+                    ? `url(#${id}-horizontal)`
+                    : undefined
+          }
+        >
+          <LoadingProgress value={{ progress, reduced }}>
+            <g
+              transform={
+                horizontal && ["bar", "waterfall", "histogram", "box-plot"].includes(family)
+                  ? "matrix(0 .375 -2.6666667 0 640 0)"
                   : undefined
-        }
-      >
-        <LoadingProgress value={{ progress, reduced }}>
-          <g
-            transform={
-              horizontal && ["bar", "waterfall", "histogram", "box-plot"].includes(family)
-                ? "matrix(0 .375 -2.6666667 0 640 0)"
-                : undefined
-            }
-          >
-            {design(family === "radar" ? seed : designSeed)}
-          </g>
-        </LoadingProgress>
+              }
+            >
+              {design(family === "radar" ? seed : designSeed)}
+            </g>
+          </LoadingProgress>
+        </g>
       </g>
     </svg>
   );

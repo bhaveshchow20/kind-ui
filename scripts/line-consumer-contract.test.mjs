@@ -73,3 +73,19 @@ test("area pattern fixture wiring stays inside the public host import guard", ()
 });
 
 import "./line-dash-source.test.mjs";
+
+test("Motion host integration uses the public required peer without package internals", () => {
+  assertCompositionConsumerSource(
+    'import { FunnelChart } from "@kind-ui/charts"; import { LazyMotion, domAnimation } from "motion/react";',
+  );
+  for (const specifier of [
+    "motion/dist/react",
+    "framer-motion/dist/es/index.mjs",
+    "@kind-ui/charts/src/funnel.tsx",
+  ]) {
+    assert.throws(
+      () => assertCompositionConsumerSource(`import * as Host from "${specifier}";`),
+      /Disallowed/,
+    );
+  }
+});

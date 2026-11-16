@@ -239,10 +239,7 @@ test("live reduced motion makes every skeleton static and skips real entrance", 
   const sweeps = page.locator(skeletonSelector);
   await expect(sweeps).toHaveCount(14);
   for (const sweep of await sweeps.all())
-    await expect(sweep).toHaveCSS(
-      "animation-name",
-      (await sweep.getAttribute("data-family")) === "radar" ? "none" : "kind-ui-loading-pulse",
-    );
+    await expect(sweep).toHaveCSS("animation-name", "kind-ui-loading-cycle");
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const sweep of await sweeps.all()) await expect(sweep).toHaveCSS("animation-name", "none");
   const staticDesigns = await Promise.all(
@@ -377,8 +374,15 @@ test("three normal-speed pulses give pulse-based families visibly distinct geome
         ).flat();
       };
       let prior = geometry();
+      const wave = surface.querySelector('[data-kind-ui="loading-wave-window"]');
       const samples = [
-        { geometry: prior, metric: metric(), opacity: Number(getComputedStyle(surface).opacity) },
+        {
+          geometry: prior,
+          metric: metric(),
+          opacity: Number(getComputedStyle(surface).opacity),
+          waveY: Number(wave?.getAttribute("y")),
+          waveHeight: Number(wave?.getAttribute("height")),
+        },
       ];
       surface.setAttribute("data-pulse-samples", JSON.stringify(samples));
       const observer = new MutationObserver(() => {
@@ -389,6 +393,8 @@ test("three normal-speed pulses give pulse-based families visibly distinct geome
           geometry: current,
           metric: metric(),
           opacity: Number(getComputedStyle(surface).opacity),
+          waveY: Number(wave?.getAttribute("y")),
+          waveHeight: Number(wave?.getAttribute("height")),
         });
         surface.setAttribute("data-pulse-samples", JSON.stringify(samples));
         if (samples.length >= 4) observer.disconnect();
@@ -421,6 +427,8 @@ test("three normal-speed pulses give pulse-based families visibly distinct geome
           geometry: string;
           metric: number[];
           opacity: number;
+          waveY: number;
+          waveHeight: number;
         }[],
       })),
   );
@@ -430,7 +438,11 @@ test("three normal-speed pulses give pulse-based families visibly distinct geome
       const previous = samples[index - 1];
       const current = samples[index];
       if (!previous || !current) throw new Error("Incomplete pulse observations");
-      expect(current.opacity, `${family} swaps invisibly`).toBeLessThanOrEqual(0.001);
+      expect(current.opacity, `${family} root remains visible`).toBe(1);
+      expect(
+        current.waveY + current.waveHeight <= 0 || current.waveY >= 240,
+        `${family} swaps behind the shared wave`,
+      ).toBe(true);
       if (current.metric.length !== previous.metric.length) continue;
       const rms = Math.sqrt(
         current.metric.reduce(
@@ -514,7 +526,7 @@ test("native motion uses moving soft windows and reduced motion removes recurrin
   const duration = await line.getAttribute("data-reveal-duration");
   expect(duration).toBe("1100");
   const barMask = await page
-    .locator('[data-family-card="bar"] [data-kind-ui="loading-design"]')
+    .locator('[data-family-card="bar"] [data-kind-ui="loading-family-motion"]')
     .getAttribute("mask");
   expect(barMask).toMatch(/-horizontal\)$/);
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -646,7 +658,7 @@ test("bar-shaped families reveal left to right and fade behind the advancing fro
   await page.goto("/loading.html");
   for (const family of ["bar", "waterfall", "histogram", "box-plot"]) {
     const surface = page.locator(`[data-family-card="${family}"]`).locator(skeletonSelector);
-    await expect(surface.locator('[data-kind-ui="loading-design"]')).toHaveAttribute(
+    await expect(surface.locator('[data-kind-ui="loading-family-motion"]')).toHaveAttribute(
       "mask",
       /-horizontal\)$/,
     );
@@ -670,7 +682,7 @@ test("bar-shaped families reveal left to right and fade behind the advancing fro
               afterAlpha: number;
             }>((resolve, reject) => {
               const id = surface
-                .querySelector('[data-kind-ui="loading-design"]')
+                .querySelector('[data-kind-ui="loading-family-motion"]')
                 ?.getAttribute("mask")
                 ?.match(/#([^)]*)/)?.[1];
               const window = id ? document.getElementById(id)?.querySelector("rect") : null;
@@ -710,6 +722,47 @@ test("bar-shaped families reveal left to right and fade behind the advancing fro
   }
 });
 
+test("shared loading wave moves top to bottom without root opacity blinking", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/loading.html");
+  const line = page.locator('[data-family-card="line"]').locator(skeletonSelector);
+  await expect(line).toHaveCSS("animation-name", "kind-ui-loading-cycle");
+  const wave = line.locator('[data-kind-ui="loading-wave-window"]');
+  await expect(wave).toHaveCount(1);
+  const before = Number(await wave.getAttribute("y"));
+  await expect.poll(async () => Number(await wave.getAttribute("y"))).toBeGreaterThan(before + 40);
+  const opacities = await line.evaluate(
+    (element) =>
+      new Promise<number[]>((resolve) => {
+        const samples: number[] = [];
+        const started = performance.now();
+        const read = () => {
+          samples.push(Number(getComputedStyle(element).opacity));
+          if (performance.now() - started >= 500) resolve(samples);
+          else requestAnimationFrame(read);
+        };
+        read();
+      }),
+  );
+  expect(new Set(opacities)).toEqual(new Set([1]));
+  await expect(line.locator('[data-kind-ui="loading-design"]')).toHaveAttribute("mask", /-wave\)$/);
+  await expect(line.locator('[data-kind-ui="loading-family-motion"]')).toHaveAttribute(
+    "mask",
+    /-horizontal\)$/,
+  );
+  await expect(line).toHaveAttribute("aria-hidden", "true");
+  await expect(
+    page.locator('[data-family-card="line"]').locator('[data-kind-ui="chart-loading-status"]'),
+  ).toHaveText("Loading chart data");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(wave).toHaveCount(0);
+  await expect(line.locator('[data-kind-ui="loading-wave-static"]')).toHaveCount(1);
+  await expect(line).toHaveCSS("animation-name", "none");
+  await expect(line).toHaveCSS("opacity", "1");
+  await expect(line.locator('[data-kind-ui="loading-design"]')).toBeVisible();
+});
+
 test("both Radar polygons morph continuously through wrap, resize and interruptions, and stop for reduced motion", async ({
   page,
 }) => {
@@ -719,8 +772,14 @@ test("both Radar polygons morph continuously through wrap, resize and interrupti
   const radar = page.locator('[data-family-card="radar"]').locator(skeletonSelector);
   const polygons = radar.locator('[data-kind-ui="loading-radar-polygon"]');
   await expect(polygons).toHaveCount(2);
-  await expect(radar).toHaveCSS("animation-name", "none");
-  expect(await radar.locator('[data-kind-ui="loading-design"]').getAttribute("mask")).toBeNull();
+  await expect(radar).toHaveCSS("animation-name", "kind-ui-loading-cycle");
+  await expect(radar.locator('[data-kind-ui="loading-design"]')).toHaveAttribute(
+    "mask",
+    /-wave\)$/,
+  );
+  expect(
+    await radar.locator('[data-kind-ui="loading-family-motion"]').getAttribute("mask"),
+  ).toBeNull();
   const observation = polygons.evaluateAll(
     (nodes) =>
       new Promise<{ changes: number[]; maxSpeed: number; minOpacity: number; valid: boolean }>(

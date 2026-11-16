@@ -147,6 +147,36 @@ export {
   type FillPatternSwatchProps,
 } from "./fill-pattern.js";
 export {
+  type FunnelAnimation,
+  FunnelChart,
+  type FunnelChartProps,
+  FunnelContent,
+  type FunnelDataColumn,
+  FunnelDataTable,
+  type FunnelDataTableProps,
+  type FunnelGeometry,
+  type FunnelInteraction,
+  FunnelLabels,
+  type FunnelLabelsProps,
+  FunnelLegend,
+  type FunnelShapeProps,
+  FunnelStages,
+  type FunnelStagesProps,
+  FunnelTooltip,
+  type FunnelTooltipContentProps,
+  type FunnelTooltipProps,
+} from "./funnel.js";
+export {
+  createFunnelModel,
+  type FunnelAccessors,
+  type FunnelCustomModelOptions,
+  type FunnelDatum,
+  type FunnelDenominator,
+  type FunnelModel,
+  type FunnelModelOptions,
+  type FunnelStage,
+} from "./funnel-model.js";
+export {
   HeatmapCellContent,
   type HeatmapCellContentProps,
   type HeatmapChartProps,

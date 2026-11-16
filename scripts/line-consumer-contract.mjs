@@ -7,6 +7,7 @@ export function assertLineConsumerSource(source) {
     "react",
     "react-dom/client",
     "react-dom",
+    "motion/react",
     "recharts",
     "./host.js",
     "./presentation.js",
