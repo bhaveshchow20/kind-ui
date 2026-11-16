@@ -11,6 +11,7 @@ import { previews as radar } from "./radar";
 import { previews as radial } from "./radial";
 import { previews as sankey } from "./sankey";
 import { previews as scatter } from "./scatter";
+import { previews as treemap } from "./treemap";
 import { previews as waterfall } from "./waterfall";
 export const previews = {
   ...line,
@@ -22,6 +23,7 @@ export const previews = {
   ...radial,
   ...scatter,
   ...heatmap,
+  ...treemap,
   ...waterfall,
   ...sankey,
   ...histogram,

@@ -27,6 +27,7 @@ export const documentationCharts = [
   ["Scatter", "scatter"],
   ["Bubble", "scatter"],
   ["Heatmap", "heatmap"],
+  ["Treemap", "treemap"],
   ["Waterfall", "waterfall"],
   ["Sankey", "sankey"],
   ["Histogram", "histogram"],

@@ -98,3 +98,48 @@ test("installed combo legend and activity rings retain explicit values on a narr
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   expect(errors).toEqual([]);
 });
+
+test("installed treemap keeps selection and geometry through native boolean loading", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await page.getByRole("combobox", { name: "Chart", exact: true }).selectOption("treemap-chart");
+  const composition = page.getByRole("region", { name: "Installed composition" });
+  const tiles = composition.locator('[data-kind-ui="treemap-tile"]');
+  const target = composition.locator('[data-kind-ui="treemap-tile"][data-node-id="api"]');
+  await expect(target).toBeVisible();
+  await target.focus();
+  await expect(composition.getByRole("tooltip")).toContainText("API");
+  await target.press("Enter");
+  await expect(target).toHaveAttribute("aria-pressed", "true");
+  const geometry = () =>
+    tiles.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        if (!(node instanceof HTMLElement)) throw new Error("Expected native Treemap tiles");
+        return [
+          node.dataset.nodeId,
+          node.style.left,
+          node.style.top,
+          node.style.width,
+          node.style.height,
+        ];
+      }),
+    );
+  const before = await geometry();
+  await page.getByRole("button", { name: "Loading", exact: true }).click();
+  await expect(composition.locator('[data-kind-ui="chart-loading-status"]')).toHaveText(
+    "Loading cloud spend",
+  );
+  await expect(composition.locator('[data-kind-ui="treemap-content"]')).toHaveAttribute(
+    "inert",
+    "",
+  );
+  await page.getByRole("button", { name: "Loading", exact: true }).click();
+  await expect(target).toBeVisible();
+  await expect(target).toHaveAttribute("aria-pressed", "true");
+  expect(await geometry()).toEqual(before);
+  await expect(composition.locator('[data-kind-ui="chart-legend"]')).toBeVisible();
+  expect(errors).toEqual([]);
+});

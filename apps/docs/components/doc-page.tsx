@@ -17,6 +17,7 @@ import { type ComponentId, ComponentPlayground } from "./component-playground";
 import { CopyMarkdown } from "./copy-markdown";
 import { MobileDocsNavigation } from "./glass-docs-layout";
 import { TrackedCodeBlock } from "./tracked-code-block";
+import { TreemapDataAlternative } from "./treemap-data-alternative";
 
 const validatedBundles = componentBundlesSchema.parse(bundles);
 
@@ -110,6 +111,7 @@ export function renderDoc(slug?: string[]) {
               AreaExample: LineExample,
               ApiTable,
               ChartInstallation,
+              TreemapDataAlternative,
               Callout,
               Steps,
               Step,

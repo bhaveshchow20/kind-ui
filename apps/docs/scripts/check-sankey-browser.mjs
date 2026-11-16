@@ -14,13 +14,27 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 1000 } });
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
+    await page.addInitScript(() => {
+      const observer = new MutationObserver(() => {
+        const count = document.querySelectorAll(
+          '[data-component="sankey"] [data-kind-ui="sankey-link-entrance"]',
+        ).length;
+        if (count === 18) {
+          document.documentElement.setAttribute("data-test-entrance-count", String(count));
+          observer.disconnect();
+        }
+      });
+      observer.observe(document, { childList: true, subtree: true });
+    });
     await page.goto(`${origin}/docs/components/sankey/`);
     const first = page.locator('[data-component="sankey"]');
     const flows = first.locator('path[role="button"]');
     await flows.first().waitFor({ state: "attached" });
     assert.equal(await flows.count(), 18);
     const entrance = first.locator('[data-kind-ui="sankey-link-entrance"]');
-    assert.equal(await entrance.count(), 18);
+    // Observe from navigation rather than requiring transient masks to remain
+    // mounted after hydration, font loading and the first reveal have settled.
+    await expect(page.locator("html")).toHaveAttribute("data-test-entrance-count", "18");
     // Completion removes the masks; observe that contract rather than assuming
     // the 900 ms animation and its React update finish inside a fixed 1 s sleep.
     await expect(entrance).toHaveCount(0, { timeout: 5000 });

@@ -53,6 +53,7 @@ test("all families have two or three working examples and relevant controls", as
     "Sankey",
     "Histogram",
     "Box Plot",
+    "Treemap",
   ]) {
     await page.getByRole("tab", { name, exact: true }).click();
     const cards = page.locator(".demo-grid .chart-card");
@@ -60,9 +61,13 @@ test("all families have two or three working examples and relevant controls", as
     expect(await cards.count()).toBeLessThanOrEqual(3);
     await page.locator(".tile-open").first().click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.locator(".demo-controls > *")).toHaveCount(name === "Activity" ? 5 : 4);
+    await expect(dialog.locator(".demo-controls > *")).toHaveCount(
+      name === "Activity" || name === "Treemap" ? 5 : 4,
+    );
     await expect(
-      dialog.locator("svg.recharts-surface, [data-kind-ui=heatmap-grid]").first(),
+      dialog
+        .locator("svg.recharts-surface, [data-kind-ui=heatmap-grid], [data-kind-ui=treemap]")
+        .first(),
     ).toBeVisible();
     await page.keyboard.press("Escape");
   }

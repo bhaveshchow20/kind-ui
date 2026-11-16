@@ -21,7 +21,7 @@ export default defineConfig({
     },
     {
       name: "webkit-desktop",
-      testMatch: ["headline-layout.spec.ts", "tooltip-layout.spec.ts"],
+      testMatch: ["headline-layout.spec.ts", "tooltip-layout.spec.ts", "treemap.spec.ts"],
       use: { ...devices["Desktop Safari"] },
     },
     {
@@ -32,6 +32,7 @@ export default defineConfig({
         "headline-layout.spec.ts",
         "mobile-theme.spec.ts",
         "tooltip-layout.spec.ts",
+        "treemap.spec.ts",
       ],
       use: { ...devices["iPhone 13"] },
     },

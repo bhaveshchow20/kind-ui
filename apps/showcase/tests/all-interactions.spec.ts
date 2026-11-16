@@ -14,6 +14,7 @@ const families = [
   "Sankey",
   "Histogram",
   "Box Plot",
+  "Treemap",
 ];
 
 for (const width of [375, 1280]) {
@@ -55,11 +56,12 @@ for (const width of [375, 1280]) {
         await trigger.click();
         const dialog = page.getByRole("dialog");
         const controls = dialog.locator(".demo-controls > div");
-        const controlCount = (await dialog
-          .getByRole("heading", { name: "Gauge Chart", exact: true })
-          .count())
-          ? 5
-          : 4;
+        const controlCount =
+          family === "Treemap"
+            ? 5
+            : (await dialog.getByRole("heading", { name: "Gauge Chart", exact: true }).count())
+              ? 5
+              : 4;
         await expect(controls).toHaveCount(controlCount);
         await expect(dialog.getByRole("link", { name: "Go to Documentation" })).toHaveAttribute(
           "href",
@@ -68,7 +70,12 @@ for (const width of [375, 1280]) {
         await dialog.getByRole("tab", { name: "Code", exact: true }).click();
         const code = dialog.getByRole("region", { name: "Chart example code" });
         let previous = await code.textContent();
-        for (let controlIndex = 0; controlIndex < controlCount; controlIndex++) {
+        // Change the values control while labels remain visible.
+        const order =
+          family === "Treemap"
+            ? [1, 0, 2, 3, 4]
+            : Array.from({ length: controlCount }, (_value, index) => index);
+        for (const controlIndex of order) {
           await dialog.getByRole("tab", { name: "Preview", exact: true }).click();
           const control = controls.nth(controlIndex);
           const slider = control.getByRole("slider");

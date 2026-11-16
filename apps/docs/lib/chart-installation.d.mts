@@ -1,5 +1,7 @@
 interface InstallationBundle {
   id: string;
+  family?: string | undefined;
+  packageStatus?: string | undefined;
   version: string;
   registryItemName?: string | undefined;
   files: Record<string, string>;
@@ -12,6 +14,7 @@ export interface InstallationStep {
   filename: string;
 }
 export function installationFor(bundle: InstallationBundle): {
+  available: boolean;
   itemName: string;
   command: string;
   steps: InstallationStep[];

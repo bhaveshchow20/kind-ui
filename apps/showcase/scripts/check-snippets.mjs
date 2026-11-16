@@ -53,6 +53,86 @@ const basic = await evaluate(
 );
 const advanced = await evaluate(await readFile(join(app, "lib/advanced-chart-recipes.ts"), "utf8"));
 const recent = await evaluate(await readFile(join(app, "lib/new-chart-recipes.ts"), "utf8"));
+const treemap = await evaluate(await readFile(join(app, "lib/treemap-recipes.ts"), "utf8"));
+assert.deepEqual(
+  treemap.treemapRecipes.map((recipe) => recipe.id),
+  ["treemap-market", "treemap-exposure"],
+);
+assert.equal(
+  treemap
+    .treemapRows(treemap.treemapData("treemap-market"))
+    .reduce((sum, row) => sum + row.value, 0),
+  76300,
+);
+assert.equal(
+  treemap
+    .treemapRows(treemap.treemapData("treemap-exposure"))
+    .reduce((sum, row) => sum + row.value, 0),
+  197000,
+);
+// Use the actual gallery defaults and evaluate the copied encoding declarations
+// so swapped palette endpoints cannot pass through preview/source parity checks.
+const pageSource = ts.createSourceFile(
+  "page.tsx",
+  page,
+  ts.ScriptTarget.Latest,
+  true,
+  ts.ScriptKind.TSX,
+);
+const paletteDeclaration = pageSource.statements
+  .flatMap((statement) =>
+    ts.isVariableStatement(statement) ? [...statement.declarationList.declarations] : [],
+  )
+  .find(
+    (declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === "exampleColors",
+  );
+assert.ok(
+  paletteDeclaration?.initializer && ts.isObjectLiteralExpression(paletteDeclaration.initializer),
+);
+for (const recipe of treemap.treemapRecipes) {
+  const property = paletteDeclaration.initializer.properties.find(
+    (property) =>
+      ts.isPropertyAssignment(property) &&
+      (ts.isStringLiteral(property.name) || ts.isIdentifier(property.name)) &&
+      property.name.text === recipe.id,
+  );
+  assert.ok(
+    property && ts.isPropertyAssignment(property),
+    `${recipe.id} needs an explicit gallery palette`,
+  );
+  const defaultColors = (
+    await evaluate(`export const colors = ${property.initializer.getText(pageSource)};`)
+  ).colors;
+  for (const colors of [defaultColors, ["#123456", "#abcdef", "#fedcba", "#654321"], []]) {
+    const preview = treemap.treemapConfig(treemap.treemapData(recipe.id), colors);
+    const generated = treemap.treemapCode(recipe, "plain", colors, false);
+    const generatedSource = ts.createSourceFile(
+      "example.tsx",
+      generated,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    );
+    const declarations = generatedSource.statements.filter(
+      (statement) =>
+        ts.isVariableStatement(statement) &&
+        statement.declarationList.declarations.some(
+          (declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === "config",
+        ),
+    );
+    const copied = (
+      await evaluate(
+        declarations.map((statement) => statement.getText(generatedSource)).join("\n") +
+          "\nexport { config };",
+      )
+    ).config;
+    assert.deepEqual(
+      copied,
+      preview,
+      `${recipe.id} copied category config matches the preview and legend`,
+    );
+  }
+}
 const activity = await evaluate(await readFile(join(app, "lib/activity-recipe.ts"), "utf8"));
 const temporary = await mkdtemp(join(app, ".snippet-check-"));
 try {
@@ -61,6 +141,7 @@ try {
     [basic.recipes, basic.snippet],
     [advanced.advancedRecipes, advanced.advancedCode],
     [recent.newRecipes, recent.newCode],
+    [treemap.treemapRecipes, treemap.treemapCode],
   ]) {
     for (const recipe of recipes) {
       for (const finish of ["plain", "clay", "glow"]) {
@@ -74,6 +155,26 @@ try {
             /visibleSeries=|onVisibleSeriesChange=|data\.filter\(/,
             `${recipe.id} copied focus must preserve the complete data`,
           );
+          if (recipe.family === "Treemap") {
+            assert.match(source, /readonly TreemapNode\[\]/);
+            assert.doesNotMatch(source, /accessors=|encoding=|View data|signedPosition/);
+            assert.doesNotMatch(source, /candidate|validated archive|does not include it/);
+            assert.match(source, /TreemapChart\.Legend/);
+            if (animate) assert.match(source, /valueAnimation="shuffle"/);
+            else assert.doesNotMatch(source, /valueAnimation="shuffle"/);
+            const prompt = treemap.treemapPrompt(
+              recipe,
+              finish,
+              ["#733bff", "#119548", "#f22e79"],
+              animate,
+            );
+            assert.ok(prompt.includes(source));
+            assert.match(prompt, /https:\/\/kindui\.dev\/charts\/docs\/components\/treemap\//);
+            assert.doesNotMatch(
+              prompt,
+              /localhost|127\.0\.0\.1|candidate|published.*0\.5\.0|validated archive/,
+            );
+          }
           if (recipe.family === "Pie") {
             assert.match(source, /<PieChart\.Series/);
             assert.doesNotMatch(source, /interactionBinding=/);
@@ -86,7 +187,7 @@ try {
       }
     }
   }
-  assert.equal(files.length, 192, "Every recipe, finish and motion setting must be checked");
+  assert.equal(files.length, 204, "Every recipe, finish and motion setting must be checked");
   const changedOptions = {
     strokeWidth: 4,
     showGrid: false,
@@ -120,6 +221,7 @@ try {
     [basic.recipes, basic.snippet],
     [advanced.advancedRecipes, advanced.advancedCode],
     [recent.newRecipes, recent.newCode],
+    [treemap.treemapRecipes, treemap.treemapCode],
   ]) {
     for (const recipe of recipes) {
       const file = join(temporary, `${recipe.id}-controls.tsx`);
@@ -130,9 +232,18 @@ try {
         true,
         changedOptions,
       );
-      assert.doesNotMatch(source, /<\w+Chart\.Legend\b/, `${recipe.id} hides the explicit legend`);
+      assert.doesNotMatch(
+        source,
+        /<\w+Chart\.(?:Legend|ColorLegend)\b/,
+        `${recipe.id} hides the explicit legend`,
+      );
       if (recipe.family !== "Heatmap")
         assert.doesNotMatch(source, /<\w+Chart\.Grid\b/, `${recipe.id} omits the explicit grid`);
+      if (recipe.family === "Treemap") {
+        assert.doesNotMatch(source, /<TreemapChart\.(Labels|ColorLegend)\b/);
+        assert.match(source, /padding=\{8\}/);
+        assert.match(source, /borderRadius:\s*12/);
+      }
       await writeFile(file, source);
       files.push(file);
     }

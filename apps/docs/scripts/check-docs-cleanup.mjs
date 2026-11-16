@@ -67,7 +67,13 @@ try {
         const id = family;
         const card = page.locator(`[data-component="${id}"]`);
         await card
-          .locator(id === "heatmap" ? "[role=grid]" : "svg.recharts-surface")
+          .locator(
+            id === "treemap"
+              ? '[data-kind-ui="treemap"]'
+              : id === "heatmap"
+                ? "[role=grid]"
+                : "svg.recharts-surface",
+          )
           .first()
           .waitFor();
         const sections = page.locator(".doc-body > h2");

@@ -176,6 +176,14 @@ export function controlsFor(family: string, id: string): Control[] {
         grid,
         legend,
       ];
+    case "Treemap":
+      return [
+        labels,
+        { kind: "switch", key: "showValues", label: "Show values" },
+        legend,
+        { kind: "range", key: "gap", label: "Tile spacing", min: 0, max: 10, unit: "px" },
+        corners,
+      ];
     case "Heatmap":
       return [
         { kind: "switch", key: "showValues", label: "Show values" },

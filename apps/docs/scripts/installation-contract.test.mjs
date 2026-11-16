@@ -8,15 +8,17 @@ const docs = new URL("../", import.meta.url);
 const read = (file) => readFileSync(new URL(file, docs), "utf8");
 
 test("CLI and manual installation use each canonical editable composition", () => {
-  for (const { exampleId, name } of registryItems) {
+  for (const { exampleId, name, minimumCoreVersion } of registryItems) {
     const source = read(`examples/${exampleId}/example.tsx`);
     const bundle = {
       id: exampleId,
       version: coreVersion,
       registryItemName: name,
+      ...(minimumCoreVersion ? { minimumCoreVersion } : {}),
       files: { [`src/examples/${exampleId}/example.tsx`]: source },
     };
     const installation = installationFor(bundle);
+    assert.equal(installation.available, true);
     assert.equal(installation.command, `npx shadcn@latest add @kind-ui/${name}`);
     const composition = installation.steps.find(({ title }) => title === "Create the composition");
     assert.equal(composition?.code, source);
@@ -44,6 +46,7 @@ test("generated installation metadata agrees with the catalog and source files",
     assert.equal(bundle.registryItemName, name);
     assert.equal(bundle.version, coreVersion);
     const installation = installationFor(bundle);
+    assert.equal(installation.available, true);
     assert.equal(
       installation.steps.find(({ title }) => title === "Create the composition")?.code,
       read(`examples/${exampleId}/example.tsx`),

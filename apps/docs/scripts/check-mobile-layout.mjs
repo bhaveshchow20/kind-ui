@@ -16,7 +16,10 @@ export async function checkMobileLayout(browser, origin) {
     for (const { id } of families) {
       await page.goto(`${origin}/docs/components/${id}/`);
       const example = page.locator(`[data-component="${id}"]`);
-      await example.locator(".recharts-surface, [data-kind-ui=heatmap-grid]").first().waitFor();
+      await example
+        .locator(".recharts-surface, [data-kind-ui=heatmap-grid], [data-kind-ui=treemap]")
+        .first()
+        .waitFor();
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(150);
       assert.ok(
@@ -24,7 +27,7 @@ export async function checkMobileLayout(browser, origin) {
         `${id} page overflows at ${width}`,
       );
       const bounds = await example
-        .locator(".recharts-surface, [data-kind-ui=heatmap-scroll]")
+        .locator(".recharts-surface, [data-kind-ui=heatmap-scroll], [data-kind-ui=treemap]")
         .first()
         .evaluate((plot) => {
           // Dense native diagrams may keep their labels in an accessible pan viewport.
