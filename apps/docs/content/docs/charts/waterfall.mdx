@@ -1,0 +1,92 @@
+---
+title: Waterfall Chart
+description: Show how gains and losses add up from a starting value to a total.
+---
+
+import WaterfallExample from "../../../examples/waterfall/basic";
+
+Use a waterfall chart to show how a running balance, like cash or headcount, moves from one checkpoint to the next through each change.
+
+<Example caption="Hover a bar, or focus the chart and press the arrow keys, to see that step's change or balance.">
+  <WaterfallExample />
+
+  <include cwd lang="tsx">./examples/waterfall/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/waterfall-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+WaterfallChart
+├── WaterfallChart.Background
+├── WaterfallChart.Grid
+├── WaterfallChart.XAxis
+├── WaterfallChart.YAxis
+├── WaterfallChart.Connectors
+├── WaterfallChart.Series
+│   └── WaterfallChart.Labels
+├── WaterfallChart.Tooltip
+└── WaterfallChart.Legend
+```
+
+`WaterfallChart` holds the rows, the series config and the accessible name, and draws only the parts you add. `WaterfallChart.Series` draws one floating bar per row, and `WaterfallChart.Connectors` draws the dashed lines that join each bar to the next. Add the connectors before the series so the bars sit on top.
+
+## Usage
+
+### Steps
+
+Describe each step as an entry with a unique `id`, a `label` and a `kind`, then pass them through `computeWaterfallData` to get the rows the chart draws:
+
+| `kind` | `value` | Bar |
+| --- | --- | --- |
+| `"start"` | The opening balance | From zero to the balance |
+| `"delta"` | A signed change | From the previous balance to the new one |
+| `"subtotal"` | None | From zero to the running balance |
+| `"total"`, `"end"` | A balance you know | From zero to that balance |
+
+`"total"` and `"end"` set the balance to the value you give; the chart never sums the steps into a total for you. Each row keeps its `value`, and adds the `start` and `balance` you can read in a tooltip or color by. Color increases and decreases with `Cell`, as in the example. Duplicate ids, values that aren't finite or `null`, and sums too large to represent throw.
+
+Set `layout="vertical"` for horizontal bars, with the number scale on `WaterfallChart.XAxis` and the row ids on `WaterfallChart.YAxis`. The connectors follow.
+
+### Missing Values
+
+A `null` change leaves its bar out and makes the balance unknown, so the bars after it disappear too, until a `"total"` or `"end"` gives a known balance again. The default tooltip skips steps without a bar; pass your own `content` to describe them. A change of `0` keeps its step with a zero-height bar.
+
+### Connectors
+
+`WaterfallChart.Connectors` takes the same `data` as the chart and joins two bars only when the balance carries over between them. They take Recharts' [ReferenceLine](https://recharts.github.io/en-US/api/ReferenceLine/) props, like `stroke` and `strokeDasharray`. If you hide the series with `hide`, pass the same `hide` to the connectors.
+
+### Motion and Loading
+
+Set `animate` to grow the bars from zero when the chart mounts. When the reader prefers reduced motion, bars appear without growing. See [Motion](../guides/motion.mdx).
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder, and screen readers hear `loadingLabel` ("Loading chart" by default):
+
+```tsx
+<WaterfallChart loading={isPending} loadingLabel="Loading cash flow" {...props}>
+```
+
+Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx).
+
+## API Reference
+
+### WaterfallChart
+
+<auto-type-table path="../../../../../packages/charts/src/composition/waterfall.tsx" name="WaterfallChartOptions" type='Pick<WaterfallChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "legendPosition" | "frameProps">' />
+
+### WaterfallChart.Connectors
+
+<auto-type-table path="../../../../../packages/charts/src/waterfall-series.tsx" name="WaterfallConnectorsOptions" type='Pick<WaterfallConnectorsProps, "data" | "seriesKey" | "hide">' />
+
+<Caption>
+  `WaterfallChart.Series` takes the [BarChart.Series](./bar.mdx#barchartseries) props except `dataKey`, `data`, `stackId` and `minPointSize`; it always draws each row's `range`. `WaterfallChart` also takes every prop of Recharts' [BarChart](https://recharts.github.io/en-US/api/BarChart/), like `layout` and `margin`.
+</Caption>

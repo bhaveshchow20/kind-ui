@@ -17,8 +17,18 @@ import { defaultHover, useReducedMotion } from "./motion-preference.js";
 
 export type BarAnimation = BaseAnimation;
 export type BarChartProps = ComponentProps<typeof EngineBarChart> & {
+  /**
+   * Grows the bars from zero on mount. Pass options to change the duration or easing.
+   * Reduced motion skips it.
+   * @default false
+   */
   animate?: boolean | BarAnimation | undefined;
+  /** Shows a placeholder plot and hides the legend and tooltip while the data is on its way. */
   loading?: boolean | undefined;
+  /**
+   * What screen readers hear while `loading` is on.
+   * @default "Loading chart"
+   */
   loadingLabel?: string | undefined;
   /** Opt in only for complete native category comparisons; any unsafe visible peer falls back. */
   emphasis?: "none" | "category" | undefined;

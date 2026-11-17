@@ -54,15 +54,25 @@ export type BarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Bar<DataPoint, Value>>,
   "isAnimationActive"
 > & {
-  /** Metadata/visibility key, required for controlled function or numeric data keys. */
+  /**
+   * The series' key in `config`, for its label, color and visibility. Required when `dataKey` is a
+   * function or a number.
+   * @default dataKey
+   */
   seriesKey?: string;
-  /** Stable category identity for numeric domains or independently supplied series rows. */
+  /** Returns a row's category, for `emphasis="category"` when categories aren't unique strings. */
   emphasisKey?: ((payload: unknown) => string | number | undefined) | undefined;
-  /** Finish on native rectangles; custom shapes and filters retain ownership. */
+  /**
+   * A finish for the bars: `"clay"` or `"glow"`. A custom `shape` or `filter` replaces it.
+   * @default "plain"
+   */
   material?: BarMaterial | undefined;
-  /** Static encoding for implicit fills; explicit fills/Cells/custom shapes retain ownership. */
+  /**
+   * Fills the bars with a pattern instead of a solid color. Overrides the `config` pattern;
+   * `false` turns it off. An explicit `fill`, `Cell` or `shape` replaces it.
+   */
   pattern?: FillPattern | false | undefined;
-  /** Pattern selected rows; selection remains caller-owned. */
+  /** Patterns the rows `isProjected` picks, like forecast values. It doesn't compute them. */
   projection?: BarProjection<DataPoint> | undefined;
 };
 

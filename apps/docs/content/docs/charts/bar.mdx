@@ -1,0 +1,130 @@
+---
+title: Bar Chart
+description: Compare values across categories with columns or horizontal bars.
+---
+
+import BarExample from "../../../examples/bar/basic";
+import BarComparisonExample from "../../../examples/bar/comparison";
+
+Use a bar chart to compare a measure across categories, like locations or products, and to compare a few measures side by side or stacked.
+
+<Example caption="Hover a bar, or focus the chart and press the arrow keys, to see its value and dim the other bars.">
+  <BarExample />
+
+  <include cwd lang="tsx">./examples/bar/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/bar-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+BarChart
+├── BarChart.Background
+├── BarChart.Grid
+├── BarChart.XAxis
+├── BarChart.YAxis
+├── BarChart.Series
+│   ├── BarChart.Cell
+│   └── BarChart.Labels
+├── BarChart.Tooltip
+└── BarChart.Legend
+```
+
+`BarChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `BarChart.Series` per measure. `BarChart.Cell` colors a single bar and `BarChart.Labels` writes values on the bars. The tooltip and legend read their labels and colors from `config`.
+
+## Usage
+
+### Series
+
+Each `BarChart.Series` plots the `dataKey` it names, and takes its label and color from the matching `config` entry. Series sit side by side in each category. Set `radius` to round the corners and `maxBarSize` to cap the width:
+
+<Example caption="Press Print or Digital in the legend to highlight that series.">
+  <BarComparisonExample />
+
+  <include cwd lang="tsx">./examples/bar/comparison.tsx</include>
+</Example>
+
+Give series the same `stackId` to stack them. Set `stackOffset="expand"` on the chart to stack to 100%, or `"sign"` to stack negative values below zero:
+
+```tsx
+<BarChart.Series dataKey="print" stackId="loans" />
+<BarChart.Series dataKey="digital" stackId="loans" />
+```
+
+### Horizontal Bars
+
+Set `layout="vertical"` for horizontal bars. The axes swap, so the X axis is the number scale and the Y axis names the categories:
+
+```tsx
+<BarChart layout="vertical" {...props}>
+  <BarChart.XAxis type="number" />
+  <BarChart.YAxis type="category" dataKey="location" width={80} />
+  <BarChart.Series dataKey="orders" radius={[0, 4, 4, 0]} />
+</BarChart>
+```
+
+### Emphasis
+
+By default, hovering a bar dims the other series. Set `emphasis="category"` to dim the other categories instead, as in the first example, or `"none"` to turn it off. Category emphasis needs a unique category per row and the built-in bar shape; a custom `shape`, range values or per-series `data` turn it off for that chart.
+
+### Legend and Keyboard
+
+Pressing a legend item highlights its series and dims the others, and screen readers hear "Highlighted Print." Press it again, or press Escape, to clear it. Hidden series keep their slot in each group, and stacks keep their baselines. To hide and show series from the legend instead, see [Legend](../building-blocks/legend.mdx).
+
+Focus the chart and press the arrow keys to move between categories, which shows the tooltip, and Escape to dismiss it.
+
+### Patterns and Projections
+
+Give a series a `pattern` in `config` to fill its bars with `hatch`, `stripe`, `duotone`, `dots` or `lines`, and its legend swatch follows. To pattern only some bars, like projected values, pass `projection` with a function that picks them:
+
+```tsx
+<BarChart.Series
+  dataKey="orders"
+  projection={{ isProjected: (row) => row.projected, pattern: { kind: "stripe" } }}
+/>
+```
+
+The chart only draws the values you pass; it doesn't forecast them. An explicit `fill`, `BarChart.Cell` or custom `shape` replaces the pattern.
+
+Set `material="clay"` or `"glow"` on a series for a finish; see [Materials](../guides/materials.mdx).
+
+### Motion
+
+Set `animate` to grow the bars from zero when the chart mounts, over one second by default. Pass options to change the duration or easing:
+
+```tsx
+<BarChart animate={{ revealDurationMs: 600 }} {...props}>
+```
+
+When the reader prefers reduced motion, bars appear without growing. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows placeholder bars that rise and fade, or hold still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default). The legend and tooltip come back when `loading` turns off:
+
+```tsx
+<BarChart loading={isPending} loadingLabel="Loading orders" {...props}>
+```
+
+## API Reference
+
+### BarChart
+
+<auto-type-table path="../../../../../packages/charts/src/composition/bar.tsx" name="BarChartOptions" type='Pick<BarChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
+
+### BarChart.Series
+
+<auto-type-table path="../../../../../packages/charts/src/bar-series.tsx" name="BarSeriesOptions" type='Pick<BarSeriesProps, "seriesKey" | "material" | "pattern" | "projection" | "emphasisKey">' />
+
+<Caption>
+  `BarChart` and `BarChart.Series` also take every prop of Recharts' [BarChart](https://recharts.github.io/en-US/api/BarChart/) and [Bar](https://recharts.github.io/en-US/api/Bar/), like `layout`, `stackOffset`, `stackId`, `radius` and `maxBarSize`.
+</Caption>

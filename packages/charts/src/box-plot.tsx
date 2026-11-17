@@ -19,11 +19,17 @@ import { BoxMaterialFilter, type BoxPlotMaterial } from "./box-material.js";
 
 /** Caller-computed statistics; no sample, quartile or fence convention is inferred. */
 export type BoxPlotSummary = {
+  /** The end of the lower whisker. */
   lowerWhisker: number;
+  /** The first quartile, where the box starts. */
   q1: number;
+  /** The median, drawn as a line across the box. */
   median: number;
+  /** The third quartile, where the box ends. */
   q3: number;
+  /** The end of the upper whisker. */
   upperWhisker: number;
+  /** Values drawn as circles. Each must lie outside the whiskers. */
   outliers?: readonly number[];
 };
 const fields = ["lowerWhisker", "q1", "median", "q3", "upperWhisker"] as const;
@@ -278,13 +284,26 @@ export type BoxPlotSeriesProps<Row extends object = Record<string, unknown>> = O
   | "background"
   | "radius"
 > & {
-  /** Direct property name or accessor. Nested paths are not interpreted. */
+  /**
+   * The row field that holds each `BoxPlotSummary`, or a function that returns it. `null` draws
+   * no box. Nested paths aren't read.
+   */
   dataKey: (keyof Row & string) | ((row: Row) => BoxPlotSummary | null | undefined);
-  /** Required metadata/visibility key, independent of the computed native range. */
+  /** The series' key in `config`, for its label, color and visibility. */
   seriesKey: string;
+  /**
+   * A finish for the boxes: `"clay"` or `"glow"`. An explicit `filter` replaces it.
+   * @default "plain"
+   */
   material?: BoxPlotMaterial | undefined;
+  /** Draws each box yourself. Gets the summary, its screen coordinates and the Recharts bar props. */
   shape?: (props: BoxPlotShapeProps) => ReactNode;
+  /** Attributes, styles and handlers for each box's SVG group. */
   markProps?: Omit<ComponentPropsWithRef<"g">, "children">;
+  /**
+   * The radius of each outlier circle, in pixels.
+   * @default 3
+   */
   outlierRadius?: number | undefined;
 };
 
