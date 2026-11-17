@@ -26,8 +26,10 @@ export function assertReviewedVersion(inputPolicy, inputManifest) {
 export function chartsVersionPlan(inputStatus, inputManifest) {
   const status = changesetStatusSchema.parse(inputStatus);
   const manifest = packageIdentitySchema.parse(inputManifest);
-  assert.equal(status.releases.length, 1, "Version only the charts package");
-  const release = status.releases[0];
+  // Ignored dependents, like the private docs app, are listed with type "none" and keep their version.
+  const releases = status.releases.filter((entry) => entry.type !== "none");
+  assert.equal(releases.length, 1, "Version only the charts package");
+  const release = releases[0];
   assert.ok(release, "Version plan must contain a release");
   assert.equal(release.name, "@kind-ui/charts");
   assert.equal(release.oldVersion, manifest.version, "Plan must start from the current version");

@@ -47,6 +47,9 @@ const transition = {
 };
 test("the reviewed exact version changes only through a Changesets plan", () => {
   assert.deepEqual(chartsVersionPlan(status, previous), policy);
+  const docs = { name: "@kind-ui/charts-docs", oldVersion: "0.0.0", newVersion: "0.0.0" };
+  const withDocs = { releases: [...status.releases, { ...docs, type: "none", changesets: [] }] };
+  assert.deepEqual(chartsVersionPlan(withDocs, previous), policy);
   assertReleaseTransition(transition);
   assert.throws(() => assertReviewedVersion(policy, { ...manifest, version: "0.1.3" }));
 });
