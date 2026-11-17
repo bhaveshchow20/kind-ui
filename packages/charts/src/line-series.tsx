@@ -17,15 +17,24 @@ export type LineSeriesProps<
   DataPoint = Parameters<DefaultLineDataKey>[0],
   Value = ReturnType<DefaultLineDataKey>,
 > = ComponentProps<typeof Line<DataPoint, Value>> & {
-  /** Metadata/visibility key, required only for function or numeric data keys. */
+  /** The `config` key for this series. Required when `dataKey` is a function or a number. */
   seriesKey?: string;
-  /** Optional point paint; explicit native dot takes precedence. */
+  /**
+   * How each point is painted. A `dot` you pass replaces it.
+   * @default "default"
+   */
   pointStyle?: PointStyle;
-  /** Independent active point paint; explicit native activeDot takes precedence. */
+  /** How the inspected point is painted. An `activeDot` you pass replaces it. */
   activePointStyle?: PointStyle;
-  /** Material on the default SVG curve; custom shape/filter retain consumer ownership. */
+  /**
+   * A finish for the line. A custom `shape` or `filter` replaces it.
+   * @default "plain"
+   */
   material?: LineMaterial;
-  /** Continuous default-curve dashes; requires a numeric native strokeDasharray. */
+  /**
+   * Moves the dashes along the line. Needs a numeric `strokeDasharray`, like `"6 4"`.
+   * @default false
+   */
   dashAnimation?: false | LineDashAnimation;
 };
 

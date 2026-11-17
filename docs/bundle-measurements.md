@@ -74,7 +74,7 @@ baseline. It produces the same CSS for primitive, Line, Radar, Heatmap and Sanke
 fixtures. Tailwind scans source text independently from JavaScript tree shaking;
 removing an unused JavaScript family does not prune its scanned utilities. These
 numbers therefore do not promise family-specific CSS pruning. Use the documented
-[Tailwind setup](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/installation.mdx) when integrating
+[Tailwind setup](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/index.mdx) when integrating
 the package.
 
 ## Regression policy

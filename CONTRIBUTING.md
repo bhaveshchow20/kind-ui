@@ -23,7 +23,8 @@ Kind UI publishes `@kind-ui/charts` on npm. It remains before 1.0, with an open-
 - `npm run check:package`: build, validate package-gate fixtures, then verify a tarball in an isolated consumer with pinned peers
 - `npm run pack:artifact`: run the same full package gate and retain the exact validated tarball and checksum in `artifacts/package/`
 - `npm test`: build and run public component tests
-- `npm run dev:docs`: run the documentation (see its README for package preparation and dependency installation)
+- `npm run dev:docs`: build the package and serve the documentation with hot reload
+- `npm run build:docs`, `npm run test:docs`, `npm run check:docs`: build the docs site, check its page structure, and open every exported page in Chromium
 - `npm run check:chart`: prepare the packed consumer, typecheck/build regression fixtures and run browser checks
 - `npm run check:fast`: lint, CI/release contracts, strict library typecheck and component tests
 - `npm run check:packed`: full packed-package gate, regression fixture typecheck/build and Next/Tailwind/Lucide build checks
@@ -88,21 +89,13 @@ All four browser configurations receive `--shard`, with no tests excluded.
 Browser binaries are cached by Playwright version, OS and architecture; OS
 libraries are still installed on every runner.
 
-Only changes entirely within root Markdown files, `docs/`, `apps/docs/`, or
-`packages/charts/*.md` skip the library Playwright suite. Mixed changes and unknown
-paths run it. The packed gate always checks package documentation contracts, and
-the separate Docs workflow continues to validate docs consumers and browsers.
+Only changes entirely within root Markdown files, `docs/`, `apps/docs/` (except
+its examples, which registry items ship), or `packages/charts/*.md` skip the library
+Playwright suite. Mixed changes and unknown paths run it. The packed gate always
+checks package documentation contracts, and the separate Docs workflow builds the
+site, checks its pages and opens every page, at the root and under `/docs/charts`.
 
 The required `All checks` completion check covers the Node 22 pipeline. It rejects
 failed or cancelled gates and accepts skipped browsers only after successful
 docs-only detection. Targets are fast feedback under 3 minutes and all required
 checks under 10 minutes, including fixture preparation.
-
-The Docs workflow also separates site build/export checks, four copied-consumer
-shards, and four browser groups. All complete examples and non-default variants retain
-Vite production builds and strict NodeNext/Bundler checks. Docs browsers start
-when the site is ready rather than waiting for every copied consumer; family checks
-run once across four independent groups. The `docs`
-completion receipt requires all three stages to pass. For a local shard, run
-`npm run check:consumers -- --shard=1/4` in `apps/docs`; omitting `--shard` still
-checks every copied consumer.

@@ -42,9 +42,9 @@ import { LineChart } from "@kind-ui/charts";
 
 Each chart takes `config`, an accessible name and explicit children such as `LineChart.XAxis`, `LineChart.Series` and `LineChart.Tooltip`. Add only the parts you need.
 
-Build that CSS with your Tailwind v4 Vite or PostCSS integration and import it at your application entry. In Next.js, import your CSS in the root layout and render interactive charts in a client component. The [installation guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/installation.mdx) includes build configuration and required peer dependencies.
+Build that CSS with your Tailwind v4 Vite or PostCSS integration and import it at your application entry. In Next.js, import your CSS in the root layout and render interactive charts in a client component. The [installation guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/index.mdx) includes build configuration and required peer dependencies.
 
-Copy a [complete line chart example](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/line.mdx), including its data and explicit chart parts. Examples render only the graph; your application owns any accessible data alternative. The [package reference](packages/charts/README.md) covers API defaults and limits.
+Copy a [complete line chart example](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/line.mdx), including its data and explicit chart parts. Examples render only the graph; your application owns any accessible data alternative. The [package reference](packages/charts/README.md) covers API defaults and limits.
 
 ## Explore charts
 
@@ -52,10 +52,10 @@ Browse 13 chart families, with complete examples and code in the documentation:
 
 | Use case | Chart guides |
 | --- | --- |
-| Trends and comparisons | [Line](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/line.mdx) · [Area](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/area.mdx) · [Bar](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/bar.mdx) · [Combo](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/combo.mdx) |
-| Parts and progress | [Pie / Donut](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/pie.mdx) · [Radar](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/radar.mdx) · [Radial / Activity rings](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/radial.mdx) |
-| Relationships and distributions | [Scatter / Bubble](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/scatter.mdx) · [Heatmap](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/heatmap.mdx) · [Histogram](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/histogram.mdx) · [Box plot](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/box-plot.mdx) |
-| Flow and change | [Sankey](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/sankey.mdx) · [Waterfall](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/waterfall.mdx) |
+| Trends and comparisons | [Line](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/line.mdx) · [Area](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/area.mdx) · [Bar](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/bar.mdx) · [Combo](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/combo.mdx) |
+| Parts and progress | [Pie / Donut](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/pie.mdx) · [Radar](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/radar.mdx) · [Radial / Activity rings](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/radial.mdx) |
+| Relationships and distributions | [Scatter / Bubble](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/scatter.mdx) · [Heatmap](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/heatmap.mdx) · [Histogram](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/histogram.mdx) · [Box plot](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/box-plot.mdx) |
+| Flow and change | [Sankey](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/sankey.mdx) · [Waterfall](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/waterfall.mdx) |
 
 Explore [materials](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/guides/materials.mdx), [motion](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/guides/motion.mdx) and [accessibility](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/guides/accessibility.mdx) when adapting an example.
 
@@ -67,7 +67,7 @@ Install the Kind UI consumer skill:
 npx skills add kind-ui/charts --skill kind-ui-charts
 ```
 
-Start with the [agent consumer guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/agents/consumer.mdx), then read the relevant [chart guide](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs/components). Each chart guide includes example setup files and prompts.
+Start with the [agent consumer guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/guides/ai-agents.mdx), then read the relevant [chart guide](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs/charts). Each chart guide includes example setup files and prompts.
 
 ## Contribute
 

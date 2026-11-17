@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/docs"
   ],
   "engines": {
     "node": ">=22.12.0"
@@ -12,7 +13,7 @@
   "packageManager": "npm@11.9.0",
   "scripts": {
     "build": "tsc -b packages/charts --force && npm run build:primitives && npm run build --workspace @kind-ui/ai",
-    "typecheck": "npm run build && npm run check:tooling && npm run check:types && npm run check:apps-tooling",
+    "typecheck": "npm run build && npm run check:tooling && npm run check:types",
     "lint": "biome check .",
     "format": "biome check --write .",
     "check": "npm run check:fast && npm run check:chart",
@@ -28,7 +29,7 @@
     "changeset": "changeset",
     "release:status": "changeset status",
     "release:version": "node scripts/prepare-release-version.mjs",
-    "check:ci": "node --test scripts/ci-workflow.test.mjs scripts/compatibility-matrix.test.mjs scripts/ci-tools.test.mjs apps/docs/scripts/consumer-shards.test.mjs",
+    "check:ci": "node --test scripts/ci-workflow.test.mjs scripts/compatibility-matrix.test.mjs scripts/ci-tools.test.mjs",
     "check:release": "node --test scripts/tooling-schemas.test.mjs scripts/release-artifact.test.mjs scripts/release-workflow.test.mjs scripts/release-plan.test.mjs scripts/github-release.test.mjs && node scripts/check-release-versioning.mjs",
     "test:chart": "playwright test",
     "check:framework": "npm run check:line-integrations && npm run test:line-integrations",
@@ -39,10 +40,12 @@
     "check:browsers": "node scripts/run-checks.mjs consumers",
     "test:focus-identity": "playwright test --config playwright.focus-identity.config.mjs",
     "test:cartesian-visibility": "playwright test --config playwright.cartesian-visibility.config.mjs",
-    "dev:docs": "npm --prefix apps/docs run dev",
+    "dev:docs": "tsc -b packages/charts && npm run dev --workspace @kind-ui/charts-docs",
+    "build:docs": "tsc -b packages/charts --force && npm run build --workspace @kind-ui/charts-docs",
+    "test:docs": "node --test scripts/docs.test.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
     "check:tooling": "tsc -p tsconfig.tooling.json",
     "check:types": "tsc -p tsconfig.tests.json && tsc -p tests/fixtures/primitives && npm run check:ai:types",
-    "check:apps-tooling": "tsc -p apps/tsconfig.tools.json",
     "build:registry": "node scripts/build-registry.mjs",
     "pack:site": "node scripts/pack-site.mjs",
     "check:registry": "npm run build:registry && node --test scripts/registry-contract.test.mjs",

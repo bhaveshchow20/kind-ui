@@ -1,0 +1,114 @@
+---
+title: Line Chart
+description: Compare values over time with one or more lines.
+---
+
+import LineExample from "../../../examples/line/basic";
+import LineComparisonExample from "../../../examples/line/comparison";
+
+Use a line chart to show how a measure changes across ordered categories, like months or days, and to compare a few measures on the same scale.
+
+<Example caption="Hover a point, or focus the chart and press the arrow keys, to see its value.">
+  <LineExample />
+
+  <include cwd lang="tsx">./examples/line/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/line-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+LineChart
+├── LineChart.Background
+├── LineChart.Grid
+├── LineChart.XAxis
+├── LineChart.YAxis
+├── LineChart.Series
+├── LineChart.Tooltip
+└── LineChart.Legend
+```
+
+`LineChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `LineChart.Series` per line. The tooltip and legend read their labels and colors from `config`.
+
+## Usage
+
+### Series
+
+Each `LineChart.Series` plots the `dataKey` it names, and takes its label and color from the matching `config` entry. Set `type` for the curve (`linear` by default, `monotone` for a smooth line, `step` for steps), and `strokeDasharray` to dash a line, like a target:
+
+<Example caption="Press Revenue or Target in the legend to highlight that line.">
+  <LineComparisonExample />
+
+  <include cwd lang="tsx">./examples/line/comparison.tsx</include>
+</Example>
+
+A `null` value leaves a gap in the line. Pass `connectNulls` to the series to draw across it instead.
+
+### Legend and Keyboard
+
+Pressing a legend item highlights its line and dims the others, and screen readers hear "Highlighted Revenue." Press it again, or press Escape, to clear it. To hide and show lines from the legend instead, see [Legend](../building-blocks/legend.mdx).
+
+Focus the chart and press the arrow keys to move between points, which shows the tooltip, and Escape to dismiss it. Screen readers hear these instructions when the chart gets focus.
+
+### Points and Dashes
+
+Lines have a dot at each point. Pass `dot={false}` to hide them, or `pointStyle="border"` or `"colored-border"` for outlined points. With a numeric `strokeDasharray`, `dashAnimation` moves the dashes along the line:
+
+```tsx
+<LineChart.Series
+  dataKey="target"
+  strokeDasharray="6 4"
+  dashAnimation={{ durationMs: 1000 }}
+/>
+```
+
+Set `material="clay"` or `"glow"` on a series for a finish; see [Materials](../guides/materials.mdx).
+
+### Motion
+
+Lines draw in from left to right when the chart mounts. Set `animate` to change the direction or the duration, or `animate={false}` to turn it off:
+
+```tsx
+<LineChart animate={{ revealDirection: "center-out", revealDurationMs: 800 }} {...props}>
+```
+
+`revealDirection` is `left-to-right`, `right-to-left`, `center-out` or `edges-in`. When the reader prefers reduced motion, lines appear without drawing in. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder line that sweeps across the plot, or holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default). The legend and tooltip come back when `loading` turns off:
+
+```tsx
+<LineChart loading={isPending} loadingLabel="Loading visitors" {...props}>
+```
+
+### Background
+
+Add `LineChart.Background` for a decorative pattern behind the plot: `pinpoints`, `crossings` or `waves`. It adds nothing to the tooltip, legend or accessible name.
+
+```tsx
+<LineChart.Background pattern="crossings" opacity={0.15} />
+```
+
+## API Reference
+
+### LineChart
+
+<auto-type-table path="../../../../../packages/charts/src/composition/line.tsx" name="LineChartOptions" type='Pick<LineChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
+
+### LineChart.Series
+
+<auto-type-table path="../../../../../packages/charts/src/animation.tsx" name="LineSeriesOptions" type='Pick<LineSeriesProps, "seriesKey" | "pointStyle" | "activePointStyle" | "material" | "dashAnimation">' />
+
+<Caption>
+  `LineChart` and `LineChart.Series` also take every prop of Recharts' [LineChart](https://recharts.github.io/en-US/api/LineChart/) and [Line](https://recharts.github.io/en-US/api/Line/), like `margin`, `type` and `connectNulls`.
+</Caption>

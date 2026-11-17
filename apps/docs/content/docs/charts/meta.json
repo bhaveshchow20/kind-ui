@@ -1,0 +1,18 @@
+{
+  "title": "Charts",
+  "pages": [
+    "line",
+    "area",
+    "bar",
+    "combo",
+    "pie",
+    "radar",
+    "radial",
+    "scatter",
+    "heatmap",
+    "waterfall",
+    "sankey",
+    "histogram",
+    "box-plot"
+  ]
+}

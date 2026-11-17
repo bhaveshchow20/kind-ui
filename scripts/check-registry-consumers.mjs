@@ -316,15 +316,12 @@ try {
         lock.packages["node_modules/@kind-ui/charts"]?.resolved,
         publishedMetadata?.tarball ?? `${endpoint}/candidate.tgz`,
       );
-      for (const { name, exampleId } of registryItems) {
+      for (const { name, source } of registryItems) {
         const installedSource = await readFile(
           path.join(scratch, components, `${name}.tsx`),
           "utf8",
         );
-        const canonical = await readFile(
-          path.join(root, `apps/docs/examples/${exampleId}/example.tsx`),
-          "utf8",
-        );
+        const canonical = await readFile(path.join(root, source), "utf8");
         assert.equal(
           installedSource.trim(),
           // The official CLI drops a leading lint-only comment before the client directive.
@@ -337,6 +334,8 @@ try {
       assert.ok(cssAfter.includes("--foreground: #fedcba"));
       for (const source of sourcePaths)
         assert.equal(cssAfter.split(`@source "${source}"`).length - 1, 1);
+      const lineSource = registryItems.find(({ name }) => name === "line-chart")?.source;
+      assert.ok(lineSource);
       const lineFile = path.join(scratch, components, "line-chart.tsx");
       await writeFile(lineFile, "// Scratch consumer modification\n");
       await run(
@@ -358,22 +357,28 @@ try {
       assert.equal(await readFile(path.join(scratch, cssFile), "utf8"), cssAfter);
       assert.equal(
         (await readFile(lineFile, "utf8")).trim(),
-        (await readFile(path.join(root, "apps/docs/examples/line/example.tsx"), "utf8")).trim(),
+        (await readFile(path.join(root, lineSource), "utf8")).trim(),
         "Overwrite must restore the complete editable composition",
       );
       const hostImports = [];
       const renders = [];
       for (const { name } of registryItems) {
         const source = await readFile(path.join(scratch, components, `${name}.tsx`), "utf8");
-        const exportName = source.match(/export function (\w+)/)?.[1];
+        const [, isDefault, exportName] = source.match(/export (default )?function (\w+)/) ?? [];
         assert.ok(exportName);
+        const specifier = `${alias}/${components.replace(/^src\//, "")}/${name}`;
         hostImports.push(
-          `import { ${exportName} } from "${alias}/${components.replace(/^src\//, "")}/${name}";`,
+          isDefault
+            ? `import ${exportName} from "${specifier}";`
+            : `import { ${exportName} } from "${specifier}";`,
         );
+        // Docs examples take no props; the remaining compositions still expose a loading toggle.
         const prop = name === "pie-chart" ? "shape" : name === "radial-chart" ? "labels" : "state";
         const ready = name === "pie-chart" ? "pie" : name === "radial-chart" ? "visible" : "ready";
         renders.push(
-          `{name:"${name}",render:(loading:boolean)=><${exportName} ${prop}={loading?"loading":"${ready}"}/>}`,
+          isDefault
+            ? `{name:"${name}",render:()=><${exportName}/>}`
+            : `{name:"${name}",render:(loading:boolean)=><${exportName} ${prop}={loading?"loading":"${ready}"}/>}`,
         );
       }
       await write(

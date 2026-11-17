@@ -8,6 +8,8 @@
       "!**/package-lock.json",
       "!**/artifacts",
       "!**/.next",
+      "!**/.source",
+      "!**/out",
       "!**/playwright-report",
       "!**/test-results",
       "!.agents/skills/composition-patterns",
