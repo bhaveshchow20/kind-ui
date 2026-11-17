@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 // Each item ships one docs example byte-for-byte; the names are the public install addresses.
 export const registryItems = [
   {
@@ -87,7 +89,9 @@ export const registryItems = [
   },
 ];
 
-export const coreVersion = "0.5.0";
+export const coreVersion = JSON.parse(
+  readFileSync(new URL("../packages/charts/package.json", import.meta.url), "utf8"),
+).version;
 export const registryHomepage = "https://github.com/kind-ui/charts";
 export const registryEndpoint = "https://kindui.dev/r/";
 export const sourcePaths = [

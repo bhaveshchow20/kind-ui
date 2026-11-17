@@ -19,6 +19,8 @@ export async function pendingChangesets(root) {
     .sort();
 }
 
+const biome = fileURLToPath(new URL("../node_modules/@biomejs/biome/bin/biome", import.meta.url));
+
 /** @param {string} root @param {string} cli */
 export async function changesetStatus(root, cli) {
   const scratch = await mkdtemp(join(tmpdir(), "kind-version-status-"));
@@ -55,10 +57,12 @@ export async function prepareChartsVersion(root, { cli, npm }) {
     [npm, "install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund"],
     { cwd: root, stdio: "inherit" },
   );
-  await writeFile(
-    join(root, ".changeset/release-version.json"),
-    `${JSON.stringify(next, null, 2)}\n`,
-  );
+  const policyPath = join(root, ".changeset/release-version.json");
+  await writeFile(policyPath, `${JSON.stringify(next, null, 2)}\n`);
+  execFileSync(process.execPath, [biome, "format", "--write", policyPath], {
+    cwd: root,
+    stdio: "inherit",
+  });
   return next;
 }
 
