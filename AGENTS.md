@@ -43,6 +43,13 @@ Never add secrets, credentials, telemetry, external uploads, or hidden network b
 
 The workspace remains private at `0.0.0`; `@kind-ui/charts` is published on npm and independently versioned. Follow the versioning and changeset policy in [docs/development.md](docs/development.md). The existing version workflow opens one reviewed version PR for accumulated changesets; the release workflow publishes its exact validated artifact through the configured OIDC identity. Publication and persistent security changes require explicit authorization. Preserve existing user work and report blockers instead of bypassing permissions or verification.
 
+## Workflow skills and experts
+
+Write with [`write-code`](.agents/skills/write-code/SKILL.md), finish with [`unslop`](.agents/skills/unslop/SKILL.md), then run [`expert-review`](.agents/skills/expert-review/SKILL.md) before every push. For the docs site, write with [`write-docs`](.agents/skills/write-docs/SKILL.md) and [`fumadocs`](.agents/skills/fumadocs/SKILL.md); `.mcp.json` and `.vscode/mcp.json` register Fumadocs' docs MCP server. Experts (`charts`, `docs`, `tooling`) live in `.agents/experts/`.
+
+- **Testing never slows implementation.** Build first, then run the targeted check your change reaches, then `npm run check` once before you push. Hand slow test work to a subagent with only the command and the files it covers.
+- **Before every push:** run `unslop` and `expert-review` on the diff.
+
 ## Optional upstream agent skills
 
 Select skills on demand for the authorized task; read `SKILL.md` first, then only

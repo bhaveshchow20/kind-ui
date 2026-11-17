@@ -40,7 +40,7 @@
 **Files:**
 - Create: `.agents/skills/{write-docs,fumadocs,unslop,expert-review,write-code}/SKILL.md`, `.agents/experts/{README.md,charts,docs,tooling}/{expert.md,decisions.md}`, `.mcp.json`, `.vscode/mcp.json`
 - Modify: `AGENTS.md`, `.agents/skills/UPSTREAM.md` (local skills list)
-- Delete: `.agents/skills/writing-guidelines/` and references to it
+- Modify: `.agents/skills/kind-ai-components/SKILL.md` (route docs pages to `write-docs`, PR prose to `writing-guidelines`)
 
 - [ ] Adapt each Agent UI skill to Charts: twins from `packages/charts/src` and `apps/docs` (reference page `content/docs/charts/line.mdx`), Charts checks (`npm run lint`, `npm run typecheck`, `npm test`, `npm run check`), no UI SDK, no Web Components, no `createAgent`.
 - [ ] `expert-review` routes by `git diff --name-only <base>...HEAD`: `charts` → `packages/charts/**`, `tests/**`; `docs` → `apps/docs/**`, `registry/**`, `skills/**`; `tooling` → `scripts/**`, `.github/**`, root config.
