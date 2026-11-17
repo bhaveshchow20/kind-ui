@@ -17,15 +17,11 @@
     "skipLibCheck": false
   },
   "include": [
-    "analytics.mjs",
-    "indexing.mjs",
-    "seo.mjs",
     "docs/lib/routing.mjs",
     "docs/scripts/consumer-shards.mjs",
     "docs/scripts/serve.mjs",
     "docs/scripts/validated-artifact.mjs",
     "docs/scripts/verify-pinned-package.mjs",
-    "showcase/postcss.config.mjs",
     "docs/lib/component-bundles.server.mjs",
     "docs/scripts/prepare-package.mjs",
     "docs/lib/chart-installation.mjs"

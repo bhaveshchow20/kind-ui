@@ -1,6 +1,0 @@
-import type { MetadataRoute } from "next";
-import { showcaseURL, sitemapEntries } from "../../indexing.mjs";
-export const dynamic = "force-static";
-export default function sitemap(): MetadataRoute.Sitemap {
-  return sitemapEntries([showcaseURL]);
-}

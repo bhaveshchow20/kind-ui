@@ -1,6 +1,6 @@
 # Internal chart fixtures
 
-Homepage (`apps/showcase`) and docs (`apps/docs`) own the maintained examples.
+Docs (`apps/docs`) own the maintained examples.
 These fixtures exercise public package contracts: geometry, missing and zero
 values, visibility, refs, keyboard inspection, resizing, loading and motion.
 Change a fixture when its tested behavior changes; visual or documentation

@@ -2,9 +2,7 @@
 
 Composable, interactive charts for React and Next.js. Designed for builders and AI agents.
 
-[Chart gallery](https://github.com/kind-ui/charts) · [Documentation](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs) · [npm package](https://www.npmjs.com/package/@kind-ui/charts)
-
-[![Kind UI chart gallery: line, area, bar, heatmap, radar and Sankey charts](apps/showcase/public/social/homepage-v1.png)](https://github.com/kind-ui/charts)
+[Documentation](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs) · [npm package](https://www.npmjs.com/package/@kind-ui/charts)
 
 [![npm version](https://img.shields.io/npm/v/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
 [![CI](https://github.com/kind-ui/charts/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kind-ui/charts/actions/workflows/ci.yml)

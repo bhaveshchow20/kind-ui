@@ -32,4 +32,4 @@ The [customization guide](https://github.com/kind-ui/charts/blob/main/apps/docs/
 
 Start with the [agent consumer guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/agents/consumer.mdx), then retrieve the relevant [documentation source](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs) and complete example setup files. Install the repository consumer skill with `npx skills add kind-ui/charts --skill kind-ui-charts`.
 
-Homepage (`apps/showcase`) and docs (`apps/docs`) own the maintained examples. Internal regression fixtures in `tests/fixtures` validate package and browser contracts. See [CONTRIBUTING.md](../CONTRIBUTING.md) for library/package/browser checks and [release automation](release-automation.md) for exact artifact publication.
+Docs (`apps/docs`) own the maintained examples. Internal regression fixtures in `tests/fixtures` validate package and browser contracts. See [CONTRIBUTING.md](../CONTRIBUTING.md) for library/package/browser checks and [release automation](release-automation.md) for exact artifact publication.

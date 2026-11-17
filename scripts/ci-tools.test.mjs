@@ -17,11 +17,9 @@ test("generated browser output is ignored without excluding source images", () =
     "playwright-report/index.html",
     "apps/docs/playwright-report/data/screenshot.png",
     "blob-report/report.zip",
-    "apps/showcase/blob-report/report.zip",
   ];
   const sources = [
     "apps/docs/public/cherry-blossom.png",
-    "apps/showcase/public/social/homepage-v1.png",
     "tests/chart.spec.ts-snapshots/desktop.png",
   ];
   const ignored = execFileSync("git", ["check-ignore", "--no-index", "--stdin"], {

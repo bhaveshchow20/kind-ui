@@ -4,7 +4,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing this repository. Its wor
 
 ## Current state and architecture guidance
 
-`packages/charts` exports composable React charts for the documented families, prop-controlled Motion animation, and component-owned Tailwind v4 utilities; its README is the public API reference. Keep component props with their implementation, share only the context/config types that are needed, and keep the public index as explicit reexports. Static presentation belongs in component-owned Tailwind utilities; data-dependent CSS variables and explicit consumer styles can remain inline. Homepage (`apps/showcase`) and docs (`apps/docs`) own the maintained examples. Internal `tests/fixtures` exercise specific regressions; update them only when their tested contract changes, rather than keeping them in sync with showcase design. `tests` checks component behavior, consumer types and browser contracts. Keep geometry, axes, data and visibility state consumer-owned; do not add a universal chart schema, generic core or another package without a demonstrated need.
+`packages/charts` exports composable React charts for the documented families, prop-controlled Motion animation, and component-owned Tailwind v4 utilities; its README is the public API reference. Keep component props with their implementation, share only the context/config types that are needed, and keep the public index as explicit reexports. Static presentation belongs in component-owned Tailwind utilities; data-dependent CSS variables and explicit consumer styles can remain inline. Docs (`apps/docs`) own the maintained examples. Internal `tests/fixtures` exercise specific regressions; update them only when their tested contract changes, rather than keeping them in sync with docs design. `tests` checks component behavior, consumer types and browser contracts. Keep geometry, axes, data and visibility state consumer-owned; do not add a universal chart schema, generic core or another package without a demonstrated need.
 
 Build on established UI libraries. Check existing capabilities before adding primitives or infrastructure. Prefer familiar composition or a narrow integration. Preserve consumer control of styling, markup, state, refs, handlers, and animation where the API requires it. A new abstraction needs a concrete unmet need, alternatives considered, and a clear benefit beyond integration cost.
 
@@ -26,7 +26,7 @@ Use Node 22.12+ and npm 11.9. Use npm and the checked-in lockfile; do not add a 
 - Build/typecheck: `npm run typecheck`
 - Packed-package contract: `npm run check:package`
 - Component tests: `npm test`
-- Homepage: `npm run dev:showcase`; docs: `npm run dev:docs` (prepare their package and install dependencies as described in their READMEs)
+- Docs: `npm run dev:docs` (prepare its package and install dependencies as described in its README)
 - Packed-consumer and browser checks: `npm run check:chart`
 - Browser prerequisite: `npm exec playwright install -- --with-deps chromium`
 - Required aggregate check: `npm run check`

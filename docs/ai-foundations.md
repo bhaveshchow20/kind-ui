@@ -4,7 +4,7 @@ This setup records the decisions and review gates for Kind's next React componen
 
 ## Repository baseline
 
-The setup branch starts at main commit `fbb13e2` (2026-10-09). The workspace publishes `@kind-ui/charts`; `packages/charts` is the only runtime library. The docs and showcase applications have separate manifests. Charts, its APIs, and production applications remain unchanged.
+The setup branch starts at main commit `fbb13e2` (2026-10-09). The workspace publishes `@kind-ui/charts`; `packages/charts` is the only runtime library. The docs application has a separate manifest. Charts, its APIs, and production applications remain unchanged.
 
 Reuse these conventions:
 
