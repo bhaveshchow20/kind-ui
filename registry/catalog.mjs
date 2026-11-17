@@ -27,8 +27,8 @@ export const registryItems = [
   {
     name: "heatmap-chart",
     title: "Heatmap",
-    description: "Support demand across four days and six two-hour intervals.",
-    source: "apps/docs/examples/heatmap/example.tsx",
+    description: "Support requests by day and hour, with a color legend and tooltip.",
+    source: "apps/docs/examples/heatmap/basic.tsx",
   },
   {
     name: "histogram-chart",
@@ -63,15 +63,15 @@ export const registryItems = [
   },
   {
     name: "sankey-chart",
-    title: "Energy allocation",
-    description: "180 MWh across nine nodes, three stages and eighteen balanced flows.",
-    source: "apps/docs/examples/sankey/example.tsx",
+    title: "Sankey Chart",
+    description: "Energy flowing from two sources through two zones to two uses.",
+    source: "apps/docs/examples/sankey/basic.tsx",
   },
   {
     name: "scatter-chart",
     title: "Scatter Chart",
-    description: "Eight task observations on numeric latency and acceptance axes.",
-    source: "apps/docs/examples/scatter/example.tsx",
+    description: "Task latency against acceptance rate for two groups of points.",
+    source: "apps/docs/examples/scatter/basic.tsx",
   },
   {
     name: "waterfall-chart",

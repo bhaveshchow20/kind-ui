@@ -77,10 +77,15 @@ export type SankeyChartProps = Omit<
 > &
   FamilyFrameOptions &
   ChartName & {
+    /** A label and color, plus an optional icon, for every node ID. The legend lists nodes in this order. */
     config: SankeyNodeConfig;
     children: Exclude<ReactNode, undefined>;
     width?: ResponsiveContainerProps["width"];
     height?: ResponsiveContainerProps["height"];
+    /**
+     * Sizes the diagram to its container. Set `false` to use a numeric `width` and `height`.
+     * @default true
+     */
     responsive?: boolean;
   };
 const renderNode = (props: SankeyNodeProps) => <FlowNode {...props} />;

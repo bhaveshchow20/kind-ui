@@ -33,12 +33,29 @@ import { cn } from "./utils.js";
 
 type HeatmapPlotProps = ComponentPropsWithRef<"div"> &
   HeatmapModelOptions & {
+    /** Maps each value to a color for the cells and the legend. Make one with `createHeatmapScale`. */
     scale: HeatmapScale;
+    /**
+     * Formats values in the cells, tooltip and legend without changing the scale.
+     * @default String
+     */
     formatValue?: (value: number) => string;
+    /**
+     * What cells with no record or a `null` value show.
+     * @default "Missing"
+     */
     missingLabel?: string;
-    /** Diagonal cell entrance; quantitative colors and table geometry are unchanged. */
+    /**
+     * Fades the cells in diagonally on mount. Reduced motion skips it.
+     * @default false
+     */
     animate?: boolean;
+    /** Shows a placeholder grid and hides the legend and tooltip while the data is on its way. */
     loading?: boolean | undefined;
+    /**
+     * What screen readers hear while `loading` is on.
+     * @default "Loading chart"
+     */
     loadingLabel?: string | undefined;
   };
 export type HeatmapChartProps = Omit<HeatmapPlotProps, "children" | keyof FamilyOptions> &
@@ -394,9 +411,9 @@ const headerClasses = "p-[0.4rem] text-center text-[0.75rem] font-medium wrap-an
 const scrollClasses = "max-w-full overflow-x-auto [container-type:inline-size]";
 
 export type HeatmapGridProps = Omit<ComponentPropsWithRef<"table">, "children"> & {
-  /** Required accessible name, also rendered as a native caption. */
+  /** Names the grid, and shows above it as the table caption. */
   caption: string;
-  /** Optional fixed square cells, spacing and visual labels; accessible headers remain. */
+  /** Fixed square cells, spacing, and whether row and column labels show. Hidden labels stay readable by screen readers. */
   layout?: {
     /** Positive CSS length or finite positive pixels. Omit to retain fluid cells. */
     cellSize?: number | string;
@@ -405,12 +422,18 @@ export type HeatmapGridProps = Omit<ComponentPropsWithRef<"table">, "children"> 
     rowLabels?: "visible" | "hidden";
     columnLabels?: "visible" | "hidden";
   };
-  /** Static edge treatment; the central 84% × 84% remains the exact scale color. */
+  /** A finish for the cell edges. The center of each cell keeps the exact scale color. */
   material?: HeatmapMaterial;
+  /**
+   * Renders the inside of each cell. Receives the `cell`, its `fill` and its `formattedValue`.
+   * @default HeatmapCellContent
+   */
   Cell?: ComponentType<HeatmapCellContentProps>;
-  /** Native cell styles, refs and handlers; grid semantics and navigation remain owned by the table. */
+  /** Props for each cell's `td`, like styles and handlers. The grid keeps its focus and keyboard handling. */
   cellProps?: (cell: HeatmapCell) => ComponentPropsWithRef<"td">;
+  /** Renders a row header. Receives the row key, which stays the accessible name. */
   rowLabel?: (row: string) => ReactNode;
+  /** Renders a column header. Receives the column key, which stays the accessible name. */
   columnLabel?: (column: string) => ReactNode;
 };
 
@@ -694,8 +717,9 @@ export function HeatmapGrid({
 }
 
 export type HeatmapTooltipProps = Omit<ComponentPropsWithRef<"div">, "children" | "id"> & {
+  /** Renders the tooltip. Receives the active `cell`, its `fill` and its `formattedValue`. */
   Content?: ComponentType<HeatmapCellContentProps>;
-  /** Opt in for the built-in value only; Content keeps complete presentation ownership. */
+  /** Set to `"shuffle"` to animate the digits of the built-in value. Custom `Content` is left as it is. */
   valueAnimation?: TooltipContentProps["valueAnimation"];
 };
 /** In-flow tooltip stays within narrow containers and remains available for hover, focus and touch. */
@@ -745,6 +769,7 @@ export function HeatmapTooltip({ Content, valueAnimation, ...props }: HeatmapToo
 }
 
 export type HeatmapLegendProps = Omit<ComponentPropsWithRef<"fieldset">, "children"> & {
+  /** Describes what the colors measure, like "Requests per hour". */
   label: string;
 };
 export function HeatmapLegend({ label, ...props }: HeatmapLegendProps) {

@@ -6,19 +6,43 @@ import { prepareSankeyData, type SankeyFlowData } from "./sankey-data.js";
 import type { SankeyNodeProps } from "./sankey-marks.js";
 
 export type SankeyNodeLabelProps = Omit<ComponentPropsWithRef<"text">, "position"> & {
-  /** Geometry from the native node callback; identity comes from payload.id, never index. */
+  /** The node props from `SankeyChart.Nodes`' `render` callback. */
   node: Pick<SankeyNodeProps, "x" | "y" | "width" | "height" | "payload">;
+  /** The chart's `data`, used for the node's name and value. */
   data: SankeyFlowData;
-  /** Explicit metadata; icons are looked up by payload.id. Labels still use data names. */
+  /** The chart's `config`. Shows the node's `icon`, if it has one. */
   nodeConfig?: SankeyNodeConfig;
-  /** Square SVG viewport size and gap in chart units; inside icons share the node clip. */
+  /**
+   * Icon size in chart units.
+   * @default 16
+   */
   iconSize?: number;
+  /**
+   * Gap between the icon and the text.
+   * @default 4
+   */
   iconGap?: number;
+  /**
+   * `"outside"` sets the label beside the node; `"inside"` clips it to the node.
+   * @default "outside"
+   */
   position?: "inside" | "outside";
-  /** Outside defaults to left for sinks and right otherwise. Reserve chart margins for text. */
+  /** Which side an outside label goes on. Defaults to left for end nodes and right for the rest. Leave chart margin for the text. */
   side?: "left" | "right";
+  /**
+   * Adds the node's total after its name.
+   * @default false
+   */
   showValues?: boolean;
+  /**
+   * Formats the total from `showValues`.
+   * @default String
+   */
   valueFormatter?: (value: number) => string;
+  /**
+   * Gap between the node and an outside label.
+   * @default 8
+   */
   offset?: number;
 };
 
