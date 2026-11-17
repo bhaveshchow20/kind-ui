@@ -44,10 +44,10 @@ test("installed combo legend and activity rings retain explicit values on a narr
   await page.getByRole("combobox", { name: "Chart", exact: true }).selectOption("combo-chart");
   await expect(
     composition.getByRole("application", {
-      name: "Monthly production, capacity and target in units",
+      name: "Monthly units shipped against capacity and target",
     }),
   ).toBeVisible();
-  const capacity = composition.getByRole("button", { name: "Capacity · units", exact: true });
+  const capacity = composition.getByRole("button", { name: "Capacity", exact: true });
   await capacity.focus();
   await page.keyboard.press("Escape");
   await expect(capacity).toHaveAttribute("aria-pressed", "false");
