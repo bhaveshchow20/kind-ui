@@ -362,28 +362,16 @@ try {
       );
       const hostImports = [];
       const renders = [];
-      for (const { name } of registryItems) {
+      for (const [index, { name }] of registryItems.entries()) {
         const source = await readFile(path.join(scratch, components, `${name}.tsx`), "utf8");
-        const [, isDefault, exportName] = source.match(/export (default )?function (\w+)/) ?? [];
-        assert.ok(exportName);
+        assert.match(source, /export default function \w+/, `${name} must default-export its chart`);
         const specifier = `${alias}/${components.replace(/^src\//, "")}/${name}`;
-        hostImports.push(
-          isDefault
-            ? `import ${exportName} from "${specifier}";`
-            : `import { ${exportName} } from "${specifier}";`,
-        );
-        // Docs examples take no props; the remaining compositions still expose a loading toggle.
-        const prop = name === "pie-chart" ? "shape" : name === "radial-chart" ? "labels" : "state";
-        const ready = name === "pie-chart" ? "pie" : name === "radial-chart" ? "visible" : "ready";
-        renders.push(
-          isDefault
-            ? `{name:"${name}",render:()=><${exportName}/>}`
-            : `{name:"${name}",render:(loading:boolean)=><${exportName} ${prop}={loading?"loading":"${ready}"}/>}`,
-        );
+        hostImports.push(`import Chart${index} from "${specifier}";`);
+        renders.push(`{name:"${name}",render:()=><Chart${index}/>}`);
       }
       await write(
         path.join(scratch, "src/host.tsx"),
-        `"use client";\nimport {useEffect,useState} from "react";\n${hostImports.join("\n")}\nconst charts=[${renders.join(",")}];\nexport function RegistryHost(){const [selected,setSelected]=useState("line-chart");const [loading,setLoading]=useState(false);const [dark,setDark]=useState(false);useEffect(()=>{document.documentElement.classList.toggle("dark",dark)},[dark]);const chart=charts.find(({name})=>name===selected);return <main><h1>Installed chart compositions</h1><label>Chart<select aria-label="Chart" value={selected} onChange={event=>setSelected(event.target.value)}>{charts.map(({name})=><option key={name}>{name}</option>)}</select></label><button onClick={()=>setLoading(!loading)} aria-pressed={loading}>Loading</button><button onClick={()=>setDark(!dark)} aria-pressed={dark}>Dark mode</button><section aria-label="Installed composition">{chart?.render(loading)}</section></main>}`,
+        `"use client";\nimport {useEffect,useState} from "react";\n${hostImports.join("\n")}\nconst charts=[${renders.join(",")}];\nexport function RegistryHost(){const [selected,setSelected]=useState("line-chart");const [dark,setDark]=useState(false);useEffect(()=>{document.documentElement.classList.toggle("dark",dark)},[dark]);const chart=charts.find(({name})=>name===selected);return <main><h1>Installed chart compositions</h1><label>Chart<select aria-label="Chart" value={selected} onChange={event=>setSelected(event.target.value)}>{charts.map(({name})=><option key={name}>{name}</option>)}</select></label><button onClick={()=>setDark(!dark)} aria-pressed={dark}>Dark mode</button><section aria-label="Installed composition">{chart?.render()}</section></main>}`,
       );
       for (const mode of ["NodeNext", "Bundler"]) {
         await write(
