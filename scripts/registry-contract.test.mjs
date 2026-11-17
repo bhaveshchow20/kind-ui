@@ -6,7 +6,6 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import {
   coreVersion,
-  itemNameFor,
   registryCss,
   registryEndpoint,
   registryHomepage,
@@ -94,12 +93,9 @@ test("installed compositions equal canonical preview and copied source bytes", (
     assert.ok(file);
     assert.equal(file.path, `components/${definition.name}.tsx`);
     assert.equal(file.target, `@components/${definition.name}.tsx`);
-    const canonical = readFileSync(
-      path.join(root, `apps/docs/examples/${definition.exampleId}/example.tsx`),
-      "utf8",
-    );
+    const canonical = readFileSync(path.join(root, definition.source), "utf8");
     assert.equal(file.content, canonical);
-    assert.match(canonical, /["']use client["'];/);
+    assert.match(canonical, /^(\/\/.*\n)*"use client";/);
     assert.match(canonical, /from ["']@kind-ui\/charts["']/);
     assert.doesNotMatch(canonical, /from ["'](?:\.\.?\/|@\/)/);
   }
@@ -134,10 +130,7 @@ test("directory submission entry has the production namespace, endpoint and revi
   }
 });
 
-test("lookup and policy reject missing examples, nested names and absent dependencies", () => {
-  assert.equal(itemNameFor("line"), "line-chart");
-  assert.equal(itemNameFor("radial-activity"), "activity-rings");
-  assert.throws(() => itemNameFor("line-smooth"), /No registry installation/);
+test("policy rejects nested names and absent dependencies", () => {
   const first = catalog.items[0];
   assert.ok(first);
   assert.equal(itemSchema.safeParse({ ...first, name: "charts/line-chart" }).success, false);

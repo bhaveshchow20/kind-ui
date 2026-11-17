@@ -88,7 +88,7 @@ test("Docs follows shared dependency, build configuration, and package gate chan
   for (const event of ["pull_request", "push"]) {
     for (const path of [
       "apps/docs/**",
-      "apps/seo.mjs",
+      "registry/**",
       "packages/charts/**",
       "package.json",
       "package-lock.json",
@@ -177,25 +177,15 @@ test("parallel source fixtures isolate Vite caches and retain their CI failure t
   }
 });
 
-test("advisory checks include development tooling and npm updates cover both lockfiles", async () => {
-  for (const job of [ci.jobs.fast, docs.jobs.build, release.jobs.validate]) {
+test("advisory checks include development tooling and npm updates cover the lockfile", async () => {
+  for (const job of [ci.jobs.fast, docs.jobs.docs, release.jobs.validate]) {
     assert.ok(job.steps.some((step) => step.run === "npm audit --audit-level=high --include=dev"));
   }
   assert.ok(
-    docs.jobs.build.steps.some(
-      (step) =>
-        step.run === "npm audit --audit-level=high --include=dev" &&
-        step["working-directory"] === "apps/docs",
+    dependabot.updates.some(
+      (update) => update["package-ecosystem"] === "npm" && update.directory === "/",
     ),
   );
-  for (const directory of ["/", "/apps/docs"]) {
-    await read(`${directory === "/" ? "" : "apps/docs/"}package-lock.json`);
-    assert.ok(
-      dependabot.updates.some(
-        (update) => update["package-ecosystem"] === "npm" && update.directory === directory,
-      ),
-    );
-  }
 });
 
 test("split CI covers all aggregate gates and sends shard args to every browser suite", async () => {
@@ -248,7 +238,7 @@ test("split CI covers all aggregate gates and sends shard args to every browser 
 });
 
 test("cached browser binaries do not replace OS dependency installation", () => {
-  for (const job of [ci.jobs.playwright, docs.jobs.browsers]) {
+  for (const job of [ci.jobs.playwright, docs.jobs.docs]) {
     const steps = job.steps;
     const cache = steps.find((s) => s.uses?.startsWith("actions/cache@"));
     assert.equal(cache.with.path, "~/.cache/ms-playwright");
@@ -277,110 +267,13 @@ test("release installs fresh browser binaries and OS dependencies without cachin
   assert.equal(install.if, undefined);
 });
 
-test("Docs separates copied consumers without dropping any browser or build gate", () => {
-  assert.equal(docs.jobs.build.needs, undefined);
-  assert.equal(docs.jobs.consumers.needs, undefined);
-  assert.deepEqual(docs.jobs.consumers.strategy.matrix.shard, [1, 2, 3, 4]);
-  assert.equal(docs.jobs.consumers.strategy["fail-fast"], false);
-  assert.ok(
-    docs.jobs.consumers.steps.some((s) => s.run?.includes("npm run check:consumers -- --shard=")),
-  );
-  assert.deepEqual(docs.jobs.browsers.needs, "build");
-  assert.deepEqual(docs.jobs.browsers.strategy.matrix.group, [
-    "general",
-    "polar",
-    "advanced",
-    "cartesian",
-  ]);
-  assert.equal(docs.jobs.browsers.strategy["fail-fast"], false);
-  const browserChecks = docs.jobs.browsers.steps.filter(
-    (s) =>
-      s["working-directory"] === "apps/docs" &&
-      s.run !== "npm ci" &&
-      s.run !== "npm audit --audit-level=high --include=dev",
-  );
-  assert.equal(browserChecks.length, 16);
-  assert.ok(
-    browserChecks.some(
-      (step) =>
-        step.run === "npm run check:accessibility" && step.if === "matrix.group == 'general'",
-    ),
-  );
-  assert.ok(
-    browserChecks.some(
-      (step) =>
-        step.run === "node scripts/start-legend-checks.mjs" &&
-        step.if === "matrix.group == 'general'",
-    ),
-  );
-  for (const step of browserChecks) {
-    assert.ok(
-      docs.jobs.browsers.strategy.matrix.group.some(
-        (group) => step.if === `matrix.group == '${group}'`,
-      ),
-    );
-  }
-  assert.equal(new Set(browserChecks.map((s) => s.if)).size, 4);
-  assert.deepEqual(docs.jobs.docs.needs, ["build", "consumers", "browsers"]);
-  assert.equal(docs.jobs.docs.if, "always()");
-  const fixtures = docs.jobs.build.steps.find((s) => s.with?.name === "docs-browser-fixtures");
-  for (const path of ["apps/docs/out/", "apps/docs/generated/", "apps/docs/public/"])
-    assert.ok(
-      fixtures.with.path.split("\n").includes(path),
-      `Missing Docs browser fixture: ${path}`,
-    );
-  const build = docs.jobs.build.steps.map((s) => s.run ?? "").join("\n");
-  for (const command of ["npm run generate", "npm run build", "npm run check"])
-    assert.ok(build.includes(command));
-  const browsers = docs.jobs.browsers.steps.map((s) => s.run ?? "").join("\n");
-  assert.ok(browsers.includes("npm run check:browser"));
-  for (const family of [
-    "line",
-    "area",
-    "pie",
-    "radar",
-    "sankey",
-    "histogram",
-    "radial",
-    "waterfall",
-    "box-plot",
-    "combo",
-    "scatter",
-    "bar",
-    "heatmap",
-  ])
-    assert.ok(browsers.includes(`start-${family}-checks.mjs`));
-  for (const contract of [
-    "pie-contract",
-    "check-sankey-source",
-    "histogram-contract",
-    "waterfall-contract",
-    "combo-contract",
-    "heatmap-contract",
-  ])
-    assert.ok(browsers.includes(`${contract}.test.mjs`));
-  for (const family of ["histogram", "waterfall", "box-plot", "combo", "heatmap"])
-    assert.ok(browsers.includes(`check-${family}-consumers.mjs`));
-});
-
-test("Docs verifies preview and public indexing without replacing browser fixtures or repeating fleets", () => {
-  const steps = docs.jobs.build.steps;
-  const preview = steps.find((step) => step.run?.includes("npm run check"));
-  assert.equal(preview.env.KIND_UI_DEPLOYMENT_ENV, "preview");
-  assert.equal(preview.env.NEXT_PUBLIC_KIND_DOCS_BASE_PATH, "");
-  const fixtures = steps.findIndex((step) => step.with?.name === "docs-browser-fixtures");
-  const production = steps.findIndex(
-    (step) => step.name === "Check production indexing at the public Docs mount",
-  );
-  assert.ok(production > fixtures);
-  assert.equal(steps[production].env.KIND_UI_DEPLOYMENT_ENV, "production");
-  assert.equal(steps[production].env.NEXT_PUBLIC_KIND_DOCS_BASE_PATH, "/charts/docs");
-  assert.equal(steps[production].env.KIND_DOCS_ORIGIN, "https://kindui.dev");
-  assert.match(steps[production].run, /npm run build/);
-  assert.match(steps[production].run, /node scripts\/check-export\.mjs/);
-  assert.doesNotMatch(steps[production].run, /npm (?:ci|install)|check:consumers|check:browser/);
-  for (const event of ["pull_request", "push"])
-    assert.ok(docs.on[event].paths.includes("apps/indexing.mjs"));
+test("Docs builds, tests and opens the site at the root and under the kindui.dev mount", () => {
+  const runs = docs.jobs.docs.steps.map((step) => step.run).filter(Boolean);
+  for (const command of ["npm run test:docs", "npm run build:docs", "npm run check:docs"])
+    assert.ok(runs.includes(command), `Missing ${command}`);
+  const mounted = docs.jobs.docs.steps.find((step) => step.env?.NEXT_PUBLIC_DOCS_BASE_PATH);
+  assert.equal(mounted.env.NEXT_PUBLIC_DOCS_BASE_PATH, "/docs/charts");
+  assert.equal(mounted.run, "npm run build:docs && npm run check:docs");
 });
 
 test("pinned compatibility and bundle budgets reuse the packed pipeline and retain evidence", async () => {

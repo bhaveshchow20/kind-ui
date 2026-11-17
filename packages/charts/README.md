@@ -7,7 +7,7 @@ and optional animation. Compose a chart from styled family parts, then customize
 
 [Website](https://github.com/kind-ui/charts) ·
 [Documentation](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs) ·
-[Examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/line.mdx) ·
+[Examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/line.mdx) ·
 [GitHub](https://github.com/kind-ui/charts)
 
 ## Chart types
@@ -42,7 +42,7 @@ and add `tailwindcss()` to the `plugins` array in `vite.config`. For Next.js, us
 `tailwindcss` and `@tailwindcss/postcss` with your PostCSS configuration. Import
 your CSS at the application entry or Next.js root layout, and place interactive
 Next.js chart code in a client component. The
-[installation guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/installation.mdx) includes complete
+[installation guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/index.mdx) includes complete
 configuration examples.
 
 The package has no stylesheet export. Components carry their default Tailwind
@@ -121,7 +121,7 @@ export function TasksChart() {
 }
 ```
 
-Use the [Line guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/line.mdx)
+Use the [Line guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/line.mdx)
 for composition and customization. The documentation covers chart selection,
 peer requirements, styling, motion and accessibility; applications own their
 data, domains and business state.

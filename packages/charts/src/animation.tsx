@@ -56,6 +56,11 @@ export type LineSeriesProps<
   Value = ReturnType<DefaultLineDataKey>,
 > = Omit<StaticLineSeriesProps<DataPoint, Value>, "isAnimationActive">;
 export type LineChartProps = StaticLineChartProps & {
+  /**
+   * Draws the lines in on mount. Pass options to change the direction or duration, or `false` to turn it off.
+   * Reduced motion skips it.
+   * @default true
+   */
   animate?: boolean | LineAnimation | undefined;
 };
 export const MotionContext = createContext({ enabled: false, transition: defaultHover });

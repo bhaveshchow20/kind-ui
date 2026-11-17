@@ -1,70 +1,19 @@
-import Script from "next/script";
-import { webAnalytics } from "../../analytics.mjs";
-import "@fontsource-variable/geist";
-import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { GlassDocsLayout } from "@/components/glass-docs-layout";
 import { Provider } from "@/components/provider";
-import { docRoute, publicPath } from "@/lib/routing.mjs";
-import { primitiveSource, source } from "@/lib/source";
-import { indexingMetadata } from "../../indexing.mjs";
+import { appName, basePath, origin } from "@/lib/shared";
+import "./global.css";
 
 export const metadata: Metadata = {
-  title: { default: "Kind UI charts · Documentation", template: "%s · Kind UI charts" },
-  description: "React chart components with native Recharts composition and complete examples.",
-  icons: {
-    icon: { url: publicPath("/cherry-blossom.png"), type: "image/png", sizes: "512x512" },
-    shortcut: publicPath("/cherry-blossom.png"),
-    apple: publicPath("/cherry-blossom.png"),
-  },
-  ...indexingMetadata(),
+  metadataBase: new URL(`${origin}${basePath}`),
+  title: { template: `%s | ${appName}`, default: appName },
 };
+
 export default function Layout({ children }: { children: ReactNode }) {
-  const analytics = webAnalytics();
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
-        <a href="#docs-content" className="skip-link">
-          Skip to content
-        </a>
-        <Provider>
-          <GlassDocsLayout
-            tree={source.getPageTree()}
-            primitiveTree={{
-              name: "Components",
-              children: [
-                {
-                  type: "folder",
-                  name: "Components",
-                  defaultOpen: true,
-                  children: primitiveSource.getPageTree().children,
-                },
-              ],
-            }}
-            nav={{
-              title: (
-                <span className="kind-wordmark">
-                  kind<span>ui</span>
-                  <small>charts</small>
-                </span>
-              ),
-              url: docRoute("/docs/"),
-            }}
-            githubUrl="https://github.com/kind-ui/charts"
-          >
-            {children}
-          </GlassDocsLayout>
-        </Provider>
-        {analytics && (
-          <Script
-            id="kind-ui-web-analytics"
-            type="module"
-            src={analytics.src}
-            data-cf-beacon={analytics.beacon}
-            strategy="afterInteractive"
-          />
-        )}
+      <body className="flex min-h-screen flex-col">
+        <Provider>{children}</Provider>
       </body>
     </html>
   );

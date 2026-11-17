@@ -52,7 +52,14 @@ export type ChartInteractionConfig = {
     ))
 );
 export type ChartVisibilityProps =
-  | { visibleSeries?: undefined; defaultVisibleSeries?: undefined; onVisibleSeriesChange?: never }
+  | {
+      /** The series keys to show, when you control visibility. */
+      visibleSeries?: undefined;
+      /** The series keys to show first, when the chart controls visibility. */
+      defaultVisibleSeries?: undefined;
+      /** Called with the next visible series keys when the legend hides or shows one. */
+      onVisibleSeriesChange?: never;
+    }
   | {
       visibleSeries?: undefined;
       defaultVisibleSeries: readonly string[];

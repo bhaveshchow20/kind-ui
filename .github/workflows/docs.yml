@@ -1,20 +1,20 @@
 name: Docs
 on:
   pull_request:
-    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "apps/showcase/**", "registry/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
+    paths: ["apps/docs/**", "registry/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
   push:
     branches: [main]
-    paths: ["apps/analytics.mjs", "apps/indexing.mjs", "apps/seo.mjs", "apps/docs/**", "apps/showcase/**", "registry/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
+    paths: ["apps/docs/**", "registry/**", "packages/charts/**", "scripts/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/docs.yml"]
 permissions:
   contents: read
 concurrency:
   group: docs-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  build:
-    name: "Build & links"
+  docs:
+    name: "All docs checks"
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -23,140 +23,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            apps/docs/package-lock.json
       - run: npm install --global npm@11.9.0
       - run: npm ci
       - run: npm audit --audit-level=high --include=dev
-      - run: node apps/docs/scripts/verify-pinned-package.mjs
-      - run: npm ci
-        working-directory: apps/docs
-      - run: npm audit --audit-level=high --include=dev
-        working-directory: apps/docs
-      - run: |
-          mkdir -p artifacts
-          npm run generate
-          npm run build
-          npm run check
-        working-directory: apps/docs
-        env:
-          KIND_DOCS_ORIGIN: https://kind-ui-charts-docs.angrypirate20.chatgpt.site
-          KIND_UI_DEPLOYMENT_ENV: preview
-          NEXT_PUBLIC_KIND_DOCS_BASE_PATH: ""
-      - name: Retain the built docs site and generated browser fixtures
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: docs-browser-fixtures
-          path: |
-            apps/docs/out/
-            apps/docs/generated/
-            apps/docs/public/
-          if-no-files-found: error
-          retention-days: 1
-      # Preserve the root-mounted preview fixtures above before rebuilding the public mount.
-      # Reuse installed dependencies; no copied-consumer or browser fleet is repeated.
-      - name: Check production indexing at the public Docs mount
-        run: |
-          npm run build
-          node scripts/check-export.mjs
-          mkdir -p artifacts/production-indexing
-          cp out/index.html out/robots.txt out/sitemap.xml artifacts/production-indexing/
-          cp out/components/line/index.html artifacts/production-indexing/line.html
-          cp out/start/installation/index.html artifacts/production-indexing/legacy-installation.html
-        working-directory: apps/docs
-        env:
-          KIND_UI_DEPLOYMENT_ENV: production
-          NEXT_PUBLIC_KIND_DOCS_BASE_PATH: /charts/docs
-          KIND_DOCS_ORIGIN: https://kindui.dev
-      - name: Retain production indexing output
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: docs-production-indexing
-          path: apps/docs/artifacts/production-indexing/
-          if-no-files-found: error
-          retention-days: ${{ job.status != 'success' && 3 || 1 }}
-  consumers:
-    name: "Copied examples · shard ${{ matrix.shard }}/4"
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            apps/docs/package-lock.json
-      - run: npm install --global npm@11.9.0
-      - run: npm ci
-      - run: npm audit --audit-level=high --include=dev
-      - run: node apps/docs/scripts/verify-pinned-package.mjs
-      - run: npm ci
-        working-directory: apps/docs
-      - run: npm audit --audit-level=high --include=dev
-        working-directory: apps/docs
-      - name: Check copied consumers and every variant in this shard
-        run: |
-          mkdir -p artifacts
-          npm run generate
-          if npm run check:consumers -- --shard=${{ matrix.shard }}/4 > artifacts/consumers.log 2>&1; then
-            tail -n 12 artifacts/consumers.log
-          else
-            tail -n 100 artifacts/consumers.log
-            exit 1
-          fi
-        working-directory: apps/docs
-      - name: Retain strict consumer evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
-        with:
-          name: docs-consumer-evidence-shard-${{ matrix.shard }}
-          path: |
-            apps/docs/artifacts/consumers.log
-            apps/docs/artifacts/consumer-results*.json
-          if-no-files-found: error
-          retention-days: ${{ job.status != 'success' && 3 || 1 }}
-  browsers:
-    name: "Browser checks · ${{ matrix.group }}"
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [general, polar, advanced, cartesian]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            apps/docs/package-lock.json
-      - run: npm install --global npm@11.9.0
-      - run: npm ci
-      - run: npm audit --audit-level=high --include=dev
-      - run: node apps/docs/scripts/verify-pinned-package.mjs
-      - run: npm ci
-        working-directory: apps/docs
-      - run: npm audit --audit-level=high --include=dev
-        working-directory: apps/docs
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: docs-browser-fixtures
-          # Both uploaded paths share apps/docs as their common ancestor.
-          path: apps/docs
       - id: playwright-version
         run: echo "version=$(node -p 'require("./node_modules/@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
       - id: browsers
@@ -168,127 +37,10 @@ jobs:
       - run: npm exec playwright install-deps -- chromium
       - run: npm exec playwright install -- chromium
         if: steps.browsers.outputs.cache-hit != 'true'
-      - name: Check Docs accessibility and keyboard dialogs
-        if: matrix.group == 'general'
-        run: npm run check:accessibility
-        working-directory: apps/docs
-      - run: npm run check:browser
-        if: matrix.group == 'general'
-        working-directory: apps/docs
-      - run: node scripts/start-line-checks.mjs
-        if: matrix.group == 'general'
-        working-directory: apps/docs
-      - run: node scripts/start-area-checks.mjs
-        if: matrix.group == 'general'
-        working-directory: apps/docs
-      - name: Check legend interactions and loading restoration
-        if: matrix.group == 'general'
-        run: node scripts/start-legend-checks.mjs
-        working-directory: apps/docs
-      - name: Check pie documentation
-        if: matrix.group == 'polar'
-        run: |
-          node --test scripts/pie-contract.test.mjs
-          node scripts/start-pie-checks.mjs
-        working-directory: apps/docs
-      - name: Check radar documentation
-        if: matrix.group == 'polar'
-        run: |
-          node scripts/start-radar-checks.mjs
-        working-directory: apps/docs
-      - name: Check sankey documentation
-        if: matrix.group == 'advanced'
-        run: |
-          node --test scripts/check-sankey-source.test.mjs
-          node scripts/start-sankey-checks.mjs
-        working-directory: apps/docs
-      - name: Check histogram documentation
-        if: matrix.group == 'advanced'
-        run: |
-          node --test scripts/histogram-contract.test.mjs
-          node scripts/check-histogram-consumers.mjs
-          node scripts/start-histogram-checks.mjs
-        working-directory: apps/docs
-      - name: Check radial documentation
-        if: matrix.group == 'polar'
-        run: |
-          set -o pipefail
-          node scripts/start-radial-checks.mjs 2>&1 | tee artifacts/radial-check.log
-        working-directory: apps/docs
-      - name: Check waterfall documentation
-        if: matrix.group == 'advanced'
-        run: |
-          node --test scripts/waterfall-contract.test.mjs
-          node scripts/check-waterfall-consumers.mjs
-          node scripts/start-waterfall-checks.mjs
-        working-directory: apps/docs
-      - name: Check box-plot documentation
-        if: matrix.group == 'cartesian'
-        run: |
-          node scripts/check-box-plot-consumers.mjs
-          node scripts/start-box-plot-checks.mjs
-        working-directory: apps/docs
-      - name: Check combo documentation
-        if: matrix.group == 'cartesian'
-        run: |
-          node --test scripts/combo-contract.test.mjs
-          node scripts/check-combo-consumers.mjs
-          node scripts/start-combo-checks.mjs
-        working-directory: apps/docs
-      - name: Check scatter documentation
-        if: matrix.group == 'cartesian'
-        run: |
-          node scripts/start-scatter-checks.mjs
-        working-directory: apps/docs
-      - name: Check bar documentation
-        if: matrix.group == 'cartesian'
-        run: |
-          node scripts/start-bar-checks.mjs
-        working-directory: apps/docs
-      - name: Check heatmap documentation
-        if: matrix.group == 'polar'
-        run: |
-          node --test scripts/heatmap-contract.test.mjs
-          node scripts/check-heatmap-consumers.mjs
-          node scripts/start-heatmap-checks.mjs
-        working-directory: apps/docs
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
-        with:
-          name: docs-browser-verification-${{ matrix.group }}
-          path: |
-            apps/docs/artifacts/*.log
-            apps/docs/artifacts/*-results.json
-            apps/docs/artifacts/screenshots/*.png
-            apps/docs/artifacts/pie/*.png
-            apps/docs/artifacts/pie/*.json
-            apps/docs/artifacts/radar/*.png
-            apps/docs/artifacts/radar/*.json
-            apps/docs/artifacts/sankey/*.png
-            apps/docs/artifacts/sankey/*.json
-            apps/docs/artifacts/radial/*.png
-            apps/docs/artifacts/radial/*.json
-            apps/docs/artifacts/waterfall/*.png
-            apps/docs/artifacts/waterfall/*.json
-            apps/docs/artifacts/box-plot/*.png
-            apps/docs/artifacts/box-plot/*.json
-            apps/docs/artifacts/combo-*.png
-            apps/docs/artifacts/heatmap/*.png
-            apps/docs/artifacts/heatmap/*.json
-          if-no-files-found: warn
-          retention-days: ${{ job.status != 'success' && 3 || 1 }}
-  docs:
-    name: "All docs checks"
-    needs: [build, consumers, browsers]
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    steps:
-      - run: |
-          test "$BUILD" = success
-          test "$CONSUMERS" = success
-          test "$BROWSERS" = success
+      - run: npm run test:docs
+      - run: npm run build:docs
+      - run: npm run check:docs
+      - name: Build and check the docs under the kindui.dev mount
+        run: npm run build:docs && npm run check:docs
         env:
-          BUILD: ${{ needs.build.result }}
-          CONSUMERS: ${{ needs.consumers.result }}
-          BROWSERS: ${{ needs.browsers.result }}
+          NEXT_PUBLIC_DOCS_BASE_PATH: /docs/charts

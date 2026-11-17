@@ -1,13 +1,22 @@
-# Docs app working guide
+# Fumadocs
 
-Read repository AGENTS.md and CONTRIBUTING.md first. This application is independently installed, with its own pinned npm lockfile; do not turn it into a second chart package or change library APIs while writing docs.
+Follow the repo's `fumadocs` skill (`.agents/skills/fumadocs/SKILL.md`) for this app's page template, examples and API tables.
 
-Use public @kind-ui/charts exports and pinned peers in examples. The catalogs maintain 13 component families and 51 complete examples; Radial also covers ActivityRings. Keep selected options synchronized with Preview, Code, Copy prompt and agent retrieval. Generated files are outputs; edit source examples, MDX or public type aliases instead. Family changes own their catalog, preview bindings and checks; use the README ownership contract. Shared registration and the single guarded vendor pin/lockfiles belong to integration.
+This site is built with [Fumadocs](https://fumadocs.dev) on Next.js. The APIs and conventions of Fumadocs may differ from your training data, so check its docs for the task at hand:
 
-Read actual declarations before writing generated reference aliases. Clearly describe the explicit compound parts and distinguish supported props from unsupported native behavior. Materials are family-specific. Automatic paint emphasis is narrower than tooltip inspection. Glass stays paused.
+- Writing pages: https://fumadocs.dev/docs/next/markdown.md
+- Organizing pages and folders: https://fumadocs.dev/docs/next/page-conventions.md
+- Customizing the UI: https://fumadocs.dev/docs/next/guides/customize-ui.md
+- Changing the theme and colors: https://fumadocs.dev/docs/ui/theme.md
+- Upgrading Fumadocs: https://fumadocs.dev/docs/next/upgrade.md
+- Other tasks: https://fumadocs.dev/llms.txt lists every docs page.
 
-Keep the clean example-first Preview/Usage/Code flow, accessible navigation and restrained brand cues. Fumadocs supplies infrastructure; avoid a handwritten docs engine. Keep API/Markdown generation and syntax highlighting on the build/server side; lazy-load chart demos and search. Measure route behavior and transferred JS before claiming performance.
+<!-- BEGIN:nextjs-agent-rules -->
 
-Required docs checks: prepare validated artifact, app typecheck/build, copied consumers, contract/export checks and the local browser script. Use only reserved port 6373 (or explicitly assigned 6374–6379). Root aggregate browser fleets require coordination with other sessions. Report exact passed, failed and unrun checks.
+## This is NOT the Next.js you know
 
-The Sites checkout is generated static output from the pushed GitHub docs source, not another editable app. Only the selected deployment owner may register or deploy an authorized project and audience. Preserve its hosting identity and coordinate homepage integration with that owner. Publishing npm, merging main, changing audience, creating credentials or enabling releases requires explicit authorization.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

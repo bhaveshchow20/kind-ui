@@ -26,7 +26,8 @@ Use Node 22.12+ and npm 11.9. Use npm and the checked-in lockfile; do not add a 
 - Build/typecheck: `npm run typecheck`
 - Packed-package contract: `npm run check:package`
 - Component tests: `npm test`
-- Homepage: `npm run dev:showcase`; docs: `npm run dev:docs` (prepare their package and install dependencies as described in their READMEs)
+- Homepage: `npm run dev:showcase` (prepare its package and install dependencies as described in its README); docs: `npm run dev:docs`
+- Docs site: `npm run build:docs`, then `npm run test:docs` and `npm run check:docs`
 - Packed-consumer and browser checks: `npm run check:chart`
 - Browser prerequisite: `npm exec playwright install -- --with-deps chromium`
 - Required aggregate check: `npm run check`

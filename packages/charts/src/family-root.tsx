@@ -16,10 +16,19 @@ import { Legend, type LegendProps } from "./legend.js";
 import { cn } from "./utils.js";
 
 export type ChartName =
-  | { "aria-label": string; "aria-labelledby"?: string }
+  | {
+      /** The chart's accessible name. Pass this or `aria-labelledby`. */
+      "aria-label": string;
+      /** The id of an element that names the chart. Pass this or `aria-label`. */
+      "aria-labelledby"?: string;
+    }
   | { "aria-labelledby": string; "aria-label"?: string };
 export type FamilyFrameOptions = ChartVisibilityProps &
   Pick<ChartProviderProps, "interaction" | "emphasis" | "nonce"> & {
+    /**
+     * Places the legend and other HTML parts above or below the plot.
+     * @default "bottom"
+     */
     legendPosition?: "top" | "bottom";
     /** Attributes, handlers and ref for the outer HTML frame. Plot props remain on the chart. */
     frameProps?: Omit<

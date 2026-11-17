@@ -1,11 +1,10 @@
-export interface RegistryComposition {
-  exampleId: string;
+export interface RegistryItem {
   name: string;
   title: string;
   description: string;
+  source: string;
 }
-export const registryItems: RegistryComposition[];
-export function itemNameFor(exampleId: string): string;
+export const registryItems: RegistryItem[];
 export const coreVersion: string;
 export const registryHomepage: string;
 export const registryEndpoint: string;

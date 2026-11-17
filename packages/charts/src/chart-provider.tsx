@@ -25,8 +25,17 @@ import type { SeriesConfig } from "./types.js";
 import { cn } from "./utils.js";
 
 export type ChartProviderProps = ComponentPropsWithRef<"div"> & {
+  /**
+   * The label, color and value format of each series, keyed by its `dataKey` or `seriesKey`.
+   * @remarks `SeriesConfig`
+   */
   config: SeriesConfig;
+  /**
+   * Dims the other series while one is hovered or focused. `"none"` turns it off.
+   * @default "auto"
+   */
   emphasis?: "auto" | "none";
+  /** What pressing a legend item does: highlight a series (the default) or hide and show it. */
   interaction?: ChartInteractionConfig;
 } & ChartVisibilityProps;
 
