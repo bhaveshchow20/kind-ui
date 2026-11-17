@@ -44,6 +44,7 @@
     "check:types": "tsc -p tsconfig.tests.json && tsc -p tests/fixtures/primitives && npm run check:ai:types",
     "check:apps-tooling": "tsc -p apps/tsconfig.tools.json",
     "build:registry": "node scripts/build-registry.mjs",
+    "pack:site": "node scripts/pack-site.mjs",
     "check:registry": "npm run build:registry && node --test scripts/registry-contract.test.mjs",
     "check:registry-consumers": "node scripts/check-registry-consumers.mjs",
     "test:registry": "playwright test --config playwright.registry.config.mjs",

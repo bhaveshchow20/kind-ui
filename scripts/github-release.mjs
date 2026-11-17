@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,7 +37,7 @@ export function releaseEntry({
   };
 }
 
-export async function ensureGitHubRelease(entry, request) {
+export async function ensureGitHubRelease(entry, request, { assets = [], upload } = {}) {
   const tagPath = `git/ref/tags/${encodeURIComponent(entry.tag_name)}`;
   const releasePath = `releases/tags/${encodeURIComponent(entry.tag_name)}`;
   const existingTag = await request("GET", tagPath);
@@ -51,11 +52,30 @@ export async function ensureGitHubRelease(entry, request) {
     assert.equal(object.type, "commit", "Release tag must resolve to a commit");
     assert.equal(object.sha, entry.target_commitish, "Existing tag points to another commit");
   }
+  function assertRelease(release, fields) {
+    for (const field of fields)
+      assert.equal(release[field], entry[field], `Existing release differs: ${field}`);
+  }
+  async function attach(release) {
+    for (const { name, data } of assets) {
+      const existing = release.assets?.find((asset) => asset.name === name);
+      if (existing?.state === "uploaded") continue;
+      if (existing) await request("DELETE", `releases/assets/${existing.id}`);
+      await upload(release.upload_url, name, data);
+    }
+  }
   if (existingTag) await assertTag(existingTag);
   if (existingRelease) {
     assert.ok(existingTag, "Existing release has no matching tag");
-    for (const field of ["tag_name", "target_commitish", "name", "body", "draft", "prerelease"])
-      assert.equal(existingRelease[field], entry[field], `Existing release differs: ${field}`);
+    assertRelease(existingRelease, [
+      "tag_name",
+      "target_commitish",
+      "name",
+      "body",
+      "draft",
+      "prerelease",
+    ]);
+    await attach(existingRelease);
     return "already-released";
   }
   if (!existingTag) {
@@ -65,7 +85,19 @@ export async function ensureGitHubRelease(entry, request) {
     });
     await assertTag(await request("GET", tagPath));
   }
-  await request("POST", "releases", entry);
+  if (!assets.length) {
+    await request("POST", "releases", entry);
+    return "released";
+  }
+  // Assets go onto a draft first so the release is never published without them.
+  // Drafts are absent from the tag lookup, so a rerun finds an interrupted one by listing.
+  let draft = (await request("GET", "releases?per_page=100")).find(
+    (release) => release.draft === true && release.tag_name === entry.tag_name,
+  );
+  if (draft) assertRelease(draft, ["target_commitish", "name", "body", "prerelease"]);
+  else draft = await request("POST", "releases", { ...entry, draft: true });
+  await attach(draft);
+  await request("PATCH", `releases/${draft.id}`, { draft: false });
   return "released";
 }
 
@@ -99,7 +131,29 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     });
     if (method === "GET" && response.status === 404) return null;
     assert.ok(response.ok, `GitHub ${method} ${path} failed (${response.status})`);
-    return response.json();
+    return response.status === 204 ? null : response.json();
   };
-  console.log(await ensureGitHubRelease(entry, request));
+  const assets = [];
+  if (process.env.RELEASE_SITE === "true") {
+    const archive = `charts-site-${process.env.RELEASE_VERSION}.tar.gz`;
+    for (const name of [archive, `${archive}.sha256`])
+      assets.push({ name, data: await readFile(`artifacts/site/${name}`) });
+    const sha256 = createHash("sha256").update(assets[0].data).digest("hex");
+    assert.equal(assets[1].data.toString(), `${sha256}  ${archive}\n`, "Site checksum differs");
+  }
+  const upload = async (template, name, data) => {
+    const url = `${template.replace(/\{.*\}$/, "")}?name=${encodeURIComponent(name)}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/octet-stream",
+      },
+      body: data,
+    });
+    assert.ok(response.ok, `GitHub upload ${name} failed (${response.status})`);
+  };
+  console.log(await ensureGitHubRelease(entry, request, { assets, upload }));
 }
