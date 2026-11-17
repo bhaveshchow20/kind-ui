@@ -49,11 +49,7 @@ test("the sidebar lists every page, and every listed page exists", () => {
     }
   }
   const missing = [...listed].filter((path) => !existsSync(new URL(path, content)));
-  // Until every chart family, building block and guide is written, their pages may be missing.
-  assert.deepEqual(
-    missing.filter((path) => !/^(charts|building-blocks|guides)\//.test(path)),
-    [],
-  );
+  assert.deepEqual(missing, []);
   for (const page of pages) {
     const folder = page.slice(0, page.lastIndexOf("/") + 1);
     assert.ok(listed.has(page) || listed.has(folder), `${page} is not in a meta.json`);
@@ -86,10 +82,7 @@ test("examples are client components importing only the package, React and sibli
 
 test("every registry item ships an example its page shows", () => {
   for (const { name, source } of registryItems) {
-    const [, family] = source.match(/^apps\/docs\/examples\/([^/]+)\//) ?? [];
-    assert.ok(family, `${name}: ${source} is not a docs example`);
-    // Until every chart family is written, an item whose page is missing is skipped.
-    if (!charts.includes(family)) continue;
+    assert.match(source, /^apps\/docs\/examples\//, `${name}: ${source} is not a docs example`);
     const include = `<include cwd lang="tsx">./${source.slice("apps/docs/".length)}</include>`;
     assert.ok(
       pages.some((page) => read(new URL(page, content)).includes(include)),

@@ -95,8 +95,6 @@ async function check() {
     server.close();
   }
   for (const link of links) {
-    // Until every chart family, building block and guide is written, links to them stay unresolved `.mdx` paths.
-    if (link.endsWith(".mdx")) continue;
     const file = fileFor(link);
     if (!file || !existsSync(file)) errors.push(`${link}: 404`);
   }
