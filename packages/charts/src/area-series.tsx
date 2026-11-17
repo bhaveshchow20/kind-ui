@@ -15,15 +15,27 @@ export type AreaSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Area<DataPoint, Value>>,
   "isAnimationActive"
 > & {
-  /** Metadata/visibility key, required only for function or numeric data keys. */
+  /** The `config` key for this series. Required when `dataKey` is a function or a number. */
   seriesKey?: string;
-  /** Optional point paint; explicit native dot takes precedence. */
+  /**
+   * How each point is painted, when you show points. A `dot` you pass replaces it.
+   * @default "default"
+   */
   pointStyle?: PointStyle;
-  /** Independent active point paint; explicit native activeDot takes precedence. */
+  /**
+   * How the inspected point is painted. An `activeDot` you pass replaces it.
+   * @default "default"
+   */
   activePointStyle?: PointStyle;
-  /** Finish on the native area; explicit shape/filter retain consumer ownership. */
+  /**
+   * A finish for the area. A custom `shape` or `filter` replaces it.
+   * @default "plain"
+   */
   material?: AreaMaterial;
-  /** Static fill encoding; false opts out of configured patterns. Native paint/shape wins. */
+  /**
+   * Fills the area with a pattern instead of a flat color. Defaults to the `pattern` in `config`; `false` turns it off.
+   * A `fill` or `shape` you pass replaces it.
+   */
   pattern?: FillPattern | false | undefined;
 };
 

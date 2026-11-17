@@ -3,8 +3,8 @@ export const registryItems = [
   {
     name: "area-chart",
     title: "Area Chart",
-    description: "A single area with complete monthly visitor data.",
-    source: "apps/docs/examples/area/example.tsx",
+    description: "Monthly visitors as one filled area, with a tooltip and legend.",
+    source: "apps/docs/examples/area/basic.tsx",
   },
   {
     name: "bar-chart",
@@ -20,9 +20,9 @@ export const registryItems = [
   },
   {
     name: "combo-chart",
-    title: "Production and capacity",
-    description: "Shipped units, available capacity and a production target on one numeric scale.",
-    source: "apps/docs/examples/combo/example.tsx",
+    title: "Combo Chart",
+    description: "Shipped units as bars, with capacity as an area and a dashed target line.",
+    source: "apps/docs/examples/combo/basic.tsx",
   },
   {
     name: "heatmap-chart",

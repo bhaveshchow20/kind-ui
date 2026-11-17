@@ -1,0 +1,116 @@
+---
+title: Area Chart
+description: Show how a total changes over time, with filled areas you can stack.
+---
+
+import AreaExample from "../../../examples/area/basic";
+import AreaStackedExample from "../../../examples/area/stacked";
+
+Use an area chart to show how a measure changes across ordered categories, like months, when its size matters as much as its trend. Stack areas to show how parts add up to a total.
+
+<Example caption="Hover the area, or focus the chart and press the arrow keys, to see each month's value.">
+  <AreaExample />
+
+  <include cwd lang="tsx">./examples/area/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/area-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+AreaChart
+├── AreaChart.Background
+├── AreaChart.Grid
+├── AreaChart.XAxis
+├── AreaChart.YAxis
+├── AreaChart.Series
+├── AreaChart.Tooltip
+└── AreaChart.Legend
+```
+
+`AreaChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `AreaChart.Series` per area. The tooltip and legend read their labels and colors from `config`.
+
+## Usage
+
+### Series
+
+Each `AreaChart.Series` fills the `dataKey` it names, and takes its label and color from the matching `config` entry. Set `type` for the curve (`linear` by default, `monotone` for a smooth edge, `stepAfter` for steps) and `fillOpacity` to keep the grid visible through the fill.
+
+A `null` value leaves a gap in the area. Pass `connectNulls` to the series to fill across it instead.
+
+### Stacking
+
+Give series the same `stackId` to stack them, so the top edge shows the total:
+
+<Example caption="Press Desktop or Mobile in the legend to highlight that area.">
+  <AreaStackedExample />
+
+  <include cwd lang="tsx">./examples/area/stacked.tsx</include>
+</Example>
+
+Stacks keep their layout when a series is hidden, so the other areas don't jump. To show each part as a share of the total, set `stackOffset="expand"` on the chart and format the axis and tooltip with `createPercentStack`; see [Combo Chart](./combo.mdx#percentage-stacks).
+
+### Legend and Keyboard
+
+Pressing a legend item highlights its area and dims the others, and screen readers hear "Highlighted Desktop." Press it again, or press Escape, to clear it. To hide and show areas from the legend instead, see [Legend](../building-blocks/legend.mdx).
+
+Focus the chart and press the arrow keys to move between months, which shows the tooltip, and Escape to dismiss it.
+
+### Points, Patterns and Materials
+
+Areas have no points by default. Pass `dot` to show them, and `pointStyle="border"` or `"colored-border"` for outlined points; `activePointStyle` paints the point under the cursor. Set `pattern` to fill an area with hatching or dots instead of a flat color, which helps when colors alone are hard to tell apart:
+
+```tsx
+<AreaChart.Series dataKey="mobile" stackId="visitors" pattern={{ kind: "hatch" }} />
+```
+
+Set `material="clay"` or `"glow"` on a series for a finish; see [Materials](../guides/materials.mdx).
+
+### Motion
+
+Areas appear at once unless you set `animate`. Pass `true` to draw them in from left to right, or options to change the direction or the duration:
+
+```tsx
+<AreaChart animate={{ revealDirection: "center-out", revealDurationMs: 800 }} {...props}>
+```
+
+`revealDirection` is `left-to-right`, `right-to-left`, `center-out` or `edges-in`. When the reader prefers reduced motion, areas appear without drawing in. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder area that sweeps across the plot, or holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default). The legend and tooltip come back when `loading` turns off:
+
+```tsx
+<AreaChart loading={isPending} loadingLabel="Loading visitors" {...props}>
+```
+
+### Background
+
+Add `AreaChart.Background` for a decorative pattern behind the plot: `pinpoints`, `crossings` or `waves`. It adds nothing to the tooltip, legend or accessible name.
+
+```tsx
+<AreaChart.Background pattern="waves" opacity={0.15} />
+```
+
+## API Reference
+
+### AreaChart
+
+<auto-type-table path="../../../../../packages/charts/src/composition/area.tsx" name="AreaChartOptions" type='Pick<AreaChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
+
+### AreaChart.Series
+
+<auto-type-table path="../../../../../packages/charts/src/area-series.tsx" name="AreaSeriesOptions" type='Pick<AreaSeriesProps, "seriesKey" | "pointStyle" | "activePointStyle" | "pattern" | "material">' />
+
+<Caption>
+  `AreaChart` and `AreaChart.Series` also take every prop of Recharts' [AreaChart](https://recharts.github.io/en-US/api/AreaChart/) and [Area](https://recharts.github.io/en-US/api/Area/), like `margin`, `stackOffset`, `type`, `stackId` and `connectNulls`.
+</Caption>
