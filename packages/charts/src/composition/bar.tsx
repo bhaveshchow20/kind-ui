@@ -17,7 +17,11 @@ function BarPlot({ categoryComparison, ...props }: BarPlotProps) {
 }
 type BarEmphasis<Props> = Props extends unknown
   ? Omit<Props, "emphasis"> & {
-      /** Category comparisons retain the native safety checks for every visible series. */
+      /**
+       * Dims the other series while one is hovered or focused. `"category"` dims the other
+       * categories instead, while a bar is inspected. `"none"` turns it off.
+       * @default "auto"
+       */
       emphasis?: "auto" | "none" | "category";
     }
   : never;

@@ -10,8 +10,15 @@ export type HistogramChartProps = Omit<
   BarChartProps,
   "data" | "layout" | "stackOffset" | "barSize" | "barCategoryGap" | "barGap" | "reverseStackOrder"
 > & {
+  /**
+   * The intervals to draw, in order, each with `lower`, `upper` and `count`. Use
+   * `binHistogram` to make them.
+   */
   bins: readonly HistogramBin[];
-  /** Required: count height or normalized probability density (area sums to one). */
+  /**
+   * What the bar height shows: `"count"`, or `"density"` so each bar's area is its share of the
+   * total. Use density when bins differ in width.
+   */
   measure: HistogramMeasure;
 };
 export type HistogramXAxisProps = Omit<

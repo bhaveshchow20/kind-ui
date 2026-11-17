@@ -1,0 +1,102 @@
+---
+title: Box Plot
+description: Compare distributions with quartiles, whiskers and outliers.
+---
+
+import BoxPlotExample from "../../../examples/box-plot/basic";
+
+Use a box plot to compare how values are spread across a few groups, like response times per page, when the median and range matter more than each value.
+
+<Example caption="Hover a box, or focus the chart and press the arrow keys, to see its median.">
+  <BoxPlotExample />
+
+  <include cwd lang="tsx">./examples/box-plot/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/box-plot-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+BoxPlotChart
+├── BoxPlotChart.Background
+├── BoxPlotChart.Grid
+├── BoxPlotChart.XAxis
+├── BoxPlotChart.YAxis
+├── BoxPlotChart.Series
+├── BoxPlotChart.Tooltip
+└── BoxPlotChart.Legend
+```
+
+`BoxPlotChart` holds the data, the series config and the accessible name, and draws only the parts you add. `BoxPlotChart.Series` draws one box per row: the box spans `q1` to `q3`, the line across it marks the `median`, the whiskers reach `lowerWhisker` and `upperWhisker`, and each outlier is a circle. Its `seriesKey` picks the label and color in `config`.
+
+## Usage
+
+### Summaries
+
+The chart draws statistics you've already computed; it doesn't pick a quartile method or decide what counts as an outlier. Give each row a `BoxPlotSummary`, and point the series' `dataKey` at it, or pass a function that builds one from the row:
+
+```tsx
+<BoxPlotChart.Series<Row>
+  dataKey={(row) => ({ lowerWhisker: row.min, q1: row.p25, median: row.p50, q3: row.p75, upperWhisker: row.max })}
+  seriesKey="latency"
+/>
+```
+
+The values must be finite and in order, from `lowerWhisker` up to `upperWhisker`, and each outlier must lie outside the whiskers, or the chart throws. Equal values are fine: a summary where every value is the same draws a flat line. A `null` summary draws no box but keeps its category on the axis. Set the Y axis `domain` to include your outliers.
+
+`validateBoxPlotSummary` runs the same checks on a summary, and `boxPlotExtent` returns its lowest and highest values, outliers included.
+
+### Tooltip
+
+The default tooltip shows each box's full range. To show a statistic instead, pass a `formatter` that reads the summary from `entry.payload`, as the example does for the median, or pass your own `content` to show them all.
+
+### Horizontal Boxes
+
+Set `layout="vertical"` for horizontal boxes, with the number scale on the X axis and the categories on the Y axis:
+
+```tsx
+<BoxPlotChart layout="vertical" {...props}>
+  <BoxPlotChart.XAxis type="number" domain={[0, 180]} />
+  <BoxPlotChart.YAxis type="category" dataKey="page" width={80} />
+  <BoxPlotChart.Series<Row> dataKey="summary" seriesKey="latency" barSize={28} />
+</BoxPlotChart>
+```
+
+### Motion and Loading
+
+Set `animate` to reveal the boxes when the chart mounts. When the reader prefers reduced motion, boxes appear at once. See [Motion](../guides/motion.mdx).
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder, and screen readers hear `loadingLabel` ("Loading chart" by default):
+
+```tsx
+<BoxPlotChart loading={isPending} loadingLabel="Loading response times" {...props}>
+```
+
+Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx). To draw the boxes yourself, pass a `shape`; it gets the summary and its screen coordinates, and can render `BoxPlotChart.Mark`.
+
+## API Reference
+
+### BoxPlotChart
+
+<auto-type-table path="../../../../../packages/charts/src/composition/box-plot.tsx" name="BoxPlotChartOptions" type='Pick<BoxPlotChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
+
+### BoxPlotChart.Series
+
+<auto-type-table path="../../../../../packages/charts/src/box-plot.tsx" name="BoxPlotSeriesOptions" type='Pick<BoxPlotSeriesProps, "dataKey" | "seriesKey" | "material" | "outlierRadius" | "shape" | "markProps">' />
+
+### BoxPlotSummary
+
+<auto-type-table path="../../../../../packages/charts/src/box-plot.tsx" name="BoxPlotSummaryFields" type="BoxPlotSummary" />
+
+<Caption>
+  `BoxPlotChart` and `BoxPlotChart.Series` also take Recharts' [BarChart](https://recharts.github.io/en-US/api/BarChart/) and [Bar](https://recharts.github.io/en-US/api/Bar/) props, like `layout` and `barSize`. The series doesn't take `stackId`, `radius`, `minPointSize`, `background` or `activeBar`.
+</Caption>

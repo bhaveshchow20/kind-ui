@@ -24,9 +24,14 @@ export type WaterfallConnectorsProps = Omit<
   ComponentProps<typeof ReferenceLine>,
   "x" | "y" | "segment" | "children"
 > & {
+  /** The same rows you pass to the chart. */
   data: readonly WaterfallDatum[];
-  /** Match the WaterfallSeries metadata key and native hide state. */
+  /**
+   * The series' key, so the connectors hide with the bars.
+   * @default "range"
+   */
   seriesKey?: string;
+  /** Hides the connectors. Pass the same value as the series' `hide`. */
   hide?: boolean;
 };
 

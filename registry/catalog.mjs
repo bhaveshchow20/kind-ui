@@ -9,14 +9,14 @@ export const registryItems = [
   {
     name: "bar-chart",
     title: "Bar Chart",
-    description: "Weekly pickup orders across five locations with opt-in category emphasis.",
-    source: "apps/docs/examples/bar/example.tsx",
+    description: "Weekly orders across five locations, dimming the other bars on hover.",
+    source: "apps/docs/examples/bar/basic.tsx",
   },
   {
     name: "box-plot-chart",
-    title: "BoxPlot",
-    description: "Compare three caller-computed response time distributions, in milliseconds.",
-    source: "apps/docs/examples/box-plot/example.tsx",
+    title: "Box Plot",
+    description: "Response times for three pages, with quartiles, whiskers and outliers.",
+    source: "apps/docs/examples/box-plot/basic.tsx",
   },
   {
     name: "combo-chart",
@@ -33,8 +33,8 @@ export const registryItems = [
   {
     name: "histogram-chart",
     title: "Histogram",
-    description: "Counts across explicit equal-width response-time intervals.",
-    source: "apps/docs/examples/histogram/example.tsx",
+    description: "Response times counted into five 40 ms intervals.",
+    source: "apps/docs/examples/histogram/basic.tsx",
   },
   {
     name: "line-chart",
@@ -76,8 +76,8 @@ export const registryItems = [
   {
     name: "waterfall-chart",
     title: "Waterfall Chart",
-    description: "Cash rises from $120k to $180k before costs and tax leave $95k.",
-    source: "apps/docs/examples/waterfall/example.tsx",
+    description: "Cash moving from a $120k opening balance to a $95k close.",
+    source: "apps/docs/examples/waterfall/basic.tsx",
   },
   {
     name: "activity-rings",

@@ -1,0 +1,91 @@
+---
+title: Histogram
+description: Show how values are spread across numeric intervals.
+---
+
+import HistogramExample from "../../../examples/histogram/basic";
+
+Use a histogram to show the shape of a set of measurements, like response times, by counting how many fall into each interval.
+
+<Example caption="Hover a bar, or focus the chart and press the arrow keys, to see how many requests fall in that interval.">
+  <HistogramExample />
+
+  <include cwd lang="tsx">./examples/histogram/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/histogram-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+HistogramChart
+├── HistogramChart.Background
+├── HistogramChart.Grid
+├── HistogramChart.XAxis
+├── HistogramChart.YAxis
+├── HistogramChart.Series
+├── HistogramChart.Tooltip
+└── HistogramChart.Legend
+```
+
+`HistogramChart` holds the bins, the series config and the accessible name, and draws only the parts you add. It owns the scales: the X axis spans the first bin's `lower` to the last bin's `upper`, and the Y axis starts at zero. Add one `HistogramChart.Series`; its label and color come from the `count` entry in `config`.
+
+## Usage
+
+### Bins
+
+Pass `binHistogram` your raw values and the interval edges, in increasing order, and give its `bins` to the chart. Each bin includes its lower edge, and the last bin also includes its upper edge, so a value on an interior edge counts in the bin to its right:
+
+```tsx
+const { bins, missing, outOfRange } = binHistogram(responseTimes, [0, 40, 80, 120, 160, 200]);
+```
+
+`null` and `undefined` values count as `missing`, `NaN` and infinities as `nonfinite`, and values outside the edges as `outOfRange`; none of them get a bar. Edges that aren't finite and strictly increasing throw. You can also pass bins you've counted yourself, as `{ lower, upper, count }` objects. They may leave gaps but can't overlap.
+
+### Count and Density
+
+Set `measure="count"` to make each bar's height its count. When bins differ in width, set `measure="density"` instead: each bar's height becomes its share of the total per unit of width, so its area, not its height, is its share and wide bins don't look bigger than they are:
+
+```tsx
+const { bins } = binHistogram(responseTimes, [0, 25, 50, 100, 200]);
+
+<HistogramChart bins={bins} measure="density" {...props}>
+```
+
+### Axes
+
+`HistogramChart.XAxis` and `HistogramChart.YAxis` take Recharts' tick and label props, like `ticks`, `tickFormatter` and `label`. Their `dataKey`, `type`, `domain` and `scale` belong to the chart.
+
+### Motion and Loading
+
+Set `animate` to grow the bars from zero when the chart mounts. When the reader prefers reduced motion, bars appear without growing. See [Motion](../guides/motion.mdx).
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder, and screen readers hear `loadingLabel` ("Loading chart" by default):
+
+```tsx
+<HistogramChart loading={isPending} loadingLabel="Loading response times" {...props}>
+```
+
+Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx).
+
+## API Reference
+
+### HistogramChart
+
+<auto-type-table path="../../../../../packages/charts/src/composition/histogram.tsx" name="HistogramChartOptions" type='Pick<HistogramChartProps, "bins" | "measure" | "config" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "legendPosition" | "frameProps">' />
+
+### HistogramChart.Series
+
+<auto-type-table path="../../../../../packages/charts/src/histogram-series.tsx" name="HistogramSeriesOptions" type='Pick<HistogramSeriesProps, "seriesKey" | "material" | "shape">' />
+
+<Caption>
+  `HistogramChart` also takes Recharts' [BarChart](https://recharts.github.io/en-US/api/BarChart/) props like `margin`, but not `data`, `layout` or bar spacing, which come from the bins.
+</Caption>

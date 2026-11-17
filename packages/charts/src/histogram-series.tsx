@@ -33,10 +33,19 @@ export type HistogramSeriesProps = Omit<
   | "yAxisId"
   | "material"
   | "label"
+  | "seriesKey"
 > & {
-  /** Static finish on corrected native bin rectangles; custom paint retains ownership. */
+  /**
+   * The series' key in `config`, for its label, color and visibility.
+   * @default "count"
+   */
+  seriesKey?: string;
+  /**
+   * A finish for the bars: `"clay"` or `"glow"`. A custom `shape` or `filter` replaces it.
+   * @default "plain"
+   */
   material?: BarMaterial | undefined;
-  /** Native shape extension with corrected quantitative x/width and original bin. */
+  /** Draws each bar yourself. Gets the Recharts bar props, sized to the bin, and the `bin`. */
   shape?: ((props: HistogramShapeProps) => ReactElement) | undefined;
 };
 
