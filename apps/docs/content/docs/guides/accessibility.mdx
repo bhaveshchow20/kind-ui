@@ -1,0 +1,41 @@
+---
+title: Accessibility
+description: Name each chart, and know what keyboard and screen reader users get.
+---
+
+Charts handle focus, keyboard inspection, legend state and announcements for you. What they can't know is what the chart means, so its name, units and any data view beside it are up to you.
+
+## Name the Chart
+
+Every chart needs `aria-label` or `aria-labelledby`, and throws without one. Say what it shows and in what unit: "Revenue against target, in thousands of dollars" tells a screen reader user what "Monthly chart" doesn't. Put units in labels and `formatValue` too, so tooltips read "340 ms", not "340".
+
+## Keyboard
+
+| Part | Keys |
+| --- | --- |
+| [Legend](../building-blocks/legend.mdx) | Tab to an item; Enter or Space highlights it, or hides and shows it; Escape clears the highlight |
+| [Line](../charts/line.mdx) and the other cartesian charts, and [Pie](../charts/pie.mdx) | Focus the chart; arrow keys move between points and show the tooltip; Escape dismisses it |
+| [Heatmap](../charts/heatmap.mdx) | Arrow keys move between cells; Home and End jump to the ends; Escape dismisses the tooltip |
+| [Scatter](../charts/scatter.mdx), [Radar](../charts/radar.mdx), [Radial](../charts/radial.mdx), [Sankey](../charts/sankey.mdx) | See their chart pages for what the keyboard reaches |
+
+Line charts tell screen readers how to inspect them when they get focus. Keep the focus ring visible: don't remove outlines from charts or legend buttons in your CSS.
+
+## Announcements
+
+Screen readers hear legend changes as they happen: "Highlighted Revenue.", "Hidden Target.", "Shown Target." and "Highlight cleared.", and "At least one item must remain visible." when a press would hide the last series. While `loading` is set, they hear `loadingLabel` ("Loading chart" by default) instead of the chart's parts.
+
+## Color
+
+Don't let color be the only way to tell series apart. Name series in the legend, and add a second cue where colors are close: a dashed line, a `pattern` on bars and areas, or a `legendShape` that matches a scatter series' `shape`. Check each series' contrast against the background in light and dark; give a series `{ light, dark }` colors when one color can't serve both. See [Series Config](../building-blocks/series-config.mdx).
+
+## Data Views
+
+A tooltip shows one point at a time. When readers need every value, add a data view next to the chart: Heatmap has `HeatmapChart.DataTable` and Sankey has `SankeyChart.Table`, and for other charts a table or summary you render from the same data works. Leave it out when the chart's name and a short summary say enough.
+
+## Motion
+
+Charts follow `prefers-reduced-motion` on their own: entrances, hover motion, loading placeholders and rolling digits all hold still. See [Motion](./motion.mdx).
+
+## Check It
+
+Use the chart with the keyboard alone, at a narrow width, at 200% text size, in light and dark, and with reduced motion on. Then use it with the screen readers your readers use. Automated checks find missing names and contrast problems, but not whether the chart makes sense when heard.

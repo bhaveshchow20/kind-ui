@@ -16,11 +16,17 @@ export const legendButtonClassName =
   "inline-flex items-center gap-1.5 border border-solid border-[color:var(--border,currentColor)] rounded-[var(--radius,6px)] bg-[color:var(--muted,transparent)] text-inherit min-h-6 py-[3px] px-1.5 font-[family-name:inherit] text-[11px] leading-4 cursor-pointer data-[inactive=true]:text-[color:var(--muted-foreground,GrayText)] data-[inactive=true]:no-underline data-[inactive=true]:[&_[data-fill-pattern]]:opacity-50";
 
 export type LegendProps = Omit<ComponentPropsWithRef<"ul">, "children"> & {
-  /** Use the existing square color swatch instead of configured icons or symbols. */
+  /**
+   * Shows a color swatch for every item, ignoring each series' `icon`, `legendShape` and `pattern`.
+   * @default false
+   */
   hideIcon?: boolean;
-  /** Explicit series emphasis; visibility click behavior remains controlled by chart. */
+  /**
+   * Dims the other series while an item is hovered or focused. `"none"` turns it off; pressing an item still works.
+   * @default "series"
+   */
   emphasis?: "none" | "series";
-  /** Compose each item's noninteractive content; Kind retains list/button/state ownership. */
+  /** Renders each item's content inside its button. Keep it noninteractive; the legend owns the button and its state. */
   children?: (item: {
     key: string;
     label: string;

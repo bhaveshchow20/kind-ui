@@ -1,0 +1,57 @@
+---
+title: Motion
+description: Turn chart entrances on or off, and tune their timing and direction.
+---
+
+Charts animate with Motion. Set `animate` on a chart to reveal its marks when it mounts: `true` for the family's entrance, an options object to tune it, or `false` for a still chart. Line charts animate by default; every other family starts still until you set `animate`.
+
+```tsx
+<BarChart animate data={data} config={config} aria-label="Daily orders">
+```
+
+## Entrances
+
+Each family enters in its own way, and each chart page shows its own:
+
+| Chart | Entrance |
+| --- | --- |
+| Line, Area | Lines and areas draw in across the plot |
+| Bar, Histogram, Waterfall, Box Plot | Marks grow from the baseline |
+| Combo | Each line, area and bar series enters in its own way |
+| Pie, Radial | Slices and bars sweep around the circle |
+| Radar | Shapes grow out from the center |
+| Scatter | Points fade in where they are |
+| Heatmap | Cells fade in on a diagonal |
+| Sankey | Link paint flows along each link |
+
+Hovering or using the keyboard on a chart, or changing its data, finishes the entrance at once, so the reader never inspects a half-drawn mark. The entrance plays again when `loading` turns off. To replay it at other times, remount the chart with a new `key`.
+
+## Options
+
+Pass an object to `animate` to tune the entrance:
+
+```tsx
+<LineChart
+  animate={{ revealDurationMs: 600, revealEasing: "easeOut", revealDirection: "center-out" }}
+  {...props}
+>
+```
+
+- `revealDurationMs`: how long the entrance takes. 1000ms by default; Scatter uses 700ms and Sankey 450ms.
+- `revealEasing`: any Motion easing. Cartesian charts default to `[0.25, 0.1, 0.25, 1]`, the others to `"easeOut"`.
+- `revealDirection`: for Line, Area and Combo, where the reveal starts: `left-to-right` (the default), `right-to-left`, `center-out` or `edges-in`.
+- `hoverTransition`: the Motion transition marks use as they dim and brighten on hover. A spring by default.
+
+Pie and radial charts take `animationDirection="clockwise"` (the default) or `"anticlockwise"`. Combo charts take `lineReveal`, `areaReveal` and `barReveal` to tune each kind of series apart, or `false` to skip one. Sankey takes only `revealDurationMs`, and Heatmap only `true` or `false`. Each family's options are typed as its own animation type, like `LineAnimation` or `BarAnimation`.
+
+`animate={false}` also stops marks from moving as they dim and brighten. Two other motions are separate: a dashed line's `dashAnimation` on [Line](../charts/line.mdx), and the tooltip's `valueAnimation="shuffle"` on [Tooltip](../building-blocks/tooltip.mdx).
+
+## Loading
+
+While `loading` is set, the chart shows a placeholder in its own shape that fades from top to bottom, until the data arrives. It uses `revealDurationMs` and `revealEasing` from `animate` for its pace.
+
+## Reduced Motion
+
+When the reader prefers reduced motion, charts skip their entrances and show the final chart, marks stop moving on hover, loading placeholders hold still, and tooltip digits don't roll. Charts follow the preference live, so changing it mid-session takes effect at once. You don't need to do anything for it.
+
+Custom shapes, tooltip content and your own transitions are yours to animate, so give them a still version under `prefers-reduced-motion` too.
