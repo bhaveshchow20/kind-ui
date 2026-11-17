@@ -1,5 +1,13 @@
 # @kind-ui/charts
 
+## 0.5.1
+
+### Patch Changes
+
+- e4bc8de: Document chart props in TSDoc, with defaults, so editors and the docs' API tables describe each option.
+- 5fabf25: Reduce redundant chart presentation and Heatmap interaction work while preserving chart APIs, appearance and consumer Motion configuration.
+- b0f0ce1: Point the package homepage and README documentation links at the GitHub repository.
+
 ## 0.5.0
 
 ### Minor Changes
