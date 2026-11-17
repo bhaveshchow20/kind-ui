@@ -157,16 +157,18 @@ export type RadarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Radar<DataPoint, Value>>,
   "isAnimationActive"
 > & {
+  /** The series' `config` key. Defaults to `dataKey` when it's a string; required for a function `dataKey` with visibility. */
   seriesKey?: string;
-  /** Finish on native marks; custom renderers and consumer filters retain ownership. */
+  /** A `"clay"` or `"glow"` finish on the default marks. Custom shapes keep their own paint. */
   material?: PolarMaterial | undefined;
 };
 export type RadialBarSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof RadialBar<DataPoint, Value>>,
   "isAnimationActive"
 > & {
+  /** The series' `config` key. Defaults to `dataKey` when it's a string; required for a function `dataKey` with visibility. */
   seriesKey?: string;
-  /** Finish on native marks; custom renderers and consumer filters retain ownership. */
+  /** A `"clay"` or `"glow"` finish on the default marks. Custom shapes keep their own paint. */
   material?: PolarMaterial | undefined;
 };
 

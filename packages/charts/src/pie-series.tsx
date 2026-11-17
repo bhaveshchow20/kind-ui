@@ -47,13 +47,16 @@ export type PieSeriesProps<DataPoint = unknown, Value = unknown> = Omit<
   ComponentProps<typeof Pie<DataPoint, Value>>,
   "isAnimationActive"
 > & {
-  /** Category colors from chart config; requires explicit series data. */
+  /**
+   * The row field, or a function of the row, naming each sector's `config` entry. It sets the sector's
+   * color and links it to the legend and tooltip. Needs `data` on the series.
+   */
   categoryKey?: CategoryKey<DataPoint> | undefined;
-  /** Finish on default native sectors; custom shapes, filters and CSS transforms keep ownership. */
+  /** A `"clay"` or `"glow"` finish on the default sectors. Custom shapes keep their own paint. */
   material?: PieMaterial | undefined;
-  /** Categories receiving glow instead of material; requires categoryKey and explicit data. Unknown IDs are ignored. */
+  /** Category keys that glow, whatever `material` is. Needs `categoryKey`; unknown keys are ignored. */
   glowCategories?: readonly string[] | undefined;
-  /** Stable sector identity; defaults to the native nameKey value. */
+  /** The sector's identity for hover emphasis. Defaults to its `nameKey` value. */
   emphasisKey?: ((payload: unknown) => string | number | undefined) | undefined;
 };
 

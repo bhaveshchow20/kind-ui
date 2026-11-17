@@ -1,0 +1,103 @@
+---
+title: Pie Chart
+description: Show how a whole splits into parts with a pie or a donut.
+---
+
+import PieExample from "../../../examples/pie/basic";
+import PieDonutExample from "../../../examples/pie/donut";
+
+Use a pie chart to show a few parts of one total, like hours by team or budget by category. Keep it to a handful of slices; for more, or to compare totals, use a [bar chart](./bar.mdx).
+
+<Example caption="Hover a slice, or focus the chart and press the arrow keys, to see its hours.">
+  <PieExample />
+
+  <include cwd lang="tsx">./examples/pie/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/pie-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+PieChart
+├── PieChart.Series
+│   ├── PieChart.Cell
+│   └── PieChart.Labels
+├── PieChart.Tooltip
+├── PieChart.Legend
+└── PieChart.Content
+```
+
+`PieChart` holds the series config and the accessible name, and draws only the parts you add. `PieChart.Series` draws one sector per row. `PieChart.Labels` writes a row field on each sector, and `PieChart.Cell` paints one sector by hand. `PieChart.Content` places your own HTML next to the legend.
+
+## Usage
+
+### Categories
+
+Each row is a category. Set `categoryKey` on the series to the field holding the category's `config` key: the sector takes its color from there, and the tooltip and legend use its label. `dataKey` is the value that sizes the sector, and `nameKey` is what the tooltip reads, so point it at the same field. Give `PieChart.Tooltip` an `itemKey` that returns the same key.
+
+List every category in `interaction.eligibleKeys`, including any with a value of `0`, so the legend can reach them.
+
+### Donut and Rounded Sectors
+
+Set `innerRadius` for a donut. `cornerRadius` rounds the sector ends, and `paddingAngle` adds a gap in degrees between sectors. Keep the total padding well under the full circle; very thin sectors lose their rounding.
+
+<Example caption="Press a team in the legend to hide its slice. The other slices stay where they are.">
+  <PieDonutExample />
+
+  <include cwd lang="tsx">./examples/pie/donut.tsx</include>
+</Example>
+
+### Legend and Keyboard
+
+By default, pressing a legend item highlights its slice and dims the others, and screen readers hear "Highlighted Design." Press it again, or press Escape, to clear it. Pressing a slice does the same.
+
+With `interaction={{ kind: "category", mode: "visibility", ... }}` and `defaultVisibleSeries`, the legend hides and shows slices instead, and screen readers hear "Hidden Design." A hidden slice keeps its angle, so the others don't move, and the last visible slice can't be hidden. Pass `visibleSeries` and `onVisibleSeriesChange` to control it yourself. See [Legend](../building-blocks/legend.mdx).
+
+Focus the chart and press the arrow keys to move between slices, which shows the tooltip, and Escape to dismiss it.
+
+### Open Tooltip
+
+Set `defaultPinnedCategory` to open one category's tooltip on mount, like the largest share. It follows that category if the rows reorder, and closes for good as soon as the reader hovers, focuses or presses a key:
+
+```tsx
+<PieChart defaultPinnedCategory="design" {...props}>
+```
+
+### Materials
+
+Set `material="clay"` or `"glow"` on the series for a finish on every sector, or `glowCategories={["design"]}` to make only some of them glow. See [Materials](../guides/materials.mdx).
+
+### Motion
+
+With `animate`, the sectors sweep in when the chart mounts. Set `animationDirection="anticlockwise"` to reverse the sweep, and pass `animate={{ revealDurationMs: 800 }}` to change its length. When the reader prefers reduced motion, the sectors appear without sweeping in. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder pie that sweeps around the circle, or holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default):
+
+```tsx
+<PieChart loading={isPending} loadingLabel="Loading allocation" {...props}>
+```
+
+## API Reference
+
+### PieChart
+
+<auto-type-table path="../../../../../packages/charts/src/composition/pie.tsx" name="PieChartOptions" type='Pick<PieChartProps, "config" | "aria-label" | "aria-labelledby" | "animate" | "animationDirection" | "defaultPinnedCategory" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
+
+### PieChart.Series
+
+<auto-type-table path="../../../../../packages/charts/src/pie-series.tsx" name="PieSeriesOptions" type='Pick<PieSeriesProps, "categoryKey" | "material" | "glowCategories" | "emphasisKey">' />
+
+<Caption>
+  `PieChart` and `PieChart.Series` also take every prop of Recharts' [PieChart](https://recharts.github.io/en-US/api/PieChart/) and [Pie](https://recharts.github.io/en-US/api/Pie/), like `height`, `innerRadius` and `paddingAngle`.
+</Caption>
