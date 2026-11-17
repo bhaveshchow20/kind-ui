@@ -21,10 +21,10 @@ Set `material` on the part that draws the marks:
 
 | Chart | Part |
 | --- | --- |
-| [Line](../charts/line.mdx), [Area](../charts/area.mdx), [Bar](../charts/bar.mdx), [Histogram](../charts/histogram.mdx), [Waterfall](../charts/waterfall.mdx), [Box Plot](../charts/box-plot.mdx), [Scatter](../charts/scatter.mdx) | `.Series` |
-| [Pie](../charts/pie.mdx), [Radar](../charts/radar.mdx), [Radial](../charts/radial.mdx) | `.Series` |
-| [Heatmap](../charts/heatmap.mdx) | `HeatmapChart.Grid` |
-| [Sankey](../charts/sankey.mdx) | `finish` on `SankeyChart.Node` and `SankeyChart.Link` |
+| [Line](../components/line.mdx), [Area](../components/area.mdx), [Bar](../components/bar.mdx), [Histogram](../components/histogram.mdx), [Waterfall](../components/waterfall.mdx), [Box Plot](../components/box-plot.mdx), [Scatter](../components/scatter.mdx) | `.Series` |
+| [Pie](../components/pie.mdx), [Radar](../components/radar.mdx), [Radial](../components/radial.mdx) | `.Series` |
+| [Heatmap](../components/heatmap.mdx) | `HeatmapChart.Grid` |
+| [Sankey](../components/sankey.mdx) | `finish` on `SankeyChart.Node` and `SankeyChart.Link` |
 
 Combo charts take it on each of their line, area and bar series. Sankey uses `finish` because its links already have a `material` for their paint: `"solid"` or `"gradient"`.
 

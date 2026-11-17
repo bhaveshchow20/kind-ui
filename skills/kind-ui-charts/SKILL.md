@@ -33,7 +33,7 @@ the family table to route other chart requests.
 ## Retrieve a family contract when needed
 
 For each family or option, retrieve the page's built Markdown from the docs site at
-`llms.mdx/docs/charts/<family>.md` (shared parts at `llms.mdx/docs/building-blocks/<part>.md`).
+`llms.mdx/docs/components/<family>.md` (shared parts at `llms.mdx/docs/building-blocks/<part>.md`).
 It includes the example source and API tables that the
 [documentation source](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs)
 pulls in at build time. [Get Started](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/index.mdx) covers

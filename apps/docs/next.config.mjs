@@ -6,7 +6,7 @@ const withMDX = createMDX();
 const config = {
   output: "export",
   basePath: process.env.NEXT_PUBLIC_DOCS_BASE_PATH ?? "",
-  // Writes `docs/charts/line/index.html`, not `docs/charts/line.html`, so a plain static host serves each page at
+  // Writes `docs/components/line/index.html`, not `docs/components/line.html`, so a plain static host serves each page at
   // the path it was rendered for; otherwise the client's pathname matches no page and hydration fails.
   trailingSlash: true,
   reactStrictMode: true,

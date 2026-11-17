@@ -33,8 +33,8 @@ import { LineChart } from "@kind-ui/charts";
 </LineChart>
 ```
 
-See the [Line examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/line.mdx) and
-[Combo examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/combo.mdx). Match
+See the [Line examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/line.mdx) and
+[Combo examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/combo.mdx). Match
 `seriesKey` to config for function/numeric `dataKey`. Axis IDs must match their
 series. Preserve zero; use null for missing observations. Use
 `connectNulls={false}` when gaps carry meaning. Keep business aggregation and
@@ -44,7 +44,7 @@ percentage denominators explicit.
 
 HeatmapChart uses explicit rows, columns, data and a quantitative scale; pass
 `config={{}}` and compose Grid, Legend, Tooltip and optional DataTable parts.
-See the [Heatmap examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/heatmap.mdx).
+See the [Heatmap examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/heatmap.mdx).
 SankeyChart requires flow data and node-ID `config`; add Nodes and Links explicitly.
 Custom render callbacks receive native geometry. Validate flows with
 `prepareSankeyData`, including zero-valued links: intermediate incoming/outgoing

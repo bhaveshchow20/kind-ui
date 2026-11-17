@@ -7,13 +7,13 @@ const docs = new URL("../apps/docs/", import.meta.url);
 const content = new URL("content/docs/", docs);
 const read = (url) => readFileSync(url, "utf8");
 const pages = readdirSync(content, { recursive: true }).filter((file) => file.endsWith(".mdx"));
-const charts = readdirSync(new URL("charts/", content))
+const charts = readdirSync(new URL("components/", content))
   .filter((file) => file.endsWith(".mdx"))
   .map((file) => file.slice(0, -".mdx".length));
 
 for (const chart of charts) {
   test(`${chart} has a chart page with every section`, () => {
-    const source = read(new URL(`charts/${chart}.mdx`, content));
+    const source = read(new URL(`components/${chart}.mdx`, content));
     assert.match(source, /^---\ntitle: .+\ndescription: .+\n---\n/);
     assert.match(source, /<Example caption=".+">/);
     assert.ok(source.includes("\n## Installation\n"));
@@ -27,7 +27,7 @@ for (const chart of charts) {
 
 test("chart props tables are narrowed to the options Charts adds", () => {
   for (const chart of charts) {
-    const source = read(new URL(`charts/${chart}.mdx`, content));
+    const source = read(new URL(`components/${chart}.mdx`, content));
     for (const [table] of source.matchAll(/<auto-type-table [^>]*\/>/g)) {
       if (table.includes("ChartProps"))
         assert.ok(table.includes("type='Pick<"), `${chart}: ${table}`);

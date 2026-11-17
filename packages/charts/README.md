@@ -7,7 +7,7 @@ and optional animation. Compose a chart from styled family parts, then customize
 
 [Website](https://github.com/kind-ui/charts) ·
 [Documentation](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs) ·
-[Examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/line.mdx) ·
+[Examples](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/line.mdx) ·
 [GitHub](https://github.com/kind-ui/charts)
 
 ## Chart types
@@ -121,7 +121,7 @@ export function TasksChart() {
 }
 ```
 
-Use the [Line guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/charts/line.mdx)
+Use the [Line guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/line.mdx)
 for composition and customization. The documentation covers chart selection,
 peer requirements, styling, motion and accessibility; applications own their
 data, domains and business state.
