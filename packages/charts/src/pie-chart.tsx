@@ -22,12 +22,28 @@ import { PieTooltipPin, pinnedPieIndex } from "./pie-tooltip-pin.js";
 
 export type PieAnimation = BaseAnimation;
 export type PieChartProps = ComponentProps<typeof EnginePieChart> & {
-  /** Initial tooltip category; one direct categoryKey PieSeries with explicit data only. */
+  /**
+   * The category whose tooltip is open on mount, until the reader hovers, focuses or presses a key.
+   * Needs one `PieChart.Series` with `categoryKey` and `data`, and one `PieChart.Tooltip` with `itemKey`.
+   */
   defaultPinnedCategory?: string | undefined;
+  /**
+   * Sweeps the sectors in on mount. Pass options to change the duration or easing.
+   * Reduced motion skips it.
+   * @default false
+   */
   animate?: boolean | PieAnimation | undefined;
+  /** Shows a placeholder plot and hides the legend and tooltip while the data is on its way. */
   loading?: boolean | undefined;
+  /**
+   * What screen readers hear while `loading` is on.
+   * @default "Loading chart"
+   */
   loadingLabel?: string | undefined;
-  /** Entrance sweep only; native start/end angles and data order are unchanged. */
+  /**
+   * Which way the entrance sweeps. The sector angles and data order don't change.
+   * @default "clockwise"
+   */
   animationDirection?: "clockwise" | "anticlockwise" | undefined;
 };
 export const PieMotion = createContext<{

@@ -1,0 +1,133 @@
+---
+title: Radial Chart
+description: Show progress toward a goal with rings, gauges and activity rings.
+---
+
+import RadialExample from "../../../examples/radial/basic";
+import RadialGaugeExample from "../../../examples/radial/gauge";
+import ActivityRingsExample from "../../../examples/radial/activity";
+
+Use a radial chart to show how far a few measures are toward a goal, like project stages or storage used. Each bar is an arc, and a full circle (or half, for a gauge) is the goal.
+
+<Example caption="Hover a ring, or focus the chart and press the arrow keys, to see its value.">
+  <RadialExample />
+
+  <include cwd lang="tsx">./examples/radial/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/radial-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+RadialBarChart
+├── RadialBarChart.Grid
+├── RadialBarChart.AngleAxis
+├── RadialBarChart.RadiusAxis
+├── RadialBarChart.Series
+│   ├── RadialBarChart.Cell
+│   └── RadialBarChart.Labels
+│       └── RadialBarChart.Label
+├── RadialBarChart.Tooltip
+├── RadialBarChart.Legend
+└── RadialBarChart.Content
+```
+
+`RadialBarChart` holds the data, the series config and the accessible name, and draws only the parts you add. `RadialBarChart.AngleAxis` sets the scale around the circle, and `RadialBarChart.RadiusAxis` gives each row its own ring. `RadialBarChart.Series` draws the arcs. `RadialBarChart.Labels` writes a row field on each arc, and `RadialBarChart.Label` fits that text along it.
+
+## Usage
+
+### Scale and Rings
+
+Give `RadialBarChart.AngleAxis` a fixed `domain`, like `[0, 100]`, so a full circle always means the same thing, and `tick={false}` to hide its numbers. Each row gets its own ring when `RadialBarChart.RadiusAxis` has `type="category"` and the row field as its `dataKey`. `innerRadius` and `outerRadius` set where the rings sit, and `barCategoryGap` the space between them.
+
+Set `categoryKey` on the chart to the field holding each row's `config` key, so each ring takes its own color and the tooltip its label. Pass `background` to the series for a pale track behind each arc, and `cornerRadius` to round the ends. Set the `--kind-ui-radial-track` CSS variable to change the track color, like for a dark theme.
+
+`startAngle` and `endAngle` set where the circle starts and which way it runs. The example starts at the top (`90`) and runs clockwise to `-270`.
+
+### Labels
+
+Put `RadialBarChart.Label` in `RadialBarChart.Labels` as its `content` to write text along each arc. It shrinks the text to fit the ring, down to `minFontSize`, and hides it if it still doesn't fit. Set `show={false}` to hide it; the tooltip still has the value.
+
+### Gauge
+
+For a half-circle gauge, set `startAngle={180}` and `endAngle={0}`, and move the center down with `cy` so the arc fills the space:
+
+<Example caption="Hover the arc to see how much storage is used.">
+  <RadialGaugeExample />
+
+  <include cwd lang="tsx">./examples/radial/gauge.tsx</include>
+</Example>
+
+### Stacked Arcs
+
+Series with the same `stackId` share one ring, end to end, like committed and reserved hours out of a total:
+
+```tsx
+<RadialBarChart.Series dataKey="committed" stackId="capacity" background />
+<RadialBarChart.Series dataKey="reserved" stackId="capacity" />
+```
+
+### Activity Rings
+
+`ActivityRings` draws progress rings from a list of goals, without axes to set up. Each ring has a `key` in `config`, a `value`, and the `domain` its full circle stands for, so each one can have its own goal. Rings run from the inside out in list order.
+
+<Example caption="Press a ring in the legend to highlight it. Hover a ring to see its value.">
+  <ActivityRingsExample />
+
+  <include cwd lang="tsx">./examples/radial/activity.tsx</include>
+</Example>
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/activity-rings
+```
+
+A value past its goal fills the ring and stops; the tooltip still shows the real value, formatted by `config`. Screen readers hear every ring's label and value when the chart gets focus. `ActivityRings.Series` draws the tracks and arcs, and takes `RadialBarChart.Series` props like `cornerRadius`. Add `ActivityRings.Labels` inside it to write each ring's label along its arc.
+
+### Legend and Keyboard
+
+Pressing a legend item highlights its ring and dims the others, and screen readers hear "Highlighted Move." Press it again, or press Escape, to clear it. To hide and show rings from the legend instead, see [Legend](../building-blocks/legend.mdx).
+
+Focus the chart and press the arrow keys to move between rings, which shows the tooltip, and Escape to dismiss it.
+
+### Materials
+
+Set `material="clay"` or `"glow"` on a series for a finish. See [Materials](../guides/materials.mdx).
+
+### Motion
+
+With `animate`, the arcs sweep in when the chart mounts. Set `animationDirection="anticlockwise"` to reverse the sweep, and pass `animate={{ revealDurationMs: 1200 }}` to change its length. When the reader prefers reduced motion, the arcs appear without sweeping in. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows placeholder rings that sweep around the circle, or hold still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default). `ActivityRings` takes the same props.
+
+## API Reference
+
+### RadialBarChart
+
+<auto-type-table path="../../../../../packages/charts/src/composition/radial-bar.tsx" name="RadialBarChartOptions" type='Pick<RadialBarChartProps, "config" | "aria-label" | "aria-labelledby" | "categoryKey" | "animate" | "animationDirection" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
+
+### RadialBarChart.Series
+
+<auto-type-table path="../../../../../packages/charts/src/polar-series.tsx" name="RadialBarSeriesOptions" type='Pick<RadialBarSeriesProps, "seriesKey" | "material">' />
+
+### RadialBarChart.Label
+
+<auto-type-table path="../../../../../packages/charts/src/radial-bar-label.tsx" name="RadialBarLabelOptions" type='Pick<RadialBarLabelProps, "show" | "fontSize" | "minFontSize" | "padding">' />
+
+### ActivityRings
+
+<auto-type-table path="../../../../../packages/charts/src/activity-rings.tsx" name="ActivityRingsOptions" type='Pick<ActivityRingsProps, "rings" | "domain" | "config" | "aria-label" | "aria-labelledby" | "animate" | "animationDirection" | "loading" | "loadingLabel" | "interaction" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
+
+<Caption>
+  `RadialBarChart` and `RadialBarChart.Series` also take every prop of Recharts' [RadialBarChart](https://recharts.github.io/en-US/api/RadialBarChart/) and [RadialBar](https://recharts.github.io/en-US/api/RadialBar/), like `innerRadius`, `startAngle` and `stackId`.
+</Caption>

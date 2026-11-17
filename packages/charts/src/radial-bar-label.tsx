@@ -19,12 +19,25 @@ export type RadialBarLabelProps = Omit<
   | "dy"
   | "transform"
 > & {
-  /** Independently controls this visual label, without affecting payload or tooltip state. */
+  /**
+   * Shows the label. Hiding it leaves the tooltip as it is.
+   * @default true
+   */
   show?: boolean;
-  /** Numeric SVG pixels; reduced to fit the native ring band, never below minFontSize. */
+  /**
+   * Text size in pixels, shrunk to fit the ring, but never below `minFontSize`.
+   * @default 11
+   */
   fontSize?: number;
+  /**
+   * The smallest size to shrink to. Text that still doesn't fit is hidden.
+   * @default 9
+   */
   minFontSize?: number;
-  /** Space reserved at the arc endpoints and both edges of the band. */
+  /**
+   * Space in pixels at the arc's ends and edges.
+   * @default 2
+   */
   padding?: number;
   ref?: Ref<SVGTextElement>;
   labelRef?: Ref<SVGTextElement>;

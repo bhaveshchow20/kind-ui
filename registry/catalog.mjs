@@ -44,22 +44,22 @@ export const registryItems = [
   },
   {
     name: "pie-chart",
-    title: "Pie and Donut",
+    title: "Pie Chart",
     description:
-      "A complete 1,000-hour team allocation with category labels and percentage labels.",
-    source: "apps/docs/examples/pie/example.tsx",
+      "A team's hours split across four areas, with share labels, a tooltip and a legend.",
+    source: "apps/docs/examples/pie/basic.tsx",
   },
   {
     name: "radar-chart",
     title: "Radar Chart",
-    description: "Six comparable research dimensions for two products on a fixed 0–100 scale.",
-    source: "apps/docs/examples/radar/example.tsx",
+    description: "Two products scored on six traits out of 100, with a tooltip and a legend.",
+    source: "apps/docs/examples/radar/basic.tsx",
   },
   {
     name: "radial-chart",
     title: "Radial Chart",
-    description: "Three project stages share an explicit 0–100 percent scale.",
-    source: "apps/docs/examples/radial/example.tsx",
+    description: "Three project stages as rings out of 100%, with labels along each arc.",
+    source: "apps/docs/examples/radial/basic.tsx",
   },
   {
     name: "sankey-chart",
@@ -81,10 +81,9 @@ export const registryItems = [
   },
   {
     name: "activity-rings",
-    title: "Activity rings",
-    description:
-      "Three original values use their own domains; tracks, tooltip and static legend come from ActivityRings.",
-    source: "apps/docs/examples/radial-activity/example.tsx",
+    title: "Activity Rings",
+    description: "Move, exercise and stand goals as three rings, each against its own target.",
+    source: "apps/docs/examples/radial/activity.tsx",
   },
 ];
 

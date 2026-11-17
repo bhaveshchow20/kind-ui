@@ -13,6 +13,7 @@
   --muted-foreground: var(--color-fd-muted-foreground);
   --popover: var(--color-fd-popover);
   --popover-foreground: var(--color-fd-popover-foreground);
+  --kind-ui-radial-track: color-mix(in oklab, var(--color-fd-foreground) 10%, transparent);
 }
 
 html {
