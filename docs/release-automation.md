@@ -81,7 +81,7 @@ After the publisher succeeds, including anonymous npm integrity verification,
 the separate `github-release` job creates `@kind-ui/charts@<version>` at the
 exact validated source commit. Its release notes use that version's changelog
 section and record the archive filename, SHA-256 and npm integrity. It uploads
-no archive and uses only the existing GitHub workflow token.
+no npm archive and uses only the existing GitHub workflow token.
 
 A rerun accepts an existing tag only when it resolves to the exact source
 commit, and an existing release only when its version, commit, notes and
@@ -97,6 +97,21 @@ sees the already-published npm version, sets publication to false, and skips the
 GitHub release job. A later workflow dispatch cannot backfill a missing release.
 If the original job can no longer be retried, stop for a separately reviewed
 recovery; do not weaken release intent or publish another package version.
+
+## Site handoff
+
+kindui.dev serves the Charts docs and registry from a release asset. Only when
+the repository variable `KINDUI_HOSTING` is `true`, the `github-release` job
+installs dependencies, runs `npm run build:docs` (base path `/docs/charts`),
+`npm run build:registry` and `node scripts/pack-site.mjs`, which packs
+`apps/docs/out` as `docs/` and `artifacts/registry/r` as `r/` into
+`artifacts/site/charts-site-<version>.tar.gz` with a `.sha256` file, and fails
+naming any missing input. `scripts/github-release.mjs` checks that checksum,
+creates the release as a draft, uploads both files and only then publishes it,
+so a release never lacks them while hosting is on. A rerun finishes a leftover
+draft with matching metadata, replaces incomplete uploads, and attaches missing
+assets to an existing release. With the variable unset, the job and release are
+unchanged. This setup does not set the variable.
 
 ## Approved identity and activation
 
