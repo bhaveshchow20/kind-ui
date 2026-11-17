@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "fumadocs": {
+      "type": "http",
+      "url": "https://www.fumadocs.dev/api/mcp"
+    }
+  }
+}

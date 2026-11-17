@@ -1,95 +1,57 @@
 ---
 title: Motion
-description: Enable chart entrances and adjust their timing.
+description: Turn chart entrances on or off, and tune their timing and direction.
 ---
 
-Set `animate` on the chart to reveal its marks when it appears. Line charts animate by default; other families require `animate` to enable animation.
-
-## Enable an entrance
-
-Use `true` for the family defaults or `false` for a still chart.
+Charts animate with Motion. Set `animate` on a chart to reveal its marks when it mounts: `true` for the family's entrance, an options object to tune it, or `false` for a still chart. Line charts animate by default; every other family starts still until you set `animate`.
 
 ```tsx
-import { LineChart } from "@kind-ui/charts";
-
-<LineChart data={data} config={config} animate aria-label="Monthly visitors">
-  <LineChart.XAxis dataKey="month" />
-  <LineChart.Series dataKey="visitors" />
-  <LineChart.Tooltip />
-</LineChart>
+<BarChart animate data={data} config={config} aria-label="Daily orders">
 ```
 
-Keep your explicit parts inside the same chart. See [Chart frame](/docs/chart-components/chart/) for sizing and shared controls.
+## Entrances
 
-## Family defaults
+Each family enters in its own way, and each chart page shows its own:
 
-Entrances reveal the final chart geometry. Data changes finish the current
-entrance; they do not interpolate between datasets. Remount a chart to replay
-its entrance intentionally.
-
-| Family | Enabled by default | Entrance |
-| --- | --- | --- |
-| [Line](/docs/components/line/) | Yes | Line reveal across the plot |
-| [Area](/docs/components/area/) | No | Area reveal across the plot |
-| [Bar](/docs/components/bar/) | No | Bars reveal from zero, clamped to the numeric domain |
-| [Histogram](/docs/components/histogram/) | No | Bar reveal |
-| [Waterfall](/docs/components/waterfall/) | No | Range-bar reveal |
-| [Box Plot](/docs/components/box-plot/) | No | Reveal of the composed statistical marks |
-| [Combo](/docs/components/combo/) | No | Line, Area, and Bar reveals |
-| [Pie](/docs/components/pie/) | No | Angular sector reveal |
-| [Radar](/docs/components/radar/) | No | Polygon reveal from the center |
-| [Radial and ActivityRings](/docs/components/radial/) | No | Directional sector reveal |
-| [Scatter](/docs/components/scatter/) | No | Marks fade in place |
-| [Sankey](/docs/components/sankey/) | No | Kind link paint flows along fixed paths |
-| [Heatmap](/docs/components/heatmap/) | No | Diagonal cell fade |
-
-## Option objects
-
-Tune entrance duration in milliseconds and inspection transitions in seconds.
-
-```tsx
-import { type LineAnimation, LineChart } from "@kind-ui/charts";
-
-const animation = {
-  revealDurationMs: 600,
-  revealEasing: "easeOut",
-  hoverTransition: { type: "tween", duration: 0.12 },
-} satisfies LineAnimation;
-
-<LineChart data={data} config={config} animate={animation} aria-label="Monthly visitors">
-  <LineChart.XAxis dataKey="month" />
-  <LineChart.Series dataKey="visitors" />
-</LineChart>
-```
-
-Line, Area, Bar, Pie, Radar, Radial, and Scatter accept these fields through
-their family animation types. Histogram, Waterfall, and Box Plot use
-`BarAnimation`.
-
-| Option | Default |
+| Chart | Entrance |
 | --- | --- |
-| `revealDurationMs` | 1000; Scatter uses 700; Sankey uses 450 |
-| `revealEasing` | Cartesian: `[0.25, 0.1, 0.25, 1]`; polar and Scatter: `"easeOut"` |
-| `hoverTransition` | Spring with stiffness 210, damping 28, and mass 0.8 |
+| Line, Area | Lines and areas draw in across the plot |
+| Bar, Histogram, Waterfall, Box Plot | Marks grow from the baseline |
+| Combo | Each line, area and bar series enters in its own way |
+| Pie, Radial | Slices and bars sweep around the circle |
+| Radar | Shapes grow out from the center |
+| Scatter | Points fade in where they are |
+| Heatmap | Cells fade in on a diagonal |
+| Sankey | Link paint flows along each link |
 
-Combo accepts `lineReveal`, `areaReveal`, and `barReveal` overrides. Set an override
-to `false` to skip that family's entrance. Sankey accepts only
-`revealDurationMs`; Heatmap accepts only a boolean.
+Hovering or using the keyboard on a chart, or changing its data, finishes the entrance at once, so the reader never inspects a half-drawn mark. The entrance plays again when `loading` turns off. To replay it at other times, remount the chart with a new `key`.
 
-Pie and Radial support `animationDirection="clockwise"` or `"anticlockwise"`.
-This changes the entrance direction without changing the final angles.
+## Options
 
-## Reduced motion
+Pass an object to `animate` to tune the entrance:
 
-Kind respects live `prefers-reduced-motion` changes. Entrances show final
-geometry and inspection movement stops when reduced motion is requested.
+```tsx
+<LineChart
+  animate={{ revealDurationMs: 600, revealEasing: "easeOut", revealDirection: "center-out" }}
+  {...props}
+>
+```
 
-`animate={false}` also disables Kind inspection movement. Tooltip digit shuffle
-is separate: omit `valueAnimation="shuffle"` when you want still values.
+- `revealDurationMs`: how long the entrance takes. 1000ms by default; Scatter uses 700ms and Sankey 450ms.
+- `revealEasing`: any Motion easing. Cartesian charts default to `[0.25, 0.1, 0.25, 1]`, the others to `"easeOut"`.
+- `revealDirection`: for Line, Area and Combo, where the reveal starts: `left-to-right` (the default), `right-to-left`, `center-out` or `edges-in`.
+- `hoverTransition`: the Motion transition marks use as they dim and brighten on hover. A spring by default.
 
-## Custom choreography
+Pie and radial charts take `animationDirection="clockwise"` (the default) or `"anticlockwise"`. Combo charts take `lineReveal`, `areaReveal` and `barReveal` to tune each kind of series apart, or `false` to skip one. Sankey takes only `revealDurationMs`, and Heatmap only `true` or `false`. Each family's options are typed as its own animation type, like `LineAnimation` or `BarAnimation`.
 
-For a scene sequence or chart crossfade, disable built-in animation and control
-the timing in your application. Custom shapes and tooltip content also own
-their motion. Provide a still result for reduced-motion users and retain a
-clear [chart name and descriptions](/docs/guides/accessibility/).
+`animate={false}` also stops marks from moving as they dim and brighten. Two other motions are separate: a dashed line's `dashAnimation` on [Line](../components/line.mdx), and the tooltip's `valueAnimation="shuffle"` on [Tooltip](../building-blocks/tooltip.mdx).
+
+## Loading
+
+While `loading` is set, each chart shows a placeholder in its own shape until the data arrives; each chart page describes its placeholder. It uses `revealDurationMs` and `revealEasing` from `animate` for its pace, and holds still when the reader prefers reduced motion.
+
+## Reduced Motion
+
+When the reader prefers reduced motion, charts skip their entrances and show the final chart, marks stop moving on hover, loading placeholders hold still, and tooltip digits don't roll. Charts follow the preference live, so changing it mid-session takes effect at once. You don't need to do anything for it.
+
+Custom shapes, tooltip content and your own transitions are yours to animate, so give them a still version under `prefers-reduced-motion` too.

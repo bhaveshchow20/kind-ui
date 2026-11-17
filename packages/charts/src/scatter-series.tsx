@@ -22,9 +22,12 @@ import { SeriesInteractionLayer, useSeriesInteraction } from "./series-interacti
 import { visibilityLabel, visibilityLabelChildren } from "./visibility-labels.js";
 
 export type ScatterSeriesProps = Omit<ComponentProps<typeof Scatter>, "isAnimationActive"> & {
-  /** Series identity is separate from numeric axis data keys. Required for controlled visibility. */
+  /**
+   * The `config` key for this series' label, color and visibility. Scatter `dataKey`s name
+   * axis values, so set this on every series.
+   */
   seriesKey?: string;
-  /** Finish built-in symbols; custom shapes and consumer filters retain ownership. */
+  /** A finish for the built-in symbols. Custom shapes and filters are left as they are. */
   material?: ScatterMaterial | undefined;
 };
 

@@ -1,184 +1,131 @@
 ---
 title: Bar Chart
-description: Compare categories with columns, grouped or stacked series, and horizontal bars.
+description: Compare values across categories with columns or horizontal bars.
 ---
 
-<ChartExample id="bar" />
+import BarExample from "../../../examples/bar/basic";
+import BarComparisonExample from "../../../examples/bar/comparison";
+
+Use a bar chart to compare a measure across categories, like locations or products, and to compare a few measures side by side or stacked.
+
+<Example caption="Hover a bar, or focus the chart and press the arrow keys, to see its value and dim the other bars.">
+  <BarExample />
+
+  <include cwd lang="tsx">./examples/bar/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="bar" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/bar-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+BarChart
+├── BarChart.Background
+├── BarChart.Grid
+├── BarChart.XAxis
+├── BarChart.YAxis
+├── BarChart.Series
+│   ├── BarChart.Cell
+│   └── BarChart.Labels
+├── BarChart.Tooltip
+├── BarChart.Legend
+└── BarChart.Content
+```
+
+`BarChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `BarChart.Series` per measure. `BarChart.Cell` colors a single bar and `BarChart.Labels` writes values on the bars. The tooltip and legend read their labels and colors from `config`. `BarChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-`BarChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+### Series
 
-Add one `BarChart.Series` per measure. Use `stackId` for stacks and `layout="vertical"` for horizontal bars.
+Each `BarChart.Series` plots the `dataKey` it names, and takes its label and color from the matching `config` entry. Series sit side by side in each category. Set `radius` to round the corners and `maxBarSize` to cap the width:
 
-```tsx title="Composition sketch"
-import { BarChart } from "@kind-ui/charts";
+<Example caption="Press Print or Digital in the legend to highlight that series.">
+  <BarComparisonExample />
 
-<BarChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate accessibilityLayer aria-label="Pickup orders by location">
-  <BarChart.Grid vertical={false} />
-  <BarChart.XAxis dataKey="period" />
-  <BarChart.YAxis />
-  <BarChart.Series dataKey="orders" radius={[5, 5, 0, 0]} />
-  <BarChart.Tooltip />
-  <BarChart.Legend />
+  <include cwd lang="tsx">./examples/bar/comparison.tsx</include>
+</Example>
+
+Give series the same `stackId` to stack them. Set `stackOffset="expand"` on the chart to stack to 100%, or `"sign"` to stack negative values below zero:
+
+```tsx
+<BarChart.Series dataKey="print" stackId="loans" />
+<BarChart.Series dataKey="digital" stackId="loans" />
+```
+
+### Horizontal Bars
+
+Set `layout="vertical"` for horizontal bars. The axes swap, so the X axis is the number scale and the Y axis names the categories:
+
+```tsx
+<BarChart layout="vertical" {...props}>
+  <BarChart.XAxis type="number" />
+  <BarChart.YAxis type="category" dataKey="location" width={80} />
+  <BarChart.Series dataKey="orders" radius={[0, 4, 4, 0]} />
 </BarChart>
 ```
 
-The compound legend mounts outside the plot while remaining a child in your composition. Legend focuses and dims by default; explicit `interaction.mode="visibility"` enables hide/show.
+### Emphasis
 
-## Grouped and stacked series
+By default, hovering a bar dims the other series. Set `emphasis="category"` to dim the other categories instead, as in the first example, or `"none"` to turn it off. Category emphasis reads each row's category from the category axis, so those categories must be unique strings. When they aren't, like numbers or repeated labels, pass the series an `emphasisKey` that returns a unique key for each row. A custom `shape`, range values or per-series `data` turn it off for that chart.
 
-Compare grouped loans or stack them with matching `stackId` and axes. Legend focus dims other series. Explicit hiding preserves the original grouped slots and stack baselines.
+### Legend and Keyboard
 
-<ChartExample id="bar-comparison" />
+Pressing a legend item highlights its series and dims the others, and screen readers hear "Highlighted Print." Press it again, or press Escape, to clear it. Hidden series keep their slot in each group, and stacks keep their baselines. To hide and show series from the legend instead, see [Legend](../building-blocks/legend.mdx).
 
-## Horizontal bars
+Focus the chart and press the arrow keys to move between categories, which shows the tooltip, and Escape to dismiss it.
 
-Use `layout="vertical"` for horizontal bars, with numeric X and categorical Y axes.
+### Patterns and Projections
 
-<ChartExample id="bar-horizontal" />
-
-## Materials
-
-Choose Default, Clay or Glow. Use `radius` to round corners.
-
-<ChartExample id="bar-materials" />
-
-## Category emphasis
-
-Set `emphasis="category"` to dim other categories during hover or keyboard inspection.
-
-See `BarChart.Series` below for supported values and shapes.
-
-## Series patterns
-
-Add a pattern to distinguish a series. Its legend swatch follows the same config.
+Give a series a `pattern` in `config` to fill its bars with `hatch`, `stripe`, `duotone`, `dots` or `lines`, and its legend swatch follows. To pattern only some bars, like projected values, pass `projection` with a function that picks them:
 
 ```tsx
-import { BarChart, type SeriesConfig } from "@kind-ui/charts";
-
-const config = {
-  orders: { label: "Orders", color: "#733bff", pattern: { kind: "hatch" } },
-} satisfies SeriesConfig;
-
-// Inside the chart:
-<BarChart.Series dataKey="orders" />
+<BarChart.Series
+  dataKey="orders"
+  projection={{ isProjected: (row) => row.projected, pattern: { kind: "stripe" } }}
+/>
 ```
 
-Override the config with `BarChart.Series.pattern`; use `pattern={false}` to turn it off.
+The chart only draws the values you pass; it doesn't forecast them. An explicit `fill`, `BarChart.Cell` or custom `shape` replaces the pattern.
 
-<Callout title="Note">Explicit `fill`, Cells and custom shapes override the pattern. Keep labels clear when using patterns.</Callout>
+Set `material="clay"` or `"glow"` on a series for a finish; see [Materials](../guides/materials.mdx).
 
-## Projected bars
+### Motion
 
-In the copied Bar example, mark projected rows in `data`. Then use the same rule for the series and tooltip:
+Set `animate` to grow the bars from zero when the chart mounts, over one second by default. Pass options to change the duration or easing:
 
 ```tsx
-import { BarChart, TooltipContent } from "@kind-ui/charts";
-
-const data = [
-  { period: "North", orders: 124 },
-  { period: "East", orders: 186, projected: true },
-];
-type ProjectionRow = (typeof data)[number];
-const isProjected = (row: ProjectionRow) => row.projected === true;
-
-<BarChart.Series dataKey="orders"
-  projection={{ isProjected, pattern: { kind: "stripe" } }} />
-<BarChart.Tooltip content={(tooltip) => (
-  <TooltipContent tooltip={tooltip}
-    isProjected={(entry) => isProjected(entry.payload)} />
-)} />
+<BarChart animate={{ revealDurationMs: 600 }} {...props}>
 ```
 
-<Callout title="Note">This styles supplied values; it does not calculate a forecast. Label projected values in the tooltip.</Callout>
+When the reader prefers reduced motion, bars appear without growing. See [Motion](../guides/motion.mdx).
 
-## Loading State
+### Loading
 
-Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Set `loading` while the data is on its way. The chart keeps its size and shows placeholder bars that rise and fade, or hold still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default). The legend and tooltip come back when `loading` turns off:
 
-<ChartExample id="bar" variant="loading" />
+```tsx
+<BarChart loading={isPending} loadingLabel="Loading orders" {...props}>
+```
 
-## API reference
-
-Use these props to configure bars, stacks and presentation.
+## API Reference
 
 ### BarChart
 
-Pass `config` and an accessible name, then add the axes and series as children.
-
-<div className="line-props-scroll" role="region" aria-label="BarChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `data` | `Row[]` | — | Consumer-owned category observations. |
-| `animate` | `boolean \| BarAnimation` | `false` | Reveal from numeric zero or nearest domain edge; respects reduced motion. |
-| `emphasis` | `"auto" \| "none" \| "category"` | `"auto"` | Shared emphasis; category opts in to eligible category comparisons. |
-| `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | `"horizontal"` draws columns; `"vertical"` draws horizontal bars. |
-| `barGap` | `number \| string` | `4` | Gap between grouped bars. |
-| `barCategoryGap` | `number \| string` | `"10%"` | Space between category groups. |
-| `stackOffset` | `"none" \| "expand" \| "wiggle" \| "silhouette" \| "sign" \| "positive"` | `"none"` | Native stack calculation; use `"sign"` for separate positive/negative stacks. |
-| `accessibilityLayer` | `boolean` | `true` in Recharts | Native keyboard inspection; explicit in these components. |
-| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
-| `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Space around plot parts. |
-| `children` | `ReactNode` | Required | Explicit axes, series, grid and tooltip. |
-
-</div>
-
-`BarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
-
-<span id="barseries" />
+<auto-type-table path="../../../../../packages/charts/src/composition/bar.tsx" name="BarChartOptions" type='Pick<BarChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
 
 ### BarChart.Series
 
-String value keys identify config entries; controlled numeric keys or accessors require `seriesKey`.
+<auto-type-table path="../../../../../packages/charts/src/bar-series.tsx" name="BarSeriesOptions" type='Pick<BarSeriesProps, "seriesKey" | "material" | "pattern" | "projection" | "emphasisKey">' />
 
-<div className="line-props-scroll" role="region" aria-label="BarChart.Series props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Value field or accessor. |
-| `seriesKey` | `string` | String `dataKey` | Metadata and visibility identity. |
-| `stackId` | `string \| number` | — | Stack series with matching axis IDs. |
-| `material` | `"clay" \| "glow"` | Omitted | Native-rectangle finish; custom paint takes precedence. |
-| `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | — | Unique category identity; does not make invalid values or custom shapes eligible. |
-| `radius` | `number \| [number, number, number, number]` | `0` | Native corner rounding: top-left, top-right, bottom-right, bottom-left. |
-| `maxBarSize` | `number` | — | Limit each bar's thickness. |
-| `fill` | `string` | Config color | Native fill override; Cells can customize individual bars. |
-| `hide` | `boolean` | `false` | Native hide and chart visibility both apply. |
-| `children` | `ReactNode` | — | Native Cells, LabelList and ErrorBar composition. |
-
-</div>
-
-<Callout title="Category emphasis">Use chart-level rows, string value keys, unique category IDs and native rectangles. Missing, zero/baseline or range values, per-series data, custom shapes and non-boolean `activeBar` disable this effect.</Callout>
-
-Custom shapes and filters can override materials. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/) and [material support](/docs/guides/materials/).
-
-### Fill patterns
-
-<ApiTable name="FillPatternReference" />
-
-### Projected values
-
-<ApiTable name="BarProjectionReference" />
-
-## Shared components
-
-Add visibility controls, value formatting and category labels with these components.
-
-| Component | Purpose |
-| --- | --- |
-| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
-| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
-| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
-| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-
-Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+<Caption>
+  `BarChart` and `BarChart.Series` also take every prop of Recharts' [BarChart](https://recharts.github.io/en-US/api/BarChart/) and [Bar](https://recharts.github.io/en-US/api/Bar/), like `layout`, `stackOffset`, `stackId`, `radius` and `maxBarSize`.
+</Caption>

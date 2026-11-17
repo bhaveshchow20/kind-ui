@@ -42,8 +42,8 @@ and add `tailwindcss()` to the `plugins` array in `vite.config`. For Next.js, us
 `tailwindcss` and `@tailwindcss/postcss` with your PostCSS configuration. Import
 your CSS at the application entry or Next.js root layout, and place interactive
 Next.js chart code in a client component. The
-[installation guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/installation.mdx) includes complete
-configuration examples.
+[installation guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/index.mdx) shows the
+`@import` and `@source` lines for your CSS.
 
 The package has no stylesheet export. Components carry their default Tailwind
 classes, and consumer `className` utilities override conflicting defaults.

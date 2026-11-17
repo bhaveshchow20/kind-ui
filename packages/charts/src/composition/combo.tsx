@@ -12,7 +12,12 @@ import { type FamilyProps, familyChart } from "../family-root.js";
 import { ScatterSeries } from "../scatter-series.js";
 import { cartesian } from "./parts.js";
 
-export type ComboChartProps = FamilyProps<NativeComboChartProps>;
+export type ComboChartProps = FamilyProps<
+  Omit<NativeComboChartProps, "data"> & {
+    /** The rows to plot. Each series reads its `dataKey` from every row. */
+    data?: NonNullable<NativeComboChartProps["data"]>;
+  }
+>;
 function ComboFamily(props: ComboChartProps) {
   return familyChart(NativeComboChart, props, "ComboChart");
 }

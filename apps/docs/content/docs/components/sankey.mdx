@@ -1,199 +1,115 @@
 ---
 title: Sankey Chart
-description: Trace quantities through branching and recombining flows.
+description: Follow quantities as they split and merge through stages.
 ---
 
-<ChartExample id="sankey" />
+import SankeyExample from "../../../examples/sankey/basic";
+import SankeyLabelsExample from "../../../examples/sankey/labels";
+
+Use a Sankey chart to show how a total flows through stages, like energy from its sources through zones to its uses, where each ribbon's width is its share.
+
+<Example caption="Hover a ribbon to see its value. Press a node in the legend to highlight its routes.">
+  <SankeyExample />
+
+  <include cwd lang="tsx">./examples/sankey/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="sankey" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/sankey-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+SankeyChart
+├── SankeyChart.Nodes
+│   ├── SankeyChart.Node
+│   └── SankeyChart.NodeLabel
+├── SankeyChart.Links
+│   └── SankeyChart.Link
+├── SankeyChart.Tooltip
+├── SankeyChart.Legend
+├── SankeyChart.Table
+└── SankeyChart.Content
+```
+
+`SankeyChart` holds the flow data, the node config and the accessible name, and draws only the parts you add. `SankeyChart.Nodes` and `SankeyChart.Links` draw the bars and ribbons; leave one out and it isn't drawn. Give the chart a `height`, since it fills its container's width. `SankeyChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-Open **Code** for the complete three-stage diagram and its flow data. Click a ribbon to inspect its route; the text alternative retains every quantity.
+### Flow Data
 
-```tsx title="Composition sketch"
-import { SankeyChart } from "@kind-ui/charts";
+`data` has `nodes`, each with a unique `id` and a `name`, and `links`, each with a unique `id`, a `source` and `target` node ID, and a `value`. The chart checks the data when it renders and throws on:
 
-<SankeyChart config={nodeConfig} data={data} height={250}
-  aria-label="Energy allocation" animate={{ revealDurationMs: 900 }}>
-  <SankeyChart.Nodes />
-  <SankeyChart.Links />
-  <SankeyChart.Tooltip formatter={(value) => `${value} MWh`} />
-  <SankeyChart.Legend />
-</SankeyChart>
-```
+- a node with no `config` entry, a link to a node that doesn't exist, or a cycle,
+- a negative or non-finite value,
+- a middle node whose inflow doesn't equal its outflow,
+- two links between the same nodes with the same value.
 
-Sankey requires `config`, an accessible name and explicit children. Map every node ID to a label and color. Include `Nodes` and `Links`; omitted renderer parts stay absent, including through fragments and wrapper components. `Legend` and `Table` inherit config/data and mount outside the plot in the browser. Set shared actions on `interaction` and outer HTML attributes on `frameProps`.
+Model losses as links to their own end node, so every middle node balances. A link with a value of `0` isn't drawn, and a node with no drawn links leaves the plot. `empty` shows when no link has a positive value.
 
-Nodes use their own color; solid links use the source color. `SankeyChart.Tooltip` keeps native tooltip props and themed defaults.
+### Node Colors
 
-## Node colors
+`config` gives every node ID a `label` and `color`, and the legend lists nodes in its order. A node takes its own color and a ribbon takes its source node's color. Pressing a legend item highlights the node and every route through it, and dims the rest.
 
-Use the family config for the chart and legend. Click a legend item to highlight its node and connected routes.
+Ribbons are opaque, so they hide each other where they cross. Return `SankeyChart.Link` from `SankeyChart.Links`' `render`, as above, with a lower `strokeOpacity` in `pathProps` to let crossings show through.
 
-<ChartExample id="sankey-config" />
+`nodeWidth`, `nodePadding`, `linkCurvature` and `sort` come from Recharts. Pass `sort={false}` to keep nodes in data order.
 
-<Callout title="Note">Use unique node and link IDs. Intermediate inflow must equal outflow; model losses as explicit boundary links.</Callout>
+### Labels and Gradients
 
-## Flow finishes
+Pass a `render` function to `SankeyChart.Nodes` to draw each node yourself. Return `SankeyChart.Node` with `SankeyChart.NodeLabel` beside it, and leave room for the labels with `margin`. `showValues` adds each node's total. Set `material="gradient"` on `SankeyChart.Link` to blend each ribbon from its source to its target color:
 
-Choose Default, Clay or Glow. Gradient ribbons blend the source and destination colors.
+<Example caption="Each label shows its node's total. Ribbons blend from source to target.">
+  <SankeyLabelsExample />
 
-<ChartExample id="sankey-finishes" />
+  <include cwd lang="tsx">./examples/sankey/labels.tsx</include>
+</Example>
 
-## Motion and geometry
+A node's `icon` in `config` shows beside its label. `position="inside"` clips the label to the node instead; the tooltip still has the full name.
 
-Set `animate={{ revealDurationMs: 900 }}` for a ribbon entrance. Reduced motion shows the final diagram immediately.
+Set `finish="clay"` or `"glow"` on `SankeyChart.Node` or `SankeyChart.Link` for a surface finish; see [Materials](../guides/materials.mdx).
 
-## Labels and icons
+### Accessibility
 
-Use `SankeyChart.Nodes render={(node) => ...}` to place `SankeyChart.NodeLabel` beside `SankeyChart.Node`. The callback supplies computed geometry and payload. Pass the same `data` and `nodeConfig` as the diagram.
+Ribbons and nodes aren't reachable from the keyboard on their own. Add `SankeyChart.Table` with a `caption` for a table of every link and its value. Pass it `onInspect` to add a button per row, and `activeLinkId` to mark the selected one, for a keyboard way to pick a flow. You can also give each `SankeyChart.Link` keyboard handlers and ARIA attributes through `pathProps`.
+
+### Motion
+
+Pass `animate` to draw the ribbons in when the chart mounts, or `animate={{ revealDurationMs: 900 }}` to change the duration (450ms by default). Sankey charts don't animate by default. When the reader prefers reduced motion, the diagram appears without drawing in. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder diagram, which holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default):
 
 ```tsx
-import { SankeyChart } from "@kind-ui/charts";
-
-<SankeyChart.NodeLabel node={node} data={data} nodeConfig={nodeConfig}
-  position="outside" showValues />
+<SankeyChart loading={isPending} loadingLabel="Loading energy flows" {...props}>
 ```
 
-Node-config icons appear alongside the label.
-
-<Callout title="Note">Reserve space for outside labels. Inside labels clip to the node; tooltips retain full names and values.</Callout>
-
-## Loading State
-
-Set [`loading`](/docs/chart-components/chart/#loading) while flows are pending. Use `loadingLabel` to name the pending data.
-
-<ChartExample id="sankey" variant="loading" />
-
-## API reference
-
-Customize the diagram with these props.
+## API Reference
 
 ### SankeyChart
 
-<div className="line-props-scroll" role="region" aria-label="SankeyChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `data` | `SankeyFlowData` | Required | Immutable nodes and links; validates identities, quantities, acyclicity and intermediate balance. |
-| `animate` | `boolean \| { revealDurationMs?: number }` | `false` | Flow paint reveal; `true` uses 450ms. Duration must be finite and nonnegative. |
-| `empty` | `ReactNode` | `"No positive flows"` | Status for empty or all-zero data. |
-| `nodeWidth` | `number` | `10` | Native node rectangle width. |
-| `nodePadding` | `number` | `10` | Native vertical gap between nodes. |
-| `sort` | `boolean` | `true` | Native node ordering; these components use `false`. |
-| `linkCurvature` | `number` | `0.5` | Native cubic link curvature. |
-| `iterations` | `number` | `32` | Native layout relaxation iterations. |
-| `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Reserve space for consumer labels. |
-| `onClick` / `onMouseEnter` / `onMouseLeave` | `(item, type, event) => void` | — | Native event with typed node/link IDs; `type` is `"node" \| "link"`. |
-| `config` | `SankeyNodeConfig` | Required | Labels and colors for every node ID. |
-| `children` | `ReactNode` | Required | Explicit Nodes, Links, Tooltip and HTML parts. |
-
-</div>
-
-Equal-value positive parallel links are rejected; distinct values are supported. Rescale extreme numeric ranges before native layout. See [Recharts Sankey](https://recharts.github.io/en-US/api/Sankey/).
-
-<span id="sankeynode" />
-
-### SankeyChart.Node
-
-<div className="line-props-scroll" role="region" aria-label="SankeyChart.Node props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| Native renderer geometry and `payload` | `SankeyNodeProps` | Required | Spread the complete callback props; computed rectangle dimensions win. |
-| `color` | `string` | Config color; fallback `"#4f46e5"` | Explicit paint overrides metadata. |
-| `finish` | `"clay" \| "glow"` | Omitted | Static surface filter; explicit filters take precedence. |
-| `rectProps` | `SVGProps<SVGRectElement>` | — | Presentation, semantics and handlers on the original rectangle. |
-
-</div>
-
-Supply node labels as sibling SVG text. Chart interaction coordinates node focus; custom route selection can remain independent.
-
-<span id="sankeylink" />
+<auto-type-table path="../../../../../packages/charts/src/sankey-composition.tsx" name="SankeyChartOptions" type='Pick<SankeyChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "empty" | "responsive" | "interaction" | "legendPosition" | "frameProps">' />
 
 ### SankeyChart.Link
 
-<div className="line-props-scroll" role="region" aria-label="SankeyChart.Link props" tabIndex={0}>
+<auto-type-table path="../../../../../packages/charts/src/sankey-marks.tsx" name="SankeyLinkOptions" type='Pick<SankeyLinkProps, "material" | "finish" | "color" | "targetColor" | "pathProps">' />
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| Native renderer geometry and `payload` | `SankeyLinkProps` | Required | Spread the complete callback props; path and flow width stay native. |
-| `material` | `"solid" \| "gradient"` | `"solid"` | Single-color stroke or source-to-target gradient. |
-| `color` | `string` | Source config color; fallback `"#4f46e5"` | Explicit source paint override. |
-| `targetColor` | `string` | Target config color; fallback `"#06b6d4"` | Explicit destination override for gradient paint. |
-| `finish` | `"clay" \| "glow"` | Omitted | Static treatment independent of material and flow width. |
-| `pathProps` | `SVGProps<SVGPathElement>` | — | Presentation, keyboard handlers and semantics on the original path; computed geometry wins. |
+### SankeyChart.Node
 
-</div>
+<auto-type-table path="../../../../../packages/charts/src/sankey-marks.tsx" name="SankeyNodeOptions" type='Pick<SankeyNodeProps, "color" | "finish" | "rectProps">' />
 
-Explicit filters bypass finishes; transformed paths bypass reveal. Custom renderers own motion. Glow changes neither quantities nor hit targets.
+### SankeyChart.NodeLabel
 
-<span id="sankeylegend" />
+<auto-type-table path="../../../../../packages/charts/src/sankey-node-label.tsx" name="SankeyNodeLabelOptions" type='Pick<SankeyNodeLabelProps, "node" | "data" | "nodeConfig" | "position" | "side" | "showValues" | "valueFormatter" | "offset" | "iconSize" | "iconGap">' />
 
-### SankeyChart.Legend
-
-`SankeyChart.Legend` inherits the chart’s config and node interaction. Node focus highlights connected routes without removing flows.
-
-<div className="line-props-scroll" role="region" aria-label="SankeyChart.Legend props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children` | `(item: { key: string; label: string; color: string; marker: ReactNode }) => ReactNode` | Label and marker | Custom legend content; native list attributes and refs remain available. |
-
-</div>
-
-<span id="sankeytable" />
-
-### SankeyChart.Table
-
-<div className="line-props-scroll" role="region" aria-label="SankeyChart.Table props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `caption` | `string` | Required | Accessible table name. |
-| `formatValue` | `(value: number) => string` | `String` | Consumer-owned units. |
-| `onInspect` | `(link: SankeyFlowLink) => void` | — | Adds native inspection buttons receiving the original link. |
-| `activeLinkId` | `string \| null` | — | Controlled selected row and button `aria-pressed`. |
-
-</div>
-
-Native attributes/refs remain available. These graph-only examples omit the table. Add it in your application when needed; `onInspect` supports a visible keyboard inspector.
-
-### Flow data
-
-<div className="line-props-scroll" role="region" aria-label="Flow data fields" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `nodes` | `readonly SankeyFlowNode[]` | Required | Each node has unique `id: string` and `name: string`; extra metadata is retained. |
-| `links` | `readonly SankeyFlowLink[]` | Required | Each link has unique `id: string`, endpoints and a value. |
-| `source` / `target` | `string \| number` | Required | Node ID or original node-array integer index. |
-| `value` | `number` | Required | Finite nonnegative flow quantity. |
-
-</div>
-
-`prepareSankeyData(data)` validates/copies input and resolves endpoints to indices. It does not aggregate, normalize or infer flows. Cycles, invalid endpoints/IDs and negative/nonfinite quantities throw.
-
-Zero links remain in the table but leave plotted geometry; isolated nodes also leave the plot.
-
-### Sankey node labels
-
-<ApiTable name="SankeyLabelReference" />
-
-## Shared components
-
-Use these building blocks to customize this chart. Each reference includes its full API.
-
-| Component | Purpose |
-| --- | --- |
-| [Chart frame](/docs/chart-components/chart/) | Coordinate node focus between the legend and diagram. |
-
-Native Recharts Tooltip handles hover inspection; path handlers and status text provide keyboard selection.
-
-Give the diagram a measurable height. These examples use a 540px minimum width.
+<Caption>
+  `SankeyChart` also takes every prop of Recharts' [Sankey](https://recharts.github.io/en-US/api/Sankey/), like `margin`, `nodeWidth` and `nodePadding`, and its `onClick`, `onMouseEnter` and `onMouseLeave` receive the node or link with its `id`. `SankeyChart.Tooltip` takes every prop of Recharts' [Tooltip](https://recharts.github.io/en-US/api/Tooltip/), like `formatter`.
+</Caption>

@@ -16,7 +16,7 @@ This is original Kind UI guidance linking official references, not a vendor skil
 - React state: use [react-best-practices](../react-best-practices/SKILL.md), especially deriving state from current props rather than mirroring host-owned state.
 - SDK integration: use [ai-sdk](../ai-sdk/SKILL.md); verify version-matched types and test mappings through the optional entry point.
 - Interaction design: use [web-design-guidelines](../web-design-guidelines/SKILL.md).
-- Documentation: use [writing-guidelines](../writing-guidelines/SKILL.md).
+- Documentation: use [write-docs](../write-docs/SKILL.md) for docs pages and [writing-guidelines](../writing-guidelines/SKILL.md) for PR prose.
 
 ## Accessible primitives
 

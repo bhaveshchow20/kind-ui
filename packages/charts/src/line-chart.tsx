@@ -36,7 +36,12 @@ import { SeriesColorDefinitions, SeriesPaintBoundary } from "./series-paint.js";
 import { cn } from "./utils.js";
 
 export type LineChartProps = ComponentProps<typeof EngineLineChart> & {
+  /** Shows a placeholder plot and hides the legend and tooltip while the data is on its way. */
   loading?: boolean | undefined;
+  /**
+   * What screen readers hear while `loading` is on.
+   * @default "Loading chart"
+   */
   loadingLabel?: string | undefined;
 };
 type Point = { x: number; y: number } | null;

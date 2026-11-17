@@ -4,7 +4,8 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // An allowlist makes new/unknown paths run browsers by default. The Docs
-// workflow still validates apps/docs; packed README contracts always run.
+// workflow still validates apps/docs, except its examples, which registry items
+// ship and the registry browser suite checks; packed README contracts always run.
 /** @param {string[]} paths */
 export function needsBrowsers(paths) {
   return (
@@ -14,7 +15,7 @@ export function needsBrowsers(paths) {
         !(
           /^[^/]+\.md$/.test(path) ||
           path.startsWith("docs/") ||
-          path.startsWith("apps/docs/") ||
+          (path.startsWith("apps/docs/") && !path.startsWith("apps/docs/examples/")) ||
           /^packages\/charts\/[^/]+\.md$/.test(path)
         ),
     )

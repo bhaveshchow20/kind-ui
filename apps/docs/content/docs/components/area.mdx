@@ -1,120 +1,117 @@
 ---
 title: Area Chart
-description: Show change over time with filled areas and stacked series.
+description: Show how a total changes over time, with filled areas you can stack.
 ---
 
-<AreaExample id="area" />
+import AreaExample from "../../../examples/area/basic";
+import AreaStackedExample from "../../../examples/area/stacked";
+
+Use an area chart to show how a measure changes across ordered categories, like months, when its size matters as much as its trend. Stack areas to show how parts add up to a total.
+
+<Example caption="Hover the area, or focus the chart and press the arrow keys, to see each month's value.">
+  <AreaExample />
+
+  <include cwd lang="tsx">./examples/area/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="area" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/area-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+AreaChart
+├── AreaChart.Background
+├── AreaChart.Grid
+├── AreaChart.XAxis
+├── AreaChart.YAxis
+├── AreaChart.Series
+├── AreaChart.Tooltip
+├── AreaChart.Legend
+└── AreaChart.Content
+```
+
+`AreaChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `AreaChart.Series` per area. The tooltip and legend read their labels and colors from `config`. `AreaChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-`AreaChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+### Series
 
-Add one `AreaChart.Series` per measure. Use `stackId` to stack related series.
+Each `AreaChart.Series` fills the `dataKey` it names, and takes its label and color from the matching `config` entry. Set `type` for the curve (`linear` by default, `monotone` for a smooth edge, `stepAfter` for steps) and `fillOpacity` to keep the grid visible through the fill.
 
-```tsx title="Composition sketch"
-import { AreaChart } from "@kind-ui/charts";
+A `null` value leaves a gap in the area. Pass `connectNulls` to the series to fill across it instead.
 
-<AreaChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate accessibilityLayer aria-label="Monthly visitors">
-  <AreaChart.Grid vertical={false} />
-  <AreaChart.XAxis dataKey="period" />
-  <AreaChart.YAxis />
-  <AreaChart.Series dataKey="visitors" type="monotone" fillOpacity={0.22} />
-  <AreaChart.Tooltip />
-  <AreaChart.Legend />
-</AreaChart>
+### Stacking
+
+Give series the same `stackId` to stack them, so the top edge shows the total:
+
+<Example caption="Press Desktop or Mobile in the legend to highlight that area.">
+  <AreaStackedExample />
+
+  <include cwd lang="tsx">./examples/area/stacked.tsx</include>
+</Example>
+
+Stacks keep their layout when a series is hidden, so the other areas don't jump. To show each part as a share of the total, set `stackOffset="expand"` on the chart and format the axis and tooltip with `createPercentStack`; see [Combo Chart](./combo.mdx#percentage-stacks).
+
+### Legend and Keyboard
+
+Pressing a legend item highlights its area and dims the others, and screen readers hear "Highlighted Desktop." Press it again, or press Escape, to clear it. To hide and show areas from the legend instead, see [Legend](../building-blocks/legend.mdx).
+
+Focus the chart and press the arrow keys to move between months, which shows the tooltip, and Escape to dismiss it.
+
+### Points, Patterns and Materials
+
+Areas have no points by default. Pass `dot` to show them, and `pointStyle="border"` or `"colored-border"` for outlined points; `activePointStyle` paints the point under the cursor. Set `pattern` to fill an area with hatching or dots instead of a flat color, which helps when colors alone are hard to tell apart:
+
+```tsx
+<AreaChart.Series dataKey="mobile" stackId="visitors" pattern={{ kind: "hatch" }} />
 ```
 
-The compound legend mounts outside the plot while remaining a child in your composition. Legend focuses and dims by default; explicit `interaction.mode="visibility"` enables hide/show.
+Set `material="clay"` or `"glow"` on a series for a finish; see [Materials](../guides/materials.mdx).
 
-## Curve types
+### Motion
 
-Choose smooth, linear or step-after interpolation.
+Areas appear at once unless you set `animate`. Pass `true` to draw them in from left to right, or options to change the direction or the duration:
 
-<AreaExample id="area-curves" />
+```tsx
+<AreaChart animate={{ revealDirection: "center-out", revealDurationMs: 800 }} {...props}>
+```
 
-## Stacked series
+`revealDirection` is `left-to-right`, `right-to-left`, `center-out` or `edges-in`. When the reader prefers reduced motion, areas appear without drawing in. See [Motion](../guides/motion.mdx).
 
-Matching `stackId` values stack desktop and mobile visitors. Legend focus dims other series. Explicit hiding preserves the original stack baselines.
+### Loading
 
-<AreaExample id="area-stacked" />
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder area that sweeps across the plot, or holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default). The legend and tooltip come back when `loading` turns off:
 
-## Materials
+```tsx
+<AreaChart loading={isPending} loadingLabel="Loading visitors" {...props}>
+```
 
-Choose Default, Clay or Glow.
+### Background
 
-<AreaExample id="area-materials" />
+Add `AreaChart.Background` for a decorative pattern behind the plot: `pinpoints`, `crossings` or `waves`. It adds nothing to the tooltip, legend or accessible name.
 
-## Loading State
+```tsx
+<AreaChart.Background pattern="waves" opacity={0.15} />
+```
 
-Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
-
-<ChartExample id="area" variant="loading" />
-
-## API reference
-
-Use these props to configure the area plot and its series.
+## API Reference
 
 ### AreaChart
 
-Pass `config` and an accessible name. Add each plot part explicitly.
-
-<div className="line-props-scroll" role="region" aria-label="AreaChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `data` | `Row[]` | — | Observations for explicit series and axes. |
-| `animate` | `boolean \| AreaAnimation` | `false` | Chart-owned entrance and inspection motion; respects reduced motion. |
-| `accessibilityLayer` | `boolean` | `true` in Recharts | Enables arrow-key inspection. Set explicitly in these components. |
-| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
-| `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each side | Space around plot parts. |
-| `stackOffset` | `"none" \| "expand" \| "wiggle" \| "silhouette" \| "sign" \| "positive"` | `"none"` | Native stack calculation. `"expand"` normalizes stacks; labels and tooltip formatting stay consumer-owned. |
-| `children` | `ReactNode` | Required | Explicit axes, areas, grid and tooltip. |
-
-</div>
-
-See [Recharts AreaChart](https://recharts.github.io/en-US/api/AreaChart/).
-
-<span id="areaseries" />
+<auto-type-table path="../../../../../packages/charts/src/composition/area.tsx" name="AreaChartOptions" type='Pick<AreaChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
 
 ### AreaChart.Series
 
-String `dataKey` values identify config entries. Use `seriesKey` for numeric keys or accessors when controlling visibility.
+<auto-type-table path="../../../../../packages/charts/src/area-series.tsx" name="AreaSeriesOptions" type='Pick<AreaSeriesProps, "seriesKey" | "pointStyle" | "activePointStyle" | "pattern" | "material">' />
 
-<div className="line-props-scroll" role="region" aria-label="AreaChart.Series props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Value field or accessor. |
-| `seriesKey` | `string` | String `dataKey` | Metadata and visibility identity. |
-| `type` | `"basis" \| "basisClosed" \| "basisOpen" \| "bumpX" \| "bumpY" \| "bump" \| "linear" \| "linearClosed" \| "natural" \| "monotoneX" \| "monotoneY" \| "monotone" \| "step" \| "stepBefore" \| "stepAfter"` or custom curve function | `"linear"` | Native curve interpolation. |
-| `stackId` | `string \| number` | — | Shared identity for stacked series. |
-| `material` | `"clay" \| "glow"` | Omitted | Area finish; explicit `shape` or `filter` takes precedence. |
-| `stroke` / `fill` | `string` | Config color | Override outline or fill separately. |
-| `fillOpacity` | `number` | `0.6` in Recharts | Fill transparency; shown components set it explicitly. |
-| `connectNulls` | `boolean` | `false` | Connect missing values instead of leaving gaps. |
-| `hide` | `boolean` | `false` | Hide a series; chart visibility also applies. |
-
-</div>
-
-`AreaChart` controls animation. See [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [material support](/docs/guides/materials/).
-
-## Shared components
-
-Customize series colors, stack visibility and plot labels with these components.
-
-| Component | Purpose |
-| --- | --- |
-| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
-| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
-| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
-| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-
-Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+<Caption>
+  `AreaChart` and `AreaChart.Series` also take every prop of Recharts' [AreaChart](https://recharts.github.io/en-US/api/AreaChart/) and [Area](https://recharts.github.io/en-US/api/Area/), like `margin`, `stackOffset`, `type`, `stackId` and `connectNulls`.
+</Caption>

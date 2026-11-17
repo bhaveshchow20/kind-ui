@@ -6,9 +6,8 @@
 `artifacts/registry/r`. Hosting copies that directory to the domain root:
 [https://kindui.dev/r/](https://kindui.dev/r/).
 
-The documentation example catalog owns which compositions are canonical.
-`catalog.mjs` maps those examples to flat install names, including
-`activity-rings` from `radial-activity`. Build staging preserves the exact
+`catalog.mjs` lists each item's flat install name and the docs example it
+ships (`source`), which every docs page shows with `<include>`. Build staging preserves the exact
 composition bytes and public imports; the CLI places editable files under each
 consumer's configured components alias. Core owns chart geometry, interactions,
 and animation. The registry pins `@kind-ui/charts@0.5.0`. Core's package manifest

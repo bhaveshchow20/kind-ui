@@ -1,209 +1,136 @@
 ---
 title: Combo Chart
-description: Combine bars, lines and areas to compare related measures.
+description: Combine bars, lines and areas to compare related measures in one plot.
 ---
 
-<ChartExample id="combo" />
+import ComboExample from "../../../examples/combo/basic";
+import ComboTwoAxesExample from "../../../examples/combo/two-axes";
+
+Use a combo chart when related measures read best as different marks, like actual values as bars against a target line, or when two measures need their own scales.
+
+<Example caption="Hover a month, or focus the chart and press the arrow keys, to see every measure for it.">
+  <ComboExample />
+
+  <include cwd lang="tsx">./examples/combo/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="combo" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/combo-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+ComboChart
+├── ComboChart.Background
+├── ComboChart.Grid
+├── ComboChart.XAxis
+├── ComboChart.YAxis
+├── ComboChart.Area
+├── ComboChart.Bar
+│   ├── ComboChart.Cell
+│   └── ComboChart.Labels
+├── ComboChart.Line
+├── ComboChart.Scatter
+├── ComboChart.Tooltip
+├── ComboChart.Legend
+└── ComboChart.Content
+```
+
+`ComboChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `ComboChart.Area`, `ComboChart.Bar`, `ComboChart.Line` or `ComboChart.Scatter` per measure. `ComboChart.Cell` colors a single bar and `ComboChart.Labels` writes values on a series. They share the x-axis, the tooltip and the legend, which read their labels, colors and value formats from `config`. `ComboChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-`ComboChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+### Series
 
-Combine `ComboChart.Bar`, `ComboChart.Area` and `ComboChart.Line` in one plot.
+Each series takes the same props as its own chart: `ComboChart.Bar` as in [Bar Chart](./bar.mdx), `ComboChart.Line` as in [Line Chart](./line.mdx), and `ComboChart.Area` as in [Area Chart](./area.mdx). Series draw in the order you add them, so put areas first and lines last to keep the lines on top.
 
-```tsx title="Composition sketch"
-import { ComboChart } from "@kind-ui/charts";
+Set `formatValue` in `config` so the tooltip shows each measure in its unit.
 
-<ComboChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate accessibilityLayer aria-label="Monthly production in units">
-  <ComboChart.Grid vertical={false} />
-  <ComboChart.XAxis dataKey="period" />
-  <ComboChart.YAxis domain={[0, 1200]} width={80} />
-  <ComboChart.Area dataKey="capacity" type="stepAfter" fillOpacity={0.18} />
-  <ComboChart.Bar dataKey="shipped" maxBarSize={32} />
-  <ComboChart.Line dataKey="target" type="linear" dot={false} strokeDasharray="6 4" />
-  <ComboChart.Tooltip />
-  <ComboChart.Legend />
-</ComboChart>
-```
+### Two Axes
 
-Set interpolation and paint on each series; format each axis for its measure.
+When measures have different units, give each its own `ComboChart.YAxis` with a `yAxisId`, and point each series at its axis with the same `yAxisId`. Set `orientation="right"` on the second axis, and `stackId` on bars that add up:
 
-## Stacks and two axes
+<Example caption="Press Retail in the legend to highlight its bars, then hover a month to compare revenue with margin.">
+  <ComboTwoAxesExample />
 
-Stack revenue bars on one axis and show margin on a separate percentage axis.
+  <include cwd lang="tsx">./examples/combo/two-axes.tsx</include>
+</Example>
 
-<ChartExample id="combo-stacked" />
+Read each series against its own axis: equal heights don't mean equal values. Give each axis a `tickFormatter` with its unit so readers can tell them apart.
 
-<Callout title="Two scales">Read each series against its own axis; equal heights do not mean equal values.</Callout>
+### Percentage Stacks
 
-## Family motion
-
-Compare independent, shared or line-only entrances. Change the option to replay.
-
-<ChartExample id="combo-motion" />
-
-## Presentation options
-
-Focus a series through its legend or marks. June is projected; the target has an icon, outlined points and moving dashes.
-
-<ChartExample id="combo-presentation" />
-
-## Percentage stacks
-
-Use an expanded stack for proportions. Keep raw data; format the axis and tooltip as percentages.
+Set `stackOffset="expand"` to show each stack as shares of 100%. Keep the raw values in `data`, and use `createPercentStack` to label the axis and tooltip as percentages:
 
 ```tsx
-import { ComboChart, type SeriesConfig, createPercentStack } from "@kind-ui/charts";
+import { ComboChart, createPercentStack } from "@kind-ui/charts";
 
-const data = [{ month: "Jan", online: 60, store: 40 }];
-const config = {
-  online: { label: "Online", color: "#733bff" },
-  store: { label: "Store", color: "#0f766e" },
-} satisfies SeriesConfig;
 const percent = createPercentStack({
   values: (entry) => [entry.payload.online, entry.payload.store],
 });
 
-export function PercentageChart() {
-  return <ComboChart config={config} data={data} stackOffset="expand" aria-label="Sales channel share">
-    <ComboChart.XAxis dataKey="month" />
-    <ComboChart.YAxis domain={[0, 1]} tickFormatter={percent.tickFormatter} />
-    <ComboChart.Bar dataKey="online" stackId="share" />
-    <ComboChart.Bar dataKey="store" stackId="share" />
-    <ComboChart.Tooltip normalizedValue={percent.normalizedValue} />
-  </ComboChart>;
-}
+<ComboChart stackOffset="expand" {...props}>
+  <ComboChart.YAxis domain={[0, 1]} tickFormatter={percent.tickFormatter} />
+  <ComboChart.Bar dataKey="online" stackId="share" />
+  <ComboChart.Bar dataKey="store" stackId="share" />
+  <ComboChart.Tooltip normalizedValue={percent.normalizedValue} />
+</ComboChart>
 ```
 
-<Callout title="Note">If series can be hidden, make the `values` callback return only the visible members of the inspected stack. Already fractional values use `formatPercent` directly.</Callout>
+`values` returns the raw values in the inspected entry's stack. If readers can hide series, return only the visible ones. For values that are already fractions, use `formatPercent` instead.
 
-## Loading State
+### Legend and Keyboard
 
-Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Pressing a legend item highlights its series and dims the others, and screen readers hear "Highlighted Retail." Press it again, or press Escape, to clear it. To hide and show series from the legend instead, see [Legend](../building-blocks/legend.mdx).
 
-<ChartExample id="combo" variant="loading" />
+Focus the chart and press the arrow keys to move between categories, which shows the tooltip with every measure, and Escape to dismiss it.
 
-## API reference
+### Motion
 
-Configure the shared plot, then set options on each series.
+Series appear at once unless you set `animate`. Pass `true` and lines and areas draw in from left to right while bars grow from the axis. Pass options to change the shared direction and duration, and `lineReveal`, `areaReveal` or `barReveal` to override one type, or `false` to skip it:
+
+```tsx
+<ComboChart
+  animate={{ revealDurationMs: 800, lineReveal: { revealDirection: "right-to-left" }, barReveal: false }}
+  {...props}
+>
+```
+
+When the reader prefers reduced motion, every series appears without animating. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder plot that sweeps across, or holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default). The legend and tooltip come back when `loading` turns off:
+
+```tsx
+<ComboChart loading={isPending} loadingLabel="Loading production" {...props}>
+```
+
+### Background
+
+Add `ComboChart.Background` for a decorative pattern behind the plot: `pinpoints`, `crossings` or `waves`. It adds nothing to the tooltip, legend or accessible name.
+
+```tsx
+<ComboChart.Background pattern="pinpoints" opacity={0.15} />
+```
+
+## API Reference
 
 ### ComboChart
 
-<div className="line-props-scroll" role="region" aria-label="ComboChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `data` | `Row[]` | — | Shared category observations; Kind does not aggregate or transform them. |
-| `animate` | `boolean \| ComboAnimation` | `false` | Chart-owned entrance and inspection motion, respecting reduced motion. |
-| `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | Native chart orientation; supply matching category and numeric axes. |
-| `stackOffset` | `"none" \| "expand" \| "wiggle" \| "silhouette" \| "sign" \| "positive"` | `"none"` | Native stack calculation; formatting remains consumer-owned. |
-| `barCategoryGap` / `barGap` | `number \| string` | `"10%"` / `4` | Category and grouped-bar spacing in native geometry. |
-| `accessibilityLayer` | `boolean` | `true` in Recharts | Keyboard category inspection; enabled explicitly in these components. |
-| `aria-label` / `aria-labelledby` | `string` | — | Consumer-supplied accessible plot name. |
-| `children` | `ReactNode` | Required | Explicit axes, grid, series and tooltip. |
-
-</div>
-
-See [Recharts ComposedChart](https://recharts.github.io/en-US/api/ComposedChart/).
+<auto-type-table path="../../../../../packages/charts/src/composition/combo.tsx" name="ComboChartOptions" type='Pick<ComboChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
 
 ### ComboAnimation
 
-Pass to `ComboChart.animate` to set timing by family.
+<auto-type-table path="../../../../../packages/charts/src/combo-chart.tsx" name="ComboRevealOptions" type='Pick<ComboAnimation, "lineReveal" | "areaReveal" | "barReveal">' />
 
-<div className="line-props-scroll" role="region" aria-label="ComboAnimation options" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `revealDurationMs` | `number` | `1000` | Shared entrance duration in milliseconds. |
-| `revealEasing` | `Transition["ease"]` | `[0.25, 0.1, 0.25, 1]` | Motion entrance easing. |
-| `lineReveal` / `areaReveal` / `barReveal` | `false \| { revealDurationMs?: number; revealEasing?: Transition["ease"] }` | Shared options | Override one family's duration or easing; `false` skips its entrance. |
-| `hoverTransition` | `Transition` | Spring: `210` stiffness, `28` damping, `0.8` mass | Shared inspection motion; family entrance options do not override it. |
-
-</div>
-
-<span id="barseries" />
-
-### ComboChart.Bar
-
-<div className="line-props-scroll" role="region" aria-label="ComboChart.Bar props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Native value field or accessor. |
-| `seriesKey` | `string` | String `dataKey` | Config and visibility identity; supply for controlled accessor or numeric keys. |
-| `yAxisId` / `xAxisId` | `string \| number` | `0` | Match the explicit native axes. |
-| `stackId` | `string \| number` | — | Stack bars on matching axes; omit for grouped bars. |
-| `maxBarSize` | `number` | — | Bound native bar thickness. |
-| `radius` | `number \| [number, number, number, number]` | `0` | Native corners; stack cap geometry remains consumer-owned. |
-| `fill` | `string` | Config color | Explicit paint override. |
-| `material` | `"clay" \| "glow"` | Omitted | Static bar finish; custom shape, filter or active renderer retains ownership. |
-
-</div>
-
-See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
-
-<span id="lineseries" />
-
-### ComboChart.Line
-
-<div className="line-props-scroll" role="region" aria-label="ComboChart.Line props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Native line values. |
-| `seriesKey` | `string` | String `dataKey` | Config and visibility identity. |
-| `yAxisId` / `xAxisId` | `string \| number` | `0` | Bind the line to its scale; margin uses the percentage axis. |
-| `type` | `"basis" \| "basisClosed" \| "basisOpen" \| "bumpX" \| "bumpY" \| "bump" \| "linear" \| "linearClosed" \| "natural" \| "monotoneX" \| "monotoneY" \| "monotone" \| "step" \| "stepBefore" \| "stepAfter"` or custom curve function | `"linear"` | Native interpolation. |
-| `stroke` / `strokeDasharray` | `string` | Config color / — | Override line paint and distinguish targets with dashes. |
-| `dot` | `boolean` or native dot props/renderer | `true` | Ordinary point marks; these components disable them. |
-| `connectNulls` | `boolean` | `false` | Connect gaps explicitly. |
-
-</div>
-
-Line material choices apply to the line independently of Area and Bar. See [Recharts Line](https://recharts.github.io/en-US/api/Line/) and [Line components](/docs/components/line/).
-
-<span id="areaseries" />
-
-### ComboChart.Area
-
-<div className="line-props-scroll" role="region" aria-label="ComboChart.Area props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | Required | Native area values. |
-| `seriesKey` | `string` | String `dataKey` | Config and visibility identity. |
-| `yAxisId` / `xAxisId` | `string \| number` | `0` | Bind the area to matching axes. |
-| `type` | `"basis" \| "basisClosed" \| "basisOpen" \| "bumpX" \| "bumpY" \| "bump" \| "linear" \| "linearClosed" \| "natural" \| "monotoneX" \| "monotoneY" \| "monotone" \| "step" \| "stepBefore" \| "stepAfter"` or custom curve function | `"linear"` | Choose interpolation per area. |
-| `stackId` | `string \| number` | — | Stack areas on matching axes. |
-| `fill` / `stroke` | `string` | Config color | Override fill and outline independently. |
-| `fillOpacity` | `number` | `0.6` in Recharts | Keep the filled context legible behind other marks. |
-| `material` | `"clay" \| "glow"` | Omitted | Static area finish; explicit shape or filter wins. |
-
-</div>
-
-See [Recharts Area](https://recharts.github.io/en-US/api/Area/) and [Area components](/docs/components/area/).
-
-### Percentage formatting
-
-<ApiTable name="PercentFormattingReference" />
-
-## Shared components
-
-Share series metadata and inspection across the bars, lines and areas.
-
-| Component | Purpose |
-| --- | --- |
-| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
-| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
-| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
-| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-
-Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+<Caption>
+  `ComboChart` also takes every prop of Recharts' [ComposedChart](https://recharts.github.io/en-US/api/ComposedChart/), like `margin`, `layout` and `stackOffset`. The series take the props listed on [Bar Chart](./bar.mdx), [Line Chart](./line.mdx) and [Area Chart](./area.mdx).
+</Caption>

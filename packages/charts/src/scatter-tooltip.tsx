@@ -13,6 +13,7 @@ import { cn } from "./utils.js";
 export type ScatterSizeDimension<Row = unknown> = {
   /** Own top-level property key, or the same typed record accessor used by ZAxis. */
   dataKey: string | ((record: Row) => number | null | undefined);
+  /** @default "Size" */
   name?: string;
   unit?: string;
 };
@@ -22,10 +23,17 @@ export type ScatterTooltipContentProps<Row = unknown> = Omit<
   "children"
 > & {
   tooltip: NativeContentProps;
-  /** Receives the selected native record, never a categorical label or chart-wide index. */
+  /**
+   * The tooltip title for a point. Receives the point's data record.
+   * @default the series label from `config`
+   */
   pointLabel?: (record: Row) => ReactNode;
-  /** Recovers zero/missing Z entries omitted by native Recharts, without changing marker geometry. */
+  /** Shows the bubble-size value, including zero and missing values Recharts leaves out. */
   zDimension?: ScatterSizeDimension<Row>;
+  /**
+   * What the tooltip shows for a missing `zDimension` value.
+   * @default "No data"
+   */
   missingValue?: ReactNode;
   valueAnimation?: TooltipContentProps["valueAnimation"];
 };

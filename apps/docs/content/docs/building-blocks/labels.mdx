@@ -1,0 +1,50 @@
+---
+title: Labels and Cells
+description: Write values on marks and color single bars or slices.
+---
+
+import LabelsExample from "../../../examples/labels/basic";
+
+Use `.Labels` to write each value on its bar, slice or point, and `.Cell` to color one item differently from the rest of its series. They're Recharts' `LabelList` and `Cell`, available as parts of Bar, Combo, Pie and Radial Bar charts (Waterfall has `.Labels`).
+
+<Example caption="Each bar shows its order count, and June stands out in its own color.">
+  <LabelsExample />
+
+  <include cwd lang="tsx">./examples/labels/basic.tsx</include>
+</Example>
+
+## Usage
+
+### Value Labels
+
+Put `.Labels` inside a series. `dataKey` picks the value, `position` places it (`top`, `inside`, `insideTop`, `right` and so on), and `offset` sets the gap. Add a top margin to the chart so labels above the tallest bar don't clip. Use `formatter` to format the text:
+
+```tsx
+<BarChart.Series dataKey="revenue">
+  <BarChart.Labels dataKey="revenue" position="top" formatter={(value) => `$${value}k`} />
+</BarChart.Series>
+```
+
+Families without a `.Labels` part, like Line and Area, take the `LabelList` export the same way. In radial charts, `RadialBarChart.Label` writes text along each arc: pass it as `content={<RadialBarChart.Label />}` on `.Labels`.
+
+### Cells
+
+Put one `.Cell` per data row inside a series, in the same order as the rows, and set its `fill`. The example colors every bar but June gray. A legend still shows the series' config color, so leave it out, or match it, when cells recolor a whole series.
+
+Pie and radial charts color their slices from `config` by category key, so they need cells only for one-off overrides. See [Pie](../components/pie.mdx).
+
+### Axis and Center Text
+
+`Label` adds a single piece of text, like an axis title or the number in the middle of a donut. Put it inside an axis, or inside a pie series with `position="center"`:
+
+```tsx
+import { Label } from "@kind-ui/charts";
+
+<BarChart.YAxis width={48}>
+  <Label value="Orders" angle={-90} position="insideLeft" />
+</BarChart.YAxis>
+```
+
+<Caption>
+  `.Labels`, `.Cell` and `Label` take the props of Recharts' [LabelList](https://recharts.github.io/en-US/api/LabelList/), [Cell](https://recharts.github.io/en-US/api/Cell/) and [Label](https://recharts.github.io/en-US/api/Label/).
+</Caption>

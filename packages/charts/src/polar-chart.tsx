@@ -24,19 +24,42 @@ export type RadialBarAnimation = BaseAnimation;
 export type RadarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadarChart<DataPoint>
 > & {
+  /**
+   * Grows the polygons out from the center on mount. Pass options to change the duration or easing.
+   * Reduced motion skips it.
+   * @default false
+   */
   animate?: boolean | RadarAnimation | undefined;
+  /** Shows a placeholder plot and hides the legend and tooltip while the data is on its way. */
   loading?: boolean | undefined;
+  /**
+   * What screen readers hear while `loading` is on.
+   * @default "Loading chart"
+   */
   loadingLabel?: string | undefined;
 };
 export type RadialBarChartProps<DataPoint = unknown> = ComponentProps<
   typeof EngineRadialBarChart<DataPoint>
 > & {
-  /** Category colors from chart config, resolved from original chart rows. */
+  /** The row field, or a function of the row, naming each bar's `config` entry, so each bar takes its own color. */
   categoryKey?: CategoryKey<DataPoint> | undefined;
+  /**
+   * Sweeps the bars in along their arcs on mount. Pass options to change the duration or easing.
+   * Reduced motion skips it.
+   * @default false
+   */
   animate?: boolean | RadialBarAnimation | undefined;
+  /** Shows a placeholder plot and hides the legend and tooltip while the data is on its way. */
   loading?: boolean | undefined;
+  /**
+   * What screen readers hear while `loading` is on.
+   * @default "Loading chart"
+   */
   loadingLabel?: string | undefined;
-  /** Entrance direction only; native chart and axis angles stay consumer-owned. */
+  /**
+   * Which way the entrance sweeps. `startAngle` and `endAngle` don't change.
+   * @default "clockwise"
+   */
   animationDirection?: "clockwise" | "anticlockwise" | undefined;
 };
 export const PolarMotion = createContext<{ reveal: boolean; options: RadarAnimation }>({

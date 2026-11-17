@@ -1,183 +1,104 @@
 ---
-title: BoxPlot
-description: Compare distributions with explicit quartiles, whiskers and outliers.
+title: Box Plot
+description: Compare distributions with quartiles, whiskers and outliers.
 ---
 
-<ChartExample id="box-plot" />
+import BoxPlotExample from "../../../examples/box-plot/basic";
+
+Use a box plot to compare how values are spread across a few groups, like response times per page, when the median and range matter more than each value.
+
+<Example caption="Hover a box, or focus the chart and press the arrow keys, to see its median.">
+  <BoxPlotExample />
+
+  <include cwd lang="tsx">./examples/box-plot/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="box-plot" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/box-plot-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+BoxPlotChart
+├── BoxPlotChart.Background
+├── BoxPlotChart.Grid
+├── BoxPlotChart.XAxis
+├── BoxPlotChart.YAxis
+├── BoxPlotChart.Series
+│   └── BoxPlotChart.Mark
+├── BoxPlotChart.Tooltip
+├── BoxPlotChart.Legend
+└── BoxPlotChart.Content
+```
+
+`BoxPlotChart` holds the data, the series config and the accessible name, and draws only the parts you add. `BoxPlotChart.Series` draws one box per row: the box spans `q1` to `q3`, the line across it marks the `median`, the whiskers reach `lowerWhisker` and `upperWhisker`, and each outlier is a circle. Its `seriesKey` picks the label and color in `config`. `BoxPlotChart.Mark` draws one box, for a custom `shape`. `BoxPlotChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-`BoxPlotChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+### Summaries
 
-Open **Code** for the complete component and its data. `BoxPlotChart.Series` draws each supplied summary; Chart config provides the series label and color.
+The chart draws statistics you've already computed; it doesn't pick a quartile method or decide what counts as an outlier. Give each row a `BoxPlotSummary`, and point the series' `dataKey` at it, or pass a function that builds one from the row:
 
-Use this composition when adapting the example:
+```tsx
+<BoxPlotChart.Series<Row>
+  dataKey={(row) => ({ lowerWhisker: row.min, q1: row.p25, median: row.p50, q3: row.p75, upperWhisker: row.max })}
+  seriesKey="latency"
+/>
+```
 
-```tsx title="Composition sketch"
-import { BoxPlotChart } from "@kind-ui/charts";
+The values must be finite and in order, from `lowerWhisker` up to `upperWhisker`, and each outlier must lie outside the whiskers, or the chart throws. Equal values are fine: a summary where every value is the same draws a flat line. A `null` summary draws no box but keeps its category on the axis. Set the Y axis `domain` to include your outliers.
 
-<BoxPlotChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate accessibilityLayer aria-label="Response time distributions">
-  <BoxPlotChart.Grid vertical={false} />
-  <BoxPlotChart.XAxis dataKey="period" />
-  <BoxPlotChart.YAxis type="number" domain={[0, 180]} />
-  <BoxPlotChart.Series<(typeof data)[number]>
-    dataKey={(row) => ({
-      lowerWhisker: row.lowerWhisker,
-      q1: row.q1,
-      median: row.median,
-      q3: row.q3,
-      upperWhisker: row.upperWhisker,
-      outliers: [row.outlier],
-    })}
-    seriesKey="latency"
-    barSize={32}
-  />
-  <BoxPlotChart.Tooltip content={({ active, payload }) =>
-    active && payload?.[0] ? (
-      <div data-kind-ui="chart-tooltip">
-        Median: {payload[0].payload.median} ms
-      </div>
-    ) : null
-  } />
-  <BoxPlotChart.Legend />
+`validateBoxPlotSummary` runs the same checks on a summary, and `boxPlotExtent` returns its lowest and highest values, outliers included.
+
+Set `material="clay"` or `"glow"` on the series for a finish; see [Materials](../guides/materials.mdx). To draw the boxes yourself, pass a `shape`; it gets the summary and its screen coordinates, and can render `BoxPlotChart.Mark`.
+
+### Tooltip
+
+The default tooltip shows each box's full range. To show a statistic instead, pass a `formatter` that reads the summary from `entry.payload`, as the example does for the median, or pass your own `content` to show them all.
+
+### Horizontal Boxes
+
+Set `layout="vertical"` for horizontal boxes, with the number scale on the X axis and the categories on the Y axis:
+
+```tsx
+<BoxPlotChart layout="vertical" {...props}>
+  <BoxPlotChart.XAxis type="number" domain={[0, 180]} />
+  <BoxPlotChart.YAxis type="category" dataKey="page" width={80} />
+  <BoxPlotChart.Series<Row> dataKey="summary" seriesKey="latency" barSize={28} />
 </BoxPlotChart>
 ```
 
-Read the original row from `payload` to show named statistics such as the median.
+### Motion and Loading
 
-## Summary data
+Set `animate` to reveal the boxes when the chart mounts. When the reader prefers reduced motion, boxes appear at once. See [Motion](../guides/motion.mdx).
 
-Calculate quartiles, median, whiskers and outliers before rendering. Kind draws your summaries without choosing a statistical method.
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder, and screen readers hear `loadingLabel` ("Loading chart" by default):
 
 ```tsx
-const data = [{
-  period: "Checkout",
-  lowerWhisker: 26, q1: 46, median: 68, q3: 88, upperWhisker: 126,
-  outlier: 154,
-}];
+<BoxPlotChart loading={isPending} loadingLabel="Loading response times" {...props}>
 ```
 
-In the chart above, the box spans Q1–Q3, its middle line marks the median, and the separate circle is an outlier. Hover a box to inspect all six statistics.
-
-<Callout title="Note">Use finite values satisfying `lowerWhisker <= q1 <= median <= q3 <= upperWhisker`. Outliers must fall outside the whiskers and within your axis domain. Equal quartiles are valid; missing summaries draw no mark.</Callout>
-
-## Collapsed and missing summaries
-
-Stable and Zero have collapsed summaries; Pending has no mark but retains its category label. Variable includes negative values and outliers.
-
-<ChartExample id="box-plot-edge-cases" />
-
-## Horizontal distributions
-
-Use `layout="vertical"` with numeric X and categorical Y axes for horizontal boxes.
-
-<ChartExample id="box-plot-horizontal" />
-
-## Materials
-
-Choose Default, Clay or Glow. Explicit `filter` or `style.filter` overrides the finish; custom shapes can compose `BoxPlotMark` directly.
-
-<ChartExample id="box-plot-materials" />
-
-## Loading State
-
-Set [`loading`](/docs/chart-components/chart/#loading) while summaries are pending. Use `loadingLabel` to name the pending data.
-
-<ChartExample id="box-plot" variant="loading" />
-
-## API reference
-
-Use these props when composing a Box Plot.
+## API Reference
 
 ### BoxPlotChart
 
-<div className="line-props-scroll" role="region" aria-label="BoxPlotChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `data` | `Row[]` | — | Consumer-owned observations containing summaries or accessor inputs. |
-| `layout` | `"horizontal" \| "vertical"` | `"horizontal"` | Native layout; `"vertical"` gives horizontal boxes with numeric X and categorical Y axes. |
-| `animate` | `boolean \| BarAnimation` | `false` | Chart-owned clipped entrance; respects reduced motion. Native per-series animation is disabled. |
-| `accessibilityLayer` | `boolean` | `true` in Recharts | Native keyboard inspection. Set explicitly in these components. |
-| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
-| `children` | `ReactNode` | Required | Explicit series, axes, grid and tooltip. |
-
-</div>
-
-Custom range shapes retain inspection but cannot use Bar category emphasis. See [Recharts BarChart](https://recharts.github.io/en-US/api/BarChart/).
-
-<span id="boxplotseries" />
+<auto-type-table path="../../../../../packages/charts/src/composition/box-plot.tsx" name="BoxPlotChartOptions" type='Pick<BoxPlotChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
 
 ### BoxPlotChart.Series
 
-<div className="line-props-scroll" role="region" aria-label="BoxPlotChart.Series props" tabIndex={0}>
+<auto-type-table path="../../../../../packages/charts/src/box-plot.tsx" name="BoxPlotSeriesOptions" type='Pick<BoxPlotSeriesProps, "dataKey" | "seriesKey" | "material" | "outlierRadius" | "shape" | "markProps">' />
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `(keyof Row & string) \| ((row: Row) => BoxPlotSummary \| null \| undefined)` | Required | Direct property name or accessor; nested string paths are not interpreted. |
-| `seriesKey` | `string` | Required | Chart metadata, color and visibility identity, independent of the generated range accessor. |
-| `material` | `"clay" \| "glow"` | Omitted | Static mark finish. Explicit filters and custom shapes retain ownership. |
-| `barSize` | `number \| string` | Native automatic sizing | Category-axis width; numbers are pixels, native percentage strings are also accepted. |
-| `outlierRadius` | `number` | `3` | Radius of each outlier circle in screen pixels. |
-| `shape` | `(props: BoxPlotShapeProps) => ReactNode` | Built-in mark | Receives original summary, native Bar shape props and mapped coordinates. Owns returned markup. |
-| `markProps` | SVG group props, excluding `children` | — | Attributes, styles, handlers and refs forwarded to each present mark group. |
-| `xAxisId` / `yAxisId` | `string \| number` | `0` | Native axes used to map statistical values. |
-| `hide` | `boolean` | `false` | Suppresses paint and inspection while preserving full-data layout; chart visibility also applies. |
+### BoxPlotSummary
 
-</div>
+<auto-type-table path="../../../../../packages/charts/src/box-plot.tsx" name="BoxPlotSummaryFields" type="BoxPlotSummary" />
 
-Stacking, `minPointSize`, background, radius and `activeBar` are excluded. Cells, labels and handlers remain available. LabelList positions refer to the enclosing range. See [Recharts Bar](https://recharts.github.io/en-US/api/Bar/).
-
-### BoxPlotMark
-
-Renders caller-owned screen coordinates; it neither computes statistics nor maps domains.
-
-<div className="line-props-scroll" role="region" aria-label="BoxPlotMark props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `coordinates` | `BoxPlotSummary` | Required | Already mapped screen coordinates; these can reverse on a vertical numeric scale. |
-| `center` | `number` | Required | Category-axis center in pixels. |
-| `size` | `number` | Required | Category-axis mark width in pixels. |
-| `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | Direction of the quantitative geometry. |
-| `outlierRadius` | `number` | `3` | Screen-space circle radius. |
-| `material` | `"clay" \| "glow"` | Omitted | Static finish; explicit group filters take precedence. |
-| `strokeWidth` | SVG stroke width | `1.5` | Native stroke width; explicit SVG paint stays consumer-owned. |
-
-</div>
-
-### BoxPlotSummary and helpers
-
-<div className="line-props-scroll" role="region" aria-label="BoxPlotSummary fields" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `lowerWhisker` / `upperWhisker` | `number` | Required | Caller-defined finite whisker endpoints. |
-| `q1` / `q3` | `number` | Required | Caller-computed finite quartiles, ordered within whiskers. |
-| `median` | `number` | Required | Finite value between Q1 and Q3. |
-| `outliers` | `readonly number[]` | — | Finite observations strictly outside the supplied whiskers. |
-
-</div>
-
-`validateBoxPlotSummary` returns valid input unchanged, returns null for missing input, and throws for malformed summaries. `boxPlotExtent` returns the validated minimum/maximum including outliers. Neither mutates input.
-
-## Shared components
-
-Use these building blocks to customize this chart. Each reference includes its full API.
-
-| Component | Purpose |
-| --- | --- |
-| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
-| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
-| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
-| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-
-Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+<Caption>
+  `BoxPlotChart` and `BoxPlotChart.Series` also take Recharts' [BarChart](https://recharts.github.io/en-US/api/BarChart/) and [Bar](https://recharts.github.io/en-US/api/Bar/) props, like `layout` and `barSize`. The series doesn't take `stackId`, `radius`, `minPointSize`, `background` or `activeBar`.
+</Caption>

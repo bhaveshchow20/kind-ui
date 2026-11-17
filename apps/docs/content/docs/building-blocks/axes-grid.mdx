@@ -1,0 +1,60 @@
+---
+title: Axes and Grid
+description: Set the scales, ticks and guide lines of cartesian and polar charts.
+---
+
+import AxesExample from "../../../examples/axes-grid/basic";
+
+Use `.XAxis`, `.YAxis` and `.Grid` to give a cartesian chart its scales and guide lines, and `.AngleAxis`, `.RadiusAxis` and `.Grid` to do the same for radar and radial charts. They're Recharts' axis and grid components with quieter defaults, and take every Recharts prop.
+
+<Example caption="Hover a topic to see its hours. The dashed line marks the eight-hour target.">
+  <AxesExample />
+
+  <include cwd lang="tsx">./examples/axes-grid/basic.tsx</include>
+</Example>
+
+## Usage
+
+### Cartesian Axes
+
+`.XAxis` and `.YAxis` hide the axis and tick lines and draw 12px tick labels in `--muted-foreground`. Pass `axisLine`, `tickLine` or `tick` to bring back or restyle any of them.
+
+Most charts put categories on the X axis with `dataKey`, and numbers on the Y axis. For horizontal bars, swap them: set `layout="vertical"` on the chart, `type="number"` on the X axis and `type="category"` with a `dataKey` on the Y axis, as the example does. Give the Y axis a `width` that fits its longest label.
+
+Use `domain` to fix a numeric range, like `[0, 100]` for scores, and `tickFormatter` to format tick labels:
+
+```tsx
+<BarChart.YAxis domain={[0, "auto"]} tickFormatter={(value) => `$${value}k`} />
+```
+
+With two scales, give each axis a `yAxisId` and set the same `yAxisId` on its series. [Combo](../components/combo.mdx) charts do this for a bar and a line with different units.
+
+### Grid
+
+`.Grid` draws dashed horizontal lines in `--border`. Set `vertical` to add vertical lines and `horizontal={false}` to drop the horizontal ones; `stroke` and `strokeDasharray` restyle them.
+
+### Reference Lines
+
+Cartesian charts also have `.ReferenceLine`, `.ReferenceArea` and `.ReferenceDot` to mark a target, a range or a single point, and `.Brush` to pick a range of a long series. They're Recharts' components, so their props follow Recharts.
+
+### Scatter Axes
+
+`ScatterChart.XAxis` and `ScatterChart.YAxis` are numeric by default. `ScatterChart.ZAxis` maps a third value to each point's area, not its radius. Set its `range` and `domain` to keep sizes comparable between charts:
+
+```tsx
+<ScatterChart.ZAxis dataKey="requests" range={[40, 320]} domain={[0, 1000]} name="Requests" />
+```
+
+### Polar Axes
+
+Radar and radial charts use `.AngleAxis` for the categories around the circle, `.RadiusAxis` for the scale out from the center, and `.Grid` for polygon or circular guides. These keep Recharts' own defaults:
+
+```tsx
+<RadarChart.AngleAxis dataKey="skill" />
+<RadarChart.RadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+<RadarChart.Grid gridType="circle" />
+```
+
+<Caption>
+  Every axis and grid part takes the props of its Recharts component: [XAxis](https://recharts.github.io/en-US/api/XAxis/), [YAxis](https://recharts.github.io/en-US/api/YAxis/), [ZAxis](https://recharts.github.io/en-US/api/ZAxis/), [CartesianGrid](https://recharts.github.io/en-US/api/CartesianGrid/), [PolarAngleAxis](https://recharts.github.io/en-US/api/PolarAngleAxis/), [PolarRadiusAxis](https://recharts.github.io/en-US/api/PolarRadiusAxis/) and [PolarGrid](https://recharts.github.io/en-US/api/PolarGrid/).
+</Caption>

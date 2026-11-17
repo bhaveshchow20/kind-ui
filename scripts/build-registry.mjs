@@ -3,7 +3,6 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { filesFor } from "../apps/docs/lib/example-files.mjs";
 import { coreVersion, registryCss, registryHomepage, registryItems } from "../registry/catalog.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -21,25 +20,9 @@ if (manifest.version !== coreVersion)
 // Core declares its peers. Re-adding their ranges through the CLI upgrades
 // compatible exact host pins instead of leaving npm to resolve missing peers.
 const dependencies = [`@kind-ui/charts@${coreVersion}`];
-const items = registryItems.map(({ exampleId, name, title, description }) => {
-  const sourcePath = `src/examples/${exampleId}/example.tsx`;
-  const files = filesFor(
-    {
-      id: exampleId,
-      family: exampleId,
-      files: {
-        [sourcePath]: readFileSync(
-          path.join(root, `apps/docs/examples/${exampleId}/example.tsx`),
-          "utf8",
-        ),
-      },
-    },
-    {},
-  );
-  const source = files[sourcePath];
-  if (!source) throw new Error(`Missing canonical composition ${exampleId}`);
+const items = registryItems.map(({ name, title, description, source }) => {
   const relative = `components/${name}.tsx`;
-  writeFileSync(path.join(staging, relative), source);
+  writeFileSync(path.join(staging, relative), readFileSync(path.join(root, source), "utf8"));
   return {
     name,
     type: "registry:component",

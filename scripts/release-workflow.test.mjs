@@ -127,14 +127,26 @@ function assertRelease(w) {
   assert.deepEqual(w.jobs["github-release"].needs, ["plan", "verify", "publish"]);
   assert.equal(w.jobs["github-release"].if, "needs.publish.result == 'success'");
   assert.deepEqual(w.jobs["github-release"].permissions, { contents: "write" });
-  const entry = w.jobs["github-release"].steps.find((s) => s.run);
-  assert.equal(entry.run, "node scripts/github-release.mjs");
+  const releaseSteps = w.jobs["github-release"].steps;
+  const entry = releaseSteps.find((s) => s.run === "node scripts/github-release.mjs");
+  assert.ok(entry, "The release job records the release through github-release.mjs");
+  const hosting = "vars.KINDUI_HOSTING == 'true'";
+  const site = releaseSteps.find((s) => s.run?.includes("pack-site"));
+  assert.deepEqual(site.run.trim().split("\n"), [
+    "npm run build:docs",
+    "npm run build:registry",
+    "node scripts/pack-site.mjs",
+  ]);
+  assert.ok(releaseSteps.indexOf(site) < releaseSteps.indexOf(entry), "Pack before release");
+  for (const step of releaseSteps.filter((s) => s.run && s !== entry))
+    assert.equal(step.if, hosting, `Site handoff runs only with hosting: ${step.run}`);
   assert.deepEqual(entry.env, {
     GITHUB_TOKEN: expression("github.token"),
     RELEASE_VERSION: expression("needs.plan.outputs.version"),
     RELEASE_FILENAME: expression("needs.verify.outputs.filename"),
     RELEASE_SHA256: expression("needs.verify.outputs.sha256"),
     RELEASE_INTEGRITY: expression("needs.verify.outputs.integrity"),
+    RELEASE_SITE: expression(hosting),
   });
   assert.equal(
     w.jobs["github-release"].steps.find((s) => s.uses?.startsWith("actions/checkout@")).with.ref,
@@ -179,6 +191,25 @@ for (const [name, mutate] of [
     "release before successful publication",
     (w) => {
       w.jobs["github-release"].needs = ["plan", "verify"];
+    },
+  ],
+  [
+    "site build without hosting",
+    (w) => {
+      w.jobs["github-release"].steps.find((s) => s.run?.includes("pack-site")).if = undefined;
+    },
+  ],
+  [
+    "site assets without hosting",
+    (w) => {
+      w.jobs["github-release"].steps.find((s) => s.env?.RELEASE_SITE).env.RELEASE_SITE = "true";
+    },
+  ],
+  [
+    "missing site pack",
+    (w) => {
+      const site = w.jobs["github-release"].steps.find((s) => s.run?.includes("pack-site"));
+      site.run = site.run.replace("node scripts/pack-site.mjs", "");
     },
   ],
   [

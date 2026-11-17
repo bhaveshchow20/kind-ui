@@ -1,49 +1,39 @@
 ---
 title: Materials
-description: Choose Default, Clay, or Glow for supported chart parts.
+description: Give chart marks a clay or glow finish without changing their values.
 ---
 
-Use Clay for soft relief or Glow for light around marks. Leave the prop unset
-for Default appearance. Choose the finish on the chart part you want to style.
+import MaterialsExample from "../../../examples/materials/basic";
 
-## Choose the prop
+Set `material` on a series to change how its marks are finished: `"clay"` for soft relief, `"glow"` for light around the marks, or leave it unset for flat paint (`"plain"`). A material changes only the look, never the geometry, values, tooltip or legend.
 
-Most series use `material`. Sankey uses `finish` for Clay and Glow.
+<Example caption="Both series use the clay finish. Hover a quarter to see its loans.">
+  <MaterialsExample />
 
-| Chart part | Default | Clay | Glow |
-| --- | --- | --- | --- |
-| [Line](/docs/components/line/), [Area](/docs/components/area/), [Bar](/docs/components/bar/) series | Omit `material` | `material="clay"` | `material="glow"` |
-| [Pie](/docs/components/pie/), [Radar](/docs/components/radar/), [Radial](/docs/components/radial/), [Scatter](/docs/components/scatter/) series | Omit `material` | `material="clay"` | `material="glow"` |
-| [HeatmapGrid](/docs/components/heatmap/) | Omit `material` | `material="clay"` | `material="glow"` |
-| [Sankey nodes and links](/docs/components/sankey/) | Omit `finish` | `finish="clay"` | `finish="glow"` |
+  <include cwd lang="tsx">./examples/materials/basic.tsx</include>
+</Example>
 
-Histogram, Waterfall, Box Plot, and Combo examples use their documented series
-parts. Open a family page to compare its live material previews.
+## Usage
 
-Set the finish on the series in your existing Bar composition:
+### Where It Goes
 
-```tsx
-import { BarChart } from "@kind-ui/charts";
+Set `material` on the part that draws the marks:
 
-<BarChart.Series dataKey="orders" material="clay" />
-```
+| Chart | Part |
+| --- | --- |
+| [Line](../components/line.mdx), [Area](../components/area.mdx), [Bar](../components/bar.mdx), [Histogram](../components/histogram.mdx), [Waterfall](../components/waterfall.mdx), [Box Plot](../components/box-plot.mdx), [Scatter](../components/scatter.mdx) | `.Series` |
+| [Pie](../components/pie.mdx), [Radar](../components/radar.mdx), [Radial](../components/radial.mdx) | `.Series` |
+| [Heatmap](../components/heatmap.mdx) | `HeatmapChart.Grid` |
+| [Sankey](../components/sankey.mdx) | `finish` on `SankeyChart.Node` and `SankeyChart.Link` |
 
-For Sankey, set it in the node and link renderers:
+Combo charts take it on each of their line, area and bar series. Sankey uses `finish` because its links already have a `material` for their paint: `"solid"` or `"gradient"`.
 
 ```tsx
-import { SankeyChart } from "@kind-ui/charts";
-
-<SankeyChart config={nodeConfig} data={flowData} aria-label="Energy flows">
-  <SankeyChart.Nodes render={(props) => <SankeyChart.Node {...props} finish="glow" />} />
-  <SankeyChart.Links render={(props) => <SankeyChart.Link {...props} finish="glow" />} />
-</SankeyChart>
+<SankeyChart.Links render={(props) => <SankeyChart.Link {...props} finish="glow" />} />
 ```
 
-<Callout type="info">
-Sankey's `material="solid"` or `"gradient"` chooses link paint separately from
-`finish`. Custom shapes and filters can replace the built-in appearance.
-</Callout>
+### Choosing One
 
-Materials keep values and geometry unchanged. Check contrast in both themes and
-leave room for effects near plot edges. See [Motion](/docs/guides/motion/) to
-animate the chart independently.
+Mix finishes in one chart only when they mean something, like a glowing forecast next to plain actuals. A pie can glow only some slices with `glowCategories`. Glow and clay draw slightly past the marks, so leave a little margin at the edges of the plot. They don't fix contrast: check each series against the background in both light and dark.
+
+A custom `shape`, `fill` or `filter` you pass to a series replaces the built-in finish.

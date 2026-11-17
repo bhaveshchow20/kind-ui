@@ -1,64 +1,41 @@
 ---
 title: Accessibility
-description: Name charts and provide readable values and keyboard access.
+description: Name each chart, and know what keyboard and screen reader users get.
 ---
 
-Give every chart a meaningful name. Include units, zero values and missing observations in labels and tooltips. Documentation examples render the graph without alternative tables.
+Charts handle focus, keyboard inspection, legend state and announcements for you. What they can't know is what the chart means, so its name, units and any data view beside it are up to you.
 
-## Name and describe the chart
+## Name the Chart
 
-Use `aria-label` or `aria-labelledby` for the chart name.
+Every chart needs `aria-label` or `aria-labelledby`, and throws without one. Say what it shows and in what unit: "Revenue against target, in thousands of dollars" tells a screen reader user what "Monthly chart" doesn't. Put units in labels and `formatValue` too, so tooltips read "340 ms", not "340".
 
-```tsx
-import { LineChart } from "@kind-ui/charts";
+## Keyboard
 
-<LineChart
-    data={[{ month: "Jan", visitors: 42 }, { month: "Feb", visitors: 58 }]}
-    config={{ visitors: { label: "Visitors", color: "#733bff" } }}
-    aria-label="Monthly visitors"
-  >
-    <LineChart.XAxis dataKey="month" />
-    <LineChart.Series dataKey="visitors" />
-    <LineChart.Tooltip />
-</LineChart>
-```
-
-Applications can explicitly add family-specific data views with
-[HeatmapChart.DataTable](/docs/components/heatmap/#heatmapdatatable) or
-[SankeyChart.Table](/docs/components/sankey/#sankeycharttable) when needed. These optional parts are omitted from the examples.
-
-## Keyboard access
-
-Inspection differs by chart family. Use the family's complete example to keep
-its keyboard controls and descriptions together.
-
-| Chart or control | Access |
+| Part | Keys |
 | --- | --- |
-| [Legend](/docs/chart-components/legend/) | Enter or Space toggles eligible series or selects focus; Escape resets focus |
-| Cartesian charts and [Pie](/docs/components/pie/) | Native Recharts inspection with `accessibilityLayer`; use meaningful chart labels |
-| [Scatter](/docs/components/scatter/) | Native keyboard inspection covers the first series; expose all series in the alternative |
-| [Radar](/docs/components/radar/) | Series controls support selection; no arrow-key inspection between spokes |
-| [Heatmap](/docs/components/heatmap/) | Arrow keys move between cells; Home/End navigate the grid; Escape dismisses inspection |
-| [Sankey](/docs/components/sankey/) | Use link controls or a visible `SankeyChart.Table` inspector for keyboard selection |
-| [ActivityRings](/docs/components/radial/) | Built-in descriptions retain original ring values; give the chart a name |
+| [Legend](../building-blocks/legend.mdx) | Tab to an item; Enter or Space highlights it, or hides and shows it; Escape clears the highlight |
+| [Line](../components/line.mdx) and the other cartesian charts, and [Pie](../components/pie.mdx) | Focus the chart; arrow keys move between points and show the tooltip; Escape dismisses it |
+| [Heatmap](../components/heatmap.mdx) | Arrow keys move between cells; Home and End jump to the ends; Escape dismisses the tooltip |
+| [Scatter](../components/scatter.mdx), [Radar](../components/radar.mdx), [Radial](../components/radial.mdx), [Sankey](../components/sankey.mdx) | See their chart pages for what the keyboard reaches |
 
-<Callout type="info">
-A tooltip does not replace complete data access. Keep keyboard focus visible,
-and use labels or patterns alongside colors when color conveys a distinction.
-</Callout>
+Line charts tell screen readers how to inspect them when they get focus. Keep the focus ring visible: don't remove outlines from charts or legend buttons in your CSS.
 
-## Motion and loading
+## Announcements
 
-Kind respects reduced-motion preferences. Custom renderers must handle their own
-motion. See [Motion](/docs/guides/motion/) for still-chart options.
+Screen readers hear legend changes as they happen: "Highlighted Revenue.", "Hidden Target.", "Shown Target." and "Highlight cleared.", and "At least one item must remain visible." when a press would hide the last series. While `loading` is set, they hear `loadingLabel` ("Loading chart" by default) instead of the chart's parts.
 
-Set `loading` while a request is pending. Only the plot placeholder is visible; chart-owned legends, content and instructions return when ready without resetting selection. Use `loadingLabel` to name that state;
-show a separate message for empty results or errors. See
-[Chart loading](/docs/chart-components/chart/#loading).
+## Color
 
-## Check the result
+Don't let color be the only way to tell series apart. Name series in the legend, and add a second cue where colors are close: a dashed line, a `pattern` on bars and areas, or a `legendShape` that matches a scatter series' `shape`. Check each series' contrast against the background in light and dark; give a series `{ light, dark }` colors when one color can't serve both. See [Series Config](../building-blocks/series-config.mdx).
 
-Test the copied example with keyboard navigation and at narrow widths. Check
-chart names, focus visibility, units, contrast, missing values, and reduced
-motion. Test with your audience's browsers and screen readers; automated browser
-checks alone do not establish screen-reader conformance.
+## Data Views
+
+A tooltip shows one point at a time. When readers need every value, add a data view next to the chart: Heatmap has `HeatmapChart.DataTable` and Sankey has `SankeyChart.Table`, and for other charts a table or summary you render from the same data works. Leave it out when the chart's name and a short summary say enough.
+
+## Motion
+
+Charts follow `prefers-reduced-motion` on their own: entrances, hover motion, loading placeholders and rolling digits all hold still. See [Motion](./motion.mdx).
+
+## Check It
+
+Use the chart with the keyboard alone, at a narrow width, at 200% text size, in light and dark, and with reduced motion on. Then use it with the screen readers your readers use. Automated checks find missing names and contrast problems, but not whether the chart makes sense when heard.

@@ -11,6 +11,7 @@ import { cartesian } from "./parts.js";
 
 export type LineChartProps<DataPoint = unknown> = FamilyProps<
   Omit<NativeLineChartProps, "data"> & {
+    /** The rows to plot. Each series reads its `dataKey` from every row. */
     data?: readonly DataPoint[];
     "aria-describedby"?: string;
   }

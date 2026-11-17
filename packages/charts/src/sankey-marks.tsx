@@ -17,11 +17,22 @@ export type SankeyLinkProps = Omit<NativeLinkProps, "payload"> & {
     source: NativeNodeProps["payload"] & { id: string };
     target: NativeNodeProps["payload"] & { id: string };
   };
+  /**
+   * `"solid"` paints the ribbon in the source node's color; `"gradient"` blends from the source
+   * to the target color.
+   * @default "solid"
+   */
   material?: SankeyMaterial;
+  /**
+   * A surface finish for the ribbon.
+   * @default "plain"
+   */
   finish?: SankeyFinish;
+  /** The source color. Defaults to the source node's `config` color. */
   color?: string | undefined;
+  /** The target color for `"gradient"`. Defaults to the target node's `config` color. */
   targetColor?: string | undefined;
-  /** Presentation and handlers; computed path and flow width always win. */
+  /** Props for the ribbon's `path`, like handlers and ARIA attributes. The computed path and width always win. */
   pathProps?: SVGProps<SVGPathElement>;
 };
 export function SankeyLink({
@@ -154,10 +165,15 @@ export function SankeyLink({
 }
 export type SankeyNodeProps = Omit<NativeNodeProps, "payload"> & {
   payload: NativeNodeProps["payload"] & { id: string };
+  /** The node color. Defaults to the node's `config` color. */
   color?: string | undefined;
+  /** Props for the node's `rect`, like handlers and ARIA attributes. */
   rectProps?: SVGProps<SVGRectElement>;
+  /**
+   * A surface finish for the node.
+   * @default "plain"
+   */
   finish?: SankeyFinish;
-  /** Consumer controls label contents and placement using native node callbacks. */
 };
 export function SankeyNode({
   x,

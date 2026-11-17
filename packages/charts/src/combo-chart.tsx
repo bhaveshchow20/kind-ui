@@ -22,13 +22,26 @@ type Reveal = Pick<BaseAnimation, "revealDurationMs" | "revealEasing">;
 type DirectionalReveal = Reveal & Pick<LineAnimation, "revealDirection">;
 /** Shared hover Motion, with independently configured family entrances. */
 export type ComboAnimation = LineAnimation & {
+  /** Overrides the shared direction, duration or easing for lines. `false` skips their entrance. */
   lineReveal?: false | DirectionalReveal;
+  /** Overrides the shared direction, duration or easing for areas. `false` skips their entrance. */
   areaReveal?: false | DirectionalReveal;
+  /** Overrides the shared duration or easing for bars. `false` skips their entrance. */
   barReveal?: false | Reveal;
 };
 export type ComboChartProps = ComponentProps<typeof EngineComposedChart> & {
+  /**
+   * Draws the bars, lines and areas in on mount. Pass `true` or options to change the timing per series type.
+   * Reduced motion skips it.
+   * @default false
+   */
   animate?: boolean | ComboAnimation | undefined;
+  /** Shows a placeholder plot and hides the legend and tooltip while the data is on its way. */
   loading?: boolean | undefined;
+  /**
+   * What screen readers hear while `loading` is on.
+   * @default "Loading chart"
+   */
   loadingLabel?: string | undefined;
 };
 

@@ -1,28 +1,86 @@
 ---
-title: Introduction
-description: Learn to install @kind-ui/charts and build React charts with TypeScript, Recharts and Motion. Explore chart examples, composition and API references.
+title: Get Started
+description: Build React charts from composable parts, on Recharts and Motion.
 ---
 
-Kind UI Charts (`@kind-ui/charts`) is an MIT-licensed React chart library built on Recharts and Motion. Build charts with reusable TypeScript components, expressive materials and optional animation. Keep control of your data, styling and interactions.
+Charts has thirteen chart families, from lines and bars to Sankey flows and activity rings. Each chart is a family root like `LineChart` that holds your data, plus the parts you choose to show: axes, grid, series, tooltip and legend. Recharts draws the geometry and Motion animates it, so every Recharts prop still works. Keyboard inspection, legend highlighting, loading states and reduced motion come built in.
 
-Start with [Installation](/docs/installation/) to build your first chart, then choose a chart below. Each component page includes a live preview, complete code and an API reference.
+## Install with the shadcn CLI
 
-## Choose a chart
+Add the `@kind-ui` registry to your `components.json`:
+
+```json title="components.json"
+{
+  "registries": {
+    "@kind-ui": "https://kindui.dev/r/{name}.json"
+  }
+}
+```
+
+Then add a chart by name. Each chart page lists its item:
+
+```bash
+npx shadcn@latest add @kind-ui/line-chart
+```
+
+The item copies an editable chart into your components, installs `@kind-ui/charts`, and adds an `@source` for the package to your stylesheet so Tailwind picks up its classes.
+
+## Install with npm
+
+```bash
+npm install @kind-ui/charts motion recharts
+```
+
+The package needs React 19 and Tailwind CSS v4. Add it to the stylesheet that imports Tailwind; the path is relative to that file:
+
+```css title="app/globals.css"
+@import "tailwindcss";
+@source "../node_modules/@kind-ui/charts/dist";
+```
+
+In Next.js, put charts in a client component (start the file with `"use client"`). Parts like `LineChart.XAxis` are properties of a client component, so a server component can't reach them.
+
+## Your First Chart
+
+Pass rows as `data`, name each series in `config`, give the chart an accessible name, and add the parts you want:
+
+```tsx
+"use client";
+import { LineChart, type SeriesConfig } from "@kind-ui/charts";
+
+const data = [
+  { day: "Mon", tasks: 4 },
+  { day: "Tue", tasks: 12 },
+  { day: "Wed", tasks: 8 },
+];
+
+const config = {
+  tasks: { label: "Tasks", color: "#3659b8" },
+} satisfies SeriesConfig;
+
+export function TasksChart() {
+  return (
+    <LineChart data={data} config={config} aria-label="Tasks by day">
+      <LineChart.XAxis dataKey="day" />
+      <LineChart.YAxis />
+      <LineChart.Series dataKey="tasks" />
+      <LineChart.Tooltip />
+    </LineChart>
+  );
+}
+```
+
+## Theme
+
+Charts read the shadcn theme variables `--foreground`, `--border`, `--card`, `--muted`, `--muted-foreground`, `--popover`, `--popover-foreground` and `--radius`, so they match the rest of your app. Series colors come from `config`; pass `{ light, dark }` to set one per color scheme.
+
+## Choose a Chart
 
 | Show | Charts |
 | --- | --- |
-| Trends | [Line](/docs/components/line/), [Area](/docs/components/area/) |
-| Comparisons | [Bar](/docs/components/bar/), [Combo](/docs/components/combo/), [Radar](/docs/components/radar/) |
-| Parts and progress | [Pie](/docs/components/pie/), [Radial and activity rings](/docs/components/radial/) |
-| Distributions | [Histogram](/docs/components/histogram/), [Box Plot](/docs/components/box-plot/) |
-| Relationships | [Scatter](/docs/components/scatter/), [Heatmap](/docs/components/heatmap/) |
-| Flows and changes | [Sankey](/docs/components/sankey/), [Waterfall](/docs/components/waterfall/) |
-
-## Explore
-
-- [Identity and colors](/docs/concepts/identity/): labels, colors and stable series keys.
-- [Materials](/docs/guides/materials/): Default, Clay and Glow finishes.
-- [Motion](/docs/guides/motion/): entrances and custom animation.
-- [Accessibility](/docs/guides/accessibility/): keyboard access and chart descriptions.
-
-For AI-assisted development, use the [consumer guide](/docs/agents/consumer/) and [llms.txt](/llms.txt).
+| Trends | [Line](./components/line.mdx), [Area](./components/area.mdx) |
+| Comparisons | [Bar](./components/bar.mdx), [Combo](./components/combo.mdx), [Radar](./components/radar.mdx) |
+| Parts and progress | [Pie](./components/pie.mdx), [Radial and activity rings](./components/radial.mdx) |
+| Distributions | [Histogram](./components/histogram.mdx), [Box Plot](./components/box-plot.mdx) |
+| Relationships | [Scatter](./components/scatter.mdx), [Heatmap](./components/heatmap.mdx) |
+| Flows and changes | [Sankey](./components/sankey.mdx), [Waterfall](./components/waterfall.mdx) |

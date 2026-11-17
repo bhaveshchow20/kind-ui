@@ -17,8 +17,18 @@ import { defaultHover, useReducedMotion } from "./motion-preference.js";
 
 export type ScatterAnimation = BaseAnimation;
 export type ScatterChartProps = ComponentProps<typeof EngineScatterChart> & {
+  /**
+   * Fades the points in on mount. Pass options to change the duration or easing.
+   * Reduced motion skips it.
+   * @default false
+   */
   animate?: boolean | ScatterAnimation | undefined;
+  /** Shows a placeholder plot and hides the legend and tooltip while the data is on its way. */
   loading?: boolean | undefined;
+  /**
+   * What screen readers hear while `loading` is on.
+   * @default "Loading chart"
+   */
   loadingLabel?: string | undefined;
 };
 export const ScatterMotion = createContext<{

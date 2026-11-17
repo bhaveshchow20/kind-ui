@@ -1,0 +1,48 @@
+---
+title: Tooltip
+description: Show the label and value of each series at the point a reader inspects.
+---
+
+import TooltipExample from "../../../examples/tooltip/basic";
+
+Use `.Tooltip` to show the values at the point a reader hovers or inspects with the keyboard. It lists each series with its label, color and formatted value from [Series Config](./series-config.mdx), and stays inside the plot.
+
+<Example caption="Hover a day, or focus the chart and press the arrow keys, to see both response times.">
+  <TooltipExample />
+
+  <include cwd lang="tsx">./examples/tooltip/basic.tsx</include>
+</Example>
+
+## Usage
+
+### Values
+
+The tooltip shows a row for each series at the inspected point, in the order the series are drawn, with the value `formatValue` returns. A missing or `null` value shows "No data", unless every row is missing, in which case no tooltip appears. When a series is dimmed or hidden, its row stays, dimmed. Press Escape to dismiss it.
+
+Pass `valueAnimation="shuffle"` to roll the digits of numeric values as they change. It stays still when the reader prefers reduced motion.
+
+### Custom Content
+
+Pass a `content` function to render the tooltip yourself. To keep the labels, colors and formats, return `TooltipContent` and pass the function's props through as `tooltip`, as the example does. `TooltipContent` takes the marker's shape as `indicator` (`line` by default, `dot` or `dashed`), and `hideLabel` or `hideIndicator` to drop the heading or the marker.
+
+### Categories
+
+When a row's config key isn't its `dataKey`, like a category ID in a pie, pass `itemKey` to return the key for each row. Pass `normalizedValue` to show each value as a percentage of its total next to the raw value, as stacked charts do.
+
+### Size
+
+The tooltip grows up to `maxWidth` (180px by default) and never past the plot; content that doesn't fit scrolls. Use `frameProps` for the attributes and styles of the element that positions it.
+
+## API Reference
+
+### Tooltip
+
+<auto-type-table path="../../../../../packages/charts/src/tooltip.tsx" name="TooltipOptions" type='Pick<TooltipProps, "valueAnimation" | "itemKey" | "normalizedValue" | "maxWidth" | "frameProps">' />
+
+### TooltipContent
+
+<auto-type-table path="../../../../../packages/charts/src/tooltip-content.tsx" name="TooltipContentOptions" type='Pick<TooltipContentProps, "tooltip" | "indicator" | "hideLabel" | "hideIndicator" | "missingValue" | "valueAnimation" | "itemKey" | "normalizedValue" | "isProjected" | "projectedLabel">' />
+
+<Caption>
+  `.Tooltip` also takes the props of Recharts' [Tooltip](https://recharts.github.io/en-US/api/Tooltip/), like `formatter` and `labelFormatter`. Scatter, Heatmap and Sankey charts have tooltips of their own; see their chart pages.
+</Caption>

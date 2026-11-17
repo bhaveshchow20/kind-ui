@@ -40,8 +40,15 @@ export type ActivityRingsProps = Omit<
   FamilyOptions &
   ChartName & {
     "aria-describedby"?: string;
+    /**
+     * The rings, inside out. Each has a `key` in `config`, a `value`, and an optional `domain` that
+     * its full circle stands for.
+     */
     rings: readonly ActivityRing[];
-    /** Default domain for rings without their own domain. Defaults to [0, 100]. */
+    /**
+     * The range a full ring stands for, for rings without their own `domain`.
+     * @default [0, 100]
+     */
     domain?: readonly [number, number];
     children: Exclude<ReactNode, undefined>;
   };

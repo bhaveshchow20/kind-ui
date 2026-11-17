@@ -15,13 +15,20 @@ const input = {
 const entry = releaseEntry(input);
 const tag = { ref: `refs/tags/${entry.tag_name}`, object: { type: "commit", sha: input.commit } };
 
-function github({ ref = null, release = null, annotated = null, failRelease = false } = {}) {
+function github({
+  ref = null,
+  release = null,
+  annotated = null,
+  failRelease = false,
+  failUpload = false,
+} = {}) {
   const writes = [];
   const request = async (method, path, body) => {
     if (method === "GET") {
       if (path.startsWith("git/ref/")) return ref;
       if (path.startsWith("git/tags/")) return annotated;
-      if (path.startsWith("releases/tags/")) return release;
+      if (path.startsWith("releases/tags/")) return release?.draft === true ? null : release;
+      if (path === "releases?per_page=100") return release ? [release] : [];
     }
     writes.push({ path, body });
     if (path === "git/refs") {
@@ -30,13 +37,32 @@ function github({ ref = null, release = null, annotated = null, failRelease = fa
     }
     if (path === "releases") {
       if (failRelease) throw Error("GitHub unavailable");
-      release = body;
+      release = { ...body, id: 7, upload_url: "upload{?name,label}", assets: [] };
       return release;
+    }
+    if (method === "PATCH" && path === `releases/${release.id}`) {
+      Object.assign(release, body);
+      return release;
+    }
+    if (method === "DELETE" && path.startsWith("releases/assets/")) {
+      release.assets = release.assets.filter((asset) => `releases/assets/${asset.id}` !== path);
+      return null;
     }
     throw Error(`Unexpected request: ${method} ${path}`);
   };
-  return { request, writes };
+  const upload = async (url, name) => {
+    writes.push({ path: `upload:${name}` });
+    if (failUpload) throw Error("Upload interrupted");
+    assert.equal(url, "upload{?name,label}");
+    release.assets.push({ id: release.assets.length + 1, name, state: "uploaded" });
+  };
+  return { request, upload, writes };
 }
+
+const assets = ["charts-site-0.3.0.tar.gz", "charts-site-0.3.0.tar.gz.sha256"].map((name) => ({
+  name,
+  data: Buffer.from(name),
+}));
 
 test("notes contain only this changelog section and exact verified artifact metadata", () => {
   assert.equal(entry.tag_name, "@kind-ui/charts@0.3.0");
@@ -106,4 +132,102 @@ test("refuses conflicting tag commits and existing release metadata without writ
     await assert.rejects(() => ensureGitHubRelease(entry, api.request));
     assert.equal(api.writes.length, 0);
   }
+});
+
+test("site assets are uploaded to a draft before the release is published", async () => {
+  const api = github();
+  const options = { assets, upload: api.upload };
+  assert.equal(await ensureGitHubRelease(entry, api.request, options), "released");
+  assert.deepEqual(
+    api.writes.map((write) => write.path),
+    [
+      "git/refs",
+      "releases",
+      "upload:charts-site-0.3.0.tar.gz",
+      "upload:charts-site-0.3.0.tar.gz.sha256",
+      "releases/7",
+    ],
+  );
+  assert.equal(api.writes[1].body.draft, true);
+  assert.deepEqual(api.writes.at(-1).body, { draft: false });
+  assert.equal(await ensureGitHubRelease(entry, api.request, options), "already-released");
+  assert.equal(api.writes.length, 5);
+});
+
+test("a rerun finishes a draft left by an interrupted upload instead of creating another", async () => {
+  const failed = github({ failUpload: true });
+  await assert.rejects(
+    () => ensureGitHubRelease(entry, failed.request, { assets, upload: failed.upload }),
+    /interrupted/,
+  );
+  const draft = failed.writes.find((write) => write.path === "releases").body;
+  const retry = github({
+    ref: tag,
+    release: {
+      ...draft,
+      id: 7,
+      upload_url: "upload{?name,label}",
+      assets: [{ id: 9, name: assets[0].name, state: "starter" }],
+    },
+  });
+  assert.equal(
+    await ensureGitHubRelease(entry, retry.request, { assets, upload: retry.upload }),
+    "released",
+  );
+  assert.deepEqual(
+    retry.writes.map((write) => write.path),
+    [
+      "releases/assets/9",
+      "upload:charts-site-0.3.0.tar.gz",
+      "upload:charts-site-0.3.0.tar.gz.sha256",
+      "releases/7",
+    ],
+  );
+});
+
+test("attaches missing site assets to an existing published release", async () => {
+  const api = github({
+    ref: tag,
+    release: { ...entry, id: 7, upload_url: "upload{?name,label}", assets: [] },
+  });
+  assert.equal(
+    await ensureGitHubRelease(entry, api.request, { assets, upload: api.upload }),
+    "already-released",
+  );
+  assert.deepEqual(
+    api.writes.map((write) => write.path),
+    ["upload:charts-site-0.3.0.tar.gz", "upload:charts-site-0.3.0.tar.gz.sha256"],
+  );
+});
+
+test("refuses a leftover draft with different release metadata", async () => {
+  const api = github({
+    ref: tag,
+    release: { ...entry, draft: true, body: "conflict", id: 7, assets: [] },
+  });
+  await assert.rejects(() =>
+    ensureGitHubRelease(entry, api.request, { assets, upload: api.upload }),
+  );
+  assert.equal(api.writes.length, 0);
+});
+
+test("replaces an uploaded archive whose checksum is missing, so the pair always matches", async () => {
+  const api = github({
+    ref: tag,
+    release: {
+      ...entry,
+      id: 7,
+      upload_url: "upload{?name,label}",
+      assets: [{ id: 3, name: assets[0].name, state: "uploaded" }],
+    },
+  });
+  await ensureGitHubRelease(entry, api.request, { assets, upload: api.upload });
+  assert.deepEqual(
+    api.writes.map((write) => write.path),
+    [
+      "releases/assets/3",
+      "upload:charts-site-0.3.0.tar.gz",
+      "upload:charts-site-0.3.0.tar.gz.sha256",
+    ],
+  );
 });

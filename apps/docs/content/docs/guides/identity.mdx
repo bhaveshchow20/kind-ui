@@ -1,0 +1,58 @@
+---
+title: Identity
+description: Tie each value to a stable key so labels, colors and state follow it.
+---
+
+A value says how much; its identity says which series or category it belongs to. Charts use that identity, a key in [Series Config](../building-blocks/series-config.mdx), to find a label and color, and to track what's highlighted or hidden. Keep keys stable when you sort, filter or reload data, and keep them separate from display text, which can change with the locale.
+
+## Series
+
+A series' `dataKey` reads its value from each row, and when it's a string, it's also the config key. When the series reads its value with a function, or the row field isn't the name you want as its identity, set `seriesKey` to the config key:
+
+```tsx
+const config = {
+  visitors: { label: "Visitors", color: "#733bff" },
+} satisfies SeriesConfig;
+
+<LineChart data={data} config={config} aria-label="Monthly visitors">
+  <LineChart.XAxis dataKey="month" />
+  <LineChart.Series<Row> dataKey={(row) => row.count} seriesKey="visitors" />
+  <LineChart.Legend />
+</LineChart>
+```
+
+The line reads `count` from each row, but its label, color, legend item and visibility all use `visitors`. Without `seriesKey`, the chart can't match the series to its config.
+
+## Categories and Nodes
+
+Some charts color each item instead of each series. Give every item an ID that matches a config key, and its color stays with it however the rows are sorted:
+
+| Chart | Identity |
+| --- | --- |
+| [Pie](../components/pie.mdx) | `PieChart.Series` reads each slice's ID from `categoryKey` |
+| [Radial](../components/radial.mdx) | `RadialBarChart` reads each bar's ID from `categoryKey`; each activity ring's `key` matches its config |
+| [Sankey](../components/sankey.mdx) | Each node's ID matches its config |
+| [Heatmap](../components/heatmap.mdx) | Row and column IDs place each cell; a color scale colors its value |
+
+```tsx
+const data = [
+  { id: "search", visitors: 35 },
+  { id: "direct", visitors: 65 },
+];
+
+const config = {
+  search: { label: "Search", color: "#733bff" },
+  direct: { label: "Direct", color: "#0f8b8d" },
+} satisfies SeriesConfig;
+
+<PieChart config={config} aria-label="Visitors by source">
+  <PieChart.Series data={data} dataKey="visitors" categoryKey="id" />
+  <PieChart.Legend />
+</PieChart>
+```
+
+To let the legend highlight or hide categories, set `interaction.kind` to `"category"` (or `"node"` for Sankey) with those IDs as `eligibleKeys`. See [Chart](../building-blocks/chart.mdx).
+
+## Keys in State
+
+`visibleSeries`, `selected` and `eligibleKeys` all hold config keys, never labels or row positions. Include keys whose value is zero or that are hidden right now in `eligibleKeys`, so the legend can still bring them back.

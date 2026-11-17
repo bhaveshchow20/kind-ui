@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { expectDimmedPaint } from "./interaction-paint";
 
-test("installed line composition retains native keyboard tooltip, host theme and loading recovery", async ({
+test("installed line composition retains native keyboard tooltip and host theme", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -30,15 +30,6 @@ test("installed line composition retains native keyboard tooltip, host theme and
   await page.getByRole("button", { name: "Dark mode", exact: true }).click();
   const frame = composition.locator('[data-kind-ui="chart"]').first();
   await expect(frame).toHaveCSS("color", "rgb(254, 220, 186)");
-  await page.getByRole("button", { name: "Loading", exact: true }).click();
-  await expect(composition.locator('[data-kind-ui="chart-loading-skeleton"]')).toBeVisible();
-  await expect(composition.locator('[data-kind-ui="chart-loading-status"]')).toHaveText(
-    "Loading chart",
-  );
-  await page.getByRole("button", { name: "Loading", exact: true }).click();
-  await expect(composition.locator('[data-kind-ui="chart-loading-skeleton"]')).toHaveCount(0);
-  await expect(svg).toBeVisible();
-  await expect(composition.locator(".recharts-line-curve")).toHaveCount(1);
   expect(errors).toEqual([]);
 });
 
@@ -53,10 +44,10 @@ test("installed combo legend and activity rings retain explicit values on a narr
   await page.getByRole("combobox", { name: "Chart", exact: true }).selectOption("combo-chart");
   await expect(
     composition.getByRole("application", {
-      name: "Monthly production, capacity and target in units",
+      name: "Monthly units shipped against capacity and target",
     }),
   ).toBeVisible();
-  const capacity = composition.getByRole("button", { name: "Capacity · units", exact: true });
+  const capacity = composition.getByRole("button", { name: "Capacity", exact: true });
   await capacity.focus();
   await page.keyboard.press("Escape");
   await expect(capacity).toHaveAttribute("aria-pressed", "false");

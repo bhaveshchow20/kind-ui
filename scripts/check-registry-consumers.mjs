@@ -316,15 +316,12 @@ try {
         lock.packages["node_modules/@kind-ui/charts"]?.resolved,
         publishedMetadata?.tarball ?? `${endpoint}/candidate.tgz`,
       );
-      for (const { name, exampleId } of registryItems) {
+      for (const { name, source } of registryItems) {
         const installedSource = await readFile(
           path.join(scratch, components, `${name}.tsx`),
           "utf8",
         );
-        const canonical = await readFile(
-          path.join(root, `apps/docs/examples/${exampleId}/example.tsx`),
-          "utf8",
-        );
+        const canonical = await readFile(path.join(root, source), "utf8");
         assert.equal(
           installedSource.trim(),
           // The official CLI drops a leading lint-only comment before the client directive.
@@ -337,6 +334,8 @@ try {
       assert.ok(cssAfter.includes("--foreground: #fedcba"));
       for (const source of sourcePaths)
         assert.equal(cssAfter.split(`@source "${source}"`).length - 1, 1);
+      const lineSource = registryItems.find(({ name }) => name === "line-chart")?.source;
+      assert.ok(lineSource);
       const lineFile = path.join(scratch, components, "line-chart.tsx");
       await writeFile(lineFile, "// Scratch consumer modification\n");
       await run(
@@ -358,27 +357,25 @@ try {
       assert.equal(await readFile(path.join(scratch, cssFile), "utf8"), cssAfter);
       assert.equal(
         (await readFile(lineFile, "utf8")).trim(),
-        (await readFile(path.join(root, "apps/docs/examples/line/example.tsx"), "utf8")).trim(),
+        (await readFile(path.join(root, lineSource), "utf8")).trim(),
         "Overwrite must restore the complete editable composition",
       );
       const hostImports = [];
       const renders = [];
-      for (const { name } of registryItems) {
+      for (const [index, { name }] of registryItems.entries()) {
         const source = await readFile(path.join(scratch, components, `${name}.tsx`), "utf8");
-        const exportName = source.match(/export function (\w+)/)?.[1];
-        assert.ok(exportName);
-        hostImports.push(
-          `import { ${exportName} } from "${alias}/${components.replace(/^src\//, "")}/${name}";`,
+        assert.match(
+          source,
+          /export default function \w+/,
+          `${name} must default-export its chart`,
         );
-        const prop = name === "pie-chart" ? "shape" : name === "radial-chart" ? "labels" : "state";
-        const ready = name === "pie-chart" ? "pie" : name === "radial-chart" ? "visible" : "ready";
-        renders.push(
-          `{name:"${name}",render:(loading:boolean)=><${exportName} ${prop}={loading?"loading":"${ready}"}/>}`,
-        );
+        const specifier = `${alias}/${components.replace(/^src\//, "")}/${name}`;
+        hostImports.push(`import Chart${index} from "${specifier}";`);
+        renders.push(`{name:"${name}",render:()=><Chart${index}/>}`);
       }
       await write(
         path.join(scratch, "src/host.tsx"),
-        `"use client";\nimport {useEffect,useState} from "react";\n${hostImports.join("\n")}\nconst charts=[${renders.join(",")}];\nexport function RegistryHost(){const [selected,setSelected]=useState("line-chart");const [loading,setLoading]=useState(false);const [dark,setDark]=useState(false);useEffect(()=>{document.documentElement.classList.toggle("dark",dark)},[dark]);const chart=charts.find(({name})=>name===selected);return <main><h1>Installed chart compositions</h1><label>Chart<select aria-label="Chart" value={selected} onChange={event=>setSelected(event.target.value)}>{charts.map(({name})=><option key={name}>{name}</option>)}</select></label><button onClick={()=>setLoading(!loading)} aria-pressed={loading}>Loading</button><button onClick={()=>setDark(!dark)} aria-pressed={dark}>Dark mode</button><section aria-label="Installed composition">{chart?.render(loading)}</section></main>}`,
+        `"use client";\nimport {useEffect,useState} from "react";\n${hostImports.join("\n")}\nconst charts=[${renders.join(",")}];\nexport function RegistryHost(){const [selected,setSelected]=useState("line-chart");const [dark,setDark]=useState(false);useEffect(()=>{document.documentElement.classList.toggle("dark",dark)},[dark]);const chart=charts.find(({name})=>name===selected);return <main><h1>Installed chart compositions</h1><label>Chart<select aria-label="Chart" value={selected} onChange={event=>setSelected(event.target.value)}>{charts.map(({name})=><option key={name}>{name}</option>)}</select></label><button onClick={()=>setDark(!dark)} aria-pressed={dark}>Dark mode</button><section aria-label="Installed composition">{chart?.render()}</section></main>}`,
       );
       for (const mode of ["NodeNext", "Bundler"]) {
         await write(

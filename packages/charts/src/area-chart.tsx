@@ -11,8 +11,18 @@ import { cn } from "./utils.js";
 
 export type AreaAnimation = LineAnimation;
 export type AreaChartProps = ComponentProps<typeof EngineAreaChart> & {
+  /**
+   * Draws the areas in on mount. Pass `true` or options to change the direction or duration.
+   * Reduced motion skips it.
+   * @default false
+   */
   animate?: boolean | AreaAnimation | undefined;
+  /** Shows a placeholder plot and hides the legend and tooltip while the data is on its way. */
   loading?: boolean | undefined;
+  /**
+   * What screen readers hear while `loading` is on.
+   * @default "Loading chart"
+   */
   loadingLabel?: string | undefined;
 };
 

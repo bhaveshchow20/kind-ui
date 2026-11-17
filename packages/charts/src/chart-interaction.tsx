@@ -25,10 +25,11 @@ export type ChartInteractionRequest = {
   event: ChartInteractionEvent;
 };
 export type ChartInteractionConfig = {
-  /** Explicit binding between this chart's legend and participating chart identities. */
+  /** Whether pressing a mark acts like pressing its legend item. `"none"` limits it to the legend. Focus mode defaults to `"matching-legend"`. */
   markActivation?: "none" | "matching-legend";
-  /** Settled data identities, including hidden items and zero values. */
+  /** The keys the legend can act on, including hidden and zero-valued ones. */
   eligibleKeys: readonly string[];
+  /** Called before each legend or mark action. Return `false`, or call `event.preventDefault()`, to cancel it. */
   onBeforeInteraction?: (request: ChartInteractionRequest) => boolean | void;
 } & (
   | {
@@ -38,13 +39,24 @@ export type ChartInteractionConfig = {
       defaultSelected?: never;
       onSelectionChange?: never;
     }
-  | ({ kind: "series" | "category" | "node"; mode?: "focus" } & (
+  | ({
+      /** What the legend items stand for: series, categories (like pie slices) or Sankey nodes. */
+      kind: "series" | "category" | "node";
+      /**
+       * `"focus"` highlights the pressed item and dims the rest. `"visibility"` hides and shows it.
+       * @default "focus"
+       */
+      mode?: "focus";
+    } & (
       | {
           selected?: undefined;
+          /** The key highlighted first, when the chart owns the highlight. */
           defaultSelected?: string | null;
+          /** Called with the newly highlighted key, or `null` when the highlight clears. */
           onSelectionChange?: (next: string | null) => void;
         }
       | {
+          /** The highlighted key, or `null`, when you own the highlight. Pass `onSelectionChange` with it. */
           selected: string | null;
           defaultSelected?: never;
           onSelectionChange: (next: string | null) => void;
@@ -52,7 +64,14 @@ export type ChartInteractionConfig = {
     ))
 );
 export type ChartVisibilityProps =
-  | { visibleSeries?: undefined; defaultVisibleSeries?: undefined; onVisibleSeriesChange?: never }
+  | {
+      /** The series keys to show, when you control visibility. */
+      visibleSeries?: undefined;
+      /** The series keys to show first, when the chart controls visibility. */
+      defaultVisibleSeries?: undefined;
+      /** Called with the next visible series keys when the legend hides or shows one. */
+      onVisibleSeriesChange?: never;
+    }
   | {
       visibleSeries?: undefined;
       defaultVisibleSeries: readonly string[];

@@ -54,6 +54,7 @@ export type SankeyChartProps = Omit<
   NativeProps,
   "data" | "node" | "link" | "onClick" | "onMouseEnter" | "onMouseLeave"
 > & {
+  /** Nodes and links. Every node ID needs a `config` entry, and each middle node's inflow must equal its outflow. */
   data: SankeyFlowData;
   /** Node-ID metadata supplied by the owning compound chart. */
   nodeConfig: SankeyNodeConfig;
@@ -66,12 +67,26 @@ export type SankeyChartProps = Omit<
   onClick?: IdentityEvent;
   onMouseEnter?: IdentityEvent;
   onMouseLeave?: IdentityEvent;
-  /** Kind SankeyLink paint flows along unchanged paths; custom renderers retain ownership. */
+  /**
+   * Draws the ribbons in on mount. Pass `{ revealDurationMs }` to change the duration (450ms
+   * by default). Custom link renderers draw in only if they use `SankeyChart.Link`. Reduced
+   * motion skips it.
+   * @default false
+   */
   animate?: boolean | SankeyAnimation;
+  /** Shows a placeholder diagram and hides the legend and tooltip while the data is on its way. */
   loading?: boolean | undefined;
+  /**
+   * What screen readers hear while `loading` is on.
+   * @default "Loading chart"
+   */
   loadingLabel?: string | undefined;
   /** Internal: a responsive owning frame can render this boundary before native geometry mounts. */
   loadingPresentation?: boolean;
+  /**
+   * What shows when no link has a positive value.
+   * @default "No positive flows"
+   */
   empty?: ReactNode;
 };
 

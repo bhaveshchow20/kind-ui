@@ -1,43 +1,39 @@
 ---
 title: Troubleshooting
-description: Resolve chart installation, sizing, and composition problems.
+description: Fix the common problems with installing, sizing and composing charts.
 ---
 
-Find the visible symptom below, then check it against the complete example for
-your [chart family](/docs/).
+Find the symptom below. If it isn't here, compare your chart with the first example on its [chart page](../components/line.mdx), which is complete.
 
-## Installation and sizing
+## Setup and Sizing
 
-Check public imports, CSS, and the chart's container first.
-
-| Symptom | Action |
+| Symptom | Fix |
 | --- | --- |
-| Package or import cannot resolve | Follow [Installation](/docs/installation/); import from `@kind-ui/charts`, not its source files |
-| Motion import fails | Install the required Motion peer; there is no `@kind-ui/charts/motion` entry |
-| Chart appears unstyled | Follow the [Tailwind setup](/docs/installation/#configure-tailwind-css-v4) |
-| Chart is blank or has no height | Set a numeric chart `height`, or give percentage sizing a measurable parent; see [Sizing](/docs/chart-components/chart/#sizing) |
-| Chart overflows a flex/grid layout | Give its parent `min-width: 0`; check axis-label space and long values |
-| Colors overlap between independent hydrated React roots | Assign a distinct React `identifierPrefix` to each root |
+| `@kind-ui/charts` or `motion` doesn't resolve | Install the package with `motion` and `recharts`, as in [Get Started](../index.mdx); Motion is needed even with `animate={false}`. Import from `@kind-ui/charts` only, not its files |
+| `shadcn add` can't find `components.json` | Run `npx shadcn@latest init` first, then add the `@kind-ui` registry |
+| The chart has no styles | Add the `@source` line for the package to the stylesheet that imports Tailwind. Its path is relative to that file: from `src/app/globals.css` it's `../../node_modules/@kind-ui/charts/dist` |
+| A server component can't find `LineChart.XAxis` | Put the chart in a file that starts with `"use client"` |
+| The chart is blank or has no height | Leave `height` at its default, set a number, or give a percentage height a parent with a measured height |
+| The chart pushes its flex or grid layout wider | Give its parent `min-width: 0` |
+| The last x-axis label is cut off | Pass `margin={{ right: 16 }}` to the chart |
+| Series colors don't follow dark mode | Set `color-scheme` on the page, and give the series `{ light, dark }` colors |
+| Two React roots on one page share colors | Give each root its own `identifierPrefix` |
 
-## Composition and interaction
+## Composition
 
-Each chart owns its frame and requires explicit parts.
-
-| Symptom | Action |
+| Symptom | Fix |
 | --- | --- |
-| Chart has no marks or legend | Add explicit family Series and Legend parts; `config` only supplies metadata |
-| Chart reports a nested frame | Place each family in its own frame rather than nesting chart families |
-| Legend clicks do not change visibility | Focus dims by default. For hide/show, set chart `interaction.mode="visibility"` and pair controlled visibility with its callback, or use `defaultVisibleSeries` |
-| Accessor series ignores visibility or metadata | Give it a matching `seriesKey`; see [Identity and colors](/docs/concepts/identity/) |
-| Category colors move when rows reorder | Use stable category IDs rather than row positions; see the family example |
-| Arrow keys do not inspect every mark | Check the family's [keyboard access](/docs/guides/accessibility/#keyboard-access); use meaningful chart labels |
-| Arrow keys stay on the hovered category | Move the pointer out of the plot before entering keyboard inspection |
-| Material does not affect a custom mark | Custom shapes, paint, and filters can replace the built-in appearance |
-| Entrance stops after an update | Data/layout changes finish the entrance; remount to replay intentionally |
-| Copied source shows a different option | Select the desired preview option, then copy again |
+| The chart throws "requires aria-label or aria-labelledby" | Name it; see [Accessibility](./accessibility.mdx) |
+| The chart throws "do not nest chart families" | Give each chart its own root, side by side |
+| Nothing draws | Add the parts as children: `config` names series but draws nothing |
+| The legend highlights instead of hiding | Set `interaction` to `"visibility"` mode with `defaultVisibleSeries`; see [Legend](../building-blocks/legend.mdx) |
+| The chart throws about `onVisibleSeriesChange` | Pass `visibleSeries` or `defaultVisibleSeries` with it, but not both |
+| A series has no label, color or legend item | Its `dataKey` or `seriesKey` must match a config key; see [Identity](./identity.mdx) |
+| Colors move when rows are sorted | Give each category a stable ID with `categoryKey`; see [Identity](./identity.mdx) |
+| Arrow keys stay on the hovered point | Move the pointer out of the plot before using the keyboard |
+| A material doesn't show | A custom `shape`, `fill` or `filter` replaces it; see [Materials](./materials.mdx) |
+| The entrance stops early | Hovering or new data finishes it; remount with a new `key` to replay; see [Motion](./motion.mdx) |
 
-## Report a problem
+## Report a Problem
 
-Include the package and peer versions, complete example, and expected and
-observed results. Add reproduction commands. For a docs layout issue, include
-the page, viewport width, and interaction steps.
+Open an issue on [GitHub](https://github.com/kind-ui/charts/issues) with the versions of `@kind-ui/charts`, React, Recharts and Motion you have installed, the smallest chart that shows the problem, and what you expected to happen.

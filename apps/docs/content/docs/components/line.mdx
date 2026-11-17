@@ -1,167 +1,115 @@
 ---
 title: Line Chart
-description: Compose a line chart with axes, lines and tooltips.
+description: Compare values over time with one or more lines.
 ---
 
-<LineExample id="line-start" />
+import LineExample from "../../../examples/line/basic";
+import LineComparisonExample from "../../../examples/line/comparison";
+
+Use a line chart to show how a measure changes across ordered categories, like months or days, and to compare a few measures on the same scale.
+
+<Example caption="Hover a point, or focus the chart and press the arrow keys, to see its value.">
+  <LineExample />
+
+  <include cwd lang="tsx">./examples/line/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="line" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/line-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+LineChart
+├── LineChart.Background
+├── LineChart.Grid
+├── LineChart.XAxis
+├── LineChart.YAxis
+├── LineChart.Series
+├── LineChart.Tooltip
+├── LineChart.Legend
+└── LineChart.Content
+```
+
+`LineChart` holds the data, the series config and the accessible name, and draws only the parts you add. Add one `LineChart.Series` per line. The tooltip and legend read their labels and colors from `config`. `LineChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-Add one `LineChart.Series` per measure. Use `type="monotone"` for smooth curves and include `LineChart.Legend` to show the legend.
+### Series
 
-```tsx title="Composition sketch"
-import { LineChart } from "@kind-ui/charts";
+Each `LineChart.Series` plots the `dataKey` it names, and takes its label and color from the matching `config` entry. Set `type` for the curve (`linear` by default, `monotone` for a smooth line, `step` for steps), and `strokeDasharray` to dash a line, like a target:
 
-<LineChart data={data} config={config} aria-label="Monthly visitors">
-  <LineChart.Grid vertical={false} />
-  <LineChart.XAxis dataKey="period" />
-  <LineChart.YAxis />
-  <LineChart.Series dataKey="visitors" type="monotone" />
-  <LineChart.Tooltip />
-  <LineChart.Legend />
-</LineChart>
-```
+<Example caption="Press Revenue or Target in the legend to highlight that line.">
+  <LineComparisonExample />
 
-## Compose plot parts
+  <include cwd lang="tsx">./examples/line/comparison.tsx</include>
+</Example>
 
-Use explicit children for your own axes, grid and series. The chart supplies its frame and responsive sizing.
+A `null` value leaves a gap in the line. Pass `connectNulls` to the series to draw across it instead.
 
-<LineExample id="line" />
+### Legend and Keyboard
 
-## Curve types
+Pressing a legend item highlights its line and dims the others, and screen readers hear "Highlighted Revenue." Press it again, or press Escape, to clear it. To hide and show lines from the legend instead, see [Legend](../building-blocks/legend.mdx).
 
-Choose smooth, linear or step-after interpolation. The code follows the selected curve.
+Focus the chart and press the arrow keys to move between points, which shows the tooltip, and Escape to dismiss it. Screen readers hear these instructions when the chart gets focus.
 
-<LineExample id="line-smooth" />
+### Points and Dashes
 
-## Multiple series
-
-Compare revenue with a dashed target. Use the legend to focus either series.
-
-<LineExample id="line-comparison" />
-
-## Dots and labels
-
-Explicit children add diamond markers and labels. Keep sizing, visibility and animation options on `LineChart`.
-
-<LineExample id="line-markers" />
-
-## Materials
-
-Choose Default, Clay or Glow.
-
-<LineExample id="line-materials" />
-
-## Point markers, dashed lines and reveal direction
-
-Choose a presentation to see the effect and copy its complete example.
-
-<ChartExample id="line-presentation" />
-
-- **Markers:** `pointStyle="colored-border"` adds outlined points.
-- **Animated dashes:** `strokeDasharray="6 4"` with `dashAnimation={{ durationMs: 1000 }}` moves the pattern.
-- **Reveal direction:** `animate={{ revealDirection: "center-out" }}` draws from the center.
-
-<Callout title="Note">Motion respects reduced motion. Explicit `dot`, `activeDot` and custom marker renderers override the built-in point styles.</Callout>
-
-For custom point styling, pass `dot={<PointMarker variant="colored-border" />}` to `LineChart.Series`; see the [PointMarker reference](https://github.com/kind-ui/charts/blob/main/packages/charts/README.md#point-marker-styles).
-
-## Decorative backgrounds
-
-Select **Background** in the [Line presentation example](/docs/components/line/#point-markers-dashed-lines-and-reveal-direction), or add a preset to your chart:
+Lines have a dot at each point. Pass `dot={false}` to hide them, or `pointStyle="border"` or `"colored-border"` for outlined points. With a numeric `strokeDasharray`, `dashAnimation` moves the dashes along the line:
 
 ```tsx
-import { LineChart } from "@kind-ui/charts";
-
-<LineChart data={data} config={config} aria-label="Monthly visitors">
-  <LineChart.Background pattern="crossings" opacity={0.15} />
-  <LineChart.XAxis dataKey="period" />
-  <LineChart.Series dataKey="visitors" />
-</LineChart>
+<LineChart.Series
+  dataKey="target"
+  strokeDasharray="6 4"
+  dashAnimation={{ durationMs: 1000 }}
+/>
 ```
 
-Presets: `"pinpoints"`, `"crossings"`, `"waves"`. Decoration stays behind the data.
+Set `material="clay"` or `"glow"` on a series for a finish; see [Materials](../guides/materials.mdx).
 
-## Loading State
+### Motion
 
-Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
+Lines draw in from left to right when the chart mounts. Set `animate` to change the direction or the duration, or `animate={false}` to turn it off:
 
-<ChartExample id="line" variant="loading" />
+```tsx
+<LineChart animate={{ revealDirection: "center-out", revealDurationMs: 800 }} {...props}>
+```
 
-## API reference
+`revealDirection` is `left-to-right`, `right-to-left`, `center-out` or `edges-in`. When the reader prefers reduced motion, lines appear without drawing in. See [Motion](../guides/motion.mdx).
 
-Pass `config`, an accessible name and explicit children.
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder line that sweeps across the plot, or holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default). The legend and tooltip come back when `loading` turns off:
+
+```tsx
+<LineChart loading={isPending} loadingLabel="Loading visitors" {...props}>
+```
+
+### Background
+
+Add `LineChart.Background` for a decorative pattern behind the plot: `pinpoints`, `crossings` or `waves`. It adds nothing to the tooltip, legend or accessible name.
+
+```tsx
+<LineChart.Background pattern="crossings" opacity={0.15} />
+```
+
+## API Reference
 
 ### LineChart
 
-Add one `LineChart.Series` for each measure you want to plot.
-
-<div className="line-props-scroll" role="region" aria-label="LineChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `data` | `readonly Row[]` | — | Chart rows; per-series native data remains available. |
-| `config` | `SeriesConfig` | Required | Series labels, colors and optional value formatters. |
-| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. Keyboard inspection instructions are provided. |
-| `height` / `width` | Native chart dimensions | `280px` / `100%` | Responsive plot dimensions; `style` and `className` can also override sizing. |
-| `animate` | `boolean` or `LineAnimation` | `true` | Entrance and emphasis motion; respects reduced motion. |
-| `defaultVisibleSeries` | `readonly string[]` | All series | Initial uncontrolled visibility. Explicit visibility interaction lets legend actions update it. |
-| `visibleSeries` / `onVisibleSeriesChange` | `readonly string[]` / callback | Uncontrolled | Consumer-controlled visual visibility; explicit visibility mode enables legend hide/show. Without a callback, visibility is read-only. |
-| `children` | `ReactNode` | Required | Explicit plot parts; `null` or an empty fragment intentionally omits them. |
-
-</div>
-
-<Callout title="Composition">Set axes, series, tooltip and legend options on their explicit parts.</Callout>
-
-See [Recharts LineChart](https://recharts.github.io/en-US/api/LineChart/) for native plot props.
-
-<span id="lineseries" />
+<auto-type-table path="../../../../../packages/charts/src/composition/line.tsx" name="LineChartOptions" type='Pick<LineChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
 
 ### LineChart.Series
 
-Compose `LineChart.Series` as children. String `dataKey` values identify config entries; accessor and numeric keys use `seriesKey`.
+<auto-type-table path="../../../../../packages/charts/src/animation.tsx" name="LineSeriesOptions" type='Pick<LineSeriesProps, "seriesKey" | "pointStyle" | "activePointStyle" | "material" | "dashAnimation">' />
 
-<div className="line-props-scroll" role="region" aria-label="LineChart.Series props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `DataKey<Row>` | Required | Value field or accessor. |
-| `seriesKey` | `string` | String `dataKey` | Config and visibility identity for accessor and numeric data keys. |
-| `type` | Recharts curve type | `"linear"` | Curve for this line. |
-| `dot` | Native dot props or renderer | `true` | Point markers; use `false` to hide them. |
-| `strokeWidth` / `strokeDasharray` | `number` / `string` | Width `1`; no dashes | Stroke weight and dash pattern. |
-
-</div>
-
-Missing values remain gaps unless `connectNulls` is enabled. See [Recharts Line](https://recharts.github.io/en-US/api/Line/) for native marks and [material support](/docs/guides/materials/) for finishes.
-
-### Presentation API
-
-<ApiTable name="LinePresentationReference" />
-
-### Area presentation
-
-<ApiTable name="AreaPresentationReference" />
-
-### Background patterns
-
-<ApiTable name="BackgroundPatternReference" />
-
-## Shared components
-
-Customize your legend, tooltip and plot parts with these components.
-
-| Component | Purpose |
-| --- | --- |
-| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
-| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
-| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
-| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
-| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
+<Caption>
+  `LineChart` and `LineChart.Series` also take every prop of Recharts' [LineChart](https://recharts.github.io/en-US/api/LineChart/) and [Line](https://recharts.github.io/en-US/api/Line/), like `margin`, `type` and `connectNulls`.
+</Caption>

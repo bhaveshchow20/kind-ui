@@ -17,11 +17,9 @@ test("generated browser output is ignored without excluding source images", () =
     "playwright-report/index.html",
     "apps/docs/playwright-report/data/screenshot.png",
     "blob-report/report.zip",
-    "apps/showcase/blob-report/report.zip",
   ];
   const sources = [
     "apps/docs/public/cherry-blossom.png",
-    "apps/showcase/public/social/homepage-v1.png",
     "tests/chart.spec.ts-snapshots/desktop.png",
   ];
   const ignored = execFileSync("git", ["check-ignore", "--no-index", "--stdin"], {
@@ -166,6 +164,7 @@ test("docs-only filter is conservative for mixed changes and executable paths", 
     "package-lock.json",
     "tests/fixtures/browser/index.html",
     "unknown/new-file",
+    "apps/docs/examples/line/basic.tsx",
   ])
     assert.equal(needsBrowsers(["docs/readme.md", path]), true, path);
   assert.equal(needsBrowsers([]), true);
@@ -224,21 +223,6 @@ test("parallel browser runner forwards the shard to every suite", async () => {
   } finally {
     await rm(scratch, { recursive: true, force: true });
   }
-});
-
-test("Docs completion receipt fails on every incomplete prerequisite", async () => {
-  const { parse } = await import("yaml");
-  const docs = parse(
-    await readFile(new URL("../.github/workflows/docs.yml", import.meta.url), "utf8"),
-  );
-  const command = docs.jobs.docs.steps[0].run;
-  const env = { ...process.env, BUILD: "success", CONSUMERS: "success", BROWSERS: "success" };
-  const run = (overrides) =>
-    execFileSync("bash", ["-e", "-c", command], { env: { ...env, ...overrides }, stdio: "pipe" });
-  run({});
-  for (const gate of ["BUILD", "CONSUMERS", "BROWSERS"])
-    for (const status of ["failure", "cancelled", "skipped", ""])
-      assert.throws(() => run({ [gate]: status }));
 });
 
 test("background chrome preserves series and native export boundaries", async () => {

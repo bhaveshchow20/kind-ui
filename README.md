@@ -2,9 +2,7 @@
 
 Composable, interactive charts for React and Next.js. Designed for builders and AI agents.
 
-[Chart gallery](https://github.com/kind-ui/charts) · [Documentation](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs) · [npm package](https://www.npmjs.com/package/@kind-ui/charts)
-
-[![Kind UI chart gallery: line, area, bar, heatmap, radar and Sankey charts](apps/showcase/public/social/homepage-v1.png)](https://github.com/kind-ui/charts)
+[Documentation](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs) · [npm package](https://www.npmjs.com/package/@kind-ui/charts)
 
 [![npm version](https://img.shields.io/npm/v/@kind-ui/charts)](https://www.npmjs.com/package/@kind-ui/charts)
 [![CI](https://github.com/kind-ui/charts/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kind-ui/charts/actions/workflows/ci.yml)
@@ -44,7 +42,7 @@ import { LineChart } from "@kind-ui/charts";
 
 Each chart takes `config`, an accessible name and explicit children such as `LineChart.XAxis`, `LineChart.Series` and `LineChart.Tooltip`. Add only the parts you need.
 
-Build that CSS with your Tailwind v4 Vite or PostCSS integration and import it at your application entry. In Next.js, import your CSS in the root layout and render interactive charts in a client component. The [installation guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/installation.mdx) includes build configuration and required peer dependencies.
+Build that CSS with your Tailwind v4 Vite or PostCSS integration and import it at your application entry. In Next.js, import your CSS in the root layout and render interactive charts in a client component. The [installation guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/index.mdx) includes build configuration and required peer dependencies.
 
 Copy a [complete line chart example](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/components/line.mdx), including its data and explicit chart parts. Examples render only the graph; your application owns any accessible data alternative. The [package reference](packages/charts/README.md) covers API defaults and limits.
 
@@ -69,7 +67,7 @@ Install the Kind UI consumer skill:
 npx skills add kind-ui/charts --skill kind-ui-charts
 ```
 
-Start with the [agent consumer guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/agents/consumer.mdx), then read the relevant [chart guide](https://github.com/kind-ui/charts/tree/main/apps/docs/content/docs/components). Each chart guide includes example setup files and prompts.
+Start with the [agent consumer guide](https://github.com/kind-ui/charts/blob/main/apps/docs/content/docs/guides/ai-agents.mdx). The docs site serves each chart page as Markdown at `llms.mdx/docs/components/<family>.md`, with its example source and API tables. The example source also lives in [`apps/docs/examples/<family>/`](https://github.com/kind-ui/charts/tree/main/apps/docs/examples).
 
 ## Contribute
 

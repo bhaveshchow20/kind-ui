@@ -195,7 +195,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -205,6 +205,20 @@ jobs:
         with:
           node-version: 22
           package-manager-cache: false
+      # The site handoff feeds the kindui.dev deployment; skipped until that hosting is approved.
+      # It is attached before the release is published, so a release never lacks it while hosting is on.
+      - if: vars.KINDUI_HOSTING == 'true'
+        run: npm install --global npm@11.9.0
+      - if: vars.KINDUI_HOSTING == 'true'
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - if: vars.KINDUI_HOSTING == 'true'
+        env:
+          NEXT_PUBLIC_DOCS_ORIGIN: https://kindui.dev
+          NEXT_PUBLIC_DOCS_BASE_PATH: /docs/charts
+        run: |
+          npm run build:docs
+          npm run build:registry
+          node scripts/pack-site.mjs
       - name: Record the published version and verified checksums on GitHub
         run: node scripts/github-release.mjs
         env:
@@ -213,3 +227,4 @@ jobs:
           RELEASE_FILENAME: ${{ needs.verify.outputs.filename }}
           RELEASE_SHA256: ${{ needs.verify.outputs.sha256 }}
           RELEASE_INTEGRITY: ${{ needs.verify.outputs.integrity }}
+          RELEASE_SITE: ${{ vars.KINDUI_HOSTING == 'true' }}

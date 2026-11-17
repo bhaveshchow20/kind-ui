@@ -1,0 +1,34 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+@source "../../../packages/charts/src";
+@source "../examples";
+
+/* Charts read the host's theme variables, so they follow the docs theme in light and dark. */
+:root {
+  --foreground: var(--color-fd-foreground);
+  --border: var(--color-fd-border);
+  --muted: var(--color-fd-muted);
+  --muted-foreground: var(--color-fd-muted-foreground);
+  --popover: var(--color-fd-popover);
+  --popover-foreground: var(--color-fd-popover-foreground);
+  --kind-ui-radial-track: color-mix(in oklab, var(--color-fd-foreground) 10%, transparent);
+}
+
+html {
+  color-scheme: light;
+  scrollbar-gutter: stable;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* The stable gutter already holds the scrollbar's place, so the scroll lock's `!important` margin is undone. */
+html > body[data-scroll-locked] {
+  /* biome-ignore lint/complexity/noImportantStyles: only `!important` beats the scroll lock's `!important` rule */
+  margin-right: 0px !important;
+  /* biome-ignore lint/complexity/noImportantStyles: as above */
+  --removed-body-scroll-bar-size: 0px !important;
+}

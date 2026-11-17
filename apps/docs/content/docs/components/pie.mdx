@@ -1,164 +1,103 @@
 ---
-title: Pie and Donut
-description: Compare parts of a whole with pies, donuts and rounded sectors.
+title: Pie Chart
+description: Show how a whole splits into parts with a pie or a donut.
 ---
 
-<ChartExample id="pie" />
+import PieExample from "../../../examples/pie/basic";
+import PieDonutExample from "../../../examples/pie/donut";
+
+Use a pie chart to show a few parts of one total, like hours by team or budget by category. Keep it to a handful of slices; for more, or to compare totals, use a [bar chart](./bar.mdx).
+
+<Example caption="Hover a slice, or focus the chart and press the arrow keys, to see its hours.">
+  <PieExample />
+
+  <include cwd lang="tsx">./examples/pie/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="pie" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/pie-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+PieChart
+├── PieChart.Series
+│   ├── PieChart.Cell
+│   └── PieChart.Labels
+├── PieChart.Tooltip
+├── PieChart.Legend
+└── PieChart.Content
+```
+
+`PieChart` holds the series config and the accessible name, and draws only the parts you add. `PieChart.Series` draws one sector per row. `PieChart.Labels` writes a row field on each sector, and `PieChart.Cell` paints one sector by hand. `PieChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-`PieChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+### Categories
 
-Set `categoryKey` for stable slice colors and `innerRadius` for a donut.
+Each row is a category. Set `categoryKey` on the series to the field holding the category's `config` key: the sector takes its color from there, and the tooltip and legend use its label. `dataKey` is the value that sizes the sector, and `nameKey` is what the tooltip reads, so point it at the same field. Give `PieChart.Tooltip` an `itemKey` that returns the same key.
 
-```tsx title="Composition sketch"
-import { PieChart } from "@kind-ui/charts";
+List every category in `interaction.eligibleKeys`, including any with a value of `0`, so the legend can reach them.
 
-<PieChart config={config} defaultVisibleSeries={Object.keys(config)} interaction={{ kind: "category", eligibleKeys: data.map((row) => row.key) }} height={280} animate accessibilityLayer aria-label="Team allocation">
-  <PieChart.Series data={data} dataKey="hours" categoryKey="key" nameKey="key" innerRadius={58} outerRadius={108}>
-    <PieChart.Labels dataKey="share" position="inside" fill="white" stroke="none" style={{ fill: "white", fontWeight: 600 }} />
-  </PieChart.Series>
-  <PieChart.Tooltip itemKey={(entry) => String(entry.payload?.key ?? entry.name)} />
-  <PieChart.Legend />
-</PieChart>
+### Donut and Rounded Sectors
+
+Set `innerRadius` for a donut. `cornerRadius` rounds the sector ends, and `paddingAngle` adds a gap in degrees between sectors. Keep the total padding well under the full circle; very thin sectors lose their rounding.
+
+<Example caption="Press a team in the legend to hide its slice. The other slices stay where they are.">
+  <PieDonutExample />
+
+  <include cwd lang="tsx">./examples/pie/donut.tsx</include>
+</Example>
+
+### Legend and Keyboard
+
+By default, pressing a legend item highlights its slice and dims the others, and screen readers hear "Highlighted Design." Press it again, or press Escape, to clear it. Pressing a slice does the same.
+
+With `interaction={{ kind: "category", mode: "visibility", ... }}` and `defaultVisibleSeries`, the legend hides and shows slices instead, and screen readers hear "Hidden Design." A hidden slice keeps its angle, so the others don't move, and the last visible slice can't be hidden. Pass `visibleSeries` and `onVisibleSeriesChange` to control it yourself. See [Legend](../building-blocks/legend.mdx).
+
+Focus the chart and press the arrow keys to move between slices, which shows the tooltip, and Escape to dismiss it.
+
+### Open Tooltip
+
+Set `defaultPinnedCategory` to open one category's tooltip on mount, like the largest share. It follows that category if the rows reorder, and closes for good as soon as the reader hovers, focuses or presses a key:
+
+```tsx
+<PieChart defaultPinnedCategory="design" {...props}>
 ```
 
-Use the same stable category IDs for config, slices and tooltips. Set `animationDirection` to choose the entrance sweep.
+### Materials
 
-## Controlled categories
+Set `material="clay"` or `"glow"` on the series for a finish on every sector, or `glowCategories={["design"]}` to make only some of them glow. See [Materials](../guides/materials.mdx).
 
-This example explicitly opts into visibility. Hide a category without moving or resizing the remaining slices; the status reports visible hours.
+### Motion
 
-<ChartExample id="pie-visibility" />
+With `animate`, the sectors sweep in when the chart mounts. Set `animationDirection="anticlockwise"` to reverse the sweep, and pass `animate={{ revealDurationMs: 800 }}` to change its length. When the reader prefers reduced motion, the sectors appear without sweeping in. See [Motion](../guides/motion.mdx).
 
-Set category `interaction` on PieChart and `categoryKey` on its Series to share actions between slices and legend.
+### Loading
 
-<ChartExample id="pie-interaction" />
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder pie that sweeps around the circle, or holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default):
 
-<Callout title="Category identities">Supply unique string IDs and complete `eligibleKeys`, including hidden and zero-valued categories. Set category `interaction` on `PieChart`, give its Series a `categoryKey`, and retain complete data and Cells. Hiding suppresses a slice without reallocating its angle; `visibleSeries` alone does not bind slices.</Callout>
-
-Focus highlights a slice; Enter/Space activates it and Escape resets. In explicit visibility mode, the legend keeps at least one category visible. Focus never changes visibility; explicit controls can clear focus. See [Chart interaction](/docs/chart-components/chart/) for controlled actions.
-
-## Initial tooltip
-
-Set `defaultPinnedCategory="service"` to open the first tooltip on Service. It follows that ID when rows reorder.
-
-<Callout title="Initial tooltip">Use one category-keyed `PieChart.Series` with explicit data and one `PieChart.Tooltip` with `itemKey`. Compound parts can be wrapped in fragments or consumer components. Inspection or hiding the category dismisses the initial pin until remount; explicit tooltip state takes precedence.</Callout>
-
-## Materials
-
-Labels show each category’s share of the original 1,000 hours, even when categories are hidden.
-
-<ChartExample id="pie-materials" />
-
-### Selective glow
-
-Use `glowCategories={["design"]}` to decorate a specific category.
-
-```tsx title="Selected category on a rounded donut"
-import { PieChart } from "@kind-ui/charts";
-
-<PieChart.Series
-  data={data}
-  dataKey="hours"
-  categoryKey="key"
-  nameKey="key"
-  innerRadius={58}
-  outerRadius={108}
-  cornerRadius={8}
-  paddingAngle={2}
-  glowCategories={["design"]}
-/>
+```tsx
+<PieChart loading={isPending} loadingLabel="Loading allocation" {...props}>
 ```
 
-Glow is decorative; keep category labels and readable fills.
-
-## Rounded and petal sectors
-
-Choose rounded sectors or petals with native `cornerRadius` and `paddingAngle`.
-
-<ChartExample id="pie-rounded" />
-
-Switch Geometry to compare the finishes.
-
-<Callout title="Sector spacing">Use finite, nonnegative values and `0 <= innerRadius < outerRadius`. Keep total padding below the sweep. Narrow sectors may lose rounding; full circles have no rounded ends.</Callout>
-
-## Loading State
-
-Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
-
-<ChartExample id="pie" variant="loading" />
-
-## API reference
-
-Configure the angular plot and its category-valued series.
+## API Reference
 
 ### PieChart
 
-Set the plot size on the chart and add its parts as children.
-
-<div className="line-props-scroll" role="region" aria-label="PieChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `animate` | `boolean \| PieAnimation` | `false` | Sector entrance and interaction motion; respects reduced motion. |
-| `animationDirection` | `"clockwise" \| "anticlockwise"` | `"clockwise"` | Continuous entrance sweep; native geometry and row order stay unchanged. |
-| `defaultPinnedCategory` | `string` | Off | Initial category tooltip; requires one category-keyed PieChart.Series and one Tooltip. Dismissal is permanent until remount. |
-| `loading` | `boolean` | `false` | Explicit pending state with a chart-owned loading illustration and blocked inspection. |
-| `loadingLabel` | `string` | `"Loading chart"` | Accessible pending status. |
-| `accessibilityLayer` | `boolean` | `true` in Recharts | Enables native keyboard inspection; set explicitly here. |
-| `aria-label` / `aria-labelledby` | `string` | — | Accessible chart name. |
-| `children` | `ReactNode` | Required | Explicit PieChart.Series, labels and tooltip. |
-
-</div>
-
-`PieAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` and `hoverTransition`. See [Recharts PieChart](https://recharts.github.io/en-US/api/PieChart/).
-
-<span id="pieseries" />
+<auto-type-table path="../../../../../packages/charts/src/composition/pie.tsx" name="PieChartOptions" type='Pick<PieChartProps, "config" | "aria-label" | "aria-labelledby" | "animate" | "animationDirection" | "defaultPinnedCategory" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
 
 ### PieChart.Series
 
-Value and category identity use separate fields.
+<auto-type-table path="../../../../../packages/charts/src/pie-series.tsx" name="PieSeriesOptions" type='Pick<PieSeriesProps, "categoryKey" | "material" | "glowCategories" | "emphasisKey">' />
 
-<div className="line-props-scroll" role="region" aria-label="PieChart.Series props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `data` | `Row[]` | — | Consumer-owned category rows. |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | `"value"` in Recharts | Numeric value field or accessor; set explicitly here. |
-| `categoryKey` | `string \| ((row: Row) => string)` | Off | Resolves an own top-level field or accessor into chart `config`; requires explicit series data and string IDs. |
-| `nameKey` | `string \| number \| ((row: Row) => unknown)` | `"name"` | Native category name; use config keys for semantic identity. |
-| `innerRadius` | `number` or percentage | `0` | A positive radius produces a Donut. |
-| `outerRadius` | `number` or percentage | `"80%"` | Sector size; percentages use Recharts' available radius. |
-| `startAngle` / `endAngle` | `number` | `0` / `360` | Native angular geometry in degrees. |
-| `paddingAngle` | `number` | `0` | Native gap in degrees; keep total padding below the angular sweep. |
-| `cornerRadius` | `number \| string` | `0` | Native rounded sector corners; numeric units are recommended here. |
-| `material` | `"clay" \| "glow"` | Omitted | Finish on default sectors; consumer rendering can take precedence. |
-| `glowCategories` | `readonly string[]` | Off | Category IDs receiving glow instead of `material`; requires `categoryKey` and explicit data. Unknown IDs are ignored. |
-| `emphasisKey` | `(payload: unknown) => string \| number \| undefined` | Native name | Optional semantic sector identity for paint emphasis; does not configure tooltip identity. |
-| `stroke` | `string` | `"none"` | Native sector outline. |
-
-</div>
-
-Explicit series fill overrides config colors; datum/Cell fill wins. Custom rendering may bypass materials. See [Recharts Pie](https://recharts.github.io/en-US/api/Pie/).
-
-## Shared components
-
-Keep slice identities, legend actions and tooltip formatting aligned with these components.
-
-| Component | Purpose |
-| --- | --- |
-| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
-| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
-| [Labels and cells](/docs/chart-components/labels/) | Annotate values and style individual marks. |
-| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
-| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-
-Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+<Caption>
+  `PieChart` and `PieChart.Series` also take every prop of Recharts' [PieChart](https://recharts.github.io/en-US/api/PieChart/) and [Pie](https://recharts.github.io/en-US/api/Pie/), like `height`, `innerRadius` and `paddingAngle`.
+</Caption>

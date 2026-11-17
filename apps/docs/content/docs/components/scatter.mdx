@@ -1,145 +1,102 @@
 ---
-title: Scatter and Bubble Chart
-description: Compare numeric relationships across series and encode a third measure with bubble area.
+title: Scatter Chart
+description: Compare two numeric measures point by point, and size bubbles by a third.
 ---
 
-<ChartExample id="scatter" />
+import ScatterExample from "../../../examples/scatter/basic";
+import ScatterBubbleExample from "../../../examples/scatter/bubble";
+
+Use a scatter chart to show how two numeric measures relate, like latency and acceptance, and to compare a few groups of points on the same axes.
+
+<Example caption="Hover a point, or focus the chart and press the arrow keys, to see its values.">
+  <ScatterExample />
+
+  <include cwd lang="tsx">./examples/scatter/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="scatter" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/scatter-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+ScatterChart
+├── ScatterChart.Background
+├── ScatterChart.Grid
+├── ScatterChart.XAxis
+├── ScatterChart.YAxis
+├── ScatterChart.ZAxis
+├── ScatterChart.Series
+├── ScatterChart.Tooltip
+├── ScatterChart.Legend
+└── ScatterChart.Content
+```
+
+`ScatterChart` holds the series config and the accessible name, and draws only the parts you add. Unlike the other cartesian charts, each `ScatterChart.Series` takes its own `data`. The tooltip and legend read their labels and colors from `config`. `ScatterChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-`ScatterChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+### Series and Axes
 
-Supply records to each `ScatterChart.Series` and numeric keys to the X and Y axes.
+Both axes are numeric. Give each one the `dataKey` it reads from the points; `name` and `unit` label the value in the tooltip.
 
-```tsx title="Composition sketch"
-import { ScatterChart } from "@kind-ui/charts";
+Add one `ScatterChart.Series` per group, with its points in `data` and its `config` key in `seriesKey`. Set `shape` to tell groups apart without color: `circle` (the default), `cross`, `diamond`, `square`, `star`, `triangle` or `wye`. Give the `config` entry the same `legendShape` so the legend matches.
 
-<ScatterChart config={config} visibleSeries={visibleSeries} onVisibleSeriesChange={setVisibleSeries} height={280} animate accessibilityLayer aria-label="Latency and acceptance by cohort">
-  <ScatterChart.Grid />
-  <ScatterChart.XAxis type="number" dataKey="latency" name="Latency" unit=" ms" />
-  <ScatterChart.YAxis type="number" dataKey="acceptance" name="Acceptance" unit="%" />
-  <ScatterChart.Series seriesKey="weekday" data={data.filter((row) => row.cohort === "weekday")} shape="circle" />
-  <ScatterChart.Series seriesKey="weekend" data={data.filter((row) => row.cohort === "weekend")} shape="diamond" />
-  <ScatterChart.Tooltip<(typeof data)[number]> pointLabel={(row) => row.period} />
-  <ScatterChart.Legend />
-</ScatterChart>
+Set `material="clay"` or `"glow"` on a series for a finish on the built-in shapes; see [Materials](../guides/materials.mdx).
+
+`ScatterChart.Tooltip` titles each point with its series label. Pass `pointLabel` to title it from the point's own record instead, like the task name above.
+
+### Bubble Size
+
+Add `ScatterChart.ZAxis` to size each point by a third measure. Its `range` sets the smallest and largest bubble area, in square pixels:
+
+<Example caption="Bubble area shows requests. Hover Classify or Extract to see a zero and a missing value.">
+  <ScatterBubbleExample />
+
+  <include cwd lang="tsx">./examples/scatter/bubble.tsx</include>
+</Example>
+
+Recharts draws zero and missing sizes at the smallest area and leaves them out of the tooltip. Pass the same key to the tooltip's `zDimension` to show them, as `0k` and `missingValue` ("No data" by default).
+
+### Legend and Keyboard
+
+Pressing a legend item highlights its points and dims the others. Press it again, or press Escape, to clear it. To hide and show series from the legend instead, see [Legend](../building-blocks/legend.mdx).
+
+Focus the chart and press the left and right arrow keys to move through the points of the first series, which shows the tooltip, and Escape to dismiss it. Hover reaches every series.
+
+### Motion
+
+Pass `animate` to fade the points in when the chart mounts, or `animate={{ revealDurationMs: 900 }}` to change the duration. Scatter charts don't animate by default. When the reader prefers reduced motion, points appear without fading in. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows placeholder points, which hold still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default):
+
+```tsx
+<ScatterChart loading={isPending} loadingLabel="Loading latency" {...props}>
 ```
 
-Match `legendShape` to each series’ `shape` so legend symbols identify the points.
-
-## Bubble size
-
-Add `ZAxis` to map a third measure to bubble area.
-
-<ChartExample id="scatter-bubble" />
-
-<Callout title="Zero and missing sizes">Native scaling uses the minimum bubble area for both. Set `zDimension` to preserve their original tooltip values.</Callout>
-
-## Materials
-
-Choose Default, Clay or Glow.
-
-<ChartExample id="scatter-materials" />
-
-Custom shapes and filters may bypass materials.
-
-## Interaction and accessibility
-
-Left/Right inspects the first series in data order; Escape dismisses inspection. Include accessible data for all series. Entrance motion respects reduced motion.
-
-## Loading State
-
-Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
-
-<ChartExample id="scatter" variant="loading" />
-
-## API reference
-
-Configure numeric dimensions, point symbols and tooltip values.
+## API Reference
 
 ### ScatterChart
 
-<div className="line-props-scroll" role="region" aria-label="ScatterChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `animate` | `boolean \| ScatterAnimation` | `false` | In-place entrance fade and shared tooltip motion; respects reduced motion. |
-| `accessibilityLayer` | `boolean` | `true` in Recharts | Native first-series keyboard inspection; set explicitly here. |
-| `margin` | `{ top?: number; right?: number; bottom?: number; left?: number }` | `5` each | Plot spacing for axes and marks. |
-| `children` | `ReactNode` | Required | Explicit axes, grid, series and Scatter tooltip. |
-| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name. |
-
-</div>
-
-See [Recharts ScatterChart](https://recharts.github.io/en-US/api/ScatterChart/).
-
-<Callout title="Server rendering">At the pinned Recharts version, fixed-size server rendering omits Scatter marks. Applications can supply a server-rendered summary when needed.</Callout>
-
-<span id="scatterseries" />
+<auto-type-table path="../../../../../packages/charts/src/composition/scatter.tsx" name="ScatterChartOptions" type='Pick<ScatterChartProps, "config" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
 
 ### ScatterChart.Series
 
-<div className="line-props-scroll" role="region" aria-label="ScatterChart.Series props" tabIndex={0}>
+<auto-type-table path="../../../../../packages/charts/src/scatter-series.tsx" name="ScatterSeriesOptions" type='Pick<ScatterSeriesProps, "seriesKey" | "material">' />
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `data` | `Row[]` | — | Native point records; axis keys read these records. |
-| `seriesKey` | `string` | String `dataKey` | Config and visibility identity; use explicitly for cohorts. |
-| `shape` | `"circle" \| "cross" \| "diamond" \| "square" \| "star" \| "triangle" \| "wye"` or native custom shape | `"circle"` | Built-in symbol or consumer-owned renderer. |
-| `material` | `"clay" \| "glow"` | Omitted | Finish for built-in symbols, preserving native geometry. |
-| `fill` | `string` | Config color when identified | Explicit color overrides metadata. |
-| `hide` | `boolean` | `false` | Suppresses paint and inspection while preserving coordinates; chart visibility also applies. |
-| `xAxisId` / `yAxisId` / `zAxisId` | `string \| number` | `0` | Native axis association. |
+### ScatterChart.Tooltip
 
-</div>
+<auto-type-table path="../../../../../packages/charts/src/scatter-tooltip.tsx" name="ScatterTooltipOptions" type='Pick<ScatterTooltipProps, "pointLabel" | "zDimension" | "missingValue">' />
 
-See [Recharts Scatter](https://recharts.github.io/en-US/api/Scatter/).
-
-### ScatterTooltip
-
-<div className="line-props-scroll" role="region" aria-label="ScatterTooltip props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `pointLabel` | `(record: Row) => ReactNode` | Config series label | Receives the actual selected native record. |
-| `zDimension` | `ScatterSizeDimension<Row>` | — | Explicit raw zero/missing size recovery; no geometry change. |
-| `missingValue` | `ReactNode` | `"No data"` | Text for a recovered missing measurement. |
-| `axisId` | `string \| number` | `0` | Match a custom X axis ID for native keyboard navigation. |
-| `maxWidth` | `number` | `180` | Kind tooltip width bound in pixels. |
-| `content` | `ReactElement \| ((props: TooltipRenderProps) => ReactNode)` | Kind Scatter content | Custom content owns dimension rendering. |
-
-</div>
-
-`zDimension` accepts a string key or numeric/missing-value accessor, plus optional `name` and `unit`. Native formatters take precedence. See [Recharts Tooltip](https://recharts.github.io/en-US/api/Tooltip/).
-
-### ScatterTooltip<wbr />Content
-
-<div className="line-props-scroll" role="region" aria-label="ScatterTooltipContent props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `tooltip` | `TooltipRenderProps` | Required | Native tooltip content callback payload. |
-| `pointLabel` / `zDimension` / `missingValue` | Same as `ScatterTooltip` | Same | Compose Kind dimension content inside a custom native adapter. |
-| `valueAnimation` | `"shuffle"` | — | Optional numeric readout motion. |
-
-</div>
-
-## Shared components
-
-Configure cohort metadata and numeric scales with these components. Use ScatterTooltip above for point values.
-
-| Component | Purpose |
-| --- | --- |
-| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
-| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
-| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
-
-Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+<Caption>
+  `ScatterChart`, `ScatterChart.Series` and `ScatterChart.ZAxis` also take every prop of Recharts' [ScatterChart](https://recharts.github.io/en-US/api/ScatterChart/), [Scatter](https://recharts.github.io/en-US/api/Scatter/) and [ZAxis](https://recharts.github.io/en-US/api/ZAxis/), like `margin`, `data`, `shape` and `range`.
+</Caption>

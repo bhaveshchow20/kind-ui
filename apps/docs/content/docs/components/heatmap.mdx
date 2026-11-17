@@ -1,182 +1,113 @@
 ---
 title: Heatmap
-description: Compare numeric intensity across two ordered domains with native table cells.
+description: Compare a value across two sets of categories with a grid of colored cells.
 ---
 
-<ChartExample id="heatmap" />
+import HeatmapExample from "../../../examples/heatmap/basic";
+import HeatmapCompactExample from "../../../examples/heatmap/compact";
+
+Use a heatmap to show how one measure varies across two ordered sets, like days and hours, when the pattern matters more than each exact value.
+
+<Example caption="Hover a cell, or focus the grid and press the arrow keys, to see its value.">
+  <HeatmapExample />
+
+  <include cwd lang="tsx">./examples/heatmap/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="heatmap" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/heatmap-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+HeatmapChart
+├── HeatmapChart.Grid
+├── HeatmapChart.Tooltip
+├── HeatmapChart.Legend
+├── HeatmapChart.DataTable
+└── HeatmapChart.Content
+```
+
+`HeatmapChart` holds the rows, columns, data and color scale, and draws only the parts you add. The grid is an HTML table with a header for each row and column, so screen readers can read it like one. Heatmaps have no series, so pass `config={{}}`. `HeatmapChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-Supply ordered rows and columns, records and a color scale. Add the grid, legend and tooltip as children.
+### Rows, Columns and Data
 
-```tsx title="Composition sketch"
-import { HeatmapChart } from "@kind-ui/charts";
+`rows` and `columns` set the order of the grid. `data` has one `{ row, column, value }` record per cell; a record whose row or column isn't listed throws. A missing record or a `null` value shows as a patterned cell labeled `missingLabel`, while `0` is a measured value. When two records share a cell, `duplicates` decides what happens: `error` (the default), `first`, `last` or `sum`.
 
-<HeatmapChart
-  config={{}} aria-label="Support requests by day and hour"
-  rows={rows} columns={columns} data={data} scale={scale}
-  animate missingLabel="No report"
->
-  <HeatmapChart.Grid caption="Support requests by day and hour" />
-  <HeatmapChart.Legend label="Requests per two-hour interval" />
-  <HeatmapChart.Tooltip valueAnimation="shuffle" />
-</HeatmapChart>
+`formatValue` formats the value in the cells, tooltip and legend, like ``(value) => `${value}%` ``, without changing the colors.
+
+### Color Scale
+
+`createHeatmapScale` maps a numeric `domain` to two or more `#rrggbb` colors, spaced evenly. Values outside the domain take the nearest end color. For values above and below a target, center the domain on zero with a neutral middle color:
+
+```tsx
+const scale = createHeatmapScale({
+  domain: [-20, 20],
+  colors: ["#9a3412", "#fff7ed", "#1e40af"],
+});
 ```
 
-Missing records and `null` use patterned cells; zero remains a measured value.
+Keep the same scale when you compare two heatmaps, so the same color means the same value. `HeatmapChart.Legend` shows the scale's ends, zero for a domain that crosses it, and the missing-cell swatch.
 
-## Compact activity grid
+### Compact Grids
 
-Square cells grow to fill the preview and shrink on smaller screens.
+Set `layout` on the grid for fixed square cells: `cellSize`, `gap`, and `rowLabels` or `columnLabels` set to `hidden`. Hidden labels stay readable by screen readers, and the tooltip still names each cell. Pass `Cell` to change what each cell shows, like nothing:
 
-<ChartExample id="heatmap-compact" />
+<Example caption="Square cells shrink with the page. Hover a cell to see its day and week.">
+  <HeatmapCompactExample />
 
-<Callout title="Note">Hidden visual labels keep accessible row and column names.</Callout>
+  <include cwd lang="tsx">./examples/heatmap/compact.tsx</include>
+</Example>
 
-## Signed comparisons
+Set `material="clay"` or `"glow"` on the grid for a finish on the cell edges; see [Materials](../guides/materials.mdx).
 
-Use a symmetric scale to distinguish values below and above target.
+### Keyboard
 
-<ChartExample id="heatmap-diverging" />
+Focus the grid and press the arrow keys to move between cells, which shows the tooltip. Home and End go to the ends of a row, Ctrl+Home and Ctrl+End to the first and last cells, and Escape dismisses the tooltip. Pass `valueAnimation="shuffle"` to the tooltip to animate its digits.
 
-Keep the same scale when comparing datasets.
+### Motion
 
-## Cell materials
+Pass `animate` to fade the cells in diagonally when the chart mounts. Heatmaps don't animate by default. When the reader prefers reduced motion, cells appear without fading in. See [Motion](../guides/motion.mdx).
 
-Choose Default, Clay or Glow. Finishes decorate cell edges while preserving the scale color.
+### Loading
 
-<ChartExample id="heatmap-materials" />
+Set `loading` while the data is on its way. The chart shows a placeholder grid, which holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default):
 
-## Keyboard and motion
+```tsx
+<HeatmapChart loading={isPending} loadingLabel="Loading requests" {...props}>
+```
 
-Use arrows to inspect cells, Home/End for row ends and Ctrl+Home/End for matrix corners. Escape dismisses inspection. Entrance motion respects reduced motion.
-
-## Loading State
-
-Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
-
-<ChartExample id="heatmap" variant="loading" />
-
-## API reference
-
-Pass `config={{}}`, an accessible name and explicit grid, legend and tooltip parts. The numeric scale supplies heatmap colors.
+## API Reference
 
 ### HeatmapChart
 
-<div className="line-props-scroll" role="region" aria-label="HeatmapChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Use an empty config for the quantitative grid. |
-| `aria-label` / `aria-labelledby` | `string` | One required | Accessible chart name. |
-| `children` | `ReactNode` | Required | Explicit family parts; omitted parts stay absent. |
-| `interaction` | `ChartInteractionConfig` | — | Optional frame actions; grid inspection uses row/column identities independently. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `rows` / `columns` | `readonly string[]` | Required | Unique, explicitly ordered domains. Records outside them throw. |
-| `data` | `readonly HeatmapDatum[]` | Required | Records shaped as `{ row: string; column: string; value: number \| null }`. Nonfinite values throw. |
-| `scale` | `HeatmapScale` | Required | Shared numeric encoding for grid, legend and tooltip content. |
-| `duplicates` | `"error" \| "first" \| "last" \| "sum"` | `"error"` | Coordinate collision policy. Sum ignores null records; all-null coordinates stay missing. Nonfinite sums throw. |
-| `formatValue` | `(value: number) => string` | `String` conversion | Formats cells, tooltip, legend and data table without changing the numeric scale. |
-| `missingLabel` | `string` | `"Missing"` | Text used for absent or null observations. |
-| `animate` | `boolean` | `false` | Diagonal cell entrance; respects reduced motion and interaction. |
-
-</div>
-
-### createHeatmapScale
-
-Produces the `HeatmapScale` passed to `HeatmapChart`.
-
-<div className="line-props-scroll" role="region" aria-label="createHeatmapScale options" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `domain` | `readonly [number, number]` | Required | Finite ascending endpoints; their difference must also be finite. Equal endpoints use the palette midpoint. |
-| `colors` | `readonly string[]` | Required | At least two opaque `#rrggbb` stops, evenly spaced in sRGB. |
-
-</div>
-
-`color(value)` interpolates opaque hex colors and clamps to the explicit domain. Nonfinite values throw; data does not infer the scale or categorical palette.
-
-<span id="heatmapgrid" />
+<auto-type-table path="../../../../../packages/charts/src/heatmap.tsx" name="HeatmapChartOptions" type='Pick<HeatmapChartProps, "aria-label" | "aria-labelledby" | "rows" | "columns" | "data" | "scale" | "duplicates" | "formatValue" | "missingLabel" | "animate" | "loading" | "loadingLabel" | "frameProps">' />
 
 ### HeatmapChart.Grid
 
-Captioned native table with row/column headers and roving grid focus. Empty domains show an empty state; wide matrices scroll horizontally.
-
-<div className="line-props-scroll" role="region" aria-label="HeatmapChart.Grid props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `caption` | `string` | Required | Visible table caption and accessible grid name. |
-| `layout` | `{ cellSize?: number \| string; gap?: number \| string; rowLabels?: "visible" \| "hidden"; columnLabels?: "visible" \| "hidden" }` | Fluid cells; `gap: 3`; labels visible | Optional fixed cells, spacing and independent visual headers. |
-| `material` | `"clay" \| "glow"` | Omitted | Static cell-edge finish; missing cells do not receive it. |
-| `Cell` | `ComponentType<HeatmapCellContentProps>` | `HeatmapCellContent` | Custom cell content receives `cell`, `fill` and `formattedValue`. Keep content compatible with grid navigation. |
-| `cellProps` | `(cell: HeatmapCell) => ComponentPropsWithRef<"td">` | — | Native styles, refs and handlers. The grid still owns cell semantics, focus and background color. |
-| `rowLabel` / `columnLabel` | `(key: string) => ReactNode` | Domain key | Customize visible headers; coordinate identities and inspection labels remain domain keys. |
-
-</div>
-
-Use a positive `cellSize` and nonnegative `gap`. Hidden labels retain accessible names and keyboard navigation.
-
-### HeatmapCellContent
-
-Formats values and chooses black/white text from hex-fill luminance. Also usable inside a custom `Cell`.
-
-<div className="line-props-scroll" role="region" aria-label="HeatmapCellContent props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `cell` | `HeatmapCell` | Required | Normalized coordinate supplied to a custom cell component. |
-| `fill` | `string` | Required | Opaque scale hex color or the missing-fill CSS variable. |
-| `formattedValue` | `string` | Required | Display text; the default renderer does not format the number again. |
-
-</div>
-
-<span id="heatmaplegend" />
-
-### HeatmapChart.Legend
-
-<div className="line-props-scroll" role="region" aria-label="HeatmapChart.Legend props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `label` | `string` | Required | Fieldset legend describing the numeric encoding. |
-
-</div>
-
-Shows scale endpoints, zero for signed domains and the `missingLabel` swatch. It is a numeric key, without series toggles.
-
-<span id="heatmaptooltip" />
+<auto-type-table path="../../../../../packages/charts/src/heatmap.tsx" name="HeatmapGridOptions" type='Pick<HeatmapGridProps, "caption" | "layout" | "material" | "Cell" | "cellProps" | "rowLabel" | "columnLabel">' />
 
 ### HeatmapChart.Tooltip
 
-Shows the focused, hovered or touched cell below the grid. Digit animation respects reduced motion and exposes the final value to assistive technology.
+<auto-type-table path="../../../../../packages/charts/src/heatmap.tsx" name="HeatmapTooltipOptions" type='Pick<HeatmapTooltipProps, "Content" | "valueAnimation">' />
 
-<div className="line-props-scroll" role="region" aria-label="HeatmapChart.Tooltip props" tabIndex={0}>
+### HeatmapChart.Legend
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `Content` | `ComponentType<HeatmapCellContentProps>` | Coordinate and value text | Custom content receives the active `cell`, `fill` and `formattedValue`; presentation stays consumer-owned. |
-| `valueAnimation` | `"shuffle"` | Off | Optional digit motion for built-in numeric content. Missing cells remain text; custom `Content` receives no injected animation. |
+<auto-type-table path="../../../../../packages/charts/src/heatmap.tsx" name="HeatmapLegendOptions" type='Pick<HeatmapLegendProps, "label">' />
 
-</div>
+### createHeatmapScale
 
-### HeatmapDataTable
+<auto-type-table path="../../../../../packages/charts/src/heatmap-model.ts" name="CreateHeatmapScaleOptions" type='Pick<HeatmapScaleOptions, "domain" | "colors">' />
 
-A static data alternative using the same records and formatting.
-
-<div className="line-props-scroll" role="region" aria-label="HeatmapDataTable props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `caption` | `string` | Required | Native data table caption. |
-
-</div>
-
-### createHeatmapModel
-
-Builds a cell matrix from the chart’s rows, columns, data and duplicate policy. Missing coordinates become null; invalid inputs throw.
+<Caption>
+  `HeatmapChart.DataTable` takes a `caption` and shows the same records as a plain table. Each part also takes the props of its HTML element, like `className` and `style`.
+</Caption>

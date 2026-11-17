@@ -1,0 +1,34 @@
+---
+title: AI Agents
+description: Give a coding agent the skill and docs it needs to build charts with you.
+---
+
+Charts ships an agent skill and serves every docs page as Markdown, so a coding agent can pick a chart, read its contract and adapt its example without guessing props.
+
+## Add the Skill
+
+```bash
+npx skills add kind-ui/charts --skill kind-ui-charts
+```
+
+The `kind-ui-charts` skill teaches an agent to choose a chart family for the data, compose it from the public parts, keep keys, units and missing values explicit, and check the result in a browser. It points the agent to the page it needs instead of the whole site.
+
+## Read the Docs as Markdown
+
+Every page has a **Copy Markdown** button under its title, and its menu opens the page as Markdown or on GitHub. Agents can fetch the same files directly from the site root:
+
+| Path | What it has |
+| --- | --- |
+| `llms.txt` | An index of every page, with its description |
+| `llms-full.txt` | Every page in one file |
+| `llms.mdx/docs/<page>.md` | One page, like `llms.mdx/docs/components/line.md` |
+
+Each page's Markdown includes its example source and API tables, so one chart page is usually all an agent needs. Point it at the chart page and the building block you're changing, like [Legend](../building-blocks/legend.mdx), rather than `llms-full.txt`.
+
+## Ask for the Chart You Need
+
+Name the data, the units and what should happen with zeros and gaps, then ask for the checks you want:
+
+> Using the Line Chart page, chart weekly completed tasks from `useTasks()`. Keep weeks with zero tasks, leave missing weeks as gaps, label the chart "Completed tasks per week", and run the typecheck and build.
+
+Review what comes back like any other change: run it, use it with the keyboard, and check it in light and dark.

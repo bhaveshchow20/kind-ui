@@ -1,0 +1,86 @@
+---
+title: Chart
+description: Name, size and control any chart family with the options its root shares.
+---
+
+import ChartExample from "../../../examples/chart/basic";
+
+Every family root, like `LineChart` or `BarChart`, takes the same options for its data, series config, accessible name, size, legend behavior and HTML frame. This page covers those; each [chart page](../components/line.mdx) covers the options its family adds.
+
+<Example caption="Delivery starts highlighted. Press Pickup or Delivery in the legend to move the highlight, or press it again to clear it.">
+  <ChartExample />
+
+  <include cwd lang="tsx">./examples/chart/basic.tsx</include>
+</Example>
+
+## Usage
+
+### Name and Parts
+
+Pass `config`, then `aria-label` or `aria-labelledby`. The chart throws without them, so a chart can't ship without a name. It draws only the parts you add as children, like axes, series, tooltip and legend; pass `children={null}` for an empty frame on purpose. Families don't nest: put each chart in its own root.
+
+### Size
+
+A chart fills its container's width and is 280px tall (activity rings are 300px). Set `height`, `width`, `style` or `className` to change it; your values win over the defaults. A percentage height needs a parent with a measured height. Set `responsive={false}` to size the chart with fixed `width` and `height` only.
+
+`className`, `style`, refs and handlers go to the plot. To reach the outer HTML frame that also holds the legend, pass them in `frameProps`. `legendPosition` puts the legend and other HTML parts `"bottom"` (the default) or `"top"`.
+
+### Highlight
+
+Pressing a legend item highlights its series and dims the rest; pressing it again, or pressing Escape, clears it. Screen readers hear "Highlighted Delivery." and "Highlight cleared." Pressing a bar, slice or point does the same in families whose marks support it; set `interaction.markActivation` to `"none"` to limit it to the legend.
+
+Set `interaction` to own the highlight. `defaultSelected` starts with one highlighted, as in the example; `selected` with `onSelectionChange` puts it in your state. `eligibleKeys` lists the keys the legend acts on, so include hidden and zero-valued series:
+
+```tsx
+const [selected, setSelected] = useState<string | null>(null);
+
+<BarChart
+  interaction={{
+    kind: "series",
+    eligibleKeys: ["pickup", "delivery"],
+    selected,
+    onSelectionChange: setSelected,
+  }}
+  {...props}
+/>
+```
+
+`kind` is `"series"` for series, `"category"` for categories like pie slices, and `"node"` for Sankey nodes. To cancel an action, return `false` from `interaction.onBeforeInteraction`, or call `event.preventDefault()` in an `onClick` you pass to the legend; it runs first.
+
+### Hide and Show
+
+Set `interaction.mode` to `"visibility"` and the legend hides and shows series instead. Pass `defaultVisibleSeries` to let the chart own the list, or `visibleSeries` with `onVisibleSeriesChange` to own it yourself. The [Legend](./legend.mdx) page shows it in action.
+
+Pass one of `visibleSeries` or `defaultVisibleSeries`, not both. `onVisibleSeriesChange` needs one of them; `visibleSeries` without it is read-only. The legend always keeps one series visible, but your own state can hide them all, so show an empty message when it does.
+
+### Emphasis
+
+Hovering or focusing a series, in the legend or on the plot, dims the others while the pointer or focus stays. Set `emphasis="none"` to turn it off. Bar charts also take `emphasis="category"` to dim the other categories while one is hovered.
+
+### Content
+
+Add `.Content` for HTML next to the plot, like a control or a status line. It renders in the same frame as the legend, keeps the chart's context and hides while the chart is loading:
+
+```tsx
+<LineChart.Content>
+  <button type="button" onClick={refresh}>Refresh</button>
+</LineChart.Content>
+```
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder in its own shape, the legend and other HTML parts hide, and screen readers hear `loadingLabel` ("Loading chart" by default). Highlight and visibility carry over when `loading` turns off. Show your own message for errors and empty results.
+
+### Colors in CSS
+
+Each config key `revenue` sets a `--color-revenue` CSS variable on the frame, so custom marks and HTML can match the series. See [Series Config](./series-config.mdx).
+
+## API Reference
+
+### Chart Root
+
+<auto-type-table path="../../../../../packages/charts/src/family-root.tsx" name="ChartRootOptions" type='Pick<FamilyOptions, "config" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
+
+### interaction
+
+<auto-type-table path="../../../../../packages/charts/src/chart-interaction.tsx" name="ChartInteractionOptions" type='Pick<ChartInteractionConfig, "kind" | "mode" | "eligibleKeys" | "defaultSelected" | "selected" | "onSelectionChange" | "markActivation" | "onBeforeInteraction">' />

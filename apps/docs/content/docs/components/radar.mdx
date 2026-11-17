@@ -1,126 +1,81 @@
 ---
 title: Radar Chart
-description: Compare two product profiles across six dimensions on a shared numeric scale.
+description: Compare a few profiles across the same set of measures.
 ---
 
-<ChartExample id="radar" />
+import RadarExample from "../../../examples/radar/basic";
+
+Use a radar chart to compare two or three profiles, like products or teams, across five to eight measures on one shared scale. Each measure is a spoke, and each profile is a polygon.
+
+<Example caption="Hover a spoke to compare both scores. Press a polygon or a legend item to highlight that product.">
+  <RadarExample />
+
+  <include cwd lang="tsx">./examples/radar/basic.tsx</include>
+</Example>
 
 ## Installation
 
-<ChartInstallation id="radar" />
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/radar-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts motion recharts
+```
+
+## Composition
+
+```text
+RadarChart
+├── RadarChart.Grid
+├── RadarChart.AngleAxis
+├── RadarChart.RadiusAxis
+├── RadarChart.Series
+├── RadarChart.Tooltip
+├── RadarChart.Legend
+└── RadarChart.Content
+```
+
+`RadarChart` holds the data, the series config and the accessible name, and draws only the parts you add. `RadarChart.AngleAxis` names the spokes from a row field, `RadarChart.RadiusAxis` sets the scale out from the center, and `RadarChart.Grid` draws the rings behind them. Add one `RadarChart.Series` per profile. `RadarChart.Content` places your own HTML next to the legend.
 
 ## Usage
 
-`RadarChart` requires `config`, an accessible name and explicit children. Add the parts you need; omitted parts stay absent. Set plot dimensions on the chart, shared actions on `interaction`, and outer HTML attributes on `frameProps`.
+### Scale
 
-Compare measures on a shared radial scale with one `RadarChart.Series` per profile.
+Each row is a spoke, and every profile reads its value from the same row. Give `RadarChart.RadiusAxis` a fixed `domain`, like `[0, 100]`, and explicit `ticks`, so every spoke uses the same scale. Only compare measures with the same unit. Set `outerRadius` on the chart (the example uses `"68%"`) to leave room for the spoke names.
 
-```tsx title="Composition sketch"
-import { RadarChart } from "@kind-ui/charts";
+Overlapping profiles need a see-through fill: set `fillOpacity` on each series, like `0.18`. `RadarChart.Grid` takes `radialLines={false}` to hide the spokes and keep the rings.
 
-<RadarChart config={config} defaultVisibleSeries={Object.keys(config)} height={280} data={data} animate outerRadius="68%" aria-label="Product research scores out of 100">
-  <RadarChart.Grid radialLines={false} />
-  <RadarChart.AngleAxis dataKey="period" />
-  <RadarChart.RadiusAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} />
-  <RadarChart.Series dataKey="studio" fillOpacity={0.18} />
-  <RadarChart.Series dataKey="field" fillOpacity={0.18} />
-  <RadarChart.Tooltip />
-  <RadarChart.Legend />
-</RadarChart>
-```
+### Selection and Keyboard
 
-Use comparable units and a fixed domain across spokes. These research scores share a 0–100 scale.
+With `interaction={{ kind: "series", eligibleKeys }}`, pressing a polygon or its legend item highlights that profile and dims the others, and screen readers hear "Highlighted Studio." Press it again, or press Escape, to clear it. Each profile is a button, so Tab reaches it and Enter or Space presses it.
 
-## Center-out motion
+Pass `selected` and `onSelectionChange` in `interaction` to control the highlight yourself. To hide and show profiles from the legend instead, see [Legend](../building-blocks/legend.mdx).
 
-Set `animate` for a center-out entrance that respects reduced motion.
+Focus the chart and press the arrow keys to move between spokes, which shows every profile's score in the tooltip, and Escape to dismiss it.
 
-## Series selection
+### Materials
 
-Click a polygon or press Enter/Space to select it. Repeat or press Escape to clear.
+Set `material="clay"` or `"glow"` on a series for a finish. The glow spreads past the polygon's edge, so it doesn't mark a score. See [Materials](../guides/materials.mdx).
 
-<ChartExample id="radar-selection" />
+### Motion
 
-Set `RadarChart.interaction` to `{ kind: "series", mode: "focus", eligibleKeys }`. Pair `selected` with `onSelectionChange` for controlled focus.
+With `animate`, the polygons grow out from the center when the chart mounts. Pass `animate={{ revealDurationMs: 800 }}` to change its length. When the reader prefers reduced motion, the polygons appear without growing. See [Motion](../guides/motion.mdx).
 
-Selection highlights a profile without hiding other values.
+### Loading
 
-<Callout title="Keyboard access">Series controls support selection, but not arrow-key navigation between spokes. Use a meaningful chart name and clear profile labels.</Callout>
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder polygon that slowly changes shape, or holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default).
 
-## Materials
-
-Choose Default, Clay or Glow. Glow’s exterior halo is decorative, not a score boundary.
-
-<ChartExample id="radar-materials" />
-
-See [material support](/docs/guides/materials/) for custom-shape limitations.
-
-## Loading State
-
-Set [`loading`](/docs/chart-components/chart/#loading) while data is pending. Use `loadingLabel` for its accessible status.
-
-<ChartExample id="radar" variant="loading" />
-
-## API reference
-
-Configure the shared scale, profile selection and series styling.
+## API Reference
 
 ### RadarChart
 
-Pass `config` and an accessible name, then add the axes and series as children.
-
-<div className="line-props-scroll" role="region" aria-label="RadarChart props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `config` | `SeriesConfig` | Required | Series or category labels, colors and formatting. |
-| `interaction` | `ChartInteractionConfig` | Family focus | Shared legend and supported mark actions; eligibility remains explicit. |
-| `frameProps` | HTML frame attributes | — | Styles, handlers, data attributes and ref for the outer HTML frame. |
-| `data` | `Row[]` | — | Category rows used by explicit axes and series. |
-| `animate` | `boolean \| RadarAnimation` | `false` | Center-out entrance for default polygons; respects reduced motion. |
-| `cx` / `cy` | `number \| string` | `"50%"` | Native polar center. |
-| `outerRadius` | `number \| string` | `"80%"` | Plot radius; these components reserve label space with `"68%"`. |
-| `aria-label` / `aria-labelledby` | `string` | — | Accessible plot name; does not add spoke keyboard inspection. |
-| `children` | `ReactNode` | Required | Explicit polar axes, grid, series and tooltip. |
-
-</div>
-
-`RadarAnimation` accepts `revealDurationMs` (default `1000`), `revealEasing` (default `"easeOut"`) and `hoverTransition` (shared spring). See [Recharts RadarChart](https://recharts.github.io/en-US/api/RadarChart/).
-
-<span id="radarseries" />
+<auto-type-table path="../../../../../packages/charts/src/composition/radar.tsx" name="RadarChartOptions" type='Pick<RadarChartProps, "config" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
 
 ### RadarChart.Series
 
-String `dataKey` values identify config entries. Use `seriesKey` for numeric keys or accessors with visibility or selection.
+<auto-type-table path="../../../../../packages/charts/src/polar-series.tsx" name="RadarSeriesOptions" type='Pick<RadarSeriesProps, "seriesKey" | "material">' />
 
-<div className="line-props-scroll" role="region" aria-label="RadarChart.Series props" tabIndex={0}>
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `dataKey` | `string \| number \| ((row: Row) => unknown)` | — | Value field or native accessor; supplied for both profiles here. |
-| `seriesKey` | `string` | String `dataKey` | Metadata, visibility and selection identity. |
-| `material` | `"clay" \| "glow"` | Omitted | Finish on default polygons; consumer rendering takes precedence. |
-| `stroke` / `fill` | `string` | Config color | Override outline or fill independently. |
-| `fillOpacity` | `number` | SVG default `1` | These overlapping profiles explicitly use `0.18`. |
-| `dot` | `boolean` or native dot props / renderer | `false` | Optional native category marks. |
-| `activeDot` | `boolean` or native dot props / renderer | Kind active marker | Native inspected-category marker; independent of selection. |
-| `hide` | `boolean` | `false` | Suppresses series paint and inspection while preserving full-data layout; chart visibility also applies. |
-| `shape` | Native element or renderer | Kind default polygon | Consumer-owned shape bypasses material and center-out masking. |
-
-</div>
-
-See [Recharts Radar](https://recharts.github.io/en-US/api/Radar/).
-
-## Shared components
-
-Configure profile colors, radial scales and selection controls with these components.
-
-| Component | Purpose |
-| --- | --- |
-| [Chart frame](/docs/chart-components/chart/) | Share colors, formatting and series visibility. |
-| [SeriesConfig](/docs/chart-components/series-config/) | Name series and define their colors and value formats. |
-| [Axes and grid](/docs/chart-components/axes-grid/) | Label scales and add comparison guides. |
-| [Legend](/docs/chart-components/legend/) | Identify series and focus by dimming other marks. |
-| [Tooltip](/docs/chart-components/tooltip/) | Show values for the inspected mark. |
-
-Place custom HTML controls or status text in the family’s `Content` part. Keep function/numeric data accessors paired with explicit `seriesKey` metadata.
+<Caption>
+  `RadarChart` and `RadarChart.Series` also take every prop of Recharts' [RadarChart](https://recharts.github.io/en-US/api/RadarChart/) and [Radar](https://recharts.github.io/en-US/api/Radar/), like `outerRadius`, `fillOpacity` and `dot`.
+</Caption>
