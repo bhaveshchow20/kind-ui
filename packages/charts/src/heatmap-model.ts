@@ -15,9 +15,16 @@ export type HeatmapModel = {
   cells: readonly (readonly HeatmapCell[])[];
 };
 export type HeatmapModelOptions = {
+  /** Row keys, top to bottom. A record whose row isn't listed throws. */
   rows: readonly string[];
+  /** Column keys, left to right. A record whose column isn't listed throws. */
   columns: readonly string[];
+  /** One `{ row, column, value }` record per cell. A missing record or a `null` value is a missing cell, not zero. */
   data: readonly HeatmapDatum[];
+  /**
+   * What to do when two records share a cell: throw, keep the first or last, or add them up.
+   * @default "error"
+   */
   duplicates?: HeatmapDuplicatePolicy;
 };
 

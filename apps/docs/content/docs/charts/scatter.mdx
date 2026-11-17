@@ -1,0 +1,101 @@
+---
+title: Scatter Chart
+description: Compare two numeric measures point by point, and size bubbles by a third.
+---
+
+import ScatterExample from "../../../examples/scatter/basic";
+import ScatterBubbleExample from "../../../examples/scatter/bubble";
+
+Use a scatter chart to show how two numeric measures relate, like latency and acceptance, and to compare a few groups of points on the same axes.
+
+<Example caption="Hover a point, or focus the chart and press the arrow keys, to see its values.">
+  <ScatterExample />
+
+  <include cwd lang="tsx">./examples/scatter/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/scatter-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+ScatterChart
+├── ScatterChart.Background
+├── ScatterChart.Grid
+├── ScatterChart.XAxis
+├── ScatterChart.YAxis
+├── ScatterChart.ZAxis
+├── ScatterChart.Series
+├── ScatterChart.Tooltip
+└── ScatterChart.Legend
+```
+
+`ScatterChart` holds the series config and the accessible name, and draws only the parts you add. Unlike the other cartesian charts, each `ScatterChart.Series` takes its own `data`. The tooltip and legend read their labels and colors from `config`.
+
+## Usage
+
+### Series and Axes
+
+Both axes are numeric: give each one `type="number"` and the `dataKey` it reads from the points. `name` and `unit` label the value in the tooltip.
+
+Add one `ScatterChart.Series` per group, with its points in `data` and its `config` key in `seriesKey`. Set `shape` to tell groups apart without color: `circle` (the default), `cross`, `diamond`, `square`, `star`, `triangle` or `wye`. Give the `config` entry the same `legendShape` so the legend matches.
+
+`ScatterChart.Tooltip` titles each point with its series label. Pass `pointLabel` to title it from the point's own record instead, like the task name above.
+
+### Bubble Size
+
+Add `ScatterChart.ZAxis` to size each point by a third measure. Its `range` sets the smallest and largest bubble area, in square pixels:
+
+<Example caption="Bubble area shows requests. Hover Classify or Extract to see a zero and a missing value.">
+  <ScatterBubbleExample />
+
+  <include cwd lang="tsx">./examples/scatter/bubble.tsx</include>
+</Example>
+
+Recharts draws zero and missing sizes at the smallest area and leaves them out of the tooltip. Pass the same key to the tooltip's `zDimension` to show them, as `0k` and `missingValue` ("No data" by default).
+
+### Legend and Keyboard
+
+Pressing a legend item highlights its points and dims the others. Press it again, or press Escape, to clear it. To hide and show series from the legend instead, see [Legend](../building-blocks/legend.mdx).
+
+Focus the chart and press the left and right arrow keys to move through the points of the first series, which shows the tooltip, and Escape to dismiss it. Hover reaches every series.
+
+Set `material="clay"` or `"glow"` on a series for a finish on the built-in shapes; see [Materials](../guides/materials.mdx).
+
+### Motion
+
+Pass `animate` to fade the points in when the chart mounts, or `animate={{ revealDurationMs: 900 }}` to change the duration. Scatter charts don't animate by default. When the reader prefers reduced motion, points appear without fading in. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows placeholder points, which hold still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default):
+
+```tsx
+<ScatterChart loading={isPending} loadingLabel="Loading latency" {...props}>
+```
+
+## API Reference
+
+### ScatterChart
+
+<auto-type-table path="../../../../../packages/charts/src/composition/scatter.tsx" name="ScatterChartOptions" type='Pick<ScatterChartProps, "config" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "interaction" | "emphasis" | "visibleSeries" | "defaultVisibleSeries" | "onVisibleSeriesChange" | "legendPosition" | "frameProps">' />
+
+### ScatterChart.Series
+
+<auto-type-table path="../../../../../packages/charts/src/scatter-series.tsx" name="ScatterSeriesOptions" type='Pick<ScatterSeriesProps, "seriesKey" | "material">' />
+
+### ScatterChart.Tooltip
+
+<auto-type-table path="../../../../../packages/charts/src/scatter-tooltip.tsx" name="ScatterTooltipOptions" type='Pick<ScatterTooltipProps, "pointLabel" | "zDimension" | "missingValue">' />
+
+<Caption>
+  `ScatterChart`, `ScatterChart.Series` and `ScatterChart.ZAxis` also take every prop of Recharts' [ScatterChart](https://recharts.github.io/en-US/api/ScatterChart/), [Scatter](https://recharts.github.io/en-US/api/Scatter/) and [ZAxis](https://recharts.github.io/en-US/api/ZAxis/), like `margin`, `data`, `shape` and `range`.
+</Caption>

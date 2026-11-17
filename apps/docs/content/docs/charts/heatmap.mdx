@@ -1,0 +1,112 @@
+---
+title: Heatmap
+description: Compare a value across two sets of categories with a grid of colored cells.
+---
+
+import HeatmapExample from "../../../examples/heatmap/basic";
+import HeatmapCompactExample from "../../../examples/heatmap/compact";
+
+Use a heatmap to show how one measure varies across two ordered sets, like days and hours, when the pattern matters more than each exact value.
+
+<Example caption="Hover a cell, or focus the grid and press the arrow keys, to see its value.">
+  <HeatmapExample />
+
+  <include cwd lang="tsx">./examples/heatmap/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/heatmap-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+HeatmapChart
+├── HeatmapChart.Grid
+├── HeatmapChart.Tooltip
+├── HeatmapChart.Legend
+└── HeatmapChart.DataTable
+```
+
+`HeatmapChart` holds the rows, columns, data and color scale, and draws only the parts you add. The grid is an HTML table with a header for each row and column, so screen readers can read it like one. Heatmaps have no series, so pass `config={{}}`.
+
+## Usage
+
+### Rows, Columns and Data
+
+`rows` and `columns` set the order of the grid. `data` has one `{ row, column, value }` record per cell; a record whose row or column isn't listed throws. A missing record or a `null` value shows as a patterned cell labeled `missingLabel`, while `0` is a measured value. When two records share a cell, `duplicates` decides what happens: `error` (the default), `first`, `last` or `sum`.
+
+`formatValue` formats the value in the cells, tooltip and legend, like ``(value) => `${value}%` ``, without changing the colors.
+
+### Color Scale
+
+`createHeatmapScale` maps a numeric `domain` to two or more `#rrggbb` colors, spaced evenly. Values outside the domain take the nearest end color. For values above and below a target, center the domain on zero with a neutral middle color:
+
+```tsx
+const scale = createHeatmapScale({
+  domain: [-20, 20],
+  colors: ["#9a3412", "#fff7ed", "#1e40af"],
+});
+```
+
+Keep the same scale when you compare two heatmaps, so the same color means the same value. `HeatmapChart.Legend` shows the scale's ends, zero for a domain that crosses it, and the missing-cell swatch.
+
+### Compact Grids
+
+Set `layout` on the grid for fixed square cells: `cellSize`, `gap`, and `rowLabels` or `columnLabels` set to `hidden`. Hidden labels stay readable by screen readers, and the tooltip still names each cell. Pass `Cell` to change what each cell shows, like nothing:
+
+<Example caption="Square cells shrink with the page. Hover a cell to see its day and week.">
+  <HeatmapCompactExample />
+
+  <include cwd lang="tsx">./examples/heatmap/compact.tsx</include>
+</Example>
+
+Set `material="clay"` or `"glow"` on the grid for a finish on the cell edges; see [Materials](../guides/materials.mdx).
+
+### Keyboard
+
+Focus the grid and press the arrow keys to move between cells, which shows the tooltip. Home and End go to the ends of a row, Ctrl+Home and Ctrl+End to the first and last cells, and Escape dismisses the tooltip. Pass `valueAnimation="shuffle"` to the tooltip to animate its digits.
+
+### Motion
+
+Pass `animate` to fade the cells in diagonally when the chart mounts. Heatmaps don't animate by default. When the reader prefers reduced motion, cells appear without fading in. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart shows a placeholder grid, which holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default):
+
+```tsx
+<HeatmapChart loading={isPending} loadingLabel="Loading requests" {...props}>
+```
+
+## API Reference
+
+### HeatmapChart
+
+<auto-type-table path="../../../../../packages/charts/src/heatmap.tsx" name="HeatmapChartOptions" type='Pick<HeatmapChartProps, "aria-label" | "aria-labelledby" | "rows" | "columns" | "data" | "scale" | "duplicates" | "formatValue" | "missingLabel" | "animate" | "loading" | "loadingLabel" | "frameProps">' />
+
+### HeatmapChart.Grid
+
+<auto-type-table path="../../../../../packages/charts/src/heatmap.tsx" name="HeatmapGridOptions" type='Pick<HeatmapGridProps, "caption" | "layout" | "material" | "Cell" | "cellProps" | "rowLabel" | "columnLabel">' />
+
+### HeatmapChart.Tooltip
+
+<auto-type-table path="../../../../../packages/charts/src/heatmap.tsx" name="HeatmapTooltipOptions" type='Pick<HeatmapTooltipProps, "Content" | "valueAnimation">' />
+
+### HeatmapChart.Legend
+
+<auto-type-table path="../../../../../packages/charts/src/heatmap.tsx" name="HeatmapLegendOptions" type='Pick<HeatmapLegendProps, "label">' />
+
+### createHeatmapScale
+
+<auto-type-table path="../../../../../packages/charts/src/heatmap-model.ts" name="CreateHeatmapScaleOptions" type='Pick<HeatmapScaleOptions, "domain" | "colors">' />
+
+<Caption>
+  `HeatmapChart.DataTable` takes a `caption` and shows the same records as a plain table. Each part also takes the props of its HTML element, like `className` and `style`.
+</Caption>

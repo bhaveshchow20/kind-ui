@@ -1,0 +1,114 @@
+---
+title: Sankey Chart
+description: Follow quantities as they split and merge through stages.
+---
+
+import SankeyExample from "../../../examples/sankey/basic";
+import SankeyLabelsExample from "../../../examples/sankey/labels";
+
+Use a Sankey chart to show how a total flows through stages, like energy from its sources through zones to its uses, where each ribbon's width is its share.
+
+<Example caption="Hover a ribbon to see its value. Press a node in the legend to highlight its routes.">
+  <SankeyExample />
+
+  <include cwd lang="tsx">./examples/sankey/basic.tsx</include>
+</Example>
+
+## Installation
+
+```bash tab="shadcn"
+npx shadcn@latest add @kind-ui/sankey-chart
+```
+
+```bash tab="npm"
+npm install @kind-ui/charts
+```
+
+## Composition
+
+```text
+SankeyChart
+├── SankeyChart.Nodes
+│   ├── SankeyChart.Node
+│   └── SankeyChart.NodeLabel
+├── SankeyChart.Links
+│   └── SankeyChart.Link
+├── SankeyChart.Tooltip
+├── SankeyChart.Legend
+└── SankeyChart.Table
+```
+
+`SankeyChart` holds the flow data, the node config and the accessible name, and draws only the parts you add. `SankeyChart.Nodes` and `SankeyChart.Links` draw the bars and ribbons; leave one out and it isn't drawn. Give the chart a `height`, since it fills its container's width.
+
+## Usage
+
+### Flow Data
+
+`data` has `nodes`, each with a unique `id` and a `name`, and `links`, each with a unique `id`, a `source` and `target` node ID, and a `value`. The chart checks the data when it renders and throws on:
+
+- a node with no `config` entry, a link to a node that doesn't exist, or a cycle,
+- a negative or non-finite value,
+- a middle node whose inflow doesn't equal its outflow,
+- two links between the same nodes with the same value.
+
+Model losses as links to their own end node, so every middle node balances. A link with a value of `0` isn't drawn, and a node with no drawn links leaves the plot. `empty` shows when no link has a positive value.
+
+### Node Colors
+
+`config` gives every node ID a `label` and `color`, and the legend lists nodes in its order. A node takes its own color and a ribbon takes its source node's color. Pressing a legend item highlights the node and every route through it, and dims the rest.
+
+Ribbons are opaque, so they hide each other where they cross. Return `SankeyChart.Link` from `SankeyChart.Links`' `render`, as above, with a lower `strokeOpacity` in `pathProps` to let crossings show through.
+
+`nodeWidth`, `nodePadding`, `linkCurvature` and `sort` come from Recharts. Pass `sort={false}` to keep nodes in data order.
+
+### Labels and Gradients
+
+Pass a `render` function to `SankeyChart.Nodes` to draw each node yourself. Return `SankeyChart.Node` with `SankeyChart.NodeLabel` beside it, and leave room for the labels with `margin`. `showValues` adds each node's total. Set `material="gradient"` on `SankeyChart.Link` to blend each ribbon from its source to its target color:
+
+<Example caption="Each label shows its node's total. Ribbons blend from source to target.">
+  <SankeyLabelsExample />
+
+  <include cwd lang="tsx">./examples/sankey/labels.tsx</include>
+</Example>
+
+A node's `icon` in `config` shows beside its label. `position="inside"` clips the label to the node instead; the tooltip still has the full name.
+
+Set `finish="clay"` or `"glow"` on `SankeyChart.Node` or `SankeyChart.Link` for a surface finish; see [Materials](../guides/materials.mdx).
+
+### Accessibility
+
+Ribbons and nodes aren't reachable from the keyboard on their own. Add `SankeyChart.Table` with a `caption` for a table of every link and its value. Pass it `onInspect` to add a button per row, and `activeLinkId` to mark the selected one, for a keyboard way to pick a flow. You can also give each `SankeyChart.Link` keyboard handlers and ARIA attributes through `pathProps`.
+
+### Motion
+
+Pass `animate` to draw the ribbons in when the chart mounts, or `animate={{ revealDurationMs: 900 }}` to change the duration (450ms by default). Sankey charts don't animate by default. When the reader prefers reduced motion, the diagram appears without drawing in. See [Motion](../guides/motion.mdx).
+
+### Loading
+
+Set `loading` while the data is on its way. The chart keeps its size and shows a placeholder diagram, which holds still when the reader prefers reduced motion. Screen readers hear `loadingLabel` ("Loading chart" by default):
+
+```tsx
+<SankeyChart loading={isPending} loadingLabel="Loading energy flows" {...props}>
+```
+
+## API Reference
+
+### SankeyChart
+
+<auto-type-table path="../../../../../packages/charts/src/sankey-composition.tsx" name="SankeyChartOptions" type='Pick<SankeyChartProps, "config" | "data" | "aria-label" | "aria-labelledby" | "animate" | "loading" | "loadingLabel" | "empty" | "responsive" | "interaction" | "legendPosition" | "frameProps">' />
+
+### SankeyChart.Link
+
+<auto-type-table path="../../../../../packages/charts/src/sankey-marks.tsx" name="SankeyLinkOptions" type='Pick<SankeyLinkProps, "material" | "finish" | "color" | "targetColor" | "pathProps">' />
+
+### SankeyChart.Node
+
+<auto-type-table path="../../../../../packages/charts/src/sankey-marks.tsx" name="SankeyNodeOptions" type='Pick<SankeyNodeProps, "color" | "finish" | "rectProps">' />
+
+### SankeyChart.NodeLabel
+
+<auto-type-table path="../../../../../packages/charts/src/sankey-node-label.tsx" name="SankeyNodeLabelOptions" type='Pick<SankeyNodeLabelProps, "node" | "data" | "nodeConfig" | "position" | "side" | "showValues" | "valueFormatter" | "offset" | "iconSize" | "iconGap">' />
+
+<Caption>
+  `SankeyChart` also takes every prop of Recharts' [Sankey](https://recharts.github.io/en-US/api/Sankey/), like `margin`, `nodeWidth` and `nodePadding`, and its `onClick`, `onMouseEnter` and `onMouseLeave` receive the node or link with its `id`. `SankeyChart.Tooltip` takes every prop of Recharts' [Tooltip](https://recharts.github.io/en-US/api/Tooltip/), like `formatter`.
+</Caption>
