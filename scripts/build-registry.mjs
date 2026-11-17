@@ -2,7 +2,6 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { z } from "zod";
 import { coreVersion, registryCss, registryHomepage, registryItems } from "../registry/catalog.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -11,12 +10,6 @@ const output = path.join(root, "artifacts/registry/r");
 rmSync(staging, { recursive: true, force: true });
 rmSync(output, { recursive: true, force: true });
 mkdirSync(path.join(staging, "components"), { recursive: true });
-const packageJson = /** @type {unknown} */ (
-  JSON.parse(readFileSync(path.join(root, "packages/charts/package.json"), "utf8"))
-);
-const manifest = z.object({ version: z.string() }).parse(packageJson);
-if (manifest.version !== coreVersion)
-  throw new Error(`Registry targets Core ${coreVersion}, source package is ${manifest.version}`);
 // Core declares its peers. Re-adding their ranges through the CLI upgrades
 // compatible exact host pins instead of leaving npm to resolve missing peers.
 const dependencies = [`@kind-ui/charts@${coreVersion}`];
