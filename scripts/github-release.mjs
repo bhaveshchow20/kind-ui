@@ -56,13 +56,12 @@ export async function ensureGitHubRelease(entry, request, { assets = [], upload 
     for (const field of fields)
       assert.equal(release[field], entry[field], `Existing release differs: ${field}`);
   }
+  // The archive isn't byte-reproducible, so the archive and its checksum are replaced together.
   async function attach(release) {
-    for (const { name, data } of assets) {
-      const existing = release.assets?.find((asset) => asset.name === name);
-      if (existing?.state === "uploaded") continue;
-      if (existing) await request("DELETE", `releases/assets/${existing.id}`);
-      await upload(release.upload_url, name, data);
-    }
+    const existing = assets.map(({ name }) => release.assets?.find((asset) => asset.name === name));
+    if (existing.every((asset) => asset?.state === "uploaded")) return;
+    for (const asset of existing) if (asset) await request("DELETE", `releases/assets/${asset.id}`);
+    for (const { name, data } of assets) await upload(release.upload_url, name, data);
   }
   if (existingTag) await assertTag(existingTag);
   if (existingRelease) {

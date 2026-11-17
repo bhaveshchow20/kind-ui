@@ -364,7 +364,11 @@ try {
       const renders = [];
       for (const [index, { name }] of registryItems.entries()) {
         const source = await readFile(path.join(scratch, components, `${name}.tsx`), "utf8");
-        assert.match(source, /export default function \w+/, `${name} must default-export its chart`);
+        assert.match(
+          source,
+          /export default function \w+/,
+          `${name} must default-export its chart`,
+        );
         const specifier = `${alias}/${components.replace(/^src\//, "")}/${name}`;
         hostImports.push(`import Chart${index} from "${specifier}";`);
         renders.push(`{name:"${name}",render:()=><Chart${index}/>}`);

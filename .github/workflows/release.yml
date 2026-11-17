@@ -210,7 +210,7 @@ jobs:
       - if: vars.KINDUI_HOSTING == 'true'
         run: npm install --global npm@11.9.0
       - if: vars.KINDUI_HOSTING == 'true'
-        run: npm ci --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - if: vars.KINDUI_HOSTING == 'true'
         env:
           NEXT_PUBLIC_DOCS_ORIGIN: https://kindui.dev

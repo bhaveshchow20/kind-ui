@@ -3,11 +3,7 @@ title: Get Started
 description: Build React charts from composable parts, on Recharts and Motion.
 ---
 
-import LineExample from "../../examples/line/basic";
-
 Charts has thirteen chart families, from lines and bars to Sankey flows and activity rings. Each chart is a family root like `LineChart` that holds your data, plus the parts you choose to show: axes, grid, series, tooltip and legend. Recharts draws the geometry and Motion animates it, so every Recharts prop still works. Keyboard inspection, legend highlighting, loading states and reduced motion come built in.
-
-<LineExample />
 
 ## Install with the shadcn CLI
 
@@ -49,6 +45,7 @@ In Next.js, put charts in a client component (start the file with `"use client"`
 Pass rows as `data`, name each series in `config`, give the chart an accessible name, and add the parts you want:
 
 ```tsx
+"use client";
 import { LineChart, type SeriesConfig } from "@kind-ui/charts";
 
 const data = [
@@ -75,7 +72,7 @@ export function TasksChart() {
 
 ## Theme
 
-Charts read the shadcn theme variables `--foreground`, `--border`, `--muted`, `--muted-foreground`, `--popover`, `--popover-foreground` and `--radius`, so they match the rest of your app. Series colors come from `config`; pass `{ light, dark }` to set one per color scheme.
+Charts read the shadcn theme variables `--foreground`, `--border`, `--card`, `--muted`, `--muted-foreground`, `--popover`, `--popover-foreground` and `--radius`, so they match the rest of your app. Series colors come from `config`; pass `{ light, dark }` to set one per color scheme.
 
 ## Choose a Chart
 

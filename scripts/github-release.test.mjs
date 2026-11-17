@@ -210,3 +210,24 @@ test("refuses a leftover draft with different release metadata", async () => {
   );
   assert.equal(api.writes.length, 0);
 });
+
+test("replaces an uploaded archive whose checksum is missing, so the pair always matches", async () => {
+  const api = github({
+    ref: tag,
+    release: {
+      ...entry,
+      id: 7,
+      upload_url: "upload{?name,label}",
+      assets: [{ id: 3, name: assets[0].name, state: "uploaded" }],
+    },
+  });
+  await ensureGitHubRelease(entry, api.request, { assets, upload: api.upload });
+  assert.deepEqual(
+    api.writes.map((write) => write.path),
+    [
+      "releases/assets/3",
+      "upload:charts-site-0.3.0.tar.gz",
+      "upload:charts-site-0.3.0.tar.gz.sha256",
+    ],
+  );
+});
